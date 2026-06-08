@@ -1,11 +1,16 @@
 program RecorderHardwareMathTest;
 
-{$mode objfpc}{$H+}
+{$mode delphi}{$H+}
 
 uses
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ENDIF}
   Classes,
   SysUtils,
   LConvEncoding,
+  uCommonTypes,
+  complex,
   uHardwareMath;
 
 var
@@ -18,13 +23,13 @@ begin
   Flush(g_LogFile);
 end;
 
-procedure AssertEquals(AActual, AExpected: Double; const AStep: string);
+procedure AssertEquals(AActual, AExpected: Double; const AStep: string); overload; overload;
 begin
   if Abs(AActual - AExpected) > 1e-9 then
     raise Exception.CreateFmt('%s: expected %f, got %f', [AStep, AExpected, AActual]);
 end;
 
-procedure AssertEquals(AActual, AExpected: Integer; const AStep: string);
+procedure AssertEquals(AActual, AExpected: Integer; const AStep: string); overload; overload;
 begin
   if AActual <> AExpected then
     raise Exception.CreateFmt('%s: expected %d, got %d', [AStep, AExpected, AActual]);
@@ -92,6 +97,7 @@ var
   lA, lB, lC_P, lC_S, lC_A: array of Double;
   I: Integer;
   lStart, lTimeP, lTimeS, lTimeA: Int64;
+  lPtrA, lPtrB, lPtrC: PDouble;
 begin
   SetLength(lA, Count);
   SetLength(lB, Count);
@@ -105,9 +111,17 @@ begin
     lB[I] := I * 0.25;
   end;
 
-  AddArrays_Pascal(@lA[0], @lB[0], @lC_P[0], Count);
-  AddArrays_SSE(@lA[0], @lB[0], @lC_S[0], Count);
-  AddArrays_AVX2(@lA[0], @lB[0], @lC_A[0], Count);
+  lPtrA := @lA[0];
+  lPtrB := @lB[0];
+  
+  lPtrC := @lC_P[0];
+  AddArrays_Pascal(lPtrA, lPtrB, lPtrC, Count);
+  
+  lPtrC := @lC_S[0];
+  AddArrays_SSE(lPtrA, lPtrB, lPtrC, Count);
+  
+  lPtrC := @lC_A[0];
+  AddArrays_AVX2(lPtrA, lPtrB, lPtrC, Count);
 
   for I := 0 to Count - 1 do
   begin
@@ -116,18 +130,21 @@ begin
   end;
 
   lStart := GetTimeUs;
+  lPtrC := @lC_P[0];
   for I := 1 to 100000 do
-    AddArrays_Pascal(@lA[0], @lB[0], @lC_P[0], Count);
+    AddArrays_Pascal(lPtrA, lPtrB, lPtrC, Count);
   lTimeP := GetTimeUs - lStart;
 
   lStart := GetTimeUs;
+  lPtrC := @lC_S[0];
   for I := 1 to 100000 do
-    AddArrays_SSE(@lA[0], @lB[0], @lC_S[0], Count);
+    AddArrays_SSE(lPtrA, lPtrB, lPtrC, Count);
   lTimeS := GetTimeUs - lStart;
 
   lStart := GetTimeUs;
+  lPtrC := @lC_A[0];
   for I := 1 to 100000 do
-    AddArrays_AVX2(@lA[0], @lB[0], @lC_A[0], Count);
+    AddArrays_AVX2(lPtrA, lPtrB, lPtrC, Count);
   lTimeA := GetTimeUs - lStart;
 
   Log(Format('AddArrays (%d elements, 100k runs):', [Count]));
@@ -394,6 +411,7 @@ begin
 end;
 
 begin
+  Writeln('Program started!');
   AssignFile(g_LogFile, 'logfile.log');
   Rewrite(g_LogFile);
   try

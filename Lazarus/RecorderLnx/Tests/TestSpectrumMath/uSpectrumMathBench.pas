@@ -1407,6 +1407,14 @@ begin
     Result := 1;
 end;
 
+function SafeRatio(ANominator, ADenominator: Double): Double;
+begin
+  if Abs(ADenominator) < 1e-9 then
+    Result := 0.0
+  else
+    Result := ANominator / ADenominator;
+end;
+
 function BenchmarkComplexCopy(Src, Dst: PComplex64; Count, Iterations: SizeInt): Double;
 var
   I: SizeInt;
@@ -1710,13 +1718,13 @@ begin
     ALog.Line(Format('  Backend=FFT_Iterative_Pascal Iterations=%d AvgUs=%.3f Correctness=%s Champion=YES',
       [Iterations, ChampionUs, BoolToStr((not ARunDft) or (DftDiff <= CCompareTolerance), 'PASS', 'FAIL')]));
     ALog.Line(Format('  Backend=FFT_Iterative_SSE3_RMS Iterations=%d AvgUs=%.3f DiffVsChampion=%.12g Correctness=%s RatioVsChampion=%.3fx',
-      [Iterations, SseUs, SseDiff, BoolToStr(SseDiff <= CCompareTolerance, 'PASS', 'FAIL'), SseUs / ChampionUs]));
+      [Iterations, SseUs, SseDiff, BoolToStr(SseDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(SseUs, ChampionUs)]));
     ALog.Line(Format('  Backend=FFT_Iterative_AVX_RMS Iterations=%d AvgUs=%.3f DiffVsChampion=%.12g Correctness=%s RatioVsChampion=%.3fx',
-      [Iterations, AvxUs, AvxDiff, BoolToStr(AvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), AvxUs / ChampionUs]));
+      [Iterations, AvxUs, AvxDiff, BoolToStr(AvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(AvxUs, ChampionUs)]));
     ALog.Line(Format('  Backend=FFT_Precomputed_Pascal Iterations=%d AvgUs=%.3f DiffVsChampion=%.12g Correctness=%s RatioVsChampion=%.3fx',
-      [Iterations, PreUs, PreDiff, BoolToStr(PreDiff <= CCompareTolerance, 'PASS', 'FAIL'), PreUs / ChampionUs]));
+      [Iterations, PreUs, PreDiff, BoolToStr(PreDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(PreUs, ChampionUs)]));
     ALog.Line(Format('  Backend=FFT_Precomputed_AVX_RMS Iterations=%d AvgUs=%.3f DiffVsChampion=%.12g Correctness=%s RatioVsChampion=%.3fx',
-      [Iterations, PreAvxUs, PreAvxDiff, BoolToStr(PreAvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), PreAvxUs / ChampionUs]));
+      [Iterations, PreAvxUs, PreAvxDiff, BoolToStr(PreAvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(PreAvxUs, ChampionUs)]));
     if (PreAvxUs < ChampionUs) and (PreAvxUs <= SseUs) and (PreAvxUs <= AvxUs) and (PreAvxUs <= PreUs) then
       ALog.Line('  Winner=FFT_Precomputed_AVX_RMS')
     else if (PreUs < ChampionUs) and (PreUs <= SseUs) and (PreUs <= AvxUs) then
@@ -1807,7 +1815,7 @@ begin
       [ASize, Iterations, CopyUs, ForwardDiff, InverseDiff, CCompareTolerance]));
     ALog.Line(Format('  Direction=Forward Backend=Butterfly_SinCos AvgUs=%.3f Correctness=REFERENCE', [SinCosForwardUs]));
     ALog.Line(Format('  Direction=Forward Backend=Butterfly_Precomputed AvgUs=%.3f DiffVsSinCos=%.12g Correctness=%s RatioVsSinCos=%.3fx',
-      [PreForwardUs, ForwardDiff, BoolToStr(ForwardDiff <= CCompareTolerance, 'PASS', 'FAIL'), PreForwardUs / SinCosForwardUs]));
+      [PreForwardUs, ForwardDiff, BoolToStr(ForwardDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(PreForwardUs, SinCosForwardUs)]));
     if PreForwardUs < SinCosForwardUs then
       ALog.Line('  Direction=Forward Winner=Butterfly_Precomputed')
     else
@@ -1815,7 +1823,7 @@ begin
 
     ALog.Line(Format('  Direction=Inverse Backend=Butterfly_SinCos AvgUs=%.3f Correctness=REFERENCE', [SinCosInverseUs]));
     ALog.Line(Format('  Direction=Inverse Backend=Butterfly_Precomputed AvgUs=%.3f DiffVsSinCos=%.12g Correctness=%s RatioVsSinCos=%.3fx',
-      [PreInverseUs, InverseDiff, BoolToStr(InverseDiff <= CCompareTolerance, 'PASS', 'FAIL'), PreInverseUs / SinCosInverseUs]));
+      [PreInverseUs, InverseDiff, BoolToStr(InverseDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(PreInverseUs, SinCosInverseUs)]));
     if PreInverseUs < SinCosInverseUs then
       ALog.Line('  Direction=Inverse Winner=Butterfly_Precomputed')
     else
@@ -1894,13 +1902,13 @@ begin
       [ASize, Iterations, InlineDiff, SseDiff, AvxDiff, AvxVecDiff, CCompareTolerance]));
     ALog.Line(Format('  Technology=Pascal_Precomputed AvgUs=%.3f Correctness=REFERENCE', [PascalUs]));
     ALog.Line(Format('  Technology=Pascal_Inline_Precomputed AvgUs=%.3f DiffVsPascal=%.12g Correctness=%s RatioVsPascal=%.3fx',
-      [InlineUs, InlineDiff, BoolToStr(InlineDiff <= CCompareTolerance, 'PASS', 'FAIL'), InlineUs / PascalUs]));
+      [InlineUs, InlineDiff, BoolToStr(InlineDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(InlineUs, PascalUs)]));
     ALog.Line(Format('  Technology=SSE2_InlineAsm_Precomputed AvgUs=%.3f DiffVsPascal=%.12g Correctness=%s RatioVsPascal=%.3fx',
-      [SseUs, SseDiff, BoolToStr(SseDiff <= CCompareTolerance, 'PASS', 'FAIL'), SseUs / PascalUs]));
+      [SseUs, SseDiff, BoolToStr(SseDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(SseUs, PascalUs)]));
     ALog.Line(Format('  Technology=AVX_InlineAsm_Precomputed AvgUs=%.3f DiffVsPascal=%.12g Correctness=%s RatioVsPascal=%.3fx',
-      [AvxUs, AvxDiff, BoolToStr(AvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), AvxUs / PascalUs]));
+      [AvxUs, AvxDiff, BoolToStr(AvxDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(AvxUs, PascalUs)]));
     ALog.Line(Format('  Technology=AVX_Vector2_InlineAsm_Precomputed AvgUs=%.3f DiffVsPascal=%.12g Correctness=%s RatioVsPascal=%.3fx RatioVsPascalInline=%.3fx',
-      [AvxVecUs, AvxVecDiff, BoolToStr(AvxVecDiff <= CCompareTolerance, 'PASS', 'FAIL'), AvxVecUs / PascalUs, AvxVecUs / InlineUs]));
+      [AvxVecUs, AvxVecDiff, BoolToStr(AvxVecDiff <= CCompareTolerance, 'PASS', 'FAIL'), SafeRatio(AvxVecUs, PascalUs), SafeRatio(AvxVecUs, InlineUs)]));
 
     if (InlineUs <= PascalUs) and (InlineUs <= SseUs) and (InlineUs <= AvxUs) and (InlineUs <= AvxVecUs) then
       ALog.Line('  Winner=Pascal_Inline_Precomputed')
@@ -1984,20 +1992,20 @@ begin
     ParallelUsPerSpectrum := ParallelUs / ABatchCount;
     CreateTickUsPerSpectrum := CreateTickUs / ABatchCount;
     PoolUsPerSpectrum := PoolUs / ABatchCount;
-    SingleSpectraPerSec := 1000000.0 / SingleUsPerSpectrum;
-    ParallelSpectraPerSec := 1000000.0 / ParallelUsPerSpectrum;
-    CreateTickSpectraPerSec := 1000000.0 / CreateTickUsPerSpectrum;
-    PoolSpectraPerSec := 1000000.0 / PoolUsPerSpectrum;
+    SingleSpectraPerSec := SafeRatio(1000000.0, SingleUsPerSpectrum);
+    ParallelSpectraPerSec := SafeRatio(1000000.0, ParallelUsPerSpectrum);
+    CreateTickSpectraPerSec := SafeRatio(1000000.0, CreateTickUsPerSpectrum);
+    PoolSpectraPerSec := SafeRatio(1000000.0, PoolUsPerSpectrum);
 
     ALog.Line(Format('BatchFFT Size=%d Batch=%d Iterations=%d Cpu=%d Workers=%d SingleBatchMs=%.3f SingleUsPerSpectrum=%.3f SingleSpectraPerSec=%.1f ParallelBulkBatchMs=%.3f ParallelBulkUsPerSpectrum=%.3f ParallelBulkSpectraPerSec=%.1f ParallelBulkSpeedup=%.3fx CreateTickBatchMs=%.3f CreateTickUsPerSpectrum=%.3f CreateTickSpectraPerSec=%.1f CreateTickSpeedup=%.3fx PoolTickBatchMs=%.3f PoolTickUsPerSpectrum=%.3f PoolTickSpectraPerSec=%.1f PoolTickSpeedup=%.3fx PoolVsCreateTick=%.3fx',
       [ASize, ABatchCount, Iterations, CpuCount, WorkerCount,
        SingleUs / 1000.0, SingleUsPerSpectrum, SingleSpectraPerSec,
        ParallelUs / 1000.0, ParallelUsPerSpectrum, ParallelSpectraPerSec,
-       SingleUs / ParallelUs,
+       SafeRatio(SingleUs, ParallelUs),
        CreateTickUs / 1000.0, CreateTickUsPerSpectrum, CreateTickSpectraPerSec,
-       SingleUs / CreateTickUs,
+       SafeRatio(SingleUs, CreateTickUs),
        PoolUs / 1000.0, PoolUsPerSpectrum, PoolSpectraPerSec,
-       SingleUs / PoolUs, CreateTickUs / PoolUs]));
+       SafeRatio(SingleUs, PoolUs), SafeRatio(CreateTickUs, PoolUs)]));
   finally
     for I := 0 to High(Outputs) do
       Outputs[I].Free;

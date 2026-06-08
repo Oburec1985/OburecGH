@@ -38,7 +38,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../../sharedUtils;../../../../sharedUtils/math;../../../../sharedUtils/math/FFT_койнов;C:/lazarus/components/opengl/lib/x86_64-win64/win32"/>
+      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../SharedUtils;../../../SharedUtils/math;C:/lazarus/components/opengl/lib/x86_64-win64/win32"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <CodeGeneration>
