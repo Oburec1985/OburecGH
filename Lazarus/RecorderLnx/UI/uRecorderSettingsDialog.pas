@@ -53,6 +53,7 @@ type
     btnAlgorithmConfig: TBitBtn;                // Применить параметры FFT-узла
     btnFrequencyBands: TBitBtn;                 // Настроить частотные полосы
     fAlgorithmFftSizeEdit: TEdit;               // Размер FFT
+    fAlgorithmFftSizeUpDown: TUpDown;           // Стрелочки изменения размера FFT
     fAlgorithmSampleRateEdit: TEdit;            // Частота опроса
     fAlgorithmPortionLabel: TLabel;             // Размер порции в секундах
     fAlgorithmAverageBlocksEdit: TEdit;         // Количество блоков усреднения
@@ -134,6 +135,7 @@ type
     procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
   private
     fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
@@ -1117,6 +1119,66 @@ begin
     btnAlgorithmConfigClick(Sender);
     Key := 0;
   end;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
+  function NextPowerOfTwo(AValue: Integer): Integer;
+  begin
+    Result := 1;
+    while Result <= AValue do
+      Result := Result * 2;
+  end;
+  function PreviousPowerOfTwo(AValue: Integer): Integer;
+  begin
+    if AValue <= 2 then
+    begin
+      Result := 2;
+      Exit;
+    end;
+    Result := 1;
+    while Result < AValue do
+      Result := Result * 2;
+    Result := Result div 2;
+  end;
+  function IsPowerOfTwoVal(AValue: Integer): Boolean;
+  begin
+    Result := (AValue > 0) and ((AValue and (AValue - 1)) = 0);
+  end;
+var
+  lVal: Integer;
+begin
+  if fAlgorithmFftSizeEdit = nil then
+    Exit;
+
+  if not TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lVal) then
+    lVal := 8192;
+
+  if lVal < 2 then
+    lVal := 2;
+
+  if Button = btNext then
+  begin
+    if lVal < 1048576 then
+    begin
+      if not IsPowerOfTwoVal(lVal) then
+        lVal := NextPowerOfTwo(lVal)
+      else
+        lVal := lVal * 2;
+    end;
+  end
+  else
+  begin
+    if lVal > 2 then
+    begin
+      if not IsPowerOfTwoVal(lVal) then
+        lVal := PreviousPowerOfTwo(lVal)
+      else
+        lVal := lVal div 2;
+    end;
+  end;
+
+  fAlgorithmFftSizeEdit.Text := IntToStr(lVal);
+  fAlgorithmFftParamChange(fAlgorithmFftSizeEdit);
 end;
 
 { Marks signals already represented in registry. Name matches relink existing tags

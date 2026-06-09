@@ -851,6 +851,16 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             TabOrder = 0
             Text = '8192'
           end
+          object fAlgorithmFftSizeUpDown: TUpDown
+            Left = 150
+            Height = 33
+            Top = 116
+            Width = 22
+            Min = 0
+            Max = 1000
+            OnClick = fAlgorithmFftSizeUpDownClick
+            TabOrder = 11
+          end
           object fAlgorithmSampleRateEdit: TEdit
             Left = 184
             Height = 33
