@@ -144,6 +144,16 @@ type
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
+    fCanDrag: Boolean;
+    fDragStartPt: TPoint;
+    fDragSelectActive: Boolean;
+    fDragSelectStart: TPoint;
+    fDragSelectEnd: TPoint;
+    fSelectingGrid: TStringGrid;
+    fSavedSelection: TGridRect;
+    procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure GridPaint(Sender: TObject);
     
     // Вспомогательные методы работы с Mera-сигналами
     procedure AddMeraSignal(ASignal: TMeraSignalInfo);
@@ -398,7 +408,18 @@ begin
   begin
     fSelectedChannelsGrid.OnDblClick := @fSelectedChannelsGridDblClick;
     fSelectedChannelsGrid.OnMouseDown := @fSelectedChannelsGridMouseDown;
-    fSelectedChannelsGrid.DragMode := dmAutomatic;
+    fSelectedChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
+    fSelectedChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
+    fSelectedChannelsGrid.OnPaint := @GridPaint;
+    fSelectedChannelsGrid.DragMode := dmManual;
+  end;
+
+  if fAvailableChannelsGrid <> nil then
+  begin
+    fAvailableChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
+    fAvailableChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
+    fAvailableChannelsGrid.OnPaint := @GridPaint;
+    fAvailableChannelsGrid.DragMode := dmManual;
   end;
   if fAlgorithmsTree <> nil then
   begin
@@ -994,7 +1015,7 @@ begin
   for I := 0 to fMeraSignals.Count - 1 do
   begin
     lSignal := TMeraSignalInfo(fMeraSignals[I]);
-    if not SignalHasLinkedTag(lSignal) then
+    if not lSignal.Selected then
       Continue;
 
     lTag := FindTagBySourceAddress(lSourceId, lSignal.Address);
@@ -2053,15 +2074,114 @@ end;
 procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
+  lGrid: TStringGrid;
   lCol: LongInt;
   lRow: LongInt;
 begin
-  if (Button <> mbLeft) or (fSelectedChannelsGrid = nil) then
+  lGrid := TStringGrid(Sender);
+  if (Button <> mbLeft) or (lGrid = nil) then
     Exit;
 
-  fSelectedChannelsGrid.MouseToCell(X, Y, lCol, lRow);
+  lGrid.MouseToCell(X, Y, lCol, lRow);
   if lRow = 0 then
-    SortSelectedChannelsByColumn(lCol);
+  begin
+    if lGrid = fSelectedChannelsGrid then
+      SortSelectedChannelsByColumn(lCol);
+    Exit;
+  end;
+
+  if (lRow >= lGrid.Selection.Top) and (lRow <= lGrid.Selection.Bottom) then
+  begin
+    fCanDrag := True;
+    fDragStartPt := Point(X, Y);
+    fDragSelectActive := False;
+    fSavedSelection := lGrid.Selection;
+  end
+  else
+  begin
+    fDragSelectActive := True;
+    fDragSelectStart := Point(X, Y);
+    fDragSelectEnd := Point(X, Y);
+    fSelectingGrid := lGrid;
+    fCanDrag := False;
+    lGrid.Selection := TGridRect(Rect(0, lRow, lGrid.ColCount - 1, lRow));
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  lGrid: TStringGrid;
+  lColStart, lRowStart, lColEnd, lRowEnd: LongInt;
+  lTemp: LongInt;
+begin
+  lGrid := TStringGrid(Sender);
+  if fCanDrag and (ssLeft in Shift) then
+  begin
+    if (Abs(X - fDragStartPt.X) > 5) or (Abs(Y - fDragStartPt.Y) > 5) then
+    begin
+      fCanDrag := False;
+      lGrid.Selection := fSavedSelection;
+      lGrid.BeginDrag(False);
+    end;
+    Exit;
+  end;
+
+  if fDragSelectActive and (fSelectingGrid = lGrid) and (ssLeft in Shift) then
+  begin
+    fDragSelectEnd := Point(X, Y);
+    lGrid.Invalidate;
+
+    lGrid.MouseToCell(fDragSelectStart.X, fDragSelectStart.Y, lColStart, lRowStart);
+    lGrid.MouseToCell(fDragSelectEnd.X, fDragSelectEnd.Y, lColEnd, lRowEnd);
+
+    if (lRowStart > 0) and (lRowEnd > 0) then
+    begin
+      if lRowStart > lRowEnd then
+      begin
+        lTemp := lRowStart;
+        lRowStart := lRowEnd;
+        lRowEnd := lTemp;
+      end;
+      if lRowStart < 1 then
+        lRowStart := 1;
+
+      lGrid.Selection := TGridRect(Rect(0, lRowStart, lGrid.ColCount - 1, lRowEnd));
+    end;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lGrid: TStringGrid;
+begin
+  lGrid := TStringGrid(Sender);
+  fCanDrag := False;
+  if fDragSelectActive and (fSelectingGrid = lGrid) then
+  begin
+    fDragSelectActive := False;
+    lGrid.Invalidate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.GridPaint(Sender: TObject);
+var
+  lGrid: TStringGrid;
+  lRect: TRect;
+begin
+  lGrid := TStringGrid(Sender);
+  if fDragSelectActive and (fSelectingGrid = lGrid) then
+  begin
+    lRect.Left := Min(fDragSelectStart.X, fDragSelectEnd.X);
+    lRect.Top := Min(fDragSelectStart.Y, fDragSelectEnd.Y);
+    lRect.Right := Max(fDragSelectStart.X, fDragSelectEnd.X);
+    lRect.Bottom := Max(fDragSelectStart.Y, fDragSelectEnd.Y);
+
+    lGrid.Canvas.Brush.Style := bsClear;
+    lGrid.Canvas.Pen.Color := clHighlight;
+    lGrid.Canvas.Pen.Style := psDash;
+    lGrid.Canvas.Pen.Width := 1;
+    lGrid.Canvas.Rectangle(lRect);
+  end;
 end;
 
 procedure TRecorderSettingsDialog.fAlgorithmsTreeChange(Sender: TObject;
@@ -2208,7 +2328,7 @@ end;
 procedure TRecorderSettingsDialog.fAvailableChannelsGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  // Не начинать drag-and-drop здесь: TStringGrid использует MouseDown для выделения.
+  fSelectedChannelsGridMouseDown(Sender, Button, Shift, X, Y);
 end;
 
 { Drag and Drop доступного канала в активную сетку }
@@ -2216,15 +2336,31 @@ procedure TRecorderSettingsDialog.fSelectedChannelsGridDragDrop(Sender,
   Source: TObject; X, Y: Integer);
 var
   lSignal: TMeraSignalInfo;
+  lSelection: TGridRect;
+  lRow: Integer;
+  lTop: Integer;
+  lBottom: Integer;
 begin
   if Source <> fAvailableChannelsGrid then
     Exit;
 
-  lSignal := AvailableSignalByGridRow(fAvailableChannelsGrid.Row);
-  if lSignal = nil then
-    Exit;
+  lSelection := fAvailableChannelsGrid.Selection;
+  lTop := lSelection.Top;
+  lBottom := lSelection.Bottom;
+  if lTop > lBottom then
+  begin
+    lTop := lSelection.Bottom;
+    lBottom := lSelection.Top;
+  end;
 
-  lSignal.Selected := True;
+  for lRow := lBottom downto lTop do
+  begin
+    lSignal := AvailableSignalByGridRow(lRow);
+    if lSignal <> nil then
+      lSignal.Selected := True;
+  end;
+  CreateSelectedMeraTags;
+  MarkSignalsFromRegistry;
   PopulateChannelGrids;
 end;
 
