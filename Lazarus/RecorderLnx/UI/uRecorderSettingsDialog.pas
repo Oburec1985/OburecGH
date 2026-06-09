@@ -63,6 +63,7 @@ type
     fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
     fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
     fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
+    Cfg: TEdit;
 
     // Поля ввода общих настроек
     fScreenUpdateEdit: TEdit;                   // Период обновления экрана (сек)
@@ -130,6 +131,9 @@ type
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure WorkDirBrowseClick(Sender: TObject);
   private
     fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
@@ -195,6 +199,9 @@ type
     procedure LoadSelectedAlgorithmSettings;
     procedure StoreSelectedAlgorithmSettings;
     procedure UpdateAlgorithmDerivedControls;
+    procedure DeleteSelectedAlgorithms;
+    function GetSettingsFromControls(const ACurrent: TRecorderSpectrumSettings): TRecorderSpectrumSettings;
+    procedure UpdateConfigStr;
     procedure SetGridHeaders;
     procedure ToggleHardwareSignal(ANode: TTreeNode);
     procedure SetRunSettings(AValue: TRecorderRunControlSettings);
@@ -426,6 +433,19 @@ begin
     fAlgorithmsTree.Images := fDeviceImageList;
     fAlgorithmsTree.ImagesWidth := 16;
   end;
+  if fAlgorithmsTree <> nil then
+  begin
+    fAlgorithmsTree.Options := fAlgorithmsTree.Options + [tvoAllowMultiselect];
+    fAlgorithmsTree.OnKeyDown := @fAlgorithmsTreeKeyDown;
+  end;
+  if fAlgorithmWindowCombo <> nil then
+    fAlgorithmWindowCombo.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmZeroPadCheck <> nil then
+    fAlgorithmZeroPadCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmIntegrationGroup <> nil then
+    fAlgorithmIntegrationGroup.OnClick := @fAlgorithmFftParamChange;
+  if Cfg <> nil then
+    Cfg.OnKeyDown := @fCfgKeyDown;
   if fAlgorithmFftSizeEdit <> nil then
     fAlgorithmFftSizeEdit.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmSampleRateEdit <> nil then
@@ -902,6 +922,8 @@ begin
     fAlgorithmAhCorrectionCheck.Checked := lSettings.AhCorrectionEnabled;
   if fAlgorithmIntegrationGroup <> nil then
     fAlgorithmIntegrationGroup.ItemIndex := Ord(lSettings.IntegrationMode);
+  if Cfg <> nil then
+    Cfg.Text := lSettings.AsString;
   UpdateAlgorithmDerivedControls;
 end;
 
@@ -909,40 +931,26 @@ procedure TRecorderSettingsDialog.StoreSelectedAlgorithmSettings;
 var
   lNode: TRecorderSpectrumConfigNode;
   lSettings: TRecorderSpectrumSettings;
-  lInt: Integer;
 begin
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
 
   lSettings := lNode.Settings;
-  if (fAlgorithmFftSizeEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lInt) then
-    lSettings.FFTSize := lInt;
-  if (fAlgorithmOverlapEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmOverlapEdit.Text), lInt) then
-    lSettings.Overlap := lInt;
-  if fAlgorithmSampleRateEdit <> nil then
-    lSettings.SampleRateHz := ReadFloatEdit(fAlgorithmSampleRateEdit,
-      lSettings.SampleRateHz);
-  if (fAlgorithmAverageBlocksEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmAverageBlocksEdit.Text), lInt) then
-    lSettings.AverageBlockCount := lInt;
-  if (fAlgorithmOverlapCombo <> nil) and (fAlgorithmOverlapCombo.ItemIndex >= 0) then
-    lSettings.OverlapMode := TRecorderSpectrumOverlapMode(
-      fAlgorithmOverlapCombo.ItemIndex);
-  if (fAlgorithmWindowCombo <> nil) and (fAlgorithmWindowCombo.ItemIndex >= 0) then
-    lSettings.WindowKind := TRecorderSpectrumWindowKind(fAlgorithmWindowCombo.ItemIndex);
-  if fAlgorithmZeroPadCheck <> nil then
-    lSettings.ZeroPad := fAlgorithmZeroPadCheck.Checked;
-  if fAlgorithmAhCorrectionCheck <> nil then
-    lSettings.AhCorrectionEnabled := fAlgorithmAhCorrectionCheck.Checked;
-  if (fAlgorithmIntegrationGroup <> nil) and
-    (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
-    lSettings.IntegrationMode := TRecorderSpectrumIntegrationMode(
-      fAlgorithmIntegrationGroup.ItemIndex);
-  lSettings.NormalizeMode := snmNone;
+  if (Cfg <> nil) and (Cfg.Text <> '') then
+  begin
+    try
+      lSettings.FromString(Cfg.Text);
+      lSettings.Validate;
+      lNode.Settings := lSettings;
+      LoadSelectedAlgorithmSettings;
+      Exit;
+    except
+      // Ignore parsing error and read from input controls
+    end;
+  end;
 
+  lSettings := GetSettingsFromControls(lSettings);
   lSettings.Validate;
   lNode.Settings := lSettings;
   UpdateAlgorithmDerivedControls;
@@ -971,6 +979,144 @@ begin
   end
   else
     fAlgorithmPortionLabel.Caption := 'порция: - с';
+
+  UpdateConfigStr;
+end;
+
+procedure TRecorderSettingsDialog.DeleteSelectedAlgorithms;
+var
+  lNodeList: TList;
+  lSelectedNode: TTreeNode;
+  lObj: TObject;
+  lBinding: TRecorderSpectrumTagBinding;
+  lParentNode: TRecorderSpectrumConfigNode;
+  I, J: Integer;
+begin
+  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.SelectionCount = 0) then
+    Exit;
+
+  lNodeList := TList.Create;
+  try
+    for I := 0 to fAlgorithmsTree.SelectionCount - 1 do
+      lNodeList.Add(fAlgorithmsTree.Selections[I]);
+
+    fAlgorithmsTree.Items.BeginUpdate;
+    try
+      // First delete channel bindings (TRecorderSpectrumTagBinding)
+      for I := 0 to lNodeList.Count - 1 do
+      begin
+        lSelectedNode := TTreeNode(lNodeList[I]);
+        if lSelectedNode.Data = nil then
+          Continue;
+        lObj := TObject(lSelectedNode.Data);
+        if lObj is TRecorderSpectrumTagBinding then
+        begin
+          lBinding := TRecorderSpectrumTagBinding(lObj);
+          lParentNode := nil;
+          if (lSelectedNode.Parent <> nil) and (TObject(lSelectedNode.Parent.Data) is TRecorderSpectrumConfigNode) then
+            lParentNode := TRecorderSpectrumConfigNode(lSelectedNode.Parent.Data);
+
+          if lParentNode <> nil then
+          begin
+            for J := lParentNode.BindingCount - 1 downto 0 do
+              if lParentNode.Bindings[J] = lBinding then
+              begin
+                lParentNode.DeleteBinding(J);
+                Break;
+              end;
+          end;
+        end;
+      end;
+
+      // Then delete algorithms themselves (TRecorderSpectrumConfigNode)
+      for I := 0 to lNodeList.Count - 1 do
+      begin
+        lSelectedNode := TTreeNode(lNodeList[I]);
+        if lSelectedNode.Data = nil then
+          Continue;
+        lObj := TObject(lSelectedNode.Data);
+        if lObj is TRecorderSpectrumConfigNode then
+        begin
+          for J := fSpectrumConfigTree.NodeCount - 1 downto 0 do
+            if fSpectrumConfigTree.Nodes[J] = lObj then
+            begin
+              fSpectrumConfigTree.DeleteNode(J);
+              Break;
+            end;
+        end;
+      end;
+    finally
+      fAlgorithmsTree.Items.EndUpdate;
+    end;
+  finally
+    lNodeList.Free;
+  end;
+
+  PopulateAlgorithmsTree;
+end;
+
+function TRecorderSettingsDialog.GetSettingsFromControls(
+  const ACurrent: TRecorderSpectrumSettings): TRecorderSpectrumSettings;
+var
+  lInt: Integer;
+begin
+  Result := ACurrent;
+  if (fAlgorithmFftSizeEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lInt) then
+    Result.FFTSize := lInt;
+  if (fAlgorithmOverlapEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmOverlapEdit.Text), lInt) then
+    Result.Overlap := lInt;
+  if fAlgorithmSampleRateEdit <> nil then
+    Result.SampleRateHz := ReadFloatEdit(fAlgorithmSampleRateEdit, Result.SampleRateHz);
+  if (fAlgorithmAverageBlocksEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmAverageBlocksEdit.Text), lInt) then
+    Result.AverageBlockCount := lInt;
+  if (fAlgorithmOverlapCombo <> nil) and (fAlgorithmOverlapCombo.ItemIndex >= 0) then
+    Result.OverlapMode := TRecorderSpectrumOverlapMode(fAlgorithmOverlapCombo.ItemIndex);
+  if (fAlgorithmWindowCombo <> nil) and (fAlgorithmWindowCombo.ItemIndex >= 0) then
+    Result.WindowKind := TRecorderSpectrumWindowKind(fAlgorithmWindowCombo.ItemIndex);
+  if fAlgorithmZeroPadCheck <> nil then
+    Result.ZeroPad := fAlgorithmZeroPadCheck.Checked;
+  if fAlgorithmAhCorrectionCheck <> nil then
+    Result.AhCorrectionEnabled := fAlgorithmAhCorrectionCheck.Checked;
+  if (fAlgorithmIntegrationGroup <> nil) and
+    (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
+    Result.IntegrationMode := TRecorderSpectrumIntegrationMode(fAlgorithmIntegrationGroup.ItemIndex);
+  Result.NormalizeMode := snmNone;
+end;
+
+procedure TRecorderSettingsDialog.UpdateConfigStr;
+var
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+begin
+  lNode := SelectedSpectrumConfigNode;
+  if lNode = nil then
+    Exit;
+  lSettings := GetSettingsFromControls(lNode.Settings);
+  if Cfg <> nil then
+    Cfg.Text := lSettings.AsString;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmsTreeKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_DELETE then
+  begin
+    DeleteSelectedAlgorithms;
+    Key := 0;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fCfgKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    btnAlgorithmConfigClick(Sender);
+    Key := 0;
+  end;
 end;
 
 { Marks signals already represented in registry. Name matches relink existing tags
@@ -2216,39 +2362,8 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmRemoveClick(Sender: TObject);
-var
-  lSelected: TTreeNode;
-  lParentNode: TRecorderSpectrumConfigNode;
-  lBinding: TRecorderSpectrumTagBinding;
-  I: Integer;
 begin
-  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.Selected = nil) then
-    Exit;
-
-  lSelected := fAlgorithmsTree.Selected;
-  if TObject(lSelected.Data) is TRecorderSpectrumTagBinding then
-  begin
-    lBinding := TRecorderSpectrumTagBinding(lSelected.Data);
-    lParentNode := SelectedSpectrumConfigNode;
-    if lParentNode <> nil then
-      for I := lParentNode.BindingCount - 1 downto 0 do
-        if lParentNode.Bindings[I] = lBinding then
-        begin
-          lParentNode.DeleteBinding(I);
-          Break;
-        end;
-  end
-  else if TObject(lSelected.Data) is TRecorderSpectrumConfigNode then
-  begin
-    for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
-      if fSpectrumConfigTree.Nodes[I] = TObject(lSelected.Data) then
-      begin
-        fSpectrumConfigTree.DeleteNode(I);
-        Break;
-      end;
-  end;
-
-  PopulateAlgorithmsTree;
+  DeleteSelectedAlgorithms;
 end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmConfigClick(Sender: TObject);
