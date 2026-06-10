@@ -1,11 +1,8 @@
 unit uPeakFrm;
-
 interface
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, StdCtrls, ExtCtrls, uStringGridExt;
-
 type
   TPeakFrm = class(TForm)
     DebugPanel: TPanel;
@@ -41,21 +38,15 @@ type
     { Public declarations }
     procedure ShowFRFPeaks(AFRFFrm: TObject);
   end;
-
 function EvalFRFPeaks(AFRFFrm, ASignal: TObject; AShowMessages: Boolean;
   ADebugLog: Boolean = false): Boolean;
-
 var
   PeakFrm: TPeakFrm;
-
 implementation
-
 uses
   MathFunction, u2DMath, uBuffTrend1d, uCommonMath, uCommonTypes,
   uEvalFRFFrm, uBladeDB, uBladeReport, uSpmBand, uLogFile;
-
 {$R *.dfm}
-
 const
   cPeakColFreq = 0;
   cPeakColValue = 1;
@@ -64,7 +55,6 @@ const
   cNearBandTolPercent = 10;
   cPeakDebugLogLimit = 200;
   cDefaultBandRatioLimit = 0.2;
-
 procedure ClearBandExtremums(AList: TList);
 var
   i: integer;
@@ -75,7 +65,6 @@ begin
     cExtremum(AList.Items[i]).destroy;
   AList.Clear;
 end;
-
 function EvalFRFPeaks(AFRFFrm, ASignal: TObject; AShowMessages: Boolean;
   ADebugLog: Boolean = false): Boolean;
 var
@@ -95,12 +84,10 @@ var
   v, vf, f1, f2, tol, absTol, mainF, trigLevel, lowLevel, dx: double;
   zoneMax: double;
   inZone, armed: boolean;
-
   function GetXByInd(AIndex: integer): double;
   begin
     result := AIndex * dx;
   end;
-
   procedure DebugLog(const AText: string);
   begin
     if not ADebugLog then
@@ -109,7 +96,6 @@ var
       g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
     logMessage(AText);
   end;
-
   function PeakExists(AIndex: integer): boolean;
   var
     n: integer;
@@ -126,20 +112,17 @@ var
       end;
     end;
   end;
-
   procedure AddPeak(AIndex, AZoneStart, AZoneEnd: integer);
   var
     bandIndex: integer;
   begin
     if (AIndex <= 0) or (AIndex >= length(d)) or PeakExists(AIndex) then
       exit;
-
     BandExtr := cExtremum.create;
     s.m_BandExtremums.Add(BandExtr);
     BandExtr.Index := AIndex;
     BandExtr.Value := d[AIndex];
     BandExtr.Freq := GetXByInd(AIndex);
-
     for bandIndex := 0 to f.m_bands.Count - 1 do
     begin
       b := f.m_bands.getband(bandIndex);
@@ -156,7 +139,6 @@ var
       end;
     end;
     prevExtr := BandExtr;
-
     BandExtr.decrement := -1;
     v := BandExtr.Value * 0.5;
     k := AIndex;
@@ -169,7 +151,6 @@ var
       p2.x := GetXByInd(AIndex);
       p2.y := d[AIndex];
       f1 := EvalLineX(v, p1, p2);
-
       k := AIndex;
       while (k < high(d)) and (d[k] > v) do
         inc(k);
@@ -183,7 +164,6 @@ var
           BandExtr.decrement := (f2 - f1) / vf;
       end;
     end;
-
     inc(debugPeakCount);
     if debugLoggedCount < cPeakDebugLogLimit then
     begin
@@ -204,7 +184,6 @@ var
         ';band=' + inttostr(BandExtr.BandNum));
     end;
   end;
-
 begin
   result := false;
   f := TFRFFrm(AFRFFrm);
@@ -227,11 +206,9 @@ begin
   end;
   if AShowMessages and (PeakFrm <> nil) then
     PeakFrm.SetTrigStatus('', clBtnFace);
-
   dx := cfg.fspmdx;
   if dx <= 0 then
     exit;
-
   debugPeakCount := 0;
   debugLoggedCount := 0;
   debugSource := 'line';
@@ -265,19 +242,16 @@ begin
   end;
   if length(d) < 3 then
     exit;
-
   if g_mbase <> nil then
     bl := g_mbase.SelectBlade
   else
     bl := nil;
-
   b := f.m_bands.getband(f.m_bands.Count - 1);
   maxIndex := trunc(b.m_f2 / dx);
   if maxIndex >= high(d) then
     maxIndex := high(d) - 1;
   if maxIndex <= 1 then
     exit;
-
   // CODEx DEBUG: временный заголовок блока расчета, убрать после разбора лишних/пропавших пиков.
   DebugLog('PEAK_DEBUG BEGIN;time=' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
     ';src=' + debugSource +
@@ -292,12 +266,10 @@ begin
     ';len=' + inttostr(length(d)) +
     ';maxIndex=' + inttostr(maxIndex) +
     ';maxFreq=' + floattostr(GetXByInd(maxIndex)));
-
   lowLevel := 0.95 * trigLevel;
   // CODEx DEBUG: временный лог параметров гистерезиса, убрать после разбора лишних/пропавших пиков.
   DebugLog('PEAK_DEBUG HYST;hi=' + floattostr(trigLevel) +
     ';lo=' + floattostr(lowLevel));
-
   ClearBandExtremums(s.m_BandExtremums);
   prevExtr := nil;
   inZone := false;
@@ -377,7 +349,6 @@ begin
       ';tableCount=0');
     exit;
   end;
-
   if bl <> nil then
     tol := bl.GetTolerance(0)
   else
@@ -405,7 +376,6 @@ begin
     ';tableCount=' + inttostr(s.m_BandExtremums.Count));
   result := true;
 end;
-
 function TPeakFrm.GetRatioLimit: double;
 var
   s: string;
@@ -428,7 +398,6 @@ begin
   if result > 1 then
     result := 1;
 end;
-
 function TPeakFrm.CalcBandValueRatio(AExtremums: TList): boolean;
 var
   i, count, bandIndex: integer;
@@ -481,7 +450,6 @@ begin
   FBandRatioBlocked := FBandRatio < GetRatioLimit;
   result := true;
 end;
-
 procedure TPeakFrm.UpdateRatioStatus;
 var
   limit: double;
@@ -594,7 +562,6 @@ begin
   end;
   UpdateBandStatus(AExtremums);
 end;
-
 function TPeakFrm.IsAllBandsFound(AExtremums: TList): boolean;
 var
   i, j: integer;
@@ -659,7 +626,6 @@ begin
     end;
   end;
 end;
-
 procedure TPeakFrm.DebugLogBtnClick(Sender: TObject);
 var
   f: TFRFFrm;
@@ -675,7 +641,6 @@ begin
   EvalFRFPeaks(f, s, true, true);
   FillGrid(s.m_BandExtremums);
 end;
-
 procedure TPeakFrm.ProfileSGDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
@@ -688,7 +653,6 @@ begin
   extr := cExtremum(ProfileSG.Objects[ACol, ARow]);
   if extr = nil then
     exit;
-
   if extr.BandNum >= 0 then
     ProfileSG.Canvas.Brush.Color := RGB(181, 220, 150)
   else
@@ -705,7 +669,6 @@ begin
   InflateRect(Rect, -2, 0);
   DrawText(ProfileSG.Canvas.Handle, PChar(s), length(s), Rect, flags);
 end;
-
 procedure TPeakFrm.RatioLimitEditChange(Sender: TObject);
 var
   f: TFRFFrm;
@@ -732,7 +695,6 @@ begin
   else
     TrigStatusLabel.Font.Color := clWindowText;
 end;
-
 procedure TPeakFrm.ShowFRFPeaks(AFRFFrm: TObject);
 var
   f: TFRFFrm;
@@ -756,5 +718,4 @@ begin
   FillGrid(s.m_BandExtremums);
   show;
 end;
-
 end.
