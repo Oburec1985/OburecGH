@@ -53,6 +53,7 @@ type
     btnAlgorithmConfig: TBitBtn;                // Применить параметры FFT-узла
     btnFrequencyBands: TBitBtn;                 // Настроить частотные полосы
     fAlgorithmFftSizeEdit: TEdit;               // Размер FFT
+    fAlgorithmFftSizeUpDown: TUpDown;           // Стрелочки изменения размера FFT
     fAlgorithmSampleRateEdit: TEdit;            // Частота опроса
     fAlgorithmPortionLabel: TLabel;             // Размер порции в секундах
     fAlgorithmAverageBlocksEdit: TEdit;         // Количество блоков усреднения
@@ -63,6 +64,7 @@ type
     fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
     fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
     fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
+    Cfg: TEdit;
 
     // Поля ввода общих настроек
     fScreenUpdateEdit: TEdit;                   // Период обновления экрана (сек)
@@ -130,6 +132,10 @@ type
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
   private
     fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
@@ -144,6 +150,16 @@ type
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
+    fCanDrag: Boolean;
+    fDragStartPt: TPoint;
+    fDragSelectActive: Boolean;
+    fDragSelectStart: TPoint;
+    fDragSelectEnd: TPoint;
+    fSelectingGrid: TStringGrid;
+    fSavedSelection: TGridRect;
+    procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure GridPaint(Sender: TObject);
     
     // Вспомогательные методы работы с Mera-сигналами
     procedure AddMeraSignal(ASignal: TMeraSignalInfo);
@@ -185,6 +201,9 @@ type
     procedure LoadSelectedAlgorithmSettings;
     procedure StoreSelectedAlgorithmSettings;
     procedure UpdateAlgorithmDerivedControls;
+    procedure DeleteSelectedAlgorithms;
+    function GetSettingsFromControls(const ACurrent: TRecorderSpectrumSettings): TRecorderSpectrumSettings;
+    procedure UpdateConfigStr;
     procedure SetGridHeaders;
     procedure ToggleHardwareSignal(ANode: TTreeNode);
     procedure SetRunSettings(AValue: TRecorderRunControlSettings);
@@ -398,13 +417,37 @@ begin
   begin
     fSelectedChannelsGrid.OnDblClick := @fSelectedChannelsGridDblClick;
     fSelectedChannelsGrid.OnMouseDown := @fSelectedChannelsGridMouseDown;
-    fSelectedChannelsGrid.DragMode := dmAutomatic;
+    fSelectedChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
+    fSelectedChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
+    fSelectedChannelsGrid.OnPaint := @GridPaint;
+    fSelectedChannelsGrid.DragMode := dmManual;
+  end;
+
+  if fAvailableChannelsGrid <> nil then
+  begin
+    fAvailableChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
+    fAvailableChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
+    fAvailableChannelsGrid.OnPaint := @GridPaint;
+    fAvailableChannelsGrid.DragMode := dmManual;
   end;
   if fAlgorithmsTree <> nil then
   begin
     fAlgorithmsTree.Images := fDeviceImageList;
     fAlgorithmsTree.ImagesWidth := 16;
   end;
+  if fAlgorithmsTree <> nil then
+  begin
+    fAlgorithmsTree.Options := fAlgorithmsTree.Options + [tvoAllowMultiselect];
+    fAlgorithmsTree.OnKeyDown := @fAlgorithmsTreeKeyDown;
+  end;
+  if fAlgorithmWindowCombo <> nil then
+    fAlgorithmWindowCombo.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmZeroPadCheck <> nil then
+    fAlgorithmZeroPadCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmIntegrationGroup <> nil then
+    fAlgorithmIntegrationGroup.OnClick := @fAlgorithmFftParamChange;
+  if Cfg <> nil then
+    Cfg.OnKeyDown := @fCfgKeyDown;
   if fAlgorithmFftSizeEdit <> nil then
     fAlgorithmFftSizeEdit.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmSampleRateEdit <> nil then
@@ -881,6 +924,8 @@ begin
     fAlgorithmAhCorrectionCheck.Checked := lSettings.AhCorrectionEnabled;
   if fAlgorithmIntegrationGroup <> nil then
     fAlgorithmIntegrationGroup.ItemIndex := Ord(lSettings.IntegrationMode);
+  if Cfg <> nil then
+    Cfg.Text := lSettings.AsString;
   UpdateAlgorithmDerivedControls;
 end;
 
@@ -888,40 +933,26 @@ procedure TRecorderSettingsDialog.StoreSelectedAlgorithmSettings;
 var
   lNode: TRecorderSpectrumConfigNode;
   lSettings: TRecorderSpectrumSettings;
-  lInt: Integer;
 begin
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
 
   lSettings := lNode.Settings;
-  if (fAlgorithmFftSizeEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lInt) then
-    lSettings.FFTSize := lInt;
-  if (fAlgorithmOverlapEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmOverlapEdit.Text), lInt) then
-    lSettings.Overlap := lInt;
-  if fAlgorithmSampleRateEdit <> nil then
-    lSettings.SampleRateHz := ReadFloatEdit(fAlgorithmSampleRateEdit,
-      lSettings.SampleRateHz);
-  if (fAlgorithmAverageBlocksEdit <> nil) and
-    TryStrToInt(Trim(fAlgorithmAverageBlocksEdit.Text), lInt) then
-    lSettings.AverageBlockCount := lInt;
-  if (fAlgorithmOverlapCombo <> nil) and (fAlgorithmOverlapCombo.ItemIndex >= 0) then
-    lSettings.OverlapMode := TRecorderSpectrumOverlapMode(
-      fAlgorithmOverlapCombo.ItemIndex);
-  if (fAlgorithmWindowCombo <> nil) and (fAlgorithmWindowCombo.ItemIndex >= 0) then
-    lSettings.WindowKind := TRecorderSpectrumWindowKind(fAlgorithmWindowCombo.ItemIndex);
-  if fAlgorithmZeroPadCheck <> nil then
-    lSettings.ZeroPad := fAlgorithmZeroPadCheck.Checked;
-  if fAlgorithmAhCorrectionCheck <> nil then
-    lSettings.AhCorrectionEnabled := fAlgorithmAhCorrectionCheck.Checked;
-  if (fAlgorithmIntegrationGroup <> nil) and
-    (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
-    lSettings.IntegrationMode := TRecorderSpectrumIntegrationMode(
-      fAlgorithmIntegrationGroup.ItemIndex);
-  lSettings.NormalizeMode := snmNone;
+  if (Cfg <> nil) and (Cfg.Text <> '') then
+  begin
+    try
+      lSettings.FromString(Cfg.Text);
+      lSettings.Validate;
+      lNode.Settings := lSettings;
+      LoadSelectedAlgorithmSettings;
+      Exit;
+    except
+      // Ignore parsing error and read from input controls
+    end;
+  end;
 
+  lSettings := GetSettingsFromControls(lSettings);
   lSettings.Validate;
   lNode.Settings := lSettings;
   UpdateAlgorithmDerivedControls;
@@ -950,6 +981,204 @@ begin
   end
   else
     fAlgorithmPortionLabel.Caption := 'порция: - с';
+
+  UpdateConfigStr;
+end;
+
+procedure TRecorderSettingsDialog.DeleteSelectedAlgorithms;
+var
+  lNodeList: TList;
+  lSelectedNode: TTreeNode;
+  lObj: TObject;
+  lBinding: TRecorderSpectrumTagBinding;
+  lParentNode: TRecorderSpectrumConfigNode;
+  I, J: Integer;
+begin
+  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.SelectionCount = 0) then
+    Exit;
+
+  lNodeList := TList.Create;
+  try
+    for I := 0 to fAlgorithmsTree.SelectionCount - 1 do
+      lNodeList.Add(fAlgorithmsTree.Selections[I]);
+
+    fAlgorithmsTree.Items.BeginUpdate;
+    try
+      // First delete channel bindings (TRecorderSpectrumTagBinding)
+      for I := 0 to lNodeList.Count - 1 do
+      begin
+        lSelectedNode := TTreeNode(lNodeList[I]);
+        if lSelectedNode.Data = nil then
+          Continue;
+        lObj := TObject(lSelectedNode.Data);
+        if lObj is TRecorderSpectrumTagBinding then
+        begin
+          lBinding := TRecorderSpectrumTagBinding(lObj);
+          lParentNode := nil;
+          if (lSelectedNode.Parent <> nil) and (TObject(lSelectedNode.Parent.Data) is TRecorderSpectrumConfigNode) then
+            lParentNode := TRecorderSpectrumConfigNode(lSelectedNode.Parent.Data);
+
+          if lParentNode <> nil then
+          begin
+            for J := lParentNode.BindingCount - 1 downto 0 do
+              if lParentNode.Bindings[J] = lBinding then
+              begin
+                lParentNode.DeleteBinding(J);
+                Break;
+              end;
+          end;
+        end;
+      end;
+
+      // Then delete algorithms themselves (TRecorderSpectrumConfigNode)
+      for I := 0 to lNodeList.Count - 1 do
+      begin
+        lSelectedNode := TTreeNode(lNodeList[I]);
+        if lSelectedNode.Data = nil then
+          Continue;
+        lObj := TObject(lSelectedNode.Data);
+        if lObj is TRecorderSpectrumConfigNode then
+        begin
+          for J := fSpectrumConfigTree.NodeCount - 1 downto 0 do
+            if fSpectrumConfigTree.Nodes[J] = lObj then
+            begin
+              fSpectrumConfigTree.DeleteNode(J);
+              Break;
+            end;
+        end;
+      end;
+    finally
+      fAlgorithmsTree.Items.EndUpdate;
+    end;
+  finally
+    lNodeList.Free;
+  end;
+
+  PopulateAlgorithmsTree;
+end;
+
+function TRecorderSettingsDialog.GetSettingsFromControls(
+  const ACurrent: TRecorderSpectrumSettings): TRecorderSpectrumSettings;
+var
+  lInt: Integer;
+begin
+  Result := ACurrent;
+  if (fAlgorithmFftSizeEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lInt) then
+    Result.FFTSize := lInt;
+  if (fAlgorithmOverlapEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmOverlapEdit.Text), lInt) then
+    Result.Overlap := lInt;
+  if fAlgorithmSampleRateEdit <> nil then
+    Result.SampleRateHz := ReadFloatEdit(fAlgorithmSampleRateEdit, Result.SampleRateHz);
+  if (fAlgorithmAverageBlocksEdit <> nil) and
+    TryStrToInt(Trim(fAlgorithmAverageBlocksEdit.Text), lInt) then
+    Result.AverageBlockCount := lInt;
+  if (fAlgorithmOverlapCombo <> nil) and (fAlgorithmOverlapCombo.ItemIndex >= 0) then
+    Result.OverlapMode := TRecorderSpectrumOverlapMode(fAlgorithmOverlapCombo.ItemIndex);
+  if (fAlgorithmWindowCombo <> nil) and (fAlgorithmWindowCombo.ItemIndex >= 0) then
+    Result.WindowKind := TRecorderSpectrumWindowKind(fAlgorithmWindowCombo.ItemIndex);
+  if fAlgorithmZeroPadCheck <> nil then
+    Result.ZeroPad := fAlgorithmZeroPadCheck.Checked;
+  if fAlgorithmAhCorrectionCheck <> nil then
+    Result.AhCorrectionEnabled := fAlgorithmAhCorrectionCheck.Checked;
+  if (fAlgorithmIntegrationGroup <> nil) and
+    (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
+    Result.IntegrationMode := TRecorderSpectrumIntegrationMode(fAlgorithmIntegrationGroup.ItemIndex);
+  Result.NormalizeMode := snmNone;
+end;
+
+procedure TRecorderSettingsDialog.UpdateConfigStr;
+var
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+begin
+  lNode := SelectedSpectrumConfigNode;
+  if lNode = nil then
+    Exit;
+  lSettings := GetSettingsFromControls(lNode.Settings);
+  if Cfg <> nil then
+    Cfg.Text := lSettings.AsString;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmsTreeKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_DELETE then
+  begin
+    DeleteSelectedAlgorithms;
+    Key := 0;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fCfgKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+  begin
+    btnAlgorithmConfigClick(Sender);
+    Key := 0;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
+  function NextPowerOfTwo(AValue: Integer): Integer;
+  begin
+    Result := 1;
+    while Result <= AValue do
+      Result := Result * 2;
+  end;
+  function PreviousPowerOfTwo(AValue: Integer): Integer;
+  begin
+    if AValue <= 2 then
+    begin
+      Result := 2;
+      Exit;
+    end;
+    Result := 1;
+    while Result < AValue do
+      Result := Result * 2;
+    Result := Result div 2;
+  end;
+  function IsPowerOfTwoVal(AValue: Integer): Boolean;
+  begin
+    Result := (AValue > 0) and ((AValue and (AValue - 1)) = 0);
+  end;
+var
+  lVal: Integer;
+begin
+  if fAlgorithmFftSizeEdit = nil then
+    Exit;
+
+  if not TryStrToInt(Trim(fAlgorithmFftSizeEdit.Text), lVal) then
+    lVal := 8192;
+
+  if lVal < 2 then
+    lVal := 2;
+
+  if Button = btNext then
+  begin
+    if lVal < 1048576 then
+    begin
+      if not IsPowerOfTwoVal(lVal) then
+        lVal := NextPowerOfTwo(lVal)
+      else
+        lVal := lVal * 2;
+    end;
+  end
+  else
+  begin
+    if lVal > 2 then
+    begin
+      if not IsPowerOfTwoVal(lVal) then
+        lVal := PreviousPowerOfTwo(lVal)
+      else
+        lVal := lVal div 2;
+    end;
+  end;
+
+  fAlgorithmFftSizeEdit.Text := IntToStr(lVal);
+  fAlgorithmFftParamChange(fAlgorithmFftSizeEdit);
 end;
 
 { Marks signals already represented in registry. Name matches relink existing tags
@@ -994,7 +1223,7 @@ begin
   for I := 0 to fMeraSignals.Count - 1 do
   begin
     lSignal := TMeraSignalInfo(fMeraSignals[I]);
-    if not SignalHasLinkedTag(lSignal) then
+    if not lSignal.Selected then
       Continue;
 
     lTag := FindTagBySourceAddress(lSourceId, lSignal.Address);
@@ -2053,15 +2282,114 @@ end;
 procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
+  lGrid: TStringGrid;
   lCol: LongInt;
   lRow: LongInt;
 begin
-  if (Button <> mbLeft) or (fSelectedChannelsGrid = nil) then
+  lGrid := TStringGrid(Sender);
+  if (Button <> mbLeft) or (lGrid = nil) then
     Exit;
 
-  fSelectedChannelsGrid.MouseToCell(X, Y, lCol, lRow);
+  lGrid.MouseToCell(X, Y, lCol, lRow);
   if lRow = 0 then
-    SortSelectedChannelsByColumn(lCol);
+  begin
+    if lGrid = fSelectedChannelsGrid then
+      SortSelectedChannelsByColumn(lCol);
+    Exit;
+  end;
+
+  if (lRow >= lGrid.Selection.Top) and (lRow <= lGrid.Selection.Bottom) then
+  begin
+    fCanDrag := True;
+    fDragStartPt := Point(X, Y);
+    fDragSelectActive := False;
+    fSavedSelection := lGrid.Selection;
+  end
+  else
+  begin
+    fDragSelectActive := True;
+    fDragSelectStart := Point(X, Y);
+    fDragSelectEnd := Point(X, Y);
+    fSelectingGrid := lGrid;
+    fCanDrag := False;
+    lGrid.Selection := TGridRect(Rect(0, lRow, lGrid.ColCount - 1, lRow));
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  lGrid: TStringGrid;
+  lColStart, lRowStart, lColEnd, lRowEnd: LongInt;
+  lTemp: LongInt;
+begin
+  lGrid := TStringGrid(Sender);
+  if fCanDrag and (ssLeft in Shift) then
+  begin
+    if (Abs(X - fDragStartPt.X) > 5) or (Abs(Y - fDragStartPt.Y) > 5) then
+    begin
+      fCanDrag := False;
+      lGrid.Selection := fSavedSelection;
+      lGrid.BeginDrag(False);
+    end;
+    Exit;
+  end;
+
+  if fDragSelectActive and (fSelectingGrid = lGrid) and (ssLeft in Shift) then
+  begin
+    fDragSelectEnd := Point(X, Y);
+    lGrid.Invalidate;
+
+    lGrid.MouseToCell(fDragSelectStart.X, fDragSelectStart.Y, lColStart, lRowStart);
+    lGrid.MouseToCell(fDragSelectEnd.X, fDragSelectEnd.Y, lColEnd, lRowEnd);
+
+    if (lRowStart > 0) and (lRowEnd > 0) then
+    begin
+      if lRowStart > lRowEnd then
+      begin
+        lTemp := lRowStart;
+        lRowStart := lRowEnd;
+        lRowEnd := lTemp;
+      end;
+      if lRowStart < 1 then
+        lRowStart := 1;
+
+      lGrid.Selection := TGridRect(Rect(0, lRowStart, lGrid.ColCount - 1, lRowEnd));
+    end;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lGrid: TStringGrid;
+begin
+  lGrid := TStringGrid(Sender);
+  fCanDrag := False;
+  if fDragSelectActive and (fSelectingGrid = lGrid) then
+  begin
+    fDragSelectActive := False;
+    lGrid.Invalidate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.GridPaint(Sender: TObject);
+var
+  lGrid: TStringGrid;
+  lRect: TRect;
+begin
+  lGrid := TStringGrid(Sender);
+  if fDragSelectActive and (fSelectingGrid = lGrid) then
+  begin
+    lRect.Left := Min(fDragSelectStart.X, fDragSelectEnd.X);
+    lRect.Top := Min(fDragSelectStart.Y, fDragSelectEnd.Y);
+    lRect.Right := Max(fDragSelectStart.X, fDragSelectEnd.X);
+    lRect.Bottom := Max(fDragSelectStart.Y, fDragSelectEnd.Y);
+
+    lGrid.Canvas.Brush.Style := bsClear;
+    lGrid.Canvas.Pen.Color := clHighlight;
+    lGrid.Canvas.Pen.Style := psDash;
+    lGrid.Canvas.Pen.Width := 1;
+    lGrid.Canvas.Rectangle(lRect);
+  end;
 end;
 
 procedure TRecorderSettingsDialog.fAlgorithmsTreeChange(Sender: TObject;
@@ -2096,39 +2424,8 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmRemoveClick(Sender: TObject);
-var
-  lSelected: TTreeNode;
-  lParentNode: TRecorderSpectrumConfigNode;
-  lBinding: TRecorderSpectrumTagBinding;
-  I: Integer;
 begin
-  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.Selected = nil) then
-    Exit;
-
-  lSelected := fAlgorithmsTree.Selected;
-  if TObject(lSelected.Data) is TRecorderSpectrumTagBinding then
-  begin
-    lBinding := TRecorderSpectrumTagBinding(lSelected.Data);
-    lParentNode := SelectedSpectrumConfigNode;
-    if lParentNode <> nil then
-      for I := lParentNode.BindingCount - 1 downto 0 do
-        if lParentNode.Bindings[I] = lBinding then
-        begin
-          lParentNode.DeleteBinding(I);
-          Break;
-        end;
-  end
-  else if TObject(lSelected.Data) is TRecorderSpectrumConfigNode then
-  begin
-    for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
-      if fSpectrumConfigTree.Nodes[I] = TObject(lSelected.Data) then
-      begin
-        fSpectrumConfigTree.DeleteNode(I);
-        Break;
-      end;
-  end;
-
-  PopulateAlgorithmsTree;
+  DeleteSelectedAlgorithms;
 end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmConfigClick(Sender: TObject);
@@ -2208,7 +2505,7 @@ end;
 procedure TRecorderSettingsDialog.fAvailableChannelsGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  // Не начинать drag-and-drop здесь: TStringGrid использует MouseDown для выделения.
+  fSelectedChannelsGridMouseDown(Sender, Button, Shift, X, Y);
 end;
 
 { Drag and Drop доступного канала в активную сетку }
@@ -2216,15 +2513,31 @@ procedure TRecorderSettingsDialog.fSelectedChannelsGridDragDrop(Sender,
   Source: TObject; X, Y: Integer);
 var
   lSignal: TMeraSignalInfo;
+  lSelection: TGridRect;
+  lRow: Integer;
+  lTop: Integer;
+  lBottom: Integer;
 begin
   if Source <> fAvailableChannelsGrid then
     Exit;
 
-  lSignal := AvailableSignalByGridRow(fAvailableChannelsGrid.Row);
-  if lSignal = nil then
-    Exit;
+  lSelection := fAvailableChannelsGrid.Selection;
+  lTop := lSelection.Top;
+  lBottom := lSelection.Bottom;
+  if lTop > lBottom then
+  begin
+    lTop := lSelection.Bottom;
+    lBottom := lSelection.Top;
+  end;
 
-  lSignal.Selected := True;
+  for lRow := lBottom downto lTop do
+  begin
+    lSignal := AvailableSignalByGridRow(lRow);
+    if lSignal <> nil then
+      lSignal.Selected := True;
+  end;
+  CreateSelectedMeraTags;
+  MarkSignalsFromRegistry;
   PopulateChannelGrids;
 end;
 

@@ -68,6 +68,8 @@ type
     procedure Validate;
     function HopSize: Integer;
     function FrequencyStepHz: Double;
+    function AsString: string;
+    procedure FromString(const AValue: string);
   end;
 
   { A child tag binding inherits the parent settings unless UseOwnSettings is
@@ -288,6 +290,89 @@ begin
   WindowKind := swkHann;
   NormalizeMode := snmNone;
   KeepPhase := True;
+end;
+
+function TRecorderSpectrumSettings.AsString: string;
+var
+  lFS: TFormatSettings;
+begin
+  lFS := DefaultFormatSettings;
+  lFS.DecimalSeparator := '.';
+  Result := Format(
+    'FFTSize=%d,Overlap=%d,OverlapMode=%d,SampleRateHz=%s,AverageBlockCount=%d,ZeroPad=%d,' +
+    'AhCorrectionEnabled=%d,AhCorrectionProfileName=%s,IntegrationMode=%d,WindowKind=%d,NormalizeMode=%d,KeepPhase=%d',
+    [FFTSize, Overlap, Ord(OverlapMode), FloatToStr(SampleRateHz, lFS), AverageBlockCount, Ord(ZeroPad),
+     Ord(AhCorrectionEnabled), AhCorrectionProfileName, Ord(IntegrationMode),
+     Ord(WindowKind), Ord(NormalizeMode), Ord(KeepPhase)]);
+end;
+
+procedure TRecorderSpectrumSettings.FromString(const AValue: string);
+var
+  lList: TStringList;
+  I: Integer;
+  lKey, lVal: string;
+  lInt: Integer;
+  lFS: TFormatSettings;
+begin
+  SetDefaults;
+  if AValue = '' then
+    Exit;
+
+  lFS := DefaultFormatSettings;
+  lFS.DecimalSeparator := '.';
+  lList := TStringList.Create;
+  try
+    lList.Delimiter := ',';
+    lList.StrictDelimiter := True;
+    lList.DelimitedText := AValue;
+    for I := 0 to lList.Count - 1 do
+    begin
+      lKey := Trim(lList.Names[I]);
+      lVal := Trim(lList.ValueFromIndex[I]);
+      if SameText(lKey, 'FFTSize') then
+        FFTSize := StrToIntDef(lVal, FFTSize)
+      else if SameText(lKey, 'Overlap') then
+        Overlap := StrToIntDef(lVal, Overlap)
+      else if SameText(lKey, 'OverlapMode') then
+      begin
+        lInt := StrToIntDef(lVal, Ord(OverlapMode));
+        if (lInt >= Ord(Low(TRecorderSpectrumOverlapMode))) and (lInt <= Ord(High(TRecorderSpectrumOverlapMode))) then
+          OverlapMode := TRecorderSpectrumOverlapMode(lInt);
+      end
+      else if SameText(lKey, 'SampleRateHz') then
+        SampleRateHz := StrToFloatDef(lVal, SampleRateHz, lFS)
+      else if SameText(lKey, 'AverageBlockCount') then
+        AverageBlockCount := StrToIntDef(lVal, AverageBlockCount)
+      else if SameText(lKey, 'ZeroPad') then
+        ZeroPad := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'AhCorrectionEnabled') then
+        AhCorrectionEnabled := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'AhCorrectionProfileName') then
+        AhCorrectionProfileName := lVal
+      else if SameText(lKey, 'IntegrationMode') then
+      begin
+        lInt := StrToIntDef(lVal, Ord(IntegrationMode));
+        if (lInt >= Ord(Low(TRecorderSpectrumIntegrationMode))) and (lInt <= Ord(High(TRecorderSpectrumIntegrationMode))) then
+          IntegrationMode := TRecorderSpectrumIntegrationMode(lInt);
+      end
+      else if SameText(lKey, 'WindowKind') then
+      begin
+        lInt := StrToIntDef(lVal, Ord(WindowKind));
+        if (lInt >= Ord(Low(TRecorderSpectrumWindowKind))) and (lInt <= Ord(High(TRecorderSpectrumWindowKind))) then
+          WindowKind := TRecorderSpectrumWindowKind(lInt);
+      end
+      else if SameText(lKey, 'NormalizeMode') then
+      begin
+        lInt := StrToIntDef(lVal, Ord(NormalizeMode));
+        if (lInt >= Ord(Low(TRecorderSpectrumNormalizeMode))) and (lInt <= Ord(High(TRecorderSpectrumNormalizeMode))) then
+          NormalizeMode := TRecorderSpectrumNormalizeMode(lInt);
+      end
+      else if SameText(lKey, 'KeepPhase') then
+        KeepPhase := StrToIntDef(lVal, 0) <> 0;
+    end;
+  finally
+    lList.Free;
+  end;
 end;
 
 procedure TRecorderSpectrumSettings.Validate;

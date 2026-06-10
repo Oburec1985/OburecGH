@@ -19,11 +19,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="764"/>
-        <CursorPos X="51" Y="774"/>
+        <TopLine Value="762"/>
+        <CursorPos X="53" Y="785"/>
         <UsageCount Value="131"/>
         <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderStateMachine.pas"/>
@@ -144,10 +143,13 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="687"/>
-        <CursorPos X="49" Y="703"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="16"/>
+        <CursorPos X="72" Y="34"/>
         <UsageCount Value="109"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderFrequencyBandsDialog.pas"/>
@@ -157,8 +159,8 @@
       <Unit>
         <Filename Value="UI\uRecorderCommandImages.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="4"/>
-        <CursorPos X="48" Y="18"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="64" Y="14"/>
         <UsageCount Value="89"/>
         <Loaded Value="True"/>
       </Unit>
@@ -173,7 +175,6 @@
         <CursorPos X="33" Y="1202"/>
         <UsageCount Value="89"/>
         <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderDigitalPageView.pas"/>
@@ -343,22 +344,8 @@
         <CursorPos X="47" Y="13"/>
         <UsageCount Value="10"/>
       </Unit>
-      <Unit>
-        <Filename Value="..\OGlChartLaz\Test_component\unit1.pas"/>
-        <ComponentName Value="Form1"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-        <UnitName Value="Unit1"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="304"/>
-        <CursorPos X="33" Y="19"/>
-        <UsageCount Value="11"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
-      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="16">
+    <JumpHistory HistoryIndex="19">
       <Position>
         <Filename Value="Core\uRecorderTags.pas"/>
         <Caret Line="776" Column="64" TopLine="765"/>
@@ -424,6 +411,18 @@
       <Position>
         <Filename Value="UI\uTagSettingsDialog.pas"/>
         <Caret Line="710" Column="83" TopLine="695"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderCommandImages.pas"/>
+        <Caret Line="14" Column="64"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="153" Column="15" TopLine="143"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
+        <Caret Line="24" Column="71" TopLine="14"/>
       </Position>
     </JumpHistory>
     <RunParams>
