@@ -41,8 +41,7 @@ uses
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
-  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
-  uComponentServices;
+  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -384,7 +383,7 @@ begin
   // Создание контекстного меню для настройки каналов
   lPopupMenu := TPopupMenu.Create(Self);
   lMenuItem := TMenuItem.Create(lPopupMenu);
-  lMenuItem.Caption := LclText('Настроить выделенные каналы...');
+  lMenuItem.Caption := 'Настроить выделенные каналы...';
   lMenuItem.OnClick := @OnMenuEditSelectedTags;
   lPopupMenu.Items.Add(lMenuItem);
   lbTags.PopupMenu := lPopupMenu;
@@ -1792,14 +1791,14 @@ begin
   lbTags.Items.BeginUpdate;
   try
     lbTags.Items.Clear;
-    lFilter := LowerCase(Trim(LclText(AFilter)));
+    lFilter := LowerCase(Trim(AFilter));
 
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
       if (lFilter <> '') and
-        (Pos(lFilter, LowerCase(LclText(lTag.Name + ' ' + lTag.Address + ' ' +
-        lTag.Description))) = 0) then
+        (Pos(lFilter, LowerCase(lTag.Name + ' ' + lTag.Address + ' ' +
+        lTag.Description)) = 0) then
         Continue;
 
       lValue := fLatestTagValues.Values[lTag.Name];
@@ -1808,7 +1807,7 @@ begin
       if lValue = '' then
         lValue := '-';
 
-      lbTags.Items.AddObject(Format('%s     %s', [LclText(lTag.Name), LclText(lValue)]), lTag);
+      lbTags.Items.AddObject(Format('%s     %s', [lTag.Name, lValue]), lTag);
     end;
   finally
     lbTags.Items.EndUpdate;
