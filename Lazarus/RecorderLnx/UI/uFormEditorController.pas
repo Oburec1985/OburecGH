@@ -804,7 +804,8 @@ begin
             lChart := lVisualCtrl.GetChartControl;
             if lChart <> nil then
               lChart.MouseInputEnabled := not fEnabled;
-            lVisualCtrl.Configure(lComponent, fTagRegistry);
+            if fEnabled then
+              lVisualCtrl.Configure(lComponent, fTagRegistry);
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
           end;
 
@@ -1093,6 +1094,8 @@ procedure TFormEditorController.CanvasMouseUp(Sender: TObject;
 
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
+  if not fEnabled then
+    Exit;
   if Button <> mbLeft then
     Exit;
 

@@ -41,7 +41,8 @@ uses
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
-  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage, uRecorderSpectrumRuntime;
+  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
+  uRecorderSpectrumRuntime, uRecorderMic140DataSource;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -485,7 +486,7 @@ begin
   if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
     (fFormManager.ActivePage.Id = 'BasePage') then
     RefreshBaseOscillograms
-  else if fFormEditor <> nil then
+  else if (fFormEditor <> nil) and fFormEditor.Enabled then
     fFormEditor.Render;
 end;
 
@@ -1934,9 +1935,14 @@ end;
 procedure TMainForm.EnsureDemoDataSources;
 var
   I: Integer;
+  lChannelCount: Integer;
+  lChannelNumber: Integer;
   lFileIndex: Integer;
   lFileName: string;
   lFiles: TStringList;
+  lMicHost: string;
+  lMicPort: Word;
+  lMicSources: TStringList;
   lSource: IRecorderDataSource;
   lTag: TRecorderTag;
   lTagNames: TStringList;
@@ -1958,31 +1964,51 @@ begin
   fDataSourceManager.AddSource(lSource);
 
   lFiles := TStringList.Create;
+  lMicSources := TStringList.Create;
   try
     lFiles.CaseSensitive := False;
     lFiles.Sorted := False;
+    lMicSources.CaseSensitive := False;
+    lMicSources.Sorted := False;
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
-      if Pos(CMeraSourcePrefix, lTag.SourceId) <> 1 then
-        Continue;
-
-      lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
-      if lFileName = '' then
-        Continue;
-
-      lFileIndex := lFiles.IndexOf(lFileName);
-      if lFileIndex < 0 then
+      if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
       begin
-        lTagNames := TStringList.Create;
-        lTagNames.CaseSensitive := False;
-        lFileIndex := lFiles.AddObject(lFileName, lTagNames);
-      end
-      else
-        lTagNames := TStringList(lFiles.Objects[lFileIndex]);
+        lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+        if lFileName = '' then
+          Continue;
 
-      if lTagNames.IndexOf(lTag.Address) < 0 then
-        lTagNames.Add(lTag.Address);
+        lFileIndex := lFiles.IndexOf(lFileName);
+        if lFileIndex < 0 then
+        begin
+          lTagNames := TStringList.Create;
+          lTagNames.CaseSensitive := False;
+          lFileIndex := lFiles.AddObject(lFileName, lTagNames);
+        end
+        else
+          lTagNames := TStringList(lFiles.Objects[lFileIndex]);
+
+        if lTagNames.IndexOf(lTag.Address) < 0 then
+          lTagNames.Add(lTag.Address);
+      end
+      else if TryParseRecorderMic140SourceId(lTag.SourceId, lMicHost, lMicPort) then
+      begin
+        lFileIndex := lMicSources.IndexOf(lTag.SourceId);
+        if lFileIndex < 0 then
+        begin
+          lTagNames := TStringList.Create;
+          lTagNames.CaseSensitive := False;
+          lFileIndex := lMicSources.AddObject(lTag.SourceId, lTagNames);
+        end
+        else
+          lTagNames := TStringList(lMicSources.Objects[lFileIndex]);
+
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end;
     end;
 
     for I := 0 to lFiles.Count - 1 do
@@ -1994,12 +2020,31 @@ begin
       AddLog(Format('MERA playback source configured: %s (%d channels).',
         [ExtractFileName(lFiles[I]), lTagNames.Count]));
     end;
+
+    for I := 0 to lMicSources.Count - 1 do
+    begin
+      if not TryParseRecorderMic140SourceId(lMicSources[I], lMicHost, lMicPort) then
+        Continue;
+      lTagNames := TStringList(lMicSources.Objects[I]);
+      lChannelCount := MIC140DefaultChannelCount;
+      for lFileIndex := 0 to lTagNames.Count - 1 do
+        if TryStrToInt(lTagNames[lFileIndex], lChannelNumber) and
+          (lChannelNumber > lChannelCount) then
+          lChannelCount := MIC140MaxChannelCount;
+      lSource := TRecorderMic140DataSource.Create(lMicSources[I], lMicHost, lMicPort,
+        lChannelCount, MIC140DefaultPollFrequencyHz, lDataUpdateMs, lTagNames);
+      fDataSourceManager.AddSource(lSource);
+      AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
+        [lMicHost, lMicPort, lChannelCount]));
+    end;
   finally
     for I := 0 to lFiles.Count - 1 do
       lFiles.Objects[I].Free;
     lFiles.Free;
+    for I := 0 to lMicSources.Count - 1 do
+      lMicSources.Objects[I].Free;
+    lMicSources.Free;
   end;
-
   fDataSourceManager.ConfigureTagsAll(fTagRegistry);
   EnsureTagSignalBufferCapacities;
   fDataSourcesConfigured := True;

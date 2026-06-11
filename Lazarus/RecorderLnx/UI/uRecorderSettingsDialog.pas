@@ -26,7 +26,8 @@ uses
   ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
-  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog;
+  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
+  uRecorderMic140DataSource, uRecorderMic140SettingsDialog;
 
 type
   { TRecorderSettingsDialog }
@@ -189,6 +190,12 @@ type
     function MeraSourceId(const AFileName: string): string;
     procedure DeleteCurrentMeraSource;
     procedure ReloadCurrentMeraSource;
+    procedure HardwareAddSourceClick(Sender: TObject);
+    procedure HardwareSearchClick(Sender: TObject);
+    procedure AddMic140Source(const APresetHost: string = '');
+    function SelectedMic140SourceId: string;
+    procedure ConfigureMic140Source(const ASourceId: string);
+    procedure DeleteMic140Source(const ASourceId: string);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
     procedure HardwareEditSourceClick(Sender: TObject);
@@ -412,6 +419,14 @@ begin
 
   if FindComponent('btnWorkDirBrowse') is TButton then
     TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
+  if btnDeviceAdd <> nil then
+    btnDeviceAdd.OnClick := @HardwareAddSourceClick;
+  if FindComponent('btnDeviceDelete') is TBitBtn then
+    TBitBtn(FindComponent('btnDeviceDelete')).OnClick := @HardwareDeleteSourceClick;
+  if FindComponent('btnDeviceSetup') is TBitBtn then
+    TBitBtn(FindComponent('btnDeviceSetup')).OnClick := @HardwareEditSourceClick;
+  if FindComponent('btnDeviceSearch') is TBitBtn then
+    TBitBtn(FindComponent('btnDeviceSearch')).OnClick := @HardwareSearchClick;
 
   if fSelectedChannelsGrid <> nil then
   begin
@@ -1422,9 +1437,232 @@ begin
   PopulateChannelGrids;
 end;
 
+procedure TRecorderSettingsDialog.HardwareAddSourceClick(Sender: TObject);
+var
+  lButton: TButton;
+  lCombo: TComboBox;
+  lForm: TForm;
+begin
+  lForm := TForm.Create(Self);
+  try
+    lForm.Caption := 'Data source';
+    lForm.Position := poOwnerFormCenter;
+    lForm.BorderStyle := bsDialog;
+    lForm.Width := 320;
+    lForm.Height := 132;
+
+    lCombo := TComboBox.Create(lForm);
+    lCombo.Parent := lForm;
+    lCombo.Left := 16;
+    lCombo.Top := 16;
+    lCombo.Width := 280;
+    lCombo.Style := csDropDownList;
+    lCombo.Items.Add('MIC-140');
+    lCombo.Items.Add('Mera file');
+    lCombo.ItemIndex := 0;
+
+    lButton := TButton.Create(lForm);
+    lButton.Parent := lForm;
+    lButton.Left := 124;
+    lButton.Top := 58;
+    lButton.Width := 82;
+    lButton.Height := 28;
+    lButton.Caption := 'OK';
+    lButton.Default := True;
+    lButton.ModalResult := mrOk;
+
+    lButton := TButton.Create(lForm);
+    lButton.Parent := lForm;
+    lButton.Left := 214;
+    lButton.Top := 58;
+    lButton.Width := 82;
+    lButton.Height := 28;
+    lButton.Caption := 'Cancel';
+    lButton.Cancel := True;
+    lButton.ModalResult := mrCancel;
+
+    if lForm.ShowModal <> mrOk then
+      Exit;
+    if SameText(lCombo.Text, 'MIC-140') then
+      AddMic140Source
+    else
+      btnDeviceAddClick(Sender);
+  finally
+    lForm.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.HardwareSearchClick(Sender: TObject);
+var
+  lFound: TStringList;
+begin
+  lFound := TStringList.Create;
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      RecorderMic140Discover(lFound, MIC140DefaultDiscoverySubnet,
+        MIC140DefaultPort, 180);
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    if lFound.Count = 0 then
+    begin
+      MessageDlg('MIC-140', 'Device not found in 192.168.14.0/24',
+        mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    AddMic140Source(lFound[0]);
+  finally
+    lFound.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.AddMic140Source(const APresetHost: string);
+var
+  lSourceId: string;
+begin
+  if APresetHost <> '' then
+    lSourceId := RecorderMic140SourceId(APresetHost, MIC140DefaultPort)
+  else
+    lSourceId := '';
+  ConfigureMic140Source(lSourceId);
+end;
+
+function TRecorderSettingsDialog.SelectedMic140SourceId: string;
+var
+  lHost: string;
+  lNode: TTreeNode;
+  lPort: Word;
+  lTag: TRecorderTag;
+begin
+  Result := '';
+  if fHardwareTree <> nil then
+  begin
+    lNode := fHardwareTree.Selected;
+    while lNode <> nil do
+    begin
+      if TObject(lNode.Data) is TRecorderTag then
+      begin
+        lTag := TRecorderTag(lNode.Data);
+        if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+          Exit(lTag.SourceId);
+      end;
+      if TryParseRecorderMic140SourceId(lNode.Text, lHost, lPort) then
+        Exit(RecorderMic140SourceId(lHost, lPort));
+      lNode := lNode.Parent;
+    end;
+  end;
+
+  if fSelectedChannelsGrid <> nil then
+  begin
+    lTag := SelectedTagByGridRow(fSelectedChannelsGrid.Row);
+    if (lTag <> nil) and TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+      Result := lTag.SourceId;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.ConfigureMic140Source(const ASourceId: string);
+var
+  I: Integer;
+  lAddress: string;
+  lCapacity: Integer;
+  lChannelNumber: Integer;
+  lHost: string;
+  lNewSourceId: string;
+  lPort: Word;
+  lResult: TRecorderMic140DialogResult;
+  lTag: TRecorderTag;
+  lTagName: string;
+begin
+  if fTagRegistry = nil then
+    Exit;
+
+  InitRecorderMic140DialogResult(lResult);
+  try
+    if TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+    begin
+      lResult.Host := lHost;
+      lResult.Port := lPort;
+      lResult.SelectedChannels.Clear;
+      for I := 0 to fTagRegistry.TagCount - 1 do
+      begin
+        lTag := fTagRegistry.Tags[I];
+        if SameText(lTag.SourceId, ASourceId) then
+        begin
+          lResult.SelectedChannels.Add(lTag.Address);
+          if TryStrToInt(lTag.Address, lChannelNumber) and
+            (lChannelNumber > lResult.ChannelCount) then
+            lResult.ChannelCount := MIC140MaxChannelCount;
+          if lTag.PollFrequencyHz > 0 then
+            lResult.PollFrequencyHz := lTag.PollFrequencyHz;
+        end;
+      end;
+    end;
+
+    if not ShowRecorderMic140SettingsDialog(Self, lResult) then
+      Exit;
+
+    lNewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
+    fTagRegistry.RegisterActiveSource(lNewSourceId);
+    lCapacity := Ceil(Max(4096, lResult.PollFrequencyHz));
+
+    for I := 0 to lResult.SelectedChannels.Count - 1 do
+    begin
+      lAddress := lResult.SelectedChannels[I];
+      lTag := FindTagBySourceAddress(lNewSourceId, lAddress);
+      if (lTag = nil) and (ASourceId <> '') then
+        lTag := FindTagBySourceAddress(ASourceId, lAddress);
+      if lTag = nil then
+      begin
+        lTagName := Format('MIC140_%2.2d', [StrToIntDef(lAddress, I + 1)]);
+        lTag := fTagRegistry.FindByName(lTagName);
+        if lTag = nil then
+          lTag := fTagRegistry.CreateTag(lTagName, lCapacity);
+      end;
+      lTag.SourceId := lNewSourceId;
+      lTag.Address := lAddress;
+      lTag.ModuleType := 'MIC-140';
+      lTag.PollFrequencyHz := lResult.PollFrequencyHz;
+      lTag.UnitName := '';
+      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz',
+        [lAddress, FormatFloat('0.######', lResult.PollFrequencyHz)]);
+      lTag.EnsureBufferCapacity(lCapacity);
+    end;
+
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+  finally
+    DoneRecorderMic140DialogResult(lResult);
+  end;
+end;
+
+procedure TRecorderSettingsDialog.DeleteMic140Source(const ASourceId: string);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  if (ASourceId = '') or (fTagRegistry = nil) then
+    Exit;
+  if MessageDlg('MIC-140', 'Remove source "' + ASourceId + '"?',
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  fTagRegistry.UnregisterActiveSource(ASourceId);
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if SameText(lTag.SourceId, ASourceId) then
+      lTag.SourceId := 'Detached: ' + ASourceId;
+  end;
+  PopulateHardwareTree;
+  PopulateChannelGrids;
+end;
+
 procedure TRecorderSettingsDialog.HardwareDeleteSourceClick(Sender: TObject);
 begin
-  DeleteCurrentMeraSource;
+  if SelectedMic140SourceId <> '' then
+    DeleteMic140Source(SelectedMic140SourceId)
+  else
+    DeleteCurrentMeraSource;
 end;
 
 procedure TRecorderSettingsDialog.HardwareReloadSourceClick(Sender: TObject);
@@ -1439,6 +1677,12 @@ var
   I: Integer;
   lTag: TRecorderTag;
 begin
+  if SelectedMic140SourceId <> '' then
+  begin
+    ConfigureMic140Source(SelectedMic140SourceId);
+    Exit;
+  end;
+
   if fMeraFileName = '' then
     Exit;
 
