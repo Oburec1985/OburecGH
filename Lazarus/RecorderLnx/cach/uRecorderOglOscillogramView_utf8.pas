@@ -1,4 +1,4 @@
-unit uRecorderOglOscillogramView;
+﻿unit uRecorderOglOscillogramView;
 
 {
   Unit uRecorderOglOscillogramView
@@ -485,8 +485,7 @@ begin
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
   Inc(fFrameNo);
-  if not TChartPage(fPage).ZoomedX then
-    SetXRange(ADisplaySeconds);
+  SetXRange(ADisplaySeconds);
   if fTrend = nil then
     Exit;
   lTrend := cBuffTrend1d(fTrend);
@@ -837,11 +836,8 @@ begin
     lTrend := GetTrend(I);
     if (lPage = nil) or (lAxis = nil) or (lTrend = nil) then
       Continue;
-    if not lPage.ZoomedX then
-    begin
-      lPage.XMinValue := 0;
-      lPage.XMaxValue := ADisplaySeconds;
-    end;
+    lPage.XMinValue := 0;
+    lPage.XMaxValue := ADisplaySeconds;
     lTrend.ClearValues;
     lTrend.X0 := 0;
     lTrend.DX := 1;

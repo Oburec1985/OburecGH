@@ -41,6 +41,7 @@ type
     fXMinValue: Double;                  // Минимальное значение шкалы X для всей страницы
     fXMaxValue: Double;                  // Максимальное значение шкалы X для всей страницы
     fXScale: TChartAxisScale;            // Тип шкалы X страницы (линейная/логарифм)
+    fZoomedX: Boolean;                   // Флаг того, что масштаб оси X изменен пользователем (зум/пан)
   public
     // Установка свойств страницы по умолчанию
     procedure AssignDefaultProperties; override;
@@ -54,6 +55,7 @@ type
     property XMinValue: Double read fXMinValue write fXMinValue;
     property XMaxValue: Double read fXMaxValue write fXMaxValue;
     property XScale: TChartAxisScale read fXScale write fXScale;
+    property ZoomedX: Boolean read fZoomedX write fZoomedX;
   end;
 
   TChartPage = cBasePage;
@@ -85,6 +87,7 @@ begin
   fXMinValue := 0;
   fXMaxValue := 1;
   fXScale := casLinear;
+  fZoomedX := False;
 end;
 
 end.
