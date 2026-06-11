@@ -720,6 +720,8 @@ begin
           lIni.WriteBool(lSection, 'ShowWarnings', lSpectrum.ShowWarnings);
           lIni.WriteBool(lSection, 'ShowProfile', lSpectrum.ShowProfile);
           lIni.WriteBool(lSection, 'ShowLabels', lSpectrum.ShowLabels);
+          lIni.WriteBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
+          lIni.WriteBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
           lIni.WriteInteger(lSection, 'ResultType', lSpectrum.ResultType);
           lIni.WriteString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
           lIni.WriteString(lSection, 'ProfileName', lSpectrum.ProfileName);
@@ -853,6 +855,8 @@ begin
             lSpectrum.ShowWarnings := lIni.ReadBool(lSection, 'ShowWarnings', lSpectrum.ShowWarnings);
             lSpectrum.ShowProfile := lIni.ReadBool(lSection, 'ShowProfile', lSpectrum.ShowProfile);
             lSpectrum.ShowLabels := lIni.ReadBool(lSection, 'ShowLabels', lSpectrum.ShowLabels);
+            lSpectrum.LegendVisible := lIni.ReadBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
+            lSpectrum.ZeroY0 := lIni.ReadBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
             lSpectrum.ResultType := lIni.ReadInteger(lSection, 'ResultType', lSpectrum.ResultType);
             lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
             lSpectrum.ProfileName := lIni.ReadString(lSection, 'ProfileName', lSpectrum.ProfileName);

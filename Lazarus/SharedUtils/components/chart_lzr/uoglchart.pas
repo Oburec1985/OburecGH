@@ -16,6 +16,7 @@ uses
 
 type
   TChartAfterRenderEvent = procedure(Sender: TObject; ARenderTimeMs: Double) of object;
+  TChartCursorChangedEvent = procedure(Sender: TObject; ACursor: TObject) of object;
   { TOglChart }
   // LCL/OpenGL-хост компонента графика.
   // Хранит модель и делегирует отрисовку renderer-слою.
@@ -28,6 +29,7 @@ type
     fListeners: TList;                   // Список слушателей событий мыши/клавиатуры
     fMouseInputEnabled: Boolean;         // Разрешает собственную интерактивность графика
     fOnAfterRender: TChartAfterRenderEvent; // Событие после отрисовки кадра
+    fOnCursorChanged: TChartCursorChangedEvent; // Событие изменения измерительного курсора
 
     function GetModel: TChartModel;
 
@@ -79,6 +81,7 @@ type
     function GetRenderer: TObject;
 
     function GetModel: TObject;
+    procedure NotifyCursorChanged(ACursor: TObject);
     { IOpenGLContextHost }
 
     procedure MakeCurrent; reintroduce;
@@ -90,6 +93,7 @@ type
     function GetHeight: Integer;
     property Model: TChartModel read GetModel write SetModel;
     property OnAfterRender: TChartAfterRenderEvent read fOnAfterRender write fOnAfterRender;
+    property OnCursorChanged: TChartCursorChangedEvent read fOnCursorChanged write fOnCursorChanged;
     property ObjectManager: TChartObjectManager read fObjectManager;
     property Renderer: IChartRenderer read fRenderer write fRenderer;
     property MouseInputEnabled: Boolean read fMouseInputEnabled write fMouseInputEnabled;
@@ -423,6 +427,12 @@ end;
 procedure TOglChart.Redraw;
 begin
   Invalidate;
+end;
+
+procedure TOglChart.NotifyCursorChanged(ACursor: TObject);
+begin
+  if Assigned(fOnCursorChanged) then
+    fOnCursorChanged(Self, ACursor);
 end;
 
 procedure TOglChart.MakeCurrent;

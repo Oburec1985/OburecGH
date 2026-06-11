@@ -598,7 +598,13 @@ begin
               begin
                 ApplyPresetZoomYAll(lPage);
                 lPage.ZoomedX := False;
-                FitZoomX(lPage);
+                if lPage.HasPresetXRange and (lPage.PresetMaxXValue > lPage.PresetMinXValue) then
+                begin
+                  lPage.XMinValue := lPage.PresetMinXValue;
+                  lPage.XMaxValue := lPage.PresetMaxXValue;
+                end
+                else
+                  FitZoomX(lPage);
                 lControl.Redraw;
                 Handled := True;
                 Exit;

@@ -141,6 +141,9 @@ type
     FrequencyStepHz: Double;
     Rms: array of Double;
     PhaseRad: array of Double;
+    MaxIndex: Integer;
+    MaxFrequencyHz: Double;
+    MaxRms: Double;
   end;
 
   TRecorderSpectrumFrameEvent = procedure(ASender: TObject;
@@ -762,6 +765,17 @@ begin
   if lNorm > 0.0 then
     for I := 0 to AFrame.Bins - 1 do
       AFrame.Rms[I] := AFrame.Rms[I] / lNorm;
+
+  AFrame.MaxIndex := -1;
+  AFrame.MaxFrequencyHz := 0.0;
+  AFrame.MaxRms := 0.0;
+  for I := 1 to AFrame.Bins - 1 do
+    if (AFrame.MaxIndex < 0) or (AFrame.Rms[I] > AFrame.MaxRms) then
+    begin
+      AFrame.MaxIndex := I;
+      AFrame.MaxFrequencyHz := I * AFrame.FrequencyStepHz;
+      AFrame.MaxRms := AFrame.Rms[I];
+    end;
 end;
 
 constructor TRecorderSpectrumChannel.Create(const ASourceTagName: string;

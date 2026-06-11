@@ -42,6 +42,8 @@ type
     fShowWarningsCheck: TCheckBox;
     fShowProfileCheck: TCheckBox;
     fShowLabelsCheck: TCheckBox;
+    fShowLegendCheck: TCheckBox;
+    fZeroY0Check: TCheckBox;
     fResultTypeCombo: TComboBox;
     fTahoCombo: TComboBox;
 
@@ -53,6 +55,9 @@ type
     procedure StoreToComponent;
     procedure OkButtonClick(Sender: TObject);
     function ParseFloatText(const AText: string; ADefault: Double): Double;
+    function IsSpectrumTagSelectable(const ATagName: string): Boolean;
+    function TagDisplayText(const ATagName: string): string;
+    function DisplayItemTagName(AList: TListBox; AIndex: Integer): string;
 
     procedure FilterEditChange(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -97,7 +102,7 @@ begin
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 710;
-  ClientHeight := 520;
+  ClientHeight := 555;
 
   BuildUi;
   LoadFromComponent;
@@ -121,6 +126,42 @@ begin
   Result := StrToFloatDef(lText, ADefault);
 end;
 
+function TRecorderSpectrumSettingsDialog.IsSpectrumTagSelectable(
+  const ATagName: string): Boolean;
+var
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if (ATagName = '') or (fTagRegistry = nil) then
+    Exit;
+  lTag := fTagRegistry.FindByName(ATagName);
+  Result := (lTag <> nil) and (lTag.PollFrequencyHz > 0.0);
+end;
+
+function TRecorderSpectrumSettingsDialog.TagDisplayText(
+  const ATagName: string): string;
+var
+  lTag: TRecorderTag;
+begin
+  Result := ATagName;
+  if fTagRegistry = nil then
+    Exit;
+  lTag := fTagRegistry.FindByName(ATagName);
+  if lTag <> nil then
+    Result := Format('%s (%.6g Hz)', [ATagName, lTag.PollFrequencyHz]);
+end;
+
+function TRecorderSpectrumSettingsDialog.DisplayItemTagName(AList: TListBox;
+  AIndex: Integer): string;
+begin
+  Result := '';
+  if (AList = nil) or (AIndex < 0) or (AIndex >= AList.Items.Count) then
+    Exit;
+  if AList.Items.Objects[AIndex] is TRecorderTag then
+    Result := TRecorderTag(AList.Items.Objects[AIndex]).Name
+  else
+    Result := AList.Items[AIndex];
+end;
 procedure TRecorderSpectrumSettingsDialog.BuildUi;
 var
   lLabel: TLabel;
@@ -135,7 +176,8 @@ begin
     begin
       lNode := fTagRegistry.SpectrumConfigs.Nodes[I];
       for J := 0 to lNode.BindingCount - 1 do
-        fAllAvailableTags.Add(lNode.Bindings[J].SourceTagName);
+        if IsSpectrumTagSelectable(lNode.Bindings[J].SourceTagName) then
+          fAllAvailableTags.Add(lNode.Bindings[J].SourceTagName);
     end;
   end;
 
@@ -236,7 +278,7 @@ begin
   // 5. Параметры отображения
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
-  lGroupBox.SetBounds(478, 215, 220, 200);
+  lGroupBox.SetBounds(478, 215, 220, 225);
   lGroupBox.Caption := CP1251ToUTF8('Отображение');
 
   fShowAlarmsCheck := TCheckBox.Create(lGroupBox);
@@ -261,12 +303,22 @@ begin
 
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
-  lLabel.SetBounds(10, 125, 80, 15);
+  fShowLegendCheck := TCheckBox.Create(lGroupBox);
+  fShowLegendCheck.Parent := lGroupBox;
+  fShowLegendCheck.SetBounds(10, 120, 180, 20);
+  fShowLegendCheck.Caption := CP1251ToUTF8('Легенда');
+
+  fZeroY0Check := TCheckBox.Create(lGroupBox);
+  fZeroY0Check.Parent := lGroupBox;
+  fZeroY0Check.SetBounds(10, 145, 180, 20);
+  fZeroY0Check.Caption := CP1251ToUTF8('Занулять Y0');
+
+  lLabel.SetBounds(10, 175, 80, 15);
   lLabel.Caption := CP1251ToUTF8('Результат:');
 
   fResultTypeCombo := TComboBox.Create(lGroupBox);
   fResultTypeCombo.Parent := lGroupBox;
-  fResultTypeCombo.SetBounds(90, 122, 120, 23);
+  fResultTypeCombo.SetBounds(90, 172, 120, 23);
   fResultTypeCombo.Style := csDropDownList;
   fResultTypeCombo.Items.Add(CP1251ToUTF8('Амплитуда'));
   fResultTypeCombo.Items.Add(CP1251ToUTF8('Фаза'));
@@ -274,12 +326,12 @@ begin
   // 6. Прочее (Тахометр)
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(478, 425, 80, 15);
+  lLabel.SetBounds(478, 452, 80, 15);
   lLabel.Caption := CP1251ToUTF8('Тахометр:');
 
   fTahoCombo := TComboBox.Create(Self);
   fTahoCombo.Parent := Self;
-  fTahoCombo.SetBounds(563, 422, 135, 23);
+  fTahoCombo.SetBounds(563, 449, 135, 23);
   fTahoCombo.Style := csDropDownList;
   fTahoCombo.Items.Add('');
   if fTagRegistry <> nil then
@@ -291,14 +343,14 @@ begin
   // 7. Кнопки ОК / Отмена
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
-  fOkButton.SetBounds(520, 475, 80, 25);
+  fOkButton.SetBounds(520, 515, 80, 25);
   fOkButton.Caption := CP1251ToUTF8('ОК');
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
-  fCancelButton.SetBounds(615, 475, 80, 25);
+  fCancelButton.SetBounds(615, 515, 80, 25);
   fCancelButton.Caption := CP1251ToUTF8('Отмена');
   fCancelButton.Cancel := True;
   fCancelButton.ModalResult := mrCancel;
@@ -319,6 +371,8 @@ begin
   fShowWarningsCheck.Checked := fDraft.ShowWarnings;
   fShowProfileCheck.Checked := fDraft.ShowProfile;
   fShowLabelsCheck.Checked := fDraft.ShowLabels;
+  fShowLegendCheck.Checked := fDraft.LegendVisible;
+  fZeroY0Check.Checked := fDraft.ZeroY0;
 
   if (fDraft.ResultType >= 0) and (fDraft.ResultType < fResultTypeCombo.Items.Count) then
     fResultTypeCombo.ItemIndex := fDraft.ResultType
@@ -334,7 +388,9 @@ begin
   // Заполняем список используемых
   fUsedList.Items.Clear;
   for I := 0 to fDraft.TagNames.Count - 1 do
-    fUsedList.Items.Add(fDraft.TagNames[I]);
+    if IsSpectrumTagSelectable(fDraft.TagNames[I]) then
+      fUsedList.Items.AddObject(TagDisplayText(fDraft.TagNames[I]),
+        fTagRegistry.FindByName(fDraft.TagNames[I]));
 
   UpdateAvailableList;
 end;
@@ -354,13 +410,15 @@ begin
   fDraft.ShowWarnings := fShowWarningsCheck.Checked;
   fDraft.ShowProfile := fShowProfileCheck.Checked;
   fDraft.ShowLabels := fShowLabelsCheck.Checked;
+  fDraft.LegendVisible := fShowLegendCheck.Checked;
+  fDraft.ZeroY0 := fZeroY0Check.Checked;
 
   fDraft.ResultType := fResultTypeCombo.ItemIndex;
   fDraft.TahoTagName := fTahoCombo.Text;
 
   fDraft.TagNames.Clear;
   for I := 0 to fUsedList.Count - 1 do
-    fDraft.TagNames.Add(fUsedList.Items[I]);
+    fDraft.TagNames.Add(DisplayItemTagName(fUsedList, I));
 end;
 
 procedure TRecorderSpectrumSettingsDialog.OkButtonClick(Sender: TObject);
@@ -386,10 +444,10 @@ begin
   begin
     if fAvailableList.Selected[I] then
     begin
-      lTagName := fAvailableList.Items[I];
-      if fUsedList.Items.IndexOf(lTagName) < 0 then
+      lTagName := DisplayItemTagName(fAvailableList, I);
+      if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) < 0 then
       begin
-        fUsedList.Items.Add(lTagName);
+        fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
         lChanged := True;
       end;
     end;
@@ -424,10 +482,10 @@ begin
   lIdx := fAvailableList.ItemIndex;
   if lIdx >= 0 then
   begin
-    lTagName := fAvailableList.Items[lIdx];
-    if fUsedList.Items.IndexOf(lTagName) < 0 then
+    lTagName := DisplayItemTagName(fAvailableList, lIdx);
+    if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) < 0 then
     begin
-      fUsedList.Items.Add(lTagName);
+      fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
       UpdateAvailableList;
     end;
   end;
@@ -460,12 +518,13 @@ begin
       lTagName := fAllAvailableTags[I];
       
       // Исключаем те, что уже выбраны
-      if fUsedList.Items.IndexOf(lTagName) >= 0 then
+      if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) >= 0 then
         Continue;
         
       // Фильтруем по подстроке
-      if (lFilter = '') or (AnsiContainsText(AnsiLowerCase(lTagName), lFilter)) then
-        fAvailableList.Items.Add(lTagName);
+      if (lFilter = '') or (AnsiContainsText(AnsiLowerCase(lTagName), lFilter)) or
+        (AnsiContainsText(AnsiLowerCase(TagDisplayText(lTagName)), lFilter)) then
+        fAvailableList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
     end;
   finally
     fAvailableList.Items.EndUpdate;

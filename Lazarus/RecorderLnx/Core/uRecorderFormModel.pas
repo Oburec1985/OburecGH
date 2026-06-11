@@ -252,6 +252,8 @@ type
     fLgX, fLgY: Boolean;
     fShowAlarms, fShowWarnings, fShowProfile: Boolean;
     fShowLabels: Boolean;
+    fLegendVisible: Boolean;
+    fZeroY0: Boolean;
     fResultType: Integer;
     fTagNames: TStringList;
     fTahoTagName: string;
@@ -272,6 +274,8 @@ type
     property ShowWarnings: Boolean read fShowWarnings write fShowWarnings;
     property ShowProfile: Boolean read fShowProfile write fShowProfile;
     property ShowLabels: Boolean read fShowLabels write fShowLabels;
+    property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
+    property ZeroY0: Boolean read fZeroY0 write fZeroY0;
     property ResultType: Integer read fResultType write fResultType;
     property TagNames: TStringList read fTagNames;
     property TahoTagName: string read fTahoTagName write fTahoTagName;
@@ -778,6 +782,8 @@ begin
   fShowWarnings := True;
   fShowProfile := True;
   fShowLabels := True;
+  fLegendVisible := True;
+  fZeroY0 := True;
   fResultType := 0;
 end;
 
@@ -800,6 +806,8 @@ begin
   fShowWarnings := ASource.ShowWarnings;
   fShowProfile := ASource.ShowProfile;
   fShowLabels := ASource.ShowLabels;
+  fLegendVisible := ASource.LegendVisible;
+  fZeroY0 := ASource.ZeroY0;
   fResultType := ASource.ResultType;
   fTahoTagName := ASource.TahoTagName;
   fProfileName := ASource.ProfileName;

@@ -55,13 +55,15 @@ type
   { IChartControl }
   // Интерфейс для доступа к элементам управления графиком из внешних классов-слушателей (listeners).
   IChartControl = interface
-    ['{C1D2E3F4-5678-90AB-CDEF-1234567890AB}']
+    ['{C1D2E3F4-5678-90AB-CDEF-1234567890AC}']
     // Возвращает объект рендерера
     function GetRenderer: TObject;
     // Возвращает корневой объект модели чарта
     function GetModel: TObject;
     // Запускает перерисовку чарта
     procedure Redraw;
+    // Уведомляет визуальный компонент об изменении измерительного курсора
+    procedure NotifyCursorChanged(ACursor: TObject);
   end;
 
 var

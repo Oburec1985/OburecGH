@@ -41,6 +41,9 @@ type
     fXMinValue: Double;                  // Минимальное значение шкалы X для всей страницы
     fXMaxValue: Double;                  // Максимальное значение шкалы X для всей страницы
     fXScale: TChartAxisScale;            // Тип шкалы X страницы (линейная/логарифм)
+    fPresetMinXValue: Double;            // Преднастроенный минимум шкалы X
+    fPresetMaxXValue: Double;            // Преднастроенный максимум шкалы X
+    fHasPresetXRange: Boolean;           // Признак заданного преднастроенного диапазона X
     fZoomedX: Boolean;                   // Флаг того, что масштаб оси X изменен пользователем (зум/пан)
   public
     // Установка свойств страницы по умолчанию
@@ -55,6 +58,9 @@ type
     property XMinValue: Double read fXMinValue write fXMinValue;
     property XMaxValue: Double read fXMaxValue write fXMaxValue;
     property XScale: TChartAxisScale read fXScale write fXScale;
+    property PresetMinXValue: Double read fPresetMinXValue write fPresetMinXValue;
+    property PresetMaxXValue: Double read fPresetMaxXValue write fPresetMaxXValue;
+    property HasPresetXRange: Boolean read fHasPresetXRange write fHasPresetXRange;
     property ZoomedX: Boolean read fZoomedX write fZoomedX;
   end;
 
@@ -87,6 +93,9 @@ begin
   fXMinValue := 0;
   fXMaxValue := 1;
   fXScale := casLinear;
+  fPresetMinXValue := fXMinValue;
+  fPresetMaxXValue := fXMaxValue;
+  fHasPresetXRange := False;
   fZoomedX := False;
 end;
 

@@ -751,6 +751,7 @@ begin
 
       end;
 
+      lControl.NotifyCursorChanged(lCursor);
       lControl.Redraw;
 
       Handled := True;
@@ -1025,6 +1026,7 @@ begin
 
         end;
 
+        lControl.NotifyCursorChanged(lCursor);
         lControl.Redraw;
 
         Key := 0;
@@ -1109,6 +1111,7 @@ begin
 
               lCursor.X2 := lMouseWorldX;
 
+              lControl.NotifyCursorChanged(lCursor);
               lControl.Redraw;
 
               Key := 0;
@@ -1125,6 +1128,7 @@ begin
 
             lCursor.X1 := lMouseWorldX;
 
+            lControl.NotifyCursorChanged(lCursor);
             lControl.Redraw;
 
             Key := 0;

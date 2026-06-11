@@ -1516,6 +1516,7 @@ var
   lAxis: TChartAxis;
   lTrends: TList;
   lTrendIdx: Integer;
+  lOldUseTextureAtlas: Boolean;
 begin
   lPageRect := PageToPixelRect(APage);
   lContentRect := PageContentRect(APage);
@@ -1592,9 +1593,9 @@ begin
           glVertex2f(lPtX, lPtY);
           glVertex2f((lLabelRect.Left + lLabelRect.Right) / 2, (lLabelRect.Top + lLabelRect.Bottom) / 2);
           glEnd;
-          // Рисуем маркер-квадратик на самом графике
-          SetGLColor($FF000000); // Черный маркер
-          glBegin(GL_QUADS);
+          // Рисуем незалитый маркер, чтобы он не перекрывал текст флага
+          SetGLColor($FF202020);
+          glBegin(GL_LINE_LOOP);
           glVertex2f(lPtX - 3, lPtY - 3);
           glVertex2f(lPtX + 3, lPtY - 3);
           glVertex2f(lPtX + 3, lPtY + 3);
@@ -1635,7 +1636,14 @@ begin
         // Если текст выходит за пределы рамки по вертикали, прекращаем отрисовку
         if (I > 0) and (lLineY + lFont.TextPixelHeight > lLabelRect.Bottom - 2) then
           Break;
-        DrawText(lLines[I], lLabelRect.Left + 4, lLineY, lFont);
+        lOldUseTextureAtlas := gUseTextureAtlas;
+        try
+          if ALabel is TChartFlagLabel then
+            gUseTextureAtlas := False;
+          DrawText(lLines[I], lLabelRect.Left + 4, lLineY, lFont);
+        finally
+          gUseTextureAtlas := lOldUseTextureAtlas;
+        end;
         lLineY := lLineY + lFont.TextPixelHeight + 2;
       end;
 

@@ -20,6 +20,9 @@ type
     FFTSize: Integer;
     Bins: Integer;
     FrequencyStepHz: Double;
+    MaxIndex: Integer;
+    MaxFrequencyHz: Double;
+    MaxRms: Double;
     Rms: array of Double;
     PhaseRad: array of Double;
     constructor Create(const AFrame: TRecorderSpectrumFrame);
@@ -81,6 +84,9 @@ begin
   FFTSize := AFrame.FFTSize;
   Bins := AFrame.Bins;
   FrequencyStepHz := AFrame.FrequencyStepHz;
+  MaxIndex := AFrame.MaxIndex;
+  MaxFrequencyHz := AFrame.MaxFrequencyHz;
+  MaxRms := AFrame.MaxRms;
   
   SetLength(Rms, Length(AFrame.Rms));
   if Length(AFrame.Rms) > 0 then
@@ -197,6 +203,9 @@ begin
         AFrame.FFTSize := lCached.FFTSize;
         AFrame.Bins := lCached.Bins;
         AFrame.FrequencyStepHz := lCached.FrequencyStepHz;
+        AFrame.MaxIndex := lCached.MaxIndex;
+        AFrame.MaxFrequencyHz := lCached.MaxFrequencyHz;
+        AFrame.MaxRms := lCached.MaxRms;
         
         SetLength(AFrame.Rms, Length(lCached.Rms));
         if Length(lCached.Rms) > 0 then
