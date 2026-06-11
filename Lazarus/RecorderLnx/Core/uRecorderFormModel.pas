@@ -243,6 +243,39 @@ type
     property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
     property ShowCurrentValues: Boolean read fShowCurrentValues
       write fShowCurrentValues;
+  end;
+
+  TRecorderSpectrumComponent = class(TRecorderVisualComponent)
+  private
+    fRangeMinX, fRangeMaxX: Double;
+    fRangeMinY, fRangeMaxY: Double;
+    fLgX, fLgY: Boolean;
+    fShowAlarms, fShowWarnings, fShowProfile: Boolean;
+    fShowLabels: Boolean;
+    fResultType: Integer;
+    fTagNames: TStringList;
+    fTahoTagName: string;
+    fProfileName: string;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Assign(ASource: TRecorderSpectrumComponent);
+    property RangeMinX: Double read fRangeMinX write fRangeMinX;
+    property RangeMaxX: Double read fRangeMaxX write fRangeMaxX;
+    property RangeMinY: Double read fRangeMinY write fRangeMinY;
+    property RangeMaxY: Double read fRangeMaxY write fRangeMaxY;
+    property LgX: Boolean read fLgX write fLgX;
+    property LgY: Boolean read fLgY write fLgY;
+    property ShowAlarms: Boolean read fShowAlarms write fShowAlarms;
+    property ShowWarnings: Boolean read fShowWarnings write fShowWarnings;
+    property ShowProfile: Boolean read fShowProfile write fShowProfile;
+    property ShowLabels: Boolean read fShowLabels write fShowLabels;
+    property ResultType: Integer read fResultType write fResultType;
+    property TagNames: TStringList read fTagNames;
+    property TahoTagName: string read fTahoTagName write fTahoTagName;
+    property ProfileName: string read fProfileName write fProfileName;
   end;  { TRecorderComponentFactoryBase
     Фабрика одного типа модельных компонентов. Она создает компоненты и ведет
     реестр своих дочерних экземпляров, чтобы удаление формы/компонента не
@@ -313,6 +346,11 @@ type
   TRecorderTrendFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
+  end;
+
+  TRecorderSpectrumFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create;
   end;
 
   { TRecorderFormPage
@@ -714,6 +752,66 @@ begin
     TObject(fLines[0]).Free;
     fLines.Delete(0);
   end;
+end;
+
+{ TRecorderSpectrumComponent }
+
+class function TRecorderSpectrumComponent.GetTypeId: string;
+begin
+  Result := 'Spectrum';
+end;
+
+constructor TRecorderSpectrumComponent.Create;
+begin
+  inherited Create;
+  fTagNames := TStringList.Create;
+  fTagNames.Sorted := True;
+  fTagNames.Duplicates := dupIgnore;
+  
+  fRangeMinX := 0.0;
+  fRangeMaxX := 1000.0;
+  fRangeMinY := 0.0;
+  fRangeMaxY := 10.0;
+  fLgX := False;
+  fLgY := False;
+  fShowAlarms := True;
+  fShowWarnings := True;
+  fShowProfile := True;
+  fShowLabels := True;
+  fResultType := 0;
+end;
+
+destructor TRecorderSpectrumComponent.Destroy;
+begin
+  fTagNames.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderSpectrumComponent.Assign(ASource: TRecorderSpectrumComponent);
+begin
+  if ASource = nil then Exit;
+  fRangeMinX := ASource.RangeMinX;
+  fRangeMaxX := ASource.RangeMaxX;
+  fRangeMinY := ASource.RangeMinY;
+  fRangeMaxY := ASource.RangeMaxY;
+  fLgX := ASource.LgX;
+  fLgY := ASource.LgY;
+  fShowAlarms := ASource.ShowAlarms;
+  fShowWarnings := ASource.ShowWarnings;
+  fShowProfile := ASource.ShowProfile;
+  fShowLabels := ASource.ShowLabels;
+  fResultType := ASource.ResultType;
+  fTahoTagName := ASource.TahoTagName;
+  fProfileName := ASource.ProfileName;
+  fTagNames.Assign(ASource.TagNames);
+end;
+
+{ TRecorderSpectrumFactory }
+
+constructor TRecorderSpectrumFactory.Create;
+begin
+  inherited Create(TRecorderSpectrumComponent.TypeId, 'Spectrum',
+    TRecorderSpectrumComponent, 400, 300, False);
 end;
 
 procedure TRecorderTrendComponent.DeleteAxis(AIndex: Integer);
@@ -1173,6 +1271,7 @@ begin
   RegisterFactory(TRecorderTagValueFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);
   RegisterFactory(TRecorderTrendFactory.Create);
+  RegisterFactory(TRecorderSpectrumFactory.Create);
 end;
 
 { TRecorderFormFactory }

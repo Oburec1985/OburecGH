@@ -271,13 +271,9 @@ const
     '    lgRange = lgMax - lgMin;'#10 +
     '    range = a_minmax[1] - a_minmax[0];'#10 +
     '    lgRange = 1.0 / lgRange;'#10 +
-    '    if (gl_Position[0] <= 0.0) {'#10 +
-    '      rate = 0.0;'#10 +
-    '      gl_Position[0] = a_minmax[0] - 200.0;'#10 +
-    '    } else {'#10 +
-    '      rate = (Log10(gl_Position[0]) - lgMin) * lgRange;'#10 +
-    '      gl_Position[0] = range * rate + a_minmax[0];'#10 +
-    '    }'#10 +
+    '    float val_x = max(gl_Position[0], 1e-10);'#10 +
+    '    rate = (Log10(val_x) - lgMin) * lgRange;'#10 +
+    '    gl_Position[0] = range * rate + a_minmax[0];'#10 +
     '  }'#10 +
     '  if (a_Lg[1] == 1) {'#10 +
     '    lgMax = Log10(a_minmax[3]);'#10 +
@@ -286,13 +282,9 @@ const
     '    lgRange = lgMax - lgMin;'#10 +
     '    range = a_minmax[3] - a_minmax[2];'#10 +
     '    lgRange = 1.0 / lgRange;'#10 +
-    '    if (gl_Position[1] <= 0.0) {'#10 +
-    '      rate = 0.0;'#10 +
-    '      gl_Position[1] = a_minmax[2] - 200.0;'#10 +
-    '    } else {'#10 +
-    '      rate = (Log10(gl_Position[1]) - lgMin) * lgRange;'#10 +
-    '      gl_Position[1] = range * rate + a_minmax[2];'#10 +
-    '    }'#10 +
+    '    float val_y = max(gl_Position[1], 1e-10);'#10 +
+    '    rate = (Log10(val_y) - lgMin) * lgRange;'#10 +
+    '    gl_Position[1] = range * rate + a_minmax[2];'#10 +
     '  }'#10 +
     '  gl_Position = gl_ModelViewProjectionMatrix * gl_Position;'#10 +
     '}';
@@ -319,13 +311,9 @@ const
     '    lgRange = lgMax - lgMin;'#10 +
     '    range = a_minmax[1] - a_minmax[0];'#10 +
     '    lgRange = 1.0 / lgRange;'#10 +
-    '    if (gl_Position[0] <= 0.0) {'#10 +
-    '      rate = 0.0;'#10 +
-    '      gl_Position[0] = a_minmax[0] - 200.0;'#10 +
-    '    } else {'#10 +
-    '      rate = (Log10(gl_Position[0]) - lgMin) * lgRange;'#10 +
-    '      gl_Position[0] = range * rate + a_minmax[0];'#10 +
-    '    }'#10 +
+    '    float val_x = max(gl_Position[0], 1e-10);'#10 +
+    '    rate = (Log10(val_x) - lgMin) * lgRange;'#10 +
+    '    gl_Position[0] = range * rate + a_minmax[0];'#10 +
     '  }'#10 +
     '  if (a_Lg[1] == 1) {'#10 +
     '    lgMax = Log10(a_minmax[3]);'#10 +
@@ -334,13 +322,9 @@ const
     '    lgRange = lgMax - lgMin;'#10 +
     '    range = a_minmax[3] - a_minmax[2];'#10 +
     '    lgRange = 1.0 / lgRange;'#10 +
-    '    if (gl_Position[1] <= 0.0) {'#10 +
-    '      rate = 0.0;'#10 +
-    '      gl_Position[1] = a_minmax[2] - 200.0;'#10 +
-    '    } else {'#10 +
-    '      rate = (Log10(gl_Position[1]) - lgMin) * lgRange;'#10 +
-    '      gl_Position[1] = range * rate + a_minmax[2];'#10 +
-    '    }'#10 +
+    '    float val_y = max(gl_Position[1], 1e-10);'#10 +
+    '    rate = (Log10(val_y) - lgMin) * lgRange;'#10 +
+    '    gl_Position[1] = range * rate + a_minmax[2];'#10 +
     '  }'#10 +
     '  gl_Position = gl_ModelViewProjectionMatrix * gl_Position;'#10 +
     '}';

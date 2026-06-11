@@ -88,3 +88,26 @@
 ## 11. Промпты по исправлению зума оси X и обратного зума:
 12. **Промпт**: Сделать unzoom при смахивании рамки влево на осциллограммах и трендах, и заморозить ось X при призумлении при обновлении данных.
     *Изменение*: Добавлен флаг `ZoomedX` в `TChartPage`, настроена логика зума/паннинга/unzoom в `uOglChartPanZoomListener.pas`, заблокирована перезапись X границ при обновлении в `uRecorderOglOscillogramView.pas` и `uRecorderTrendView.pas`.
+
+
+---
+
+## 5. Доработки спектрального компонента и TOglChart (Текущая итерация)
+
+### Выполненные задачи:
+- **Кэширование кадров спектра**:
+  - В [uRecorderSpectrumRuntime.pas](file:///d:/works/OburecGH/Lazarus/RecorderLnx/Core/uRecorderSpectrumRuntime.pas) объявлен класс `TRecorderCachedSpectrumFrame` для глубокого копирования данных кадров.
+  - В менеджере `TRecorderSpectrumRuntimeManager` реализован потокобезопасный синглтон-кэш кадров.
+  - В визуальном компоненте [uRecorderSpectrumView.pas](file:///d:/works/OburecGH/Lazarus/RecorderLnx/UI/uRecorderSpectrumView.pas) реализовано автоматическое восстановление кадра при инициализации вкладки, устраняющее эффект очистки спектра.
+- **Premium UX в настройках спектра**:
+  - В [uRecorderSpectrumSettingsDialog.pas](file:///d:/works/OburecGH/Lazarus/RecorderLnx/UI/uRecorderSpectrumSettingsDialog.pas) создан двухсписочный интерфейс выбора тегов "Доступные >> Отображаемые".
+  - Слева выводятся только те теги, для которых реально настроен расчет спектра в алгоритмах.
+  - Реализован быстрый поиск-фильтрация по подстроке.
+  - Добавлена поддержка переноса по двойному клику и через кнопки `>>` / `<<`.
+- **Логарифмирование X на GPU в TOglChart**:
+  - В [uOglChartRenderer.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas) оптимизированы шейдеры `SHADER_LINE_LG_VERT` и `SHADER_LINE_LG_1D_VERT` для правильной обработки нулевых и отрицательных частот по оси X с помощью функции `max(val, 1e-10)`. DC-компонента (0 Hz) теперь ровно привязывается к левой границе вьюпорта.
+
+### Короткие промпты изменений:
+- **Промпт 1**: Добавить класс TRecorderCachedSpectrumFrame с глубоким копированием массивов в uRecorderSpectrumRuntime.pas. Создать синглтон-кэш с fLock: TCriticalSection и методами UpdateCache / GetLastFrame. Интегрировать чтение из кэша в uRecorderSpectrumView.pas. Configure при старте восстанавливает кадр и делает RefreshControl.
+- **Промпт 2**: Переписать uRecorderSpectrumSettingsDialog.pas, добавив двухколоночный выбор тегов: доступные слева, отображаемые справа. Добавить fFilterEdit (TEdit) для поиска. Реализовать фильтрацию по подстроке и исключение уже добавленных из доступных. Сделать перенос по кнопкам << / >> и по OnDblClick списков.
+- **Промпт 3**: Изменить вершинные шейдеры SHADER_LINE_LG_VERT и SHADER_LINE_LG_1D_VERT в uOglChartRenderer.pas, заменив улет неположительных координат в -200.0 на безопасный max(val, 1e-10), чтобы первая точка (0 Hz) спектра ложилась точно на левую границу, как в CPU-методе XValueToPixel.

@@ -1,4 +1,4 @@
-unit uRecorderSpectrumEngine;
+﻿unit uRecorderSpectrumEngine;
 
 {
   RecorderLnx FFT runtime engine.
@@ -105,7 +105,6 @@ type
     function AddBinding(const ASourceTagName: string): TRecorderSpectrumTagBinding;
     procedure DeleteBinding(AIndex: Integer);
     procedure ClearBindings;
-    procedure Assign(ASource: TRecorderSpectrumConfigNode);
     property Id: string read fId write fId;
     property DisplayName: string read fDisplayName write fDisplayName;
     property Settings: TRecorderSpectrumSettings read fSettings write fSettings;
@@ -125,7 +124,6 @@ type
     procedure DeleteNode(AIndex: Integer);
     function FindNode(const AId: string): TRecorderSpectrumConfigNode;
     procedure Clear;
-    procedure Assign(ASource: TRecorderSpectrumConfigTree);
     property NodeCount: Integer read GetNodeCount;
     property Nodes[AIndex: Integer]: TRecorderSpectrumConfigNode read GetNode;
   end;
@@ -259,7 +257,7 @@ end;
 function RecorderSpectrumOverlapName(AMode: TRecorderSpectrumOverlapMode): string;
 begin
   case AMode of
-    somNone: Result := 'без перекрытия';
+    somNone: Result := 'Р±РµР· РїРµСЂРµРєСЂС‹С‚РёСЏ';
     somHalf: Result := '1/2';
     somQuarter: Result := '1/4';
   else
@@ -270,9 +268,9 @@ end;
 function RecorderSpectrumIntegrationName(AMode: TRecorderSpectrumIntegrationMode): string;
 begin
   case AMode of
-    simNone: Result := 'без интегрирования';
-    simSingle: Result := 'однократное';
-    simDouble: Result := 'двухкратное';
+    simNone: Result := 'Р±РµР· РёРЅС‚РµРіСЂРёСЂРѕРІР°РЅРёСЏ';
+    simSingle: Result := 'РѕРґРЅРѕРєСЂР°С‚РЅРѕРµ';
+    simDouble: Result := 'РґРІСѓС…РєСЂР°С‚РЅРѕРµ';
   else
     Result := 'Unknown';
   end;
@@ -484,24 +482,6 @@ begin
   fBindings.Clear;
 end;
 
-procedure TRecorderSpectrumConfigNode.Assign(ASource: TRecorderSpectrumConfigNode);
-var
-  I: Integer;
-  lSrcBinding, lDestBinding: TRecorderSpectrumTagBinding;
-begin
-  if ASource = nil then Exit;
-  fId := ASource.Id;
-  fDisplayName := ASource.DisplayName;
-  fSettings := ASource.Settings;
-  ClearBindings;
-  for I := 0 to ASource.BindingCount - 1 do
-  begin
-    lSrcBinding := ASource.Bindings[I];
-    lDestBinding := AddBinding(lSrcBinding.SourceTagName);
-    lDestBinding.Assign(lSrcBinding);
-  end;
-end;
-
 constructor TRecorderSpectrumConfigTree.Create;
 begin
   inherited Create;
@@ -560,21 +540,6 @@ begin
   for I := 0 to fNodes.Count - 1 do
     TObject(fNodes[I]).Free;
   fNodes.Clear;
-end;
-
-procedure TRecorderSpectrumConfigTree.Assign(ASource: TRecorderSpectrumConfigTree);
-var
-  I: Integer;
-  lSrcNode, lDestNode: TRecorderSpectrumConfigNode;
-begin
-  if ASource = nil then Exit;
-  Clear;
-  for I := 0 to ASource.NodeCount - 1 do
-  begin
-    lSrcNode := ASource.Nodes[I];
-    lDestNode := AddNode(lSrcNode.Id, lSrcNode.DisplayName);
-    lDestNode.Assign(lSrcNode);
-  end;
 end;
 
 constructor TRecorderSpectrumFFTPlan.Create(AFFTSize: Integer);

@@ -308,7 +308,7 @@ begin
 end;
 
 procedure TPlannerDBDatePicker.DaySelect;
-var
+var
   d: TDateTime;
 begin
   inherited;

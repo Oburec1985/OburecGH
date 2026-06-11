@@ -1,19 +1,19 @@
-unit uRecorderSettingsDialog;
+﻿unit uRecorderSettingsDialog;
 
 {
-  Модуль uRecorderSettingsDialog
+  РњРѕРґСѓР»СЊ uRecorderSettingsDialog
 
-  Назначение:
-    Диалог настройки параметров рекордера и конфигурации аппаратных каналов/устройств.
-    Позволяет задавать параметры отображения, буферизации, записи, условия
-    старта/останова сбора данных, а также импортировать сигналы из файлов формата Mera.
+  РќР°Р·РЅР°С‡РµРЅРёРµ:
+    Р”РёР°Р»РѕРі РЅР°СЃС‚СЂРѕР№РєРё РїР°СЂР°РјРµС‚СЂРѕРІ СЂРµРєРѕСЂРґРµСЂР° Рё РєРѕРЅС„РёРіСѓСЂР°С†РёРё Р°РїРїР°СЂР°С‚РЅС‹С… РєР°РЅР°Р»РѕРІ/СѓСЃС‚СЂРѕР№СЃС‚РІ.
+    РџРѕР·РІРѕР»СЏРµС‚ Р·Р°РґР°РІР°С‚СЊ РїР°СЂР°РјРµС‚СЂС‹ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ, Р±СѓС„РµСЂРёР·Р°С†РёРё, Р·Р°РїРёСЃРё, СѓСЃР»РѕРІРёСЏ
+    СЃС‚Р°СЂС‚Р°/РѕСЃС‚Р°РЅРѕРІР° СЃР±РѕСЂР° РґР°РЅРЅС‹С…, Р° С‚Р°РєР¶Рµ РёРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ СЃРёРіРЅР°Р»С‹ РёР· С„Р°Р№Р»РѕРІ С„РѕСЂРјР°С‚Р° Mera.
 
-  Библиотеки и зависимости:
-    - Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls: стандартные модули LCL.
-    - ComCtrls, ImgList, Grids, Buttons: компоненты UI (дерево устройств, списки каналов).
-    - uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags: бизнес-логика рекордера.
-    - uMeraFile: парсинг файлов конфигурации сигналов Mera.
-    - uRecorderCommandImages: константы индексов иконок UI.
+  Р‘РёР±Р»РёРѕС‚РµРєРё Рё Р·Р°РІРёСЃРёРјРѕСЃС‚Рё:
+    - Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls: СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ РјРѕРґСѓР»Рё LCL.
+    - ComCtrls, ImgList, Grids, Buttons: РєРѕРјРїРѕРЅРµРЅС‚С‹ UI (РґРµСЂРµРІРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ, СЃРїРёСЃРєРё РєР°РЅР°Р»РѕРІ).
+    - uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags: Р±РёР·РЅРµСЃ-Р»РѕРіРёРєР° СЂРµРєРѕСЂРґРµСЂР°.
+    - uMeraFile: РїР°СЂСЃРёРЅРі С„Р°Р№Р»РѕРІ РєРѕРЅС„РёРіСѓСЂР°С†РёРё СЃРёРіРЅР°Р»РѕРІ Mera.
+    - uRecorderCommandImages: РєРѕРЅСЃС‚Р°РЅС‚С‹ РёРЅРґРµРєСЃРѕРІ РёРєРѕРЅРѕРє UI.
 }
 
 {$mode objfpc}{$H+}
@@ -31,78 +31,78 @@ uses
 type
   { TRecorderSettingsDialog }
 
-  { Класс диалогового окна настроек рекордера }
+  { РљР»Р°СЃСЃ РґРёР°Р»РѕРіРѕРІРѕРіРѕ РѕРєРЅР° РЅР°СЃС‚СЂРѕРµРє СЂРµРєРѕСЂРґРµСЂР° }
   TRecorderSettingsDialog = class(TForm)
   published
-    fPageControl: TPageControl;                 // Контейнер вкладок настроек
-    fApplyButton: TButton;                     // Кнопка "Применить"
-    fHardwareTree: TTreeView;                   // Дерево аппаратной конфигурации/устройств
-    btnDeviceAdd: TBitBtn;                      // Кнопка добавления устройства (Mera-файла)
-    btnChannelAdd: TBitBtn;                     // Кнопка добавления выбранного канала в список активных
-    btnChannelRemove: TBitBtn;                  // Кнопка удаления канала из списка активных
-    btnChannelEdit: TBitBtn;                    // Кнопка настройки выбранного тега
-    pnChannelMoveButtons: TPanel;               // Панель кнопок перемещения каналов
-    spChannels: TSplitter;                      // Разделитель между сетками доступных и выбранных каналов
-    fAvailableChannelsGrid: TStringGrid;        // Таблица доступных для выбора каналов
-    fSelectedChannelsGrid: TStringGrid;         // Таблица выбранных (активных) каналов
-    spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
-    fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
-    fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
-    btnAlgorithmAdd: TBitBtn;                   // Создать алгоритм по выбранным каналам
-    btnAlgorithmRemove: TBitBtn;                // Удалить узел алгоритма
-    btnAlgorithmConfig: TBitBtn;                // Применить параметры FFT-узла
-    btnFrequencyBands: TBitBtn;                 // Настроить частотные полосы
-    fAlgorithmFftSizeEdit: TEdit;               // Размер FFT
-    fAlgorithmFftSizeUpDown: TUpDown;           // Стрелочки изменения размера FFT
-    fAlgorithmSampleRateEdit: TEdit;            // Частота опроса
-    fAlgorithmPortionLabel: TLabel;             // Размер порции в секундах
-    fAlgorithmAverageBlocksEdit: TEdit;         // Количество блоков усреднения
-    fAlgorithmOverlapEdit: TEdit;               // Перекрытие FFT
-    fAlgorithmOverlapCombo: TComboBox;          // Режим перекрытия FFT
-    fAlgorithmWindowCombo: TComboBox;           // Оконная функция
-    fAlgorithmNormalizeCombo: TComboBox;        // Нормировка спектра
-    fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
-    fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
-    fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
+    fPageControl: TPageControl;                 // РљРѕРЅС‚РµР№РЅРµСЂ РІРєР»Р°РґРѕРє РЅР°СЃС‚СЂРѕРµРє
+    fApplyButton: TButton;                     // РљРЅРѕРїРєР° "РџСЂРёРјРµРЅРёС‚СЊ"
+    fHardwareTree: TTreeView;                   // Р”РµСЂРµРІРѕ Р°РїРїР°СЂР°С‚РЅРѕР№ РєРѕРЅС„РёРіСѓСЂР°С†РёРё/СѓСЃС‚СЂРѕР№СЃС‚РІ
+    btnDeviceAdd: TBitBtn;                      // РљРЅРѕРїРєР° РґРѕР±Р°РІР»РµРЅРёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° (Mera-С„Р°Р№Р»Р°)
+    btnChannelAdd: TBitBtn;                     // РљРЅРѕРїРєР° РґРѕР±Р°РІР»РµРЅРёСЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ РєР°РЅР°Р»Р° РІ СЃРїРёСЃРѕРє Р°РєС‚РёРІРЅС‹С…
+    btnChannelRemove: TBitBtn;                  // РљРЅРѕРїРєР° СѓРґР°Р»РµРЅРёСЏ РєР°РЅР°Р»Р° РёР· СЃРїРёСЃРєР° Р°РєС‚РёРІРЅС‹С…
+    btnChannelEdit: TBitBtn;                    // РљРЅРѕРїРєР° РЅР°СЃС‚СЂРѕР№РєРё РІС‹Р±СЂР°РЅРЅРѕРіРѕ С‚РµРіР°
+    pnChannelMoveButtons: TPanel;               // РџР°РЅРµР»СЊ РєРЅРѕРїРѕРє РїРµСЂРµРјРµС‰РµРЅРёСЏ РєР°РЅР°Р»РѕРІ
+    spChannels: TSplitter;                      // Р Р°Р·РґРµР»РёС‚РµР»СЊ РјРµР¶РґСѓ СЃРµС‚РєР°РјРё РґРѕСЃС‚СѓРїРЅС‹С… Рё РІС‹Р±СЂР°РЅРЅС‹С… РєР°РЅР°Р»РѕРІ
+    fAvailableChannelsGrid: TStringGrid;        // РўР°Р±Р»РёС†Р° РґРѕСЃС‚СѓРїРЅС‹С… РґР»СЏ РІС‹Р±РѕСЂР° РєР°РЅР°Р»РѕРІ
+    fSelectedChannelsGrid: TStringGrid;         // РўР°Р±Р»РёС†Р° РІС‹Р±СЂР°РЅРЅС‹С… (Р°РєС‚РёРІРЅС‹С…) РєР°РЅР°Р»РѕРІ
+    spChannelAlgorithms: TSplitter;             // Р Р°Р·РґРµР»РёС‚РµР»СЊ РјРµР¶РґСѓ РєР°РЅР°Р»Р°РјРё Рё Р°Р»РіРѕСЂРёС‚РјР°РјРё
+    fAlgorithmsTree: TTreeView;                 // Р”РµСЂРµРІРѕ Р°Р»РіРѕСЂРёС‚РјРѕРІ РєР°РЅР°Р»РѕРІ
+    fAlgorithmKindCombo: TComboBox;             // РўРёРї СЃРѕР·РґР°РІР°РµРјРѕРіРѕ Р°Р»РіРѕСЂРёС‚РјР°
+    btnAlgorithmAdd: TBitBtn;                   // РЎРѕР·РґР°С‚СЊ Р°Р»РіРѕСЂРёС‚Рј РїРѕ РІС‹Р±СЂР°РЅРЅС‹Рј РєР°РЅР°Р»Р°Рј
+    btnAlgorithmRemove: TBitBtn;                // РЈРґР°Р»РёС‚СЊ СѓР·РµР» Р°Р»РіРѕСЂРёС‚РјР°
+    btnAlgorithmConfig: TBitBtn;                // РџСЂРёРјРµРЅРёС‚СЊ РїР°СЂР°РјРµС‚СЂС‹ FFT-СѓР·Р»Р°
+    btnFrequencyBands: TBitBtn;                 // РќР°СЃС‚СЂРѕРёС‚СЊ С‡Р°СЃС‚РѕС‚РЅС‹Рµ РїРѕР»РѕСЃС‹
+    fAlgorithmFftSizeEdit: TEdit;               // Р Р°Р·РјРµСЂ FFT
+    fAlgorithmFftSizeUpDown: TUpDown;           // РЎС‚СЂРµР»РѕС‡РєРё РёР·РјРµРЅРµРЅРёСЏ СЂР°Р·РјРµСЂР° FFT
+    fAlgorithmSampleRateEdit: TEdit;            // Р§Р°СЃС‚РѕС‚Р° РѕРїСЂРѕСЃР°
+    fAlgorithmPortionLabel: TLabel;             // Р Р°Р·РјРµСЂ РїРѕСЂС†РёРё РІ СЃРµРєСѓРЅРґР°С…
+    fAlgorithmAverageBlocksEdit: TEdit;         // РљРѕР»РёС‡РµСЃС‚РІРѕ Р±Р»РѕРєРѕРІ СѓСЃСЂРµРґРЅРµРЅРёСЏ
+    fAlgorithmOverlapEdit: TEdit;               // РџРµСЂРµРєСЂС‹С‚РёРµ FFT
+    fAlgorithmOverlapCombo: TComboBox;          // Р РµР¶РёРј РїРµСЂРµРєСЂС‹С‚РёСЏ FFT
+    fAlgorithmWindowCombo: TComboBox;           // РћРєРѕРЅРЅР°СЏ С„СѓРЅРєС†РёСЏ
+    fAlgorithmNormalizeCombo: TComboBox;        // РќРѕСЂРјРёСЂРѕРІРєР° СЃРїРµРєС‚СЂР°
+    fAlgorithmZeroPadCheck: TCheckBox;          // Р”РѕРїРѕР»РЅСЏС‚СЊ РЅСѓР»СЏРјРё
+    fAlgorithmAhCorrectionCheck: TCheckBox;     // РљРѕСЂСЂРµРєС†РёСЏ РђР§РҐ
+    fAlgorithmIntegrationGroup: TRadioGroup;    // Р РµР¶РёРј РёРЅС‚РµРіСЂРёСЂРѕРІР°РЅРёСЏ
     Cfg: TEdit;
 
-    // Поля ввода общих настроек
-    fScreenUpdateEdit: TEdit;                   // Период обновления экрана (сек)
-    fBufferSecondsEdit: TEdit;                  // Длина отображаемого буфера (сек)
-    fDataUpdateEdit: TEdit;                     // Период обновления данных (сек)
-    fTestNameEdit: TEdit;                       // Имя текущего испытания
-    fProductNameEdit: TEdit;                    // Имя исследуемого изделия
-    fModifyNameCheck: TCheckBox;                // Флаг автоматической модификации имени испытания
-    fPrehistoryCheck: TCheckBox;                // Флаг записи предыстории
-    fPrehistoryEdit: TEdit;                     // Длина предыстории (сек)
-    fResetTimeCheck: TCheckBox;                 // Флаг сброса времени при старте записи
-    fWriteWithPausesCheck: TCheckBox;           // Флаг разрешения записи с паузами
-    fSaveConfigWithDataCheck: TCheckBox;        // Флаг сохранения файла конфигурации вместе с данными
-    fWorkDirEdit: TEdit;                        // Рабочий каталог сохранения файлов
-    fTemplateCheck: TCheckBox;                  // Флаг использования шаблона имени файла
-    fTemplateButton: TButton;                   // Кнопка настройки шаблона
-    fFrameDirEdit: TEdit;                       // Путь к текущему кадру данных
+    // РџРѕР»СЏ РІРІРѕРґР° РѕР±С‰РёС… РЅР°СЃС‚СЂРѕРµРє
+    fScreenUpdateEdit: TEdit;                   // РџРµСЂРёРѕРґ РѕР±РЅРѕРІР»РµРЅРёСЏ СЌРєСЂР°РЅР° (СЃРµРє)
+    fBufferSecondsEdit: TEdit;                  // Р”Р»РёРЅР° РѕС‚РѕР±СЂР°Р¶Р°РµРјРѕРіРѕ Р±СѓС„РµСЂР° (СЃРµРє)
+    fDataUpdateEdit: TEdit;                     // РџРµСЂРёРѕРґ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С… (СЃРµРє)
+    fTestNameEdit: TEdit;                       // РРјСЏ С‚РµРєСѓС‰РµРіРѕ РёСЃРїС‹С‚Р°РЅРёСЏ
+    fProductNameEdit: TEdit;                    // РРјСЏ РёСЃСЃР»РµРґСѓРµРјРѕРіРѕ РёР·РґРµР»РёСЏ
+    fModifyNameCheck: TCheckBox;                // Р¤Р»Р°Рі Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕР№ РјРѕРґРёС„РёРєР°С†РёРё РёРјРµРЅРё РёСЃРїС‹С‚Р°РЅРёСЏ
+    fPrehistoryCheck: TCheckBox;                // Р¤Р»Р°Рі Р·Р°РїРёСЃРё РїСЂРµРґС‹СЃС‚РѕСЂРёРё
+    fPrehistoryEdit: TEdit;                     // Р”Р»РёРЅР° РїСЂРµРґС‹СЃС‚РѕСЂРёРё (СЃРµРє)
+    fResetTimeCheck: TCheckBox;                 // Р¤Р»Р°Рі СЃР±СЂРѕСЃР° РІСЂРµРјРµРЅРё РїСЂРё СЃС‚Р°СЂС‚Рµ Р·Р°РїРёСЃРё
+    fWriteWithPausesCheck: TCheckBox;           // Р¤Р»Р°Рі СЂР°Р·СЂРµС€РµРЅРёСЏ Р·Р°РїРёСЃРё СЃ РїР°СѓР·Р°РјРё
+    fSaveConfigWithDataCheck: TCheckBox;        // Р¤Р»Р°Рі СЃРѕС…СЂР°РЅРµРЅРёСЏ С„Р°Р№Р»Р° РєРѕРЅС„РёРіСѓСЂР°С†РёРё РІРјРµСЃС‚Рµ СЃ РґР°РЅРЅС‹РјРё
+    fWorkDirEdit: TEdit;                        // Р Р°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі СЃРѕС…СЂР°РЅРµРЅРёСЏ С„Р°Р№Р»РѕРІ
+    fTemplateCheck: TCheckBox;                  // Р¤Р»Р°Рі РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ С€Р°Р±Р»РѕРЅР° РёРјРµРЅРё С„Р°Р№Р»Р°
+    fTemplateButton: TButton;                   // РљРЅРѕРїРєР° РЅР°СЃС‚СЂРѕР№РєРё С€Р°Р±Р»РѕРЅР°
+    fFrameDirEdit: TEdit;                       // РџСѓС‚СЊ Рє С‚РµРєСѓС‰РµРјСѓ РєР°РґСЂСѓ РґР°РЅРЅС‹С…
 
-    // Условия старта записи
-    fStartManualRadio: TRadioButton;            // Старт вручную (по кнопке)
-    fStartLevelRadio: TRadioButton;             // Старт по достижению уровня сигнала
-    fStartTriggerRadio: TRadioButton;           // Старт по внешнему триггеру
-    fStartTriggerEdit: TEdit;                   // Номер триггера старта
-    fStartChannelCombo: TComboBox;              // Канал-источник для условия старта
-    fStartEdgeCombo: TComboBox;                 // Направление перехода (больше/меньше)
-    fStartLevelEdit: TEdit;                     // Пороговый уровень для старта
+    // РЈСЃР»РѕРІРёСЏ СЃС‚Р°СЂС‚Р° Р·Р°РїРёСЃРё
+    fStartManualRadio: TRadioButton;            // РЎС‚Р°СЂС‚ РІСЂСѓС‡РЅСѓСЋ (РїРѕ РєРЅРѕРїРєРµ)
+    fStartLevelRadio: TRadioButton;             // РЎС‚Р°СЂС‚ РїРѕ РґРѕСЃС‚РёР¶РµРЅРёСЋ СѓСЂРѕРІРЅСЏ СЃРёРіРЅР°Р»Р°
+    fStartTriggerRadio: TRadioButton;           // РЎС‚Р°СЂС‚ РїРѕ РІРЅРµС€РЅРµРјСѓ С‚СЂРёРіРіРµСЂСѓ
+    fStartTriggerEdit: TEdit;                   // РќРѕРјРµСЂ С‚СЂРёРіРіРµСЂР° СЃС‚Р°СЂС‚Р°
+    fStartChannelCombo: TComboBox;              // РљР°РЅР°Р»-РёСЃС‚РѕС‡РЅРёРє РґР»СЏ СѓСЃР»РѕРІРёСЏ СЃС‚Р°СЂС‚Р°
+    fStartEdgeCombo: TComboBox;                 // РќР°РїСЂР°РІР»РµРЅРёРµ РїРµСЂРµС…РѕРґР° (Р±РѕР»СЊС€Рµ/РјРµРЅСЊС€Рµ)
+    fStartLevelEdit: TEdit;                     // РџРѕСЂРѕРіРѕРІС‹Р№ СѓСЂРѕРІРµРЅСЊ РґР»СЏ СЃС‚Р°СЂС‚Р°
 
-    // Условия останова записи
-    fStopManualRadio: TRadioButton;             // Остановы вручную (по кнопке)
-    fStopLevelRadio: TRadioButton;              // Останов по уровню сигнала
-    fStopDurationRadio: TRadioButton;           // Останов по длительности (таймеру)
-    fStopDurationEdit: TEdit;                   // Время записи до останова (сек)
-    fStopChannelCombo: TComboBox;               // Канал-источник для условия останова
-    fStopEdgeCombo: TComboBox;                  // Направление перехода для останова
-    fStopLevelEdit: TEdit;                      // Пороговый уровень для останова
-    fStopReturnToPreviewCheck: TCheckBox;       // Флаг возврата в режим просмотра после останова
+    // РЈСЃР»РѕРІРёСЏ РѕСЃС‚Р°РЅРѕРІР° Р·Р°РїРёСЃРё
+    fStopManualRadio: TRadioButton;             // РћСЃС‚Р°РЅРѕРІС‹ РІСЂСѓС‡РЅСѓСЋ (РїРѕ РєРЅРѕРїРєРµ)
+    fStopLevelRadio: TRadioButton;              // РћСЃС‚Р°РЅРѕРІ РїРѕ СѓСЂРѕРІРЅСЋ СЃРёРіРЅР°Р»Р°
+    fStopDurationRadio: TRadioButton;           // РћСЃС‚Р°РЅРѕРІ РїРѕ РґР»РёС‚РµР»СЊРЅРѕСЃС‚Рё (С‚Р°Р№РјРµСЂСѓ)
+    fStopDurationEdit: TEdit;                   // Р’СЂРµРјСЏ Р·Р°РїРёСЃРё РґРѕ РѕСЃС‚Р°РЅРѕРІР° (СЃРµРє)
+    fStopChannelCombo: TComboBox;               // РљР°РЅР°Р»-РёСЃС‚РѕС‡РЅРёРє РґР»СЏ СѓСЃР»РѕРІРёСЏ РѕСЃС‚Р°РЅРѕРІР°
+    fStopEdgeCombo: TComboBox;                  // РќР°РїСЂР°РІР»РµРЅРёРµ РїРµСЂРµС…РѕРґР° РґР»СЏ РѕСЃС‚Р°РЅРѕРІР°
+    fStopLevelEdit: TEdit;                      // РџРѕСЂРѕРіРѕРІС‹Р№ СѓСЂРѕРІРµРЅСЊ РґР»СЏ РѕСЃС‚Р°РЅРѕРІР°
+    fStopReturnToPreviewCheck: TCheckBox;       // Р¤Р»Р°Рі РІРѕР·РІСЂР°С‚Р° РІ СЂРµР¶РёРј РїСЂРѕСЃРјРѕС‚СЂР° РїРѕСЃР»Рµ РѕСЃС‚Р°РЅРѕРІР°
 
-    // Обработчики событий UI элементов диалога
+    // РћР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ UI СЌР»РµРјРµРЅС‚РѕРІ РґРёР°Р»РѕРіР°
     procedure ApplyButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure ConditionChanged(Sender: TObject);
@@ -138,18 +138,18 @@ type
     procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
   private
-    fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
-    fTagRegistry: TRecorderTagRegistry;         // Ссылка на реестр тегов приложения
-    fDeviceImageList: TCustomImageList;         // Список картинок для дерева устройств
-    fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
-    fMeraFolder: string;                        // Путь к последней папке импортированного Mera-файла
-    fMeraFileName: string;                      // Имя импортированного Mera-файла
-    fMeraSignals: TList;                        // Список TMeraSignalInfo, загруженных из файла
-    fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
-    fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
-    fSelectedSortAscending: Boolean;            // Направление текущей сортировки
-    fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
-    fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
+    fRunSettings: TRecorderRunControlSettings;   // РЎСЃС‹Р»РєР° РЅР° РѕР±СЉРµРєС‚ РЅР°СЃС‚СЂРѕРµРє Р·Р°РїСѓСЃРєР°/РѕСЃС‚Р°РЅРѕРІР°
+    fTagRegistry: TRecorderTagRegistry;         // РЎСЃС‹Р»РєР° РЅР° СЂРµРµСЃС‚СЂ С‚РµРіРѕРІ РїСЂРёР»РѕР¶РµРЅРёСЏ
+    fDeviceImageList: TCustomImageList;         // РЎРїРёСЃРѕРє РєР°СЂС‚РёРЅРѕРє РґР»СЏ РґРµСЂРµРІР° СѓСЃС‚СЂРѕР№СЃС‚РІ
+    fTagDialogImageList: TCustomImageList;      // РЎРїРёСЃРѕРє РёРєРѕРЅРѕРє РґРёР°Р»РѕРіР° РЅР°СЃС‚СЂРѕР№РєРё С‚РµРіРѕРІ
+    fMeraFolder: string;                        // РџСѓС‚СЊ Рє РїРѕСЃР»РµРґРЅРµР№ РїР°РїРєРµ РёРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕРіРѕ Mera-С„Р°Р№Р»Р°
+    fMeraFileName: string;                      // РРјСЏ РёРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕРіРѕ Mera-С„Р°Р№Р»Р°
+    fMeraSignals: TList;                        // РЎРїРёСЃРѕРє TMeraSignalInfo, Р·Р°РіСЂСѓР¶РµРЅРЅС‹С… РёР· С„Р°Р№Р»Р°
+    fSelectedChannelTags: TList;                // Row-map РІС‹Р±СЂР°РЅРЅС‹С… РєР°РЅР°Р»РѕРІ РЅР° TRecorderTag
+    fSelectedSortColumn: Integer;               // РљРѕР»РѕРЅРєР° С‚РµРєСѓС‰РµР№ СЃРѕСЂС‚РёСЂРѕРІРєРё РІС‹Р±СЂР°РЅРЅС‹С… РєР°РЅР°Р»РѕРІ
+    fSelectedSortAscending: Boolean;            // РќР°РїСЂР°РІР»РµРЅРёРµ С‚РµРєСѓС‰РµР№ СЃРѕСЂС‚РёСЂРѕРІРєРё
+    fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Р§РµСЂРЅРѕРІР°СЏ РјРѕРґРµР»СЊ Р°Р»РіРѕСЂРёС‚РјРѕРІ РІРєР»Р°РґРєРё РєР°РЅР°Р»РѕРІ
+    fFrequencyBands: TRecorderFrequencyBandList; // Р§РµСЂРЅРѕРІР°СЏ РјРѕРґРµР»СЊ С‡Р°СЃС‚РѕС‚РЅС‹С… РїРѕР»РѕСЃ
     fCanDrag: Boolean;
     fDragStartPt: TPoint;
     fDragSelectActive: Boolean;
@@ -161,7 +161,7 @@ type
     procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure GridPaint(Sender: TObject);
     
-    // Вспомогательные методы работы с Mera-сигналами
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РјРµС‚РѕРґС‹ СЂР°Р±РѕС‚С‹ СЃ Mera-СЃРёРіРЅР°Р»Р°РјРё
     procedure AddMeraSignal(ASignal: TMeraSignalInfo);
     function CloneMeraSignalForTag(ASignal: TMeraSignalInfo;
       const ATagName: string): TMeraSignalInfo;
@@ -193,7 +193,7 @@ type
     procedure HardwareReloadSourceClick(Sender: TObject);
     procedure HardwareEditSourceClick(Sender: TObject);
     
-    // Методы инициализации и обновления интерфейса
+    // РњРµС‚РѕРґС‹ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё Рё РѕР±РЅРѕРІР»РµРЅРёСЏ РёРЅС‚РµСЂС„РµР№СЃР°
     procedure PopulateChannelGrids;
     procedure PopulateHardwareTree;
     procedure PopulateAlgorithmsTree;
@@ -212,13 +212,13 @@ type
     procedure SetDialogButtonImages;
     procedure InitializeHardwareTree;
     
-    // Динамическое построение UI (используется при отсутствии lfm-файла формы)
+    // Р”РёРЅР°РјРёС‡РµСЃРєРѕРµ РїРѕСЃС‚СЂРѕРµРЅРёРµ UI (РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РїСЂРё РѕС‚СЃСѓС‚СЃС‚РІРёРё lfm-С„Р°Р№Р»Р° С„РѕСЂРјС‹)
     procedure BuildUi;
     procedure BuildRecorderTab(ATab: TTabSheet);
     procedure BuildHardwareTab(ATab: TTabSheet);
     procedure BuildPlaceholderTab(const ACaption: string);
     
-    // Чтение и сохранение настроек
+    // Р§С‚РµРЅРёРµ Рё СЃРѕС…СЂР°РЅРµРЅРёРµ РЅР°СЃС‚СЂРѕРµРє
     procedure LoadFromSettings;
     procedure StoreToSettings;
     procedure UpdateConditionControls;
@@ -228,14 +228,14 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     
-    // Свойства доступа к зависимостям
+    // РЎРІРѕР№СЃС‚РІР° РґРѕСЃС‚СѓРїР° Рє Р·Р°РІРёСЃРёРјРѕСЃС‚СЏРј
     property DeviceImageList: TCustomImageList read fDeviceImageList write SetDeviceImageList;
     property TagDialogImageList: TCustomImageList read fTagDialogImageList write fTagDialogImageList;
     property RunSettings: TRecorderRunControlSettings read fRunSettings write SetRunSettings;
     property TagRegistry: TRecorderTagRegistry read fTagRegistry write SetTagRegistry;
   end;
 
-{ Отображает модальный диалог настроек }
+{ РћС‚РѕР±СЂР°Р¶Р°РµС‚ РјРѕРґР°Р»СЊРЅС‹Р№ РґРёР°Р»РѕРі РЅР°СЃС‚СЂРѕРµРє }
 function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARunSettings: TRecorderRunControlSettings;
   ATagRegistry: TRecorderTagRegistry = nil;
@@ -246,7 +246,7 @@ implementation
 
 {$R *.lfm}
 
-{ Точка входа для запуска диалога настроек }
+{ РўРѕС‡РєР° РІС…РѕРґР° РґР»СЏ Р·Р°РїСѓСЃРєР° РґРёР°Р»РѕРіР° РЅР°СЃС‚СЂРѕРµРє }
 function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARunSettings: TRecorderRunControlSettings;
   ATagRegistry: TRecorderTagRegistry;
@@ -267,7 +267,7 @@ begin
   end;
 end;
 
-{ Вспомогательные функции динамического создания UI контролов }
+{ Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё РґРёРЅР°РјРёС‡РµСЃРєРѕРіРѕ СЃРѕР·РґР°РЅРёСЏ UI РєРѕРЅС‚СЂРѕР»РѕРІ }
 
 function AddLabel(AOwner: TComponent; AParent: TWinControl; ALeft, ATop: Integer;
   const ACaption: string): TLabel;
@@ -334,7 +334,7 @@ begin
   Result.Style := csDropDownList;
 end;
 
-{ Назначение картинки кнопкам с глифом }
+{ РќР°Р·РЅР°С‡РµРЅРёРµ РєР°СЂС‚РёРЅРєРё РєРЅРѕРїРєР°Рј СЃ РіР»РёС„РѕРј }
 procedure AssignButtonImage(AButton: TBitBtn; AImages: TCustomImageList;
   AIndex: Integer);
 var
@@ -405,7 +405,7 @@ begin
     btnChannelEdit.Width := 30;
     btnChannelEdit.Height := 30;
     btnChannelEdit.Caption := '...';
-    btnChannelEdit.Hint := 'Настроить выбранный канал';
+    btnChannelEdit.Hint := 'РќР°СЃС‚СЂРѕРёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Р№ РєР°РЅР°Р»';
     btnChannelEdit.ShowHint := True;
     btnChannelEdit.OnClick := @btnChannelEditClick;
   end;
@@ -483,11 +483,6 @@ procedure TRecorderSettingsDialog.SetTagRegistry(AValue: TRecorderTagRegistry);
 begin
   fTagRegistry := AValue;
   RestoreMeraSignalsFromTags;
-  if fTagRegistry <> nil then
-  begin
-    fSpectrumConfigTree.Assign(fTagRegistry.SpectrumConfigs);
-    PopulateAlgorithmsTree;
-  end;
 end;
 
 procedure TRecorderSettingsDialog.SetDeviceImageList(AValue: TCustomImageList);
@@ -506,7 +501,7 @@ begin
   SetDialogButtonImages;
 end;
 
-{ Настройка иконок кнопок на панели дерева устройств }
+{ РќР°СЃС‚СЂРѕР№РєР° РёРєРѕРЅРѕРє РєРЅРѕРїРѕРє РЅР° РїР°РЅРµР»Рё РґРµСЂРµРІР° СѓСЃС‚СЂРѕР№СЃС‚РІ }
 procedure TRecorderSettingsDialog.SetDialogButtonImages;
 var
   lButton: TComponent;
@@ -741,7 +736,7 @@ var
 begin
   Result := fSpectrumConfigTree.AddNode('spectrum.' +
     IntToStr(fSpectrumConfigTree.NodeCount + 1),
-    'Спектр ' + IntToStr(fSpectrumConfigTree.NodeCount + 1));
+    'РЎРїРµРєС‚СЂ ' + IntToStr(fSpectrumConfigTree.NodeCount + 1));
   lSettings := Result.Settings;
   if (ATag <> nil) and (ATag.PollFrequencyHz > 0) then
     lSettings.SampleRateHz := ATag.PollFrequencyHz;
@@ -784,7 +779,7 @@ begin
     Exit;
   if fAlgorithmKindCombo.ItemIndex < 0 then
     fAlgorithmKindCombo.ItemIndex := 0;
-  if fAlgorithmKindCombo.Text <> 'Спектр' then
+  if fAlgorithmKindCombo.Text <> 'РЎРїРµРєС‚СЂ' then
     Exit;
 
   lSelection := fSelectedChannelsGrid.Selection;
@@ -823,7 +818,7 @@ begin
   if fAlgorithmKindCombo <> nil then
   begin
     fAlgorithmKindCombo.Items.Clear;
-    fAlgorithmKindCombo.Items.Add('Спектр');
+    fAlgorithmKindCombo.Items.Add('РЎРїРµРєС‚СЂ');
     fAlgorithmKindCombo.ItemIndex := 0;
   end;
   if fAlgorithmWindowCombo <> nil then
@@ -875,7 +870,7 @@ begin
   fAlgorithmsTree.Items.BeginUpdate;
   try
     fAlgorithmsTree.Items.Clear;
-    lRoot := fAlgorithmsTree.Items.Add(nil, 'Алгоритмы');
+    lRoot := fAlgorithmsTree.Items.Add(nil, 'РђР»РіРѕСЂРёС‚РјС‹');
     lRoot.Data := nil;
     for I := 0 to fSpectrumConfigTree.NodeCount - 1 do
     begin
@@ -981,11 +976,11 @@ begin
   if (lFftSize > 0) and (lSampleRate > 0.0) then
   begin
     lPortionSec := lFftSize / lSampleRate;
-    fAlgorithmPortionLabel.Caption := 'порция: ' +
-      FormatFloat('0.###', lPortionSec) + ' с';
+    fAlgorithmPortionLabel.Caption := 'РїРѕСЂС†РёСЏ: ' +
+      FormatFloat('0.###', lPortionSec) + ' СЃ';
   end
   else
-    fAlgorithmPortionLabel.Caption := 'порция: - с';
+    fAlgorithmPortionLabel.Caption := 'РїРѕСЂС†РёСЏ: - СЃ';
 
   UpdateConfigStr;
 end;
@@ -1209,7 +1204,7 @@ begin
   end;
 end;
 
-{ Создание или обновление каналов/тегов в реестре на основе выбранных сигналов Mera-файла }
+{ РЎРѕР·РґР°РЅРёРµ РёР»Рё РѕР±РЅРѕРІР»РµРЅРёРµ РєР°РЅР°Р»РѕРІ/С‚РµРіРѕРІ РІ СЂРµРµСЃС‚СЂРµ РЅР° РѕСЃРЅРѕРІРµ РІС‹Р±СЂР°РЅРЅС‹С… СЃРёРіРЅР°Р»РѕРІ Mera-С„Р°Р№Р»Р° }
 procedure TRecorderSettingsDialog.CreateSelectedMeraTags;
 var
   I: Integer;
@@ -1310,7 +1305,7 @@ begin
   end;
 end;
 
-{ Возвращает Mera-сигнал по строке таблицы доступных каналов }
+{ Р’РѕР·РІСЂР°С‰Р°РµС‚ Mera-СЃРёРіРЅР°Р» РїРѕ СЃС‚СЂРѕРєРµ С‚Р°Р±Р»РёС†С‹ РґРѕСЃС‚СѓРїРЅС‹С… РєР°РЅР°Р»РѕРІ }
 function TRecorderSettingsDialog.AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
 var
   I: Integer;
@@ -1333,7 +1328,7 @@ begin
   end;
 end;
 
-{ Возвращает Mera-сигнал по строке таблицы выбранных каналов }
+{ Р’РѕР·РІСЂР°С‰Р°РµС‚ Mera-СЃРёРіРЅР°Р» РїРѕ СЃС‚СЂРѕРєРµ С‚Р°Р±Р»РёС†С‹ РІС‹Р±СЂР°РЅРЅС‹С… РєР°РЅР°Р»РѕРІ }
 function TRecorderSettingsDialog.SelectedSignalByGridRow(ARow: Integer): TMeraSignalInfo;
 var
   I: Integer;
@@ -1356,7 +1351,7 @@ begin
   end;
 end;
 
-{ Загрузка информации о сигналах из выбранного файла Mera }
+{ Р—Р°РіСЂСѓР·РєР° РёРЅС„РѕСЂРјР°С†РёРё Рѕ СЃРёРіРЅР°Р»Р°С… РёР· РІС‹Р±СЂР°РЅРЅРѕРіРѕ С„Р°Р№Р»Р° Mera }
 procedure TRecorderSettingsDialog.LoadMeraFile(const AFileName: string);
 begin
   fMeraFolder := ExtractFilePath(AFileName);
@@ -1370,7 +1365,7 @@ begin
   PopulateChannelGrids;
 end;
 
-{ Обновление дерева аппаратной части при загрузке файлов Mera }
+{ РћР±РЅРѕРІР»РµРЅРёРµ РґРµСЂРµРІР° Р°РїРїР°СЂР°С‚РЅРѕР№ С‡Р°СЃС‚Рё РїСЂРё Р·Р°РіСЂСѓР·РєРµ С„Р°Р№Р»РѕРІ Mera }
 procedure TRecorderSettingsDialog.DeleteCurrentMeraSource;
 var
   I: Integer;
@@ -1380,8 +1375,8 @@ begin
   if fMeraFileName = '' then
     Exit;
 
-  if MessageDlg('Удаление источника данных',
-    'Удалить источник данных "' + ExtractFileName(fMeraFileName) + '"?',
+  if MessageDlg('РЈРґР°Р»РµРЅРёРµ РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С…',
+    'РЈРґР°Р»РёС‚СЊ РёСЃС‚РѕС‡РЅРёРє РґР°РЅРЅС‹С… "' + ExtractFileName(fMeraFileName) + '"?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
 
@@ -1410,8 +1405,8 @@ begin
     Exit;
   if not FileExists(fMeraFileName) then
   begin
-    MessageDlg('Перечитывание источника',
-      'Файл источника данных не найден: ' + fMeraFileName,
+    MessageDlg('РџРµСЂРµС‡РёС‚С‹РІР°РЅРёРµ РёСЃС‚РѕС‡РЅРёРєР°',
+      'Р¤Р°Р№Р» РёСЃС‚РѕС‡РЅРёРєР° РґР°РЅРЅС‹С… РЅРµ РЅР°Р№РґРµРЅ: ' + fMeraFileName,
       mtWarning, [mbOK], 0);
     Exit;
   end;
@@ -1444,7 +1439,7 @@ begin
 
   lDialog := TOpenDialog.Create(Self);
   try
-    lDialog.Title := 'Выберите файл Mera';
+    lDialog.Title := 'Р’С‹Р±РµСЂРёС‚Рµ С„Р°Р№Р» Mera';
     lDialog.Filter := 'Mera file (*.mera)|*.mera|All files (*.*)|*.*';
     lDialog.InitialDir := ExtractFilePath(fMeraFileName);
     lDialog.FileName := ExtractFileName(fMeraFileName);
@@ -1495,7 +1490,7 @@ begin
   fHardwareTree.Items.BeginUpdate;
   try
     fHardwareTree.Items.Clear;
-    lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
+    lRootNode := fHardwareTree.Items.Add(nil, 'РЈСЃС‚СЂРѕР№СЃС‚РІР°');
     lRootNode.ImageIndex := CDeviceRootImageIndex;
     lRootNode.SelectedIndex := CDeviceRootImageIndex;
 
@@ -1541,7 +1536,7 @@ begin
   end;
 end;
 
-{ Установка заголовков сеток каналов }
+{ РЈСЃС‚Р°РЅРѕРІРєР° Р·Р°РіРѕР»РѕРІРєРѕРІ СЃРµС‚РѕРє РєР°РЅР°Р»РѕРІ }
 procedure TRecorderSettingsDialog.SetGridHeaders;
 begin
   if fAvailableChannelsGrid <> nil then
@@ -1549,9 +1544,9 @@ begin
     fAvailableChannelsGrid.ColCount := 3;
     fAvailableChannelsGrid.FixedRows := 1;
     fAvailableChannelsGrid.RowCount := 2;
-    fAvailableChannelsGrid.Cells[0, 0] := 'Адрес';
-    fAvailableChannelsGrid.Cells[1, 0] := 'Тип';
-    fAvailableChannelsGrid.Cells[2, 0] := 'Имя';
+    fAvailableChannelsGrid.Cells[0, 0] := 'РђРґСЂРµСЃ';
+    fAvailableChannelsGrid.Cells[1, 0] := 'РўРёРї';
+    fAvailableChannelsGrid.Cells[2, 0] := 'РРјСЏ';
     fAvailableChannelsGrid.Cells[0, 1] := '';
     fAvailableChannelsGrid.Cells[1, 1] := '';
     fAvailableChannelsGrid.Cells[2, 1] := '';
@@ -1562,13 +1557,13 @@ begin
     fSelectedChannelsGrid.ColCount := 8;
     fSelectedChannelsGrid.FixedRows := 1;
     fSelectedChannelsGrid.RowCount := 2;
-    fSelectedChannelsGrid.Cells[0, 0] := 'Имя';
-    fSelectedChannelsGrid.Cells[1, 0] := 'Адрес';
-    fSelectedChannelsGrid.Cells[2, 0] := 'Тип';
-    fSelectedChannelsGrid.Cells[3, 0] := 'Частота';
-    fSelectedChannelsGrid.Cells[4, 0] := 'ГХ';
-    fSelectedChannelsGrid.Cells[5, 0] := 'Группа';
-    fSelectedChannelsGrid.Cells[6, 0] := 'Информация';
+    fSelectedChannelsGrid.Cells[0, 0] := 'РРјСЏ';
+    fSelectedChannelsGrid.Cells[1, 0] := 'РђРґСЂРµСЃ';
+    fSelectedChannelsGrid.Cells[2, 0] := 'РўРёРї';
+    fSelectedChannelsGrid.Cells[3, 0] := 'Р§Р°СЃС‚РѕС‚Р°';
+    fSelectedChannelsGrid.Cells[4, 0] := 'Р“РҐ';
+    fSelectedChannelsGrid.Cells[5, 0] := 'Р“СЂСѓРїРїР°';
+    fSelectedChannelsGrid.Cells[6, 0] := 'РРЅС„РѕСЂРјР°С†РёСЏ';
     fSelectedChannelsGrid.Cells[7, 0] := 'ID';
     fSelectedChannelsGrid.Cells[0, 1] := '';
     fSelectedChannelsGrid.Cells[1, 1] := '';
@@ -1581,7 +1576,7 @@ begin
   end;
 end;
 
-{ Заполнение сеток доступных и выбранных каналов на основе fMeraSignals }
+{ Р—Р°РїРѕР»РЅРµРЅРёРµ СЃРµС‚РѕРє РґРѕСЃС‚СѓРїРЅС‹С… Рё РІС‹Р±СЂР°РЅРЅС‹С… РєР°РЅР°Р»РѕРІ РЅР° РѕСЃРЅРѕРІРµ fMeraSignals }
 procedure TRecorderSettingsDialog.PopulateChannelGrids;
 var
   I: Integer;
@@ -1662,7 +1657,7 @@ begin
   SGChange(fSelectedChannelsGrid);
 end;
 
-{ Переключение активности сигнала по двойному клику в дереве аппаратных модулей }
+{ РџРµСЂРµРєР»СЋС‡РµРЅРёРµ Р°РєС‚РёРІРЅРѕСЃС‚Рё СЃРёРіРЅР°Р»Р° РїРѕ РґРІРѕР№РЅРѕРјСѓ РєР»РёРєСѓ РІ РґРµСЂРµРІРµ Р°РїРїР°СЂР°С‚РЅС‹С… РјРѕРґСѓР»РµР№ }
 procedure TRecorderSettingsDialog.ToggleHardwareSignal(ANode: TTreeNode);
 var
   lSignal: TMeraSignalInfo;
@@ -1693,17 +1688,17 @@ begin
     lPopup := TPopupMenu.Create(Self);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := 'Перечитать теги источника';
+    lItem.Caption := 'РџРµСЂРµС‡РёС‚Р°С‚СЊ С‚РµРіРё РёСЃС‚РѕС‡РЅРёРєР°';
     lItem.OnClick := @HardwareReloadSourceClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := 'Настройка источника...';
+    lItem.Caption := 'РќР°СЃС‚СЂРѕР№РєР° РёСЃС‚РѕС‡РЅРёРєР°...';
     lItem.OnClick := @HardwareEditSourceClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := 'Удалить источник данных';
+    lItem.Caption := 'РЈРґР°Р»РёС‚СЊ РёСЃС‚РѕС‡РЅРёРє РґР°РЅРЅС‹С…';
     lItem.OnClick := @HardwareDeleteSourceClick;
     lPopup.Items.Add(lItem);
 
@@ -1721,14 +1716,14 @@ begin
   end;
 end;
 
-{ Динамическое создание пользовательского интерфейса }
+{ Р”РёРЅР°РјРёС‡РµСЃРєРѕРµ СЃРѕР·РґР°РЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРіРѕ РёРЅС‚РµСЂС„РµР№СЃР° }
 procedure TRecorderSettingsDialog.BuildUi;
 var
   lButtonPanel: TPanel;
   lButton: TButton;
   lTab: TTabSheet;
 begin
-  Caption := 'Настройка';
+  Caption := 'РќР°СЃС‚СЂРѕР№РєР°';
   Position := poOwnerFormCenter;
   BorderStyle := bsSizeable;
   Width := 890;
@@ -1742,16 +1737,16 @@ begin
 
   lTab := TTabSheet.Create(Self);
   lTab.PageControl := fPageControl;
-  lTab.Caption := 'Рекордер';
+  lTab.Caption := 'Р РµРєРѕСЂРґРµСЂ';
   BuildRecorderTab(lTab);
 
   lTab := TTabSheet.Create(Self);
   lTab.PageControl := fPageControl;
-  lTab.Caption := 'Аппаратные свойства';
+  lTab.Caption := 'РђРїРїР°СЂР°С‚РЅС‹Рµ СЃРІРѕР№СЃС‚РІР°';
   BuildHardwareTab(lTab);
 
-  BuildPlaceholderTab('Каналы');
-  BuildPlaceholderTab('Плагины');
+  BuildPlaceholderTab('РљР°РЅР°Р»С‹');
+  BuildPlaceholderTab('РџР»Р°РіРёРЅС‹');
 
   lButtonPanel := TPanel.Create(Self);
   lButtonPanel.Parent := Self;
@@ -1781,7 +1776,7 @@ begin
   lButton.AnchorSideRight.Control := lButtonPanel;
   lButton.AnchorSideRight.Side := asrRight;
   lButton.Anchors := [akTop, akRight];
-  lButton.Caption := 'Закрыть';
+  lButton.Caption := 'Р—Р°РєСЂС‹С‚СЊ';
   lButton.Cancel := True;
   lButton.ModalResult := mrCancel;
 
@@ -1794,11 +1789,11 @@ begin
   fApplyButton.AnchorSideRight.Control := lButtonPanel;
   fApplyButton.AnchorSideRight.Side := asrRight;
   fApplyButton.Anchors := [akTop, akRight];
-  fApplyButton.Caption := 'Применить';
+  fApplyButton.Caption := 'РџСЂРёРјРµРЅРёС‚СЊ';
   fApplyButton.OnClick := @ApplyButtonClick;
 end;
 
-{ Конструирование вкладки общих настроек }
+{ РљРѕРЅСЃС‚СЂСѓРёСЂРѕРІР°РЅРёРµ РІРєР»Р°РґРєРё РѕР±С‰РёС… РЅР°СЃС‚СЂРѕРµРє }
 procedure TRecorderSettingsDialog.BuildRecorderTab(ATab: TTabSheet);
 var
   lLeftPanel: TPanel;
@@ -1817,38 +1812,38 @@ begin
   lRightPanel.Width := 230;
   lRightPanel.BevelOuter := bvNone;
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 210, 82, 'Отображение');
-  AddLabel(Self, lGroup, 10, 22, 'Период обновления');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 210, 82, 'РћС‚РѕР±СЂР°Р¶РµРЅРёРµ');
+  AddLabel(Self, lGroup, 10, 22, 'РџРµСЂРёРѕРґ РѕР±РЅРѕРІР»РµРЅРёСЏ');
   fScreenUpdateEdit := AddEdit(Self, lGroup, 126, 18, 56, '0.5');
-  AddLabel(Self, lGroup, 186, 22, 'с');
+  AddLabel(Self, lGroup, 186, 22, 'СЃ');
 
-  lGroup := AddGroup(Self, lLeftPanel, 238, 8, 390, 82, 'Сигналы');
-  AddLabel(Self, lGroup, 10, 18, 'Длина отображаемых данных');
+  lGroup := AddGroup(Self, lLeftPanel, 238, 8, 390, 82, 'РЎРёРіРЅР°Р»С‹');
+  AddLabel(Self, lGroup, 10, 18, 'Р”Р»РёРЅР° РѕС‚РѕР±СЂР°Р¶Р°РµРјС‹С… РґР°РЅРЅС‹С…');
   fBufferSecondsEdit := AddEdit(Self, lGroup, 190, 14, 64, '1');
-  AddLabel(Self, lGroup, 260, 18, 'с');
-  AddLabel(Self, lGroup, 10, 40, 'Период обновления данных');
+  AddLabel(Self, lGroup, 260, 18, 'СЃ');
+  AddLabel(Self, lGroup, 10, 40, 'РџРµСЂРёРѕРґ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С…');
   fDataUpdateEdit := AddEdit(Self, lGroup, 190, 36, 64, '0.3');
-  AddLabel(Self, lGroup, 260, 40, 'с');
+  AddLabel(Self, lGroup, 260, 40, 'СЃ');
 
   lGroup := AddGroup(Self, lLeftPanel, 8, 102, 620, 78, '');
-  AddLabel(Self, lGroup, 10, 18, 'Испытание');
-  fTestNameEdit := AddEdit(Self, lGroup, 130, 14, 470, 'Испытание');
-  AddLabel(Self, lGroup, 10, 42, 'Изделие');
-  fProductNameEdit := AddEdit(Self, lGroup, 130, 42, 470, 'Изделие');
+  AddLabel(Self, lGroup, 10, 18, 'РСЃРїС‹С‚Р°РЅРёРµ');
+  fTestNameEdit := AddEdit(Self, lGroup, 130, 14, 470, 'РСЃРїС‹С‚Р°РЅРёРµ');
+  AddLabel(Self, lGroup, 10, 42, 'РР·РґРµР»РёРµ');
+  fProductNameEdit := AddEdit(Self, lGroup, 130, 42, 470, 'РР·РґРµР»РёРµ');
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 190, 620, 284, 'Запись');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 190, 620, 284, 'Р—Р°РїРёСЃСЊ');
   fModifyNameCheck := AddCheck(Self, lGroup, 12, 22,
-    'Модифицировать имя по каждому испытанию');
+    'РњРѕРґРёС„РёС†РёСЂРѕРІР°С‚СЊ РёРјСЏ РїРѕ РєР°Р¶РґРѕРјСѓ РёСЃРїС‹С‚Р°РЅРёСЋ');
   fModifyNameCheck.Enabled := False;
-  fPrehistoryCheck := AddCheck(Self, lGroup, 12, 48, 'Предыстория');
+  fPrehistoryCheck := AddCheck(Self, lGroup, 12, 48, 'РџСЂРµРґС‹СЃС‚РѕСЂРёСЏ');
   fPrehistoryEdit := AddEdit(Self, lGroup, 130, 44, 68, '10');
-  AddLabel(Self, lGroup, 206, 48, 'сек');
+  AddLabel(Self, lGroup, 206, 48, 'СЃРµРє');
   fResetTimeCheck := AddCheck(Self, lGroup, 12, 74,
-    'Сброс времени при начале записи');
-  fWriteWithPausesCheck := AddCheck(Self, lGroup, 12, 100, 'Запись с паузами');
+    'РЎР±СЂРѕСЃ РІСЂРµРјРµРЅРё РїСЂРё РЅР°С‡Р°Р»Рµ Р·Р°РїРёСЃРё');
+  fWriteWithPausesCheck := AddCheck(Self, lGroup, 12, 100, 'Р—Р°РїРёСЃСЊ СЃ РїР°СѓР·Р°РјРё');
   fSaveConfigWithDataCheck := AddCheck(Self, lGroup, 12, 126,
-    'Сохранять файл конфигурации вместе с записью данных');
-  AddLabel(Self, lGroup, 10, 154, 'Рабочий каталог');
+    'РЎРѕС…СЂР°РЅСЏС‚СЊ С„Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё РІРјРµСЃС‚Рµ СЃ Р·Р°РїРёСЃСЊСЋ РґР°РЅРЅС‹С…');
+  AddLabel(Self, lGroup, 10, 154, 'Р Р°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі');
   fWorkDirEdit := AddEdit(Self, lGroup, 10, 172, 526, 'C:\USML\');
   lButton := TButton.Create(Self);
   lButton.Parent := lGroup;
@@ -1858,42 +1853,42 @@ begin
   lButton.Height := 26;
   lButton.Caption := '...';
   lButton.OnClick := @WorkDirBrowseClick;
-  fTemplateCheck := AddCheck(Self, lGroup, 12, 204, 'Шаблон');
+  fTemplateCheck := AddCheck(Self, lGroup, 12, 204, 'РЁР°Р±Р»РѕРЅ');
   fTemplateButton := TButton.Create(Self);
   fTemplateButton.Parent := lGroup;
   fTemplateButton.Left := 84;
   fTemplateButton.Top := 200;
   fTemplateButton.Width := 86;
   fTemplateButton.Height := 26;
-  fTemplateButton.Caption := 'Настроить';
+  fTemplateButton.Caption := 'РќР°СЃС‚СЂРѕРёС‚СЊ';
   fTemplateButton.Enabled := False;
   fFrameDirEdit := AddEdit(Self, lGroup, 10, 232, 470, 'C:\USML\signal0000');
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, 'Условия старта записи');
-  fStartManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
-  fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
-  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 46, 'Триггерный старт', @ConditionChanged);
+  lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, 'РЈСЃР»РѕРІРёСЏ СЃС‚Р°СЂС‚Р° Р·Р°РїРёСЃРё');
+  fStartManualRadio := AddRadio(Self, lGroup, 10, 20, 'РџРѕ РєР»Р°РІРёС€Рµ', @ConditionChanged);
+  fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, 'РџРѕ СѓСЂРѕРІРЅСЋ', @ConditionChanged);
+  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 46, 'РўСЂРёРіРіРµСЂРЅС‹Р№ СЃС‚Р°СЂС‚', @ConditionChanged);
   fStartTriggerEdit := AddEdit(Self, lGroup, 140, 42, 48, '1');
-  AddLabel(Self, lGroup, 10, 76, 'Канал');
+  AddLabel(Self, lGroup, 10, 76, 'РљР°РЅР°Р»');
   fStartChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
   fStartEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
-  fStartEdgeCombo.Items.Add('меньше');
-  fStartEdgeCombo.Items.Add('больше');
+  fStartEdgeCombo.Items.Add('РјРµРЅСЊС€Рµ');
+  fStartEdgeCombo.Items.Add('Р±РѕР»СЊС€Рµ');
   fStartLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 160, 210, 170, 'Условия останова записи');
-  fStopManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
-  fStopLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
-  fStopDurationRadio := AddRadio(Self, lGroup, 10, 46, 'Через', @ConditionChanged);
+  lGroup := AddGroup(Self, lRightPanel, 8, 160, 210, 170, 'РЈСЃР»РѕРІРёСЏ РѕСЃС‚Р°РЅРѕРІР° Р·Р°РїРёСЃРё');
+  fStopManualRadio := AddRadio(Self, lGroup, 10, 20, 'РџРѕ РєР»Р°РІРёС€Рµ', @ConditionChanged);
+  fStopLevelRadio := AddRadio(Self, lGroup, 104, 20, 'РџРѕ СѓСЂРѕРІРЅСЋ', @ConditionChanged);
+  fStopDurationRadio := AddRadio(Self, lGroup, 10, 46, 'Р§РµСЂРµР·', @ConditionChanged);
   fStopDurationEdit := AddEdit(Self, lGroup, 70, 42, 74, '1.000000');
-  AddLabel(Self, lGroup, 152, 46, 'сек');
-  AddLabel(Self, lGroup, 10, 76, 'Канал');
+  AddLabel(Self, lGroup, 152, 46, 'СЃРµРє');
+  AddLabel(Self, lGroup, 10, 76, 'РљР°РЅР°Р»');
   fStopChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
   fStopEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
-  fStopEdgeCombo.Items.Add('меньше');
-  fStopEdgeCombo.Items.Add('больше');
+  fStopEdgeCombo.Items.Add('РјРµРЅСЊС€Рµ');
+  fStopEdgeCombo.Items.Add('Р±РѕР»СЊС€Рµ');
   fStopLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
-  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 126, 'Переход в просмотр');
+  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 126, 'РџРµСЂРµС…РѕРґ РІ РїСЂРѕСЃРјРѕС‚СЂ');
   fStopReturnToPreviewCheck.Enabled := False;
 
   lButton := TButton.Create(Self);
@@ -1902,7 +1897,7 @@ begin
   lButton.Top := 342;
   lButton.Width := 122;
   lButton.Height := 28;
-  lButton.Caption := 'Системное время';
+  lButton.Caption := 'РЎРёСЃС‚РµРјРЅРѕРµ РІСЂРµРјСЏ';
 
   fStartChannelCombo.Items.Add('MemTag');
   fStartChannelCombo.Items.Add('SineTag');
@@ -1910,7 +1905,7 @@ begin
   fStopChannelCombo.Items.Add('SineTag');
 end;
 
-{ Конструирование вкладки дерева оборудования и устройств }
+{ РљРѕРЅСЃС‚СЂСѓРёСЂРѕРІР°РЅРёРµ РІРєР»Р°РґРєРё РґРµСЂРµРІР° РѕР±РѕСЂСѓРґРѕРІР°РЅРёСЏ Рё СѓСЃС‚СЂРѕР№СЃС‚РІ }
 procedure TRecorderSettingsDialog.BuildHardwareTab(ATab: TTabSheet);
 var
   lGroup: TGroupBox;
@@ -1919,7 +1914,7 @@ var
   lButtonPanel: TPanel;
   lButton: TButton;
 begin
-  lGroup := AddGroup(Self, ATab, 8, 8, 858, 560, 'Устройства');
+  lGroup := AddGroup(Self, ATab, 8, 8, 858, 560, 'РЈСЃС‚СЂРѕР№СЃС‚РІР°');
   lGroup.AnchorSideRight.Control := ATab;
   lGroup.AnchorSideRight.Side := asrRight;
   lGroup.AnchorSideBottom.Control := ATab;
@@ -1940,15 +1935,15 @@ begin
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
   fHardwareTree.Options := fHardwareTree.Options + [tvoShowButtons, tvoShowLines, tvoShowRoot];
 
-  lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
+  lRootNode := fHardwareTree.Items.Add(nil, 'РЈСЃС‚СЂРѕР№СЃС‚РІР°');
   lRootNode.ImageIndex := CDeviceRootImageIndex;
   lRootNode.SelectedIndex := CDeviceRootImageIndex;
   lControllerNode := fHardwareTree.Items.AddChild(lRootNode,
-    '[1] МС-Крейт - ISA Крейт-контроллер s/n: 0000');
+    '[1] РњРЎ-РљСЂРµР№С‚ - ISA РљСЂРµР№С‚-РєРѕРЅС‚СЂРѕР»Р»РµСЂ s/n: 0000');
   lControllerNode.ImageIndex := CDeviceControllerImageIndex;
   lControllerNode.SelectedIndex := CDeviceControllerImageIndex;
   with fHardwareTree.Items.AddChild(lControllerNode,
-    'Слот 1 - MC-212 с/н:00000 - Тензомодуль 4 канала v4.0-v5.0') do
+    'РЎР»РѕС‚ 1 - MC-212 СЃ/РЅ:00000 - РўРµРЅР·РѕРјРѕРґСѓР»СЊ 4 РєР°РЅР°Р»Р° v4.0-v5.0') do
   begin
     ImageIndex := CDeviceModuleImageIndex;
     SelectedIndex := CDeviceModuleImageIndex;
@@ -1963,7 +1958,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '+';
-  lButton.Hint := 'Добавить устройство вручную';
+  lButton.Hint := 'Р”РѕР±Р°РІРёС‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РІСЂСѓС‡РЅСѓСЋ';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -1973,7 +1968,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '-';
-  lButton.Hint := 'Удалить устройство вручную';
+  lButton.Hint := 'РЈРґР°Р»РёС‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РІСЂСѓС‡РЅСѓСЋ';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -1983,7 +1978,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '...';
-  lButton.Hint := 'Настроить выбранное устройство';
+  lButton.Hint := 'РќР°СЃС‚СЂРѕРёС‚СЊ РІС‹Р±СЂР°РЅРЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -1993,11 +1988,11 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '?';
-  lButton.Hint := 'Автопоиск подключенных устройств';
+  lButton.Hint := 'РђРІС‚РѕРїРѕРёСЃРє РїРѕРґРєР»СЋС‡РµРЅРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ';
   lButton.ShowHint := True;
 end;
 
-{ Вспомогательная заглушка вкладки для ещё не разработанных компонентов }
+{ Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ Р·Р°РіР»СѓС€РєР° РІРєР»Р°РґРєРё РґР»СЏ РµС‰С‘ РЅРµ СЂР°Р·СЂР°Р±РѕС‚Р°РЅРЅС‹С… РєРѕРјРїРѕРЅРµРЅС‚РѕРІ }
 procedure TRecorderSettingsDialog.BuildPlaceholderTab(const ACaption: string);
 var
   lTab: TTabSheet;
@@ -2011,10 +2006,10 @@ begin
   lLabel.Parent := lTab;
   lLabel.Left := 16;
   lLabel.Top := 16;
-  lLabel.Caption := 'Раздел будет заполнен после появления соответствующей модели.';
+  lLabel.Caption := 'Р Р°Р·РґРµР» Р±СѓРґРµС‚ Р·Р°РїРѕР»РЅРµРЅ РїРѕСЃР»Рµ РїРѕСЏРІР»РµРЅРёСЏ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ РјРѕРґРµР»Рё.';
 end;
 
-{ Чтение конфигурации из объекта TRecorderRunControlSettings в UI элементы диалога }
+{ Р§С‚РµРЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РёР· РѕР±СЉРµРєС‚Р° TRecorderRunControlSettings РІ UI СЌР»РµРјРµРЅС‚С‹ РґРёР°Р»РѕРіР° }
 procedure TRecorderSettingsDialog.LoadFromSettings;
 begin
   if fRunSettings = nil then
@@ -2050,7 +2045,7 @@ begin
   UpdateConditionControls;
 end;
 
-{ Перенос настроек из UI в объект fRunSettings }
+{ РџРµСЂРµРЅРѕСЃ РЅР°СЃС‚СЂРѕРµРє РёР· UI РІ РѕР±СЉРµРєС‚ fRunSettings }
 procedure TRecorderSettingsDialog.StoreToSettings;
 begin
   if fRunSettings = nil then
@@ -2086,11 +2081,9 @@ begin
     fRunSettings.DataUpdateMs);
   fRunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   fRunSettings.RequireValid;
-  if fTagRegistry <> nil then
-    fTagRegistry.SpectrumConfigs.Assign(fSpectrumConfigTree);
 end;
 
-{ Включение/выключение контроллеров в зависимости от выбранных триггеров старта/останова }
+{ Р’РєР»СЋС‡РµРЅРёРµ/РІС‹РєР»СЋС‡РµРЅРёРµ РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРІ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ РІС‹Р±СЂР°РЅРЅС‹С… С‚СЂРёРіРіРµСЂРѕРІ СЃС‚Р°СЂС‚Р°/РѕСЃС‚Р°РЅРѕРІР° }
 procedure TRecorderSettingsDialog.UpdateConditionControls;
 var
   lStartLevel: Boolean;
@@ -2111,7 +2104,7 @@ begin
   fStopDurationEdit.Enabled := lStopDuration;
 end;
 
-{ Безопасное чтение вещественного числа из TEdit с учётом локали }
+{ Р‘РµР·РѕРїР°СЃРЅРѕРµ С‡С‚РµРЅРёРµ РІРµС‰РµСЃС‚РІРµРЅРЅРѕРіРѕ С‡РёСЃР»Р° РёР· TEdit СЃ СѓС‡С‘С‚РѕРј Р»РѕРєР°Р»Рё }
 function TRecorderSettingsDialog.ReadFloatEdit(AEdit: TEdit; ADefault: Double): Double;
 var
   lText: string;
@@ -2125,7 +2118,7 @@ begin
     Result := ADefault;
 end;
 
-{ Чтение секунд из UI и перевод в миллисекунды }
+{ Р§С‚РµРЅРёРµ СЃРµРєСѓРЅРґ РёР· UI Рё РїРµСЂРµРІРѕРґ РІ РјРёР»Р»РёСЃРµРєСѓРЅРґС‹ }
 function TRecorderSettingsDialog.ReadSecondsAsMs(AEdit: TEdit;
   ADefaultMs: Cardinal): Cardinal;
 var
@@ -2145,7 +2138,7 @@ begin
   lDir := Trim(fWorkDirEdit.Text);
   if lDir = '' then
     lDir := 'C:\USML\';
-  if not SelectDirectory('Выберите рабочий каталог для записи MERA-файлов', '', lDir) then
+  if not SelectDirectory('Р’С‹Р±РµСЂРёС‚Рµ СЂР°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі РґР»СЏ Р·Р°РїРёСЃРё MERA-С„Р°Р№Р»РѕРІ', '', lDir) then
     Exit;
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(lDir);
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(lDir) + '0001';
@@ -2169,12 +2162,12 @@ begin
   UpdateConditionControls;
 end;
 
-{ Добавление нового устройства путём импорта сигналов из файла Mera }
+{ Р”РѕР±Р°РІР»РµРЅРёРµ РЅРѕРІРѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР° РїСѓС‚С‘Рј РёРјРїРѕСЂС‚Р° СЃРёРіРЅР°Р»РѕРІ РёР· С„Р°Р№Р»Р° Mera }
 procedure TRecorderSettingsDialog.btnDeviceAddClick(Sender: TObject);
 var
   lDialog: TOpenDialog;
 begin
-  if MessageDlg('Добавление устройства', 'Mera file', mtConfirmation,
+  if MessageDlg('Р”РѕР±Р°РІР»РµРЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°', 'Mera file', mtConfirmation,
     [mbOK, mbCancel], 0) <> mrOk then
     Exit;
 
@@ -2195,7 +2188,7 @@ begin
   end;
 end;
 
-{ Добавление каналов в активный список }
+{ Р”РѕР±Р°РІР»РµРЅРёРµ РєР°РЅР°Р»РѕРІ РІ Р°РєС‚РёРІРЅС‹Р№ СЃРїРёСЃРѕРє }
 procedure TRecorderSettingsDialog.btnChannelAddClick(Sender: TObject);
 var
   lSignal: TMeraSignalInfo;
@@ -2227,7 +2220,7 @@ begin
   PopulateChannelGrids;
 end;
 
-{ Исключение каналов из активного списка }
+{ РСЃРєР»СЋС‡РµРЅРёРµ РєР°РЅР°Р»РѕРІ РёР· Р°РєС‚РёРІРЅРѕРіРѕ СЃРїРёСЃРєР° }
 procedure TRecorderSettingsDialog.btnChannelRemoveClick(Sender: TObject);
 var
   lSelection: TGridRect;
@@ -2441,7 +2434,7 @@ begin
     StoreSelectedAlgorithmSettings;
   except
     on E: Exception do
-      MessageDlg('Настройка спектра', E.Message, mtError, [mbOK], 0);
+      MessageDlg('РќР°СЃС‚СЂРѕР№РєР° СЃРїРµРєС‚СЂР°', E.Message, mtError, [mbOK], 0);
   end;
 end;
 
@@ -2469,7 +2462,7 @@ begin
   lProfile := lSettings.AhCorrectionProfileName;
   if lProfile = '' then
     lProfile := 'default';
-  if InputQuery('Коррекция АЧХ', 'Профиль коэффициентов спектра', lProfile) then
+  if InputQuery('РљРѕСЂСЂРµРєС†РёСЏ РђР§РҐ', 'РџСЂРѕС„РёР»СЊ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ СЃРїРµРєС‚СЂР°', lProfile) then
   begin
     lSettings.AhCorrectionEnabled := True;
     lSettings.AhCorrectionProfileName := lProfile;
@@ -2515,7 +2508,7 @@ begin
   fSelectedChannelsGridMouseDown(Sender, Button, Shift, X, Y);
 end;
 
-{ Drag and Drop доступного канала в активную сетку }
+{ Drag and Drop РґРѕСЃС‚СѓРїРЅРѕРіРѕ РєР°РЅР°Р»Р° РІ Р°РєС‚РёРІРЅСѓСЋ СЃРµС‚РєСѓ }
 procedure TRecorderSettingsDialog.fSelectedChannelsGridDragDrop(Sender,
   Source: TObject; X, Y: Integer);
 var
@@ -2554,7 +2547,7 @@ begin
   Accept := Source = fAvailableChannelsGrid;
 end;
 
-{ Двойной клик на устройстве/модуле в дереве для изменения его активности }
+{ Р”РІРѕР№РЅРѕР№ РєР»РёРє РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІРµ/РјРѕРґСѓР»Рµ РІ РґРµСЂРµРІРµ РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ РµРіРѕ Р°РєС‚РёРІРЅРѕСЃС‚Рё }
 procedure TRecorderSettingsDialog.fHardwareTreeDblClick(Sender: TObject);
 begin
   if (fHardwareTree = nil) or (fHardwareTree.Selected = nil) then

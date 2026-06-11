@@ -34,6 +34,69 @@
 						]
 				}
 		],
+		"spectrumConfigs" : [
+				{
+						"id" : "spectrum.1",
+						"displayName" : "Спектр 1",
+						"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=57600,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1",
+						"bindings" : [
+								{
+										"sourceTagName" : "1_датчик_X",
+										"outputPrefix" : "1_датчик_X_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "1_датчик_Y",
+										"outputPrefix" : "1_датчик_Y_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "1_датчик_Z",
+										"outputPrefix" : "1_датчик_Z_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "2_датчик_X",
+										"outputPrefix" : "2_датчик_X_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "2_датчик_Y",
+										"outputPrefix" : "2_датчик_Y_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "2_датчик_Z",
+										"outputPrefix" : "2_датчик_Z_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "3_датчик_X",
+										"outputPrefix" : "3_датчик_X_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "3_датчик_Y",
+										"outputPrefix" : "3_датчик_Y_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								},
+								{
+										"sourceTagName" : "3_датчик_Z",
+										"outputPrefix" : "3_датчик_Z_spm",
+										"useOwnSettings" : false,
+										"settings" : "FFTSize=8192,Overlap=0,OverlapMode=0,SampleRateHz=0,AverageBlockCount=1,ZeroPad=0,AhCorrectionEnabled=0,AhCorrectionProfileName=,IntegrationMode=0,WindowKind=1,NormalizeMode=0,KeepPhase=1"
+								}
+						]
+				}
+		],
 		"tags" : [
 				{
 						"id" : 1,

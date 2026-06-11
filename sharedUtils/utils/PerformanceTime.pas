@@ -41,7 +41,7 @@ Type
   public    constructor Create;    property Delay:Real read FDelay;
     function Start:double;
     // получить время от Start
-    function CurTime:double;    function checkCycle:boolean;  end;
+    function CurTime:double;    function checkCycle:boolean;  end;
   Function GetTimeInSec:Real; //вернет время в секундах, с начало работы ОС
 
 

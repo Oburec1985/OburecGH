@@ -1,18 +1,18 @@
-unit uRecorderProjectFiles;
+п»їunit uRecorderProjectFiles;
 
 {
-  Модуль uRecorderProjectFiles
+  РњРѕРґСѓР»СЊ uRecorderProjectFiles
 
-  Назначение:
-    Текстовый пакет конфигурации проекта RecorderLnx. Как в оригинальном
-    Recorder, визуальная часть формуляров хранится отдельно от основной
-    конфигурации каналов/аппаратных настроек. Формат намеренно простой:
-      <base>.config.json - теги, расчетные оценки, уставки, источники;
-      <base>.gui.ini     - страницы формуляров и компоненты мнемосхем;
-      <base>.run-control.ini сохраняется существующей моделью запуска.
+  РќР°Р·РЅР°С‡РµРЅРёРµ:
+    РўРµРєСЃС‚РѕРІС‹Р№ РїР°РєРµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РїСЂРѕРµРєС‚Р° RecorderLnx. РљР°Рє РІ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕРј
+    Recorder, РІРёР·СѓР°Р»СЊРЅР°СЏ С‡Р°СЃС‚СЊ С„РѕСЂРјСѓР»СЏСЂРѕРІ С…СЂР°РЅРёС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ РѕС‚ РѕСЃРЅРѕРІРЅРѕР№
+    РєРѕРЅС„РёРіСѓСЂР°С†РёРё РєР°РЅР°Р»РѕРІ/Р°РїРїР°СЂР°С‚РЅС‹С… РЅР°СЃС‚СЂРѕРµРє. Р¤РѕСЂРјР°С‚ РЅР°РјРµСЂРµРЅРЅРѕ РїСЂРѕСЃС‚РѕР№:
+      <base>.config.json - С‚РµРіРё, СЂР°СЃС‡РµС‚РЅС‹Рµ РѕС†РµРЅРєРё, СѓСЃС‚Р°РІРєРё, РёСЃС‚РѕС‡РЅРёРєРё;
+      <base>.gui.ini     - СЃС‚СЂР°РЅРёС†С‹ С„РѕСЂРјСѓР»СЏСЂРѕРІ Рё РєРѕРјРїРѕРЅРµРЅС‚С‹ РјРЅРµРјРѕСЃС…РµРј;
+      <base>.run-control.ini СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµР№ РјРѕРґРµР»СЊСЋ Р·Р°РїСѓСЃРєР°.
 
-  JSON пока не пытается быть бинарно совместимым с rcfg оригинального Recorder:
-  он повторяет смысловые разделы, но остается человекочитаемым.
+  JSON РїРѕРєР° РЅРµ РїС‹С‚Р°РµС‚СЃСЏ Р±С‹С‚СЊ Р±РёРЅР°СЂРЅРѕ СЃРѕРІРјРµСЃС‚РёРјС‹Рј СЃ rcfg РѕСЂРёРіРёРЅР°Р»СЊРЅРѕРіРѕ Recorder:
+  РѕРЅ РїРѕРІС‚РѕСЂСЏРµС‚ СЃРјС‹СЃР»РѕРІС‹Рµ СЂР°Р·РґРµР»С‹, РЅРѕ РѕСЃС‚Р°РµС‚СЃСЏ С‡РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Рј.
 }
 
 {$mode objfpc}{$H+}
@@ -25,13 +25,13 @@ uses
 
 type
   { TRecorderProjectFileSet
-    Набор путей к файлам проекта.
+    РќР°Р±РѕСЂ РїСѓС‚РµР№ Рє С„Р°Р№Р»Р°Рј РїСЂРѕРµРєС‚Р°.
     
-    BaseName           - базовое имя файлов проекта.
-    DirectoryName      - рабочий каталог проекта.
-    MainConfigFileName - путь к основному файлу конфигурации (.config.json).
-    GuiFileName        - путь к конфигурации GUI-модели (.gui.ini).
-    RunControlFileName - путь к настройкам запуска (.run-control.ini). }
+    BaseName           - Р±Р°Р·РѕРІРѕРµ РёРјСЏ С„Р°Р№Р»РѕРІ РїСЂРѕРµРєС‚Р°.
+    DirectoryName      - СЂР°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі РїСЂРѕРµРєС‚Р°.
+    MainConfigFileName - РїСѓС‚СЊ Рє РѕСЃРЅРѕРІРЅРѕРјСѓ С„Р°Р№Р»Сѓ РєРѕРЅС„РёРіСѓСЂР°С†РёРё (.config.json).
+    GuiFileName        - РїСѓС‚СЊ Рє РєРѕРЅС„РёРіСѓСЂР°С†РёРё GUI-РјРѕРґРµР»Рё (.gui.ini).
+    RunControlFileName - РїСѓС‚СЊ Рє РЅР°СЃС‚СЂРѕР№РєР°Рј Р·Р°РїСѓСЃРєР° (.run-control.ini). }
   TRecorderProjectFileSet = record
     BaseName: string;
     DirectoryName: string;
@@ -40,28 +40,28 @@ type
     RunControlFileName: string;
   end;
 
-{ Инициализирует и возвращает структуру путей проекта по каталогу и базовому имени }
+{ РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ РїСѓС‚РµР№ РїСЂРѕРµРєС‚Р° РїРѕ РєР°С‚Р°Р»РѕРіСѓ Рё Р±Р°Р·РѕРІРѕРјСѓ РёРјРµРЅРё }
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
 
-{ Сохраняет конфигурацию тегов в JSON-файл }
+{ РЎРѕС…СЂР°РЅСЏРµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ С‚РµРіРѕРІ РІ JSON-С„Р°Р№Р» }
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
-{ Загружает конфигурацию тегов из JSON-файла }
+{ Р—Р°РіСЂСѓР¶Р°РµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ С‚РµРіРѕРІ РёР· JSON-С„Р°Р№Р»Р° }
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 
-{ Сохраняет структуру страниц формуляров и их компонентов в INI-файл }
+{ РЎРѕС…СЂР°РЅСЏРµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃС‚СЂР°РЅРёС† С„РѕСЂРјСѓР»СЏСЂРѕРІ Рё РёС… РєРѕРјРїРѕРЅРµРЅС‚РѕРІ РІ INI-С„Р°Р№Р» }
 procedure SaveRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager);
-{ Загружает структуру страниц формуляров из INI-файла }
+{ Р—Р°РіСЂСѓР¶Р°РµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃС‚СЂР°РЅРёС† С„РѕСЂРјСѓР»СЏСЂРѕРІ РёР· INI-С„Р°Р№Р»Р° }
 procedure LoadRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager; AFactory: TRecorderComponentFactory);
 
 implementation
 
 uses
-  IniFiles, fpjson, jsonparser, uRecorderSpectrumEngine;
+  IniFiles, fpjson, jsonparser;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -126,8 +126,6 @@ begin
     Result := TRecorderOscillogramComponent.TypeId
   else if AComponent is TRecorderTrendComponent then
     Result := TRecorderTrendComponent.TypeId
-  else if AComponent is TRecorderSpectrumComponent then
-    Result := TRecorderSpectrumComponent.TypeId
   else
     Result := AComponent.ClassName;
 end;
@@ -436,83 +434,6 @@ begin
   end;
 end;
 
-procedure SaveSpectrumConfigs(AJson: TJSONArray; ATree: TRecorderSpectrumConfigTree);
-var
-  I, J: Integer;
-  lNode: TRecorderSpectrumConfigNode;
-  lItem, lBindingJson: TJSONObject;
-  lBindingsArray: TJSONArray;
-  lBinding: TRecorderSpectrumTagBinding;
-begin
-  if (AJson = nil) or (ATree = nil) then Exit;
-  for I := 0 to ATree.NodeCount - 1 do
-  begin
-    lNode := ATree.Nodes[I];
-    lItem := TJSONObject.Create;
-    AJson.Add(lItem);
-    
-    lItem.Add('id', lNode.Id);
-    lItem.Add('displayName', lNode.DisplayName);
-    lItem.Add('settings', lNode.Settings.AsString);
-    
-    lBindingsArray := JsonArray(lItem, 'bindings');
-    for J := 0 to lNode.BindingCount - 1 do
-    begin
-      lBinding := lNode.Bindings[J];
-      lBindingJson := TJSONObject.Create;
-      lBindingsArray.Add(lBindingJson);
-      
-      lBindingJson.Add('sourceTagName', lBinding.SourceTagName);
-      lBindingJson.Add('outputPrefix', lBinding.OutputPrefix);
-      lBindingJson.Add('useOwnSettings', lBinding.UseOwnSettings);
-      lBindingJson.Add('settings', lBinding.Settings.AsString);
-    end;
-  end;
-end;
-
-procedure LoadSpectrumConfigs(AJson: TJSONArray; ATree: TRecorderSpectrumConfigTree);
-var
-  I, J: Integer;
-  lItem, lBindingJson: TJSONObject;
-  lNode: TRecorderSpectrumConfigNode;
-  lBindingsArray: TJSONArray;
-  lBinding: TRecorderSpectrumTagBinding;
-  lSettingsStr: string;
-begin
-  if (AJson = nil) or (ATree = nil) then Exit;
-  ATree.Clear;
-  for I := 0 to AJson.Count - 1 do
-  begin
-    if not (AJson.Items[I] is TJSONObject) then Continue;
-    lItem := TJSONObject(AJson.Items[I]);
-    
-    lNode := ATree.AddNode(
-      lItem.Get('id', ''),
-      lItem.Get('displayName', '')
-    );
-    
-    lSettingsStr := lItem.Get('settings', '');
-    lNode.Settings.FromString(lSettingsStr);
-    
-    lBindingsArray := FindArray(lItem, 'bindings');
-    if lBindingsArray <> nil then
-    begin
-      for J := 0 to lBindingsArray.Count - 1 do
-      begin
-        if not (lBindingsArray.Items[J] is TJSONObject) then Continue;
-        lBindingJson := TJSONObject(lBindingsArray.Items[J]);
-        
-        lBinding := lNode.AddBinding(lBindingJson.Get('sourceTagName', ''));
-        lBinding.OutputPrefix := lBindingJson.Get('outputPrefix', '');
-        lBinding.UseOwnSettings := lBindingJson.Get('useOwnSettings', False);
-        
-        lSettingsStr := lBindingJson.Get('settings', '');
-        lBinding.Settings.FromString(lSettingsStr);
-      end;
-    end;
-  end;
-end;
-
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 var
@@ -533,7 +454,6 @@ begin
     lRoot.Add('version', 1);
     SaveDataSources(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
-    SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
 
     lTags := JsonArray(lRoot, 'tags');
     for I := 0 to ATags.TagCount - 1 do
@@ -606,7 +526,6 @@ begin
 
     ATags.Clear;
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
-    LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     for I := 0 to lTags.Count - 1 do
     begin
       if not (lTags.Items[I] is TJSONObject) then
@@ -654,7 +573,6 @@ var
   lPage: TRecorderFormPage;
   lSection: string;
   lTrend: TRecorderTrendComponent;
-  lSpectrum: TRecorderSpectrumComponent;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -707,26 +625,6 @@ begin
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
         end;
-        if lComponent is TRecorderSpectrumComponent then
-        begin
-          lSpectrum := TRecorderSpectrumComponent(lComponent);
-          lIni.WriteFloat(lSection, 'RangeMinX', lSpectrum.RangeMinX);
-          lIni.WriteFloat(lSection, 'RangeMaxX', lSpectrum.RangeMaxX);
-          lIni.WriteFloat(lSection, 'RangeMinY', lSpectrum.RangeMinY);
-          lIni.WriteFloat(lSection, 'RangeMaxY', lSpectrum.RangeMaxY);
-          lIni.WriteBool(lSection, 'LgX', lSpectrum.LgX);
-          lIni.WriteBool(lSection, 'LgY', lSpectrum.LgY);
-          lIni.WriteBool(lSection, 'ShowAlarms', lSpectrum.ShowAlarms);
-          lIni.WriteBool(lSection, 'ShowWarnings', lSpectrum.ShowWarnings);
-          lIni.WriteBool(lSection, 'ShowProfile', lSpectrum.ShowProfile);
-          lIni.WriteBool(lSection, 'ShowLabels', lSpectrum.ShowLabels);
-          lIni.WriteInteger(lSection, 'ResultType', lSpectrum.ResultType);
-          lIni.WriteString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
-          lIni.WriteString(lSection, 'ProfileName', lSpectrum.ProfileName);
-          lIni.WriteInteger(lSection, 'TagCount', lSpectrum.TagNames.Count);
-          for K := 0 to lSpectrum.TagNames.Count - 1 do
-            lIni.WriteString(lSection, Format('Tag%d', [K]), lSpectrum.TagNames[K]);
-        end;
         if lComponent is TRecorderTrendComponent then
         begin
           lTrend := TRecorderTrendComponent(lComponent);
@@ -777,7 +675,6 @@ var
   lPage: TRecorderFormPage;
   lSection: string;
   lTrend: TRecorderTrendComponent;
-  lSpectrum: TRecorderSpectrumComponent;
   lTypeId: string;
   lIni: TIniFile;
 begin
@@ -839,27 +736,6 @@ begin
                 Ord(rtbmRelativeSelectedTag)));
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
-          end;
-          if lComponent is TRecorderSpectrumComponent then
-          begin
-            lSpectrum := TRecorderSpectrumComponent(lComponent);
-            lSpectrum.RangeMinX := lIni.ReadFloat(lSection, 'RangeMinX', lSpectrum.RangeMinX);
-            lSpectrum.RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', lSpectrum.RangeMaxX);
-            lSpectrum.RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', lSpectrum.RangeMinY);
-            lSpectrum.RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', lSpectrum.RangeMaxY);
-            lSpectrum.LgX := lIni.ReadBool(lSection, 'LgX', lSpectrum.LgX);
-            lSpectrum.LgY := lIni.ReadBool(lSection, 'LgY', lSpectrum.LgY);
-            lSpectrum.ShowAlarms := lIni.ReadBool(lSection, 'ShowAlarms', lSpectrum.ShowAlarms);
-            lSpectrum.ShowWarnings := lIni.ReadBool(lSection, 'ShowWarnings', lSpectrum.ShowWarnings);
-            lSpectrum.ShowProfile := lIni.ReadBool(lSection, 'ShowProfile', lSpectrum.ShowProfile);
-            lSpectrum.ShowLabels := lIni.ReadBool(lSection, 'ShowLabels', lSpectrum.ShowLabels);
-            lSpectrum.ResultType := lIni.ReadInteger(lSection, 'ResultType', lSpectrum.ResultType);
-            lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
-            lSpectrum.ProfileName := lIni.ReadString(lSection, 'ProfileName', lSpectrum.ProfileName);
-            lSpectrum.TagNames.Clear;
-            lItemCount := lIni.ReadInteger(lSection, 'TagCount', 0);
-            for K := 0 to lItemCount - 1 do
-              lSpectrum.TagNames.Add(lIni.ReadString(lSection, Format('Tag%d', [K]), ''));
           end;
           if lComponent is TRecorderTrendComponent then
           begin

@@ -41,7 +41,7 @@ uses
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
-  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage;
+  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage, uRecorderSpectrumRuntime;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -143,6 +143,7 @@ type
     fTagRegistry: TRecorderTagRegistry;           // Общий реестр тегов и каналов
     fEventQueue: TRecorderEventSnapshotQueue;     // Очередь снимков значений для UI-потока
     fAlarmEngine: IRecorderAlarmEngine;           // Движок тревог/уставок для отображающих компонентов
+    fSpectrumManager: TRecorderSpectrumRuntimeManager;
     fTimeSystem: TRecorderTimeSystem;             // Подсистема контроля времени
     fDataSourceManager: TRecorderDataSourceManager; // Менеджер источников сбора данных
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
@@ -234,10 +235,14 @@ type
     procedure AddOscillogramComponentToActivePage;
     { Добавляет на активную страницу компонент тренда. }
     procedure AddTrendComponentToActivePage;
+    { Добавляет на активную страницу спектр. }
+    procedure AddSpectrumComponentToActivePage;
     { Обработчик кнопки добавления осциллограммы на полотне. }
     procedure AddOscillogramClick(Sender: TObject);
     { Обработчик кнопки добавления тренда на полотне. }
     procedure AddTrendClick(Sender: TObject);
+    { Обработчик кнопки добавления спектра на полотне. }
+    procedure AddSpectrumClick(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
     procedure AddDigitalIndicatorClick(Sender: TObject);
     { Переключает режим редактирования мнемосхемы. }
@@ -346,6 +351,7 @@ begin
   fTagRegistry := TRecorderTagRegistry.Create(fEventBus);
   fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
   fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
+  fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
   fTimeSystem := TRecorderTimeSystem.Create;
   fDataSourceManager := TRecorderDataSourceManager.Create;
   fLatestTagValues := TStringList.Create;
@@ -416,6 +422,7 @@ begin
   FreeAndNil(fDataSourceManager);
   FreeAndNil(fTimeSystem);
   fAlarmEngine := nil;
+  FreeAndNil(fSpectrumManager);
   FreeAndNil(fEventQueue);
   FreeAndNil(fTagRegistry);
   FreeAndNil(fEventBus);
@@ -1127,6 +1134,60 @@ begin
   AddLog('Form component added: ' + lComponent.Id);
 end;
 
+procedure TMainForm.AddSpectrumClick(Sender: TObject);
+begin
+  try
+    AddSpectrumComponentToActivePage;
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Add spectrum', E);
+  end;
+end;
+
+procedure TMainForm.AddSpectrumComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderSpectrumComponent;
+  lTag: TRecorderTag;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    raise ERecorderFormError.Create('Cannot add component without active page');
+  if not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
+
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderSpectrumComponent(
+    fComponentFactory.CreateComponent(TRecorderSpectrumComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('Spectrum%d', [fNextComponentNo]);
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
+
+    lTag := nil;
+    if fTagRegistry <> nil then
+    begin
+      lTag := fTagRegistry.SelectedTag;
+      if (lTag = nil) and (fTagRegistry.TagCount > 0) then
+        lTag := fTagRegistry.Tags[0];
+    end;
+
+    if lTag <> nil then
+      lComponent.TagNames.Add(lTag.Name);
+
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+
+  AddLog('Form component added: ' + lComponent.Id);
+end;
+
 procedure TMainForm.AddDigitalIndicatorClick(Sender: TObject);
 begin
   try
@@ -1230,7 +1291,7 @@ begin
   fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick);
   fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick);
   fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick);
-  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', nil, 0, False, False);
+  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
   fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick);
   fAddTagTableButton := AddEditMnemoToolBarButton(208, CIconTagTable, 'Add tag table', nil, 0, False, False);
   fAddButtonButton := AddEditMnemoToolBarButton(242, CIconButton, 'Add button', nil, 0, False, False);
@@ -2242,7 +2303,11 @@ begin
     rsPreview, rsRecord:
       begin
         if not (AOldState in [rsPreview, rsRecord]) then
+        begin
           fTimeSystem.Start;
+          if fSpectrumManager <> nil then
+            fSpectrumManager.RebuildChannels;
+        end;
         StartDataSources;
       end;
     rsStop:
@@ -2250,6 +2315,8 @@ begin
         StopDataSources;
         CloseRecordFrame;
         fTimeSystem.Stop;
+        if fSpectrumManager <> nil then
+          fSpectrumManager.ClearChannels;
       end;
   end;
 

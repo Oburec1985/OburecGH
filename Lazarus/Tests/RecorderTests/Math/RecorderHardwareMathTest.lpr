@@ -11,7 +11,8 @@ uses
   LConvEncoding,
   uCommonTypes,
   complex,
-  uHardwareMath;
+  uHardwareMath,
+  uRecorderSpectrumEngine;
 
 var
   g_LogFile: TextFile;
@@ -410,6 +411,136 @@ begin
   Log(Format('  AVX2:   %d us (%.2fx speedup)', [lTimeA, lTimeP / lTimeA]));
 end;
 
+type
+  TTestSpectrumReceiver = class
+  private
+    fFrameCount: Integer;
+    fLastFrame: TRecorderSpectrumFrame;
+  public
+    procedure OnSpectrumFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);
+    property FrameCount: Integer read fFrameCount;
+    property LastFrame: TRecorderSpectrumFrame read fLastFrame;
+  end;
+
+procedure TTestSpectrumReceiver.OnSpectrumFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);
+begin
+  Inc(fFrameCount);
+  fLastFrame.SourceTagName := AFrame.SourceTagName;
+  fLastFrame.FrameIndex := AFrame.FrameIndex;
+  fLastFrame.StartTimeSec := AFrame.StartTimeSec;
+  fLastFrame.EndTimeSec := AFrame.EndTimeSec;
+  fLastFrame.SampleRateHz := AFrame.SampleRateHz;
+  fLastFrame.FFTSize := AFrame.FFTSize;
+  fLastFrame.Bins := AFrame.Bins;
+  fLastFrame.FrequencyStepHz := AFrame.FrequencyStepHz;
+  
+  SetLength(fLastFrame.Rms, Length(AFrame.Rms));
+  if Length(AFrame.Rms) > 0 then
+    Move(AFrame.Rms[0], fLastFrame.Rms[0], Length(AFrame.Rms) * SizeOf(Double));
+    
+  SetLength(fLastFrame.PhaseRad, Length(AFrame.PhaseRad));
+  if Length(AFrame.PhaseRad) > 0 then
+    Move(AFrame.PhaseRad[0], fLastFrame.PhaseRad[0], Length(AFrame.PhaseRad) * SizeOf(Double));
+end;
+
+procedure TestSpectrumFFT;
+const
+  FFT_SIZE = 1024;
+  SAMPLE_RATE = 1000.0;
+  SIGNAL_FREQ = 100.0; // 100 Гц
+var
+  lSettings: TRecorderSpectrumSettings;
+  lChannel: TRecorderSpectrumChannel;
+  lReceiver: TTestSpectrumReceiver;
+  lTimes, lValues: array of Double;
+  I, lMaxBin: Integer;
+  lMaxVal, lFreq: Double;
+begin
+  Log('--- Тест вычислений спектра (FFT) ---');
+  
+  // 1. Инициализация настроек
+  lSettings.SetDefaults;
+  lSettings.FFTSize := FFT_SIZE;
+  lSettings.SampleRateHz := SAMPLE_RATE;
+  lSettings.WindowKind := swkHann;
+  lSettings.NormalizeMode := snmNone;
+  lSettings.KeepPhase := True;
+  lSettings.Validate;
+
+  // 2. Создание канала спектрального анализа и приемника кадров
+  lReceiver := TTestSpectrumReceiver.Create;
+  lChannel := TRecorderSpectrumChannel.Create('TestTag', lSettings);
+  try
+    lChannel.OnFrame := lReceiver.OnSpectrumFrame;
+
+    // Генерируем синусоидальный сигнал 100 Гц длительностью 2.0 секунды
+    // При частоте дискретизации 1000 Гц это 2000 отсчетов
+    SetLength(lTimes, 2000);
+    SetLength(lValues, 2000);
+    for I := 0 to 1999 do
+    begin
+      lTimes[I] := I / SAMPLE_RATE;
+      lValues[I] := sin(2.0 * Pi * SIGNAL_FREQ * lTimes[I]);
+    end;
+
+    // 3. Передаем данные порциями в канал (эмулируем поток данных)
+    // Передаем порциями по 250 отсчетов
+    for I := 0 to 7 do
+    begin
+      lChannel.FeedSamples(
+        Copy(lTimes, I * 250, 250),
+        Copy(lValues, I * 250, 250),
+        250
+      );
+    end;
+
+    // С размером FFT = 1024 и без перекрытия, из 2000 отсчетов должно
+    // сформироваться ровно 1 полный кадр (1024 отсчета). Оставшиеся 976 отсчетов
+    // будут ожидать следующей порции в буфере.
+    AssertEquals(lReceiver.FrameCount, 1, 'Количество сформированных кадров');
+    AssertEquals(lChannel.PendingCount, 2000 - 1024, 'Количество отсчетов в буфере ожидания');
+
+    // 4. Проверка характеристик сформированного спектрального кадра
+    AssertEquals(lReceiver.LastFrame.Bins, FFT_SIZE div 2, 'Количество спектральных бинов');
+    if Abs(lReceiver.LastFrame.FrequencyStepHz - (SAMPLE_RATE / FFT_SIZE)) > 1e-9 then
+      raise Exception.Create('Некорректный шаг по частоте');
+
+    // Ищем пиковую частоту в рассчитанном спектре
+    lMaxVal := -1.0;
+    lMaxBin := -1;
+    for I := 0 to lReceiver.LastFrame.Bins - 1 do
+    begin
+      if lReceiver.LastFrame.Rms[I] > lMaxVal then
+      begin
+        lMaxVal := lReceiver.LastFrame.Rms[I];
+        lMaxBin := I;
+      end;
+    end;
+
+    // Рассчитываем частоту пика
+    lFreq := lMaxBin * lReceiver.LastFrame.FrequencyStepHz;
+    Log(Format('  Найден пик на частоте: %.2f Гц (Бин %d, Амплитуда %.4f)', 
+      [lFreq, lMaxBin, lMaxVal]));
+
+    // Ожидаемый бин для 100 Гц при шаге 0.9765625 Гц: 100 / 0.9765625 = 102.4 -> 102
+    AssertEquals(lMaxBin, 102, 'Номер бина пиковой частоты');
+
+    // Проверяем, что пиковая частота близка к 100 Гц
+    if Abs(lFreq - SIGNAL_FREQ) > lReceiver.LastFrame.FrequencyStepHz then
+      raise Exception.CreateFmt('Частота пика %.2f Гц отличается от заданной %.2f Гц', 
+        [lFreq, SIGNAL_FREQ]);
+
+    // 5. Проверяем работу метода Clear (очистка буфера)
+    lChannel.Clear;
+    AssertEquals(lChannel.PendingCount, 0, 'Буфер канала после Clear');
+
+    Log('  Тест расчетов спектра успешно пройден!');
+  finally
+    lChannel.Free;
+    lReceiver.Free;
+  end;
+end;
+
 begin
   Writeln('Program started!');
   AssignFile(g_LogFile, 'logfile.log');
@@ -432,6 +563,8 @@ begin
     TestEvalSpmMag;
     Log('');
     TestNormalizeAndScaleSpmMag;
+    Log('');
+    TestSpectrumFFT;
 
     Log('');
     Log('=== All HardwareMath tests passed successfully! ===');

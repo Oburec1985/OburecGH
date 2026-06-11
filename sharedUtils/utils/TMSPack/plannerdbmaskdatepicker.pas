@@ -352,5 +352,5 @@ begin
   end;
   EditMask := EdM;
 end;
-
+
 end.

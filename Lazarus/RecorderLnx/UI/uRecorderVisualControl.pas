@@ -76,7 +76,8 @@ implementation
 uses
   uOglChartTrend,
   uRecorderOglOscillogramView,
-  uRecorderTrendView;
+  uRecorderTrendView,
+  uRecorderSpectrumView;
 
 { TRecorderVisualControlRegistry }
 
@@ -214,6 +215,7 @@ initialization
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTagValueComponent, TRecorderTagValueView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTrendComponent, TRecorderTrendView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderOscillogramComponent, TRecorderOglOscillogram);
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderSpectrumComponent, TRecorderSpectrumView);
 
 finalization
   TRecorderVisualControlRegistry.ClearRegistry;

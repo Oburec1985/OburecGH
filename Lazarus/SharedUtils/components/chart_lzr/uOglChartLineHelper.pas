@@ -219,7 +219,7 @@ begin
   lRendererObj.SetGLColor(ATrend.Color);
   glLineWidth(2.3);
   // Использование шейдерного рендеринга
-  if AUseShader and AShaderInitialized and (ATrend.Count > 2000) then
+  if AUseShader and AShaderInitialized then
   begin
     if AYAxis.UseOwnX then
     begin

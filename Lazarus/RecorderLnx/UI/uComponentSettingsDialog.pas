@@ -57,7 +57,7 @@ function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVi
 implementation
 
 uses
-  uRecorderTrendSettingsDialog;
+  uRecorderTrendSettingsDialog, uRecorderSpectrumSettingsDialog;
 
 function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
@@ -67,6 +67,9 @@ begin
   if AComponent is TRecorderTrendComponent then
     Exit(ShowRecorderTrendSettingsDialog(AOwner,
       TRecorderTrendComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderSpectrumComponent then
+    Exit(ShowRecorderSpectrumSettingsDialog(AOwner,
+      TRecorderSpectrumComponent(AComponent), ATagRegistry));
 
   lDialog := TComponentSettingsDialog.CreateDialog(AOwner, AComponent, ATagRegistry);
   try
