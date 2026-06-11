@@ -70,65 +70,16 @@ begin
 end;
 
 function TChartCursorListener.GetCursorLabelRect(ACursor: TChartCursor; ALabelIdx: Integer; AXPixel, AYPixel: Single; ARenderer: TOpenGLChartRenderer; APage: TChartPage): TChartPixelRect;
-
 var
-
   lFont: cOglFont;
-
   lTextWidth, lTextHeight: Single;
-
   lText: string;
-
-  lTrend: cBaseTrend;
-
-  lAxis: TChartAxis;
-
-  lValY: Double;
-
   lLines: TStringList;
-
   I: Integer;
-
+  lColors: TCardinalArray;
 begin
-
   lFont := ARenderer.FontManager.Font(cfGridTick);
-
-  lText := '';
-
-  lTrend := ARenderer.FindSelectedTrend(APage, ARenderer.SelectedObject);
-
-  
-
-  if ALabelIdx = 1 then
-
-  begin
-
-    lValY := 0;
-
-    if Assigned(lTrend) then
-
-      ARenderer.GetTrendValueAtX(lTrend, ACursor.X1, lValY);
-
-    lText := Format('X1: %0.5g'#13'Y1: %0.5g', [ACursor.X1, lValY]);
-
-  end
-
-  else
-
-  begin
-
-    lValY := 0;
-
-    if Assigned(lTrend) then
-
-      ARenderer.GetTrendValueAtX(lTrend, ACursor.X2, lValY);
-
-    lText := Format('X2: %0.5g'#13'Y2: %0.5g', [ACursor.X2, lValY]);
-
-  end;
-
-  
-
+  lText := ARenderer.GetCursorLabelTextAndColors(ACursor, ALabelIdx, APage, lColors);
   lLines := TStringList.Create;
 
   try
@@ -931,6 +882,46 @@ begin
   if not Enabled then Exit;
 
   // Alt + 3
+
+  // Alt + M or Alt + 4 (MultiLine cursor toggle)
+  if (((Key = Ord('M')) or (Key = Ord('4'))) and (ssAlt in Shift)) then
+  begin
+    if Supports(ASender, IChartControl, lControl) then
+    begin
+      lRenderer := TOpenGLChartRenderer(lControl.GetRenderer);
+      if not Assigned(lRenderer) then Exit;
+      lModel := TChartModel(lControl.GetModel);
+      if not Assigned(lModel) then Exit;
+      lPage := nil;
+      for I := 0 to lModel.ChildCount - 1 do
+      begin
+        if lModel.Children[I] is TChartPage then
+        begin
+          lPageRect := lRenderer.GetPageRect(TChartPage(lModel.Children[I]));
+          if (fLastMouseX >= lPageRect.Left) and (fLastMouseX <= lPageRect.Right) and
+             (fLastMouseY >= lPageRect.Top) and (fLastMouseY <= lPageRect.Bottom) then
+          begin
+            lPage := TChartPage(lModel.Children[I]);
+            Break;
+          end;
+        end;
+      end;
+      if Assigned(lPage) then
+      begin
+        lCursor := GetOrCreatePageCursor(lPage);
+        case lCursor.MultiLineMode of
+          mlDisabled:  lCursor.MultiLineMode := mlEnabled;
+          mlEnabled:   lCursor.MultiLineMode := mlShowNames;
+          mlShowNames: lCursor.MultiLineMode := mlDisabled;
+        end;
+        lControl.NotifyCursorChanged(lCursor);
+        lControl.Redraw;
+        Key := 0;
+        Handled := True;
+        Exit;
+      end;
+    end;
+  end;
 
   if (Key = Ord('3')) and (ssAlt in Shift) then
 

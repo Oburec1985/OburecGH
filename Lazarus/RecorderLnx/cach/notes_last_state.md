@@ -107,7 +107,31 @@
 - **Логарифмирование X на GPU в TOglChart**:
   - В [uOglChartRenderer.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas) оптимизированы шейдеры `SHADER_LINE_LG_VERT` и `SHADER_LINE_LG_1D_VERT` для правильной обработки нулевых и отрицательных частот по оси X с помощью функции `max(val, 1e-10)`. DC-компонента (0 Hz) теперь ровно привязывается к левой границе вьюпорта.
 
+- **Режим циклического мультилинейного курсора в OglChart (Alt + M / Alt + 4)**:
+  - Добавлено перечисление `TMultiLineMode = (mlDisabled, mlEnabled, mlShowNames)` в [uOglChartTypes.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTypes.pas).
+  - Свойство `MultiLine: Boolean` класса `TChartCursor` в [uOglChartCursor.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas) заменено на `MultiLineMode: TMultiLineMode`.
+  - В [uOglChartRenderer.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas) обновлен `GetCursorLabelTextAndColors` для вывода Y-координат всех видимых линий с их соответствующими цветами (для `mlEnabled` выводятся только значения `Y1: ...`, для `mlShowNames` выводятся имена трендов `<имя>: ...`).
+  - В [uOglChartCursorListener.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas) реализована циклическая смена режимов (`mlDisabled -> mlEnabled -> mlShowNames -> mlDisabled`) при нажатии сочетаний клавиш **Alt + M** и **Alt + 4**.
+  - Добавлены модульные тесты в [uOglChartCursorTest.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorTest.pas).
+
 ### Короткие промпты изменений:
 - **Промпт 1**: Добавить класс TRecorderCachedSpectrumFrame с глубоким копированием массивов в uRecorderSpectrumRuntime.pas. Создать синглтон-кэш с fLock: TCriticalSection и методами UpdateCache / GetLastFrame. Интегрировать чтение из кэша в uRecorderSpectrumView.pas. Configure при старте восстанавливает кадр и делает RefreshControl.
 - **Промпт 2**: Переписать uRecorderSpectrumSettingsDialog.pas, добавив двухколоночный выбор тегов: доступные слева, отображаемые справа. Добавить fFilterEdit (TEdit) для поиска. Реализовать фильтрацию по подстроке и исключение уже добавленных из доступных. Сделать перенос по кнопкам << / >> и по OnDblClick списков.
 - **Промпт 3**: Изменить вершинные шейдеры SHADER_LINE_LG_VERT и SHADER_LINE_LG_1D_VERT в uOglChartRenderer.pas, заменив улет неположительных координат в -200.0 на безопасный max(val, 1e-10), чтобы первая точка (0 Hz) спектра ложилась точно на левую границу, как в CPU-методе XValueToPixel.
+- **Промпт 4**: Добавить в OglChart поддержку циклического мультилинейного курсора (TMultiLineMode). По нажатию Alt+M / Alt+4 циклически переключать режимы: выкл (mlDisabled) -> вкл без имен (mlEnabled, выводит только Y-значения в цветах линий) -> отображать имя тренда (mlShowNames) -> выкл. Настроить JSON-сериализацию с поддержкой обратной совместимости. Все файлы pas сохранить в cp1251 без BOM.
+## 12. Доработка спектров: легенда, сплиттер, бесконфликтные метки максимумов
+
+### Проделанные изменения:
+- **Интеграция сплиттера**: В [uRecorderSpectrumView.pas](file:///d:/works/OburecGH/Lazarus/RecorderLnx/UI/uRecorderSpectrumView.pas) добавлен сплиттер Splitter: TSplitter (высота 4, курсор crVSplit, выравнивание lBottom). Это позволяет пользователю вручную регулировать высоту панели легенды.
+- **Отрисовка поверх линий (Z-Order)**: В класс TOpenGLChartRenderer в [uOglChartRenderer.pas](file:///d:/works/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas) добавлен метод RenderLabels. Отрисовка меток TChartTextLabel исключена из основного прохода RenderObject и перенесена во второй проход RenderLabels, вызываемый в конце RenderPage после отрисовки дерева объектов.
+- **Новый стиль меток максимумов**:
+  - Шрифт меток максимумов TChartFlagLabel изменен на мелкий cfGridTick (как на курсоре).
+  - Фон рамки сделан полупрозрачным светлым ($D8F5F5FA), граница и текст окрашиваются в цвет соответствующего тренда (Trend.Color).
+  - Размеры рамок в uRecorderSpectrumView.pas уменьшены с 190x38 до 150x32 для аккуратного размещения.
+  - Подпись максимума выводится в читаемом двухстрочном формате MAX %d: X=%s#13Y=%s.
+- **Бесконфликтное распределение (ResolveFlagOverlaps)**: Метод ResolveFlagOverlaps в TOpenGLChartRenderer рекурсивно собирает все видимые метки максимумов на странице, сортирует их по Y-координате на экране и бесконфликтно сдвигает перекрывающиеся рамки меток вертикально вниз, автоматически перераспределяя их. Линии-выноски тянутся к новым центрам смещенных рамок.
+
+### Промпты по доработке спектров:
+13. **Промпт**: Добавить сплиттер между легендой и графиком, реализовать бесконфликтную сортировку меток максимумов по Y-координате и перевести их на двухстрочный читаемый формат X/Y. Сделать отрисовку меток поверх линий спектра. Уменьшить шрифт до cfGridTick и красить рамку и текст меток максимумов в цвет линии.
+    *Изменение*: Интегрирована RenderLabels в uOglChartRenderer.pas для рисования меток после отрисовки дерева объектов. Настроен шрифт cfGridTick, полупрозрачный фон $D8F5F5FA и окрашивание текста/рамки в цвет тренда. В uRecorderSpectrumView.pas изменены размеры меток на 160x40.
+- **Динамический расчет ширины флага**: В uOglChartRenderer.pas интегрирован механизм измерения ширины текста меток (TextPixelWidth каждой строки в TStringList.Text). Во время рендеринга DrawTextLabel вычисляет максимальную ширину и динамически сужает рамку метки (с отступами по 6 пикселей с каждого края), исключая избыточное пустое пространство справа.

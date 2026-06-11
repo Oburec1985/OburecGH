@@ -1,7 +1,9 @@
 // Библиотека математических функций
 unit MathFunction;
 
+{$IFDEF FPC}
 {$mode delphi}
+{$ENDIF}
 
 {$IFDEF FPC}
   {$DEFINE GEOMETRY_NO_ASM}

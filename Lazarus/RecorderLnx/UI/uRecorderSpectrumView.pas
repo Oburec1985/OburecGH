@@ -41,6 +41,8 @@ type
     fHeaderSignature: string;
     fBufferedFrames: array of TBufferedFrame;
     fLock: TCriticalSection;
+    fSplitter: TSplitter;
+    fLegendHeightInitialized: Boolean;
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure ChartMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -80,6 +82,8 @@ begin
   fSeriesList := TList.Create;
   fMaxFlags := TList.Create;
   fLock := TCriticalSection.Create;
+  fSplitter := nil;
+  fLegendHeightInitialized := False;
 end;
 
 destructor TRecorderSpectrumView.Destroy;
@@ -290,7 +294,7 @@ begin
   lFlag.AnchorX := lFrame.MaxFrequencyHz;
   lFlag.WorldX := lFrame.MaxFrequencyHz;
   lFlag.WorldY := lFrame.MaxRms;
-  lFlag.Text := Format('MAX %d  X %s  Y %s', [lFrame.MaxIndex,
+  lFlag.Text := Format('MAX %d: X=%s'#13#10'Y=%s', [lFrame.MaxIndex,
     FormatFloat('0.######', lFrame.MaxFrequencyHz),
     FormatFloat('0.######', lFrame.MaxRms)]);
 end;
@@ -317,11 +321,24 @@ begin
   begin
     fHeaderPanel.Visible := False;
     fHeaderPanel.Height := 0;
+    fLegendHeightInitialized := False;
+    if fSplitter <> nil then
+      fSplitter.Visible := False;
     Exit;
   end;
 
   ConfigureLegendGrid;
   fHeaderPanel.Visible := True;
+  
+  if fSplitter = nil then
+  begin
+    fSplitter := TSplitter.Create(Self);
+    fSplitter.Parent := Self;
+    fSplitter.Align := alBottom;
+    fSplitter.Height := 4;
+    fSplitter.Cursor := crVSplit;
+  end;
+  fSplitter.Visible := True;
   lCursor := FindPageCursor;
   lHasCursor := (lCursor <> nil) and lCursor.Visible;
   lHasDouble := lHasCursor and (lCursor.CursorType = cctDouble);
@@ -405,7 +422,11 @@ begin
   end;
 
   SGChange(fLegendGrid, 48, 220, 18);
-  fHeaderPanel.Height := Min(180, Max(44, fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 6));
+  if not fLegendHeightInitialized then
+  begin
+    fHeaderPanel.Height := Min(180, Max(44, fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 6));
+    fLegendHeightInitialized := True;
+  end;
 end;
 
 procedure TRecorderSpectrumView.Configure(AComponent: TRecorderVisualComponent;
@@ -544,8 +565,8 @@ begin
     lFlag.Name := Format('MaxFlag%d', [I]);
     lFlag.Caption := lFlag.Name;
     lFlag.Visible := False;
-    lFlag.Width := 185;
-    lFlag.Height := 24;
+    lFlag.Width := 160;
+    lFlag.Height := 40;
     lFlag.Trend := lSeries;
     lFlag.Axis := fAxisY;
     fAxisY.AddChild(lFlag);

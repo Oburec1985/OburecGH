@@ -26,6 +26,7 @@ type
     fAxis: TChartAxis;                   // Ссылка на ось Y для пересчета WorldY
     fWidth: Integer;                     // Ширина рамки в пикселях (для мирового режима)
     fHeight: Integer;                    // Высота рамки в пикселях (для мирового режима)
+    fRenderYOffset: Integer;
   protected
     function GetAxis: TChartAxis; virtual;
     procedure SetAxis(AValue: TChartAxis); virtual;
@@ -47,6 +48,7 @@ type
     property Axis: TChartAxis read GetAxis write SetAxis;
     property Width: Integer read fWidth write fWidth;
     property Height: Integer read fHeight write fHeight;
+    property RenderYOffset: Integer read fRenderYOffset write fRenderYOffset;
   end;
 
   TChartFlagLabel = class(TChartTextLabel)
@@ -227,6 +229,7 @@ begin
   fAxis := nil;
   fWidth := 100;
   fHeight := 50;
+  fRenderYOffset := 0;
   // По умолчанию относительные координаты
   SetFloatRect(0.1, 0.1, 0.3, 0.25);
 end;

@@ -17,7 +17,7 @@ interface
 
 uses
 
-  Classes, SysUtils, uOglChartCursor, uOglChartBaseObj, uOglChartPage, uOglChartTrend;
+  Classes, SysUtils, uOglChartTypes, uOglChartCursor, uOglChartBaseObj, uOglChartPage, uOglChartTrend;
 
 
 
@@ -30,13 +30,20 @@ implementation
 
 
 procedure LogMsg(const AMsg: string);
-
+var
+  lFile: TextFile;
+  lPath: string;
 begin
-
   if IsConsole then
-
     WriteLn(AMsg);
-
+  lPath := ExtractFilePath(ParamStr(0)) + 'cursor_test.log';
+  AssignFile(lFile, lPath);
+  if FileExists(lPath) then
+    Append(lFile)
+  else
+    Rewrite(lFile);
+  WriteLn(lFile, AMsg);
+  CloseFile(lFile);
 end;
 
 
@@ -52,7 +59,7 @@ var
   lTrend: cBuffTrend1d;
 
 begin
-
+  DeleteFile(ExtractFilePath(ParamStr(0)) + 'cursor_test.log');
   LogMsg('--- RUNNING CURSOR TESTS ---');
 
   
@@ -78,6 +85,19 @@ begin
     if lCursor.CursorType <> cctSingle then
 
       raise Exception.Create('Ошибка: Тип курсора должен быть cctSingle.');
+      
+    if lCursor.MultiLineMode <> mlDisabled then
+      raise Exception.Create('Ошибка: Режим мультилинейности должен быть mlDisabled по умолчанию.');
+
+    lCursor.MultiLineMode := mlEnabled;
+    if lCursor.MultiLineMode <> mlEnabled then
+      raise Exception.Create('Ошибка: Не удалось переключить MultiLineMode в mlEnabled.');
+
+    lCursor.MultiLineMode := mlShowNames;
+    if lCursor.MultiLineMode <> mlShowNames then
+      raise Exception.Create('Ошибка: Не удалось переключить MultiLineMode в mlShowNames.');
+
+    lCursor.MultiLineMode := mlDisabled;
 
       
 

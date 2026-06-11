@@ -42,6 +42,7 @@ type
     fShowLabel: Boolean;
 
     fColor: Cardinal;
+    fMultiLineMode: TMultiLineMode;
 
   public
 
@@ -68,6 +69,7 @@ type
     property ShowLabel: Boolean read fShowLabel write fShowLabel;
 
     property Color: Cardinal read fColor write fColor;
+    property MultiLineMode: TMultiLineMode read fMultiLineMode write fMultiLineMode;
 
   end;
 
@@ -135,7 +137,8 @@ begin
 
   fShowLabel := True;
 
-  fColor := 4294901760; // Красный по умолчанию ()
+  fColor := 4294901760;
+  fMultiLineMode := mlDisabled;
 
 end;
 
@@ -160,6 +163,7 @@ begin
   AJson.Add('show_label', fShowLabel);
 
   AJson.Add('color', Int64(fColor));
+  AJson.Add('multiline_mode', Ord(fMultiLineMode));
 
 end;
 
@@ -186,6 +190,11 @@ begin
   if AJson.IndexOfName('show_label') <> -1 then fShowLabel := AJson.Booleans['show_label'];
 
   if AJson.IndexOfName('color') <> -1 then fColor := Cardinal(AJson.Integers['color']);
+  if AJson.IndexOfName('multiline_mode') <> -1 then fMultiLineMode := TMultiLineMode(AJson.Integers['multiline_mode'])
+  else if AJson.IndexOfName('multiline') <> -1 then
+  begin
+    if AJson.Booleans['multiline'] then fMultiLineMode := mlShowNames else fMultiLineMode := mlDisabled;
+  end;
 
 end;
 

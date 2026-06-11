@@ -1,6 +1,8 @@
 unit uCommonMath;
 
+{$IFDEF FPC}
 {$mode delphi}
+{$ENDIF}
 
 interface
 
@@ -1793,7 +1795,17 @@ var
   i, sepPos: integer;
   ch:char;
   resstr:string;
+  lDecSep: Char;
 begin
+  {$IFDEF FPC}
+  lDecSep := DefaultFormatSettings.DecimalSeparator;
+  {$ELSE}
+    {$IF CompilerVersion >= 22.0}
+    lDecSep := FormatSettings.DecimalSeparator;
+    {$ELSE}
+    lDecSep := DecimalSeparator;
+    {$IFEND}
+  {$ENDIF}
   if str='' then
   begin
     result:=0;
@@ -1817,9 +1829,9 @@ begin
   if sepPos > 0 then
   begin
     ch:=Str[sepPos];
-    if decimalseparator <> ch then
+    if lDecSep <> ch then
     begin
-      Str[i] := decimalseparator;
+      Str[i] := lDecSep;
     end;
   end;
   resstr:='';

@@ -15,6 +15,9 @@ uses
   SysUtils;
 
 type
+  TCardinalArray = array of Cardinal;
+  TMultiLineMode = (mlDisabled, mlEnabled, mlShowNames);
+
   { IOpenGLContextHost }
   // Интерфейс хоста OpenGL-контекста.
   // Отделяет логику рендера (TOpenGLChartRenderer) от конкретного визуального LCL-контрола.

@@ -101,6 +101,36 @@
         <Filename Value="uOglChartLabelEditListener.pas"/>
         <UnitName Value="uOglChartLabelEditListener"/>
       </Item>
+      <Item>
+        <Filename Value="uOglChartControl.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uOglChartControl"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartCursor.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uOglChartCursor"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartCursorListener.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uOglChartCursorListener"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartCursorTest.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uOglChartCursorTest"/>
+      </Item>
+      <Item>
+        <Filename Value="uOglChartLineHelper.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uOglChartLineHelper"/>
+      </Item>
+      <Item>
+        <Filename Value="uSharedQueue.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="uSharedQueue"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

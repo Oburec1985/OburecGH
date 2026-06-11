@@ -18,3 +18,11 @@ Font: PageCaption, Scale: 1,80, Height: 19, TexWidth: 2048, TexHeight: 32, Space
 Font: GridTick, Scale: 1,45, Height: 16, TexWidth: 2048, TexHeight: 16, SpaceWidth: 4, AWidth: 9
 Font: AxisLabel, Scale: 1,55, Height: 17, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9
 Font: AxisSelected, Scale: 1,55, Height: 18, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9
+Font: PageCaption, Scale: 1,80, Height: 19, TexWidth: 2048, TexHeight: 32, SpaceWidth: 5, AWidth: 11
+Font: GridTick, Scale: 1,45, Height: 16, TexWidth: 2048, TexHeight: 16, SpaceWidth: 4, AWidth: 9
+Font: AxisLabel, Scale: 1,55, Height: 17, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9
+Font: AxisSelected, Scale: 1,55, Height: 18, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9
+Font: PageCaption, Scale: 1,80, Height: 19, TexWidth: 2048, TexHeight: 32, SpaceWidth: 5, AWidth: 11
+Font: GridTick, Scale: 1,45, Height: 16, TexWidth: 2048, TexHeight: 16, SpaceWidth: 4, AWidth: 9
+Font: AxisLabel, Scale: 1,55, Height: 17, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9
+Font: AxisSelected, Scale: 1,55, Height: 18, TexWidth: 2048, TexHeight: 32, SpaceWidth: 4, AWidth: 9

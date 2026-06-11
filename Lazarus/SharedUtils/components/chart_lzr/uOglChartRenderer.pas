@@ -147,10 +147,13 @@ type
 
     procedure DrawTextLabel(ALabel: TChartTextLabel; APage: TChartPage; const ARect: TChartPixelRect);
     procedure DrawCursor(ACursor: TChartCursor; APage: TChartPage; const ARect: TChartPixelRect);
-    procedure DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string);
+    procedure CollectFlags(AObject: TChartBaseObject; AList: TList);
+    procedure ResolveFlagOverlaps(APage: TChartPage);
+    procedure DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray);
     /// <summary> Рекурсивный обход и отрисовка дочерних объектов модели. </summary>
 
     procedure RenderObject(AObject: TChartBaseObject; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
+    procedure RenderLabels(AObject: TChartBaseObject; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     /// <summary> Подготовка контекста и отрисовка отдельной страницы APage. </summary>
 
     procedure RenderPage(APage: TChartPage);
@@ -161,6 +164,7 @@ type
 
     procedure DrawHighlightRect(const ARect: TChartPixelRect; AColor: Cardinal);
   public
+    function GetCursorLabelTextAndColors(ACursor: TChartCursor; ALabelIdx: Integer; APage: TChartPage; out AColors: TCardinalArray): string;
     function FindSelectedTrend(APage: TChartPage; ASelectedObj: TChartBaseObject): cBaseTrend;
     function GetTrendValueAtX(ATrend: cBaseTrend; AWorldX: Double; out AValueY: Double): Boolean;
 
@@ -1014,13 +1018,81 @@ begin
   end;
 end;
 
-procedure TOpenGLChartRenderer.DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string);
+function TOpenGLChartRenderer.GetCursorLabelTextAndColors(ACursor: TChartCursor; ALabelIdx: Integer; APage: TChartPage; out AColors: TCardinalArray): string;
+var
+  lValX: Double;
+  lText: string;
+  lTrend, lTr: cBaseTrend;
+  lAxis: TChartAxis;
+  I, J: Integer;
+  lValY: Double;
+  lCount: Integer;
+begin
+  if ALabelIdx = 1 then
+    lValX := ACursor.X1
+  else
+    lValX := ACursor.X2;
+
+  lText := Format('X%d: %0.5g', [ALabelIdx, lValX]);
+  SetLength(AColors, 1);
+  AColors[0] := $FF101010;
+
+  if ACursor.MultiLineMode <> mlDisabled then
+  begin
+    lCount := 1;
+    for I := 0 to APage.ChildCount - 1 do
+    begin
+      if APage.Children[I] is TChartAxis then
+      begin
+        lAxis := TChartAxis(APage.Children[I]);
+        for J := 0 to lAxis.ChildCount - 1 do
+        begin
+          if lAxis.Children[J] is cBaseTrend then
+          begin
+            lTr := cBaseTrend(lAxis.Children[J]);
+            if lTr.Visible then
+            begin
+              lValY := 0.0;
+              if GetTrendValueAtX(lTr, lValX, lValY) then
+              begin
+                if ACursor.MultiLineMode = mlShowNames then
+                  lText := lText + #13 + Format('%s: %0.5g', [lTr.Caption, lValY])
+                else
+                  lText := lText + #13 + Format('%0.5g', [lValY]);
+                Inc(lCount);
+                SetLength(AColors, lCount);
+                AColors[lCount - 1] := lTr.Color;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    lTrend := FindSelectedTrend(APage, fSelectedObject);
+    if Assigned(lTrend) then
+    begin
+      lValY := 0.0;
+      GetTrendValueAtX(lTrend, lValX, lValY);
+      lText := lText + #13 + Format('Y%d: %0.5g', [ALabelIdx, lValY]);
+      SetLength(AColors, 2);
+      AColors[1] := lTrend.Color;
+    end;
+  end;
+
+  Result := lText;
+end;
+
+procedure TOpenGLChartRenderer.DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray);
 var
   lFont: cOglFont;
   lTextWidth, lTextHeight: Single;
   lRect: TChartPixelRect;
   lLines: TStringList;
   I: Integer;
+  lOldColor: Cardinal;
 begin
   lFont := fFontMng.Font(cfGridTick);
   lLines := TStringList.Create;
@@ -1043,10 +1115,18 @@ begin
     glLineWidth(1);
     DrawRect(lRect);
     
-    SetGLColor($FF101010); // Темный текст для контраста
-    for I := 0 to lLines.Count - 1 do
-    begin
-      DrawText(lLines[I], lRect.Left + 6, lRect.Top + 4 + I * (lFont.TextPixelHeight + 2), lFont);
+    lOldColor := lFont.Color;
+    try
+      for I := 0 to lLines.Count - 1 do
+      begin
+        if I < Length(AColors) then
+          lFont.Color := AColors[I]
+        else
+          lFont.Color := $FF101010;
+        DrawText(lLines[I], lRect.Left + 6, lRect.Top + 4 + I * (lFont.TextPixelHeight + 2), lFont);
+      end;
+    finally
+      lFont.Color := lOldColor;
     end;
   finally
     lLines.Free;
@@ -1056,11 +1136,10 @@ end;
 procedure TOpenGLChartRenderer.DrawCursor(ACursor: TChartCursor; APage: TChartPage; const ARect: TChartPixelRect);
 var
   lPixelX1, lPixelX2: Single;
-  lValY1, lValY2: Double;
-  lTrend: cBaseTrend;
   lYAxis: TChartAxis;
   lLabelY1, lLabelY2: Single;
-  lText: string;
+  lText1, lText2: string;
+  lColors1, lColors2: TCardinalArray;
 begin
   if not Assigned(ACursor) or not ACursor.Visible then Exit;
 
@@ -1068,8 +1147,6 @@ begin
   lPixelX1 := XValueToPixel(APage, lYAxis, ACursor.X1, ARect.Left, ARect.Right);
   lPixelX2 := XValueToPixel(APage, lYAxis, ACursor.X2, ARect.Left, ARect.Right);
 
-  lTrend := FindSelectedTrend(APage, fSelectedObject);
-  
   if (lPixelX1 >= ARect.Left) and (lPixelX1 <= ARect.Right) then
   begin
     SetGLColor(ACursor.Color);
@@ -1081,13 +1158,9 @@ begin
 
     if ACursor.ShowLabel then
     begin
-      lValY1 := 0.0;
-      if Assigned(lTrend) then
-        GetTrendValueAtX(lTrend, ACursor.X1, lValY1);
-      
-      lText := Format('X1: %0.5g'#13'Y1: %0.5g', [ACursor.X1, lValY1]);
+      lText1 := GetCursorLabelTextAndColors(ACursor, 1, APage, lColors1);
       lLabelY1 := ARect.Bottom + ACursor.LabelY1Offset * (ARect.Top - ARect.Bottom);
-      DrawCursorLabel(ACursor, lPixelX1, lLabelY1, lText);
+      DrawCursorLabel(ACursor, lPixelX1, lLabelY1, lText1, lColors1);
     end;
   end;
 
@@ -1104,13 +1177,9 @@ begin
 
       if ACursor.ShowLabel then
       begin
-        lValY2 := 0.0;
-        if Assigned(lTrend) then
-          GetTrendValueAtX(lTrend, ACursor.X2, lValY2);
-
-        lText := Format('X2: %0.5g'#13'Y2: %0.5g', [ACursor.X2, lValY2]);
+        lText2 := GetCursorLabelTextAndColors(ACursor, 2, APage, lColors2);
         lLabelY2 := ARect.Bottom + ACursor.LabelY2Offset * (ARect.Top - ARect.Bottom);
-        DrawCursorLabel(ACursor, lPixelX2, lLabelY2, lText);
+        DrawCursorLabel(ACursor, lPixelX2, lLabelY2, lText2, lColors2);
       end;
     end;
   end;
@@ -1517,37 +1586,67 @@ var
   lTrends: TList;
   lTrendIdx: Integer;
   lOldUseTextureAtlas: Boolean;
+  lOldColor: Cardinal;
+  lRawLines: TStringList;
+  lLineW: Single;
+  lMaxW: Single;
+  lTextWidth: Integer;
 begin
   lPageRect := PageToPixelRect(APage);
-  lContentRect := PageContentRect(APage);
-  lPageWidth := lPageRect.Right - lPageRect.Left;
+  lContentRect := PageContentRect(APage);  lPageWidth := lPageRect.Right - lPageRect.Left;
   lPageHeight := lPageRect.Bottom - lPageRect.Top;
-  // Вычисляем координаты X рамки метки в пикселях
+
+  // Вычисляем динамическую ширину метки на основе текста
+  if ALabel is TChartFlagLabel then
+    lFont := fFontMng.Font(cfGridTick)
+  else
+    lFont := fFontMng.Font(cfAxisLabel);
+
+  lTextWidth := ALabel.Width;
+  if Assigned(lFont) then
+  begin
+    lRawLines := TStringList.Create;
+    try
+      lRawLines.Text := ALabel.Text;
+      lMaxW := 0;
+      for I := 0 to lRawLines.Count - 1 do
+      begin
+        lLineW := lFont.TextPixelWidth(lRawLines[I]);
+        if lLineW > lMaxW then
+          lMaxW := lLineW;
+      end;
+      if lMaxW > 0 then
+        lTextWidth := Round(lMaxW) + 12; // 6px слева, 6px справа
+    finally
+      lRawLines.Free;
+    end;
+  end;
+
+  // В X-координатах:
   if ALabel.IsWorldX then
   begin
     lX := XValueToPixel(APage, nil, ALabel.WorldX, lContentRect.Left, lContentRect.Right);
     lLabelRect.Left := Round(lX);
-    lLabelRect.Right := lLabelRect.Left + ALabel.Width;
+    lLabelRect.Right := lLabelRect.Left + lTextWidth;
   end
-
   else
   begin
     lLabelRect.Left := lContentRect.Left + Round(ALabel.FloatRect.Left * (lContentRect.Right - lContentRect.Left));
-    lLabelRect.Right := lContentRect.Left + Round(ALabel.FloatRect.Right * (lContentRect.Right - lContentRect.Left));
+    lLabelRect.Right := lLabelRect.Left + lTextWidth;
   end;
 
   // Вычисляем координаты Y рамки метки в пикселях
   if ALabel.IsWorldY and Assigned(ALabel.Axis) then
   begin
     lY := AxisValueToPixel(ALabel.Axis, ALabel.WorldY, lContentRect.Bottom, lContentRect.Top);
-    lLabelRect.Top := Round(lY);
+    lLabelRect.Top := Round(lY) + ALabel.RenderYOffset;
     lLabelRect.Bottom := lLabelRect.Top + ALabel.Height;
   end
 
   else
   begin
-    lLabelRect.Top := lContentRect.Top + Round(ALabel.FloatRect.Top * (lContentRect.Bottom - lContentRect.Top));
-    lLabelRect.Bottom := lContentRect.Top + Round(ALabel.FloatRect.Bottom * (lContentRect.Bottom - lContentRect.Top));
+    lLabelRect.Top := lContentRect.Top + Round(ALabel.FloatRect.Top * (lContentRect.Bottom - lContentRect.Top)) + ALabel.RenderYOffset;
+    lLabelRect.Bottom := lContentRect.Top + Round(ALabel.FloatRect.Bottom * (lContentRect.Bottom - lContentRect.Top)) + ALabel.RenderYOffset;
   end;
 
   // 1. Если это флаг, рисуем линию выноски и маркер на самом тренде
@@ -1611,46 +1710,49 @@ begin
 
   end;
 
-  // 2. Рисуем подложку рамки (залитый прямоугольник)
-  SetGLColor($FFFFFFFF); // Белый фон
-  FillRect(lLabelRect);
-  // 3. Рисуем рамку
-  if SelectedObject = ALabel then
-    SetGLColor($FFFF0000) // Выделенная рамка (синий цвет ABGR: $FFFF0000)
+  // 2. Рисуем фон метки (для флага максимума делаем его полупрозрачным, как у курсора)
+  if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
+    SetGLColor($D8F5F5FA)
   else
-    SetGLColor($FFCCCCCC); // Обычная рамка (светло-серая)
+    SetGLColor($FFFFFFFF);
+  FillRect(lLabelRect);
+  // 3. Рисуем границу рамки
+  if SelectedObject = ALabel then
+    SetGLColor($FFFF0000) // Выделено (красный)
+  else if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
+    SetGLColor(TChartFlagLabel(ALabel).Trend.Color) // В цвет соответствующей линии
+  else
+    SetGLColor($FFCCCCCC); // Обычный серый
   glLineWidth(1.0);
   DrawRect(lLabelRect);
   // 4. Отрисовка текста с автопереносом
-  lFont := fFontMng.Font(cfAxisLabel);
+  // 4. Отрисовка текста внутри метки
+  if ALabel is TChartFlagLabel then
+    lFont := fFontMng.Font(cfGridTick) // Используем мелкий шрифт, как на курсорах
+  else
+    lFont := fFontMng.Font(cfAxisLabel);
   if Assigned(lFont) then
   begin
-    lFont.Color := $FF333333; // Темно-серый текст
+    lOldColor := lFont.Color;
+    if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
+      lFont.Color := TChartFlagLabel(ALabel).Trend.Color // Текст цветом линии
+    else
+      lFont.Color := $FF333333;
     lLines := TStringList.Create;
     try
-      // Вызываем наш метод Word Wrap из TChartTextLabel
       ALabel.GetWrappedLines(lFont, lLabelRect.Right - lLabelRect.Left - 8, lLines);
       lLineY := lLabelRect.Top + 4;
       for I := 0 to lLines.Count - 1 do
       begin
-        // Если текст выходит за пределы рамки по вертикали, прекращаем отрисовку
         if (I > 0) and (lLineY + lFont.TextPixelHeight > lLabelRect.Bottom - 2) then
           Break;
-        lOldUseTextureAtlas := gUseTextureAtlas;
-        try
-          if ALabel is TChartFlagLabel then
-            gUseTextureAtlas := False;
-          DrawText(lLines[I], lLabelRect.Left + 4, lLineY, lFont);
-        finally
-          gUseTextureAtlas := lOldUseTextureAtlas;
-        end;
+        DrawText(lLines[I], lLabelRect.Left + 4, lLineY, lFont);
         lLineY := lLineY + lFont.TextPixelHeight + 2;
       end;
-
     finally
+      lFont.Color := lOldColor;
       lLines.Free;
     end;
-
   end;
 
 end;
@@ -1671,12 +1773,107 @@ begin
     lYAxis := TChartAxis(AObject);
   if AObject is cBaseTrend then
     DrawBaseTrend(cBaseTrend(AObject), ARect, APage, lYAxis);
-  if AObject is TChartTextLabel then
-    DrawTextLabel(TChartTextLabel(AObject), APage, ARect);
+  // В основном проходе TChartTextLabel пропускается (рисуется позже в RenderLabels)
+  // if AObject is TChartTextLabel then
+  //   DrawTextLabel(TChartTextLabel(AObject), APage, ARect);
   if AObject is TChartCursor then
     DrawCursor(TChartCursor(AObject), APage, ARect);
   for lIndex := 0 to AObject.ChildCount - 1 do
     RenderObject(AObject.Children[lIndex], ARect, APage, lYAxis);
+end;
+
+procedure TOpenGLChartRenderer.RenderLabels(AObject: TChartBaseObject; const ARect: TChartPixelRect;
+  APage: TChartPage; AYAxis: TChartAxis);
+var
+  lIndex: Integer;
+  lYAxis: TChartAxis;
+begin
+  if not Assigned(AObject) then
+    Exit;
+  if (AObject is TChartDrawObject) and not TChartDrawObject(AObject).Visible then
+    Exit;
+  lYAxis := AYAxis;
+  if AObject is TChartAxis then
+    lYAxis := TChartAxis(AObject);
+  if AObject is TChartTextLabel then
+    DrawTextLabel(TChartTextLabel(AObject), APage, ARect);
+  for lIndex := 0 to AObject.ChildCount - 1 do
+    RenderLabels(AObject.Children[lIndex], ARect, APage, lYAxis);
+end;
+
+procedure TOpenGLChartRenderer.CollectFlags(AObject: TChartBaseObject; AList: TList);
+var
+  I: Integer;
+begin
+  if not Assigned(AObject) then Exit;
+  if (AObject is TChartFlagLabel) and TChartFlagLabel(AObject).Visible then
+    AList.Add(AObject);
+  for I := 0 to AObject.ChildCount - 1 do
+    CollectFlags(AObject.Children[I], AList);
+end;
+
+procedure TOpenGLChartRenderer.ResolveFlagOverlaps(APage: TChartPage);
+var
+  lFlags: TList;
+  lFlag: TChartFlagLabel;
+  I, J: Integer;
+  lContentRect: TChartPixelRect;
+  lY: Single;
+  lBaseY: array of Integer;
+  lHeight: array of Integer;
+  lTemp: Pointer;
+  lDiff: Integer;
+begin
+  lFlags := TList.Create;
+  try
+    CollectFlags(APage, lFlags);
+    if lFlags.Count <= 1 then Exit;
+
+    lContentRect := PageContentRect(APage);
+
+    SetLength(lBaseY, lFlags.Count);
+    SetLength(lHeight, lFlags.Count);
+    for I := 0 to lFlags.Count - 1 do
+    begin
+      lFlag := TChartFlagLabel(lFlags[I]);
+      lFlag.RenderYOffset := 0;
+      
+      if lFlag.IsWorldY and Assigned(lFlag.Axis) then
+      begin
+        lY := AxisValueToPixel(lFlag.Axis, lFlag.WorldY, lContentRect.Bottom, lContentRect.Top);
+        lBaseY[I] := Round(lY);
+      end
+      else
+      begin
+        lBaseY[I] := lContentRect.Top + Round(lFlag.FloatRect.Top * (lContentRect.Bottom - lContentRect.Top));
+      end;
+      lHeight[I] := lFlag.Height;
+    end;
+
+    for I := 0 to lFlags.Count - 2 do
+      for J := I + 1 to lFlags.Count - 1 do
+        if lBaseY[I] > lBaseY[J] then
+        begin
+          lTemp := lFlags[I];
+          lFlags[I] := lFlags[J];
+          lFlags[J] := lTemp;
+          
+          lDiff := lBaseY[I]; lBaseY[I] := lBaseY[J]; lBaseY[J] := lDiff;
+          lDiff := lHeight[I]; lHeight[I] := lHeight[J]; lHeight[J] := lDiff;
+        end;
+
+    for I := 1 to lFlags.Count - 1 do
+    begin
+      lDiff := (lBaseY[I-1] + TChartFlagLabel(lFlags[I-1]).RenderYOffset + lHeight[I-1] + 4) - lBaseY[I];
+      if lDiff > 0 then
+      begin
+        TChartFlagLabel(lFlags[I]).RenderYOffset := lDiff;
+      end;
+    end;
+
+  finally
+    lFlags.Free;
+  end;
 end;
 
 procedure TOpenGLChartRenderer.RenderPage(APage: TChartPage);
@@ -1690,6 +1887,7 @@ begin
     Exit;
   if not APage.Visible then
     Exit;
+  ResolveFlagOverlaps(APage);
   fPageRect := PageToPixelRect(APage);
   lContentRect := PageContentRect(APage);
   lYAxis := GetPrimaryXAxis(APage);
@@ -1705,6 +1903,8 @@ begin
     Max(1, lContentRect.Bottom - lContentRect.Top));
   for lIndex := 0 to APage.ChildCount - 1 do
     RenderObject(APage.Children[lIndex], lContentRect, APage, nil);
+  for lIndex := 0 to APage.ChildCount - 1 do
+    RenderLabels(APage.Children[lIndex], lContentRect, APage, nil);
   glDisable(GL_SCISSOR_TEST);
 end;
 
