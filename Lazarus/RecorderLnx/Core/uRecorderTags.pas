@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, Math,
-  uRecorderCoreServices, uRecorderSpectrumEngine;
+  uRecorderCoreServices, uRecorderSpectrumEngine, uRecorderFrequencyBands;
 
 type
   { Идентификатор тега }
@@ -332,6 +332,7 @@ type
     fTags: TList;                                     { Список тегов (TRecorderTag) }
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
+    fFrequencyBands: TRecorderFrequencyBandList;
     function GetActiveSourceCount: Integer;
     function GetActiveSourceId(AIndex: Integer): string;
     function GetSelectedTag: TRecorderTag;
@@ -382,6 +383,7 @@ type
     property TagCount: Integer read GetTagCount;
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
+    property FrequencyBands: TRecorderFrequencyBandList read fFrequencyBands;
     property Tags[AIndex: Integer]: TRecorderTag read GetTag;
   end;
 
@@ -927,11 +929,13 @@ begin
   fNextId := 1;
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
+  fFrequencyBands := TRecorderFrequencyBandList.Create;
 end;
 
 destructor TRecorderTagRegistry.Destroy;
 begin
   Clear;
+  fFrequencyBands.Free;
   fSpectrumConfigs.Free;
   fCalibrations.Free;
   fActiveSourceIds.Free;

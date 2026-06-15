@@ -130,6 +130,15 @@ type
     property Nodes[AIndex: Integer]: TRecorderSpectrumConfigNode read GetNode;
   end;
 
+  TRecorderSpectrumBandResult = record
+    BandName: string;
+    F1: Double;
+    F2: Double;
+    Rms: Double;
+    MaxRms: Double;
+    MaxFrequencyHz: Double;
+  end;
+
   TRecorderSpectrumFrame = record
     SourceTagName: string;
     FrameIndex: Int64;
@@ -141,6 +150,7 @@ type
     FrequencyStepHz: Double;
     Rms: array of Double;
     PhaseRad: array of Double;
+    Bands: array of TRecorderSpectrumBandResult;
     MaxIndex: Integer;
     MaxFrequencyHz: Double;
     MaxRms: Double;

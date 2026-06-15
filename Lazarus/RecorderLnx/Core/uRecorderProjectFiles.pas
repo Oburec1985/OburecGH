@@ -61,7 +61,7 @@ procedure LoadRecorderGuiConfig(const AFileName: string;
 implementation
 
 uses
-  IniFiles, fpjson, jsonparser, uRecorderSpectrumEngine;
+  IniFiles, fpjson, jsonparser, uRecorderSpectrumEngine, uRecorderFrequencyBands;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -470,6 +470,76 @@ begin
   end;
 end;
 
+procedure SaveFrequencyBands(AJson: TJSONArray; AList: TRecorderFrequencyBandList);
+var
+  I, J: Integer;
+  lBand: TRecorderFrequencyBand;
+  lItem, lTermJson: TJSONObject;
+  lTermsArray: TJSONArray;
+  lTerm: TRecorderFrequencyBandTerm;
+begin
+  if (AJson = nil) or (AList = nil) then Exit;
+  for I := 0 to AList.BandCount - 1 do
+  begin
+    lBand := AList.Bands[I];
+    lItem := TJSONObject.Create;
+    AJson.Add(lItem);
+    
+    lItem.Add('name', lBand.Name);
+    lItem.Add('kind', Ord(lBand.Kind));
+    lItem.Add('x1', lBand.X1);
+    lItem.Add('x2', lBand.X2);
+    
+    lTermsArray := JsonArray(lItem, 'terms');
+    for J := 0 to lBand.TermCount - 1 do
+    begin
+      lTerm := lBand.Terms[J];
+      lTermJson := TJSONObject.Create;
+      lTermsArray.Add(lTermJson);
+      
+      lTermJson.Add('tagName', lTerm.TagName);
+      lTermJson.Add('coefficient', lTerm.Coefficient);
+    end;
+  end;
+end;
+
+procedure LoadFrequencyBands(AJson: TJSONArray; AList: TRecorderFrequencyBandList);
+var
+  I, J: Integer;
+  lItem, lTermJson: TJSONObject;
+  lBand: TRecorderFrequencyBand;
+  lTermsArray: TJSONArray;
+  lTerm: TRecorderFrequencyBandTerm;
+begin
+  if (AJson = nil) or (AList = nil) then Exit;
+  AList.Clear;
+  for I := 0 to AJson.Count - 1 do
+  begin
+    if not (AJson.Items[I] is TJSONObject) then Continue;
+    lItem := TJSONObject(AJson.Items[I]);
+    
+    lBand := AList.AddBand(lItem.Get('name', ''));
+    lBand.Kind := TRecorderFrequencyBandKind(lItem.Get('kind', Ord(fbkAbsoluteHz)));
+    lBand.X1 := lItem.Get('x1', 0.0);
+    lBand.X2 := lItem.Get('x2', 0.0);
+    
+    lTermsArray := FindArray(lItem, 'terms');
+    if lTermsArray <> nil then
+    begin
+      for J := 0 to lTermsArray.Count - 1 do
+      begin
+        if not (lTermsArray.Items[J] is TJSONObject) then Continue;
+        lTermJson := TJSONObject(lTermsArray.Items[J]);
+        
+        lBand.AddTerm(
+          lTermJson.Get('tagName', ''),
+          lTermJson.Get('coefficient', 1.0)
+        );
+      end;
+    end;
+  end;
+end;
+
 procedure LoadSpectrumConfigs(AJson: TJSONArray; ATree: TRecorderSpectrumConfigTree);
 var
   I, J: Integer;
@@ -534,6 +604,7 @@ begin
     SaveDataSources(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
+    SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
 
     lTags := JsonArray(lRoot, 'tags');
     for I := 0 to ATags.TagCount - 1 do
@@ -607,6 +678,7 @@ begin
     ATags.Clear;
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
+    LoadFrequencyBands(FindArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
     for I := 0 to lTags.Count - 1 do
     begin
       if not (lTags.Items[I] is TJSONObject) then

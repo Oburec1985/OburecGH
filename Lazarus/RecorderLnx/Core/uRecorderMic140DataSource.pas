@@ -45,6 +45,12 @@ type
     fHost: string;
     fLegacyClient: TRecorderMic140LegacyClient;
     fLegacyFirmware: TRecorderMic140LegacyFirmware;
+    fLegacyMemAddrCur: Word;
+    fLegacyMemHeapAddrCur: Word;
+    fLegacyReadBlockCount: Int64;
+    fLegacyReadErrorLogged: Boolean;
+    fLegacyReadFailureCount: Integer;
+    fLegacyReadPacketLogged: Boolean;
     fUseLegacyProtocol: Boolean;
     fPollFrequencyHz: Double;
     fPort: Word;
@@ -55,6 +61,9 @@ type
     function GetState: TRecorderDeviceState;
     function GetChannels: TRecorderDeviceChannelArray;
     procedure BuildChannels;
+    function LegacyAllocBuffer(AWordCount: Word; out APage, AAddress: Word): Boolean;
+    function LegacyAllocHeap(AWordCount: Word; out APage, AAddress: Word): Boolean;
+    function ProgramLegacyDevice(out AErrorMessage: string): Boolean;
   public
     constructor Create(const ADeviceId, AHost: string; APort: Word;
       AChannelCount: Integer; APollFrequencyHz: Double);
@@ -110,11 +119,12 @@ implementation
 
 uses
   Math, StrUtils, uSharedFileLogger
-  {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, CTypes, Sockets{$ENDIF};
+  {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
   CMic140SourcePrefix = 'MIC-140:';
   CMic140ConnectAttempts = 3;
+  CMic140LegacyMaxUiReadFrequencyHz = 1000.0;
   CMic140MebiusChannelCount = 16;
   CMic140MebiusTemperatureSettingsCount = 5;
   CMic140MebiusModuleCount = 4;
@@ -129,6 +139,25 @@ const
   CMic140Range5mV = 2;
   CMic140SensorSchemeTenzo = 0;
   CMic140DefaultCorrectorId = 2;
+  CMic140LegacyScanId = 0;
+  CMic140LegacyTypeMic140 = 12;
+  CMic140LegacyCmdAppendScanMain = 82;
+  CMic140LegacyCmdResetScanMain = 83;
+  CMic140LegacyCmdConfigScanMain = 84;
+  CMic140LegacyCmdSetStateScan = 87;
+  CMic140LegacyCmdScanSetChans = 132;
+  CMic140LegacyCmdScanSetBuff = 133;
+  CMic140LegacyCmdAddChannelModule = 152;
+  CMic140LegacyDmBufferBegin = $0000;
+  CMic140LegacyDmBufferEnd = $07FF;
+  CMic140LegacyDmHeapBegin = $0800;
+  CMic140LegacyDmHeapEnd = $2BFF;
+  CMic140LegacyBiosScanContextWords = 6;
+  CMic140LegacyBiosScanBufferDescWords = 10;
+  CMic140LegacyDescChanWords = 5;
+  CMic140LegacyStartDescChanWords = 3;
+  CMic140LegacyFifoHalfWords = 384;
+  CMic140LegacyMaskGroundChannel = $4000;
 
 type
 {$packrecords 8}
@@ -435,7 +464,7 @@ begin
       Exit;
     Result := lError = 0;
   finally
-    CloseSocket(lSocket);
+    fpClose(lSocket);
   end;
 end;
 {$ENDIF}
@@ -529,6 +558,12 @@ begin
   if APollFrequencyHz <= 0 then
     APollFrequencyHz := MIC140DefaultPollFrequencyHz;
   APollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
+  if APollFrequencyHz > CMic140LegacyMaxUiReadFrequencyHz then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] Requested frequency %.3f Hz is too high for current direct legacy reader; using %.3f Hz',
+      [AHost, APort, APollFrequencyHz, MIC140DefaultPollFrequencyHz]));
+    APollFrequencyHz := MIC140DefaultPollFrequencyHz;
+  end;
 
   fDeviceId := ADeviceId;
   fHost := AHost;
@@ -581,6 +616,320 @@ begin
   end;
 end;
 
+function TRecorderMic140Device.LegacyAllocBuffer(AWordCount: Word; out APage,
+  AAddress: Word): Boolean;
+begin
+  // Mirrors CC81WDInterface::GetInternalMem(): scan FIFO data lives in the
+  // low DM buffer area 0x0000..0x07FF.
+  APage := 0;
+  AAddress := fLegacyMemAddrCur;
+  Result := (AWordCount > 0) and
+    (LongWord(fLegacyMemAddrCur) + AWordCount - 1 <= CMic140LegacyDmBufferEnd);
+  if Result then
+    Inc(fLegacyMemAddrCur, AWordCount);
+end;
+
+function TRecorderMic140Device.LegacyAllocHeap(AWordCount: Word; out APage,
+  AAddress: Word): Boolean;
+begin
+  // Mirrors CC81WDInterface::GetInternalMemHeap(): BIOS descriptors and
+  // channel tables are allocated from DM heap 0x0800..0x2BFF.
+  APage := 0;
+  AAddress := fLegacyMemHeapAddrCur;
+  Result := (AWordCount > 0) and
+    (LongWord(fLegacyMemHeapAddrCur) + AWordCount - 1 <= CMic140LegacyDmHeapEnd);
+  if Result then
+    Inc(fLegacyMemHeapAddrCur, AWordCount);
+end;
+
+function Mic140LegacyFrequencyDivider(AFrequencyHz: Double): Word;
+var
+  I: Integer;
+  lFrequencyHz: Double;
+begin
+  lFrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
+  Result := 1;
+  for I := 0 to High(CMic140Frequencies) do
+    if SameValue(CMic140Frequencies[I], lFrequencyHz, 0.001) then
+      Exit(Word(I + 1));
+end;
+
+function Mic140LegacyMe048Code48(APhysicalChannel: Integer): Word;
+var
+  lGroup: Integer;
+  lLow: Integer;
+  lSelectLine: Integer;
+begin
+  // Equivalent to packing TRegME048 from MIC140_48mod.cpp. The first 24
+  // physical channels use selector lines XA2..XA7; the second half uses
+  // XA8..XA13 and sets the indicator bit.
+  lLow := APhysicalChannel mod 4;
+  if APhysicalChannel < 24 then
+  begin
+    lGroup := APhysicalChannel div 4;
+    lSelectLine := 2 + lGroup;
+    Result := 0;
+  end
+  else
+  begin
+    lGroup := (APhysicalChannel - 24) div 4;
+    lSelectLine := 8 + lGroup;
+    Result := 1;
+  end;
+
+  if (lLow and 1) <> 0 then
+    Result := Result or (Word(1) shl 15);
+  if (lLow and 2) <> 0 then
+    Result := Result or (Word(1) shl 14);
+  Result := Result or (Word(1) shl (15 - lSelectLine));
+end;
+
+function Mic140LegacyLevel0Code: Word;
+begin
+  Result := Word(1) shl 1;
+end;
+
+function Mic140LegacyWordAt(const AWords: TRecorderMic140LegacyWordArray;
+  AIndex: Integer): Word;
+begin
+  if (AIndex >= 0) and (AIndex < Length(AWords)) then
+    Result := AWords[AIndex]
+  else
+    Result := 0;
+end;
+
+function TRecorderMic140Device.ProgramLegacyDevice(out AErrorMessage: string): Boolean;
+const
+  CAInNum48: array[0..47] of Word =
+    (24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+     36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+     23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12,
+     11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
+  CNormalDesc = Word($0100);
+  CGroundDesc = Word($0110);
+  CNormalDelay = Word(606);
+  CGroundDelay = Word(9);
+  CAverageDelay = Word(48);
+var
+  I: Integer;
+  lArgs: TRecorderMic140LegacyWordArray;
+  lChanDump: TRecorderMic140LegacyWordArray;
+  lChanPtrCount: Integer;
+  lDescAddr: Word;
+  lDescCount: Integer;
+  lDescDump: TRecorderMic140LegacyWordArray;
+  lFifoAddr: Word;
+  lFifoDescAddr: Word;
+  lPage: Word;
+  lReply: TRecorderMic140LegacyWordArray;
+  lScanChanAddr: Word;
+  lScanDescAddr: Word;
+  lValueAddr: Word;
+begin
+  // The original ModuleMIC140_48 driver enables a ground descriptor before
+  // every measured channel. The switched ADC depends on this table layout:
+  // channel pointers are emitted as ground, channel, ground, channel...
+  Result := False;
+  AErrorMessage := '';
+  if fLegacyClient = nil then
+  begin
+    AErrorMessage := 'MIC-140 legacy client is not connected';
+    Exit;
+  end;
+
+  fLegacyMemAddrCur := CMic140LegacyDmBufferBegin;
+  fLegacyMemHeapAddrCur := CMic140LegacyDmHeapBegin;
+
+  // Original CCDevice::OnResetScanMain clears BIOS scan contexts before a new
+  // scan is appended, otherwise stale descriptors can keep the timer task busy.
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdResetScanMain, nil, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'RESETSCANMAIN failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  SetLength(lArgs, 2);
+  lArgs[0] := 0;
+  lArgs[1] := 639;
+  // ModuleMIC140_96::WriteConfig configures the main scan timer as
+  // scale=1/period=640 for the 16 MHz grid; CCDevice sends scale-1/period-1.
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdConfigScanMain, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'CONFIGSCANMAIN failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  if not LegacyAllocHeap(CMic140LegacyBiosScanContextWords, lPage,
+    lScanDescAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy scan context allocation failed';
+    Exit;
+  end;
+  SetLength(lArgs, 5);
+  lArgs[0] := CMic140LegacyTypeMic140;
+  lArgs[1] := CMic140LegacyScanId;
+  lArgs[2] := Mic140LegacyFrequencyDivider(fPollFrequencyHz);
+  lArgs[3] := lScanDescAddr;
+  lArgs[4] := lPage;
+  // ScanModule::CreateInternalScan: create scan_id=0 of TYPE_MIC140 and give
+  // BIOS a small context block allocated from the heap.
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdAppendScanMain, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'APPENDSCANMAIN failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  SetLength(lArgs, 2);
+  lArgs[0] := CMic140LegacyScanId;
+  lArgs[1] := 0;
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdSetStateScan, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'SETSTATESCAN failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  if not LegacyAllocBuffer(2 * CMic140LegacyFifoHalfWords, lPage, lFifoAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy FIFO allocation failed';
+    Exit;
+  end;
+  if not LegacyAllocHeap(CMic140LegacyBiosScanBufferDescWords, lPage,
+    lFifoDescAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy FIFO descriptor allocation failed';
+    Exit;
+  end;
+  SetLength(lArgs, CMic140LegacyBiosScanBufferDescWords);
+  lArgs[0] := 0;
+  lArgs[1] := CMic140LegacyScanId;
+  lArgs[2] := lFifoAddr;
+  lArgs[3] := lFifoAddr;
+  lArgs[4] := lFifoAddr;
+  lArgs[5] := 0;
+  lArgs[6] := 2 * CMic140LegacyFifoHalfWords;
+  lArgs[7] := CMic140LegacyFifoHalfWords;
+  lArgs[8] := 0;
+  lArgs[9] := 0;
+  // ScanModule::CreateBiosCCScanBuf: descriptor words are
+  // state, scan_id, head, tail, begin, page, size, sizeready, numready, num.
+  if not fLegacyClient.WriteDmWords(lFifoDescAddr, lArgs, AErrorMessage) then
+  begin
+    AErrorMessage := 'FIFO descriptor DM write failed: ' + AErrorMessage;
+    Exit;
+  end;
+  SetLength(lArgs, 3);
+  lArgs[0] := CMic140LegacyScanId;
+  lArgs[1] := lFifoDescAddr;
+  lArgs[2] := 0;
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdScanSetBuff, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'SCAN_SET_BUFF failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  if not LegacyAllocHeap(48 + 3, lPage, lValueAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy channel value allocation failed';
+    Exit;
+  end;
+  lDescCount := fChannelCount + 1;
+  if not LegacyAllocHeap(lDescCount * CMic140LegacyDescChanWords, lPage,
+    lDescAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy channel descriptor allocation failed';
+    Exit;
+  end;
+
+  SetLength(lDescDump, lDescCount * CMic140LegacyDescChanWords);
+  // TDescChanBios_MIC140_96 is five words:
+  // code_ME048[0], code_ME048[1], MIC140 register desc, delay, value pointer.
+  lDescDump[0] := Mic140LegacyLevel0Code;
+  lDescDump[1] := Mic140LegacyLevel0Code;
+  lDescDump[2] := CGroundDesc;
+  lDescDump[3] := CGroundDelay;
+  lDescDump[4] := CMic140LegacyMaskGroundChannel;
+
+  for I := 0 to fChannelCount - 1 do
+  begin
+    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 0] := 0;
+    if I <= High(CAInNum48) then
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] :=
+        Mic140LegacyMe048Code48(CAInNum48[I])
+    else
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] := 0;
+    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
+    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 3] := CNormalDelay;
+    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 4] :=
+      Word(lValueAddr + I);
+  end;
+  if not fLegacyClient.WriteDmWords(lDescAddr, lDescDump, AErrorMessage) then
+  begin
+    AErrorMessage := 'channel descriptor DM write failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  lChanPtrCount := fChannelCount * 2;
+  SetLength(lChanDump, CMic140LegacyStartDescChanWords + lChanPtrCount);
+  lChanDump[0] := CAverageDelay;
+  lChanDump[1] := 1;
+  lChanDump[2] := fChannelCount;
+  for I := 0 to fChannelCount - 1 do
+  begin
+    lChanDump[CMic140LegacyStartDescChanWords + I * 2] := lDescAddr;
+    lChanDump[CMic140LegacyStartDescChanWords + I * 2 + 1] :=
+      Word(lDescAddr + (I + 1) * CMic140LegacyDescChanWords);
+  end;
+
+  if not LegacyAllocHeap(CMic140LegacyDescChanWords, lPage, lScanChanAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy scan channel descriptor allocation failed';
+    Exit;
+  end;
+  if not LegacyAllocHeap(Length(lChanDump), lPage, lScanDescAddr) then
+  begin
+    AErrorMessage := 'MIC-140 legacy scan channel pointer allocation failed';
+    Exit;
+  end;
+  if not fLegacyClient.WriteDmWords(lScanDescAddr, lChanDump, AErrorMessage) then
+  begin
+    AErrorMessage := 'channel pointer DM write failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  SetLength(lArgs, 6);
+  lArgs[0] := CMic140LegacyScanId;
+  lArgs[1] := 0;
+  lArgs[2] := lScanDescAddr;
+  lArgs[3] := lChanPtrCount;
+  lArgs[4] := lScanChanAddr;
+  lArgs[5] := lPage;
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdAddChannelModule, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'ADDCHANNELMODULE failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  SetLength(lArgs, 4);
+  lArgs[0] := CMic140LegacyScanId;
+  lArgs[1] := 1;
+  lArgs[2] := lScanChanAddr;
+  lArgs[3] := lPage;
+  if not fLegacyClient.CallCommand(CMic140LegacyCmdScanSetChans, lArgs, 0,
+    lReply, AErrorMessage) then
+  begin
+    AErrorMessage := 'SCAN_SET_CHANS failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  Result := True;
+end;
+
 procedure TRecorderMic140Device.Connect;
 var
   lAttempt: Integer;
@@ -591,8 +940,23 @@ begin
 
   FreeAndNil(fLegacyClient);
   fUseLegacyProtocol := False;
+  fLegacyReadErrorLogged := False;
+  fLegacyReadFailureCount := 0;
   fLegacyClient := TRecorderMic140LegacyClient.Create(fHost, fPort, 5000);
+  fLegacyReadBlockCount := 0;
+  fLegacyReadPacketLogged := False;
   try
+    // TInetSocket.Create raises on timeout; probe first so a missing/busy
+    // device is logged as a normal connection failure instead of stopping the
+    // debugger on an expected exception.
+    if not RecorderMic140TcpProbe(fHost, fPort, 800) then
+    begin
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy TCP probe failed',
+        [fHost, fPort]));
+      FreeAndNil(fLegacyClient);
+      Exit;
+    end;
+
     fLegacyClient.Connect;
     if fLegacyClient.ReadFirmware(fLegacyFirmware, lErrorMessage) then
     begin
@@ -711,8 +1075,15 @@ begin
     Exit;
   if fUseLegacyProtocol then
   begin
-    Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 command protocol is connected; scan programming is not implemented yet',
-      [fHost, fPort]));
+    if ProgramLegacyDevice(lErrorMessage) then
+    begin
+      fState := rdsProgrammed;
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 scan programmed: channels=%d freq=%.3f Hz',
+        [fHost, fPort, fChannelCount, fPollFrequencyHz]));
+    end
+    else
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 scan programming failed: %s',
+        [fHost, fPort, lErrorMessage]));
     Exit;
   end;
   if fClient = nil then
@@ -762,6 +1133,10 @@ begin
   FreeAndNil(fClient);
   FreeAndNil(fLegacyClient);
   fUseLegacyProtocol := False;
+  fLegacyReadErrorLogged := False;
+  fLegacyReadFailureCount := 0;
+  fLegacyReadBlockCount := 0;
+  fLegacyReadPacketLogged := False;
   fState := rdsDisconnected;
 end;
 
@@ -778,6 +1153,26 @@ begin
     ProgramDevice;
   if fState <> rdsProgrammed then
     Exit;
+  if fUseLegacyProtocol then
+  begin
+    if fLegacyClient = nil then
+      Exit;
+    if fLegacyClient.StartScan(lErrorMessage) then
+    begin
+      fSampleIndex := 0;
+      fLegacyReadFailureCount := 0;
+      fLegacyReadBlockCount := 0;
+      fLegacyReadPacketLogged := False;
+      fState := rdsStarted;
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy CC BIOS scan start accepted: command=%d',
+        [fHost, fPort, MIC140_LEGACY_CMD_START_SCAN_MAIN]));
+      Exit;
+    end;
+    Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan start failed: %s',
+      [fHost, fPort, lErrorMessage]));
+    fState := rdsConnected;
+    Exit;
+  end;
   if fClient = nil then
     Exit;
 
@@ -801,6 +1196,14 @@ procedure TRecorderMic140Device.Stop;
 var
   lErrorMessage: string;
 begin
+  if (fState = rdsStarted) and fUseLegacyProtocol and (fLegacyClient <> nil) then
+  begin
+    if not fLegacyClient.StopScan(lErrorMessage) then
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan stop failed: %s',
+        [fHost, fPort, lErrorMessage]));
+    fLegacyReadFailureCount := 0;
+  end
+  else
   if (fState = rdsStarted) and (fClient <> nil) then
   begin
     if not fClient.TryStopMeasurement(lErrorMessage) then
@@ -816,12 +1219,72 @@ function TRecorderMic140Device.ReadBlock(ATimeoutMs: Cardinal;
 var
   I: Integer;
   J: Integer;
+  lDataIndex: Integer;
+  lErrorMessage: string;
+  lLegacyBlock: TRecorderMic140LegacyScanBlock;
   lRaw: TRecorderMebiusFloatBlock;
 begin
   ClearRecorderDeviceSampleBlock(ABlock);
   Result := False;
   if fState <> rdsStarted then
     Exit;
+  if fUseLegacyProtocol then
+  begin
+    if fLegacyClient = nil then
+      Exit;
+    fLegacyClient.TimeoutMs := ATimeoutMs;
+    if not fLegacyClient.ReadScanBlock(lLegacyBlock, lErrorMessage) then
+    begin
+      if not fLegacyReadErrorLogged then
+      begin
+        Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan read failed after %d good blocks: %s. The scan is left running; Stop/Disconnect will send StopScan explicitly.',
+          [fHost, fPort, fLegacyReadBlockCount, lErrorMessage]));
+        fLegacyReadErrorLogged := True;
+      end;
+      Inc(fLegacyReadFailureCount);
+      Exit;
+    end;
+    fLegacyReadErrorLogged := False;
+    fLegacyReadFailureCount := 0;
+    Inc(fLegacyReadBlockCount);
+    if not fLegacyReadPacketLogged then
+    begin
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy first scan packet: headerWords=%d dataWords=%d h0=%d h1=%d h2=%d h3=%d h4=%d',
+        [fHost, fPort, Length(lLegacyBlock.HeaderWords),
+         Length(lLegacyBlock.DataWords),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 0),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 1),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 2),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 3),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 4)]));
+      fLegacyReadPacketLogged := True;
+    end;
+
+    ABlock.ChannelCount := fChannelCount;
+    if ABlock.ChannelCount <= 0 then
+      Exit;
+    ABlock.SampleCount := Length(lLegacyBlock.DataWords) div ABlock.ChannelCount;
+    if ABlock.SampleCount <= 0 then
+    begin
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan packet has no full samples: dataWords=%d channels=%d',
+        [fHost, fPort, Length(lLegacyBlock.DataWords), ABlock.ChannelCount]));
+      Exit;
+    end;
+    ABlock.SampleRateHz := fPollFrequencyHz;
+    ABlock.FirstTimeSec := fSampleIndex / fPollFrequencyHz;
+    SetLength(ABlock.Values, ABlock.ChannelCount);
+    for I := 0 to ABlock.ChannelCount - 1 do
+      SetLength(ABlock.Values[I], ABlock.SampleCount);
+    for J := 0 to ABlock.SampleCount - 1 do
+      for I := 0 to ABlock.ChannelCount - 1 do
+      begin
+        lDataIndex := J * ABlock.ChannelCount + I;
+        ABlock.Values[I][J] := SmallInt(lLegacyBlock.DataWords[lDataIndex]);
+      end;
+    Inc(fSampleIndex, ABlock.SampleCount);
+    Result := True;
+    Exit;
+  end;
   if fClient = nil then
     Exit;
 

@@ -9,13 +9,12 @@ unit uRecorderFrequencyBandsDialog;
 }
 
 {$mode objfpc}{$H+}
-{$codepage UTF8}
 
 interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids,
-  uRecorderFrequencyBands;
+  LConvEncoding, uRecorderFrequencyBands;
 
 type
   TRecorderFrequencyBandsDialog = class(TForm)
@@ -72,7 +71,7 @@ end;
 
 constructor TRecorderFrequencyBandsDialog.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+  inherited CreateNew(AOwner);
   fBands := TRecorderFrequencyBandList.Create;
   fOwnBands := True;
   BuildUi;
@@ -93,7 +92,7 @@ var
   lBottomPanel: TPanel;
   lButton: TButton;
 begin
-  Caption := 'Р§Р°СЃС‚РѕС‚РЅС‹Рµ РїРѕР»РѕСЃС‹';
+  Caption := CP1251ToUTF8('Частотные полосы');
   Width := 680;
   Height := 420;
   Position := poOwnerFormCenter;
@@ -136,7 +135,7 @@ begin
   begin
     Parent := lRightPanel;
     SetBounds(12, 14, 90, 18);
-    Caption := 'РќР°Р·РІР°РЅРёРµ';
+    Caption := CP1251ToUTF8('Название');
   end;
   fNameEdit := TEdit.Create(Self);
   fNameEdit.Parent := lRightPanel;
@@ -146,14 +145,14 @@ begin
   begin
     Parent := lRightPanel;
     SetBounds(320, 14, 42, 18);
-    Caption := 'РўРёРї';
+    Caption := CP1251ToUTF8('Тип');
   end;
   fKindCombo := TComboBox.Create(Self);
   fKindCombo.Parent := lRightPanel;
   fKindCombo.SetBounds(368, 10, 130, 24);
   fKindCombo.Style := csDropDownList;
-  fKindCombo.Items.Add('Р°Р±СЃРѕР»СЋС‚РЅР°СЏ');
-  fKindCombo.Items.Add('С„РѕСЂРјСѓР»Р°');
+  fKindCombo.Items.Add(CP1251ToUTF8('абсолютная'));
+  fKindCombo.Items.Add(CP1251ToUTF8('формула'));
   fKindCombo.ItemIndex := 0;
 
   with TLabel.Create(Self) do
@@ -187,8 +186,8 @@ begin
   fTermsGrid.ColCount := 2;
   fTermsGrid.RowCount := 2;
   fTermsGrid.FixedCols := 0;
-  fTermsGrid.Cells[0, 0] := 'РўР°С…Рѕ/С‡Р°СЃС‚РѕС‚Р°';
-  fTermsGrid.Cells[1, 0] := 'РљРѕСЌС„С„РёС†РёРµРЅС‚';
+  fTermsGrid.Cells[0, 0] := CP1251ToUTF8('Тахо/частота');
+  fTermsGrid.Cells[1, 0] := CP1251ToUTF8('Коэффициент');
   fTermsGrid.Options := fTermsGrid.Options + [goEditing, goRowSelect];
 
   lBottomPanel := TPanel.Create(Self);
@@ -200,19 +199,19 @@ begin
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(12, 10, 86, 28);
-  lButton.Caption := '+ СЃР»Р°РіР°РµРјРѕРµ';
+  lButton.Caption := CP1251ToUTF8('+ слагаемое');
   lButton.OnClick := @AddTermClick;
 
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(106, 10, 86, 28);
-  lButton.Caption := '- СЃР»Р°РіР°РµРјРѕРµ';
+  lButton.Caption := CP1251ToUTF8('- слагаемое');
   lButton.OnClick := @DeleteTermClick;
 
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(210, 10, 90, 28);
-  lButton.Caption := 'РџСЂРёРјРµРЅРёС‚СЊ';
+  lButton.Caption := CP1251ToUTF8('Применить');
   lButton.OnClick := @ApplyBandClick;
 
   lButton := TButton.Create(Self);
@@ -224,7 +223,7 @@ begin
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(406, 10, 78, 28);
-  lButton.Caption := 'Р—Р°РєСЂС‹С‚СЊ';
+  lButton.Caption := CP1251ToUTF8('Закрыть');
   lButton.ModalResult := mrCancel;
 end;
 
@@ -243,7 +242,7 @@ begin
   try
     fBandList.Items.Clear;
     for I := 0 to fBands.BandCount - 1 do
-      fBandList.Items.Add(fBands.Bands[I].Name);
+      fBandList.Items.Add(CP1251ToUTF8(fBands.Bands[I].Name));
   finally
     fBandList.Items.EndUpdate;
   end;
@@ -258,7 +257,7 @@ var
 begin
   if ABand = nil then
     Exit;
-  fNameEdit.Text := ABand.Name;
+  fNameEdit.Text := CP1251ToUTF8(ABand.Name);
   fKindCombo.ItemIndex := Ord(ABand.Kind);
   fX1Edit.Text := FloatToStr(ABand.X1);
   fX2Edit.Text := FloatToStr(ABand.X2);
@@ -272,7 +271,7 @@ begin
   end;
   for I := 0 to ABand.TermCount - 1 do
   begin
-    fTermsGrid.Cells[0, I + 1] := ABand.Terms[I].TagName;
+    fTermsGrid.Cells[0, I + 1] := CP1251ToUTF8(ABand.Terms[I].TagName);
     fTermsGrid.Cells[1, I + 1] := FloatToStr(ABand.Terms[I].Coefficient);
   end;
 end;
@@ -284,7 +283,7 @@ var
 begin
   if ABand = nil then
     Exit;
-  ABand.Name := Trim(fNameEdit.Text);
+  ABand.Name := UTF8ToCP1251(Trim(fNameEdit.Text));
   ABand.Kind := TRecorderFrequencyBandKind(fKindCombo.ItemIndex);
   ABand.X1 := StrToFloatDef(Trim(fX1Edit.Text), 0.0);
   ABand.X2 := StrToFloatDef(Trim(fX2Edit.Text), 0.0);
@@ -294,7 +293,7 @@ begin
     if Trim(fTermsGrid.Cells[0, I]) = '' then
       Continue;
     lK := StrToFloatDef(Trim(fTermsGrid.Cells[1, I]), 1.0);
-    ABand.AddTerm(Trim(fTermsGrid.Cells[0, I]), lK);
+    ABand.AddTerm(UTF8ToCP1251(Trim(fTermsGrid.Cells[0, I])), lK);
   end;
   ABand.Validate;
 end;
@@ -303,7 +302,7 @@ procedure TRecorderFrequencyBandsDialog.AddBandClick(Sender: TObject);
 var
   lBand: TRecorderFrequencyBand;
 begin
-  lBand := fBands.AddBand('РџРѕР»РѕСЃР° ' + IntToStr(fBands.BandCount + 1));
+  lBand := fBands.AddBand('Полоса ' + IntToStr(fBands.BandCount + 1));
   lBand.X1 := 0.0;
   lBand.X2 := 100.0;
   RefreshBandList;

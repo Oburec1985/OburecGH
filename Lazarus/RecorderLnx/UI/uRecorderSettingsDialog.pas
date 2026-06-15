@@ -2618,6 +2618,8 @@ begin
   fResetTimeCheck.Checked := True;
 
   UpdateConditionControls;
+  if fTagRegistry <> nil then
+    fFrequencyBands.Assign(fTagRegistry.FrequencyBands);
 end;
 
 { Перенос настроек из UI в объект fRunSettings }
@@ -2657,7 +2659,10 @@ begin
   fRunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   fRunSettings.RequireValid;
   if fTagRegistry <> nil then
+  begin
     fTagRegistry.SpectrumConfigs.Assign(fSpectrumConfigTree);
+    fTagRegistry.FrequencyBands.Assign(fFrequencyBands);
+  end;
 end;
 
 { Включение/выключение контроллеров в зависимости от выбранных триггеров старта/останова }

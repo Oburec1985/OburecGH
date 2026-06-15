@@ -50,6 +50,7 @@ type
     procedure DeleteTerm(AIndex: Integer);
     procedure ClearTerms;
     procedure Validate;
+    procedure Evaluate(ATagRegistry: TObject; out AF1, AF2: Double);
     property Name: string read fName write fName;
     property Kind: TRecorderFrequencyBandKind read fKind write fKind;
     property X1: Double read fX1 write fX1;
@@ -69,11 +70,15 @@ type
     function AddBand(const AName: string): TRecorderFrequencyBand;
     procedure DeleteBand(AIndex: Integer);
     procedure Clear;
+    procedure Assign(ASource: TRecorderFrequencyBandList);
     property BandCount: Integer read GetBandCount;
     property Bands[AIndex: Integer]: TRecorderFrequencyBand read GetBand;
   end;
 
 implementation
+
+uses
+  uRecorderTags;
 
 constructor TRecorderFrequencyBandTerm.Create(const ATagName: string;
   ACoefficient: Double);
@@ -191,6 +196,64 @@ begin
   for I := 0 to fBands.Count - 1 do
     TObject(fBands[I]).Free;
   fBands.Clear;
+end;
+
+procedure TRecorderFrequencyBand.Evaluate(ATagRegistry: TObject; out AF1, AF2: Double);
+var
+  lRegistry: TRecorderTagRegistry;
+  I: Integer;
+  lTerm: TRecorderFrequencyBandTerm;
+  lTag: TRecorderTag;
+  lVal: Double;
+  lBase: Double;
+begin
+  if fKind = fbkAbsoluteHz then
+  begin
+    AF1 := fX1;
+    AF2 := fX2;
+    Exit;
+  end;
+
+  lBase := 0.0;
+  if ATagRegistry <> nil then
+  begin
+    lRegistry := TRecorderTagRegistry(ATagRegistry);
+    for I := 0 to TermCount - 1 do
+    begin
+      lTerm := Terms[I];
+      lTag := lRegistry.FindByName(lTerm.TagName);
+      if (lTag <> nil) and (lTag.SignalBuffer <> nil) and (lTag.SignalBuffer.Count > 0) then
+        lVal := lTag.SignalBuffer.LatestValue
+      else
+        lVal := 0.0;
+      lBase := lBase + lVal * lTerm.Coefficient;
+    end;
+  end;
+
+  AF1 := lBase * fX1;
+  AF2 := lBase * fX2;
+end;
+
+procedure TRecorderFrequencyBandList.Assign(ASource: TRecorderFrequencyBandList);
+var
+  I, J: Integer;
+  lSrcBand, lDestBand: TRecorderFrequencyBand;
+begin
+  if ASource = nil then Exit;
+  Clear;
+  for I := 0 to ASource.BandCount - 1 do
+  begin
+    lSrcBand := ASource.Bands[I];
+    lDestBand := AddBand(lSrcBand.Name);
+    lDestBand.Kind := lSrcBand.Kind;
+    lDestBand.X1 := lSrcBand.X1;
+    lDestBand.X2 := lSrcBand.X2;
+    lDestBand.ClearTerms;
+    for J := 0 to lSrcBand.TermCount - 1 do
+    begin
+      lDestBand.AddTerm(lSrcBand.Terms[J].TagName, lSrcBand.Terms[J].Coefficient);
+    end;
+  end;
 end;
 
 end.

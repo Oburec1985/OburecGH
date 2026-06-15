@@ -7846,3 +7846,185 @@
 2026-06-11 16:55:44.806 [DEBUG] thread=7636 cBaseObj.Create self=$000000000014A320 class=TChartCursor name="TChartCursor"
 2026-06-11 16:55:45.262 [DEBUG] thread=7636 cBaseObj.Create self=$000000000014A520 class=TChartCursor name="TChartCursor"
 2026-06-11 16:55:46.709 [DEBUG] thread=7636 cBaseObj.Create self=$000000000014A820 class=TChartCursor name="TChartCursor"
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001681FE0 class=cBasePage name="Page"
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165A000 class=TChartCursor name="TChartCursor"
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165A100 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001681FE0 class=cBasePage name="TestPage" children=2 parent=nil manager=nil
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165A100 class=cBuffTrend1d name="TestTrend" children=0 parent=$0000000001681FE0 manager=nil
+2026-06-15 16:47:21.722 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165A000 class=TChartCursor name="TestPageCursor" children=0 parent=$0000000001681FE0 manager=nil
+2026-06-15 16:47:21.728 [INFO] thread=21132 cChartMng.Create self=$000000000160A010
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165A280 class=cChart name="ChartModel"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$00000000016838A0 class=cBasePage name="Page"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683960 class=cAxis name="Axis"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165A980 class=cTrend name="Trend"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683A20 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683AE0 class=cBasePage name="Page"
+2026-06-15 16:47:21.728 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683BA0 class=cAxis name="Axis"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AA00 class=cTrend name="Trend"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683C60 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683D20 class=cAxis name="Axis"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AA80 class=cTrend name="Trend"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683DE0 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683EA0 class=cBasePage name="Page"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001683F60 class=cAxis name="Axis"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AB00 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001684020 class=cBasePage name="Page"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$00000000016840E0 class=cAxis name="Axis"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AB80 class=cTrend name="Trend"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$00000000016841A0 class=cBasePage name="Page"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001684260 class=cAxis name="Axis"
+2026-06-15 16:47:21.729 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AC00 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:47:21.732 [DEBUG] thread=21132 cBaseObj.Create self=$0000000001684320 class=cAxis name="Axis"
+2026-06-15 16:47:21.732 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165AC80 class=cBuffTrend2d name="BuffTrend2d"
+2026-06-15 16:47:24.110 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165B180 class=TChartCursor name="TChartCursor"
+2026-06-15 16:47:24.460 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165B380 class=TChartCursor name="TChartCursor"
+2026-06-15 16:47:53.348 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165B400 class=TChartCursor name="TChartCursor"
+2026-06-15 16:47:53.428 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165B480 class=TChartCursor name="TChartCursor"
+2026-06-15 16:48:12.708 [DEBUG] thread=21132 cBaseObj.Create self=$000000000165B500 class=TChartCursor name="TChartCursor"
+2026-06-15 16:48:20.895 [INFO] thread=21132 cChartMng.Destroy self=$000000000160A010 root=$000000000165A280 count=28
+2026-06-15 16:48:20.895 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165A280 class=cChart name="ChartModel" children=5 parent=nil manager=$000000000160A010
+2026-06-15 16:48:20.895 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$00000000016841A0 class=cBasePage name="PagePerf" children=3 parent=$000000000165A280 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165B500 class=TChartCursor name="PagePerfCursor" children=0 parent=$00000000016841A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001684320 class=cAxis name="PerfAxis2DAxisY" children=1 parent=$00000000016841A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AC80 class=cBuffTrend2d name="Buff2D_100k" children=0 parent=$0000000001684320 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001684260 class=cAxis name="PerfAxis1DAxisY" children=1 parent=$00000000016841A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AC00 class=cBuffTrend1d name="Buff1D_100k" children=0 parent=$0000000001684260 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001684020 class=cBasePage name="PageOwnX" children=2 parent=$000000000165A280 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165B400 class=TChartCursor name="PageOwnXCursor" children=0 parent=$0000000001684020 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$00000000016840E0 class=cAxis name="OwnXAxisY" children=1 parent=$0000000001684020 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AB80 class=cTrend name="OwnXLine" children=0 parent=$00000000016840E0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683EA0 class=cBasePage name="PageBars" children=2 parent=$000000000165A280 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165B480 class=TChartCursor name="PageBarsCursor" children=0 parent=$0000000001683EA0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683F60 class=cAxis name="BarsAxisY" children=1 parent=$0000000001683EA0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AB00 class=cBuffTrend1d name="BottomBuff1d" children=0 parent=$0000000001683F60 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683AE0 class=cBasePage name="PageSignals" children=5 parent=$000000000165A280 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165B180 class=TChartCursor name="PageSignalsCursor" children=0 parent=$0000000001683AE0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683DE0 class=TChartFlagLabel name="Flag_SignalRed" children=0 parent=$0000000001683AE0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683D20 class=cAxis name="Signals2AxisY" children=1 parent=$0000000001683AE0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AA80 class=cTrend name="SignalRed" children=0 parent=$0000000001683D20 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683C60 class=TChartFlagLabel name="Flag_SignalBlue" children=0 parent=$0000000001683AE0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683BA0 class=cAxis name="SignalsAxisY" children=1 parent=$0000000001683AE0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165AA00 class=cTrend name="SignalBlue" children=0 parent=$0000000001683BA0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$00000000016838A0 class=cBasePage name="PageTrend" children=3 parent=$000000000165A280 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165B380 class=TChartCursor name="PageTrendCursor" children=0 parent=$00000000016838A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683A20 class=TChartFlagLabel name="Flag_TrendLine" children=0 parent=$00000000016838A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$0000000001683960 class=cAxis name="TrendAxisY" children=1 parent=$00000000016838A0 manager=$000000000160A010
+2026-06-15 16:48:20.896 [DEBUG] thread=21132 cBaseObj.Destroy enter self=$000000000165A980 class=cTrend name="TrendLine" children=0 parent=$0000000001683960 manager=$000000000160A010
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000151D50 class=cBasePage name="Page"
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012A060 class=TChartCursor name="TChartCursor"
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012A160 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000151D50 class=cBasePage name="TestPage" children=2 parent=nil manager=nil
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012A160 class=cBuffTrend1d name="TestTrend" children=0 parent=$0000000000151D50 manager=nil
+2026-06-15 16:55:57.128 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012A060 class=TChartCursor name="TestPageCursor" children=0 parent=$0000000000151D50 manager=nil
+2026-06-15 16:55:57.134 [INFO] thread=15120 cChartMng.Create self=$00000000000DA070
+2026-06-15 16:55:57.134 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012A2E0 class=cChart name="ChartModel"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153610 class=cBasePage name="Page"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$00000000001536D0 class=cAxis name="Axis"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012A9E0 class=cTrend name="Trend"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153790 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153850 class=cBasePage name="Page"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153910 class=cAxis name="Axis"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012AA60 class=cTrend name="Trend"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$00000000001539D0 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153A90 class=cAxis name="Axis"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012AAE0 class=cTrend name="Trend"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153B50 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153C10 class=cBasePage name="Page"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153CD0 class=cAxis name="Axis"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012AB60 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:55:57.135 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153D90 class=cBasePage name="Page"
+2026-06-15 16:55:57.136 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153E50 class=cAxis name="Axis"
+2026-06-15 16:55:57.136 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012ABE0 class=cTrend name="Trend"
+2026-06-15 16:55:57.136 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153F10 class=cBasePage name="Page"
+2026-06-15 16:55:57.136 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000153FD0 class=cAxis name="Axis"
+2026-06-15 16:55:57.136 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012AC60 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 16:55:57.138 [DEBUG] thread=15120 cBaseObj.Create self=$0000000000154090 class=cAxis name="Axis"
+2026-06-15 16:55:57.138 [DEBUG] thread=15120 cBaseObj.Create self=$000000000012ACE0 class=cBuffTrend2d name="BuffTrend2d"
+2026-06-15 16:55:59.574 [INFO] thread=15120 cChartMng.Destroy self=$00000000000DA070 root=$000000000012A2E0 count=23
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012A2E0 class=cChart name="ChartModel" children=5 parent=nil manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153F10 class=cBasePage name="PagePerf" children=2 parent=$000000000012A2E0 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000154090 class=cAxis name="PerfAxis2DAxisY" children=1 parent=$0000000000153F10 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012ACE0 class=cBuffTrend2d name="Buff2D_100k" children=0 parent=$0000000000154090 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153FD0 class=cAxis name="PerfAxis1DAxisY" children=1 parent=$0000000000153F10 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012AC60 class=cBuffTrend1d name="Buff1D_100k" children=0 parent=$0000000000153FD0 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153D90 class=cBasePage name="PageOwnX" children=1 parent=$000000000012A2E0 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153E50 class=cAxis name="OwnXAxisY" children=1 parent=$0000000000153D90 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012ABE0 class=cTrend name="OwnXLine" children=0 parent=$0000000000153E50 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153C10 class=cBasePage name="PageBars" children=1 parent=$000000000012A2E0 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153CD0 class=cAxis name="BarsAxisY" children=1 parent=$0000000000153C10 manager=$00000000000DA070
+2026-06-15 16:55:59.575 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012AB60 class=cBuffTrend1d name="BottomBuff1d" children=0 parent=$0000000000153CD0 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153850 class=cBasePage name="PageSignals" children=4 parent=$000000000012A2E0 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153B50 class=TChartFlagLabel name="Flag_SignalRed" children=0 parent=$0000000000153850 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153A90 class=cAxis name="Signals2AxisY" children=1 parent=$0000000000153850 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012AAE0 class=cTrend name="SignalRed" children=0 parent=$0000000000153A90 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$00000000001539D0 class=TChartFlagLabel name="Flag_SignalBlue" children=0 parent=$0000000000153850 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153910 class=cAxis name="SignalsAxisY" children=1 parent=$0000000000153850 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012AA60 class=cTrend name="SignalBlue" children=0 parent=$0000000000153910 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153610 class=cBasePage name="PageTrend" children=2 parent=$000000000012A2E0 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$0000000000153790 class=TChartFlagLabel name="Flag_TrendLine" children=0 parent=$0000000000153610 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$00000000001536D0 class=cAxis name="TrendAxisY" children=1 parent=$0000000000153610 manager=$00000000000DA070
+2026-06-15 16:55:59.576 [DEBUG] thread=15120 cBaseObj.Destroy enter self=$000000000012A9E0 class=cTrend name="TrendLine" children=0 parent=$00000000001536D0 manager=$00000000000DA070
+2026-06-15 18:46:35.842 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E2040 class=cBasePage name="Page"
+2026-06-15 18:46:35.842 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BA060 class=TChartCursor name="TChartCursor"
+2026-06-15 18:46:35.842 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BA160 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 18:46:35.842 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E2040 class=cBasePage name="TestPage" children=2 parent=nil manager=nil
+2026-06-15 18:46:35.842 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BA160 class=cBuffTrend1d name="TestTrend" children=0 parent=$00000000015E2040 manager=nil
+2026-06-15 18:46:35.843 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BA060 class=TChartCursor name="TestPageCursor" children=0 parent=$00000000015E2040 manager=nil
+2026-06-15 18:46:35.849 [INFO] thread=10236 cChartMng.Create self=$000000000156A070
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BA2E0 class=cChart name="ChartModel"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3900 class=cBasePage name="Page"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E39C0 class=cAxis name="Axis"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BA9E0 class=cTrend name="Trend"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3A80 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3B40 class=cBasePage name="Page"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3C00 class=cAxis name="Axis"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BAA60 class=cTrend name="Trend"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3CC0 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3D80 class=cAxis name="Axis"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BAAE0 class=cTrend name="Trend"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3E40 class=TChartFlagLabel name="FlagLabel"
+2026-06-15 18:46:35.849 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3F00 class=cBasePage name="Page"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E3FC0 class=cAxis name="Axis"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BAB60 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E4080 class=cBasePage name="Page"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E4140 class=cAxis name="Axis"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BABE0 class=cTrend name="Trend"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E4200 class=cBasePage name="Page"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E42C0 class=cAxis name="Axis"
+2026-06-15 18:46:35.850 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BAC60 class=cBuffTrend1d name="BuffTrend1d"
+2026-06-15 18:46:35.852 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015E4380 class=cAxis name="Axis"
+2026-06-15 18:46:35.852 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BACE0 class=cBuffTrend2d name="BuffTrend2d"
+2026-06-15 18:46:37.956 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BB360 class=TChartCursor name="TChartCursor"
+2026-06-15 18:46:38.151 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BB3E0 class=TChartCursor name="TChartCursor"
+2026-06-15 18:46:38.183 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BB460 class=TChartCursor name="TChartCursor"
+2026-06-15 18:46:47.736 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BB4E0 class=TChartCursor name="TChartCursor"
+2026-06-15 18:46:50.095 [DEBUG] thread=10236 cBaseObj.Create self=$00000000015BB560 class=TChartCursor name="TChartCursor"
+2026-06-15 18:47:14.050 [INFO] thread=10236 cChartMng.Destroy self=$000000000156A070 root=$00000000015BA2E0 count=28
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BA2E0 class=cChart name="ChartModel" children=5 parent=nil manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E4200 class=cBasePage name="PagePerf" children=3 parent=$00000000015BA2E0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BB560 class=TChartCursor name="PagePerfCursor" children=0 parent=$00000000015E4200 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E4380 class=cAxis name="PerfAxis2DAxisY" children=1 parent=$00000000015E4200 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BACE0 class=cBuffTrend2d name="Buff2D_100k" children=0 parent=$00000000015E4380 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E42C0 class=cAxis name="PerfAxis1DAxisY" children=1 parent=$00000000015E4200 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BAC60 class=cBuffTrend1d name="Buff1D_100k" children=0 parent=$00000000015E42C0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E4080 class=cBasePage name="PageOwnX" children=2 parent=$00000000015BA2E0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BB460 class=TChartCursor name="PageOwnXCursor" children=0 parent=$00000000015E4080 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E4140 class=cAxis name="OwnXAxisY" children=1 parent=$00000000015E4080 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BABE0 class=cTrend name="OwnXLine" children=0 parent=$00000000015E4140 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3F00 class=cBasePage name="PageBars" children=2 parent=$00000000015BA2E0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BB3E0 class=TChartCursor name="PageBarsCursor" children=0 parent=$00000000015E3F00 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3FC0 class=cAxis name="BarsAxisY" children=1 parent=$00000000015E3F00 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BAB60 class=cBuffTrend1d name="BottomBuff1d" children=0 parent=$00000000015E3FC0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3B40 class=cBasePage name="PageSignals" children=5 parent=$00000000015BA2E0 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BB360 class=TChartCursor name="PageSignalsCursor" children=0 parent=$00000000015E3B40 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3E40 class=TChartFlagLabel name="Flag_SignalRed" children=0 parent=$00000000015E3B40 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3D80 class=cAxis name="Signals2AxisY" children=1 parent=$00000000015E3B40 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BAAE0 class=cTrend name="SignalRed" children=0 parent=$00000000015E3D80 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3CC0 class=TChartFlagLabel name="Flag_SignalBlue" children=0 parent=$00000000015E3B40 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3C00 class=cAxis name="SignalsAxisY" children=1 parent=$00000000015E3B40 manager=$000000000156A070
+2026-06-15 18:47:14.051 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BAA60 class=cTrend name="SignalBlue" children=0 parent=$00000000015E3C00 manager=$000000000156A070
+2026-06-15 18:47:14.052 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3900 class=cBasePage name="PageTrend" children=3 parent=$00000000015BA2E0 manager=$000000000156A070
+2026-06-15 18:47:14.052 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BB4E0 class=TChartCursor name="PageTrendCursor" children=0 parent=$00000000015E3900 manager=$000000000156A070
+2026-06-15 18:47:14.052 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E3A80 class=TChartFlagLabel name="Flag_TrendLine" children=0 parent=$00000000015E3900 manager=$000000000156A070
+2026-06-15 18:47:14.052 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015E39C0 class=cAxis name="TrendAxisY" children=1 parent=$00000000015E3900 manager=$000000000156A070
+2026-06-15 18:47:14.052 [DEBUG] thread=10236 cBaseObj.Destroy enter self=$00000000015BA9E0 class=cTrend name="TrendLine" children=0 parent=$00000000015E39C0 manager=$000000000156A070

@@ -5,7 +5,7 @@ unit uRecorderSpectrumView;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, Graphics, Grids, Math,
+  Classes, SysUtils, Controls, ExtCtrls, Graphics, Grids, Math, LConvEncoding,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartTrend, uOglChartDrawObj,
   uOglChartCursor, uOglChartRenderer, uOglChartTextLabel,
@@ -22,6 +22,7 @@ type
     MaxIndex: Integer;
     MaxFrequencyHz: Double;
     MaxRms: Double;
+    Bands: array of TRecorderSpectrumBandResult;
     HasNewData: Boolean;
   end;
 
@@ -51,6 +52,7 @@ type
       AState: TGridDrawState);
     procedure ClearSeries;
     procedure ClearHeader;
+    procedure ClearBandObjects;
     function GetSpectrumColor(AIndex: Integer): TColor;
     function FindPageCursor: TChartCursor;
     function SeriesValueAtX(ASeries: cBuffTrend1d; AX: Double; out AY: Double): Boolean;
@@ -107,6 +109,16 @@ begin
     fSeriesList.Clear;
   if Assigned(fMaxFlags) then
     fMaxFlags.Clear;
+end;
+
+procedure TRecorderSpectrumView.ClearBandObjects;
+var
+  I: Integer;
+begin
+  if fPage = nil then Exit;
+  for I := fPage.ChildCount - 1 downto 0 do
+    if fPage.Children[I] is TChartFrequencyBand then
+      fPage.Children[I].Free;
 end;
 
 procedure TRecorderSpectrumView.ClearHeader;
@@ -286,7 +298,7 @@ begin
   end;
 
   lFrame := fBufferedFrames[AIndex];
-  lFlag.Visible := (lFrame.MaxIndex >= 0) and (lFrame.MaxIndex < ASeries.Count);
+  lFlag.Visible := (lFrame.MaxIndex >= 0) and (lFrame.MaxIndex < ASeries.Count) and (lFrame.MaxFrequencyHz >= 10.0);
   if not lFlag.Visible then
     Exit;
   lFlag.Trend := ASeries;
@@ -432,7 +444,7 @@ end;
 procedure TRecorderSpectrumView.Configure(AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry);
 var
-  I: Integer;
+  I, J: Integer;
   lSeries: cBuffTrend1d;
   lFlag: TChartFlagLabel;
   lPageArea: TChartFloatRect;
@@ -511,6 +523,9 @@ begin
           SetLength(fBufferedFrames[I].PhaseRad, Length(lFrame.PhaseRad));
           if Length(lFrame.PhaseRad) > 0 then
             Move(lFrame.PhaseRad[0], fBufferedFrames[I].PhaseRad[0], Length(lFrame.PhaseRad) * SizeOf(Double));
+          SetLength(fBufferedFrames[I].Bands, Length(lFrame.Bands));
+          for J := 0 to Length(lFrame.Bands) - 1 do
+            fBufferedFrames[I].Bands[J] := lFrame.Bands[J];
           fBufferedFrames[I].HasNewData := True;
         end;
       end;
@@ -586,10 +601,11 @@ end;
 procedure TRecorderSpectrumView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
 var
-  I, J: Integer;
+  I, J, K: Integer;
   lSeries: cBuffTrend1d;
   lNeedsRedraw: Boolean;
   lValues: array of Double;
+  lBand: TChartFrequencyBand;
 begin
   lNeedsRedraw := False;
 
@@ -625,7 +641,33 @@ begin
             Break;
           end;
         end;
+        
+        // Copy bands from active frame
+        SetLength(fBufferedFrames[I].Bands, Length(fBufferedFrames[I].Bands)); // Ensure allocated
         fBufferedFrames[I].HasNewData := False;
+      end;
+    end;
+
+    // Synchronize the bands on the page
+    if (fPage <> nil) and (Length(fBufferedFrames) > 0) then
+    begin
+      ClearBandObjects;
+      for K := 0 to Length(fBufferedFrames[0].Bands) - 1 do
+      begin
+        lBand := TChartFrequencyBand.Create;
+        lBand.Name := Format('FreqBand_%d', [K]);
+        lBand.Caption := CP1251ToUTF8(Format('%s'#13'RMS: %.4f', [
+          fBufferedFrames[0].Bands[K].BandName,
+          fBufferedFrames[0].Bands[K].Rms
+        ]));
+        lBand.X1 := fBufferedFrames[0].Bands[K].F1;
+        lBand.X2 := fBufferedFrames[0].Bands[K].F2;
+        lBand.PeakX := fBufferedFrames[0].Bands[K].MaxFrequencyHz;
+        lBand.PeakY := fBufferedFrames[0].Bands[K].MaxRms;
+        lBand.Rms := fBufferedFrames[0].Bands[K].Rms;
+        lBand.Visible := True;
+        lBand.Color := $1E808080; // Gray transparency
+        fPage.AddChild(lBand);
       end;
     end;
   finally
@@ -712,7 +754,7 @@ end;
 procedure TRecorderSpectrumView.HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
 var
   lEventData: TRecorderSpectrumFrameEventData;
-  I: Integer;
+  I, J: Integer;
 begin
   if not IsVisible then Exit;
   if (AEvent.Kind <> rceSpectrumFrame) or (not (AEvent.Data is TRecorderSpectrumFrameEventData)) then
@@ -738,6 +780,9 @@ begin
         if Length(lEventData.Frame.PhaseRad) > 0 then
           Move(lEventData.Frame.PhaseRad[0], fBufferedFrames[I].PhaseRad[0],
             Length(lEventData.Frame.PhaseRad) * SizeOf(Double));
+        SetLength(fBufferedFrames[I].Bands, Length(lEventData.Frame.Bands));
+        for J := 0 to Length(lEventData.Frame.Bands) - 1 do
+          fBufferedFrames[I].Bands[J] := lEventData.Frame.Bands[J];
         fBufferedFrames[I].HasNewData := True;
         Break;
       end;

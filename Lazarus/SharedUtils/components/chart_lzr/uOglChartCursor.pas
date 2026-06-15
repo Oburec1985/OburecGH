@@ -70,7 +70,30 @@ type
 
     property Color: Cardinal read fColor write fColor;
     property MultiLineMode: TMultiLineMode read fMultiLineMode write fMultiLineMode;
+  end;
 
+  { TChartFrequencyBand }
+
+  TChartFrequencyBand = class(TChartBaseObject)
+  private
+    fVisible: Boolean;
+    fX1: Double;
+    fX2: Double;
+    fColor: Cardinal;
+    fPeakX: Double;
+    fPeakY: Double;
+    fRms: Double;
+  public
+    constructor Create; override;
+    procedure AssignDefaultProperties; override;
+    function NotSaveToJson: Boolean; override;
+    property Visible: Boolean read fVisible write fVisible;
+    property X1: Double read fX1 write fX1;
+    property X2: Double read fX2 write fX2;
+    property Color: Cardinal read fColor write fColor;
+    property PeakX: Double read fPeakX write fPeakX;
+    property PeakY: Double read fPeakY write fPeakY;
+    property Rms: Double read fRms write fRms;
   end;
 
 // ¬озвращает существующий или создает новый курсор дл€ страницы.
@@ -198,5 +221,29 @@ begin
 
 end;
 
-end.
+{ TChartFrequencyBand }
 
+constructor TChartFrequencyBand.Create;
+begin
+  inherited Create;
+  AssignDefaultProperties;
+end;
+
+procedure TChartFrequencyBand.AssignDefaultProperties;
+begin
+  inherited AssignDefaultProperties;
+  fVisible := True;
+  fX1 := 0.0;
+  fX2 := 0.0;
+  fColor := $1E808080; // ќчень прозрачный серый
+  fPeakX := 0.0;
+  fPeakY := 0.0;
+  fRms := 0.0;
+end;
+
+function TChartFrequencyBand.NotSaveToJson: Boolean;
+begin
+  Result := True;
+end;
+
+end.

@@ -11,7 +11,7 @@ interface
 uses
   Classes, SysUtils, Math, gl, glext, uOglChartTypes, uOglChartBaseObj,
   uOglChartDrawObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, uOglChartFontMng, uOglChartLineHelper, uOglChartTextLabel, uOglChartCursor;
+  uOglChartChart, uOglChartFontMng, uOglChartLineHelper, uOglChartTextLabel, uOglChartCursor, LConvEncoding;
 
 type
   // Тип редактируемой интерактивной текстовой метки на графике
@@ -147,6 +147,8 @@ type
 
     procedure DrawTextLabel(ALabel: TChartTextLabel; APage: TChartPage; const ARect: TChartPixelRect);
     procedure DrawCursor(ACursor: TChartCursor; APage: TChartPage; const ARect: TChartPixelRect);
+      procedure DrawFrequencyBand(ABand: TChartFrequencyBand; APage: TChartPage; const ARect: TChartPixelRect);
+      procedure DrawBandShadedRects(APage: TChartPage; const ARect: TChartPixelRect);
     procedure CollectFlags(AObject: TChartBaseObject; AList: TList);
     procedure ResolveFlagOverlaps(APage: TChartPage);
     procedure DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray);
@@ -1185,97 +1187,272 @@ begin
   end;
 end;
 
-function UpCaseWide(AChar: WideChar): WideChar;
+function FindTrendPeak(ATrend: cBuffTrend1d; AX1, AX2: Double; out APeakX, APeakY: Double): Boolean;
+var
+  I, lStartIdx, lEndIdx: Integer;
+  lMaxVal: Double;
+  lMaxIdx: Integer;
+  lVal: Double;
 begin
-  if (AChar >= #$0430) and (AChar <= #$044F) then
-    Result := WideChar(Ord(AChar) - 32)
-  else if AChar = #$0451 then
-    Result := #$0401
-  else if (AChar >= 'a') and (AChar <= 'z') then
-    Result := WideChar(Ord(AChar) - 32)
-  else
-    Result := AChar;
+  Result := False;
+  if (ATrend = nil) or (ATrend.Count = 0) or (ATrend.DX = 0.0) then Exit;
+  
+  lStartIdx := Round((AX1 - ATrend.X0) / ATrend.DX);
+  lEndIdx := Round((AX2 - ATrend.X0) / ATrend.DX);
+  
+  if lStartIdx < 0 then lStartIdx := 0;
+  if lEndIdx >= ATrend.Count then lEndIdx := ATrend.Count - 1;
+  if lStartIdx > lEndIdx then Exit;
+  
+  lMaxVal := ATrend.Values[lStartIdx];
+  lMaxIdx := lStartIdx;
+  
+  for I := lStartIdx + 1 to lEndIdx do
+  begin
+    lVal := ATrend.Values[I];
+    if lVal > lMaxVal then
+    begin
+      lMaxVal := lVal;
+      lMaxIdx := I;
+    end;
+  end;
+  
+  APeakX := ATrend.X0 + lMaxIdx * ATrend.DX;
+  APeakY := lMaxVal;
+  Result := True;
 end;
 
-function GlyphRow(AChar: WideChar; ARow: Integer): string;
+procedure TOpenGLChartRenderer.DrawBandShadedRects(APage: TChartPage; const ARect: TChartPixelRect);
+var
+  I: Integer;
+  lBand: TChartFrequencyBand;
+  lYAxis: TChartAxis;
+  lPixelX1, lPixelX2: Single;
+  lRect: TChartPixelRect;
 begin
-  Result := '00000';
-  case UpCaseWide(AChar) of
-    'A': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    'B': case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
-    'C': case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '01111'; end;
-    'D': case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
-    'E': case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
-    'F': case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
-    'G': case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10011'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01111'; end;
-    'H': case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    'I': case ARow of 0: Result := '11111'; 1: Result := '00100'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '11111'; end;
-    'J': case ARow of 0: Result := '00111'; 1: Result := '00010'; 2: Result := '00010'; 3: Result := '00010'; 4: Result := '10010'; 5: Result := '10010'; 6: Result := '01100'; end;
-    'K': case ARow of 0: Result := '10001'; 1: Result := '10010'; 2: Result := '10100'; 3: Result := '11000'; 4: Result := '10100'; 5: Result := '10010'; 6: Result := '10001'; end;
-    'L': case ARow of 0: Result := '10000'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
-    'M': case ARow of 0: Result := '10001'; 1: Result := '11011'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    'N': case ARow of 0: Result := '10001'; 1: Result := '11001'; 2: Result := '10101'; 3: Result := '10011'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    'O': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    'P': case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
-    'Q': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10101'; 5: Result := '10010'; 6: Result := '01101'; end;
-    'R': case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10100'; 5: Result := '10010'; 6: Result := '10001'; end;
-    'S': case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '01110'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '11110'; end;
-    'T': case ARow of 0: Result := '11111'; 1: Result := '00100'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '00100'; end;
-    'U': case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    'V': case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '01010'; 5: Result := '01010'; 6: Result := '00100'; end;
-    'W': case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10101'; 4: Result := '10101'; 5: Result := '10101'; 6: Result := '01010'; end;
-    'X': case ARow of 0: Result := '10001'; 1: Result := '01010'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '01010'; 6: Result := '10001'; end;
-    'Y': case ARow of 0: Result := '10001'; 1: Result := '01010'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '00100'; end;
-    'Z': case ARow of 0: Result := '11111'; 1: Result := '00001'; 2: Result := '00010'; 3: Result := '00100'; 4: Result := '01000'; 5: Result := '10000'; 6: Result := '11111'; end;
-    '0': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10011'; 3: Result := '10101'; 4: Result := '11001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    '1': case ARow of 0: Result := '00100'; 1: Result := '01100'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '01110'; end;
-    '2': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '00001'; 3: Result := '00010'; 4: Result := '00100'; 5: Result := '01000'; 6: Result := '11111'; end;
-    '3': case ARow of 0: Result := '11110'; 1: Result := '00001'; 2: Result := '00001'; 3: Result := '01110'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '11110'; end;
-    '4': case ARow of 0: Result := '00010'; 1: Result := '00110'; 2: Result := '01010'; 3: Result := '10010'; 4: Result := '11111'; 5: Result := '00010'; 6: Result := '00010'; end;
-    '5': case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '11110'; end;
-    '6': case ARow of 0: Result := '01110'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    '7': case ARow of 0: Result := '11111'; 1: Result := '00001'; 2: Result := '00010'; 3: Result := '00100'; 4: Result := '01000'; 5: Result := '01000'; 6: Result := '01000'; end;
-    '8': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    '9': case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01111'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '01110'; end;
-    '.': if ARow = 6 then Result := '00100';
-    ',': case ARow of 5: Result := '00100'; 6: Result := '01000'; end;
-    '-': if ARow = 3 then Result := '01110';
-    '_': if ARow = 6 then Result := '11111';
-    #$0410: case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$0411: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
-    #$0412: case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
-    #$0413: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
-    #$0414: case ARow of 0: Result := '01110'; 1: Result := '01010'; 2: Result := '01010'; 3: Result := '01010'; 4: Result := '01010'; 5: Result := '11111'; 6: Result := '10001'; end;
-    #$0415: case ARow of 0: Result := '11111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
-    #$0416: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '01110'; 3: Result := '00100'; 4: Result := '01110'; 5: Result := '10101'; 6: Result := '10101'; end;
-    #$0417: case ARow of 0: Result := '11110'; 1: Result := '00001'; 2: Result := '00010'; 3: Result := '01100'; 4: Result := '00010'; 5: Result := '00001'; 6: Result := '11110'; end;
-    #$0418: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10011'; 3: Result := '10101'; 4: Result := '11001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$0419: case ARow of 0: Result := '10101'; 1: Result := '10001'; 2: Result := '10011'; 3: Result := '10101'; 4: Result := '11001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$041A: case ARow of 0: Result := '10001'; 1: Result := '10010'; 2: Result := '10100'; 3: Result := '11000'; 4: Result := '10100'; 5: Result := '10010'; 6: Result := '10001'; end;
-    #$041B: case ARow of 0: Result := '01111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$041C: case ARow of 0: Result := '10001'; 1: Result := '11011'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$041D: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11111'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$041E: case ARow of 0: Result := '01110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '01110'; end;
-    #$041F: case ARow of 0: Result := '11111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$0420: case ARow of 0: Result := '11110'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '10000'; end;
-    #$0421: case ARow of 0: Result := '01111'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '10000'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '01111'; end;
-    #$0422: case ARow of 0: Result := '11111'; 1: Result := '00100'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '00100'; 6: Result := '00100'; end;
-    #$0423: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '01010'; 3: Result := '00100'; 4: Result := '01000'; 5: Result := '10000'; 6: Result := '10000'; end;
-    #$0424: case ARow of 0: Result := '00100'; 1: Result := '01110'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '01110'; 5: Result := '00100'; 6: Result := '00100'; end;
-    #$0425: case ARow of 0: Result := '10001'; 1: Result := '01010'; 2: Result := '00100'; 3: Result := '00100'; 4: Result := '00100'; 5: Result := '01010'; 6: Result := '10001'; end;
-    #$0426: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '10001'; 4: Result := '10001'; 5: Result := '11111'; 6: Result := '00001'; end;
-    #$0427: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01111'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '00001'; end;
-    #$0428: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10101'; 5: Result := '11111'; 6: Result := '00000'; end;
-    #$0429: case ARow of 0: Result := '10101'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '10101'; 4: Result := '10101'; 5: Result := '11111'; 6: Result := '00001'; end;
-    #$042A: case ARow of 0: Result := '11000'; 1: Result := '01000'; 2: Result := '01000'; 3: Result := '01110'; 4: Result := '01001'; 5: Result := '01001'; 6: Result := '01110'; end;
-    #$042B: case ARow of 0: Result := '10001'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '11101'; 4: Result := '10011'; 5: Result := '10011'; 6: Result := '11101'; end;
-    #$042C: case ARow of 0: Result := '10000'; 1: Result := '10000'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10001'; 5: Result := '10001'; 6: Result := '11110'; end;
-    #$042D: case ARow of 0: Result := '11110'; 1: Result := '00001'; 2: Result := '00001'; 3: Result := '01110'; 4: Result := '00001'; 5: Result := '00001'; 6: Result := '11110'; end;
-    #$042E: case ARow of 0: Result := '10001'; 1: Result := '10101'; 2: Result := '10101'; 3: Result := '11111'; 4: Result := '10101'; 5: Result := '10101'; 6: Result := '10001'; end;
-    #$042F: case ARow of 0: Result := '01111'; 1: Result := '10001'; 2: Result := '10001'; 3: Result := '01111'; 4: Result := '01001'; 5: Result := '10001'; 6: Result := '10001'; end;
-    #$0401: case ARow of 0: Result := '01010'; 1: Result := '11111'; 2: Result := '10000'; 3: Result := '11110'; 4: Result := '10000'; 5: Result := '10000'; 6: Result := '11111'; end;
-  end;
+  if not Assigned(APage) then Exit;
+  lYAxis := GetPrimaryXAxis(APage);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  for I := 0 to APage.ChildCount - 1 do
+  begin
+    if APage.Children[I] is TChartFrequencyBand then
+    begin
+      lBand := TChartFrequencyBand(APage.Children[I]);
+      if lBand.Visible then
+      begin
+        lPixelX1 := XValueToPixel(APage, lYAxis, lBand.X1, ARect.Left, ARect.Right);
+        lPixelX2 := XValueToPixel(APage, lYAxis, lBand.X2, ARect.Left, ARect.Right);
 
+        lRect.Left := Round(Min(lPixelX1, lPixelX2));
+        lRect.Right := Round(Max(lPixelX1, lPixelX2));
+        lRect.Top := ARect.Top;
+        lRect.Bottom := ARect.Bottom;
+
+        if lRect.Left < ARect.Left then lRect.Left := ARect.Left;
+        if lRect.Right > ARect.Right then lRect.Right := ARect.Right;
+
+        if lRect.Left < lRect.Right then
+        begin
+          SetGLColor(lBand.Color);
+          FillRect(lRect);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TOpenGLChartRenderer.DrawFrequencyBand(ABand: TChartFrequencyBand; APage: TChartPage; const ARect: TChartPixelRect);
+var
+  lYAxis: TChartAxis;
+  lPixelX1, lPixelX2: Single;
+  lRect: TChartPixelRect;
+  lFont: cOglFont;
+  lTextWidth, lTextHeight: Single;
+  lCenterX: Single;
+  I, J, K: Integer;
+  lAxis: TChartAxis;
+  lTrend: cBaseTrend;
+  lPeakX, lPeakY: Double;
+  lPixelPeakX, lPixelY, lConnX: Single;
+  lMarkerRect: TChartPixelRect;
+  lTextRect: TChartPixelRect;
+  lLabelText: string;
+  lLabelLines: TStringList;
+  lHasPeak: Boolean;
+  lOffsetCount: Integer;
+begin
+  if not Assigned(ABand) or not ABand.Visible then Exit;
+
+  lYAxis := GetPrimaryXAxis(APage);
+  lPixelX1 := XValueToPixel(APage, lYAxis, ABand.X1, ARect.Left, ARect.Right);
+  lPixelX2 := XValueToPixel(APage, lYAxis, ABand.X2, ARect.Left, ARect.Right);
+
+  lRect.Left := Round(Min(lPixelX1, lPixelX2));
+  lRect.Right := Round(Max(lPixelX1, lPixelX2));
+  lRect.Top := ARect.Top;
+  lRect.Bottom := ARect.Bottom;
+
+  if lRect.Left < ARect.Left then lRect.Left := ARect.Left;
+  if lRect.Right > ARect.Right then lRect.Right := ARect.Right;
+
+  if lRect.Left < lRect.Right then
+  begin
+    // 1. Shaded rectangle is drawn in DrawBandShadedRects pass.
+
+    // 2. Draw green name label (Caption) at the bottom
+    if ABand.Caption <> '' then
+    begin
+      lFont := fFontMng.Font(cfGridTick);
+      lLabelLines := TStringList.Create;
+      try
+        lLabelLines.Text := ABand.Caption;
+        lTextWidth := 0;
+        for I := 0 to lLabelLines.Count - 1 do
+          lTextWidth := Max(lTextWidth, lFont.TextPixelWidth(lLabelLines[I]));
+        lTextHeight := lLabelLines.Count * lFont.TextPixelHeight + (lLabelLines.Count - 1) * 2;
+
+        lCenterX := (lPixelX1 + lPixelX2) / 2;
+
+        lTextRect.Left := Round(lCenterX - lTextWidth / 2 - 4);
+        lTextRect.Right := Round(lCenterX + lTextWidth / 2 + 4);
+        lTextRect.Bottom := ARect.Bottom - 4;
+        lTextRect.Top := Round(lTextRect.Bottom - lTextHeight - 6);
+
+        if lTextRect.Left < ARect.Left then
+        begin
+          lTextRect.Right := lTextRect.Right + (ARect.Left - lTextRect.Left);
+          lTextRect.Left := ARect.Left;
+        end;
+        if lTextRect.Right > ARect.Right then
+        begin
+          lTextRect.Left := lTextRect.Left - (lTextRect.Right - ARect.Right);
+          lTextRect.Right := ARect.Right;
+        end;
+
+        if lTextRect.Left < lTextRect.Right then
+        begin
+          SetGLColor($FF00C000); // Green
+          FillRect(lTextRect);
+
+          SetGLColor($FF000000);
+          glLineWidth(1);
+          DrawRect(lTextRect);
+
+          lFont.Color := $FF000000;
+          for I := 0 to lLabelLines.Count - 1 do
+            DrawText(lLabelLines[I], lTextRect.Left + 4, lTextRect.Top + 3 + I * (lFont.TextPixelHeight + 2), lFont);
+        end;
+      finally
+        lLabelLines.Free;
+      end;
+    end;
+
+    // 3. Draw peak markers/labels for each visible trend! (NO vertical red line)
+    lOffsetCount := 0;
+    for I := 0 to APage.ChildCount - 1 do
+    begin
+      if APage.Children[I] is TChartAxis then
+      begin
+        lAxis := TChartAxis(APage.Children[I]);
+        for J := 0 to lAxis.ChildCount - 1 do
+        begin
+          if lAxis.Children[J] is cBuffTrend1d then
+          begin
+            lTrend := cBaseTrend(lAxis.Children[J]);
+            if lTrend.Visible then
+            begin
+              lHasPeak := FindTrendPeak(cBuffTrend1d(lTrend), ABand.X1, ABand.X2, lPeakX, lPeakY);
+              if lHasPeak then
+              begin
+                lPixelPeakX := XValueToPixel(APage, nil, lPeakX, ARect.Left, ARect.Right);
+                lPixelY := AxisValueToPixel(lAxis, lPeakY, ARect.Bottom, ARect.Top);
+
+                // Black dot
+                if (lPixelPeakX >= ARect.Left) and (lPixelPeakX <= ARect.Right) and
+                   (lPixelY >= ARect.Top) and (lPixelY <= ARect.Bottom) then
+                begin
+                  SetGLColor($FF000000); // Black
+                  lMarkerRect.Left := Round(lPixelPeakX - 3);
+                  lMarkerRect.Right := Round(lPixelPeakX + 3);
+                  lMarkerRect.Top := Round(lPixelY - 3);
+                  lMarkerRect.Bottom := Round(lPixelY + 3);
+                  FillRect(lMarkerRect);
+
+                  // Label stacked from the top of the chart downwards
+                  if lPeakX >= 1000.0 then
+                    lLabelText := Format('F:%.3e V:%.3g', [lPeakX, lPeakY])
+                  else
+                    lLabelText := Format('F:%.1f V:%.3g', [lPeakX, lPeakY]);
+                  
+                  lLabelText := CP1251ToUTF8(lLabelText);
+
+                  lFont := fFontMng.Font(cfGridTick);
+                  lTextWidth := lFont.TextPixelWidth(lLabelText);
+                  lTextHeight := lFont.TextPixelHeight;
+
+                  // Shift horizontally to avoid covering the peak dot
+                  if lPixelPeakX + 10 + lTextWidth + 8 <= ARect.Right then
+                  begin
+                    lTextRect.Left := Round(lPixelPeakX + 10);
+                    lTextRect.Right := Round(lTextRect.Left + lTextWidth + 8);
+                  end
+                  else
+                  begin
+                    lTextRect.Right := Round(lPixelPeakX - 10);
+                    lTextRect.Left := Round(lTextRect.Right - lTextWidth - 8);
+                  end;
+                  
+                  // Stack vertically from the top downwards
+                  lTextRect.Top := Round(ARect.Top + 4 + lOffsetCount * (lTextHeight + 8));
+                  lTextRect.Bottom := Round(lTextRect.Top + lTextHeight + 6);
+
+                  if lTextRect.Left < ARect.Left then
+                  begin
+                    lTextRect.Right := lTextRect.Right + (ARect.Left - lTextRect.Left);
+                    lTextRect.Left := ARect.Left;
+                  end;
+                  if lTextRect.Right > ARect.Right then
+                  begin
+                    lTextRect.Left := lTextRect.Left - (lTextRect.Right - ARect.Right);
+                    lTextRect.Right := ARect.Right;
+                  end;
+
+                  if lTextRect.Left < lTextRect.Right then
+                  begin
+                    // Draw a thin line from the nearest edge of the label box to the peak dot
+                    lConnX := lTextRect.Left;
+                    if lPixelPeakX > lTextRect.Right then
+                      lConnX := lTextRect.Right;
+
+                    SetGLColor($FF808080); // Gray line
+                    glLineWidth(1.0);
+                    glBegin(GL_LINES);
+                    glVertex2f(lConnX, (lTextRect.Top + lTextRect.Bottom) / 2);
+                    glVertex2f(lPixelPeakX, lPixelY);
+                    glEnd;
+
+                    SetGLColor($FFFFFFFF);
+                    FillRect(lTextRect);
+
+                    SetGLColor(lTrend.Color);
+                    glLineWidth(1);
+                    DrawRect(lTextRect);
+
+                    lFont.Color := lTrend.Color;
+                    DrawText(lLabelText, lTextRect.Left + 4, lTextRect.Top + 3, lFont);
+                  end;
+                  Inc(lOffsetCount);
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TOpenGLChartRenderer.AddTextHit(const AText: string; AX, AY: Single; AFont: cOglFont;
@@ -1581,7 +1758,7 @@ var
   lFlag: TChartFlagLabel;
   lTrend: cBaseTrend;
   lTrendYVal: Double;
-  lPtX, lPtY: Single;
+  lPtX, lPtY, lConnX: Single;
   lAxis: TChartAxis;
   lTrends: TList;
   lTrendIdx: Integer;
@@ -1686,11 +1863,17 @@ begin
           lPtX := XValueToPixel(APage, nil, lFlag.AnchorX, lContentRect.Left, lContentRect.Right);
           lPtY := AxisValueToPixel(lAxis, lTrendYVal, lContentRect.Bottom, lContentRect.Top);
           // Рисуем линию-выноску от точки привязки к центру нижней (или верхней) части рамки флага
-          SetGLColor($FF808080); // Серый цвет выноски
+          lConnX := (lLabelRect.Left + lLabelRect.Right) / 2;
+          if lPtX < lLabelRect.Left then
+            lConnX := lLabelRect.Left
+          else if lPtX > lLabelRect.Right then
+            lConnX := lLabelRect.Right;
+
+          SetGLColor($FF808080); // Line color
           glLineWidth(1.0);
           glBegin(GL_LINES);
           glVertex2f(lPtX, lPtY);
-          glVertex2f((lLabelRect.Left + lLabelRect.Right) / 2, (lLabelRect.Top + lLabelRect.Bottom) / 2);
+          glVertex2f(lConnX, (lLabelRect.Top + lLabelRect.Bottom) / 2);
           glEnd;
           // Рисуем незалитый маркер, чтобы он не перекрывал текст флага
           SetGLColor($FF202020);
@@ -1777,7 +1960,9 @@ begin
   // if AObject is TChartTextLabel then
   //   DrawTextLabel(TChartTextLabel(AObject), APage, ARect);
   if AObject is TChartCursor then
-    DrawCursor(TChartCursor(AObject), APage, ARect);
+      DrawCursor(TChartCursor(AObject), APage, ARect);
+    if AObject is TChartFrequencyBand then
+      DrawFrequencyBand(TChartFrequencyBand(AObject), APage, ARect);
   for lIndex := 0 to AObject.ChildCount - 1 do
     RenderObject(AObject.Children[lIndex], ARect, APage, lYAxis);
 end;
@@ -1897,6 +2082,7 @@ begin
     Max(1, fPageRect.Bottom - fPageRect.Top));
   DrawPageFrame(APage, fPageRect);
   DrawGrid(lContentRect, APage, lYAxis);
+  DrawBandShadedRects(APage, lContentRect);
   DrawAxes(lContentRect, APage);
   glScissor(lContentRect.Left, fHost.GetHeight - lContentRect.Bottom,
     Max(1, lContentRect.Right - lContentRect.Left),

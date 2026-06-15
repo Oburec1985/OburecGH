@@ -10,7 +10,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="87" Y="15"/>
-        <UsageCount Value="149"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uMainForm.pas"/>
@@ -18,20 +18,18 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="762"/>
         <CursorPos X="94" Y="782"/>
-        <UsageCount Value="149"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderStateMachine.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
-        <CursorPos X="65" Y="47"/>
-        <UsageCount Value="149"/>
+        <CursorPos X="77" Y="34"/>
+        <UsageCount Value="158"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
@@ -39,7 +37,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="169"/>
         <CursorPos X="55" Y="116"/>
-        <UsageCount Value="149"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFormModel.pas"/>
@@ -47,28 +45,28 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="127"/>
         <CursorPos X="78" Y="153"/>
-        <UsageCount Value="144"/>
+        <UsageCount Value="153"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderCoreServices.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="136"/>
+        <UsageCount Value="145"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDebugLog.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="52" Y="9"/>
-        <UsageCount Value="93"/>
+        <UsageCount Value="102"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
-        <TopLine Value="1348"/>
-        <CursorPos X="74" Y="1369"/>
-        <UsageCount Value="136"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1317"/>
+        <CursorPos X="31" Y="1331"/>
+        <UsageCount Value="145"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDataSources.pas"/>
@@ -76,7 +74,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1384"/>
         <CursorPos X="66" Y="1408"/>
-        <UsageCount Value="136"/>
+        <UsageCount Value="145"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderEventQueue.pas"/>
@@ -84,12 +82,12 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="111"/>
         <CursorPos X="194" Y="116"/>
-        <UsageCount Value="136"/>
+        <UsageCount Value="145"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderAlarms.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="93"/>
+        <UsageCount Value="102"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDataStorage.pas"/>
@@ -97,12 +95,12 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="573"/>
         <CursorPos X="73" Y="608"/>
-        <UsageCount Value="136"/>
+        <UsageCount Value="145"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTimeSystem.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="129"/>
+        <UsageCount Value="138"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderProjectFiles.pas"/>
@@ -110,17 +108,17 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="463"/>
         <CursorPos X="124" Y="489"/>
-        <UsageCount Value="107"/>
+        <UsageCount Value="116"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderSpectrumEngine.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="49"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFrequencyBands.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="49"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormPagesDialog.pas"/>
@@ -128,7 +126,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="309"/>
         <CursorPos X="48" Y="327"/>
-        <UsageCount Value="144"/>
+        <UsageCount Value="153"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormEditorController.pas"/>
@@ -136,7 +134,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="73"/>
         <CursorPos X="70" Y="83"/>
-        <UsageCount Value="142"/>
+        <UsageCount Value="151"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderSettingsDialog.pas"/>
@@ -144,25 +142,22 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="94" Y="36"/>
-        <UsageCount Value="127"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
+        <UsageCount Value="136"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderFrequencyBandsDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="49"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderCommandImages.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="64" Y="14"/>
-        <UsageCount Value="107"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="116"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uTagSettingsDialog.pas"/>
@@ -170,16 +165,15 @@
         <ComponentName Value="TagSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1193"/>
         <CursorPos X="33" Y="1202"/>
-        <UsageCount Value="107"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="116"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderDigitalPageView.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="107"/>
+        <UsageCount Value="116"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderOscillogramPageView.pas"/>
@@ -187,7 +181,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="165"/>
         <CursorPos X="46" Y="210"/>
-        <UsageCount Value="107"/>
+        <UsageCount Value="116"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderOglOscillogramView.pas"/>
@@ -195,7 +189,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="93"/>
         <CursorPos X="73" Y="98"/>
-        <UsageCount Value="104"/>
+        <UsageCount Value="113"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\uSharedFileLogger.pas"/>
@@ -203,7 +197,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="195"/>
         <CursorPos X="64" Y="214"/>
-        <UsageCount Value="105"/>
+        <UsageCount Value="114"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\mera\uMeraFile.pas"/>
@@ -211,14 +205,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="129"/>
         <CursorPos X="38" Y="134"/>
-        <UsageCount Value="93"/>
+        <UsageCount Value="102"/>
       </Unit>
       <Unit>
         <Filename Value="..\Tests\RecorderTests\UITestData\uRecorderUiTestData.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="77" Y="23"/>
-        <UsageCount Value="93"/>
+        <UsageCount Value="102"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uComponentSettingsDialog.pas"/>
@@ -227,7 +221,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="73"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderTrendSettingsDialog.pas"/>
@@ -236,7 +230,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="73"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderTrendView.pas"/>
@@ -244,77 +238,85 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="498"/>
         <CursorPos X="50" Y="508"/>
-        <UsageCount Value="64"/>
+        <UsageCount Value="73"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderSpectrumView.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="703"/>
-        <CursorPos X="80" Y="725"/>
-        <UsageCount Value="21"/>
-        <Loaded Value="True"/>
+        <CursorPos X="99" Y="721"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderCalibrationAddDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationAddDialog"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderCalibrationListDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationListDialog"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderCalibrationPropertiesDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationPropertiesDialog"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderMic140SettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderSpectrumSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderVisualControl.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderDeviceInterfaces.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderMebiusTcpProtocol.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderMic140LegacyProtocol.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="203"/>
+        <CursorPos X="65" Y="217"/>
+        <UsageCount Value="30"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderMic140DataSource.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="1432"/>
+        <CursorPos X="87" Y="1453"/>
+        <UsageCount Value="30"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderSpectrumRuntime.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="30"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uMainForm.lfm"/>
@@ -349,7 +351,7 @@
         <Filename Value="C:\lazarus\lcl\include\customform.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="2022"/>
-        <CursorPos X="57" Y="2043"/>
+        <CursorPos X="74" Y="2040"/>
         <UsageCount Value="12"/>
       </Unit>
       <Unit>
@@ -368,11 +370,10 @@
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartTrend.pas"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="514"/>
-        <CursorPos X="65" Y="535"/>
-        <UsageCount Value="16"/>
-        <Loaded Value="True"/>
+        <CursorPos X="80" Y="533"/>
+        <UsageCount Value="18"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas"/>
@@ -396,20 +397,17 @@
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1019"/>
-        <CursorPos X="101" Y="1033"/>
-        <UsageCount Value="15"/>
-        <Loaded Value="True"/>
+        <CursorPos X="69" Y="1040"/>
+        <UsageCount Value="17"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="66"/>
-        <CursorPos X="74" Y="93"/>
-        <UsageCount Value="11"/>
-        <Loaded Value="True"/>
+        <CursorPos X="102" Y="75"/>
+        <UsageCount Value="13"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\components\lazutils\lconvencoding.pas"/>
@@ -419,124 +417,26 @@
         <UsageCount Value="9"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="29">
+    <JumpHistory HistoryIndex="4">
       <Position>
-        <Filename Value="Core\uRecorderTags.pas"/>
+        <Filename Value="Core\uRecorderStateMachine.pas"/>
+        <Caret Line="34" Column="122" TopLine="25"/>
       </Position>
       <Position>
-        <Filename Value="Core\uRecorderTags.pas"/>
-        <Caret Line="1026" Column="46" TopLine="1018"/>
+        <Filename Value="Core\uRecorderMic140DataSource.pas"/>
+        <Caret Line="1351" Column="69" TopLine="1340"/>
       </Position>
       <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="30" Column="45"/>
+        <Filename Value="Core\uRecorderMic140DataSource.pas"/>
+        <Caret Line="1297" Column="81" TopLine="1289"/>
       </Position>
       <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="381" Column="58" TopLine="365"/>
+        <Filename Value="Core\uRecorderMic140LegacyProtocol.pas"/>
+        <Caret Line="225" Column="61" TopLine="208"/>
       </Position>
       <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="258" Column="76" TopLine="229"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="372" Column="40" TopLine="361"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="377" Column="33" TopLine="361"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="377" Column="33" TopLine="351"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="377" Column="21" TopLine="361"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="30" Column="62" TopLine="11"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="46" Column="87" TopLine="28"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="451" Column="65" TopLine="439"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="460" Column="71" TopLine="439"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uTagSettingsDialog.pas"/>
-        <Caret Line="710" Column="83" TopLine="695"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderCommandImages.pas"/>
-        <Caret Line="14" Column="64"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="153" Column="15" TopLine="143"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="24" Column="71" TopLine="14"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="782" Column="94" TopLine="762"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="68" Column="94" TopLine="54"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="71" Column="41" TopLine="54"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="66" Column="22" TopLine="54"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="52" Column="45" TopLine="42"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="64" Column="62" TopLine="42"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="38" Column="79" TopLine="13"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="36" Column="94" TopLine="25"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSpectrumView.pas"/>
-        <Caret Line="20" Column="69"/>
-      </Position>
-      <Position>
-        <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1951" Column="73" TopLine="1929"/>
-      </Position>
-      <Position>
-        <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1941" Column="94" TopLine="1930"/>
-      </Position>
-      <Position>
-        <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
-        <Caret Line="1042" Column="50" TopLine="1020"/>
+        <Filename Value="Core\uRecorderMic140DataSource.pas"/>
+        <Caret Line="1453" Column="87" TopLine="1432"/>
       </Position>
     </JumpHistory>
     <RunParams>

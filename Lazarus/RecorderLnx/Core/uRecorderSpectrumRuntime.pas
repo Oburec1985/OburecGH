@@ -5,7 +5,7 @@ unit uRecorderSpectrumRuntime;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, uRecorderCoreServices, uRecorderTags, uRecorderSpectrumEngine;
+  Classes, SysUtils, SyncObjs, uRecorderCoreServices, uRecorderTags, uRecorderSpectrumEngine, uRecorderFrequencyBands;
 
 type
   { TRecorderCachedSpectrumFrame
@@ -25,6 +25,7 @@ type
     MaxRms: Double;
     Rms: array of Double;
     PhaseRad: array of Double;
+    Bands: array of TRecorderSpectrumBandResult;
     constructor Create(const AFrame: TRecorderSpectrumFrame);
     procedure AssignFrom(const AFrame: TRecorderSpectrumFrame);
   end;
@@ -75,6 +76,8 @@ begin
 end;
 
 procedure TRecorderCachedSpectrumFrame.AssignFrom(const AFrame: TRecorderSpectrumFrame);
+var
+  I: Integer;
 begin
   SourceTagName := AFrame.SourceTagName;
   FrameIndex := AFrame.FrameIndex;
@@ -95,6 +98,17 @@ begin
   SetLength(PhaseRad, Length(AFrame.PhaseRad));
   if Length(AFrame.PhaseRad) > 0 then
     Move(AFrame.PhaseRad[0], PhaseRad[0], Length(AFrame.PhaseRad) * SizeOf(Double));
+
+  SetLength(Bands, Length(AFrame.Bands));
+  for I := 0 to Length(AFrame.Bands) - 1 do
+  begin
+    Bands[I].BandName := AFrame.Bands[I].BandName;
+    Bands[I].F1 := AFrame.Bands[I].F1;
+    Bands[I].F2 := AFrame.Bands[I].F2;
+    Bands[I].Rms := AFrame.Bands[I].Rms;
+    Bands[I].MaxRms := AFrame.Bands[I].MaxRms;
+    Bands[I].MaxFrequencyHz := AFrame.Bands[I].MaxFrequencyHz;
+  end;
 end;
 
 { TRecorderSpectrumFrameEventData }
@@ -184,7 +198,7 @@ end;
 
 function TRecorderSpectrumRuntimeManager.GetLastFrame(const ATagName: string; var AFrame: TRecorderSpectrumFrame): Boolean;
 var
-  I: Integer;
+  I, J: Integer;
   lCached: TRecorderCachedSpectrumFrame;
 begin
   Result := False;
@@ -214,6 +228,17 @@ begin
         SetLength(AFrame.PhaseRad, Length(lCached.PhaseRad));
         if Length(lCached.PhaseRad) > 0 then
           Move(lCached.PhaseRad[0], AFrame.PhaseRad[0], Length(lCached.PhaseRad) * SizeOf(Double));
+
+        SetLength(AFrame.Bands, Length(lCached.Bands));
+        for J := 0 to Length(lCached.Bands) - 1 do
+        begin
+          AFrame.Bands[J].BandName := lCached.Bands[J].BandName;
+          AFrame.Bands[J].F1 := lCached.Bands[J].F1;
+          AFrame.Bands[J].F2 := lCached.Bands[J].F2;
+          AFrame.Bands[J].Rms := lCached.Bands[J].Rms;
+          AFrame.Bands[J].MaxRms := lCached.Bands[J].MaxRms;
+          AFrame.Bands[J].MaxFrequencyHz := lCached.Bands[J].MaxFrequencyHz;
+        end;
           
         Result := True;
         Break;
@@ -307,12 +332,82 @@ procedure TRecorderSpectrumRuntimeManager.HandleChannelFrame(ASender: TObject; c
 var
   lEventData: TRecorderSpectrumFrameEventData;
   lEvent: TRecorderEvent;
+  lFrame: TRecorderSpectrumFrame;
+  I, K: Integer;
+  lBand: TRecorderFrequencyBand;
+  lF1, lF2: Double;
+  lIdx1, lIdx2: Integer;
+  lSumSq, lMaxVal, lMaxHz: Double;
 begin
-  UpdateCache(AFrame);
+  lFrame := AFrame;
+  
+  if (fTagRegistry <> nil) and (fTagRegistry.FrequencyBands <> nil) and (fTagRegistry.FrequencyBands.BandCount > 0) then
+  begin
+    SetLength(lFrame.Bands, fTagRegistry.FrequencyBands.BandCount);
+    for I := 0 to fTagRegistry.FrequencyBands.BandCount - 1 do
+    begin
+      lBand := fTagRegistry.FrequencyBands.Bands[I];
+      lBand.Evaluate(fTagRegistry, lF1, lF2);
+      
+      lFrame.Bands[I].BandName := lBand.Name;
+      lFrame.Bands[I].F1 := lF1;
+      lFrame.Bands[I].F2 := lF2;
+      
+      if lFrame.FrequencyStepHz > 0 then
+      begin
+        lIdx1 := Round(lF1 / lFrame.FrequencyStepHz);
+        lIdx2 := Round(lF2 / lFrame.FrequencyStepHz);
+      end
+      else
+      begin
+        lIdx1 := 0;
+        lIdx2 := 0;
+      end;
+      
+      if lIdx1 < 0 then lIdx1 := 0;
+      if lIdx1 >= lFrame.Bins then lIdx1 := lFrame.Bins - 1;
+      if lIdx2 < 0 then lIdx2 := 0;
+      if lIdx2 >= lFrame.Bins then lIdx2 := lFrame.Bins - 1;
+      
+      if lIdx1 > lIdx2 then
+      begin
+        K := lIdx1;
+        lIdx1 := lIdx2;
+        lIdx2 := K;
+      end;
+      
+      lSumSq := 0.0;
+      lMaxVal := -1.0;
+      lMaxHz := 0.0;
+      
+      if (lIdx1 < lFrame.Bins) and (lIdx2 < lFrame.Bins) then
+      begin
+        for K := lIdx1 to lIdx2 do
+        begin
+          lSumSq := lSumSq + Sqr(lFrame.Rms[K]);
+          if lFrame.Rms[K] > lMaxVal then
+          begin
+            lMaxVal := lFrame.Rms[K];
+            lMaxHz := K * lFrame.FrequencyStepHz;
+          end;
+        end;
+      end;
+      
+      if lMaxVal < 0.0 then lMaxVal := 0.0;
+      
+      lFrame.Bands[I].Rms := Sqrt(lSumSq);
+      lFrame.Bands[I].MaxRms := lMaxVal;
+      lFrame.Bands[I].MaxFrequencyHz := lMaxHz;
+    end;
+  end
+  else
+    SetLength(lFrame.Bands, 0);
+
+  UpdateCache(lFrame);
   if fEventBus = nil then Exit;
-  lEventData := TRecorderSpectrumFrameEventData.Create(AFrame);
+  lEventData := TRecorderSpectrumFrameEventData.Create(lFrame);
   try
-    lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self, AFrame.SourceTagName, '', 0, lEventData);
+    lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self, lFrame.SourceTagName, '', 0, lEventData);
     fEventBus.Publish(lEvent);
   finally
     lEventData.Free;
