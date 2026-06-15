@@ -25,7 +25,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
-  uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderMic140DataSource, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog;
 
 type
@@ -177,6 +177,7 @@ type
       AGetter: Integer; out AValue: Double): Boolean;
     function AllSetpointGlobalBool(AGetter: Integer; out AValue: Boolean): Boolean;
     function AllString(AKind: Integer; out AValue: string): Boolean;
+    function AllSourceId(out AValue: string): Boolean;
     
     // Дополнительные проверки и чтение чисел
     function FrequencyCanBeEdited: Boolean;
@@ -391,6 +392,20 @@ begin
     if not SameText(AValue, lValue) then
       Exit(False);
   end;
+  Result := True;
+end;
+
+function TTagSettingsDialog.AllSourceId(out AValue: string): Boolean;
+var
+  I: Integer;
+begin
+  AValue := '';
+  if fTags.Count = 0 then
+    Exit(False);
+  AValue := TagAt(0).SourceId;
+  for I := 1 to fTags.Count - 1 do
+    if not SameText(AValue, TagAt(I).SourceId) then
+      Exit(False);
   Result := True;
 end;
 
@@ -852,6 +867,7 @@ end;
 { Загрузка текущих параметров тегов в элементы интерфейса }
 procedure TTagSettingsDialog.LoadFromTags;
 var
+  I: Integer;
   lText: string;
   lFloat: Double;
   lBool: Integer;
@@ -861,6 +877,7 @@ var
   lInt: Integer;
   lSetpointKind: TRecorderTagSetpointKind;
   lJ: Integer;
+  lSourceId: string;
   lSourceActive: Boolean;
   lTagTemp: TRecorderTag;
 begin
@@ -909,6 +926,11 @@ begin
     fDescriptionEdit.Text := lText
   else
     fDescriptionEdit.Text := '';
+
+  fFrequencyCombo.Items.Clear;
+  if AllSourceId(lSourceId) and (Pos('MIC-140:', lSourceId) = 1) then
+    for I := 0 to RecorderMic140FrequencyCount - 1 do
+      fFrequencyCombo.Items.Add(FormatFloat('0.######', RecorderMic140Frequency(I)));
 
   if AllFloat(0, lFloat) and (lFloat > 0) then
     fFrequencyCombo.Text := FormatFloat('0.######', lFloat)
@@ -1066,7 +1088,10 @@ begin
     begin
       if not ReadFloat(fFrequencyCombo.Text, lFloat) then
         raise ERecorderTagError.Create('Invalid poll frequency');
-      lTag.PollFrequencyHz := lFloat;
+      if Pos('MIC-140:', lTag.SourceId) = 1 then
+        RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat)
+      else
+        lTag.PollFrequencyHz := lFloat;
     end;
     if Trim(fMinEdit.Text) <> '' then
     begin

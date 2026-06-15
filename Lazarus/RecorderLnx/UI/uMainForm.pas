@@ -1943,6 +1943,7 @@ var
   lMicHost: string;
   lMicPort: Word;
   lMicSources: TStringList;
+  lPollFrequencyHz: Double;
   lSource: IRecorderDataSource;
   lTag: TRecorderTag;
   lTagNames: TStringList;
@@ -2027,12 +2028,22 @@ begin
         Continue;
       lTagNames := TStringList(lMicSources.Objects[I]);
       lChannelCount := MIC140DefaultChannelCount;
+      lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
       for lFileIndex := 0 to lTagNames.Count - 1 do
         if TryStrToInt(lTagNames[lFileIndex], lChannelNumber) and
           (lChannelNumber > lChannelCount) then
           lChannelCount := MIC140MaxChannelCount;
+      for lFileIndex := 0 to fTagRegistry.TagCount - 1 do
+      begin
+        lTag := fTagRegistry.Tags[lFileIndex];
+        if SameText(lTag.SourceId, lMicSources[I]) and (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
       lSource := TRecorderMic140DataSource.Create(lMicSources[I], lMicHost, lMicPort,
-        lChannelCount, MIC140DefaultPollFrequencyHz, lDataUpdateMs, lTagNames);
+        lChannelCount, lPollFrequencyHz, lDataUpdateMs, lTagNames);
       fDataSourceManager.AddSource(lSource);
       AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
         [lMicHost, lMicPort, lChannelCount]));

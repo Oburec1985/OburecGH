@@ -49,6 +49,9 @@ type
     function ReadPacket(out APacket: TRecorderMebiusPacket): Boolean;
     function IoControl(AIoCode: LongWord; const AInData: TRecorderByteArray;
       AOutSize: Integer; out AOutData: TRecorderByteArray): LongInt;
+    function TryIoControl(AIoCode: LongWord; const AInData: TRecorderByteArray;
+      AOutSize: Integer; out AOutData: TRecorderByteArray;
+      out AErrorMessage: string): Boolean;
   public
     constructor Create(const AHost: string; APort: Word = 4000;
       ATimeoutMs: Cardinal = 2000);
@@ -58,6 +61,15 @@ type
     procedure Disconnect;
     procedure StartMeasurement;
     procedure StopMeasurement;
+    function TrySetSessionId(ASessionId: LongWord; out AErrorMessage: string): Boolean;
+    function TryCallCommand(ACommand: LongWord; const AInData: TRecorderByteArray;
+      AOutSize: Integer; out AOutData: TRecorderByteArray;
+      out AErrorMessage: string): Boolean;
+    function TryProgramDeviceBin(const ASettings: TRecorderByteArray;
+      out AErrorMessage: string): Boolean;
+    function TryProgramMeasurement(out AErrorMessage: string): Boolean;
+    function TryStartMeasurement(out AErrorMessage: string): Boolean;
+    function TryStopMeasurement(out AErrorMessage: string): Boolean;
     function ReadDataBlock(AChannelCount: Integer;
       out ABlock: TRecorderMebiusFloatBlock): Boolean;
 
@@ -95,8 +107,10 @@ const
 
   REC_IOCTL_MEASTASK_NULL = (REC_TYPEIO_MEAS_TASK shl 16);
   REC_IOCTL_MEASTASK_SET_SESSION_ID = (REC_TYPEIO_MEAS_TASK shl 16) or ($0009 shl 2);
+  REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN = (REC_TYPEIO_MEAS_TASK shl 16) or ($000A shl 2);
   REC_IOCTL_MEASTASK_START = (REC_TYPEIO_MEAS_TASK shl 16) or ($000B shl 2);
   REC_IOCTL_MEASTASK_STOP = (REC_TYPEIO_MEAS_TASK shl 16) or ($000C shl 2);
+  REC_IOCTL_MEASTASK_CALL_COMMAND = (REC_TYPEIO_MEAS_TASK shl 16) or ($000D shl 2);
   REC_IOCTL_MEASTASK_PROGRAM = (REC_TYPEIO_MEAS_TASK shl 16) or ($0010 shl 2);
 
   REC_S_MEB_OK = 0;
@@ -320,11 +334,28 @@ function TRecorderMebiusTcpClient.IoControl(AIoCode: LongWord;
   const AInData: TRecorderByteArray; AOutSize: Integer;
   out AOutData: TRecorderByteArray): LongInt;
 var
+  lErrorMessage: string;
+begin
+  if not TryIoControl(AIoCode, AInData, AOutSize, AOutData, lErrorMessage) then
+    raise ERecorderMebiusProtocolError.Create(lErrorMessage);
+  if Length(AOutData) >= SizeOf(LongInt) then
+    Move(AOutData[0], Result, SizeOf(Result))
+  else
+    Result := REC_S_MEB_OK;
+end;
+
+function TRecorderMebiusTcpClient.TryIoControl(AIoCode: LongWord;
+  const AInData: TRecorderByteArray; AOutSize: Integer;
+  out AOutData: TRecorderByteArray; out AErrorMessage: string): Boolean;
+var
   lBody: TRecorderByteArray;
   lPacket: TRecorderByteArray;
   lReply: TRecorderMebiusPacket;
   lReplyCode: LongWord;
 begin
+  Result := False;
+  AErrorMessage := '';
+  SetLength(AOutData, 0);
   SetLength(lBody, REC_MEB_IOCTL_COMMAND_HEADER_SIZE + Length(AInData));
   PutWordLE(lBody, 0, REC_MEB_IOCTL_COMMAND_SIGNATURE);
   PutWordLE(lBody, 2, REC_MEB_IOCTL_COMMAND_SIGNATURE);
@@ -336,28 +367,40 @@ begin
 
   repeat
     if not ReadPacket(lReply) then
-      raise ERecorderMebiusProtocolError.Create('Mebius IoControl timeout');
+    begin
+      AErrorMessage := 'Mebius IoControl timeout';
+      Exit;
+    end;
   until lReply.Kind = mpkCommand;
 
   if Length(lReply.Data) < REC_MEB_IOCTL_COMMAND_HEADER_SIZE then
-    raise ERecorderMebiusProtocolError.Create('Mebius IoControl reply is too short');
+  begin
+    AErrorMessage := 'Mebius IoControl reply is too short';
+    Exit;
+  end;
   lReplyCode := GetLongLE(lReply.Data, 4);
   if lReplyCode = REC_IOCTL_MEASTASK_NULL then
-    raise ERecorderMebiusProtocolError.Create('Mebius device returned IOCTL_MEASTASK_NULL');
+  begin
+    AErrorMessage := 'Mebius device returned IOCTL_MEASTASK_NULL';
+    Exit;
+  end;
   if lReplyCode <> AIoCode then
-    raise ERecorderMebiusProtocolError.CreateFmt(
+  begin
+    AErrorMessage := Format(
       'Unexpected Mebius IoControl reply %.8x for %.8x', [lReplyCode, AIoCode]);
+    Exit;
+  end;
 
   SetLength(AOutData, Length(lReply.Data) - REC_MEB_IOCTL_COMMAND_HEADER_SIZE);
   if Length(AOutData) > 0 then
     Move(lReply.Data[REC_MEB_IOCTL_COMMAND_HEADER_SIZE], AOutData[0],
       Length(AOutData));
   if (AOutSize > 0) and (Length(AOutData) < AOutSize) then
-    raise ERecorderMebiusProtocolError.Create('Mebius IoControl reply is shorter than expected');
-  if Length(AOutData) >= SizeOf(LongInt) then
-    Move(AOutData[0], Result, SizeOf(Result))
-  else
-    Result := REC_S_MEB_OK;
+  begin
+    AErrorMessage := 'Mebius IoControl reply is shorter than expected';
+    Exit;
+  end;
+  Result := True;
 end;
 
 procedure TRecorderMebiusTcpClient.StartMeasurement;
@@ -367,11 +410,99 @@ begin
   IoControl(REC_IOCTL_MEASTASK_START, nil, SizeOf(LongInt), lOut);
 end;
 
+function TRecorderMebiusTcpClient.TrySetSessionId(ASessionId: LongWord;
+  out AErrorMessage: string): Boolean;
+var
+  lIn: TRecorderByteArray;
+  lOut: TRecorderByteArray;
+begin
+  SetLength(lIn, SizeOf(ASessionId));
+  Move(ASessionId, lIn[0], SizeOf(ASessionId));
+  Result := TryIoControl(REC_IOCTL_MEASTASK_SET_SESSION_ID, lIn, SizeOf(LongInt),
+    lOut, AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.TryCallCommand(ACommand: LongWord;
+  const AInData: TRecorderByteArray; AOutSize: Integer;
+  out AOutData: TRecorderByteArray; out AErrorMessage: string): Boolean;
+var
+  lBlock: TRecorderByteArray;
+  lOut: TRecorderByteArray;
+  lPayloadSize: Integer;
+begin
+  SetLength(AOutData, 0);
+  lPayloadSize := SizeOf(LongWord) + Length(AInData);
+  SetLength(lBlock, SizeOf(LongWord) * 2 + lPayloadSize);
+  PutLongLE(lBlock, 0, 0);
+  PutLongLE(lBlock, SizeOf(LongWord),
+    (LongWord(Length(AInData)) shl 16) or LongWord(AOutSize));
+  PutLongLE(lBlock, SizeOf(LongWord) * 2, ACommand);
+  if Length(AInData) > 0 then
+    Move(AInData[0], lBlock[SizeOf(LongWord) * 3], Length(AInData));
+
+  Result := TryIoControl(REC_IOCTL_MEASTASK_CALL_COMMAND, lBlock,
+    SizeOf(LongWord) * 2 + AOutSize, lOut, AErrorMessage);
+  if (not Result) or (AOutSize <= 0) then
+    Exit;
+
+  if Length(lOut) < SizeOf(LongWord) * 2 + AOutSize then
+  begin
+    Result := False;
+    AErrorMessage := 'Mebius CallCommand reply is shorter than expected';
+    Exit;
+  end;
+  SetLength(AOutData, AOutSize);
+  Move(lOut[SizeOf(LongWord) * 2], AOutData[0], AOutSize);
+end;
+
+function TRecorderMebiusTcpClient.TryProgramDeviceBin(
+  const ASettings: TRecorderByteArray; out AErrorMessage: string): Boolean;
+var
+  lBlock: TRecorderByteArray;
+  lOut: TRecorderByteArray;
+begin
+  SetLength(lBlock, SizeOf(LongWord) * 2 + Length(ASettings));
+  PutLongLE(lBlock, 0, 0);
+  PutLongLE(lBlock, SizeOf(LongWord), Length(ASettings));
+  if Length(ASettings) > 0 then
+    Move(ASettings[0], lBlock[SizeOf(LongWord) * 2], Length(ASettings));
+
+  Result := TryIoControl(REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN, lBlock,
+    SizeOf(LongInt), lOut, AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.TryProgramMeasurement(
+  out AErrorMessage: string): Boolean;
+var
+  lOut: TRecorderByteArray;
+begin
+  Result := TryIoControl(REC_IOCTL_MEASTASK_PROGRAM, nil, SizeOf(LongInt), lOut,
+    AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.TryStartMeasurement(
+  out AErrorMessage: string): Boolean;
+var
+  lOut: TRecorderByteArray;
+begin
+  Result := TryIoControl(REC_IOCTL_MEASTASK_START, nil, SizeOf(LongInt), lOut,
+    AErrorMessage);
+end;
+
 procedure TRecorderMebiusTcpClient.StopMeasurement;
 var
   lOut: TRecorderByteArray;
 begin
   IoControl(REC_IOCTL_MEASTASK_STOP, nil, SizeOf(LongInt), lOut);
+end;
+
+function TRecorderMebiusTcpClient.TryStopMeasurement(
+  out AErrorMessage: string): Boolean;
+var
+  lOut: TRecorderByteArray;
+begin
+  Result := TryIoControl(REC_IOCTL_MEASTASK_STOP, nil, SizeOf(LongInt), lOut,
+    AErrorMessage);
 end;
 
 function TRecorderMebiusTcpClient.ReadDataBlock(AChannelCount: Integer;

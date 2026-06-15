@@ -16,6 +16,7 @@ interface
 uses
   Classes, SysUtils,
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderMebiusTcpProtocol,
+  uRecorderMic140LegacyProtocol,
   uRecorderTags;
 
 const
@@ -23,10 +24,18 @@ const
   MIC140DefaultPort = 4000;
   MIC140DefaultChannelCount = 48;
   MIC140MaxChannelCount = 96;
-  MIC140DefaultPollFrequencyHz = 1000.0;
+  MIC140TemperatureChannelCount = 5;
+  MIC140DefaultPollFrequencyHz = 100.0;
   MIC140DefaultDiscoverySubnet = '192.168.14.';
 
 type
+  TRecorderMic140Timing = record
+    FrequencyHz: Double;
+    GroundCommutationUs: Cardinal;
+    ChannelCommutationUs: Cardinal;
+    AveragePower: Word;
+  end;
+
   TRecorderMic140Device = class(TInterfacedObject, IRecorderDevice)
   private
     fChannelCount: Integer;
@@ -34,6 +43,9 @@ type
     fClient: TRecorderMebiusTcpClient;
     fDeviceId: string;
     fHost: string;
+    fLegacyClient: TRecorderMic140LegacyClient;
+    fLegacyFirmware: TRecorderMic140LegacyFirmware;
+    fUseLegacyProtocol: Boolean;
     fPollFrequencyHz: Double;
     fPort: Word;
     fSampleIndex: Int64;
@@ -87,15 +99,88 @@ function RecorderMic140TestConnection(const AHost: string; APort: Word;
 procedure RecorderMic140Discover(AFoundHosts: TStrings;
   const ASubnetPrefix: string = MIC140DefaultDiscoverySubnet;
   APort: Word = MIC140DefaultPort; ATimeoutMs: Cardinal = 180);
+function RecorderMic140FrequencyCount: Integer;
+function RecorderMic140Frequency(AIndex: Integer): Double;
+function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
+function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; AFrequencyHz: Double);
 
 implementation
 
 uses
-  Math, StrUtils
+  Math, StrUtils, uSharedFileLogger
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, CTypes, Sockets{$ENDIF};
 
 const
   CMic140SourcePrefix = 'MIC-140:';
+  CMic140ConnectAttempts = 3;
+  CMic140MebiusChannelCount = 16;
+  CMic140MebiusTemperatureSettingsCount = 5;
+  CMic140MebiusModuleCount = 4;
+  CMic140FrequencyCount = 12;
+  CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
+    (1.0, 10.0, 25.0, 50.0, 100.0, 150.0, 200.0, 250.0, 400.0,
+     10000.0, 20000.0, 35000.0);
+  CMic140IoCtlTypeCallCommand = 2;
+  CMic140IoCtlCmdSetControllerParams =
+    (CMic140IoCtlTypeCallCommand shl 16) or ($000C shl 2);
+  CMic140ChannelCommutIn = 0;
+  CMic140Range5mV = 2;
+  CMic140SensorSchemeTenzo = 0;
+  CMic140DefaultCorrectorId = 2;
+
+type
+{$packrecords 8}
+  TMic140BaseChanSettings = record
+    FrequencyHz: Single;
+    Connected: Boolean;
+  end;
+
+  TMic140BaseDeviceChanSettings = record
+    FrequencyHz: Single;
+    Connected: Boolean;
+    Corrector: LongWord;
+    TareName: array[0..127] of AnsiChar;
+    DefaultCorrector: Boolean;
+    SoftBalance: Single;
+    BlockSize: Word;
+    MeasRangeIndex: LongWord;
+    CommutIndex: LongInt;
+    ShuntOn: LongWord;
+    EvalType: LongWord;
+    TensoSensitivity: Double;
+    Resistance: Double;
+    SensorScheme: LongWord;
+  end;
+
+  TMic140BaseSettings = record
+    Channels: array[0..CMic140MebiusChannelCount + CMic140MebiusTemperatureSettingsCount - 1] of TMic140BaseDeviceChanSettings;
+    TemperatureChannels: array[0..CMic140MebiusTemperatureSettingsCount - 1] of TMic140BaseChanSettings;
+    SerialNumber: LongWord;
+    GroundEnabled: Boolean;
+    GroundCommutationUs: LongWord;
+    ChannelCommutationUs: LongWord;
+    BalancePortionLength: LongWord;
+    HardBalance: LongWord;
+    AveragePointCount: Word;
+    PowerMaCode: LongWord;
+    Reserved: LongWord;
+    MaxFreqMode: LongWord;
+    CalibrShuntIndex: LongWord;
+    GroupAddition: array[0..CMic140MebiusModuleCount - 1] of LongWord;
+    DetermineBreak: Boolean;
+    HardwareBalanceOn: Boolean;
+    TemperatureCompensation: Boolean;
+    SoftVersion: LongWord;
+  end;
+{$packrecords default}
+
+procedure Mic140LogWarning(const AMessage: string);
+begin
+  SharedLogger.Enabled := True;
+  SharedLogger.Warning(AMessage);
+end;
 
 function RecorderMic140SourceId(const AHost: string; APort: Word): string;
 begin
@@ -133,6 +218,79 @@ begin
     AHost := lHostPort;
 
   Result := AHost <> '';
+end;
+
+function RecorderMic140FrequencyCount: Integer;
+begin
+  Result := CMic140FrequencyCount;
+end;
+
+function RecorderMic140Frequency(AIndex: Integer): Double;
+begin
+  if (AIndex < 0) or (AIndex >= CMic140FrequencyCount) then
+    raise ERecorderDeviceError.CreateFmt('MIC-140 frequency index is invalid: %d',
+      [AIndex]);
+  Result := CMic140Frequencies[AIndex];
+end;
+
+function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
+var
+  I: Integer;
+  lBestDelta: Double;
+  lDelta: Double;
+begin
+  Result := MIC140DefaultPollFrequencyHz;
+  lBestDelta := MaxDouble;
+  for I := 0 to High(CMic140Frequencies) do
+  begin
+    lDelta := Abs(CMic140Frequencies[I] - AFrequencyHz);
+    if lDelta < lBestDelta then
+    begin
+      lBestDelta := lDelta;
+      Result := CMic140Frequencies[I];
+    end;
+  end;
+end;
+
+function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+begin
+  Result.FrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
+  Result.GroundCommutationUs := 100;
+  Result.ChannelCommutationUs := 150;
+  Result.AveragePower := 7;
+
+  if Result.FrequencyHz >= 10000.0 then
+    Result.AveragePower := 0
+  else if Result.FrequencyHz >= 400.0 then
+    Result.AveragePower := 4
+  else if Result.FrequencyHz >= 250.0 then
+    Result.AveragePower := 5
+  else if Result.FrequencyHz >= 150.0 then
+    Result.AveragePower := 6;
+end;
+
+procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; AFrequencyHz: Double);
+var
+  I: Integer;
+  lCapacity: Integer;
+  lFrequencyHz: Double;
+  lTag: TRecorderTag;
+begin
+  if (ARegistry = nil) or (ASourceId = '') then
+    Exit;
+
+  lFrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
+  lCapacity := Ceil(Max(4096, lFrequencyHz));
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(lTag.SourceId, ASourceId) then
+    begin
+      lTag.PollFrequencyHz := lFrequencyHz;
+      lTag.EnsureBufferCapacity(lCapacity);
+    end;
+  end;
 end;
 
 function RecorderMic140TcpProbe(const AHost: string; APort: Word;
@@ -370,6 +528,7 @@ begin
       [AChannelCount]);
   if APollFrequencyHz <= 0 then
     APollFrequencyHz := MIC140DefaultPollFrequencyHz;
+  APollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
 
   fDeviceId := ADeviceId;
   fHost := AHost;
@@ -423,17 +582,177 @@ begin
 end;
 
 procedure TRecorderMic140Device.Connect;
+var
+  lAttempt: Integer;
+  lErrorMessage: string;
 begin
   if fState <> rdsDisconnected then
     Exit;
-  fClient := TRecorderMebiusTcpClient.Create(fHost, fPort, 2000);
+
+  FreeAndNil(fLegacyClient);
+  fUseLegacyProtocol := False;
+  fLegacyClient := TRecorderMic140LegacyClient.Create(fHost, fPort, 5000);
   try
-    fClient.Connect;
-    fState := rdsConnected;
+    fLegacyClient.Connect;
+    if fLegacyClient.ReadFirmware(fLegacyFirmware, lErrorMessage) then
+    begin
+      fUseLegacyProtocol := True;
+      fState := rdsConnected;
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy Ethernet protocol detected: device=%d.%d serial=%d controller=%d serial=%d BIOS=%d.%d',
+        [fHost, fPort, fLegacyFirmware.DeviceType, fLegacyFirmware.DeviceRevision,
+         fLegacyFirmware.DeviceSerial, fLegacyFirmware.ControllerType,
+         fLegacyFirmware.ControllerSerial, fLegacyFirmware.BiosFunction,
+         fLegacyFirmware.BiosRevision]));
+      Exit;
+    end;
+    Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy probe failed: %s',
+      [fHost, fPort, lErrorMessage]));
   except
-    FreeAndNil(fClient);
-    raise;
+    on E: Exception do
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy connect failed: %s: %s',
+        [fHost, fPort, E.ClassName, E.Message]));
   end;
+  FreeAndNil(fLegacyClient);
+
+  for lAttempt := 1 to CMic140ConnectAttempts do
+  begin
+    FreeAndNil(fClient);
+    fClient := TRecorderMebiusTcpClient.Create(fHost, fPort, 5000);
+    try
+      fClient.Connect;
+      fState := rdsConnected;
+      Exit;
+    except
+      on E: Exception do
+      begin
+        Mic140LogWarning(Format('[MIC-140:%s:%d] Connect attempt %d/%d failed: %s: %s',
+          [fHost, fPort, lAttempt, CMic140ConnectAttempts, E.ClassName, E.Message]));
+        FreeAndNil(fClient);
+        fState := rdsDisconnected;
+        if lAttempt < CMic140ConnectAttempts then
+          Sleep(250);
+      end;
+    end;
+  end;
+end;
+
+function Mic140GenerateSessionId: LongWord;
+begin
+  Result := LongWord(GetTickCount64 and $00000FFF) or
+    ((LongWord(Random($1000)) shl 12) and $00FFF000) or $14000000;
+end;
+
+function Mic140BuildSettings(AChannelCount: Integer;
+  APollFrequencyHz: Double): TRecorderByteArray;
+var
+  I: Integer;
+  lSettings: TMic140BaseSettings;
+  lTiming: TRecorderMic140Timing;
+begin
+  FillChar(lSettings, SizeOf(lSettings), 0);
+  lTiming := RecorderMic140TimingForFrequency(APollFrequencyHz);
+
+  for I := 0 to High(lSettings.Channels) do
+  begin
+    lSettings.Channels[I].FrequencyHz := lTiming.FrequencyHz;
+    lSettings.Channels[I].Connected :=
+      I < Min(AChannelCount, CMic140MebiusChannelCount);
+    lSettings.Channels[I].Corrector := CMic140DefaultCorrectorId;
+    lSettings.Channels[I].DefaultCorrector := False;
+    lSettings.Channels[I].SoftBalance := 0;
+    lSettings.Channels[I].BlockSize := 1;
+    lSettings.Channels[I].MeasRangeIndex := CMic140Range5mV;
+    lSettings.Channels[I].CommutIndex := CMic140ChannelCommutIn;
+    lSettings.Channels[I].ShuntOn := 0;
+    lSettings.Channels[I].EvalType := 0;
+    lSettings.Channels[I].TensoSensitivity := 2;
+    lSettings.Channels[I].Resistance := 200;
+    lSettings.Channels[I].SensorScheme := CMic140SensorSchemeTenzo;
+  end;
+
+  for I := 0 to High(lSettings.TemperatureChannels) do
+  begin
+    lSettings.TemperatureChannels[I].FrequencyHz := lTiming.FrequencyHz;
+    lSettings.TemperatureChannels[I].Connected := False;
+  end;
+
+  lSettings.SerialNumber := 0;
+  lSettings.GroundEnabled := True;
+  lSettings.GroundCommutationUs := lTiming.GroundCommutationUs;
+  lSettings.ChannelCommutationUs := lTiming.ChannelCommutationUs;
+  lSettings.BalancePortionLength := 30;
+  lSettings.HardBalance := 8192;
+  lSettings.AveragePointCount := lTiming.AveragePower;
+  lSettings.PowerMaCode := 10813;
+  lSettings.Reserved := 0;
+  lSettings.MaxFreqMode := 0;
+  lSettings.CalibrShuntIndex := 3;
+  lSettings.DetermineBreak := False;
+  lSettings.HardwareBalanceOn := False;
+  lSettings.TemperatureCompensation := False;
+  lSettings.SoftVersion := 0;
+
+  SetLength(Result, SizeOf(lSettings));
+  Move(lSettings, Result[0], SizeOf(lSettings));
+end;
+
+procedure TRecorderMic140Device.ProgramDevice;
+var
+  lCommandIn: TRecorderByteArray;
+  lCommandOut: TRecorderByteArray;
+  lErrorMessage: string;
+  lSessionId: LongWord;
+  lSettings: TRecorderByteArray;
+  lStatusFlags: LongWord;
+begin
+  if fState = rdsDisconnected then
+    Connect;
+  if fState = rdsDisconnected then
+    Exit;
+  if fUseLegacyProtocol then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 command protocol is connected; scan programming is not implemented yet',
+      [fHost, fPort]));
+    Exit;
+  end;
+  if fClient = nil then
+    Exit;
+
+  SetLength(lCommandIn, SizeOf(LongWord));
+  lStatusFlags := 0;
+  Move(lStatusFlags, lCommandIn[0], SizeOf(lStatusFlags));
+  if not fClient.TryCallCommand(CMic140IoCtlCmdSetControllerParams, lCommandIn,
+    0, lCommandOut, lErrorMessage) then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] SetControllerParams failed: %s',
+      [fHost, fPort, lErrorMessage]));
+    Exit;
+  end;
+
+  lSettings := Mic140BuildSettings(fChannelCount, fPollFrequencyHz);
+  if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] ProgramDeviceBin failed: %s',
+      [fHost, fPort, lErrorMessage]));
+    Exit;
+  end;
+
+  lSessionId := Mic140GenerateSessionId;
+  if not fClient.TrySetSessionId(lSessionId, lErrorMessage) then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] SetSessionId failed: %s',
+      [fHost, fPort, lErrorMessage]));
+    Exit;
+  end;
+
+  if not fClient.TryProgramMeasurement(lErrorMessage) then
+  begin
+    Mic140LogWarning(Format('[MIC-140:%s:%d] ProgramMeasurement failed: %s',
+      [fHost, fPort, lErrorMessage]));
+    Exit;
+  end;
+
+  fState := rdsProgrammed;
 end;
 
 procedure TRecorderMic140Device.Disconnect;
@@ -441,38 +760,52 @@ begin
   if fState = rdsStarted then
     Stop;
   FreeAndNil(fClient);
+  FreeAndNil(fLegacyClient);
+  fUseLegacyProtocol := False;
   fState := rdsDisconnected;
 end;
 
-procedure TRecorderMic140Device.ProgramDevice;
-begin
-  if fState = rdsDisconnected then
-    Connect;
-  fState := rdsProgrammed;
-end;
-
 procedure TRecorderMic140Device.Start;
+var
+  lAttempt: Integer;
+  lErrorMessage: string;
 begin
   if fState = rdsDisconnected then
     Connect;
+  if fState = rdsDisconnected then
+    Exit;
   if fState = rdsConnected then
     ProgramDevice;
+  if fState <> rdsProgrammed then
+    Exit;
   if fClient = nil then
-    raise ERecorderDeviceError.Create('MIC-140 transport is not connected');
-  fClient.StartMeasurement;
-  fSampleIndex := 0;
-  fState := rdsStarted;
+    Exit;
+
+  for lAttempt := 1 to CMic140ConnectAttempts do
+  begin
+    if fClient.TryStartMeasurement(lErrorMessage) then
+    begin
+      fSampleIndex := 0;
+      fState := rdsStarted;
+      Exit;
+    end;
+    Mic140LogWarning(Format('[MIC-140:%s:%d] StartMeasurement attempt %d/%d failed: %s',
+      [fHost, fPort, lAttempt, CMic140ConnectAttempts, lErrorMessage]));
+    if lAttempt < CMic140ConnectAttempts then
+      Sleep(250);
+  end;
+  fState := rdsConnected;
 end;
 
 procedure TRecorderMic140Device.Stop;
+var
+  lErrorMessage: string;
 begin
   if (fState = rdsStarted) and (fClient <> nil) then
   begin
-    try
-      fClient.StopMeasurement;
-    except
-      { Stop must not hide the original data-source thread shutdown. }
-    end;
+    if not fClient.TryStopMeasurement(lErrorMessage) then
+      Mic140LogWarning(Format('[MIC-140:%s:%d] StopMeasurement failed: %s',
+        [fHost, fPort, lErrorMessage]));
   end;
   if fState <> rdsDisconnected then
     fState := rdsConnected;
@@ -488,9 +821,9 @@ begin
   ClearRecorderDeviceSampleBlock(ABlock);
   Result := False;
   if fState <> rdsStarted then
-    raise ERecorderDeviceError.Create('MIC-140 is not started');
+    Exit;
   if fClient = nil then
-    raise ERecorderDeviceError.Create('MIC-140 transport is not connected');
+    Exit;
 
   fClient.TimeoutMs := ATimeoutMs;
   if not fClient.ReadDataBlock(fChannelCount, lRaw) then
@@ -597,6 +930,9 @@ begin
   fDevice.Connect;
   fDevice.ProgramDevice;
   fDevice.Start;
+  if fDevice.State <> rdsStarted then
+    Mic140LogWarning(Format('[DataSource:%s] MIC-140 source is not started; preview will continue without device samples',
+      [SourceId]));
 end;
 
 procedure TRecorderMic140DataSource.Stop;
@@ -623,8 +959,20 @@ var
   lTimes: TRecorderDoubleArray;
   lValues: TRecorderDoubleArray;
 begin
-  if not fDevice.ReadBlock(UpdateTimeMs, lBlock) then
-    Exit;
+  try
+    if (fDevice = nil) or (fDevice.State <> rdsStarted) then
+      Exit;
+    if not fDevice.ReadBlock(UpdateTimeMs, lBlock) then
+      Exit;
+  except
+    on E: Exception do
+    begin
+      Mic140LogWarning(Format('[DataSource:%s] MIC-140 read failed: %s: %s',
+        [SourceId, E.ClassName, E.Message]));
+      fDevice.Stop;
+      Exit;
+    end;
+  end;
   lChannels := fDevice.GetChannels;
   lCount := Min(lBlock.ChannelCount, Length(lChannels));
   if lCount <= 0 then

@@ -146,6 +146,7 @@ type
     fMeraFolder: string;                        // Путь к последней папке импортированного Mera-файла
     fMeraFileName: string;                      // Имя импортированного Mera-файла
     fMeraSignals: TList;                        // Список TMeraSignalInfo, загруженных из файла
+    fMic140Signals: TList;                      // Список доступных каналов MIC-140
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
@@ -167,6 +168,8 @@ type
     function CloneMeraSignalForTag(ASignal: TMeraSignalInfo;
       const ATagName: string): TMeraSignalInfo;
     procedure ApplyMeraSignalToTag(ATag: TRecorderTag; ASignal: TMeraSignalInfo);
+    function SignalSourceId(ASignal: TMeraSignalInfo): string;
+    function SignalSourceGroup(ASignal: TMeraSignalInfo): string;
     function FindTagBySourceAddress(const ASourceId, AAddress: string): TRecorderTag;
     function SignalHasLinkedTag(ASignal: TMeraSignalInfo): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
@@ -181,8 +184,13 @@ type
     function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
     procedure CreateSelectedMeraTags;
     procedure ClearMeraSignals;
+    procedure ClearMic140Signals;
     procedure RestoreMeraSignalsFromTags;
+    procedure RestoreMic140SignalsFromTags;
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
+    function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
+    procedure BuildMic140Signals(const ASourceId: string; AChannelCount: Integer;
+      APollFrequencyHz: Double; AEnabledChannels: TStrings);
     function AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     function SelectedSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     procedure LoadMeraFile(const AFileName: string);
@@ -397,6 +405,7 @@ constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   fMeraSignals := TList.Create;
+  fMic140Signals := TList.Create;
   fSelectedChannelTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -481,9 +490,11 @@ end;
 destructor TRecorderSettingsDialog.Destroy;
 begin
   ClearMeraSignals;
+  ClearMic140Signals;
   fFrequencyBands.Free;
   fSpectrumConfigTree.Free;
   fSelectedChannelTags.Free;
+  fMic140Signals.Free;
   fMeraSignals.Free;
   inherited Destroy;
 end;
@@ -498,6 +509,7 @@ procedure TRecorderSettingsDialog.SetTagRegistry(AValue: TRecorderTagRegistry);
 begin
   fTagRegistry := AValue;
   RestoreMeraSignalsFromTags;
+  RestoreMic140SignalsFromTags;
   if fTagRegistry <> nil then
   begin
     fSpectrumConfigTree.Assign(fTagRegistry.SpectrumConfigs);
@@ -578,18 +590,47 @@ end;
 { Copies MERA signal properties into a tag and binds it to the active source. }
 procedure TRecorderSettingsDialog.ApplyMeraSignalToTag(ATag: TRecorderTag;
   ASignal: TMeraSignalInfo);
+var
+  lSourceId: string;
 begin
   if (ATag = nil) or (ASignal = nil) then
     Exit;
 
+  lSourceId := SignalSourceId(ASignal);
   ATag.Address := ASignal.Address;
   ATag.UnitName := ASignal.UnitsName;
-  ATag.SourceId := MeraSourceId(fMeraFileName);
+  ATag.SourceId := lSourceId;
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
-  ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
-    [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######', ASignal.FrequencyHz),
-    ExtractFileName(ASignal.FileName)]);
+  if SameText(ASignal.ModuleName, 'MIC-140') then
+    ATag.Description := Format('%s; freq=%s Hz',
+      [ASignal.Description, FormatFloat('0.######', ASignal.FrequencyHz)])
+  else
+    ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
+      [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######', ASignal.FrequencyHz),
+      ExtractFileName(ASignal.FileName)]);
+end;
+
+function TRecorderSettingsDialog.SignalSourceId(ASignal: TMeraSignalInfo): string;
+begin
+  Result := '';
+  if ASignal = nil then
+    Exit;
+  if SameText(ASignal.ModuleName, 'MIC-140') then
+    Result := ASignal.FileName
+  else
+    Result := MeraSourceId(fMeraFileName);
+end;
+
+function TRecorderSettingsDialog.SignalSourceGroup(ASignal: TMeraSignalInfo): string;
+begin
+  Result := '';
+  if ASignal = nil then
+    Exit;
+  if SameText(ASignal.ModuleName, 'MIC-140') then
+    Result := 'MIC-140'
+  else
+    Result := 'Mera File';
 end;
 function TRecorderSettingsDialog.FindTagBySourceAddress(const ASourceId,
   AAddress: string): TRecorderTag;
@@ -613,7 +654,7 @@ function TRecorderSettingsDialog.SignalHasLinkedTag(
   ASignal: TMeraSignalInfo): Boolean;
 begin
   Result := (ASignal <> nil) and
-    (FindTagBySourceAddress(MeraSourceId(fMeraFileName), ASignal.Address) <> nil);
+    (FindTagBySourceAddress(SignalSourceId(ASignal), ASignal.Address) <> nil);
 end;
 
 function TRecorderSettingsDialog.SelectedTagByGridRow(
@@ -1222,46 +1263,145 @@ begin
     lSignal.Enabled := FindTagBySourceAddress(lSourceId, lSignal.Address) <> nil;
     lSignal.Selected := lSignal.Enabled;
   end;
+
+  if fMic140Signals <> nil then
+    for I := 0 to fMic140Signals.Count - 1 do
+    begin
+      lSignal := TMeraSignalInfo(fMic140Signals[I]);
+      lSignal.Selected := SignalHasLinkedTag(lSignal);
+    end;
 end;
 
 { Создание или обновление каналов/тегов в реестре на основе выбранных сигналов Mera-файла }
 procedure TRecorderSettingsDialog.CreateSelectedMeraTags;
 var
-  I: Integer;
   lSignal: TMeraSignalInfo;
   lTag: TRecorderTag;
   lSourceId: string;
   lTagName: string;
+
+  procedure CreateTagsFromSignals(ASignals: TList);
+  var
+    J: Integer;
+  begin
+    if ASignals = nil then
+      Exit;
+    for J := 0 to ASignals.Count - 1 do
+    begin
+      lSignal := TMeraSignalInfo(ASignals[J]);
+      if (lSignal = nil) or (not lSignal.Selected) then
+        Continue;
+
+      lSourceId := SignalSourceId(lSignal);
+      if lSourceId <> '' then
+        fTagRegistry.RegisterActiveSource(lSourceId);
+
+      lTag := FindTagBySourceAddress(lSourceId, lSignal.Address);
+      if lTag = nil then
+      begin
+        lTagName := MeraSignalToRecorderTagName(lSignal);
+        lTag := fTagRegistry.FindByName(lTagName);
+        if lTag = nil then
+          lTag := fTagRegistry.CreateTag(lTagName, Ceil(Max(4096, lSignal.FrequencyHz)));
+      end;
+
+      ApplyMeraSignalToTag(lTag, lSignal);
+      lTag.EnsureBufferCapacity(Ceil(Max(4096, lSignal.FrequencyHz)));
+    end;
+  end;
 begin
-  if (fTagRegistry = nil) or (fMeraSignals = nil) then
+  if fTagRegistry = nil then
     Exit;
 
-  lSourceId := MeraSourceId(fMeraFileName);
-  if fMeraFileName <> '' then
-    fTagRegistry.RegisterActiveSource(lSourceId);
+  if (fMeraFileName <> '') and (fMeraSignals <> nil) then
+    fTagRegistry.RegisterActiveSource(MeraSourceId(fMeraFileName));
 
-  for I := 0 to fMeraSignals.Count - 1 do
-  begin
-    lSignal := TMeraSignalInfo(fMeraSignals[I]);
-    if not lSignal.Selected then
-      Continue;
-
-    lTag := FindTagBySourceAddress(lSourceId, lSignal.Address);
-    if lTag = nil then
-    begin
-      lTagName := MeraSignalToRecorderTagName(lSignal);
-      lTag := fTagRegistry.FindByName(lTagName);
-      if lTag = nil then
-        lTag := fTagRegistry.CreateTag(lTagName, 4096);
-    end;
-
-    ApplyMeraSignalToTag(lTag, lSignal);
-  end;
+  CreateTagsFromSignals(fMeraSignals);
+  CreateTagsFromSignals(fMic140Signals);
 end;
 
 procedure TRecorderSettingsDialog.ClearMeraSignals;
 begin
   uMeraFile.ClearMeraSignals(fMeraSignals);
+end;
+
+procedure TRecorderSettingsDialog.ClearMic140Signals;
+begin
+  uMeraFile.ClearMeraSignals(fMic140Signals);
+end;
+
+procedure TRecorderSettingsDialog.BuildMic140Signals(const ASourceId: string;
+  AChannelCount: Integer; APollFrequencyHz: Double; AEnabledChannels: TStrings);
+var
+  I: Integer;
+  lAddress: string;
+  lSignal: TMeraSignalInfo;
+begin
+  if fMic140Signals = nil then
+    fMic140Signals := TList.Create;
+  for I := fMic140Signals.Count - 1 downto 0 do
+  begin
+    lSignal := TMeraSignalInfo(fMic140Signals[I]);
+    if SameText(lSignal.FileName, ASourceId) then
+    begin
+      lSignal.Free;
+      fMic140Signals.Delete(I);
+    end;
+  end;
+
+  if AChannelCount <= 0 then
+    AChannelCount := MIC140DefaultChannelCount;
+  if AChannelCount > MIC140DefaultChannelCount then
+    AChannelCount := MIC140MaxChannelCount
+  else
+    AChannelCount := MIC140DefaultChannelCount;
+  if APollFrequencyHz <= 0 then
+    APollFrequencyHz := MIC140DefaultPollFrequencyHz;
+  APollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
+
+  for I := 1 to AChannelCount do
+  begin
+    lAddress := IntToStr(I);
+    if (AEnabledChannels <> nil) and (AEnabledChannels.Count > 0) and
+      (AEnabledChannels.IndexOf(lAddress) < 0) then
+      Continue;
+
+    lSignal := TMeraSignalInfo.Create;
+    lSignal.Name := Format('MIC140_%2.2d', [I]);
+    lSignal.Address := lAddress;
+    lSignal.ModuleName := 'MIC-140';
+    lSignal.DataTypeName := 'R8';
+    lSignal.DataType := mvtFloat64;
+    lSignal.FrequencyHz := APollFrequencyHz;
+    lSignal.UnitsName := '';
+    lSignal.Description := Format('MIC-140 channel %s', [lAddress]);
+    lSignal.FileName := ASourceId;
+    lSignal.Enabled := True;
+    lSignal.Selected := SignalHasLinkedTag(lSignal);
+    fMic140Signals.Add(lSignal);
+  end;
+
+  for I := 1 to MIC140TemperatureChannelCount do
+  begin
+    lAddress := 'T' + IntToStr(I);
+    if (AEnabledChannels <> nil) and (AEnabledChannels.Count > 0) and
+      (AEnabledChannels.IndexOf(lAddress) < 0) then
+      Continue;
+
+    lSignal := TMeraSignalInfo.Create;
+    lSignal.Name := Format('MIC140_T%1.1d', [I]);
+    lSignal.Address := lAddress;
+    lSignal.ModuleName := 'MIC-140';
+    lSignal.DataTypeName := 'R4';
+    lSignal.DataType := mvtFloat64;
+    lSignal.FrequencyHz := APollFrequencyHz;
+    lSignal.UnitsName := 'degC';
+    lSignal.Description := Format('MIC-140 temperature channel %s', [lAddress]);
+    lSignal.FileName := ASourceId;
+    lSignal.Enabled := True;
+    lSignal.Selected := SignalHasLinkedTag(lSignal);
+    fMic140Signals.Add(lSignal);
+  end;
 end;
 procedure TRecorderSettingsDialog.RestoreMeraSignalsFromTags;
 const
@@ -1269,7 +1409,6 @@ const
 var
   I: Integer;
   lFileName: string;
-  lSignal: TMeraSignalInfo;
   lTag: TRecorderTag;
 begin
   if (fTagRegistry = nil) or (fMeraSignals = nil) then
@@ -1325,6 +1464,23 @@ begin
   end;
 end;
 
+function TRecorderSettingsDialog.FindMic140SignalBySourceAddress(
+  const ASourceId, AAddress: string): TMeraSignalInfo;
+var
+  I: Integer;
+  lSignal: TMeraSignalInfo;
+begin
+  Result := nil;
+  if fMic140Signals = nil then
+    Exit;
+  for I := 0 to fMic140Signals.Count - 1 do
+  begin
+    lSignal := TMeraSignalInfo(fMic140Signals[I]);
+    if SameText(lSignal.FileName, ASourceId) and SameText(lSignal.Address, AAddress) then
+      Exit(lSignal);
+  end;
+end;
+
 { Возвращает Mera-сигнал по строке таблицы доступных каналов }
 function TRecorderSettingsDialog.AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
 var
@@ -1333,13 +1489,28 @@ var
   lSignal: TMeraSignalInfo;
 begin
   Result := nil;
-  if (fMeraSignals = nil) or (ARow < 1) then
+  if ARow < 1 then
     Exit;
 
   lRow := 0;
-  for I := 0 to fMeraSignals.Count - 1 do
+  if fMeraSignals <> nil then
   begin
-    lSignal := TMeraSignalInfo(fMeraSignals[I]);
+    for I := 0 to fMeraSignals.Count - 1 do
+    begin
+      lSignal := TMeraSignalInfo(fMeraSignals[I]);
+      if SignalHasLinkedTag(lSignal) then
+        Continue;
+      Inc(lRow);
+      if lRow = ARow then
+        Exit(lSignal);
+    end;
+  end;
+
+  if fMic140Signals = nil then
+    Exit;
+  for I := 0 to fMic140Signals.Count - 1 do
+  begin
+    lSignal := TMeraSignalInfo(fMic140Signals[I]);
     if SignalHasLinkedTag(lSignal) then
       Continue;
     Inc(lRow);
@@ -1433,6 +1604,69 @@ begin
 
   LoadMeraSignalsFromFile(fMeraFileName, fMeraSignals);
   MarkSignalsFromRegistry;
+  PopulateHardwareTree;
+  PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.RestoreMic140SignalsFromTags;
+var
+  I: Integer;
+  lChannelCount: Integer;
+  lChannelNumber: Integer;
+  lAddressNumber: Integer;
+  lHost: string;
+  lPort: Word;
+  lSourceId: string;
+  lSources: TStringList;
+  lTag: TRecorderTag;
+  lFrequencyHz: Double;
+begin
+  ClearMic140Signals;
+  if fTagRegistry = nil then
+    Exit;
+
+  lSources := TStringList.Create;
+  try
+    lSources.CaseSensitive := False;
+    lSources.Sorted := False;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) and
+        (lSources.IndexOf(lTag.SourceId) < 0) then
+        lSources.Add(lTag.SourceId);
+    end;
+
+    for I := 0 to fTagRegistry.ActiveSourceCount - 1 do
+    begin
+      lSourceId := fTagRegistry.ActiveSourceIds[I];
+      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) and
+        (lSources.IndexOf(lSourceId) < 0) then
+        lSources.Add(lSourceId);
+    end;
+
+    for I := 0 to lSources.Count - 1 do
+    begin
+      lSourceId := lSources[I];
+      lChannelCount := MIC140DefaultChannelCount;
+      lFrequencyHz := MIC140DefaultPollFrequencyHz;
+      for lChannelNumber := 0 to fTagRegistry.TagCount - 1 do
+      begin
+        lTag := fTagRegistry.Tags[lChannelNumber];
+        if not SameText(lTag.SourceId, lSourceId) then
+          Continue;
+        if TryStrToInt(lTag.Address, lAddressNumber) and
+          (lAddressNumber > lChannelCount) then
+          lChannelCount := MIC140MaxChannelCount;
+        if lTag.PollFrequencyHz > 0 then
+          lFrequencyHz := lTag.PollFrequencyHz;
+      end;
+      BuildMic140Signals(lSourceId, lChannelCount, lFrequencyHz, nil);
+    end;
+  finally
+    lSources.Free;
+  end;
+
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -1564,7 +1798,6 @@ end;
 procedure TRecorderSettingsDialog.ConfigureMic140Source(const ASourceId: string);
 var
   I: Integer;
-  lAddress: string;
   lCapacity: Integer;
   lChannelNumber: Integer;
   lHost: string;
@@ -1572,7 +1805,6 @@ var
   lPort: Word;
   lResult: TRecorderMic140DialogResult;
   lTag: TRecorderTag;
-  lTagName: string;
 begin
   if fTagRegistry = nil then
     Exit;
@@ -1603,29 +1835,29 @@ begin
       Exit;
 
     lNewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
+    if (ASourceId <> '') and (not SameText(ASourceId, lNewSourceId)) then
+      fTagRegistry.UnregisterActiveSource(ASourceId);
     fTagRegistry.RegisterActiveSource(lNewSourceId);
-    lCapacity := Ceil(Max(4096, lResult.PollFrequencyHz));
+    lResult.PollFrequencyHz := RecorderMic140NormalizeFrequency(lResult.PollFrequencyHz);
+    BuildMic140Signals(lNewSourceId, lResult.ChannelCount,
+      lResult.PollFrequencyHz, lResult.SelectedChannels);
 
-    for I := 0 to lResult.SelectedChannels.Count - 1 do
+    lCapacity := Ceil(Max(4096, lResult.PollFrequencyHz));
+    for I := 0 to fTagRegistry.TagCount - 1 do
     begin
-      lAddress := lResult.SelectedChannels[I];
-      lTag := FindTagBySourceAddress(lNewSourceId, lAddress);
-      if (lTag = nil) and (ASourceId <> '') then
-        lTag := FindTagBySourceAddress(ASourceId, lAddress);
-      if lTag = nil then
-      begin
-        lTagName := Format('MIC140_%2.2d', [StrToIntDef(lAddress, I + 1)]);
-        lTag := fTagRegistry.FindByName(lTagName);
-        if lTag = nil then
-          lTag := fTagRegistry.CreateTag(lTagName, lCapacity);
-      end;
+      lTag := fTagRegistry.Tags[I];
+      if (not SameText(lTag.SourceId, lNewSourceId)) and
+        ((ASourceId = '') or (not SameText(lTag.SourceId, ASourceId))) then
+        Continue;
+      if (lResult.SelectedChannels.Count > 0) and
+        (lResult.SelectedChannels.IndexOf(lTag.Address) < 0) then
+        Continue;
       lTag.SourceId := lNewSourceId;
-      lTag.Address := lAddress;
       lTag.ModuleType := 'MIC-140';
       lTag.PollFrequencyHz := lResult.PollFrequencyHz;
       lTag.UnitName := '';
       lTag.Description := Format('MIC-140 channel %s; freq=%s Hz',
-        [lAddress, FormatFloat('0.######', lResult.PollFrequencyHz)]);
+        [lTag.Address, FormatFloat('0.######', lResult.PollFrequencyHz)]);
       lTag.EnsureBufferCapacity(lCapacity);
     end;
 
@@ -1647,6 +1879,12 @@ begin
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
   fTagRegistry.UnregisterActiveSource(ASourceId);
+  for I := fMic140Signals.Count - 1 downto 0 do
+    if SameText(TMeraSignalInfo(fMic140Signals[I]).FileName, ASourceId) then
+    begin
+      TObject(fMic140Signals[I]).Free;
+      fMic140Signals.Delete(I);
+    end;
   for I := 0 to fTagRegistry.TagCount - 1 do
   begin
     lTag := fTagRegistry.Tags[I];
@@ -1731,11 +1969,15 @@ var
   lRootNode: TTreeNode;
   lSourceNode: TTreeNode;
   I: Integer;
+  lRow: Integer;
   lSignal: TMeraSignalInfo;
+  lSourceIds: TStringList;
+  lSourceId: string;
 begin
   if fHardwareTree = nil then
     Exit;
 
+  lSourceIds := TStringList.Create;
   fHardwareTree.Items.BeginUpdate;
   try
     fHardwareTree.Items.Clear;
@@ -1779,9 +2021,51 @@ begin
       lSourceNode.Expand(True);
     end;
 
+    if fMic140Signals <> nil then
+    begin
+      lSourceIds.CaseSensitive := False;
+      lSourceIds.Sorted := False;
+      for I := 0 to fMic140Signals.Count - 1 do
+      begin
+        lSignal := TMeraSignalInfo(fMic140Signals[I]);
+        if (lSignal.FileName <> '') and (lSourceIds.IndexOf(lSignal.FileName) < 0) then
+          lSourceIds.Add(lSignal.FileName);
+      end;
+
+      for I := 0 to lSourceIds.Count - 1 do
+      begin
+        lSourceId := lSourceIds[I];
+        lSourceNode := fHardwareTree.Items.AddChild(lRootNode, lSourceId);
+        lSourceNode.ImageIndex := CDeviceControllerImageIndex;
+        lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
+        for lRow := 0 to fMic140Signals.Count - 1 do
+        begin
+          lSignal := TMeraSignalInfo(fMic140Signals[lRow]);
+          if not SameText(lSignal.FileName, lSourceId) then
+            Continue;
+          if SignalHasLinkedTag(lSignal) then
+            with fHardwareTree.Items.AddChild(lSourceNode, '[x] ' + lSignal.Name) do
+            begin
+              ImageIndex := CDeviceModuleImageIndex;
+              SelectedIndex := CDeviceModuleImageIndex;
+              Data := lSignal;
+            end
+          else
+            with fHardwareTree.Items.AddChild(lSourceNode, '[ ] ' + lSignal.Name) do
+            begin
+              ImageIndex := CDeviceModuleImageIndex;
+              SelectedIndex := CDeviceModuleImageIndex;
+              Data := lSignal;
+            end;
+        end;
+        lSourceNode.Expand(True);
+      end;
+    end;
+
     lRootNode.Expand(True);
   finally
     fHardwareTree.Items.EndUpdate;
+    lSourceIds.Free;
   end;
 end;
 
@@ -1831,29 +2115,32 @@ var
   I: Integer;
   lRow: Integer;
   lEnabledCount: Integer;
+  lHost: string;
+  lPort: Word;
   lSelectedTags: TList;
   lSignal: TMeraSignalInfo;
-  lSourceId: string;
   lTag: TRecorderTag;
-begin
-  SetGridHeaders;
-  lSourceId := MeraSourceId(fMeraFileName);
 
-  if fAvailableChannelsGrid <> nil then
+  procedure CountAvailableSignals(ASignals: TList);
+  var
+    J: Integer;
   begin
-    lEnabledCount := 0;
-    for I := 0 to fMeraSignals.Count - 1 do
-      if not SignalHasLinkedTag(TMeraSignalInfo(fMeraSignals[I])) then
+    if ASignals = nil then
+      Exit;
+    for J := 0 to ASignals.Count - 1 do
+      if not SignalHasLinkedTag(TMeraSignalInfo(ASignals[J])) then
         Inc(lEnabledCount);
+  end;
 
-    if lEnabledCount = 0 then
-      fAvailableChannelsGrid.RowCount := 2
-    else
-      fAvailableChannelsGrid.RowCount := lEnabledCount + 1;
-    lRow := 1;
-    for I := 0 to fMeraSignals.Count - 1 do
+  procedure FillAvailableSignals(ASignals: TList);
+  var
+    J: Integer;
+  begin
+    if ASignals = nil then
+      Exit;
+    for J := 0 to ASignals.Count - 1 do
     begin
-      lSignal := TMeraSignalInfo(fMeraSignals[I]);
+      lSignal := TMeraSignalInfo(ASignals[J]);
       if SignalHasLinkedTag(lSignal) then
         Continue;
       fAvailableChannelsGrid.Cells[0, lRow] := lSignal.Address;
@@ -1861,6 +2148,23 @@ begin
       fAvailableChannelsGrid.Cells[2, lRow] := lSignal.Name;
       Inc(lRow);
     end;
+  end;
+begin
+  SetGridHeaders;
+
+  if fAvailableChannelsGrid <> nil then
+  begin
+    lEnabledCount := 0;
+    CountAvailableSignals(fMeraSignals);
+    CountAvailableSignals(fMic140Signals);
+
+    if lEnabledCount = 0 then
+      fAvailableChannelsGrid.RowCount := 2
+    else
+      fAvailableChannelsGrid.RowCount := lEnabledCount + 1;
+    lRow := 1;
+    FillAvailableSignals(fMeraSignals);
+    FillAvailableSignals(fMic140Signals);
   end;
 
   if fSelectedChannelsGrid <> nil then
@@ -1892,7 +2196,12 @@ begin
         fSelectedChannelsGrid.Cells[2, lRow] := lTag.ModuleType;
         fSelectedChannelsGrid.Cells[3, lRow] := FormatFloat('0.######', lTag.PollFrequencyHz);
         fSelectedChannelsGrid.Cells[4, lRow] := '-';
-        fSelectedChannelsGrid.Cells[5, lRow] := 'Mera File';
+        if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+          fSelectedChannelsGrid.Cells[5, lRow] := 'MIC-140'
+        else if Pos('Mera file:', lTag.SourceId) = 1 then
+          fSelectedChannelsGrid.Cells[5, lRow] := 'Mera File'
+        else
+          fSelectedChannelsGrid.Cells[5, lRow] := lTag.SourceId;
         fSelectedChannelsGrid.Cells[6, lRow] := lTag.Description;
         fSelectedChannelsGrid.Cells[7, lRow] := IntToStr(lTag.Id);
         Inc(lRow);
@@ -1910,11 +2219,28 @@ end;
 procedure TRecorderSettingsDialog.ToggleHardwareSignal(ANode: TTreeNode);
 var
   lSignal: TMeraSignalInfo;
+  lTag: TRecorderTag;
 begin
   if (ANode = nil) or (ANode.Data = nil) then
     Exit;
 
   lSignal := TMeraSignalInfo(ANode.Data);
+  if SameText(lSignal.ModuleName, 'MIC-140') then
+  begin
+    lTag := FindTagBySourceAddress(SignalSourceId(lSignal), lSignal.Address);
+    if lTag <> nil then
+      fTagRegistry.RemoveTag(lTag)
+    else
+    begin
+      lSignal.Selected := True;
+      CreateSelectedMeraTags;
+      lSignal.Selected := False;
+    end;
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+    Exit;
+  end;
+
   lSignal.Enabled := not lSignal.Enabled;
   if not lSignal.Enabled then
     lSignal.Selected := False;
@@ -2507,7 +2833,7 @@ procedure TRecorderSettingsDialog.fAvailableChannelsGridDblClick(Sender: TObject
 var
   lSignal: TMeraSignalInfo;
 begin
-  if (fAvailableChannelsGrid = nil) or (fMeraSignals = nil) then
+  if fAvailableChannelsGrid = nil then
     Exit;
 
   lSignal := AvailableSignalByGridRow(fAvailableChannelsGrid.Row);
