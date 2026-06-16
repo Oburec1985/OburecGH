@@ -46,6 +46,7 @@ type
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer);
+    procedure SetTimeoutMs(AValue: Cardinal);
     procedure WriteBytes(const ABuffer; ACount: Integer);
     procedure SendPacket(APort: Word; const AWords: TRecorderMic140LegacyWordArray);
     function ReadPacket(out APort: Word; out AWords: TRecorderMic140LegacyWordArray): Boolean;
@@ -71,7 +72,7 @@ type
 
     property Host: string read fHost;
     property Port: Word read fPort;
-    property TimeoutMs: Cardinal read fTimeoutMs write fTimeoutMs;
+    property TimeoutMs: Cardinal read fTimeoutMs write SetTimeoutMs;
   end;
 
 const
@@ -133,7 +134,7 @@ procedure TRecorderMic140LegacyClient.Connect;
 begin
   Disconnect;
   fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
-  fSocket.IOTimeout := Integer(fTimeoutMs);
+  SetTimeoutMs(fTimeoutMs);
 end;
 
 procedure TRecorderMic140LegacyClient.Disconnect;
@@ -145,6 +146,15 @@ end;
 procedure TRecorderMic140LegacyClient.ClearBufferedPackets;
 begin
   SetLength(fRxBuffer, 0);
+end;
+
+procedure TRecorderMic140LegacyClient.SetTimeoutMs(AValue: Cardinal);
+begin
+  if AValue = 0 then
+    AValue := 1;
+  fTimeoutMs := AValue;
+  if fSocket <> nil then
+    fSocket.IOTimeout := Integer(fTimeoutMs);
 end;
 
 function TRecorderMic140LegacyClient.ReadBytes(var ABuffer; ACount: Integer): Boolean;

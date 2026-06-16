@@ -95,9 +95,17 @@ type
   private
     fChannelTagNames: TStringList;
     fDevice: IRecorderDevice;
+    fGoodBlockCount: Int64;
+    fLastStatusCode: Integer;
+    fReadFailCount: Integer;
+    fBlockCountTagName: string;
+    fStatusTagName: string;
     fTagNames: TStringList;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
+    procedure PublishDiagnostics(AStatusCode: Integer; const AStatusText: string;
+      AForce: Boolean = False);
+    procedure PublishBlockCounter(ABlockCount: Int64);
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -133,6 +141,13 @@ uses
 
 const
   CMic140SourcePrefix = 'MIC-140:';
+  CMic140StatusDisconnected = 0;
+  CMic140StatusConnected = 1;
+  CMic140StatusProgrammed = 2;
+  CMic140StatusStarted = 3;
+  CMic140StatusError = -1;
+  CMic140ReadTimeoutMinMs = 1500;
+  CMic140NoDataFailThreshold = 10;
   CMic140ConnectAttempts = 3;
   CMic140LegacyMaxUiReadFrequencyHz = 1000.0;
   CMic140MebiusChannelCount = 16;
@@ -1612,8 +1627,21 @@ end;
 constructor TRecorderMic140DataSource.Create(const ASourceId, AHost: string; APort: Word;
   AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
   ATagNames: TStrings);
+var
+  lDiagnosticPrefix: string;
 begin
   inherited Create(ASourceId, 'MIC-140', AUpdateTimeMs);
+  fLastStatusCode := Low(Integer);
+  lDiagnosticPrefix := StringReplace(ASourceId, CMic140SourcePrefix, 'MIC140',
+    [rfIgnoreCase]);
+  lDiagnosticPrefix := StringReplace(Trim(lDiagnosticPrefix), ' ', '_',
+    [rfReplaceAll]);
+  lDiagnosticPrefix := StringReplace(lDiagnosticPrefix, ':', '_',
+    [rfReplaceAll]);
+  lDiagnosticPrefix := StringReplace(lDiagnosticPrefix, '.', '_',
+    [rfReplaceAll]);
+  fStatusTagName := lDiagnosticPrefix + '_Status';
+  fBlockCountTagName := lDiagnosticPrefix + '_Blocks';
   fChannelTagNames := TStringList.Create;
   fChannelTagNames.CaseSensitive := False;
   fChannelTagNames.Sorted := False;
@@ -1624,6 +1652,39 @@ begin
     fTagNames.Assign(ATagNames);
   fDevice := TRecorderMic140Device.Create(ASourceId, AHost, APort,
     AChannelCount, APollFrequencyHz);
+end;
+
+procedure TRecorderMic140DataSource.PublishDiagnostics(AStatusCode: Integer;
+  const AStatusText: string; AForce: Boolean);
+var
+  lTag: TRecorderTag;
+begin
+  if Registry = nil then
+    Exit;
+  lTag := Registry.FindByName(fStatusTagName);
+  if lTag = nil then
+    Exit;
+  lTag.TextValue := AStatusText;
+  lTag.Description := Format('MIC-140 connection status: %s', [AStatusText]);
+  if (not AForce) and (fLastStatusCode = AStatusCode) then
+    Exit;
+  fLastStatusCode := AStatusCode;
+  Registry.PublishValue(fStatusTagName, GetTickCount64 / 1000.0, AStatusCode);
+  Mic140LogWarning(Format('[DataSource:%s] MIC-140 status=%d %s',
+    [SourceId, AStatusCode, AStatusText]));
+end;
+
+procedure TRecorderMic140DataSource.PublishBlockCounter(ABlockCount: Int64);
+var
+  lTag: TRecorderTag;
+begin
+  if Registry = nil then
+    Exit;
+  lTag := Registry.FindByName(fBlockCountTagName);
+  if lTag = nil then
+    Exit;
+  lTag.TextValue := IntToStr(ABlockCount);
+  Registry.PublishValue(fBlockCountTagName, GetTickCount64 / 1000.0, ABlockCount);
 end;
 
 destructor TRecorderMic140DataSource.Destroy;
@@ -1656,6 +1717,28 @@ var
   lTag: TRecorderTag;
   lTagName: string;
 begin
+  lTag := ARegistry.FindByName(fStatusTagName);
+  if lTag = nil then
+    lTag := ARegistry.CreateTag(fStatusTagName, 4096);
+  lTag.Address := 'diagnostics.status';
+  lTag.UnitName := '';
+  lTag.ModuleType := 'MIC-140 diagnostics';
+  lTag.PollFrequencyHz := 1.0;
+  lTag.SourceId := SourceId;
+  lTag.Description := 'MIC-140 connection status: not checked';
+  lTag.TextValue := 'not checked';
+
+  lTag := ARegistry.FindByName(fBlockCountTagName);
+  if lTag = nil then
+    lTag := ARegistry.CreateTag(fBlockCountTagName, 4096);
+  lTag.Address := 'diagnostics.blocks';
+  lTag.UnitName := 'blocks';
+  lTag.ModuleType := 'MIC-140 diagnostics';
+  lTag.PollFrequencyHz := 1.0;
+  lTag.SourceId := SourceId;
+  lTag.Description := 'MIC-140 successfully received scan blocks';
+  lTag.TextValue := '0';
+
   lChannels := fDevice.GetChannels;
   fChannelTagNames.Clear;
   for I := 0 to High(lChannels) do
@@ -1690,12 +1773,34 @@ end;
 procedure TRecorderMic140DataSource.Start;
 begin
   inherited Start;
+  fGoodBlockCount := 0;
+  fReadFailCount := 0;
+  PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
   fDevice.Connect;
+  if fDevice.State = rdsDisconnected then
+  begin
+    PublishDiagnostics(CMic140StatusError, 'connection failed', True);
+    Exit;
+  end;
+  PublishDiagnostics(CMic140StatusConnected, 'connected', True);
   fDevice.ProgramDevice;
-  fDevice.Start;
+  if fDevice.State = rdsProgrammed then
+    PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True)
+  else
   if fDevice.State <> rdsStarted then
+  begin
+    PublishDiagnostics(CMic140StatusError, 'programming failed', True);
+    Exit;
+  end;
+  fDevice.Start;
+  if fDevice.State = rdsStarted then
+    PublishDiagnostics(CMic140StatusStarted, 'started', True)
+  else
+  begin
+    PublishDiagnostics(CMic140StatusError, 'start failed', True);
     Mic140LogWarning(Format('[DataSource:%s] MIC-140 source is not started; preview will continue without device samples',
       [SourceId]));
+  end;
 end;
 
 procedure TRecorderMic140DataSource.Stop;
@@ -1705,7 +1810,12 @@ begin
     try
       fDevice.Stop;
       fDevice.Disconnect;
+      PublishDiagnostics(CMic140StatusDisconnected, 'stopped', True);
     except
+      on E: Exception do
+      begin
+        PublishDiagnostics(CMic140StatusError, 'stop failed: ' + E.Message, True);
+      end;
     end;
   end;
   inherited Stop;
@@ -1725,13 +1835,19 @@ begin
   try
     if (fDevice = nil) or (fDevice.State <> rdsStarted) then
       Exit;
-    if not fDevice.ReadBlock(UpdateTimeMs, lBlock) then
+    if not fDevice.ReadBlock(Max(UpdateTimeMs, CMic140ReadTimeoutMinMs), lBlock) then
+    begin
+      Inc(fReadFailCount);
+      if fReadFailCount = CMic140NoDataFailThreshold then
+        PublishDiagnostics(CMic140StatusError, 'no scan data', True);
       Exit;
+    end;
   except
     on E: Exception do
     begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 read failed: %s: %s',
         [SourceId, E.ClassName, E.Message]));
+      PublishDiagnostics(CMic140StatusError, 'read exception: ' + E.Message, True);
       fDevice.Stop;
       Exit;
     end;
@@ -1740,6 +1856,10 @@ begin
   lCount := Min(lBlock.ChannelCount, Length(lChannels));
   if lCount <= 0 then
     Exit;
+  Inc(fGoodBlockCount);
+  fReadFailCount := 0;
+  PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
+  PublishBlockCounter(fGoodBlockCount);
 
   SetLength(lTimes, lBlock.SampleCount);
   for J := 0 to lBlock.SampleCount - 1 do

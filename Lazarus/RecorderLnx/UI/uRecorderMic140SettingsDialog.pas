@@ -311,11 +311,10 @@ procedure TRecorderMic140SettingsDialog.FillGrid(AChannelCount: Integer;
 var
   I: Integer;
   lAddress: string;
-  lRow: Integer;
 begin
   if AChannelCount <= 0 then
     AChannelCount := MIC140DefaultChannelCount;
-  fGrid.RowCount := AChannelCount + MIC140TemperatureChannelCount + 1;
+  fGrid.RowCount := AChannelCount + 1;
   for I := 1 to AChannelCount do
   begin
     lAddress := IntToStr(I);
@@ -329,20 +328,10 @@ begin
     fGrid.Cells[3, I] := 'U';
     fGrid.Cells[4, I] := '';
   end;
-  for I := 1 to MIC140TemperatureChannelCount do
-  begin
-    lRow := AChannelCount + I;
-    lAddress := 'T' + IntToStr(I);
-    if (ASelected = nil) or (ASelected.Count = 0) or
-      (ASelected.IndexOf(lAddress) >= 0) then
-      fGrid.Cells[0, lRow] := '[x]'
-    else
-      fGrid.Cells[0, lRow] := '[ ]';
-    fGrid.Cells[1, lRow] := lAddress;
-    fGrid.Cells[2, lRow] := Format('MIC140_T%1.1d', [I]);
-    fGrid.Cells[3, lRow] := 'T';
-    fGrid.Cells[4, lRow] := 'degC';
-  end;
+  // TIn channels are configured through the CJC controls above. They are
+  // intentionally hidden from the ordinary channel grid: the original Recorder
+  // does not expose them as user channels, and scanning them like AIn channels
+  // breaks the MIC-140 block layout.
 end;
 
 procedure TRecorderMic140SettingsDialog.ToggleGridRow(ARow: Integer);

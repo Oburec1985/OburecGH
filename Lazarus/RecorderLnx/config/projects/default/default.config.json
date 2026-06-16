@@ -1043,7 +1043,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"P2P"
 								]
 						},
 						"setpoints" : {
@@ -3852,6 +3853,126 @@
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"moduleType" : "MIC-140",
 						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 150,
+						"name" : "MIC140_192_168_14_155_4000_Status",
+						"address" : "diagnostics.status",
+						"unit" : "",
+						"description" : "MIC-140 connection status: stopped",
+						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"moduleType" : "MIC-140 diagnostics",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 151,
+						"name" : "MIC140_192_168_14_155_4000_Blocks",
+						"address" : "diagnostics.blocks",
+						"unit" : "blocks",
+						"description" : "MIC-140 successfully received scan blocks",
+						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"moduleType" : "MIC-140 diagnostics",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,

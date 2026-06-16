@@ -390,7 +390,7 @@ begin
   // Создание контекстного меню для настройки каналов
   lPopupMenu := TPopupMenu.Create(Self);
   lMenuItem := TMenuItem.Create(lPopupMenu);
-  lMenuItem.Caption := 'Настроить выделенные каналы...';
+  lMenuItem.Caption := CP1251ToUTF8('Настроить выделенные каналы...');
   lMenuItem.OnClick := @OnMenuEditSelectedTags;
   lPopupMenu.Items.Add(lMenuItem);
   lbTags.PopupMenu := lPopupMenu;
@@ -1917,7 +1917,7 @@ begin
     if lTags.Count = 0 then
       Exit;
 
-    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons) then
+    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons, fRunSettings.DataUpdateMs) then
     begin
       if fAlarmEngine <> nil then
         fAlarmEngine.Reset;
