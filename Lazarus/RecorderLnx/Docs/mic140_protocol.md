@@ -1,260 +1,936 @@
-# MIC-140 Ethernet protocol
+# MIC-140: драйвер, протокол и цикл обмена
 
-## Status in RecorderLnx
+Документ фиксирует все, что сейчас известно по подключению MIC-140 в
+RecorderLnx. Его нужно поддерживать рядом с кодом: любые новые знания из
+оригинального Recorder, наблюдения с живого прибора и найденные ошибки обмена
+добавлять сюда.
 
-RecorderLnx has two protocol layers for MIC-140:
+Рабочий прибор на столе: `192.168.14.155:4000`, исполнение 48 каналов. В
+оригинальном Recorder прибор видится и отдает данные. В RecorderLnx устройство
+подключается как источник данных ядра, без внешней DLL.
 
-- `Core/uRecorderMebiusTcpProtocol.pas` - Mebius/MEAS task protocol used by newer
-  MIC140MDQ code.
-- `Core/uRecorderMic140LegacyProtocol.pas` - legacy Ethernet protocol used by the
-  48/96-channel MIC-140 hardware from original Recorder.
+## Цель интеграции
 
-The 48-channel device at `192.168.14.155:4000` answered the legacy protocol and
-did not answer Mebius packets. The source `Core/uRecorderMic140DataSource.pas`
-therefore probes the legacy protocol first. If `CMD_REPLY` succeeds, the source
-logs firmware/controller information and does not continue with the Mebius
-programming path.
+MIC-140 должен выглядеть для RecorderLnx так же, как любой другой источник
+данных:
 
-At this point the low-level legacy command exchange is implemented and compiled.
-The source can send start/stop scan commands, write ADSP DM memory, and can read
-stream `0` packets. RecorderLnx now contains the first 48-channel scan
-programming path: reset/config main scan, append MIC-140 scan, create FIFO
-descriptor, create ground/channel descriptor tables, add module channels, and
-bind them to the scan.
+- источник добавляется в настройках Recorder;
+- источник создает теги каналов;
+- поток сбора данных пишет отсчеты в теги;
+- отображение и запись читают данные из тегов и их кольцевых буферов;
+- реализация протокола изолирована от UI и от общей модели тегов.
 
-## Original Recorder sources
+Архитектурно MIC-140 сейчас подключен через:
 
-The legacy MIC-140 implementation is spread across these original Recorder files:
+- `Core/uRecorderMic140DataSource.pas` - высокоуровневый источник данных,
+  создание каналов, программирование прибора, чтение блоков;
+- `Core/uRecorderMic140LegacyProtocol.pas` - старый Ethernet-протокол MC031 /
+  mdpEthernet81;
+- `Core/uRecorderMebiusTcpProtocol.pas` - новый Mebius/MEAS-протокол для более
+  новых MIC140MDQ-устройств;
+- `UI/uRecorderMic140SettingsDialog.pas` - диалог поиска и настройки MIC-140.
 
-- `D:\works\windev-v3.9\mtcEthernet81\Mc031ethernetifc.cpp`
-  opens the TCP transport, default port `4000`, reads BIOS info by `CMD_REPLY`,
-  and wraps DM/PM memory reads and writes.
-- `D:\works\windev-v3.9\mdpEthernet81\mdpEthernet81.cpp`
-  implements packet framing, stream demultiplexing, and `CallCommand`.
-- `D:\works\windev-v3.9\include\VTBL.H`
-  defines low-level/common commands such as `CMD_START_SCAN_MAIN = 4`,
-  `CMD_STOP_SCAN_MAIN = 5`, `CMD_REPLY = 113`, `CMD_RESET = 125`.
-- `D:\works\windev-v3.9\mtc\Ccdevice.h`
-  defines CC BIOS scan commands such as `CMD_STARTSCANMAIN = 80`,
-  `CMD_STOPSCANMAIN = 81`, `CMD_APPENDSCANMAIN = 82`,
-  `CMD_SETSTATESCAN = 87`, `CMD_SCAN_SET_BUFF = 133`,
-  `CMD_SCAN_SET_CHANS = 132`, `CMD_ADDCHANNELMODULE = 152`, and ADSP DM memory
-  write `CMD_WRITEDM = 111`.
-- `D:\works\windev-v3.9\MIC140_96_rce\mic140_96scn.cpp`
-  builds and sends the scan channel table to BIOS.
-- `D:\works\windev-v3.9\MIC140_96_rce\MIC140_48mod.cpp`,
-  `MIC140_48v2mod.cpp`, `mic140_96mod.cpp`, `MIC140_96v2mod.cpp`
-  build module-specific channel descriptors for 48/96-channel hardware.
+На живом приборе `192.168.14.155:4000` сработал именно legacy-протокол. Mebius
+путь оставлен как fallback для других исполнений, но текущий 48-канальный
+прибор работает через MC031/mdpEthernet81.
 
-## Transport packet
+## Оригинальные исходники Recorder
 
-The old MIC-140 Ethernet transport is little-endian TCP. One TCP connection is
-opened to the device, normally on port `4000`.
+Основные файлы, с которых переносится логика:
 
-Every packet has an 8-byte header followed by `size` data words and one data
-checksum word:
+| Файл | Что важно |
+|---|---|
+| `D:\works\windev-v3.9\mtcEthernet81\Mc031ethernetifc.cpp` | TCP-соединение, вызов команд, чтение BIOS info, запись DM/PM памяти. |
+| `D:\works\windev-v3.9\mdpEthernet81\mdpEthernet81.cpp` | Разбор TCP-потока, контрольные суммы, RX-поток, FIFO для scan/command. |
+| `D:\works\windev-v3.9\devapi\Types.h` | `THeaderMessage`, заголовок блока измерений. |
+| `D:\works\windev-v3.9\mtc\Ccdevice.h` | Команды CC BIOS: скан, FIFO, каналы, запись DM. |
+| `D:\works\windev-v3.9\mtc\Modscn.cpp` | Расчет `offset/count/size` каналов внутри буфера. |
+| `D:\works\windev-v3.9\MIC140_96_rce\mic140_96scn.cpp` | `ScanMIC140::Decommutation()`: разбор блока данных, баланс, фильтрация, Eval, CJC. |
+| `D:\works\windev-v3.9\MIC140_96_rce\MIC140_48mod.cpp` | 48-канальное исполнение: порядок каналов, ME048, дескрипторы, земля. |
+| `D:\works\windev-v3.9\MIC140_96_rce\mic140_96mod.cpp` | Общая логика MIC-140: тайминги, диапазоны, усиления, 96 каналов. |
+| `D:\works\windev-v3.9\MIC140_96_rce\MIC140_48v2mod.cpp`, `MIC140_96v2mod.cpp`, `mic140_96v5mod.cpp` | Варианты железа v2/v5, которые еще надо переносить отдельно. |
+
+## Жизненный цикл источника в RecorderLnx
+
+1. Пользователь добавляет MIC-140 в настройках.
+2. Диалог хранит `IP`, `port`, число каналов и частоту.
+3. `TRecorderMic140DataSource` создает `TRecorderMic140Device`.
+4. `DoCreateTags` создает теги `MIC140_01`, `MIC140_02`, ... с адресами
+   `1`, `2`, ...
+5. При старте источник вызывает `TRecorderMic140Device.Start`.
+6. `Start` при необходимости вызывает `Connect`, затем `ProgramDevice`.
+7. Для legacy-прибора `ProgramDevice` вызывает `ProgramLegacyDevice`.
+8. После успешного программирования отправляется `CMD_STARTSCANMAIN`.
+9. Цикл источника вызывает `ReadBlock`, получает блок отсчетов и пишет их в
+   теги.
+10. При остановке отправляется `CMD_STOPSCANMAIN`, затем соединение закрывается.
+
+Состояния устройства:
+
+| Состояние | Значение |
+|---|---|
+| `rdsDisconnected` | TCP-клиента нет или прибор недоступен. |
+| `rdsConnected` | TCP есть, протокол определен, скан еще не запрограммирован. |
+| `rdsProgrammed` | BIOS-скан и таблицы каналов записаны, можно стартовать. |
+| `rdsStarted` | Скан запущен, поток `0` должен отдавать блоки данных. |
+
+## Выбор протокола при подключении
+
+`TRecorderMic140Device.Connect` сначала пробует legacy-путь:
+
+1. Проверяет TCP-доступность `RecorderMic140TcpProbe`.
+2. Создает `TRecorderMic140LegacyClient`.
+3. Открывает TCP-соединение.
+4. Вызывает `ReadFirmware`, то есть команду `CMD_REPLY = 113`.
+5. Если ответ корректный, выставляет `fUseLegacyProtocol := True`.
+
+Если legacy не ответил, код пробует Mebius-клиент. Это важно для будущих
+исполнений, но для текущего прибора рабочий путь - legacy.
+
+Почему предварительный TCP probe нужен: `TInetSocket.Create` на timeout кидает
+исключение. Без probe отладчик Lazarus останавливался на ожидаемой сетевой
+ошибке при поиске устройства.
+
+## Legacy TCP-пакет
+
+MIC-140 legacy работает поверх одного TCP-соединения. Все числа little-endian.
 
 ```text
-WORD syn       = 0x12B8
-WORD port      = stream id
-WORD size      = number of data words
-WORD cs        = (syn + port + size) & 0xFFFF
+WORD sync      = 0x12B8
+WORD port      = номер потока
+WORD size      = число WORD в data[]
+WORD header_cs = (sync + port + size) & 0xFFFF
 WORD data[size]
-WORD data_cs   = sum(data[0..size-1]) & 0xFFFF
+WORD data_cs   = sum(data[]) & 0xFFFF
 ```
 
-Known streams:
+Потоки:
 
-- `0` - scan/data stream.
-- `1` - command stream used by `CallCommand`.
+| Поток | Назначение |
+|---|---|
+| `0` | Данные скана. |
+| `1` | Команды и ответы команд. |
 
-Original `mdpEthernet81::ProcessProtocol()` parses the TCP byte stream with
-resynchronization. If a candidate packet has a bad sync word, bad header
-checksum, or bad data checksum, it advances the raw input by one byte and tries
-again. It does not drop the whole candidate packet. RecorderLnx must do the same
-because stream `0` packets can be frequent; losing byte alignment after a single
-checksum mismatch can make all following packets look broken and leave the
-device scanning without a healthy reader.
+Оригинальный `mdpEthernet81::ProcessProtocol()` читает TCP непрерывно в
+отдельном RX-потоке. При ошибке sync/header checksum/data checksum он не
+выбрасывает весь подозрительный пакет, а сдвигается на один байт и снова ищет
+`0x12B8`. Это критично: если потерять выравнивание на stream `0`, следующие
+пакеты будут выглядеть битыми, а прибор продолжит сканировать без здорового
+читателя.
 
-Original `mdpEthernet81` also demultiplexes streams into separate FIFOs:
-`m_ScanFifo` for stream `0` and `m_CommandFifo` for stream `1`. RecorderLnx reads
-directly from one TCP socket, so `CallCommand()` must skip stream-`0` packets
-while waiting for the stream-`1` reply. This matters especially for stop commands
-sent while acquisition is already running.
+RecorderLnx повторяет byte-resync в `ReadPacket`, но пока не имеет отдельного
+RX-потока. Сейчас чтение идет синхронно из потока источника данных. При
+ожидании ответа команды `CallCommand` пропускает пакеты stream `0`, пока не
+придет stream `1`.
 
-RecorderLnx no longer sends `CMD_STOPSCANMAIN = 81` from inside `ReadBlock()` on
-ordinary stream-`0` read timeouts. A live MIC-140 can still be sending scan
-packets while the application side has a short read timeout, and calling a
-command through the same TCP stream at that moment may make diagnostics worse.
-Stop is sent only from the explicit source stop/disconnect path.
+Это временное упрощение. Для полной устойчивости нужен перенос схемы
+оригинального Recorder:
 
-The legacy reader logs the first successful stream-`0` scan packet with header
-word count, data word count, and the first five header words. This is used while
-matching RecorderLnx parsing to original `THeaderMessage` handling in
-`MIC140_96_rce\mic140_96scn.cpp`.
+```text
+TCP socket -> RX thread -> packet parser -> scan FIFO / command FIFO
+```
 
-The current direct legacy reader is intentionally conservative about sampling
-frequency. Original `mdpEthernet81` has a permanent RX thread and separate scan
-and command FIFOs. RecorderLnx still reads the TCP stream synchronously from the
-data-source thread, so frequencies above `1000 Hz` are clamped to the default
-`100 Hz` for now to avoid overrunning the single reader while the protocol port
-is being stabilized.
+## Формат команды
 
-## Command packet
-
-Commands are sent on stream `1`. The command payload starts with three words:
+Команда передается в stream `1`. Полезная нагрузка:
 
 ```text
 WORD cmd
-WORD argc      = number of argument words
-WORD retc      = expected number of reply words
+WORD argc
+WORD retc
 WORD argv[argc]
 ```
 
-Original `mdpEthernet81::CallCommand()` treats `retc = 0` as one reply word, so
-RecorderLnx does the same in the legacy client.
+`retc = 0` в оригинальном `CallCommand` фактически означает ожидание хотя бы
+одного слова ответа. RecorderLnx делает так же.
 
-Important distinction: `VTBL.H` also has similarly named commands, but the
-MIC-140 scan path goes through `Ccdevice.h` CC BIOS commands. For example,
-`VTBL.H` has `CMD_WRITEDM = 16`, while
-`CCMC031EthernetInterface::WriteRemoteWordArray(... IS_DM ...)` reaches
-`Ccdevice.h` `CMD_WRITEDM = 111`. Using `16` for the scan FIFO/descriptor writes
-makes the device time out. The same applies to main scan start/stop: original
-`CCDevice::OnStartScanMain()` / `OnStopScanMain()` use `CMD_STARTSCANMAIN = 80`
-and `CMD_STOPSCANMAIN = 81`, not `VTBL.H` commands `4/5`.
+Нюанс: в оригинальном дереве есть несколько наборов команд. Для MIC-140
+сканирования нужны команды из `Ccdevice.h`, а не похожие команды из `VTBL.H`.
+Например, `VTBL.H` имеет `CMD_WRITEDM = 16`, но путь
+`WriteRemoteWordArray(... IS_DM ...)` идет в `Ccdevice.h CMD_WRITEDM = 111`.
+Использование `16` приводило к timeout записи дескрипторов.
 
-The reply is a normal stream-`1` packet whose data words are the command result.
-For `CMD_REPLY` the original code reads the BIOS/controller information into the
-MC031 BIOS info structure.
+Ключевые команды legacy-пути:
 
-## Verified exchange with the device
+| Команда | Имя из Recorder | Назначение |
+|---:|---|---|
+| `80` | `CMD_STARTSCANMAIN` | Запуск главного скана CC BIOS. |
+| `81` | `CMD_STOPSCANMAIN` | Остановка главного скана. |
+| `82` | `CMD_APPENDSCANMAIN` | Добавить внутренний scan-контекст. |
+| `83` | `CMD_RESETSCANMAIN` | Очистить scan-контексты BIOS. |
+| `84` | `CMD_CONFIGSCANMAIN` | Настроить таймер главного скана. |
+| `87` | `CMD_SETSTATESCAN` | Установить состояние scan-контекста. |
+| `111` | `CMD_WRITEDM` | Записать слова в DM-память ADSP. |
+| `113` | `CMD_REPLY` | Получить информацию BIOS/контроллера. |
+| `132` | `CMD_SCAN_SET_CHANS` | Привязать таблицу каналов к scan. |
+| `133` | `CMD_SCAN_SET_BUFF` | Привязать FIFO к scan. |
+| `152` | `CMD_ADDCHANNELMODULE` | Добавить модульные каналы в scan. |
 
-The live device at `192.168.14.155:4000` answered `CMD_REPLY = 113` with the
-legacy framing.
+## Константы RecorderLnx
 
-Request data words:
+Основные константы из `uRecorderMic140DataSource.pas`:
 
-```text
-113, 0, 10
-```
+| Константа | Значение | Смысл |
+|---|---:|---|
+| `MIC140DefaultHost` | `192.168.14.155` | IP прибора по умолчанию для текущего стенда. |
+| `MIC140DefaultPort` | `4000` | Штатный TCP-порт legacy MIC-140. |
+| `MIC140DefaultChannelCount` | `48` | Текущий настольный прибор. |
+| `MIC140MaxChannelCount` | `96` | Верхняя граница для 96-канального исполнения. |
+| `MIC140DefaultPollFrequencyHz` | `100` | Частота по умолчанию, как надо для MIC-140. |
+| `CMic140LegacyScanId` | `0` | Идентификатор внутреннего скана. |
+| `CMic140LegacyTypeMic140` | `12` | Тип scan-задачи `TYPE_MIC140` в `Ccdevice.h`. |
+| `CMic140LegacyFreqClkHz` | `16000000` | Частота тактирования MIC-140. |
+| `CMic140LegacyTimerPeriod` | `640` | Делитель главного таймера, 640 / 16 МГц = 40 мкс в текущей модели. В оригинале комментарий говорит о сетке таймера 20 мкс; эту разницу надо еще сверить по `GetScale/GetPeriod`. |
+| `CMic140LegacyPeriodAdSec` | `5 мкс` | Период между отдельными измерениями АЦП при усреднении. |
+| `CMic140LegacyInitPeriodDecaySec` | `57 мкс` | Дефолтное время ожидания после переключения канала. |
+| `CMic140LegacyMinCountAver` | `1` | Минимум измерений для усреднения. |
+| `CMic140LegacyMaxCountAver` | `32767` | Ограничение BIOS. |
+| `CMic140LegacyDescChanWords` | `5` | Размер `TDescChanBios_MIC140_96` в WORD. |
+| `CMic140LegacyStartDescChanWords` | `3` | Заголовок таблицы каналов: delay/count/count_channels. |
+| `CMic140LegacyMaskGroundChannel` | `0x4000` | `MASK_CHAN_GR`, указатель на канал земли. |
 
-Response bytes:
-
-```text
-B8 12 01 00 0A 00 C3 12 F0 01 27 41 3F 41 0E 01
-9B 00 3E 41 A4 00 BF 00 B7 00 01 00 58 C9
-```
-
-Parsed header:
-
-```text
-syn  = 0x12B8
-port = 1
-size = 10 words
-cs   = 0x12C3
-```
-
-Parsed data words:
-
-```text
-0x01F0, 0x4127, 0x413F, 0x010E, 0x009B,
-0x413E, 0x00A4, 0x00BF, 0x00B7, 0x0001
-```
-
-This proves that the physical MIC-140 uses the old MC031/mdpEthernet81 transport,
-not the Mebius `MEBE_PACKET` transport.
-
-Additional live check before the scan table was ported:
+Сетка частот сейчас:
 
 ```text
-VTBL.H CMD_START_SCAN_MAIN = 4, request words: 4, 0, 1
-reply stream=1 size=1 words=1
+1, 10, 25, 50, 100, 150, 200, 250, 400, 10000, 20000, 35000 Гц
 ```
 
-After this command the device did not send a stream `0` packet within the test
-timeout. `CMD_STOP_SCAN_MAIN = 5` still answered on stream `1`. This confirmed
-that command transport works, but this is not the CC BIOS scan start path used by
-original Recorder for MIC-140.
+Частота общая для всего прибора. Если пользователь меняет частоту одного
+канала, RecorderLnx должен менять частоту всех каналов MIC-140, потому что
+циклограмма прибора одна.
 
-RecorderLnx log after the first scan-programming implementation showed:
+## ADSP DM-память
+
+Оригинальный `CC81WDInterface` разделяет память на две области:
+
+| Область | Адреса | Использование |
+|---|---|---|
+| Buffer DM | `0x0522..0x07FF` для MC031 Ethernet | Данные FIFO scan-потока. Базовый CC81 начинает с `0x0000`, но Ethernet-интерфейс MIC-140 резервирует нижнюю часть DM. |
+| Heap DM | `0x0800..0x2BFF` | Контексты BIOS, дескрипторы FIFO, дескрипторы каналов, таблицы указателей. |
+
+RecorderLnx зеркалирует это двумя простыми аллокаторами:
+
+- `LegacyAllocBuffer` - выдает адреса из `0x0522..0x07FF`;
+- `LegacyAllocHeap` - выдает адреса из `0x0800..0x2BFF`.
+
+Перед новым программированием скана оба курсора сбрасываются:
+
+```pascal
+fLegacyMemAddrCur := CMic140LegacyDmBufferBegin;
+fLegacyMemHeapAddrCur := CMic140LegacyDmHeapBegin;
+```
+
+Это важно: если не сбрасывать scan-контексты и не пересоздавать таблицы,
+в BIOS могут остаться старые дескрипторы, а прибор продолжит работать с
+предыдущей циклограммой.
+
+Оригинальный `CCDevice::Config()` делает еще один важный шаг: после
+`ResetScanMain()` вызывает `OnStopScanMain()` с комментарием “очистка буферов,
+если предыдущий запуск был аварийным”. RecorderLnx теперь повторяет этот смысл:
+если в текущем объекте MIC-140 уже был успешный `STARTSCANMAIN`, перед новым
+программированием выполняется pre-stop и очищается разобранный RX-буфер клиента.
+Это нужно для второго старта после аварийного/неполного останова, когда stream
+`0` еще может мешать ответам команд stream `1`.
+
+## Последовательность программирования legacy-скана
+
+`TRecorderMic140Device.ProgramLegacyDevice` делает следующее.
+
+1. `CMD_RESETSCANMAIN = 83`
+
+   Сбрасывает контексты главного скана. Это защита от старых таблиц и
+   зависшего timer task.
+
+2. `CMD_CONFIGSCANMAIN = 84`
+
+   В RecorderLnx отправляется:
+
+   ```text
+   scale - 1  = 0
+   period - 1 = 639
+   ```
+
+   То есть `scale = 1`, `period = 640`. Это перенесено из
+   `ModuleMIC140_96::WriteConfig` / `SetIfaceScalePeriod`, но требует
+   дальнейшей сверки с `GetScale/GetPeriod` оригинала для разных частот.
+
+3. Выделение scan context
+
+   `CMic140LegacyBiosScanContextWords = 6` WORD в heap DM.
+
+4. `CMD_APPENDSCANMAIN = 82`
+
+   Аргументы:
+
+   ```text
+   type    = TYPE_MIC140 = 12
+   scan_id = 0
+   divider = индекс частоты в сетке + 1
+   addr    = адрес scan context в DM heap
+   page    = 0
+   ```
+
+5. `CMD_SETSTATESCAN = 87`
+
+   Для `scan_id = 0` выставляется state `0`.
+
+6. Создание FIFO
+
+   Размер FIFO нельзя задавать произвольно. Оригинальный
+   `ScanModule::GetChanMaxFifoSizeCC()` вычисляет ready half-buffer так:
+
+   ```text
+   ready = (GetMaxFifoAdspSize() / 2) / GetCountChanBios()
+   ```
+
+   Для Ethernet MIC-140 используется не базовое начало CC81 `0x0000`, а
+   переопределение `CCMC031EthernetInterface::GetDMAddrBeginBuffer() = 0x0522`.
+   Поэтому доступный FIFO:
+
+   ```text
+   GetMaxFifoAdspSize = 0x07FF - 0x0522 + 1 = 734 WORD
+   ready = (734 / 2) / 48 = 7 WORD
+   full FIFO = 2 * ready = 14 WORD
+   ```
+
+   Это критично: запись FIFO с адреса `0x0000` на MC031 может задеть служебную
+   область BIOS/контроллера и подвесить прибор после старта скана.
+
+   Для сравнения, у базового CC81 без Ethernet-смещения было бы:
+
+   ```text
+   GetMaxFifoAdspSize = 0x800 WORD
+   ready = (2048 / 2) / 48 = 21 WORD
+   full FIFO = 2 * ready = 42 WORD
+   ```
+
+   Ранее в RecorderLnx стояла грубая константа 384 WORD для половины FIFO. Это
+   сильно отличалось от Recorder и могло менять организацию scan-пакетов,
+   приводить к скачкам значений и плохому поведению при повторном старте.
+
+   В heap DM выделяется 10 WORD под дескриптор FIFO.
+
+   Дескриптор FIFO:
+
+   ```text
+   [0] state
+   [1] scan_id
+   [2] head
+   [3] tail
+   [4] begin
+   [5] page
+   [6] size
+   [7] sizeready
+   [8] numready
+   [9] num
+   ```
+
+   Затем дескриптор записывается в DM через `CMD_WRITEDM = 111` и привязывается
+   к scan командой `CMD_SCAN_SET_BUFF = 133`.
+
+7. Выделение мгновенных значений каналов
+
+   RecorderLnx выделяет `48 + 3` WORD. В оригинале `var_addr` используется как
+   база массива мгновенных значений: для AIN каналов `ptr = var_addr + num_chan`,
+   для температурных каналов `ptr = var_addr + MAX_AIN + num_chan`.
+
+   Текущая реализация пишет только аналоговые 48 каналов. Температурные каналы
+   еще не вставлены в scan.
+
+8. Формирование дескрипторов каналов
+
+   Выделяется `(fChannelCount + 1) * 5` WORD. `+1` - дескриптор земли.
+
+9. Формирование таблицы указателей каналов
+
+   Таблица начинается с 3 WORD:
+
+   ```text
+   [0] PeriodAverageToSport(period_aver) - 1
+   [1] count_aver
+   [2] channels.Size()
+   ```
+
+   Дальше идут указатели на дескрипторы. При включенной земле порядок такой:
+
+   ```text
+   ground, channel 1, ground, channel 2, ..., ground, channel N
+   ```
+
+   Поэтому `lChanPtrCount = fChannelCount * 2`.
+
+10. `CMD_ADDCHANNELMODULE = 152`
+
+    Передает BIOS адрес таблицы указателей и адрес внутреннего scan channel
+    descriptor.
+
+11. `CMD_SCAN_SET_CHANS = 132`
+
+    Привязывает таблицу каналов к scan.
+
+Только после этой последовательности можно вызывать `CMD_STARTSCANMAIN = 80`.
+Просто послать старт без дескрипторов недостаточно: прибор ответит на команду,
+но stream `0` не будет содержать нормального потока измерений.
+
+## Дескриптор канала MIC-140
+
+Структура из оригинального `MIC140_48mod.cpp`:
+
+```cpp
+typedef struct
+{
+    WORD code_ME048[2];
+    WORD desc;
+    WORD delay;
+    WORD ptr;
+} TDescChanBios_MIC140_96;
+```
+
+В RecorderLnx это `CMic140LegacyDescChanWords = 5`.
+
+Поля:
+
+| Поле | Смысл |
+|---|---|
+| `code_ME048[0..1]` | Состояние внешнего коммутатора ME048. |
+| `desc` | Регистр MIC-140: MUX, усилители, аппаратный диапазон, BreakTst. |
+| `delay` | Время ожидания в SPORT-тиках, уже минус 1. |
+| `ptr` | Куда BIOS кладет мгновенное значение канала или специальный `MASK_CHAN_GR`. |
+
+## Внешний коммутатор ME048
+
+Для 48-канального исполнения оригинальный Recorder использует:
+
+```cpp
+const WORD AInNum[48] =
+{
+  24,25,26,27,28,29,30,31,32,33,34,35,
+  36,37,38,39,40,41,42,43,44,45,46,47,
+  23,22,21,20,19,18,17,16,15,14,13,12,
+  11,10,9,8,7,6,5,4,3,2,1,0
+};
+```
+
+Это физическая перестановка входов. Нельзя считать, что канал 1 - это линия 0
+ME048. Если перепутать порядок, значения будут приходить с других входов.
+
+`TCode_ME048` содержит линии `XA0..XA14` и `indicator`. Затем оригинал
+перекладывает их в `TRegME048`, потому что SPORT выдает биты со старших:
+
+```cpp
+struct TRegME048
+{
+  WORD indicator;
+  WORD XA14;
+  WORD XA13;
+  ...
+  WORD XA0;
+};
+```
+
+RecorderLnx сейчас вычисляет тот же WORD для 48 каналов в
+`Mic140LegacyMe048Code48`. Для первых 24 физических каналов используются линии
+`XA2..XA7`, для второй половины - `XA8..XA13` и `indicator = 1`.
+
+Специальные коды:
+
+| Код | Назначение |
+|---|---|
+| `code_level0mV` | Коммутация на 0 мВ / землю. |
+| `code_level24mV` | Тестовый уровень 24 мВ. |
+| `code_chanTIn_48` | Температурные входы, пока не перенесены в scan RecorderLnx. |
+
+## Регистр MIC-140 `desc`
+
+Оригинальная структура:
+
+```cpp
+struct TRegMIC140
+{
+  WORD empty15;
+  WORD AMP4;
+  WORD AMP2;
+  WORD AMP16;
+  WORD MUX_IN1;
+  WORD MUX_IN2;
+  WORD BreakTst;
+  WORD empty8;
+  WORD K1;
+  WORD empty6;
+  WORD K2;
+  WORD empty4;
+  WORD empty3;
+  WORD empty2;
+  WORD empty1;
+  WORD empty0;
+};
+```
+
+Затем Recorder собирает `desc` циклом:
+
+```cpp
+desc |= ((WORD*)&reg_MC114)[j] << j;
+```
+
+Текущие значения по умолчанию:
+
+- `hard_amplif = HARD_AMPLIF_100mV_CODE = 2`;
+- из таблицы `ampl1_mc114v5[2] = {100, k3=0, k100=1, k500=0}`;
+- значит `K1 = 1`, `K2 = 0`;
+- канальный усилитель по умолчанию равен 1:
+  `ampl2_mc114v5[0] = {1, k2=0, k4=0, k16=0}`;
+- входной коммутатор платы MIC-140 по умолчанию `commut_b[i] = 0`, то есть
+  `MUX_IN1 = 0`, `MUX_IN2 = 0`;
+- `BreakTst = 0`.
+
+Поэтому обычный канал в текущем режиме дает `desc = 0x0100`. Земля задает
+`MUX_IN1 = 1`, `MUX_IN2 = 0`, `K1 = 1`, поэтому `desc = 0x0110`.
+
+В коде RecorderLnx это сейчас зафиксировано как:
+
+```pascal
+CNormalDesc = $0100;
+CGroundDesc = $0110;
+```
+
+Это корректно для дефолтного режима 100 мВ / усиление 1 / вход. Когда появится
+редактирование диапазонов, `desc` надо будет собирать из полей, а не держать
+константой.
+
+## Земля перед каналом
+
+MIC-140 - коммутируемый АЦП. После переключения с предыдущего входа может
+остаться заряд и переходный процесс. В оригинальном Recorder включен
+`flag_chan_ground = 1`, поэтому перед каждым измеряемым каналом вставляется
+дескриптор земли.
+
+Для земли:
 
 ```text
-Legacy Ethernet protocol detected: device=16703.270 serial=155 controller=16702 serial=164 BIOS=183.1
-Legacy MIC-140 scan programming failed: FIFO descriptor DM write failed: MIC-140 legacy command timeout
+code_ME048[0] = code_level0mV
+code_ME048[1] = code_level0mV
+desc          = CGroundDesc
+delay         = PeriodDecayToSport(m_period_decay2) - 1
+ptr           = MASK_CHAN_GR = 0x4000
 ```
 
-That failure happened while `CMD_WRITEDM` was still incorrectly set to `16`.
-The command has been corrected to `111`.
+Земля не должна становиться отдельным тегом RecorderLnx. Она нужна только для
+циклограммы прибора. В таблице указателей BIOS она присутствует, а в списке
+пользовательских каналов `m_ChanDump[2]` остается число реальных каналов.
 
-## Scan programming sequence
+## Расчет таймингов
 
-Original `ScanMIC140::ChannelsToBios()` performs the important setup before scan
-start:
+Важные оригинальные константы из `mic140_96mod.cpp`:
 
-1. `ScanModule::CreateInternalScan()` calls `CMD_APPENDSCANMAIN = 82`.
-2. `ScanModule::SetStateInternalScan()` calls `CMD_SETSTATESCAN = 87`.
-3. `ScanModule::CreateBiosCCScanBuf()` allocates the BIOS scan buffer and calls
-   `CMD_SCAN_SET_BUFF = 133`.
-4. `ScanMIC140::ChannelsToBios()` allocates internal memory for instant channel
-   values.
-5. Allocates internal memory for channel descriptors.
-6. Calls the selected module implementation, for example
-   `ModuleMIC140_48::PrepareModuleDescForScan()` or
-   `ModuleMIC140_96::PrepareModuleDescForScan()`.
-7. Writes the descriptor array to ADSP DM memory through `WriteRemoteWordArray`.
-8. Calls `CMD_ADDCHANNELMODULE = 152`.
-9. Calls `CMD_SCAN_SET_CHANS = 132`.
+| Константа | Значение | Смысл |
+|---|---:|---|
+| `TIMER_PERIOD` | `640` | Делитель системного таймера. |
+| `SPORT_SCLK_DIV_PROGR` | `4` | Делитель SPORT при программировании канала. |
+| `PERIOD_PROGRAMMING_CHAN_CODE` | `(4+1)*2*(16*2+(16+3))` | Время программирования коммутатора канала в тактах кода. |
+| `PERIOD_AD_MKS` | `5` | Период между измерениями АЦП для усреднения. |
+| `INIT_PERIOD_DECAY` | `57e-6` | Дефолтное время ожидания канала. |
+| `PERIOD_SUM_CHAN_CODE` | `58` | Суммирование/деление/среднее. |
+| `PERIOD_WRITE_CHAN_CODE` | `115` | Запись среднего. |
+| `PERIOD_TIMER_OSC` | `62` | Задержка от прерывания таймера до старта АЦП. |
+| `DELTA_SPORT` | `11` | Особенность настройки SPORT при `len=3`. |
+| `PERIOD_1_CHAN_CODE` | `30` | Прерывание - старт АЦП. |
+| `PERIOD_21_CHAN_CODE` | `21` | Старт АЦП - старт SPORT при усреднении. |
+| `PERIOD_2_CHAN_CODE` | `27` | Старт АЦП - RegLatch. |
+| `PERIOD_3_CHAN_CODE` | `59` | RegLatch - старт SPORT. |
+| `PERIOD_4_CHAN_CODE` | `120` | RegLatch - конец прерывания без DELTA_PROG. |
+| `PERIOD_TIMER_WORK` | `80+32` | Время обработки таймера. |
 
-Only after this descriptor path is complete does it make sense to start the scan
-and read stream `0`. Sending only a start command without descriptors does not
-match original Recorder behavior.
+Базовые преобразования:
 
-RecorderLnx 48-channel path currently follows this concrete sequence:
+```text
+CodeToPeriod(count) = count / (2 * FREQ_CLK)
+PeriodToSport(sec) = trunc(sec * FREQ_CLK)
+SportToPeriod(cnt) = cnt / FREQ_CLK
+```
 
-1. `CMD_RESETSCANMAIN = 83`.
-2. `CMD_CONFIGSCANMAIN = 84` with `scale-1 = 0`, `period-1 = 639`
-   (`scale=1`, `period=640` for the 16 MHz MIC-140 grid).
-3. Allocate BIOS scan context from DM heap `0x0800..0x2BFF`.
-4. `CMD_APPENDSCANMAIN = 82` with `TYPE_MIC140 = 12`, `scan_id = 0`.
-5. `CMD_SETSTATESCAN = 87`, state `0`.
-6. Allocate scan FIFO from DM buffer `0x0000..0x07FF`.
-7. Write the 10-word BIOS FIFO descriptor to DM using `CMD_WRITEDM = 111`.
-8. `CMD_SCAN_SET_BUFF = 133`.
-9. Allocate instant-value cells and `TDescChanBios_MIC140_96` descriptors.
-10. Build a ground descriptor plus one descriptor for each selected AIN channel.
-11. Write descriptor array and channel-pointer array to DM.
-12. `CMD_ADDCHANNELMODULE = 152`.
-13. `CMD_SCAN_SET_CHANS = 132`.
+`CalcMinPeriodDecay`:
 
-## Current RecorderLnx implementation notes
+1. Берет `CodeToPeriod(PERIOD_4_CHAN_CODE)`.
+2. Добавляет минимальное время программирования канала.
+3. Сравнивает с `PERIOD_AD_MKS`.
+4. Квантует через `PeriodToSport` / `SportToPeriod`.
 
-`TRecorderMic140LegacyClient` currently supports:
+`PeriodDecayToSport(period)` вычитает из желаемого времени фиксированные
+участки циклограммы:
 
-- TCP connect/disconnect.
-- Packet send/read with header and data checksums.
-- Byte-stream resynchronization after broken packet candidates.
-- `CallCommand`.
-- `ReadFirmware` using `CMD_REPLY`.
-- `WriteDmWords` using CC BIOS `CMD_WRITEDM = 111`.
-- `StartScan` / `StopScan` using CC BIOS commands `80/81`.
-- `ReadScanBlock` from stream `0`.
+```text
+period
+- CodeToPeriod(PERIOD_3_CHAN_CODE)
+- CodeToPeriod(PERIOD_1_CHAN_CODE)
+- CodeToPeriod(DELTA_SPORT)
+- CalcMinPeriodProgrammingChan()
+```
 
-Current assumptions in `TRecorderMic140Device.ProgramLegacyDevice`:
+Именно это значение записывается в `desc.delay`. Поэтому в дескрипторе лежит
+не “57 мкс”, а остаток ожидания в SPORT-тиках после вычитания неизбежных
+задержек.
 
-- 48-channel execution only.
-- Analog input channels only; temperature compensation channels are not yet
-  inserted into the scan stream.
-- Ground channel is enabled and inserted before each analog channel, matching
-  `ModuleMIC140_48::PrepareModuleDescForScan()`.
-- Timing constants are the original defaults: average delay derived from
-  `period_aver=5 us`, channel delay from `period_decay=57 us`, and the minimum
-  ground delay from `CalcMinPeriodDecay()`.
+`PeriodAverageToSport(period_aver)` аналогично вычитает:
 
-Next porting steps for full parity:
+```text
+period_aver
+- CodeToPeriod(PERIOD_21_CHAN_CODE)
+- CodeToPeriod(PERIOD_1_CHAN_CODE)
+- CodeToPeriod(DELTA_SPORT)
+```
 
-- Re-test the corrected `CMD_WRITEDM = 111` path on the reset device.
-- Compare stream `0` packet layout with original `ScanMIC140::Decommutation()`.
-- Add the 96-channel and v2/v5 descriptor variants.
-- Port temperature-compensation channel settings and CJC table behavior.
-- Replace hard-coded default timing values with the original auto-calculation
-  model driven by selected frequency, averaging count, and commutation settings.
+`CalcCountAver` подбирает число измерений для усреднения так, чтобы весь цикл
+каналов уложился в заданную частоту. При включенной земле количество BIOS
+дескрипторов в два раза больше количества пользовательских каналов, поэтому в
+формулах используется `count_chans = AChannelCount * 2`.
+
+Для 48 каналов и 100 Гц в оригинальном диалоге наблюдались:
+
+```text
+count_aver      = 319
+period_decay    = 57.000 мкс
+m_period_decay2 = 19.688 мкс
+period_aver     = 5.000 мкс
+```
+
+RecorderLnx повторяет режим `AUTO_CALC_COUNT_AVER`: старается сохранить
+`period_decay = 57 мкс`, а под выбранную частоту меняет `count_aver`.
+
+## Частота и ограничения
+
+Частота в UI выбирается из сетки. Для legacy-пути `Mic140LegacyFrequencyDivider`
+передает в BIOS не саму частоту, а индекс частоты в сетке `+1`.
+
+Сейчас чтение legacy идет синхронно, без отдельного RX-потока. Поэтому
+частоты выше 1000 Гц в UI/ядре считаются рискованными до переноса FIFO-модели.
+На 100 Гц 48-канальный прибор должен работать устойчиво после корректного
+разбора `THeaderMessage`.
+
+## Старт и остановка
+
+Старт legacy:
+
+1. Устройство должно быть `rdsProgrammed`.
+2. Отправляется `CMD_STARTSCANMAIN = 80`.
+3. При успехе сбрасывается `fSampleIndex`, счетчик хороших блоков и флаг
+   первого логируемого пакета.
+4. Состояние становится `rdsStarted`.
+
+Остановка legacy:
+
+1. Если состояние `rdsStarted`, отправляется `CMD_STOPSCANMAIN = 81`.
+2. Ошибка stop логируется, но состояние все равно возвращается к connected,
+   если сокет не был полностью закрыт.
+3. При `Disconnect` сначала вызывается `Stop`, затем освобождается TCP-клиент.
+
+Важный нюанс: RecorderLnx не должен слать `STOPSCANMAIN` из обычного timeout
+чтения `ReadBlock`. Timeout может быть локальной задержкой читателя, а не
+проблемой прибора. Stop отправляется только по явной остановке/отключению.
+
+Дополнительный нюанс после испытаний: если первый запуск пошел, но данные
+выглядели некорректно, второй старт мог не подняться и прибор зависал до
+перезагрузки. Поэтому добавлены две защиты:
+
+- pre-stop перед новым программированием, если этот объект уже запускал scan;
+- очистка внутреннего `fRxBuffer` legacy-клиента после stop/start, чтобы старые
+  разобранные scan-пакеты не мешали следующим command-ответам.
+
+## Блок данных stream 0
+
+Пакет stream `0` содержит сначала `THeaderMessage`, потом данные каналов.
+Определение из `D:\works\windev-v3.9\devapi\Types.h`:
+
+```cpp
+typedef struct
+{
+  WORD type;
+  WORD size;
+  WORD scan_id;
+  WORD slot;
+  WORD chan;
+  WORD time_hi;
+  WORD time_lo;
+  WORD time_cnt;
+  WORD num_buff;
+  WORD state;
+} THeaderMessage;
+```
+
+Размер заголовка - 10 WORD.
+
+Оригинальный Recorder в `ScanMIC140::Decommutation()` делает:
+
+```cpp
+header = (THeaderMessage*)param;
+buff = (WORD*)&((BYTE*)param)[sizeof(THeaderMessage)];
+```
+
+RecorderLnx обязан отбрасывать ровно 10 WORD. Ошибка, найденная на живом
+приборе: раньше отбрасывалось 5 WORD, и поля `time_hi`, `time_lo`, `time_cnt`,
+`num_buff`, `state` попадали в измерения. Из-за этого значения каналов
+скакали на всю шкалу.
+
+Текущее исправление:
+
+```pascal
+CLegacyScanHeaderWords = 10;
+```
+
+## Де-коммутация данных
+
+Оригинальный алгоритм:
+
+```cpp
+offset = chan->offset;
+count  = chan->count;
+size   = chan->size;
+
+for (i = 0; i < count; i++)
+{
+  val = ProcVal((short)buff[offset + i * size], balance_soft);
+  yi = alpha * val + (1.0 - alpha) * yi;
+  output[i] = chan->Eval(yi);
+}
+```
+
+`offset/count/size` рассчитывает общий `ScanModule`:
+
+- `offset` - позиция канала внутри одного кадра;
+- `count` - сколько отсчетов канала лежит в блоке;
+- `size` - шаг между отсчетами одного канала, равный суммарному размеру кадра.
+
+Для простого случая 48 каналов по одному WORD:
+
+```text
+offset(channel N) = N
+size              = 48
+count             = dataWords / 48
+```
+
+В RecorderLnx это эквивалентно текущему циклу:
+
+```pascal
+lDataIndex := J * ABlock.ChannelCount + I;
+```
+
+Если после исправления заголовка останутся странные значения, надо логировать
+первые `DataWords` и сравнить с `offset/size` оригинального Recorder. Возможные
+причины расхождения:
+
+- в потоке реально присутствуют не только пользовательские AIN, но и
+  дополнительные служебные/температурные слова;
+- число каналов в `m_ChanDump[2]` не совпадает с ожидаемым;
+- 96/v2/v5 исполнение требует другой таблицы дескрипторов;
+- диапазон/коммутатор `desc` не соответствует настройкам оригинального
+  Recorder.
+
+## Обработка значения канала
+
+Сейчас RecorderLnx передает в тег:
+
+```pascal
+SmallInt(lLegacyBlock.DataWords[lDataIndex])
+```
+
+Это сырой signed-код АЦП, приведенный к `Double`.
+
+Оригинальный Recorder делает больше:
+
+1. `ProcVal((short)raw, balance_soft)` - применяет программный баланс.
+2. `alpha * val + (1-alpha) * yi` - сглаживание.
+3. `chan->Eval(yi)` - перевод через калибровку/диапазон в физические единицы.
+4. Для термопар дополнительно выполняет компенсацию холодного спая.
+
+Пока `ProcVal/Eval` не перенесены, значения RecorderLnx могут отличаться от
+таблицы оригинального Recorder по масштабу и единицам. Но они не должны
+скакать из-за заголовка или неверной де-коммутации.
+
+## Температурная компенсация
+
+В оригинальном `ScanMIC140::Decommutation()` после основных каналов есть блок
+компенсации холодного спая:
+
+- включается `MIC140MutexScan`;
+- проверяется `module->IsCjcEnabled()`;
+- берется коэффициент `module->GetCjcChanK()`;
+- строится/используется `m_cjc_table`;
+- средняя температура компенсационного канала применяется к термопарам.
+
+Для 48-канального модуля `MAX_COUNT_CHAN_TIN_48 = 3`, но таблица `TInNum`
+содержит два физических температурных входа:
+
+```cpp
+const WORD TInNum[MAX_SIZE_TINNUM] = { 1, 0 };
+```
+
+Третий температурный канал в коде используется как специальный случай 0 мВ.
+
+RecorderLnx пока не добавляет температурные каналы в legacy scan. В UI и
+настройках надо отдельно перенести:
+
+- включение/отключение температурной компенсации;
+- выбор температурных каналов;
+- коэффициент `k` для `y = k*x + (1-k)*y`;
+- режим теста обрыва термопары `BreakTst`;
+- связь термопар с каналами компенсации.
+
+## Диапазоны и калибровка
+
+Оригинальный MIC-140 оставил активными три диапазона:
+
+| Диапазон | `range_min..range_max` | `ampl1` | `ampl2` | id | Имя |
+|---|---:|---:|---:|---:|---|
+| 100 мВ | `-0.02..0.08` | `100` | `1` | `6` | `06_100mV` |
+| 50 мВ | `-0.01..0.04` | `100` | `2` | `7` | `07_50mV` |
+| 25 мВ | `-0.005..0.02` | `100` | `4` | `8` | `8_25mV` |
+
+Старые диапазоны на вольты и микровольты в `mic140_96mod.cpp` закомментированы.
+
+RecorderLnx пока фиксирует дефолтный режим. Когда появится редактирование
+диапазона в настройках каналов, надо:
+
+1. Выбрать `hard_amplif` по `ampl1`.
+2. Выбрать `amplif[channel]` по `ampl2`.
+3. Пересобрать `desc`.
+4. Применить соответствующий Eval/тарировку.
+
+## Добавление устройства и тегов
+
+После поиска и нажатия `OK` в диалоге MIC-140 источник должен добавляться в
+дерево устройств/источников. После добавления `DoCreateTags` создает доступные
+теги каналов. Если устройство найдено, но не добавлено как источник, каналы не
+появятся в доступных.
+
+Имена по умолчанию:
+
+```text
+MIC140_01
+MIC140_02
+...
+MIC140_48
+```
+
+Адреса каналов:
+
+```text
+1
+2
+...
+48
+```
+
+Частота отображается в описании канала/тега как `freq=... Hz`.
+
+## Поиск устройства
+
+Если MIC-140 поддерживает broadcast-поиск, надо повторить оригинальную схему.
+Пока надежная fallback-логика такая:
+
+1. Брать подсеть `192.168.14.*`.
+2. Многопоточно проверять TCP порт `4000`.
+3. После TCP connect выполнять тестовый legacy-запрос `CMD_REPLY`.
+4. Считать найденным только тот адрес, который ответил корректным legacy
+   пакетом и firmware-структурой.
+
+Простой ping недостаточен: адрес может отвечать на ICMP, но не быть MIC-140.
+И наоборот, прибор может не отвечать на ICMP, но принимать TCP `4000`.
+
+## Логирование
+
+Логи MIC-140 должны фиксировать:
+
+- адрес и порт;
+- какой протокол выбран: legacy или Mebius;
+- ответ firmware: тип прибора, ревизия, серийник, BIOS;
+- параметры программирования: каналов, частота, wait, ground, average count,
+  SPORT-значения;
+- первый scan-пакет: число слов заголовка, число слов данных, первые слова
+  `THeaderMessage`;
+- ошибки записи DM и команды, обязательно с именем этапа;
+- timeout чтения stream `0`, но без автоматического StopScan;
+- stop failures при остановке.
+
+Не надо логировать каждое значение каждого канала на постоянной основе. Для
+диагностики раскладки блока лучше сделать отдельный краткий лог первых N WORD
+только для первого пакета или по debug-флагу.
+
+## Что уже было найдено на живом приборе
+
+1. Прибор отвечает на legacy `CMD_REPLY = 113`, а не на Mebius.
+2. Команда записи DM должна быть `111` из `Ccdevice.h`, не `16` из `VTBL.H`.
+3. Старт/стоп скана должны быть `80/81` из `Ccdevice.h`, не `4/5`.
+4. При чтении stream `0` обязательно нужно отбрасывать 10 WORD
+   `THeaderMessage`; отбрасывание 5 WORD давало скачки на всю шкалу.
+5. Размер scan FIFO должен вычисляться как в `GetChanMaxFifoSizeCC`, а не
+   задаваться произвольной большой константой.
+6. Для MC031 Ethernet начало FIFO в DM должно быть `0x0522`, как в
+   `CCMC031EthernetInterface::GetDMAddrBeginBuffer()`. Начало `0x0000`
+   относится к базовому CC81 и на Ethernet MIC-140 может затирать служебную
+   область, после чего прибор зависает до перезагрузки.
+7. Прибор чувствителен к некорректному обмену: неверные тесты/команды могут
+   подвесить скан до перезагрузки устройства. Оригинальный Recorder после этого
+   продолжает работать, значит отличие в нашей схеме обмена надо искать в
+   программировании скана или RX/FIFO-модели.
+
+## Текущие ограничения реализации
+
+- Полная RX/FIFO-модель оригинального `mdpEthernet81` еще не перенесена.
+- Legacy scan реализован в первую очередь для 48 AIN каналов.
+- Температурные каналы и CJC пока описаны, но не включены в scan RecorderLnx.
+- `desc` пока константный для дефолтного режима 100 мВ / усиление 1.
+- `ProcVal`, `Eval`, тарировки и физические единицы еще не перенесены.
+- 96/v2/v5 варианты дескрипторов еще не реализованы полностью.
+- Для частот выше 1000 Гц текущий синхронный reader может быть слабым местом.
+
+## Ближайшие технические шаги
+
+1. Проверить на приборе после исправления `THeaderMessage = 10 WORD`, ушли ли
+   скачки.
+2. Добавить debug-лог первых `DataWords` первого scan-пакета и сравнить с
+   оригинальным Recorder при тех же 48 каналах / 100 Гц.
+3. Перенести постоянный RX-поток с двумя FIFO.
+4. Перенести сборку `desc` из полей вместо констант, чтобы настройки диапазона
+   реально влияли на железо.
+5. Добавить температурные каналы и CJC-настройки.
+6. Перенести `ProcVal/Eval` и калибровочные диапазоны.
+7. Сверить `GetScale/GetPeriod/GetTimerCount` оригинала для всей сетки частот.
+
+## Уточнение 2026-06-16: таймер скана и FIFO
+
+После зависаний MIC-140 при переходе в просмотр была найдена еще одна критичная группа отличий от оригинального Recorder.
+
+В оригинальном драйвере MIC-140 частотная сетка берется не как простой индекс строки комбобокса. Для 16 МГц сетки `ModuleMC114` использует таблицу `scale_period_16000` из `D:\works\windev-v3.9\mtc\Mc114mod.cpp`:
+
+```cpp
+{ freq, scale, period, count }
+{ 100.0, 1, 640, 500 }
+```
+
+При программировании MIC-140 эти поля расходятся по разным командам:
+
+- `CMD_CONFIGSCANMAIN` получает `scale - 1` и `period - 1`;
+- `CMD_APPENDSCANMAIN` получает `count` через `ScanMIC140::GetScanDivider()` -> `ModuleMIC140_96::GetMainScanDivider()`;
+- для 100 Гц корректные значения: `CONFIGSCANMAIN(0, 639)`, `APPENDSCANMAIN(..., divider=500, ...)`.
+
+Предыдущая реализация RecorderLnx отправляла в `APPENDSCANMAIN` индекс частоты из UI. Для 100 Гц это было `5`, а не `500`. Такой скан запускается с неверным основным делителем и может перегружать циклограмму обмена.
+
+Второй важный нюанс - размер FIFO. Оригинальная цепочка такая:
+
+1. `CCMC031EthernetInterface::GetDMAddrBeginBuffer()` возвращает `0x0522`.
+2. Доступная область scan FIFO для Ethernet MC031: `0x0522..0x07FF`, то есть 734 WORD.
+3. `ScanModule::GetChanMaxFifoSizeCC()` считает число готовых отсчетов на один канал: `(734 / 2) / 48 = 7`.
+4. `Scan::CalcFifoSize()` умножает это число на количество каналов: `7 * 48 = 336 WORD`.
+5. `CreateBiosCCScanBuf(size=336)` выделяет в DM буфер `2 * size = 672 WORD`, что помещается в `0x0522..0x07FF`.
+
+Ошибка была в том, что RecorderLnx после переноса начала FIFO на `0x0522` использовал `7` как полный размер готовой порции скана, а не как размер на канал. В результате BIOS получал слишком маленький FIFO. Для непрерывного потока это опасно: прибор начинает отдавать пакеты не в том темпе, обмен рассыпается по checksum/sync, после чего MIC может зависнуть до аппаратного сброса.
+
+Текущая реализация `TRecorderMic140Device` поэтому делает так:
+
+- `LegacyTimerScale()` возвращает `2` для 1 Гц и `1` для остальных безопасных частот 48-канального режима;
+- `LegacyTimerPeriod()` возвращает `640`;
+- `LegacyCalcScanDivider()` возвращает `25000, 25000, 10000, 5000, 2500, 2000, 1000, 500` для частот `1, 2, 5, 10, 20, 25, 50, 100` Гц;
+- `LegacyCalcFifoReadyWords()` возвращает полный размер готовой порции скана, для 48 каналов это `336`, а дескриптор FIFO получает `size=672`, `sizeready=336`.
+
+Частоты в UI ограничены безопасной частью оригинальной сетки для текущего 48-канального исполнения: `1, 2, 5, 10, 20, 25, 50, 100` Гц. Старый Recorder режет доступную сетку динамически по числу каналов, заземлению, времени ожидания и усреднению; пока эта динамическая часть не перенесена полностью, лучше не показывать быстрые строки, которые физически не укладываются в циклограмму 48 каналов с землей.
+
+Если после этой правки прибор все еще зависает, следующий обязательный шаг - перенос RX-модели `mdpEthernet81`: отдельный поток читает TCP постоянно, раскладывает stream `0` в FIFO данных, stream `1` в FIFO ответов команд, а верхний слой уже не читает сокет синхронно из разных сценариев. Это важно для команд, выполняемых на фоне уже запущенного скана.

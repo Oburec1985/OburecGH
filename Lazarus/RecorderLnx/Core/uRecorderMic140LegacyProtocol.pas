@@ -65,6 +65,7 @@ type
       out AErrorMessage: string): Boolean;
     function StartScan(out AErrorMessage: string): Boolean;
     function StopScan(out AErrorMessage: string): Boolean;
+    procedure ClearBufferedPackets;
     function ReadScanBlock(out ABlock: TRecorderMic140LegacyScanBlock;
       out AErrorMessage: string): Boolean;
 
@@ -89,6 +90,7 @@ const
   CLegacyMaxPacketWords = 1024;
   CLegacyMaxWriteDmDataWords = 31;
   CLegacyHeaderBytes = 8;
+  CLegacyScanHeaderWords = 10;
 
 function WordSum(const AWords: array of Word): Word;
 var
@@ -138,6 +140,11 @@ procedure TRecorderMic140LegacyClient.Disconnect;
 begin
   SetLength(fRxBuffer, 0);
   FreeAndNil(fSocket);
+end;
+
+procedure TRecorderMic140LegacyClient.ClearBufferedPackets;
+begin
+  SetLength(fRxBuffer, 0);
 end;
 
 function TRecorderMic140LegacyClient.ReadBytes(var ABuffer; ACount: Integer): Boolean;
@@ -462,14 +469,17 @@ begin
       end;
     until lPort = CLegacyStreamScan;
 
-    if Length(lWords) < 5 then
+    if Length(lWords) < CLegacyScanHeaderWords then
     begin
       AErrorMessage := Format('MIC-140 legacy scan packet is too short: %d',
         [Length(lWords)]);
       Exit;
     end;
 
-    SetLength(ABlock.HeaderWords, 5);
+    // Original Recorder skips sizeof(THeaderMessage) before decommutation.
+    // devapi/Types.h defines THeaderMessage as 10 WORDs; using fewer words
+    // shifts time/buffer fields into channel data and makes values jump.
+    SetLength(ABlock.HeaderWords, CLegacyScanHeaderWords);
     for I := 0 to High(ABlock.HeaderWords) do
       ABlock.HeaderWords[I] := lWords[I];
 

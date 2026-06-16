@@ -31,9 +31,14 @@ const
 type
   TRecorderMic140Timing = record
     FrequencyHz: Double;
-    GroundCommutationUs: Cardinal;
-    ChannelCommutationUs: Cardinal;
+    GroundCommutationUs: Double;
+    ChannelCommutationUs: Double;
+    AveragePeriodUs: Double;
+    AverageSampleCount: Word;
     AveragePower: Word;
+    LegacyGroundDelaySport: Word;
+    LegacyChannelDelaySport: Word;
+    LegacyAverageDelaySport: Word;
   end;
 
   TRecorderMic140Device = class(TInterfacedObject, IRecorderDevice)
@@ -51,6 +56,7 @@ type
     fLegacyReadErrorLogged: Boolean;
     fLegacyReadFailureCount: Integer;
     fLegacyReadPacketLogged: Boolean;
+    fLegacyScanWasStarted: Boolean;
     fUseLegacyProtocol: Boolean;
     fPollFrequencyHz: Double;
     fPort: Word;
@@ -63,6 +69,10 @@ type
     procedure BuildChannels;
     function LegacyAllocBuffer(AWordCount: Word; out APage, AAddress: Word): Boolean;
     function LegacyAllocHeap(AWordCount: Word; out APage, AAddress: Word): Boolean;
+    function LegacyCalcFifoReadyWords: Word;
+    function LegacyCalcScanDivider: Word;
+    function LegacyTimerPeriod: Word;
+    function LegacyTimerScale: Word;
     function ProgramLegacyDevice(out AErrorMessage: string): Boolean;
   public
     constructor Create(const ADeviceId, AHost: string; APort: Word;
@@ -128,10 +138,9 @@ const
   CMic140MebiusChannelCount = 16;
   CMic140MebiusTemperatureSettingsCount = 5;
   CMic140MebiusModuleCount = 4;
-  CMic140FrequencyCount = 12;
+  CMic140FrequencyCount = 8;
   CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
-    (1.0, 10.0, 25.0, 50.0, 100.0, 150.0, 200.0, 250.0, 400.0,
-     10000.0, 20000.0, 35000.0);
+    (1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0);
   CMic140IoCtlTypeCallCommand = 2;
   CMic140IoCtlCmdSetControllerParams =
     (CMic140IoCtlTypeCallCommand shl 16) or ($000C shl 2);
@@ -148,15 +157,33 @@ const
   CMic140LegacyCmdScanSetChans = 132;
   CMic140LegacyCmdScanSetBuff = 133;
   CMic140LegacyCmdAddChannelModule = 152;
-  CMic140LegacyDmBufferBegin = $0000;
+  CMic140LegacyDmBufferBegin = $0522;
   CMic140LegacyDmBufferEnd = $07FF;
   CMic140LegacyDmHeapBegin = $0800;
   CMic140LegacyDmHeapEnd = $2BFF;
+  CMic140LegacyFreqClkHz = 16000000.0;
+  CMic140LegacyTimerPeriod = 640;
+  CMic140LegacySportSclkDivProgr = 4;
+  CMic140LegacyPeriodProgrammingChanCode =
+    (CMic140LegacySportSclkDivProgr + 1) * 2 * (16 * 2 + (16 + 3));
+  CMic140LegacyPeriodAdSec = 5.0E-6;
+  CMic140LegacyInitPeriodDecaySec = 57.0E-6;
+  CMic140LegacyPeriodSumChanCode = 58;
+  CMic140LegacyPeriodWriteChanCode = 115;
+  CMic140LegacyPeriodTimerOsc = 62;
+  CMic140LegacyDeltaSport = 11;
+  CMic140LegacyPeriod1ChanCode = 30;
+  CMic140LegacyPeriod21ChanCode = 21;
+  CMic140LegacyPeriod2ChanCode = 27;
+  CMic140LegacyPeriod3ChanCode = 59;
+  CMic140LegacyPeriod4ChanCode = 120;
+  CMic140LegacyPeriodTimerWork = 80 + 32;
+  CMic140LegacyMinCountAver = 1;
+  CMic140LegacyMaxCountAver = 32767;
   CMic140LegacyBiosScanContextWords = 6;
   CMic140LegacyBiosScanBufferDescWords = 10;
   CMic140LegacyDescChanWords = 5;
   CMic140LegacyStartDescChanWords = 3;
-  CMic140LegacyFifoHalfWords = 384;
   CMic140LegacyMaskGroundChannel = $4000;
 
 type
@@ -281,13 +308,185 @@ begin
   end;
 end;
 
-function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+function Mic140LegacyPeriodToSport(APeriodSec: Double): LongWord;
+begin
+  Result := LongWord(Trunc(APeriodSec * CMic140LegacyFreqClkHz + 1.0E-9)) and $00FFFFFF;
+end;
+
+function Mic140LegacySportToPeriod(ACount: LongWord): Double;
+begin
+  Result := (ACount and $00FFFFFF) / CMic140LegacyFreqClkHz;
+end;
+
+function Mic140LegacyCodeToPeriod(ACount: Double): Double;
+begin
+  Result := ACount / (2.0 * CMic140LegacyFreqClkHz);
+end;
+
+function Mic140LegacyMinProgrammingPeriod: Double;
+begin
+  Result := CMic140LegacyPeriodProgrammingChanCode /
+    (2.0 * CMic140LegacyFreqClkHz);
+end;
+
+function Mic140LegacyMinGroundPeriod: Double;
+var
+  lPeriod: Double;
+begin
+  lPeriod := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod4ChanCode) +
+    Mic140LegacyMinProgrammingPeriod;
+  if lPeriod < CMic140LegacyPeriodAdSec then
+    lPeriod := CMic140LegacyPeriodAdSec;
+  Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(lPeriod));
+end;
+
+function Mic140LegacyPeriodDecayToSport(APeriodSec: Double): Word;
+var
+  lPeriod: Double;
+begin
+  // ModuleMIC140_96::PeriodDecayToSport(): the descriptor stores only the
+  // SPORT wait part; fixed ADC/channel-programming delays are subtracted.
+  lPeriod := APeriodSec -
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod3ChanCode) -
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) -
+    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport) -
+    Mic140LegacyMinProgrammingPeriod;
+  if lPeriod < 0.0 then
+    lPeriod := 0.0;
+  Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
+end;
+
+function Mic140LegacySportToPeriodDecay(ACount: Word): Double;
+begin
+  Result := Mic140LegacySportToPeriod(ACount) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod3ChanCode) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport) +
+    Mic140LegacyMinProgrammingPeriod;
+end;
+
+function Mic140LegacyPeriodAverageToSport(APeriodSec: Double): Word;
+var
+  lPeriod: Double;
+begin
+  lPeriod := APeriodSec -
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod21ChanCode) -
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) -
+    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport);
+  if lPeriod < 0.0 then
+    lPeriod := 0.0;
+  Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
+end;
+
+function Mic140LegacySportToPeriodAverage(ACount: Word): Double;
+begin
+  Result := Mic140LegacySportToPeriod(ACount) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod21ChanCode) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) +
+    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport);
+end;
+
+function Mic140LegacyCalcPeriodDecay(ACountChans: Word; APeriodSec,
+  APeriodAverSec: Double; ACountAver: Word; AGroundEnabled: Boolean): Double;
+var
+  lPeriodProc: Double;
+  lPeriods: Double;
+  lTimerFactor: Double;
+  lGroundPeriod: Double;
+begin
+  lTimerFactor := 1.0 + (2.0 * CMic140LegacyFreqClkHz /
+    CMic140LegacyTimerPeriod) *
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
+  lPeriods := APeriodSec / lTimerFactor;
+  APeriodAverSec := Mic140LegacySportToPeriodAverage(
+    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
+  lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
+  if AGroundEnabled then
+  begin
+    lGroundPeriod := Mic140LegacySportToPeriodDecay(
+      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
+    Result := (lPeriods - (ACountChans div 2) * lGroundPeriod) /
+      (ACountChans div 2) - (lPeriodProc + (ACountAver - 1) * APeriodAverSec);
+  end
+  else
+    Result := lPeriods / ACountChans -
+      (lPeriodProc + (ACountAver - 1) * APeriodAverSec);
+end;
+
+function Mic140LegacyCalcCountAver(ACountChans: Word; APeriodSec,
+  APeriodDecaySec, APeriodAverSec: Double; AGroundEnabled: Boolean): Word;
+var
+  lCount: LongInt;
+  lPeriodProc: Double;
+  lPeriods: Double;
+  lTimerFactor: Double;
+  lGroundPeriod: Double;
+begin
+  lTimerFactor := 1.0 + (2.0 * CMic140LegacyFreqClkHz /
+    CMic140LegacyTimerPeriod) *
+    Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
+  lPeriods := APeriodSec / lTimerFactor;
+  APeriodDecaySec := Mic140LegacySportToPeriodDecay(
+    Mic140LegacyPeriodDecayToSport(APeriodDecaySec));
+  APeriodAverSec := Mic140LegacySportToPeriodAverage(
+    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
+  lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
+  if AGroundEnabled then
+  begin
+    lGroundPeriod := Mic140LegacySportToPeriodDecay(
+      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
+    lCount := Trunc(((lPeriods - (ACountChans div 2) * lGroundPeriod) /
+      (ACountChans div 2) - (lPeriodProc + APeriodDecaySec)) /
+      APeriodAverSec + 1.0);
+  end
+  else
+    lCount := Trunc((lPeriods / ACountChans -
+      (lPeriodProc + APeriodDecaySec)) / APeriodAverSec + 1.0);
+
+  if lCount < CMic140LegacyMinCountAver then
+    lCount := CMic140LegacyMinCountAver;
+  if lCount > CMic140LegacyMaxCountAver then
+    lCount := CMic140LegacyMaxCountAver;
+  Result := Word(lCount);
+end;
+
+function Mic140LegacyTimingForFrequency(AFrequencyHz: Double;
+  AChannelCount: Integer): TRecorderMic140Timing;
+var
+  lCountChans: Word;
+  lPeriodDecaySec: Double;
 begin
   Result.FrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
-  Result.GroundCommutationUs := 100;
-  Result.ChannelCommutationUs := 150;
-  Result.AveragePower := 7;
+  if AChannelCount <= 0 then
+    AChannelCount := MIC140DefaultChannelCount;
 
+  // Original default is ModuleMC114::AUTO_CALC_COUNT_AVER: keep the channel
+  // settling time at 57 us and adjust the number of averaged ADC conversions.
+  lCountChans := Word(AChannelCount * 2);
+  lPeriodDecaySec := Mic140LegacyCalcPeriodDecay(lCountChans,
+    1.0 / Result.FrequencyHz, CMic140LegacyPeriodAdSec, 1, True);
+  if lPeriodDecaySec > CMic140LegacyInitPeriodDecaySec then
+    lPeriodDecaySec := CMic140LegacyInitPeriodDecaySec;
+  if lPeriodDecaySec < Mic140LegacyMinGroundPeriod then
+    lPeriodDecaySec := Mic140LegacyMinGroundPeriod;
+  lPeriodDecaySec := Mic140LegacySportToPeriod(
+    Mic140LegacyPeriodToSport(lPeriodDecaySec));
+
+  Result.AveragePeriodUs := CMic140LegacyPeriodAdSec * 1000000.0;
+  Result.AverageSampleCount := Mic140LegacyCalcCountAver(lCountChans,
+    1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec, True);
+  Result.ChannelCommutationUs := lPeriodDecaySec * 1000000.0;
+  Result.GroundCommutationUs := Mic140LegacySportToPeriodDecay(
+    Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod)) * 1000000.0;
+  Result.LegacyChannelDelaySport := Mic140LegacyPeriodDecayToSport(
+    lPeriodDecaySec);
+  Result.LegacyGroundDelaySport := Mic140LegacyPeriodDecayToSport(
+    Mic140LegacyMinGroundPeriod);
+  Result.LegacyAverageDelaySport := Mic140LegacyPeriodAverageToSport(
+    CMic140LegacyPeriodAdSec);
+
+  // Newer Mebius/MDQ settings encode averaging as a power of two.
+  Result.AveragePower := 7;
   if Result.FrequencyHz >= 10000.0 then
     Result.AveragePower := 0
   else if Result.FrequencyHz >= 400.0 then
@@ -296,6 +495,12 @@ begin
     Result.AveragePower := 5
   else if Result.FrequencyHz >= 150.0 then
     Result.AveragePower := 6;
+end;
+
+function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+begin
+  Result := Mic140LegacyTimingForFrequency(AFrequencyHz,
+    MIC140DefaultChannelCount);
 end;
 
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
@@ -642,16 +847,66 @@ begin
     Inc(fLegacyMemHeapAddrCur, AWordCount);
 end;
 
-function Mic140LegacyFrequencyDivider(AFrequencyHz: Double): Word;
+function TRecorderMic140Device.LegacyCalcFifoReadyWords: Word;
 var
-  I: Integer;
+  lChannelCount: Integer;
+  lMaxFifoAdspWords: Integer;
+  lReadyWordsPerChannel: Integer;
+begin
+  // Mirrors CCMC031EthernetInterface::GetDMAddrBeginBuffer() and
+  // Scan::CalcFifoSize(). Ethernet MC031 reserves the lower DM area, so scan
+  // FIFO must start at 0x0522. The original first computes ready samples per
+  // channel, then multiplies by channel count to get the scan FIFO portion.
+  lChannelCount := fChannelCount;
+  if lChannelCount <= 0 then
+    lChannelCount := MIC140DefaultChannelCount;
+  lMaxFifoAdspWords := CMic140LegacyDmBufferEnd - CMic140LegacyDmBufferBegin + 1;
+  lReadyWordsPerChannel := (lMaxFifoAdspWords div 2) div lChannelCount;
+  if lReadyWordsPerChannel <= 0 then
+    lReadyWordsPerChannel := 1;
+  if lReadyWordsPerChannel > 1024 then
+    lReadyWordsPerChannel := 1024;
+  Result := Word(lReadyWordsPerChannel * lChannelCount);
+end;
+
+function TRecorderMic140Device.LegacyTimerScale: Word;
+begin
+  if SameValue(RecorderMic140NormalizeFrequency(fPollFrequencyHz), 1.0, 0.001) then
+    Result := 2
+  else
+    Result := 1;
+end;
+
+function TRecorderMic140Device.LegacyTimerPeriod: Word;
+begin
+  // MIC-140 uses the 16 MHz MC114 grid. For the safe 48-channel frequencies
+  // exposed by the UI, the original scale_period_16000 table has period=640.
+  Result := CMic140LegacyTimerPeriod;
+end;
+
+function TRecorderMic140Device.LegacyCalcScanDivider: Word;
+var
   lFrequencyHz: Double;
 begin
-  lFrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
-  Result := 1;
-  for I := 0 to High(CMic140Frequencies) do
-    if SameValue(CMic140Frequencies[I], lFrequencyHz, 0.001) then
-      Exit(Word(I + 1));
+  // Mirrors ModuleMIC140_96::GetMainScanDivider() -> ModuleMC114::GetTimerCount().
+  // CONFIGSCANMAIN receives scale/period, APPENDSCANMAIN receives this count.
+  lFrequencyHz := RecorderMic140NormalizeFrequency(fPollFrequencyHz);
+  if SameValue(lFrequencyHz, 1.0, 0.001) then
+    Result := 25000
+  else if SameValue(lFrequencyHz, 2.0, 0.001) then
+    Result := 25000
+  else if SameValue(lFrequencyHz, 5.0, 0.001) then
+    Result := 10000
+  else if SameValue(lFrequencyHz, 10.0, 0.001) then
+    Result := 5000
+  else if SameValue(lFrequencyHz, 20.0, 0.001) then
+    Result := 2500
+  else if SameValue(lFrequencyHz, 25.0, 0.001) then
+    Result := 2000
+  else if SameValue(lFrequencyHz, 50.0, 0.001) then
+    Result := 1000
+  else
+    Result := 500;
 end;
 
 function Mic140LegacyMe048Code48(APhysicalChannel: Integer): Word;
@@ -707,9 +962,6 @@ const
      11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
   CNormalDesc = Word($0100);
   CGroundDesc = Word($0110);
-  CNormalDelay = Word(606);
-  CGroundDelay = Word(9);
-  CAverageDelay = Word(48);
 var
   I: Integer;
   lArgs: TRecorderMic140LegacyWordArray;
@@ -720,10 +972,13 @@ var
   lDescDump: TRecorderMic140LegacyWordArray;
   lFifoAddr: Word;
   lFifoDescAddr: Word;
+  lFifoReadyWords: Word;
   lPage: Word;
   lReply: TRecorderMic140LegacyWordArray;
   lScanChanAddr: Word;
   lScanDescAddr: Word;
+  lStopErrorMessage: string;
+  lTiming: TRecorderMic140Timing;
   lValueAddr: Word;
 begin
   // The original ModuleMIC140_48 driver enables a ground descriptor before
@@ -739,6 +994,20 @@ begin
 
   fLegacyMemAddrCur := CMic140LegacyDmBufferBegin;
   fLegacyMemHeapAddrCur := CMic140LegacyDmHeapBegin;
+  lTiming := Mic140LegacyTimingForFrequency(fPollFrequencyHz, fChannelCount);
+  lFifoReadyWords := LegacyCalcFifoReadyWords;
+
+  // Original CCDevice::Config() calls OnStopScanMain() before building a new
+  // scan. If the previous run ended abnormally, this drains the old BIOS scan
+  // state before RESETSCANMAIN and descriptor writes.
+  if fLegacyScanWasStarted then
+  begin
+    if not fLegacyClient.StopScan(lStopErrorMessage) then
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy pre-program stop failed: %s',
+        [fHost, fPort, lStopErrorMessage]));
+    fLegacyClient.ClearBufferedPackets;
+    fLegacyScanWasStarted := False;
+  end;
 
   // Original CCDevice::OnResetScanMain clears BIOS scan contexts before a new
   // scan is appended, otherwise stale descriptors can keep the timer task busy.
@@ -750,10 +1019,10 @@ begin
   end;
 
   SetLength(lArgs, 2);
-  lArgs[0] := 0;
-  lArgs[1] := 639;
+  lArgs[0] := LegacyTimerScale - 1;
+  lArgs[1] := LegacyTimerPeriod - 1;
   // ModuleMIC140_96::WriteConfig configures the main scan timer as
-  // scale=1/period=640 for the 16 MHz grid; CCDevice sends scale-1/period-1.
+  // scale/period from the 16 MHz MC114 grid; CCDevice sends scale-1/period-1.
   if not fLegacyClient.CallCommand(CMic140LegacyCmdConfigScanMain, lArgs, 0,
     lReply, AErrorMessage) then
   begin
@@ -770,7 +1039,7 @@ begin
   SetLength(lArgs, 5);
   lArgs[0] := CMic140LegacyTypeMic140;
   lArgs[1] := CMic140LegacyScanId;
-  lArgs[2] := Mic140LegacyFrequencyDivider(fPollFrequencyHz);
+  lArgs[2] := LegacyCalcScanDivider;
   lArgs[3] := lScanDescAddr;
   lArgs[4] := lPage;
   // ScanModule::CreateInternalScan: create scan_id=0 of TYPE_MIC140 and give
@@ -792,7 +1061,7 @@ begin
     Exit;
   end;
 
-  if not LegacyAllocBuffer(2 * CMic140LegacyFifoHalfWords, lPage, lFifoAddr) then
+  if not LegacyAllocBuffer(2 * lFifoReadyWords, lPage, lFifoAddr) then
   begin
     AErrorMessage := 'MIC-140 legacy FIFO allocation failed';
     Exit;
@@ -810,8 +1079,8 @@ begin
   lArgs[3] := lFifoAddr;
   lArgs[4] := lFifoAddr;
   lArgs[5] := 0;
-  lArgs[6] := 2 * CMic140LegacyFifoHalfWords;
-  lArgs[7] := CMic140LegacyFifoHalfWords;
+  lArgs[6] := 2 * lFifoReadyWords;
+  lArgs[7] := lFifoReadyWords;
   lArgs[8] := 0;
   lArgs[9] := 0;
   // ScanModule::CreateBiosCCScanBuf: descriptor words are
@@ -851,7 +1120,7 @@ begin
   lDescDump[0] := Mic140LegacyLevel0Code;
   lDescDump[1] := Mic140LegacyLevel0Code;
   lDescDump[2] := CGroundDesc;
-  lDescDump[3] := CGroundDelay;
+  lDescDump[3] := lTiming.LegacyGroundDelaySport - 1;
   lDescDump[4] := CMic140LegacyMaskGroundChannel;
 
   for I := 0 to fChannelCount - 1 do
@@ -863,7 +1132,8 @@ begin
     else
       lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] := 0;
     lDescDump[(I + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
-    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 3] := CNormalDelay;
+    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 3] :=
+      lTiming.LegacyChannelDelaySport - 1;
     lDescDump[(I + 1) * CMic140LegacyDescChanWords + 4] :=
       Word(lValueAddr + I);
   end;
@@ -875,8 +1145,8 @@ begin
 
   lChanPtrCount := fChannelCount * 2;
   SetLength(lChanDump, CMic140LegacyStartDescChanWords + lChanPtrCount);
-  lChanDump[0] := CAverageDelay;
-  lChanDump[1] := 1;
+  lChanDump[0] := lTiming.LegacyAverageDelaySport - 1;
+  lChanDump[1] := lTiming.AverageSampleCount;
   lChanDump[2] := fChannelCount;
   for I := 0 to fChannelCount - 1 do
   begin
@@ -942,6 +1212,7 @@ begin
   fUseLegacyProtocol := False;
   fLegacyReadErrorLogged := False;
   fLegacyReadFailureCount := 0;
+  fLegacyScanWasStarted := False;
   fLegacyClient := TRecorderMic140LegacyClient.Create(fHost, fPort, 5000);
   fLegacyReadBlockCount := 0;
   fLegacyReadPacketLogged := False;
@@ -1042,8 +1313,8 @@ begin
 
   lSettings.SerialNumber := 0;
   lSettings.GroundEnabled := True;
-  lSettings.GroundCommutationUs := lTiming.GroundCommutationUs;
-  lSettings.ChannelCommutationUs := lTiming.ChannelCommutationUs;
+  lSettings.GroundCommutationUs := Round(lTiming.GroundCommutationUs);
+  lSettings.ChannelCommutationUs := Round(lTiming.ChannelCommutationUs);
   lSettings.BalancePortionLength := 30;
   lSettings.HardBalance := 8192;
   lSettings.AveragePointCount := lTiming.AveragePower;
@@ -1068,6 +1339,7 @@ var
   lSessionId: LongWord;
   lSettings: TRecorderByteArray;
   lStatusFlags: LongWord;
+  lTiming: TRecorderMic140Timing;
 begin
   if fState = rdsDisconnected then
     Connect;
@@ -1078,8 +1350,18 @@ begin
     if ProgramLegacyDevice(lErrorMessage) then
     begin
       fState := rdsProgrammed;
-      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 scan programmed: channels=%d freq=%.3f Hz',
-        [fHost, fPort, fChannelCount, fPollFrequencyHz]));
+      lTiming := Mic140LegacyTimingForFrequency(fPollFrequencyHz, fChannelCount);
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 scan programmed: channels=%d freq=%.3f Hz timerScale=%d timerPeriod=%d scanDivider=%d wait=%.3f us ground=%.3f us avgPeriod=%.3f us avgCount=%d sportWait=%d sportGround=%d sportAvg=%d fifoBegin=0x%.4x fifoEnd=0x%.4x fifoReadyWords=%d',
+        [fHost, fPort, fChannelCount, fPollFrequencyHz,
+         LegacyTimerScale, LegacyTimerPeriod, LegacyCalcScanDivider,
+         lTiming.ChannelCommutationUs, lTiming.GroundCommutationUs,
+         lTiming.AveragePeriodUs, lTiming.AverageSampleCount,
+         lTiming.LegacyChannelDelaySport - 1,
+         lTiming.LegacyGroundDelaySport - 1,
+         lTiming.LegacyAverageDelaySport - 1,
+         CMic140LegacyDmBufferBegin,
+         CMic140LegacyDmBufferEnd,
+         LegacyCalcFifoReadyWords]));
     end
     else
       Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy MIC-140 scan programming failed: %s',
@@ -1137,6 +1419,7 @@ begin
   fLegacyReadFailureCount := 0;
   fLegacyReadBlockCount := 0;
   fLegacyReadPacketLogged := False;
+  fLegacyScanWasStarted := False;
   fState := rdsDisconnected;
 end;
 
@@ -1159,10 +1442,12 @@ begin
       Exit;
     if fLegacyClient.StartScan(lErrorMessage) then
     begin
+      fLegacyClient.ClearBufferedPackets;
       fSampleIndex := 0;
       fLegacyReadFailureCount := 0;
       fLegacyReadBlockCount := 0;
       fLegacyReadPacketLogged := False;
+      fLegacyScanWasStarted := True;
       fState := rdsStarted;
       Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy CC BIOS scan start accepted: command=%d',
         [fHost, fPort, MIC140_LEGACY_CMD_START_SCAN_MAIN]));
@@ -1201,6 +1486,8 @@ begin
     if not fLegacyClient.StopScan(lErrorMessage) then
       Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan stop failed: %s',
         [fHost, fPort, lErrorMessage]));
+    fLegacyClient.ClearBufferedPackets;
+    fLegacyScanWasStarted := False;
     fLegacyReadFailureCount := 0;
   end
   else
@@ -1249,14 +1536,27 @@ begin
     Inc(fLegacyReadBlockCount);
     if not fLegacyReadPacketLogged then
     begin
-      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy first scan packet: headerWords=%d dataWords=%d h0=%d h1=%d h2=%d h3=%d h4=%d',
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy first scan packet: headerWords=%d dataWords=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] d0=[%d,%d,%d,%d,%d,%d,%d,%d]',
         [fHost, fPort, Length(lLegacyBlock.HeaderWords),
          Length(lLegacyBlock.DataWords),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 0),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 1),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 2),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 3),
-         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 4)]));
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 4),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 5),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 6),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 7),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 8),
+         Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 9),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 0),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 1),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 2),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 3),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 4),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 5),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 6),
+         Mic140LegacyWordAt(lLegacyBlock.DataWords, 7)]));
       fLegacyReadPacketLogged := True;
     end;
 

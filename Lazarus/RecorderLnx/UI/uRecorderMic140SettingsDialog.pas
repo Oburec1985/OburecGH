@@ -443,9 +443,9 @@ begin
   if fTimingLabel = nil then
     Exit;
   lTiming := RecorderMic140TimingForFrequency(ReadFrequency);
-  fTimingLabel.Caption := Format('ADC wait %d us, GND wait %d us, average 2^%d',
+  fTimingLabel.Caption := Format('ADC wait %.3f us, GND %.3f us, average %d x %.3f us',
     [lTiming.ChannelCommutationUs, lTiming.GroundCommutationUs,
-    lTiming.AveragePower]);
+    lTiming.AverageSampleCount, lTiming.AveragePeriodUs]);
 end;
 
 function TRecorderMic140SettingsDialog.ReadChannelCount: Integer;

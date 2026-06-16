@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "notes_spectra_lazarus.md",
+                "file": "mic140_protocol.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "notes_spectra_lazarus"
+              "title": "mic140_protocol"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 473.5
   },
   "right": {
     "id": "056049d145f292ee",
@@ -183,17 +183,22 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "5887f9d2481b1755",
+  "active": "307d6ed40ccf77ac",
   "lastOpenFiles": [
-    "notes_spectrum_math_benchmarks.md",
-    "spectrum_best_pipeline.md",
     "notes_spectra_lazarus.md",
-    "data_sources_architecture.md",
-    "development-rules.md",
-    "original-recorder-block-recording.md",
+    "screens/settings_recorder_reference.svg",
+    "current-plan.md",
+    "vm_atra_lazarus.md",
+    "spectrum_best_pipeline.md",
+    "spectrum_runtime_engine.md",
+    "settings_dialog.md",
     "README_MnemonicControls.md",
     "original-recorder-trend-component.md",
-    "notes_spectra_lazarus.md.resolved",
-    "current-plan.md"
+    "development-rules.md",
+    "mic140_protocol.md",
+    "notes_spectrum_math_benchmarks.md",
+    "data_sources_architecture.md",
+    "original-recorder-block-recording.md",
+    "notes_spectra_lazarus.md.resolved"
   ]
 }
