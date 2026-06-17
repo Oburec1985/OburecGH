@@ -179,6 +179,7 @@ type
     fSetpointStatusChannelEnabled: Boolean;                    { Формировать канал состояния }
     fSetpointStatusChannelName: string;                        { Имя формируемого канала состояния }
     fSetpoints: array[TRecorderTagSetpointKind] of TRecorderTagSetpoint; { Уставки тега }
+    fSourceValueMode: string;                                  { Режим значения, заданный источником }
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
@@ -235,6 +236,7 @@ type
     property SetpointStatusChannelName: string read fSetpointStatusChannelName
       write fSetpointStatusChannelName;
     property SourceId: string read fSourceId write fSourceId;
+    property SourceValueMode: string read fSourceValueMode write fSourceValueMode;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
   end;

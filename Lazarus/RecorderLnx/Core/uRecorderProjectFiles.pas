@@ -619,6 +619,7 @@ begin
       lTagJson.Add('unit', lTag.UnitName);
       lTagJson.Add('description', lTag.Description);
       lTagJson.Add('sourceId', lTag.SourceId);
+      lTagJson.Add('sourceValueMode', lTag.SourceValueMode);
       lTagJson.Add('moduleType', lTag.ModuleType);
       lTagJson.Add('pollFrequencyHz', lTag.PollFrequencyHz);
       lTagJson.Add('rangeMin', lTag.RangeMin);
@@ -692,6 +693,7 @@ begin
         lTag.UnitName := lTagJson.Get('unit', lTag.UnitName);
         lTag.Description := lTagJson.Get('description', lTag.Description);
         lTag.SourceId := lTagJson.Get('sourceId', lTag.SourceId);
+        lTag.SourceValueMode := lTagJson.Get('sourceValueMode', lTag.SourceValueMode);
         lTag.ModuleType := lTagJson.Get('moduleType', lTag.ModuleType);
         lTag.PollFrequencyHz := lTagJson.Get('pollFrequencyHz',
           lTag.PollFrequencyHz);

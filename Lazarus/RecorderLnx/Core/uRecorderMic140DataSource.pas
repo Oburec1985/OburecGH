@@ -24,11 +24,16 @@ const
   MIC140DefaultPort = 4000;
   MIC140DefaultChannelCount = 48;
   MIC140MaxChannelCount = 96;
-  MIC140TemperatureChannelCount = 5;
+  MIC140TemperatureChannelCount = 3;
   MIC140DefaultPollFrequencyHz = 100.0;
   MIC140DefaultDiscoverySubnet = '192.168.14.';
 
 type
+  TRecorderMic140OutputMode = (
+    momMillivolts,
+    momTemperatureC
+  );
+
   TRecorderMic140Timing = record
     FrequencyHz: Double;
     GroundCommutationUs: Double;
@@ -70,6 +75,7 @@ type
     function LegacyAllocBuffer(AWordCount: Word; out APage, AAddress: Word): Boolean;
     function LegacyAllocHeap(AWordCount: Word; out APage, AAddress: Word): Boolean;
     function LegacyCalcFifoReadyWords: Word;
+    function LegacyInternalScanChannelCount: Integer;
     function LegacyCalcScanDivider: Word;
     function LegacyTimerPeriod: Word;
     function LegacyTimerScale: Word;
@@ -97,22 +103,27 @@ type
     fDevice: IRecorderDevice;
     fGoodBlockCount: Int64;
     fLastStatusCode: Integer;
+    fOutputMode: TRecorderMic140OutputMode;
+    fPollFrequencyHz: Double;
     fReadFailCount: Integer;
     fBlockCountTagName: string;
     fStatusTagName: string;
     fTagNames: TStringList;
+    fTemperatureModeWarningLogged: Boolean;
+    fTemperatureTagNames: TStringList;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     procedure PublishDiagnostics(AStatusCode: Integer; const AStatusText: string;
       AForce: Boolean = False);
     procedure PublishBlockCounter(ABlockCount: Int64);
+    procedure PublishTemperatureDiagnostics(const ABlock: TRecorderDeviceSampleBlock);
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
   public
     constructor Create(const ASourceId, AHost: string; APort: Word;
       AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
-      ATagNames: TStrings = nil);
+      ATagNames: TStrings = nil; AOutputMode: TRecorderMic140OutputMode = momMillivolts);
     destructor Destroy; override;
     procedure Start; override;
     procedure Stop; override;
@@ -132,6 +143,9 @@ function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
 function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; AFrequencyHz: Double);
+function RecorderMic140OutputModeToConfigName(AValue: TRecorderMic140OutputMode): string;
+function RecorderMic140ConfigNameToOutputMode(const AValue: string): TRecorderMic140OutputMode;
+function RecorderMic140OutputModeUnitName(AValue: TRecorderMic140OutputMode): string;
 
 implementation
 
@@ -153,9 +167,12 @@ const
   CMic140MebiusChannelCount = 16;
   CMic140MebiusTemperatureSettingsCount = 5;
   CMic140MebiusModuleCount = 4;
-  CMic140FrequencyCount = 8;
+  CMic140FrequencyCount = 1;
+  // Keep only the proven 48-channel legacy scan rate for now. The original
+  // Recorder exposes lower rates too, but their timer/averaging programming must
+  // be ported exactly before we let the UI send them to the real MIC-140.
   CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
-    (1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0);
+    (100.0);
   CMic140IoCtlTypeCallCommand = 2;
   CMic140IoCtlCmdSetControllerParams =
     (CMic140IoCtlTypeCallCommand shl 16) or ($000C shl 2);
@@ -200,6 +217,27 @@ const
   CMic140LegacyDescChanWords = 5;
   CMic140LegacyStartDescChanWords = 3;
   CMic140LegacyMaskGroundChannel = $4000;
+  CMic140CjcNotAvailable = -1.0E300;
+  CMic140InverseCalibrationMinMv = -20.0;
+  CMic140InverseCalibrationMaxMv = 100.0;
+  CMic140InverseCalibrationIterations = 48;
+  CMic140TemperOffset48: array[0..47] of Double =
+    (-1.031435079, -0.937924386, -0.844413694, -0.750903001,
+     -0.657392308, -0.563881616, -0.583159437, -0.602437259,
+     -0.621715081, -0.640992902, -0.660270724, -0.679548546,
+     -0.694781807, -0.710015069, -0.72524833, -0.740481592,
+     -0.755714853, -0.770948114, -0.794092153, -0.817236192,
+     -0.840380231, -0.863524269, -0.886668308, -0.909812347,
+     -0.822163798, -0.719807632, -0.617451466, -0.5150953,
+     -0.412739133, -0.310382967, -0.208026801, -0.27333683,
+     -0.338646859, -0.403956888, -0.469266918, -0.534576947,
+     -0.599886976, -0.61596964, -0.632052304, -0.648134968,
+     -0.664217632, -0.680300296, -0.696382961, -0.793844092,
+     -0.891305224, -0.988766356, -1.086227488, -1.18368862);
+  CMic140DefaultCjcIndex48: array[0..47] of Integer =
+    (4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1,
+     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3,
+     3, 3, 3, 3, 4, 4, 4, 4);
 
 type
 {$packrecords 8}
@@ -836,6 +874,36 @@ begin
   end;
 end;
 
+function RecorderMic140OutputModeToConfigName(
+  AValue: TRecorderMic140OutputMode): string;
+begin
+  case AValue of
+    momTemperatureC: Result := 'degC';
+  else
+    Result := 'mV';
+  end;
+end;
+
+function RecorderMic140ConfigNameToOutputMode(
+  const AValue: string): TRecorderMic140OutputMode;
+begin
+  if SameText(Trim(AValue), 'degC') or SameText(Trim(AValue), 'C') or
+    SameText(Trim(AValue), 'temperature') then
+    Result := momTemperatureC
+  else
+    Result := momMillivolts;
+end;
+
+function RecorderMic140OutputModeUnitName(
+  AValue: TRecorderMic140OutputMode): string;
+begin
+  case AValue of
+    momTemperatureC: Result := 'degC';
+  else
+    Result := 'mV';
+  end;
+end;
+
 function TRecorderMic140Device.LegacyAllocBuffer(AWordCount: Word; out APage,
   AAddress: Word): Boolean;
 begin
@@ -872,7 +940,7 @@ begin
   // Scan::CalcFifoSize(). Ethernet MC031 reserves the lower DM area, so scan
   // FIFO must start at 0x0522. The original first computes ready samples per
   // channel, then multiplies by channel count to get the scan FIFO portion.
-  lChannelCount := fChannelCount;
+  lChannelCount := LegacyInternalScanChannelCount;
   if lChannelCount <= 0 then
     lChannelCount := MIC140DefaultChannelCount;
   lMaxFifoAdspWords := CMic140LegacyDmBufferEnd - CMic140LegacyDmBufferBegin + 1;
@@ -882,6 +950,11 @@ begin
   if lReadyWordsPerChannel > 1024 then
     lReadyWordsPerChannel := 1024;
   Result := Word(lReadyWordsPerChannel * lChannelCount);
+end;
+
+function TRecorderMic140Device.LegacyInternalScanChannelCount: Integer;
+begin
+  Result := fChannelCount + MIC140TemperatureChannelCount;
 end;
 
 function TRecorderMic140Device.LegacyTimerScale: Word;
@@ -959,6 +1032,30 @@ begin
   Result := Word(1) shl 1;
 end;
 
+function Mic140LegacyTInCode48(ATemperatureIndex: Integer): Word;
+begin
+  // ModuleMIC140_48::code_chanTIn_48 and TInNum={1,0}. The third internal
+  // slot is programmed as level0mV by the original driver, not as an external
+  // user temperature channel.
+  case ATemperatureIndex of
+    0: Result := $C002;
+    1: Result := $4002;
+  else
+    Result := Mic140LegacyLevel0Code;
+  end;
+end;
+
+function Mic140LegacyTInDesc48(ATemperatureIndex: Integer): Word;
+begin
+  // TRegMIC140 packed bits: MUX_IN1 is bit 4, MUX_IN2 is bit 5, K1 is bit 8.
+  // ModuleMIC140_48 forces the last TIn slot to board MUX 2 while keeping the
+  // same hard-amplifier timing bits as ordinary scan channels.
+  if ATemperatureIndex = MIC140TemperatureChannelCount - 1 then
+    Result := $0120
+  else
+    Result := $0100;
+end;
+
 function Mic140LegacyWordAt(const AWords: TRecorderMic140LegacyWordArray;
   AIndex: Integer): Word;
 begin
@@ -966,6 +1063,87 @@ begin
     Result := AWords[AIndex]
   else
     Result := 0;
+end;
+
+function Mic140ChannelTemperOffset(AChannelIndex: Integer): Double;
+begin
+  if (AChannelIndex >= Low(CMic140TemperOffset48)) and
+    (AChannelIndex <= High(CMic140TemperOffset48)) then
+    Result := CMic140TemperOffset48[AChannelIndex]
+  else
+    Result := 0.0;
+end;
+
+function Mic140DefaultCjcIndex(AChannelIndex: Integer): Integer;
+begin
+  if (AChannelIndex >= Low(CMic140DefaultCjcIndex48)) and
+    (AChannelIndex <= High(CMic140DefaultCjcIndex48)) then
+    Result := CMic140DefaultCjcIndex48[AChannelIndex]
+  else
+    Result := -1;
+end;
+
+function Mic140TagHasCalibration(ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and (ATag.CalibrationNames <> nil) and
+    (ATag.CalibrationNames.Count > 0);
+end;
+
+function Mic140TryInvertTagCalibration(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; ATemperatureC: Double; out AMillivolts: Double): Boolean;
+var
+  I: Integer;
+  lHi: Double;
+  lLo: Double;
+  lMid: Double;
+  lMidValue: Double;
+  lReverse: Boolean;
+begin
+  Result := False;
+  AMillivolts := 0.0;
+  if (ARegistry = nil) or (not Mic140TagHasCalibration(ATag)) then
+    Exit;
+
+  lLo := CMic140InverseCalibrationMinMv;
+  lHi := CMic140InverseCalibrationMaxMv;
+  lReverse := ARegistry.TransformTagValue(ATag, lLo) >
+    ARegistry.TransformTagValue(ATag, lHi);
+
+  for I := 0 to CMic140InverseCalibrationIterations - 1 do
+  begin
+    lMid := (lLo + lHi) * 0.5;
+    lMidValue := ARegistry.TransformTagValue(ATag, lMid);
+    if (lMidValue < ATemperatureC) xor lReverse then
+      lLo := lMid
+    else
+      lHi := lMid;
+  end;
+  AMillivolts := (lLo + lHi) * 0.5;
+  Result := True;
+end;
+
+function Mic140TryBuildTemperatureValue(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AChannelIndex: Integer; ARawMillivolts: Double;
+  AColdJunctionC: Double; out ATemperatureC: Double): Boolean;
+var
+  lColdJunctionMv: Double;
+  lJunctionC: Double;
+begin
+  Result := False;
+  ATemperatureC := ARawMillivolts;
+  if (ARegistry = nil) or (ATag = nil) or (not Mic140TagHasCalibration(ATag)) then
+    Exit;
+  if AColdJunctionC <= CMic140CjcNotAvailable * 0.5 then
+    Exit;
+
+  lJunctionC := AColdJunctionC + Mic140ChannelTemperOffset(AChannelIndex);
+  if not Mic140TryInvertTagCalibration(ARegistry, ATag, lJunctionC,
+    lColdJunctionMv) then
+    Exit;
+
+  ATemperatureC := ARegistry.TransformTagValue(ATag,
+    ARawMillivolts + lColdJunctionMv);
+  Result := True;
 end;
 
 function TRecorderMic140Device.ProgramLegacyDevice(out AErrorMessage: string): Boolean;
@@ -988,11 +1166,13 @@ var
   lFifoAddr: Word;
   lFifoDescAddr: Word;
   lFifoReadyWords: Word;
+  lInternalChannelCount: Integer;
   lPage: Word;
   lReply: TRecorderMic140LegacyWordArray;
   lScanChanAddr: Word;
   lScanDescAddr: Word;
   lStopErrorMessage: string;
+  lTemperatureIndex: Integer;
   lTiming: TRecorderMic140Timing;
   lValueAddr: Word;
 begin
@@ -1010,6 +1190,7 @@ begin
   fLegacyMemAddrCur := CMic140LegacyDmBufferBegin;
   fLegacyMemHeapAddrCur := CMic140LegacyDmHeapBegin;
   lTiming := Mic140LegacyTimingForFrequency(fPollFrequencyHz, fChannelCount);
+  lInternalChannelCount := LegacyInternalScanChannelCount;
   lFifoReadyWords := LegacyCalcFifoReadyWords;
 
   // Original CCDevice::Config() calls OnStopScanMain() before building a new
@@ -1121,7 +1302,7 @@ begin
     AErrorMessage := 'MIC-140 legacy channel value allocation failed';
     Exit;
   end;
-  lDescCount := fChannelCount + 1;
+  lDescCount := lInternalChannelCount + 1;
   if not LegacyAllocHeap(lDescCount * CMic140LegacyDescChanWords, lPage,
     lDescAddr) then
   begin
@@ -1138,32 +1319,47 @@ begin
   lDescDump[3] := lTiming.LegacyGroundDelaySport - 1;
   lDescDump[4] := CMic140LegacyMaskGroundChannel;
 
-  for I := 0 to fChannelCount - 1 do
+  for I := 0 to lInternalChannelCount - 1 do
   begin
     lDescDump[(I + 1) * CMic140LegacyDescChanWords + 0] := 0;
-    if I <= High(CAInNum48) then
-      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] :=
-        Mic140LegacyMe048Code48(CAInNum48[I])
+    if I < fChannelCount then
+    begin
+      if I <= High(CAInNum48) then
+        lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] :=
+          Mic140LegacyMe048Code48(CAInNum48[I])
+      else
+        lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] := 0;
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 4] :=
+        Word(lValueAddr + I);
+    end
     else
-      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] := 0;
-    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
+    begin
+      lTemperatureIndex := I - fChannelCount;
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 1] :=
+        Mic140LegacyTInCode48(lTemperatureIndex);
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 2] :=
+        Mic140LegacyTInDesc48(lTemperatureIndex);
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 4] :=
+        Word(lValueAddr + 48 + lTemperatureIndex);
+    end;
+    if I < fChannelCount then
+      lDescDump[(I + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
     lDescDump[(I + 1) * CMic140LegacyDescChanWords + 3] :=
       lTiming.LegacyChannelDelaySport - 1;
-    lDescDump[(I + 1) * CMic140LegacyDescChanWords + 4] :=
-      Word(lValueAddr + I);
   end;
+
   if not fLegacyClient.WriteDmWords(lDescAddr, lDescDump, AErrorMessage) then
   begin
     AErrorMessage := 'channel descriptor DM write failed: ' + AErrorMessage;
     Exit;
   end;
 
-  lChanPtrCount := fChannelCount * 2;
+  lChanPtrCount := lInternalChannelCount * 2;
   SetLength(lChanDump, CMic140LegacyStartDescChanWords + lChanPtrCount);
   lChanDump[0] := lTiming.LegacyAverageDelaySport - 1;
   lChanDump[1] := lTiming.AverageSampleCount;
-  lChanDump[2] := fChannelCount;
-  for I := 0 to fChannelCount - 1 do
+  lChanDump[2] := lInternalChannelCount;
+  for I := 0 to lInternalChannelCount - 1 do
   begin
     lChanDump[CMic140LegacyStartDescChanWords + I * 2] := lDescAddr;
     lChanDump[CMic140LegacyStartDescChanWords + I * 2 + 1] :=
@@ -1523,6 +1719,7 @@ var
   J: Integer;
   lDataIndex: Integer;
   lErrorMessage: string;
+  lInternalChannelCount: Integer;
   lLegacyBlock: TRecorderMic140LegacyScanBlock;
   lRaw: TRecorderMebiusFloatBlock;
 begin
@@ -1551,9 +1748,10 @@ begin
     Inc(fLegacyReadBlockCount);
     if not fLegacyReadPacketLogged then
     begin
-      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy first scan packet: headerWords=%d dataWords=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] d0=[%d,%d,%d,%d,%d,%d,%d,%d]',
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy first scan packet: headerWords=%d dataWords=%d stride=%d userChannels=%d tin=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] d0=[%d,%d,%d,%d,%d,%d,%d,%d]',
         [fHost, fPort, Length(lLegacyBlock.HeaderWords),
-         Length(lLegacyBlock.DataWords),
+         Length(lLegacyBlock.DataWords), LegacyInternalScanChannelCount,
+         fChannelCount, MIC140TemperatureChannelCount,
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 0),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 1),
          Mic140LegacyWordAt(lLegacyBlock.HeaderWords, 2),
@@ -1575,14 +1773,16 @@ begin
       fLegacyReadPacketLogged := True;
     end;
 
+    lInternalChannelCount := LegacyInternalScanChannelCount;
     ABlock.ChannelCount := fChannelCount;
     if ABlock.ChannelCount <= 0 then
       Exit;
-    ABlock.SampleCount := Length(lLegacyBlock.DataWords) div ABlock.ChannelCount;
+    ABlock.SampleCount := Length(lLegacyBlock.DataWords) div lInternalChannelCount;
     if ABlock.SampleCount <= 0 then
     begin
-      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan packet has no full samples: dataWords=%d channels=%d',
-        [fHost, fPort, Length(lLegacyBlock.DataWords), ABlock.ChannelCount]));
+      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan packet has no full samples: dataWords=%d stride=%d userChannels=%d',
+        [fHost, fPort, Length(lLegacyBlock.DataWords), lInternalChannelCount,
+         ABlock.ChannelCount]));
       Exit;
     end;
     ABlock.SampleRateHz := fPollFrequencyHz;
@@ -1593,9 +1793,20 @@ begin
     for J := 0 to ABlock.SampleCount - 1 do
       for I := 0 to ABlock.ChannelCount - 1 do
       begin
-        lDataIndex := J * ABlock.ChannelCount + I;
+        lDataIndex := J * lInternalChannelCount + I;
         ABlock.Values[I][J] := SmallInt(lLegacyBlock.DataWords[lDataIndex]);
       end;
+    ABlock.TemperatureCount := MIC140TemperatureChannelCount;
+    SetLength(ABlock.TemperatureValues, ABlock.TemperatureCount);
+    SetLength(ABlock.TemperatureValid, ABlock.TemperatureCount);
+    for I := 0 to ABlock.TemperatureCount - 1 do
+    begin
+      lDataIndex := (ABlock.SampleCount - 1) * lInternalChannelCount +
+        fChannelCount + I;
+      ABlock.TemperatureValid[I] := lDataIndex < Length(lLegacyBlock.DataWords);
+      if ABlock.TemperatureValid[I] then
+        ABlock.TemperatureValues[I] := SmallInt(lLegacyBlock.DataWords[lDataIndex]);
+    end;
     Inc(fSampleIndex, ABlock.SampleCount);
     Result := True;
     Exit;
@@ -1626,12 +1837,15 @@ end;
 
 constructor TRecorderMic140DataSource.Create(const ASourceId, AHost: string; APort: Word;
   AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
-  ATagNames: TStrings);
+  ATagNames: TStrings; AOutputMode: TRecorderMic140OutputMode);
 var
   lDiagnosticPrefix: string;
 begin
   inherited Create(ASourceId, 'MIC-140', AUpdateTimeMs);
   fLastStatusCode := Low(Integer);
+  fOutputMode := AOutputMode;
+  fPollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
+  fTemperatureModeWarningLogged := False;
   lDiagnosticPrefix := StringReplace(ASourceId, CMic140SourcePrefix, 'MIC140',
     [rfIgnoreCase]);
   lDiagnosticPrefix := StringReplace(Trim(lDiagnosticPrefix), ' ', '_',
@@ -1645,6 +1859,14 @@ begin
   fChannelTagNames := TStringList.Create;
   fChannelTagNames.CaseSensitive := False;
   fChannelTagNames.Sorted := False;
+  fTemperatureTagNames := TStringList.Create;
+  fTemperatureTagNames.CaseSensitive := False;
+  fTemperatureTagNames.Sorted := False;
+  fTemperatureTagNames.Add(lDiagnosticPrefix + '_T1');
+  fTemperatureTagNames.Add(lDiagnosticPrefix + '_T2');
+  fTemperatureTagNames.Add(lDiagnosticPrefix + '_T3');
+  fTemperatureTagNames.Add(lDiagnosticPrefix + '_T4');
+  fTemperatureTagNames.Add(lDiagnosticPrefix + '_T5');
   fTagNames := TStringList.Create;
   fTagNames.CaseSensitive := False;
   fTagNames.Sorted := False;
@@ -1687,10 +1909,33 @@ begin
   Registry.PublishValue(fBlockCountTagName, GetTickCount64 / 1000.0, ABlockCount);
 end;
 
+procedure TRecorderMic140DataSource.PublishTemperatureDiagnostics(
+  const ABlock: TRecorderDeviceSampleBlock);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  if (Registry = nil) or (ABlock.TemperatureCount <= 0) then
+    Exit;
+  for I := 0 to Min(ABlock.TemperatureCount, fTemperatureTagNames.Count) - 1 do
+  begin
+    if (I >= Length(ABlock.TemperatureValid)) or
+      (not ABlock.TemperatureValid[I]) then
+      Continue;
+    lTag := Registry.FindByName(fTemperatureTagNames[I]);
+    if lTag = nil then
+      Continue;
+    lTag.TextValue := FormatFloat('0.###', ABlock.TemperatureValues[I]);
+    Registry.PublishValue(lTag.Name, GetTickCount64 / 1000.0,
+      ABlock.TemperatureValues[I]);
+  end;
+end;
+
 destructor TRecorderMic140DataSource.Destroy;
 begin
   Stop;
   fTagNames.Free;
+  fTemperatureTagNames.Free;
   fChannelTagNames.Free;
   inherited Destroy;
 end;
@@ -1739,6 +1984,21 @@ begin
   lTag.Description := 'MIC-140 successfully received scan blocks';
   lTag.TextValue := '0';
 
+  for I := 0 to fTemperatureTagNames.Count - 1 do
+  begin
+    lTag := ARegistry.FindByName(fTemperatureTagNames[I]);
+    if lTag = nil then
+      lTag := ARegistry.CreateTag(fTemperatureTagNames[I], 4096);
+    lTag.Address := 'diagnostics.cjc.T' + IntToStr(I + 1);
+    lTag.UnitName := 'code';
+    lTag.ModuleType := 'MIC-140 diagnostics';
+    lTag.PollFrequencyHz := fPollFrequencyHz;
+    lTag.SourceId := SourceId;
+    lTag.Description := Format('MIC-140 internal CJC channel T%d raw code; published for diagnostics only',
+      [I + 1]);
+    lTag.TextValue := '-';
+  end;
+
   lChannels := fDevice.GetChannels;
   fChannelTagNames.Clear;
   for I := 0 to High(lChannels) do
@@ -1760,12 +2020,14 @@ begin
     if lTag = nil then
       lTag := ARegistry.CreateTag(lTagName, Ceil(Max(4096, lChannel.PollFrequencyHz)));
     lTag.Address := lChannel.Address;
-    lTag.UnitName := lChannel.UnitName;
+    lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(fOutputMode);
+    lTag.UnitName := RecorderMic140OutputModeUnitName(fOutputMode);
     lTag.ModuleType := lChannel.ModuleType;
     lTag.PollFrequencyHz := lChannel.PollFrequencyHz;
     lTag.SourceId := SourceId;
-    lTag.Description := Format('MIC-140 channel %s; freq=%s Hz',
-      [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz)]);
+    lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
+      [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz),
+       RecorderMic140OutputModeToConfigName(fOutputMode)]);
     fChannelTagNames[I] := lTag.Name;
   end;
 end;
@@ -1775,6 +2037,7 @@ begin
   inherited Start;
   fGoodBlockCount := 0;
   fReadFailCount := 0;
+  fTemperatureModeWarningLogged := False;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
   fDevice.Connect;
   if fDevice.State = rdsDisconnected then
@@ -1829,6 +2092,7 @@ var
   lChannels: TRecorderDeviceChannelArray;
   lCount: Integer;
   lTag: TRecorderTag;
+  lTemperatureC: Double;
   lTimes: TRecorderDoubleArray;
   lValues: TRecorderDoubleArray;
 begin
@@ -1860,6 +2124,7 @@ begin
   fReadFailCount := 0;
   PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
   PublishBlockCounter(fGoodBlockCount);
+  PublishTemperatureDiagnostics(lBlock);
 
   SetLength(lTimes, lBlock.SampleCount);
   for J := 0 to lBlock.SampleCount - 1 do
@@ -1875,7 +2140,22 @@ begin
       Continue;
 
     for J := 0 to lBlock.SampleCount - 1 do
+    begin
       lValues[J] := lBlock.Values[I][J];
+      if fOutputMode = momTemperatureC then
+      begin
+        if Mic140TryBuildTemperatureValue(Registry, lTag, I, lValues[J],
+          CMic140CjcNotAvailable, lTemperatureC) then
+          lValues[J] := lTemperatureC
+        else
+        if not fTemperatureModeWarningLogged then
+        begin
+          Mic140LogWarning(Format('[DataSource:%s] MIC-140 temperature output requested, but CJC temperature or thermocouple calibration is not available yet; raw mV are published for now',
+            [SourceId]));
+          fTemperatureModeWarningLogged := True;
+        end;
+      end;
+    end;
     Registry.PublishBlock(lTag.Name, lTimes, lValues, lBlock.SampleCount);
   end;
 end;

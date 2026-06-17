@@ -42,6 +42,9 @@ type
     FirstTimeSec: Double;
     SampleRateHz: Double;
     Values: array of array of Double;
+    TemperatureCount: Integer;
+    TemperatureValues: array of Double;
+    TemperatureValid: array of Boolean;
   end;
 
   IRecorderDevice = interface
@@ -74,6 +77,9 @@ begin
   ABlock.FirstTimeSec := 0;
   ABlock.SampleRateHz := 0;
   SetLength(ABlock.Values, 0);
+  ABlock.TemperatureCount := 0;
+  SetLength(ABlock.TemperatureValues, 0);
+  SetLength(ABlock.TemperatureValid, 0);
 end;
 
 end.

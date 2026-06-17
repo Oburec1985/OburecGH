@@ -191,7 +191,8 @@ type
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
     procedure BuildMic140Signals(const ASourceId: string; AChannelCount: Integer;
-      APollFrequencyHz: Double; AEnabledChannels: TStrings);
+      APollFrequencyHz: Double; AEnabledChannels: TStrings;
+      AOutputMode: TRecorderMic140OutputMode);
     function AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     function SelectedSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     procedure LoadMeraFile(const AFileName: string);
@@ -577,6 +578,7 @@ begin
   Result.StartSec := ASignal.StartSec;
   Result.UnitsName := ASignal.UnitsName;
   Result.Description := ASignal.Description;
+  Result.SourceValueMode := ASignal.SourceValueMode;
   Result.FileName := ASignal.FileName;
   Result.XFileName := ASignal.XFileName;
   Result.HasXData := ASignal.HasXData;
@@ -603,6 +605,7 @@ begin
   ATag.SourceId := lSourceId;
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
+  ATag.SourceValueMode := ASignal.SourceValueMode;
   if SameText(ASignal.ModuleName, 'MIC-140') then
     ATag.Description := Format('%s; freq=%s Hz',
       [ASignal.Description, FormatFloat('0.######', ASignal.FrequencyHz)])
@@ -1332,7 +1335,8 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.BuildMic140Signals(const ASourceId: string;
-  AChannelCount: Integer; APollFrequencyHz: Double; AEnabledChannels: TStrings);
+  AChannelCount: Integer; APollFrequencyHz: Double; AEnabledChannels: TStrings;
+  AOutputMode: TRecorderMic140OutputMode);
 var
   I: Integer;
   lAddress: string;
@@ -1374,8 +1378,10 @@ begin
     lSignal.DataTypeName := 'R8';
     lSignal.DataType := mvtFloat64;
     lSignal.FrequencyHz := APollFrequencyHz;
-    lSignal.UnitsName := '';
-    lSignal.Description := Format('MIC-140 channel %s', [lAddress]);
+    lSignal.UnitsName := RecorderMic140OutputModeUnitName(AOutputMode);
+    lSignal.SourceValueMode := RecorderMic140OutputModeToConfigName(AOutputMode);
+    lSignal.Description := Format('MIC-140 channel %s; mode=%s',
+      [lAddress, RecorderMic140OutputModeToConfigName(AOutputMode)]);
     lSignal.FileName := ASourceId;
     lSignal.Enabled := True;
     lSignal.Selected := SignalHasLinkedTag(lSignal);
@@ -1601,6 +1607,7 @@ var
   lHost: string;
   lPort: Word;
   lSourceId: string;
+  lOutputMode: TRecorderMic140OutputMode;
   lSources: TStringList;
   lTag: TRecorderTag;
   lFrequencyHz: Double;
@@ -1634,6 +1641,7 @@ begin
       lSourceId := lSources[I];
       lChannelCount := MIC140DefaultChannelCount;
       lFrequencyHz := MIC140DefaultPollFrequencyHz;
+      lOutputMode := momMillivolts;
       for lChannelNumber := 0 to fTagRegistry.TagCount - 1 do
       begin
         lTag := fTagRegistry.Tags[lChannelNumber];
@@ -1644,8 +1652,10 @@ begin
           lChannelCount := MIC140MaxChannelCount;
         if lTag.PollFrequencyHz > 0 then
           lFrequencyHz := lTag.PollFrequencyHz;
+        if Trim(lTag.SourceValueMode) <> '' then
+          lOutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
       end;
-      BuildMic140Signals(lSourceId, lChannelCount, lFrequencyHz, nil);
+      BuildMic140Signals(lSourceId, lChannelCount, lFrequencyHz, nil, lOutputMode);
     end;
   finally
     lSources.Free;
@@ -1811,6 +1821,8 @@ begin
             lResult.ChannelCount := MIC140MaxChannelCount;
           if lTag.PollFrequencyHz > 0 then
             lResult.PollFrequencyHz := lTag.PollFrequencyHz;
+          if Trim(lTag.SourceValueMode) <> '' then
+            lResult.OutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
         end;
       end;
     end;
@@ -1824,7 +1836,7 @@ begin
     fTagRegistry.RegisterActiveSource(lNewSourceId);
     lResult.PollFrequencyHz := RecorderMic140NormalizeFrequency(lResult.PollFrequencyHz);
     BuildMic140Signals(lNewSourceId, lResult.ChannelCount,
-      lResult.PollFrequencyHz, lResult.SelectedChannels);
+      lResult.PollFrequencyHz, lResult.SelectedChannels, lResult.OutputMode);
 
     lCapacity := Ceil(Max(4096, lResult.PollFrequencyHz));
     for I := 0 to fTagRegistry.TagCount - 1 do
@@ -1839,9 +1851,11 @@ begin
       lTag.SourceId := lNewSourceId;
       lTag.ModuleType := 'MIC-140';
       lTag.PollFrequencyHz := lResult.PollFrequencyHz;
-      lTag.UnitName := '';
-      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz',
-        [lTag.Address, FormatFloat('0.######', lResult.PollFrequencyHz)]);
+      lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(lResult.OutputMode);
+      lTag.UnitName := RecorderMic140OutputModeUnitName(lResult.OutputMode);
+      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
+        [lTag.Address, FormatFloat('0.######', lResult.PollFrequencyHz),
+         RecorderMic140OutputModeToConfigName(lResult.OutputMode)]);
       lTag.EnsureBufferCapacity(lCapacity);
     end;
 

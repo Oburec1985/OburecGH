@@ -26,6 +26,7 @@ type
     ThermoCompensationEnabled: Boolean;
     DefaultCorrector: Boolean;
     CorrectorChannel: string;
+    OutputMode: TRecorderMic140OutputMode;
     SelectedChannels: TStringList;
   end;
 
@@ -48,6 +49,7 @@ type
     fThermoCompCheck: TCheckBox;
     fDefaultCorrectorCheck: TCheckBox;
     fCorrectorCombo: TComboBox;
+    fOutputModeCombo: TComboBox;
     fGrid: TStringGrid;
     procedure BuildUi;
     procedure FillGrid(AChannelCount: Integer; ASelected: TStrings);
@@ -76,6 +78,7 @@ begin
   AResult.ThermoCompensationEnabled := False;
   AResult.DefaultCorrector := True;
   AResult.CorrectorChannel := 'T2';
+  AResult.OutputMode := momMillivolts;
   AResult.SelectedChannels := TStringList.Create;
 end;
 
@@ -125,7 +128,7 @@ begin
   lTop := TPanel.Create(Self);
   lTop.Parent := Self;
   lTop.Align := alTop;
-  lTop.Height := 118;
+  lTop.Height := 142;
   lTop.BevelOuter := bvNone;
 
   with TLabel.Create(Self) do
@@ -250,11 +253,27 @@ begin
   for I := 1 to MIC140TemperatureChannelCount do
     fCorrectorCombo.Items.Add('T' + IntToStr(I));
 
+  with TLabel.Create(Self) do
+  begin
+    Parent := lTop;
+    Left := 12;
+    Top := 88;
+    Caption := 'Value';
+  end;
+  fOutputModeCombo := TComboBox.Create(Self);
+  fOutputModeCombo.Parent := lTop;
+  fOutputModeCombo.Left := 58;
+  fOutputModeCombo.Top := 84;
+  fOutputModeCombo.Width := 116;
+  fOutputModeCombo.Style := csDropDownList;
+  fOutputModeCombo.Items.Add('mV');
+  fOutputModeCombo.Items.Add('degC');
+
   fTimingLabel := TLabel.Create(Self);
   fTimingLabel.Parent := lTop;
-  fTimingLabel.Left := 12;
+  fTimingLabel.Left := 188;
   fTimingLabel.Top := 88;
-  fTimingLabel.Width := 680;
+  fTimingLabel.Width := 520;
   fTimingLabel.Caption := '';
 
   lBottom := TPanel.Create(Self);
@@ -462,6 +481,9 @@ begin
   fCorrectorCombo.Text := AResult.CorrectorChannel;
   if fCorrectorCombo.ItemIndex < 0 then
     fCorrectorCombo.ItemIndex := 1;
+  fOutputModeCombo.ItemIndex := Ord(AResult.OutputMode);
+  if fOutputModeCombo.ItemIndex < 0 then
+    fOutputModeCombo.ItemIndex := 0;
   if AResult.ChannelCount > MIC140DefaultChannelCount then
     fChannelCountCombo.ItemIndex := 1
   else
@@ -485,6 +507,10 @@ begin
   AResult.ThermoCompensationEnabled := fThermoCompCheck.Checked;
   AResult.DefaultCorrector := fDefaultCorrectorCheck.Checked;
   AResult.CorrectorChannel := Trim(fCorrectorCombo.Text);
+  if fOutputModeCombo.ItemIndex = Ord(momTemperatureC) then
+    AResult.OutputMode := momTemperatureC
+  else
+    AResult.OutputMode := momMillivolts;
   if AResult.SelectedChannels <> nil then
   begin
     AResult.SelectedChannels.Clear;

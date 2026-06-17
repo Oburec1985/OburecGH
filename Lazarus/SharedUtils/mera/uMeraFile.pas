@@ -28,6 +28,7 @@ type
     StartSec: Double;
     UnitsName: string;
     Description: string;
+    SourceValueMode: string;
     SensorCalibrationName: string;
     AmplifierCalibrationName: string;
     FileName: string;

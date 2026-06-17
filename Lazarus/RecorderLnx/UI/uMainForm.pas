@@ -681,7 +681,6 @@ begin
     begin
       ApplyDisplayTimingSettings;
       UpdateRecordFrameManager;
-      SaveProjectPackage;
       fDataSourceManager.Clear;
       fDataSourcesConfigured := False;
       RebuildTagList(edTagSearch.Text);
@@ -1942,6 +1941,7 @@ var
   lFiles: TStringList;
   lMicHost: string;
   lMicPort: Word;
+  lMicOutputMode: TRecorderMic140OutputMode;
   lMicSources: TStringList;
   lPollFrequencyHz: Double;
   lSource: IRecorderDataSource;
@@ -2029,6 +2029,7 @@ begin
       lTagNames := TStringList(lMicSources.Objects[I]);
       lChannelCount := MIC140DefaultChannelCount;
       lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
+      lMicOutputMode := momMillivolts;
       for lFileIndex := 0 to lTagNames.Count - 1 do
         if TryStrToInt(lTagNames[lFileIndex], lChannelNumber) and
           (lChannelNumber > lChannelCount) then
@@ -2039,11 +2040,13 @@ begin
         if SameText(lTag.SourceId, lMicSources[I]) and (lTag.PollFrequencyHz > 0) then
         begin
           lPollFrequencyHz := lTag.PollFrequencyHz;
+          if Trim(lTag.SourceValueMode) <> '' then
+            lMicOutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
           Break;
         end;
       end;
       lSource := TRecorderMic140DataSource.Create(lMicSources[I], lMicHost, lMicPort,
-        lChannelCount, lPollFrequencyHz, lDataUpdateMs, lTagNames);
+        lChannelCount, lPollFrequencyHz, lDataUpdateMs, lTagNames, lMicOutputMode);
       fDataSourceManager.AddSource(lSource);
       AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
         [lMicHost, lMicPort, lChannelCount]));
