@@ -84,6 +84,7 @@ object MainForm: TMainForm
       ClientHeight = 150
       ClientWidth = 188
       TabOrder = 1
+      OnClick = pnRightCommandsClick
       object btnSettings: TSpeedButton
         Left = 8
         Height = 42

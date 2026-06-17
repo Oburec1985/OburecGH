@@ -179,12 +179,14 @@
         <Filename Value="UI/uRecorderCalibrationListDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationListDialog"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderCalibrationPropertiesDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationPropertiesDialog"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>

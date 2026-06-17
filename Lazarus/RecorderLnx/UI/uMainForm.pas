@@ -96,6 +96,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure lbTagsClick(Sender: TObject);
     procedure lbTagsDblClick(Sender: TObject);
+    procedure pnRightCommandsClick(Sender: TObject);
     procedure sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
     procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
@@ -494,6 +495,11 @@ procedure TMainForm.lbTagsDblClick(Sender: TObject);
 begin
   UpdateSelectedTagFromList;
   OpenSelectedTagSettings;
+end;
+
+procedure TMainForm.pnRightCommandsClick(Sender: TObject);
+begin
+
 end;
 
 procedure TMainForm.UpdateActiveSourceIds;

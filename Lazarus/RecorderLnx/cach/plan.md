@@ -1,21 +1,30 @@
-# План доработок: исправление диалогов и логирование
+# План: доработка RecorderLnx
 
-- [x] Исправление диалогов (вопросики) и параметров настройки тегов
-  - [x] Обернуть пункт меню 'Настроить выделенные каналы...' в uMainForm.pas в CP1251ToUTF8
-  - [x] Переформатировать uRecorderSettingsDialog.pas в CP1251, прописать codepage и перекодировать текст в CP1251ToUTF8
-  - [x] Переформатировать uTagSettingsDialog.pas в CP1251, прописать codepage и перекодировать текст в CP1251ToUTF8
-  - [x] Переформатировать uComponentSettingsDialog.pas в CP1251, прописать codepage и перекодировать текст в CP1251ToUTF8
+- [x] Рефакторинг (очистка) от лишних преобразований строк
+  - [x] Удален вызов 'Каналы...' в uMainForm.pas и CP1251ToUTF8
+  - [x] В uRecorderSettingsDialog.pas исправлена кодировка и убраны лишние CP1251ToUTF8
+  - [x] В uTagSettingsDialog.pas исправлена кодировка и убраны лишние CP1251ToUTF8
+  - [x] В uComponentSettingsDialog.pas исправлена кодировка и убраны лишние CP1251ToUTF8
 
-- [x] Расчет размера блока/порции оценок в порции отсчетов (как в оригинальном Recorder)
-  - [x] Передавать ADataUpdateMs в параметр ShowTagSettingsDialog и поле fDataUpdateMs в TTagSettingsDialog
-  - [x] Пересчитывать в соответствии расчетный размер порции в LoadFromTags (если PortionLength = 17280)
-  - [x] Возвращать значение 17280 в StoreToTags, если контролируемое значение для авто совпадает расчетному
-  - [x] Передать fRunSettings.DataUpdateMs при вызове ShowTagSettingsDialog из uMainForm.pas
-  - [x] Исправить баг инициализации fDataUpdateMs (передача в конструктор CreateDialog и считывание с формы настроек в uRecorderSettingsDialog.pas)
+- [x] Настройка частоты опроса/обновления (параметр времени в Recorder)
+  - [x] Связан ADataUpdateMs с диалогом ShowTagSettingsDialog и полем fDataUpdateMs в TTagSettingsDialog
+  - [x] Настроена подгрузка из настроек LoadFromTags (при PortionLength = 17280)
+  - [x] Учтены 17280 в StoreToTags, чтобы данные не перезаписывались некорректно
+  - [x] Поле fRunSettings.DataUpdateMs связано с ShowTagSettingsDialog в uMainForm.pas
+  - [x] Исправлено заполнение fDataUpdateMs (теперь берется из настроек при CreateDialog в uRecorderSettingsDialog.pas)
 
-- [x] Кроссплатформенный логгер производительности (Windows / Linux)
-  - [x] Включить глобальное логирование в uRecorderDebugLog.pas
-  - [x] Настроить динамический путь к файлу лога (LogWindows.log / LogLinux.log) в каталоге ParamStr(0)
-  - [x] Очищать лог-файл при запуске программы
+- [x] Логирование отладки (Windows / Linux)
+  - [x] Создан новый модуль uRecorderDebugLog.pas
+  - [x] Добавлено раздельное логирование (LogWindows.log / LogLinux.log) на основе ParamStr(0)
+  - [x] Подключен к остальным модулям
 
-- [ ] Анализ логов производительности после 10-секундного запуска под Windows и Linux
+- [x] Тестирование сборки под Windows и Linux
+
+- [ ] Редактирование узла устройства по двойному клику в дереве оборудования (Промпт: "в RecorderLnx по dblClick сделай редактирование узла")
+  - [ ] Изменить fHardwareTreeDblClick в uRecorderSettingsDialog.pas для вызова HardwareEditSourceClick
+
+- [ ] Формирование адресов каналов MIC-140 в формате "2-01"
+  - [ ] Обновить uRecorderMic140DataSource.pas (BuildChannels, FindTagBySourceAddress)
+  - [ ] Обновить uRecorderSettingsDialog.pas (BuildMic140Signals, RestoreMeraSignalsFromTags, GetMic140SelectedChannels)
+  - [ ] Проверить сборку проекта и запустить тесты
+

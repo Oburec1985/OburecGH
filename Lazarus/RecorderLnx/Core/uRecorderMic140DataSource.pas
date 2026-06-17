@@ -153,6 +153,30 @@ uses
   Math, StrUtils, uSharedFileLogger
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
+function ParseMic140ChannelNumber(const AAddress: string; out AChannelNumber: Integer): Boolean;
+var
+  lPos: Integer;
+  lStr: string;
+begin
+  Result := False;
+  lStr := Trim(AAddress);
+  lPos := Pos('-', lStr);
+  if lPos > 0 then
+    lStr := Trim(Copy(lStr, lPos + 1, MaxInt));
+  Result := TryStrToInt(lStr, AChannelNumber);
+end;
+
+function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
+var
+  lNum1, lNum2: Integer;
+begin
+  if SameText(AAddr1, AAddr2) then
+    Exit(True);
+  Result := ParseMic140ChannelNumber(AAddr1, lNum1) and
+            ParseMic140ChannelNumber(AAddr2, lNum2) and
+            (lNum1 = lNum2);
+end;
+
 const
   CMic140SourcePrefix = 'MIC-140:';
   CMic140StatusDisconnected = 0;
@@ -866,7 +890,7 @@ begin
   for I := 0 to fChannelCount - 1 do
   begin
     fChannels[I].Name := Format('MIC140_%2.2d', [I + 1]);
-    fChannels[I].Address := IntToStr(I + 1);
+    fChannels[I].Address := Format('2-%2.2d', [I + 1]);
     fChannels[I].UnitName := '';
     fChannels[I].ModuleType := 'MIC-140';
     fChannels[I].PollFrequencyHz := fPollFrequencyHz;
@@ -1950,7 +1974,7 @@ begin
     Exit;
   for I := 0 to ARegistry.TagCount - 1 do
     if SameText(ARegistry.Tags[I].SourceId, SourceId) and
-      SameText(ARegistry.Tags[I].Address, AAddress) then
+      SameMic140Address(ARegistry.Tags[I].Address, AAddress) then
       Exit(ARegistry.Tags[I]);
 end;
 
