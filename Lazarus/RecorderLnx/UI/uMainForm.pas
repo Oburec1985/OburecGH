@@ -1846,8 +1846,8 @@ procedure TMainForm.RebuildTagList(const AFilter: string);
 var
   I: Integer;
   lFilter: string;
+  lFrequencyText: string;
   lTag: TRecorderTag;
-  lValue: string;
 begin
   lbTags.Items.BeginUpdate;
   try
@@ -1862,13 +1862,12 @@ begin
         lTag.Description)) = 0) then
         Continue;
 
-      lValue := fLatestTagValues.Values[lTag.Name];
-      if lValue = '' then
-        lValue := lTag.TextValue;
-      if lValue = '' then
-        lValue := '-';
+      if lTag.PollFrequencyHz > 0 then
+        lFrequencyText := FormatFloat('0.######', lTag.PollFrequencyHz) + ' Hz'
+      else
+        lFrequencyText := '-';
 
-      lbTags.Items.AddObject(Format('%s     %s', [lTag.Name, lValue]), lTag);
+      lbTags.Items.AddObject(Format('%s     %s', [lTag.Name, lFrequencyText]), lTag);
     end;
   finally
     lbTags.Items.EndUpdate;
