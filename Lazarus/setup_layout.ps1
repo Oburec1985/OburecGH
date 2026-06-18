@@ -72,8 +72,8 @@ $newAnchorDockingXml = @"
                 </Item1>
                 <!-- Item2: CallStack (Left-Bottom) -->
                 <Item2 Name="CallStack" Type="Control" Monitor="0" PixelsPerInch="144">
-                  <Bounds Top="452" Width="350" Height="410"/>
-                  <Anchors Right="AnchorDockSplitter1" Top="AnchorDockSplitter2"/>
+                  <Bounds Top="452" Width="350" Height="228"/>
+                  <Anchors Right="AnchorDockSplitter1" Top="AnchorDockSplitter2" Bottom="AnchorDockSplitterBottom"/>
                 </Item2>
                 <!-- Item3: Left Horizontal Splitter -->
                 <Item3 Name="AnchorDockSplitter2" Type="SplitterHorizontal" Monitor="0" PixelsPerInch="144">
@@ -82,32 +82,33 @@ $newAnchorDockingXml = @"
                 </Item3>
                 <!-- Item4: Left Vertical Splitter -->
                 <Item4 Name="AnchorDockSplitter1" Type="SplitterVertical" Monitor="0" PixelsPerInch="144">
-                  <Bounds Left="350" Width="2" Height="862"/>
+                  <Bounds Left="350" Width="2" Height="680"/>
+                  <Anchors Bottom="AnchorDockSplitterBottom"/>
                 </Item4>
-                <!-- Item5: SourceNotebook (Center-Top) -->
+                <!-- Item5: SourceNotebook (Center) -->
                 <Item5 Name="SourceNotebook" Type="Control" Monitor="0" PixelsPerInch="144">
                   <Bounds Left="352" Width="1216" Height="680"/>
-                  <Anchors Left="AnchorDockSplitter1" Right="AnchorDockSplitter3" Bottom="AnchorDockSplitter4"/>
+                  <Anchors Left="AnchorDockSplitter1" Right="AnchorDockSplitter3" Bottom="AnchorDockSplitterBottom"/>
                   <Header Position="left"/>
                 </Item5>
-                <!-- Item6: MessagesView (Center-Bottom) -->
-                <Item6 Name="MessagesView" Type="Control" Monitor="0" PixelsPerInch="144">
-                  <Bounds Left="352" Top="682" Width="1216" Height="180"/>
-                  <Anchors Left="AnchorDockSplitter1" Top="AnchorDockSplitter4" Right="AnchorDockSplitter3"/>
+                <!-- Item6: Right Vertical Splitter -->
+                <Item6 Name="AnchorDockSplitter3" Type="SplitterVertical" Monitor="0" PixelsPerInch="144">
+                  <Bounds Left="1568" Width="2" Height="680"/>
+                  <Anchors Bottom="AnchorDockSplitterBottom"/>
                 </Item6>
-                <!-- Item7: Center Horizontal Splitter -->
-                <Item7 Name="AnchorDockSplitter4" Type="SplitterHorizontal" Monitor="0" PixelsPerInch="144">
-                  <Bounds Left="352" Top="680" Width="1216" Height="2"/>
-                  <Anchors Left="AnchorDockSplitter1" Right="AnchorDockSplitter3"/>
+                <!-- Item7: ProjectGroupEditor (Right) -->
+                <Item7 Name="ProjectGroupEditor" Type="Control" Monitor="0" PixelsPerInch="144">
+                  <Bounds Left="1570" Width="350" Height="680"/>
+                  <Anchors Left="AnchorDockSplitter3" Bottom="AnchorDockSplitterBottom"/>
                 </Item7>
-                <!-- Item8: Right Vertical Splitter -->
-                <Item8 Name="AnchorDockSplitter3" Type="SplitterVertical" Monitor="0" PixelsPerInch="144">
-                  <Bounds Left="1568" Width="2" Height="862"/>
+                <!-- Item8: Bottom Horizontal Splitter -->
+                <Item8 Name="AnchorDockSplitterBottom" Type="SplitterHorizontal" Monitor="0" PixelsPerInch="144">
+                  <Bounds Top="680" Width="1920" Height="2"/>
                 </Item8>
-                <!-- Item9: ProjectInspector (Right) -->
-                <Item9 Name="ProjectInspector" Type="Control" Monitor="0" PixelsPerInch="144">
-                  <Bounds Left="1570" Width="350" Height="862"/>
-                  <Anchors Left="AnchorDockSplitter3"/>
+                <!-- Item9: MessagesView (Bottom) -->
+                <Item9 Name="MessagesView" Type="Control" Monitor="0" PixelsPerInch="144">
+                  <Bounds Top="682" Width="1920" Height="180"/>
+                  <Anchors Top="AnchorDockSplitterBottom"/>
                 </Item9>
               </Item1>
             </Item1>

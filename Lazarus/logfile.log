@@ -1,0 +1,43 @@
+=== Running HardwareMath Performance Tests ===
+CPU AVX2 Supported: True
+
+FillDouble (10007 elements, 100k runs):
+  Pascal: 232824 us
+  SSE:    98372 us (2,37x speedup)
+  AVX2:   94000 us (2,48x speedup)
+
+AddArrays (10007 elements, 100k runs):
+  Pascal: 246973 us
+  SSE:    136810 us (1,81x speedup)
+  AVX2:   171852 us (1,44x speedup)
+
+SubtractFromArray (10007 elements, 100k runs):
+  Pascal: 321762 us
+  SSE:    94760 us (3,40x speedup)
+  AVX2:   93981 us (3,42x speedup)
+
+ConjugateComplex (5003 elements, 100k runs):
+  Pascal: 199562 us
+  SSE:    121390 us (1,64x speedup)
+  AVX2:   92258 us (2,16x speedup)
+
+ComplexMultiply (5003 elements, 50k runs):
+  Pascal: 252707 us
+  SSE:    127367 us (1,98x speedup)
+  AVX2:   72212 us (3,50x speedup)
+
+EvalSpmMag (FFT 1024, 200k runs):
+  Pascal: 46960 us
+  SSE:    39286 us (1,20x speedup)
+  AVX2:   11394 us (4,12x speedup)
+
+NormalizeAndScaleSpmMag (FFT 1024, 200k runs):
+  Pascal: 114522 us
+  SSE:    115118 us (0,99x speedup)
+  AVX2:   57338 us (2,00x speedup)
+
+--- Тест вычислений спектра (FFT) ---
+  Найден пик на частоте: 99,61 Гц (Бин 102, Амплитуда 0,3183)
+  Тест расчетов спектра успешно пройден!
+
+=== All HardwareMath tests passed successfully! ===

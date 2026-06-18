@@ -690,6 +690,7 @@ begin
       fDataSourceManager.Clear;
       fDataSourcesConfigured := False;
       RebuildTagList(edTagSearch.Text);
+      RenderActivePage;
       AddLog('Project settings applied.');
     end
     else
@@ -1914,6 +1915,7 @@ end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
   lTags: TList;
+  lWasRunning: Boolean;
 begin
   lTags := TList.Create;
   try
@@ -1925,6 +1927,17 @@ begin
     begin
       if fAlarmEngine <> nil then
         fAlarmEngine.Reset;
+
+      lWasRunning := (fDataSourceManager <> nil) and fDataSourceManager.Running;
+      if lWasRunning then
+        StopDataSources;
+
+      fDataSourceManager.Clear;
+      fDataSourcesConfigured := False;
+
+      if lWasRunning then
+        StartDataSources;
+
       RebuildTagList(edTagSearch.Text);
       AddLog(Format('Tag settings updated: %d channel(s).', [lTags.Count]));
     end;

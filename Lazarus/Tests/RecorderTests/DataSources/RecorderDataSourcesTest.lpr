@@ -18,6 +18,7 @@ uses
   uRecorderCoreServices,
   uRecorderDataSources,
   uRecorderTags,
+  uRecorderMic140DataSource,
   uSharedFileLogger;
 
 type
@@ -552,6 +553,89 @@ begin
   end;
 end;
 
+
+procedure TestMic140ReadyWordsPacing;
+var
+  lDevice: TRecorderMic140Device;
+  lReadyWords: Word;
+begin
+  LogLine('--- MIC-140 ready words pacing test ---');
+
+  // Test Case 1: 100 Hz polling, 200 ms update time
+  // Expected target samples: Round(100 * 200 / 1000) = 20
+  // FIFO capacity constraint: 367 div 51 = 7 (for 48 channels + 3 temperatures)
+  // Expected: 7 ready words per channel. Total: 7 * 51 = 357 words.
+  lDevice := TRecorderMic140Device.Create('test.mic.1', '192.168.14.155', 4000, 48, 100.0, 200);
+  try
+    lReadyWords := lDevice.LegacyCalcFifoReadyWords;
+    AssertEquals(lReadyWords, 357, '100 Hz at 200 ms pacing ready words');
+  finally
+    lDevice.Free;
+  end;
+
+  // Test Case 2: 10 Hz polling, 200 ms update time
+  // Expected target samples: Round(10 * 200 / 1000) = 2
+  // FIFO capacity constraint: 367 div 51 = 7
+  // Expected: 2 ready words per channel. Total: 2 * 51 = 102 words.
+  lDevice := TRecorderMic140Device.Create('test.mic.2', '192.168.14.155', 4000, 48, 10.0, 200);
+  try
+    lReadyWords := lDevice.LegacyCalcFifoReadyWords;
+    AssertEquals(lReadyWords, 102, '10 Hz at 200 ms pacing ready words');
+  finally
+    lDevice.Free;
+  end;
+
+  // Test Case 3: 10 Hz polling, 500 ms update time
+  // Expected target samples: Round(10 * 500 / 1000) = 5
+  // FIFO capacity constraint: 367 div 51 = 7
+  // Expected: 5 ready words per channel. Total: 5 * 51 = 255 words.
+  lDevice := TRecorderMic140Device.Create('test.mic.3', '192.168.14.155', 4000, 48, 10.0, 500);
+  try
+    lReadyWords := lDevice.LegacyCalcFifoReadyWords;
+    AssertEquals(lReadyWords, 255, '10 Hz at 500 ms pacing ready words');
+  finally
+    lDevice.Free;
+  end;
+
+  // Test Case 4: 10 Hz polling, 0 ms update time (default to 200 ms)
+  // Expected target samples: Round(10 * 200 / 1000) = 2
+  // FIFO capacity constraint: 367 div 51 = 7
+  // Expected: 2 ready words per channel. Total: 2 * 51 = 102 words.
+  lDevice := TRecorderMic140Device.Create('test.mic.4', '192.168.14.155', 4000, 48, 10.0, 0);
+  try
+    lReadyWords := lDevice.LegacyCalcFifoReadyWords;
+    AssertEquals(lReadyWords, 102, '10 Hz at 0 ms (default 200) pacing ready words');
+  finally
+    lDevice.Free;
+  end;
+
+  LogLine('RESULT MIC-140 ready words pacing test passed.');
+end;
+
+procedure TestMic140AddressHelpers;
+var
+  lNum: Integer;
+begin
+  LogLine('--- MIC-140 address helpers test ---');
+  AssertTrue(ParseMic140ChannelNumber('2-01', lNum), 'Parse 2-01');
+  AssertEquals(lNum, 1, 'Value 2-01');
+  AssertTrue(ParseMic140ChannelNumber('2-48', lNum), 'Parse 2-48');
+  AssertEquals(lNum, 48, 'Value 2-48');
+  AssertTrue(ParseMic140ChannelNumber('1', lNum), 'Parse 1');
+  AssertEquals(lNum, 1, 'Value 1');
+  AssertTrue(ParseMic140ChannelNumber('48', lNum), 'Parse 48');
+  AssertEquals(lNum, 48, 'Value 48');
+  AssertTrue(not ParseMic140ChannelNumber('invalid', lNum), 'Parse invalid');
+  AssertTrue(SameMic140Address('2-01', '1'), 'Same 2-01 and 1');
+  AssertTrue(SameMic140Address('1', '2-01'), 'Same 1 and 2-01');
+  AssertTrue(SameMic140Address('2-01', '2-01'), 'Same 2-01 and 2-01');
+  AssertTrue(SameMic140Address('2-48', '48'), 'Same 2-48 and 48');
+  AssertTrue(SameMic140Address('48', '2-48'), 'Same 48 and 2-48');
+  AssertTrue(not SameMic140Address('2-01', '2-02'), 'Different 2-01 and 2-02');
+  AssertTrue(not SameMic140Address('1', '2'), 'Different 1 and 2');
+  LogLine('RESULT MIC-140 address helpers test passed.');
+end;
+
 begin
   OpenLog;
   try
@@ -566,6 +650,10 @@ begin
     TestMeraScalarTimeFileDataSource;
     LogLine('');
     TestDiagnosticsDataSource;
+    LogLine('');
+    TestMic140ReadyWordsPacing;
+    LogLine('');
+    TestMic140AddressHelpers;
   finally
     CloseLog;
   end;
