@@ -69,6 +69,7 @@ procedure FitPageZoom(APage: TChartPage);
 
 implementation
 
+
 function IsOnYAxisBand(ARenderer: TOpenGLChartRenderer; APage: TChartPage;
   AX, AY: Integer): Boolean;
 var
@@ -223,6 +224,17 @@ begin
   AAxis.HasPresetRange := False;
 end;
 
+
+begin
+  if not Assigned(AAxis) then
+    Exit;
+  if AAxis.HasPresetRange and (AAxis.PresetMaxValue > AAxis.PresetMinValue) then
+  begin
+    AAxis.MinValue := AAxis.PresetMinValue;
+    AAxis.MaxValue := AAxis.PresetMaxValue;
+  end;
+end;
+
 procedure ApplyPresetZoomY(APage: TChartPage; ASelected: TChartBaseObject);
 var
   I: Integer;
@@ -245,6 +257,7 @@ begin
       ApplyPresetZoomY(lAxis);
     end;
 end;
+
 
 procedure RestoreUserZoomOnPage(APage: TChartPage; ASelected: TChartBaseObject;
   AResetX, AResetY: Boolean);
@@ -835,7 +848,7 @@ begin
       fActivePage.XMinValue := fActivePage.XMinValue - dValX;
       fActivePage.XMaxValue := fActivePage.XMaxValue - dValX;
       fActivePage.ZoomedX := True;
-
+      
       // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ (Y) ˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜
       lSelectedAxis := nil;
       if Assigned(lRenderer.SelectedObject) then
@@ -1039,7 +1052,7 @@ begin
       lPage.XMinValue := lMouseValX - (lMouseValX - lPage.XMinValue) * lZoomFactor;
       lPage.XMaxValue := lMouseValX + (lPage.XMaxValue - lMouseValX) * lZoomFactor;
       lPage.ZoomedX := True;
-
+      
       // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ (Y) ˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜
       lSelectedAxis := nil;
       if Assigned(lRenderer.SelectedObject) then
@@ -1073,3 +1086,4 @@ begin
 end;
 
 end.
+
