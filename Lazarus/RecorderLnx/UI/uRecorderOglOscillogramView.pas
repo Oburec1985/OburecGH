@@ -15,15 +15,17 @@ unit uRecorderOglOscillogramView;
 interface
 
 uses
-  Classes, Controls, ExtCtrls, StdCtrls,
+  Classes, Controls, ExtCtrls, StdCtrls, Graphics,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
-  uOglChartTrend, uRecorderFormModel, uRecorderTags, uRecorderVisualControl;
+  uOglChartTrend, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
+  uOglChartColors, uRecorderTagRefs;
 type
   { TRecorderOglOscillogram
     Thin RecorderLnx wrapper around oglChart. It owns a default chart model with
     one page, one axis and one buffered trend. }
   TRecorderOglOscillogram = class(TPanel, IVForm)
   private
+    fAbsoluteTagId: TRecorderTagId;
     fAbsoluteTagName: string;
     fBindingMode: TRecorderTagBindingMode;
     fChart: TOglChart;
@@ -35,21 +37,34 @@ type
     fFpsWindowFrames: Integer;
     fFpsWindowLastFrameMs: QWord;
     fFrameNo: Integer;
-    fInfoLabel: TLabel;
-    fInfoText: string;
+    fInfoPanel: TPanel;
+    fInfoNextLeft: Integer;
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
+    fExtraLines: TList;
     fModel: TObject;
     fPage: TObject;
     fAxis: TObject;
     fTrend: TObject;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
+    procedure EnsureTrendCount;
+    procedure FillTrendFromSnapshot(ATrend: cBuffTrend1d;
+      const ASnapshot: TRecorderSignalSnapshot; ADisplayStart: Double;
+      ADisplaySeconds: Double; out AMinValue, AMaxValue: Double;
+      out APointCount: Integer);
+    function GetTrendByIndex(AIndex: Integer): cBuffTrend1d;
+    function TrendLabelColor(AIndex: Integer): TColor;
     function ResolveTag(ATagRegistry: TRecorderTagRegistry): TRecorderTag;
+    function ResolveTagByName(ATagRegistry: TRecorderTagRegistry;
+      const ATagName: string): TRecorderTag;
     procedure ResetFpsMeasure;
+    procedure SyncLinesFromComponent(AComponent: TRecorderOscillogramComponent);
     procedure SetAxisRange(AMinValue, AMaxValue: Double);
     procedure SetChartTitle(const ATitle: string);
     procedure SetXRange(ADisplaySeconds: Double);
-    procedure UpdateInfoLabel(ATag: TRecorderTag);
+    procedure ClearInfoPanel;
+    procedure AppendInfoPart(const AText: string; AColor: TColor);
+    procedure UpdateInfoLabel(ATagRegistry: TRecorderTagRegistry; ATag: TRecorderTag);
   public
     { IVForm }
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
@@ -149,7 +164,7 @@ function RecorderOglOscillogramsFpsText(APanel: TPanel): string;
 implementation
 
 uses
-  SysUtils, Math, Graphics,
+  SysUtils, Math,
   uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng, uSharedAlgorithms;
 
 type
@@ -228,11 +243,17 @@ begin
   fBindingMode := rtbmRelativeSelectedTag;
   fTagOffset := 0;
   fTagSlotIndex := 0;
+  fExtraLines := TList.Create;
   ConfigureDefault;
 end;
 
 destructor TRecorderOglOscillogram.Destroy;
+var
+  I: Integer;
 begin
+  for I := fExtraLines.Count - 1 downto 0 do
+    TObject(fExtraLines[I]).Free;
+  fExtraLines.Free;
   inherited Destroy;
 end;
 
@@ -242,7 +263,10 @@ begin
     ConfigureDefault;
   fBindingMode := TRecorderOscillogramComponent(AComponent).BindingMode;
   fTagOffset := TRecorderOscillogramComponent(AComponent).TagOffset;
+  fAbsoluteTagId := AComponent.TagId;
   fAbsoluteTagName := AComponent.TagName;
+  SyncLinesFromComponent(TRecorderOscillogramComponent(AComponent));
+  EnsureTrendCount;
   Refresh(ATagRegistry, 1.0);
 end;
 
@@ -267,16 +291,16 @@ var
 begin
   while ControlCount > 0 do
     Controls[0].Free;
-  fInfoLabel := TLabel.Create(Self);
-  fInfoLabel.Parent := Self;
-  fInfoLabel.Align := alTop;
-  fInfoLabel.Font.Name := 'Segoe UI';
-  fInfoLabel.Font.Size := 9;
-  fInfoLabel.Font.Style := [fsBold];
-  fInfoLabel.Font.Color := $00404040;
-  fInfoLabel.BorderSpacing.Around := 4;
-  fInfoText := 'Tag: None';
-  fInfoLabel.Caption := 'Tag: None';
+  fInfoPanel := TPanel.Create(Self);
+  fInfoPanel.Parent := Self;
+  fInfoPanel.Align := alTop;
+  fInfoPanel.Height := 22;
+  fInfoPanel.BevelOuter := bvNone;
+  fInfoPanel.ParentBackground := True;
+  fInfoPanel.BorderSpacing.Around := 4;
+  fInfoNextLeft := 0;
+  ClearInfoPanel;
+  AppendInfoPart('-', clGray);
   lChart := TOglChart.Create(Self);
   lChart.Parent := Self;
   lChart.Align := alClient;
@@ -298,11 +322,13 @@ begin
   lPage.BorderColor := $FF707070;
   lPage.XMinValue := 0;
   lPage.XMaxValue := 1;
+  lPage.AutoScaleOnZoomReset := True;
   lAxis := TChartAxis.Create;
   lAxis.Name := 'Axis1';
   lAxis.Caption := '';
   lAxis.MinValue := -1;
   lAxis.MaxValue := 1;
+  lAxis.Color := $FF404040;
   lTrend := cBuffTrend1d.Create;
   lTrend.Name := 'Signal';
   lTrend.Caption := '';
@@ -354,9 +380,107 @@ begin
   end
   else
     ResetFpsMeasure;
+end;
 
-  if (fInfoLabel <> nil) and (fInfoLabel.Caption <> fInfoText) then
-    fInfoLabel.Caption := fInfoText;
+procedure TRecorderOglOscillogram.ClearInfoPanel;
+var
+  I: Integer;
+begin
+  if fInfoPanel = nil then
+    Exit;
+  for I := fInfoPanel.ControlCount - 1 downto 0 do
+    fInfoPanel.Controls[I].Free;
+  fInfoNextLeft := 0;
+end;
+
+procedure TRecorderOglOscillogram.AppendInfoPart(const AText: string; AColor: TColor);
+var
+  lLabel: TLabel;
+begin
+  if (fInfoPanel = nil) or (AText = '') then
+    Exit;
+  lLabel := TLabel.Create(fInfoPanel);
+  lLabel.Parent := fInfoPanel;
+  lLabel.Caption := AText;
+  lLabel.ParentFont := False;
+  lLabel.Font.Name := 'Segoe UI';
+  lLabel.Font.Size := 9;
+  lLabel.Font.Style := [fsBold];
+  lLabel.Font.Color := AColor;
+  lLabel.AutoSize := True;
+  lLabel.Left := fInfoNextLeft;
+  lLabel.Top := 2;
+  Inc(fInfoNextLeft, lLabel.Width);
+end;
+
+procedure TRecorderOglOscillogram.UpdateInfoLabel(ATagRegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag);
+var
+  I, lIdx: Integer;
+  lEstimateText: string;
+  lLine: TRecorderTrendLine;
+  lLineTag: TRecorderTag;
+  lShownTags: TStringList;
+  lTagColors: array of TColor;
+  lColor: TColor;
+  lTagName: string;
+begin
+  ClearInfoPanel;
+  if ATag = nil then
+  begin
+    AppendInfoPart('-', clGray);
+    Exit;
+  end;
+
+  lShownTags := TStringList.Create;
+  try
+    lShownTags.CaseSensitive := False;
+
+    for I := 0 to fExtraLines.Count do
+    begin
+      if I = 0 then
+        lTagName := ATag.Name
+      else
+      begin
+        lLine := TRecorderTrendLine(fExtraLines[I - 1]);
+        if not lLine.Visible then
+          Continue;
+        lLineTag := RecorderResolveTag(ATagRegistry, lLine.TagId, lLine.TagName);
+        if lLineTag <> nil then
+          lTagName := lLineTag.Name
+        else
+          lTagName := Trim(lLine.TagName);
+      end;
+      if lTagName = '' then
+        Continue;
+
+      lColor := TrendLabelColor(I);
+      lIdx := lShownTags.IndexOf(lTagName);
+      if lIdx < 0 then
+      begin
+        lShownTags.Add(lTagName);
+        SetLength(lTagColors, lShownTags.Count);
+        lTagColors[lShownTags.Count - 1] := lColor;
+      end
+      else
+        lTagColors[lIdx] := lColor;
+    end;
+
+    for I := 0 to lShownTags.Count - 1 do
+    begin
+      if I > 0 then
+        AppendInfoPart('; ', clGray);
+      lTagName := lShownTags[I];
+      lLineTag := ATagRegistry.FindByName(lTagName);
+      lEstimateText := FormatEnabledEstimateCaption(lLineTag);
+      if lEstimateText <> '' then
+        AppendInfoPart(Format('%s | %s', [lTagName, lEstimateText]), lTagColors[I])
+      else
+        AppendInfoPart(lTagName, lTagColors[I]);
+    end;
+  finally
+    lShownTags.Free;
+  end;
 end;
 
 function TRecorderOglOscillogram.ResolveTag(
@@ -371,8 +495,7 @@ begin
     Exit;
   if fBindingMode = rtbmAbsoluteTag then
   begin
-    if fAbsoluteTagName <> '' then
-      Result := ATagRegistry.FindByName(fAbsoluteTagName);
+    Result := RecorderResolveTag(ATagRegistry, fAbsoluteTagId, fAbsoluteTagName);
     if Result = nil then
       Result := ATagRegistry.Tags[Min(Max(fTagSlotIndex, 0),
         ATagRegistry.TagCount - 1)];
@@ -445,23 +568,151 @@ begin
   end;
 end;
 
-procedure TRecorderOglOscillogram.UpdateInfoLabel(ATag: TRecorderTag);
+procedure TRecorderOglOscillogram.SyncLinesFromComponent(
+  AComponent: TRecorderOscillogramComponent);
 var
-  lEstimateText: string;
+  I: Integer;
+  lCopy: TRecorderTrendLine;
 begin
-  if ATag = nil then
-    fInfoText := 'Tag: None'
-  else
+  for I := fExtraLines.Count - 1 downto 0 do
   begin
-    lEstimateText := FormatEnabledEstimateCaption(ATag);
-    if lEstimateText <> '' then
-      fInfoText := Format('Tag: %s | %s', [ATag.Name, lEstimateText])
-    else
-      fInfoText := Format('Tag: %s', [ATag.Name]);
+    TObject(fExtraLines[I]).Free;
+    fExtraLines.Delete(I);
   end;
+  if AComponent = nil then
+    Exit;
+  for I := 0 to AComponent.LineCount - 1 do
+  begin
+    lCopy := TRecorderTrendLine.Create;
+    lCopy.Assign(AComponent.Lines[I]);
+    fExtraLines.Add(lCopy);
+  end;
+end;
 
-  if fInfoLabel <> nil then
-    fInfoLabel.Caption := fInfoText;
+procedure TRecorderOglOscillogram.EnsureTrendCount;
+var
+  I: Integer;
+  lAxis: TChartAxis;
+  lLine: TRecorderTrendLine;
+  lNeed: Integer;
+  lTrend: cBuffTrend1d;
+begin
+  if fAxis = nil then
+    Exit;
+  lAxis := TChartAxis(fAxis);
+  lNeed := 1 + fExtraLines.Count;
+  while lAxis.ChildCount < lNeed do
+  begin
+    lTrend := cBuffTrend1d.Create;
+    lTrend.Name := OglChartLinePaletteName(lAxis.ChildCount);
+    lTrend.Caption := lTrend.Name;
+    lTrend.Color := OglChartLinePaletteGLColor(lAxis.ChildCount);
+    lTrend.X0 := 0;
+    lTrend.DX := 1;
+    lAxis.AddChild(lTrend);
+  end;
+  while lAxis.ChildCount > lNeed do
+    lAxis.Children[lAxis.ChildCount - 1].Free;
+  lTrend := GetTrendByIndex(0);
+  if lTrend <> nil then
+  begin
+    lTrend.Name := OglChartLinePaletteName(0);
+    lTrend.Caption := lTrend.Name;
+    lTrend.Color := OglChartLinePaletteGLColor(0);
+    lTrend.Visible := True;
+  end;
+  for I := 0 to fExtraLines.Count - 1 do
+  begin
+    lLine := TRecorderTrendLine(fExtraLines[I]);
+    lTrend := GetTrendByIndex(I + 1);
+    if lTrend = nil then
+      Continue;
+    if Trim(lLine.Name) <> '' then
+      lTrend.Name := lLine.Name
+    else
+      lTrend.Name := OglChartLinePaletteName(I + 1);
+    lTrend.Caption := lTrend.Name;
+    lTrend.Color := OglChartColorToGL(TColor(lLine.Color));
+    lTrend.Visible := lLine.Visible;
+  end;
+  fTrend := GetTrendByIndex(0);
+end;
+
+function TRecorderOglOscillogram.GetTrendByIndex(AIndex: Integer): cBuffTrend1d;
+var
+  lAxis: TChartAxis;
+begin
+  Result := nil;
+  if fAxis = nil then
+    Exit;
+  lAxis := TChartAxis(fAxis);
+  if (AIndex >= 0) and (AIndex < lAxis.ChildCount) and
+    (lAxis.Children[AIndex] is cBuffTrend1d) then
+    Result := cBuffTrend1d(lAxis.Children[AIndex]);
+end;
+
+function TRecorderOglOscillogram.TrendLabelColor(AIndex: Integer): TColor;
+var
+  lTrend: cBuffTrend1d;
+begin
+  lTrend := GetTrendByIndex(AIndex);
+  if lTrend = nil then
+    Exit(clGray);
+  Result := TColor(lTrend.Color and $00FFFFFF);
+end;
+
+procedure TRecorderOglOscillogram.FillTrendFromSnapshot(ATrend: cBuffTrend1d;
+  const ASnapshot: TRecorderSignalSnapshot; ADisplayStart: Double;
+  ADisplaySeconds: Double; out AMinValue, AMaxValue: Double;
+  out APointCount: Integer);
+var
+  I: Integer;
+  lFirst: Boolean;
+  lStartIdx: Integer;
+begin
+  APointCount := 0;
+  AMinValue := 0;
+  AMaxValue := 0;
+  if ATrend = nil then
+    Exit;
+  ATrend.ClearValues;
+  ATrend.X0 := 0;
+  ATrend.DX := 1;
+  if ASnapshot.Count = 0 then
+    Exit;
+  lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(ASnapshot.Times,
+    ASnapshot.Count, ADisplayStart);
+  lFirst := True;
+  for I := lStartIdx to ASnapshot.Count - 1 do
+  begin
+    if lFirst then
+    begin
+      AMinValue := ASnapshot.Values[I];
+      AMaxValue := ASnapshot.Values[I];
+      ATrend.X0 := ASnapshot.Times[I] - ADisplayStart;
+      if (I < ASnapshot.Count - 1) and
+        (ASnapshot.Times[I + 1] > ASnapshot.Times[I]) then
+        ATrend.DX := ASnapshot.Times[I + 1] - ASnapshot.Times[I]
+      else
+        ATrend.DX := ADisplaySeconds;
+      lFirst := False;
+    end
+    else
+    begin
+      if ASnapshot.Values[I] < AMinValue then
+        AMinValue := ASnapshot.Values[I];
+      if ASnapshot.Values[I] > AMaxValue then
+        AMaxValue := ASnapshot.Values[I];
+    end;
+    ATrend.AddValue(ASnapshot.Values[I]);
+    Inc(APointCount);
+  end;
+end;
+
+function TRecorderOglOscillogram.ResolveTagByName(
+  ATagRegistry: TRecorderTagRegistry; const ATagName: string): TRecorderTag;
+begin
+  Result := RecorderResolveTag(ATagRegistry, 0, ATagName);
 end;
 
 procedure TRecorderOglOscillogram.Refresh(ATagRegistry: TRecorderTagRegistry;
@@ -470,14 +721,17 @@ var
   I: Integer;
   lDisplayStart: Double;
   lEndTime: Double;
-  lFirst: Boolean;
-  lMinValue: Double;
+  lHasRange: Boolean;
+  lLine: TRecorderTrendLine;
+  lLineMin: Double;
+  lLineMax: Double;
+  lLinePoints: Integer;
   lMaxValue: Double;
+  lMinValue: Double;
   lPointCount: Integer;
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
   lTrend: cBuffTrend1d;
-  lStartIdx: Integer;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -486,18 +740,19 @@ begin
   fFpsMeasureEnabled := AMeasureFps;
   Inc(fFrameNo);
   if not TChartPage(fPage).ZoomedX then
+  begin
     SetXRange(ADisplaySeconds);
+    TChartPage(fPage).PresetMinXValue := 0;
+    TChartPage(fPage).PresetMaxXValue := ADisplaySeconds;
+  end;
+  EnsureTrendCount;
   if fTrend = nil then
     Exit;
-  lTrend := cBuffTrend1d(fTrend);
-  lTrend.ClearValues;
-  lTrend.X0 := 0;
-  lTrend.DX := 1;
   lTag := ResolveTag(ATagRegistry);
   if lTag = nil then
   begin
     fCurrentTagName := '';
-    UpdateInfoLabel(nil);
+    UpdateInfoLabel(ATagRegistry, nil);
     SetChartTitle(Format('No tag frame:%d', [fFrameNo]));
     SetAxisRange(-1, 1);
     if fChart is TOglChart then
@@ -506,11 +761,17 @@ begin
   end;
 
   fCurrentTagName := lTag.Name;
-  UpdateInfoLabel(lTag);
+  UpdateInfoLabel(ATagRegistry, lTag);
   lSnapshot := lTag.Snapshot;
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   if lSnapshot.Count = 0 then
   begin
+    for I := 0 to fExtraLines.Count do
+    begin
+      lTrend := GetTrendByIndex(I);
+      if lTrend <> nil then
+        lTrend.ClearValues;
+    end;
     SetAxisRange(-1, 1);
     if fChart is TOglChart then
       TOglChart(fChart).Redraw;
@@ -519,40 +780,57 @@ begin
 
   lEndTime := lSnapshot.Times[lSnapshot.Count - 1];
   lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
-  lFirst := True;
+  lHasRange := False;
   lPointCount := 0;
-  lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(lSnapshot.Times, lSnapshot.Count, lDisplayStart);
-  for I := lStartIdx to lSnapshot.Count - 1 do
+  lTrend := GetTrendByIndex(0);
+  FillTrendFromSnapshot(lTrend, lSnapshot, lDisplayStart, ADisplaySeconds,
+    lMinValue, lMaxValue, lPointCount);
+  if lPointCount > 0 then
+    lHasRange := True;
+  for I := 0 to fExtraLines.Count - 1 do
   begin
-    if lFirst then
+    lLine := TRecorderTrendLine(fExtraLines[I]);
+    lTrend := GetTrendByIndex(I + 1);
+    if lTrend = nil then
+      Continue;
+    if not lLine.Visible then
     begin
-      lMinValue := lSnapshot.Values[I];
-      lMaxValue := lSnapshot.Values[I];
-      lTrend.X0 := lSnapshot.Times[I] - lDisplayStart;
-      if (I < lSnapshot.Count - 1) and
-        (lSnapshot.Times[I + 1] > lSnapshot.Times[I]) then
-        lTrend.DX := lSnapshot.Times[I + 1] - lSnapshot.Times[I]
-      else
-        lTrend.DX := ADisplaySeconds;
-      lFirst := False;
+      lTrend.ClearValues;
+      Continue;
+    end;
+    lTag := RecorderResolveTag(ATagRegistry, lLine.TagId, lLine.TagName);
+    if lTag = nil then
+    begin
+      lTrend.ClearValues;
+      Continue;
+    end;
+    lSnapshot := lTag.Snapshot;
+    FillTrendFromSnapshot(lTrend, lSnapshot, lDisplayStart, ADisplaySeconds,
+      lLineMin, lLineMax, lLinePoints);
+    if lLinePoints = 0 then
+      Continue;
+    if not lHasRange then
+    begin
+      lMinValue := lLineMin;
+      lMaxValue := lLineMax;
+      lHasRange := True;
     end
     else
     begin
-      if lSnapshot.Values[I] < lMinValue then
-        lMinValue := lSnapshot.Values[I];
-      if lSnapshot.Values[I] > lMaxValue then
-        lMaxValue := lSnapshot.Values[I];
+      if lLineMin < lMinValue then
+        lMinValue := lLineMin;
+      if lLineMax > lMaxValue then
+        lMaxValue := lLineMax;
     end;
-    lTrend.AddValue(lSnapshot.Values[I]);
-    Inc(lPointCount);
+    Inc(lPointCount, lLinePoints);
   end;
 
-  if lPointCount = 0 then
+  if not lHasRange then
     SetAxisRange(-1, 1)
-  else
+  else if not TChartAxis(fAxis).HasPresetRange then
     SetAxisRange(lMinValue, lMaxValue);
-  RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d frame=%d window=%.3f',
-    [lTag.Name, lPointCount, fFrameNo, ADisplaySeconds]));
+  RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d lines=%d frame=%d window=%.3f',
+    [fCurrentTagName, lPointCount, 1 + fExtraLines.Count, fFrameNo, ADisplaySeconds]));
   if fChart is TOglChart then
     TOglChart(fChart).Redraw;
 end;
@@ -560,8 +838,8 @@ end;
 procedure TRecorderOglOscillogram.ForceRepaint;
 begin
   Invalidate;
-  if fInfoLabel <> nil then
-    fInfoLabel.Invalidate;
+  if fInfoPanel <> nil then
+    fInfoPanel.Invalidate;
   if fChart <> nil then
   begin
     fChart.Invalidate;
@@ -739,9 +1017,9 @@ begin
     lTagName := 'None';
   lEstimateText := FormatEnabledEstimateCaption(ATag);
   if lEstimateText <> '' then
-    APage.Caption := Format('Tag: %s | %s', [lTagName, lEstimateText])
+    APage.Caption := Format('%s | %s', [lTagName, lEstimateText])
   else
-    APage.Caption := Format('Tag: %s', [lTagName]);
+    APage.Caption := lTagName;
 end;
 
 procedure TRecorderOglOscillogramSurface.Rebuild(
@@ -775,6 +1053,7 @@ begin
     lPage.Name := Format('OscPage%d', [I + 1]);
     lPage.Caption := 'Tag: None | FPS: -';
     lPage.Align := cpaAuto;
+    lPage.AutoScaleOnZoomReset := True;
     lPage.FillColor := $FFFFFFFF;
     lPage.BorderColor := $FF808080;
     lTabSpace.Left := 42;
@@ -790,6 +1069,7 @@ begin
     lAxis.Caption := 'Y';
     lAxis.MinValue := -1;
     lAxis.MaxValue := 1;
+    lAxis.Color := $FF404040;
     lPage.AddChild(lAxis);
     lTrend := cBuffTrend1d.Create;
     lTrend.Name := Format('Trend%d', [I + 1]);
@@ -841,6 +1121,8 @@ begin
     begin
       lPage.XMinValue := 0;
       lPage.XMaxValue := ADisplaySeconds;
+      lPage.PresetMinXValue := 0;
+      lPage.PresetMaxXValue := ADisplaySeconds;
     end;
     lTrend.ClearValues;
     lTrend.X0 := 0;
@@ -894,7 +1176,7 @@ begin
 
     if lPointCount = 0 then
       SetAxisRange(lAxis, -1, 1)
-    else
+    else if not lAxis.HasPresetRange then
       SetAxisRange(lAxis, lMinValue, lMaxValue);
   end;
 

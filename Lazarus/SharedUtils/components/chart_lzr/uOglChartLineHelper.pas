@@ -1,11 +1,11 @@
 unit uOglChartLineHelper;
 {$mode objfpc}{$H+}
-{$codepage cp1251}
+{$codepage UTF8}
 {
-  Модуль uOglChartLineHelper
-  Описание: Содержит вспомогательные процедуры для рендеринга серий линий (TChartLineSeries),
-            буферизованных одномерных трендов (cBuffTrend1d) и опорных узлов Безье (cTrend)
-            с использованием стандартного OpenGL или шейдеров с логарифмическим масштабированием.
+  РњРѕРґСѓР»СЊ uOglChartLineHelper
+  РћРїРёСЃР°РЅРёРµ: РЎРѕРґРµСЂР¶РёС‚ РІСЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ РїСЂРѕС†РµРґСѓСЂС‹ РґР»СЏ СЂРµРЅРґРµСЂРёРЅРіР° СЃРµСЂРёР№ Р»РёРЅРёР№ (TChartLineSeries),
+            Р±СѓС„РµСЂРёР·РѕРІР°РЅРЅС‹С… РѕРґРЅРѕРјРµСЂРЅС‹С… С‚СЂРµРЅРґРѕРІ (cBuffTrend1d) Рё РѕРїРѕСЂРЅС‹С… СѓР·Р»РѕРІ Р‘РµР·СЊРµ (cTrend)
+            СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј СЃС‚Р°РЅРґР°СЂС‚РЅРѕРіРѕ OpenGL РёР»Рё С€РµР№РґРµСЂРѕРІ СЃ Р»РѕРіР°СЂРёС„РјРёС‡РµСЃРєРёРј РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёРµРј.
 }
 interface
 uses
@@ -14,8 +14,8 @@ uses
 
 type
   { IChartOffsetHelper }
-  // Интерфейс обратного вызова для рендерера для преобразования значений в пиксели
-  // и настройки цвета без создания жесткой круговой зависимости между модулями.
+  // РРЅС‚РµСЂС„РµР№СЃ РѕР±СЂР°С‚РЅРѕРіРѕ РІС‹Р·РѕРІР° РґР»СЏ СЂРµРЅРґРµСЂРµСЂР° РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ Р·РЅР°С‡РµРЅРёР№ РІ РїРёРєСЃРµР»Рё
+  // Рё РЅР°СЃС‚СЂРѕР№РєРё С†РІРµС‚Р° Р±РµР· СЃРѕР·РґР°РЅРёСЏ Р¶РµСЃС‚РєРѕР№ РєСЂСѓРіРѕРІРѕР№ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РјРµР¶РґСѓ РјРѕРґСѓР»СЏРјРё.
   IChartOffsetHelper = interface
     ['{E8A375A2-2B3D-4A23-9D27-C8C1F4A579B1}']
     function XValueToPixel(APage: TChartPage; AAxis: TChartAxis; AValue: Double; APixelMin, APixelMax: Single): Single;
@@ -23,7 +23,7 @@ type
     procedure SetGLColor(AColor: Cardinal);
   end;
 
-// Отрисовывает стандартную серию линий TChartLineSeries.
+// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ СЃРµСЂРёСЋ Р»РёРЅРёР№ TChartLineSeries.
 procedure RenderLineSeries(
   ARenderer: TObject;
   ASeries: TChartLineSeries;
@@ -34,7 +34,7 @@ procedure RenderLineSeries(
   AShaderInitialized: Boolean;
   AShaderProgram: GLuint
 );
-// Отрисовывает одномерный буферизированный тренд cBuffTrend1d.
+// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ РѕРґРЅРѕРјРµСЂРЅС‹Р№ Р±СѓС„РµСЂРёР·РёСЂРѕРІР°РЅРЅС‹Р№ С‚СЂРµРЅРґ cBuffTrend1d.
 procedure RenderBuffTrend1d(
   ARenderer: TObject;
   ATrend: cBuffTrend1d;
@@ -45,7 +45,7 @@ procedure RenderBuffTrend1d(
   AShaderInitialized: Boolean;
   AShaderProgram: GLuint
 );
-// Отрисовывает предвыделенную очередь 2D-точек cBuffTrendQueue.
+// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ РїСЂРµРґРІС‹РґРµР»РµРЅРЅСѓСЋ РѕС‡РµСЂРµРґСЊ 2D-С‚РѕС‡РµРє cBuffTrendQueue.
 procedure RenderBuffTrendQueue(
   ARenderer: TObject;
   ATrend: cBuffTrendQueue;
@@ -56,7 +56,7 @@ procedure RenderBuffTrendQueue(
   AShaderInitialized: Boolean;
   AShaderProgram: GLuint
 );
-// Отрисовывает опорные точки и касательные линии для сплайнов cTrend.
+// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ РѕРїРѕСЂРЅС‹Рµ С‚РѕС‡РєРё Рё РєР°СЃР°С‚РµР»СЊРЅС‹Рµ Р»РёРЅРёРё РґР»СЏ СЃРїР»Р°Р№РЅРѕРІ cTrend.
 procedure RenderTrendPoints(
   ARenderer: TObject;
   ATrend: cTrend;
@@ -67,9 +67,9 @@ procedure RenderTrendPoints(
 
 implementation
 /// <summary>
-/// Отрисовывает набор точек TChartLineSeries в виде соединенных линий GL_LINE_STRIP.
-/// Если включен шейдер, передает параметры шкал (линейная/логарифм) в виде униформ-переменных.
-/// Для оптимизации серий с числом точек более 2000 использует компилируемые списки glGenLists.
+/// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ РЅР°Р±РѕСЂ С‚РѕС‡РµРє TChartLineSeries РІ РІРёРґРµ СЃРѕРµРґРёРЅРµРЅРЅС‹С… Р»РёРЅРёР№ GL_LINE_STRIP.
+/// Р•СЃР»Рё РІРєР»СЋС‡РµРЅ С€РµР№РґРµСЂ, РїРµСЂРµРґР°РµС‚ РїР°СЂР°РјРµС‚СЂС‹ С€РєР°Р» (Р»РёРЅРµР№РЅР°СЏ/Р»РѕРіР°СЂРёС„Рј) РІ РІРёРґРµ СѓРЅРёС„РѕСЂРј-РїРµСЂРµРјРµРЅРЅС‹С….
+/// Р”Р»СЏ РѕРїС‚РёРјРёР·Р°С†РёРё СЃРµСЂРёР№ СЃ С‡РёСЃР»РѕРј С‚РѕС‡РµРє Р±РѕР»РµРµ 2000 РёСЃРїРѕР»СЊР·СѓРµС‚ РєРѕРјРїРёР»РёСЂСѓРµРјС‹Рµ СЃРїРёСЃРєРё glGenLists.
 /// </summary>
 procedure RenderLineSeries(
   ARenderer: TObject;
@@ -98,7 +98,7 @@ begin
     Exit;
   lRendererObj.SetGLColor(ASeries.Color);
   glLineWidth(2.3);
-  // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
+  // РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ С€РµР№РґРµСЂРЅРѕРіРѕ РєРѕРЅРІРµР№РµСЂР° РѕС‚СЂРёСЃРѕРІРєРё (РґР»СЏ РїРѕРґРґРµСЂР¶РєРё Р»РѕРіР°СЂРёС„РјРёС‡РµСЃРєРёС… РѕСЃРµР№ РЅР° GPU)
   glUseProgram(0);
   if False and AUseShader and AShaderInitialized then
   begin
@@ -115,14 +115,14 @@ begin
     lYMin := AYAxis.MinValue;
     lYMax := AYAxis.MaxValue;
     glUseProgram(AShaderProgram);
-    // Передаем границы шкал в шейдер
+    // РџРµСЂРµРґР°РµРј РіСЂР°РЅРёС†С‹ С€РєР°Р» РІ С€РµР№РґРµСЂ
     lMinMax[0] := lXMin;
     lMinMax[1] := lXMax;
     lMinMax[2] := lYMin;
     lMinMax[3] := lYMax;
     lMinMaxLoc := glGetUniformLocation(AShaderProgram, 'a_minmax');
     glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
-    // Передаем флаги логарифмического масштабирования
+    // РџРµСЂРµРґР°РµРј С„Р»Р°РіРё Р»РѕРіР°СЂРёС„РјРёС‡РµСЃРєРѕРіРѕ РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёСЏ
     if AYAxis.UseOwnX then
     begin
       if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
@@ -134,13 +134,13 @@ begin
     if AYAxis.Scale = casLog10 then lLg[1] := 1 else lLg[1] := 0;
     lLgLoc := glGetUniformLocation(AShaderProgram, 'a_Lg');
     glUniform2iv(lLgLoc, 1, @lLg[0]);
-    // Трансформируем модельно-видовую матрицу в пиксельное пространство
+    // РўСЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРј РјРѕРґРµР»СЊРЅРѕ-РІРёРґРѕРІСѓСЋ РјР°С‚СЂРёС†Сѓ РІ РїРёРєСЃРµР»СЊРЅРѕРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix;
     glTranslatef(ARect.Left, ARect.Bottom, 0);
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
-    // Быстрая отрисовка через дисплейные списки OpenGL при большом числе точек
+    // Р‘С‹СЃС‚СЂР°СЏ РѕС‚СЂРёСЃРѕРІРєР° С‡РµСЂРµР· РґРёСЃРїР»РµР№РЅС‹Рµ СЃРїРёСЃРєРё OpenGL РїСЂРё Р±РѕР»СЊС€РѕРј С‡РёСЃР»Рµ С‚РѕС‡РµРє
     if False and (ASeries.PointCount > 2000) then
     begin
       if (ASeries.GLListID = 0) or (ASeries.GLListContextVersion <> gGLContextVersion) then
@@ -175,7 +175,7 @@ begin
   end
   else
   begin
-    // Классический медленный рендеринг на CPU с переводом координат в пиксели для каждой вершины
+    // РљР»Р°СЃСЃРёС‡РµСЃРєРёР№ РјРµРґР»РµРЅРЅС‹Р№ СЂРµРЅРґРµСЂРёРЅРі РЅР° CPU СЃ РїРµСЂРµРІРѕРґРѕРј РєРѕРѕСЂРґРёРЅР°С‚ РІ РїРёРєСЃРµР»Рё РґР»СЏ РєР°Р¶РґРѕР№ РІРµСЂС€РёРЅС‹
     glBegin(GL_LINE_STRIP);
     for lIndex := 0 to ASeries.PointCount - 1 do
     begin
@@ -189,7 +189,7 @@ begin
 end;
 
 /// <summary>
-/// Отрисовывает буферизированный тренд cBuffTrend1d (где X0 – начало отсчета, DX – шаг сетки).
+/// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ Р±СѓС„РµСЂРёР·РёСЂРѕРІР°РЅРЅС‹Р№ С‚СЂРµРЅРґ cBuffTrend1d (РіРґРµ X0 вЂ“ РЅР°С‡Р°Р»Рѕ РѕС‚СЃС‡РµС‚Р°, DX вЂ“ С€Р°Рі СЃРµС‚РєРё).
 /// </summary>
 procedure RenderBuffTrend1d(
   ARenderer: TObject;
@@ -218,7 +218,7 @@ begin
     Exit;
   lRendererObj.SetGLColor(ATrend.Color);
   glLineWidth(2.3);
-  // Использование шейдерного рендеринга
+  // РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ С€РµР№РґРµСЂРЅРѕРіРѕ СЂРµРЅРґРµСЂРёРЅРіР°
   if AUseShader and AShaderInitialized then
   begin
     if AYAxis.UseOwnX then
@@ -234,14 +234,14 @@ begin
     lYMin := AYAxis.MinValue;
     lYMax := AYAxis.MaxValue;
     glUseProgram(AShaderProgram);
-    // Установка границ вьюпорта в шейдере
+    // РЈСЃС‚Р°РЅРѕРІРєР° РіСЂР°РЅРёС† РІСЊСЋРїРѕСЂС‚Р° РІ С€РµР№РґРµСЂРµ
     lMinMax[0] := lXMin;
     lMinMax[1] := lXMax;
     lMinMax[2] := lYMin;
     lMinMax[3] := lYMax;
     lMinMaxLoc := glGetUniformLocation(AShaderProgram, 'a_minmax');
     glUniform4fv(lMinMaxLoc, 1, @lMinMax[0]);
-    // Установка шкал логарифмирования в шейдере
+    // РЈСЃС‚Р°РЅРѕРІРєР° С€РєР°Р» Р»РѕРіР°СЂРёС„РјРёСЂРѕРІР°РЅРёСЏ РІ С€РµР№РґРµСЂРµ
     if AYAxis.UseOwnX then
     begin
       if AYAxis.XScale = casLog10 then lLg[0] := 1 else lLg[0] := 0;
@@ -253,8 +253,8 @@ begin
     if AYAxis.Scale = casLog10 then lLg[1] := 1 else lLg[1] := 0;
     lLgLoc := glGetUniformLocation(AShaderProgram, 'a_Lg');
     glUniform2iv(lLgLoc, 1, @lLg[0]);
-    // Передаем параметры шага линии: a_LinePar.x = X0, a_LinePar.y = DX.
-    // Шейдер сам вычислит X-координату вершины на основе ее индекса.
+    // РџРµСЂРµРґР°РµРј РїР°СЂР°РјРµС‚СЂС‹ С€Р°РіР° Р»РёРЅРёРё: a_LinePar.x = X0, a_LinePar.y = DX.
+    // РЁРµР№РґРµСЂ СЃР°Рј РІС‹С‡РёСЃР»РёС‚ X-РєРѕРѕСЂРґРёРЅР°С‚Сѓ РІРµСЂС€РёРЅС‹ РЅР° РѕСЃРЅРѕРІРµ РµРµ РёРЅРґРµРєСЃР°.
     lLinePar[0] := ATrend.X0;
     lLinePar[1] := ATrend.DX;
     lLineParLoc := glGetUniformLocation(AShaderProgram, 'a_LinePar');
@@ -264,7 +264,7 @@ begin
     glTranslatef(ARect.Left, ARect.Bottom, 0);
     glScalef((ARect.Right - ARect.Left) / (lXMax - lXMin), (ARect.Top - ARect.Bottom) / (lYMax - lYMin), 1.0);
     glTranslatef(-lXMin, -lYMin, 0);
-    // Рендеринг через списки дисплея
+    // Р РµРЅРґРµСЂРёРЅРі С‡РµСЂРµР· СЃРїРёСЃРєРё РґРёСЃРїР»РµСЏ
     if False and (ATrend.Count > 2000) then
     begin
       if (ATrend.GLListID = 0) or (ATrend.GLListContextVersion <> gGLContextVersion) then
@@ -274,8 +274,8 @@ begin
         glBegin(GL_LINE_STRIP);
         for lIndex := 0 to ATrend.Count - 1 do
         begin
-          // Передаем Y-значение в качестве X, а в качестве Y передаем индекс вершины
-          // Шейдер восстановит реальную геометрию по формуле X0 + index * DX.
+          // РџРµСЂРµРґР°РµРј Y-Р·РЅР°С‡РµРЅРёРµ РІ РєР°С‡РµСЃС‚РІРµ X, Р° РІ РєР°С‡РµСЃС‚РІРµ Y РїРµСЂРµРґР°РµРј РёРЅРґРµРєСЃ РІРµСЂС€РёРЅС‹
+          // РЁРµР№РґРµСЂ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚ СЂРµР°Р»СЊРЅСѓСЋ РіРµРѕРјРµС‚СЂРёСЋ РїРѕ С„РѕСЂРјСѓР»Рµ X0 + index * DX.
           glVertex2f(ATrend.Values[lIndex], lIndex);
         end;
         glEnd;
@@ -299,7 +299,7 @@ begin
   end
   else
   begin
-    // Классическая CPU-отрисовка без шейдеров
+    // РљР»Р°СЃСЃРёС‡РµСЃРєР°СЏ CPU-РѕС‚СЂРёСЃРѕРІРєР° Р±РµР· С€РµР№РґРµСЂРѕРІ
     glBegin(GL_LINE_STRIP);
     for lIndex := 0 to ATrend.Count - 1 do
     begin
@@ -406,8 +406,8 @@ begin
   end;
 end;
 /// <summary>
-/// Отрисовывает маркеры контрольных точек Безье, зеленые касательные усы управления
-/// и соединяющие линии для редактируемого сплайна cTrend.
+/// РћС‚СЂРёСЃРѕРІС‹РІР°РµС‚ РјР°СЂРєРµСЂС‹ РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє Р‘РµР·СЊРµ, Р·РµР»РµРЅС‹Рµ РєР°СЃР°С‚РµР»СЊРЅС‹Рµ СѓСЃС‹ СѓРїСЂР°РІР»РµРЅРёСЏ
+/// Рё СЃРѕРµРґРёРЅСЏСЋС‰РёРµ Р»РёРЅРёРё РґР»СЏ СЂРµРґР°РєС‚РёСЂСѓРµРјРѕРіРѕ СЃРїР»Р°Р№РЅР° cTrend.
 /// </summary>
 procedure RenderTrendPoints(
   ARenderer: TObject;
@@ -436,14 +436,14 @@ begin
     lX := lRendererObj.XValueToPixel(APage, AYAxis, lPoint.X, ARect.Left, ARect.Right);
     lY := lRendererObj.AxisValueToPixel(AYAxis, lPoint.Y, ARect.Bottom, ARect.Top);
     lType := bp.PointType;
-    // Отрисовка касательных линий и контрольных точек для сглаженных узлов Безье
+    // РћС‚СЂРёСЃРѕРІРєР° РєР°СЃР°С‚РµР»СЊРЅС‹С… Р»РёРЅРёР№ Рё РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє РґР»СЏ СЃРіР»Р°Р¶РµРЅРЅС‹С… СѓР·Р»РѕРІ Р‘РµР·СЊРµ
     if (lType = bptSmooth) and bp.Selected then
     begin
       lXLeft := lRendererObj.XValueToPixel(APage, AYAxis, bp.Left.X, ARect.Left, ARect.Right);
       lYLeft := lRendererObj.AxisValueToPixel(AYAxis, bp.Left.Y, ARect.Bottom, ARect.Top);
       lXRight := lRendererObj.XValueToPixel(APage, AYAxis, bp.Right.X, ARect.Left, ARect.Right);
       lYRight := lRendererObj.AxisValueToPixel(AYAxis, bp.Right.Y, ARect.Bottom, ARect.Top);
-      // Рисование касательных серых линий
+      // Р РёСЃРѕРІР°РЅРёРµ РєР°СЃР°С‚РµР»СЊРЅС‹С… СЃРµСЂС‹С… Р»РёРЅРёР№
       lRendererObj.SetGLColor($FF808080);
       glLineWidth(1.0);
       glBegin(GL_LINES);
@@ -452,8 +452,8 @@ begin
       glVertex2f(lX, lY);
       glVertex2f(lXRight, lYRight);
       glEnd;
-      // Рисование контрольных точек (зеленые квадраты 8x8)
-      lRendererObj.SetGLColor($FF00D000); // Ярко-зеленый
+      // Р РёСЃРѕРІР°РЅРёРµ РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє (Р·РµР»РµРЅС‹Рµ РєРІР°РґСЂР°С‚С‹ 8x8)
+      lRendererObj.SetGLColor($FF00D000); // РЇСЂРєРѕ-Р·РµР»РµРЅС‹Р№
       glBegin(GL_QUADS);
       glVertex2f(lXLeft - 4, lYLeft - 4);
       glVertex2f(lXLeft + 4, lYLeft - 4);
@@ -464,7 +464,7 @@ begin
       glVertex2f(lXRight + 4, lYRight + 4);
       glVertex2f(lXRight - 4, lYRight + 4);
       glEnd;
-      // Черная обводка для зеленых контрольных точек
+      // Р§РµСЂРЅР°СЏ РѕР±РІРѕРґРєР° РґР»СЏ Р·РµР»РµРЅС‹С… РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє
       lRendererObj.SetGLColor($FF000000);
       glLineWidth(1.0);
       glBegin(GL_LINE_LOOP);
@@ -481,13 +481,13 @@ begin
       glEnd;
     end;
 
-    // Цвет узлов: красный при выделении, синий по умолчанию
+    // Р¦РІРµС‚ СѓР·Р»РѕРІ: РєСЂР°СЃРЅС‹Р№ РїСЂРё РІС‹РґРµР»РµРЅРёРё, СЃРёРЅРёР№ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
     if bp.Selected then
       lRendererObj.SetGLColor($FFFF3C3C)
     else
       lRendererObj.SetGLColor($FF3C7DFF);
     case lType of
-      bptCorner: // Обычный узел (квадрат)
+      bptCorner: // РћР±С‹С‡РЅС‹Р№ СѓР·РµР» (РєРІР°РґСЂР°С‚)
         begin
           glBegin(GL_QUADS);
           glVertex2f(lX - 4, lY - 4);
@@ -496,7 +496,7 @@ begin
           glVertex2f(lX - 4, lY + 4);
           glEnd;
         end;
-      bptSmooth: // Сглаженный узел (ромб)
+      bptSmooth: // РЎРіР»Р°Р¶РµРЅРЅС‹Р№ СѓР·РµР» (СЂРѕРјР±)
         begin
           glBegin(GL_QUADS);
           glVertex2f(lX, lY - 5);
@@ -505,7 +505,7 @@ begin
           glVertex2f(lX - 5, lY);
           glEnd;
         end;
-      bptNull: // Пустой/разрывной узел (треугольник)
+      bptNull: // РџСѓСЃС‚РѕР№/СЂР°Р·СЂС‹РІРЅРѕР№ СѓР·РµР» (С‚СЂРµСѓРіРѕР»СЊРЅРёРє)
         begin
           glBegin(GL_TRIANGLES);
           glVertex2f(lX - 5, lY + 4);
@@ -515,7 +515,7 @@ begin
         end;
     end;
 
-    // Черный контур вокруг узлов
+    // Р§РµСЂРЅС‹Р№ РєРѕРЅС‚СѓСЂ РІРѕРєСЂСѓРі СѓР·Р»РѕРІ
     lRendererObj.SetGLColor($FF000000);
     glLineWidth(1.0);
     case lType of

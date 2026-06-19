@@ -37,42 +37,7 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uMainForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="MainForm"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderStateMachine.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderRunControlSettings.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderFormModel.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderCoreServices.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderDebugLog.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderTags.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderDataSources.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Core/uRecorderEventQueue.pas"/>
+        <Filename Value="Core/uMeraFile.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -80,19 +45,27 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderCoreServices.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderDataSources.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uRecorderDataStorage.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderTimeSystem.pas"/>
+        <Filename Value="Core/uRecorderDebugLog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderProjectFiles.pas"/>
+        <Filename Value="Core/uRecorderEventQueue.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderSpectrumEngine.pas"/>
+        <Filename Value="Core/uRecorderFormModel.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -100,57 +73,63 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uFormPagesDialog.pas"/>
+        <Filename Value="Core/uRecorderMeraPaths.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uFormEditorController.pas"/>
+        <Filename Value="Core/uRecorderProjectFiles.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderSettingsDialog.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="RecorderSettingsDialog"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
-        <Filename Value="UI/uRecorderFrequencyBandsDialog.pas"/>
+        <Filename Value="Core/uRecorderRunControlSettings.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderCommandImages.pas"/>
+        <Filename Value="Core/uRecorderSpectrumEngine.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uTagSettingsDialog.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="TagSettingsDialog"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
-        <Filename Value="UI/uRecorderDigitalPageView.pas"/>
+        <Filename Value="Core/uRecorderSpectrumRuntime.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderOscillogramPageView.pas"/>
+        <Filename Value="Core/uRecorderStateMachine.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderOglOscillogramView.pas"/>
+        <Filename Value="Core/uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="../SharedUtils/uSharedFileLogger.pas"/>
+        <Filename Value="Core/uRecorderTagRefs.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="../SharedUtils/mera/uMeraFile.pas"/>
+        <Filename Value="Core/uRecorderTimeSystem.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="../Tests/RecorderTests/UITestData/uRecorderUiTestData.pas"/>
+        <Filename Value="Device/uRecorderDeviceInterfaces.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMebiusTcpProtocol.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMic140DataSource.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMic140LegacyProtocol.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMic140Utils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/UI/uRecorderMic140SettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -158,21 +137,25 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderTrendSettingsDialog.pas"/>
+        <Filename Value="UI/uFormEditorController.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderTrendView.pas"/>
+        <Filename Value="UI/uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderSpectrumView.pas"/>
+        <Filename Value="UI/uMainForm.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderCalibrationAddDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderCalibrationAddDialog"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
@@ -190,11 +173,54 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderMic140SettingsDialog.pas"/>
+        <Filename Value="UI/uRecorderCommandImages.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="UI/uRecorderDigitalPageView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderFrequencyBandsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderOglOscillogramView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderOscillogramPageView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
         <Filename Value="UI/uRecorderSpectrumSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderSpectrumView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderColorSwatch.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderOscillogramSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderTrendSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderTrendView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -202,23 +228,42 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderDeviceInterfaces.pas"/>
+        <Filename Value="UI/uTagSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="TagSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/uBaseClass.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderMebiusTcpProtocol.pas"/>
+        <Filename Value="../SharedUtils/uComponentServices.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderMic140LegacyProtocol.pas"/>
+        <Filename Value="../SharedUtils/uEventList.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderMic140DataSource.pas"/>
+        <Filename Value="../SharedUtils/uEventTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderSpectrumRuntime.pas"/>
+        <Filename Value="../SharedUtils/uSharedAlgorithms.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/uSharedFileLogger.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/uSharedStringEncoding.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../Tests/RecorderTests/UITestData/uRecorderUiTestData.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
@@ -227,7 +272,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Core;UI;../SharedUtils;../SharedUtils/mera;../Tests/RecorderTests/UITestData"/>
+      <OtherUnitFiles Value="Core;UI;Device;Device/MIC140;Device/MIC140/UI;../SharedUtils;../Tests/RecorderTests/UITestData"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

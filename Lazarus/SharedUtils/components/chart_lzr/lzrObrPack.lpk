@@ -78,6 +78,10 @@
         <UnitName Value="uOglChartTypes"/>
       </Item>
       <Item>
+        <Filename Value="uOglChartColors.pas"/>
+        <UnitName Value="uOglChartColors"/>
+      </Item>
+      <Item>
         <Filename Value="uOglChartFrameListener.pas"/>
         <UnitName Value="uOglChartFrameListener"/>
       </Item>

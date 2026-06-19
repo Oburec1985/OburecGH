@@ -1,7 +1,7 @@
 unit uRecorderSpectrumSettingsDialog;
 
 {$mode objfpc}{$H+}
-{$codepage cp1251}
+{$codepage UTF8}
 
 interface
 
@@ -98,7 +98,7 @@ begin
   fDraft := TRecorderSpectrumComponent.Create;
   fDraft.Assign(fComponent);
 
-  Caption := CP1251ToUTF8('Настройка спектрального графика - ') + AComponent.Name;
+  Caption := CP1251ToUTF8('РќР°СЃС‚СЂРѕР№РєР° СЃРїРµРєС‚СЂР°Р»СЊРЅРѕРіРѕ РіСЂР°С„РёРєР° - ') + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 710;
@@ -169,7 +169,7 @@ var
   I, J: Integer;
   lNode: TRecorderSpectrumConfigNode;
 begin
-  // Заполняем fAllAvailableTags из SpectrumConfigs
+  // Р—Р°РїРѕР»РЅСЏРµРј fAllAvailableTags РёР· SpectrumConfigs
   if (fTagRegistry <> nil) and (fTagRegistry.SpectrumConfigs <> nil) then
   begin
     for I := 0 to fTagRegistry.SpectrumConfigs.NodeCount - 1 do
@@ -181,11 +181,11 @@ begin
     end;
   end;
 
-  // 1. Доступные теги
+  // 1. Р”РѕСЃС‚СѓРїРЅС‹Рµ С‚РµРіРё
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 12, 200, 15);
-  lLabel.Caption := CP1251ToUTF8('Доступные теги (спектры):');
+  lLabel.Caption := CP1251ToUTF8('Р”РѕСЃС‚СѓРїРЅС‹Рµ С‚РµРіРё (СЃРїРµРєС‚СЂС‹):');
 
   fFilterEdit := TEdit.Create(Self);
   fFilterEdit.Parent := Self;
@@ -198,7 +198,7 @@ begin
   fAvailableList.MultiSelect := True;
   fAvailableList.OnDblClick := @AvailableListDblClick;
 
-  // 2. Кнопки переноса
+  // 2. РљРЅРѕРїРєРё РїРµСЂРµРЅРѕСЃР°
   fAddButton := TButton.Create(Self);
   fAddButton.Parent := Self;
   fAddButton.SetBounds(220, 180, 36, 25);
@@ -211,11 +211,11 @@ begin
   fRemoveButton.Caption := '<<';
   fRemoveButton.OnClick := @RemoveButtonClick;
 
-  // 3. Отображаемые теги
+  // 3. РћС‚РѕР±СЂР°Р¶Р°РµРјС‹Рµ С‚РµРіРё
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(262, 12, 200, 15);
-  lLabel.Caption := CP1251ToUTF8('Отображаемые теги:');
+  lLabel.Caption := CP1251ToUTF8('РћС‚РѕР±СЂР°Р¶Р°РµРјС‹Рµ С‚РµРіРё:');
 
   fUsedList := TListBox.Create(Self);
   fUsedList.Parent := Self;
@@ -223,16 +223,16 @@ begin
   fUsedList.MultiSelect := True;
   fUsedList.OnDblClick := @UsedListDblClick;
 
-  // 4. Параметры осей
+  // 4. РџР°СЂР°РјРµС‚СЂС‹ РѕСЃРµР№
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 24, 220, 180);
-  lGroupBox.Caption := CP1251ToUTF8('Настройка осей');
+  lGroupBox.Caption := CP1251ToUTF8('РќР°СЃС‚СЂРѕР№РєР° РѕСЃРµР№');
 
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 20, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Мин X (Гц):');
+  lLabel.Caption := CP1251ToUTF8('РњРёРЅ X (Р“С†):');
 
   fMinXEdit := TEdit.Create(lGroupBox);
   fMinXEdit.Parent := lGroupBox;
@@ -241,7 +241,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 50, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Макс X (Гц):');
+  lLabel.Caption := CP1251ToUTF8('РњР°РєСЃ X (Р“С†):');
 
   fMaxXEdit := TEdit.Create(lGroupBox);
   fMaxXEdit.Parent := lGroupBox;
@@ -250,7 +250,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 80, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Мин Y:');
+  lLabel.Caption := CP1251ToUTF8('РњРёРЅ Y:');
 
   fMinYEdit := TEdit.Create(lGroupBox);
   fMinYEdit.Parent := lGroupBox;
@@ -259,7 +259,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 110, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Макс Y:');
+  lLabel.Caption := CP1251ToUTF8('РњР°РєСЃ Y:');
 
   fMaxYEdit := TEdit.Create(lGroupBox);
   fMaxYEdit.Parent := lGroupBox;
@@ -268,66 +268,66 @@ begin
   fLgXCheck := TCheckBox.Create(lGroupBox);
   fLgXCheck.Parent := lGroupBox;
   fLgXCheck.SetBounds(10, 137, 90, 20);
-  fLgXCheck.Caption := CP1251ToUTF8('Лог X');
+  fLgXCheck.Caption := CP1251ToUTF8('Р›РѕРі X');
 
   fLgYCheck := TCheckBox.Create(lGroupBox);
   fLgYCheck.Parent := lGroupBox;
   fLgYCheck.SetBounds(110, 137, 90, 20);
-  fLgYCheck.Caption := CP1251ToUTF8('Лог Y');
+  fLgYCheck.Caption := CP1251ToUTF8('Р›РѕРі Y');
 
-  // 5. Параметры отображения
+  // 5. РџР°СЂР°РјРµС‚СЂС‹ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 215, 220, 225);
-  lGroupBox.Caption := CP1251ToUTF8('Отображение');
+  lGroupBox.Caption := CP1251ToUTF8('РћС‚РѕР±СЂР°Р¶РµРЅРёРµ');
 
   fShowAlarmsCheck := TCheckBox.Create(lGroupBox);
   fShowAlarmsCheck.Parent := lGroupBox;
   fShowAlarmsCheck.SetBounds(10, 20, 180, 20);
-  fShowAlarmsCheck.Caption := CP1251ToUTF8('Аварийные уровни');
+  fShowAlarmsCheck.Caption := CP1251ToUTF8('РђРІР°СЂРёР№РЅС‹Рµ СѓСЂРѕРІРЅРё');
 
   fShowWarningsCheck := TCheckBox.Create(lGroupBox);
   fShowWarningsCheck.Parent := lGroupBox;
   fShowWarningsCheck.SetBounds(10, 45, 180, 20);
-  fShowWarningsCheck.Caption := CP1251ToUTF8('Предупредительные');
+  fShowWarningsCheck.Caption := CP1251ToUTF8('РџСЂРµРґСѓРїСЂРµРґРёС‚РµР»СЊРЅС‹Рµ');
 
   fShowProfileCheck := TCheckBox.Create(lGroupBox);
   fShowProfileCheck.Parent := lGroupBox;
   fShowProfileCheck.SetBounds(10, 70, 180, 20);
-  fShowProfileCheck.Caption := CP1251ToUTF8('Профили');
+  fShowProfileCheck.Caption := CP1251ToUTF8('РџСЂРѕС„РёР»Рё');
 
   fShowLabelsCheck := TCheckBox.Create(lGroupBox);
   fShowLabelsCheck.Parent := lGroupBox;
   fShowLabelsCheck.SetBounds(10, 95, 180, 20);
-  fShowLabelsCheck.Caption := CP1251ToUTF8('Метки пиков');
+  fShowLabelsCheck.Caption := CP1251ToUTF8('РњРµС‚РєРё РїРёРєРѕРІ');
 
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   fShowLegendCheck := TCheckBox.Create(lGroupBox);
   fShowLegendCheck.Parent := lGroupBox;
   fShowLegendCheck.SetBounds(10, 120, 180, 20);
-  fShowLegendCheck.Caption := CP1251ToUTF8('Легенда');
+  fShowLegendCheck.Caption := CP1251ToUTF8('Р›РµРіРµРЅРґР°');
 
   fZeroY0Check := TCheckBox.Create(lGroupBox);
   fZeroY0Check.Parent := lGroupBox;
   fZeroY0Check.SetBounds(10, 145, 180, 20);
-  fZeroY0Check.Caption := CP1251ToUTF8('Занулять Y0');
+  fZeroY0Check.Caption := CP1251ToUTF8('Р—Р°РЅСѓР»СЏС‚СЊ Y0');
 
   lLabel.SetBounds(10, 175, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Результат:');
+  lLabel.Caption := CP1251ToUTF8('Р РµР·СѓР»СЊС‚Р°С‚:');
 
   fResultTypeCombo := TComboBox.Create(lGroupBox);
   fResultTypeCombo.Parent := lGroupBox;
   fResultTypeCombo.SetBounds(90, 172, 120, 23);
   fResultTypeCombo.Style := csDropDownList;
-  fResultTypeCombo.Items.Add(CP1251ToUTF8('Амплитуда'));
-  fResultTypeCombo.Items.Add(CP1251ToUTF8('Фаза'));
+  fResultTypeCombo.Items.Add(CP1251ToUTF8('РђРјРїР»РёС‚СѓРґР°'));
+  fResultTypeCombo.Items.Add(CP1251ToUTF8('Р¤Р°Р·Р°'));
 
-  // 6. Прочее (Тахометр)
+  // 6. РџСЂРѕС‡РµРµ (РўР°С…РѕРјРµС‚СЂ)
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(478, 452, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Тахометр:');
+  lLabel.Caption := CP1251ToUTF8('РўР°С…РѕРјРµС‚СЂ:');
 
   fTahoCombo := TComboBox.Create(Self);
   fTahoCombo.Parent := Self;
@@ -340,18 +340,18 @@ begin
       fTahoCombo.Items.Add(fTagRegistry.Tags[I].Name);
   end;
 
-  // 7. Кнопки ОК / Отмена
+  // 7. РљРЅРѕРїРєРё РћРљ / РћС‚РјРµРЅР°
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
   fOkButton.SetBounds(520, 515, 80, 25);
-  fOkButton.Caption := CP1251ToUTF8('ОК');
+  fOkButton.Caption := CP1251ToUTF8('РћРљ');
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(615, 515, 80, 25);
-  fCancelButton.Caption := CP1251ToUTF8('Отмена');
+  fCancelButton.Caption := CP1251ToUTF8('РћС‚РјРµРЅР°');
   fCancelButton.Cancel := True;
   fCancelButton.ModalResult := mrCancel;
 end;
@@ -385,7 +385,7 @@ begin
   else
     fTahoCombo.ItemIndex := 0;
 
-  // Заполняем список используемых
+  // Р—Р°РїРѕР»РЅСЏРµРј СЃРїРёСЃРѕРє РёСЃРїРѕР»СЊР·СѓРµРјС‹С…
   fUsedList.Items.Clear;
   for I := 0 to fDraft.TagNames.Count - 1 do
     if IsSpectrumTagSelectable(fDraft.TagNames[I]) then
@@ -517,11 +517,11 @@ begin
     begin
       lTagName := fAllAvailableTags[I];
       
-      // Исключаем те, что уже выбраны
+      // РСЃРєР»СЋС‡Р°РµРј С‚Рµ, С‡С‚Рѕ СѓР¶Рµ РІС‹Р±СЂР°РЅС‹
       if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) >= 0 then
         Continue;
         
-      // Фильтруем по подстроке
+      // Р¤РёР»СЊС‚СЂСѓРµРј РїРѕ РїРѕРґСЃС‚СЂРѕРєРµ
       if (lFilter = '') or (AnsiContainsText(AnsiLowerCase(lTagName), lFilter)) or
         (AnsiContainsText(AnsiLowerCase(TagDisplayText(lTagName)), lFilter)) then
         fAvailableList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));

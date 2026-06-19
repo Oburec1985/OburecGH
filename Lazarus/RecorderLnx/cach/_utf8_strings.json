@@ -1,0 +1,225 @@
+{
+  "rc": {
+    "IDS_TAG_PROPERTY": "Настройка канала ",
+    "IDS_TAGS_GROUP_PROPERTY": "Настройка группы каналов",
+    "IDS_TARE_SHORT": "ГХ",
+    "IDS_DEVICE_TARE_LOADING_TITLE": "Загрузка аппаратной ГХ",
+    "IDS_MODULE_TARE_LOADING_COMPL": "Градуировочная характеристика модуля успешно загружена",
+    "IDS_EDIT_TARE": "Редактирование градуировочной характеристики канала",
+    "IDS_EDIT_DEV_TARE": "Редактирование градуировочной характеристики канала модуля",
+    "IDS_CHANGE_HARDW_ADDR": "Изменить аппаратный канал",
+    "IDS_SELECT_CHANNEL": "Выберите канал",
+    "IDS_WARNING": "Предупреждение",
+    "IDS_NO_HW_CHANNELS": "Свободные аппаратные каналы отсутствуют в системе.",
+    "IDS_HW_CHANNEL_CHANGE": "Смена аппаратного канала",
+    "IDS_TAG_IS_VIRTUAL": "Канал виртуальный\nаппаратная калибровка не возможна.",
+    "IDS_TARE_REMOVE_TITLE": "",
+    "IDS_INFORMATION": null,
+    "IDS_ERROR": "Ошибка"
+  },
+  "tag_settings": {
+    "select_signal_caption": "Выбор сигнала из списка",
+    "cancel": "Отмена",
+    "select_mera_caption": "Выбор активного сигнала канала",
+    "address_title": "Адрес канала",
+    "link_input_title": "Связь входа",
+    "no_mera_signals_title": "Связь входа",
+    "caption_single": "Настройка канала ",
+    "caption_multi": "Настройка каналов (%d)",
+    "calib_title": "Канальная ГХ",
+    "hw_calib_title": "Аппаратная ГХ",
+    "new_calib_prefix": "ГХ ",
+    "gh_download_title": "Выгрузка ГХ",
+    "gh_download_ok": "Градуировочная характеристика модуля успешно загружена",
+    "gh_download_no_mic140": "Среди выбранных тегов нет каналов MIC-140."
+  },
+  "messages": {
+    "select_calib_multi": [
+      "Канальная ГХ",
+      "Выбор ГХ из списка поддерживается только для одного значения тега."
+    ],
+    "edit_calib_multi": [
+      "Канальная ГХ",
+      "Редактирование доступно только для одного значения тега."
+    ],
+    "edit_calib_no": [
+      "Канальная ГХ",
+      "У выбранного тега нет назначенной ГХ."
+    ],
+    "edit_calib_not_found": [
+      "Канальная ГХ",
+      "Градуировка ГХ не найдена в списке калибровок."
+    ],
+    "hw_select_multi": [
+      "Аппаратная ГХ",
+      "Загрузка аппаратной ГХ поддерживается только для одного значения тега."
+    ],
+    "hw_not_mic140": [
+      "Аппаратная ГХ",
+      "Загрузка из аппаратной базы поддерживается только для каналов MIC-140."
+    ],
+    "hw_load_fail": [
+      "Аппаратная ГХ",
+      "Не удалось загрузить аппаратную ГХ. Проверьте каталог calibr/hardware/MIC140 и серийный номер прибора."
+    ],
+    "hw_edit_multi": [
+      "Аппаратная ГХ",
+      "Редактирование доступно только для одного значения тега."
+    ],
+    "hw_edit_no": [
+      "Аппаратная ГХ",
+      "У выбранного тега нет назначенной аппаратной ГХ."
+    ],
+    "hw_edit_not_found": [
+      "Аппаратная ГХ",
+      "Градуировка аппаратной ГХ не найдена в списке калибровок."
+    ],
+    "address_multi": [
+      "Адрес канала",
+      "Смена адреса входа доступна только для одного значения тега."
+    ],
+    "no_mera_signals": [
+      "Связь входа",
+      "Нет доступных сигналов активных источников для связи входа."
+    ]
+  },
+  "length_check": {
+    "select_signal_caption": {
+      "text": "Выбор сигнала из списка",
+      "len": 23,
+      "expected": 23,
+      "ok": true
+    },
+    "cancel": {
+      "text": "Отмена",
+      "len": 6,
+      "expected": 6,
+      "ok": true
+    },
+    "select_mera_caption": {
+      "text": "Выбор активного сигнала канала",
+      "len": 30,
+      "expected": 29,
+      "ok": false
+    },
+    "caption_single": {
+      "text": "Настройка канала ",
+      "len": 17,
+      "expected": 17,
+      "ok": true
+    },
+    "caption_multi": {
+      "text": "Настройка каналов (%d)",
+      "len": 22,
+      "expected": 22
+    },
+    "new_calib_prefix": {
+      "text": "ГХ ",
+      "len": 3,
+      "expected": 3,
+      "ok": true
+    },
+    "select_calib_multi_title": {
+      "text": "Канальная ГХ",
+      "len": 12,
+      "expected": 12,
+      "ok": true
+    },
+    "select_calib_multi_msg": {
+      "text": "Выбор ГХ из списка поддерживается только для одного значения тега.",
+      "len": 66,
+      "expected": 62,
+      "ok": false
+    },
+    "edit_calib_multi_msg": {
+      "text": "Редактирование доступно только для одного значения тега.",
+      "len": 56,
+      "expected": 57,
+      "ok": false
+    },
+    "edit_calib_no_msg": {
+      "text": "У выбранного тега нет назначенной ГХ.",
+      "len": 37,
+      "expected": 37,
+      "ok": true
+    },
+    "edit_calib_not_found_msg": {
+      "text": "Градуировка ГХ не найдена в списке калибровок.",
+      "len": 46,
+      "expected": 49,
+      "ok": false
+    },
+    "hw_select_multi_msg": {
+      "text": "Загрузка аппаратной ГХ поддерживается только для одного значения тега.",
+      "len": 70,
+      "expected": 66,
+      "ok": false
+    },
+    "hw_not_mic140_msg": {
+      "text": "Загрузка из аппаратной базы поддерживается только для каналов MIC-140.",
+      "len": 70,
+      "expected": 70,
+      "ok": true
+    },
+    "hw_load_fail_msg": {
+      "text": "Не удалось загрузить аппаратную ГХ. Проверьте каталог calibr/hardware/MIC140 и серийный номер прибора.",
+      "len": 102,
+      "expected": 102,
+      "ok": true
+    },
+    "hw_edit_multi_msg": {
+      "text": "Редактирование доступно только для одного значения тега.",
+      "len": 56,
+      "expected": 57,
+      "ok": false
+    },
+    "hw_edit_no_msg": {
+      "text": "У выбранного тега нет назначенной аппаратной ГХ.",
+      "len": 48,
+      "expected": 48,
+      "ok": true
+    },
+    "hw_edit_not_found_msg": {
+      "text": "Градуировка аппаратной ГХ не найдена в списке калибровок.",
+      "len": 57,
+      "expected": 60,
+      "ok": false
+    },
+    "address_multi_msg": {
+      "text": "Смена адреса входа доступна только для одного значения тега.",
+      "len": 60,
+      "expected": 69,
+      "ok": false
+    },
+    "no_mera_signals_msg": {
+      "text": "Нет доступных сигналов активных источников для связи входа.",
+      "len": 59,
+      "expected": 49,
+      "ok": false
+    },
+    "address_title": {
+      "text": "Адрес канала",
+      "len": 12,
+      "expected": 12,
+      "ok": true
+    },
+    "no_mera_signals_title": {
+      "text": "Связь входа",
+      "len": 11,
+      "expected": 12,
+      "ok": false
+    },
+    "calib_title": {
+      "text": "Канальная ГХ",
+      "len": 12,
+      "expected": 12,
+      "ok": true
+    },
+    "hw_calib_title": {
+      "text": "Аппаратная ГХ",
+      "len": 13,
+      "expected": 13,
+      "ok": true
+    }
+  }
+}

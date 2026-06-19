@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Controls, ExtCtrls, Graphics, Grids, Math, LConvEncoding,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartTrend, uOglChartDrawObj,
-  uOglChartCursor, uOglChartRenderer, uOglChartTextLabel,
+  uOglChartCursor, uOglChartRenderer, uOglChartTextLabel, uOglChartColors,
   uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
   uRecorderSpectrumEngine, uRecorderSpectrumRuntime, uRecorderCoreServices,
   uComponentServices, SyncObjs;
@@ -73,6 +73,9 @@ type
   end;
 
 implementation
+
+uses
+  uRecorderTagRefs;
 
 constructor TRecorderSpectrumView.Create(AOwner: TComponent);
 begin
@@ -148,13 +151,8 @@ begin
 end;
 
 function TRecorderSpectrumView.GetSpectrumColor(AIndex: Integer): TColor;
-const
-  CColors: array[0..7] of TColor = (
-    $0000FF, $008000, $FF0000, $00A5FF,
-    $800080, $808000, $808080, $0080FF
-  );
 begin
-  Result := CColors[AIndex mod 8];
+  Result := OglChartLinePaletteColor(AIndex);
 end;
 
 function TRecorderSpectrumView.FindPageCursor: TChartCursor;
@@ -496,6 +494,7 @@ begin
 
   fLock.Enter;
   try
+    RecorderSyncSpectrumComponentTagNames(fTagRegistry, fComponent);
     SetLength(fBufferedFrames, fComponent.TagNames.Count);
     for I := 0 to fComponent.TagNames.Count - 1 do
     begin
@@ -559,12 +558,14 @@ begin
   fAxisY.PresetMinValue := fComponent.RangeMinY;
   fAxisY.PresetMaxValue := fComponent.RangeMaxY;
   fAxisY.HasPresetRange := True;
+  fAxisY.Color := $FF404040;
   if fComponent.LgY then
     fAxisY.Scale := casLog10
   else
     fAxisY.Scale := casLinear;
   fPage.AddChild(fAxisY);
 
+  RecorderSyncSpectrumComponentTagNames(fTagRegistry, fComponent);
   for I := 0 to fComponent.TagNames.Count - 1 do
   begin
     lSeries := cBuffTrend1d.Create;
@@ -572,7 +573,7 @@ begin
     lSeries.Caption := fComponent.TagNames[I];
     lSeries.X0 := 0.0;
     lSeries.DX := 1.0;
-    lSeries.Color := (GetSpectrumColor(I) and $00FFFFFF) or $FF000000;
+    lSeries.Color := OglChartLinePaletteGLColor(I);
     lSeries.Visible := True;
     fAxisY.AddChild(lSeries);
     fSeriesList.Add(lSeries);

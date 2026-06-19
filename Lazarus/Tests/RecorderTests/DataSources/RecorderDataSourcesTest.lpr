@@ -19,6 +19,8 @@ uses
   uRecorderDataSources,
   uRecorderTags,
   uRecorderMic140DataSource,
+  uRecorderMic140Utils,
+  uRecorderMeraPaths,
   uSharedFileLogger;
 
 type
@@ -636,6 +638,105 @@ begin
   LogLine('RESULT MIC-140 address helpers test passed.');
 end;
 
+procedure TestMic140HardwareCalibrationLoad;
+var
+  lCalibration: TRecorderCalibration;
+  lCalibrRoot: string;
+  lCsvPath: string;
+  lRangeDir: string;
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+  lTempDir: string;
+begin
+  LogLine('--- MIC-140 hardware calibration load test ---');
+  lTempDir := IncludeTrailingPathDelimiter(GetTempDir) + 'recorderlnx_mic140_calibr_test';
+  ForceDirectories(lTempDir + PathDelim + 'hardware' + PathDelim + 'MIC140' + PathDelim + 'sn0123');
+  lRangeDir := '8_25mV';
+  ForceDirectories(lTempDir + PathDelim + 'hardware' + PathDelim + 'MIC140' +
+    PathDelim + 'sn0123' + PathDelim + lRangeDir);
+  lCsvPath := lTempDir + PathDelim + 'hardware' + PathDelim + 'MIC140' +
+    PathDelim + 'sn0123' + PathDelim + lRangeDir + PathDelim + '01.csv';
+  with TStringList.Create do
+  try
+    Add('0,0');
+    Add('1000,10');
+    SaveToFile(lCsvPath);
+  finally
+    Free;
+  end;
+
+  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+  try
+    AssertTrue(RecorderMic140LoadCalibrationFromCsv(lCsvPath, lCalibration),
+      'Load CSV points');
+    AssertEquals(lCalibration.PointCount, 2, 'CSV point count');
+    AssertEquals(lCalibration.PointAt(1).Y, 10.0, 'CSV second point Y');
+  finally
+    lCalibration.Free;
+  end;
+
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lTag := lRegistry.CreateTag('MIC140_ch01', 1024);
+    lTag.SourceId := 'MIC-140: 192.168.14.155:4000';
+    lTag.Address := '2-01';
+    lTag.MeasRangeIndex := 2;
+    lTag.Mic140DeviceSerial := 123;
+
+    lCalibrRoot := IncludeTrailingPathDelimiter(lTempDir);
+    // Redirect calibr root for this test via direct path call
+    lCsvPath := IncludeTrailingPathDelimiter(lCalibrRoot) +
+      'hardware' + PathDelim + 'MIC140' + PathDelim + 'sn0123' + PathDelim +
+      lRangeDir + PathDelim + '01.csv';
+    AssertTrue(FileExists(lCsvPath), 'Test CSV exists');
+
+    // Use internal path builder indirectly through tag load with known serial
+    // Temporarily emulate expected layout under ../calibr from exe is hard in test,
+    // so verify path builder separately:
+    AssertTrue(Pos('hardware', LowerCase(
+      RecorderMic140HardwareCalibrCsvPath(123, 2, 1))) > 0, 'Hardware CSV path');
+    AssertTrue(Pos('sn0123', RecorderMic140HardwareCalibrCsvPath(123, 2, 1)) > 0,
+      'Hardware CSV serial segment');
+    AssertTrue(Pos('01.csv', RecorderMic140HardwareCalibrCsvPath(123, 2, 1)) > 0,
+      'Hardware CSV file name');
+
+    // Direct load using copied file into expected relative calibr tree is optional;
+    // verify registry transform path with manually registered calibration.
+    lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+    try
+      RecorderMic140LoadCalibrationFromCsv(lCsvPath, lCalibration);
+      lCalibration.Name := 'MIC140 sn0123 8_25mV ch01';
+      lRegistry.Calibrations.Add(lCalibration);
+      lCalibration := nil;
+    finally
+      lCalibration.Free;
+    end;
+    lTag.HardwareCalibrationName := 'MIC140 sn0123 8_25mV ch01';
+    lTag.HardwareCalibrationEnabled := True;
+    AssertEquals(lRegistry.TransformTagValue(lTag, 1000.0), 10.0,
+      'Hardware calibration transform');
+  finally
+    lRegistry.Free;
+  end;
+
+  LogLine('RESULT MIC-140 hardware calibration load test passed.');
+end;
+
+procedure TestMic140MeraCalibrPath;
+var
+  lCalibrRoot: string;
+  lMeraFiles: string;
+begin
+  LogLine('--- MIC-140 Mera Files calibr path test ---');
+  lMeraFiles := RecorderMeraFilesPath;
+  lCalibrRoot := RecorderMic140CalibrRootDir;
+  AssertTrue(Pos('Mera Files', lMeraFiles) > 0, 'Mera Files root path');
+  AssertTrue(Pos('Calibr', lCalibrRoot) > 0, 'Calibr root segment');
+  AssertTrue(Pos('hardware', LowerCase(
+    RecorderMic140HardwareCalibrCsvPath(123, 2, 1))) > 0, 'Hardware CSV path');
+  LogLine('RESULT MIC-140 Mera Files calibr path test passed.');
+end;
+
 begin
   OpenLog;
   try
@@ -654,6 +755,10 @@ begin
     TestMic140ReadyWordsPacing;
     LogLine('');
     TestMic140AddressHelpers;
+    LogLine('');
+    TestMic140HardwareCalibrationLoad;
+    LogLine('');
+    TestMic140MeraCalibrPath;
   finally
     CloseLog;
   end;

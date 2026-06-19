@@ -1,8 +1,8 @@
 unit uOglChartCursorTest;
 
 {
-  Модуль uOglChartCursorTest
-  Описание: Модульные тесты для проверки логики и математики интерактивного курсора.
+  РњРѕРґСѓР»СЊ uOglChartCursorTest
+  РћРїРёСЃР°РЅРёРµ: РњРѕРґСѓР»СЊРЅС‹Рµ С‚РµСЃС‚С‹ РґР»СЏ РїСЂРѕРІРµСЂРєРё Р»РѕРіРёРєРё Рё РјР°С‚РµРјР°С‚РёРєРё РёРЅС‚РµСЂР°РєС‚РёРІРЅРѕРіРѕ РєСѓСЂСЃРѕСЂР°.
 }
 
 
@@ -76,26 +76,26 @@ begin
 
     if not Assigned(lCursor) then
 
-      raise Exception.Create('Ошибка: Курсор не был создан.');
+      raise Exception.Create('РћС€РёР±РєР°: РљСѓСЂСЃРѕСЂ РЅРµ Р±С‹Р» СЃРѕР·РґР°РЅ.');
 
     if lCursor.Visible then
 
-      raise Exception.Create('Ошибка: Курсор должен быть скрыт по умолчанию.');
+      raise Exception.Create('РћС€РёР±РєР°: РљСѓСЂСЃРѕСЂ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЃРєСЂС‹С‚ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.');
 
     if lCursor.CursorType <> cctSingle then
 
-      raise Exception.Create('Ошибка: Тип курсора должен быть cctSingle.');
+      raise Exception.Create('РћС€РёР±РєР°: РўРёРї РєСѓСЂСЃРѕСЂР° РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ cctSingle.');
       
     if lCursor.MultiLineMode <> mlDisabled then
-      raise Exception.Create('Ошибка: Режим мультилинейности должен быть mlDisabled по умолчанию.');
+      raise Exception.Create('РћС€РёР±РєР°: Р РµР¶РёРј РјСѓР»СЊС‚РёР»РёРЅРµР№РЅРѕСЃС‚Рё РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ mlDisabled РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.');
 
     lCursor.MultiLineMode := mlEnabled;
     if lCursor.MultiLineMode <> mlEnabled then
-      raise Exception.Create('Ошибка: Не удалось переключить MultiLineMode в mlEnabled.');
+      raise Exception.Create('РћС€РёР±РєР°: РќРµ СѓРґР°Р»РѕСЃСЊ РїРµСЂРµРєР»СЋС‡РёС‚СЊ MultiLineMode РІ mlEnabled.');
 
     lCursor.MultiLineMode := mlShowNames;
     if lCursor.MultiLineMode <> mlShowNames then
-      raise Exception.Create('Ошибка: Не удалось переключить MultiLineMode в mlShowNames.');
+      raise Exception.Create('РћС€РёР±РєР°: РќРµ СѓРґР°Р»РѕСЃСЊ РїРµСЂРµРєР»СЋС‡РёС‚СЊ MultiLineMode РІ mlShowNames.');
 
     lCursor.MultiLineMode := mlDisabled;
 
@@ -115,11 +115,11 @@ begin
 
     if lCursor.X1 <> 1.25 then
 
-      raise Exception.Create('Ошибка: Неверное значение X1.');
+      raise Exception.Create('РћС€РёР±РєР°: РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ X1.');
 
     if lCursor.X2 <> 3.5 then
 
-      raise Exception.Create('Ошибка: Неверное значение X2.');
+      raise Exception.Create('РћС€РёР±РєР°: РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ X2.');
 
       
 

@@ -1,8 +1,8 @@
 unit uOglChartPageGeometryListener;
 
 {
-  Модуль uOglChartPageGeometryListener
-  Описание: Слушатель для изменения размеров страниц и перемещения их границ мышью.
+  РњРѕРґСѓР»СЊ uOglChartPageGeometryListener
+  РћРїРёСЃР°РЅРёРµ: РЎР»СѓС€Р°С‚РµР»СЊ РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ СЂР°Р·РјРµСЂРѕРІ СЃС‚СЂР°РЅРёС† Рё РїРµСЂРµРјРµС‰РµРЅРёСЏ РёС… РіСЂР°РЅРёС† РјС‹С€СЊСЋ.
 }
 
 { objfpc}{+}
@@ -16,15 +16,15 @@ uses
 
 type
   /// <summary>
-  /// Слушатель для изменения геометрии страниц (ресайз за границы/углы, перемещение с Shift).
+  /// РЎР»СѓС€Р°С‚РµР»СЊ РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ РіРµРѕРјРµС‚СЂРёРё СЃС‚СЂР°РЅРёС† (СЂРµСЃР°Р№Р· Р·Р° РіСЂР°РЅРёС†С‹/СѓРіР»С‹, РїРµСЂРµРјРµС‰РµРЅРёРµ СЃ Shift).
   /// </summary>
   TChartPageGeometryListener = class(TChartFrameListener)
   private
-    fActivePage: TChartPage;         // Активная страница во время ресайза/перемещения
-    fResizingBorder: Integer;        // 1..4 для сторон, 5..8 для углов
-    fMovingPage: Boolean;            // Перемещение страницы
-    fIsResizing: Boolean;            // Ресайз страницы
-    fSnapSensitivity: Integer;       // Чувствительность примагничивания в пикселях
+    fActivePage: TChartPage;         // РђРєС‚РёРІРЅР°СЏ СЃС‚СЂР°РЅРёС†Р° РІРѕ РІСЂРµРјСЏ СЂРµСЃР°Р№Р·Р°/РїРµСЂРµРјРµС‰РµРЅРёСЏ
+    fResizingBorder: Integer;        // 1..4 РґР»СЏ СЃС‚РѕСЂРѕРЅ, 5..8 РґР»СЏ СѓРіР»РѕРІ
+    fMovingPage: Boolean;            // РџРµСЂРµРјРµС‰РµРЅРёРµ СЃС‚СЂР°РЅРёС†С‹
+    fIsResizing: Boolean;            // Р РµСЃР°Р№Р· СЃС‚СЂР°РЅРёС†С‹
+    fSnapSensitivity: Integer;       // Р§СѓРІСЃС‚РІРёС‚РµР»СЊРЅРѕСЃС‚СЊ РїСЂРёРјР°РіРЅРёС‡РёРІР°РЅРёСЏ РІ РїРёРєСЃРµР»СЏС…
     fLastX, fLastY: Integer;
   public
     constructor Create; override;
@@ -68,7 +68,7 @@ begin
     lModel := TChartModel(lControl.GetModel);
     if not Assigned(lRenderer) or not Assigned(lModel) then Exit;
 
-    // 1. Изменение размеров выделенной страницы (если курсор наведен на границу/угол)
+    // 1. РР·РјРµРЅРµРЅРёРµ СЂР°Р·РјРµСЂРѕРІ РІС‹РґРµР»РµРЅРЅРѕР№ СЃС‚СЂР°РЅРёС†С‹ (РµСЃР»Рё РєСѓСЂСЃРѕСЂ РЅР°РІРµРґРµРЅ РЅР° РіСЂР°РЅРёС†Сѓ/СѓРіРѕР»)
     if (fResizingBorder > 0) and Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is TChartPage) then
     begin
       lPage := TChartPage(lRenderer.SelectedObject);
@@ -88,7 +88,7 @@ begin
       end;
     end;
 
-    // 2. Перемещение страницы (если зажат Shift и кликнули внутри страницы)
+    // 2. РџРµСЂРµРјРµС‰РµРЅРёРµ СЃС‚СЂР°РЅРёС†С‹ (РµСЃР»Рё Р·Р°Р¶Р°С‚ Shift Рё РєР»РёРєРЅСѓР»Рё РІРЅСѓС‚СЂРё СЃС‚СЂР°РЅРёС†С‹)
     if ssShift in Shift then
     begin
       for lIndex := 0 to lModel.ChildCount - 1 do
@@ -212,7 +212,7 @@ begin
     lWidth := Max(1.0, TControl(ASender).Width);
     lHeight := Max(1.0, TControl(ASender).Height);
 
-    // 1. Состояние перетаскивания (ресайза) границы страницы
+    // 1. РЎРѕСЃС‚РѕСЏРЅРёРµ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ (СЂРµСЃР°Р№Р·Р°) РіСЂР°РЅРёС†С‹ СЃС‚СЂР°РЅРёС†С‹
     if fIsResizing and Assigned(fActivePage) then
     begin
       dX := X - fLastX;
@@ -222,48 +222,48 @@ begin
       lRect := fActivePage.FloatRect;
 
       case fResizingBorder of
-        1: // Левая граница
+        1: // Р›РµРІР°СЏ РіСЂР°РЅРёС†Р°
           begin
             lTargetVal := SnapX(lPageRect.Left + dX, fActivePage, fSnapSensitivity);
             lRect.Left := Min(lRect.Right - 0.05, lTargetVal / lWidth);
           end;
-        2: // Правая граница
+        2: // РџСЂР°РІР°СЏ РіСЂР°РЅРёС†Р°
           begin
             lTargetVal := SnapX(lPageRect.Right + dX, fActivePage, fSnapSensitivity);
             lRect.Right := Max(lRect.Left + 0.05, lTargetVal / lWidth);
           end;
-        3: // Верхняя граница
+        3: // Р’РµСЂС…РЅСЏСЏ РіСЂР°РЅРёС†Р°
           begin
             lTargetVal := SnapY(lPageRect.Top + dY, fActivePage, fSnapSensitivity);
             lRect.Top := Min(lRect.Bottom - 0.05, lTargetVal / lHeight);
           end;
-        4: // Нижняя граница
+        4: // РќРёР¶РЅСЏСЏ РіСЂР°РЅРёС†Р°
           begin
             lTargetVal := SnapY(lPageRect.Bottom + dY, fActivePage, fSnapSensitivity);
             lRect.Bottom := Max(lRect.Top + 0.05, lTargetVal / lHeight);
           end;
-        5: // Верхний-левый угол (NWSE)
+        5: // Р’РµСЂС…РЅРёР№-Р»РµРІС‹Р№ СѓРіРѕР» (NWSE)
           begin
             lTargetVal := SnapX(lPageRect.Left + dX, fActivePage, fSnapSensitivity);
             lRect.Left := Min(lRect.Right - 0.05, lTargetVal / lWidth);
             lTargetVal := SnapY(lPageRect.Top + dY, fActivePage, fSnapSensitivity);
             lRect.Top := Min(lRect.Bottom - 0.05, lTargetVal / lHeight);
           end;
-        6: // Верхний-правый угол (NESW)
+        6: // Р’РµСЂС…РЅРёР№-РїСЂР°РІС‹Р№ СѓРіРѕР» (NESW)
           begin
             lTargetVal := SnapX(lPageRect.Right + dX, fActivePage, fSnapSensitivity);
             lRect.Right := Max(lRect.Left + 0.05, lTargetVal / lWidth);
             lTargetVal := SnapY(lPageRect.Top + dY, fActivePage, fSnapSensitivity);
             lRect.Top := Min(lRect.Bottom - 0.05, lTargetVal / lHeight);
           end;
-        7: // Нижний-левый угол (NESW)
+        7: // РќРёР¶РЅРёР№-Р»РµРІС‹Р№ СѓРіРѕР» (NESW)
           begin
             lTargetVal := SnapX(lPageRect.Left + dX, fActivePage, fSnapSensitivity);
             lRect.Left := Min(lRect.Right - 0.05, lTargetVal / lWidth);
             lTargetVal := SnapY(lPageRect.Bottom + dY, fActivePage, fSnapSensitivity);
             lRect.Bottom := Max(lRect.Top + 0.05, lTargetVal / lHeight);
           end;
-        8: // Нижний-правый угол (NWSE)
+        8: // РќРёР¶РЅРёР№-РїСЂР°РІС‹Р№ СѓРіРѕР» (NWSE)
           begin
             lTargetVal := SnapX(lPageRect.Right + dX, fActivePage, fSnapSensitivity);
             lRect.Right := Max(lRect.Left + 0.05, lTargetVal / lWidth);
@@ -280,7 +280,7 @@ begin
       Exit;
     end;
 
-    // 2. Состояние перемещения страницы
+    // 2. РЎРѕСЃС‚РѕСЏРЅРёРµ РїРµСЂРµРјРµС‰РµРЅРёСЏ СЃС‚СЂР°РЅРёС†С‹
     if fMovingPage and Assigned(fActivePage) then
     begin
       dX := X - fLastX;
@@ -290,7 +290,7 @@ begin
       lTargetLeft := lPageRect.Left + dX;
       lTargetTop := lPageRect.Top + dY;
 
-      // Примагничивание по X
+      // РџСЂРёРјР°РіРЅРёС‡РёРІР°РЅРёРµ РїРѕ X
       lSnappedLeft := SnapX(lTargetLeft, fActivePage, fSnapSensitivity);
       if lSnappedLeft <> lTargetLeft then
         lTargetLeft := lSnappedLeft
@@ -302,7 +302,7 @@ begin
           lTargetLeft := lSnappedRight - (lPageRect.Right - lPageRect.Left);
       end;
 
-      // Примагничивание по Y
+      // РџСЂРёРјР°РіРЅРёС‡РёРІР°РЅРёРµ РїРѕ Y
       lSnappedTop := SnapY(lTargetTop, fActivePage, fSnapSensitivity);
       if lSnappedTop <> lTargetTop then
         lTargetTop := lSnappedTop
@@ -331,7 +331,7 @@ begin
       Exit;
     end;
 
-    // 3. Обычное движение мыши: меняем курсор при наведении на границы выделенной страницы
+    // 3. РћР±С‹С‡РЅРѕРµ РґРІРёР¶РµРЅРёРµ РјС‹С€Рё: РјРµРЅСЏРµРј РєСѓСЂСЃРѕСЂ РїСЂРё РЅР°РІРµРґРµРЅРёРё РЅР° РіСЂР°РЅРёС†С‹ РІС‹РґРµР»РµРЅРЅРѕР№ СЃС‚СЂР°РЅРёС†С‹
     if Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is TChartPage) then
     begin
       lPage := TChartPage(lRenderer.SelectedObject);
@@ -339,7 +339,7 @@ begin
 
       fResizingBorder := 0;
 
-      // Проверка на углы
+      // РџСЂРѕРІРµСЂРєР° РЅР° СѓРіР»С‹
       if (Abs(X - lPageRect.Left) <= 6) and (Abs(Y - lPageRect.Top) <= 6) then
         fResizingBorder := 5  // Top-Left (NWSE)
       else if (Abs(X - lPageRect.Right) <= 6) and (Abs(Y - lPageRect.Top) <= 6) then
@@ -350,7 +350,7 @@ begin
         fResizingBorder := 8  // Bottom-Right (NWSE)
       else
       begin
-        // Проверка на ребра
+        // РџСЂРѕРІРµСЂРєР° РЅР° СЂРµР±СЂР°
         if (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
         begin
           if Abs(X - lPageRect.Left) <= 6 then
@@ -386,7 +386,7 @@ begin
     end
     else
     begin
-      // Если выделенной страницы нет, но зажат Shift, меняем курсор над любой незаблокированной страницей
+      // Р•СЃР»Рё РІС‹РґРµР»РµРЅРЅРѕР№ СЃС‚СЂР°РЅРёС†С‹ РЅРµС‚, РЅРѕ Р·Р°Р¶Р°С‚ Shift, РјРµРЅСЏРµРј РєСѓСЂСЃРѕСЂ РЅР°Рґ Р»СЋР±РѕР№ РЅРµР·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРЅРѕР№ СЃС‚СЂР°РЅРёС†РµР№
       lPage := nil;
       for lIndex := 0 to lModel.ChildCount - 1 do
         if lModel.Children[lIndex] is TChartPage then

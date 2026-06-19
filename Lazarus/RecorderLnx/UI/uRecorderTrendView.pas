@@ -1,13 +1,14 @@
 unit uRecorderTrendView;
 
 {
-  Модуль: uRecorderTrendView
-  Описание: Визуальный компонент реального времени "Тренд" на базе OpenGL (TOglChart).
-            Отображает графики изменения параметров во времени с поддержкой осей,
-            периодического расчета оценок и легенды.
+  РњРѕРґСѓР»СЊ: uRecorderTrendView
+  РћРїРёСЃР°РЅРёРµ: Р’РёР·СѓР°Р»СЊРЅС‹Р№ РєРѕРјРїРѕРЅРµРЅС‚ СЂРµР°Р»СЊРЅРѕРіРѕ РІСЂРµРјРµРЅРё "РўСЂРµРЅРґ" РЅР° Р±Р°Р·Рµ OpenGL (TOglChart).
+            РћС‚РѕР±СЂР°Р¶Р°РµС‚ РіСЂР°С„РёРєРё РёР·РјРµРЅРµРЅРёСЏ РїР°СЂР°РјРµС‚СЂРѕРІ РІРѕ РІСЂРµРјРµРЅРё СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РѕСЃРµР№,
+            РїРµСЂРёРѕРґРёС‡РµСЃРєРѕРіРѕ СЂР°СЃС‡РµС‚Р° РѕС†РµРЅРѕРє Рё Р»РµРіРµРЅРґС‹.
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -19,8 +20,8 @@ uses
 
 type
   { TRecorderTrendView
-    Реализация тренда на базе TOglChart. Реализует IVForm
-    для единообразной обработки контроллером редактора/рантайма. }
+    Р РµР°Р»РёР·Р°С†РёСЏ С‚СЂРµРЅРґР° РЅР° Р±Р°Р·Рµ TOglChart. Р РµР°Р»РёР·СѓРµС‚ IVForm
+    РґР»СЏ РµРґРёРЅРѕРѕР±СЂР°Р·РЅРѕР№ РѕР±СЂР°Р±РѕС‚РєРё РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРј СЂРµРґР°РєС‚РѕСЂР°/СЂР°РЅС‚Р°Р№РјР°. }
   TRecorderTrendView = class(TPanel, IVForm)
   private type
     TTrendSeries = record
@@ -64,7 +65,7 @@ end;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     
-    { Методы интерфейса IVForm }
+    { РњРµС‚РѕРґС‹ РёРЅС‚РµСЂС„РµР№СЃР° IVForm }
     procedure Configure(AComponent: TRecorderVisualComponent;
       ATagRegistry: TRecorderTagRegistry);
     procedure RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
@@ -75,6 +76,9 @@ end;
   end;
 
 implementation
+
+uses
+  uRecorderTagRefs;
 
 type
   TDoubleSearch = specialize TBinarySearch<Double>;
@@ -147,6 +151,7 @@ begin
         lAxis.PresetMinValue := lCompAxis.RangeMin;
         lAxis.PresetMaxValue := lCompAxis.RangeMax;
         lAxis.HasPresetRange := True;
+        lAxis.Color := $FF404040;
         lOglAxes[I] := lAxis;
       end;
     end;
@@ -172,7 +177,7 @@ begin
     Invalidate;
     Exit;
   end;
-  // Приводим к конкретному типу модели тренда
+  // РџСЂРёРІРѕРґРёРј Рє РєРѕРЅРєСЂРµС‚РЅРѕРјСѓ С‚РёРїСѓ РјРѕРґРµР»Рё С‚СЂРµРЅРґР°
   fComponent := TRecorderTrendComponent(AComponent);
   fTagRegistry := ATagRegistry;
 
@@ -246,6 +251,7 @@ begin
     lAxis.PresetMinValue := lCompAxis.RangeMin;
     lAxis.PresetMaxValue := lCompAxis.RangeMax;
     lAxis.HasPresetRange := True;
+    lAxis.Color := $FF404040;
     lOglAxes[I] := lAxis;
 
     lPages[0].AddChild(lAxis);
@@ -415,10 +421,12 @@ begin
   for I := 0 to fComponent.LineCount - 1 do
   begin
     lLine := fComponent.Lines[I];
-    if (not lLine.Visible) or (lLine.TagName = '') then
+    if not lLine.Visible then
       Continue;
 
-    lTag := fTagRegistry.FindByName(lLine.TagName);
+    lTag := RecorderResolveTag(fTagRegistry, lLine.TagId, lLine.TagName);
+    if lTag <> nil then
+      RecorderBindTrendLineTag(lLine, lTag);
     if lTag = nil then
       Continue;
 

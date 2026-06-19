@@ -1,21 +1,22 @@
 unit uRecorderProjectFiles;
 
 {
-  Модуль uRecorderProjectFiles
+  РњРѕРґСѓР»СЊ uRecorderProjectFiles
 
-  Назначение:
-    Текстовый пакет конфигурации проекта RecorderLnx. Как в оригинальном
-    Recorder, визуальная часть формуляров хранится отдельно от основной
-    конфигурации каналов/аппаратных настроек. Формат намеренно простой:
-      <base>.config.json - теги, расчетные оценки, уставки, источники;
-      <base>.gui.ini     - страницы формуляров и компоненты мнемосхем;
-      <base>.run-control.ini сохраняется существующей моделью запуска.
+  РќР°Р·РЅР°С‡РµРЅРёРµ:
+    РўРµРєСЃС‚РѕРІС‹Р№ РїР°РєРµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РїСЂРѕРµРєС‚Р° RecorderLnx. РљР°Рє РІ РѕСЂРёРіРёРЅР°Р»СЊРЅРѕРј
+    Recorder, РІРёР·СѓР°Р»СЊРЅР°СЏ С‡Р°СЃС‚СЊ С„РѕСЂРјСѓР»СЏСЂРѕРІ С…СЂР°РЅРёС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ РѕС‚ РѕСЃРЅРѕРІРЅРѕР№
+    РєРѕРЅС„РёРіСѓСЂР°С†РёРё РєР°РЅР°Р»РѕРІ/Р°РїРїР°СЂР°С‚РЅС‹С… РЅР°СЃС‚СЂРѕРµРє. Р¤РѕСЂРјР°С‚ РЅР°РјРµСЂРµРЅРЅРѕ РїСЂРѕСЃС‚РѕР№:
+      <base>.config.json - С‚РµРіРё, СЂР°СЃС‡РµС‚РЅС‹Рµ РѕС†РµРЅРєРё, СѓСЃС‚Р°РІРєРё, РёСЃС‚РѕС‡РЅРёРєРё;
+      <base>.gui.ini     - СЃС‚СЂР°РЅРёС†С‹ С„РѕСЂРјСѓР»СЏСЂРѕРІ Рё РєРѕРјРїРѕРЅРµРЅС‚С‹ РјРЅРµРјРѕСЃС…РµРј;
+      <base>.run-control.ini СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµР№ РјРѕРґРµР»СЊСЋ Р·Р°РїСѓСЃРєР°.
 
-  JSON пока не пытается быть бинарно совместимым с rcfg оригинального Recorder:
-  он повторяет смысловые разделы, но остается человекочитаемым.
+  JSON РїРѕРєР° РЅРµ РїС‹С‚Р°РµС‚СЃСЏ Р±С‹С‚СЊ Р±РёРЅР°СЂРЅРѕ СЃРѕРІРјРµСЃС‚РёРјС‹Рј СЃ rcfg РѕСЂРёРіРёРЅР°Р»СЊРЅРѕРіРѕ Recorder:
+  РѕРЅ РїРѕРІС‚РѕСЂСЏРµС‚ СЃРјС‹СЃР»РѕРІС‹Рµ СЂР°Р·РґРµР»С‹, РЅРѕ РѕСЃС‚Р°РµС‚СЃСЏ С‡РµР»РѕРІРµРєРѕС‡РёС‚Р°РµРјС‹Рј.
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -25,13 +26,13 @@ uses
 
 type
   { TRecorderProjectFileSet
-    Набор путей к файлам проекта.
+    РќР°Р±РѕСЂ РїСѓС‚РµР№ Рє С„Р°Р№Р»Р°Рј РїСЂРѕРµРєС‚Р°.
     
-    BaseName           - базовое имя файлов проекта.
-    DirectoryName      - рабочий каталог проекта.
-    MainConfigFileName - путь к основному файлу конфигурации (.config.json).
-    GuiFileName        - путь к конфигурации GUI-модели (.gui.ini).
-    RunControlFileName - путь к настройкам запуска (.run-control.ini). }
+    BaseName           - Р±Р°Р·РѕРІРѕРµ РёРјСЏ С„Р°Р№Р»РѕРІ РїСЂРѕРµРєС‚Р°.
+    DirectoryName      - СЂР°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі РїСЂРѕРµРєС‚Р°.
+    MainConfigFileName - РїСѓС‚СЊ Рє РѕСЃРЅРѕРІРЅРѕРјСѓ С„Р°Р№Р»Сѓ РєРѕРЅС„РёРіСѓСЂР°С†РёРё (.config.json).
+    GuiFileName        - РїСѓС‚СЊ Рє РєРѕРЅС„РёРіСѓСЂР°С†РёРё GUI-РјРѕРґРµР»Рё (.gui.ini).
+    RunControlFileName - РїСѓС‚СЊ Рє РЅР°СЃС‚СЂРѕР№РєР°Рј Р·Р°РїСѓСЃРєР° (.run-control.ini). }
   TRecorderProjectFileSet = record
     BaseName: string;
     DirectoryName: string;
@@ -40,28 +41,29 @@ type
     RunControlFileName: string;
   end;
 
-{ Инициализирует и возвращает структуру путей проекта по каталогу и базовому имени }
+{ РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ РїСѓС‚РµР№ РїСЂРѕРµРєС‚Р° РїРѕ РєР°С‚Р°Р»РѕРіСѓ Рё Р±Р°Р·РѕРІРѕРјСѓ РёРјРµРЅРё }
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
 
-{ Сохраняет конфигурацию тегов в JSON-файл }
+{ Р—Р°РіСЂСѓР¶Р°РµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ С‚РµРіРѕРІ РёР· JSON-С„Р°Р№Р»Р° }
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
-{ Загружает конфигурацию тегов из JSON-файла }
+{ Р—Р°РіСЂСѓР¶Р°РµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ С‚РµРіРѕРІ РёР· JSON-С„Р°Р№Р»Р° }
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 
-{ Сохраняет структуру страниц формуляров и их компонентов в INI-файл }
+{ РЎРѕС…СЂР°РЅСЏРµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃС‚СЂР°РЅРёС† С„РѕСЂРјСѓР»СЏСЂРѕРІ Рё РёС… РєРѕРјРїРѕРЅРµРЅС‚РѕРІ РІ INI-С„Р°Р№Р» }
 procedure SaveRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager);
-{ Загружает структуру страниц формуляров из INI-файла }
+{ Р—Р°РіСЂСѓР¶Р°РµС‚ СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃС‚СЂР°РЅРёС† С„РѕСЂРјСѓР»СЏСЂРѕРІ РёР· INI-С„Р°Р№Р»Р° }
 procedure LoadRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager; AFactory: TRecorderComponentFactory);
 
 implementation
 
 uses
-  IniFiles, fpjson, jsonparser, uRecorderSpectrumEngine, uRecorderFrequencyBands;
+  IniFiles, fpjson, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
+  uOglChartColors;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -626,6 +628,10 @@ begin
       lTagJson.Add('rangeMax', lTag.RangeMax);
       lTagJson.Add('autoRange', lTag.AutoRange);
       lTagJson.Add('autoUnit', lTag.AutoUnit);
+      lTagJson.Add('measRangeIndex', lTag.MeasRangeIndex);
+      lTagJson.Add('hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
+      lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
+      lTagJson.Add('mic140DeviceSerial', lTag.Mic140DeviceSerial);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -701,6 +707,13 @@ begin
         lTag.RangeMax := lTagJson.Get('rangeMax', lTag.RangeMax);
         lTag.AutoRange := lTagJson.Get('autoRange', lTag.AutoRange);
         lTag.AutoUnit := lTagJson.Get('autoUnit', lTag.AutoUnit);
+        lTag.MeasRangeIndex := lTagJson.Get('measRangeIndex', lTag.MeasRangeIndex);
+        lTag.HardwareCalibrationEnabled := lTagJson.Get('hardwareCalibrationEnabled',
+          lTag.HardwareCalibrationEnabled);
+        lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
+          lTag.HardwareCalibrationName);
+        lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
+          lTag.Mic140DeviceSerial);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -764,6 +777,7 @@ begin
         lIni.WriteString(lSection, 'Id', lComponent.Id);
         lIni.WriteString(lSection, 'Name', lComponent.Name);
         lIni.WriteString(lSection, 'TagName', lComponent.TagName);
+        lIni.WriteInt64(lSection, 'TagId', lComponent.TagId);
         lIni.WriteInteger(lSection, 'Left', lComponent.Bounds.Left);
         lIni.WriteInteger(lSection, 'Top', lComponent.Bounds.Top);
         lIni.WriteInteger(lSection, 'Width', lComponent.Bounds.Width);
@@ -780,6 +794,17 @@ begin
             Ord(TRecorderOscillogramComponent(lComponent).BindingMode));
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
+          lIni.WriteInteger(lSection, 'OscLineCount',
+            TRecorderOscillogramComponent(lComponent).LineCount);
+          for K := 0 to TRecorderOscillogramComponent(lComponent).LineCount - 1 do
+          begin
+            lLine := TRecorderOscillogramComponent(lComponent).Lines[K];
+            lIni.WriteString(lSection, Format('OscLine%dName', [K]), lLine.TagName);
+            lIni.WriteString(lSection, Format('OscLine%dTagName', [K]), lLine.TagName);
+            lIni.WriteInt64(lSection, Format('OscLine%dTagId', [K]), lLine.TagId);
+            lIni.WriteInteger(lSection, Format('OscLine%dColor', [K]), lLine.Color);
+            lIni.WriteBool(lSection, Format('OscLine%dVisible', [K]), lLine.Visible);
+          end;
         end;
         if lComponent is TRecorderSpectrumComponent then
         begin
@@ -798,10 +823,13 @@ begin
           lIni.WriteBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
           lIni.WriteInteger(lSection, 'ResultType', lSpectrum.ResultType);
           lIni.WriteString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
+          lIni.WriteInt64(lSection, 'TahoTagId', lSpectrum.TahoTagId);
           lIni.WriteString(lSection, 'ProfileName', lSpectrum.ProfileName);
           lIni.WriteInteger(lSection, 'TagCount', lSpectrum.TagNames.Count);
           for K := 0 to lSpectrum.TagNames.Count - 1 do
             lIni.WriteString(lSection, Format('Tag%d', [K]), lSpectrum.TagNames[K]);
+            if lSpectrum.TagIdAt(K) <> 0 then
+              lIni.WriteInt64(lSection, Format('Tag%dId', [K]), lSpectrum.TagIdAt(K));
         end;
         if lComponent is TRecorderTrendComponent then
         begin
@@ -826,6 +854,7 @@ begin
             lLine := lTrend.Lines[K];
             lIni.WriteString(lSection, Format('Line%dName', [K]), lLine.Name);
             lIni.WriteString(lSection, Format('Line%dTagName', [K]), lLine.TagName);
+            lIni.WriteInt64(lSection, Format('Line%dTagId', [K]), lLine.TagId);
             lIni.WriteInteger(lSection, Format('Line%dEstimateKind', [K]), Ord(lLine.EstimateKind));
             lIni.WriteInteger(lSection, Format('Line%dAxisIndex', [K]), lLine.AxisIndex);
             lIni.WriteInteger(lSection, Format('Line%dColor', [K]), lLine.Color);
@@ -851,6 +880,8 @@ var
   lItemCount: Integer;
   lLine: TRecorderTrendLine;
   lPage: TRecorderFormPage;
+  lPaletteColor: LongInt;
+  lPaletteName: string;
   lSection: string;
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
@@ -897,6 +928,7 @@ begin
           lComponent.Id := lIni.ReadString(lSection, 'Id', '');
           lComponent.Name := lIni.ReadString(lSection, 'Name', '');
           lComponent.TagName := lIni.ReadString(lSection, 'TagName', '');
+          lComponent.TagId := lIni.ReadInt64(lSection, 'TagId', 0);
           lComponent.SetBounds(
             lIni.ReadInteger(lSection, 'Left', 0),
             lIni.ReadInteger(lSection, 'Top', 0),
@@ -915,6 +947,26 @@ begin
                 Ord(rtbmRelativeSelectedTag)));
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
+            lItemCount := lIni.ReadInteger(lSection, 'OscLineCount', 0);
+            TRecorderOscillogramComponent(lComponent).ClearLines;
+            for K := 0 to lItemCount - 1 do
+            begin
+              lLine := TRecorderOscillogramComponent(lComponent).AddLine;
+              lLine.TagName := lIni.ReadString(lSection, Format('OscLine%dTagName', [K]), '');
+              lLine.TagId := lIni.ReadInt64(lSection, Format('OscLine%dTagId', [K]), 0);
+              lLine.Color := lIni.ReadInteger(lSection, Format('OscLine%dColor', [K]),
+                lLine.Color);
+              lLine.Name := OglChartLinePaletteNameForColor(TColor(lLine.Color));
+              if lLine.Name = '' then
+                lLine.Name := lIni.ReadString(lSection, Format('OscLine%dName', [K]), '');
+              if lLine.Name = '' then
+              begin
+                OglChartLineAppearance(K + 1, lPaletteName, lPaletteColor);
+                lLine.Name := lPaletteName;
+                lLine.Color := lPaletteColor;
+              end;
+              lLine.Visible := lIni.ReadBool(lSection, Format('OscLine%dVisible', [K]), True);
+            end;
           end;
           if lComponent is TRecorderSpectrumComponent then
           begin
@@ -933,11 +985,16 @@ begin
             lSpectrum.ZeroY0 := lIni.ReadBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
             lSpectrum.ResultType := lIni.ReadInteger(lSection, 'ResultType', lSpectrum.ResultType);
             lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
+            lSpectrum.TahoTagId := lIni.ReadInt64(lSection, 'TahoTagId', 0);
             lSpectrum.ProfileName := lIni.ReadString(lSection, 'ProfileName', lSpectrum.ProfileName);
             lSpectrum.TagNames.Clear;
             lItemCount := lIni.ReadInteger(lSection, 'TagCount', 0);
             for K := 0 to lItemCount - 1 do
+            begin
               lSpectrum.TagNames.Add(lIni.ReadString(lSection, Format('Tag%d', [K]), ''));
+              lSpectrum.SetTagIdAt(lSpectrum.TagNames.Count - 1,
+                lIni.ReadInt64(lSection, Format('Tag%dId', [K]), 0));
+            end;
           end;
           if lComponent is TRecorderTrendComponent then
           begin
@@ -962,11 +1019,20 @@ begin
             for K := 0 to lItemCount - 1 do
             begin
               lLine := lTrend.AddLine;
-              lLine.Name := lIni.ReadString(lSection, Format('Line%dName', [K]), lLine.Name);
               lLine.TagName := lIni.ReadString(lSection, Format('Line%dTagName', [K]), lLine.TagName);
+              lLine.TagId := lIni.ReadInt64(lSection, Format('Line%dTagId', [K]), 0);
               lLine.EstimateKind := TRecorderTagEstimateKind(lIni.ReadInteger(lSection, Format('Line%dEstimateKind', [K]), Ord(lLine.EstimateKind)));
               lLine.AxisIndex := lIni.ReadInteger(lSection, Format('Line%dAxisIndex', [K]), lLine.AxisIndex);
               lLine.Color := lIni.ReadInteger(lSection, Format('Line%dColor', [K]), lLine.Color);
+              lLine.Name := OglChartLinePaletteNameForColor(TColor(lLine.Color));
+              if lLine.Name = '' then
+                lLine.Name := lIni.ReadString(lSection, Format('Line%dName', [K]), lLine.Name);
+              if lLine.Name = '' then
+              begin
+                OglChartLineAppearance(K, lPaletteName, lPaletteColor);
+                lLine.Name := lPaletteName;
+                lLine.Color := lPaletteColor;
+              end;
               lLine.Width := lIni.ReadInteger(lSection, Format('Line%dWidth', [K]), lLine.Width);
               lLine.Visible := lIni.ReadBool(lSection, Format('Line%dVisible', [K]), lLine.Visible);
             end;

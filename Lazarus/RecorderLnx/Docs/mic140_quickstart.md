@@ -15,7 +15,7 @@ RecorderLnx сначала пробует legacy Ethernet протокол MC031
 4. Если ответ корректный, источник работает через legacy protocol.
 5. Если legacy не ответил, оставлен fallback на новый Mebius/MEAS протокол.
 
-Код: `Core/uRecorderMic140DataSource.pas`,
+Код: `Device/MIC140/uRecorderMic140DataSource.pas`,
 `TRecorderMic140Device.Connect`.
 
 ## 2. Диагностика связи

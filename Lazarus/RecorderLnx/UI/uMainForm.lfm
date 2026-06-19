@@ -53,25 +53,33 @@ object MainForm: TMainForm
       TabOrder = 0
       object lbState: TLabel
         Left = 0
-        Height = 15
+        Height = 36
         Top = 0
         Width = 188
         Align = alTop
         Alignment = taCenter
         Caption = 'Stop'
+        Font.Height = -19
+        Font.Size = 14
         Font.Style = [fsBold]
+        Layout = tlCenter
         ParentColor = False
         ParentFont = False
       end
       object lbTime: TLabel
         Left = 0
-        Height = 15
-        Top = 15
+        Height = 36
+        Top = 36
         Width = 188
-        Align = alTop
+        Align = alClient
         Alignment = taCenter
         Caption = '00:00:00'
+        Font.Height = -24
+        Font.Size = 18
+        Font.Style = [fsBold]
+        Layout = tlCenter
         ParentColor = False
+        ParentFont = False
       end
     end
     object pnRightCommands: TPanel
@@ -115,7 +123,7 @@ object MainForm: TMainForm
         Top = 8
         Width = 40
         Images = ilCommandButtons
-        ImageIndex = 26
+        ImageIndex = 38
         ImageWidth = 32
         ShowHint = True
         ParentShowHint = False

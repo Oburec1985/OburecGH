@@ -9,6 +9,7 @@ unit uRecorderSpectrumEngine;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 {$modeswitch advancedrecords}
 {$pointermath on}
 
@@ -272,7 +273,7 @@ end;
 function RecorderSpectrumOverlapName(AMode: TRecorderSpectrumOverlapMode): string;
 begin
   case AMode of
-    somNone: Result := 'без перекрытия';
+    somNone: Result := 'Р±РµР· РїРµСЂРµРєСЂС‹С‚РёСЏ';
     somHalf: Result := '1/2';
     somQuarter: Result := '1/4';
   else
@@ -283,9 +284,9 @@ end;
 function RecorderSpectrumIntegrationName(AMode: TRecorderSpectrumIntegrationMode): string;
 begin
   case AMode of
-    simNone: Result := 'без интегрирования';
-    simSingle: Result := 'однократное';
-    simDouble: Result := 'двухкратное';
+    simNone: Result := 'Р±РµР· РёРЅС‚РµРіСЂРёСЂРѕРІР°РЅРёСЏ';
+    simSingle: Result := 'РѕРґРЅРѕРєСЂР°С‚РЅРѕРµ';
+    simDouble: Result := 'РґРІСѓС…РєСЂР°С‚РЅРѕРµ';
   else
     Result := 'Unknown';
   end;

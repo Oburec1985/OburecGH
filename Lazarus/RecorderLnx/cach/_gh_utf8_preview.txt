@@ -1,0 +1,50 @@
+unit uRecorderSettingsDialog;
+
+{
+  Модуль uRecorderSettingsDialog
+
+  Назначение:
+    Диалог настройки параметров рекордера и конфигурации аппаратных каналов/устройств.
+    Позволяет задавать параметры отображения, буферизации, записи, условия
+    старта/останова сбора данных, а также импортировать сигналы из файлов формата Mera.
+
+  Библиотеки и зависимости:
+    - Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls: стандартные модули LCL.
+    - ComCtrls, ImgList, Grids, Buttons: компоненты UI (дерево устройств, списки каналов).
+    - uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags: бизнес-логика рекордера.
+    - uMeraFile: парсинг файлов конфигурации сигналов Mera.
+    - uRecorderCommandImages: константы индексов иконок UI.
+}
+
+{$mode objfpc}{$H+}
+{$codepage cp1251}
+
+interface
+
+uses
+  LConvEncoding,
+  Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
+  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
+  uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
+  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
+  uRecorderMic140DataSource, uRecorderMic140SettingsDialog;
+
+type
+  { TRecorderSettingsDialog }
+
+  { Класс диалогового окна настроек рекордера }
+  TRecorderSettingsDialog = class(TForm)
+  published
+    fPageControl: TPageControl;                 // Контейнер вкладок настроек
+    fApplyButton: TButton;                     // Кнопка "Применить"
+    fHardwareTree: TTreeView;                   // Дерево аппаратной конфигурации/устройств
+    btnDeviceAdd: TBitBtn;                      // Кнопка добавления устройства (Mera-файла)
+    btnChannelAdd: TBitBtn;                     // Кнопка добавления выбранного канала в список активных
+    btnChannelRemove: TBitBtn;                  // Кнопка удаления канала из списка активных
+    btnChannelEdit: TBitBtn;                    // Кнопка настройки выбранного тега
+    pnChannelMoveButtons: TPanel;               // Панель кнопок перемещения каналов
+    spChannels: TSplitter;                      // Разделитель между сетками доступных и выбранных каналов
+    fAvailableChannelsGrid: TStringGrid;        // Таблица доступных для выбора каналов
+    fSelectedChannelsGrid: TStringGrid;         // Таблица выбранных (активных) каналов
+    spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
