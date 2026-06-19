@@ -170,6 +170,40 @@ uses
 type
   TDoubleSearch = specialize TBinarySearch<Double>;
 
+procedure ApplyOscillogramTagYRange(AAxis: TChartAxis; ATag: TRecorderTag;
+  ADataMin, ADataMax: Double);
+var
+  lMin, lMax, lPad: Double;
+begin
+  if AAxis = nil then
+    Exit;
+  if AAxis.HasPresetRange then
+    Exit;
+  if (ATag <> nil) and (not ATag.AutoRange) and (ATag.RangeMax > ATag.RangeMin) then
+  begin
+    AAxis.PresetMinValue := ATag.RangeMin;
+    AAxis.PresetMaxValue := ATag.RangeMax;
+    AAxis.MinValue := ATag.RangeMin;
+    AAxis.MaxValue := ATag.RangeMax;
+    Exit;
+  end;
+  if SameValue(ADataMin, ADataMax) then
+  begin
+    lMin := ADataMin - 1.0;
+    lMax := ADataMax + 1.0;
+  end
+  else
+  begin
+    lPad := Abs(ADataMax - ADataMin) * 0.05;
+    lMin := ADataMin - lPad;
+    lMax := ADataMax + lPad;
+  end;
+  AAxis.MinValue := lMin;
+  AAxis.MaxValue := lMax;
+  AAxis.PresetMinValue := lMin;
+  AAxis.PresetMaxValue := lMax;
+end;
+
 function OscillogramEstimateShortName(AKind: TRecorderTagEstimateKind): string;
 begin
   case AKind of
@@ -322,7 +356,7 @@ begin
   lPage.BorderColor := $FF707070;
   lPage.XMinValue := 0;
   lPage.XMaxValue := 1;
-  lPage.AutoScaleOnZoomReset := True;
+  lPage.AutoScaleOnZoomReset := False;
   lAxis := TChartAxis.Create;
   lAxis.Name := 'Axis1';
   lAxis.Caption := '';
@@ -827,8 +861,8 @@ begin
 
   if not lHasRange then
     SetAxisRange(-1, 1)
-  else if not TChartAxis(fAxis).HasPresetRange then
-    SetAxisRange(lMinValue, lMaxValue);
+  else
+    ApplyOscillogramTagYRange(TChartAxis(fAxis), lTag, lMinValue, lMaxValue);
   RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d lines=%d frame=%d window=%.3f',
     [fCurrentTagName, lPointCount, 1 + fExtraLines.Count, fFrameNo, ADisplaySeconds]));
   if fChart is TOglChart then
@@ -1053,7 +1087,7 @@ begin
     lPage.Name := Format('OscPage%d', [I + 1]);
     lPage.Caption := 'Tag: None | FPS: -';
     lPage.Align := cpaAuto;
-    lPage.AutoScaleOnZoomReset := True;
+    lPage.AutoScaleOnZoomReset := False;
     lPage.FillColor := $FFFFFFFF;
     lPage.BorderColor := $FF808080;
     lTabSpace.Left := 42;
@@ -1176,8 +1210,8 @@ begin
 
     if lPointCount = 0 then
       SetAxisRange(lAxis, -1, 1)
-    else if not lAxis.HasPresetRange then
-      SetAxisRange(lAxis, lMinValue, lMaxValue);
+    else
+      ApplyOscillogramTagYRange(lAxis, lTag, lMinValue, lMaxValue);
   end;
 
   RecorderDebugLog(Format('Ogl surface render: charts=%d frame=%d window=%.3f',

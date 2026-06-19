@@ -1120,6 +1120,12 @@ begin
   Result := AValue;
   if ATag = nil then
     Exit;
+  if ATag.HardwareCalibrationEnabled and (Trim(ATag.HardwareCalibrationName) <> '') then
+  begin
+    lCalibration := FindCalibrationByName(ATag.HardwareCalibrationName);
+    if lCalibration <> nil then
+      Result := lCalibration.Transform(Result);
+  end;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
     lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);

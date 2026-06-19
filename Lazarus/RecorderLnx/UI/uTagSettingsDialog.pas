@@ -1,19 +1,19 @@
 unit uTagSettingsDialog;
 
 {
-  РњРѕРґСѓР»СЊ uTagSettingsDialog
+  Модуль uTagSettingsDialog
 
-  РќР°Р·РЅР°С‡РµРЅРёРµ:
-    Р”РёР°Р»РѕРі СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРІРѕР№СЃС‚РІ РѕРґРЅРѕРіРѕ РёР»Рё РЅРµСЃРєРѕР»СЊРєРёС… С‚РµРіРѕРІ/РєР°РЅР°Р»РѕРІ RecorderLnx.
+  Назначение:
+    Диалог редактирования свойств одного или нескольких тегов/каналов RecorderLnx.
 
-  Р РµР¶РёРј multi-select:
-    - Р•СЃР»Рё РІС‹Р±СЂР°РЅРѕ РЅРµСЃРєРѕР»СЊРєРѕ РєР°РЅР°Р»РѕРІ, РѕР±С‰РёРµ РїРѕР»СЏ РїРѕРєР°Р·С‹РІР°СЋС‚ В«СЃРјРµС€Р°РЅРЅРѕРµВ» СЃРѕСЃС‚РѕСЏРЅРёРµ.
-    - Р§Р°СЃС‚СЊ РґРµР№СЃС‚РІРёР№ (РіСЂР°РґСѓРёСЂРѕРІРєРё, Р°РґСЂРµСЃ РІС…РѕРґР°) РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ С‚РµРіР°.
-    - РџСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РёР·РјРµРЅРµРЅРёСЏ РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ РєРѕ РІСЃРµРј РІС‹Р±СЂР°РЅРЅС‹Рј С‚РµРіР°Рј.
+  Режим multi-select:
+    - Если выбрано несколько каналов, общие поля показывают «смешанное» состояние.
+    - Часть действий (градуировки, адрес входа) доступна только для одного тега.
+    - При сохранении изменения применяются ко всем выбранным тегам.
 
-  РљРѕРґРёСЂРѕРІРєР° (2026-06):
-    Р¤Р°Р№Р» РІ UTF-8, {$codepage UTF8}. РЎС‚СЂРѕРєРё РґР»СЏ LCL вЂ” РѕР±С‹С‡РЅС‹Рµ string-Р»РёС‚РµСЂР°Р»С‹.
-    РЎРј. Docs/source-encoding.md.
+  Кодировка (2026-06):
+    Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
+    См. Docs/source-encoding.md.
 }
 
 {$mode objfpc}{$H+}
@@ -29,8 +29,7 @@ uses
 
 type
   { TTagSettingsDialog }
-
-  { Диалоговое окно настройки свойств тега (канала) }
+  { Диалоговое окно настройки свойств тега (канала)   }
   TTagSettingsDialog = class(TForm)
   published
     fPageControl: TPageControl;
@@ -230,7 +229,7 @@ var
 begin
   lForm := TForm.CreateNew(AOwner, 1);
   try
-    lForm.Caption := 'Р’С‹Р±РѕСЂ СЃРёРіРЅР°Р»Р° РёР· СЃРїРёСЃРєР°';
+    lForm.Caption := 'Выбор сигнала из списка';
     lForm.SetBounds(0, 0, 350, 450);
     lForm.Position := poOwnerFormCenter;
     lForm.BorderStyle := bsDialog;
@@ -250,7 +249,7 @@ begin
     lCancelBtn := TButton.Create(lForm);
     lCancelBtn.Parent := lForm;
     lCancelBtn.SetBounds(230, 370, 80, 25);
-    lCancelBtn.Caption := 'РћС‚РјРµРЅР°';
+    lCancelBtn.Caption := 'Отмена';
     lCancelBtn.ModalResult := mrCancel;
     
     if lListBox.Items.Count > 0 then
@@ -745,7 +744,7 @@ begin
   lSourceIds := TStringList.Create;
   lDialog := TForm.CreateNew(Self, 1);
   try
-    lDialog.Caption := 'Р’С‹Р±РѕСЂ Р°РєС‚РёРІРЅРѕРіРѕ СЃРёРіРЅР°Р»Р° РєР°РЅР°Р»Р°';
+    lDialog.Caption := 'Выбор активного сигнала канала';
     lDialog.Position := poOwnerFormCenter;
     lDialog.BorderStyle := bsDialog;
     lDialog.ClientWidth := 560;
@@ -771,7 +770,7 @@ begin
     lButton := TButton.Create(lDialog);
     lButton.Parent := lPanel;
     lButton.SetBounds(470, 8, 74, 26);
-    lButton.Caption := 'РћС‚РјРµРЅР°';
+    lButton.Caption := 'Отмена';
     lButton.Cancel := True;
     lButton.ModalResult := mrCancel;
 
@@ -804,8 +803,8 @@ begin
 
     if lList.Items.Count = 0 then
     begin
-      MessageDlg('РЎРІСЏР·СЊ РІС…РѕРґР°',
-        'РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СЃРёРіРЅР°Р»РѕРІ Р°РєС‚РёРІРЅС‹С… РёСЃС‚РѕС‡РЅРёРєРѕРІ РґР»СЏ СЃРІСЏР·Рё РІС…РѕРґР°.',
+      MessageDlg('Связь входа',
+        'Нет доступных сигналов активных источников для связи входа.',
         mtInformation, [mbOK], 0);
       Exit;
     end;
@@ -876,8 +875,8 @@ var
 begin
   if fTags.Count <> 1 then
   begin
-    MessageDlg('РђРґСЂРµСЃ РєР°РЅР°Р»Р°',
-      'РЎРјРµРЅР° Р°РґСЂРµСЃР° РІС…РѕРґР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ С‚РµРіР°.',
+    MessageDlg('Адрес канала',
+      'Смена адреса входа доступна только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -911,14 +910,14 @@ var
 begin
   if fTags.Count = 1 then
   begin
-    Caption := 'РќР°СЃС‚СЂРѕР№РєР° РєР°РЅР°Р»Р° ' + TagAt(0).Name;
+    Caption := 'Настройка канала ' + TagAt(0).Name;
     fNameEdit.Text := TagAt(0).Name;
     fNameEdit.Enabled := True;
     fAddressButton.Enabled := fTagRegistry.ActiveSourceCount > 0;
   end
   else
   begin
-    Caption := Format('РќР°СЃС‚СЂРѕР№РєР° РєР°РЅР°Р»РѕРІ (%d)', [fTags.Count]);
+    Caption := Format('Настройка каналов (%d)', [fTags.Count]);
     fNameEdit.Text := '';
     fNameEdit.Enabled := False;
     fAddressButton.Enabled := False;
@@ -1146,6 +1145,8 @@ begin
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
+    if (fTags.Count = 1) and fHardwareCurveEdit.Enabled then
+      lTag.HardwareCalibrationName := Trim(fHardwareCurveEdit.Text);
 
     lEstimateSettings := lTag.EstimateSettings;
     for lEstimateKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
@@ -1216,8 +1217,8 @@ var
 begin
   if fTags.Count <> 1 then
   begin
-    MessageDlg('РљР°РЅР°Р»СЊРЅР°СЏ Р“РҐ',
-      'Р’С‹Р±РѕСЂ Р“РҐ РёР· СЃРїРёСЃРєР° РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ С‚РµРіР°.',
+    MessageDlg('Канальная ГХ',
+      'Выбор ГХ из списка поддерживается только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1246,7 +1247,7 @@ begin
 
   lCalibration := TRecorderCalibration.Create(lKind);
   try
-    lCalibration.Name := 'Р“РҐ ' + IntToStr(fTagRegistry.Calibrations.Count + 1);
+    lCalibration.Name := 'ГХ ' + IntToStr(fTagRegistry.Calibrations.Count + 1);
     if lKind = rckPiecewiseLinear then
     begin
       lCalibration.AddPoint(0, 0);
@@ -1285,15 +1286,15 @@ var
 begin
   if fTags.Count <> 1 then
   begin
-    MessageDlg('РљР°РЅР°Р»СЊРЅР°СЏ Р“РҐ','Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ С‚РµРіР°.',
+    MessageDlg('Канальная ГХ','Редактирование доступно только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
   if TagAt(0).CalibrationNames.Count = 0 then
   begin
-    MessageDlg('РљР°РЅР°Р»СЊРЅР°СЏ Р“РҐ',
-      'РЈ РІС‹Р±СЂР°РЅРЅРѕРіРѕ С‚РµРіР° РЅРµС‚ РЅР°Р·РЅР°С‡РµРЅРЅРѕР№ Р“РҐ.',
+    MessageDlg('Канальная ГХ',
+      'У выбранного тега нет назначенной ГХ.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1302,7 +1303,7 @@ begin
     TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]);
   if lCalibration = nil then
   begin
-    MessageDlg('РљР°РЅР°Р»СЊРЅР°СЏ Р“РҐ',   'Р“СЂР°РґСѓРёСЂРѕРІРєР° Р“РҐ РЅРµ РЅР°Р№РґРµРЅР° РІ СЃРїРёСЃРєРµ РєР°Р»РёР±СЂРѕРІРѕРє.',
+    MessageDlg('Канальная ГХ',   'Градуировка ГХ не найдена в списке калибровок.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1315,16 +1316,16 @@ procedure TTagSettingsDialog.SelectHardwareCalibrationButtonClick(Sender: TObjec
 begin
   if fTags.Count <> 1 then
   begin
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'Р—Р°РіСЂСѓР·РєР° Р°РїРїР°СЂР°С‚РЅРѕР№ Р“РҐ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ С‚РµРіР°.',
+    MessageDlg('Аппаратная ГХ',
+      'Загрузка аппаратной ГХ поддерживается только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
   if Pos('MIC-140:', TagAt(0).SourceId) <> 1 then
   begin
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'Р—Р°РіСЂСѓР·РєР° РёР· Р°РїРїР°СЂР°С‚РЅРѕР№ Р±Р°Р·С‹ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РґР»СЏ РєР°РЅР°Р»РѕРІ MIC-140.',
+    MessageDlg('Аппаратная ГХ',
+      'Загрузка из аппаратной базы поддерживается только для каналов MIC-140.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1332,8 +1333,8 @@ begin
   if RecorderMic140LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), 0) then
     UpdateHardwareCurveText
   else
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р°РїРїР°СЂР°С‚РЅСѓСЋ Р“РҐ. РџСЂРѕРІРµСЂСЊС‚Рµ РєР°С‚Р°Р»РѕРі calibr/hardware/MIC140 Рё СЃРµСЂРёР№РЅС‹Р№ РЅРѕРјРµСЂ РїСЂРёР±РѕСЂР°.',
+    MessageDlg('Аппаратная ГХ',
+      'Не удалось загрузить аппаратную ГХ. Проверьте каталог calibr/hardware/MIC140 и серийный номер прибора.',
       mtWarning, [mbOK], 0);
 end;
 
@@ -1343,16 +1344,16 @@ var
 begin
   if fTags.Count <> 1 then
   begin
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ РґР»СЏ РѕРґРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ С‚РµРіР°.',
+    MessageDlg('Аппаратная ГХ',
+      'Редактирование доступно только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'РЈ РІС‹Р±СЂР°РЅРЅРѕРіРѕ С‚РµРіР° РЅРµС‚ РЅР°Р·РЅР°С‡РµРЅРЅРѕР№ Р°РїРїР°СЂР°С‚РЅРѕР№ Р“РҐ.',
+    MessageDlg('Аппаратная ГХ',
+      'У выбранного тега нет назначенной аппаратной ГХ.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1360,8 +1361,8 @@ begin
   lCalibration := fTagRegistry.FindCalibrationByName(TagAt(0).HardwareCalibrationName);
   if lCalibration = nil then
   begin
-    MessageDlg('РђРїРїР°СЂР°С‚РЅР°СЏ Р“РҐ',
-      'Р“СЂР°РґСѓРёСЂРѕРІРєР° Р°РїРїР°СЂР°С‚РЅРѕР№ Р“РҐ РЅРµ РЅР°Р№РґРµРЅР° РІ СЃРїРёСЃРєРµ РєР°Р»РёР±СЂРѕРІРѕРє.',
+    MessageDlg('Аппаратная ГХ',
+      'Градуировка аппаратной ГХ не найдена в списке калибровок.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1413,9 +1414,9 @@ end;
 
 procedure TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
 const
-  sGhDownloadTitle = 'Р’С‹РіСЂСѓР·РєР° Р“РҐ';
-  sGhDownloadOk = 'Р“СЂР°РґСѓРёСЂРѕРІРєРё СѓСЃРїРµС€РЅРѕ РІС‹РіСЂСѓР¶РµРЅС‹ РёР· РїР°РјСЏС‚Рё СѓСЃС‚СЂРѕР№СЃС‚РІР°.';
-  sGhDownloadNoMic140 = 'РЎСЂРµРґРё РІС‹Р±СЂР°РЅРЅС‹С… С‚РµРіРѕРІ РЅРµС‚ РєР°РЅР°Р»РѕРІ MIC-140.';
+  sGhDownloadTitle = 'Выгрузка ГХ';
+  sGhDownloadOk = 'Градуировки успешно выгружены из памяти устройства.';
+  sGhDownloadNoMic140 = 'Среди выбранных тегов нет каналов MIC-140.';
 var
   lErrorMessage: string;
   lErrors: TStringList;
