@@ -87,6 +87,7 @@ def count_corruption(text: str) -> dict[str, int]:
 
     counts: dict[str, int] = {"???": text.count("???")}
     counts["U+FFFD"] = text.count("\ufffd")
+    counts["0x98"] = text.count("\x98")
     for m in MOJIBAKE_MARKERS:
         if m in text:
             counts[f"mojibake:{m}"] = text.count(m)

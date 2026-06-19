@@ -69,6 +69,18 @@ end;
 
 """
 
+# Whole procedure ApplyPresetZoomY(AAxis) — must replace header + body together.
+APPLY_PRESET_AXIS_PROC = re.compile(
+    r"procedure ApplyPresetZoomY\(AAxis: TChartAxis\);\s*begin.*?^end;\s*\n",
+    re.MULTILINE | re.DOTALL,
+)
+
+# Orphan body left by broken one-line replace (no procedure header).
+ORPHAN_AXIS_BODY = re.compile(
+    r"\n\nbegin\s*\n  if not Assigned\(AAxis\) then\s*\n.*?^end;\s*\n(?=procedure ApplyPresetZoomY\(APage)",
+    re.MULTILINE | re.DOTALL,
+)
+
 OLD_COMMIT_BLOCK = re.compile(
     r"  if TryStrToFloatUniversal\(fEditText, lValue\) then\s*"
     r"begin\s*"
@@ -79,7 +91,6 @@ OLD_COMMIT_BLOCK = re.compile(
 NEW_COMMIT_BLOCK = (
     "  if TryStrToFloatUniversal(fEditText, lValue) then\n"
     "    ApplyActiveHitNumericValue(fActiveHit, lValue);\n\n"
-    "end;\n\n"
 )
 
 
@@ -92,21 +103,20 @@ def load_git_pas(git_path: str) -> str:
 
 def patch_panzoom(text: str) -> str:
     text = fix_cp1251_mojibake(text, rounds=3)
+    text = ORPHAN_AXIS_BODY.sub("\n\n", text)
 
-    if "procedure MarkAxisUserZoomY" not in text:
-        text = text.replace(
-            "procedure ApplyPresetZoomY(AAxis: TChartAxis);",
-            MARK_AXIS_USER_ZOOM_Y + APPLY_PRESET_ZOOM_Y_AXIS,
-            1,
-        )
-    else:
+    replacement = MARK_AXIS_USER_ZOOM_Y + APPLY_PRESET_ZOOM_Y_AXIS
+    if "procedure MarkAxisUserZoomY" in text:
         text = re.sub(
-            r"procedure ApplyPresetZoomY\(AAxis: TChartAxis\);\s*begin.*?AAxis\.HasPresetRange := False;\s*end;\s*\n",
-            APPLY_PRESET_ZOOM_Y_AXIS,
+            r"procedure MarkAxisUserZoomY\(AAxis: TChartAxis\);\s*begin.*?^end;\s*\n",
+            MARK_AXIS_USER_ZOOM_Y,
             text,
             count=1,
-            flags=re.DOTALL,
+            flags=re.MULTILINE | re.DOTALL,
         )
+        text = APPLY_PRESET_AXIS_PROC.sub(APPLY_PRESET_ZOOM_Y_AXIS, text, count=1)
+    else:
+        text = APPLY_PRESET_AXIS_PROC.sub(replacement, text, count=1)
 
     replacements = [
         (
@@ -123,7 +133,7 @@ def patch_panzoom(text: str) -> str:
         ),
     ]
     for old, new in replacements:
-        if new.split("\n")[1].strip() not in text:
+        if old in text:
             text = text.replace(old, new, 1)
 
     return text
@@ -161,6 +171,8 @@ def main() -> int:
         cyr = sum(1 for c in text if "\u0400" <= c <= "\u04ff")
         bad98 = text.count("\x98")
         print(f"OK {out_path.name}: lines={len(text.splitlines())}, cyrillic={cyr}, 0x98={bad98}")
+        if bad98:
+            return 1
     return 0
 
 

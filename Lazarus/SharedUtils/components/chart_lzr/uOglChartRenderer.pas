@@ -2283,8 +2283,6 @@ begin
 
 end;
 
-end;
-
 function TOpenGLChartRenderer.TextInput(const AText: string): Boolean;
 
 var
@@ -2311,8 +2309,6 @@ begin
   fEditSelectionLength := 0;
   if TryStrToFloatUniversal(fEditText, lValue) then
     ApplyActiveHitNumericValue(fActiveHit, lValue);
-
-end;
 
 end;
 
