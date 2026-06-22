@@ -1,6 +1,5 @@
-2026-06-22 14:36:22.849 [DEBUG] [TID:19312|UIThread] 14:36:22.846 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-06-22 14:36:22.850 [DEBUG] [TID:19312|UIThread] 14:36:22.849 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-06-22 14:36:22.856 [DEBUG] [TID:19312|UIThread] 14:36:22.856 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-06-22 14:36:23.646 [DEBUG] [TID:19312|UIThread] 14:36:23.646 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-06-22 14:36:23.648 [DEBUG] [TID:19312|UIThread] 14:36:23.648 RecorderLnx started.
-2026-06-22 14:36:29.120 [WARNING] [TID:19312|UIThread] [MIC-140] loaded hardware calibration for tag MIC140_02 from C:\Mera Files\Calibr\hardware\MIC140\sn0164\06_100mV\02.csv
+2026-06-22 15:33:08.285 [DEBUG] [TID:17672|UIThread] 15:33:08.282 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-06-22 15:33:08.285 [DEBUG] [TID:17672|UIThread] 15:33:08.285 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-06-22 15:33:08.291 [DEBUG] [TID:17672|UIThread] 15:33:08.291 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-06-22 15:33:09.056 [DEBUG] [TID:17672|UIThread] 15:33:09.056 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-06-22 15:33:09.058 [DEBUG] [TID:17672|UIThread] 15:33:09.058 RecorderLnx started.

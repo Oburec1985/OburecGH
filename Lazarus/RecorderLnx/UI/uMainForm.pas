@@ -45,7 +45,8 @@ uses
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
-  uRecorderSpectrumRuntime, uRecorderMic140DataSource, uRecorderMic140Utils;
+  uRecorderSpectrumRuntime, uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderMeraPaths;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -1630,6 +1631,7 @@ begin
     fRunSettings.LoadFromFile(lOldFileName);
     AddLog('Legacy run-control config loaded: ' + lOldFileName);
   end;
+  SetRecorderMeraFilesPath(fRunSettings.MeraFilesPath);
   UpdateRecordFrameManager;
 end;
 

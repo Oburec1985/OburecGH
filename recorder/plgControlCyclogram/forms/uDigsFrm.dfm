@@ -24,6 +24,7 @@ object DigsFrm: TDigsFrm
     Margins.Right = 2
     Margins.Bottom = 2
     Align = alClient
+    FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goFixedHotTrack]
     TabOrder = 0
     OnDrawCell = SignalsSGDrawCell

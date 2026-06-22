@@ -624,6 +624,7 @@ begin
       g.initiface;
     end;
   end;
+  Preview;
 end;
 
 procedure TControlDeskFrm.doAddObj(Sender: TObject);
@@ -2030,7 +2031,7 @@ begin
           Color := sg.Canvas.Brush.Color;
           case p.State of
             c_play:
-              sg.Canvas.Brush.Color := CLgREEN;
+              sg.Canvas.Brush.Color := g_conmng.m_SelectModeColor;
             c_Pause:
               sg.Canvas.Brush.Color := clYellow;
           end;

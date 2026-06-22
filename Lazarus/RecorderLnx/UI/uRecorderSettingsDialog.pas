@@ -28,7 +28,7 @@ uses
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderMic140DataSource, uRecorderMic140SettingsDialog, uRecorderMic140Utils,
-  uRecorderMeraSdbThermocouples;
+  uRecorderMeraSdbThermocouples, uRecorderMeraPaths;
 
 type
   { TRecorderSettingsDialog }
@@ -81,6 +81,7 @@ type
     fWriteWithPausesCheck: TCheckBox; // ? ? ? ? ?
     fSaveConfigWithDataCheck: TCheckBox; // ? ? ? ? ? ? ?
     fWorkDirEdit: TEdit; // ? ? ? ?
+    fMeraFilesPathEdit: TEdit;
     fTemplateCheck: TCheckBox; // ? ? ? ? ?
     fTemplateButton: TButton; // ? ? ?
     fFrameDirEdit: TEdit; // ? ? ? ? ?
@@ -139,6 +140,7 @@ type
     procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
+    procedure MeraFilesPathBrowseClick(Sender: TObject);
   private
     fRunSettings: TRecorderRunControlSettings; // ? ? ? ? ?/?
     fTagRegistry: TRecorderTagRegistry; // ? ? ? ? ?
@@ -2690,6 +2692,18 @@ begin
   fTemplateButton.Enabled := False;
   fFrameDirEdit := AddEdit(Self, lGroup, 10, 232, 470, 'C:\USML\signal0000');
 
+  lGroup := AddGroup(Self, lLeftPanel, 8, 482, 620, 66, 'База градуировочных характеристик');
+  AddLabel(Self, lGroup, 10, 18, 'Каталог Mera Files');
+  fMeraFilesPathEdit := AddEdit(Self, lGroup, 10, 36, 526, '');
+  lButton := TButton.Create(Self);
+  lButton.Parent := lGroup;
+  lButton.Left := 548;
+  lButton.Top := 34;
+  lButton.Width := 54;
+  lButton.Height := 26;
+  lButton.Caption := '...';
+  lButton.OnClick := @MeraFilesPathBrowseClick;
+
   lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, 'Условия старта записи');
   fStartManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
   fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
@@ -2865,6 +2879,7 @@ begin
   fBufferSecondsEdit.Text := FormatFloat('0.###', fRunSettings.DisplayBufferMs / 1000);
   fDataUpdateEdit.Text := FormatFloat('0.###', fRunSettings.DataUpdateMs / 1000);
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir);
+  fMeraFilesPathEdit.Text := fRunSettings.MeraFilesPath;
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir) + '0001';
   fResetTimeCheck.Checked := True;
 
@@ -2908,6 +2923,8 @@ begin
   fRunSettings.DataUpdateMs := ReadSecondsAsMs(fDataUpdateEdit,
     fRunSettings.DataUpdateMs);
   fRunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
+  fRunSettings.MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(fMeraFilesPathEdit.Text));
+  SetRecorderMeraFilesPath(fRunSettings.MeraFilesPath);
   fRunSettings.RequireValid;
   if fTagRegistry <> nil then
   begin
@@ -2975,6 +2992,17 @@ begin
     Exit;
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(lDir);
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(lDir) + '0001';
+end;
+
+procedure TRecorderSettingsDialog.MeraFilesPathBrowseClick(Sender: TObject);
+var
+  lDir: string;
+begin
+  lDir := Trim(fMeraFilesPathEdit.Text);
+  if lDir = '' then
+    lDir := RecorderMeraFilesPath;
+  if SelectDirectory('Каталог Mera Files', '', lDir) then
+    fMeraFilesPathEdit.Text := ExcludeTrailingPathDelimiter(lDir);
 end;
 procedure TRecorderSettingsDialog.ApplyButtonClick(Sender: TObject);
 begin

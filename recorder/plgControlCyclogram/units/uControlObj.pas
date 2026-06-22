@@ -4,7 +4,7 @@ interface
 
 uses
   classes, uBaseObj, uBaseObjMng, uRTrig, NativeXML, recorder,
-  dialogs, activeX,
+  dialogs, activeX, graphics,
   sysutils, windows, uRecorderEvents, VirtualTrees, uVTServices,
   tags,
   MathFunction,
@@ -76,6 +76,7 @@ type
     AllowUserModeSelect: boolean;
     // частота счетчика замера времени
     m_Freq: int64;
+    m_selectModeColor:integer;
   public
     function ErrorCount: integer;
     function ErrorStr: string;
@@ -1183,6 +1184,7 @@ var
   gname: PAnsiChar;
 begin
   inherited;
+  m_selectModeColor:=CLgREEN;
   // состояние для поиска ошибок
   fErrorState := 0;
   fErrorCount := 0;
@@ -4218,6 +4220,7 @@ var
 begin
   inherited;
   AllowUserModeSelect := node.ReadAttributeBool('AlowUserModeSelect', true);
+  g_conmng.m_selectModeColor:=Node.ReadAttributeInteger('SelectModeColor', clGreen);
   StopTrigger := ReadTrig(node, 'CommonStopTrig', self);
   trignode := node.FindNode('TrigsNode');
   // пишем триггеры с списком действий
@@ -4242,6 +4245,7 @@ var
 begin
   inherited;
   node.WriteAttributeBool('AlowUserModeSelect', AllowUserModeSelect, true);
+  node.WriteAttributeInteger('SelectModeColor', m_selectModeColor, CLGREEN);
   if StopTrigger <> nil then
     writeTrig(node, 'CommonStopTrig', StopTrigger);
 

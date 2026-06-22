@@ -75,7 +75,7 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       Height = 15
       Top = 12
       Width = 36
-      Caption = 'Ключ'
+      Caption = 'Имя'
     end
     object edKey: TEdit
       Left = 12

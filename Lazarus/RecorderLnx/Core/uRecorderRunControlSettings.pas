@@ -27,7 +27,7 @@ interface
 
 uses
   Classes, SysUtils, IniFiles,
-  uRecorderStateMachine;
+  uRecorderStateMachine, uRecorderMeraPaths;
 
 type
   { TRecorderSignalEdge
@@ -71,6 +71,7 @@ type
     fDisplayBufferMs: Cardinal;                    { Длина отображаемого окна данных в мс }
     fDataUpdateMs: Cardinal;                       { Период обновления источников данных в мс }
     fRecordRootDir: string;                        { Корневой каталог записи MERA-кадров }
+    fMeraFilesPath: string;                        { Корень Mera Files: SDB и calibr }
 
     function ValidateStart(out AMessage: string): Boolean;
     function ValidateStop(out AMessage: string): Boolean;
@@ -142,6 +143,7 @@ type
     property DisplayBufferMs: Cardinal read fDisplayBufferMs write fDisplayBufferMs;
     property DataUpdateMs: Cardinal read fDataUpdateMs write fDataUpdateMs;
     property RecordRootDir: string read fRecordRootDir write fRecordRootDir;
+    property MeraFilesPath: string read fMeraFilesPath write fMeraFilesPath;
   end;
 
 implementation
@@ -172,6 +174,7 @@ begin
   fDisplayBufferMs := 1000;
   fDataUpdateMs := 300;
   fRecordRootDir := 'C:\USML\';
+  fMeraFilesPath := RecorderMeraFilesPath;
 end;
 
 function TRecorderRunControlSettings.ValidateStart(out AMessage: string): Boolean;
@@ -337,6 +340,7 @@ begin
     lIni.WriteInteger('Display', 'DisplayBufferMs', fDisplayBufferMs);
     lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
     lIni.WriteString('Record', 'RootDir', fRecordRootDir);
+    lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
   finally
     lIni.Free;
   end;
@@ -369,6 +373,7 @@ begin
     fDataUpdateMs := lIni.ReadInteger('Display', 'DataUpdateMs',
       fDataUpdateMs);
     fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
+    fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
   finally
     lIni.Free;
   end;

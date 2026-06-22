@@ -46,9 +46,10 @@ type
     fSelectedKey: string;
     fTree: TRecorderSdbTree;
     procedure AddNode(AParent: TTreeNode; AItem: TRecorderSdbNode);
+    function SelectedItem: TRecorderSdbNode;
     function SelectedScale: TRecorderSdbNode;
     procedure SelectInitialKey(const AKey: string);
-    procedure ShowScale(AItem: TRecorderSdbNode);
+    procedure ShowItem(AItem: TRecorderSdbNode);
   public
     function Execute(const AInitialKey: string; out ASelectedKey: string): Boolean;
   end;
@@ -102,13 +103,19 @@ end;
 function TRecorderSdbSelectDialog.SelectedScale: TRecorderSdbNode;
 begin
   Result := nil;
+  if (SelectedItem <> nil) and (SelectedItem.ItemKind = sikScale) then
+    Result := SelectedItem;
+end;
+
+function TRecorderSdbSelectDialog.SelectedItem: TRecorderSdbNode;
+begin
+  Result := nil;
   if (treeSdb.Selected <> nil) and
-    (TObject(treeSdb.Selected.Data) is TRecorderSdbNode) and
-    (TRecorderSdbNode(treeSdb.Selected.Data).ItemKind = sikScale) then
+    (TObject(treeSdb.Selected.Data) is TRecorderSdbNode) then
     Result := TRecorderSdbNode(treeSdb.Selected.Data);
 end;
 
-procedure TRecorderSdbSelectDialog.ShowScale(AItem: TRecorderSdbNode);
+procedure TRecorderSdbSelectDialog.ShowItem(AItem: TRecorderSdbNode);
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
@@ -121,11 +128,20 @@ begin
   gridPoints.Cells[0, 1] := '';
   gridPoints.Cells[1, 1] := '';
   gridPoints.Cells[2, 1] := '';
-  btnSelect.Enabled := AItem <> nil;
+  btnSelect.Enabled := (AItem <> nil) and (AItem.ItemKind = sikScale);
   if AItem = nil then
     Exit;
 
-  edKey.Text := AItem.ScaleInfo.Key;
+  if AItem.ItemKind <> sikScale then
+  begin
+    edKey.Text := AItem.Caption;
+    edDescription.Text := AItem.FolderInfo.Description;
+    Exit;
+  end;
+
+  edKey.Text := AItem.ScaleInfo.Name;
+  if edKey.Text = '' then
+    edKey.Text := AItem.Caption;
   edDescription.Text := AItem.ScaleInfo.Description;
   edUnits.Text := AItem.ScaleInfo.SrcUnits + ' -> ' + AItem.ScaleInfo.DstUnits;
   edRange.Text := FormatFloat('0.######', AItem.ScaleInfo.SrcFrom) + ' .. ' +
@@ -153,7 +169,7 @@ end;
 
 procedure TRecorderSdbSelectDialog.treeSdbChange(Sender: TObject; Node: TTreeNode);
 begin
-  ShowScale(SelectedScale);
+  ShowItem(SelectedItem);
 end;
 
 procedure TRecorderSdbSelectDialog.btnSelectClick(Sender: TObject);
@@ -211,7 +227,7 @@ begin
     SelectInitialKey(AInitialKey);
     if treeSdb.Selected = nil then
       treeSdb.Selected := treeSdb.Items.GetFirstNode;
-    ShowScale(SelectedScale);
+    ShowItem(SelectedItem);
     Result := ShowModal = mrOk;
     if Result then
       ASelectedKey := fSelectedKey;

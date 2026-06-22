@@ -17,6 +17,7 @@ uses
   SysUtils;
 
 function RecorderMeraFilesPath: string;
+procedure SetRecorderMeraFilesPath(const APath: string);
 function RecorderMeraCalibrRootDir: string;
 
 implementation
@@ -26,7 +27,10 @@ uses
   Windows;
 {$ENDIF}
 
-function RecorderMeraFilesPath: string;
+var
+  g_MeraFilesPath: string;
+
+function DefaultRecorderMeraFilesPath: string;
 {$IFDEF MSWINDOWS}
 var
   lSystemDir: array[0..MAX_PATH] of Char;
@@ -47,7 +51,19 @@ begin
   else
     Result := IncludeTrailingPathDelimiter(GetUserDir) + 'Mera Files';
 {$ENDIF}
-  ForceDirectories(Result);
+end;
+
+function RecorderMeraFilesPath: string;
+begin
+  if g_MeraFilesPath <> '' then
+    Result := g_MeraFilesPath
+  else
+    Result := DefaultRecorderMeraFilesPath;
+end;
+
+procedure SetRecorderMeraFilesPath(const APath: string);
+begin
+  g_MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(APath));
 end;
 
 function RecorderMeraCalibrRootDir: string;

@@ -23,9 +23,11 @@ type
   private
     fItemKind: TSdbItemKind;
     fScaleInfo: TSdbScaleInfo;
+    fFolderInfo: TSdbFolderInfo;
   public
     property ItemKind: TSdbItemKind read fItemKind write fItemKind;
     property ScaleInfo: TSdbScaleInfo read fScaleInfo write fScaleInfo;
+    property FolderInfo: TSdbFolderInfo read fFolderInfo write fFolderInfo;
   end;
 
   { Read-only in-memory view of the disk SDB. It uses the shared hierarchy
@@ -59,7 +61,8 @@ function RecorderSdbImportCalibration(AList: TRecorderCalibrationList;
 implementation
 
 uses
-  DOM, XMLRead, FileUtil, StrUtils, Math, uRecorderMeraPaths;
+  DOM, XMLRead, FileUtil, StrUtils, Math, uRecorderMeraPaths,
+  uSharedStringEncoding;
 
 function RecorderSdbRootDir: string;
 begin
@@ -157,6 +160,78 @@ begin
     Result := ADefault;
 end;
 
+procedure SdbReadXmlFile(out ADocument: TXMLDocument; const AFileName: string);
+var
+  lFile: TFileStream;
+  lStream: TStringStream;
+  lXmlText: RawByteString;
+  lUtf8Text: string;
+begin
+  ADocument := nil;
+  lFile := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(lXmlText, lFile.Size);
+    if lXmlText <> '' then
+      lFile.ReadBuffer(lXmlText[1], Length(lXmlText));
+  finally
+    lFile.Free;
+  end;
+
+  // FPC XMLRead does not accept the legacy CP1251 declaration used by SDB.
+  // Convert only such files in memory; the installed SDB stays read-only.
+  if Pos('encoding="windows-1251"', LowerCase(string(lXmlText))) = 0 then
+  begin
+    ReadXMLFile(ADocument, AFileName);
+    Exit;
+  end;
+
+  lUtf8Text := SharedCp1251BytesToUtf8(lXmlText);
+  lUtf8Text := StringReplace(lUtf8Text, 'encoding="windows-1251"',
+    'encoding="UTF-8"', [rfReplaceAll, rfIgnoreCase]);
+  lStream := TStringStream.Create(lUtf8Text);
+  try
+    ReadXMLFile(ADocument, lStream);
+  finally
+    lStream.Free;
+  end;
+end;
+
+function RecorderSdbTryLoadFolder(const AKey: string;
+  out AInfo: TSdbFolderInfo): Boolean;
+var
+  lDocument: TXMLDocument;
+  lFolderPath: string;
+  lXmlPath: string;
+begin
+  AInfo := Default(TSdbFolderInfo);
+  Result := False;
+  if RecorderSdbNormalizeKey(AKey) = '' then
+  begin
+    lFolderPath := ExpandFileName(RecorderSdbRootDir);
+    lXmlPath := IncludeTrailingPathDelimiter(lFolderPath) + CSdbDescriptorFile;
+  end
+  else
+  begin
+    lFolderPath := ExpandFileName(IncludeTrailingPathDelimiter(RecorderSdbRootDir) +
+      StringReplace(RecorderSdbNormalizeKey(AKey), '\', PathDelim, [rfReplaceAll]));
+    lXmlPath := IncludeTrailingPathDelimiter(lFolderPath) +
+      ExtractFileName(lFolderPath) + '.xml';
+  end;
+  if not FileExists(lXmlPath) then
+    Exit;
+  lDocument := nil;
+  try
+    SdbReadXmlFile(lDocument, lXmlPath);
+    AInfo.Key := RecorderSdbNormalizeKey(AKey);
+    AInfo.Name := SdbProperty(lDocument, 'name');
+    AInfo.Description := SdbProperty(lDocument, 'dsc');
+    AInfo.XmlPath := lXmlPath;
+    Result := True;
+  finally
+    lDocument.Free;
+  end;
+end;
+
 function RecorderSdbTryLoadScale(const AKey: string; out AInfo: TSdbScaleInfo): Boolean;
 var
   lDocument: TXMLDocument;
@@ -169,7 +244,7 @@ begin
     Exit;
   lDocument := nil;
   try
-    ReadXMLFile(lDocument, lXmlPath);
+    SdbReadXmlFile(lDocument, lXmlPath);
     AInfo.Key := RecorderSdbNormalizeKey(AKey);
     AInfo.Name := SdbProperty(lDocument, 'name');
     AInfo.Description := SdbProperty(lDocument, 'dsc');
@@ -210,6 +285,8 @@ function TRecorderSdbTree.EnsureFolder(AParent: TRecorderSdbNode;
   const AName: string): TRecorderSdbNode;
 var
   I: Integer;
+  lKey: string;
+  lFolderInfo: TSdbFolderInfo;
 begin
   for I := 0 to AParent.GetChildCount - 1 do
     if (AParent.GetChild(I) is TRecorderSdbNode) and
@@ -219,6 +296,11 @@ begin
   Result.Name := AName;
   Result.Caption := AName;
   Result.ItemKind := sikFolder;
+  lKey := AName;
+  if (AParent <> nil) and (AParent.FolderInfo.Key <> '') then
+    lKey := AParent.FolderInfo.Key + '\' + lKey;
+  if RecorderSdbTryLoadFolder(lKey, lFolderInfo) then
+    Result.FolderInfo := lFolderInfo;
   AParent.AddChild(Result);
 end;
 
@@ -233,11 +315,21 @@ var
   lRoot: string;
   lNode: TRecorderSdbNode;
   lScale: TRecorderSdbNode;
+  lFolderInfo: TSdbFolderInfo;
+  lFolderKey: string;
 begin
   fRoot.ClearChildren;
   lRoot := IncludeTrailingPathDelimiter(ExpandFileName(RecorderSdbRootDir));
   if not DirectoryExists(lRoot) then
     Exit;
+  fRoot.FolderInfo := Default(TSdbFolderInfo);
+  fRoot.Caption := ExcludeTrailingPathDelimiter(lRoot);
+  if RecorderSdbTryLoadFolder('', lFolderInfo) then
+  begin
+    fRoot.FolderInfo := lFolderInfo;
+    if lFolderInfo.Name <> '' then
+      fRoot.Caption := lFolderInfo.Name;
+  end;
   lFiles := TStringList.Create;
   lParts := TStringList.Create;
   try
@@ -249,8 +341,22 @@ begin
     begin
       lKey := ChangeFileExt(Copy(lFiles[I], Length(lRoot) + 1, MaxInt), '');
       lKey := StringReplace(lKey, PathDelim, '\', [rfReplaceAll]);
-      if SameText(lKey, ChangeFileExt(CSdbDescriptorFile, '')) or
-        not RecorderSdbTryLoadScale(lKey, lInfo) then
+      if SameText(lKey, ChangeFileExt(CSdbDescriptorFile, '')) then
+        Continue;
+      lFolderKey := ExtractFileDir(lKey);
+      lFolderKey := StringReplace(lFolderKey, PathDelim, '\', [rfReplaceAll]);
+      if (lFolderKey <> '') and SameText(ExtractFileName(lKey),
+        ExtractFileName(lFolderKey)) then
+      begin
+        lParts.DelimitedText := lFolderKey;
+        lNode := fRoot;
+        for J := 0 to lParts.Count - 1 do
+          lNode := EnsureFolder(lNode, lParts[J]);
+        if RecorderSdbTryLoadFolder(lFolderKey, lFolderInfo) then
+          lNode.FolderInfo := lFolderInfo;
+        Continue;
+      end;
+      if not RecorderSdbTryLoadScale(lKey, lInfo) then
         Continue;
       lParts.DelimitedText := lInfo.Key;
       if lParts.Count = 0 then
