@@ -105,6 +105,16 @@ object TagSettingsDialog: TTagSettingsDialog
           Anchors = [akTop, akRight]
           Caption = '...'
         end
+        object fHardwareSourceSetupBtn: TSpeedButton
+          Left = 404
+          Height = 32
+          Top = 44
+          Width = 34
+          Anchors = [akTop, akRight]
+          Hint = 'Настройка аппаратного источника'
+          ParentShowHint = False
+          ShowHint = True
+        end
         object lbDescription: TLabel
           Left = 12
           Height = 15

@@ -183,6 +183,9 @@ function RecorderMic140ChannelCjcNumber(const ASettings: TRecorderMic140ChannelS
   AChannelIndex, ADevSubRev: Integer): Integer;
 function RecorderMic140ChannelGradRangeText(
   const ASettings: TRecorderMic140ChannelSettings): string;
+procedure RecorderMic140RestoreChannelSettingsFromTag(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ASettings: TRecorderMic140ChannelSettings);
 function RecorderMic140EnsureThermocoupleCalibration(
   ARegistry: TRecorderTagRegistry;
   const ASettings: TRecorderMic140ChannelSettings): string;
@@ -1497,6 +1500,39 @@ begin
     Result := Format('%.1f...%.1f', [Min(lMinC, lMaxC), Max(lMinC, lMaxC)]);
   finally
     lCalibration.Free;
+  end;
+end;
+
+procedure RecorderMic140RestoreChannelSettingsFromTag(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ASettings: TRecorderMic140ChannelSettings);
+var
+  J: Integer;
+  lCal: TRecorderCalibration;
+  lCalName: string;
+begin
+  if ATag = nil then
+    Exit;
+  if (ATag.MeasRangeIndex >= 0) and (ATag.MeasRangeIndex < CMic140RangeCount) then
+    ASettings.RangeIndex := ATag.MeasRangeIndex;
+  if ATag.CalibrationNames = nil then
+    Exit;
+  for J := 0 to ATag.CalibrationNames.Count - 1 do
+  begin
+    lCalName := Trim(ATag.CalibrationNames[J]);
+    if Pos('TC ', lCalName) <> 1 then
+      Continue;
+    ASettings.ThermocoupleScaleName := Trim(Copy(lCalName, 4, MaxInt));
+    if ARegistry <> nil then
+    begin
+      lCal := ARegistry.FindCalibrationByName(lCalName);
+      if (lCal <> nil) and (Trim(lCal.Description) <> '') then
+        ASettings.ThermocoupleScalePath := lCal.Description
+      else if ASettings.ThermocoupleScaleName <> '' then
+        ASettings.ThermocoupleScalePath :=
+          RecorderMeraThermocoupleRelativePath(ASettings.ThermocoupleScaleName);
+    end;
+    Break;
   end;
 end;
 

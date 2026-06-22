@@ -16,9 +16,13 @@ uses
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;
-  var ASettings: TRecorderMic140ChannelSettings): Boolean;
+  var ASettings: TRecorderMic140ChannelSettings;
+  ABulkChannelCount: Integer = 0): Boolean;
 
 implementation
+
+uses
+  uRecorderSdbStore;
 
 type
   TRecorderMic140ChannelDialog = class(TForm)
@@ -47,6 +51,7 @@ type
     fChannelNumber: Integer;
     fDeviceSerial: Integer;
     fDevSubRev: Integer;
+    fBulkChannelCount: Integer;
     fSettings: TRecorderMic140ChannelSettings;
     procedure InitCombos;
     procedure LoadFromSettings;
@@ -55,20 +60,23 @@ type
     procedure UpdateCjcEnabled;
   public
     function Execute(AChannelNumber, ADeviceSerial, ADevSubRev: Integer;
-      var ASettings: TRecorderMic140ChannelSettings): Boolean;
+      var ASettings: TRecorderMic140ChannelSettings;
+      ABulkChannelCount: Integer = 0): Boolean;
   end;
 
 {$R *.lfm}
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;
-  var ASettings: TRecorderMic140ChannelSettings): Boolean;
+  var ASettings: TRecorderMic140ChannelSettings;
+  ABulkChannelCount: Integer): Boolean;
 var
   lDialog: TRecorderMic140ChannelDialog;
 begin
   lDialog := TRecorderMic140ChannelDialog.Create(AOwner);
   try
-    Result := lDialog.Execute(AChannelNumber, ADeviceSerial, ADevSubRev, ASettings);
+    Result := lDialog.Execute(AChannelNumber, ADeviceSerial, ADevSubRev, ASettings,
+      ABulkChannelCount);
   finally
     lDialog.Free;
   end;
@@ -87,9 +95,17 @@ begin
   for I := 0 to CMic140RangeCount - 1 do
     fRangeCombo.Items.Add(RecorderMic140RangeComboLabel(I));
 
-  fThermocoupleCombo.Items.Clear;
-  fThermocoupleCombo.Items.Add('');
-  RecorderMeraListThermocoupleScales(fThermocoupleCombo.Items);
+  RecorderMeraResetThermocoupleCache;
+  fThermocoupleCombo.Items.BeginUpdate;
+  try
+    fThermocoupleCombo.Items.Clear;
+    fThermocoupleCombo.Items.Add('');
+    RecorderMeraListThermocoupleScales(fThermocoupleCombo.Items);
+    if fThermocoupleCombo.Items.Count = 1 then
+      fThermocoupleCombo.Text := '';
+  finally
+    fThermocoupleCombo.Items.EndUpdate;
+  end;
 
   fCjcCombo.Items.Clear;
   for I := 1 to MIC140TemperatureChannelCount do
@@ -104,6 +120,11 @@ begin
     fRangeCombo.ItemIndex := fSettings.RangeIndex
   else
     fRangeCombo.ItemIndex := CMic140Range100mV;
+
+  if (Trim(fSettings.ThermocoupleScalePath) = '') and
+    (Trim(fSettings.ThermocoupleScaleName) <> '') then
+    fSettings.ThermocoupleScalePath :=
+      RecorderMeraThermocoupleRelativePath(fSettings.ThermocoupleScaleName);
 
   lIndex := fThermocoupleCombo.Items.IndexOf(fSettings.ThermocoupleScaleName);
   if (lIndex < 0) and (Trim(fSettings.ThermocoupleScaleName) <> '') then
@@ -144,9 +165,11 @@ begin
   else
   begin
     fSettings.ThermocoupleScaleName := lName;
-    lPath := fSettings.ThermocoupleScalePath;
-    if (lPath = '') or not SameText(RecorderMeraThermocoupleDisplayName(lPath),
-      lName) then
+    lPath := Trim(fSettings.ThermocoupleScalePath);
+    if (lPath = '') or (
+      not SameText(RecorderMeraThermocoupleDisplayName(lPath), lName) and
+      not SameText(ChangeFileExt(ExtractFileName(StringReplace(lPath, '\',
+        PathDelim, [rfReplaceAll])), ''), lName)) then
       lPath := RecorderMeraThermocoupleRelativePath(lName);
     fSettings.ThermocoupleScalePath := lPath;
   end;
@@ -206,6 +229,8 @@ begin
     lKey) then
     Exit;
   lName := RecorderMeraThermocoupleDisplayName(lKey);
+  if Trim(lName) = '' then
+    lName := RecorderSdbNormalizeKey(lKey);
   lIndex := fThermocoupleCombo.Items.IndexOf(lName);
   if lIndex < 0 then
   begin
@@ -230,13 +255,21 @@ begin
 end;
 
 function TRecorderMic140ChannelDialog.Execute(AChannelNumber, ADeviceSerial,
-  ADevSubRev: Integer; var ASettings: TRecorderMic140ChannelSettings): Boolean;
+  ADevSubRev: Integer; var ASettings: TRecorderMic140ChannelSettings;
+  ABulkChannelCount: Integer): Boolean;
 begin
   fChannelNumber := AChannelNumber;
   fDeviceSerial := ADeviceSerial;
   fDevSubRev := ADevSubRev;
+  fBulkChannelCount := ABulkChannelCount;
   fSettings := ASettings;
-  if fDeviceSerial > 0 then
+  InitCombos;
+  if fBulkChannelCount > 1 then
+  begin
+    Caption := Format('Свойства каналов (%d шт.)', [fBulkChannelCount]);
+    lbThermocouple.Caption := 'ГХ термопары (для всех)';
+  end
+  else if fDeviceSerial > 0 then
     Caption := Format('Свойства канала MIC140-%4.4d-%d',
       [fDeviceSerial, AChannelNumber])
   else

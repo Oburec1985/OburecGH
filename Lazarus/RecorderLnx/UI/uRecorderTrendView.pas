@@ -48,6 +48,7 @@ end;
     fLegendPaintBox: TPaintBox;
     fLastTrendDiagTickMs: QWord;
     fConfiguredAxisCount: Integer;
+    function CalcTrendQueueCapacity: Integer;
     procedure AddPoint(ALineIndex: Integer; ATime, AValue: Double);
     procedure AddScalarPoint(ALineIndex: Integer; const ASnapshot: TRecorderSignalSnapshot);
     function EffectivePortionLength(ATag: TRecorderTag;
@@ -57,6 +58,7 @@ end;
       AStartIndex, ACount: Integer; AKind: TRecorderTagEstimateKind;
       out ATime, AValue: Double): Boolean;
     procedure EnsureSeries;
+    procedure TrimSeriesToDurationWindow;
     procedure PruneSeries(ALineIndex: Integer);
     procedure DrawLegend(ACanvas: TCanvas; const ARect: TRect);
     procedure UpdateLegendLayout;
@@ -82,6 +84,23 @@ uses
 
 type
   TDoubleSearch = specialize TBinarySearch<Double>;
+
+const
+  CMaxTrendPortionsPerRefresh = 64;
+
+function TRecorderTrendView.CalcTrendQueueCapacity: Integer;
+var
+  lDurationSec: Double;
+  lPeriodSec: Double;
+begin
+  if fComponent = nil then
+    Exit(128);
+  lDurationSec := Max(1.0, fComponent.DurationSec);
+  lPeriodSec := Max(0.001, fComponent.UpdatePeriodSec);
+  Result := Ceil(lDurationSec / lPeriodSec * 1.25) + 32;
+  if Result < 64 then
+    Result := 64;
+end;
 
 constructor TRecorderTrendView.Create(AOwner: TComponent);
 begin
@@ -119,7 +138,7 @@ begin
     (fConfiguredAxisCount = TRecorderTrendComponent(AComponent).AxisCount) then
   begin
     fTagRegistry := ATagRegistry;
-    lQueueCapacity := Max(64, Ceil(Max(1.0, fComponent.DurationSec) / Max(0.001, fComponent.UpdatePeriodSec) * 1.1) + 16);
+    lQueueCapacity := CalcTrendQueueCapacity;
     SetLength(lOglAxes, fComponent.AxisCount);
     for I := 0 to fComponent.AxisCount - 1 do
     begin
@@ -263,7 +282,7 @@ begin
   begin
     lCompLine := fComponent.Lines[I];
     lOglLine := cBuffTrendQueue.Create;
-    lOglLine.Allocate(Max(64, Ceil(Max(1.0, fComponent.DurationSec) / Max(0.001, fComponent.UpdatePeriodSec) * 1.1) + 16));
+    lOglLine.Allocate(CalcTrendQueueCapacity);
     lOglLine.Name := lCompLine.Name;
     lOglLine.Color := (lCompLine.Color and $00FFFFFF) or $FF000000;
     lOglLine.Visible := lCompLine.Visible;
@@ -328,16 +347,22 @@ end;
 procedure TRecorderTrendView.AddScalarPoint(ALineIndex: Integer;
   const ASnapshot: TRecorderSignalSnapshot);
 var
+  lPeriodSec: Double;
   lPointTime: Double;
   lValue: Double;
 begin
   if (ASnapshot.Count <= 0) or (ALineIndex < 0) or
-    (ALineIndex >= Length(fSeries)) then
+    (ALineIndex >= Length(fSeries)) or (fComponent = nil) then
     Exit;
 
   lPointTime := ASnapshot.Times[ASnapshot.Count - 1];
   if (fSeries[ALineIndex].LastProcessedTime > 0) and
     (lPointTime <= fSeries[ALineIndex].LastProcessedTime) then
+    Exit;
+
+  lPeriodSec := Max(0.001, fComponent.UpdatePeriodSec);
+  if (fSeries[ALineIndex].LastProcessedTime > 0) and
+    (lPointTime - fSeries[ALineIndex].LastProcessedTime < lPeriodSec) then
     Exit;
 
   lValue := ASnapshot.Values[ASnapshot.Count - 1];
@@ -373,8 +398,32 @@ begin
 end;
 procedure TRecorderTrendView.PruneSeries(ALineIndex: Integer);
 begin
-  { The queue has fixed capacity and drops old points by moving its logical
-    first index, without shifting or reallocating arrays. }
+  { Ring buffer capacity is sized for DurationSec/UpdatePeriodSec. }
+end;
+
+procedure TRecorderTrendView.TrimSeriesToDurationWindow;
+var
+  I: Integer;
+  lMaxT: Double;
+  lMinT: Double;
+begin
+  if fComponent = nil then
+    Exit;
+
+  lMaxT := 0;
+  for I := 0 to High(fSeries) do
+    if (fSeries[I].OglSeries <> nil) and (fSeries[I].OglSeries.Count > 0) then
+      lMaxT := Max(lMaxT, fSeries[I].OglSeries.LastTime);
+  if lMaxT <= 0 then
+    Exit;
+
+  lMinT := Max(0.0, lMaxT - Max(1.0, fComponent.DurationSec));
+  for I := 0 to High(fSeries) do
+    if fSeries[I].OglSeries <> nil then
+    begin
+      fSeries[I].OglSeries.TrimBeforeTime(lMinT);
+      fSeries[I].Count := fSeries[I].OglSeries.Count;
+    end;
 end;
 function TRecorderTrendView.EstimatePortion(
   const ASnapshot: TRecorderSignalSnapshot; AStartIndex, ACount: Integer;
@@ -414,6 +463,7 @@ var
   lDiagLine: Integer;
   lRecorderNow: Double;
   lLagSec: Double;
+  lIterations: Integer;
 begin
   if (fComponent = nil) or (fTagRegistry = nil) then
     Exit;
@@ -459,7 +509,9 @@ begin
       lStartIdx := TDoubleSearch.FindFirstGreater(lLastBlock.Times,
         lLastBlock.Count, fSeries[I].LastProcessedTime);
 
-    while lStartIdx + lPortionLength <= lLastBlock.Count do
+    lIterations := 0;
+    while (lStartIdx + lPortionLength <= lLastBlock.Count) and
+      (lIterations < CMaxTrendPortionsPerRefresh) do
     begin
       if EstimatePortion(lLastBlock, lStartIdx, lPortionLength,
         lLine.EstimateKind, lPointTime, lValue) then
@@ -470,8 +522,11 @@ begin
           lLastBlock.Times[lStartIdx + lPortionLength - 1];
       end;
       Inc(lStartIdx, lPortionLength);
+      Inc(lIterations);
     end;
   end;
+
+  TrimSeriesToDurationWindow;
 
   lMaxT := 0;
   for I := 0 to fComponent.LineCount - 1 do

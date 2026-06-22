@@ -85,6 +85,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="SDB/uRecorderSdbImages.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="SDB/uRecorderSdbSelectDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderSdbSelectDialog"/>
@@ -270,6 +274,7 @@
       <Unit>
         <Filename Value="../SharedUtils/uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="ubaseobjLaz"/>
       </Unit>
       <Unit>
         <Filename Value="../SharedUtils/uComponentServices.pas"/>
@@ -313,6 +318,11 @@
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
     </Linking>
+    <Other>
+      <ExecuteAfter>
+        <Command Value="$(ProjPath)Scripts/copy_sdb_res.cmd $(ProjOutDir)"/>
+      </ExecuteAfter>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

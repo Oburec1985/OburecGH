@@ -3,9 +3,9 @@ unit uRecorderOscillogramSettingsDialog;
 {
   Settings dialog for oscillogram components on user mnemonics.
   Supports one primary tag plus additional synchronized lines from the same device.
-  РљРѕРґРёСЂРѕРІРєР° (2026-06):
-    Р¤Р°Р№Р» РІ UTF-8, {$codepage UTF8}. РЎС‚СЂРѕРєРё РґР»СЏ LCL вЂ” РѕР±С‹С‡РЅС‹Рµ string-Р»РёС‚РµСЂР°Р»С‹.
-    РЎРј. Docs/source-encoding.md.
+  Кодировка (2026-06):
+  Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
+  См. Docs/source-encoding.md.
 }
 
 {$mode objfpc}{$H+}
@@ -96,7 +96,7 @@ begin
   fTagRegistry := ATagRegistry;
   fDraft := TRecorderOscillogramComponent.Create;
   fSelectedLine := -1;
-  Caption := 'РќР°СЃС‚СЂРѕР№РєР° РѕСЃС†РёР»Р»РѕРіСЂР°РјРјС‹ - ' + AComponent.Name;
+  Caption := 'Настройка осциллограммы - ' + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 560;
@@ -121,7 +121,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 120, 16);
-  lLabel.Caption := 'РџРѕРёСЃРє С‚РµРіР°:';
+  lLabel.Caption := 'Поиск тега:';
 
   fTagSearchEdit := TEdit.Create(Self);
   fTagSearchEdit.Parent := Self;
@@ -132,7 +132,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 120, 16);
-  lLabel.Caption := 'РћСЃРЅРѕРІРЅРѕР№ РєР°РЅР°Р»:';
+  lLabel.Caption := 'Основной канал:';
 
   fTagCombo := TComboBox.Create(Self);
   fTagCombo.Parent := Self;
@@ -144,21 +144,21 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 120, 16);
-  lLabel.Caption := 'РџСЂРёРІСЏР·РєР°:';
+  lLabel.Caption := 'Привязка:';
 
   fBindingModeCombo := TComboBox.Create(Self);
   fBindingModeCombo.Parent := Self;
   fBindingModeCombo.SetBounds(130, lTop, 260, 23);
   fBindingModeCombo.Style := csDropDownList;
-  fBindingModeCombo.Items.Add('РћС‚РЅРѕСЃРёС‚РµР»СЊРЅР°СЏ (РІС‹Р±СЂР°РЅРЅС‹Р№ С‚РµРі)');
-  fBindingModeCombo.Items.Add('РђР±СЃРѕР»СЋС‚РЅР°СЏ РїСЂРёРІСЏР·РєР°');
+  fBindingModeCombo.Items.Add('Относительная (выбранный тег)');
+  fBindingModeCombo.Items.Add('Абсолютная привязка');
   fBindingModeCombo.OnChange := @BindingModeComboChange;
   Inc(lTop, 32);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 120, 16);
-  lLabel.Caption := 'РћС‚РЅРѕСЃРёС‚. СЃРјРµС‰РµРЅРёРµ:';
+  lLabel.Caption := 'Относит. смещение:';
 
   fTagOffsetEdit := TEdit.Create(Self);
   fTagOffsetEdit.Parent := Self;
@@ -168,7 +168,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop, 320, 16);
-  lLabel.Caption := 'Р”РѕРї. Р»РёРЅРёРё (С‚Р° Р¶Рµ РїР»Р°С‚Р°/СѓСЃС‚СЂРѕР№СЃС‚РІРѕ):';
+  lLabel.Caption := 'Доп. линии (та же плата/устройство):';
 
   fLineList := TListBox.Create(Self);
   fLineList.Parent := Self;
@@ -178,20 +178,20 @@ begin
   fAddLineButton := TButton.Create(Self);
   fAddLineButton.Parent := Self;
   fAddLineButton.SetBounds(340, lTop + 20, 90, 25);
-  fAddLineButton.Caption := 'Р”РѕР±Р°РІРёС‚СЊ';
+  fAddLineButton.Caption := 'Добавить';
   fAddLineButton.OnClick := @AddLineClick;
 
   fDeleteLineButton := TButton.Create(Self);
   fDeleteLineButton.Parent := Self;
   fDeleteLineButton.SetBounds(340, lTop + 50, 90, 25);
-  fDeleteLineButton.Caption := 'РЈРґР°Р»РёС‚СЊ';
+  fDeleteLineButton.Caption := 'Удалить';
   fDeleteLineButton.OnClick := @DeleteLineClick;
   Inc(lTop, 150);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 80, 16);
-  lLabel.Caption := 'РўРµРі:';
+  lLabel.Caption := 'Тег:';
 
   fLineTagCombo := TComboBox.Create(Self);
   fLineTagCombo.Parent := Self;
@@ -203,7 +203,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 80, 16);
-  lLabel.Caption := 'Р¦РІРµС‚:';
+  lLabel.Caption := 'Цвет:';
 
   fLineColorSwatch := TRecorderColorSwatch.Create(Self);
   fLineColorSwatch.Parent := Self;
@@ -212,13 +212,13 @@ begin
   fLineVisibleCheck := TCheckBox.Create(Self);
   fLineVisibleCheck.Parent := Self;
   fLineVisibleCheck.SetBounds(130, lTop + 2, 120, 20);
-  fLineVisibleCheck.Caption := 'Р’РёРґРёРјР°СЏ';
+  fLineVisibleCheck.Caption := 'Видимая';
   Inc(lTop, 44);
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(450, lTop, 90, 25);
-  fCancelButton.Caption := 'РћС‚РјРµРЅР°';
+  fCancelButton.Caption := 'Отмена';
   fCancelButton.ModalResult := mrCancel;
 
   fOkButton := TButton.Create(Self);
@@ -424,7 +424,7 @@ begin
   Result := False;
   if fDraft.TagName = '' then
   begin
-    ShowMessage('Р’С‹Р±РµСЂРёС‚Рµ РѕСЃРЅРѕРІРЅРѕР№ РєР°РЅР°Р».');
+    ShowMessage('Выберите основной канал.');
     Exit;
   end;
   lCount := 1;
@@ -443,7 +443,7 @@ begin
     end;
   if not RecorderTagsShareSourceId(fTagRegistry, lNames) then
   begin
-    ShowMessage('Р’СЃРµ РєР°РЅР°Р»С‹ РѕСЃС†РёР»Р»РѕРіСЂР°РјРјС‹ РґРѕР»Р¶РЅС‹ РїСЂРёРЅР°РґР»РµР¶Р°С‚СЊ РѕРґРЅРѕРјСѓ СѓСЃС‚СЂРѕР№СЃС‚РІСѓ (SourceId).');
+    ShowMessage('Все каналы осциллограммы должны принадлежать одному устройству (SourceId).');
     Exit;
   end;
   Result := True;

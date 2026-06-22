@@ -1,17 +1,17 @@
 object RecorderSettingsDialog: TRecorderSettingsDialog
   Left = 322
-  Height = 561
+  Height = 631
   Top = 122
   Width = 1002
   Caption = 'Настройка'
-  ClientHeight = 561
+  ClientHeight = 631
   ClientWidth = 1002
-  Constraints.MinHeight = 520
+  Constraints.MinHeight = 590
   Constraints.MinWidth = 760
   Position = poOwnerFormCenter
   object fPageControl: TPageControl
     Left = 0
-    Height = 519
+    Height = 589
     Top = 0
     Width = 1002
     ActivePage = tsChannels
@@ -20,11 +20,11 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     TabOrder = 0
     object tsRecorder: TTabSheet
       Caption = 'Рекордер'
-      ClientHeight = 491
+      ClientHeight = 561
       ClientWidth = 994
       object pnRecorderLeft: TPanel
         Left = 0
-        Height = 491
+        Height = 561
         Top = 0
         Width = 756
         Align = alClient
@@ -283,10 +283,43 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Text = 'C:\USML\signal0000'
           end
         end
+        object gbMeraSdb: TGroupBox
+          Left = 8
+          Height = 66
+          Top = 482
+          Width = 620
+          Caption = 'База градуировочных характеристик'
+          ClientHeight = 46
+          ClientWidth = 616
+          TabOrder = 4
+          object lbMeraFilesPath: TLabel
+            Left = 10
+            Height = 15
+            Top = 18
+            Width = 104
+            Caption = 'Каталог Mera Files'
+            ParentColor = False
+          end
+          object fMeraFilesPathEdit: TEdit
+            Left = 10
+            Height = 23
+            Top = 36
+            Width = 526
+            TabOrder = 0
+          end
+          object btnMeraFilesPathBrowse: TButton
+            Left = 548
+            Height = 26
+            Top = 34
+            Width = 54
+            Caption = '...'
+            TabOrder = 1
+          end
+        end
       end
       object pnRecorderRight: TPanel
         Left = 756
-        Height = 491
+        Height = 561
         Top = 0
         Width = 238
         Align = alRight

@@ -286,6 +286,9 @@ type
     { Пересчитывает автоинкрементные счетчики на основе загруженной структуры gui }
     procedure ResetProjectCounters;
     { Применяет фильтр поиска к списку тегов. }
+    function TagListItemName(const AItemText: string): string;
+    function FindRegistryTagForListObject(AObj: TObject): TRecorderTag;
+    function CurrentTagListSelectionName: string;
     procedure RebuildTagList(const AFilter: string);
     { Собирает выбранные в списке TListBox теги }
     procedure CollectSelectedTags(ATags: TList);
@@ -1857,20 +1860,63 @@ begin
 end;
 
 { Фильтрация отображаемых в боковой панели тегов }
+function TMainForm.TagListItemName(const AItemText: string): string;
+var
+  lSepPos: Integer;
+begin
+  lSepPos := Pos('     ', AItemText);
+  if lSepPos > 0 then
+    Result := Copy(AItemText, 1, lSepPos - 1)
+  else
+    Result := Trim(AItemText);
+end;
+
+function TMainForm.FindRegistryTagForListObject(AObj: TObject): TRecorderTag;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if (AObj = nil) or (fTagRegistry = nil) then
+    Exit;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+    if fTagRegistry.Tags[I] = AObj then
+      Exit(fTagRegistry.Tags[I]);
+end;
+
+function TMainForm.CurrentTagListSelectionName: string;
+var
+  lTag: TRecorderTag;
+begin
+  Result := '';
+  if (fTagRegistry = nil) or (lbTags = nil) then
+    Exit;
+  if Trim(fTagRegistry.SelectedTagName) <> '' then
+    Exit(Trim(fTagRegistry.SelectedTagName));
+  if (lbTags.ItemIndex < 0) or (lbTags.ItemIndex >= lbTags.Items.Count) then
+    Exit;
+  lTag := FindRegistryTagForListObject(lbTags.Items.Objects[lbTags.ItemIndex]);
+  if lTag <> nil then
+    Exit(lTag.Name);
+  Result := TagListItemName(lbTags.Items[lbTags.ItemIndex]);
+  if fTagRegistry.FindByName(Result) = nil then
+    Result := '';
+end;
+
 procedure TMainForm.RebuildTagList(const AFilter: string);
 var
   I: Integer;
   lFilter: string;
   lFrequencyText: string;
+  lSelectedName: string;
   lSelectedTag: TRecorderTag;
   lTag: TRecorderTag;
   lTopIndex: Integer;
 begin
   lTopIndex := lbTags.TopIndex;
+  lSelectedName := CurrentTagListSelectionName;
   lSelectedTag := nil;
-  if (lbTags.ItemIndex >= 0) and
-    (lbTags.Items.Objects[lbTags.ItemIndex] is TRecorderTag) then
-    lSelectedTag := TRecorderTag(lbTags.Items.Objects[lbTags.ItemIndex]);
+  if lSelectedName <> '' then
+    lSelectedTag := fTagRegistry.FindByName(lSelectedName);
 
   lbTags.Items.BeginUpdate;
   try
@@ -1910,18 +1956,29 @@ end;
 procedure TMainForm.CollectSelectedTags(ATags: TList);
 var
   I: Integer;
+  lTag: TRecorderTag;
 begin
   if ATags = nil then
     Exit;
   ATags.Clear;
 
   for I := 0 to lbTags.Items.Count - 1 do
-    if lbTags.Selected[I] and (lbTags.Items.Objects[I] is TRecorderTag) then
-      ATags.Add(lbTags.Items.Objects[I]);
+  begin
+    if not lbTags.Selected[I] then
+      Continue;
+    lTag := FindRegistryTagForListObject(lbTags.Items.Objects[I]);
+    if lTag = nil then
+      lTag := fTagRegistry.FindByName(TagListItemName(lbTags.Items[I]));
+    if lTag <> nil then
+      ATags.Add(lTag);
+  end;
 
-  if (ATags.Count = 0) and (lbTags.ItemIndex >= 0) and
-    (lbTags.Items.Objects[lbTags.ItemIndex] is TRecorderTag) then
-    ATags.Add(lbTags.Items.Objects[lbTags.ItemIndex]);
+  if ATags.Count = 0 then
+  begin
+    lTag := fTagRegistry.FindByName(CurrentTagListSelectionName);
+    if lTag <> nil then
+      ATags.Add(lTag);
+  end;
 end;
 
 procedure TMainForm.UpdateSelectedTagFromList;
@@ -1931,12 +1988,9 @@ begin
   if (fTagRegistry = nil) or (lbTags = nil) then
     Exit;
 
-  if (lbTags.ItemIndex >= 0) and
-    (lbTags.Items.Objects[lbTags.ItemIndex] is TRecorderTag) then
-  begin
-    lTag := TRecorderTag(lbTags.Items.Objects[lbTags.ItemIndex]);
+  lTag := fTagRegistry.FindByName(CurrentTagListSelectionName);
+  if lTag <> nil then
     fTagRegistry.SelectedTagName := lTag.Name;
-  end;
 end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
@@ -2382,7 +2436,7 @@ begin
   btnTrigger.ShowHint := True;
 
   btnClearSearch.Caption := 'X';
-  btnClearSearch.Hint := 'Clear tag search';
+  btnClearSearch.Hint := ' Очистка поиска тегов';
   btnClearSearch.ShowHint := True;
 end;
 

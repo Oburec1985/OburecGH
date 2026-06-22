@@ -53,14 +53,13 @@ object MainForm: TMainForm
       TabOrder = 0
       object lbState: TLabel
         Left = 0
-        Height = 36
+        Height = 25
         Top = 0
         Width = 188
         Align = alTop
         Alignment = taCenter
         Caption = 'Stop'
         Font.Height = -19
-        Font.Size = 14
         Font.Style = [fsBold]
         Layout = tlCenter
         ParentColor = False
@@ -68,14 +67,13 @@ object MainForm: TMainForm
       end
       object lbTime: TLabel
         Left = 0
-        Height = 36
-        Top = 36
+        Height = 47
+        Top = 25
         Width = 188
         Align = alClient
         Alignment = taCenter
         Caption = '00:00:00'
         Font.Height = -24
-        Font.Size = 18
         Font.Style = [fsBold]
         Layout = tlCenter
         ParentColor = False
@@ -2591,8 +2589,8 @@ object MainForm: TMainForm
   object ilTagDialogButtons: TImageList
     Height = 32
     Width = 32
-    Left = 416
-    Top = 152
+    Left = 408
+    Top = 133
     Bitmap = {
       4C7A0700000020000000200000007A0E00000000000078DAED9B095854E51AC7
       ED96B69BA2E296B9B57AB3BAEE608264EE964B68947BA6E9B5D0725F48041720

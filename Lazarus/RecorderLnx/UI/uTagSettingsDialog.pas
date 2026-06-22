@@ -25,9 +25,11 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
-  uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog;
+  uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
+  uRecorderMic140SettingsDialog;
 
 type
+  TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
   { TTagSettingsDialog }
   { Диалоговое окно настройки свойств тега (канала)   }
   TTagSettingsDialog = class(TForm)
@@ -43,6 +45,7 @@ type
     lbModule: TLabel;
     fModuleEdit: TEdit;
     fAddressButton: TSpeedButton;
+    fHardwareSourceSetupBtn: TSpeedButton;
     lbDescription: TLabel;
     fDescriptionEdit: TEdit;
     fDescriptionEditBtn: TSpeedButton;
@@ -142,6 +145,7 @@ type
     fSetpointColorPanels: array[TRecorderTagSetpointKind] of TPanel; // Цвета отображения для каждой уставки
     fSetpointEnabledChecks: array[TRecorderTagSetpointKind] of TCheckBox; // Флаги активности уставок
     fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
+    fOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
     
     // Внутренние методы обработчиков UI
     procedure ApplyButtonClick(Sender: TObject);
@@ -159,6 +163,9 @@ type
     procedure UpdateChannelCurveText;
     procedure UpdateHardwareCurveText;
     procedure UpdateHardwareCurveButtons;
+    procedure HardwareSourceSetupButtonClick(Sender: TObject);
+    procedure UpdateHardwareSourceSetupButton;
+    function CanConfigureHardwareSource: Boolean;
     
     // Обмен данными между UI и тегами
     procedure LoadFromTags;
@@ -197,11 +204,12 @@ type
     function TagAt(AIndex: Integer): TRecorderTag;
   public
     constructor CreateDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry;
-      ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200); reintroduce;
+      ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200;
+      AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil); reintroduce;
     destructor Destroy; override;
   end;
 
-function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200): Boolean;
+function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil): Boolean;
 
 implementation
 
@@ -215,6 +223,8 @@ const
   CTagDialogIconAdd = 4;
   CTagDialogIconRemove = 5;
   CTagDialogIconChannelCurve = 6;
+  CTagDialogIconHardwareSource = 42;
+  CMeraSourcePrefix = 'Mera file: ';
   CRamOutIconPaths: array[0..2] of string = (
     'D:\works\windev-v3.9\rc_guisrv\res\v3\ico\ram_out.ico',
     'D:\works\windev-v3.9\rc_guisrv\res\ram_out.ico',
@@ -265,11 +275,13 @@ end;
 
 function ShowTagSettingsDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList;
-  AImages: TCustomImageList; ADataUpdateMs: Cardinal): Boolean;
+  AImages: TCustomImageList; ADataUpdateMs: Cardinal;
+  AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent): Boolean;
 var
   lDialog: TTagSettingsDialog;
 begin
-  lDialog := TTagSettingsDialog.CreateDialog(AOwner, ATagRegistry, ATags, AImages, ADataUpdateMs);
+  lDialog := TTagSettingsDialog.CreateDialog(AOwner, ATagRegistry, ATags, AImages,
+    ADataUpdateMs, AOnHardwareSourceSetup);
   try
     Result := lDialog.ShowModal = mrOk;
   finally
@@ -279,7 +291,7 @@ end;
 
 constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList;
-  ADataUpdateMs: Cardinal);
+  ADataUpdateMs: Cardinal; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent);
 begin
   inherited Create(AOwner);
   if ATagRegistry = nil then
@@ -289,6 +301,7 @@ begin
 
   fTagRegistry := ATagRegistry;
   fImages := AImages;
+  fOnHardwareSourceSetup := AOnHardwareSourceSetup;
   fTags := TList.Create;
   fTags.Assign(ATags);
   fDataUpdateMs := ADataUpdateMs;
@@ -319,6 +332,7 @@ begin
   fSetpointColorPanels[tskLowWarning] := fSetpointColorPanel2;
   fSetpointColorPanels[tskLowAlarm] := fSetpointColorPanel3;
   fAddressButton.OnClick := @AddressButtonClick;
+  fHardwareSourceSetupBtn.OnClick := @HardwareSourceSetupButtonClick;
   fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
   fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
   fChannelCurveDeleteBtn.OnClick := @DeleteCalibrationButtonClick;
@@ -330,6 +344,7 @@ begin
   fApplyButton.OnClick := @ApplyButtonClick;
 
   AssignSpeedButtonImage(fAddressButton, CTagDialogIconAddress);
+  AssignSpeedButtonImage(fHardwareSourceSetupBtn, CTagDialogIconHardwareSource);
   AssignSpeedButtonImage(fDescriptionEditBtn, CTagDialogIconEdit);
   AssignSpeedButtonImage(fHardwareCurveSelectBtn, CTagDialogIconProperty);
   AssignSpeedButtonImage(fHardwareCurveSetupBtn, CTagDialogIconHardwareCurve);
@@ -722,8 +737,6 @@ end;
 
 function TTagSettingsDialog.SelectActiveMeraSignal(out ASourceId: string;
   out ASignal: TMeraSignalInfo): Boolean;
-const
-  CMeraSourcePrefix = 'Mera file: ';
 var
   I: Integer;
   lDialog: TForm;
@@ -891,6 +904,96 @@ begin
   end;
 end;
 
+function TTagSettingsDialog.CanConfigureHardwareSource: Boolean;
+var
+  lHost: string;
+  lPort: Word;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if fTags.Count <> 1 then
+    Exit;
+  if HasDetachedSource then
+    Exit;
+  lTag := TagAt(0);
+  if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+    Exit(True);
+  Result := Pos(CMeraSourcePrefix, lTag.SourceId) = 1;
+end;
+
+procedure TTagSettingsDialog.UpdateHardwareSourceSetupButton;
+begin
+  if fHardwareSourceSetupBtn = nil then
+    Exit;
+  fHardwareSourceSetupBtn.Enabled := CanConfigureHardwareSource;
+  fHardwareSourceSetupBtn.Visible := CanConfigureHardwareSource or
+    (fOnHardwareSourceSetup <> nil);
+end;
+
+procedure TTagSettingsDialog.HardwareSourceSetupButtonClick(Sender: TObject);
+var
+  lConfigs: TStringList;
+  lDialog: TOpenDialog;
+  lHost: string;
+  lNewSourceId: string;
+  lOldSourceId: string;
+  lPath: string;
+  lPort: Word;
+  lTag: TRecorderTag;
+  I: Integer;
+begin
+  if not CanConfigureHardwareSource then
+    Exit;
+  lTag := TagAt(0);
+  if fOnHardwareSourceSetup <> nil then
+  begin
+    fOnHardwareSourceSetup(Self, lTag);
+    LoadFromTags;
+    Exit;
+  end;
+
+  if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+  begin
+    lConfigs := TStringList.Create;
+    try
+      lConfigs.OwnsObjects := True;
+      if ApplyRecorderMic140SourceDialog(Self, fTagRegistry, lConfigs, lTag.SourceId,
+        lNewSourceId) then
+        LoadFromTags;
+    finally
+      lConfigs.Free;
+    end;
+    Exit;
+  end;
+
+  if Pos(CMeraSourcePrefix, lTag.SourceId) <> 1 then
+    Exit;
+  lPath := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+  lDialog := TOpenDialog.Create(Self);
+  try
+    lDialog.Title := 'Выберите файл Mera';
+    lDialog.Filter := 'Mera file (*.mera)|*.mera|All files (*.*)|*.*';
+    if lPath <> '' then
+    begin
+      lDialog.InitialDir := ExtractFilePath(lPath);
+      lDialog.FileName := ExtractFileName(lPath);
+    end;
+    if not lDialog.Execute then
+      Exit;
+    lOldSourceId := lTag.SourceId;
+    lNewSourceId := CMeraSourcePrefix + lDialog.FileName;
+    fTagRegistry.RegisterActiveSource(lNewSourceId);
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      if SameText(fTagRegistry.Tags[I].SourceId, lOldSourceId) then
+        fTagRegistry.Tags[I].SourceId := lNewSourceId;
+    end;
+    LoadFromTags;
+  finally
+    lDialog.Free;
+  end;
+end;
+
 { Загрузка текущих параметров тегов в элементы интерфейса }
 procedure TTagSettingsDialog.LoadFromTags;
 var
@@ -991,6 +1094,7 @@ begin
   UpdateChannelCurveText;
   UpdateHardwareCurveText;
   UpdateHardwareCurveButtons;
+  UpdateHardwareSourceSetupButton;
 
   for lEstimateKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
   begin

@@ -48,11 +48,15 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
     Width = 330
     Align = alLeft
     HideSelection = False
+    Images = ilSdbTree
     Indent = 19
     ReadOnly = True
     TabOrder = 1
+    Options = [tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
     OnChange = treeSdbChange
+    OnCollapsed = treeSdbCollapsed
     OnDblClick = treeSdbDblClick
+    OnExpanded = treeSdbExpanded
   end
   object spTree: TSplitter
     Left = 330
@@ -74,7 +78,7 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       Left = 12
       Height = 15
       Top = 12
-      Width = 36
+      Width = 24
       Caption = 'Имя'
     end
     object edKey: TEdit
@@ -90,7 +94,7 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       Left = 12
       Height = 15
       Top = 64
-      Width = 57
+      Width = 55
       Caption = 'Описание'
     end
     object edDescription: TEdit
@@ -102,45 +106,145 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       ReadOnly = True
       TabOrder = 1
     end
-    object lbUnits: TLabel
-      Left = 12
-      Height = 15
-      Top = 116
-      Width = 59
-      Caption = 'Единицы'
-    end
-    object edUnits: TEdit
-      Left = 12
-      Height = 23
-      Top = 136
-      Width = 250
-      ReadOnly = True
+    object pnScale: TPanel
+      Left = 0
+      Height = 452
+      Top = 120
+      Width = 705
+      Align = alClient
+      BevelOuter = bvNone
+      ClientHeight = 452
+      ClientWidth = 705
       TabOrder = 2
+      Visible = False
+      object lbUnits: TLabel
+        Left = 12
+        Height = 15
+        Top = 8
+        Width = 49
+        Caption = 'Единицы'
+      end
+      object edUnits: TEdit
+        Left = 12
+        Height = 23
+        Top = 28
+        Width = 250
+        ReadOnly = True
+        TabOrder = 0
+      end
+      object lbRange: TLabel
+        Left = 280
+        Height = 15
+        Top = 8
+        Width = 53
+        Caption = 'Диапазон'
+      end
+      object edRange: TEdit
+        Left = 280
+        Height = 23
+        Top = 28
+        Width = 413
+        Anchors = [akTop, akLeft, akRight]
+        ReadOnly = True
+        TabOrder = 1
+      end
+      object pcScaleData: TPageControl
+        Left = 12
+        Height = 404
+        Top = 60
+        Width = 681
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        ActivePage = tsTable
+        TabIndex = 0
+        TabOrder = 2
+        OnChange = pcScaleDataChange
+        object tsTable: TTabSheet
+          Caption = 'Таблица'
+          ClientHeight = 374
+          ClientWidth = 673
+          object gridPoints: TStringGrid
+            Left = 0
+            Height = 374
+            Top = 0
+            Width = 673
+            Align = alClient
+            ColCount = 3
+            FixedCols = 0
+            FixedRows = 1
+            Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goThumbTracking]
+            RowCount = 2
+            TabOrder = 0
+            ColWidths = (
+              45
+              140
+              140
+            )
+          end
+        end
+        object tsChart: TTabSheet
+          Caption = 'График'
+          ClientHeight = 374
+          ClientWidth = 673
+          object chartScale: TChart
+            Left = 0
+            Height = 374
+            Top = 0
+            Width = 673
+            AxisList = <
+              item
+                Grid.Color = clSilver
+                Minors = <>
+                Title.LabelFont.Orientation = 900
+                Title.Visible = True
+              end
+              item
+                Grid.Color = clSilver
+                Alignment = calBottom
+                Margin = 4
+                MarginsForMarks = True
+                Minors = <>
+                Title.Visible = True
+              end>
+            BackColor = clWhite
+            Legend.Visible = False
+            Margins.Bottom = 28
+            Margins.Left = 8
+            Margins.Right = 8
+            Margins.Top = 8
+            Title.Visible = False
+            Align = alClient
+            object seriesScale: TLineSeries
+              ColorEach = ceNone
+              LinePen.Color = clBlue
+              LinePen.Width = 1
+              Pointer.HorizSize = 1
+              Pointer.Style = psNone
+              Pointer.VertSize = 1
+              Pointer.Visible = False
+              SeriesColor = clBlue
+              ShowLines = True
+              ShowPoints = False
+              Title = 'ГХ'
+            end
+          end
+        end
+      end
     end
-    object lbRange: TLabel
-      Left = 280
-      Height = 15
-      Top = 116
-      Width = 58
-      Caption = 'Диапазон'
-    end
-    object edRange: TEdit
-      Left = 280
-      Height = 23
-      Top = 136
-      Width = 413
-      Anchors = [akTop, akLeft, akRight]
-      ReadOnly = True
-      TabOrder = 3
-    end
-    object gridPoints: TStringGrid
-      Left = 12
-      Height = 392
-      Top = 168
-      Width = 681
-      Anchors = [akTop, akLeft, akRight, akBottom]
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goThumbTracking]
-      TabOrder = 4
-    end
+  end
+  object ilSdbTree: TImageList
+    Height = 16
+    Width = 16
+    Left = 40
+    Top = 56
+    Bitmap = {
+      4C7A030000001000000010000000CF0000000000000078DAED96510EC4200844
+      3DBA47F366B331C50D502580FEB85912D3A6F6010698B69433566B855E11B600
+      68AD89ABC7C78AE53EACDCFA7DD48807E7AD1C16E712BC97EDD77FFCB3F1336B
+      F06448AE9FB25D0D3066CDC5CEEA8D800614C3874703323D9CEA3D163FA25F83
+      D1F123B9F39C33E7E771D333ACF8A80FC6C2EA5DC7FCEBDEBC5B039EFA6E79F8
+      D6866A11D50F9D8F5743A67A43FD3AC909417E9DA37A26F60FF3634FFBB89DEF
+      7339B461C55B31D5EC09BF01FE65BBBCD028D21FFDFFE2F996B277BDBAE1D699
+      0F4B298283
+    }
   end
 end

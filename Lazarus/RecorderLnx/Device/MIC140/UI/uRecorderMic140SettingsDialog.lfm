@@ -141,6 +141,7 @@ object RecorderMic140SettingsDialog: TRecorderMic140SettingsDialog
     TabOrder = 1
     OnDblClick = GridDblClick
     OnClick = GridClick
+    OnMouseDown = GridMouseDown
   end
   object pnBottom: TPanel
     Left = 0

@@ -160,6 +160,7 @@ type
     procedure Allocate(ACapacity: Integer);
     procedure ClearPoints;
     procedure AddPoint(AX, AY: Double);
+    procedure TrimBeforeTime(AMinTime: Double);
 
     property Capacity: Integer read GetCapacity;
     property Count: Integer read GetCount;
@@ -639,6 +640,17 @@ begin
   lPoint.Y := AY;
   fPoints.PushBack(lPoint);
   GLListID := 0;
+end;
+
+procedure cBuffTrendQueue.TrimBeforeTime(AMinTime: Double);
+begin
+  if fPoints = nil then
+    Exit;
+  while (Count > 0) and (Points[0].X < AMinTime) do
+  begin
+    fPoints.PopFront;
+    GLListID := 0;
+  end;
 end;
 
 { cBuffTrend2d }

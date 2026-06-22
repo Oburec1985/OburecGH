@@ -21,6 +21,8 @@ const
 
 function RecorderMeraSdbRootDir: string;
 function RecorderMeraThermocoupleDir: string;
+function RecorderMeraThermocoupleFolderKey: string;
+procedure RecorderMeraResetThermocoupleCache;
 procedure RecorderMeraListThermocoupleScales(AItems: TStrings);
 function RecorderMeraThermocoupleRelativePath(const ADisplayName: string): string;
 function RecorderMeraThermocoupleCsvPath(const ARelativeScalePath: string): string;
@@ -31,26 +33,224 @@ function RecorderMeraThermocoupleDstRange(const ARelativeScalePath: string;
 implementation
 
 uses
-  uRecorderMeraPaths, uRecorderSdbStore, uRecorderSdbTypes;
+  FileUtil, uRecorderMeraPaths, uRecorderSdbStore, uRecorderSdbTypes;
+
+var
+  g_MeraThermocoupleDir: string;
+  g_MeraThermocoupleFolderKey: string;
+  g_LastMeraFilesPath: string;
 
 function RecorderMeraSdbRootDir: string;
 begin
-  Result := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'sdb' + PathDelim;
+  Result := RecorderSdbRootDir;
+end;
+
+procedure RecorderMeraResetThermocoupleCache;
+begin
+  g_MeraThermocoupleDir := '';
+  g_MeraThermocoupleFolderKey := '';
+  g_LastMeraFilesPath := #0;
+end;
+
+function RecorderMeraCountScalePairs(const ADiskDir: string): Integer;
+var
+  lBasenames: TStringList;
+  lBase: string;
+  lDirName: string;
+  lDiskDir: string;
+  SR: TSearchRec;
+begin
+  Result := 0;
+  lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
+  if not DirectoryExists(lDiskDir) then
+    Exit;
+  lDirName := ExtractFileName(ExcludeTrailingPathDelimiter(lDiskDir));
+  lBasenames := TStringList.Create;
+  try
+    lBasenames.Sorted := True;
+    lBasenames.Duplicates := dupIgnore;
+    if FindFirst(lDiskDir + '*', faAnyFile, SR) = 0 then
+    try
+      repeat
+        if (SR.Attr and faDirectory) <> 0 then
+          Continue;
+        if not SameText(ExtractFileExt(SR.Name), '.xml') then
+          Continue;
+        lBase := ChangeFileExt(SR.Name, '');
+        if SameText(lBase, lDirName) then
+          Continue;
+        if FileExists(lDiskDir + lBase + '.csv') or
+          FileExists(lDiskDir + lBase + '.CSV') then
+          lBasenames.Add(lBase);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+    Result := lBasenames.Count;
+  finally
+    lBasenames.Free;
+  end;
+end;
+
+function RecorderMeraTryThermocoupleDir(const ADiskDir, AFolderKey: string): Boolean;
+begin
+  Result := RecorderMeraCountScalePairs(ADiskDir) > 0;
+  if Result then
+  begin
+    g_MeraThermocoupleDir := IncludeTrailingPathDelimiter(ADiskDir);
+    g_MeraThermocoupleFolderKey := AFolderKey;
+  end;
+end;
+
+function RecorderMeraIsThermocoupleFolderName(const AName: string): Boolean;
+begin
+  Result := SameText(AName, 'Термопары') or SameText(AName, 'Thermocouples');
+end;
+
+function RecorderMeraScanThermocoupleTree(const ADiskDir, AFolderKey: string;
+  ADepth: Integer): Boolean;
+var
+  SR: TSearchRec;
+  lChildDir: string;
+  lChildKey: string;
+  lDiskDir: string;
+begin
+  if ADepth < 0 then
+    Exit(False);
+  lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
+  if not DirectoryExists(lDiskDir) then
+    Exit(False);
+  if RecorderMeraIsThermocoupleFolderName(ExtractFileName(
+    ExcludeTrailingPathDelimiter(lDiskDir))) and
+    RecorderMeraTryThermocoupleDir(lDiskDir, AFolderKey) then
+    Exit(True);
+  if FindFirst(lDiskDir + '*', faDirectory, SR) = 0 then
+  try
+    repeat
+      if (SR.Attr and faDirectory) = 0 then
+        Continue;
+      if SameText(SR.Name, '.') or SameText(SR.Name, '..') then
+        Continue;
+      lChildDir := lDiskDir + SR.Name;
+      if AFolderKey <> '' then
+        lChildKey := AFolderKey + '\' + SR.Name
+      else
+        lChildKey := SR.Name;
+      if RecorderMeraScanThermocoupleTree(lChildDir, lChildKey, ADepth - 1) then
+        Exit(True);
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+  Result := False;
+end;
+
+function RecorderMeraResolveThermocoupleLocation: Boolean;
+var
+  SR: TSearchRec;
+  SR2: TSearchRec;
+  lGostDir: string;
+  lGostKey: string;
+  lRoot: string;
+  lTcDir: string;
+  lTcKey: string;
+  lCurrentMeraPath: string;
+begin
+  lCurrentMeraPath := RecorderMeraFilesPath;
+  if lCurrentMeraPath <> g_LastMeraFilesPath then
+  begin
+    g_LastMeraFilesPath := lCurrentMeraPath;
+    RecorderMeraResetThermocoupleCache;
+  end;
+
+  if (g_MeraThermocoupleDir <> '') and DirectoryExists(g_MeraThermocoupleDir) and
+    (RecorderMeraCountScalePairs(g_MeraThermocoupleDir) > 0) then
+    Exit(True);
+
+  RecorderMeraResetThermocoupleCache;
+
+  lRoot := IncludeTrailingPathDelimiter(ExpandFileName(RecorderSdbRootDir));
+  if not DirectoryExists(lRoot) then
+    Exit(False);
+
+  if RecorderMeraTryThermocoupleDir(lRoot +
+    StringReplace(CMeraSdbThermocoupleFolder, '\', PathDelim, [rfReplaceAll]),
+    CMeraSdbThermocoupleFolder) then
+    Exit(True);
+
+  if FindFirst(lRoot + '*', faDirectory, SR) = 0 then
+  try
+    repeat
+      if (SR.Attr and faDirectory) = 0 then
+        Continue;
+      if SameText(SR.Name, '.') or SameText(SR.Name, '..') then
+        Continue;
+      lGostDir := lRoot + SR.Name + PathDelim;
+      lGostKey := SR.Name;
+      if RecorderMeraTryThermocoupleDir(lGostDir, lGostKey) then
+        Exit(True);
+      if FindFirst(lGostDir + '*', faDirectory, SR2) = 0 then
+      try
+        repeat
+          if (SR2.Attr and faDirectory) = 0 then
+            Continue;
+          if SameText(SR2.Name, '.') or SameText(SR2.Name, '..') then
+            Continue;
+          lTcDir := lGostDir + SR2.Name + PathDelim;
+          lTcKey := lGostKey + '\' + SR2.Name;
+          if RecorderMeraTryThermocoupleDir(lTcDir, lTcKey) then
+            Exit(True);
+        until FindNext(SR2) <> 0;
+      finally
+        FindClose(SR2);
+      end;
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+
+  Result := RecorderMeraScanThermocoupleTree(lRoot, '', 6);
 end;
 
 function RecorderMeraThermocoupleDir: string;
 begin
-  Result := IncludeTrailingPathDelimiter(RecorderMeraSdbRootDir) +
-    CMeraSdbThermocoupleFolder + PathDelim;
+  if not RecorderMeraResolveThermocoupleLocation then
+    Result := IncludeTrailingPathDelimiter(RecorderMeraSdbRootDir) +
+      StringReplace(CMeraSdbThermocoupleFolder, '\', PathDelim, [rfReplaceAll])
+  else
+    Result := g_MeraThermocoupleDir;
+end;
+
+function RecorderMeraThermocoupleFolderKey: string;
+begin
+  if not RecorderMeraResolveThermocoupleLocation then
+    Result := CMeraSdbThermocoupleFolder
+  else
+    Result := g_MeraThermocoupleFolderKey;
 end;
 
 function RecorderMeraThermocoupleCsvPath(const ARelativeScalePath: string): string;
+var
+  lDiskPath: string;
+  lKey: string;
 begin
-  if Pos('\\', ARelativeScalePath) = 0 then
-    Result := RecorderSdbScaleCsvPath(RecorderMeraThermocoupleRelativePath(
-      ARelativeScalePath))
-  else
-    Result := RecorderSdbScaleCsvPath(ARelativeScalePath);
+  lKey := Trim(ARelativeScalePath);
+  if lKey = '' then
+    Exit('');
+  if (Pos('\', lKey) = 0) and (Pos(PathDelim, lKey) = 0) then
+  begin
+    if RecorderMeraResolveThermocoupleLocation then
+    begin
+      lDiskPath := g_MeraThermocoupleDir + lKey + '.csv';
+      if FileExists(lDiskPath) then
+        Exit(lDiskPath);
+      lDiskPath := g_MeraThermocoupleDir + lKey + '.CSV';
+      if FileExists(lDiskPath) then
+        Exit(lDiskPath);
+    end;
+    lKey := RecorderMeraThermocoupleRelativePath(lKey);
+  end;
+  Result := RecorderSdbScaleCsvPath(lKey);
 end;
 
 function RecorderMeraThermocoupleDisplayName(const ARelativeScalePath: string): string;
@@ -60,50 +260,67 @@ begin
   Result := ChangeFileExt(Result, '');
 end;
 
-function RecorderMeraReadXmlProperty(const AFileName, APropertyName: string): string;
-var
-  lLines: TStringList;
-  lMarker: string;
-  lPos: Integer;
-  I: Integer;
-begin
-  Result := '';
-  if not FileExists(AFileName) then
-    Exit;
-  lMarker := 'pty n="' + APropertyName + '"';
-  lLines := TStringList.Create;
-  try
-    lLines.LoadFromFile(AFileName);
-    for I := 0 to lLines.Count - 1 do
-    begin
-      if Pos(lMarker, lLines[I]) <= 0 then
-        Continue;
-      if I + 2 >= lLines.Count then
-        Break;
-      Result := Trim(lLines[I + 2]);
-      if (Length(Result) >= 13) and (Copy(Result, 1, 9) = '<![CDATA[') and
-        (Copy(Result, Length(Result) - 2, 3) = ']]>') then
-        Result := Copy(Result, 10, Length(Result) - 12);
-      Break;
-    end;
-  finally
-    lLines.Free;
-  end;
-end;
-
 function RecorderMeraThermocoupleDstRange(const ARelativeScalePath: string;
   out AMinC, AMaxC: Double): Boolean;
 var
   lInfo: TSdbScaleInfo;
+  lKey: string;
 begin
   Result := False;
   AMinC := 0;
   AMaxC := 0;
-  if not RecorderSdbTryLoadScale(ARelativeScalePath, lInfo) then
+  lKey := Trim(ARelativeScalePath);
+  if (Pos('\', lKey) = 0) and (Pos(PathDelim, lKey) = 0) then
+    lKey := RecorderMeraThermocoupleRelativePath(lKey);
+  if not RecorderSdbTryLoadScale(lKey, lInfo) then
     Exit;
   AMinC := lInfo.DstFrom;
   AMaxC := lInfo.DstTo;
   Result := AMinC <> AMaxC;
+end;
+
+procedure RecorderMeraCollectScalesInDir(const ADiskDir: string; AItems: TStrings);
+var
+  lBase: string;
+  lBasenames: TStringList;
+  lDirName: string;
+  lDiskDir: string;
+  lI: Integer;
+  SR: TSearchRec;
+begin
+  if AItems = nil then
+    Exit;
+  lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
+  if not DirectoryExists(lDiskDir) then
+    Exit;
+  lDirName := ExtractFileName(ExcludeTrailingPathDelimiter(lDiskDir));
+  lBasenames := TStringList.Create;
+  try
+    lBasenames.Sorted := True;
+    lBasenames.Duplicates := dupIgnore;
+    if FindFirst(lDiskDir + '*', faAnyFile, SR) = 0 then
+    try
+      repeat
+        if (SR.Attr and faDirectory) <> 0 then
+          Continue;
+        if not SameText(ExtractFileExt(SR.Name), '.xml') then
+          Continue;
+        lBase := ChangeFileExt(SR.Name, '');
+        if SameText(lBase, lDirName) then
+          Continue;
+        if FileExists(lDiskDir + lBase + '.csv') or
+          FileExists(lDiskDir + lBase + '.CSV') then
+          lBasenames.Add(lBase);
+      until FindNext(SR) <> 0;
+    finally
+      FindClose(SR);
+    end;
+    for lI := 0 to lBasenames.Count - 1 do
+      if AItems.IndexOf(lBasenames[lI]) < 0 then
+        AItems.Add(lBasenames[lI]);
+  finally
+    lBasenames.Free;
+  end;
 end;
 
 procedure RecorderMeraListThermocoupleScales(AItems: TStrings);
@@ -111,21 +328,23 @@ var
   lFiles: TStringList;
   lI: Integer;
   lName: string;
-  lPath: string;
 begin
   if AItems = nil then
     Exit;
-  AItems.Clear;
   lFiles := TStringList.Create;
   try
-    RecorderSdbListScaleKeys(CMeraSdbThermocoupleFolder, lFiles);
+    if RecorderMeraResolveThermocoupleLocation then
+      RecorderMeraCollectScalesInDir(g_MeraThermocoupleDir, lFiles);
+    if lFiles.Count = 0 then
+      RecorderSdbListScaleKeys(RecorderMeraThermocoupleFolderKey, lFiles);
     for lI := 0 to lFiles.Count - 1 do
     begin
-      if SameText(ExtractFileName(lFiles[lI]), 'Термопары.xml') then
-        Continue;
       lName := ChangeFileExt(ExtractFileName(lFiles[lI]), '');
-      lPath := RecorderMeraThermocoupleRelativePath(lName);
-      if not FileExists(RecorderMeraThermocoupleCsvPath(lPath)) then
+      if lName = '' then
+        Continue;
+      if SameText(lName, 'Термопары') or SameText(lName, 'Thermocouples') then
+        Continue;
+      if AItems.IndexOf(lName) >= 0 then
         Continue;
       AItems.Add(lName);
     end;
@@ -136,7 +355,7 @@ end;
 
 function RecorderMeraThermocoupleRelativePath(const ADisplayName: string): string;
 begin
-  Result := CMeraSdbThermocoupleFolder + PathDelim + ADisplayName;
+  Result := RecorderMeraThermocoupleFolderKey + PathDelim + ADisplayName;
 end;
 
 end.

@@ -2,6 +2,7 @@ unit uRecorderSdbPropBag;
 
 {
   Mera SDB property-bag XML (<cfg><pty n="..." t="30"><v><![CDATA[...]]></v></pty>).
+  Numeric properties are often plain <v>0.5</v> without CDATA.
 }
 
 {$mode objfpc}{$H+}
@@ -33,7 +34,66 @@ type
 implementation
 
 uses
-  StrUtils;
+  StrUtils, uSharedStringEncoding;
+
+function SdbExtractPtyName(const ABlock: string): string;
+var
+  lPos: Integer;
+  lQuote: Char;
+begin
+  Result := '';
+  lPos := PosEx('n=', LowerCase(ABlock));
+  if lPos <= 0 then
+    Exit;
+  Inc(lPos, 2);
+  while (lPos <= Length(ABlock)) and (ABlock[lPos] in [' ', #9]) do
+    Inc(lPos);
+  if lPos > Length(ABlock) then
+    Exit;
+  lQuote := ABlock[lPos];
+  if not (lQuote in ['"', '''']) then
+    Exit;
+  Inc(lPos);
+  if Pos(lQuote, ABlock, lPos) <= lPos then
+    Exit;
+  Result := Copy(ABlock, lPos, Pos(lQuote, ABlock, lPos) - lPos);
+end;
+
+function SdbExtractPtyValue(const AText: string; APtyStart: Integer): string;
+var
+  lBlock: string;
+  lBlockEnd: Integer;
+  lCdataEnd: Integer;
+  lCdataStart: Integer;
+  lVEnd: Integer;
+  lVStart: Integer;
+begin
+  Result := '';
+  lBlockEnd := PosEx('</pty>', AText, APtyStart);
+  if lBlockEnd <= 0 then
+    Exit;
+  lBlock := Copy(AText, APtyStart, lBlockEnd - APtyStart);
+  lVStart := PosEx('<v', lBlock);
+  if lVStart <= 0 then
+    Exit;
+  lVStart := PosEx('>', lBlock, lVStart);
+  if lVStart <= 0 then
+    Exit;
+  Inc(lVStart);
+  lVEnd := PosEx('</v>', lBlock, lVStart);
+  if lVEnd <= 0 then
+    Exit;
+  lBlock := Copy(lBlock, lVStart, lVEnd - lVStart);
+  lCdataStart := Pos('<![CDATA[', lBlock);
+  if lCdataStart > 0 then
+  begin
+    Inc(lCdataStart, Length('<![CDATA['));
+    lCdataEnd := Pos(']]>', lBlock, lCdataStart);
+    if lCdataEnd > 0 then
+      Exit(Copy(lBlock, lCdataStart, lCdataEnd - lCdataStart));
+  end;
+  Result := Trim(lBlock);
+end;
 
 constructor TSdbPropBag.Create;
 begin
@@ -103,37 +163,33 @@ end;
 
 procedure TSdbPropBag.LoadFromFile(const AFileName: string);
 var
-  lLines: TStringList;
-  lMarker: string;
+  lBlockEnd: Integer;
   lName: string;
   lPos: Integer;
+  lPtyStart: Integer;
+  lText: string;
   lValue: string;
-  I: Integer;
 begin
   Clear;
   if not FileExists(AFileName) then
     Exit;
-  lLines := TStringList.Create;
-  try
-    lLines.LoadFromFile(AFileName);
-    for I := 0 to lLines.Count - 1 do
+  lText := SharedLoadLegacyTextFile(AFileName);
+  lPos := 1;
+  while lPos <= Length(lText) do
+  begin
+    lPtyStart := PosEx('<pty', lText, lPos);
+    if lPtyStart <= 0 then
+      Break;
+    lBlockEnd := PosEx('</pty>', lText, lPtyStart);
+    if lBlockEnd <= 0 then
+      Break;
+    lName := SdbExtractPtyName(Copy(lText, lPtyStart, lBlockEnd - lPtyStart));
+    if lName <> '' then
     begin
-      if Pos('<pty n="', lLines[I]) <= 0 then
-        Continue;
-      lPos := Pos('"', lLines[I], 9);
-      if lPos <= 0 then
-        Continue;
-      lName := Copy(lLines[I], 9, lPos - 9);
-      if I + 2 >= lLines.Count then
-        Break;
-      lValue := Trim(lLines[I + 2]);
-      if (Length(lValue) >= 13) and (Copy(lValue, 1, 9) = '<![CDATA[') and
-        (Copy(lValue, Length(lValue) - 2, 3) = ']]>') then
-        lValue := Copy(lValue, 10, Length(lValue) - 12);
+      lValue := SdbExtractPtyValue(lText, lPtyStart);
       SetProp(lName, lValue);
     end;
-  finally
-    lLines.Free;
+    lPos := lBlockEnd + Length('</pty>');
   end;
 end;
 

@@ -22,22 +22,67 @@ function RecorderMeraCalibrRootDir: string;
 
 implementation
 
-{$IFDEF MSWINDOWS}
 uses
-  Windows;
-{$ENDIF}
+  uRecorderMeraSdbThermocouples
+  {$IFDEF MSWINDOWS}
+  , Windows
+  {$ENDIF}
+  ;
 
 var
   g_MeraFilesPath: string;
 
 function DefaultRecorderMeraFilesPath: string;
+
+  function HasSdbSubdir(const ABase: string): Boolean;
+  begin
+    Result := DirectoryExists(IncludeTrailingPathDelimiter(ABase) + 'sdb') or
+      DirectoryExists(IncludeTrailingPathDelimiter(ABase) + 'SDB');
+  end;
+
+  function FirstExistingMeraRoot(const ACandidates: array of string): string;
+  var
+    lI: Integer;
+  begin
+    Result := '';
+    for lI := Low(ACandidates) to High(ACandidates) do
+      if (ACandidates[lI] <> '') and DirectoryExists(ACandidates[lI]) and
+        HasSdbSubdir(ACandidates[lI]) then
+        Exit(ExcludeTrailingPathDelimiter(ACandidates[lI]));
+  end;
+
 {$IFDEF MSWINDOWS}
 var
+  lDriveRoot: string;
   lSystemDir: array[0..MAX_PATH] of Char;
+  lSystemRoot: string;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
+  Result := FirstExistingMeraRoot([
+    'C:\Mera Files',
+    IncludeTrailingPathDelimiter(SysUtils.GetEnvironmentVariable('SystemDrive')) + 'Mera Files',
+    IncludeTrailingPathDelimiter(SysUtils.GetEnvironmentVariable('ProgramData')) + 'Mera Files'
+  ]);
+  if Result <> '' then
+    Exit;
+
   FillChar(lSystemDir, SizeOf(lSystemDir), 0);
+  if GetSystemDirectory(lSystemDir, MAX_PATH) > 0 then
+  begin
+    lSystemRoot := IncludeTrailingPathDelimiter(string(lSystemDir)) + 'Mera Files';
+    if DirectoryExists(lSystemRoot) and HasSdbSubdir(lSystemRoot) then
+      Exit(ExcludeTrailingPathDelimiter(lSystemRoot));
+    lSystemDir[2] := #0;
+    lSystemRoot := IncludeTrailingPathDelimiter(string(lSystemDir)) + 'Mera Files';
+    if DirectoryExists(lSystemRoot) and HasSdbSubdir(lSystemRoot) then
+      Exit(ExcludeTrailingPathDelimiter(lSystemRoot));
+  end;
+
+  lDriveRoot := IncludeTrailingPathDelimiter(SysUtils.GetEnvironmentVariable('SystemDrive')) + 'Mera Files';
+  if DirectoryExists(lDriveRoot) then
+    Exit(ExcludeTrailingPathDelimiter(lDriveRoot));
+
   if GetSystemDirectory(lSystemDir, MAX_PATH) = 0 then
     Result := 'C:' + PathDelim + 'Mera Files'
   else
@@ -46,8 +91,8 @@ begin
     Result := IncludeTrailingPathDelimiter(string(lSystemDir)) + 'Mera Files';
   end;
 {$ELSE}
-  if GetEnvironmentVariable('MERA_FILES') <> '' then
-    Result := GetEnvironmentVariable('MERA_FILES')
+  if SysUtils.GetEnvironmentVariable('MERA_FILES') <> '' then
+    Result := SysUtils.GetEnvironmentVariable('MERA_FILES')
   else
     Result := IncludeTrailingPathDelimiter(GetUserDir) + 'Mera Files';
 {$ENDIF}
@@ -64,6 +109,7 @@ end;
 procedure SetRecorderMeraFilesPath(const APath: string);
 begin
   g_MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(APath));
+  RecorderMeraResetThermocoupleCache;
 end;
 
 function RecorderMeraCalibrRootDir: string;

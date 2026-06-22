@@ -112,7 +112,7 @@ UI не должен становиться местом, где впервые 
 
 | Модуль | Назначение |
 |---|---|
-| `uSharedStringEncoding` | CP1251 RawByteString → UTF-8 для LCL (`SharedCp1251BytesToUtf8`). |
+| `uSharedStringEncoding` | Legacy CP1251/UTF-8: `SharedLegacyBytesToUtf8`, `SharedReadLegacyXmlFile`, `SharedLoadLegacyTextLines`, `SharedIsGoodDisplayText`. См. `SharedUtils/Docs/string-encoding.md`. |
 | `uComponentServices` | `LclText`, сетки, TreeView sync; cp1251-литералы в cp1251-модулях. |
 | `uSharedAlgorithms` | Generic `TBinarySearch` и прочая математика без UI. |
 | `uSharedFileLogger` | Файловое логирование без привязки к Recorder. |

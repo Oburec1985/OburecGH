@@ -26,6 +26,7 @@ type
     procedure Clear;
     procedure SetCapacity(ACapacity: Integer);
     procedure PushBack(const AValue: T);
+    procedure PopFront;
 
     property Capacity: Integer read fCapacity;
     property Count: Integer read fCount;
@@ -107,6 +108,14 @@ begin
   end;
 
   fItems[lIndex] := AValue;
+end;
+
+procedure cQueue.PopFront;
+begin
+  if fCount <= 0 then
+    Exit;
+  fFirst := (fFirst + 1) mod fCapacity;
+  Dec(fCount);
 end;
 
 end.

@@ -50,7 +50,7 @@ var
 begin
   Result := False;
   lStr := Trim(AAddress);
-  lPos := Pos('-', lStr);
+  lPos := RPos('-', lStr);
   if lPos > 0 then
     lStr := Trim(Copy(lStr, lPos + 1, MaxInt));
   Result := TryStrToInt(lStr, AChannelNumber);

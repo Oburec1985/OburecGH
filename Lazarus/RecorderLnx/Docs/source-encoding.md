@@ -31,6 +31,11 @@ U+FFFD при неверной перекодировке файла.
 4. Убрать `LConvEncoding` из `uses`, если модуль больше не вызывает `CP1251ToUTF8`.
 5. Hex-константы `RawByteString` + `SharedCp1251BytesToUtf8` — только если литерал
    уже испорчен и восстановить текст иначе нельзя.
+6. Legacy-файлы MERA/SDB/CSV/XML на диске — **только** функции из
+   `SharedUtils/uSharedStringEncoding.pas` (`SharedReadLegacyXmlFile`,
+   `SharedLoadLegacyTextLines`, `SharedLegacyBytesToUtf8`). Не писать локальные
+   копии и не использовать `TStringList.LoadFromFile` / `ReadXMLFile` напрямую.
+   См. `SharedUtils/Docs/string-encoding.md`.
 
 LCL в Lazarus 2.x ожидает UTF-8 в `string`; при `{$codepage UTF8}` компилятор FPC
 формирует корректные UTF-8 строки на этапе компиляции.
@@ -65,10 +70,27 @@ python -c "t=open('UI/uMainForm.pas',encoding='utf-8').read(); print('???', t.co
 
 Симптом: в работающем приложении подписи кнопок/меток — «кракозябры» (`РќР°…`).
 
-Скрипт для новых UI-модулей, созданных AI с неверным шаблоном:
+Скрипт для миграции с `CP1251ToUTF8` (снятие обёрток, `{$codepage UTF8}`):
 
 ```powershell
 python cach/_fix_oscillogram_settings_encoding.py
+```
+
+### Mojibake в string-литералах (UTF-8 сохранён как «РќР°СЃ…»)
+
+Симптом: в `.pas` с `{$codepage UTF8}` литералы уже выглядят как `РќР°СЃС‚СЂРѕР№РєР°`
+вместо «Настройка» (двойная перекодировка UTF-8 → cp1251 → UTF-8 в файле).
+
+**Проверенный скрипт (2026-06):**
+
+```powershell
+python cach/_fix_oscillogram_mojibake.py
+```
+
+Эталон после правки: `UI/uRecorderOscillogramSettingsDialog.pas`. Затем:
+
+```powershell
+python D:\works\OburecGH\Lazarus\Scripts\encoding-safe\verify_russian_comments.py UI/uRecorderOscillogramSettingsDialog.pas
 ```
 
 Шаблон правки (можно повторить для другого `.pas`):
@@ -108,15 +130,19 @@ python -c "b=open('UI/uMainForm.pas','rb').read(); print(b.find('Модуль'.e
 |---|---|
 | `UI/uTagSettingsDialog.pas` | UTF-8 (2026-06) |
 | `UI/uMainForm.pas` | UTF-8 (2026-06), комментарии из git CP1251 |
-| `UI/uRecorderOscillogramSettingsDialog.pas` | UTF-8 (2026-06), из cp1251+CP1251ToUTF8 через `cach/_fix_oscillogram_settings_encoding.py` |
+| `UI/uRecorderOscillogramSettingsDialog.pas` | UTF-8 (2026-06); mojibake в литералах — `cach/_fix_oscillogram_mojibake.py` (проверено) |
 
 Остальные UI-модули — по мере миграции (см. `development-rules.md`).
 
 ## Данные CP1251 из MERA/INI
 
-MERA-дескрипторы и legacy-файлы по-прежнему в CP1251:
+MERA-дескрипторы, SDB (XML/CSV) и legacy-файлы по-прежнему могут быть в CP1251
+или UTF-8 с устаревшей декларацией:
 
-- `uMeraFile` — `CP1251ToUTF8` при чтении INI;
+- `uSharedStringEncoding` — единая точка чтения: `SharedReadLegacyXmlFile`,
+  `SharedLoadLegacyTextLines`, `SharedLegacyBytesToUtf8` (см.
+  `SharedUtils/Docs/string-encoding.md`);
+- `uMeraFile` — `CP1251ToUTF8` при чтении INI (миграция на Shared — по мере правок);
 - `uComponentServices.LclText` — если в `string` попали байты CP1251.
 
 Это не относится к исходным литералам в `.pas`.
@@ -124,5 +150,6 @@ MERA-дескрипторы и legacy-файлы по-прежнему в CP1251
 ## Связанные материалы
 
 - `Docs/development-rules.md` — раздел «Кодировки»
+- `SharedUtils/Docs/string-encoding.md` — API чтения legacy-файлов
 - AGrav: `20_Проекты/Разработка_Delphi/Lazarus/RecorderLnx/Docs/10_Кодировка_Исходников.md`
 - AGrav: `00_Система/Инструменты/RecorderLnxUtf8Restore/Tool.md`

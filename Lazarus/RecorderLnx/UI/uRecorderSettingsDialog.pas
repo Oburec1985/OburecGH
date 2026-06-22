@@ -36,74 +36,74 @@ type
   { Класс диалогового окна настроек рекордера }
   TRecorderSettingsDialog = class(TForm)
   published
-    fPageControl: TPageControl; // ? ? ?
-    fApplyButton: TButton; // ? "?"
-    fHardwareTree: TTreeView; // ? ? ?/?
-    btnDeviceAdd: TBitBtn; // ? ? ? (Mera-?)
-    btnChannelAdd: TBitBtn; // ? ? ? ? ? ? ?
-    btnChannelRemove: TBitBtn; // ? ? ? ? ? ?
-    btnChannelEdit: TBitBtn; // ? ? ? ?
-    pnChannelMoveButtons: TPanel; // ? ? ? ?
-    spChannels: TSplitter; // ? ? ? ? ? ? ?
-    fAvailableChannelsGrid: TStringGrid; // ? ? ? ? ?
-    fSelectedChannelsGrid: TStringGrid; // ? ? (?) ?
-    spChannelAlgorithms: TSplitter; // ? ? ? ? ?
-    fAlgorithmsTree: TTreeView; // ? ? ?
-    fAlgorithmKindCombo: TComboBox; // ? ? ?
-    btnAlgorithmAdd: TBitBtn; // ? ? ? ? ?
-    btnAlgorithmRemove: TBitBtn; // ? ? ?
-    btnAlgorithmConfig: TBitBtn; // ? ? FFT-?
-    btnFrequencyBands: TBitBtn; // ? ? ?
-    fAlgorithmFftSizeEdit: TEdit; // ? FFT
-    fAlgorithmFftSizeUpDown: TUpDown; // ? ? ? FFT
-    fAlgorithmSampleRateEdit: TEdit; // ? ?
-    fAlgorithmPortionLabel: TLabel; // ? ? ? ?
-    fAlgorithmAverageBlocksEdit: TEdit; // ? ? ?
-    fAlgorithmOverlapEdit: TEdit; // ? FFT
-    fAlgorithmOverlapCombo: TComboBox; // ? ? FFT
-    fAlgorithmWindowCombo: TComboBox; // ? ?
-    fAlgorithmNormalizeCombo: TComboBox; // ? ?
-    fAlgorithmZeroPadCheck: TCheckBox; // ? ?
-    fAlgorithmAhCorrectionCheck: TCheckBox; // ? ?
-    fAlgorithmIntegrationGroup: TRadioGroup; // ? ?
+    fPageControl: TPageControl;                 // Контейнер вкладок настроек
+    fApplyButton: TButton;                     // Кнопка "Применить"
+    fHardwareTree: TTreeView;                   // Дерево аппаратной конфигурации/устройств
+    btnDeviceAdd: TBitBtn;                      // Кнопка добавления устройства (Mera-файла)
+    btnChannelAdd: TBitBtn;                     // Кнопка добавления выбранного канала в список активных
+    btnChannelRemove: TBitBtn;                  // Кнопка удаления канала из списка активных
+    btnChannelEdit: TBitBtn;                    // Кнопка настройки выбранного тега
+    pnChannelMoveButtons: TPanel;               // Панель кнопок перемещения каналов
+    spChannels: TSplitter;                      // Разделитель между сетками доступных и выбранных каналов
+    fAvailableChannelsGrid: TStringGrid;        // Таблица доступных для выбора каналов
+    fSelectedChannelsGrid: TStringGrid;         // Таблица выбранных (активных) каналов
+    spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
+    fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
+    fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
+    btnAlgorithmAdd: TBitBtn;                   // Создать алгоритм по выбранным каналам
+    btnAlgorithmRemove: TBitBtn;                // Удалить узел алгоритма
+    btnAlgorithmConfig: TBitBtn;                // Применить параметры FFT-узла
+    btnFrequencyBands: TBitBtn;                 // Настроить частотные полосы
+    fAlgorithmFftSizeEdit: TEdit;               // Размер FFT
+    fAlgorithmFftSizeUpDown: TUpDown;           // Стрелочки изменения размера FFT
+    fAlgorithmSampleRateEdit: TEdit;            // Частота опроса
+    fAlgorithmPortionLabel: TLabel;             // Размер порции в секундах
+    fAlgorithmAverageBlocksEdit: TEdit;         // Количество блоков усреднения
+    fAlgorithmOverlapEdit: TEdit;               // Перекрытие FFT
+    fAlgorithmOverlapCombo: TComboBox;          // Режим перекрытия FFT
+    fAlgorithmWindowCombo: TComboBox;           // Оконная функция
+    fAlgorithmNormalizeCombo: TComboBox;        // Нормировка спектра
+    fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
+    fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
+    fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
     Cfg: TEdit;
 
     // Поля ввода общих настроек
-    fScreenUpdateEdit: TEdit; // ? ? ? (?)
-    fBufferSecondsEdit: TEdit; // ? ? ? (?)
-    fDataUpdateEdit: TEdit; // ? ? ? (?)
-    fTestNameEdit: TEdit; // ? ? ?
-    fProductNameEdit: TEdit; // ? ? ?
-    fModifyNameCheck: TCheckBox; // ? ? ? ? ?
-    fPrehistoryCheck: TCheckBox; // ? ? ?
-    fPrehistoryEdit: TEdit; // ? ? (?)
-    fResetTimeCheck: TCheckBox; // ? ? ? ? ? ?
-    fWriteWithPausesCheck: TCheckBox; // ? ? ? ? ?
-    fSaveConfigWithDataCheck: TCheckBox; // ? ? ? ? ? ? ?
-    fWorkDirEdit: TEdit; // ? ? ? ?
-    fMeraFilesPathEdit: TEdit;
-    fTemplateCheck: TCheckBox; // ? ? ? ? ?
-    fTemplateButton: TButton; // ? ? ?
-    fFrameDirEdit: TEdit; // ? ? ? ? ?
+    fScreenUpdateEdit: TEdit;                   // Период обновления экрана (сек)
+    fBufferSecondsEdit: TEdit;                  // Длина отображаемого буфера (сек)
+    fDataUpdateEdit: TEdit;                     // Период обновления данных (сек)
+    fTestNameEdit: TEdit;                       // Имя текущего испытания
+    fProductNameEdit: TEdit;                    // Имя исследуемого изделия
+    fModifyNameCheck: TCheckBox;                // Флаг автоматической модификации имени испытания
+    fPrehistoryCheck: TCheckBox;                // Флаг записи предыстории
+    fPrehistoryEdit: TEdit;                     // Длина предыстории (сек)
+    fResetTimeCheck: TCheckBox;                 // Флаг сброса времени при старте записи
+    fWriteWithPausesCheck: TCheckBox;           // Флаг разрешения записи с паузами
+    fSaveConfigWithDataCheck: TCheckBox;        // Флаг сохранения файла конфигурации вместе с данными
+    fWorkDirEdit: TEdit;                        // Рабочий каталог сохранения файлов
+    fMeraFilesPathEdit: TEdit;                  // Каталог Mera Files (SDB, калибровки)
+    fTemplateCheck: TCheckBox;                  // Флаг использования шаблона имени файла
+    fTemplateButton: TButton;                   // Кнопка настройки шаблона
+    fFrameDirEdit: TEdit;                       // Путь к текущему кадру данных
 
     // Условия старта записи
-    fStartManualRadio: TRadioButton; // ? ? (? ?)
-    fStartLevelRadio: TRadioButton; // ? ? ? ? ?
-    fStartTriggerRadio: TRadioButton; // ? ? ? ?
-    fStartTriggerEdit: TEdit; // ? ? ?
-    fStartChannelCombo: TComboBox; // ?-? ? ? ?
-    fStartEdgeCombo: TComboBox; // ? ? (?/?)
-    fStartLevelEdit: TEdit; // ? ? ? ?
+    fStartManualRadio: TRadioButton;            // Старт вручную (по кнопке)
+    fStartLevelRadio: TRadioButton;             // Старт по достижению уровня сигнала
+    fStartTriggerRadio: TRadioButton;           // Старт по внешнему триггеру
+    fStartTriggerEdit: TEdit;                   // Номер триггера старта
+    fStartChannelCombo: TComboBox;              // Канал-источник для условия старта
+    fStartEdgeCombo: TComboBox;                 // Направление перехода (больше/меньше)
+    fStartLevelEdit: TEdit;                     // Пороговый уровень для старта
 
     // Условия останова записи
-    fStopManualRadio: TRadioButton; // ? ? (? ?)
-    fStopLevelRadio: TRadioButton; // ? ? ? ?
-    fStopDurationRadio: TRadioButton; // ? ? ? (?)
-    fStopDurationEdit: TEdit; // ? ? ? ? (?)
-    fStopChannelCombo: TComboBox; // ?-? ? ? ?
-    fStopEdgeCombo: TComboBox; // ? ? ? ?
-    fStopLevelEdit: TEdit; // ? ? ? ?
-    fStopReturnToPreviewCheck: TCheckBox; // ? ? ? ? ? ? ?
+    fStopManualRadio: TRadioButton;             // Останов вручную (по кнопке)
+    fStopLevelRadio: TRadioButton;              // Останов по уровню сигнала
+    fStopDurationRadio: TRadioButton;           // Останов по длительности (таймеру)
+    fStopDurationEdit: TEdit;                   // Время записи до останова (сек)
+    fStopChannelCombo: TComboBox;               // Канал-источник для условия останова
+    fStopEdgeCombo: TComboBox;                  // Направление перехода для останова
+    fStopLevelEdit: TEdit;                      // Пороговый уровень для останова
+    fStopReturnToPreviewCheck: TCheckBox;       // Флаг возврата в режим просмотра после останова
 
     // Обработчики событий UI элементов диалога
     procedure ApplyButtonClick(Sender: TObject);
@@ -142,17 +142,18 @@ type
     procedure WorkDirBrowseClick(Sender: TObject);
     procedure MeraFilesPathBrowseClick(Sender: TObject);
   private
-    fRunSettings: TRecorderRunControlSettings; // ? ? ? ? ?/?
-    fTagRegistry: TRecorderTagRegistry; // ? ? ? ? ?
-    fDeviceImageList: TCustomImageList; // ? ? ? ? ?
-    fTagDialogImageList: TCustomImageList; // ? ? ? ? ?
-    fMeraFolder: string; // ? ? ? ? ? Mera-?
-    fMeraFileName: string; // ? ? Mera-?
-    fMeraSignals: TList; // ? TMeraSignalInfo, ? ? ?
-    fMic140Signals: TList; // ? ? ? MIC-140
-    fSelectedChannelTags: TList; // Row-map ? ? ? TRecorderTag
-    fSelectedSortColumn: Integer; // ? ? ? ? ?
-    fSelectedSortAscending: Boolean; // ? ? ?
+    fRunSettings: TRecorderRunControlSettings;   // Ссылка на объект настроек запуска/останова
+    fTagRegistry: TRecorderTagRegistry;         // Ссылка на реестр тегов приложения
+    fDeviceImageList: TCustomImageList;         // Список картинок для дерева устройств
+    fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
+    fMeraFolder: string;                        // Путь к последней папке импортированного Mera-файла
+    fMeraFileName: string;                      // Имя импортированного Mera-файла
+    fMeraSignals: TList;                        // Список TMeraSignalInfo, загруженных из файла
+    fMic140Signals: TList;                      // Список сигналов MIC-140
+    fMic140SourceConfigs: TStringList;          // Настройки каналов MIC-140 по SourceId
+    fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
+    fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
+    fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
     fCanDrag: Boolean;
@@ -190,6 +191,7 @@ type
     procedure ClearMic140Signals;
     procedure RestoreMeraSignalsFromTags;
     procedure RestoreMic140SignalsFromTags;
+    procedure RebuildMic140SourceConfigsFromTags;
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
     procedure BuildMic140Signals(const ASourceId: string; AChannelCount: Integer;
@@ -212,6 +214,8 @@ type
     procedure AddMic140Source(const APresetHost: string = '');
     function SelectedMic140SourceId: string;
     procedure ConfigureMic140Source(const ASourceId: string);
+    function SelectedMeraFileSourceSelected: Boolean;
+    procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure DeleteMic140Source(const ASourceId: string);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
@@ -243,6 +247,7 @@ type
     procedure BuildPlaceholderTab(const ACaption: string);
     
     // Чтение и сохранение настроек
+    procedure SyncMeraFilesPathFromUi;
     procedure LoadFromSettings;
     procedure StoreToSettings;
     procedure UpdateConditionControls;
@@ -268,31 +273,13 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
 
 implementation
 
+uses
+  StrUtils;
+
 {$R *.lfm}
 
-function ParseMic140ChannelNumber(const AAddress: string; out AChannelNumber: Integer): Boolean;
-var
-  lPos: Integer;
-  lStr: string;
-begin
-  Result := False;
-  lStr := Trim(AAddress);
-  lPos := Pos('-', lStr);
-  if lPos > 0 then
-    lStr := Trim(Copy(lStr, lPos + 1, MaxInt));
-  Result := TryStrToInt(lStr, AChannelNumber);
-end;
-
-function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
-var
-  lNum1, lNum2: Integer;
-begin
-  if SameText(AAddr1, AAddr2) then
-    Exit(True);
-  Result := ParseMic140ChannelNumber(AAddr1, lNum1) and
-            ParseMic140ChannelNumber(AAddr2, lNum2) and
-            (lNum1 = lNum2);
-end;
+const
+  CMeraSourcePrefix = 'Mera file: ';
 
 function IsChannelEnabled(AEnabledChannels: TStrings; const AAddress: string): Boolean;
 var
@@ -461,6 +448,8 @@ begin
   inherited Create(AOwner);
   fMeraSignals := TList.Create;
   fMic140Signals := TList.Create;
+  fMic140SourceConfigs := TStringList.Create;
+  fMic140SourceConfigs.OwnsObjects := True;
   fSelectedChannelTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -483,6 +472,8 @@ begin
 
   if FindComponent('btnWorkDirBrowse') is TButton then
     TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
+  if FindComponent('btnMeraFilesPathBrowse') is TButton then
+    TButton(FindComponent('btnMeraFilesPathBrowse')).OnClick := @MeraFilesPathBrowseClick;
   if btnDeviceAdd <> nil then
     btnDeviceAdd.OnClick := @HardwareAddSourceClick;
   if FindComponent('btnDeviceDelete') is TBitBtn then
@@ -546,6 +537,7 @@ destructor TRecorderSettingsDialog.Destroy;
 begin
   ClearMeraSignals;
   ClearMic140Signals;
+  fMic140SourceConfigs.Free;
   fFrequencyBands.Free;
   fSpectrumConfigTree.Free;
   fSelectedChannelTags.Free;
@@ -817,9 +809,11 @@ begin
   try
     lTags.Add(lTag);
     if fTagDialogImageList <> nil then
-      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fTagDialogImageList, ReadSecondsAsMs(fDataUpdateEdit, 200))
+      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fTagDialogImageList,
+        ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup)
     else
-      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fDeviceImageList, ReadSecondsAsMs(fDataUpdateEdit, 200));
+      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fDeviceImageList,
+        ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup);
     if lDialogOk then
     begin
       MarkSignalsFromRegistry;
@@ -1600,8 +1594,6 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.RestoreMeraSignalsFromTags;
-const
-  CMeraSourcePrefix = 'Mera file: ';
 var
   I: Integer;
   lFileName: string;
@@ -1804,12 +1796,86 @@ begin
   PopulateChannelGrids;
 end;
 
+procedure TRecorderSettingsDialog.RebuildMic140SourceConfigsFromTags;
+var
+  I: Integer;
+  J: Integer;
+  lCh: Integer;
+  lConfig: TRecorderMic140SourceConfig;
+  lHost: string;
+  lPort: Word;
+  lResult: TRecorderMic140DialogResult;
+  lSourceId: string;
+  lSources: TStringList;
+  lTag: TRecorderTag;
+begin
+  if fTagRegistry = nil then
+    Exit;
+
+  fMic140SourceConfigs.Clear;
+  lSources := TStringList.Create;
+  try
+    lSources.CaseSensitive := False;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) and
+        (lSources.IndexOf(lTag.SourceId) < 0) then
+        lSources.Add(lTag.SourceId);
+    end;
+    for I := 0 to fTagRegistry.ActiveSourceCount - 1 do
+    begin
+      lSourceId := fTagRegistry.ActiveSourceIds[I];
+      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) and
+        (lSources.IndexOf(lSourceId) < 0) then
+        lSources.Add(lSourceId);
+    end;
+
+    for I := 0 to lSources.Count - 1 do
+    begin
+      lSourceId := lSources[I];
+      if not TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
+        Continue;
+      InitRecorderMic140DialogResult(lResult);
+      try
+        lResult.Host := lHost;
+        lResult.Port := lPort;
+        for J := 0 to fTagRegistry.TagCount - 1 do
+        begin
+          lTag := fTagRegistry.Tags[J];
+          if not SameText(lTag.SourceId, lSourceId) then
+            Continue;
+          if ParseMic140ChannelNumber(lTag.Address, lCh) then
+          begin
+            if lResult.SelectedChannels.IndexOf(IntToStr(lCh)) < 0 then
+              lResult.SelectedChannels.Add(IntToStr(lCh));
+            if lTag.Mic140DeviceSerial > 0 then
+              lResult.DeviceSerial := lTag.Mic140DeviceSerial;
+            if lCh > lResult.ChannelCount then
+              lResult.ChannelCount := MIC140MaxChannelCount;
+            if (lCh > 0) and (lCh <= Length(lResult.ChannelSettings)) then
+              RecorderMic140RestoreChannelSettingsFromTag(fTagRegistry, lTag,
+                lResult.ChannelSettings[lCh - 1]);
+          end;
+        end;
+        lConfig := EnsureRecorderMic140SourceConfig(fMic140SourceConfigs, lSourceId);
+        lConfig.LoadFromResult(lResult);
+      finally
+        DoneRecorderMic140DialogResult(lResult);
+      end;
+    end;
+  finally
+    lSources.Free;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.RestoreMic140SignalsFromTags;
 var
   I: Integer;
   lChannelCount: Integer;
   lChannelNumber: Integer;
   lAddressNumber: Integer;
+  lConfig: TRecorderMic140SourceConfig;
   lHost: string;
   lPort: Word;
   lSourceId: string;
@@ -1819,6 +1885,8 @@ begin
   ClearMic140Signals;
   if fTagRegistry = nil then
     Exit;
+
+  RebuildMic140SourceConfigsFromTags;
 
   lSources := TStringList.Create;
   try
@@ -1843,6 +1911,13 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
+      lConfig := FindRecorderMic140SourceConfig(fMic140SourceConfigs, lSourceId);
+      if lConfig <> nil then
+      begin
+        BuildMic140Signals(lSourceId, lConfig.ChannelCount, lConfig.SelectedChannels,
+          lConfig.ChannelSettings);
+        Continue;
+      end;
       lChannelCount := MIC140DefaultChannelCount;
       for lChannelNumber := 0 to fTagRegistry.TagCount - 1 do
       begin
@@ -1959,165 +2034,73 @@ var
   lHost: string;
   lNode: TTreeNode;
   lPort: Word;
-  lTag: TRecorderTag;
 begin
   Result := '';
-  if fHardwareTree <> nil then
+  if fHardwareTree = nil then
+    Exit;
+  lNode := fHardwareTree.Selected;
+  while lNode <> nil do
   begin
-    lNode := fHardwareTree.Selected;
-    while lNode <> nil do
-    begin
-      if TObject(lNode.Data) is TRecorderTag then
-      begin
-        lTag := TRecorderTag(lNode.Data);
-        if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-          Exit(lTag.SourceId);
-      end;
-      if TryParseRecorderMic140SourceId(lNode.Text, lHost, lPort) then
-        Exit(RecorderMic140SourceId(lHost, lPort));
-      lNode := lNode.Parent;
-    end;
+    if TryParseRecorderMic140SourceId(lNode.Text, lHost, lPort) then
+      Exit(RecorderMic140SourceId(lHost, lPort));
+    lNode := lNode.Parent;
   end;
+end;
 
-  if fSelectedChannelsGrid <> nil then
+function TRecorderSettingsDialog.SelectedMeraFileSourceSelected: Boolean;
+var
+  lNode: TTreeNode;
+begin
+  Result := False;
+  if fHardwareTree = nil then
+    Exit;
+  lNode := fHardwareTree.Selected;
+  while (lNode <> nil) and ((lNode.Parent = nil) or
+    (lNode.Parent.Parent <> nil)) do
+    lNode := lNode.Parent;
+  Result := (lNode <> nil) and StartsText('Mera File', lNode.Text);
+end;
+
+procedure TRecorderSettingsDialog.TagHardwareSourceSetup(Sender: TObject;
+  ATag: TRecorderTag);
+var
+  lHost: string;
+  lPath: string;
+  lPort: Word;
+begin
+  if ATag = nil then
+    Exit;
+  if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) then
   begin
-    lTag := SelectedTagByGridRow(fSelectedChannelsGrid.Row);
-    if (lTag <> nil) and TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-      Result := lTag.SourceId;
+    ConfigureMic140Source(ATag.SourceId);
+    Exit;
+  end;
+  if Pos(CMeraSourcePrefix, ATag.SourceId) = 1 then
+  begin
+    lPath := Trim(Copy(ATag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+    if lPath <> '' then
+      fMeraFileName := lPath;
+    HardwareEditSourceClick(Sender);
   end;
 end;
 
 procedure TRecorderSettingsDialog.ConfigureMic140Source(const ASourceId: string);
 var
-  I: Integer;
-  J: Integer;
-  lCal: TRecorderCalibration;
-  lCalName: string;
-  lCapacity: Integer;
-  lChannelNumber: Integer;
-  lHost: string;
+  lConfig: TRecorderMic140SourceConfig;
   lNewSourceId: string;
-  lPort: Word;
-  lResult: TRecorderMic140DialogResult;
-  lSettings: TRecorderMic140ChannelSettings;
-  lTag: TRecorderTag;
 begin
   if fTagRegistry = nil then
     Exit;
-
-  InitRecorderMic140DialogResult(lResult);
-  try
-    if TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
-    begin
-      lResult.Host := lHost;
-      lResult.Port := lPort;
-      lResult.DeviceSerial := 0;
-      lResult.VersionText := '';
-      for I := 0 to fTagRegistry.TagCount - 1 do
-      begin
-        lTag := fTagRegistry.Tags[I];
-        if SameText(lTag.SourceId, ASourceId) then
-        begin
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
-            lResult.SelectedChannels.Add(IntToStr(lChannelNumber))
-          else
-            lResult.SelectedChannels.Add(lTag.Address);
-          if lTag.Mic140DeviceSerial > 0 then
-            lResult.DeviceSerial := lTag.Mic140DeviceSerial;
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
-            (lChannelNumber > lResult.ChannelCount) then
-            lResult.ChannelCount := MIC140MaxChannelCount;
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
-            (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
-          begin
-            lResult.ChannelSettings[lChannelNumber - 1].RangeIndex := lTag.MeasRangeIndex;
-            if SameText(lTag.SourceValueMode, 'degC') and (lTag.CalibrationNames <> nil) then
-            begin
-              for J := 0 to lTag.CalibrationNames.Count - 1 do
-              begin
-                lCalName := lTag.CalibrationNames[J];
-                if Pos('TC ', lCalName) <> 1 then
-                  Continue;
-                lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName :=
-                  Trim(Copy(lCalName, 4, MaxInt));
-                lCal := fTagRegistry.FindCalibrationByName(lCalName);
-                if (lCal <> nil) and (Trim(lCal.Description) <> '') then
-                  lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScalePath :=
-                    lCal.Description
-                else if lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName <> '' then
-                  lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScalePath :=
-                    RecorderMeraThermocoupleRelativePath(
-                      lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName);
-                Break;
-              end;
-            end;
-          end;
-        end;
-      end;
-    end;
-
-    if not ShowRecorderMic140SettingsDialog(Self, lResult) then
-      Exit;
-
-    lNewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
-    if (ASourceId <> '') and (not SameText(ASourceId, lNewSourceId)) then
-      fTagRegistry.UnregisterActiveSource(ASourceId);
-    fTagRegistry.RegisterActiveSource(lNewSourceId);
-    BuildMic140Signals(lNewSourceId, lResult.ChannelCount,
-      lResult.SelectedChannels, lResult.ChannelSettings);
-
-    lCapacity := 4096;
-    for I := 0 to fTagRegistry.TagCount - 1 do
-    begin
-      lTag := fTagRegistry.Tags[I];
-      if SameText(lTag.SourceId, lNewSourceId) and (lTag.PollFrequencyHz > 0) then
-        lCapacity := Max(lCapacity, Ceil(lTag.PollFrequencyHz));
-    end;
-    for I := 0 to fTagRegistry.TagCount - 1 do
-    begin
-      lTag := fTagRegistry.Tags[I];
-      if (not SameText(lTag.SourceId, lNewSourceId)) and
-        ((ASourceId = '') or (not SameText(lTag.SourceId, ASourceId))) then
-        Continue;
-      if (lResult.SelectedChannels.Count > 0) and
-        (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber) or
-        (lResult.SelectedChannels.IndexOf(IntToStr(lChannelNumber)) < 0)) then
-        Continue;
-      lTag.SourceId := lNewSourceId;
-      lTag.ModuleType := 'MIC-140';
-      if lResult.DeviceSerial > 0 then
-        lTag.Mic140DeviceSerial := lResult.DeviceSerial;
-      if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
-        (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
-      begin
-        lSettings := lResult.ChannelSettings[lChannelNumber - 1];
-        lTag.MeasRangeIndex := lSettings.RangeIndex;
-        if RecorderMic140ChannelUsesTemperature(lSettings) then
-        begin
-          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
-          lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
-          lCalName := RecorderMic140EnsureThermocoupleCalibration(fTagRegistry, lSettings);
-          lTag.CalibrationNames.Clear;
-          if lCalName <> '' then
-            lTag.CalibrationNames.Add(lCalName);
-        end
-        else
-        begin
-          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momMillivolts);
-          lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
-        end;
-      end;
-      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
-        [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
-         lTag.SourceValueMode]);
-      lTag.EnsureBufferCapacity(lCapacity);
-    end;
-
-    PopulateHardwareTree;
-    PopulateChannelGrids;
-  finally
-    DoneRecorderMic140DialogResult(lResult);
-  end;
+  SyncMeraFilesPathFromUi;
+  if not ApplyRecorderMic140SourceDialog(Self, fTagRegistry, fMic140SourceConfigs,
+    ASourceId, lNewSourceId) then
+    Exit;
+  lConfig := FindRecorderMic140SourceConfig(fMic140SourceConfigs, lNewSourceId);
+  if lConfig <> nil then
+    BuildMic140Signals(lNewSourceId, lConfig.ChannelCount,
+      lConfig.SelectedChannels, lConfig.ChannelSettings);
+  PopulateHardwareTree;
+  PopulateChannelGrids;
 end;
 
 procedure TRecorderSettingsDialog.DeleteMic140Source(const ASourceId: string);
@@ -2173,7 +2156,7 @@ begin
     Exit;
   end;
 
-  if fMeraFileName = '' then
+  if (not SelectedMeraFileSourceSelected) and (fMeraFileName = '') then
     Exit;
 
   lDialog := TOpenDialog.Create(Self);
@@ -2850,6 +2833,19 @@ begin
 end;
 
 { Чтение конфигурации из объекта TRecorderRunControlSettings в UI элементы диалога }
+procedure TRecorderSettingsDialog.SyncMeraFilesPathFromUi;
+var
+  lPath: string;
+begin
+  lPath := '';
+  if fMeraFilesPathEdit <> nil then
+    lPath := Trim(fMeraFilesPathEdit.Text);
+  if (lPath = '') and (fRunSettings <> nil) then
+    lPath := Trim(fRunSettings.MeraFilesPath);
+  if lPath <> '' then
+    SetRecorderMeraFilesPath(lPath);
+end;
+
 procedure TRecorderSettingsDialog.LoadFromSettings;
 begin
   if fRunSettings = nil then
@@ -2879,7 +2875,14 @@ begin
   fBufferSecondsEdit.Text := FormatFloat('0.###', fRunSettings.DisplayBufferMs / 1000);
   fDataUpdateEdit.Text := FormatFloat('0.###', fRunSettings.DataUpdateMs / 1000);
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir);
-  fMeraFilesPathEdit.Text := fRunSettings.MeraFilesPath;
+  if fMeraFilesPathEdit <> nil then
+  begin
+    if Trim(fRunSettings.MeraFilesPath) <> '' then
+      fMeraFilesPathEdit.Text := fRunSettings.MeraFilesPath
+    else
+      fMeraFilesPathEdit.Text := RecorderMeraFilesPath;
+  end;
+  SyncMeraFilesPathFromUi;
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(fRunSettings.RecordRootDir) + '0001';
   fResetTimeCheck.Checked := True;
 
@@ -2923,7 +2926,8 @@ begin
   fRunSettings.DataUpdateMs := ReadSecondsAsMs(fDataUpdateEdit,
     fRunSettings.DataUpdateMs);
   fRunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
-  fRunSettings.MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(fMeraFilesPathEdit.Text));
+  if fMeraFilesPathEdit <> nil then
+    fRunSettings.MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(fMeraFilesPathEdit.Text));
   SetRecorderMeraFilesPath(fRunSettings.MeraFilesPath);
   fRunSettings.RequireValid;
   if fTagRegistry <> nil then
@@ -2998,6 +3002,8 @@ procedure TRecorderSettingsDialog.MeraFilesPathBrowseClick(Sender: TObject);
 var
   lDir: string;
 begin
+  if fMeraFilesPathEdit = nil then
+    Exit;
   lDir := Trim(fMeraFilesPathEdit.Text);
   if lDir = '' then
     lDir := RecorderMeraFilesPath;

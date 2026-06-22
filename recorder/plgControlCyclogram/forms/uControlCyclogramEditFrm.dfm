@@ -1002,9 +1002,9 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           ExplicitHeight = 244
           inherited ProgramPage: TTabSheet
             ExplicitLeft = 4
-            ExplicitTop = 28
-            ExplicitWidth = 548
-            ExplicitHeight = 296
+            ExplicitTop = 24
+            ExplicitWidth = 490
+            ExplicitHeight = 216
             inherited ShowModesTabBtn: TSpeedButton
               Left = 319
               Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
@@ -1014,6 +1014,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
             inherited ProgramCountSE: TSpinEdit
               Left = 2
               Height = 22
+              Value = 1
               ExplicitLeft = 2
               ExplicitHeight = 22
             end
@@ -1053,39 +1054,39 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
           inherited ModesPage: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 24
-            ExplicitWidth = 490
-            ExplicitHeight = 216
+            ExplicitWidth = 548
+            ExplicitHeight = 300
             inherited Splitter1: TSplitter
-              Left = 264
+              Left = 322
               Width = 5
-              Height = 216
+              Height = 300
               ExplicitLeft = 266
               ExplicitTop = 0
               ExplicitWidth = 5
               ExplicitHeight = 221
             end
             inherited ModeChannelsGB: TGroupBox
-              Left = 269
+              Left = 327
               Width = 221
-              Height = 216
-              ExplicitLeft = 269
+              Height = 300
+              ExplicitLeft = 327
               ExplicitWidth = 221
-              ExplicitHeight = 216
+              ExplicitHeight = 300
               inherited ChannelsLV: TBtnListView
                 Top = 15
                 Width = 217
-                Height = 199
+                Height = 283
                 ExplicitTop = 15
                 ExplicitWidth = 217
-                ExplicitHeight = 199
+                ExplicitHeight = 283
               end
             end
             inherited ModePanel: TPanel
-              Width = 264
-              Height = 216
+              Width = 322
+              Height = 300
               Constraints.MinWidth = 192
-              ExplicitWidth = 264
-              ExplicitHeight = 216
+              ExplicitWidth = 322
+              ExplicitHeight = 300
               inherited ModeTimeLabel: TLabel
                 Top = 51
                 ExplicitTop = 51
@@ -1258,6 +1259,7 @@ object ControlCyclogramEditFrm: TControlCyclogramEditFrm
       ParentBackground = False
       TabOrder = 1
       OnClick = SelectModeColorPanClick
+      OnDblClick = SelectModeColorPanClick
     end
   end
   object ImageList_32: TImageList

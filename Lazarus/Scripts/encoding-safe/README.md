@@ -59,6 +59,9 @@ python fix_string_literal_mojibake.py ..\RecorderLnx\UI\uTagSettingsDialog.pas
 # 6. cp1251 + CP1251ToUTF8 -> UTF8
 python convert_cp1251_wrappers_to_utf8.py ..\RecorderLnx\UI\uRecorderOscillogramSettingsDialog.pas
 
+# 6b. Mojibake в литералах UTF-8 модуля (РќР°… -> Настройка) — проверено 2026-06
+python ..\RecorderLnx\cach\_fix_oscillogram_mojibake.py
+
 # 7. Восстановление из git (комментарии были ???)
 python restore_pas_from_git.py Lazarus/RecorderLnx/UI/uMainForm.pas
 ```
