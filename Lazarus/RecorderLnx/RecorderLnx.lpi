@@ -77,6 +77,25 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderMeraSdbThermocouples.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SDB/uRecorderSdbStore.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SDB/uRecorderSdbSelectDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderSdbSelectDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SDB/uRecorderSdbTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uRecorderProjectFiles.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -131,6 +150,16 @@
       <Unit>
         <Filename Value="Device/MIC140/UI/uRecorderMic140SettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMic140SettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/UI/uRecorderMic140ChannelDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMic140ChannelDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uComponentSettingsDialog.pas"/>
@@ -239,6 +268,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="../SharedUtils/uBaseObjLaz.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="../SharedUtils/uComponentServices.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -272,7 +305,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Core;UI;Device;Device/MIC140;Device/MIC140/UI;../SharedUtils;../Tests/RecorderTests/UITestData"/>
+      <OtherUnitFiles Value="Core;UI;Device;Device/MIC140;Device/MIC140/UI;SDB;../SharedUtils;../Tests/RecorderTests/UITestData"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

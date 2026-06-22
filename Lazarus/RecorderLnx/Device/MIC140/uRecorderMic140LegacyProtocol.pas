@@ -97,6 +97,12 @@ const
 
 function RecorderMic140DeviceSerialFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+function RecorderMic140FirmwareVersionText(
+  const AFirmware: TRecorderMic140LegacyFirmware): string;
+function RecorderMic140DevRevFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+function RecorderMic140DevSubRevFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Word;
 
 implementation
 
@@ -452,23 +458,24 @@ begin
     Result := False;
     Exit;
   end;
-  AFirmware.Signature := lReply[1];
-  AFirmware.MdpType := lReply[2];
-  AFirmware.DevType := lReply[3];
-  AFirmware.DevRevNo := lReply[4];
-  AFirmware.DevSerNo := lReply[5];
+  { TBiosInfoMC031: 11 WORDs at lReply[0..10], same layout as CCMC031EthernetInterface::ReadCfg. }
+  AFirmware.Signature := lReply[0];
+  AFirmware.MdpType := lReply[1];
+  AFirmware.DevType := lReply[2];
+  AFirmware.DevRevNo := lReply[3];
+  AFirmware.DevSerNo := lReply[4];
   if Length(lReply) >= 6 then
-    AFirmware.CCType := lReply[6];
+    AFirmware.CCType := lReply[5];
   if Length(lReply) >= 7 then
-    AFirmware.CCSerNo := lReply[7];
+    AFirmware.CCSerNo := lReply[6];
   if Length(lReply) >= 8 then
-    AFirmware.EepromManufactId := lReply[8];
+    AFirmware.EepromManufactId := lReply[7];
   if Length(lReply) >= 9 then
-    AFirmware.EepromDeviceId := lReply[9];
+    AFirmware.EepromDeviceId := lReply[8];
   if Length(lReply) >= 10 then
-    AFirmware.BiosFunction := lReply[10];
+    AFirmware.BiosFunction := lReply[9];
   if Length(lReply) >= 11 then
-    AFirmware.BiosVersion := lReply[11];
+    AFirmware.BiosVersion := lReply[10];
 end;
 
 function TRecorderMic140LegacyClient.StartScan(out AErrorMessage: string): Boolean;
@@ -610,6 +617,29 @@ begin
     Exit(AFirmware.CCType);
   if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
     Exit(AFirmware.CCSerNo);
+end;
+
+function RecorderMic140DevRevFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+begin
+  { CMIC140::GetDevRev: PROP_REV = DeviceInfo.RevisionNo = bios_info.cfg.DevRevNo. }
+  Result := AFirmware.DevRevNo and $FF;
+end;
+
+function RecorderMic140DevSubRevFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+begin
+  Result := (AFirmware.DevRevNo shr 8) and $FF;
+end;
+
+function RecorderMic140FirmwareVersionText(
+  const AFirmware: TRecorderMic140LegacyFirmware): string;
+begin
+  Result := Format('%u.%u.%u.%u', [
+    RecorderMic140DevRevFromFirmware(AFirmware),
+    RecorderMic140DevSubRevFromFirmware(AFirmware),
+    AFirmware.BiosVersion,
+    AFirmware.BiosFunction]);
 end;
 
 end.

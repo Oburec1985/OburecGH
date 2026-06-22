@@ -1,0 +1,146 @@
+object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
+  Left = 300
+  Height = 620
+  Top = 160
+  Width = 1040
+  BorderStyle = bsSizeable
+  Caption = 'Просмотр и выбор базы градуировочных характеристик'
+  ClientHeight = 620
+  ClientWidth = 1040
+  Position = poOwnerFormCenter
+  OnCreate = FormCreate
+  object pnBottom: TPanel
+    Left = 0
+    Height = 48
+    Top = 572
+    Width = 1040
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 1040
+    TabOrder = 0
+    object btnSelect: TButton
+      Left = 852
+      Height = 28
+      Top = 10
+      Width = 84
+      Anchors = [akTop, akRight]
+      Caption = 'Выбрать'
+      OnClick = btnSelectClick
+      TabOrder = 0
+    end
+    object btnCancel: TButton
+      Left = 944
+      Height = 28
+      Top = 10
+      Width = 84
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object treeSdb: TTreeView
+    Left = 0
+    Height = 572
+    Top = 0
+    Width = 330
+    Align = alLeft
+    HideSelection = False
+    Indent = 19
+    ReadOnly = True
+    TabOrder = 1
+    OnChange = treeSdbChange
+    OnDblClick = treeSdbDblClick
+  end
+  object spTree: TSplitter
+    Left = 330
+    Height = 572
+    Top = 0
+    Width = 5
+  end
+  object pnDetails: TPanel
+    Left = 335
+    Height = 572
+    Top = 0
+    Width = 705
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 572
+    ClientWidth = 705
+    TabOrder = 2
+    object lbKey: TLabel
+      Left = 12
+      Height = 15
+      Top = 12
+      Width = 36
+      Caption = 'Ключ'
+    end
+    object edKey: TEdit
+      Left = 12
+      Height = 23
+      Top = 32
+      Width = 681
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TabOrder = 0
+    end
+    object lbDescription: TLabel
+      Left = 12
+      Height = 15
+      Top = 64
+      Width = 57
+      Caption = 'Описание'
+    end
+    object edDescription: TEdit
+      Left = 12
+      Height = 23
+      Top = 84
+      Width = 681
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TabOrder = 1
+    end
+    object lbUnits: TLabel
+      Left = 12
+      Height = 15
+      Top = 116
+      Width = 59
+      Caption = 'Единицы'
+    end
+    object edUnits: TEdit
+      Left = 12
+      Height = 23
+      Top = 136
+      Width = 250
+      ReadOnly = True
+      TabOrder = 2
+    end
+    object lbRange: TLabel
+      Left = 280
+      Height = 15
+      Top = 116
+      Width = 58
+      Caption = 'Диапазон'
+    end
+    object edRange: TEdit
+      Left = 280
+      Height = 23
+      Top = 136
+      Width = 413
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TabOrder = 3
+    end
+    object gridPoints: TStringGrid
+      Left = 12
+      Height = 392
+      Top = 168
+      Width = 681
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goThumbTracking]
+      TabOrder = 4
+    end
+  end
+end

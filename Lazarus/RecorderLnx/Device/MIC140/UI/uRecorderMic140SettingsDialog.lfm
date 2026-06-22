@@ -1,0 +1,187 @@
+object RecorderMic140SettingsDialog: TRecorderMic140SettingsDialog
+  Left = 280
+  Height = 502
+  Top = 120
+  Width = 760
+  Caption = 'MIC-140'
+  ClientHeight = 502
+  ClientWidth = 760
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 760
+  Position = poOwnerFormCenter
+  OnCreate = FormCreate
+  object pnTop: TPanel
+    Left = 0
+    Height = 88
+    Top = 0
+    Width = 760
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 88
+    ClientWidth = 760
+    TabOrder = 0
+    object lbSerial: TLabel
+      Left = 12
+      Height = 15
+      Top = 12
+      Width = 97
+      Caption = 'Серийный номер'
+    end
+    object fSerialEdit: TEdit
+      Left = 120
+      Height = 23
+      Top = 8
+      Width = 116
+      ReadOnly = True
+      TabOrder = 0
+    end
+    object lbVersion: TLabel
+      Left = 255
+      Height = 15
+      Top = 12
+      Width = 39
+      Caption = 'Версия'
+    end
+    object fVersionEdit: TEdit
+      Left = 308
+      Height = 23
+      Top = 8
+      Width = 108
+      ReadOnly = True
+      TabOrder = 1
+    end
+    object lbHost: TLabel
+      Left = 430
+      Height = 15
+      Top = 12
+      Width = 10
+      Caption = 'IP'
+    end
+    object fHostEdit: TEdit
+      Left = 454
+      Height = 23
+      Top = 8
+      Width = 116
+      TabOrder = 2
+    end
+    object lbPort: TLabel
+      Left = 582
+      Height = 15
+      Top = 12
+      Width = 22
+      Caption = 'Port'
+    end
+    object fPortEdit: TEdit
+      Left = 618
+      Height = 23
+      Top = 8
+      Width = 118
+      TabOrder = 3
+    end
+    object lbChannelCount: TLabel
+      Left = 12
+      Height = 15
+      Top = 48
+      Width = 46
+      Caption = 'Каналов'
+    end
+    object fChannelCountCombo: TComboBox
+      Left = 72
+      Height = 23
+      Top = 44
+      Width = 56
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        '48'
+        '96'
+      )
+      Style = csDropDownList
+      TabOrder = 4
+      Text = '48'
+      OnChange = ChannelCountChange
+    end
+    object btnSearch: TButton
+      Left = 453
+      Height = 28
+      Top = 40
+      Width = 116
+      Caption = 'Автопоиск'
+      TabOrder = 5
+      OnClick = SearchClick
+    end
+    object btnTest: TButton
+      Left = 617
+      Height = 28
+      Top = 40
+      Width = 118
+      Caption = 'Проверка связи'
+      TabOrder = 6
+      OnClick = TestClick
+    end
+    object fThermoCompCheck: TCheckBox
+      Left = 148
+      Height = 19
+      Top = 48
+      Width = 127
+      Caption = 'Термокомпенсация'
+      TabOrder = 7
+    end
+  end
+  object fGrid: TStringGrid
+    Left = 0
+    Height = 370
+    Top = 88
+    Width = 760
+    Align = alClient
+    ColCount = 6
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+    RowCount = 2
+    TabOrder = 1
+    OnDblClick = GridDblClick
+    OnClick = GridClick
+  end
+  object pnBottom: TPanel
+    Left = 0
+    Height = 44
+    Top = 458
+    Width = 760
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 44
+    ClientWidth = 760
+    TabOrder = 2
+    object pnButtons: TPanel
+      Left = 556
+      Height = 44
+      Top = 0
+      Width = 204
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 44
+      ClientWidth = 204
+      TabOrder = 0
+      object btnOk: TButton
+        Left = 10
+        Height = 28
+        Top = 8
+        Width = 82
+        Caption = 'OK'
+        Default = True
+        ModalResult = 1
+        TabOrder = 0
+      end
+      object btnCancel: TButton
+        Left = 102
+        Height = 28
+        Top = 8
+        Width = 82
+        Cancel = True
+        Caption = 'Отмена'
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+  end
+end

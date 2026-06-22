@@ -1,14 +1,11 @@
 unit uRecorderMic140SettingsDialog;
 
 {
-  Runtime-built MIC-140 setup dialog.
-
-  The dialog keeps MIC-140 configuration in the same tag/source model as other
-  RecorderLnx data sources: selected channels become tags bound to
-  RecorderMic140SourceId(Host, Port).
+  MIC-140 setup dialog (LFM layout, editable in Lazarus IDE).
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -21,13 +18,11 @@ type
     Host: string;
     Port: Word;
     ChannelCount: Integer;
-    PollFrequencyHz: Double;
+    DeviceSerial: Integer;
     VersionText: string;
     ThermoCompensationEnabled: Boolean;
-    DefaultCorrector: Boolean;
-    CorrectorChannel: string;
-    OutputMode: TRecorderMic140OutputMode;
     SelectedChannels: TStringList;
+    ChannelSettings: array of TRecorderMic140ChannelSettings;
   end;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
@@ -37,54 +32,78 @@ procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResul
 
 implementation
 
+uses
+  uRecorderMic140ChannelDialog;
+
 type
   TRecorderMic140SettingsDialog = class(TForm)
-  private
-    fHostEdit: TEdit;
-    fPortEdit: TEdit;
-    fFrequencyEdit: TComboBox;
-    fChannelCountCombo: TComboBox;
+    pnTop: TPanel;
+    lbSerial: TLabel;
+    fSerialEdit: TEdit;
+    lbVersion: TLabel;
     fVersionEdit: TEdit;
-    fTimingLabel: TLabel;
+    lbHost: TLabel;
+    fHostEdit: TEdit;
+    lbPort: TLabel;
+    fPortEdit: TEdit;
+    lbChannelCount: TLabel;
+    fChannelCountCombo: TComboBox;
+    btnSearch: TButton;
+    btnTest: TButton;
     fThermoCompCheck: TCheckBox;
-    fDefaultCorrectorCheck: TCheckBox;
-    fCorrectorCombo: TComboBox;
-    fOutputModeCombo: TComboBox;
     fGrid: TStringGrid;
-    procedure BuildUi;
-    procedure FillGrid(AChannelCount: Integer; ASelected: TStrings);
-    procedure ToggleGridRow(ARow: Integer);
+    pnBottom: TPanel;
+    pnButtons: TPanel;
+    btnOk: TButton;
+    btnCancel: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure GridClick(Sender: TObject);
     procedure GridDblClick(Sender: TObject);
     procedure ChannelCountChange(Sender: TObject);
     procedure SearchClick(Sender: TObject);
     procedure TestClick(Sender: TObject);
-    procedure FrequencyChange(Sender: TObject);
+  private
+    fDeviceSerial: Integer;
+    fDevSubRev: Integer;
+    fChannelSettings: array of TRecorderMic140ChannelSettings;
+    procedure InitGrid;
+    procedure EnsureChannelSettings(AChannelCount: Integer);
+    procedure FillGrid(AChannelCount: Integer; ASelected: TStrings);
+    procedure ToggleGridRow(ARow: Integer);
+    procedure OpenChannelDialog(ARow: Integer);
+    procedure UpdateDeviceCaption;
+    procedure QueryDeviceInfo;
     function ReadPort: Word;
-    function ReadFrequency: Double;
     function ReadChannelCount: Integer;
+    function ChannelAddressText(AChannelNumber: Integer): string;
+    function CollectSelectedChannels: TStringList;
   public
-    constructor Create(AOwner: TComponent); override;
     procedure LoadFromResult(const AResult: TRecorderMic140DialogResult);
     procedure StoreToResult(var AResult: TRecorderMic140DialogResult);
   end;
 
+{$R *.lfm}
+
 procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
+var
+  I: Integer;
 begin
   AResult.Host := MIC140DefaultHost;
   AResult.Port := MIC140DefaultPort;
   AResult.ChannelCount := MIC140DefaultChannelCount;
-  AResult.PollFrequencyHz := MIC140DefaultPollFrequencyHz;
+  AResult.DeviceSerial := 0;
   AResult.VersionText := '';
   AResult.ThermoCompensationEnabled := False;
-  AResult.DefaultCorrector := True;
-  AResult.CorrectorChannel := 'T2';
-  AResult.OutputMode := momMillivolts;
   AResult.SelectedChannels := TStringList.Create;
+  SetLength(AResult.ChannelSettings, MIC140MaxChannelCount);
+  for I := 0 to High(AResult.ChannelSettings) do
+    RecorderMic140InitChannelSettings(AResult.ChannelSettings[I], I, CMic140Mic140SubRev1);
 end;
 
 procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
 begin
   FreeAndNil(AResult.SelectedChannels);
+  SetLength(AResult.ChannelSettings, 0);
 end;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
@@ -103,226 +122,108 @@ begin
   end;
 end;
 
-constructor TRecorderMic140SettingsDialog.Create(AOwner: TComponent);
+procedure TRecorderMic140SettingsDialog.FormCreate(Sender: TObject);
 begin
-  inherited CreateNew(AOwner);
-  BuildUi;
+  fDeviceSerial := 0;
+  fDevSubRev := CMic140Mic140SubRev1;
+  SetLength(fChannelSettings, 0);
+  InitGrid;
 end;
 
-procedure TRecorderMic140SettingsDialog.BuildUi;
-var
-  lBottom: TPanel;
-  lButton: TButton;
-  lButtonPanel: TPanel;
-  I: Integer;
-  lTop: TPanel;
+procedure TRecorderMic140SettingsDialog.InitGrid;
 begin
-  Caption := 'MIC-140';
-  Position := poOwnerFormCenter;
-  BorderStyle := bsSizeable;
-  ClientWidth := 720;
-  ClientHeight := 560;
-  Constraints.MinWidth := 640;
-  Constraints.MinHeight := 460;
+  fGrid.ColCount := 7;
+  fGrid.Cells[0, 0] := 'Исп.';
+  fGrid.Cells[1, 0] := 'Адрес';
+  fGrid.Cells[2, 0] := 'Имя';
+  fGrid.Cells[3, 0] := 'Диапазон [°C]';
+  fGrid.Cells[4, 0] := 'Канал КХС';
+  fGrid.Cells[5, 0] := 'Диапазон [mV]';
+  fGrid.Cells[6, 0] := 'ГХ';
+  fGrid.ColWidths[0] := 36;
+  fGrid.ColWidths[1] := 76;
+  fGrid.ColWidths[2] := 132;
+  fGrid.ColWidths[3] := 96;
+  fGrid.ColWidths[4] := 64;
+  fGrid.ColWidths[5] := 96;
+  fGrid.ColWidths[6] := 120;
+end;
 
-  lTop := TPanel.Create(Self);
-  lTop.Parent := Self;
-  lTop.Align := alTop;
-  lTop.Height := 142;
-  lTop.BevelOuter := bvNone;
-
-  with TLabel.Create(Self) do
+procedure TRecorderMic140SettingsDialog.EnsureChannelSettings(AChannelCount: Integer);
+var
+  I: Integer;
+  lOldLen: Integer;
+begin
+  if AChannelCount <= 0 then
+    AChannelCount := MIC140DefaultChannelCount;
+  lOldLen := Length(fChannelSettings);
+  if lOldLen < AChannelCount then
   begin
-    Parent := lTop;
-    Left := 12;
-    Top := 14;
-    Caption := 'IP';
+    SetLength(fChannelSettings, AChannelCount);
+    for I := lOldLen to AChannelCount - 1 do
+      RecorderMic140InitChannelSettings(fChannelSettings[I], I, fDevSubRev);
   end;
-  fHostEdit := TEdit.Create(Self);
-  fHostEdit.Parent := lTop;
-  fHostEdit.Left := 46;
-  fHostEdit.Top := 10;
-  fHostEdit.Width := 128;
+end;
 
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 188;
-    Top := 14;
-    Caption := 'Port';
+function TRecorderMic140SettingsDialog.ChannelAddressText(
+  AChannelNumber: Integer): string;
+begin
+  if fDeviceSerial > 0 then
+    Result := Format('%4.4d-%d', [fDeviceSerial, AChannelNumber])
+  else
+    Result := Format('%4.4d-%2.2d', [0, AChannelNumber]);
+end;
+
+function TRecorderMic140SettingsDialog.CollectSelectedChannels: TStringList;
+var
+  I: Integer;
+begin
+  Result := TStringList.Create;
+  for I := 1 to fGrid.RowCount - 1 do
+    if fGrid.Cells[0, I] = '[x]' then
+      Result.Add(IntToStr(I));
+end;
+
+procedure TRecorderMic140SettingsDialog.UpdateDeviceCaption;
+var
+  lModel: string;
+begin
+  if ReadChannelCount > MIC140DefaultChannelCount then
+    lModel := 'MIC-140-96'
+  else
+    lModel := 'MIC-140-48';
+  if fDeviceSerial > 0 then
+    Caption := Format('%s, с/н %d', [lModel, fDeviceSerial])
+  else
+    Caption := lModel;
+end;
+
+procedure TRecorderMic140SettingsDialog.QueryDeviceInfo;
+var
+  lHost: string;
+  lSerial: Integer;
+  lSubRev: Integer;
+  lVersion: string;
+begin
+  lHost := Trim(fHostEdit.Text);
+  if lHost = '' then
+    Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    if RecorderMic140QueryDeviceInfo(lHost, ReadPort, lSerial, lVersion, lSubRev) then
+    begin
+      if lSerial > 0 then
+        fDeviceSerial := lSerial;
+      fDevSubRev := lSubRev;
+      if lVersion <> '' then
+        fVersionEdit.Text := lVersion;
+      fSerialEdit.Text := IntToStr(fDeviceSerial);
+      UpdateDeviceCaption;
+      FillGrid(ReadChannelCount, CollectSelectedChannels);
+    end;
+  finally
+    Screen.Cursor := crDefault;
   end;
-  fPortEdit := TEdit.Create(Self);
-  fPortEdit.Parent := lTop;
-  fPortEdit.Left := 226;
-  fPortEdit.Top := 10;
-  fPortEdit.Width := 58;
-
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 300;
-    Top := 14;
-    Caption := 'Channels';
-  end;
-  fChannelCountCombo := TComboBox.Create(Self);
-  fChannelCountCombo.Parent := lTop;
-  fChannelCountCombo.Left := 366;
-  fChannelCountCombo.Top := 10;
-  fChannelCountCombo.Width := 72;
-  fChannelCountCombo.Style := csDropDownList;
-  fChannelCountCombo.Items.Add('48');
-  fChannelCountCombo.Items.Add('96');
-  fChannelCountCombo.OnChange := @ChannelCountChange;
-
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 454;
-    Top := 14;
-    Caption := 'Hz';
-  end;
-  fFrequencyEdit := TComboBox.Create(Self);
-  fFrequencyEdit.Parent := lTop;
-  fFrequencyEdit.Left := 482;
-  fFrequencyEdit.Top := 10;
-  fFrequencyEdit.Width := 86;
-  fFrequencyEdit.Style := csDropDownList;
-  for I := 0 to RecorderMic140FrequencyCount - 1 do
-    fFrequencyEdit.Items.Add(FormatFloat('0.######', RecorderMic140Frequency(I)));
-  fFrequencyEdit.OnChange := @FrequencyChange;
-
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 586;
-    Top := 14;
-    Caption := 'Version';
-  end;
-  fVersionEdit := TEdit.Create(Self);
-  fVersionEdit.Parent := lTop;
-  fVersionEdit.Left := 640;
-  fVersionEdit.Top := 10;
-  fVersionEdit.Width := 70;
-  fVersionEdit.ReadOnly := True;
-
-  lButton := TButton.Create(Self);
-  lButton.Parent := lTop;
-  lButton.Left := 12;
-  lButton.Top := 46;
-  lButton.Width := 126;
-  lButton.Height := 28;
-  lButton.Caption := 'Auto search';
-  lButton.OnClick := @SearchClick;
-
-  lButton := TButton.Create(Self);
-  lButton.Parent := lTop;
-  lButton.Left := 148;
-  lButton.Top := 46;
-  lButton.Width := 126;
-  lButton.Height := 28;
-  lButton.Caption := 'Test connect';
-  lButton.OnClick := @TestClick;
-
-  fThermoCompCheck := TCheckBox.Create(Self);
-  fThermoCompCheck.Parent := lTop;
-  fThermoCompCheck.Left := 300;
-  fThermoCompCheck.Top := 50;
-  fThermoCompCheck.Width := 150;
-  fThermoCompCheck.Caption := 'Thermo comp';
-
-  fDefaultCorrectorCheck := TCheckBox.Create(Self);
-  fDefaultCorrectorCheck.Parent := lTop;
-  fDefaultCorrectorCheck.Left := 450;
-  fDefaultCorrectorCheck.Top := 50;
-  fDefaultCorrectorCheck.Width := 120;
-  fDefaultCorrectorCheck.Caption := 'Default CJC';
-
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 584;
-    Top := 52;
-    Caption := 'CJC';
-  end;
-  fCorrectorCombo := TComboBox.Create(Self);
-  fCorrectorCombo.Parent := lTop;
-  fCorrectorCombo.Left := 640;
-  fCorrectorCombo.Top := 48;
-  fCorrectorCombo.Width := 70;
-  fCorrectorCombo.Style := csDropDownList;
-  for I := 1 to MIC140TemperatureChannelCount do
-    fCorrectorCombo.Items.Add('T' + IntToStr(I));
-
-  with TLabel.Create(Self) do
-  begin
-    Parent := lTop;
-    Left := 12;
-    Top := 88;
-    Caption := 'Value';
-  end;
-  fOutputModeCombo := TComboBox.Create(Self);
-  fOutputModeCombo.Parent := lTop;
-  fOutputModeCombo.Left := 58;
-  fOutputModeCombo.Top := 84;
-  fOutputModeCombo.Width := 116;
-  fOutputModeCombo.Style := csDropDownList;
-  fOutputModeCombo.Items.Add('mV');
-  fOutputModeCombo.Items.Add('degC');
-
-  fTimingLabel := TLabel.Create(Self);
-  fTimingLabel.Parent := lTop;
-  fTimingLabel.Left := 188;
-  fTimingLabel.Top := 88;
-  fTimingLabel.Width := 520;
-  fTimingLabel.Caption := '';
-
-  lBottom := TPanel.Create(Self);
-  lBottom.Parent := Self;
-  lBottom.Align := alBottom;
-  lBottom.Height := 44;
-  lBottom.BevelOuter := bvNone;
-
-  lButtonPanel := TPanel.Create(Self);
-  lButtonPanel.Parent := lBottom;
-  lButtonPanel.Align := alRight;
-  lButtonPanel.Width := 204;
-  lButtonPanel.BevelOuter := bvNone;
-
-  lButton := TButton.Create(Self);
-  lButton.Parent := lButtonPanel;
-  lButton.Width := 82;
-  lButton.Height := 28;
-  lButton.Left := 10;
-  lButton.Top := 8;
-  lButton.Anchors := [akTop, akLeft];
-  lButton.Caption := 'OK';
-  lButton.Default := True;
-  lButton.ModalResult := mrOk;
-
-  lButton := TButton.Create(Self);
-  lButton.Parent := lButtonPanel;
-  lButton.Width := 82;
-  lButton.Height := 28;
-  lButton.Left := 102;
-  lButton.Top := 8;
-  lButton.Anchors := [akTop, akLeft];
-  lButton.Caption := 'Cancel';
-  lButton.Cancel := True;
-  lButton.ModalResult := mrCancel;
-
-  fGrid := TStringGrid.Create(Self);
-  fGrid.Parent := Self;
-  fGrid.Align := alClient;
-  fGrid.FixedCols := 0;
-  fGrid.FixedRows := 1;
-  fGrid.ColCount := 5;
-  fGrid.Options := fGrid.Options + [goRowSelect, goRangeSelect, goColSizing];
-  fGrid.OnDblClick := @GridDblClick;
-  fGrid.Cells[0, 0] := 'Use';
-  fGrid.Cells[1, 0] := 'Channel';
-  fGrid.Cells[2, 0] := 'Name';
-  fGrid.Cells[3, 0] := 'Mode';
-  fGrid.Cells[4, 0] := 'Unit';
 end;
 
 procedure TRecorderMic140SettingsDialog.FillGrid(AChannelCount: Integer;
@@ -330,32 +231,53 @@ procedure TRecorderMic140SettingsDialog.FillGrid(AChannelCount: Integer;
 var
   I: Integer;
   lAddress: string;
+  lGrad: string;
+  lOwned: TStringList;
+  lSelected: TStrings;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
   if AChannelCount <= 0 then
     AChannelCount := MIC140DefaultChannelCount;
-  fGrid.RowCount := AChannelCount + 1;
-  for I := 1 to AChannelCount do
+  EnsureChannelSettings(AChannelCount);
+  lOwned := nil;
+  if ASelected <> nil then
+    lSelected := ASelected
+  else
   begin
-    lAddress := IntToStr(I);
-    if (ASelected = nil) or (ASelected.Count = 0) or
-      (ASelected.IndexOf(lAddress) >= 0) then
-      fGrid.Cells[0, I] := '[x]'
-    else
-      fGrid.Cells[0, I] := '[ ]';
-    fGrid.Cells[1, I] := lAddress;
-    fGrid.Cells[2, I] := RecorderMic140ChannelTagName(MIC140DefaultNodeNumber, I);
-    fGrid.Cells[3, I] := 'U';
-    fGrid.Cells[4, I] := '';
+    lOwned := CollectSelectedChannels;
+    lSelected := lOwned;
   end;
-  // TIn channels are configured through the CJC controls above. They are
-  // intentionally hidden from the ordinary channel grid: the original Recorder
-  // does not expose them as user channels, and scanning them like AIn channels
-  // breaks the MIC-140 block layout.
+  try
+    fGrid.RowCount := AChannelCount + 1;
+    for I := 1 to AChannelCount do
+    begin
+      lAddress := IntToStr(I);
+      if (lSelected.Count = 0) or (lSelected.IndexOf(lAddress) >= 0) then
+        fGrid.Cells[0, I] := '[x]'
+      else
+        fGrid.Cells[0, I] := '[ ]';
+      lSettings := fChannelSettings[I - 1];
+      fGrid.Cells[1, I] := ChannelAddressText(I);
+      fGrid.Cells[2, I] := Format('MIC140-{%s}', [fGrid.Cells[1, I]]);
+      if RecorderMic140ChannelUsesTemperature(lSettings) then
+        lGrad := RecorderMic140ChannelGradRangeText(lSettings)
+      else
+        lGrad := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
+      fGrid.Cells[3, I] := lGrad;
+      fGrid.Cells[4, I] := IntToStr(RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev));
+      fGrid.Cells[5, I] := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
+      fGrid.Cells[6, I] := lSettings.ThermocoupleScaleName;
+    end;
+  finally
+    lOwned.Free;
+  end;
 end;
 
 procedure TRecorderMic140SettingsDialog.ToggleGridRow(ARow: Integer);
 begin
   if (ARow <= 0) or (ARow >= fGrid.RowCount) then
+    Exit;
+  if fGrid.Col <> 0 then
     Exit;
   if fGrid.Cells[0, ARow] = '[x]' then
     fGrid.Cells[0, ARow] := '[ ]'
@@ -363,22 +285,39 @@ begin
     fGrid.Cells[0, ARow] := '[x]';
 end;
 
-procedure TRecorderMic140SettingsDialog.GridDblClick(Sender: TObject);
+procedure TRecorderMic140SettingsDialog.OpenChannelDialog(ARow: Integer);
+var
+  lSettings: TRecorderMic140ChannelSettings;
+begin
+  if (ARow <= 0) or (ARow >= fGrid.RowCount) then
+    Exit;
+  EnsureChannelSettings(ReadChannelCount);
+  lSettings := fChannelSettings[ARow - 1];
+  if ShowRecorderMic140ChannelDialog(Self, ARow, fDeviceSerial, fDevSubRev, lSettings) then
+  begin
+    fChannelSettings[ARow - 1] := lSettings;
+    FillGrid(ReadChannelCount, CollectSelectedChannels);
+  end;
+end;
+
+procedure TRecorderMic140SettingsDialog.GridClick(Sender: TObject);
 begin
   ToggleGridRow(fGrid.Row);
 end;
 
+procedure TRecorderMic140SettingsDialog.GridDblClick(Sender: TObject);
+begin
+  OpenChannelDialog(fGrid.Row);
+end;
+
 procedure TRecorderMic140SettingsDialog.ChannelCountChange(Sender: TObject);
 var
-  I: Integer;
   lSelected: TStringList;
 begin
-  lSelected := TStringList.Create;
+  lSelected := CollectSelectedChannels;
   try
-    for I := 1 to fGrid.RowCount - 1 do
-      if fGrid.Cells[0, I] = '[x]' then
-        lSelected.Add(fGrid.Cells[1, I]);
     FillGrid(ReadChannelCount, lSelected);
+    UpdateDeviceCaption;
   finally
     lSelected.Free;
   end;
@@ -399,10 +338,11 @@ begin
     if lFound.Count > 0 then
     begin
       fHostEdit.Text := lFound[0];
-      MessageDlg('MIC-140', 'Found: ' + lFound.CommaText, mtInformation, [mbOK], 0);
+      QueryDeviceInfo;
+      MessageDlg('MIC-140', 'Найдено: ' + lFound.CommaText, mtInformation, [mbOK], 0);
     end
     else
-      MessageDlg('MIC-140', 'Device not found in 192.168.14.0/24',
+      MessageDlg('MIC-140', 'Устройство не найдено в 192.168.14.0/24',
         mtWarning, [mbOK], 0);
   finally
     lFound.Free;
@@ -412,9 +352,12 @@ end;
 procedure TRecorderMic140SettingsDialog.TestClick(Sender: TObject);
 begin
   if RecorderMic140TestConnection(Trim(fHostEdit.Text), ReadPort, 500) then
-    MessageDlg('MIC-140', 'Connection OK', mtInformation, [mbOK], 0)
+  begin
+    QueryDeviceInfo;
+    MessageDlg('MIC-140', 'Связь установлена', mtInformation, [mbOK], 0);
+  end
   else
-    MessageDlg('MIC-140', 'Connection failed', mtWarning, [mbOK], 0);
+    MessageDlg('MIC-140', 'Нет связи с устройством', mtWarning, [mbOK], 0);
 end;
 
 function TRecorderMic140SettingsDialog.ReadPort: Word;
@@ -426,34 +369,6 @@ begin
   if (lPort <= 0) or (lPort > High(Word)) then
     lPort := MIC140DefaultPort;
   Result := Word(lPort);
-end;
-
-function TRecorderMic140SettingsDialog.ReadFrequency: Double;
-var
-  lText: string;
-begin
-  lText := Trim(fFrequencyEdit.Text);
-  lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator,
-    [rfReplaceAll]);
-  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator,
-    [rfReplaceAll]);
-  if not TryStrToFloat(lText, Result) then
-    Result := MIC140DefaultPollFrequencyHz;
-  if Result <= 0 then
-    Result := MIC140DefaultPollFrequencyHz;
-  Result := RecorderMic140NormalizeFrequency(Result);
-end;
-
-procedure TRecorderMic140SettingsDialog.FrequencyChange(Sender: TObject);
-var
-  lTiming: TRecorderMic140Timing;
-begin
-  if fTimingLabel = nil then
-    Exit;
-  lTiming := RecorderMic140TimingForFrequency(ReadFrequency);
-  fTimingLabel.Caption := Format('ADC wait %.3f us, GND %.3f us, average %d x %.3f us',
-    [lTiming.ChannelCommutationUs, lTiming.GroundCommutationUs,
-    lTiming.AverageSampleCount, lTiming.AveragePeriodUs]);
 end;
 
 function TRecorderMic140SettingsDialog.ReadChannelCount: Integer;
@@ -468,28 +383,29 @@ end;
 
 procedure TRecorderMic140SettingsDialog.LoadFromResult(
   const AResult: TRecorderMic140DialogResult);
+var
+  I: Integer;
 begin
+  fDeviceSerial := AResult.DeviceSerial;
+  fDevSubRev := CMic140Mic140SubRev1;
   fHostEdit.Text := AResult.Host;
   fPortEdit.Text := IntToStr(AResult.Port);
-  fFrequencyEdit.Text := FormatFloat('0.######',
-    RecorderMic140NormalizeFrequency(AResult.PollFrequencyHz));
-  if fFrequencyEdit.Items.IndexOf(fFrequencyEdit.Text) < 0 then
-    fFrequencyEdit.ItemIndex := 0;
+  fSerialEdit.Text := '';
+  if AResult.DeviceSerial > 0 then
+    fSerialEdit.Text := IntToStr(AResult.DeviceSerial);
   fVersionEdit.Text := AResult.VersionText;
   fThermoCompCheck.Checked := AResult.ThermoCompensationEnabled;
-  fDefaultCorrectorCheck.Checked := AResult.DefaultCorrector;
-  fCorrectorCombo.Text := AResult.CorrectorChannel;
-  if fCorrectorCombo.ItemIndex < 0 then
-    fCorrectorCombo.ItemIndex := 1;
-  fOutputModeCombo.ItemIndex := Ord(AResult.OutputMode);
-  if fOutputModeCombo.ItemIndex < 0 then
-    fOutputModeCombo.ItemIndex := 0;
   if AResult.ChannelCount > MIC140DefaultChannelCount then
     fChannelCountCombo.ItemIndex := 1
   else
     fChannelCountCombo.ItemIndex := 0;
+  SetLength(fChannelSettings, Length(AResult.ChannelSettings));
+  for I := 0 to High(AResult.ChannelSettings) do
+    fChannelSettings[I] := AResult.ChannelSettings[I];
   FillGrid(ReadChannelCount, AResult.SelectedChannels);
-  FrequencyChange(fFrequencyEdit);
+  UpdateDeviceCaption;
+  if (Trim(AResult.VersionText) = '') and (Trim(AResult.Host) <> '') then
+    QueryDeviceInfo;
 end;
 
 procedure TRecorderMic140SettingsDialog.StoreToResult(
@@ -502,22 +418,19 @@ begin
     AResult.Host := MIC140DefaultHost;
   AResult.Port := ReadPort;
   AResult.ChannelCount := ReadChannelCount;
-  AResult.PollFrequencyHz := ReadFrequency;
+  AResult.DeviceSerial := fDeviceSerial;
   AResult.VersionText := Trim(fVersionEdit.Text);
   AResult.ThermoCompensationEnabled := fThermoCompCheck.Checked;
-  AResult.DefaultCorrector := fDefaultCorrectorCheck.Checked;
-  AResult.CorrectorChannel := Trim(fCorrectorCombo.Text);
-  if fOutputModeCombo.ItemIndex = Ord(momTemperatureC) then
-    AResult.OutputMode := momTemperatureC
-  else
-    AResult.OutputMode := momMillivolts;
   if AResult.SelectedChannels <> nil then
   begin
     AResult.SelectedChannels.Clear;
     for I := 1 to fGrid.RowCount - 1 do
       if fGrid.Cells[0, I] = '[x]' then
-        AResult.SelectedChannels.Add(fGrid.Cells[1, I]);
+        AResult.SelectedChannels.Add(IntToStr(I));
   end;
+  SetLength(AResult.ChannelSettings, Length(fChannelSettings));
+  for I := 0 to High(fChannelSettings) do
+    AResult.ChannelSettings[I] := fChannelSettings[I];
 end;
 
 end.

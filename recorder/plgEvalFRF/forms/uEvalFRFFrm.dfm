@@ -11,7 +11,9 @@ object FRFFrm: TFRFFrm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  OldCreateOrder = False
   OnCreate = FormCreate
+  PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 576
@@ -28,7 +30,6 @@ object FRFFrm: TFRFFrm
     Top = 0
     Width = 576
     Height = 666
-    Cursor = crSizeAll
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -43,8 +44,7 @@ object FRFFrm: TFRFFrm
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitWidth = 572
-    ExplicitHeight = 665
+    ExplicitLeft = 3
   end
   object RightGB: TGroupBox
     Left = 582
@@ -56,8 +56,6 @@ object FRFFrm: TFRFFrm
     ParentShowHint = False
     ShowHint = False
     TabOrder = 1
-    ExplicitLeft = 578
-    ExplicitHeight = 665
     object ShockCountLabel: TLabel
       Left = 6
       Top = 21
@@ -410,7 +408,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1057#1080#1075#1085#1072#1083#1099
       TabOrder = 9
-      ExplicitTop = 385
       object SignalsLV: TBtnListView
         Left = 2
         Top = 15
@@ -482,7 +479,6 @@ object FRFFrm: TFRFFrm
       Align = alBottom
       Caption = #1051#1086#1087#1072#1090#1082#1072
       TabOrder = 11
-      ExplicitTop = 505
       object BladeLabel: TLabel
         Left = 5
         Top = 16

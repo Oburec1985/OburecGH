@@ -39,7 +39,6 @@ type
 
   { IRecorderDataSource
     Минимальный интерфейс источника данных.
-    
     SourceId     - стабильный идентификатор источника в конфигурации проекта.
     Name         - человекочитаемое имя для логов и UI.
     UpdateTimeMs - период опроса/генерации данных в миллисекундах.
@@ -54,17 +53,13 @@ type
     function GetUpdateTimeMs: Cardinal;
     { Возвращает текущее состояние источника }
     function GetState: TRecorderDataSourceState;
-
     { Создает/подключает теги источника в общем registry.
       ARegistry - общий реестр тегов проекта. Владение не передается. }
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry);
-
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
-
     { Останавливает источник. После Stop вызов Tick считается ошибкой контракта. }
     procedure Stop;
-
     { Публикует один шаг данных. В потоковой версии будет вызываться worker-thread. }
     procedure Tick;
 

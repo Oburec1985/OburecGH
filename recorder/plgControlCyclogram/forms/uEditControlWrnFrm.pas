@@ -12,7 +12,7 @@ uses
   uBaseObj, uRCFunc, uRvclService, uCommonTypes,uCommonMath,
   tags, recorder, uBaseObjService, uModesTabsForm, activex, uRTrig,
   DCL_MYOWN, uRcCtrls, uTrigsFrm, uEventTypes, uSpin, uControlWarnFrm, uEditProfileFrm, Spin,
-  uTagsListFrame, uaxis, uBaseAlg, uGrmsSrcAlg, System.ImageList;
+  uTagsListFrame, uaxis, uBaseAlg, uGrmsSrcAlg;
 
 type
 

@@ -1,9 +1,5 @@
 unit uCommonMath;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -89,9 +85,7 @@ function DeleteChars(src: string; ch: char): string;
 function replaceChar(Str: string; ch, newchar: char): string;
 function replaceSpace(Str: string; newchar: char): string;
 function isdig(ch:ansichar):boolean;overload;
-{$IFNDEF FPC}
 function isdig(ch:char):boolean;overload;
-{$ENDIF}
 // получить подстроку содержащую номер
 function GetBaseNum(str:string):string;
 // получить подстроку содержащую номер в конце после _
@@ -814,15 +808,6 @@ begin
 end;
 
 function GetObjectClass(APointer: Pointer): TClass;
-{$IFDEF FPC}
-begin
-  try
-    Result := TClass(PPointer(APointer)^);
-  except
-    Result := nil;
-  end;
-end;
-{$ELSE}
 var
   LMemInfo: TMemoryBasicInformation;
 
@@ -894,7 +879,6 @@ begin
   if not InternalIsValidClass(Pointer(Result), 0) then
     Result := nil;
 end;
-{$ENDIF}
 
 Function IniReadFloatEx(ifile:tinifile;section, key:string;default:double):double;
 var
@@ -1197,17 +1181,15 @@ begin
 end;
 
 
-function isdig(ch:ansichar):boolean; overload;
+function isdig(ch:ansichar):boolean;
 begin
   result:=pos(ch,chars)>0;
 end;
 
-{$IFNDEF FPC}
-function isdig(ch:char):boolean; overload;
+function isdig(ch:char):boolean;
 begin
   result:=pos(ch,chars)>0;
 end;
-{$ENDIF}
 
 function getendnum(str:string):string;
 var
@@ -1415,11 +1397,6 @@ begin
 end;
 
 function TailPos(const S, SubStr: AnsiString; fromPos: integer): integer;
-{$IFDEF FPC}
-begin
-  Result := PosEx(SubStr, S, fromPos);
-end;
-{$ELSE}
 asm
         PUSH EDI
         PUSH ESI
@@ -1465,8 +1442,8 @@ asm
 @@3: POP EBX
         POP ESI
         POP EDI
-end;
-{$ENDIF}
+end
+;
 
 Function trimChars(str:string):string;
 var
@@ -1795,17 +1772,7 @@ var
   i, sepPos: integer;
   ch:char;
   resstr:string;
-  lDecSep: Char;
 begin
-  {$IFDEF FPC}
-  lDecSep := DefaultFormatSettings.DecimalSeparator;
-  {$ELSE}
-    {$IF CompilerVersion >= 22.0}
-    lDecSep := FormatSettings.DecimalSeparator;
-    {$ELSE}
-    lDecSep := DecimalSeparator;
-    {$IFEND}
-  {$ENDIF}
   if str='' then
   begin
     result:=0;
@@ -1829,9 +1796,9 @@ begin
   if sepPos > 0 then
   begin
     ch:=Str[sepPos];
-    if lDecSep <> ch then
+    if decimalseparator <> ch then
     begin
-      Str[i] := lDecSep;
+      Str[i] := decimalseparator;
     end;
   end;
   resstr:='';

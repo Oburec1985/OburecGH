@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "mic140_protocol.md",
+                "file": "sdb.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "mic140_protocol"
+              "title": "sdb"
             }
           }
         ]
@@ -185,23 +185,44 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "development-rules.md",
-    "current-plan.md",
-    "data_sources_architecture.md",
-    "vm_atra_lazarus.md",
-    "spectrum_runtime_engine.md",
-    "spectrum_best_pipeline.md",
-    "settings_dialog.md",
-    "original-recorder-trend-component.md",
-    "notes_spectrum_math_benchmarks.md",
-    "mic140_quickstart.md",
-    "mic140_protocol.md",
+    "screens/~$$Recorder.~vsd",
     "screens/~$$Документ1.~vsdx",
-    "screens/Документ1.vsdx",
-    "notes_spectra_lazarus.md",
-    "screens/settings_recorder_reference.svg",
-    "README_MnemonicControls.md",
-    "original-recorder-block-recording.md",
-    "notes_spectra_lazarus.md.resolved"
+    "mic140_protocol.md",
+    "Из AGrav/Docs/10_Кодировка_Исходников.md",
+    "Из AGrav/Docs/09_MIC140.md",
+    "Из AGrav/Docs/08_Карта_Исходников_Оригинального_Recorder.md",
+    "Из AGrav/Docs/07_UI_Ориентир_Recorder.md",
+    "Из AGrav/Docs/06_Идеи_из_руководства_Recorder.md",
+    "Из AGrav/Docs/05_Решения_и_Вопросы.md",
+    "Из AGrav/Docs/03_Карта_Интерфейсов.md",
+    "Из AGrav/Docs/02_Правила_Разработки.md",
+    "Из AGrav/Docs/01_Архитектура.md",
+    "Из AGrav/Docs/00_Вводная.md",
+    "Из AGrav/Docs",
+    "Из AGrav/cach/plan.md",
+    "Из AGrav/cach",
+    "Из AGrav/Приложения/Pasted image 20260428235456.png",
+    "Из AGrav/Приложения/Pasted image 20260428235059.png",
+    "Из AGrav/Приложения",
+    "Из AGrav/Docs/Глава_02_Архитектурные_решения/04_User_Events.md",
+    "Из AGrav/Docs/Глава_02_Архитектурные_решения/03_Render_Tree.md",
+    "Из AGrav/Docs/Глава_02_Архитектурные_решения/02_Design_Notes.md",
+    "Из AGrav/Docs/Глава_02_Архитектурные_решения/01_Class_Diagram.md",
+    "Из AGrav/Docs/Глава_01_Костяк_компонента/02_Structure.md",
+    "Из AGrav/Docs/Глава_01_Костяк_компонента/01_Skeleton.md",
+    "Из AGrav/Docs/notes/01_Иерархия_классов_cChart.md",
+    "Из AGrav/Docs/classes/TZoomTool.md",
+    "Из AGrav/Docs/classes/TXmlChartSerializer.md",
+    "Из AGrav/Docs/classes/TSelectTool.md",
+    "Из AGrav/Docs/classes/TPanTool.md",
+    "Из AGrav/Docs/classes/TOpenGLChartRenderer.md",
+    "Из AGrav/Docs/classes/TOglChartControl.md",
+    "Из AGrav/Docs/Глава_03_Графические_объекты",
+    "Из AGrav/Docs/Глава_02_Архитектурные_решения",
+    "Из AGrav/Docs/Глава_01_Костяк_компонента",
+    "Из AGrav/Docs/notes",
+    "Из AGrav/Docs/uTestRussianText.pas",
+    "Из AGrav/Docs/classes",
+    "screens/settings_recorder_reference.svg"
   ]
 }

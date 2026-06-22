@@ -25,8 +25,19 @@ const
   MIC140TemperatureChannelCount = 3;
   MIC140DefaultPollFrequencyHz = 100.0;
   MIC140DefaultDiscoverySubnet = '192.168.14.';
+  CMic140Range100mV = 0;
+  CMic140RangeCount = 3;
+  CMic140Mic140SubRev1 = 1;
 
 type
+  TRecorderMic140ChannelSettings = record
+    RangeIndex: Integer;
+    DefaultCjc: Boolean;
+    CjcChannel: Integer;
+    ThermocoupleScalePath: string;
+    ThermocoupleScaleName: string;
+  end;
+
   TRecorderMic140OutputMode = (
     momMillivolts,
     momTemperatureC
@@ -156,6 +167,25 @@ function RecorderMic140LoadCalibrationFromCsv(const AFileName: string;
   ACalibration: TRecorderCalibration): Boolean;
 function RecorderMic140QueryDeviceSerial(const AHost: string; APort: Word;
   out ADeviceSerial: Integer): Boolean;
+function RecorderMic140QueryDeviceInfo(const AHost: string; APort: Word;
+  out ADeviceSerial: Integer; out AVersionText: string;
+  out ADevSubRev: Integer): Boolean;
+function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
+  ADevSubRev: Integer): Integer;
+function RecorderMic140FormatAdcRangeMv(ARangeIndex: Integer): string;
+function RecorderMic140FormatAdcRangeGrad(ARangeIndex: Integer): string;
+function RecorderMic140RangeComboLabel(ARangeIndex: Integer): string;
+procedure RecorderMic140InitChannelSettings(out ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer);
+function RecorderMic140ChannelUsesTemperature(
+  const ASettings: TRecorderMic140ChannelSettings): Boolean;
+function RecorderMic140ChannelCjcNumber(const ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer): Integer;
+function RecorderMic140ChannelGradRangeText(
+  const ASettings: TRecorderMic140ChannelSettings): string;
+function RecorderMic140EnsureThermocoupleCalibration(
+  ARegistry: TRecorderTagRegistry;
+  const ASettings: TRecorderMic140ChannelSettings): string;
 function RecorderMic140LoadHardwareCalibrationForTag(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   ADeviceSerial: Integer): Boolean;
@@ -169,7 +199,8 @@ procedure RecorderMic140ApplyHardwareCalibrations(
 implementation
 
 uses
-  Math, StrUtils, uSharedFileLogger, uRecorderMeraPaths, uRecorderDebugLog
+  Math, StrUtils, uSharedFileLogger, uRecorderMeraPaths, uRecorderDebugLog,
+  uRecorderMeraSdbThermocouples, uRecorderSdbStore
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
@@ -196,7 +227,6 @@ const
     (CMic140IoCtlTypeCallCommand shl 16) or ($000C shl 2);
   CMic140ChannelCommutIn = 0;
   CMic140Range5mV = 2;
-  CMic140RangeCount = 3;
   CMic140RangeCalibrDirNames: array[0..CMic140RangeCount - 1] of string =
     ('06_100mV', '07_50mV', '8_25mV');
   CMic140HardwareCalibrSubDir = 'hardware' + PathDelim + 'MIC140' + PathDelim;
@@ -268,10 +298,11 @@ const
      -0.599886976, -0.61596964, -0.632052304, -0.648134968,
      -0.664217632, -0.680300296, -0.696382961, -0.793844092,
      -0.891305224, -0.988766356, -1.086227488, -1.18368862);
-  CMic140DefaultCjcIndex48: array[0..47] of Integer =
-    (4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3,
-     3, 3, 3, 3, 4, 4, 4, 4);
+  CMic140TInNum: array[0..11] of Integer =
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+  CMic140TInNumSubRev1: array[0..11] of Integer =
+    (4, 3, 2, 1, 0, 5, 6, 7, 8, 9, 10, 11);
+  CMic140DefaultCjcSplitChannel = 24;
 
 type
 {$packrecords 8}
@@ -1117,13 +1148,20 @@ begin
     Result := 0.0;
 end;
 
+function Mic140DefaultCjcTChannelNumber(AChannelIndex: Integer): Integer;
+begin
+  if (AChannelIndex >= 0) and (AChannelIndex < CMic140DefaultCjcSplitChannel) then
+    Result := 1
+  else if (AChannelIndex >= CMic140DefaultCjcSplitChannel) and
+    (AChannelIndex < MIC140DefaultChannelCount) then
+    Result := 2
+  else
+    Result := 0;
+end;
+
 function Mic140DefaultCjcIndex(AChannelIndex: Integer): Integer;
 begin
-  if (AChannelIndex >= Low(CMic140DefaultCjcIndex48)) and
-    (AChannelIndex <= High(CMic140DefaultCjcIndex48)) then
-    Result := CMic140DefaultCjcIndex48[AChannelIndex]
-  else
-    Result := -1;
+  Result := Mic140DefaultCjcTChannelNumber(AChannelIndex) - 1;
 end;
 
 function Mic140TagHasCalibration(ATag: TRecorderTag): Boolean;
@@ -1199,7 +1237,7 @@ begin
   if (ARangeIndex >= 0) and (ARangeIndex < CMic140RangeCount) then
     Result := CMic140RangeCalibrDirNames[ARangeIndex]
   else
-    Result := CMic140RangeCalibrDirNames[CMic140Range5mV];
+    Result := CMic140RangeCalibrDirNames[CMic140Range100mV];
 end;
 
 function RecorderMic140HardwareCalibrCsvPath(ADeviceSerial, ARangeIndex,
@@ -1317,6 +1355,179 @@ begin
   end;
 end;
 
+function RecorderMic140QueryDeviceInfo(const AHost: string; APort: Word;
+  out ADeviceSerial: Integer; out AVersionText: string;
+  out ADevSubRev: Integer): Boolean;
+var
+  lClient: TRecorderMic140LegacyClient;
+  lErrorMessage: string;
+  lFirmware: TRecorderMic140LegacyFirmware;
+begin
+  Result := False;
+  ADeviceSerial := 0;
+  AVersionText := '';
+  ADevSubRev := 0;
+  lClient := TRecorderMic140LegacyClient.Create(AHost, APort, 5000);
+  try
+    lClient.Connect;
+    if lClient.ReadFirmware(lFirmware, lErrorMessage) then
+    begin
+      ADeviceSerial := RecorderMic140DeviceSerialFromFirmware(lFirmware);
+      AVersionText := RecorderMic140FirmwareVersionText(lFirmware);
+      ADevSubRev := RecorderMic140DevSubRevFromFirmware(lFirmware);
+      Result := (ADeviceSerial > 0) or (AVersionText <> '');
+    end;
+  finally
+    lClient.Free;
+  end;
+end;
+
+function Mic140TInDisplayNumber(ATInListIndex, ADevSubRev: Integer): Integer;
+begin
+  if (ATInListIndex < 0) or (ATInListIndex > High(CMic140TInNum)) then
+    Exit(0);
+  if ADevSubRev = CMic140Mic140SubRev1 then
+    Result := CMic140TInNumSubRev1[ATInListIndex] + 1
+  else
+    Result := CMic140TInNum[ATInListIndex] + 1;
+end;
+
+function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
+  ADevSubRev: Integer): Integer;
+begin
+  Result := Mic140DefaultCjcTChannelNumber(AChannelIndex);
+end;
+
+function RecorderMic140FormatAdcRangeMv(ARangeIndex: Integer): string;
+const
+  CMic140RangeMinMax: array[0..CMic140RangeCount - 1] of record MinV, MaxV: Double end =
+    ((MinV: -0.02; MaxV: 0.08), (MinV: -0.01; MaxV: 0.04), (MinV: -0.005; MaxV: 0.02));
+var
+  lIdx: Integer;
+begin
+  lIdx := ARangeIndex;
+  if (lIdx < 0) or (lIdx >= CMic140RangeCount) then
+    lIdx := CMic140Range100mV;
+  Result := Format('%.1f...%.1f', [
+    CMic140RangeMinMax[lIdx].MinV * 1000.0,
+    CMic140RangeMinMax[lIdx].MaxV * 1000.0]);
+end;
+
+function RecorderMic140FormatAdcRangeGrad(ARangeIndex: Integer): string;
+begin
+  Result := RecorderMic140FormatAdcRangeMv(ARangeIndex);
+end;
+
+function RecorderMic140RangeComboLabel(ARangeIndex: Integer): string;
+const
+  CLabels: array[0..CMic140RangeCount - 1] of string =
+    ('-20..80mV', '-10..40mV', '-5..20mV');
+begin
+  if (ARangeIndex >= 0) and (ARangeIndex < CMic140RangeCount) then
+    Result := CLabels[ARangeIndex]
+  else
+    Result := CLabels[CMic140Range100mV];
+end;
+
+procedure RecorderMic140InitChannelSettings(out ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer);
+begin
+  ASettings.RangeIndex := CMic140Range100mV;
+  ASettings.DefaultCjc := True;
+  ASettings.CjcChannel := RecorderMic140DefaultCjcChannel(AChannelIndex, ADevSubRev);
+  ASettings.ThermocoupleScalePath := '';
+  ASettings.ThermocoupleScaleName := '';
+end;
+
+function RecorderMic140ChannelUsesTemperature(
+  const ASettings: TRecorderMic140ChannelSettings): Boolean;
+begin
+  Result := Trim(ASettings.ThermocoupleScaleName) <> '';
+end;
+
+function RecorderMic140ChannelCjcNumber(const ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer): Integer;
+begin
+  if ASettings.DefaultCjc then
+    Result := RecorderMic140DefaultCjcChannel(AChannelIndex, ADevSubRev)
+  else
+    Result := ASettings.CjcChannel;
+end;
+
+function RecorderMic140ChannelGradRangeText(
+  const ASettings: TRecorderMic140ChannelSettings): string;
+const
+  CRangeMinMax: array[0..CMic140RangeCount - 1] of record MinV, MaxV: Double end =
+    ((MinV: -0.02; MaxV: 0.08), (MinV: -0.01; MaxV: 0.04), (MinV: -0.005; MaxV: 0.02));
+var
+  lCalibration: TRecorderCalibration;
+  lDstMax: Double;
+  lDstMin: Double;
+  lIdx: Integer;
+  lMaxC: Double;
+  lMinC: Double;
+  lMaxMv: Double;
+  lMinMv: Double;
+begin
+  if not RecorderMic140ChannelUsesTemperature(ASettings) then
+    Exit('');
+  lIdx := ASettings.RangeIndex;
+  if (lIdx < 0) or (lIdx >= CMic140RangeCount) then
+    lIdx := CMic140Range100mV;
+  lMinMv := CRangeMinMax[lIdx].MinV * 1000.0;
+  lMaxMv := CRangeMinMax[lIdx].MaxV * 1000.0;
+  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+  try
+    if not RecorderSdbLoadScaleCalibration(ASettings.ThermocoupleScalePath,
+      lCalibration) then
+      Exit('');
+    lMinC := lCalibration.Transform(lMinMv);
+    lMaxC := lCalibration.Transform(lMaxMv);
+    if RecorderMeraThermocoupleDstRange(ASettings.ThermocoupleScalePath, lDstMin, lDstMax) then
+    begin
+      if lMinC < lDstMin then
+        lMinC := lDstMin;
+      if lMinC > lDstMax then
+        lMinC := lDstMax;
+      if lMaxC < lDstMin then
+        lMaxC := lDstMin;
+      if lMaxC > lDstMax then
+        lMaxC := lDstMax;
+    end;
+    Result := Format('%.1f...%.1f', [Min(lMinC, lMaxC), Max(lMinC, lMaxC)]);
+  finally
+    lCalibration.Free;
+  end;
+end;
+
+function RecorderMic140EnsureThermocoupleCalibration(
+  ARegistry: TRecorderTagRegistry;
+  const ASettings: TRecorderMic140ChannelSettings): string;
+var
+  lCalibration: TRecorderCalibration;
+  lName: string;
+begin
+  Result := '';
+  if (ARegistry = nil) or (not RecorderMic140ChannelUsesTemperature(ASettings)) then
+    Exit;
+  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+  try
+    if not RecorderSdbLoadScaleCalibration(ASettings.ThermocoupleScalePath,
+      lCalibration) then
+      Exit;
+    lCalibration.Extrapolation := True;
+    lCalibration.UnitIn := 'mV';
+    lCalibration.UnitOut := 'degC';
+    lName := 'TC ' + ASettings.ThermocoupleScaleName;
+    lCalibration.Name := lName;
+    lCalibration.Description := ASettings.ThermocoupleScalePath;
+    if RecorderMic140UpsertHardwareCalibration(ARegistry, lName, lCalibration) <> nil then
+      Result := lName;
+  finally
+    lCalibration.Free;
+  end;
+end;
+
 function RecorderMic140ResolveDeviceSerialForTag(const ATag: TRecorderTag;
   ADeviceSerial: Integer): Integer;
 var
@@ -1359,7 +1570,7 @@ begin
 
   lRangeIndex := ATag.MeasRangeIndex;
   if lRangeIndex >= CMic140RangeCount then
-    lRangeIndex := CMic140Range5mV;
+    lRangeIndex := CMic140Range100mV;
 
   lCsvPath := RecorderMic140HardwareCalibrCsvPath(lSerial, lRangeIndex,
     lChannelNumber);
@@ -1833,7 +2044,7 @@ begin
 
   lRangeIndex := ATag.MeasRangeIndex;
   if lRangeIndex >= CMic140RangeCount then
-    lRangeIndex := CMic140Range5mV;
+    lRangeIndex := CMic140Range100mV;
 
   lChanIndex := lChannelNumber - 1;
   if lChanIndex < 0 then
@@ -2329,11 +2540,14 @@ begin
     lSettings.Channels[I].FrequencyHz := lTiming.FrequencyHz;
     lSettings.Channels[I].Connected :=
       I < Min(AChannelCount, CMic140MebiusChannelCount);
-    lSettings.Channels[I].Corrector := CMic140DefaultCorrectorId;
+    if Mic140DefaultCjcTChannelNumber(I) > 0 then
+      lSettings.Channels[I].Corrector := Mic140DefaultCjcTChannelNumber(I)
+    else
+      lSettings.Channels[I].Corrector := CMic140DefaultCorrectorId;
     lSettings.Channels[I].DefaultCorrector := False;
     lSettings.Channels[I].SoftBalance := 0;
     lSettings.Channels[I].BlockSize := 1;
-    lSettings.Channels[I].MeasRangeIndex := CMic140Range5mV;
+    lSettings.Channels[I].MeasRangeIndex := CMic140Range100mV;
     lSettings.Channels[I].CommutIndex := CMic140ChannelCommutIn;
     lSettings.Channels[I].ShuntOn := 0;
     lSettings.Channels[I].EvalType := 0;
@@ -2863,14 +3077,19 @@ begin
     if lTag = nil then
       lTag := ARegistry.CreateTag(lTagName, Ceil(Max(4096, lChannel.PollFrequencyHz)));
     lTag.Address := lChannel.Address;
-    lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(fOutputMode);
-    lTag.UnitName := RecorderMic140OutputModeUnitName(fOutputMode);
+    // A source can contain both millivolt and thermocouple channels. Preserve
+    // the mode chosen in the per-channel dialog instead of imposing the mode
+    // inferred from the first source tag on every channel.
+    if Trim(lTag.SourceValueMode) = '' then
+      lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(fOutputMode);
+    if Trim(lTag.UnitName) = '' then
+      lTag.UnitName := RecorderMic140OutputModeUnitName(fOutputMode);
     lTag.ModuleType := lChannel.ModuleType;
     lTag.PollFrequencyHz := lChannel.PollFrequencyHz;
     lTag.SourceId := SourceId;
     lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
       [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz),
-       RecorderMic140OutputModeToConfigName(fOutputMode)]);
+       lTag.SourceValueMode]);
     fChannelTagNames[I] := lTag.Name;
   end;
 end;
@@ -2975,7 +3194,8 @@ var
       for lJ := 0 to lBlock.SampleCount - 1 do
       begin
         lValues[lJ] := lBlock.Values[lI][lJ];
-        if fOutputMode = momTemperatureC then
+        if SameText(lTag.SourceValueMode,
+          RecorderMic140OutputModeToConfigName(momTemperatureC)) then
         begin
           if Mic140TryBuildTemperatureValue(Registry, lTag, lI, lValues[lJ],
             CMic140CjcNotAvailable, lTemperatureC) then

@@ -22,13 +22,13 @@ unit uRecorderSettingsDialog;
 interface
 
 uses
-  LConvEncoding,
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
-  uRecorderMic140DataSource, uRecorderMic140SettingsDialog, uRecorderMic140Utils;
+  uRecorderMic140DataSource, uRecorderMic140SettingsDialog, uRecorderMic140Utils,
+  uRecorderMeraSdbThermocouples;
 
 type
   { TRecorderSettingsDialog }
@@ -191,8 +191,13 @@ type
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
     procedure BuildMic140Signals(const ASourceId: string; AChannelCount: Integer;
-      APollFrequencyHz: Double; AEnabledChannels: TStrings;
-      AOutputMode: TRecorderMic140OutputMode);
+      AEnabledChannels: TStrings;
+      const AChannelSettings: array of TRecorderMic140ChannelSettings);
+    function Mic140PollFrequencyForChannel(const ASourceId: string;
+      AChannelNumber: Integer): Double;
+    function Mic140TagPollFrequency(const ASourceId, AAddress: string): Double;
+    function Mic140TagOutputModeForChannel(const ASourceId: string;
+      AChannelNumber: Integer; out AMode: TRecorderMic140OutputMode): Boolean;
     function AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     function SelectedSignalByGridRow(ARow: Integer): TMeraSignalInfo;
     procedure LoadMeraFile(const AFileName: string);
@@ -469,7 +474,7 @@ begin
     btnChannelEdit.Width := 30;
     btnChannelEdit.Height := 30;
     btnChannelEdit.Caption := '...';
-    btnChannelEdit.Hint := CP1251ToUTF8('Настроить выбранный канал');
+    btnChannelEdit.Hint := 'Настроить выбранный канал';
     btnChannelEdit.ShowHint := True;
     btnChannelEdit.OnClick := @btnChannelEditClick;
   end;
@@ -847,7 +852,7 @@ var
 begin
   Result := fSpectrumConfigTree.AddNode('spectrum.' +
     IntToStr(fSpectrumConfigTree.NodeCount + 1),
-    CP1251ToUTF8('Спектр ') + IntToStr(fSpectrumConfigTree.NodeCount + 1));
+    'Спектр ' + IntToStr(fSpectrumConfigTree.NodeCount + 1));
   lSettings := Result.Settings;
   if (ATag <> nil) and (ATag.PollFrequencyHz > 0) then
     lSettings.SampleRateHz := ATag.PollFrequencyHz;
@@ -890,7 +895,7 @@ begin
     Exit;
   if fAlgorithmKindCombo.ItemIndex < 0 then
     fAlgorithmKindCombo.ItemIndex := 0;
-  if fAlgorithmKindCombo.Text <> CP1251ToUTF8('Спектр') then
+  if fAlgorithmKindCombo.Text <> 'Спектр' then
     Exit;
 
   lSelection := fSelectedChannelsGrid.Selection;
@@ -929,7 +934,7 @@ begin
   if fAlgorithmKindCombo <> nil then
   begin
     fAlgorithmKindCombo.Items.Clear;
-    fAlgorithmKindCombo.Items.Add(CP1251ToUTF8('Спектр'));
+    fAlgorithmKindCombo.Items.Add('Спектр');
     fAlgorithmKindCombo.ItemIndex := 0;
   end;
   if fAlgorithmWindowCombo <> nil then
@@ -981,7 +986,7 @@ begin
   fAlgorithmsTree.Items.BeginUpdate;
   try
     fAlgorithmsTree.Items.Clear;
-    lRoot := fAlgorithmsTree.Items.Add(nil, CP1251ToUTF8('Алгоритмы'));
+    lRoot := fAlgorithmsTree.Items.Add(nil, 'Алгоритмы');
     lRoot.Data := nil;
     for I := 0 to fSpectrumConfigTree.NodeCount - 1 do
     begin
@@ -1087,11 +1092,11 @@ begin
   if (lFftSize > 0) and (lSampleRate > 0.0) then
   begin
     lPortionSec := lFftSize / lSampleRate;
-    fAlgorithmPortionLabel.Caption := CP1251ToUTF8('порция: ') +
-      FormatFloat('0.###', lPortionSec) + CP1251ToUTF8(' с');
+    fAlgorithmPortionLabel.Caption := 'порция: ' +
+      FormatFloat('0.###', lPortionSec) + ' с';
   end
   else
-    fAlgorithmPortionLabel.Caption := CP1251ToUTF8('порция: - с');
+    fAlgorithmPortionLabel.Caption := 'порция: - с';
 
   UpdateConfigStr;
 end;
@@ -1445,13 +1450,16 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.BuildMic140Signals(const ASourceId: string;
-  AChannelCount: Integer; APollFrequencyHz: Double; AEnabledChannels: TStrings;
-  AOutputMode: TRecorderMic140OutputMode);
+  AChannelCount: Integer; AEnabledChannels: TStrings;
+  const AChannelSettings: array of TRecorderMic140ChannelSettings);
 var
   I: Integer;
   lAddress: string;
-  lSignal: TMeraSignalInfo;
+  lFreqHz: Double;
+  lDummyMode: TRecorderMic140OutputMode;
+  lOutputMode: TRecorderMic140OutputMode;
   lPrefix: string;
+  lSignal: TMeraSignalInfo;
 begin
   if fMic140Signals = nil then
     fMic140Signals := TList.Create;
@@ -1471,9 +1479,6 @@ begin
     AChannelCount := MIC140MaxChannelCount
   else
     AChannelCount := MIC140DefaultChannelCount;
-  if APollFrequencyHz <= 0 then
-    APollFrequencyHz := MIC140DefaultPollFrequencyHz;
-  APollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
 
   for I := 1 to AChannelCount do
   begin
@@ -1481,17 +1486,29 @@ begin
     if not IsChannelEnabled(AEnabledChannels, lAddress) then
       Continue;
 
+    lOutputMode := momMillivolts;
+    if (I <= Length(AChannelSettings)) and
+      RecorderMic140ChannelUsesTemperature(AChannelSettings[I - 1]) then
+      lOutputMode := momTemperatureC
+    else
+    begin
+      lDummyMode := momMillivolts;
+      if Mic140TagOutputModeForChannel(ASourceId, I, lDummyMode) then
+        lOutputMode := lDummyMode;
+    end;
+    lFreqHz := Mic140PollFrequencyForChannel(ASourceId, I);
+
     lSignal := TMeraSignalInfo.Create;
     lSignal.Name := Format('MIC140_%2.2d', [I]);
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';
     lSignal.DataType := mvtFloat64;
-    lSignal.FrequencyHz := APollFrequencyHz;
-    lSignal.UnitsName := RecorderMic140OutputModeUnitName(AOutputMode);
-    lSignal.SourceValueMode := RecorderMic140OutputModeToConfigName(AOutputMode);
+    lSignal.FrequencyHz := lFreqHz;
+    lSignal.UnitsName := RecorderMic140OutputModeUnitName(lOutputMode);
+    lSignal.SourceValueMode := RecorderMic140OutputModeToConfigName(lOutputMode);
     lSignal.Description := Format('MIC-140 channel %s; mode=%s',
-      [lAddress, RecorderMic140OutputModeToConfigName(AOutputMode)]);
+      [lAddress, RecorderMic140OutputModeToConfigName(lOutputMode)]);
     lSignal.FileName := ASourceId;
     lSignal.Enabled := True;
     lSignal.Selected := SignalHasLinkedTag(lSignal);
@@ -1515,7 +1532,7 @@ begin
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';
     lSignal.DataType := mvtFloat64;
-    lSignal.FrequencyHz := APollFrequencyHz;
+    lSignal.FrequencyHz := Mic140TagPollFrequency(ASourceId, lAddress);
     lSignal.UnitsName := 'code';
     lSignal.SourceValueMode := '';
     lSignal.Description := Format('MIC-140 temperature channel T%d code', [I]);
@@ -1530,6 +1547,56 @@ begin
   // adding them to the 48-channel stream changes the BIOS scan layout and
   // corrupts the MIC-140 data flow.
 end;
+
+function TRecorderSettingsDialog.Mic140TagPollFrequency(const ASourceId,
+  AAddress: string): Double;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  Result := MIC140DefaultPollFrequencyHz;
+  if fTagRegistry = nil then
+    Exit;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if SameText(lTag.SourceId, ASourceId) and SameText(lTag.Address, AAddress) and
+      (lTag.PollFrequencyHz > 0) then
+      Exit(RecorderMic140NormalizeFrequency(lTag.PollFrequencyHz));
+  end;
+end;
+
+function TRecorderSettingsDialog.Mic140PollFrequencyForChannel(const ASourceId: string;
+  AChannelNumber: Integer): Double;
+begin
+  Result := Mic140TagPollFrequency(ASourceId, Format('2-%2.2d', [AChannelNumber]));
+end;
+
+function TRecorderSettingsDialog.Mic140TagOutputModeForChannel(const ASourceId: string;
+  AChannelNumber: Integer; out AMode: TRecorderMic140OutputMode): Boolean;
+var
+  I: Integer;
+  lNum: Integer;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  AMode := momMillivolts;
+  if fTagRegistry = nil then
+    Exit;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if not SameText(lTag.SourceId, ASourceId) then
+      Continue;
+    if ParseMic140ChannelNumber(lTag.Address, lNum) and (lNum = AChannelNumber) and
+      (Trim(lTag.SourceValueMode) <> '') then
+    begin
+      AMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
+      Exit(True);
+    end;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.RestoreMeraSignalsFromTags;
 const
   CMeraSourcePrefix = 'Mera file: ';
@@ -1693,8 +1760,8 @@ begin
   if fMeraFileName = '' then
     Exit;
 
-  if MessageDlg(CP1251ToUTF8('Удаление источника данных'),
-    CP1251ToUTF8('Удалить источник данных "') + ExtractFileName(fMeraFileName) + '"?',
+  if MessageDlg('Удаление источника данных',
+    'Удалить источник данных "' + ExtractFileName(fMeraFileName) + '"?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
 
@@ -1723,8 +1790,8 @@ begin
     Exit;
   if not FileExists(fMeraFileName) then
   begin
-    MessageDlg(CP1251ToUTF8('Перечитывание источника'),
-      CP1251ToUTF8('Файл источника данных не найден: ') + fMeraFileName,
+    MessageDlg('Перечитывание источника',
+      'Файл источника данных не найден: ' + fMeraFileName,
       mtWarning, [mbOK], 0);
     Exit;
   end;
@@ -1744,10 +1811,8 @@ var
   lHost: string;
   lPort: Word;
   lSourceId: string;
-  lOutputMode: TRecorderMic140OutputMode;
   lSources: TStringList;
   lTag: TRecorderTag;
-  lFrequencyHz: Double;
 begin
   ClearMic140Signals;
   if fTagRegistry = nil then
@@ -1777,8 +1842,6 @@ begin
     begin
       lSourceId := lSources[I];
       lChannelCount := MIC140DefaultChannelCount;
-      lFrequencyHz := MIC140DefaultPollFrequencyHz;
-      lOutputMode := momMillivolts;
       for lChannelNumber := 0 to fTagRegistry.TagCount - 1 do
       begin
         lTag := fTagRegistry.Tags[lChannelNumber];
@@ -1787,12 +1850,8 @@ begin
         if ParseMic140ChannelNumber(lTag.Address, lAddressNumber) and
           (lAddressNumber > lChannelCount) then
           lChannelCount := MIC140MaxChannelCount;
-        if lTag.PollFrequencyHz > 0 then
-          lFrequencyHz := lTag.PollFrequencyHz;
-        if Trim(lTag.SourceValueMode) <> '' then
-          lOutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
       end;
-      BuildMic140Signals(lSourceId, lChannelCount, lFrequencyHz, nil, lOutputMode);
+      BuildMic140Signals(lSourceId, lChannelCount, nil, []);
     end;
   finally
     lSources.Free;
@@ -1929,12 +1988,16 @@ end;
 procedure TRecorderSettingsDialog.ConfigureMic140Source(const ASourceId: string);
 var
   I: Integer;
+  J: Integer;
+  lCal: TRecorderCalibration;
+  lCalName: string;
   lCapacity: Integer;
   lChannelNumber: Integer;
   lHost: string;
   lNewSourceId: string;
   lPort: Word;
   lResult: TRecorderMic140DialogResult;
+  lSettings: TRecorderMic140ChannelSettings;
   lTag: TRecorderTag;
 begin
   if fTagRegistry = nil then
@@ -1946,20 +2009,47 @@ begin
     begin
       lResult.Host := lHost;
       lResult.Port := lPort;
-      lResult.SelectedChannels.Clear;
+      lResult.DeviceSerial := 0;
+      lResult.VersionText := '';
       for I := 0 to fTagRegistry.TagCount - 1 do
       begin
         lTag := fTagRegistry.Tags[I];
         if SameText(lTag.SourceId, ASourceId) then
         begin
-          lResult.SelectedChannels.Add(lTag.Address);
+          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
+            lResult.SelectedChannels.Add(IntToStr(lChannelNumber))
+          else
+            lResult.SelectedChannels.Add(lTag.Address);
+          if lTag.Mic140DeviceSerial > 0 then
+            lResult.DeviceSerial := lTag.Mic140DeviceSerial;
           if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
             (lChannelNumber > lResult.ChannelCount) then
             lResult.ChannelCount := MIC140MaxChannelCount;
-          if lTag.PollFrequencyHz > 0 then
-            lResult.PollFrequencyHz := lTag.PollFrequencyHz;
-          if Trim(lTag.SourceValueMode) <> '' then
-            lResult.OutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
+          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
+            (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
+          begin
+            lResult.ChannelSettings[lChannelNumber - 1].RangeIndex := lTag.MeasRangeIndex;
+            if SameText(lTag.SourceValueMode, 'degC') and (lTag.CalibrationNames <> nil) then
+            begin
+              for J := 0 to lTag.CalibrationNames.Count - 1 do
+              begin
+                lCalName := lTag.CalibrationNames[J];
+                if Pos('TC ', lCalName) <> 1 then
+                  Continue;
+                lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName :=
+                  Trim(Copy(lCalName, 4, MaxInt));
+                lCal := fTagRegistry.FindCalibrationByName(lCalName);
+                if (lCal <> nil) and (Trim(lCal.Description) <> '') then
+                  lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScalePath :=
+                    lCal.Description
+                else if lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName <> '' then
+                  lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScalePath :=
+                    RecorderMeraThermocoupleRelativePath(
+                      lResult.ChannelSettings[lChannelNumber - 1].ThermocoupleScaleName);
+                Break;
+              end;
+            end;
+          end;
         end;
       end;
     end;
@@ -1971,11 +2061,16 @@ begin
     if (ASourceId <> '') and (not SameText(ASourceId, lNewSourceId)) then
       fTagRegistry.UnregisterActiveSource(ASourceId);
     fTagRegistry.RegisterActiveSource(lNewSourceId);
-    lResult.PollFrequencyHz := RecorderMic140NormalizeFrequency(lResult.PollFrequencyHz);
     BuildMic140Signals(lNewSourceId, lResult.ChannelCount,
-      lResult.PollFrequencyHz, lResult.SelectedChannels, lResult.OutputMode);
+      lResult.SelectedChannels, lResult.ChannelSettings);
 
-    lCapacity := Ceil(Max(4096, lResult.PollFrequencyHz));
+    lCapacity := 4096;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if SameText(lTag.SourceId, lNewSourceId) and (lTag.PollFrequencyHz > 0) then
+        lCapacity := Max(lCapacity, Ceil(lTag.PollFrequencyHz));
+    end;
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
@@ -1983,16 +2078,36 @@ begin
         ((ASourceId = '') or (not SameText(lTag.SourceId, ASourceId))) then
         Continue;
       if (lResult.SelectedChannels.Count > 0) and
-        (lResult.SelectedChannels.IndexOf(lTag.Address) < 0) then
+        (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber) or
+        (lResult.SelectedChannels.IndexOf(IntToStr(lChannelNumber)) < 0)) then
         Continue;
       lTag.SourceId := lNewSourceId;
       lTag.ModuleType := 'MIC-140';
-      lTag.PollFrequencyHz := lResult.PollFrequencyHz;
-      lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(lResult.OutputMode);
-      lTag.UnitName := RecorderMic140OutputModeUnitName(lResult.OutputMode);
+      if lResult.DeviceSerial > 0 then
+        lTag.Mic140DeviceSerial := lResult.DeviceSerial;
+      if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
+        (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
+      begin
+        lSettings := lResult.ChannelSettings[lChannelNumber - 1];
+        lTag.MeasRangeIndex := lSettings.RangeIndex;
+        if RecorderMic140ChannelUsesTemperature(lSettings) then
+        begin
+          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
+          lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
+          lCalName := RecorderMic140EnsureThermocoupleCalibration(fTagRegistry, lSettings);
+          lTag.CalibrationNames.Clear;
+          if lCalName <> '' then
+            lTag.CalibrationNames.Add(lCalName);
+        end
+        else
+        begin
+          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momMillivolts);
+          lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
+        end;
+      end;
       lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
-        [lTag.Address, FormatFloat('0.######', lResult.PollFrequencyHz),
-         RecorderMic140OutputModeToConfigName(lResult.OutputMode)]);
+        [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
+         lTag.SourceValueMode]);
       lTag.EnsureBufferCapacity(lCapacity);
     end;
 
@@ -2061,7 +2176,7 @@ begin
 
   lDialog := TOpenDialog.Create(Self);
   try
-    lDialog.Title := CP1251ToUTF8('Выберите файл Mera');
+    lDialog.Title := 'Выберите файл Mera';
     lDialog.Filter := 'Mera file (*.mera)|*.mera|All files (*.*)|*.*';
     lDialog.InitialDir := ExtractFilePath(fMeraFileName);
     lDialog.FileName := ExtractFileName(fMeraFileName);
@@ -2116,7 +2231,7 @@ begin
   fHardwareTree.Items.BeginUpdate;
   try
     fHardwareTree.Items.Clear;
-    lRootNode := fHardwareTree.Items.Add(nil, CP1251ToUTF8('Устройства'));
+    lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
     lRootNode.ImageIndex := CDeviceRootImageIndex;
     lRootNode.SelectedIndex := CDeviceRootImageIndex;
 
@@ -2212,9 +2327,9 @@ begin
     fAvailableChannelsGrid.ColCount := 3;
     fAvailableChannelsGrid.FixedRows := 1;
     fAvailableChannelsGrid.RowCount := 2;
-    fAvailableChannelsGrid.Cells[0, 0] := CP1251ToUTF8('Адрес');
-    fAvailableChannelsGrid.Cells[1, 0] := CP1251ToUTF8('Тип');
-    fAvailableChannelsGrid.Cells[2, 0] := CP1251ToUTF8('Имя');
+    fAvailableChannelsGrid.Cells[0, 0] := 'Адрес';
+    fAvailableChannelsGrid.Cells[1, 0] := 'Тип';
+    fAvailableChannelsGrid.Cells[2, 0] := 'Имя';
     fAvailableChannelsGrid.Cells[0, 1] := '';
     fAvailableChannelsGrid.Cells[1, 1] := '';
     fAvailableChannelsGrid.Cells[2, 1] := '';
@@ -2225,13 +2340,13 @@ begin
     fSelectedChannelsGrid.ColCount := 8;
     fSelectedChannelsGrid.FixedRows := 1;
     fSelectedChannelsGrid.RowCount := 2;
-    fSelectedChannelsGrid.Cells[0, 0] := CP1251ToUTF8('Имя');
-    fSelectedChannelsGrid.Cells[1, 0] := CP1251ToUTF8('Адрес');
-    fSelectedChannelsGrid.Cells[2, 0] := CP1251ToUTF8('Тип');
-    fSelectedChannelsGrid.Cells[3, 0] := CP1251ToUTF8('Частота');
-    fSelectedChannelsGrid.Cells[4, 0] := CP1251ToUTF8('ГХ');
-    fSelectedChannelsGrid.Cells[5, 0] := CP1251ToUTF8('Группа');
-    fSelectedChannelsGrid.Cells[6, 0] := CP1251ToUTF8('Информация');
+    fSelectedChannelsGrid.Cells[0, 0] := 'Имя';
+    fSelectedChannelsGrid.Cells[1, 0] := 'Адрес';
+    fSelectedChannelsGrid.Cells[2, 0] := 'Тип';
+    fSelectedChannelsGrid.Cells[3, 0] := 'Частота';
+    fSelectedChannelsGrid.Cells[4, 0] := 'ГХ';
+    fSelectedChannelsGrid.Cells[5, 0] := 'Группа';
+    fSelectedChannelsGrid.Cells[6, 0] := 'Информация';
     fSelectedChannelsGrid.Cells[7, 0] := 'ID';
     fSelectedChannelsGrid.Cells[0, 1] := '';
     fSelectedChannelsGrid.Cells[1, 1] := '';
@@ -2399,17 +2514,17 @@ begin
     lPopup := TPopupMenu.Create(Self);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := CP1251ToUTF8('Перечитать теги источника');
+    lItem.Caption := 'Перечитать теги источника';
     lItem.OnClick := @HardwareReloadSourceClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := CP1251ToUTF8('Настройка источника...');
+    lItem.Caption := 'Настройка источника...';
     lItem.OnClick := @HardwareEditSourceClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
-    lItem.Caption := CP1251ToUTF8('Удалить источник данных');
+    lItem.Caption := 'Удалить источник данных';
     lItem.OnClick := @HardwareDeleteSourceClick;
     lPopup.Items.Add(lItem);
 
@@ -2434,7 +2549,7 @@ var
   lButton: TButton;
   lTab: TTabSheet;
 begin
-  Caption := CP1251ToUTF8('Настройка');
+  Caption := 'Настройка';
   Position := poOwnerFormCenter;
   BorderStyle := bsSizeable;
   Width := 890;
@@ -2448,16 +2563,16 @@ begin
 
   lTab := TTabSheet.Create(Self);
   lTab.PageControl := fPageControl;
-  lTab.Caption := CP1251ToUTF8('Рекордер');
+  lTab.Caption := 'Рекордер';
   BuildRecorderTab(lTab);
 
   lTab := TTabSheet.Create(Self);
   lTab.PageControl := fPageControl;
-  lTab.Caption := CP1251ToUTF8('Аппаратные свойства');
+  lTab.Caption := 'Аппаратные свойства';
   BuildHardwareTab(lTab);
 
-  BuildPlaceholderTab(CP1251ToUTF8('Каналы'));
-  BuildPlaceholderTab(CP1251ToUTF8('Плагины'));
+  BuildPlaceholderTab('Каналы');
+  BuildPlaceholderTab('Плагины');
 
   lButtonPanel := TPanel.Create(Self);
   lButtonPanel.Parent := Self;
@@ -2487,7 +2602,7 @@ begin
   lButton.AnchorSideRight.Control := lButtonPanel;
   lButton.AnchorSideRight.Side := asrRight;
   lButton.Anchors := [akTop, akRight];
-  lButton.Caption := CP1251ToUTF8('Закрыть');
+  lButton.Caption := 'Закрыть';
   lButton.Cancel := True;
   lButton.ModalResult := mrCancel;
 
@@ -2500,7 +2615,7 @@ begin
   fApplyButton.AnchorSideRight.Control := lButtonPanel;
   fApplyButton.AnchorSideRight.Side := asrRight;
   fApplyButton.Anchors := [akTop, akRight];
-  fApplyButton.Caption := CP1251ToUTF8('Применить');
+  fApplyButton.Caption := 'Применить';
   fApplyButton.OnClick := @ApplyButtonClick;
 end;
 
@@ -2523,38 +2638,38 @@ begin
   lRightPanel.Width := 230;
   lRightPanel.BevelOuter := bvNone;
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 210, 82, CP1251ToUTF8('Отображение'));
-  AddLabel(Self, lGroup, 10, 22, CP1251ToUTF8('Период обновления'));
+  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 210, 82, 'Отображение');
+  AddLabel(Self, lGroup, 10, 22, 'Период обновления');
   fScreenUpdateEdit := AddEdit(Self, lGroup, 126, 18, 56, '0.5');
-  AddLabel(Self, lGroup, 186, 22, CP1251ToUTF8('с'));
+  AddLabel(Self, lGroup, 186, 22, 'с');
 
-  lGroup := AddGroup(Self, lLeftPanel, 238, 8, 390, 82, CP1251ToUTF8('Сигналы'));
-  AddLabel(Self, lGroup, 10, 18, CP1251ToUTF8('Длина отображаемых данных'));
+  lGroup := AddGroup(Self, lLeftPanel, 238, 8, 390, 82, 'Сигналы');
+  AddLabel(Self, lGroup, 10, 18, 'Длина отображаемых данных');
   fBufferSecondsEdit := AddEdit(Self, lGroup, 190, 14, 64, '1');
-  AddLabel(Self, lGroup, 260, 18, CP1251ToUTF8('с'));
-  AddLabel(Self, lGroup, 10, 40, CP1251ToUTF8('Период обновления данных'));
+  AddLabel(Self, lGroup, 260, 18, 'с');
+  AddLabel(Self, lGroup, 10, 40, 'Период обновления данных');
   fDataUpdateEdit := AddEdit(Self, lGroup, 190, 36, 64, '0.3');
-  AddLabel(Self, lGroup, 260, 40, CP1251ToUTF8('с'));
+  AddLabel(Self, lGroup, 260, 40, 'с');
 
   lGroup := AddGroup(Self, lLeftPanel, 8, 102, 620, 78, '');
-  AddLabel(Self, lGroup, 10, 18, CP1251ToUTF8('Испытание'));
-  fTestNameEdit := AddEdit(Self, lGroup, 130, 14, 470, CP1251ToUTF8('Испытание'));
-  AddLabel(Self, lGroup, 10, 42, CP1251ToUTF8('Изделие'));
-  fProductNameEdit := AddEdit(Self, lGroup, 130, 42, 470, CP1251ToUTF8('Изделие'));
+  AddLabel(Self, lGroup, 10, 18, 'Испытание');
+  fTestNameEdit := AddEdit(Self, lGroup, 130, 14, 470, 'Испытание');
+  AddLabel(Self, lGroup, 10, 42, 'Изделие');
+  fProductNameEdit := AddEdit(Self, lGroup, 130, 42, 470, 'Изделие');
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 190, 620, 284, CP1251ToUTF8('Запись'));
+  lGroup := AddGroup(Self, lLeftPanel, 8, 190, 620, 284, 'Запись');
   fModifyNameCheck := AddCheck(Self, lGroup, 12, 22,
-    CP1251ToUTF8('Модифицировать имя по каждому испытанию'));
+    'Модифицировать имя по каждому испытанию');
   fModifyNameCheck.Enabled := False;
-  fPrehistoryCheck := AddCheck(Self, lGroup, 12, 48, CP1251ToUTF8('Предыстория'));
+  fPrehistoryCheck := AddCheck(Self, lGroup, 12, 48, 'Предыстория');
   fPrehistoryEdit := AddEdit(Self, lGroup, 130, 44, 68, '10');
-  AddLabel(Self, lGroup, 206, 48, CP1251ToUTF8('сек'));
+  AddLabel(Self, lGroup, 206, 48, 'сек');
   fResetTimeCheck := AddCheck(Self, lGroup, 12, 74,
-    CP1251ToUTF8('Сброс времени при начале записи'));
-  fWriteWithPausesCheck := AddCheck(Self, lGroup, 12, 100, CP1251ToUTF8('Запись с паузами'));
+    'Сброс времени при начале записи');
+  fWriteWithPausesCheck := AddCheck(Self, lGroup, 12, 100, 'Запись с паузами');
   fSaveConfigWithDataCheck := AddCheck(Self, lGroup, 12, 126,
-    CP1251ToUTF8('Сохранять файл конфигурации вместе с записью данных'));
-  AddLabel(Self, lGroup, 10, 154, CP1251ToUTF8('Рабочий каталог'));
+    'Сохранять файл конфигурации вместе с записью данных');
+  AddLabel(Self, lGroup, 10, 154, 'Рабочий каталог');
   fWorkDirEdit := AddEdit(Self, lGroup, 10, 172, 526, 'C:\USML\');
   lButton := TButton.Create(Self);
   lButton.Parent := lGroup;
@@ -2564,42 +2679,42 @@ begin
   lButton.Height := 26;
   lButton.Caption := '...';
   lButton.OnClick := @WorkDirBrowseClick;
-  fTemplateCheck := AddCheck(Self, lGroup, 12, 204, CP1251ToUTF8('Шаблон'));
+  fTemplateCheck := AddCheck(Self, lGroup, 12, 204, 'Шаблон');
   fTemplateButton := TButton.Create(Self);
   fTemplateButton.Parent := lGroup;
   fTemplateButton.Left := 84;
   fTemplateButton.Top := 200;
   fTemplateButton.Width := 86;
   fTemplateButton.Height := 26;
-  fTemplateButton.Caption := CP1251ToUTF8('Настроить');
+  fTemplateButton.Caption := 'Настроить';
   fTemplateButton.Enabled := False;
   fFrameDirEdit := AddEdit(Self, lGroup, 10, 232, 470, 'C:\USML\signal0000');
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, CP1251ToUTF8('Условия старта записи'));
-  fStartManualRadio := AddRadio(Self, lGroup, 10, 20, CP1251ToUTF8('По клавише'), @ConditionChanged);
-  fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, CP1251ToUTF8('По уровню'), @ConditionChanged);
-  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 46, CP1251ToUTF8('Триггерный старт'), @ConditionChanged);
+  lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, 'Условия старта записи');
+  fStartManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
+  fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
+  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 46, 'Триггерный старт', @ConditionChanged);
   fStartTriggerEdit := AddEdit(Self, lGroup, 140, 42, 48, '1');
-  AddLabel(Self, lGroup, 10, 76, CP1251ToUTF8('Канал'));
+  AddLabel(Self, lGroup, 10, 76, 'Канал');
   fStartChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
   fStartEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
-  fStartEdgeCombo.Items.Add(CP1251ToUTF8('меньше'));
-  fStartEdgeCombo.Items.Add(CP1251ToUTF8('меньше'));
+  fStartEdgeCombo.Items.Add('меньше');
+  fStartEdgeCombo.Items.Add('меньше');
   fStartLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 160, 210, 170, CP1251ToUTF8('Условия останова записи'));
-  fStopManualRadio := AddRadio(Self, lGroup, 10, 20, CP1251ToUTF8('По клавише'), @ConditionChanged);
-  fStopLevelRadio := AddRadio(Self, lGroup, 104, 20, CP1251ToUTF8('По уровню'), @ConditionChanged);
-  fStopDurationRadio := AddRadio(Self, lGroup, 10, 46, CP1251ToUTF8('Через'), @ConditionChanged);
+  lGroup := AddGroup(Self, lRightPanel, 8, 160, 210, 170, 'Условия останова записи');
+  fStopManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
+  fStopLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
+  fStopDurationRadio := AddRadio(Self, lGroup, 10, 46, 'Через', @ConditionChanged);
   fStopDurationEdit := AddEdit(Self, lGroup, 70, 42, 74, '1.000000');
-  AddLabel(Self, lGroup, 152, 46, CP1251ToUTF8('сек'));
-  AddLabel(Self, lGroup, 10, 76, CP1251ToUTF8('Канал'));
+  AddLabel(Self, lGroup, 152, 46, 'сек');
+  AddLabel(Self, lGroup, 10, 76, 'Канал');
   fStopChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
   fStopEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
-  fStopEdgeCombo.Items.Add(CP1251ToUTF8('меньше'));
-  fStopEdgeCombo.Items.Add(CP1251ToUTF8('меньше'));
+  fStopEdgeCombo.Items.Add('меньше');
+  fStopEdgeCombo.Items.Add('меньше');
   fStopLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
-  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 126, CP1251ToUTF8('Переход в просмотр'));
+  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 126, 'Переход в просмотр');
   fStopReturnToPreviewCheck.Enabled := False;
 
   lButton := TButton.Create(Self);
@@ -2608,7 +2723,7 @@ begin
   lButton.Top := 342;
   lButton.Width := 122;
   lButton.Height := 28;
-  lButton.Caption := CP1251ToUTF8('Системное время');
+  lButton.Caption := 'Системное время';
 
   fStartChannelCombo.Items.Add('MemTag');
   fStartChannelCombo.Items.Add('SineTag');
@@ -2625,7 +2740,7 @@ var
   lButtonPanel: TPanel;
   lButton: TButton;
 begin
-  lGroup := AddGroup(Self, ATab, 8, 8, 858, 560, CP1251ToUTF8('Устройства'));
+  lGroup := AddGroup(Self, ATab, 8, 8, 858, 560, 'Устройства');
   lGroup.AnchorSideRight.Control := ATab;
   lGroup.AnchorSideRight.Side := asrRight;
   lGroup.AnchorSideBottom.Control := ATab;
@@ -2646,15 +2761,15 @@ begin
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
   fHardwareTree.Options := fHardwareTree.Options + [tvoShowButtons, tvoShowLines, tvoShowRoot];
 
-  lRootNode := fHardwareTree.Items.Add(nil, CP1251ToUTF8('Устройства'));
+  lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
   lRootNode.ImageIndex := CDeviceRootImageIndex;
   lRootNode.SelectedIndex := CDeviceRootImageIndex;
   lControllerNode := fHardwareTree.Items.AddChild(lRootNode,
-    CP1251ToUTF8('[1] МС-Крейт - ISA Крейт-контроллер s/n: 0000'));
+    '[1] МС-Крейт - ISA Крейт-контроллер s/n: 0000');
   lControllerNode.ImageIndex := CDeviceControllerImageIndex;
   lControllerNode.SelectedIndex := CDeviceControllerImageIndex;
   with fHardwareTree.Items.AddChild(lControllerNode,
-    CP1251ToUTF8('Слот 1 - MC-212 с/н:00000 - Тензомодуль 4 канала v4.0-v5.0')) do
+    'Слот 1 - MC-212 с/н:00000 - Тензомодуль 4 канала v4.0-v5.0') do
   begin
     ImageIndex := CDeviceModuleImageIndex;
     SelectedIndex := CDeviceModuleImageIndex;
@@ -2669,7 +2784,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '+';
-  lButton.Hint := CP1251ToUTF8('Добавить устройство вручную');
+  lButton.Hint := 'Добавить устройство вручную';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -2679,7 +2794,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '-';
-  lButton.Hint := CP1251ToUTF8('Удалить устройство вручную');
+  lButton.Hint := 'Удалить устройство вручную';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -2689,7 +2804,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '...';
-  lButton.Hint := CP1251ToUTF8('Настроить выбранное устройство');
+  lButton.Hint := 'Настроить выбранное устройство';
   lButton.ShowHint := True;
 
   lButton := TButton.Create(Self);
@@ -2699,7 +2814,7 @@ begin
   lButton.Width := 42;
   lButton.Height := 36;
   lButton.Caption := '?';
-  lButton.Hint := CP1251ToUTF8('Автопоиск подключенных устройств');
+  lButton.Hint := 'Автопоиск подключенных устройств';
   lButton.ShowHint := True;
 end;
 
@@ -2717,7 +2832,7 @@ begin
   lLabel.Parent := lTab;
   lLabel.Left := 16;
   lLabel.Top := 16;
-  lLabel.Caption := CP1251ToUTF8('Раздел будет заполнен после появления соответствующей модели.');
+  lLabel.Caption := 'Раздел будет заполнен после появления соответствующей модели.';
 end;
 
 { Чтение конфигурации из объекта TRecorderRunControlSettings в UI элементы диалога }
@@ -2856,7 +2971,7 @@ begin
   lDir := Trim(fWorkDirEdit.Text);
   if lDir = '' then
     lDir := 'C:\USML\';
-  if not SelectDirectory(CP1251ToUTF8('Выберите рабочий каталог для записи MERA-файлов'), '', lDir) then
+  if not SelectDirectory('Выберите рабочий каталог для записи MERA-файлов', '', lDir) then
     Exit;
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(lDir);
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(lDir) + '0001';
@@ -2885,7 +3000,7 @@ procedure TRecorderSettingsDialog.btnDeviceAddClick(Sender: TObject);
 var
   lDialog: TOpenDialog;
 begin
-  if MessageDlg(CP1251ToUTF8('Добавление устройства'), 'Mera file', mtConfirmation,
+  if MessageDlg('Добавление устройства', 'Mera file', mtConfirmation,
     [mbOK, mbCancel], 0) <> mrOk then
     Exit;
 
@@ -3152,7 +3267,7 @@ begin
     StoreSelectedAlgorithmSettings;
   except
     on E: Exception do
-      MessageDlg(CP1251ToUTF8('Настройка спектра'), E.Message, mtError, [mbOK], 0);
+      MessageDlg('Настройка спектра', E.Message, mtError, [mbOK], 0);
   end;
 end;
 
@@ -3180,7 +3295,7 @@ begin
   lProfile := lSettings.AhCorrectionProfileName;
   if lProfile = '' then
     lProfile := 'default';
-  if InputQuery(CP1251ToUTF8('Коррекция АЧХ'), CP1251ToUTF8('Профиль коэффициентов спектра'), lProfile) then
+  if InputQuery('Коррекция АЧХ', 'Профиль коэффициентов спектра', lProfile) then
   begin
     lSettings.AhCorrectionEnabled := True;
     lSettings.AhCorrectionProfileName := lProfile;

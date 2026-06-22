@@ -605,6 +605,7 @@ begin
   //  g_logFile := cLogFile.Create('e:\Oburec\delphi\2011\OburecGH\recorder\plgEvalFRF\log\log.txt', ';');
   logMessage('NO_TAHO_DEBUG ' + AText);
 end;
+
 function TextLabelsComparator(p1, p2: pointer): integer;
 begin
   if cTextLabel(p1).Position.x > cTextLabel(p2).Position.x then
@@ -1174,6 +1175,7 @@ begin
     end;
   end;
 end;
+
 function TFRFFrm.CanAssignBladeSn(const ASn: string; ABlade: cBladeFolder): boolean;
 var
   s: cStageFolder;
@@ -3949,6 +3951,7 @@ begin
       result := s.m_tag;
   end;
 end;
+
 function cSRSTaho.WorkFreq: double;
 var
   tag: ctag;

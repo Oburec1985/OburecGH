@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, Math, Forms, Controls, StdCtrls, Grids,
   uRecorderTags, uRecorderCalibrationAddDialog,
-  uRecorderCalibrationPropertiesDialog;
+  uRecorderCalibrationPropertiesDialog, uRecorderSdbStore,
+  uRecorderSdbSelectDialog;
 
 type
   TRecorderCalibrationListDialog = class(TForm)
@@ -155,6 +156,9 @@ end;
 
 procedure TRecorderCalibrationListDialog.btnAddClick(Sender: TObject);
 var
+  lAction: TRecorderCalibrationAddAction;
+  lCalibrationName: string;
+  lKey: string;
   lKind: TRecorderCalibrationKind;
   lCalibration: TRecorderCalibration;
   lSelected: TRecorderCalibration;
@@ -174,8 +178,15 @@ begin
     Exit;
   end;
 
-  if not ShowRecorderCalibrationAddDialog(Self, lKind) then
+  if not ShowRecorderCalibrationAddDialog(Self, lKind, lAction) then
     Exit;
+  if lAction = rcaaLoadFromSdb then
+  begin
+    if ShowRecorderSdbSelectDialog(Self, '', lKey) and
+      RecorderSdbImportCalibration(fList, lKey, lCalibrationName) then
+      RefreshGrid;
+    Exit;
+  end;
   lCalibration := TRecorderCalibration.Create(lKind);
   try
     if lKind = rckPiecewiseLinear then

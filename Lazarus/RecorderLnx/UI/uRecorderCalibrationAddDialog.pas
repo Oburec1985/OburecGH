@@ -9,6 +9,8 @@ uses
   uRecorderTags;
 
 type
+  TRecorderCalibrationAddAction = (rcaaCreate, rcaaLoadFromSdb);
+
   TRecorderCalibrationAddDialog = class(TForm)
     btnAdd: TButton;
     btnCancel: TButton;
@@ -17,10 +19,12 @@ type
     procedure lbTypesDblClick(Sender: TObject);
   public
     function SelectedKind: TRecorderCalibrationKind;
+    function SelectedAction: TRecorderCalibrationAddAction;
   end;
 
 function ShowRecorderCalibrationAddDialog(AOwner: TComponent;
-  out AKind: TRecorderCalibrationKind): Boolean;
+  out AKind: TRecorderCalibrationKind;
+  out AAction: TRecorderCalibrationAddAction): Boolean;
 
 implementation
 
@@ -45,7 +49,7 @@ begin
   if lbTypes.ItemIndex < 0 then
     Exit;
   lValue := PtrInt(lbTypes.Items.Objects[lbTypes.ItemIndex]);
-  if lValue >= 0 then
+  if (lValue >= 0) or (lbTypes.ItemIndex = 0) then
     ModalResult := mrOk;
 end;
 
@@ -61,8 +65,16 @@ begin
     Result := rckScale;
 end;
 
+function TRecorderCalibrationAddDialog.SelectedAction: TRecorderCalibrationAddAction;
+begin
+  Result := rcaaCreate;
+  if lbTypes.ItemIndex = 0 then
+    Result := rcaaLoadFromSdb;
+end;
+
 function ShowRecorderCalibrationAddDialog(AOwner: TComponent;
-  out AKind: TRecorderCalibrationKind): Boolean;
+  out AKind: TRecorderCalibrationKind;
+  out AAction: TRecorderCalibrationAddAction): Boolean;
 var
   lDialog: TRecorderCalibrationAddDialog;
 begin
@@ -70,7 +82,10 @@ begin
   try
     Result := lDialog.ShowModal = mrOk;
     if Result then
+    begin
       AKind := lDialog.SelectedKind;
+      AAction := lDialog.SelectedAction;
+    end;
   finally
     lDialog.Free;
   end;

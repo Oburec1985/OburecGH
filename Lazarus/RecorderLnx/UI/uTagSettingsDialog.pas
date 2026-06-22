@@ -25,7 +25,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
-  uRecorderCalibrationListDialog;
+  uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog;
 
 type
   { TTagSettingsDialog }
@@ -1238,12 +1238,31 @@ end;
 
 procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);
 var
+  lAction: TRecorderCalibrationAddAction;
+  lCalibrationName: string;
+  lKey: string;
   I: Integer;
   lKind: TRecorderCalibrationKind;
   lCalibration: TRecorderCalibration;
 begin
-  if not ShowRecorderCalibrationAddDialog(Self, lKind) then
+  if not ShowRecorderCalibrationAddDialog(Self, lKind, lAction) then
     Exit;
+
+  if lAction = rcaaLoadFromSdb then
+  begin
+    if not ShowRecorderSdbSelectDialog(Self, '', lKey) or
+      not RecorderSdbImportCalibration(fTagRegistry.Calibrations, lKey,
+        lCalibrationName) then
+      Exit;
+    for I := 0 to fTags.Count - 1 do
+      if TagAt(I).CalibrationNames.Count = 0 then
+        TagAt(I).CalibrationNames.Add(lCalibrationName)
+      else
+        TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
+          lCalibrationName;
+    UpdateChannelCurveText;
+    Exit;
+  end;
 
   lCalibration := TRecorderCalibration.Create(lKind);
   try

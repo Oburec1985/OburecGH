@@ -589,8 +589,8 @@ begin
     ACanvas.Font.Color := clBlack;
     ACanvas.Font.Name := 'Segoe UI';
     ACanvas.Font.Size := 9;
-
-    lText := lLine.Name;
+    // берем именно имя тега в легенду
+    lText := lLine.TagName;
     if (I < Length(fSeries)) and fSeries[I].HasValue and
       fComponent.ShowCurrentValues then
       lText := Format('%s %.3f', [lText, fSeries[I].LastValue]);

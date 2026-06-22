@@ -1,7 +1,7 @@
 object PeakFrm: TPeakFrm
   Left = 0
   Top = 0
-  Caption = #1057#1087#1080#1089#1086#1082' '#1101#1082#1089#1090#1088#1077#1084#1091#1084#1086#1074
+  Caption = 'Список экстремумов'
   ClientHeight = 467
   ClientWidth = 635
   Color = clBtnFace
@@ -11,6 +11,8 @@ object PeakFrm: TPeakFrm
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
+  OldCreateOrder = False
+  PixelsPerInch = 96
   TextHeight = 13
   object TrigStatusLabel: TLabel
     Left = 0
@@ -38,14 +40,22 @@ object PeakFrm: TPeakFrm
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 631
+    object DebugLogBtn: TButton
+      Left = 6
+      Top = 3
+      Width = 130
+      Height = 23
+      Caption = 'Лог расчета'
+      TabOrder = 0
+      OnClick = DebugLogBtnClick
+    end
     object PeakStatusLabel: TLabel
       Left = 146
       Top = 4
       Width = 260
       Height = 21
       AutoSize = False
-      Caption = #1055#1086#1083#1086#1089#1099' '#1085#1077' '#1085#1072#1081#1076#1077#1085#1099
+      Caption = 'Полосы не найдены'
       Color = 16757940
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clMaroon
@@ -62,7 +72,7 @@ object PeakFrm: TPeakFrm
       Width = 145
       Height = 21
       AutoSize = False
-      Caption = #1052#1080#1085'/'#1084#1072#1082#1089': -'
+      Caption = 'Мин/макс: -'
       Color = clBtnFace
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -76,18 +86,9 @@ object PeakFrm: TPeakFrm
     object RatioLimitLabel: TLabel
       Left = 560
       Top = 8
-      Width = 30
+      Width = 38
       Height = 13
-      Caption = #1055#1086#1088#1086#1075
-    end
-    object DebugLogBtn: TButton
-      Left = 6
-      Top = 3
-      Width = 130
-      Height = 23
-      Caption = #1051#1086#1075' '#1088#1072#1089#1095#1077#1090#1072
-      TabOrder = 0
-      OnClick = DebugLogBtnClick
+      Caption = 'Порог'
     end
     object RatioLimitEdit: TEdit
       Left = 602
@@ -108,8 +109,6 @@ object PeakFrm: TPeakFrm
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 1
     OnDrawCell = ProfileSGDrawCell
-    ExplicitWidth = 631
-    ExplicitHeight = 414
     ColWidths = (
       64
       65
