@@ -75,6 +75,14 @@ type
     property TryStop: Boolean read GetTryStop;
   end;
 
+  { IRecorderZeroBalanceSupport
+    Опциональный интерфейс источника данных для аппаратной/программной балансировки нуля. }
+  IRecorderZeroBalanceSupport = interface
+    ['{E4C9A1B2-7D3F-4E5A-9B8C-1A2B3C4D5E6F}']
+    function ZeroBalanceTags(AOwner: TComponent; ATags: TList;
+      AMessages: TStrings): Boolean;
+  end;
+
   { TRecorderDataSourceBase
     Базовый класс источника данных. Потомки реализуют создание тегов и один
     шаг генерации/опроса данных в DoCreateTags/DoTick. }

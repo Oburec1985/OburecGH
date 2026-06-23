@@ -26,10 +26,12 @@ uses
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
-  uRecorderMic140SettingsDialog;
+  uRecorderMic140SettingsDialog, uRecorderCommandImages;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
+  TTagZeroBalanceEvent = procedure(Sender: TObject; ARegistry: TRecorderTagRegistry;
+    ATags: TList) of object;
   { TTagSettingsDialog }
   { Диалоговое окно настройки свойств тега (канала)   }
   TTagSettingsDialog = class(TForm)
@@ -72,6 +74,9 @@ type
     fChannelCurveAddBtn: TSpeedButton;
     fChannelCurveDeleteBtn: TSpeedButton;
     fChannelCurveEditBtn: TSpeedButton;
+    pnTagDeviceActions: TPanel;
+    fZeroBalanceBtn: TSpeedButton;
+    fHardwareDeviceSetupBtn: TSpeedButton;
     lbVirtualChannelInfo: TLabel;
     tsAdditional: TTabSheet;
     gbEstimates: TGroupBox;
@@ -135,8 +140,12 @@ type
     btnOk: TButton;
     btnCancel: TButton;
     fApplyButton: TButton;
+    ilTagDialogButtons: TImageList;
+    procedure ZeroBalanceButtonClick(Sender: TObject);
+    procedure HardwareDeviceSetupButtonClick(Sender: TObject);
   private
-    fImages: TCustomImageList;                           // Список иконок для диалога
+    fImages: TCustomImageList;                           // Список иконок для диалога (ilTagDialogButtons)
+    fCommandImages: TCustomImageList;                    // Список иконок устройства (ilCommandButtons)
     fTagRegistry: TRecorderTagRegistry;                  // Реестр тегов
     fSelectedMeraFileName: string;                       // Путь выбранного Mera-файла
     fTags: TList;                                        // Список редактируемых тегов
@@ -146,6 +155,7 @@ type
     fSetpointEnabledChecks: array[TRecorderTagSetpointKind] of TCheckBox; // Флаги активности уставок
     fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
     fOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+    fOnZeroBalance: TTagZeroBalanceEvent;
     
     // Внутренние методы обработчиков UI
     procedure ApplyButtonClick(Sender: TObject);
@@ -158,14 +168,21 @@ type
     procedure SelectHardwareCalibrationButtonClick(Sender: TObject);
     procedure EditHardwareCalibrationButtonClick(Sender: TObject);
     procedure DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
-    procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImageIndex: Integer);
+    procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImages: TCustomImageList;
+      AImageIndex: Integer; const AHint: string = ''; ABtnSize: Integer = 0);
+    procedure AssignActionSpeedButton(AButton: TSpeedButton; AImages: TCustomImageList;
+      AImageIndex: Integer; const ACaption, AHint: string);
+    procedure LayoutTagDeviceActionButtons;
     procedure AssignDownloadFlashIcon(AButton: TSpeedButton);
     procedure UpdateChannelCurveText;
     procedure UpdateHardwareCurveText;
     procedure UpdateHardwareCurveButtons;
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
     procedure UpdateHardwareSourceSetupButton;
+    procedure UpdateTagDeviceActionButtons;
+    procedure UpdateVirtualChannelInfo;
     function CanConfigureHardwareSource: Boolean;
+    function CanZeroBalance: Boolean;
     
     // Обмен данными между UI и тегами
     procedure LoadFromTags;
@@ -177,6 +194,7 @@ type
     
     // Функции проверки согласованности значений при множественном выборе
     function AllBool(AGetter: Integer): Integer;
+    function AllChannelCalibrationEnabled: Integer;
     function AllEstimateBool(AKind: TRecorderTagEstimateKind;
       out AValue: Boolean): Boolean;
     function AllEstimateDefault(out AValue: TRecorderTagEstimateKind): Boolean;
@@ -205,11 +223,13 @@ type
   public
     constructor CreateDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry;
       ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200;
-      AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil); reintroduce;
+      AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil;
+      AOnZeroBalance: TTagZeroBalanceEvent = nil;
+      ACommandImages: TCustomImageList = nil); reintroduce;
     destructor Destroy; override;
   end;
 
-function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil): Boolean;
+function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
 
 implementation
 
@@ -223,7 +243,8 @@ const
   CTagDialogIconAdd = 4;
   CTagDialogIconRemove = 5;
   CTagDialogIconChannelCurve = 6;
-  CTagDialogIconHardwareSource = 42;
+  CTagDeviceActionBtnSize = 32;
+  CTagDeviceActionBtnGap = 4;
   CMeraSourcePrefix = 'Mera file: ';
   CRamOutIconPaths: array[0..2] of string = (
     'D:\works\windev-v3.9\rc_guisrv\res\v3\ico\ram_out.ico',
@@ -276,12 +297,14 @@ end;
 function ShowTagSettingsDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList;
   AImages: TCustomImageList; ADataUpdateMs: Cardinal;
-  AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent): Boolean;
+  AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+  AOnZeroBalance: TTagZeroBalanceEvent;
+  ACommandImages: TCustomImageList): Boolean;
 var
   lDialog: TTagSettingsDialog;
 begin
   lDialog := TTagSettingsDialog.CreateDialog(AOwner, ATagRegistry, ATags, AImages,
-    ADataUpdateMs, AOnHardwareSourceSetup);
+    ADataUpdateMs, AOnHardwareSourceSetup, AOnZeroBalance, ACommandImages);
   try
     Result := lDialog.ShowModal = mrOk;
   finally
@@ -291,7 +314,8 @@ end;
 
 constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList;
-  ADataUpdateMs: Cardinal; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent);
+  ADataUpdateMs: Cardinal; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+  AOnZeroBalance: TTagZeroBalanceEvent; ACommandImages: TCustomImageList);
 begin
   inherited Create(AOwner);
   if ATagRegistry = nil then
@@ -300,8 +324,17 @@ begin
     raise ERecorderTagError.Create('No tags selected');
 
   fTagRegistry := ATagRegistry;
-  fImages := AImages;
+  fTagRegistry.RefreshActiveSourcesFromTags;
+  if AImages <> nil then
+  begin
+    ilTagDialogButtons.Assign(AImages);
+    fImages := ilTagDialogButtons;
+  end
+  else
+    fImages := ilTagDialogButtons;
+  fCommandImages := ACommandImages;
   fOnHardwareSourceSetup := AOnHardwareSourceSetup;
+  fOnZeroBalance := AOnZeroBalance;
   fTags := TList.Create;
   fTags.Assign(ATags);
   fDataUpdateMs := ADataUpdateMs;
@@ -333,6 +366,7 @@ begin
   fSetpointColorPanels[tskLowAlarm] := fSetpointColorPanel3;
   fAddressButton.OnClick := @AddressButtonClick;
   fHardwareSourceSetupBtn.OnClick := @HardwareSourceSetupButtonClick;
+  fHardwareSourceSetupBtn.Visible := False;
   fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
   fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
   fChannelCurveDeleteBtn.OnClick := @DeleteCalibrationButtonClick;
@@ -343,16 +377,20 @@ begin
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
 
-  AssignSpeedButtonImage(fAddressButton, CTagDialogIconAddress);
-  AssignSpeedButtonImage(fHardwareSourceSetupBtn, CTagDialogIconHardwareSource);
-  AssignSpeedButtonImage(fDescriptionEditBtn, CTagDialogIconEdit);
-  AssignSpeedButtonImage(fHardwareCurveSelectBtn, CTagDialogIconProperty);
-  AssignSpeedButtonImage(fHardwareCurveSetupBtn, CTagDialogIconHardwareCurve);
+  AssignSpeedButtonImage(fAddressButton, fImages, CTagDialogIconAddress);
+  AssignSpeedButtonImage(fDescriptionEditBtn, fImages, CTagDialogIconEdit);
+  AssignSpeedButtonImage(fHardwareCurveSelectBtn, fImages, CTagDialogIconProperty);
+  AssignSpeedButtonImage(fHardwareCurveSetupBtn, fImages, CTagDialogIconHardwareCurve);
   AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
-  AssignSpeedButtonImage(fChannelCurveSelectBtn, CTagDialogIconProperty);
-  AssignSpeedButtonImage(fChannelCurveAddBtn, CTagDialogIconAdd);
-  AssignSpeedButtonImage(fChannelCurveDeleteBtn, CTagDialogIconRemove);
-  AssignSpeedButtonImage(fChannelCurveEditBtn, CTagDialogIconChannelCurve);
+  AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty);
+  AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CTagDialogIconAdd);
+  AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CTagDialogIconRemove);
+  AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CTagDialogIconChannelCurve);
+  AssignSpeedButtonImage(fZeroBalanceBtn, fCommandImages, CTagDialogIconZeroBalance,
+    'Балансировка нуля', CTagDeviceActionBtnSize);
+  AssignSpeedButtonImage(fHardwareDeviceSetupBtn, fCommandImages,
+    CTagDialogIconHardwareSource, 'Настройка аппаратной части', CTagDeviceActionBtnSize);
+  LayoutTagDeviceActionButtons;
   LoadFromTags;
 end;
 
@@ -363,18 +401,65 @@ begin
 end;
 
 
-procedure TTagSettingsDialog.AssignSpeedButtonImage(AButton: TSpeedButton; AImageIndex: Integer);
+procedure TTagSettingsDialog.AssignSpeedButtonImage(AButton: TSpeedButton;
+  AImages: TCustomImageList; AImageIndex: Integer; const AHint: string;
+  ABtnSize: Integer);
+var
+  lBtnSize: Integer;
 begin
-  if (AButton = nil) or (fImages = nil) or (AImageIndex < 0) or
-    (AImageIndex >= fImages.Count) then
+  if (AButton = nil) or (AImages = nil) or (AImageIndex < 0) or
+    (AImageIndex >= AImages.Count) then
     Exit;
-  AButton.Images := fImages;
+  if ABtnSize > 0 then
+    lBtnSize := ABtnSize
+  else if AImages.Width > 0 then
+    lBtnSize := AImages.Width
+  else
+    lBtnSize := 32;
+  AButton.Images := AImages;
   AButton.ImageIndex := AImageIndex;
-  AButton.ImageWidth := 32;
+  AButton.ImageWidth := lBtnSize;
   AButton.Caption := '';
+  AButton.Layout := blGlyphTop;
+  AButton.Spacing := 0;
+  AButton.Margin := 0;
+  AButton.Flat := False;
+  if AHint <> '' then
+  begin
+    AButton.Hint := AHint;
+    AButton.ShowHint := True;
+    AButton.ParentShowHint := False;
+  end;
+  AButton.SetBounds(AButton.Left, AButton.Top, lBtnSize, lBtnSize);
+end;
+
+procedure TTagSettingsDialog.AssignActionSpeedButton(AButton: TSpeedButton;
+  AImages: TCustomImageList; AImageIndex: Integer; const ACaption, AHint: string);
+begin
+  if AButton = nil then
+    Exit;
+  if (AImages <> nil) and (AImageIndex >= 0) and (AImageIndex < AImages.Count) then
+  begin
+    AButton.Images := AImages;
+    AButton.ImageIndex := AImageIndex;
+    if AImages.Width > 0 then
+      AButton.ImageWidth := AImages.Width
+    else
+      AButton.ImageWidth := 32;
+  end;
+  AButton.Caption := ACaption;
+  AButton.Layout := blGlyphLeft;
+  AButton.Spacing := 4;
+  AButton.Margin := 6;
+  AButton.Flat := False;
+  AButton.Hint := AHint;
+  AButton.ShowHint := True;
+  AButton.ParentShowHint := False;
 end;
 
 procedure TTagSettingsDialog.UpdateChannelCurveText;
+var
+  lBool: Integer;
 begin
   if fTags.Count = 0 then
     Exit;
@@ -383,7 +468,12 @@ begin
       TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]
   else
     fChannelCurveEdit.Text := '';
-  fChannelCurveCheck.Checked := fChannelCurveEdit.Text <> '';
+  lBool := AllChannelCalibrationEnabled;
+  fChannelCurveCheck.AllowGrayed := fTags.Count > 1;
+  if lBool < 0 then
+    fChannelCurveCheck.State := cbGrayed
+  else
+    fChannelCurveCheck.Checked := lBool > 0;
 end;
 
 procedure TTagSettingsDialog.UpdateHardwareCurveText;
@@ -506,6 +596,24 @@ begin
       Exit;
   end;
 
+  if lFirst then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function TTagSettingsDialog.AllChannelCalibrationEnabled: Integer;
+var
+  I: Integer;
+  lFirst: Boolean;
+begin
+  Result := -1;
+  if fTags.Count = 0 then
+    Exit;
+  lFirst := TagAt(0).ChannelCalibrationEnabled;
+  for I := 1 to fTags.Count - 1 do
+    if TagAt(I).ChannelCalibrationEnabled <> lFirst then
+      Exit;
   if lFirst then
     Result := 1
   else
@@ -700,6 +808,10 @@ begin
   for I := 0 to fTags.Count - 1 do
   begin
     lSourceId := Trim(TagAt(I).SourceId);
+    if RecorderIsDetachedTagSource(lSourceId) then
+      Exit(True);
+    if RecorderIsHardwareMic140TagSource(lSourceId) then
+      Continue;
     if SourceNeedsActiveCheck(lSourceId) and
       not fTagRegistry.IsSourceActive(lSourceId) then
       Exit(True);
@@ -913,8 +1025,6 @@ begin
   Result := False;
   if fTags.Count <> 1 then
     Exit;
-  if HasDetachedSource then
-    Exit;
   lTag := TagAt(0);
   if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
     Exit(True);
@@ -926,8 +1036,97 @@ begin
   if fHardwareSourceSetupBtn = nil then
     Exit;
   fHardwareSourceSetupBtn.Enabled := CanConfigureHardwareSource;
-  fHardwareSourceSetupBtn.Visible := CanConfigureHardwareSource or
-    (fOnHardwareSourceSetup <> nil);
+  fHardwareSourceSetupBtn.Visible := False;
+end;
+
+procedure TTagSettingsDialog.LayoutTagDeviceActionButtons;
+var
+  lLeft: Integer;
+  lTop: Integer;
+  lVisibleCount: Integer;
+begin
+  if pnTagDeviceActions = nil then
+    Exit;
+  lTop := 4;
+  lLeft := 0;
+  lVisibleCount := 0;
+  if (fZeroBalanceBtn <> nil) and fZeroBalanceBtn.Visible then
+  begin
+    fZeroBalanceBtn.SetBounds(lLeft, lTop, CTagDeviceActionBtnSize, CTagDeviceActionBtnSize);
+    Inc(lLeft, CTagDeviceActionBtnSize + CTagDeviceActionBtnGap);
+    Inc(lVisibleCount);
+  end;
+  if (fHardwareDeviceSetupBtn <> nil) and fHardwareDeviceSetupBtn.Visible then
+  begin
+    fHardwareDeviceSetupBtn.SetBounds(lLeft, lTop, CTagDeviceActionBtnSize,
+      CTagDeviceActionBtnSize);
+    Inc(lLeft, CTagDeviceActionBtnSize + CTagDeviceActionBtnGap);
+    Inc(lVisibleCount);
+  end;
+  if lVisibleCount > 0 then
+  begin
+    pnTagDeviceActions.Height := CTagDeviceActionBtnSize + 8;
+    pnTagDeviceActions.Width := lLeft;
+  end;
+end;
+
+function TTagSettingsDialog.CanZeroBalance: Boolean;
+var
+  I: Integer;
+  lHost: string;
+  lPort: Word;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if fTags.Count = 0 then
+    Exit;
+  for I := 0 to fTags.Count - 1 do
+  begin
+    lTag := TagAt(I);
+    if Pos('Detached:', lTag.SourceId) = 1 then
+      Continue;
+    if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+      Exit(True);
+  end;
+end;
+
+procedure TTagSettingsDialog.UpdateTagDeviceActionButtons;
+begin
+  if fZeroBalanceBtn <> nil then
+  begin
+    fZeroBalanceBtn.Enabled := CanZeroBalance;
+    fZeroBalanceBtn.Visible := CanZeroBalance;
+  end;
+  if fHardwareDeviceSetupBtn <> nil then
+  begin
+    fHardwareDeviceSetupBtn.Enabled := CanConfigureHardwareSource;
+    fHardwareDeviceSetupBtn.Visible := CanConfigureHardwareSource;
+  end;
+  if pnTagDeviceActions <> nil then
+    pnTagDeviceActions.Visible := (fZeroBalanceBtn <> nil) and fZeroBalanceBtn.Visible or
+      ((fHardwareDeviceSetupBtn <> nil) and fHardwareDeviceSetupBtn.Visible);
+  LayoutTagDeviceActionButtons;
+end;
+
+procedure TTagSettingsDialog.UpdateVirtualChannelInfo;
+begin
+  if lbVirtualChannelInfo = nil then
+    Exit;
+  lbVirtualChannelInfo.Visible := (fTags.Count = 1) and
+    RecorderIsVirtualTagSource(TagAt(0).SourceId);
+end;
+
+procedure TTagSettingsDialog.ZeroBalanceButtonClick(Sender: TObject);
+begin
+  if not CanZeroBalance then
+    Exit;
+  if fOnZeroBalance <> nil then
+    fOnZeroBalance(Self, fTagRegistry, fTags);
+end;
+
+procedure TTagSettingsDialog.HardwareDeviceSetupButtonClick(Sender: TObject);
+begin
+  HardwareSourceSetupButtonClick(Sender);
 end;
 
 procedure TTagSettingsDialog.HardwareSourceSetupButtonClick(Sender: TObject);
@@ -1041,13 +1240,19 @@ begin
   for lJ := 0 to fTags.Count - 1 do
   begin
     lTagTemp := TagAt(lJ);
-    if SourceNeedsActiveCheck(lTagTemp.SourceId) then
+    lSourceId := Trim(lTagTemp.SourceId);
+    if RecorderIsDetachedTagSource(lSourceId) then
     begin
-      if not fTagRegistry.IsSourceActive(lTagTemp.SourceId) then
-      begin
-        lSourceActive := False;
-        Break;
-      end;
+      lSourceActive := False;
+      Break;
+    end;
+    if RecorderIsHardwareMic140TagSource(lSourceId) then
+      Continue;
+    if SourceNeedsActiveCheck(lSourceId) and
+      not fTagRegistry.IsSourceActive(lSourceId) then
+    begin
+      lSourceActive := False;
+      Break;
     end;
   end;
   fDetachedSourceLabel.Visible := not lSourceActive;
@@ -1095,6 +1300,8 @@ begin
   UpdateHardwareCurveText;
   UpdateHardwareCurveButtons;
   UpdateHardwareSourceSetupButton;
+  UpdateTagDeviceActionButtons;
+  UpdateVirtualChannelInfo;
 
   for lEstimateKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
   begin
@@ -1251,6 +1458,37 @@ begin
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
     if (fTags.Count = 1) and fHardwareCurveEdit.Enabled then
       lTag.HardwareCalibrationName := Trim(fHardwareCurveEdit.Text);
+    if fChannelCurveCheck.State <> cbGrayed then
+    begin
+      if lTag.ChannelCalibrationEnabled <> fChannelCurveCheck.Checked then
+        lTag.ClearSignalHistory;
+      lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
+      if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+      begin
+        if fChannelCurveCheck.Checked then
+        begin
+          if (Trim(lTag.Mic140ThermocoupleScalePath) <> '') or
+            (Trim(lTag.Mic140ThermocoupleScaleName) <> '') then
+          begin
+            if lTag.SourceValueMode <>
+              RecorderMic140OutputModeToConfigName(momTemperatureC) then
+              lTag.ClearSignalHistory;
+            lTag.SourceValueMode :=
+              RecorderMic140OutputModeToConfigName(momTemperatureC);
+            lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
+          end;
+        end
+        else
+        begin
+          if lTag.SourceValueMode <>
+            RecorderMic140OutputModeToConfigName(momMillivolts) then
+            lTag.ClearSignalHistory;
+          lTag.SourceValueMode :=
+            RecorderMic140OutputModeToConfigName(momMillivolts);
+          lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
+        end;
+      end;
+    end;
 
     lEstimateSettings := lTag.EstimateSettings;
     for lEstimateKind := Low(TRecorderTagEstimateKind) to tekPeakToPeakByRmsDeviation do
@@ -1327,6 +1565,15 @@ begin
     Exit;
   end;
 
+  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) = 1 then
+  begin
+    MessageDlg('Канальная ГХ',
+      'Для MIC-140 термопарная ГХ настраивается в диалоге канала MIC-140 ' +
+      'и выгружается из памяти прибора. Общий список ГХ для этого канала не используется.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
   lSelected := nil;
   if ShowRecorderCalibrationListDialog(Self, fTagRegistry.Calibrations, lSelected) and
     (lSelected <> nil) then
@@ -1336,6 +1583,7 @@ begin
     else
       TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1] :=
         lSelected.Name;
+    TagAt(0).ChannelCalibrationEnabled := True;
     UpdateChannelCurveText;
   end;
 end;
@@ -1359,11 +1607,14 @@ begin
         lCalibrationName) then
       Exit;
     for I := 0 to fTags.Count - 1 do
+    begin
       if TagAt(I).CalibrationNames.Count = 0 then
         TagAt(I).CalibrationNames.Add(lCalibrationName)
       else
         TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
           lCalibrationName;
+      TagAt(I).ChannelCalibrationEnabled := True;
+    end;
     UpdateChannelCurveText;
     Exit;
   end;
@@ -1382,11 +1633,14 @@ begin
 
   fTagRegistry.Calibrations.Add(lCalibration);
   for I := 0 to fTags.Count - 1 do
+  begin
     if TagAt(I).CalibrationNames.Count = 0 then
       TagAt(I).CalibrationNames.Add(lCalibration.Name)
     else
       TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
         lCalibration.Name;
+    TagAt(I).ChannelCalibrationEnabled := True;
+  end;
     lCalibration := nil;
     UpdateChannelCurveText;
   finally
@@ -1399,7 +1653,16 @@ var
   I: Integer;
 begin
   for I := 0 to fTags.Count - 1 do
+  begin
     TagAt(I).CalibrationNames.Clear;
+    TagAt(I).ChannelCalibrationEnabled := False;
+    if Pos(CMic140SourcePrefix, TagAt(I).SourceId) = 1 then
+    begin
+      TagAt(I).SourceValueMode :=
+        RecorderMic140OutputModeToConfigName(momMillivolts);
+      TagAt(I).UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
+    end;
+  end;
   UpdateChannelCurveText;
 end;
 
@@ -1436,16 +1699,18 @@ begin
 end;
 
 procedure TTagSettingsDialog.SelectHardwareCalibrationButtonClick(Sender: TObject);
+var
+  lCalibration: TRecorderCalibration;
 begin
   if fTags.Count <> 1 then
   begin
     MessageDlg('Аппаратная ГХ',
-      'Загрузка аппаратной ГХ поддерживается только для одного значения тега.',
+      'Просмотр аппаратной ГХ поддерживается только для одного значения тега.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
-  if Pos('MIC-140:', TagAt(0).SourceId) <> 1 then
+  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
   begin
     MessageDlg('Аппаратная ГХ',
       'Загрузка из аппаратной базы поддерживается только для каналов MIC-140.',
@@ -1453,12 +1718,25 @@ begin
     Exit;
   end;
 
-  if RecorderMic140LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), 0) then
-    UpdateHardwareCurveText
-  else
+  if not RecorderMic140LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), 0,
+    fHardwareCurveCheck.Checked) then
+  begin
     MessageDlg('Аппаратная ГХ',
       'Не удалось загрузить аппаратную ГХ. Проверьте каталог calibr/hardware/MIC140 и серийный номер прибора.',
       mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  UpdateHardwareCurveText;
+  lCalibration := fTagRegistry.FindCalibrationByName(
+    Trim(TagAt(0).HardwareCalibrationName));
+  if lCalibration = nil then
+  begin
+    MessageDlg('Аппаратная ГХ',
+      'Градуировка аппаратной ГХ не найдена в реестре калибровок.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  ShowRecorderCalibrationPropertiesDialog(Self, lCalibration);
 end;
 
 procedure TTagSettingsDialog.EditHardwareCalibrationButtonClick(Sender: TObject);
@@ -1469,6 +1747,14 @@ begin
   begin
     MessageDlg('Аппаратная ГХ',
       'Редактирование доступно только для одного значения тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
+  begin
+    MessageDlg('Аппаратная ГХ',
+      'Редактирование доступно только для каналов MIC-140.',
       mtInformation, [mbOK], 0);
     Exit;
   end;

@@ -49,8 +49,12 @@ const
 
   CRecorderOriginalImageCount = 15;
   CRecorderCommandImageCount = 39;
+  CTagDialogIconHardwareSource = 42;
+  CTagDialogIconZeroBalance = 51;
+  CTagDialogImageCount = 52;
 
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
+procedure EnsureRecorderTagDialogImages(AImages: TCustomImageList);
 
 implementation
 
@@ -258,6 +262,45 @@ procedure EnsureImageListSize(AImages: TCustomImageList; AMinCount: Integer);
 begin
   while AImages.Count < AMinCount do
     AddBitmapFile(AImages, '');
+end;
+
+procedure SetImageListIconAt(AImages: TCustomImageList; AIndex: Integer;
+  const AFileName: string);
+var
+  lIcon: TIcon;
+begin
+  if (AImages = nil) or (AFileName = '') or not FileExists(AFileName) then
+    Exit;
+  EnsureImageListSize(AImages, AIndex + 1);
+  lIcon := TIcon.Create;
+  try
+    lIcon.LoadFromFile(AFileName);
+    AImages.ReplaceIcon(AIndex, lIcon);
+  finally
+    lIcon.Free;
+  end;
+end;
+
+procedure EnsureRecorderTagDialogImages(AImages: TCustomImageList);
+begin
+  if AImages = nil then
+    Exit;
+  if AImages.Width < 32 then
+    AImages.Width := 32;
+  if AImages.Height < 32 then
+    AImages.Height := 32;
+  SetImageListIconAt(AImages, CTagDialogIconHardwareSource, FirstExistingFile([
+    CWindevRoot + 'rc_guisrv\res\v3\ico\hardware.ico',
+    CWindevRoot + 'rc_guisrv\res\hardware.ico',
+    ImageFile('hardware.ico'),
+    ImageFile('from_rcguisrv\res\v3\ico\hardware.ico')
+  ]));
+  SetImageListIconAt(AImages, CTagDialogIconZeroBalance, FirstExistingFile([
+    CWindevRoot + 'rc_guisrv\res\v3\ico\zbalance.ico',
+    CWindevRoot + 'rc_guisrv\res\zbalance.ico',
+    ImageFile('zbalance.ico'),
+    ImageFile('from_rcguisrv\res\v3\ico\zbalance.ico')
+  ]));
 end;
 
 procedure RefreshSaveConfigIcons(AImages: TCustomImageList);

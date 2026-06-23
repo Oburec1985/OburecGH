@@ -184,12 +184,14 @@ type
     fMeasRangeIndex: LongWord;                                 { Индекс диапазона MIC-140 }
     fHardwareCalibrationEnabled: Boolean;                      { Включена аппаратная ГХ с устройства }
     fHardwareCalibrationName: string;                          { Имя аппаратной ГХ в реестре калибровок }
+    fChannelCalibrationEnabled: Boolean;                         { Включена канальная ГХ (термопарная/SDB) }
     fMic140DeviceSerial: Integer;                              { Серийный номер MIC-140 для аппаратной ГХ }
     fMic140ThermoCompensationEnabled: Boolean;                 { КТХС выполняется драйвером MIC-140 до ГХ }
     fMic140CjcDefault: Boolean;                                { Использовать штатный T-канал холодного спая }
     fMic140CjcChannel: Integer;                                { T1..T3, выбранный для КТХС }
     fMic140ThermocoupleScaleName: string;                      { Выбранная SDB ГХ термопары }
     fMic140ThermocoupleScalePath: string;                      { Ключ SDB выбранной ГХ }
+    fMic140SoftBalance: Double;                                { Программное смещение нуля (коды АЦП) }
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
@@ -211,6 +213,8 @@ type
     procedure AddSamples(const ATimes, AValues: array of Double; ACount: Integer);
     { Расширяет кольцевой буфер тега без потери последних точек. }
     procedure EnsureBufferCapacity(ACapacity: Integer);
+    { Очищает историю сигнала после смены режима/ГХ канала. }
+    procedure ClearSignalHistory;
 
     { Возвращает снимок сигнала тега. }
     function Snapshot: TRecorderSignalSnapshot;
@@ -252,6 +256,8 @@ type
       write fHardwareCalibrationEnabled;
     property HardwareCalibrationName: string read fHardwareCalibrationName
       write fHardwareCalibrationName;
+    property ChannelCalibrationEnabled: Boolean read fChannelCalibrationEnabled
+      write fChannelCalibrationEnabled;
     property Mic140DeviceSerial: Integer read fMic140DeviceSerial
       write fMic140DeviceSerial;
     property Mic140ThermoCompensationEnabled: Boolean
@@ -262,6 +268,7 @@ type
       write fMic140ThermocoupleScaleName;
     property Mic140ThermocoupleScalePath: string read fMic140ThermocoupleScalePath
       write fMic140ThermocoupleScalePath;
+    property Mic140SoftBalance: Double read fMic140SoftBalance write fMic140SoftBalance;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
   end;
@@ -397,6 +404,7 @@ type
     procedure RegisterActiveSource(const ASourceId: string);
     procedure UnregisterActiveSource(const ASourceId: string);
     procedure ClearActiveSources;
+    procedure RefreshActiveSourcesFromTags;
     function IsSourceActive(const ASourceId: string): Boolean;
 
     { Публикует новое значение тега и отправляет событие rceDataUpdated. }
@@ -445,6 +453,16 @@ function RecorderTagsShareSourceId(ARegistry: TRecorderTagRegistry;
   const ATagNames: array of string): Boolean;
 function RecorderTagsShareSourceIdList(ARegistry: TRecorderTagRegistry;
   ATagNames: TStrings): Boolean;
+
+const
+  CDetachedTagSourcePrefix = 'Detached:';
+  CMeraTagSourcePrefix = 'Mera file: ';
+  CMic140TagSourcePrefix = 'MIC-140:';
+
+function RecorderNormalizeTagSourceId(const ASourceId: string): string;
+function RecorderIsDetachedTagSource(const ASourceId: string): Boolean;
+function RecorderIsVirtualTagSource(const ASourceId: string): Boolean;
+function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
 
 implementation
 
@@ -900,6 +918,7 @@ begin
   fSetpointSoundUntilEnd := True;
   fMic140CjcDefault := True;
   fMic140CjcChannel := 0;
+  fChannelCalibrationEnabled := True;
   fCalibrationNames := TStringList.Create;
   fCalibrationNames.CaseSensitive := False;
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
@@ -930,6 +949,12 @@ procedure TRecorderTag.EnsureBufferCapacity(ACapacity: Integer);
 begin
   if ACapacity > fSignalBuffer.Capacity then
     fSignalBuffer.SetCapacity(ACapacity);
+end;
+
+procedure TRecorderTag.ClearSignalHistory;
+begin
+  fSignalBuffer.Clear;
+  fTextValue := '';
 end;
 
 function TRecorderTag.Snapshot: TRecorderSignalSnapshot;
@@ -1156,7 +1181,8 @@ var
   lName: string;
 begin
   Result := nil;
-  if (ATag = nil) or (ATag.CalibrationNames = nil) then
+  if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
+    (ATag.CalibrationNames = nil) then
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
@@ -1231,7 +1257,7 @@ var
   lCalibration: TRecorderCalibration;
 begin
   Result := TransformTagHardwareValue(ATag, AValue);
-  if ATag = nil then
+  if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) then
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
@@ -1263,6 +1289,52 @@ end;
 procedure TRecorderTagRegistry.ClearActiveSources;
 begin
   fActiveSourceIds.Clear;
+end;
+
+function RecorderNormalizeTagSourceId(const ASourceId: string): string;
+begin
+  Result := Trim(ASourceId);
+  if Pos(CDetachedTagSourcePrefix, Result) = 1 then
+    Result := Trim(Copy(Result, Length(CDetachedTagSourcePrefix) + 1, MaxInt));
+end;
+
+function RecorderIsDetachedTagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CDetachedTagSourcePrefix, Trim(ASourceId)) = 1;
+end;
+
+function RecorderIsVirtualTagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CMeraTagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CMic140TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+procedure TRecorderTagRegistry.RefreshActiveSourcesFromTags;
+var
+  I: Integer;
+  lSourceId: string;
+  lTag: TRecorderTag;
+begin
+  ClearActiveSources;
+  RegisterActiveSource('manual');
+  RegisterActiveSource('debug.diagnostics');
+  for I := 0 to TagCount - 1 do
+  begin
+    lTag := Tags[I];
+    if RecorderIsDetachedTagSource(lTag.SourceId) then
+      Continue;
+    lSourceId := Trim(lTag.SourceId);
+    if lSourceId = '' then
+      Continue;
+    if Pos(CMeraTagSourcePrefix, lSourceId) = 1 then
+      RegisterActiveSource(lSourceId)
+    else if Pos(CMic140TagSourcePrefix, lSourceId) = 1 then
+      RegisterActiveSource(lSourceId);
+  end;
 end;
 
 function TRecorderTagRegistry.IsSourceActive(const ASourceId: string): Boolean;

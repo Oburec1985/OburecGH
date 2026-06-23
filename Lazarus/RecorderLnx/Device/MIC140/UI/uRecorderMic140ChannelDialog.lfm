@@ -1,11 +1,11 @@
 object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
   Left = 320
-  Height = 240
+  Height = 280
   Top = 200
   Width = 360
   BorderStyle = bsDialog
   Caption = 'Свойства канала'
-  ClientHeight = 240
+  ClientHeight = 280
   ClientWidth = 360
   Position = poOwnerFormCenter
   OnCreate = FormCreate
@@ -102,10 +102,24 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     ReadOnly = True
     TabOrder = 6
   end
+  object lbSoftBalance: TLabel
+    Left = 12
+    Height = 15
+    Top = 144
+    Width = 188
+    Caption = 'Значение баланс. програм., код'
+  end
+  object fSoftBalanceEdit: TEdit
+    Left = 220
+    Height = 23
+    Top = 140
+    Width = 100
+    TabOrder = 7
+  end
   object pnButtons: TPanel
     Left = 0
     Height = 44
-    Top = 196
+    Top = 236
     Width = 360
     Align = alBottom
     BevelOuter = bvNone

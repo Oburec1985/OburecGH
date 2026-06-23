@@ -19,18 +19,25 @@ uses
 function RecorderMeraFilesPath: string;
 procedure SetRecorderMeraFilesPath(const APath: string);
 function RecorderMeraCalibrRootDir: string;
+procedure RecorderMeraResetThermocoupleCache;
+procedure RecorderMeraGetThermocoupleCache(out ADiskDir, AFolderKey: string);
+procedure RecorderMeraSetThermocoupleCache(const ADiskDir, AFolderKey: string);
+function RecorderMeraThermocoupleLastMeraPath: string;
+procedure RecorderMeraSetThermocoupleLastMeraPath(const APath: string);
 
 implementation
 
 uses
-  uRecorderMeraSdbThermocouples
   {$IFDEF MSWINDOWS}
-  , Windows
+  Windows
   {$ENDIF}
   ;
 
 var
   g_MeraFilesPath: string;
+  g_MeraThermocoupleDir: string;
+  g_MeraThermocoupleFolderKey: string;
+  g_MeraThermocoupleLastMeraPath: string;
 
 function DefaultRecorderMeraFilesPath: string;
 
@@ -110,6 +117,35 @@ procedure SetRecorderMeraFilesPath(const APath: string);
 begin
   g_MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(APath));
   RecorderMeraResetThermocoupleCache;
+end;
+
+procedure RecorderMeraResetThermocoupleCache;
+begin
+  g_MeraThermocoupleDir := '';
+  g_MeraThermocoupleFolderKey := '';
+  g_MeraThermocoupleLastMeraPath := #0;
+end;
+
+procedure RecorderMeraGetThermocoupleCache(out ADiskDir, AFolderKey: string);
+begin
+  ADiskDir := g_MeraThermocoupleDir;
+  AFolderKey := g_MeraThermocoupleFolderKey;
+end;
+
+procedure RecorderMeraSetThermocoupleCache(const ADiskDir, AFolderKey: string);
+begin
+  g_MeraThermocoupleDir := ADiskDir;
+  g_MeraThermocoupleFolderKey := AFolderKey;
+end;
+
+function RecorderMeraThermocoupleLastMeraPath: string;
+begin
+  Result := g_MeraThermocoupleLastMeraPath;
+end;
+
+procedure RecorderMeraSetThermocoupleLastMeraPath(const APath: string);
+begin
+  g_MeraThermocoupleLastMeraPath := APath;
 end;
 
 function RecorderMeraCalibrRootDir: string;

@@ -134,7 +134,7 @@ object RecorderMic140SettingsDialog: TRecorderMic140SettingsDialog
     Top = 88
     Width = 760
     Align = alClient
-    ColCount = 6
+    ColCount = 8
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
     RowCount = 2
@@ -153,6 +153,15 @@ object RecorderMic140SettingsDialog: TRecorderMic140SettingsDialog
     ClientHeight = 44
     ClientWidth = 760
     TabOrder = 2
+    object btnBalance: TButton
+      Left = 8
+      Height = 28
+      Top = 8
+      Width = 120
+      Caption = 'Балансировать'
+      TabOrder = 0
+      OnClick = BalanceClick
+    end
     object pnButtons: TPanel
       Left = 556
       Height = 44

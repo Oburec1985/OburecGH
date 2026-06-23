@@ -108,12 +108,12 @@ object TagSettingsDialog: TTagSettingsDialog
         object fHardwareSourceSetupBtn: TSpeedButton
           Left = 404
           Height = 32
+          Hint = 'Настройка аппаратного источника'
           Top = 44
           Width = 34
           Anchors = [akTop, akRight]
-          Hint = 'Настройка аппаратного источника'
-          ParentShowHint = False
           ShowHint = True
+          ParentShowHint = False
         end
         object lbDescription: TLabel
           Left = 12
@@ -341,12 +341,44 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'f/c'
         end
       end
-      object lbVirtualChannelInfo: TLabel
-        Left = 72
+      object pnTagDeviceActions: TPanel
+        Left = 8
+        Height = 40
+        Top = 462
+        Width = 72
+        Anchors = [akTop, akLeft]
+        BevelOuter = bvNone
+        ClientHeight = 40
+        ClientWidth = 72
+        TabOrder = 4
+        object fZeroBalanceBtn: TSpeedButton
+          Left = 0
+          Height = 32
+          Hint = 'Балансировка нуля'
+          Top = 4
+          Width = 32
+          ShowHint = True
+          ParentShowHint = False
+          OnClick = ZeroBalanceButtonClick
+        end
+        object fHardwareDeviceSetupBtn: TSpeedButton
+          Left = 36
+          Height = 32
+          Hint = 'Настройка аппаратной части'
+          Top = 4
+          Width = 32
+          ShowHint = True
+          ParentShowHint = False
+          OnClick = HardwareDeviceSetupButtonClick
+        end
+      end
+        object lbVirtualChannelInfo: TLabel
+        Left = 88
         Height = 15
-        Top = 482
+        Top = 510
         Width = 179
         Caption = 'Настройка виртуального канала'
+        Visible = False
       end
     end
     object tsAdditional: TTabSheet
@@ -894,5 +926,9 @@ object TagSettingsDialog: TTagSettingsDialog
       Caption = 'Применить'
       TabOrder = 2
     end
+  end
+  object ilTagDialogButtons: TImageList
+    Height = 32
+    Width = 32
   end
 end

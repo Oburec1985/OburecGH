@@ -11,7 +11,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
-  uRecorderMic140DataSource, uRecorderMeraSdbThermocouples,
+  uRecorderMic140DataSource, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderSdbSelectDialog;
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
@@ -37,6 +37,8 @@ type
     fDefaultCjcCheck: TCheckBox;
     lbTempRange: TLabel;
     fTempRangeEdit: TEdit;
+    lbSoftBalance: TLabel;
+    fSoftBalanceEdit: TEdit;
     pnButtons: TPanel;
     btnOk: TButton;
     btnCancel: TButton;
@@ -138,6 +140,7 @@ begin
     fThermocoupleCombo.ItemIndex := 0;
 
   fDefaultCjcCheck.Checked := fSettings.DefaultCjc;
+  fSoftBalanceEdit.Text := FormatFloat('0.000', fSettings.SoftBalance);
   if (fSettings.CjcChannel >= 1) and (fSettings.CjcChannel <= MIC140TemperatureChannelCount) then
     fCjcCombo.ItemIndex := fSettings.CjcChannel - 1
   else
@@ -150,7 +153,13 @@ procedure TRecorderMic140ChannelDialog.StoreToSettings;
 var
   lName: string;
   lPath: string;
+  lValue: Double;
 begin
+  if not TryStrToFloat(StringReplace(fSoftBalanceEdit.Text, ',', '.', [rfReplaceAll]),
+    lValue) then
+    lValue := fSettings.SoftBalance;
+  fSettings.SoftBalance := lValue;
+
   if fRangeCombo.ItemIndex >= 0 then
     fSettings.RangeIndex := fRangeCombo.ItemIndex
   else

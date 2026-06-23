@@ -11,7 +11,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids, Buttons, Dialogs, Menus,
-  uRecorderTags, uRecorderMic140DataSource, uRecorderMic140Utils;
+  uRecorderTags, uRecorderDataSources, uRecorderMic140DataSource, uRecorderMic140Utils;
 
 type
   TRecorderMic140DialogResult = record
@@ -42,7 +42,9 @@ type
   end;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
-  var AResult: TRecorderMic140DialogResult): Boolean;
+  var AResult: TRecorderMic140DialogResult;
+  ATagRegistry: TRecorderTagRegistry = nil; const ASourceId: string = '';
+  ADataSources: TRecorderDataSourceManager = nil): Boolean;
 procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
 procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
 function FindRecorderMic140SourceConfig(AList: TStrings;
@@ -77,6 +79,7 @@ type
     fGrid: TStringGrid;
     pnBottom: TPanel;
     pnButtons: TPanel;
+    btnBalance: TButton;
     btnOk: TButton;
     btnCancel: TButton;
     procedure FormCreate(Sender: TObject);
@@ -88,7 +91,11 @@ type
     procedure ChannelCountChange(Sender: TObject);
     procedure SearchClick(Sender: TObject);
     procedure TestClick(Sender: TObject);
+    procedure BalanceClick(Sender: TObject);
   private
+    fTagRegistry: TRecorderTagRegistry;
+    fSourceId: string;
+    fDataSources: TRecorderDataSourceManager;
     fDeviceSerial: Integer;
     fDevSubRev: Integer;
     fChannelSettings: array of TRecorderMic140ChannelSettings;
@@ -106,7 +113,11 @@ type
     function ReadChannelCount: Integer;
     function ChannelAddressText(AChannelNumber: Integer): string;
     function CollectSelectedChannels: TStringList;
+    function FindTagForChannel(AChannelNumber: Integer): TRecorderTag;
+    procedure SyncChannelSoftBalanceToTag(AChannelNumber: Integer);
   public
+    procedure ConfigureContext(ATagRegistry: TRecorderTagRegistry;
+      const ASourceId: string; ADataSources: TRecorderDataSourceManager = nil);
     procedure LoadFromResult(const AResult: TRecorderMic140DialogResult);
     procedure StoreToResult(var AResult: TRecorderMic140DialogResult);
   end;
@@ -216,12 +227,15 @@ begin
 end;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
-  var AResult: TRecorderMic140DialogResult): Boolean;
+  var AResult: TRecorderMic140DialogResult;
+  ATagRegistry: TRecorderTagRegistry; const ASourceId: string;
+  ADataSources: TRecorderDataSourceManager): Boolean;
 var
   lDialog: TRecorderMic140SettingsDialog;
 begin
   lDialog := TRecorderMic140SettingsDialog.Create(AOwner);
   try
+    lDialog.ConfigureContext(ATagRegistry, ASourceId, ADataSources);
     lDialog.LoadFromResult(AResult);
     Result := lDialog.ShowModal = mrOk;
     if Result then
@@ -237,8 +251,12 @@ var
 begin
   fDeviceSerial := 0;
   fDevSubRev := CMic140Mic140SubRev1;
+  fTagRegistry := nil;
+  fSourceId := '';
+  fDataSources := nil;
   SetLength(fChannelSettings, 0);
   InitGrid;
+  btnBalance.OnClick := @BalanceClick;
 
   fGridPopup := TPopupMenu.Create(Self);
   lItem := TMenuItem.Create(fGridPopup);
@@ -250,7 +268,7 @@ end;
 
 procedure TRecorderMic140SettingsDialog.InitGrid;
 begin
-  fGrid.ColCount := 7;
+  fGrid.ColCount := 8;
   fGrid.Cells[0, 0] := 'Исп.';
   fGrid.Cells[1, 0] := 'Адрес';
   fGrid.Cells[2, 0] := 'Имя';
@@ -258,13 +276,58 @@ begin
   fGrid.Cells[4, 0] := 'Канал КХС';
   fGrid.Cells[5, 0] := 'Диапазон [mV]';
   fGrid.Cells[6, 0] := 'ГХ';
+  fGrid.Cells[7, 0] := 'Баланс';
   fGrid.ColWidths[0] := 36;
   fGrid.ColWidths[1] := 76;
-  fGrid.ColWidths[2] := 132;
-  fGrid.ColWidths[3] := 96;
+  fGrid.ColWidths[2] := 120;
+  fGrid.ColWidths[3] := 88;
   fGrid.ColWidths[4] := 64;
-  fGrid.ColWidths[5] := 96;
-  fGrid.ColWidths[6] := 120;
+  fGrid.ColWidths[5] := 88;
+  fGrid.ColWidths[6] := 100;
+  fGrid.ColWidths[7] := 64;
+end;
+
+procedure TRecorderMic140SettingsDialog.ConfigureContext(
+  ATagRegistry: TRecorderTagRegistry; const ASourceId: string;
+  ADataSources: TRecorderDataSourceManager);
+begin
+  fTagRegistry := ATagRegistry;
+  fSourceId := ASourceId;
+  fDataSources := ADataSources;
+  btnBalance.Visible := fTagRegistry <> nil;
+end;
+
+function TRecorderMic140SettingsDialog.FindTagForChannel(
+  AChannelNumber: Integer): TRecorderTag;
+var
+  I: Integer;
+  lChannelNumber: Integer;
+  lTag: TRecorderTag;
+begin
+  Result := nil;
+  if (fTagRegistry = nil) or (fSourceId = '') then
+    Exit;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    if not SameText(lTag.SourceId, fSourceId) then
+      Continue;
+    if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
+      (lChannelNumber = AChannelNumber) then
+      Exit(lTag);
+  end;
+end;
+
+procedure TRecorderMic140SettingsDialog.SyncChannelSoftBalanceToTag(
+  AChannelNumber: Integer);
+var
+  lTag: TRecorderTag;
+begin
+  if (AChannelNumber <= 0) or (AChannelNumber > Length(fChannelSettings)) then
+    Exit;
+  lTag := FindTagForChannel(AChannelNumber);
+  if lTag <> nil then
+    lTag.Mic140SoftBalance := fChannelSettings[AChannelNumber - 1].SoftBalance;
 end;
 
 procedure TRecorderMic140SettingsDialog.EnsureChannelSettings(AChannelCount: Integer);
@@ -385,6 +448,7 @@ begin
       fGrid.Cells[4, I] := IntToStr(RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev));
       fGrid.Cells[5, I] := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
       fGrid.Cells[6, I] := lSettings.ThermocoupleScaleName;
+      fGrid.Cells[7, I] := FormatFloat('0.000', lSettings.SoftBalance);
     end;
   finally
     lOwned.Free;
@@ -470,8 +534,71 @@ begin
       fChannelSettings[lRow - 1].ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
       fChannelSettings[lRow - 1].DefaultCjc := lSettings.DefaultCjc;
       fChannelSettings[lRow - 1].CjcChannel := lSettings.CjcChannel;
+      fChannelSettings[lRow - 1].SoftBalance := lSettings.SoftBalance;
+      SyncChannelSoftBalanceToTag(lRow);
     end;
     FillGrid(ReadChannelCount, CollectSelectedChannels);
+  end;
+end;
+
+procedure TRecorderMic140SettingsDialog.BalanceClick(Sender: TObject);
+var
+  I: Integer;
+  lChannelNumber: Integer;
+  lMessages: TStringList;
+  lRows: TStringList;
+  lTags: TList;
+  lTag: TRecorderTag;
+begin
+  if fTagRegistry = nil then
+    Exit;
+  lRows := CollectSelectedChannels;
+  try
+    if lRows.Count = 0 then
+    begin
+      MessageDlg('MIC-140', 'Выберите каналы для балансировки нуля.',
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+    lTags := TList.Create;
+    lMessages := TStringList.Create;
+    try
+      for I := 0 to lRows.Count - 1 do
+      begin
+        if not TryStrToInt(lRows[I], lChannelNumber) then
+          Continue;
+        lTag := FindTagForChannel(lChannelNumber);
+        if lTag <> nil then
+          lTags.Add(lTag);
+      end;
+      if lTags.Count = 0 then
+      begin
+        MessageDlg('MIC-140', 'Для выбранных каналов нет тегов в проекте.',
+          mtInformation, [mbOK], 0);
+        Exit;
+      end;
+      if RecorderMic140ZeroBalanceTags(Self, fTagRegistry, lTags, fDataSources,
+        lMessages) then
+      begin
+        for I := 0 to lTags.Count - 1 do
+        begin
+          lTag := TRecorderTag(lTags[I]);
+          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
+          begin
+            if (lChannelNumber > 0) and (lChannelNumber <= Length(fChannelSettings)) then
+              fChannelSettings[lChannelNumber - 1].SoftBalance := lTag.Mic140SoftBalance;
+          end;
+        end;
+        FillGrid(ReadChannelCount, CollectSelectedChannels);
+      end;
+      if lMessages.Count > 0 then
+        MessageDlg('Балансировка нуля', lMessages.Text, mtInformation, [mbOK], 0);
+    finally
+      lMessages.Free;
+      lTags.Free;
+    end;
+  finally
+    lRows.Free;
   end;
 end;
 
@@ -692,7 +819,8 @@ begin
       end;
     end;
 
-    if not ShowRecorderMic140SettingsDialog(AOwner, lResult) then
+    if not ShowRecorderMic140SettingsDialog(AOwner, lResult, ATagRegistry, ASourceId,
+      nil) then
       Exit;
 
     if not lResult.ThermoCompensationEnabled then
@@ -758,8 +886,14 @@ begin
           lChannelNumber - 1, CMic140Mic140SubRev1);
         lTag.Mic140ThermocoupleScaleName := lSettings.ThermocoupleScaleName;
         lTag.Mic140ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
+        lTag.Mic140SoftBalance := lSettings.SoftBalance;
         if RecorderMic140ChannelUsesTemperature(lSettings) then
         begin
+          if (not lTag.ChannelCalibrationEnabled) or
+            (lTag.SourceValueMode <>
+            RecorderMic140OutputModeToConfigName(momTemperatureC)) then
+            lTag.ClearSignalHistory;
+          lTag.ChannelCalibrationEnabled := True;
           lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
           lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
           lCalName := RecorderMic140EnsureThermocoupleCalibration(ATagRegistry, lSettings);
@@ -773,6 +907,11 @@ begin
         end
         else
         begin
+          if lTag.ChannelCalibrationEnabled or
+            (lTag.SourceValueMode <>
+            RecorderMic140OutputModeToConfigName(momMillivolts)) then
+            lTag.ClearSignalHistory;
+          lTag.ChannelCalibrationEnabled := False;
           lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momMillivolts);
           lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
           if lTag.CalibrationNames <> nil then

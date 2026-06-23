@@ -29,7 +29,7 @@ uses
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderMic140DataSource, uRecorderMic140LegacyProtocol,
   uRecorderMic140SettingsDialog, uRecorderMic140Utils,
-  uRecorderMeraSdbThermocouples, uRecorderMeraPaths;
+  uRecorderMeraSdbThermocouples, uRecorderMeraPaths, uRecorderTagBalance;
 
 type
   { TRecorderSettingsDialog }
@@ -218,6 +218,8 @@ type
     procedure ConfigureMic140Source(const ASourceId: string);
     function SelectedMeraFileSourceSelected: Boolean;
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
+    procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
+      ATags: TList);
     procedure DeleteMic140Source(const ASourceId: string);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
@@ -810,12 +812,9 @@ begin
   lTags := TList.Create;
   try
     lTags.Add(lTag);
-    if fTagDialogImageList <> nil then
-      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fTagDialogImageList,
-        ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup)
-    else
-      lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fDeviceImageList,
-        ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup);
+    lDialogOk := ShowTagSettingsDialog(Self, fTagRegistry, lTags, fTagDialogImageList,
+      ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
+      fDeviceImageList);
     if lDialogOk then
     begin
       MarkSignalsFromRegistry;
@@ -2113,6 +2112,12 @@ begin
       fMeraFileName := lPath;
     HardwareEditSourceClick(Sender);
   end;
+end;
+
+procedure TRecorderSettingsDialog.TagZeroBalance(Sender: TObject;
+  ARegistry: TRecorderTagRegistry; ATags: TList);
+begin
+  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, nil);
 end;
 
 procedure TRecorderSettingsDialog.ConfigureMic140Source(const ASourceId: string);

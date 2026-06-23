@@ -45,8 +45,8 @@ uses
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
-  uRecorderSpectrumRuntime, uRecorderMic140DataSource, uRecorderMic140Utils,
-  uRecorderMeraPaths;
+  uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderMeraPaths, uRecorderTagBalance, uRecorderMic140SettingsDialog;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -323,6 +323,9 @@ type
     procedure StateMachineStateChanged(ASender: TObject;
       AOldState, ANewState: TRecorderState);
     procedure OnMenuEditSelectedTags(Sender: TObject);
+    procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
+    procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
+      ATags: TList);
     procedure UpdateActiveSourceIds;
   public
   end;
@@ -512,23 +515,10 @@ begin
 end;
 
 procedure TMainForm.UpdateActiveSourceIds;
-var
-  I: Integer;
-  lTag: TRecorderTag;
-const
-  CMeraSourcePrefix = 'Mera file: ';
 begin
-  if fTagRegistry = nil then Exit;
-  fTagRegistry.ClearActiveSources;
-  fTagRegistry.RegisterActiveSource('manual');
-  fTagRegistry.RegisterActiveSource('debug.diagnostics');
-  
-  for I := 0 to fTagRegistry.TagCount - 1 do
-  begin
-    lTag := fTagRegistry.Tags[I];
-    if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
-      fTagRegistry.RegisterActiveSource(lTag.SourceId);
-  end;
+  if fTagRegistry = nil then
+    Exit;
+  fTagRegistry.RefreshActiveSourcesFromTags;
 end;
 
 procedure TMainForm.OnMenuEditSelectedTags(Sender: TObject);
@@ -2003,7 +1993,9 @@ begin
     if lTags.Count = 0 then
       Exit;
 
-    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons, fRunSettings.DataUpdateMs) then
+    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons,
+      fRunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
+      ilCommandButtons) then
     begin
       if fAlarmEngine <> nil then
         fAlarmEngine.Reset;
@@ -2030,6 +2022,55 @@ begin
       LogCommandError('Tag settings', E);
   end;
   lTags.Free;
+end;
+
+procedure TMainForm.TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
+var
+  lConfigs: TStringList;
+  lDialog: TOpenDialog;
+  lHost: string;
+  lNewSourceId: string;
+  lPath: string;
+  lPort: Word;
+const
+  CMeraSourcePrefix = 'Mera file: ';
+begin
+  if ATag = nil then
+    Exit;
+  if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) then
+  begin
+    lConfigs := TStringList.Create;
+    try
+      lConfigs.OwnsObjects := True;
+      if ApplyRecorderMic140SourceDialog(Self, fTagRegistry, lConfigs, ATag.SourceId,
+        lNewSourceId) then
+        AddLog('MIC-140 hardware settings updated.');
+    finally
+      lConfigs.Free;
+    end;
+    Exit;
+  end;
+  if Pos(CMeraSourcePrefix, ATag.SourceId) = 1 then
+  begin
+    lPath := Trim(Copy(ATag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+    lDialog := TOpenDialog.Create(Self);
+    try
+      lDialog.Title := 'Файл Mera';
+      lDialog.Filter := 'Mera files (*.mera)|*.mera|All files (*.*)|*.*';
+      lDialog.FileName := lPath;
+      if lDialog.Execute then
+        ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry,
+          ilCommandButtons, ilTagDialogButtons);
+    finally
+      lDialog.Free;
+    end;
+  end;
+end;
+
+procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
+  ATags: TList);
+begin
+  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, fDataSourceManager);
 end;
 
 { Инициализация демонстрационных отладочных источников данных (MemTag и Mera-файлы) }

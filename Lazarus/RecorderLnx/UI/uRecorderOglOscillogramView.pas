@@ -181,11 +181,14 @@ begin
     Exit;
   if (ATag <> nil) and (not ATag.AutoRange) and (ATag.RangeMax > ATag.RangeMin) then
   begin
-    AAxis.PresetMinValue := ATag.RangeMin;
-    AAxis.PresetMaxValue := ATag.RangeMax;
-    AAxis.MinValue := ATag.RangeMin;
-    AAxis.MaxValue := ATag.RangeMax;
-    Exit;
+    if (ADataMax >= ATag.RangeMin) and (ADataMin <= ATag.RangeMax) then
+    begin
+      AAxis.PresetMinValue := ATag.RangeMin;
+      AAxis.PresetMaxValue := ATag.RangeMax;
+      AAxis.MinValue := ATag.RangeMin;
+      AAxis.MaxValue := ATag.RangeMax;
+      Exit;
+    end;
   end;
   if SameValue(ADataMin, ADataMax) then
   begin

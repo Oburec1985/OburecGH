@@ -631,6 +631,7 @@ begin
       lTagJson.Add('measRangeIndex', lTag.MeasRangeIndex);
       lTagJson.Add('hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
       lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
+      lTagJson.Add('channelCalibrationEnabled', lTag.ChannelCalibrationEnabled);
       lTagJson.Add('mic140DeviceSerial', lTag.Mic140DeviceSerial);
       lTagJson.Add('mic140ThermoCompensationEnabled',
         lTag.Mic140ThermoCompensationEnabled);
@@ -638,6 +639,7 @@ begin
       lTagJson.Add('mic140CjcChannel', lTag.Mic140CjcChannel);
       lTagJson.Add('mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
       lTagJson.Add('mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
+      lTagJson.Add('mic140SoftBalance', lTag.Mic140SoftBalance);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -718,6 +720,8 @@ begin
           lTag.HardwareCalibrationEnabled);
         lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
           lTag.HardwareCalibrationName);
+        lTag.ChannelCalibrationEnabled := lTagJson.Get('channelCalibrationEnabled',
+          lTag.ChannelCalibrationEnabled);
         lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
           lTag.Mic140DeviceSerial);
         lTag.Mic140ThermoCompensationEnabled := lTagJson.Get(
@@ -730,6 +734,8 @@ begin
           'mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
         lTag.Mic140ThermocoupleScalePath := lTagJson.Get(
           'mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
+        lTag.Mic140SoftBalance := lTagJson.Get('mic140SoftBalance',
+          lTag.Mic140SoftBalance);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
