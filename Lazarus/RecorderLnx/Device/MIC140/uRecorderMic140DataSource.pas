@@ -123,6 +123,7 @@ type
     fBlockCountTagName: string;
     fStatusTagName: string;
     fTagNames: TStringList;
+    fCjcActiveLogWritten: Boolean;
     fTemperatureModeWarningLogged: Boolean;
     fTemperatureTagNames: TStringList;
     fDeviceSerial: Integer;
@@ -1560,6 +1561,15 @@ begin
   if (ATag.Mic140CjcChannel >= 1) and
     (ATag.Mic140CjcChannel <= MIC140TemperatureChannelCount) then
     ASettings.CjcChannel := ATag.Mic140CjcChannel;
+  if Trim(ATag.Mic140ThermocoupleScaleName) <> '' then
+  begin
+    ASettings.ThermocoupleScaleName := ATag.Mic140ThermocoupleScaleName;
+    ASettings.ThermocoupleScalePath := ATag.Mic140ThermocoupleScalePath;
+    if Trim(ASettings.ThermocoupleScalePath) = '' then
+      ASettings.ThermocoupleScalePath :=
+        RecorderMeraThermocoupleRelativePath(ASettings.ThermocoupleScaleName);
+    Exit;
+  end;
   if ATag.CalibrationNames = nil then
     Exit;
   for J := 0 to ATag.CalibrationNames.Count - 1 do
@@ -3198,10 +3208,17 @@ begin
 end;
 
 procedure TRecorderMic140DataSource.Start;
+var
+  I: Integer;
+  lChannelNumber: Integer;
+  lCalibrationName: string;
+  lSettings: TRecorderMic140ChannelSettings;
+  lTag: TRecorderTag;
 begin
   inherited Start;
   fGoodBlockCount := 0;
   fReadFailCount := 0;
+  fCjcActiveLogWritten := False;
   fTemperatureModeWarningLogged := False;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
   fDevice.Connect;
@@ -3217,6 +3234,37 @@ begin
     if (fDeviceSerial > 0) and (Registry <> nil) then
       RecorderMic140ApplyHardwareCalibrations(Registry, SourceId, fDeviceSerial);
   end;
+  // The generic calibration registry is recreated with a project/session.
+  // Rehydrate every thermocouple curve from the persisted MIC-140 tag setting
+  // before samples are published; otherwise a tag may say "degC" while its
+  // TransformTagValue pipeline has no actual SDB curve.
+  if Registry <> nil then
+    for I := 0 to Registry.TagCount - 1 do
+    begin
+      lTag := Registry.Tags[I];
+      if not SameText(lTag.SourceId, SourceId) or
+        (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber)) then
+        Continue;
+      RecorderMic140InitChannelSettings(lSettings, lChannelNumber - 1,
+        CMic140Mic140SubRev1);
+      RecorderMic140RestoreChannelSettingsFromTag(Registry, lTag, lSettings);
+      if not RecorderMic140ChannelUsesTemperature(lSettings) then
+        Continue;
+      lCalibrationName := RecorderMic140EnsureThermocoupleCalibration(Registry,
+        lSettings);
+      if lCalibrationName = '' then
+      begin
+        Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve was not loaded: tag=%s SDB=%s',
+          [SourceId, lTag.Name, lSettings.ThermocoupleScalePath]));
+        Continue;
+      end;
+      if lTag.CalibrationNames.IndexOf(lCalibrationName) < 0 then
+        lTag.CalibrationNames.Add(lCalibrationName);
+      lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
+      lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
+      Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve ready: tag=%s SDB=%s',
+        [SourceId, lTag.Name, lSettings.ThermocoupleScalePath]));
+    end;
   fDevice.ProgramDevice;
   if fDevice.State = rdsProgrammed then
     PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True)
@@ -3308,6 +3356,12 @@ var
       if lUseCjc then
         lUseCjc := Mic140TryGetColdJunctionTemperature(Registry, lTag, lBlock,
           lTag.Mic140CjcChannel, lCjcTemperatureC);
+      if lUseCjc and (not fCjcActiveLogWritten) then
+      begin
+        Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC active: tag=%s T%d=%.3f degC',
+          [SourceId, lTag.Name, lTag.Mic140CjcChannel, lCjcTemperatureC]));
+        fCjcActiveLogWritten := True;
+      end;
       if (not lUseCjc) and lTag.Mic140ThermoCompensationEnabled and
         SameText(lTag.SourceValueMode,
           RecorderMic140OutputModeToConfigName(momTemperatureC)) and

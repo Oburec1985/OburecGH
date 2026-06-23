@@ -1851,6 +1851,11 @@ begin
               lResult.SelectedChannels.Add(IntToStr(lCh));
             if lTag.Mic140DeviceSerial > 0 then
               lResult.DeviceSerial := lTag.Mic140DeviceSerial;
+            // Source settings are rebuilt from persisted tags whenever the
+            // main settings dialog is created again.
+            lResult.ThermoCompensationEnabled :=
+              lResult.ThermoCompensationEnabled or
+              lTag.Mic140ThermoCompensationEnabled;
             if lCh > lResult.ChannelCount then
               lResult.ChannelCount := MIC140MaxChannelCount;
             if (lCh > 0) and (lCh <= Length(lResult.ChannelSettings)) then

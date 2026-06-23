@@ -636,6 +636,8 @@ begin
         lTag.Mic140ThermoCompensationEnabled);
       lTagJson.Add('mic140CjcDefault', lTag.Mic140CjcDefault);
       lTagJson.Add('mic140CjcChannel', lTag.Mic140CjcChannel);
+      lTagJson.Add('mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
+      lTagJson.Add('mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -724,6 +726,10 @@ begin
           lTag.Mic140CjcDefault);
         lTag.Mic140CjcChannel := lTagJson.Get('mic140CjcChannel',
           lTag.Mic140CjcChannel);
+        lTag.Mic140ThermocoupleScaleName := lTagJson.Get(
+          'mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
+        lTag.Mic140ThermocoupleScalePath := lTagJson.Get(
+          'mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);

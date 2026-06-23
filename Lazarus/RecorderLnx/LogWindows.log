@@ -1,8 +1,468 @@
-2026-06-23 09:04:32.000 [DEBUG] [TID:988|UIThread] 09:04:31.997 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-06-23 09:04:32.001 [DEBUG] [TID:988|UIThread] 09:04:32.000 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-06-23 09:04:32.010 [DEBUG] [TID:988|UIThread] 09:04:32.010 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-06-23 09:04:32.781 [DEBUG] [TID:988|UIThread] 09:04:32.780 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-06-23 09:04:32.783 [DEBUG] [TID:988|UIThread] 09:04:32.783 RecorderLnx started.
-2026-06-23 09:04:36.695 [DEBUG] [TID:988|UIThread] 09:04:36.693 Configuration mode: settings dialog opened.
-2026-06-23 09:04:41.651 [DEBUG] [TID:988|UIThread] 09:04:41.648 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-06-23 09:04:41.667 [DEBUG] [TID:988|UIThread] 09:04:41.665 Project settings applied.
+2026-06-23 09:51:10.830 [DEBUG] [TID:7120|UIThread] 09:51:10.827 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-06-23 09:51:10.831 [DEBUG] [TID:7120|UIThread] 09:51:10.831 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-06-23 09:51:10.840 [DEBUG] [TID:7120|UIThread] 09:51:10.840 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-06-23 09:51:11.462 [DEBUG] [TID:7120|UIThread] 09:51:11.462 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-06-23 09:51:11.464 [DEBUG] [TID:7120|UIThread] 09:51:11.464 RecorderLnx started.
+2026-06-23 09:51:15.866 [DEBUG] [TID:7120|UIThread] 09:51:15.861 Configuration mode: settings dialog opened.
+2026-06-23 09:51:27.792 [DEBUG] [TID:7120|UIThread] 09:51:27.791 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-06-23 09:51:27.820 [DEBUG] [TID:7120|UIThread] 09:51:27.819 Project settings applied.
+2026-06-23 09:51:28.918 [DEBUG] [TID:7120|UIThread] 09:51:28.916 MERA playback source configured: signal0005.mera (11 channels).
+2026-06-23 09:51:28.919 [DEBUG] [TID:7120|UIThread] 09:51:28.918 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-06-23 09:51:28.933 [DEBUG] [TID:7120|UIThread] 09:51:28.932 Diagnostics data source configured: MemTag, CpuUsage.
+2026-06-23 09:51:28.934 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-06-23 09:51:28.937 [DEBUG] [TID:7120|UIThread] 09:51:28.933 Data sources started.
+2026-06-23 09:51:28.942 [DEBUG] [TID:7120|UIThread] 09:51:28.941 State changed: Stop -> Preview
+2026-06-23 09:51:28.952 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy Ethernet protocol detected: devType=16703 devRev=270 devSerNo=155 ccType=16702 ccSerNo=164 BIOS=1.6
+2026-06-23 09:51:28.952 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=1 connected
+2026-06-23 09:51:28.955 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\01.csv
+2026-06-23 09:51:28.959 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\02.csv
+2026-06-23 09:51:28.963 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\03.csv
+2026-06-23 09:51:28.966 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\04.csv
+2026-06-23 09:51:28.970 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\05.csv
+2026-06-23 09:51:28.974 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\06.csv
+2026-06-23 09:51:28.978 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\07.csv
+2026-06-23 09:51:28.981 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\08.csv
+2026-06-23 09:51:28.985 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\09.csv
+2026-06-23 09:51:28.989 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\10.csv
+2026-06-23 09:51:28.992 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\11.csv
+2026-06-23 09:51:28.996 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\12.csv
+2026-06-23 09:51:29.000 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\13.csv
+2026-06-23 09:51:29.003 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\14.csv
+2026-06-23 09:51:29.007 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\15.csv
+2026-06-23 09:51:29.011 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\16.csv
+2026-06-23 09:51:29.015 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\17.csv
+2026-06-23 09:51:29.018 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\18.csv
+2026-06-23 09:51:29.022 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\19.csv
+2026-06-23 09:51:29.026 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\20.csv
+2026-06-23 09:51:29.030 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\21.csv
+2026-06-23 09:51:29.034 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\22.csv
+2026-06-23 09:51:29.037 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\23.csv
+2026-06-23 09:51:29.041 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\24.csv
+2026-06-23 09:51:29.045 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\25.csv
+2026-06-23 09:51:29.049 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\26.csv
+2026-06-23 09:51:29.052 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\27.csv
+2026-06-23 09:51:29.056 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\28.csv
+2026-06-23 09:51:29.060 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\29.csv
+2026-06-23 09:51:29.063 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\30.csv
+2026-06-23 09:51:29.067 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\31.csv
+2026-06-23 09:51:29.071 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\32.csv
+2026-06-23 09:51:29.074 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\33.csv
+2026-06-23 09:51:29.078 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\34.csv
+2026-06-23 09:51:29.082 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\35.csv
+2026-06-23 09:51:29.086 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\36.csv
+2026-06-23 09:51:29.089 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\37.csv
+2026-06-23 09:51:29.092 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\38.csv
+2026-06-23 09:51:29.096 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\39.csv
+2026-06-23 09:51:29.100 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\40.csv
+2026-06-23 09:51:29.104 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\41.csv
+2026-06-23 09:51:29.107 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\42.csv
+2026-06-23 09:51:29.111 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\43.csv
+2026-06-23 09:51:29.115 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\44.csv
+2026-06-23 09:51:29.119 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\45.csv
+2026-06-23 09:51:29.123 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\46.csv
+2026-06-23 09:51:29.126 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\47.csv
+2026-06-23 09:51:29.130 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0114\06_100mV\48.csv
+2026-06-23 09:51:29.134 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 thermocouple curve was not loaded: tag=T_01 SDB=ГОСТ\Термопары\K_ГОСТ Р 8
+2026-06-23 09:51:29.138 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 thermocouple curve was not loaded: tag=MIC140_02 SDB=ГОСТ\Термопары\K_ГОСТ Р 8
+2026-06-23 09:51:29.142 [DEBUG] [TID:7120|UIThread] 09:51:29.139 Update diag: elapsed=18328 ms uiTicks=1 dataEvents=4 renders=1 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:29.145 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=4, Time=16 ms, ThreadID=7120
+2026-06-23 09:51:29.149 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 thermocouple curve was not loaded: tag=MIC140_03 SDB=ГОСТ\Термопары\K_ГОСТ Р 8
+2026-06-23 09:51:29.154 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 thermocouple curve was not loaded: tag=MIC140_04 SDB=ГОСТ\Термопары\K_ГОСТ Р 8
+2026-06-23 09:51:29.165 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy MIC-140 scan programmed: channels=48 freq=100,000 Hz timerScale=1 timerPeriod=640 scanDivider=500 wait=57,000 us ground=19,625 us avgPeriod=5,000 us avgCount=20 sportWait=606 sportGround=8 sportAvg=48 fifoBegin=0x0522 fifoEnd=0x07FF fifoReadyWords=357
+2026-06-23 09:51:29.165 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=2 programmed
+2026-06-23 09:51:29.169 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy CC BIOS scan start accepted: command=80
+2026-06-23 09:51:29.173 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=3 started
+2026-06-23 09:51:29.240 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy first scan packet: headerWords=10 dataWords=357 stride=51 userChannels=48 tin=3 h=[0,367,0,0,0,0,3511,26602,1,0] d0=[58360,58403,58907,58279,58353,58391,58914,58286]
+2026-06-23 09:51:29.241 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=1 samples=7 stride=51 rate=100,000 Hz
+2026-06-23 09:51:29.251 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 CJC active: tag=T_01 T1=44,723 degC
+2026-06-23 09:51:29.265 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 94 ms on Thread 19896
+2026-06-23 09:51:29.272 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=0,000015 last=0,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.294 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=0,000015 last=0,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.316 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=0,000015 last=0,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.338 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=0,000015 last=0,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.338 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=21 lines=3 frame=5 window=1,000
+2026-06-23 09:51:29.347 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=7 lines=1 frame=5 window=1,000
+2026-06-23 09:51:29.350 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=11520 lines=1 frame=5 window=1,000
+2026-06-23 09:51:29.353 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=59, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:29.361 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=0,000015 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.384 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=0,000015 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.406 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=0,000015 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.427 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=0,000015 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.449 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=0,000014 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.454 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:29.471 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=0,000014 last=0,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.471 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19432
+2026-06-23 09:51:29.508 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=0,200015 last=0,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.530 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=0,200015 last=0,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.543 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=84 lines=3 frame=6 window=1,000
+2026-06-23 09:51:29.546 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=28 lines=1 frame=6 window=1,000
+2026-06-23 09:51:29.552 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=0,200015 last=0,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.554 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=23040 lines=1 frame=6 window=1,000
+2026-06-23 09:51:29.559 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=166, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:29.576 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:29.576 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=0,200015 last=0,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.607 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:29.607 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=0,200015 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.633 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=0,200015 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.656 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=0,200015 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.659 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:29.678 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=0,200015 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.701 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=0,200014 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.722 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=0,200014 last=0,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.722 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 19432
+2026-06-23 09:51:29.749 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=126 lines=3 frame=7 window=1,000
+2026-06-23 09:51:29.751 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=42 lines=1 frame=7 window=1,000
+2026-06-23 09:51:29.757 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=23040 lines=1 frame=7 window=1,000
+2026-06-23 09:51:29.760 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=115, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:29.764 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=0,400015 last=0,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.791 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=0,400015 last=0,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.814 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=0,400015 last=0,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.837 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=0,400015 last=0,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:29.860 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=0,400015 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.863 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:29.882 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=0,400015 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.905 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:29.905 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=0,400015 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.934 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=0,400015 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.951 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=189 lines=3 frame=8 window=1,000
+2026-06-23 09:51:29.954 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=63 lines=1 frame=8 window=1,000
+2026-06-23 09:51:29.958 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=0,400014 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.963 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=34560 lines=1 frame=8 window=1,000
+2026-06-23 09:51:29.968 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=173, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:29.984 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=0,400014 last=0,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:29.984 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 250 ms on Thread 19432
+2026-06-23 09:51:30.027 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=0,600015 last=0,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.049 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=0,600015 last=0,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.067 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:30.071 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=0,600015 last=0,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.093 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=0,600015 last=0,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.115 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=0,600015 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.137 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=0,600015 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.157 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=252 lines=3 frame=9 window=1,000
+2026-06-23 09:51:30.159 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=0,600015 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.162 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=84 lines=1 frame=9 window=1,000
+2026-06-23 09:51:30.170 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=46080 lines=1 frame=9 window=1,000
+2026-06-23 09:51:30.172 [DEBUG] [TID:7120|UIThread] Trend diag: comp=Trend16 recNow=1,000000 trendMax=0,200000 lag=0,800000 window=[0,000000..1,000000] line=0 tag=MemTag kind=scalar snap=6 block=1 portion=1 added=0 lastProcessed=0,200000 visible=True
+2026-06-23 09:51:30.178 [DEBUG] [TID:7120|UIThread] 09:51:30.177 Update diag: elapsed=1031 ms uiTicks=5 dataEvents=678 renders=5 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:30.181 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=165, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:30.185 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=0,600015 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.212 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=0,600014 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.234 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=0,600014 last=0,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.234 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:30.258 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:30.265 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=0,800015 last=0,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.288 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=0,800015 last=0,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.311 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:30.311 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=0,800015 last=0,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.338 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=0,800015 last=0,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.360 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=0,800015 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.370 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=300 lines=3 frame=10 window=1,000
+2026-06-23 09:51:30.372 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=100 lines=1 frame=10 window=1,000
+2026-06-23 09:51:30.378 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57600 lines=1 frame=10 window=1,000
+2026-06-23 09:51:30.380 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=168, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:30.384 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=0,800015 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.411 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=0,800015 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.434 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=0,800015 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.456 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=0,800014 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.478 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=0,800014 last=0,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.478 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 19432
+2026-06-23 09:51:30.484 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:30.518 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=1,000015 last=1,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.540 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=1,000015 last=1,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.562 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=1,000015 last=1,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.574 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=11 window=1,000
+2026-06-23 09:51:30.576 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=11 window=1,000
+2026-06-23 09:51:30.583 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=11 window=1,000
+2026-06-23 09:51:30.584 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=1,000015 last=1,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.589 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=169, Time=32 ms, ThreadID=7120
+2026-06-23 09:51:30.612 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=1,000015 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.633 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=1,000015 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.636 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=20 samples=7 stride=51 rate=100,000 Hz
+2026-06-23 09:51:30.651 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:30.656 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=1,000015 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.678 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=1,000015 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.700 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=1,000014 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.721 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=1,000014 last=1,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.721 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 19432
+2026-06-23 09:51:30.753 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=1,200015 last=1,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.771 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=12 window=1,000
+2026-06-23 09:51:30.773 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=12 window=1,000
+2026-06-23 09:51:30.776 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=1,200015 last=1,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.781 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57600 lines=1 frame=12 window=1,000
+2026-06-23 09:51:30.787 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=166, Time=32 ms, ThreadID=7120
+2026-06-23 09:51:30.804 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=1,200015 last=1,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.826 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:30.826 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=1,200015 last=1,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:30.853 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=1,200015 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.875 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=1,200015 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.889 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:30.897 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=1,200015 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.919 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=1,200015 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.941 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=1,200014 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.963 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=1,200014 last=1,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:30.963 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:30.969 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=300 lines=3 frame=13 window=1,000
+2026-06-23 09:51:30.975 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=100 lines=1 frame=13 window=1,000
+2026-06-23 09:51:30.980 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57600 lines=1 frame=13 window=1,000
+2026-06-23 09:51:30.982 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=165, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:31.008 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=1,400015 last=1,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.031 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=1,400015 last=1,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.046 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:31.053 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=1,400015 last=1,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.075 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=1,400015 last=1,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.098 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=1,400015 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.121 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=1,400015 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.144 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=1,400015 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.166 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=14 window=1,000
+2026-06-23 09:51:31.167 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=1,400015 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.172 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=14 window=1,000
+2026-06-23 09:51:31.180 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=14 window=1,000
+2026-06-23 09:51:31.183 [DEBUG] [TID:7120|UIThread] Trend diag: comp=Trend16 recNow=2,000000 trendMax=1,200000 lag=0,800000 window=[0,000000..1,200000] line=0 tag=MemTag kind=scalar snap=11 block=1 portion=1 added=0 lastProcessed=1,200000 visible=True
+2026-06-23 09:51:31.190 [DEBUG] [TID:7120|UIThread] 09:51:31.188 Update diag: elapsed=1016 ms uiTicks=5 dataEvents=790 renders=5 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:31.193 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=122, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:31.198 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=1,400014 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.224 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=1,400014 last=1,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.225 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 19432
+2026-06-23 09:51:31.260 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=1,600015 last=1,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.269 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:31.282 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=1,600015 last=1,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.304 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=1,600015 last=1,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.327 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:31.327 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=1,600015 last=1,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.354 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=1,600015 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.372 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=15 window=1,000
+2026-06-23 09:51:31.374 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=15 window=1,000
+2026-06-23 09:51:31.378 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=1,600015 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.382 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=15 window=1,000
+2026-06-23 09:51:31.388 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=166, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:31.408 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=1,600015 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.434 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=1,600015 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.458 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:31.460 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=1,600014 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.487 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=1,600014 last=1,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.488 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 250 ms on Thread 19432
+2026-06-23 09:51:31.530 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=1,800015 last=1,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.553 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=1,800015 last=1,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.572 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=16 window=1,000
+2026-06-23 09:51:31.574 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=16 window=1,000
+2026-06-23 09:51:31.578 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=1,800015 last=1,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.584 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=16 window=1,000
+2026-06-23 09:51:31.589 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=164, Time=16 ms, ThreadID=7120
+2026-06-23 09:51:31.606 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=1,800015 last=1,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.629 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=1,800015 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.653 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=1,800015 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.662 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:31.675 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=1,800015 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.698 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=1,800015 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.721 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=1,800014 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.743 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=1,800014 last=1,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.743 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:31.780 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=2,000015 last=2,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.782 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=17 window=1,000
+2026-06-23 09:51:31.789 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=17 window=1,000
+2026-06-23 09:51:31.795 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=17 window=1,000
+2026-06-23 09:51:31.799 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=171, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:31.804 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=2,000015 last=2,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.832 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=2,000015 last=2,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.854 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=2,000015 last=2,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:31.864 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:31.877 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=2,000015 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.899 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=2,000015 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.921 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=2,000015 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.944 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=2,000015 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.966 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=2,000014 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.983 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=18 window=1,000
+2026-06-23 09:51:31.985 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=18 window=1,000
+2026-06-23 09:51:31.989 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=2,000014 last=2,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:31.995 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:32.000 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=18 window=1,000
+2026-06-23 09:51:32.006 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=167, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:32.030 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:32.030 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=2,200015 last=2,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.055 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=40 samples=7 stride=51 rate=100,000 Hz
+2026-06-23 09:51:32.057 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=2,200015 last=2,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.070 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:32.082 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=2,200015 last=2,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.104 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=2,200015 last=2,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.126 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=2,200015 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.150 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=2,200015 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.173 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=2,200015 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.196 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=2,200015 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.206 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=19 window=1,000
+2026-06-23 09:51:32.208 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=19 window=1,000
+2026-06-23 09:51:32.216 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=19 window=1,000
+2026-06-23 09:51:32.217 [DEBUG] [TID:7120|UIThread] Trend diag: comp=Trend16 recNow=3,200000 trendMax=3,200000 lag=0,000000 window=[0,000000..3,200000] line=0 tag=MemTag kind=scalar snap=17 block=1 portion=1 added=1 lastProcessed=3,200000 visible=True
+2026-06-23 09:51:32.222 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=2,200014 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.226 [DEBUG] [TID:7120|UIThread] 09:51:32.222 Update diag: elapsed=1031 ms uiTicks=5 dataEvents=834 renders=5 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:32.231 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=166, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:32.248 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=2,200014 last=2,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.249 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 250 ms on Thread 19432
+2026-06-23 09:51:32.260 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:32.283 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=2,400015 last=2,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.306 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=2,400015 last=2,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.329 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=2,400015 last=2,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.352 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=2,400015 last=2,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.374 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=2,400015 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.394 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=20 window=1,000
+2026-06-23 09:51:32.397 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=20 window=1,000
+2026-06-23 09:51:32.399 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=2,400015 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.405 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=20 window=1,000
+2026-06-23 09:51:32.410 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=167, Time=32 ms, ThreadID=7120
+2026-06-23 09:51:32.427 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=2,400015 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.449 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=2,400015 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.471 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=2,400014 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.478 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:32.493 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=2,400014 last=2,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.493 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:32.532 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=2,600015 last=2,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.554 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=2,600015 last=2,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.576 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:32.576 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=2,600015 last=2,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.595 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=21 window=1,000
+2026-06-23 09:51:32.597 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=21 window=1,000
+2026-06-23 09:51:32.602 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=2,600015 last=2,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.606 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=21 window=1,000
+2026-06-23 09:51:32.611 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=168, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:32.628 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=2,600015 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.650 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=2,600015 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.666 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:32.673 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=2,600015 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.695 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=2,600015 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.717 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=15 ms, ThreadID=19432
+2026-06-23 09:51:32.717 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=2,600014 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.743 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=2,600014 last=2,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.743 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:32.785 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=2,800015 last=2,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.801 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=22 window=1,000
+2026-06-23 09:51:32.803 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=22 window=1,000
+2026-06-23 09:51:32.808 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=2,800015 last=2,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.811 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57600 lines=1 frame=22 window=1,000
+2026-06-23 09:51:32.816 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=116, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:32.833 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=2,800015 last=2,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.856 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=2,800015 last=2,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:32.872 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:32.879 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=2,800015 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.901 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=2,800015 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.923 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=2,800015 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.946 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=2,800015 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.968 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=2,800014 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.990 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=2,800014 last=2,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:32.990 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:32.995 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=23 window=1,000
+2026-06-23 09:51:33.001 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=23 window=1,000
+2026-06-23 09:51:33.007 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57600 lines=1 frame=23 window=1,000
+2026-06-23 09:51:33.011 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=173, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:33.021 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=3,000015 last=3,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.042 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=3,000015 last=3,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.064 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=3,000015 last=3,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.087 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=3,000015 last=3,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.109 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=3,000015 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.132 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=3,000015 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.154 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=3,000015 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.176 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=3,000015 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.197 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=24 window=1,000
+2026-06-23 09:51:33.198 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=3,000014 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.202 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=24 window=1,000
+2026-06-23 09:51:33.210 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=24 window=1,000
+2026-06-23 09:51:33.213 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=168, Time=16 ms, ThreadID=7120
+2026-06-23 09:51:33.224 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=3,000014 last=3,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.224 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 19432
+2026-06-23 09:51:33.255 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=3,200015 last=3,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.264 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:33.278 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=3,200015 last=3,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.300 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=3,200015 last=3,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.322 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=3,200015 last=3,399998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.344 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=3,200015 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.366 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=3,200015 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.388 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=3,200015 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.400 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=25 window=1,000
+2026-06-23 09:51:33.402 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=25 window=1,000
+2026-06-23 09:51:33.411 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=3,200015 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.411 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=25 window=1,000
+2026-06-23 09:51:33.415 [DEBUG] [TID:7120|UIThread] Trend diag: comp=Trend16 recNow=4,200000 trendMax=4,200000 lag=0,000000 window=[0,000000..4,200000] line=0 tag=MemTag kind=scalar snap=22 block=1 portion=1 added=0 lastProcessed=4,200000 visible=True
+2026-06-23 09:51:33.421 [DEBUG] [TID:7120|UIThread] 09:51:33.420 Update diag: elapsed=1203 ms uiTicks=6 dataEvents=956 renders=6 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:33.425 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=164, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:33.433 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=3,200014 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.439 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=60 samples=7 stride=51 rate=100,000 Hz
+2026-06-23 09:51:33.454 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:33.457 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=3,200014 last=3,399997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.458 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:33.492 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=3,400015 last=3,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.515 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=3,400015 last=3,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.538 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=3,400015 last=3,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.560 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=3,400015 last=3,599998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.583 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=3,400015 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.605 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=26 window=1,000
+2026-06-23 09:51:33.606 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=3,400015 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.610 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=26 window=1,000
+2026-06-23 09:51:33.617 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=26 window=1,000
+2026-06-23 09:51:33.620 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=171, Time=16 ms, ThreadID=7120
+2026-06-23 09:51:33.632 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=3,400015 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.654 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:33.654 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=3,400015 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.659 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:33.681 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=3,400014 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.703 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=3,400014 last=3,599997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.703 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:33.744 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=3,600015 last=3,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.766 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=3,600015 last=3,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.788 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=3,600015 last=3,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.809 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=27 window=1,000
+2026-06-23 09:51:33.811 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=16 ms, ThreadID=19432
+2026-06-23 09:51:33.814 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=3,600015 last=3,799998 blockLength=11520 update=200ms
+2026-06-23 09:51:33.819 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=27 window=1,000
+2026-06-23 09:51:33.826 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=27 window=1,000
+2026-06-23 09:51:33.829 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=166, Time=32 ms, ThreadID=7120
+2026-06-23 09:51:33.841 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=3,600015 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.863 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:33.863 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=3,600015 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.890 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=3,600015 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.912 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=3,600015 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.934 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=3,600014 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.956 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=3,600014 last=3,799997 blockLength=11520 update=200ms
+2026-06-23 09:51:33.956 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:33.997 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=3,800015 last=3,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.013 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=28 window=1,000
+2026-06-23 09:51:34.016 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=28 window=1,000
+2026-06-23 09:51:34.020 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=3,800015 last=3,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.023 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=28 window=1,000
+2026-06-23 09:51:34.028 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=167, Time=16 ms, ThreadID=7120
+2026-06-23 09:51:34.046 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=3,800015 last=3,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.069 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 16 ms on Thread 19896
+2026-06-23 09:51:34.069 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=3,800015 last=3,999998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.096 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=3,800015 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.119 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=3,800015 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.141 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=3,800015 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.164 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=3,800015 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.187 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=3,800014 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.208 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=3,800014 last=3,999997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.208 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:34.217 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=29 window=1,000
+2026-06-23 09:51:34.219 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=29 window=1,000
+2026-06-23 09:51:34.224 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=29 window=1,000
+2026-06-23 09:51:34.226 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=125, Time=15 ms, ThreadID=7120
+2026-06-23 09:51:34.248 [DEBUG] [TID:19432|Src_mera.file.1] [EventBus] Publish: Kind=5, Time=15 ms, ThreadID=19432
+2026-06-23 09:51:34.248 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_X count=11520 first=4,000015 last=4,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.257 [DEBUG] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] Tick took 15 ms on Thread 19896
+2026-06-23 09:51:34.258 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan begin: command=81 timeout=5000 ms readBlocks=72
+2026-06-23 09:51:34.263 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan completed
+2026-06-23 09:51:34.267 [WARNING] [TID:19896|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-06-23 09:51:34.276 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Y count=11520 first=4,000015 last=4,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.298 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=1_датчик_Z count=11520 first=4,000015 last=4,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.320 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_X count=11520 first=4,000015 last=4,199998 blockLength=11520 update=200ms
+2026-06-23 09:51:34.343 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Y count=11520 first=4,000015 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.365 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=2_датчик_Z count=11520 first=4,000015 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.387 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_X count=11520 first=4,000015 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.409 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Y count=11520 first=4,000015 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.430 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=3_датчик_Z count=11520 first=4,000014 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.452 [DEBUG] [TID:19432|Src_mera.file.1] MERA block: tag=молоток count=11520 first=4,000014 last=4,199997 blockLength=11520 update=200ms
+2026-06-23 09:51:34.452 [DEBUG] [TID:19432|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 19432
+2026-06-23 09:51:34.467 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_02 points=303 lines=3 frame=30 window=1,000
+2026-06-23 09:51:34.469 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=MIC140_03 points=101 lines=1 frame=30 window=1,000
+2026-06-23 09:51:34.474 [DEBUG] [TID:7120|UIThread] Ogl osc render: tag=1_датчик_X points=57601 lines=1 frame=30 window=1,000
+2026-06-23 09:51:34.475 [DEBUG] [TID:7120|UIThread] Trend diag: comp=Trend16 recNow=5,200000 trendMax=5,200000 lag=0,000000 window=[0,000000..5,200000] line=0 tag=MemTag kind=scalar snap=27 block=1 portion=1 added=0 lastProcessed=5,200000 visible=True
+2026-06-23 09:51:34.481 [DEBUG] [TID:7120|UIThread] 09:51:34.480 Update diag: elapsed=1047 ms uiTicks=5 dataEvents=796 renders=5 screenTimer=200 ms dataUpdate=200 ms
+2026-06-23 09:51:34.484 [DEBUG] [TID:7120|UIThread] [UI] DrainUiEventQueue: Count=167, Time=31 ms, ThreadID=7120
+2026-06-23 09:51:34.490 [DEBUG] [TID:7120|UIThread] 09:51:34.489 Data sources stopped.
+2026-06-23 09:51:34.496 [DEBUG] [TID:7120|UIThread] 09:51:34.495 State changed: Preview -> Stop
+2026-06-23 09:51:36.868 [WARNING] [TID:7120|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped

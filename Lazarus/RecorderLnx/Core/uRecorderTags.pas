@@ -188,6 +188,8 @@ type
     fMic140ThermoCompensationEnabled: Boolean;                 { КТХС выполняется драйвером MIC-140 до ГХ }
     fMic140CjcDefault: Boolean;                                { Использовать штатный T-канал холодного спая }
     fMic140CjcChannel: Integer;                                { T1..T3, выбранный для КТХС }
+    fMic140ThermocoupleScaleName: string;                      { Выбранная SDB ГХ термопары }
+    fMic140ThermocoupleScalePath: string;                      { Ключ SDB выбранной ГХ }
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
@@ -256,6 +258,10 @@ type
       read fMic140ThermoCompensationEnabled write fMic140ThermoCompensationEnabled;
     property Mic140CjcDefault: Boolean read fMic140CjcDefault write fMic140CjcDefault;
     property Mic140CjcChannel: Integer read fMic140CjcChannel write fMic140CjcChannel;
+    property Mic140ThermocoupleScaleName: string read fMic140ThermocoupleScaleName
+      write fMic140ThermocoupleScaleName;
+    property Mic140ThermocoupleScalePath: string read fMic140ThermocoupleScalePath
+      write fMic140ThermocoupleScalePath;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
   end;

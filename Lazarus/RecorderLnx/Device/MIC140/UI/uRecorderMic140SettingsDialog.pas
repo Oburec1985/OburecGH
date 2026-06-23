@@ -672,6 +672,12 @@ begin
             lResult.SelectedChannels.Add(lTag.Address);
           if lTag.Mic140DeviceSerial > 0 then
             lResult.DeviceSerial := lTag.Mic140DeviceSerial;
+          // The source-config list exists only for the lifetime of the
+          // settings dialog. Reconstruct its source-level flag from tags when
+          // the dialog is opened again after Preview/Record.
+          lResult.ThermoCompensationEnabled :=
+            lResult.ThermoCompensationEnabled or
+            lTag.Mic140ThermoCompensationEnabled;
           if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
             (lChannelNumber > lResult.ChannelCount) then
             lResult.ChannelCount := MIC140MaxChannelCount;
@@ -733,6 +739,8 @@ begin
         lTag.Mic140CjcDefault := lSettings.DefaultCjc;
         lTag.Mic140CjcChannel := RecorderMic140ChannelCjcNumber(lSettings,
           lChannelNumber - 1, CMic140Mic140SubRev1);
+        lTag.Mic140ThermocoupleScaleName := lSettings.ThermocoupleScaleName;
+        lTag.Mic140ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
         if RecorderMic140ChannelUsesTemperature(lSettings) then
         begin
           lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
@@ -741,6 +749,10 @@ begin
           lTag.CalibrationNames.Clear;
           if lCalName <> '' then
             lTag.CalibrationNames.Add(lCalName);
+          if lCalName = '' then
+            // The selection is still stored in MIC-140 settings above. Do not
+            // erase it just because the SDB table could not be opened now.
+            lTag.CalibrationNames.Add('TC ' + lSettings.ThermocoupleScaleName);
         end
         else
         begin
