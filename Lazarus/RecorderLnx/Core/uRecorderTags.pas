@@ -185,6 +185,9 @@ type
     fHardwareCalibrationEnabled: Boolean;                      { Включена аппаратная ГХ с устройства }
     fHardwareCalibrationName: string;                          { Имя аппаратной ГХ в реестре калибровок }
     fMic140DeviceSerial: Integer;                              { Серийный номер MIC-140 для аппаратной ГХ }
+    fMic140ThermoCompensationEnabled: Boolean;                 { КТХС выполняется драйвером MIC-140 до ГХ }
+    fMic140CjcDefault: Boolean;                                { Использовать штатный T-канал холодного спая }
+    fMic140CjcChannel: Integer;                                { T1..T3, выбранный для КТХС }
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
@@ -249,6 +252,10 @@ type
       write fHardwareCalibrationName;
     property Mic140DeviceSerial: Integer read fMic140DeviceSerial
       write fMic140DeviceSerial;
+    property Mic140ThermoCompensationEnabled: Boolean
+      read fMic140ThermoCompensationEnabled write fMic140ThermoCompensationEnabled;
+    property Mic140CjcDefault: Boolean read fMic140CjcDefault write fMic140CjcDefault;
+    property Mic140CjcChannel: Integer read fMic140CjcChannel write fMic140CjcChannel;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
   end;
@@ -873,6 +880,8 @@ begin
   fSetpoints[tskLowAlarm].Threshold := -10.0;
   fSetpoints[tskLowAlarm].Color := $0000FF;
   fSetpointSoundUntilEnd := True;
+  fMic140CjcDefault := True;
+  fMic140CjcChannel := 0;
   fCalibrationNames := TStringList.Create;
   fCalibrationNames.CaseSensitive := False;
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
@@ -1199,7 +1208,6 @@ procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes
 var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
-  lTimeSec: Double;
   lEventData: TRecorderTagUpdateEventData;
   lValues: TRecorderDoubleArray;
   I: Integer;
@@ -1217,10 +1225,9 @@ begin
   for I := 0 to ACount - 1 do
     lValues[I] := TransformTagValue(lTag, AValues[I]);
   lTag.AddSamples(ATimes, lValues, ACount);
-  lTimeSec := ATimes[ACount - 1];
-  RecorderDebugLog(Format('Tag block: tag=%s count=%d first=%.6f last=%.6f bufferCount=%d bufferCapacity=%d',
-    [lTag.Name, ACount, ATimes[0], lTimeSec, lTag.SignalBuffer.Count,
-    lTag.SignalBuffer.Capacity]));
+  // This method is in the acquisition hot path. Per-tag disk logging turns a
+  // 48-channel hardware block into dozens of synchronous writes and can delay
+  // the next MIC-140 TCP read. Device-level diagnostics log block summaries.
 
   if fEventBus <> nil then
   begin

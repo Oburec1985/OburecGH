@@ -728,6 +728,11 @@ begin
       begin
         lSettings := lResult.ChannelSettings[lChannelNumber - 1];
         lTag.MeasRangeIndex := lSettings.RangeIndex;
+        lTag.Mic140ThermoCompensationEnabled :=
+          lResult.ThermoCompensationEnabled;
+        lTag.Mic140CjcDefault := lSettings.DefaultCjc;
+        lTag.Mic140CjcChannel := RecorderMic140ChannelCjcNumber(lSettings,
+          lChannelNumber - 1, CMic140Mic140SubRev1);
         if RecorderMic140ChannelUsesTemperature(lSettings) then
         begin
           lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);

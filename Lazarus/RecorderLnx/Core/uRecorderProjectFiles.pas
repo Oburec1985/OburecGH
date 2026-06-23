@@ -632,6 +632,10 @@ begin
       lTagJson.Add('hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
       lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       lTagJson.Add('mic140DeviceSerial', lTag.Mic140DeviceSerial);
+      lTagJson.Add('mic140ThermoCompensationEnabled',
+        lTag.Mic140ThermoCompensationEnabled);
+      lTagJson.Add('mic140CjcDefault', lTag.Mic140CjcDefault);
+      lTagJson.Add('mic140CjcChannel', lTag.Mic140CjcChannel);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -714,6 +718,12 @@ begin
           lTag.HardwareCalibrationName);
         lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
           lTag.Mic140DeviceSerial);
+        lTag.Mic140ThermoCompensationEnabled := lTagJson.Get(
+          'mic140ThermoCompensationEnabled', lTag.Mic140ThermoCompensationEnabled);
+        lTag.Mic140CjcDefault := lTagJson.Get('mic140CjcDefault',
+          lTag.Mic140CjcDefault);
+        lTag.Mic140CjcChannel := lTagJson.Get('mic140CjcChannel',
+          lTag.Mic140CjcChannel);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);

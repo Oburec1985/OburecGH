@@ -213,6 +213,9 @@ const
   CMic140StatusStarted = 3;
   CMic140StatusError = -1;
   CMic140ReadTimeoutMinMs = 1500;
+  // A non-blocking drain uses 1 ms. BIOS commands must never inherit that
+  // value because the device needs a normal round-trip time for stream 1.
+  CMic140LegacyCommandTimeoutMs = 5000;
   CMic140NoDataFailThreshold = 10;
   CMic140ConnectAttempts = 3;
   CMic140LegacyMaxUiReadFrequencyHz = 1000.0;
@@ -1206,15 +1209,15 @@ begin
   Result := True;
 end;
 
-function Mic140TryBuildTemperatureValue(ARegistry: TRecorderTagRegistry;
+function Mic140TryBuildCjcCorrectedRawValue(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; AChannelIndex: Integer; ARawMillivolts: Double;
-  AColdJunctionC: Double; out ATemperatureC: Double): Boolean;
+  AColdJunctionC: Double; out ACorrectedRawValue: Double): Boolean;
 var
   lColdJunctionMv: Double;
   lJunctionC: Double;
 begin
   Result := False;
-  ATemperatureC := ARawMillivolts;
+  ACorrectedRawValue := ARawMillivolts;
   if (ARegistry = nil) or (ATag = nil) or (not Mic140TagHasCalibration(ATag)) then
     Exit;
   if AColdJunctionC <= CMic140CjcNotAvailable * 0.5 then
@@ -1225,8 +1228,46 @@ begin
     lColdJunctionMv) then
     Exit;
 
-  ATemperatureC := ARegistry.TransformTagValue(ATag,
-    ARawMillivolts + lColdJunctionMv);
+  // The generic registry will apply the hardware and thermocouple GХ once
+  // after this pre-correction. Applying it here would transform the value twice.
+  ACorrectedRawValue := ARawMillivolts + lColdJunctionMv;
+  Result := True;
+end;
+
+function Mic140TryGetColdJunctionTemperature(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ABlock: TRecorderDeviceSampleBlock;
+  ACjcChannel: Integer; out ATemperatureC: Double): Boolean;
+var
+  I: Integer;
+  lCjcIndex: Integer;
+  lSum: Double;
+  lCount: Integer;
+begin
+  Result := False;
+  ATemperatureC := CMic140CjcNotAvailable;
+  lCjcIndex := ACjcChannel - 1;
+  if (ARegistry = nil) or (ATag = nil) or (lCjcIndex < 0) or
+    (lCjcIndex >= ABlock.TemperatureCount) or
+    (lCjcIndex >= Length(ABlock.TemperatureValues)) then
+    Exit;
+
+  // Same as ScanMIC140: a T-channel is converted through the thermocouple
+  // curve, then averaged for the received scan block.
+  lSum := 0;
+  lCount := 0;
+  for I := 0 to ABlock.SampleCount - 1 do
+    if (lCjcIndex < Length(ABlock.TemperatureValid)) and
+      (I < Length(ABlock.TemperatureValid[lCjcIndex])) and
+      ABlock.TemperatureValid[lCjcIndex][I] and
+      (I < Length(ABlock.TemperatureValues[lCjcIndex])) then
+    begin
+      lSum := lSum + ARegistry.TransformTagValue(ATag,
+        ABlock.TemperatureValues[lCjcIndex][I]);
+      Inc(lCount);
+    end;
+  if lCount <= 0 then
+    Exit;
+  ATemperatureC := lSum / lCount;
   Result := True;
 end;
 
@@ -1515,6 +1556,10 @@ begin
     Exit;
   if (ATag.MeasRangeIndex >= 0) and (ATag.MeasRangeIndex < CMic140RangeCount) then
     ASettings.RangeIndex := ATag.MeasRangeIndex;
+  ASettings.DefaultCjc := ATag.Mic140CjcDefault;
+  if (ATag.Mic140CjcChannel >= 1) and
+    (ATag.Mic140CjcChannel <= MIC140TemperatureChannelCount) then
+    ASettings.CjcChannel := ATag.Mic140CjcChannel;
   if ATag.CalibrationNames = nil then
     Exit;
   for J := 0 to ATag.CalibrationNames.Count - 1 do
@@ -2767,12 +2812,28 @@ end;
 procedure TRecorderMic140Device.Stop;
 var
   lErrorMessage: string;
+  lPreviousTimeoutMs: Cardinal;
 begin
   if (fState = rdsStarted) and fUseLegacyProtocol and (fLegacyClient <> nil) then
   begin
-    if not fLegacyClient.StopScan(lErrorMessage) then
-      Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan stop failed: %s',
-        [fHost, fPort, lErrorMessage]));
+    // DoTick drains queued packets with ReadBlock(0); that intentionally uses
+    // a 1 ms receive timeout. StopScan shares the same socket, so restore a
+    // command timeout before sending CMD_STOPSCANMAIN.
+    lPreviousTimeoutMs := fLegacyClient.TimeoutMs;
+    fLegacyClient.TimeoutMs := CMic140LegacyCommandTimeoutMs;
+    Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy StopScan begin: command=%d timeout=%d ms readBlocks=%d',
+      [fHost, fPort, MIC140_LEGACY_CMD_STOP_SCAN_MAIN,
+       fLegacyClient.TimeoutMs, fLegacyReadBlockCount]));
+    try
+      if not fLegacyClient.StopScan(lErrorMessage) then
+        Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan stop failed: %s',
+          [fHost, fPort, lErrorMessage]))
+      else
+        Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy StopScan completed',
+          [fHost, fPort]));
+    finally
+      fLegacyClient.TimeoutMs := lPreviousTimeoutMs;
+    end;
     fLegacyClient.ClearBufferedPackets;
     fLegacyScanWasStarted := False;
     fLegacyReadFailureCount := 0;
@@ -2810,13 +2871,19 @@ begin
     fLegacyClient.TimeoutMs := ATimeoutMs;
     if not fLegacyClient.ReadScanBlock(lLegacyBlock, lErrorMessage) then
     begin
-      if not fLegacyReadErrorLogged then
+      // ReadBlock(0) is the non-blocking drain after a valid packet. Its
+      // timeout means only that the TCP queue is empty, not that MIC-140 has
+      // stopped scanning. Report failures only for the timed main read.
+      if ATimeoutMs > 0 then
       begin
-        Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan read failed after %d good blocks: %s. The scan is left running; Stop/Disconnect will send StopScan explicitly.',
-          [fHost, fPort, fLegacyReadBlockCount, lErrorMessage]));
-        fLegacyReadErrorLogged := True;
+        if not fLegacyReadErrorLogged then
+        begin
+          Mic140LogWarning(Format('[MIC-140:%s:%d] Legacy scan read failed after %d good blocks: %s. The scan is left running; Stop/Disconnect will send StopScan explicitly.',
+            [fHost, fPort, fLegacyReadBlockCount, lErrorMessage]));
+          fLegacyReadErrorLogged := True;
+        end;
+        Inc(fLegacyReadFailureCount);
       end;
-      Inc(fLegacyReadFailureCount);
       Exit;
     end;
     fLegacyReadErrorLogged := False;
@@ -3199,7 +3266,9 @@ var
     lI: Integer;
     lJ: Integer;
     lTag: TRecorderTag;
-    lTemperatureC: Double;
+    lCjcTemperatureC: Double;
+    lCjcCorrectedValue: Double;
+    lUseCjc: Boolean;
     lTimes: TRecorderDoubleArray;
     lValues: TRecorderDoubleArray;
   begin
@@ -3211,6 +3280,12 @@ var
     fReadFailCount := 0;
     PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
     PublishBlockCounter(fGoodBlockCount);
+    // Keep acquisition diagnostics useful without recreating the former
+    // per-tag logging load in the 48-channel hot path.
+    if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
+      Mic140LogWarning(Format('[DataSource:%s] MIC-140 block=%d samples=%d stride=%d rate=%.3f Hz',
+        [SourceId, fGoodBlockCount, lBlock.SampleCount, lBlock.ChannelCount +
+         lBlock.TemperatureCount, lBlock.SampleRateHz]));
 
     SetLength(lTimes, lBlock.SampleCount);
     for lJ := 0 to lBlock.SampleCount - 1 do
@@ -3227,23 +3302,28 @@ var
       if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
         Continue;
 
+      lUseCjc := lTag.Mic140ThermoCompensationEnabled and
+        SameText(lTag.SourceValueMode,
+          RecorderMic140OutputModeToConfigName(momTemperatureC));
+      if lUseCjc then
+        lUseCjc := Mic140TryGetColdJunctionTemperature(Registry, lTag, lBlock,
+          lTag.Mic140CjcChannel, lCjcTemperatureC);
+      if (not lUseCjc) and lTag.Mic140ThermoCompensationEnabled and
+        SameText(lTag.SourceValueMode,
+          RecorderMic140OutputModeToConfigName(momTemperatureC)) and
+        (not fTemperatureModeWarningLogged) then
+      begin
+        Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC T%d is not available; raw value will pass through the thermocouple GХ without compensation',
+          [SourceId, lTag.Mic140CjcChannel]));
+        fTemperatureModeWarningLogged := True;
+      end;
+
       for lJ := 0 to lBlock.SampleCount - 1 do
       begin
         lValues[lJ] := lBlock.Values[lI][lJ];
-        if SameText(lTag.SourceValueMode,
-          RecorderMic140OutputModeToConfigName(momTemperatureC)) then
-        begin
-          if Mic140TryBuildTemperatureValue(Registry, lTag, lI, lValues[lJ],
-            CMic140CjcNotAvailable, lTemperatureC) then
-            lValues[lJ] := lTemperatureC
-          else
-          if not fTemperatureModeWarningLogged then
-          begin
-            Mic140LogWarning(Format('[DataSource:%s] MIC-140 temperature output requested, but CJC temperature or thermocouple calibration is not available yet; raw mV are published for now',
-              [SourceId]));
-            fTemperatureModeWarningLogged := True;
-          end;
-        end;
+        if lUseCjc and Mic140TryBuildCjcCorrectedRawValue(Registry, lTag, lI,
+          lValues[lJ], lCjcTemperatureC, lCjcCorrectedValue) then
+          lValues[lJ] := lCjcCorrectedValue;
       end;
       Registry.PublishBlock(lTag.Name, lTimes, lValues, lBlock.SampleCount);
     end;
