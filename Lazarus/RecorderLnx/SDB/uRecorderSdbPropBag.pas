@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  StrUtils, uSharedStringEncoding;
+  StrUtils, LazFileUtils, uSharedStringEncoding;
 
 function SdbExtractPtyName(const ABlock: string): string;
 var
@@ -171,7 +171,7 @@ var
   lValue: string;
 begin
   Clear;
-  if not FileExists(AFileName) then
+  if not FileExistsUTF8(AFileName) then
     Exit;
   lText := SharedLoadLegacyTextFile(AFileName);
   lPos := 1;

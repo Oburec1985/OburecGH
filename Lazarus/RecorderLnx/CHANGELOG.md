@@ -4,6 +4,108 @@
 
 ---
 
+## 2026-06-23 — MIC-140 КТХС: mV-пайплайн и TIn-калибровка
+
+**Задача:** RecorderLnx ~490 °C vs Recorder ~520 °C.
+
+**Причина:** T_КТХС читался через ГХ термопары AIN-канала; для TIn после аппаратной ГХ значение уже в °C, лишняя `thermo.Eval` занижала T_спая и недокомпенсировала ~30 °C. Не загружалась аппаратная ГХ из `Calibr\hardware\MIC140\snCCCC\TIn\`.
+
+**Сделано:**
+- Цепочка КТХС: `код→мВ (аппаратная)` → `+inverse(термопара, T_КТХС)` → `forward(термопара, мВ)`.
+- T_КТХС: TIn hardware → °C (или + своя ГХ T-канала, если есть).
+- Загрузка `TIn\NN.csv`, привязка к тегам `2-t1`… при старте.
+- Сборка OK.
+
+**Файлы:** `Device/MIC140/uRecorderMic140DataSource.pas`
+
+---
+
+## 2026-06-23 — MIC-140 КТХС: цепочка как в ScanMIC140
+
+**Задача:** Recorder 520 °C, RecorderLnx 495 °C — неполная компенсация холодного спая.
+
+**Причина:** В оригинале (`ScanMIC140::Decommutation`) КТХС: `hardware Eval(code) + tare->EvalInverse(T_junction)` → `tare->Eval`. В RecorderLnx mV КТХС прибавлялись к сырым кодам, инверсия шла через полную цепочку ГХ (аппаратная + термопара).
+
+**Сделано:**
+- Раздельные `TransformTagHardwareValue`, `TransformTagThermocoupleValue`, `InvertTagThermocoupleValue`.
+- КТХС: аппаратная ГХ → + inverse(термопара, T_КТХС+offset) → forward(термопара).
+- T_КТХС: hardware(T-тег) + thermo(кривая канала), как `tar->Eval(tc_->loc_data)`.
+- `PublishBlock(..., AValuesAlreadyTransformed)` для готовых °C.
+- Сборка OK.
+
+**Файлы:** `Core/uRecorderTags.pas`, `Device/MIC140/uRecorderMic140DataSource.pas`
+
+---
+
+## 2026-06-23 — SDB термопары: кириллические пути (K_ГОСТ Р 8.585-2001.csv)
+
+**Задача:** `thermocouple curve was not loaded` для `ГОСТ\Термопары\K_ГОСТ Р 8.585-2001` при наличии файла на диске.
+
+**Причина:** `ChangeFileExt` в `RecorderSdbNormalizeKey` воспринимал `.585-2001` в имени `K_ГОСТ Р 8.585-2001` как расширение файла и обрезал ключ до `K_ГОСТ Р 8` → искался несуществующий `K_ГОСТ Р 8.csv`.
+
+**Сделано:**
+- `RecorderSdbNormalizeKey` снимает только суффиксы `.xml`/`.csv`.
+- То же для `RecorderMeraThermocoupleDisplayName`.
+- В лог ошибки добавлен полный путь `csv=...`.
+
+**Сделано:**
+- `FileExistsUTF8` в `uRecorderSdbStore`, `uRecorderSdbPropBag`, `uRecorderMeraSdbThermocouples`.
+- `RecorderMeraLoadThermocoupleCalibration` — SDB + запасная загрузка CSV.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `SDB/uRecorderSdbStore.pas`, `SDB/uRecorderSdbPropBag.pas`, `Core/uRecorderMeraSdbThermocouples.pas`, `Device/MIC140/uRecorderMic140DataSource.pas`
+
+---
+
+## 2026-06-23 — MIC-140: исправлен сбой serial=76 (неверный cast IRecorderDevice)
+
+**Задача:** После фикса CCSerNo путь к ГХ стал `sn0076` вместо `sn0164`. В логе Connect: `ccSerNo=164`, сразу после — `ccSerNo=76`.
+
+**Причина:** `TRecorderMic140Device(fDevice)` при `fDevice: IRecorderDevice` в FPC читает не тот объект; firmware на Connect записывалась правильно, `GetDeviceSerial` — из мусора.
+
+**Сделано:**
+- Поле `fMic140Device: TRecorderMic140Device` + `fDevice := fMic140Device` (без cast через interface).
+- `fHardwareCalibrSerial` кэшируется в `Connect` сразу после `ReadFirmware`.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `Device/MIC140/uRecorderMic140DataSource.pas`
+
+---
+
+## 2026-06-23 — Аппаратная ГХ MIC-140: серийник sn0164 (CCSerNo)
+
+**Задача (переформулировка):** КТХС и температурный расчёт не работали: аппаратная ГХ искалась в `sn0115`/`sn0155` вместо `sn0164`; DevSerNo=155 совпадает с последним октетом IP, а не с с/н MIC (CCSerNo=164).
+
+**Сделано:**
+- `RecorderMic140HardwareCalibrSerialFromFirmware` — только CCSerNo при известном CCType (как `owner->DeviceInfo.SerialNo` в MC031); DevSerNo для каталога calibr не используется.
+- `RecorderMic140DisplaySerialFromFirmware` / `RecorderMic140HostLastOctet` — в UI и диалоге показывается CCSerNo, если DevSerNo = октет IP.
+- `ResolveDeviceSerialForTag` и `RebuildMic140SourceConfigsFromTags` игнорируют устаревший `mic140DeviceSerial` = октет IP из конфига.
+- Лог при старте: `devSerNo / ccSerNo / ccType -> hardware calibr serial`.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `Device/MIC140/uRecorderMic140LegacyProtocol.pas`, `Device/MIC140/uRecorderMic140DataSource.pas`, `Device/MIC140/UI/uRecorderMic140SettingsDialog.pas`, `UI/uRecorderSettingsDialog.pas`
+
+**Документация:** [mic140_protocol.md](Docs/mic140_protocol.md)
+
+---
+
+## 2026-06-22 — КТХС MIC-140: применение компенсации холодного спая
+
+**Задача (переформулировка):** Доработать КТХС для термопарных каналов MIC-140 — при включённой компенсации температура холодного спая не учитывалась в измерении.
+
+**Сделано:**
+- Исправлен выбор T-канала КТХС: при `Mic140CjcDefault` и сохранённом `Mic140CjcChannel=0` используется штатная таблица соответствия AIn→TIn (`RecorderMic140TagEffectiveCjcChannel`), а не сырой ноль.
+- При старте источника синхронизируется `Mic140CjcChannel` на тегах; для термопарных каналов автоматически включается `Mic140ThermoCompensationEnabled`, если флаг не был сохранён.
+- При сохранении MIC-140 КТХС включается автоматически, если хотя бы один выбранный канал использует ГХ термопары.
+- В лог добавлен `block tin=` при недоступности TIn в блоке сканирования.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `Device/MIC140/uRecorderMic140DataSource.pas`, `Device/MIC140/UI/uRecorderMic140SettingsDialog.pas`
+
+**Документация:** [mic140_protocol.md](Docs/mic140_protocol.md) (раздел «ThermoComp, Default CJC и CJC»)
+
+---
+
 ## 2026-06-22 — Глубина тренда 100 с и плавное обновление
 
 **Задача (переформулировка):** При настройке глубины тренда 100 с накапливалось ~30 с истории, затем интерфейс заедал; нужно корректное окно по `DurationSec` и стабильный refresh.

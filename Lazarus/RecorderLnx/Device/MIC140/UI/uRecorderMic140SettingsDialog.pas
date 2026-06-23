@@ -634,6 +634,7 @@ function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
   const ASourceId: string; out ANewSourceId: string): Boolean;
 var
   I: Integer;
+  lCalibrSerial: Integer;
   lCalName: string;
   lCapacity: Integer;
   lChannelNumber: Integer;
@@ -670,8 +671,10 @@ begin
           end
           else
             lResult.SelectedChannels.Add(lTag.Address);
-          if lTag.Mic140DeviceSerial > 0 then
-            lResult.DeviceSerial := lTag.Mic140DeviceSerial;
+          // Mic140DeviceSerial is the hardware-calibr folder serial (CCSerNo),
+          // not the display DevSerNo shown in the dialog caption.
+          if (lResult.DeviceSerial <= 0) and TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+            RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lResult.DeviceSerial);
           // The source-config list exists only for the lifetime of the
           // settings dialog. Reconstruct its source-level flag from tags when
           // the dialog is opened again after Preview/Record.
@@ -692,7 +695,21 @@ begin
     if not ShowRecorderMic140SettingsDialog(AOwner, lResult) then
       Exit;
 
+    if not lResult.ThermoCompensationEnabled then
+      for I := 0 to High(lResult.ChannelSettings) do
+        if RecorderMic140ChannelUsesTemperature(lResult.ChannelSettings[I]) and
+          ((lResult.SelectedChannels.Count = 0) or
+          (lResult.SelectedChannels.IndexOf(IntToStr(I + 1)) >= 0)) then
+        begin
+          lResult.ThermoCompensationEnabled := True;
+          Break;
+        end;
+
     ANewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
+    lCalibrSerial := 0;
+    if TryParseRecorderMic140SourceId(ANewSourceId, lHost, lPort) then
+      RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lCalibrSerial);
+
     if AMic140Configs <> nil then
     begin
       lConfig := EnsureRecorderMic140SourceConfig(AMic140Configs, ANewSourceId);
@@ -727,8 +744,8 @@ begin
         Continue;
       lTag.SourceId := ANewSourceId;
       lTag.ModuleType := 'MIC-140';
-      if lResult.DeviceSerial > 0 then
-        lTag.Mic140DeviceSerial := lResult.DeviceSerial;
+      if lCalibrSerial > 0 then
+        lTag.Mic140DeviceSerial := lCalibrSerial;
       if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
         (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
       begin

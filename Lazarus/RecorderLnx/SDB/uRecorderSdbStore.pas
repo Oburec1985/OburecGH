@@ -61,6 +61,8 @@ function RecorderSdbLoadScaleCalibrationFromInfo(const AInfo: TSdbScaleInfo;
   ACalibration: TRecorderCalibration): Boolean;
 function RecorderSdbLoadScaleCalibration(const AKey: string;
   ACalibration: TRecorderCalibration): Boolean;
+function RecorderSdbLoadScaleCalibrationFromCsv(const ACsvPath, AKey: string;
+  ACalibration: TRecorderCalibration): Boolean;
 function RecorderSdbImportCalibration(AList: TRecorderCalibrationList;
   const AKey: string; out ACalibrationName: string): Boolean;
 
@@ -71,7 +73,7 @@ procedure RecorderSdbReloadNodeMetadata(ANode: TRecorderSdbNode);
 implementation
 
 uses
-  FileUtil, StrUtils, uRecorderMeraPaths, uRecorderSdbPropBag,
+  FileUtil, LazFileUtils, StrUtils, uRecorderMeraPaths, uRecorderSdbPropBag,
   uSharedStringEncoding;
 
 function RecorderSdbRootDir: string;
@@ -86,12 +88,17 @@ begin
 end;
 
 function RecorderSdbNormalizeKey(const AKey: string): string;
+var
+  lExt: string;
 begin
   Result := Trim(AKey);
   Result := StringReplace(Result, '/', '\', [rfReplaceAll]);
   while (Length(Result) > 0) and (Result[1] = '\') do
     Delete(Result, 1, 1);
-  Result := ChangeFileExt(Result, '');
+  { Имена шкал вроде K_ГОСТ Р 8.585-2001 содержат точку, но это не .csv/.xml. }
+  lExt := LowerCase(ExtractFileExt(Result));
+  if (lExt = '.xml') or (lExt = '.csv') then
+    Result := ChangeFileExt(Result, '');
 end;
 
 function SdbKeyFileName(const AKey, AExtension: string): string;
@@ -153,7 +160,7 @@ begin
   Result := False;
   if (AXmlPath = '') or (ACsvPath = '') then
     Exit;
-  if not FileExists(AXmlPath) or not FileExists(ACsvPath) then
+  if not FileExistsUTF8(AXmlPath) or not FileExistsUTF8(ACsvPath) then
     Exit;
   lBag := TSdbPropBag.Create;
   try
@@ -201,7 +208,7 @@ begin
     lXmlPath := IncludeTrailingPathDelimiter(lFolderPath) +
       ExtractFileName(lFolderPath) + '.xml';
   end;
-  if not FileExists(lXmlPath) then
+  if not FileExistsUTF8(lXmlPath) then
     Exit;
   lBag := TSdbPropBag.Create;
   try
@@ -288,7 +295,7 @@ begin
         Continue;
       lXmlPath := lDiskDir + lBase + '.xml';
       lCsvPath := lDiskDir + lBase + '.csv';
-      if not FileExists(lXmlPath) or not FileExists(lCsvPath) then
+      if not FileExistsUTF8(lXmlPath) or not FileExistsUTF8(lCsvPath) then
         Continue;
       if AKey <> '' then
         lChildKey := AKey + '\' + lBase
@@ -331,7 +338,7 @@ begin
         Continue;
       lSubDir := lDiskDir + SR.Name;
       lXmlPath := IncludeTrailingPathDelimiter(lSubDir) + SR.Name + '.xml';
-      if not FileExists(lXmlPath) then
+      if not FileExistsUTF8(lXmlPath) then
         Continue;
       if AKey <> '' then
         lChildKey := AKey + '\' + SR.Name
@@ -464,7 +471,7 @@ var
 begin
   Result := False;
   if (ACalibration = nil) or (Trim(AInfo.CsvPath) = '') or
-    not FileExists(AInfo.CsvPath) then
+    not FileExistsUTF8(AInfo.CsvPath) then
     Exit;
   lLines := TStringList.Create;
   try
@@ -497,6 +504,23 @@ begin
   Result := False;
   if (ACalibration = nil) or not RecorderSdbTryLoadScale(AKey, lInfo) then
     Exit;
+  Result := RecorderSdbLoadScaleCalibrationFromInfo(lInfo, ACalibration);
+end;
+
+function RecorderSdbLoadScaleCalibrationFromCsv(const ACsvPath, AKey: string;
+  ACalibration: TRecorderCalibration): Boolean;
+var
+  lInfo: TSdbScaleInfo;
+begin
+  Result := False;
+  if (ACalibration = nil) or (Trim(ACsvPath) = '') or not FileExistsUTF8(ACsvPath) then
+    Exit;
+  lInfo.Key := RecorderSdbNormalizeKey(AKey);
+  lInfo.CsvPath := ACsvPath;
+  if Trim(lInfo.SrcUnits) = '' then
+    lInfo.SrcUnits := 'mV';
+  if Trim(lInfo.DstUnits) = '' then
+    lInfo.DstUnits := 'degC';
   Result := RecorderSdbLoadScaleCalibrationFromInfo(lInfo, ACalibration);
 end;
 

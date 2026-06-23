@@ -386,6 +386,12 @@ type
     function FindByName(const AName: string): TRecorderTag;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
+    function FindTagHardwareCalibration(ATag: TRecorderTag): TRecorderCalibration;
+    function FindTagThermocoupleCalibration(ATag: TRecorderTag): TRecorderCalibration;
+    function TransformTagHardwareValue(ATag: TRecorderTag; AValue: Double): Double;
+    function TransformTagThermocoupleValue(ATag: TRecorderTag; AValue: Double): Double;
+    function InvertTagThermocoupleValue(ATag: TRecorderTag; ATemperatureC: Double;
+      out AMillivolts: Double): Boolean;
     function TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
 
     procedure RegisterActiveSource(const ASourceId: string);
@@ -397,7 +403,8 @@ type
     procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double);
     { Публикует блок значений тега и отправляет событие rceDataUpdated. }
     procedure PublishBlock(const ATagName: string; const ATimes,
-      AValues: array of Double; ACount: Integer);
+      AValues: array of Double; ACount: Integer;
+      AValuesAlreadyTransformed: Boolean = False);
 
     { Удаляет все теги и очищает счетчик id. }
     procedure Clear;
@@ -442,7 +449,12 @@ function RecorderTagsShareSourceIdList(ARegistry: TRecorderTagRegistry;
 implementation
 
 uses
-  uRecorderDebugLog;
+  StrUtils, uRecorderDebugLog;
+
+const
+  CTagThermocoupleInverseMinMv = -20.0;
+  CTagThermocoupleInverseMaxMv = 100.0;
+  CTagThermocoupleInverseIterations = 48;
 
 function RecorderTagEstimateKindToShortName(AKind: TRecorderTagEstimateKind): string;
 begin
@@ -1127,20 +1139,100 @@ begin
       Exit(fCalibrations[I]);
 end;
 
-function TRecorderTagRegistry.TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
+function TRecorderTagRegistry.FindTagHardwareCalibration(
+  ATag: TRecorderTag): TRecorderCalibration;
+begin
+  Result := nil;
+  if (ATag = nil) or (not ATag.HardwareCalibrationEnabled) then
+    Exit;
+  if Trim(ATag.HardwareCalibrationName) <> '' then
+    Result := FindCalibrationByName(ATag.HardwareCalibrationName);
+end;
+
+function TRecorderTagRegistry.FindTagThermocoupleCalibration(
+  ATag: TRecorderTag): TRecorderCalibration;
 var
   I: Integer;
+  lName: string;
+begin
+  Result := nil;
+  if (ATag = nil) or (ATag.CalibrationNames = nil) then
+    Exit;
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+  begin
+    lName := Trim(ATag.CalibrationNames[I]);
+    if StartsText('TC ', lName) then
+      Exit(FindCalibrationByName(lName));
+  end;
+end;
+
+function TRecorderTagRegistry.TransformTagHardwareValue(ATag: TRecorderTag;
+  AValue: Double): Double;
+var
   lCalibration: TRecorderCalibration;
 begin
   Result := AValue;
   if ATag = nil then
     Exit;
-  if ATag.HardwareCalibrationEnabled and (Trim(ATag.HardwareCalibrationName) <> '') then
+  lCalibration := FindTagHardwareCalibration(ATag);
+  if lCalibration <> nil then
+    Result := lCalibration.Transform(Result);
+end;
+
+function TRecorderTagRegistry.TransformTagThermocoupleValue(ATag: TRecorderTag;
+  AValue: Double): Double;
+var
+  lCalibration: TRecorderCalibration;
+begin
+  Result := AValue;
+  if ATag = nil then
+    Exit;
+  lCalibration := FindTagThermocoupleCalibration(ATag);
+  if lCalibration <> nil then
+    Result := lCalibration.Transform(Result);
+end;
+
+function TRecorderTagRegistry.InvertTagThermocoupleValue(ATag: TRecorderTag;
+  ATemperatureC: Double; out AMillivolts: Double): Boolean;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lHi: Double;
+  lLo: Double;
+  lMid: Double;
+  lMidValue: Double;
+  lReverse: Boolean;
+begin
+  Result := False;
+  AMillivolts := 0.0;
+  lCalibration := FindTagThermocoupleCalibration(ATag);
+  if lCalibration = nil then
+    Exit;
+
+  lLo := CTagThermocoupleInverseMinMv;
+  lHi := CTagThermocoupleInverseMaxMv;
+  lReverse := lCalibration.Transform(lLo) > lCalibration.Transform(lHi);
+  for I := 0 to CTagThermocoupleInverseIterations - 1 do
   begin
-    lCalibration := FindCalibrationByName(ATag.HardwareCalibrationName);
-    if lCalibration <> nil then
-      Result := lCalibration.Transform(Result);
+    lMid := (lLo + lHi) * 0.5;
+    lMidValue := lCalibration.Transform(lMid);
+    if (lMidValue < ATemperatureC) xor lReverse then
+      lLo := lMid
+    else
+      lHi := lMid;
   end;
+  AMillivolts := (lLo + lHi) * 0.5;
+  Result := True;
+end;
+
+function TRecorderTagRegistry.TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+begin
+  Result := TransformTagHardwareValue(ATag, AValue);
+  if ATag = nil then
+    Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
     lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
@@ -1210,7 +1302,7 @@ begin
 end;
 
 procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
-  AValues: array of Double; ACount: Integer);
+  AValues: array of Double; ACount: Integer; AValuesAlreadyTransformed: Boolean);
 var
   lEvent: TRecorderEvent;
   lTag: TRecorderTag;
@@ -1228,8 +1320,12 @@ begin
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
 
   SetLength(lValues, ACount);
-  for I := 0 to ACount - 1 do
-    lValues[I] := TransformTagValue(lTag, AValues[I]);
+  if AValuesAlreadyTransformed then
+    for I := 0 to ACount - 1 do
+      lValues[I] := AValues[I]
+  else
+    for I := 0 to ACount - 1 do
+      lValues[I] := TransformTagValue(lTag, AValues[I]);
   lTag.AddSamples(ATimes, lValues, ACount);
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay

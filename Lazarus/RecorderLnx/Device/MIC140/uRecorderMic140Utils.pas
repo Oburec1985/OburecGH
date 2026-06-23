@@ -30,8 +30,16 @@ function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
 function RecorderMic140SourceId(const AHost: string; APort: Word): string;
 function RecorderMic140NodeTagPrefix(ANodeNumber: Integer): string;
 function RecorderMic140ChannelTagName(ANodeNumber, AChannelNumber: Integer): string;
+function RecorderMic140TemperatureAddressText(ADeviceSerial,
+  ATemperatureIndex: Integer): string;
+function RecorderMic140TemperatureDisplayName(ADeviceSerial,
+  ATemperatureIndex: Integer): string;
 function RecorderMic140TemperatureTagName(ANodeNumber,
   ATemperatureIndex: Integer): string;
+function ParseMic140TemperatureChannelIndex(const AAddress: string;
+  out ATemperatureIndex: Integer): Boolean;
+function Mic140ResolveTemperatureChannelIndex(const AAddress: string;
+  out ATemperatureIndex: Integer): Boolean;
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;
   const ASuffix: string): string;
 function TryParseRecorderMic140SourceId(const ASourceId: string;
@@ -85,6 +93,23 @@ begin
     AChannelNumber]);
 end;
 
+function RecorderMic140TemperatureAddressText(ADeviceSerial,
+  ATemperatureIndex: Integer): string;
+begin
+  if ATemperatureIndex <= 0 then
+    ATemperatureIndex := 1;
+  if ADeviceSerial < 0 then
+    ADeviceSerial := 0;
+  Result := Format('%4.4d-t%2d', [ADeviceSerial, ATemperatureIndex]);
+end;
+
+function RecorderMic140TemperatureDisplayName(ADeviceSerial,
+  ATemperatureIndex: Integer): string;
+begin
+  Result := Format('MIC140-{%s}',
+    [RecorderMic140TemperatureAddressText(ADeviceSerial, ATemperatureIndex)]);
+end;
+
 function RecorderMic140TemperatureTagName(ANodeNumber,
   ATemperatureIndex: Integer): string;
 begin
@@ -92,6 +117,37 @@ begin
     ATemperatureIndex := 1;
   Result := Format('%s-t%d', [RecorderMic140NodeTagPrefix(ANodeNumber),
     ATemperatureIndex]);
+end;
+
+function ParseMic140TemperatureChannelIndex(const AAddress: string;
+  out ATemperatureIndex: Integer): Boolean;
+var
+  lPos: Integer;
+  lTail: string;
+begin
+  Result := False;
+  lPos := Pos('-t', LowerCase(Trim(AAddress)));
+  if lPos <= 0 then
+    Exit;
+  lTail := Trim(Copy(AAddress, lPos + 2, MaxInt));
+  Result := TryStrToInt(lTail, ATemperatureIndex) and (ATemperatureIndex > 0);
+end;
+
+function Mic140ResolveTemperatureChannelIndex(const AAddress: string;
+  out ATemperatureIndex: Integer): Boolean;
+var
+  lPrefix: string;
+begin
+  Result := ParseMic140TemperatureChannelIndex(AAddress, ATemperatureIndex);
+  if Result then
+    Exit;
+  lPrefix := 'diagnostics.cjc.t';
+  if Pos(lPrefix, LowerCase(Trim(AAddress))) = 1 then
+  begin
+    Result := TryStrToInt(Trim(Copy(AAddress, Length('diagnostics.cjc.T') + 1,
+      MaxInt)), ATemperatureIndex) and (ATemperatureIndex > 0);
+    Exit;
+  end;
 end;
 
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;
@@ -103,9 +159,13 @@ end;
 function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
 var
   lNum1, lNum2: Integer;
+  lTemp1, lTemp2: Integer;
 begin
   if SameText(AAddr1, AAddr2) then
     Exit(True);
+  if ParseMic140TemperatureChannelIndex(AAddr1, lTemp1) and
+    ParseMic140TemperatureChannelIndex(AAddr2, lTemp2) then
+    Exit(lTemp1 = lTemp2);
   Result := ParseMic140ChannelNumber(AAddr1, lNum1) and
             ParseMic140ChannelNumber(AAddr2, lNum2) and
             (lNum1 = lNum2);

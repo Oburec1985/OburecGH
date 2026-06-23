@@ -14,7 +14,7 @@ unit uRecorderMeraSdbThermocouples;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderTags;
 
 const
   CMeraSdbThermocoupleFolder = 'ГОСТ\Термопары';
@@ -25,15 +25,20 @@ function RecorderMeraThermocoupleFolderKey: string;
 procedure RecorderMeraResetThermocoupleCache;
 procedure RecorderMeraListThermocoupleScales(AItems: TStrings);
 function RecorderMeraThermocoupleRelativePath(const ADisplayName: string): string;
+function RecorderMeraResolveThermocoupleScaleKey(const ARelativeScalePath,
+  ADisplayName: string): string;
 function RecorderMeraThermocoupleCsvPath(const ARelativeScalePath: string): string;
 function RecorderMeraThermocoupleDisplayName(const ARelativeScalePath: string): string;
 function RecorderMeraThermocoupleDstRange(const ARelativeScalePath: string;
   out AMinC, AMaxC: Double): Boolean;
+function RecorderMeraLoadThermocoupleCalibration(const ARelativeScalePath,
+  ADisplayName: string; ACalibration: TRecorderCalibration): Boolean;
 
 implementation
 
 uses
-  FileUtil, uRecorderMeraPaths, uRecorderSdbStore, uRecorderSdbTypes;
+  FileUtil, LazFileUtils, StrUtils, uRecorderMeraPaths, uRecorderSdbStore,
+  uRecorderSdbTypes;
 
 var
   g_MeraThermocoupleDir: string;
@@ -79,8 +84,8 @@ begin
         lBase := ChangeFileExt(SR.Name, '');
         if SameText(lBase, lDirName) then
           Continue;
-        if FileExists(lDiskDir + lBase + '.csv') or
-          FileExists(lDiskDir + lBase + '.CSV') then
+        if FileExistsUTF8(lDiskDir + lBase + '.csv') or
+          FileExistsUTF8(lDiskDir + lBase + '.CSV') then
           lBasenames.Add(lBase);
       until FindNext(SR) <> 0;
     finally
@@ -242,10 +247,10 @@ begin
     if RecorderMeraResolveThermocoupleLocation then
     begin
       lDiskPath := g_MeraThermocoupleDir + lKey + '.csv';
-      if FileExists(lDiskPath) then
+      if FileExistsUTF8(lDiskPath) then
         Exit(lDiskPath);
       lDiskPath := g_MeraThermocoupleDir + lKey + '.CSV';
-      if FileExists(lDiskPath) then
+      if FileExistsUTF8(lDiskPath) then
         Exit(lDiskPath);
     end;
     lKey := RecorderMeraThermocoupleRelativePath(lKey);
@@ -254,10 +259,14 @@ begin
 end;
 
 function RecorderMeraThermocoupleDisplayName(const ARelativeScalePath: string): string;
+var
+  lExt: string;
 begin
   Result := ExtractFileName(StringReplace(ARelativeScalePath, '\', PathDelim,
     [rfReplaceAll]));
-  Result := ChangeFileExt(Result, '');
+  lExt := LowerCase(ExtractFileExt(Result));
+  if (lExt = '.xml') or (lExt = '.csv') then
+    Result := ChangeFileExt(Result, '');
 end;
 
 function RecorderMeraThermocoupleDstRange(const ARelativeScalePath: string;
@@ -308,8 +317,8 @@ begin
         lBase := ChangeFileExt(SR.Name, '');
         if SameText(lBase, lDirName) then
           Continue;
-        if FileExists(lDiskDir + lBase + '.csv') or
-          FileExists(lDiskDir + lBase + '.CSV') then
+        if FileExistsUTF8(lDiskDir + lBase + '.csv') or
+          FileExistsUTF8(lDiskDir + lBase + '.CSV') then
           lBasenames.Add(lBase);
       until FindNext(SR) <> 0;
     finally
@@ -356,6 +365,106 @@ end;
 function RecorderMeraThermocoupleRelativePath(const ADisplayName: string): string;
 begin
   Result := RecorderMeraThermocoupleFolderKey + PathDelim + ADisplayName;
+end;
+
+function RecorderMeraThermocoupleScaleKeyExists(const AKey: string): Boolean;
+var
+  lInfo: TSdbScaleInfo;
+begin
+  Result := (Trim(AKey) <> '') and RecorderSdbTryLoadScale(AKey, lInfo);
+end;
+
+function RecorderMeraFindThermocoupleScaleByPrefix(const AName: string): string;
+var
+  lBestBase: string;
+  lBestKey: string;
+  lBestLen: Integer;
+  lDiskDir: string;
+  lName: string;
+  SR: TSearchRec;
+begin
+  Result := '';
+  lName := Trim(AName);
+  if lName = '' then
+    Exit;
+  if not RecorderMeraResolveThermocoupleLocation then
+    Exit;
+  lDiskDir := IncludeTrailingPathDelimiter(g_MeraThermocoupleDir);
+  lBestKey := '';
+  lBestLen := -1;
+  if FindFirst(lDiskDir + '*.xml', faAnyFile, SR) = 0 then
+  try
+    repeat
+      if (SR.Attr and faDirectory) <> 0 then
+        Continue;
+      lBestBase := ChangeFileExt(SR.Name, '');
+      if not (FileExistsUTF8(lDiskDir + lBestBase + '.csv') or
+        FileExistsUTF8(lDiskDir + lBestBase + '.CSV')) then
+        Continue;
+      if SameText(lBestBase, lName) then
+        Exit(RecorderMeraThermocoupleRelativePath(lBestBase));
+      if StartsText(lBestBase, lName) or StartsText(lName, lBestBase) then
+      begin
+        if Length(lBestBase) > lBestLen then
+        begin
+          lBestLen := Length(lBestBase);
+          lBestKey := RecorderMeraThermocoupleRelativePath(lBestBase);
+        end;
+      end;
+    until FindNext(SR) <> 0;
+  finally
+    FindClose(SR);
+  end;
+  Result := lBestKey;
+end;
+
+function RecorderMeraResolveThermocoupleScaleKey(const ARelativeScalePath,
+  ADisplayName: string): string;
+var
+  lCandidates: array[0..2] of string;
+  lI: Integer;
+  lName: string;
+  lPath: string;
+begin
+  lName := Trim(ADisplayName);
+  lPath := Trim(ARelativeScalePath);
+  lCandidates[0] := lPath;
+  if lName <> '' then
+    lCandidates[1] := RecorderMeraThermocoupleRelativePath(lName)
+  else
+    lCandidates[1] := '';
+  lCandidates[2] := '';
+  for lI := Low(lCandidates) to High(lCandidates) do
+    if RecorderMeraThermocoupleScaleKeyExists(lCandidates[lI]) then
+      Exit(lCandidates[lI]);
+  if lName <> '' then
+  begin
+    Result := RecorderMeraFindThermocoupleScaleByPrefix(lName);
+    if Result <> '' then
+      Exit;
+  end;
+  if lPath <> '' then
+    Exit(lPath);
+  if lName <> '' then
+    Result := RecorderMeraThermocoupleRelativePath(lName);
+end;
+
+function RecorderMeraLoadThermocoupleCalibration(const ARelativeScalePath,
+  ADisplayName: string; ACalibration: TRecorderCalibration): Boolean;
+var
+  lCsvPath: string;
+  lKey: string;
+begin
+  Result := False;
+  if ACalibration = nil then
+    Exit;
+  lKey := RecorderMeraResolveThermocoupleScaleKey(ARelativeScalePath, ADisplayName);
+  if lKey = '' then
+    Exit;
+  if RecorderSdbLoadScaleCalibration(lKey, ACalibration) then
+    Exit(True);
+  lCsvPath := RecorderMeraThermocoupleCsvPath(lKey);
+  Result := RecorderSdbLoadScaleCalibrationFromCsv(lCsvPath, lKey, ACalibration);
 end;
 
 end.

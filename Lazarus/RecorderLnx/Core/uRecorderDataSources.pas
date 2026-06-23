@@ -58,15 +58,21 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry);
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
-    { Останавливает источник. После Stop вызов Tick считается ошибкой контракта. }
+    { Останавливает источник. Вызывается только из worker-thread в конце суперцикла. }
     procedure Stop;
+    { Запрос остановки из внешнего потока: только флаг TryStop, без смены State
+      и без освобождения ресурсов (AGrav: состояние потока меняет сам поток). }
+    procedure RequestStop;
     { Публикует один шаг данных. В потоковой версии будет вызываться worker-thread. }
     procedure Tick;
+    { Флаг запрошенной остановки, выставленный RequestStop. }
+    function GetTryStop: Boolean;
 
     property SourceId: string read GetSourceId;
     property Name: string read GetName;
     property UpdateTimeMs: Cardinal read GetUpdateTimeMs;
     property State: TRecorderDataSourceState read GetState;
+    property TryStop: Boolean read GetTryStop;
   end;
 
   { TRecorderDataSourceBase
@@ -78,12 +84,16 @@ type
     fRegistry: TRecorderTagRegistry;        { Ссылка на реестр тегов }
     fSourceId: string;                      { Идентификатор источника }
     fState: TRecorderDataSourceState;       { Состояние источника }
+    fTryStop: Boolean;                      { Запрос остановки из внешнего потока }
     fUpdateTimeMs: Cardinal;                { Период опроса в мс }
   protected
     function GetSourceId: string;
     function GetName: string;
     function GetUpdateTimeMs: Cardinal;
     function GetState: TRecorderDataSourceState;
+    function GetTryStop: Boolean;
+    { Точка проверки в DoTick: True, если суперцикл должен завершиться. }
+    function ShouldStop: Boolean;
 
     { Проверяет, что registry уже подключен, и возвращает его. }
     function RequireRegistry: TRecorderTagRegistry;
@@ -106,8 +116,10 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry); virtual;
     { Запуск источника }
     procedure Start; virtual;
-    { Остановка источника }
+    { Остановка источника (только из worker-thread) }
     procedure Stop; virtual;
+    { Запрос остановки из внешнего потока }
+    procedure RequestStop; virtual;
     { Выполнение одного шага опроса/генерации }
     procedure Tick; virtual;
 
@@ -115,6 +127,7 @@ type
     property Name: string read GetName;
     property UpdateTimeMs: Cardinal read GetUpdateTimeMs;
     property State: TRecorderDataSourceState read GetState;
+    property TryStop: Boolean read GetTryStop;
   end;
 
   { TMockSineDataSource
@@ -381,6 +394,16 @@ begin
   Result := fState;
 end;
 
+function TRecorderDataSourceBase.GetTryStop: Boolean;
+begin
+  Result := fTryStop;
+end;
+
+function TRecorderDataSourceBase.ShouldStop: Boolean;
+begin
+  Result := fTryStop;
+end;
+
 function TRecorderDataSourceBase.RequireRegistry: TRecorderTagRegistry;
 begin
   if fRegistry = nil then
@@ -404,12 +427,19 @@ end;
 procedure TRecorderDataSourceBase.Start;
 begin
   RequireRegistry;
+  fTryStop := False;
   fState := dssRunning;
+end;
+
+procedure TRecorderDataSourceBase.RequestStop;
+begin
+  fTryStop := True;
 end;
 
 procedure TRecorderDataSourceBase.Stop;
 begin
   fState := dssStopped;
+  fTryStop := False;
 end;
 
 procedure TRecorderDataSourceBase.Tick;
@@ -417,6 +447,8 @@ begin
   if fState <> dssRunning then
     raise ERecorderDataSourceError.CreateFmt(
       'Data source %s tick called while stopped', [fSourceId]);
+  if fTryStop then
+    Exit;
 
   DoTick;
 end;
@@ -1141,12 +1173,12 @@ end;
 
 procedure TRecorderMeraFileDataSource.Stop;
 begin
+  inherited Stop;
   while fPlaybackSignals.Count > 0 do
   begin
     TObject(fPlaybackSignals[0]).Free;
     fPlaybackSignals.Delete(0);
   end;
-  inherited Stop;
 end;
 
 procedure TRecorderMeraFileDataSource.DoTick;
@@ -1165,6 +1197,8 @@ begin
   lAnyPublished := False;
   for I := 0 to fPlaybackSignals.Count - 1 do
   begin
+    if ShouldStop then
+      Exit;
     lSignal := TMeraPlaybackSignal(fPlaybackSignals[I]);
     if lSignal.IsScalar then
       lSignalPublished := lSignal.PublishScalarDue(Registry, lPlayTimeSec,
@@ -1231,9 +1265,14 @@ begin
     lNextTickMs := GetTickCount64;
     while not Terminated do
     begin
+      if fSource.TryStop then
+        Break;
+
       lStart := GetTickCount64;
       fSource.Tick;
       Inc(fTickCount);
+      if fSource.TryStop then
+        Break;
       lElapsed := GetTickCount64 - lStart;
       if lElapsed > 10 then
         RecorderDebugLog(Format('[DataSource:%s] Tick took %d ms on Thread %d',
@@ -1395,6 +1434,19 @@ begin
     lContext := GetSourceContext(I);
     if lContext.Thread <> nil then
       lContext.Thread.Terminate;
+  end;
+
+  { Внешний поток только выставляет TryStop; State и очистка — в worker-thread. }
+  for I := 0 to fSources.Count - 1 do
+  begin
+    lContext := GetSourceContext(I);
+    try
+      lContext.Source.RequestStop;
+    except
+      on E: Exception do
+        fLastErrors.Add(lContext.Source.SourceId + ': request stop failed: ' +
+          E.Message);
+    end;
   end;
 
   for I := 0 to fSources.Count - 1 do

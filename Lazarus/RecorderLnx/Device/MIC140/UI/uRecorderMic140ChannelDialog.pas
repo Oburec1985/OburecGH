@@ -171,6 +171,7 @@ begin
       not SameText(ChangeFileExt(ExtractFileName(StringReplace(lPath, '\',
         PathDelim, [rfReplaceAll])), ''), lName)) then
       lPath := RecorderMeraThermocoupleRelativePath(lName);
+    lPath := RecorderMeraResolveThermocoupleScaleKey(lPath, lName);
     fSettings.ThermocoupleScalePath := lPath;
   end;
 

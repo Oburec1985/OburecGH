@@ -27,7 +27,8 @@ uses
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
-  uRecorderMic140DataSource, uRecorderMic140SettingsDialog, uRecorderMic140Utils,
+  uRecorderMic140DataSource, uRecorderMic140LegacyProtocol,
+  uRecorderMic140SettingsDialog, uRecorderMic140Utils,
   uRecorderMeraSdbThermocouples, uRecorderMeraPaths;
 
 type
@@ -196,7 +197,8 @@ type
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
     procedure BuildMic140Signals(const ASourceId: string; AChannelCount: Integer;
       AEnabledChannels: TStrings;
-      const AChannelSettings: array of TRecorderMic140ChannelSettings);
+      const AChannelSettings: array of TRecorderMic140ChannelSettings;
+      ADeviceSerial: Integer = 0);
     function Mic140PollFrequencyForChannel(const ASourceId: string;
       AChannelNumber: Integer): Double;
     function Mic140TagPollFrequency(const ASourceId, AAddress: string): Double;
@@ -1447,15 +1449,19 @@ end;
 
 procedure TRecorderSettingsDialog.BuildMic140Signals(const ASourceId: string;
   AChannelCount: Integer; AEnabledChannels: TStrings;
-  const AChannelSettings: array of TRecorderMic140ChannelSettings);
+  const AChannelSettings: array of TRecorderMic140ChannelSettings;
+  ADeviceSerial: Integer);
 var
   I: Integer;
   lAddress: string;
+  lDeviceSerial: Integer;
   lFreqHz: Double;
   lDummyMode: TRecorderMic140OutputMode;
+  lHost: string;
   lOutputMode: TRecorderMic140OutputMode;
-  lPrefix: string;
+  lPort: Word;
   lSignal: TMeraSignalInfo;
+  lTag: TRecorderTag;
 begin
   if fMic140Signals = nil then
     fMic140Signals := TList.Create;
@@ -1475,6 +1481,23 @@ begin
     AChannelCount := MIC140MaxChannelCount
   else
     AChannelCount := MIC140DefaultChannelCount;
+
+  lDeviceSerial := ADeviceSerial;
+  if (lDeviceSerial <= 0) and TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+  begin
+    if fTagRegistry <> nil then
+      for I := 0 to fTagRegistry.TagCount - 1 do
+      begin
+        lTag := fTagRegistry.Tags[I];
+        if SameText(lTag.SourceId, ASourceId) and (lTag.Mic140DeviceSerial > 0) then
+        begin
+          lDeviceSerial := lTag.Mic140DeviceSerial;
+          Break;
+        end;
+      end;
+    if lDeviceSerial <= 0 then
+      RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lDeviceSerial);
+  end;
 
   for I := 1 to AChannelCount do
   begin
@@ -1511,24 +1534,22 @@ begin
     fMic140Signals.Add(lSignal);
   end;
 
-  // Add temperature channels T1..T3
-  for I := 1 to 3 do
+  // TIn channels T1..T3 — как в оригинальном Recorder (0164-t 1), всегда в списке
+  // доступных; не фильтруются SelectedChannels, где только AIn 1..48/96.
+  for I := 1 to MIC140TemperatureChannelCount do
   begin
-    lAddress := 'diagnostics.cjc.T' + IntToStr(I);
-    if not IsChannelEnabled(AEnabledChannels, lAddress) then
-      Continue;
+    lAddress := RecorderMic140TemperatureAddressText(lDeviceSerial, I);
+    lFreqHz := Mic140TagPollFrequency(ASourceId, lAddress);
+    if lFreqHz <= 0 then
+      lFreqHz := Mic140PollFrequencyForChannel(ASourceId, 1);
 
     lSignal := TMeraSignalInfo.Create;
-    lPrefix := StringReplace(ASourceId, 'MIC-140:', 'MIC140', [rfIgnoreCase]);
-    lPrefix := StringReplace(Trim(lPrefix), ' ', '_', [rfReplaceAll]);
-    lPrefix := StringReplace(lPrefix, ':', '_', [rfReplaceAll]);
-    lPrefix := StringReplace(lPrefix, '.', '_', [rfReplaceAll]);
-    lSignal.Name := lPrefix + '_T' + IntToStr(I);
+    lSignal.Name := RecorderMic140TemperatureDisplayName(lDeviceSerial, I);
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';
     lSignal.DataType := mvtFloat64;
-    lSignal.FrequencyHz := Mic140TagPollFrequency(ASourceId, lAddress);
+    lSignal.FrequencyHz := lFreqHz;
     lSignal.UnitsName := 'code';
     lSignal.SourceValueMode := '';
     lSignal.Description := Format('MIC-140 temperature channel T%d code', [I]);
@@ -1537,11 +1558,6 @@ begin
     lSignal.Selected := SignalHasLinkedTag(lSignal);
     fMic140Signals.Add(lSignal);
   end;
-
-  // TIn are internal cold-junction correctors in the original Recorder, not
-  // normal user scan channels. They must not be offered as ordinary signals:
-  // adding them to the 48-channel stream changes the BIOS scan layout and
-  // corrupts the MIC-140 data flow.
 end;
 
 function TRecorderSettingsDialog.Mic140TagPollFrequency(const ASourceId,
@@ -1800,9 +1816,11 @@ procedure TRecorderSettingsDialog.RebuildMic140SourceConfigsFromTags;
 var
   I: Integer;
   J: Integer;
+  lCalibrSerial: Integer;
   lCh: Integer;
   lConfig: TRecorderMic140SourceConfig;
   lHost: string;
+  lHostOctet: Integer;
   lPort: Word;
   lResult: TRecorderMic140DialogResult;
   lSourceId: string;
@@ -1863,6 +1881,14 @@ begin
                 lResult.ChannelSettings[lCh - 1]);
           end;
         end;
+        if (lResult.DeviceSerial <= 0) or
+           (RecorderMic140HostLastOctet(lHost, lHostOctet) and
+            (lResult.DeviceSerial = lHostOctet)) then
+        begin
+          lCalibrSerial := 0;
+          if RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lCalibrSerial) then
+            lResult.DeviceSerial := lCalibrSerial;
+        end;
         lConfig := EnsureRecorderMic140SourceConfig(fMic140SourceConfigs, lSourceId);
         lConfig.LoadFromResult(lResult);
       finally
@@ -1920,7 +1946,7 @@ begin
       if lConfig <> nil then
       begin
         BuildMic140Signals(lSourceId, lConfig.ChannelCount, lConfig.SelectedChannels,
-          lConfig.ChannelSettings);
+          lConfig.ChannelSettings, lConfig.DeviceSerial);
         Continue;
       end;
       lChannelCount := MIC140DefaultChannelCount;
@@ -2103,7 +2129,7 @@ begin
   lConfig := FindRecorderMic140SourceConfig(fMic140SourceConfigs, lNewSourceId);
   if lConfig <> nil then
     BuildMic140Signals(lNewSourceId, lConfig.ChannelCount,
-      lConfig.SelectedChannels, lConfig.ChannelSettings);
+      lConfig.SelectedChannels, lConfig.ChannelSettings, lConfig.DeviceSerial);
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;

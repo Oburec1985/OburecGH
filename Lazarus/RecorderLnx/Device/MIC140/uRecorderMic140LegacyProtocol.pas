@@ -94,8 +94,14 @@ const
   MIC140_LEGACY_DM_FLAG = Word($4000);
   CMic140MaxPlausibleDeviceSerial = 9999;
   CMic140FirmwareDeviceIdentityMin = $4000;
+  CMic140LegacyCrateTypeUnknown = Word($FFFF);
 
+function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
 function RecorderMic140DeviceSerialFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+function RecorderMic140DisplaySerialFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware; const AHost: string): Integer;
+function RecorderMic140HardwareCalibrSerialFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Integer;
 function RecorderMic140FirmwareVersionText(
   const AFirmware: TRecorderMic140LegacyFirmware): string;
@@ -605,16 +611,66 @@ begin
     not Mic140FirmwareWordLooksLikeDeviceIdentity(AValue);
 end;
 
+function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+var
+  lDotPos: Integer;
+  lPart: string;
+begin
+  Result := False;
+  AOctet := 0;
+  lDotPos := Length(AHost);
+  while (lDotPos > 0) and (AHost[lDotPos] <> '.') do
+    Dec(lDotPos);
+  if lDotPos <= 0 then
+    Exit;
+  lPart := Trim(Copy(AHost, lDotPos + 1, MaxInt));
+  if lPart = '' then
+    Exit;
+  Result := TryStrToInt(lPart, AOctet);
+end;
+
 function RecorderMic140DeviceSerialFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Integer;
 begin
   Result := 0;
-  { TBiosInfoMC031 / ETH81_DETECT_DEVICE_INFO: DevSerNo С‡Р°СЃС‚Рѕ = MDP identity
-    (0x413x), Р·Р°РІРѕРґСЃРєРѕР№ serial вЂ” РЅРµР±РѕР»СЊС€РѕРµ decimal (SerialNo_/CCType_). }
+  { Номер в заголовке диалога / адресе канала (DETECT DevSerNo). }
   if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.DevSerNo) then
     Exit(AFirmware.DevSerNo);
+  if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
+    Exit(AFirmware.CCSerNo);
   if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCType) then
     Exit(AFirmware.CCType);
+end;
+
+function RecorderMic140DisplaySerialFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware; const AHost: string): Integer;
+var
+  lHostOctet: Integer;
+begin
+  Result := 0;
+  { DevSerNo на Ethernet MIC часто совпадает с последним октетом IP, не с с/н MIC. }
+  if RecorderMic140HostLastOctet(AHost, lHostOctet) and
+     (Integer(AFirmware.DevSerNo) = lHostOctet) then
+  begin
+    if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
+      Exit(AFirmware.CCSerNo);
+    Exit(0);
+  end;
+  Result := RecorderMic140DeviceSerialFromFirmware(AFirmware);
+end;
+
+function RecorderMic140HardwareCalibrSerialFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+begin
+  Result := 0;
+  { CCMC031EthernetInterface::ReadCfg: owner->DeviceInfo.SerialNo = CCSerNo;
+    CChannelMIC140::GetSerialNumOwner -> cc->DeviceInfo.SerialNo.
+    DevSerNo — только идентификатор Ethernet MDP, не каталог calibr/hardware. }
+  if (AFirmware.CCType <> 0) and
+     (AFirmware.CCType <> CMic140LegacyCrateTypeUnknown) and
+     (AFirmware.CCSerNo > 0) and
+     not Mic140FirmwareWordLooksLikeDeviceIdentity(AFirmware.CCSerNo) then
+    Exit(AFirmware.CCSerNo);
   if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
     Exit(AFirmware.CCSerNo);
 end;
