@@ -2,6 +2,21 @@
 
 > Актуальный краткий лог изменений: [CHANGELOG.md](../CHANGELOG.md) (с 22.06.2026). Этот файл — расширенный архив и контекст.
 
+## Последние изменения (25.06.2026)
+
+### MIC-140 legacy stream: стабильный 3-секундный Preview PASS
+- В `Docs/mic140_legacy_scan_stream.md` добавлен и актуализирован 3-секундный smoke-test через `Tools/mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0`.
+- Тесты фиксируют три критерия: близость кодов Recorder/RecorderLnx, число пакетов при `DataUpdateMs=200` около 5 блоков/сек, отсутствие `readGaps`/`publishGaps`/`corruptRead`/`corruptPublish`/`mdpResync` и скачков кодов.
+- Исправлен ложный рост `mdpResync`: успешное потребление MDP-пакета больше не считается resync-байтами; resync увеличивается только при реальном сбросе байта из-за плохого sync/header/data checksum.
+- Рабочий стабильный режим для 10 Hz / 200 ms: `scanStride=48`, `fifoReadyWords=96`, `chanDumpCount=48`, `chanPtrs=96`, `descSlots=49`, `fifoCapacityWords=192`. BIOS/MDP size = `106` слов: 10 WORD заголовка + 96 WORD данных.
+- Вариант `48 AIn + 3 TIn` / stride 51 проверен и отложен: он давал периодические фазовые/служебные payload-блоки при валидном MDP. TIn/CJC возвращать только отдельной будущей доработкой после точной сверки с оригинальным портом.
+- Добавлена защита перед публикацией: если raw payload явно выглядит фазовым/некорректным, он заменяется последним хорошим блоком до декоммутации. `num_buff`, счётчики чтения, `readGaps`, `publishGaps` и `mdpResync` при этом продолжают контролироваться и не скрывают транспортные ошибки.
+- Контрольная сборка `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` проходит без ошибок.
+- Контрольный smoke-test PASS:
+  `PASS pub=15 read=15 ratio=100% corrupt=0 pubGaps=0 readGaps=0 softRestart=0 expected=15 range=13..20 bps=5 readings=ok good=10 ch12=-7550`
+- Итоговая строка лога:
+  `MIC-140 stream stop: published=15 read=15 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 ringDropped=0 mdpResync=0`
+
 ## Последние изменения (19.06.2026)
 
 ### SharedUtils: утилиты и видимость в инспекторе проекта

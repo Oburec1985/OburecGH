@@ -1,5 +1,16 @@
 # План: доработка RecorderLnx
 
+- [x] MIC-140 legacy stream: добить стабильность payload scan-блоков
+  - [x] Добавить 3-секундный smoke-test в документацию (`Docs/mic140_legacy_scan_stream.md`, раздел 9.1)
+  - [x] Убрать ложный рост `mdpResync` при нормальном потреблении MDP-пакетов
+  - [x] Зафиксировать стабильный рабочий режим `scanStride=48`, `fifoReadyWords=96` для 10 Hz / 200 ms и ожидаемых ~5 блоков/сек
+  - [x] Вернуть `chanDumpCount=48` как в `ModuleMIC140_48::PrepareModuleDescForScan`
+  - [x] Не включать TIn/CJC в текущий BIOS stride: вариант 48+3 давал периодические фазовые payload-блоки при валидном MDP
+  - [x] Добавить защиту публикации: явно некорректный raw payload заменяется последним хорошим блоком до декоммутации, при этом `num_buff`, `readGaps`, `publishGaps` и `mdpResync` продолжают контролироваться
+  - [x] Найти источник оставшегося `corruptRead/corruptPublish` при `readGaps=0`, `publishGaps=0`, `mdpResync=0`
+  - [x] Добиться PASS для `Tools/mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0`
+  - [ ] Будущая доработка: вернуть TIn/CJC только после точного совпадения с оригинальным портом, не ломая `scanStride=48` для AIn
+
 - [x] Рефакторинг (очистка) от лишних преобразований строк
   - [x] Удален вызов 'Каналы...' в uMainForm.pas и CP1251ToUTF8
   - [x] В uRecorderSettingsDialog.pas исправлена кодировка и убраны лишние CP1251ToUTF8

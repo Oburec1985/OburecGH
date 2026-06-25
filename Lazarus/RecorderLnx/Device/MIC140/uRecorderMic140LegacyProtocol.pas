@@ -55,7 +55,7 @@ type
     fMdpResyncBytes: Int64;
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
     function EnsureRxBytes(ACount: Integer): Boolean;
-    procedure DropRxBytes(ACount: Integer);
+    procedure DropRxBytes(ACount: Integer; AResync: Boolean = False);
     procedure DrainPendingSocket;
     procedure ApplyTimeoutMs(AValue: Cardinal);
     procedure SetTimeoutMs(AValue: Cardinal);
@@ -331,13 +331,15 @@ begin
   Result := True;
 end;
 
-procedure TRecorderMic140LegacyClient.DropRxBytes(ACount: Integer);
+procedure TRecorderMic140LegacyClient.DropRxBytes(ACount: Integer;
+  AResync: Boolean);
 var
   lRemain: Integer;
 begin
   if ACount <= 0 then
     Exit;
-  Inc(fMdpResyncBytes, ACount);
+  if AResync then
+    Inc(fMdpResyncBytes, ACount);
   if ACount >= Length(fRxBuffer) then
   begin
     SetLength(fRxBuffer, 0);
@@ -420,7 +422,7 @@ begin
     // stream and can leave the device running without a reader.
     if GetWordLE(fRxBuffer, 0) <> CLegacySyncWord then
     begin
-      DropRxBytes(1);
+      DropRxBytes(1, True);
       Continue;
     end;
 
@@ -430,7 +432,7 @@ begin
     if (GetWordLE(fRxBuffer, 6) <> lHeaderSum) or
       (lSizeWords > CLegacyMaxPacketWords) then
     begin
-      DropRxBytes(1);
+      DropRxBytes(1, True);
       Continue;
     end;
 
@@ -445,7 +447,7 @@ begin
     if GetWordLE(fRxBuffer, CLegacyHeaderBytes + lSizeWords * SizeOf(Word)) <>
       Word(lDataSum and $FFFF) then
     begin
-      DropRxBytes(1);
+      DropRxBytes(1, True);
       Continue;
     end;
 

@@ -21,24 +21,24 @@ MC031 + MIC140_48).
 
 ## Справочник: формат пакета и потоки опроса
 
-Чистовой блок для отладки legacy scan stream MIC-140 48ch @ 10 Hz, 2 отсчёта/блок,
-stride 51 (48 AIn + 3 TIn). Источник: `devapi/Types.h` (`THeaderMessage`),
+Чистовой рабочий блок для legacy scan stream MIC-140 48ch @ 10 Hz, 2 отсчёта/блок:
+stride 48 (только 48 пользовательских AIn). Источник: `devapi/Types.h` (`THeaderMessage`),
 `uRecorderMic140LegacyProtocol.pas` (`ReadPacket`, `ReadScanBlock`).
 
 ### Таблица 1. Формат MDP-кадра scan (stream 0)
 
 Первая строка — начало кадра в TCP-потоке, последняя — конец кадра.
 Все многобайтовые поля — **little-endian**. Размеры указаны для типового блока
-измерений (112 слов payload).
+измерений (106 слов payload).
 
 | ID                 | Формат   | Размер                | Назначение                                                                                                         |
 | ------------------ | -------- | --------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | MDP-SYNC           | `uint16` | 2 байта               | **Начало MDP-кадра.** Sync-word `0x12B8`                                                                           |
 | MDP-PORT           | `uint16` | 2 байта               | Номер потока: `0` = scan (измерения), `1` = command                                                                |
-| MDP-SIZE           | `uint16` | 2 байта               | Длина payload в словах WORD; для scan = `112`                                                                      |
+| MDP-SIZE           | `uint16` | 2 байта               | Длина payload в словах WORD; для scan = `106`                                                                      |
 | MDP-HCS            | `uint16` | 2 байта               | Контрольная сумма MDP-заголовка: `(SYNC+PORT+SIZE) mod 65536`                                                      |
 | BIOS-TYPE          | `uint16` | 2 байта               | `THeaderMessage.type` — тип BIOS-сообщения (`0` = блок данных)                                                     |
-| BIOS-SIZE          | `uint16` | 2 байта               | `THeaderMessage.size` — размер всего BIOS-сообщения в словах (`112`)                                               |
+| BIOS-SIZE          | `uint16` | 2 байта               | `THeaderMessage.size` — размер всего BIOS-сообщения в словах (`106`)                                               |
 | BIOS-SCAN_ID       | `uint16` | 2 байта               | `scan_id` — идентификатор скана                                                                                    |
 | BIOS-SLOT          | `uint16` | 2 байта               | `slot`                                                                                                             |
 | BIOS-CHAN          | `uint16` | 2 байта               | `chan`                                                                                                             |
@@ -47,10 +47,10 @@ stride 51 (48 AIn + 3 TIn). Источник: `devapi/Types.h` (`THeaderMessage`
 | BIOS-TIME_CNT      | `uint16` | 2 байта               | `time_cnt` — счётчик времени BIOS                                                                                  |
 | BIOS-NUM_BUFF      | `uint16` | 2 байта               | `num_buff` — номер BIOS-блока (монотонный, без пропусков)                                                          |
 | BIOS-STATE         | `uint16` | 2 байта               | `state` — флаги состояния блока                                                                                    |
-| DATA-00 … DATA-101 | `uint16` | 102 слова (204 байта) | Payload: `2 отсчёта × (48 AIn + 3 TIn)`, stride = 51. Индекс: `j*51 + ch`. Код АЦП интерпретируется как `SmallInt` |
+| DATA-00 … DATA-95  | `uint16` | 96 слов (192 байта)   | Payload: `2 отсчёта × 48 AIn`, stride = 48. Индекс: `j*48 + ch`. Код АЦП интерпретируется как `SmallInt`            |
 | MDP-DCS            | `uint16` | 2 байта               | **Конец MDP-кадра.** Контрольная сумма payload: `(Σ всех payload-слов) mod 65536`                                  |
 
-**Итого кадр:** 8 байт MDP-заголовок + 112×2 байт payload + 2 байт MDP-DCS = **234 байта**.
+**Итого кадр:** 8 байт MDP-заголовок + 106×2 байт payload + 2 байт MDP-DCS = **222 байта**.
 
 Один MDP-кадр stream 0 = один BIOS-блок. Парсер `ReadScanBlock` не ищет
 заголовок внутри DATA; первые 10 слов payload — всегда `THeaderMessage`.
@@ -142,7 +142,7 @@ MIC-140.BlockPublish
 
 - **`TRecorderMic140LegacyClient`** — не поток, а объект TCP/MDP (`fLock` на `ReadScanBlock` / `CallCommand`).
   Команды старт/стоп/программирование — в **`PrepareHardware`** до старта worker-thread.
-- **`TMic140RawBlockRing`** — фиксированный кольцевой буфер `8 × (10+102 WORD)` без heap-копий на handoff.
+- **`TMic140RawBlockRing`** — фиксированный кольцевой буфер `8 × (10+96 WORD)` без heap-копий на handoff.
 - **`TMic140BlockPublishThread`** — только декоммутация и публикация в теги.
 
 ### 3.2. Буферы в `TRecorderMic140LegacyClient`
@@ -151,7 +151,7 @@ MIC-140.BlockPublish
 |---|---|
 | `fRxBuffer` | сырые байты MDP (уровень TCP-пакета: sync, port, size, data, checksum) |
 | `fScanPayloadWords` | накопитель **слов** BIOS scan FIFO (как `m_ScanFifo` в оригинале) |
-| `fPendingScanBlocks` | очередь уже разобранных блоков `{HeaderWords[10], DataWords[102]}` |
+| `fPendingScanBlocks` | очередь уже разобранных блоков `{HeaderWords[10], DataWords[96]}` |
 
 **Важно:** слова из `fScanPayloadWords` **не возвращаются** в `fRxBuffer`. Уровни
 MDP и BIOS разделены.
@@ -171,19 +171,19 @@ MDP и BIOS разделены.
 
 1. Если неполное сообщение при **валидном** заголовке — ждать (break).
 2. Если заголовок на offset 0 невалиден — `resync +1` слово.
-3. Если заголовок валиден — извлечь ровно `size` слов (112), enqueue, сдвинуть буфер.
-4. Обновить `fLastParsedNumBuff` / `fExpectedDataWords` (102).
+3. Если заголовок валиден — извлечь ровно `size` слов (106), enqueue, сдвинуть буфер.
+4. Обновить `fLastParsedNumBuff` / `fExpectedDataWords` (96).
 
 **Валидация заголовка** (`Mic140LegacyScanHeaderLooksValid`):
 
 - `type = 0`, `scan_id = 0`, `state = 0`
-- `size = 112` (ровно)
-- `dataWords = 102` после первого блока
+- `size = 106` (ровно)
+- `dataWords = 96` после первого блока
 - `num_buff > 0`; если уже был блок — `num_buff > last` (строго растущий)
 
 **Убрано (не повторять):**
 
-- `doubled payload` — синтетические блоки из остатка кратного 102 без заголовка;
+- `doubled payload` — синтетические блоки из остатка кратного 96 без заголовка;
 - `PrependRxWords` — смешивание BIOS-слов обратно в MDP byte buffer;
 - проверка «plausible ADC» в парсере — отбрасывала **валидный блок 1** и запускала
   сотни `resync +1` за один вызов (~600 ms без чтения сокета);
@@ -210,7 +210,7 @@ WORD data_cs   = sum(data[]) & $FFFF
 ### 4.2. THeaderMessage + данные (внутри data[] stream 0)
 
 ```text
-[10 WORD заголовка][102 WORD данных]  = 112 WORD на одно BIOS-сообщение
+[10 WORD заголовка][96 WORD данных]  = 106 WORD на одно BIOS-сообщение
 ```
 
 Поля заголовка (`devapi/Types.h`, индексы в `uRecorderMic140LegacyProtocol.pas`):
@@ -218,7 +218,7 @@ WORD data_cs   = sum(data[]) & $FFFF
 | Индекс | Поле | Типичное значение |
 |---:|---|---|
 | 0 | type | 0 |
-| 1 | size | **112** (всё сообщение, не только data) |
+| 1 | size | **106** (всё сообщение, не только data) |
 | 2 | scan_id | 0 |
 | 3 | slot | 0 |
 | 4 | chan | 0 |
@@ -231,13 +231,13 @@ WORD data_cs   = sum(data[]) & $FFFF
 **Критично:** раньше отбрасывали 5 WORD вместо 10 — поля `time_*` и `num_buff`
 попадали в данные → скачки на всю шкалу. Сейчас `CLegacyScanHeaderWords = 10`.
 
-### 4.3. Раскладка 102 WORD данных (48 AIn + 3 TIn)
+### 4.3. Раскладка 96 WORD данных (48 AIn)
 
 Для текущего RecorderLnx:
 
-- **stride (internal)** = `48 + 3 = 51` (`LegacyInternalScanChannelCount`);
-- **samples per block** = `102 / 51 = 2`;
-- индекс: `DataWords[J * 51 + I]` — sample `J`, канал `I` (0..47 AIn, 48..50 TIn).
+- **stride (internal)** = `48` (`LegacyInternalScanChannelCount`);
+- **samples per block** = `96 / 48 = 2`;
+- индекс: `DataWords[J * 48 + I]` — sample `J`, канал `I` (0..47 AIn).
 
 Код в `TRecorderMic140Device.ReadBlock`:
 
@@ -252,7 +252,7 @@ ABlock.Values[I][J] := SmallInt(lLegacyBlock.DataWords[lDataIndex]);
 val = (short)buff[offset + i * size];  // offset=номер канала, size=stride, i=sample
 ```
 
-При stride=51 и offset=I это эквивалентно `J*51+I`.
+При stride=48 и offset=I это эквивалентно `J*48+I`.
 
 ### 4.4. Эталонные коды АЦП (живой прибор, комнатная температура)
 
@@ -262,7 +262,7 @@ val = (short)buff[offset + i * size];  // offset=номер канала, size=s
 |---|---:|---:|
 | ch 1–24 | 58375–58947 | ~−6593…−7222 |
 | ch 25–48 | выше, но как SmallInt отрицательные | ~−15789…−22808 |
-| Tin (ch 49–51 в stride) | ~7886, 8065 | положительные коды |
+| TIn/CJC | не публикуются в текущем стабильном scan-блоке | будущая доработка |
 
 **Не путать с мусором:** `±32767`, массовые положительные на ch 1–24, повторяющееся
 preview каждые 3 блока — признак **рассинхрона парсера**, не «особенности датчиков».
@@ -275,7 +275,7 @@ preview каждые 3 блока — признак **рассинхрона п
 важно:
 
 - FIFO DM: `0x0522..0x07FF` (Ethernet MC031, не `0x0000`);
-- `fifoReadyWords` при 10 Hz, 48+3 ch, update 200 ms: **102** (= 2 samples × 51 ch);
+- `fifoReadyWords` при 10 Hz, 48 AIn, update 200 ms: **96** (= 2 samples × 48 ch);
 - земля перед каждым каналом в таблице дескрипторов (ground, ch, ground, ch, …);
 - `ClearBufferedPackets` — **до** `StartScan`, не после;
 - при `CallCommand` пакеты stream 0 **буферизуются** в scan-парсер (`AbsorbScanStreamPacket`), не отбрасываются.
@@ -287,8 +287,8 @@ preview каждые 3 блока — признак **рассинхрона п
 ### 6.1. Здоровый старт
 
 ```text
-Legacy first scan packet: ... h=[0,112,0,0,0,0,10091,28650,1,0] d0=[58379,58429,...]
-MIC-140 block=1 samples=2 stride=51 rate=10.000 Hz
+Legacy first scan packet: ... h=[0,106,0,0,0,0,10091,28650,1,0] d0=[58379,58429,...]
+MIC-140 block=1 samples=2 stride=48 rate=10.000 Hz
 ```
 
 ### 6.2. Типичные симптомы поломки
@@ -312,6 +312,7 @@ MIC-140 block=1 samples=2 stride=51 rate=10.000 Hz
 - `MIC-140 stream:` — сводка каждые 20 опубликованных блоков (`readGaps`, `dupRead`, `corruptRead`, `publishGaps`, `ring`);
 - `MIC-140 raw ring overflow` / `raw ring depth` — переполнение кольца;
 - `stride misalignment suspect` — corrupt после декоммутации;
+- `Legacy scan payload replaced with last good block` — перед публикацией найден фазовый/некорректный raw payload; опубликован последний хороший payload при сохранении текущего `num_buff` и всех счётчиков ошибок транспорта;
 - `MIC-140 block=N` — успешная публикация;
 - `Legacy StopScan completed` / `MIC-140 stream stop` — итог сессии с счётчиками `num_buff`.
 
@@ -319,7 +320,7 @@ MIC-140 block=1 samples=2 stride=51 rate=10.000 Hz
 
 **Интерпретация `sincePrevMs`:** при 10 Hz и 2 samples/block ожидается **~200 ms** между пакетами. Значения 200–450 ms — reader успевает, но с запасом; систематически <100 ms — риск переполнения FIFO на прошивке; >500 ms — риск пропуска на устройстве (сверять с `readGaps`).
 
-**Программирование scan (windev):** `m_ChanDump[2] = channels.Size()` — число пользовательских каналов (48), не stride AIn+TIn (51). Ошибка в этом поле ломает раскладку FIFO BIOS при двойной буферизации.
+**Программирование scan (windev):** `m_ChanDump[2] = channels.Size()` — число пользовательских каналов (48). Попытка добавить TIn в stride RecorderLnx дала периодические фазовые/служебные payload-блоки при валидном MDP и была отложена.
 
 **MDP vs BIOS:** на каждом TCP-пакете проверяются sync + CS заголовка + CS данных (`ReadPacket`). Отдельного CRC у `THeaderMessage` нет; при неверном `type/size` пишется `Legacy BIOS header invalid`.
 
@@ -329,7 +330,7 @@ MIC-140 block=1 samples=2 stride=51 rate=10.000 Hz
 
 | Подход | Почему плохо |
 |---|---|
-| Искать заголовок `type=0,size=112` в потоке без строгого sync | ложные совпадения в данных АЦП |
+| Искать заголовок `type=0,size=106` в потоке без строгого sync | ложные совпадения в данных АЦП |
 | Resync +1 в цикле без лимита | блокирует read thread на сотни ms |
 | Отбрасывать блоки с «corrupt» ADC в publish | ломает `num_buff` и провоцирует stop |
 | Проверять «все каналы отрицательные» в парсере | отвергает валидные блоки; high ch могут давать иные коды |
@@ -344,7 +345,7 @@ MIC-140 block=1 samples=2 stride=51 rate=10.000 Hz
 ### 8.1. Минимально достаточная (ближайший шаг)
 
 1. **Один владелец сокета** — mutex на клиенте (сделано).
-2. **ScanFifo-модель** — накопитель слов + чтение ровно 112 слов по валидному заголовку.
+2. **ScanFifo-модель** — накопитель слов + чтение ровно 106 слов по валидному заголовку.
 3. **Ограниченный resync** — не более 8 слов за вызов parse; остальное — ждать следующий MDP-пакет.
 4. **Мягкий timeout** — непарсимый хвост не фатален.
 5. **CallCommand** — scan-пакеты в тот же FIFO, не в /dev/null.
@@ -363,9 +364,9 @@ while Length(payload) >= 10 do
   if partial_valid_header then break;
   if not header_valid_at_0 then
     delete 1 word; continue;  // с лимитом за вызов
-  extract 112 words;
+  extract 106 words;
   enqueue block;
-  delete 112 words;
+  delete 106 words;
 ```
 
 ---
@@ -380,6 +381,36 @@ while Length(payload) >= 10 do
 4. Нет `stride misalignment` с `sat>=32` на блоках 3+.
 5. `num_buff` в заголовках монотонно растёт (допустимы пропуски с warning, не допустим цикл 1,2,3,1,2…).
 6. Stop только по действию пользователя, не по timeout storm.
+
+Сборка:
+
+### 9.1. Быстрый 3-секундный smoke-test по логу
+
+Перед длинным 60-секундным прогоном запускать RecorderLnx в Preview на 3 секунды и проверять
+`LogWindows.log`:
+
+```powershell
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0
+```
+
+Три обязательные проверки:
+
+1. **Коды Recorder и RecorderLnx грубо совпадают.** В `block1 channels` для `MIC140_01..MIC140_24`
+   ожидаются отрицательные raw/SmallInt коды примерно `-6500..-8000`; для `MIC140_12` не должно
+   быть `32767`, `-32768` или явных положительных скачков.
+2. **Количество пакетов соответствует времени и скорости блоков.** При `DataUpdateMs=200` ожидается
+   около `5` блоков/с, то есть около `15` опубликованных блоков за 3 секунды; допускается небольшой
+   запас на старт/останов.
+3. **Нет сбоев при работе.** В логе не должно быть `readGaps`, `publishGaps`, `corruptRead`,
+   `corruptPublish`, `stride misalignment`, `BIOS header invalid`, повторяющихся `32767/-32768`
+   и роста `mdpResync` на здоровых пакетах.
+
+Контрольный результат 25.06.2026:
+
+```text
+PASS pub=15 read=15 ratio=100% corrupt=0 pubGaps=0 readGaps=0 softRestart=0 expected=15 range=13..20 bps=5 readings=ok good=10 ch12=-7550
+MIC-140 stream stop: published=15 read=15 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 ringDropped=0 mdpResync=0
+```
 
 Сборка:
 
@@ -424,8 +455,9 @@ C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi
 resync / timeout.
 
 Задача: довести приём stream 0 до поведения оригинала (ScanFifo + фиксированное
-чтение 10+102 слов). Не использовать эвристики отбрасывания блоков в парсере.
-Сохранить stride=51 (48+3 TIn). Проверить на LogWindows.log критерии из раздела 9.
+чтение 10+96 слов). Не использовать эвристики отбрасывания блоков в парсере.
+Сохранить рабочий stride=48 для AIn; TIn/CJC возвращать только после точного
+совпадения с оригинальным портом. Проверить на LogWindows.log критерии из раздела 9.
 
 Ограничения:
 - не ломать ProgramLegacyDevice / DM 0x0522;
@@ -443,15 +475,15 @@ resync / timeout.
 - ScanFifo-подобный буфер `fScanPayloadWords` + очередь `fPendingScanBlocks`;
 - отдельные read/publish threads;
 - mutex на legacy client;
-- заголовок 10 WORD, size=112, data=102;
-- decommutation `J*51+I`;
-- 3 TIn в хвосте stride для CJC;
+- заголовок 10 WORD, size=106, data=96;
+- decommutation `J*48+I`;
+- TIn/CJC временно не входят в стабильный scan-блок;
 - ограничение resync, буферизация scan при CallCommand;
 - ClearBuffered перед StartScan.
 
 **Открыто / нестабильно:**
 
-- устойчивый приём 10+ блоков подряд без рассинхрона (основная задача);
+- устойчивый приём 10+ блоков подряд без рассинхрона (сделано для 48 AIn);
 - полный RX thread + dual FIFO как в mdpEthernet81;
 - сверка `num_buff` при пропусках пакетов на сети;
 - частоты ниже/выше 100 Hz на железе.
