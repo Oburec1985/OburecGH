@@ -14,6 +14,33 @@
 - Shared folder Windows `D:\works` внутри VM смонтирован как `/mnt/win_share`.
 - Локальная техническая учетка VM: пользователь `user`, пароль `11111111`.
 
+## Рабочий профиль Lazarus и dockable-интерфейс
+
+Ярлык на рабочем столе запускает рабочую IDE с отдельным профилем:
+
+```text
+startlazarus-2.2.6 --pcp=/home/user/.lazarus_work
+```
+
+Настраивать пакеты и раскладку нужно именно в `/home/user/.lazarus_work`, а не
+в `/home/user/.lazarus`: это две независимые конфигурации Lazarus.
+
+Для включения dockable-окон используется макрос:
+
+```text
+/mnt/win_share/OburecGH/Lazarus/Tools/configure_lazarus_docking_linux.sh
+```
+
+Он создаёт резервную копию рабочего профиля, подключает штатные пакеты
+`AnchorDocking` и `AnchorDockingDsgn`, пересобирает IDE и устраняет ложный
+диалог о понижении версии каталога конфигурации. Запускать его нужно так:
+
+```bash
+bash /mnt/win_share/OburecGH/Lazarus/Tools/configure_lazarus_docking_linux.sh /home/user/.lazarus_work
+```
+
+Для восстановления одной командой на Windows см. [памятку и BAT-файл](lazarus_vm_docking.md).
+
 ## Команды VMware
 
 Путь к `vmrun` на Windows:
@@ -110,3 +137,7 @@ D:\works\OburecGH\Lazarus\Tools\install_lzrobrpack_linux.sh
 
 - [План работ RecorderLnx](../cach/plan.md)
 - [OpenGLChartLazarus](../../../../AGrav/20_Проекты/Разработка_Delphi/Lazarus/OpenGLChartLazarus/Summary.md)
+
+
+Bat для восстановления докинга в Linux
+D:\works\OburecGH\Lazarus\Tools\Restore_Lazarus_Docking_VM.bat - запускать из windows

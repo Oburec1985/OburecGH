@@ -58,6 +58,8 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry);
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
+    { Подготовка железа/транспорта до старта worker-thread (UI / main thread). }
+    procedure PrepareHardware;
     { Останавливает источник. Вызывается только из worker-thread в конце суперцикла. }
     procedure Stop;
     { Запрос остановки из внешнего потока: только флаг TryStop, без смены State
@@ -124,6 +126,8 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry); virtual;
     { Запуск источника }
     procedure Start; virtual;
+    { Подготовка железа/транспорта до старта worker-thread (UI / main thread). }
+    procedure PrepareHardware; virtual;
     { Остановка источника (только из worker-thread) }
     procedure Stop; virtual;
     { Запрос остановки из внешнего потока }
@@ -437,6 +441,10 @@ begin
   RequireRegistry;
   fTryStop := False;
   fState := dssRunning;
+end;
+
+procedure TRecorderDataSourceBase.PrepareHardware;
+begin
 end;
 
 procedure TRecorderDataSourceBase.RequestStop;
@@ -967,9 +975,10 @@ begin
       Break;
 
     ARegistry.PublishBlock(fTagName, lTimes, lValues, lCount);
+    { MIC-140 stream debug: MERA block log suppressed.
     RecorderDebugLog(Format('MERA block: tag=%s count=%d first=%.6f last=%.6f blockLength=%d update=%dms',
       [fTagName, lCount, lTimes[0], lTimes[lCount - 1], ABlockLength,
-      AUpdateTimeMs]));
+      AUpdateTimeMs])); }
     Result := True;
     Inc(lBlocks);
   end;
@@ -1282,7 +1291,7 @@ begin
       if fSource.TryStop then
         Break;
       lElapsed := GetTickCount64 - lStart;
-      if lElapsed > 10 then
+      if (lElapsed > 10) and (Pos('MIC-140', fSource.SourceId) > 0) then
         RecorderDebugLog(Format('[DataSource:%s] Tick took %d ms on Thread %d',
           [fSource.SourceId, lElapsed, PtrUInt(GetThreadID)]));
 
@@ -1418,6 +1427,8 @@ begin
 
   fLastErrors.Clear;
   try
+    for I := 0 to fSources.Count - 1 do
+      GetSourceContext(I).Source.PrepareHardware;
     for I := 0 to fSources.Count - 1 do
     begin
       lContext := GetSourceContext(I);

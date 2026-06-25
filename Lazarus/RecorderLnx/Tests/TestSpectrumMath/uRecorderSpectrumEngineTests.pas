@@ -54,6 +54,29 @@ begin
     raise Exception.CreateFmt('%s expected %d, got %d', [AName, AExpected, AActual]);
 end;
 
+procedure TestSpectrumComputeManager;
+var
+  lManager: TRecorderSpectrumComputeManager;
+  lPlan1: TRecorderSpectrumFFTPlan;
+  lPlan2: TRecorderSpectrumFFTPlan;
+  lPlan3: TRecorderSpectrumFFTPlan;
+  lPlanCount: Integer;
+begin
+  lManager := RecorderSpectrumComputeManager;
+  lPlanCount := lManager.PlanCount;
+  lPlan1 := lManager.AcquirePlan(256);
+  lPlan2 := lManager.AcquirePlan(256);
+  if lPlan1 <> lPlan2 then
+    raise Exception.Create('Spectrum compute manager did not reuse the FFT plan');
+  if Trim(lPlan1.BackendName) = '' then
+    raise Exception.Create('Spectrum compute manager did not select a backend');
+  lPlan3 := lManager.AcquirePlan(512);
+  if lPlan3 = lPlan1 then
+    raise Exception.Create('Spectrum compute manager reused a plan for another FFT size');
+  if lManager.PlanCount < lPlanCount + 2 then
+    raise Exception.Create('Spectrum compute manager did not retain prepared plans');
+end;
+
 procedure TestMultipleFramesWithoutOverlap;
 var
   lSettings: TRecorderSpectrumSettings;
@@ -218,6 +241,12 @@ begin
       lRegistry.PublishBlock('Sensor1', lTimes, lValues, 8);
       
       // Получаем результаты
+      for I := 1 to 100 do
+      begin
+        if lManager.GetLastFrame('Sensor1', lFrame) then
+          Break;
+        Sleep(5);
+      end;
       if not lManager.GetLastFrame('Sensor1', lFrame) then
         raise Exception.Create('GetLastFrame failed in integration test');
         
@@ -253,6 +282,7 @@ end;
 procedure RunRecorderSpectrumEngineTests;
 begin
   Writeln('Recorder spectrum engine tests...');
+  TestSpectrumComputeManager;
   TestMultipleFramesWithoutOverlap;
   TestMultipleFramesWithOverlap;
   TestConfigInheritance;

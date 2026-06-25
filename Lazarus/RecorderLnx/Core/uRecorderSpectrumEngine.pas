@@ -12,11 +12,13 @@ unit uRecorderSpectrumEngine;
 {$codepage UTF8}
 {$modeswitch advancedrecords}
 {$pointermath on}
+{$asmmode intel}
 
 interface
 
 uses
-  Classes, SysUtils, Math;
+  Classes, SysUtils, Math, SyncObjs
+  {$IFDEF MSWINDOWS}, Windows{$ENDIF};
 
 type
   ERecorderSpectrumError = class(Exception);
@@ -51,6 +53,11 @@ type
     Re: Double;
     Im: Double;
   end;
+
+  PRecorderSpectrumComplex = ^TRecorderSpectrumComplex;
+  TRecorderSpectrumFFTPlan = class;
+  TRecorderSpectrumForwardProc = procedure(AWork: PRecorderSpectrumComplex;
+    APlan: TRecorderSpectrumFFTPlan);
 
   TRecorderSpectrumSettings = record
     FFTSize: Integer;
@@ -162,17 +169,39 @@ type
 
   TRecorderSpectrumFFTPlan = class
   private
+    fBackendName: string;
     fBitReverse: array of Integer;
     fBits: Integer;
+    fForwardProc: TRecorderSpectrumForwardProc;
     fSize: Integer;
     fTwiddle: array of TRecorderSpectrumComplex;
     function GetBitReverse(AIndex: Integer): Integer;
     function GetTwiddle(AIndex: Integer): TRecorderSpectrumComplex;
+    procedure SelectFastestForwardProc;
   public
     constructor Create(AFFTSize: Integer);
+    procedure ExecuteForward(AWork: PRecorderSpectrumComplex); inline;
     property Size: Integer read fSize;
     property BitReverse[AIndex: Integer]: Integer read GetBitReverse;
     property Twiddle[AIndex: Integer]: TRecorderSpectrumComplex read GetTwiddle;
+    property BackendName: string read fBackendName;
+  end;
+
+  { Caches immutable FFT plans by size and binds every plan to the fastest
+    numerically verified forward-transform function for the current CPU. }
+  TRecorderSpectrumComputeManager = class
+  private
+    fLock: SyncObjs.TCriticalSection;
+    fPlans: TList;
+    function FindPlan(AFFTSize: Integer): TRecorderSpectrumFFTPlan;
+    function GetPlanCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function AcquirePlan(AFFTSize: Integer): TRecorderSpectrumFFTPlan;
+    procedure Prepare(const AFFTSizes: array of Integer);
+    function BackendName(AFFTSize: Integer): string;
+    property PlanCount: Integer read GetPlanCount;
   end;
 
   TRecorderSpectrumEvaluator = class
@@ -180,8 +209,10 @@ type
     fSettings: TRecorderSpectrumSettings;
     fPlan: TRecorderSpectrumFFTPlan;
     fWindow: array of Double;
-    fWindowed: array of Double;
-    fWork: array of TRecorderSpectrumComplex;
+    fWindowed: PDouble;
+    fWindowedBase: Pointer;
+    fWork: PRecorderSpectrumComplex;
+    fWorkBase: Pointer;
     procedure BuildWindow;
   public
     constructor Create(const ASettings: TRecorderSpectrumSettings);
@@ -222,12 +253,90 @@ function RecorderSpectrumWindowName(AKind: TRecorderSpectrumWindowKind): string;
 function RecorderSpectrumNormalizeName(AMode: TRecorderSpectrumNormalizeMode): string;
 function RecorderSpectrumOverlapName(AMode: TRecorderSpectrumOverlapMode): string;
 function RecorderSpectrumIntegrationName(AMode: TRecorderSpectrumIntegrationMode): string;
+function RecorderSpectrumComputeManager: TRecorderSpectrumComputeManager;
 
 implementation
 
 const
   CTwoPi = 2.0 * Pi;
   CSqrt2 = 1.4142135623730950488;
+
+var
+  gSpectrumComputeManager: TRecorderSpectrumComputeManager = nil;
+
+function AlignSpectrumPointer(APointer: Pointer; AAlignment: SizeInt): Pointer; inline;
+var
+  lValue: PtrUInt;
+begin
+  lValue := PtrUInt(APointer);
+  Result := Pointer((lValue + PtrUInt(AAlignment - 1)) and not PtrUInt(AAlignment - 1));
+end;
+
+function SpectrumBenchmarkIterations(AFFTSize: Integer): Integer;
+begin
+  if AFFTSize <= 512 then
+    Result := 4000
+  else if AFFTSize <= 2048 then
+    Result := 1200
+  else if AFFTSize <= 8192 then
+    Result := 320
+  else
+    Result := 96;
+end;
+
+function SpectrumTickMicroseconds: Int64;
+{$IFDEF MSWINDOWS}
+var
+  lCounter: Int64;
+  lFrequency: Int64;
+{$ENDIF}
+begin
+  {$IFDEF MSWINDOWS}
+  QueryPerformanceCounter(lCounter);
+  QueryPerformanceFrequency(lFrequency);
+  if lFrequency > 0 then
+    Result := (lCounter * 1000000) div lFrequency
+  else
+    Result := Int64(GetTickCount64) * 1000;
+  {$ELSE}
+  Result := Int64(GetTickCount64) * 1000;
+  {$ENDIF}
+end;
+
+{$IF Defined(CPUX86_64)}
+function SpectrumAvxAvailableAsm: Boolean; assembler;
+var
+  lSavedRbx: NativeUInt;
+asm
+  mov lSavedRbx, rbx
+  mov eax, 1
+  cpuid
+  bt ecx, 28 // AVX hardware
+  jnc @not_supported
+  bt ecx, 27 // OSXSAVE
+  jnc @not_supported
+  xor ecx, ecx
+  xgetbv
+  and eax, 6
+  cmp eax, 6
+  jne @not_supported
+  mov al, 1
+  jmp @exit
+@not_supported:
+  xor al, al
+@exit:
+  mov rbx, lSavedRbx
+end;
+{$ENDIF}
+
+function SpectrumAvxAvailable: Boolean;
+begin
+  {$IF Defined(CPUX86_64)}
+  Result := SpectrumAvxAvailableAsm;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
 
 function IsPowerOfTwo(AValue: Integer): Boolean;
 begin
@@ -591,6 +700,127 @@ begin
   end;
 end;
 
+procedure SpectrumButterflyForwardInline(var AU, AV: TRecorderSpectrumComplex;
+  const ATwiddle: TRecorderSpectrumComplex); inline;
+var
+  lTmpRe: Double;
+  lTmpIm: Double;
+  lURe: Double;
+  lUIm: Double;
+begin
+  lURe := AU.Re;
+  lUIm := AU.Im;
+  lTmpRe := AV.Re * ATwiddle.Re - AV.Im * ATwiddle.Im;
+  lTmpIm := AV.Re * ATwiddle.Im + AV.Im * ATwiddle.Re;
+  AU.Re := lURe + lTmpRe;
+  AU.Im := lUIm + lTmpIm;
+  AV.Re := lURe - lTmpRe;
+  AV.Im := lUIm - lTmpIm;
+end;
+
+procedure SpectrumForwardPascalInline(AWork: PRecorderSpectrumComplex;
+  APlan: TRecorderSpectrumFFTPlan); inline;
+var
+  lStepSize: Integer;
+  lHalfStep: Integer;
+  lBlockStart: Integer;
+  lK: Integer;
+  lTwiddleStep: Integer;
+  lTwiddleIndex: Integer;
+begin
+  lStepSize := 2;
+  while lStepSize <= APlan.Size do
+  begin
+    lHalfStep := lStepSize div 2;
+    lTwiddleStep := APlan.Size div lStepSize;
+    lBlockStart := 0;
+    while lBlockStart < APlan.Size do
+    begin
+      lTwiddleIndex := 0;
+      for lK := 0 to lHalfStep - 1 do
+      begin
+        SpectrumButterflyForwardInline(AWork[lBlockStart + lK],
+          AWork[lBlockStart + lK + lHalfStep], APlan.fTwiddle[lTwiddleIndex]);
+        Inc(lTwiddleIndex, lTwiddleStep);
+      end;
+      Inc(lBlockStart, lStepSize);
+    end;
+    lStepSize := lStepSize shl 1;
+  end;
+end;
+
+{$IF Defined(CPUX86_64)}
+procedure SpectrumForwardAvxVector2(AWork: PRecorderSpectrumComplex;
+  APlan: TRecorderSpectrumFFTPlan);
+var
+  lStepSize: Integer;
+  lHalfStep: Integer;
+  lBlockStart: Integer;
+  lK: Integer;
+  lTwiddleStep: Integer;
+  lTwiddleIndex: Integer;
+  lUPtr: PRecorderSpectrumComplex;
+  lVPtr: PRecorderSpectrumComplex;
+  lTw0Ptr: PRecorderSpectrumComplex;
+  lTw1Ptr: PRecorderSpectrumComplex;
+begin
+  lStepSize := 2;
+  while lStepSize <= APlan.Size do
+  begin
+    lHalfStep := lStepSize div 2;
+    lTwiddleStep := APlan.Size div lStepSize;
+    lBlockStart := 0;
+    while lBlockStart < APlan.Size do
+    begin
+      lTwiddleIndex := 0;
+      lK := 0;
+      while lK + 1 < lHalfStep do
+      begin
+        lUPtr := @AWork[lBlockStart + lK];
+        lVPtr := @AWork[lBlockStart + lK + lHalfStep];
+        lTw0Ptr := @APlan.fTwiddle[lTwiddleIndex];
+        lTw1Ptr := @APlan.fTwiddle[lTwiddleIndex + lTwiddleStep];
+        asm
+          mov rax, lUPtr
+          mov rdx, lVPtr
+          mov r8, lTw0Ptr
+          mov r9, lTw1Ptr
+          vmovupd ymm0, [rax]
+          vmovupd ymm1, [rdx]
+          vmovupd xmm2, [r8]
+          vinsertf128 ymm2, ymm2, [r9], 1
+          vpermilpd ymm3, ymm1, 0
+          vpermilpd ymm4, ymm1, 15
+          vpermilpd ymm5, ymm2, 5
+          vmulpd ymm3, ymm3, ymm2
+          vmulpd ymm4, ymm4, ymm5
+          vaddsubpd ymm3, ymm3, ymm4
+          vaddpd ymm4, ymm0, ymm3
+          vsubpd ymm5, ymm0, ymm3
+          vmovupd [rax], ymm4
+          vmovupd [rdx], ymm5
+        end;
+        Inc(lK, 2);
+        Inc(lTwiddleIndex, lTwiddleStep * 2);
+      end;
+      while lK < lHalfStep do
+      begin
+        // The last butterfly of an odd half-block is kept scalar.
+        SpectrumButterflyForwardInline(AWork[lBlockStart + lK],
+          AWork[lBlockStart + lK + lHalfStep], APlan.fTwiddle[lTwiddleIndex]);
+        Inc(lK);
+        Inc(lTwiddleIndex, lTwiddleStep);
+      end;
+      Inc(lBlockStart, lStepSize);
+    end;
+    lStepSize := lStepSize shl 1;
+  end;
+  asm
+    vzeroupper
+  end;
+end;
+{$ENDIF}
+
 constructor TRecorderSpectrumFFTPlan.Create(AFFTSize: Integer);
 var
   I: Integer;
@@ -623,6 +853,7 @@ begin
     fTwiddle[I].Re := lCos;
     fTwiddle[I].Im := lSin;
   end;
+  SelectFastestForwardProc;
 end;
 
 function TRecorderSpectrumFFTPlan.GetBitReverse(AIndex: Integer): Integer;
@@ -636,22 +867,190 @@ begin
   Result := fTwiddle[AIndex];
 end;
 
+procedure TRecorderSpectrumFFTPlan.ExecuteForward(AWork: PRecorderSpectrumComplex); inline;
+begin
+  fForwardProc(AWork, Self);
+end;
+
+procedure TRecorderSpectrumFFTPlan.SelectFastestForwardProc;
+var
+  I: Integer;
+  lIterations: Integer;
+  lStartTick: Int64;
+  lPascalTime: Int64;
+  lCandidateTime: Int64;
+  lSeedBase: Pointer;
+  lReferenceBase: Pointer;
+  lWorkBase: Pointer;
+  lSeed: PRecorderSpectrumComplex;
+  lReference: PRecorderSpectrumComplex;
+  lWork: PRecorderSpectrumComplex;
+  lCandidate: TRecorderSpectrumForwardProc;
+  lDiff: Double;
+begin
+  fForwardProc := @SpectrumForwardPascalInline;
+  fBackendName := 'Pascal inline';
+  {$IF Defined(CPUX86_64)}
+  if not SpectrumAvxAvailable then
+    Exit;
+  {$ELSE}
+  Exit;
+  {$ENDIF}
+
+  lSeedBase := nil;
+  lReferenceBase := nil;
+  lWorkBase := nil;
+  try
+    GetMem(lSeedBase, fSize * SizeOf(TRecorderSpectrumComplex) + 64);
+    GetMem(lReferenceBase, fSize * SizeOf(TRecorderSpectrumComplex) + 64);
+    GetMem(lWorkBase, fSize * SizeOf(TRecorderSpectrumComplex) + 64);
+    lSeed := PRecorderSpectrumComplex(AlignSpectrumPointer(lSeedBase, 64));
+    lReference := PRecorderSpectrumComplex(AlignSpectrumPointer(lReferenceBase, 64));
+    lWork := PRecorderSpectrumComplex(AlignSpectrumPointer(lWorkBase, 64));
+    for I := 0 to fSize - 1 do
+    begin
+      lSeed[I].Re := Sin(I * 0.03125) + Cos(I * 0.0078125);
+      lSeed[I].Im := 0.0;
+    end;
+    Move(lSeed^, lReference^, fSize * SizeOf(TRecorderSpectrumComplex));
+    SpectrumForwardPascalInline(lReference, Self);
+
+    {$IF Defined(CPUX86_64)}
+    lCandidate := @SpectrumForwardAvxVector2;
+    Move(lSeed^, lWork^, fSize * SizeOf(TRecorderSpectrumComplex));
+    lCandidate(lWork, Self);
+    lDiff := 0.0;
+    for I := 0 to fSize - 1 do
+    begin
+      if Abs(lReference[I].Re - lWork[I].Re) > lDiff then
+        lDiff := Abs(lReference[I].Re - lWork[I].Re);
+      if Abs(lReference[I].Im - lWork[I].Im) > lDiff then
+        lDiff := Abs(lReference[I].Im - lWork[I].Im);
+    end;
+    if lDiff > 1.0e-8 then
+      Exit;
+
+    lIterations := SpectrumBenchmarkIterations(fSize);
+    lStartTick := SpectrumTickMicroseconds;
+    for I := 1 to lIterations do
+    begin
+      Move(lSeed^, lWork^, fSize * SizeOf(TRecorderSpectrumComplex));
+      SpectrumForwardPascalInline(lWork, Self);
+    end;
+    lPascalTime := SpectrumTickMicroseconds - lStartTick;
+    lStartTick := SpectrumTickMicroseconds;
+    for I := 1 to lIterations do
+    begin
+      Move(lSeed^, lWork^, fSize * SizeOf(TRecorderSpectrumComplex));
+      lCandidate(lWork, Self);
+    end;
+    lCandidateTime := SpectrumTickMicroseconds - lStartTick;
+    if (lCandidateTime > 0) and ((lPascalTime <= 0) or
+      (lCandidateTime < lPascalTime)) then
+    begin
+      fForwardProc := lCandidate;
+      fBackendName := 'AVX vector2';
+    end;
+    {$ENDIF}
+  finally
+    if lWorkBase <> nil then
+      FreeMem(lWorkBase);
+    if lReferenceBase <> nil then
+      FreeMem(lReferenceBase);
+    if lSeedBase <> nil then
+      FreeMem(lSeedBase);
+  end;
+end;
+
+constructor TRecorderSpectrumComputeManager.Create;
+begin
+  inherited Create;
+  fLock := SyncObjs.TCriticalSection.Create;
+  fPlans := TList.Create;
+end;
+
+destructor TRecorderSpectrumComputeManager.Destroy;
+var
+  I: Integer;
+begin
+  for I := 0 to fPlans.Count - 1 do
+    TObject(fPlans[I]).Free;
+  fPlans.Free;
+  fLock.Free;
+  inherited Destroy;
+end;
+
+function TRecorderSpectrumComputeManager.FindPlan(
+  AFFTSize: Integer): TRecorderSpectrumFFTPlan;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to fPlans.Count - 1 do
+    if TRecorderSpectrumFFTPlan(fPlans[I]).Size = AFFTSize then
+      Exit(TRecorderSpectrumFFTPlan(fPlans[I]));
+end;
+
+function TRecorderSpectrumComputeManager.GetPlanCount: Integer;
+begin
+  Result := fPlans.Count;
+end;
+
+function TRecorderSpectrumComputeManager.AcquirePlan(
+  AFFTSize: Integer): TRecorderSpectrumFFTPlan;
+begin
+  fLock.Acquire;
+  try
+    Result := FindPlan(AFFTSize);
+    if Result = nil then
+    begin
+      Result := TRecorderSpectrumFFTPlan.Create(AFFTSize);
+      fPlans.Add(Result);
+    end;
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TRecorderSpectrumComputeManager.Prepare(const AFFTSizes: array of Integer);
+var
+  I: Integer;
+begin
+  for I := 0 to High(AFFTSizes) do
+    AcquirePlan(AFFTSizes[I]);
+end;
+
+function TRecorderSpectrumComputeManager.BackendName(AFFTSize: Integer): string;
+begin
+  Result := AcquirePlan(AFFTSize).BackendName;
+end;
+
+function RecorderSpectrumComputeManager: TRecorderSpectrumComputeManager;
+begin
+  Result := gSpectrumComputeManager;
+end;
+
 constructor TRecorderSpectrumEvaluator.Create(
   const ASettings: TRecorderSpectrumSettings);
 begin
   inherited Create;
   fSettings := ASettings;
   fSettings.Validate;
-  fPlan := TRecorderSpectrumFFTPlan.Create(fSettings.FFTSize);
+  fPlan := RecorderSpectrumComputeManager.AcquirePlan(fSettings.FFTSize);
   SetLength(fWindow, fSettings.FFTSize);
-  SetLength(fWindowed, fSettings.FFTSize);
-  SetLength(fWork, fSettings.FFTSize);
+  GetMem(fWindowedBase, fSettings.FFTSize * SizeOf(Double) + 64);
+  fWindowed := PDouble(AlignSpectrumPointer(fWindowedBase, 64));
+  GetMem(fWorkBase, fSettings.FFTSize * SizeOf(TRecorderSpectrumComplex) + 64);
+  fWork := PRecorderSpectrumComplex(AlignSpectrumPointer(fWorkBase, 64));
   BuildWindow;
 end;
 
 destructor TRecorderSpectrumEvaluator.Destroy;
 begin
-  fPlan.Free;
+  if fWorkBase <> nil then
+    FreeMem(fWorkBase);
+  if fWindowedBase <> nil then
+    FreeMem(fWindowedBase);
   inherited Destroy;
 end;
 
@@ -687,17 +1086,6 @@ procedure TRecorderSpectrumEvaluator.Eval(AInput: PDouble;
 var
   I: Integer;
   J: Integer;
-  lStepSize: Integer;
-  lHalfStep: Integer;
-  lBlockStart: Integer;
-  lK: Integer;
-  lTwiddleStep: Integer;
-  lTwiddleIndex: Integer;
-  lTw: TRecorderSpectrumComplex;
-  lURe: Double;
-  lUIm: Double;
-  lTmpRe: Double;
-  lTmpIm: Double;
   lScale: Double;
   lValue: Double;
   lNorm: Double;
@@ -715,34 +1103,7 @@ begin
     fWork[J].Im := 0.0;
   end;
 
-  lStepSize := 2;
-  while lStepSize <= fSettings.FFTSize do
-  begin
-    lHalfStep := lStepSize div 2;
-    lTwiddleStep := fSettings.FFTSize div lStepSize;
-    lBlockStart := 0;
-    while lBlockStart < fSettings.FFTSize do
-    begin
-      lTwiddleIndex := 0;
-      for lK := 0 to lHalfStep - 1 do
-      begin
-        lTw := fPlan.Twiddle[lTwiddleIndex];
-        lURe := fWork[lBlockStart + lK].Re;
-        lUIm := fWork[lBlockStart + lK].Im;
-        lTmpRe := fWork[lBlockStart + lK + lHalfStep].Re * lTw.Re -
-          fWork[lBlockStart + lK + lHalfStep].Im * lTw.Im;
-        lTmpIm := fWork[lBlockStart + lK + lHalfStep].Re * lTw.Im +
-          fWork[lBlockStart + lK + lHalfStep].Im * lTw.Re;
-        fWork[lBlockStart + lK].Re := lURe + lTmpRe;
-        fWork[lBlockStart + lK].Im := lUIm + lTmpIm;
-        fWork[lBlockStart + lK + lHalfStep].Re := lURe - lTmpRe;
-        fWork[lBlockStart + lK + lHalfStep].Im := lUIm - lTmpIm;
-        Inc(lTwiddleIndex, lTwiddleStep);
-      end;
-      Inc(lBlockStart, lStepSize);
-    end;
-    lStepSize := lStepSize shl 1;
-  end;
+  fPlan.ExecuteForward(fWork);
 
   AFrame.FFTSize := fSettings.FFTSize;
   AFrame.Bins := fSettings.FFTSize div 2;
@@ -867,5 +1228,13 @@ begin
     end;
   end;
 end;
+
+initialization
+  // The manager object itself is created on the UI/startup path. Expensive
+  // plan preparation remains explicit in the stopped-state runtime manager.
+  gSpectrumComputeManager := TRecorderSpectrumComputeManager.Create;
+
+finalization
+  FreeAndNil(gSpectrumComputeManager);
 
 end.

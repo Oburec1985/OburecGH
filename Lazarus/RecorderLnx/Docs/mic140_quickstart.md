@@ -18,6 +18,8 @@ RecorderLnx сначала пробует legacy Ethernet протокол MC031
 Код: `Device/MIC140/uRecorderMic140DataSource.pas`,
 `TRecorderMic140Device.Connect`.
 
+Подробнее о потоке scan и отладке: [`mic140_legacy_scan_stream.md`](mic140_legacy_scan_stream.md).
+
 ## 2. Диагностика связи
 
 При `ConfigureTags` MIC-140 создает два служебных тега:

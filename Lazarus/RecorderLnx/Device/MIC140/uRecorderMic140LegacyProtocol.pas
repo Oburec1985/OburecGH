@@ -16,7 +16,7 @@ unit uRecorderMic140LegacyProtocol;
 interface
 
 uses
-  Classes, SysUtils, ssockets;
+  Classes, SysUtils, SyncObjs, ssockets;
 
 type
   ERecorderMic140LegacyProtocol = class(Exception);
@@ -51,9 +51,13 @@ type
     fRxBuffer: TRecorderMic140LegacyByteArray;
     fSocket: TInetSocket;
     fTimeoutMs: Cardinal;
+    fLock: TCriticalSection;
+    fMdpResyncBytes: Int64;
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer);
+    procedure DrainPendingSocket;
+    procedure ApplyTimeoutMs(AValue: Cardinal);
     procedure SetTimeoutMs(AValue: Cardinal);
     procedure WriteBytes(const ABuffer; ACount: Integer);
     procedure SendPacket(APort: Word; const AWords: TRecorderMic140LegacyWordArray);
@@ -79,6 +83,7 @@ type
       out AErrorMessage: string): Boolean;
     function ReadFlashStorage(AAddress: LongWord; var ABuffer; AByteCount: Integer;
       out AErrorMessage: string): Boolean;
+    function MdpResyncByteCount: Int64;
 
     property Host: string read fHost;
     property Port: Word read fPort;
@@ -109,10 +114,17 @@ function RecorderMic140DevRevFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Word;
 function RecorderMic140DevSubRevFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Word;
+function Mic140LegacyBiosScanHeaderValid(
+  const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
 
 implementation
 
+uses
+  uRecorderDebugLog;
+
 const
+  CMic140LegacyBiosMessageType = 0;
+  CMic140LegacyBiosMessageSizeWords = 112;
   CLegacySyncWord = Word($12B8);
   CLegacyStreamScan = Word(0);
   CLegacyStreamCommand = Word(1);
@@ -151,19 +163,32 @@ begin
   fHost := AHost;
   fPort := APort;
   fTimeoutMs := ATimeoutMs;
+  fLock := TCriticalSection.Create;
+  fMdpResyncBytes := 0;
 end;
 
 destructor TRecorderMic140LegacyClient.Destroy;
 begin
-  Disconnect;
+  fLock.Acquire;
+  try
+    Disconnect;
+  finally
+    fLock.Release;
+    fLock.Free;
+  end;
   inherited Destroy;
 end;
 
 procedure TRecorderMic140LegacyClient.Connect;
 begin
-  Disconnect;
-  fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
-  SetTimeoutMs(fTimeoutMs);
+  fLock.Acquire;
+  try
+    Disconnect;
+    fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+    ApplyTimeoutMs(fTimeoutMs);
+  finally
+    fLock.Release;
+  end;
 end;
 
 procedure TRecorderMic140LegacyClient.Disconnect;
@@ -172,18 +197,91 @@ begin
   FreeAndNil(fSocket);
 end;
 
-procedure TRecorderMic140LegacyClient.ClearBufferedPackets;
+procedure TRecorderMic140LegacyClient.DrainPendingSocket;
+var
+  lBuf: array[0..4095] of Byte;
+  lOldTimeout: Cardinal;
+  lRead: Integer;
 begin
-  SetLength(fRxBuffer, 0);
+  if fSocket = nil then
+    Exit;
+  lOldTimeout := fTimeoutMs;
+  try
+    ApplyTimeoutMs(1);
+    repeat
+      lRead := fSocket.Read(lBuf[0], SizeOf(lBuf));
+    until lRead <= 0;
+  finally
+    ApplyTimeoutMs(lOldTimeout);
+  end;
 end;
 
-procedure TRecorderMic140LegacyClient.SetTimeoutMs(AValue: Cardinal);
+procedure TRecorderMic140LegacyClient.ClearBufferedPackets;
+begin
+  fLock.Acquire;
+  try
+    SetLength(fRxBuffer, 0);
+    fMdpResyncBytes := 0;
+    DrainPendingSocket;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TRecorderMic140LegacyClient.MdpResyncByteCount: Int64;
+begin
+  fLock.Acquire;
+  try
+    Result := fMdpResyncBytes;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function Mic140LegacyBiosScanHeaderValid(
+  const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
+var
+  lMessageSize: Integer;
+begin
+  AReason := '';
+  if Length(AHeaderWords) < CLegacyScanHeaderWords then
+  begin
+    AReason := Format('short header words=%d', [Length(AHeaderWords)]);
+    Exit(False);
+  end;
+  if AHeaderWords[0] <> CMic140LegacyBiosMessageType then
+  begin
+    AReason := Format('type=%d expected=%d', [AHeaderWords[0],
+      CMic140LegacyBiosMessageType]);
+    Exit(False);
+  end;
+  lMessageSize := AHeaderWords[1];
+  if (lMessageSize < CLegacyScanHeaderWords + 1) or
+    (lMessageSize > CLegacyMaxPacketWords) then
+  begin
+    AReason := Format('size=%d out of range', [lMessageSize]);
+    Exit(False);
+  end;
+  Result := True;
+end;
+
+procedure TRecorderMic140LegacyClient.ApplyTimeoutMs(AValue: Cardinal);
 begin
   if AValue = 0 then
     AValue := 1;
   fTimeoutMs := AValue;
   if fSocket <> nil then
     fSocket.IOTimeout := Integer(fTimeoutMs);
+end;
+
+procedure TRecorderMic140LegacyClient.SetTimeoutMs(AValue: Cardinal);
+begin
+  fLock.Acquire;
+  try
+    ApplyTimeoutMs(AValue);
+  finally
+    fLock.Release;
+  end;
 end;
 
 function TRecorderMic140LegacyClient.ReadBytes(var ABuffer; ACount: Integer): Boolean;
@@ -239,6 +337,7 @@ var
 begin
   if ACount <= 0 then
     Exit;
+  Inc(fMdpResyncBytes, ACount);
   if ACount >= Length(fRxBuffer) then
   begin
     SetLength(fRxBuffer, 0);
@@ -367,51 +466,56 @@ var
   lRequest: TRecorderMic140LegacyWordArray;
   lStartedAt: QWord;
 begin
-  Result := False;
-  AErrorMessage := '';
-  SetLength(ARet, 0);
+  fLock.Acquire;
   try
-    if ARetWordCount <= 0 then
-      ARetWordCount := 1;
-    SetLength(lRequest, 3 + Length(AArgs));
-    lRequest[0] := ACommand;
-    lRequest[1] := Length(AArgs);
-    lRequest[2] := ARetWordCount;
-    if Length(AArgs) > 0 then
-      Move(AArgs[0], lRequest[3], Length(AArgs) * SizeOf(Word));
+    Result := False;
+    AErrorMessage := '';
+    SetLength(ARet, 0);
+    try
+      if ARetWordCount <= 0 then
+        ARetWordCount := 1;
+      SetLength(lRequest, 3 + Length(AArgs));
+      lRequest[0] := ACommand;
+      lRequest[1] := Length(AArgs);
+      lRequest[2] := ARetWordCount;
+      if Length(AArgs) > 0 then
+        Move(AArgs[0], lRequest[3], Length(AArgs) * SizeOf(Word));
 
-    SendPacket(CLegacyStreamCommand, lRequest);
-    lStartedAt := GetTickCount64;
-    repeat
-      if not ReadPacket(lPort, ARet) then
+      SendPacket(CLegacyStreamCommand, lRequest);
+      lStartedAt := GetTickCount64;
+      repeat
+        if not ReadPacket(lPort, ARet) then
+        begin
+          AErrorMessage := 'MIC-140 legacy command timeout';
+          Exit;
+        end;
+
+        // Original mdpEthernet81 demultiplexes command and scan streams into
+        // separate FIFOs. RecorderLnx currently reads the same TCP stream
+        // directly, so command calls made while the scan is active must skip
+        // stream-0 packets until the stream-1 reply arrives.
+        if lPort = CLegacyStreamCommand then
+          Break;
+      until GetTickCount64 - lStartedAt >= fTimeoutMs;
+
+      if lPort <> CLegacyStreamCommand then
       begin
-        AErrorMessage := 'MIC-140 legacy command timeout';
+        AErrorMessage := Format('MIC-140 legacy unexpected reply stream: %d', [lPort]);
         Exit;
       end;
-
-      // Original mdpEthernet81 demultiplexes command and scan streams into
-      // separate FIFOs. RecorderLnx currently reads the same TCP stream
-      // directly, so command calls made while the scan is active must skip
-      // stream-0 packets until the stream-1 reply arrives.
-      if lPort = CLegacyStreamCommand then
-        Break;
-    until GetTickCount64 - lStartedAt >= fTimeoutMs;
-
-    if lPort <> CLegacyStreamCommand then
-    begin
-      AErrorMessage := Format('MIC-140 legacy unexpected reply stream: %d', [lPort]);
-      Exit;
+      if Length(ARet) < ARetWordCount then
+      begin
+        AErrorMessage := Format('MIC-140 legacy reply is too short: %d/%d',
+          [Length(ARet), ARetWordCount]);
+        Exit;
+      end;
+      Result := True;
+    except
+      on E: Exception do
+        AErrorMessage := E.Message;
     end;
-    if Length(ARet) < ARetWordCount then
-    begin
-      AErrorMessage := Format('MIC-140 legacy reply is too short: %d/%d',
-        [Length(ARet), ARetWordCount]);
-      Exit;
-    end;
-    Result := True;
-  except
-    on E: Exception do
-      AErrorMessage := E.Message;
+  finally
+    fLock.Release;
   end;
 end;
 
@@ -558,45 +662,89 @@ function TRecorderMic140LegacyClient.ReadScanBlock(
 var
   I: Integer;
   lDataCount: Integer;
+  lDrainMode: Boolean;
   lPort: Word;
   lWords: TRecorderMic140LegacyWordArray;
+  lBiosReason: string;
+  lMessageSize: Integer;
+  lStartedAt: QWord;
 begin
   Result := False;
   AErrorMessage := '';
   SetLength(ABlock.HeaderWords, 0);
   SetLength(ABlock.DataWords, 0);
+  fLock.Acquire;
   try
-    repeat
-      if not ReadPacket(lPort, lWords) then
+    try
+      { ReadLegacyRawBlock(0) maps to a 1 ms socket timeout — drain every already
+        buffered MDP packet without a wall-clock cap, otherwise one rejected
+        candidate ends burst after ~1 ms and the TCP queue stalls. }
+      lDrainMode := fTimeoutMs <= 1;
+      lStartedAt := GetTickCount64;
+      while True do
       begin
-        AErrorMessage := 'MIC-140 legacy scan timeout';
+        if (not lDrainMode) and (GetTickCount64 - lStartedAt >= fTimeoutMs) then
+          Break;
+        if not ReadPacket(lPort, lWords) then
+        begin
+          if lDrainMode then
+            Exit;
+          AErrorMessage := 'MIC-140 legacy scan timeout';
+          Exit;
+        end;
+        if lPort <> CLegacyStreamScan then
+          Continue;
+
+        if Length(lWords) < CLegacyScanHeaderWords then
+        begin
+          RecorderDebugLog(Format(
+            '[MIC-140:%s:%d] Legacy scan packet too short: mdpWords=%d mdpResync=%d',
+            [fHost, fPort, Length(lWords), fMdpResyncBytes]));
+          Continue;
+        end;
+
+        SetLength(ABlock.HeaderWords, CLegacyScanHeaderWords);
+        for I := 0 to High(ABlock.HeaderWords) do
+          ABlock.HeaderWords[I] := lWords[I];
+        lMessageSize := ABlock.HeaderWords[1];
+        if not Mic140LegacyBiosScanHeaderValid(ABlock.HeaderWords, lBiosReason) then
+        begin
+          RecorderDebugLog(Format(
+            '[MIC-140:%s:%d] Legacy BIOS header invalid: %s mdpWords=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] mdpResync=%d',
+            [fHost, fPort, lBiosReason, Length(lWords),
+             ABlock.HeaderWords[0], ABlock.HeaderWords[1], ABlock.HeaderWords[2],
+             ABlock.HeaderWords[3], ABlock.HeaderWords[4], ABlock.HeaderWords[5],
+             ABlock.HeaderWords[6], ABlock.HeaderWords[7], ABlock.HeaderWords[8],
+             ABlock.HeaderWords[9], fMdpResyncBytes]));
+          Continue;
+        end;
+        if Length(lWords) < lMessageSize then
+        begin
+          RecorderDebugLog(Format(
+            '[MIC-140:%s:%d] Legacy scan MDP short: headerSize=%d mdpWords=%d mdpResync=%d',
+            [fHost, fPort, lMessageSize, Length(lWords), fMdpResyncBytes]));
+          Continue;
+        end;
+        if Length(lWords) <> lMessageSize then
+          RecorderDebugLog(Format(
+            '[MIC-140:%s:%d] Legacy scan MDP extra words: headerSize=%d mdpWords=%d mdpResync=%d',
+            [fHost, fPort, lMessageSize, Length(lWords), fMdpResyncBytes]));
+
+        lDataCount := lMessageSize - CLegacyScanHeaderWords;
+        SetLength(ABlock.DataWords, lDataCount);
+        for I := 0 to lDataCount - 1 do
+          ABlock.DataWords[I] := lWords[I + CLegacyScanHeaderWords];
+
+        Result := True;
         Exit;
       end;
-    until lPort = CLegacyStreamScan;
-
-    if Length(lWords) < CLegacyScanHeaderWords then
-    begin
-      AErrorMessage := Format('MIC-140 legacy scan packet is too short: %d',
-        [Length(lWords)]);
-      Exit;
+      AErrorMessage := 'MIC-140 legacy scan timeout (no valid BIOS packet)';
+    except
+      on E: Exception do
+        AErrorMessage := E.Message;
     end;
-
-    // Original Recorder skips sizeof(THeaderMessage) before decommutation.
-    // devapi/Types.h defines THeaderMessage as 10 WORDs; using fewer words
-    // shifts time/buffer fields into channel data and makes values jump.
-    SetLength(ABlock.HeaderWords, CLegacyScanHeaderWords);
-    for I := 0 to High(ABlock.HeaderWords) do
-      ABlock.HeaderWords[I] := lWords[I];
-
-    lDataCount := Length(lWords) - Length(ABlock.HeaderWords);
-    SetLength(ABlock.DataWords, lDataCount);
-    for I := 0 to lDataCount - 1 do
-      ABlock.DataWords[I] := lWords[I + Length(ABlock.HeaderWords)];
-
-    Result := True;
-  except
-    on E: Exception do
-      AErrorMessage := E.Message;
+  finally
+    fLock.Release;
   end;
 end;
 

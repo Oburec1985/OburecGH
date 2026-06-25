@@ -117,8 +117,9 @@ begin
     AChart.LeftAxis.Range.Min := lMinValue - Abs(lMaxValue - lMinValue) * 0.05;
     AChart.LeftAxis.Range.Max := lMaxValue + Abs(lMaxValue - lMinValue) * 0.05;
   end;
+  { MIC-140 stream debug: legacy oscillogram render diag suppressed.
   RecorderDebugLog(Format('Osc render: tag=%s points=%d first=%.6f last=%.6f xMax=%.3f',
-    [ATag.Name, lPointCount, lStartTime, lEndTime, ADisplaySeconds]));
+    [ATag.Name, lPointCount, lStartTime, lEndTime, ADisplaySeconds])); }
   AChart.Invalidate;
 end;
 

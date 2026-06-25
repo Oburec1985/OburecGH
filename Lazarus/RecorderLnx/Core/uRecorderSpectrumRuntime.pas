@@ -41,6 +41,16 @@ type
     property Frame: TRecorderSpectrumFrame read fFrame;
   end;
 
+  TRecorderSpectrumInputBlock = class(TObject)
+  public
+    TagName: string;
+    Times: TRecorderDoubleArray;
+    Values: TRecorderDoubleArray;
+    constructor Create(const ATagName: string; const ATimes, AValues: array of Double;
+      ACount: Integer);
+    procedure AssignSamples(const ATimes, AValues: array of Double; ACount: Integer);
+  end;
+
   { TRecorderSpectrumRuntimeManager
     Менеджер рантайм-вычислений спектров. }
   TRecorderSpectrumRuntimeManager = class(TObject)
@@ -51,22 +61,106 @@ type
     fChannels: TList; // Список TRecorderSpectrumChannel
     fCache: TList;    // Список кэшированных кадров (TRecorderCachedSpectrumFrame)
     fLock: TCriticalSection;
+    fChannelLock: TCriticalSection;
+    fProcessLock: TCriticalSection;
+    fInputLock: TCriticalSection;
+    fInputQueue: TList;
+    fInputEvent: TEvent;
+    fWorker: TThread;
+    fPrepared: Boolean;
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure HandleChannelFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);
     function FindChannel(const ATagName: string): TRecorderSpectrumChannel;
     procedure UpdateCache(const AFrame: TRecorderSpectrumFrame);
     procedure ClearCache;
+    procedure ClearInputQueue;
+    procedure QueueInput(const ATagName: string; const ATimes, AValues: array of Double;
+      ACount: Integer);
+    procedure ProcessQueuedInputs;
+    procedure HandleTagRegistryBlockPublished(Sender: TObject; const ATagName: string;
+      const ATimes, AValues: array of Double; ACount: Integer);
   public
     class var fInstance: TRecorderSpectrumRuntimeManager;
     class function Instance: TRecorderSpectrumRuntimeManager;
     constructor Create(AEventBus: TRecorderEventBus; ATagRegistry: TRecorderTagRegistry);
     destructor Destroy; override;
+    procedure PrepareConfiguredPlans;
+    procedure PrepareConfiguration;
     procedure RebuildChannels;
+    procedure ResetForNextRun;
     procedure ClearChannels;
     function GetLastFrame(const ATagName: string; var AFrame: TRecorderSpectrumFrame): Boolean;
+    procedure FeedTagSamples(const ATagName: string; const ATimes, AValues: array of Double;
+      ACount: Integer);
+    property IsPrepared: Boolean read fPrepared;
   end;
 
 implementation
+
+uses
+  uRecorderDebugLog;
+
+type
+  TRecorderSpectrumWorker = class(TThread)
+  private
+    fManager: TRecorderSpectrumRuntimeManager;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(AManager: TRecorderSpectrumRuntimeManager);
+  end;
+
+constructor TRecorderSpectrumInputBlock.Create(const ATagName: string;
+  const ATimes, AValues: array of Double; ACount: Integer);
+begin
+  inherited Create;
+  TagName := ATagName;
+  AssignSamples(ATimes, AValues, ACount);
+end;
+
+procedure TRecorderSpectrumInputBlock.AssignSamples(const ATimes,
+  AValues: array of Double; ACount: Integer);
+begin
+  if ACount < 0 then
+    ACount := 0;
+  SetLength(Times, ACount);
+  SetLength(Values, ACount);
+  if ACount > 0 then
+  begin
+    Move(ATimes[0], Times[0], ACount * SizeOf(Double));
+    Move(AValues[0], Values[0], ACount * SizeOf(Double));
+  end;
+end;
+
+constructor TRecorderSpectrumWorker.Create(AManager: TRecorderSpectrumRuntimeManager);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fManager := AManager;
+  Start;
+end;
+
+procedure TRecorderSpectrumWorker.Execute;
+begin
+  while not Terminated do
+  begin
+    try
+      fManager.ProcessQueuedInputs;
+    except
+      on E: Exception do
+        { MIC-140 stream debug: spectrum worker errors suppressed.
+        RecorderDebugLog('Spectrum worker failed: ' + E.ClassName + ': ' + E.Message); }
+    end;
+    fManager.fInputEvent.WaitFor(50);
+  end;
+  try
+    fManager.ProcessQueuedInputs;
+  except
+    on E: Exception do
+      { MIC-140 stream debug: spectrum worker shutdown errors suppressed.
+      RecorderDebugLog('Spectrum worker shutdown failed: ' + E.ClassName + ': ' + E.Message); }
+  end;
+end;
 
 { TRecorderCachedSpectrumFrame }
 
@@ -135,24 +229,47 @@ begin
   fChannels := TList.Create;
   fCache := TList.Create;
   fLock := TCriticalSection.Create;
+  fChannelLock := TCriticalSection.Create;
+  fProcessLock := TCriticalSection.Create;
+  fInputLock := TCriticalSection.Create;
+  fInputQueue := TList.Create;
+  fInputEvent := TEvent.Create(nil, False, False, '');
   fInstance := Self;
   if fEventBus <> nil then
     fToken := fEventBus.Subscribe(@HandleEvent);
+  if fTagRegistry <> nil then
+    fTagRegistry.SetBlockPublishedHandler(Self, @HandleTagRegistryBlockPublished);
+  fWorker := TRecorderSpectrumWorker.Create(Self);
 end;
 
 destructor TRecorderSpectrumRuntimeManager.Destroy;
 begin
   if fInstance = Self then
     fInstance := nil;
+  if fTagRegistry <> nil then
+    fTagRegistry.SetBlockPublishedHandler(nil, nil);
   if (fEventBus <> nil) and (fToken <> 0) then
   begin
     fEventBus.Unsubscribe(fToken);
     fToken := 0;
   end;
+  if fWorker <> nil then
+  begin
+    fWorker.Terminate;
+    fInputEvent.SetEvent;
+    fWorker.WaitFor;
+    FreeAndNil(fWorker);
+  end;
   ClearChannels;
+  ClearInputQueue;
+  fInputEvent.Free;
+  fInputQueue.Free;
+  fInputLock.Free;
+  fProcessLock.Free;
   fChannels.Free;
   ClearCache;
   fCache.Free;
+  fChannelLock.Free;
   fLock.Free;
   inherited Destroy;
 end;
@@ -268,9 +385,148 @@ procedure TRecorderSpectrumRuntimeManager.ClearChannels;
 var
   I: Integer;
 begin
-  for I := 0 to fChannels.Count - 1 do
-    TObject(fChannels[I]).Free;
-  fChannels.Clear;
+  fPrepared := False;
+  ClearInputQueue;
+  fProcessLock.Acquire;
+  try
+    fChannelLock.Acquire;
+    try
+      for I := 0 to fChannels.Count - 1 do
+        TObject(fChannels[I]).Free;
+      fChannels.Clear;
+    finally
+      fChannelLock.Release;
+    end;
+  finally
+    fProcessLock.Release;
+  end;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.ClearInputQueue;
+var
+  I: Integer;
+begin
+  fInputLock.Acquire;
+  try
+    for I := 0 to fInputQueue.Count - 1 do
+      TObject(fInputQueue[I]).Free;
+    fInputQueue.Clear;
+  finally
+    fInputLock.Release;
+  end;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.QueueInput(const ATagName: string;
+  const ATimes, AValues: array of Double; ACount: Integer);
+var
+  lInput: TRecorderSpectrumInputBlock;
+  I: Integer;
+begin
+  if ACount <= 0 then
+    Exit;
+  fInputLock.Acquire;
+  try
+    for I := 0 to fInputQueue.Count - 1 do
+    begin
+      lInput := TRecorderSpectrumInputBlock(fInputQueue[I]);
+      if SameText(lInput.TagName, ATagName) then
+      begin
+        // Spectrum is derived real-time output. Coalescing preserves the
+        // newest input without allowing a slow FFT to backlog MIC-140 blocks.
+        lInput.AssignSamples(ATimes, AValues, ACount);
+        fInputEvent.SetEvent;
+        Exit;
+      end;
+    end;
+    lInput := TRecorderSpectrumInputBlock.Create(ATagName, ATimes, AValues, ACount);
+    fInputQueue.Add(lInput);
+  finally
+    fInputLock.Release;
+  end;
+  fInputEvent.SetEvent;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.ProcessQueuedInputs;
+var
+  lInput: TRecorderSpectrumInputBlock;
+  lChannel: TRecorderSpectrumChannel;
+begin
+  repeat
+    lInput := nil;
+    fInputLock.Acquire;
+    try
+      if fInputQueue.Count > 0 then
+      begin
+        lInput := TRecorderSpectrumInputBlock(fInputQueue[0]);
+        fInputQueue.Delete(0);
+      end;
+    finally
+      fInputLock.Release;
+    end;
+    if lInput = nil then
+      Exit;
+
+    try
+      fProcessLock.Acquire;
+      try
+        fChannelLock.Acquire;
+        try
+          lChannel := FindChannel(lInput.TagName);
+        finally
+          fChannelLock.Release;
+        end;
+        if lChannel <> nil then
+          lChannel.FeedSamples(lInput.Times, lInput.Values, Length(lInput.Values));
+      finally
+        fProcessLock.Release;
+      end;
+    finally
+      lInput.Free;
+    end;
+  until False;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.PrepareConfiguredPlans;
+var
+  I, J: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+  lSettings: TRecorderSpectrumSettings;
+begin
+  if (fTagRegistry = nil) or (fTagRegistry.SpectrumConfigs = nil) then
+    Exit;
+
+  // This is called while Recorder is stopped, after project loading or a
+  // spectrum configuration change. It allocates plans and benchmarks SIMD
+  // implementations before the acquisition thread can publish its first tag.
+  for I := 0 to fTagRegistry.SpectrumConfigs.NodeCount - 1 do
+  begin
+    lNode := fTagRegistry.SpectrumConfigs.Nodes[I];
+    for J := 0 to lNode.BindingCount - 1 do
+    begin
+      lBinding := lNode.Bindings[J];
+      lSettings := lBinding.ResolveSettings(lNode.Settings);
+      try
+        lSettings.Validate;
+        RecorderSpectrumComputeManager.AcquirePlan(lSettings.FFTSize);
+      except
+        on E: Exception do
+          ; // The runtime will skip the same invalid binding when started.
+      end;
+    end;
+  end;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.PrepareConfiguration;
+begin
+  { This method is intentionally called only while Recorder is stopped.
+    It owns all expensive spectrum setup: FFT plan selection/benchmarking,
+    evaluator creation and channel input buffers. Starting View/Record must
+    only activate already prepared objects. }
+  fPrepared := False;
+  PrepareConfiguredPlans;
+  RebuildChannels;
+  fPrepared := True;
 end;
 
 procedure TRecorderSpectrumRuntimeManager.RebuildChannels;
@@ -310,23 +566,90 @@ begin
   end;
 end;
 
+procedure TRecorderSpectrumRuntimeManager.ResetForNextRun;
+var
+  I: Integer;
+begin
+  { Keep configured channels and their allocations alive between runs. }
+  ClearInputQueue;
+  fProcessLock.Acquire;
+  try
+    fChannelLock.Acquire;
+    try
+      for I := 0 to fChannels.Count - 1 do
+        TRecorderSpectrumChannel(fChannels[I]).Clear;
+    finally
+      fChannelLock.Release;
+    end;
+  finally
+    fProcessLock.Release;
+  end;
+  ClearCache;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.FeedTagSamples(const ATagName: string;
+  const ATimes, AValues: array of Double; ACount: Integer);
+var
+  lHasChannel: Boolean;
+begin
+  if ACount <= 0 then
+    Exit;
+  fChannelLock.Acquire;
+  try
+    lHasChannel := FindChannel(ATagName) <> nil;
+  finally
+    fChannelLock.Release;
+  end;
+  if not lHasChannel then
+    Exit;
+  QueueInput(ATagName, ATimes, AValues, ACount);
+end;
+
+procedure TRecorderSpectrumRuntimeManager.HandleTagRegistryBlockPublished(
+  Sender: TObject; const ATagName: string; const ATimes, AValues: array of Double;
+  ACount: Integer);
+begin
+  FeedTagSamples(ATagName, ATimes, AValues, ACount);
+end;
+
 procedure TRecorderSpectrumRuntimeManager.HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
 var
   lTagData: TRecorderTagUpdateEventData;
-  lChannel: TRecorderSpectrumChannel;
+  lHasChannel: Boolean;
 begin
   if (AEvent.Kind <> rceDataUpdated) or (not (AEvent.Data is TRecorderTagUpdateEventData)) then
     Exit;
 
   lTagData := TRecorderTagUpdateEventData(AEvent.Data);
-  lChannel := FindChannel(lTagData.Tag.Name);
-  if lChannel <> nil then
+  if lTagData.SampleCount > 1 then
   begin
-    if lTagData.SampleCount = 1 then
-      lChannel.FeedSamples([lTagData.TimeSec], [lTagData.Value], 1)
-    else if lTagData.SampleCount > 1 then
-      lChannel.FeedSamples(lTagData.Times, lTagData.Values, lTagData.SampleCount);
+    fChannelLock.Acquire;
+    try
+      lHasChannel := FindChannel(lTagData.Tag.Name) <> nil;
+    finally
+      fChannelLock.Release;
+    end;
+    if not lHasChannel then
+      Exit;
+    QueueInput(lTagData.Tag.Name, lTagData.Times, lTagData.Values,
+      lTagData.SampleCount);
+    Exit;
   end;
+
+  fChannelLock.Acquire;
+  try
+    lHasChannel := FindChannel(lTagData.Tag.Name) <> nil;
+  finally
+    fChannelLock.Release;
+  end;
+  if not lHasChannel then
+    Exit;
+
+  if lTagData.BlockTailNotify then
+    Exit;
+
+  // Scalar updates from PublishValue.
+  QueueInput(lTagData.Tag.Name, [lTagData.TimeSec], [lTagData.Value], 1);
 end;
 
 procedure TRecorderSpectrumRuntimeManager.HandleChannelFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);

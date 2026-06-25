@@ -67,8 +67,47 @@ type
   end;
 
 procedure ClearRecorderDeviceSampleBlock(var ABlock: TRecorderDeviceSampleBlock);
+procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBlock;
+  var ADest: TRecorderDeviceSampleBlock);
 
 implementation
+
+procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBlock;
+  var ADest: TRecorderDeviceSampleBlock);
+var
+  I: Integer;
+  lSampleCount: Integer;
+begin
+  ADest.ChannelCount := ASource.ChannelCount;
+  ADest.SampleCount := ASource.SampleCount;
+  ADest.FirstTimeSec := ASource.FirstTimeSec;
+  ADest.SampleRateHz := ASource.SampleRateHz;
+  ADest.TemperatureCount := ASource.TemperatureCount;
+
+  SetLength(ADest.Values, ASource.ChannelCount);
+  lSampleCount := ASource.SampleCount;
+  for I := 0 to ASource.ChannelCount - 1 do
+  begin
+    SetLength(ADest.Values[I], lSampleCount);
+    if lSampleCount > 0 then
+      Move(ASource.Values[I][0], ADest.Values[I][0],
+        lSampleCount * SizeOf(Double));
+  end;
+
+  SetLength(ADest.TemperatureValues, ASource.TemperatureCount);
+  SetLength(ADest.TemperatureValid, ASource.TemperatureCount);
+  for I := 0 to ASource.TemperatureCount - 1 do
+  begin
+    SetLength(ADest.TemperatureValues[I], lSampleCount);
+    SetLength(ADest.TemperatureValid[I], lSampleCount);
+    if lSampleCount > 0 then
+      Move(ASource.TemperatureValues[I][0], ADest.TemperatureValues[I][0],
+        lSampleCount * SizeOf(Double));
+    if lSampleCount > 0 then
+      Move(ASource.TemperatureValid[I][0], ADest.TemperatureValid[I][0],
+        lSampleCount * SizeOf(Boolean));
+  end;
+end;
 
 procedure ClearRecorderDeviceSampleBlock(var ABlock: TRecorderDeviceSampleBlock);
 begin

@@ -550,12 +550,13 @@ begin
       end;
     lLagSec := lRecorderNow - lMaxT;
     if lDiagLine >= 0 then
+      { MIC-140 stream debug: trend render diag suppressed.
       RecorderDebugLog(Format('Trend diag: comp=%s recNow=%.6f trendMax=%.6f lag=%.6f window=[%.6f..%.6f] line=%d tag=%s kind=%s snap=%d block=%d portion=%d added=%d lastProcessed=%.6f visible=%s',
         [fComponent.Name, lRecorderNow, lMaxT, lLagSec, lMinT, Max(lMinT + 1.0, lMaxT),
          lDiagLine, fComponent.Lines[lDiagLine].TagName, fSeries[lDiagLine].LastBlockKind,
          fSeries[lDiagLine].LastSnapshotCount, fSeries[lDiagLine].LastBlockCount,
          fSeries[lDiagLine].LastPortionLength, fSeries[lDiagLine].LastPointsAdded,
-         fSeries[lDiagLine].LastProcessedTime, BoolToStr(IsVisible, True)]));
+         fSeries[lDiagLine].LastProcessedTime, BoolToStr(IsVisible, True)])); }
   end;
 
   if not IsVisible then

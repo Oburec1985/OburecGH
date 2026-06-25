@@ -24,7 +24,7 @@ unit uRecorderCoreServices;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderStateMachine;
 
 type
   { Тип события RecorderLnx.
@@ -47,6 +47,9 @@ type
     rceFormsChanged,         { Изменение форм или экранов отображения }
         rceSpectrumFrame,        { Получен новый кадр спектра }
     rceUser                  { Пользовательское событие }
+    , rceConfigurationPrepared,
+    rceRunTransitionBefore,
+    rceRunTransitionAfter
   );
 
   { Данные одного события core-шины.
@@ -64,6 +67,7 @@ type
     Text: string;
     IntValue: Int64;
     Data: TObject;
+    Transition: TRecorderStateTransition;
   end;
 
   { Обработчик события.
@@ -114,7 +118,8 @@ type
     { Удобный конструктор события без объектной нагрузки }
     class function MakeEvent(AKind: TRecorderEventKind; ASource: TObject = nil;
       const AName: string = ''; const AText: string = '';
-      AIntValue: Int64 = 0; AData: TObject = nil): TRecorderEvent; static;
+      AIntValue: Int64 = 0; AData: TObject = nil;
+      ATransition: TRecorderStateTransition = rstNone): TRecorderEvent; static;
   end;
 
   { Контекст выполнения action.
@@ -399,13 +404,15 @@ begin
     lSnapshot.Free;
   end;
   if GetTickCount64 - lStart > 5 then
+    { MIC-140 stream debug: EventBus timing suppressed.
     RecorderDebugLog(Format('[EventBus] Publish: Kind=%d, Time=%d ms, ThreadID=%d',
-      [Ord(AEvent.Kind), GetTickCount64 - lStart, PtrUInt(GetThreadID)]));
+      [Ord(AEvent.Kind), GetTickCount64 - lStart, PtrUInt(GetThreadID)])); }
 end;
 
 class function TRecorderEventBus.MakeEvent(AKind: TRecorderEventKind;
   ASource: TObject; const AName: string; const AText: string;
-  AIntValue: Int64; AData: TObject): TRecorderEvent;
+  AIntValue: Int64; AData: TObject;
+  ATransition: TRecorderStateTransition): TRecorderEvent;
 begin
   Result.Kind := AKind;
   Result.Source := ASource;
@@ -413,6 +420,7 @@ begin
   Result.Text := AText;
   Result.IntValue := AIntValue;
   Result.Data := AData;
+  Result.Transition := ATransition;
 end;
 
 { TRecorderAction }

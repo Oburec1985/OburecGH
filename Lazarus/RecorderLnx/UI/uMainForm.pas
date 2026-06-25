@@ -165,6 +165,10 @@ type
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
     fDiagRenderCount: Integer;                    // Количество отрисовок активной страницы
+    fAutoPreviewSeconds: Integer;                 // CLI: --preview-seconds=N headless preview run
+    fAutoPreviewExtraTicks: Integer;              // extra 500 ms ticks for MIC-140 warmup
+    fAutoPreviewTicks: Integer;
+    fAutoPreviewTimer: TTimer;
 
     { Создает и настраивает кнопку тулбара редактора мнемосхем. }
     function AddEditMnemoToolBarButton(ALeft, AImageIndex: Integer;
@@ -319,9 +323,16 @@ type
     procedure UpdateTimeView;
     { Единая обработка ошибок команд UI. }
     procedure LogCommandError(const ACommand: string; E: Exception);
+    { CLI automation: start preview, stop and quit after N seconds. }
+    procedure AutoPreviewTimer(Sender: TObject);
+    procedure ParseAutoPreviewCommandLine;
     { Обработчик события ядра: фиксирует переход состояния в журнале и на форме. }
     procedure StateMachineStateChanged(ASender: TObject;
       AOldState, ANewState: TRecorderState);
+    procedure StateMachineStateChanging(ASender: TObject;
+      AOldState, ANewState: TRecorderState;
+      ATransition: TRecorderStateTransition);
+    procedure PrepareRuntimeForConfiguration;
     procedure OnMenuEditSelectedTags(Sender: TObject);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
@@ -357,6 +368,7 @@ begin
 
   fSelectedComponentRow := -1;
   fStateMachine := TRecorderStateMachine.Create;
+  fStateMachine.OnStateChanging := @StateMachineStateChanging;
   fStateMachine.OnStateChanged := @StateMachineStateChanged;
 
   fRunSettings := TRecorderRunControlSettings.Create;
@@ -413,12 +425,72 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  PrepareRuntimeForConfiguration;
   if fTagRegistry.TagCount = 0 then
     EnsureDemoDataSources;
   RebuildTagList('');
   UpdateStateView;
   AddLog('RecorderLnx started.');
+  ParseAutoPreviewCommandLine;
 
+end;
+
+procedure TMainForm.ParseAutoPreviewCommandLine;
+var
+  I: Integer;
+  lArg: string;
+  lValue: string;
+  lSeconds: Integer;
+begin
+  fAutoPreviewSeconds := 0;
+  for I := 1 to ParamCount do
+  begin
+    lArg := ParamStr(I);
+    if SameText(lArg, '--preview-seconds') then
+    begin
+      if I < ParamCount then
+        TryStrToInt(ParamStr(I + 1), fAutoPreviewSeconds);
+      Break;
+    end;
+    if Pos('--preview-seconds=', LowerCase(lArg)) = 1 then
+    begin
+      lValue := Copy(lArg, Length('--preview-seconds=') + 1, MaxInt);
+      if TryStrToInt(lValue, lSeconds) then
+        fAutoPreviewSeconds := lSeconds;
+      Break;
+    end;
+  end;
+  if fAutoPreviewSeconds <= 0 then
+    Exit;
+
+  fAutoPreviewTicks := 0;
+  fAutoPreviewExtraTicks := 3 + (fAutoPreviewSeconds div 8);
+  fAutoPreviewTimer := TTimer.Create(Self);
+  fAutoPreviewTimer.Interval := 500;
+  fAutoPreviewTimer.OnTimer := @AutoPreviewTimer;
+  fAutoPreviewTimer.Enabled := True;
+  AddLog(Format('Auto preview: %d s then stop/quit (MIC-140 debug).',
+    [fAutoPreviewSeconds]));
+end;
+
+procedure TMainForm.AutoPreviewTimer(Sender: TObject);
+begin
+  if fAutoPreviewTimer = nil then
+    Exit;
+  if fStateMachine.State = rsStop then
+  begin
+    btnPreviewClick(nil);
+    Exit;
+  end;
+  if fStateMachine.State <> rsPreview then
+    Exit;
+  Inc(fAutoPreviewTicks);
+  if fAutoPreviewTicks < fAutoPreviewSeconds * 2 + fAutoPreviewExtraTicks then
+    Exit;
+  fAutoPreviewTimer.Enabled := False;
+  AddLog(Format('Auto preview finished after %d s, stopping.', [fAutoPreviewSeconds]));
+  btnStopClick(nil);
+  Application.Terminate;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -688,6 +760,7 @@ begin
       UpdateRecordFrameManager;
       fDataSourceManager.Clear;
       fDataSourcesConfigured := False;
+      PrepareRuntimeForConfiguration;
       RebuildTagList(edTagSearch.Text);
       RenderActivePage;
       AddLog('Project settings applied.');
@@ -1605,6 +1678,11 @@ end;
 procedure TMainForm.FormEditorChanged;
 begin
   { Макет мнемосхемы автоматически обновляется в TRecorderFormPage. }
+  // The component settings dialog invokes this callback after it stores a
+  // spectrum configuration. Prepare a newly selected FFT size while stopped,
+  // never from the MIC-140 acquisition callback.
+  if (fStateMachine <> nil) and (fStateMachine.State = rsStop) then
+    PrepareRuntimeForConfiguration;
 end;
 
 { Чтение условий запуска/останова записи из ini }
@@ -1777,6 +1855,7 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  PrepareRuntimeForConfiguration;
   fDataSourceManager.Clear;
   fDataSourcesConfigured := False;
   RebuildTagList(edTagSearch.Text);
@@ -2317,8 +2396,9 @@ begin
   UpdateTimeView;
   LogUpdateDiagnostics;
   if GetTickCount64 - lStart > 10 then
+    { MIC-140 stream debug: UI queue drain timing suppressed.
     RecorderDebugLog(Format('[UI] DrainUiEventQueue: Count=%d, Time=%d ms, ThreadID=%d',
-      [lCount, GetTickCount64 - lStart, PtrUInt(GetThreadID)]));
+      [lCount, GetTickCount64 - lStart, PtrUInt(GetThreadID)])); }
 end;
 
 procedure TMainForm.LogUpdateDiagnostics;
@@ -2333,9 +2413,10 @@ begin
   if lElapsedMs < 1000 then
     Exit;
 
+  { MIC-140 stream debug: periodic UI update diag suppressed.
   AddLog(Format('Update diag: elapsed=%d ms uiTicks=%d dataEvents=%d renders=%d screenTimer=%d ms dataUpdate=%d ms',
     [lElapsedMs, fDiagUiTicks, fDiagDataEvents, fDiagRenderCount,
-    fUiUpdateTimer.Interval, fRunSettings.DataUpdateMs]), rlkData);
+    fUiUpdateTimer.Interval, fRunSettings.DataUpdateMs]), rlkData); }
   fDiagLastLogTickMs := lNowMs;
   fDiagUiTicks := 0;
   fDiagDataEvents := 0;
@@ -2344,6 +2425,7 @@ end;
 
 procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
 var
+  lBlock: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
 begin
   if ASnapshot = nil then
@@ -2370,10 +2452,19 @@ begin
   begin
     lTag := fTagRegistry.FindByName(ASnapshot.TagName);
     if lTag <> nil then
-      fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
-        lTag.Description, lTag.SensorCalibrationName,
-        lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
-        ASnapshot.SampleCount, lTag.PollFrequencyHz)
+    begin
+      lBlock := lTag.LastBlockSnapshot;
+      if lBlock.Count > 0 then
+        fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
+          lTag.Description, lTag.SensorCalibrationName,
+          lTag.AmplifierCalibrationName, lBlock.Times, lBlock.Values,
+          lBlock.Count, lTag.PollFrequencyHz)
+      else
+        fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
+          lTag.Description, lTag.SensorCalibrationName,
+          lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
+          ASnapshot.SampleCount, lTag.PollFrequencyHz);
+    end
     else
       fMeraWriter.WriteBlock(ASnapshot.TagName, '', '', '', '',
         ASnapshot.Times, ASnapshot.Values, ASnapshot.SampleCount, 0);
@@ -2516,30 +2607,65 @@ begin
 end;
 
 { Реакция на смену состояний сбора данных }
+procedure TMainForm.PrepareRuntimeForConfiguration;
+begin
+  if fSpectrumManager <> nil then
+    fSpectrumManager.PrepareConfiguration;
+
+  if fEventBus <> nil then
+    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
+      Self, 'ConfigurationPrepared'));
+end;
+
+procedure TMainForm.StateMachineStateChanging(ASender: TObject;
+  AOldState, ANewState: TRecorderState;
+  ATransition: TRecorderStateTransition);
+begin
+  if ATransition = rstNone then
+    Exit;
+
+  { No allocation, FFT benchmark or channel creation is permitted here.
+    A configuration must have prepared the spectrum runtime while stopped. }
+  if (ATransition in [rstStopToView, rstStopToRecord]) and
+    (fSpectrumManager <> nil) and (not fSpectrumManager.IsPrepared) then
+    raise ERecorderStateError.Create(
+      'Spectrum runtime is not prepared. Apply configuration while Recorder is stopped.');
+
+  if fEventBus <> nil then
+    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionBefore,
+      Self, TRecorderStateMachine.TransitionToString(ATransition), '', 0, nil,
+      ATransition));
+end;
+
 procedure TMainForm.StateMachineStateChanged(ASender: TObject;
   AOldState, ANewState: TRecorderState);
+var
+  lTransition: TRecorderStateTransition;
 begin
+  lTransition := TRecorderStateMachine(ASender).LastTransition;
+
   if (ANewState = rsRecord) and (AOldState <> rsRecord) then
     OpenRecordFrame;
 
   case ANewState of
     rsPreview, rsRecord:
       begin
-        if not (AOldState in [rsPreview, rsRecord]) then
+        if lTransition in [rstStopToView, rstStopToRecord] then
         begin
           fTimeSystem.Start;
-          if fSpectrumManager <> nil then
-            fSpectrumManager.RebuildChannels;
+          StartDataSources;
         end;
-        StartDataSources;
       end;
     rsStop:
       begin
-        StopDataSources;
-        CloseRecordFrame;
-        fTimeSystem.Stop;
-        if fSpectrumManager <> nil then
-          fSpectrumManager.ClearChannels;
+        if lTransition in [rstViewToStop, rstRecordToStop] then
+        begin
+          StopDataSources;
+          CloseRecordFrame;
+          fTimeSystem.Stop;
+          if fSpectrumManager <> nil then
+            fSpectrumManager.ResetForNextRun;
+        end;
       end;
   end;
 
@@ -2547,6 +2673,10 @@ begin
     CloseRecordFrame;
 
   UpdateStateView;
+  if (lTransition <> rstNone) and (fEventBus <> nil) then
+    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionAfter,
+      Self, TRecorderStateMachine.TransitionToString(lTransition), '', 0, nil,
+      lTransition));
   AddLog(Format('State changed: %s -> %s',
     [TRecorderStateMachine.StateToString(AOldState),
      TRecorderStateMachine.StateToString(ANewState)]));

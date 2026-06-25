@@ -285,15 +285,18 @@ type
     fSampleCount: Integer;
     fTimes: TRecorderDoubleArray;
     fValues: TRecorderDoubleArray;
+    fBlockTailNotify: Boolean;
   public
     constructor Create(ATag: TRecorderTag; ATimeSec, AValue: Double); overload;
     constructor CreateBlock(ATag: TRecorderTag; const ATimes, AValues: array of Double; ACount: Integer);
+    constructor CreateBlockTailNotify(ATag: TRecorderTag; ATimeSec, AValue: Double);
     property Tag: TRecorderTag read fTag;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
     property SampleCount: Integer read fSampleCount;
     property Times: TRecorderDoubleArray read fTimes;
     property Values: TRecorderDoubleArray read fValues;
+    property BlockTailNotify: Boolean read fBlockTailNotify;
   end;
 
   { TRecorderTagRegistry
@@ -357,9 +360,14 @@ type
     property Items[AIndex: Integer]: TRecorderCalibration read GetItem; default;
   end;
 
+  TRecorderTagBlockPublishedEvent = procedure(Sender: TObject; const ATagName: string;
+    const ATimes, AValues: array of Double; ACount: Integer) of object;
+
   TRecorderTagRegistry = class
   private
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
+    fBlockPublishedTarget: TObject;
+    fOnBlockPublished: TRecorderTagBlockPublishedEvent;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
@@ -409,10 +417,23 @@ type
 
     { Публикует новое значение тега и отправляет событие rceDataUpdated. }
     procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double);
+    { Добавляет блок в кольцевой буфер тега без публикации события. }
+    procedure AddBlockSamples(const ATagName: string; const ATimes,
+      AValues: array of Double; ACount: Integer;
+      AValuesAlreadyTransformed: Boolean = False);
+    { Публикует хвостовое UI-событие после AddBlockSamples. }
+    procedure NotifyBlockTail(const ATagName: string; ATimeSec, AValue: Double);
     { Публикует блок значений тега и отправляет событие rceDataUpdated. }
     procedure PublishBlock(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
       AValuesAlreadyTransformed: Boolean = False);
+    { Подписчик на полный блок до публикации легковесного UI-события.
+      Используется рантаймом спектров, чтобы не копировать блоки в EventBus
+      из потока опроса MIC-140. }
+    procedure SetBlockPublishedHandler(ATarget: TObject;
+      AHandler: TRecorderTagBlockPublishedEvent);
+    { Публикует спектр/UI-уведомления после AddBlockSamples. }
+    procedure PublishBlockNotifications(const ATagName: string);
 
     { Удаляет все теги и очищает счетчик id. }
     procedure Clear;
@@ -1000,6 +1021,22 @@ begin
   fTimeSec := ATimeSec;
   fValue := AValue;
   fSampleCount := 1;
+  fBlockTailNotify := False;
+  SetLength(fTimes, 1);
+  SetLength(fValues, 1);
+  fTimes[0] := ATimeSec;
+  fValues[0] := AValue;
+end;
+
+constructor TRecorderTagUpdateEventData.CreateBlockTailNotify(ATag: TRecorderTag;
+  ATimeSec, AValue: Double);
+begin
+  inherited Create;
+  fTag := ATag;
+  fTimeSec := ATimeSec;
+  fValue := AValue;
+  fSampleCount := 1;
+  fBlockTailNotify := True;
   SetLength(fTimes, 1);
   SetLength(fValues, 1);
   fTimes[0] := ATimeSec;
@@ -1008,8 +1045,6 @@ end;
 
 constructor TRecorderTagUpdateEventData.CreateBlock(ATag: TRecorderTag;
   const ATimes, AValues: array of Double; ACount: Integer);
-var
-  I: Integer;
 begin
   inherited Create;
   if ACount <= 0 then
@@ -1019,12 +1054,13 @@ begin
 
   fTag := ATag;
   fSampleCount := ACount;
+  fBlockTailNotify := False;
   SetLength(fTimes, ACount);
   SetLength(fValues, ACount);
-  for I := 0 to ACount - 1 do
+  if ACount > 0 then
   begin
-    fTimes[I] := ATimes[I];
-    fValues[I] := AValues[I];
+    Move(ATimes[0], fTimes[0], ACount * SizeOf(Double));
+    Move(AValues[0], fValues[0], ACount * SizeOf(Double));
   end;
   fTimeSec := fTimes[ACount - 1];
   fValue := fValues[ACount - 1];
@@ -1373,12 +1409,18 @@ begin
   end;
 end;
 
-procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
-  AValues: array of Double; ACount: Integer; AValuesAlreadyTransformed: Boolean);
+procedure TRecorderTagRegistry.SetBlockPublishedHandler(ATarget: TObject;
+  AHandler: TRecorderTagBlockPublishedEvent);
+begin
+  fBlockPublishedTarget := ATarget;
+  fOnBlockPublished := AHandler;
+end;
+
+procedure TRecorderTagRegistry.AddBlockSamples(const ATagName: string;
+  const ATimes, AValues: array of Double; ACount: Integer;
+  AValuesAlreadyTransformed: Boolean);
 var
-  lEvent: TRecorderEvent;
   lTag: TRecorderTag;
-  lEventData: TRecorderTagUpdateEventData;
   lValues: TRecorderDoubleArray;
   I: Integer;
 begin
@@ -1393,22 +1435,88 @@ begin
 
   SetLength(lValues, ACount);
   if AValuesAlreadyTransformed then
-    for I := 0 to ACount - 1 do
-      lValues[I] := AValues[I]
+  begin
+    if ACount > 0 then
+      Move(AValues[0], lValues[0], ACount * SizeOf(Double));
+  end
   else
     for I := 0 to ACount - 1 do
       lValues[I] := TransformTagValue(lTag, AValues[I]);
   lTag.AddSamples(ATimes, lValues, ACount);
+end;
+
+procedure TRecorderTagRegistry.NotifyBlockTail(const ATagName: string;
+  ATimeSec, AValue: Double);
+var
+  lEvent: TRecorderEvent;
+  lTag: TRecorderTag;
+  lEventData: TRecorderTagUpdateEventData;
+begin
+  if fEventBus = nil then
+    Exit;
+  lTag := FindByName(ATagName);
+  if lTag = nil then
+    raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
+  lEventData := TRecorderTagUpdateEventData.CreateBlockTailNotify(lTag, ATimeSec,
+    AValue);
+  try
+    lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
+      lTag.TextValue, 1, lEventData);
+    fEventBus.Publish(lEvent);
+  finally
+    lEventData.Free;
+  end;
+end;
+
+procedure TRecorderTagRegistry.PublishBlockNotifications(const ATagName: string);
+var
+  lSnapshot: TRecorderSignalSnapshot;
+  lTag: TRecorderTag;
+begin
+  lTag := FindByName(ATagName);
+  if lTag = nil then
+    Exit;
+  lSnapshot := lTag.LastBlockSnapshot;
+  if lSnapshot.Count <= 0 then
+    Exit;
+  if Assigned(fOnBlockPublished) then
+    fOnBlockPublished(fBlockPublishedTarget, ATagName, lSnapshot.Times,
+      lSnapshot.Values, lSnapshot.Count);
+  if fEventBus <> nil then
+    NotifyBlockTail(ATagName, lSnapshot.Times[lSnapshot.Count - 1],
+      lSnapshot.Values[lSnapshot.Count - 1]);
+end;
+
+procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
+  AValues: array of Double; ACount: Integer; AValuesAlreadyTransformed: Boolean);
+var
+  lEvent: TRecorderEvent;
+  lTag: TRecorderTag;
+  lEventData: TRecorderTagUpdateEventData;
+  lSnapshot: TRecorderSignalSnapshot;
+begin
+  if ACount <= 0 then
+    Exit;
+
+  AddBlockSamples(ATagName, ATimes, AValues, ACount, AValuesAlreadyTransformed);
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay
   // the next MIC-140 TCP read. Device-level diagnostics log block summaries.
 
-  if fEventBus <> nil then
+  lTag := FindByName(ATagName);
+  if lTag = nil then
+    Exit;
+
+  if Assigned(fOnBlockPublished) then
+    PublishBlockNotifications(ATagName)
+  else if fEventBus <> nil then
   begin
-    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, ATimes, lValues, ACount);
+    lSnapshot := lTag.LastBlockSnapshot;
+    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, lSnapshot.Times,
+      lSnapshot.Values, lSnapshot.Count);
     try
       lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
-        lTag.TextValue, ACount, lEventData);
+        lTag.TextValue, lEventData.SampleCount, lEventData);
       fEventBus.Publish(lEvent);
     finally
       lEventData.Free;

@@ -866,8 +866,9 @@ begin
     SetAxisRange(-1, 1)
   else
     ApplyOscillogramTagYRange(TChartAxis(fAxis), lTag, lMinValue, lMaxValue);
+  { MIC-140 stream debug: oscillogram render diag suppressed.
   RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d lines=%d frame=%d window=%.3f',
-    [fCurrentTagName, lPointCount, 1 + fExtraLines.Count, fFrameNo, ADisplaySeconds]));
+    [fCurrentTagName, lPointCount, 1 + fExtraLines.Count, fFrameNo, ADisplaySeconds])); }
   if fChart is TOglChart then
     TOglChart(fChart).Redraw;
 end;
@@ -1217,8 +1218,9 @@ begin
       ApplyOscillogramTagYRange(lAxis, lTag, lMinValue, lMaxValue);
   end;
 
+  { MIC-140 stream debug: oscillogram surface render diag suppressed.
   RecorderDebugLog(Format('Ogl surface render: charts=%d frame=%d window=%.3f',
-    [fCount, fFrameNo, ADisplaySeconds]));
+    [fCount, fFrameNo, ADisplaySeconds])); }
   fChart.Redraw;
 end;
 

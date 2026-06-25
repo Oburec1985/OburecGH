@@ -1,18 +1,18 @@
 object TagSettingsDialog: TTagSettingsDialog
-  Left = 350
-  Height = 640
-  Top = 200
-  Width = 620
+  Left = 0
+  Height = 851
+  Top = 0
+  Width = 1918
   Caption = 'Настройка канала'
-  ClientHeight = 640
-  ClientWidth = 620
+  ClientHeight = 851
+  ClientWidth = 1918
   Position = poScreenCenter
-  LCLVersion = '4.2.0.0'
+  LCLVersion = '2.2.6.0'
   object fPageControl: TPageControl
     Left = 8
-    Height = 536
+    Height = 747
     Top = 8
-    Width = 604
+    Width = 1902
     ActivePage = tsParams
     Align = alClient
     BorderSpacing.Bottom = 46
@@ -21,47 +21,49 @@ object TagSettingsDialog: TTagSettingsDialog
     TabOrder = 0
     object tsParams: TTabSheet
       Caption = 'Параметры'
-      ClientHeight = 508
-      ClientWidth = 596
+      ClientHeight = 716
+      ClientWidth = 1892
       object gbGeneral: TGroupBox
         Left = 8
         Height = 186
         Top = 8
-        Width = 580
+        Width = 1876
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Общие параметры'
         ClientHeight = 166
-        ClientWidth = 576
+        ClientWidth = 1874
         TabOrder = 0
         object lbName: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 22
-          Width = 24
+          Width = 27
           Caption = 'Имя'
+          ParentColor = False
         end
         object fNameEdit: TEdit
           Left = 72
-          Height = 23
+          Height = 31
           Top = 18
-          Width = 286
+          Width = 1584
           Anchors = [akTop, akLeft, akRight]
           TabOrder = 0
         end
         object lbUnit: TLabel
           Left = 334
-          Height = 15
+          Height = 19
           Top = 22
-          Width = 15
+          Width = 20
           Caption = 'ед.'
+          ParentColor = False
         end
         object fUnitCombo: TComboBox
-          Left = 398
-          Height = 23
+          Left = 1696
+          Height = 31
           Top = 18
           Width = 80
           Anchors = [akTop, akRight]
-          ItemHeight = 15
+          ItemHeight = 0
           Items.Strings = (
             '-'
             'a.u.'
@@ -73,32 +75,33 @@ object TagSettingsDialog: TTagSettingsDialog
           TabOrder = 1
         end
         object fAutoUnitCheck: TCheckBox
-          Left = 486
-          Height = 19
+          Left = 1773
+          Height = 21
           Top = 20
-          Width = 44
+          Width = 55
           Anchors = [akTop, akRight]
           Caption = 'Авто'
           TabOrder = 2
         end
         object lbModule: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 52
-          Width = 33
+          Width = 39
           Caption = 'Адрес'
+          ParentColor = False
         end
         object fModuleEdit: TEdit
           Left = 72
-          Height = 23
+          Height = 31
           Top = 48
-          Width = 286
+          Width = 1584
           Anchors = [akTop, akLeft, akRight]
           ReadOnly = True
           TabOrder = 3
         end
         object fAddressButton: TSpeedButton
-          Left = 366
+          Left = 1664
           Height = 32
           Top = 44
           Width = 34
@@ -106,7 +109,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = '...'
         end
         object fHardwareSourceSetupBtn: TSpeedButton
-          Left = 404
+          Left = 1702
           Height = 32
           Hint = 'Настройка аппаратного источника'
           Top = 44
@@ -117,21 +120,22 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbDescription: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 86
-          Width = 55
+          Width = 65
           Caption = 'Описание'
+          ParentColor = False
         end
         object fDescriptionEdit: TEdit
           Left = 72
-          Height = 23
+          Height = 31
           Top = 82
-          Width = 436
+          Width = 1734
           Anchors = [akTop, akLeft, akRight]
           TabOrder = 4
         end
         object fDescriptionEditBtn: TSpeedButton
-          Left = 516
+          Left = 1814
           Height = 32
           Top = 78
           Width = 34
@@ -140,17 +144,18 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbFrequency: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 124
-          Width = 86
+          Width = 97
           Caption = 'Частота опроса'
+          ParentColor = False
         end
         object fFrequencyCombo: TComboBox
           Left = 132
-          Height = 23
+          Height = 31
           Top = 120
           Width = 128
-          ItemHeight = 15
+          ItemHeight = 0
           Items.Strings = (
             '100.0'
             '1000.0'
@@ -161,16 +166,17 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbHz: TLabel
           Left = 268
-          Height = 15
+          Height = 19
           Top = 124
-          Width = 13
+          Width = 14
           Caption = 'Гц'
+          ParentColor = False
         end
         object fDetachedSourceLabel: TLabel
           Left = 72
-          Height = 15
+          Height = 19
           Top = 152
-          Width = 220
+          Width = 269
           Caption = 'Внимание: источник данных отвязан!'
           Font.Color = clRed
           Font.Style = [fsBold]
@@ -183,45 +189,47 @@ object TagSettingsDialog: TTagSettingsDialog
         Left = 8
         Height = 78
         Top = 204
-        Width = 580
+        Width = 1876
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Диапазон значений'
         ClientHeight = 58
-        ClientWidth = 576
+        ClientWidth = 1874
         TabOrder = 1
         object lbMin: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 24
-          Width = 46
+          Width = 55
           Caption = 'Нижний'
+          ParentColor = False
         end
         object fMinEdit: TEdit
           Left = 72
-          Height = 23
+          Height = 31
           Top = 20
           Width = 90
           TabOrder = 0
         end
         object lbMax: TLabel
           Left = 210
-          Height = 15
+          Height = 19
           Top = 24
-          Width = 47
+          Width = 58
           Caption = 'Верхний'
+          ParentColor = False
         end
         object fMaxEdit: TEdit
           Left = 272
-          Height = 23
+          Height = 31
           Top = 20
           Width = 90
           TabOrder = 1
         end
         object fAutoRangeCheck: TCheckBox
-          Left = 480
-          Height = 19
+          Left = 1767
+          Height = 21
           Top = 22
-          Width = 44
+          Width = 55
           Anchors = [akTop, akRight]
           Caption = 'Авто'
           TabOrder = 2
@@ -231,30 +239,30 @@ object TagSettingsDialog: TTagSettingsDialog
         Left = 8
         Height = 74
         Top = 294
-        Width = 580
+        Width = 1876
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Аппаратная КХ'
         ClientHeight = 54
-        ClientWidth = 576
+        ClientWidth = 1874
         TabOrder = 2
         object fHardwareCurveCheck: TCheckBox
           Left = 8
-          Height = 17
+          Height = 21
           Top = 22
-          Width = 18
+          Width = 21
           TabOrder = 0
         end
         object fHardwareCurveEdit: TEdit
           Left = 30
-          Height = 23
+          Height = 31
           Top = 22
-          Width = 420
+          Width = 1718
           Anchors = [akTop, akLeft, akRight]
           ReadOnly = True
           TabOrder = 1
         end
         object fHardwareCurveSelectBtn: TSpeedButton
-          Left = 460
+          Left = 1758
           Height = 32
           Top = 16
           Width = 34
@@ -262,7 +270,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = '...'
         end
         object fHardwareCurveSetupBtn: TSpeedButton
-          Left = 498
+          Left = 1796
           Height = 32
           Top = 16
           Width = 34
@@ -270,7 +278,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'f/c'
         end
         object fHardwareCurveDownloadBtn: TSpeedButton
-          Left = 536
+          Left = 1834
           Height = 32
           Hint = 'Выгрузка из памяти ГХ'
           Top = 16
@@ -284,32 +292,32 @@ object TagSettingsDialog: TTagSettingsDialog
         Left = 8
         Height = 74
         Top = 380
-        Width = 580
+        Width = 1876
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Канальная ГХ'
         ClientHeight = 54
-        ClientWidth = 576
+        ClientWidth = 1874
         TabOrder = 3
         object fChannelCurveCheck: TCheckBox
           Left = 8
-          Height = 17
+          Height = 21
           Top = 22
-          Width = 18
+          Width = 21
           Checked = True
           State = cbChecked
           TabOrder = 0
         end
         object fChannelCurveEdit: TEdit
           Left = 30
-          Height = 23
+          Height = 31
           Top = 22
-          Width = 350
+          Width = 1648
           Anchors = [akTop, akLeft, akRight]
           ReadOnly = True
           TabOrder = 1
         end
         object fChannelCurveSelectBtn: TSpeedButton
-          Left = 390
+          Left = 1688
           Height = 32
           Top = 16
           Width = 34
@@ -317,7 +325,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = '...'
         end
         object fChannelCurveAddBtn: TSpeedButton
-          Left = 428
+          Left = 1726
           Height = 32
           Top = 16
           Width = 34
@@ -325,7 +333,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = '+'
         end
         object fChannelCurveDeleteBtn: TSpeedButton
-          Left = 466
+          Left = 1764
           Height = 32
           Top = 16
           Width = 34
@@ -333,7 +341,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'x'
         end
         object fChannelCurveEditBtn: TSpeedButton
-          Left = 504
+          Left = 1802
           Height = 32
           Top = 16
           Width = 34
@@ -346,7 +354,6 @@ object TagSettingsDialog: TTagSettingsDialog
         Height = 40
         Top = 462
         Width = 72
-        Anchors = [akTop, akLeft]
         BevelOuter = bvNone
         ClientHeight = 40
         ClientWidth = 72
@@ -357,9 +364,9 @@ object TagSettingsDialog: TTagSettingsDialog
           Hint = 'Балансировка нуля'
           Top = 4
           Width = 32
+          OnClick = ZeroBalanceButtonClick
           ShowHint = True
           ParentShowHint = False
-          OnClick = ZeroBalanceButtonClick
         end
         object fHardwareDeviceSetupBtn: TSpeedButton
           Left = 36
@@ -367,24 +374,25 @@ object TagSettingsDialog: TTagSettingsDialog
           Hint = 'Настройка аппаратной части'
           Top = 4
           Width = 32
+          OnClick = HardwareDeviceSetupButtonClick
           ShowHint = True
           ParentShowHint = False
-          OnClick = HardwareDeviceSetupButtonClick
         end
       end
-        object lbVirtualChannelInfo: TLabel
+      object lbVirtualChannelInfo: TLabel
         Left = 88
-        Height = 15
+        Height = 19
         Top = 510
-        Width = 179
+        Width = 209
         Caption = 'Настройка виртуального канала'
+        ParentColor = False
         Visible = False
       end
     end
     object tsAdditional: TTabSheet
       Caption = 'Дополнительно'
-      ClientHeight = 508
-      ClientWidth = 596
+      ClientHeight = 716
+      ClientWidth = 1892
       object gbEstimates: TGroupBox
         Left = 8
         Height = 250
@@ -392,86 +400,87 @@ object TagSettingsDialog: TTagSettingsDialog
         Width = 580
         Caption = 'Вычисляемые оценки'
         ClientHeight = 230
-        ClientWidth = 576
+        ClientWidth = 578
         TabOrder = 0
         object fEstimateCheckMO: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 20
-          Width = 292
+          Width = 344
           Caption = 'математическое ожидание (МО) precision: default'
           TabOrder = 0
         end
         object fEstimateCheckSKZ: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 38
-          Width = 324
+          Width = 385
           Caption = 'среднеквадратическое значение (СКЗ) precision: default'
           TabOrder = 1
         end
         object fEstimateCheckSKO: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 56
-          Width = 340
+          Width = 402
           Caption = 'среднеквадратическое отклонение (СКО) precision: default'
           TabOrder = 2
         end
         object fEstimateCheckPeak: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 74
-          Width = 204
+          Width = 240
           Caption = 'амплитуда (Пик) precision: default'
           TabOrder = 3
         end
         object fEstimateCheckPeakPeak: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 92
-          Width = 211
+          Width = 246
           Caption = 'размах (Пик-Пик) precision: default'
           TabOrder = 4
         end
         object fEstimateCheckMin: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 110
-          Width = 313
+          Width = 370
           Caption = 'Минимальное значение (Минимум) precision: default'
           TabOrder = 5
         end
         object fEstimateCheckMax: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 128
-          Width = 321
+          Width = 376
           Caption = 'Максимальное значение (Максимум) precision: default'
           TabOrder = 6
         end
         object fEstimateCheckPeakPeakByRms: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 146
-          Width = 450
+          Width = 524
           Caption = 'Размах по среднеквадратическому отклонению (ПП по СКО) precision: default'
           TabOrder = 7
         end
       end
       object lbDefaultEstimate: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 274
-        Width = 127
+        Width = 146
         Caption = 'Оценка по умолчанию'
+        ParentColor = False
       end
       object fDefaultEstimateCombo: TComboBox
         Left = 150
-        Height = 23
+        Height = 35
         Top = 270
         Width = 430
-        ItemHeight = 15
+        ItemHeight = 0
         Style = csDropDownList
         TabOrder = 1
       end
@@ -481,22 +490,23 @@ object TagSettingsDialog: TTagSettingsDialog
         Top = 306
         Width = 200
         Caption = 'Длина порции'
-        ClientHeight = 38
-        ClientWidth = 196
+        ClientHeight = 56
+        ClientWidth = 198
         TabOrder = 2
         object fPortionLengthEdit: TEdit
           Left = 12
-          Height = 23
+          Height = 31
           Top = 22
           Width = 104
           TabOrder = 0
         end
         object lbPortionUnit: TLabel
           Left = 124
-          Height = 15
+          Height = 19
           Top = 26
-          Width = 49
+          Width = 58
           Caption = 'отсчетов'
+          ParentColor = False
         end
       end
       object gbSmoothing: TGroupBox
@@ -506,19 +516,19 @@ object TagSettingsDialog: TTagSettingsDialog
         Width = 316
         Caption = 'Усреднение y''=kx+(1-k)y'
         ClientHeight = 38
-        ClientWidth = 272
+        ClientWidth = 314
         TabOrder = 3
         object fSmoothingCheck: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 24
-          Width = 32
+          Width = 39
           Caption = 'k='
           TabOrder = 0
         end
         object fSmoothingKEdit: TEdit
           Left = 62
-          Height = 23
+          Height = 31
           Top = 22
           Width = 92
           TabOrder = 1
@@ -531,13 +541,13 @@ object TagSettingsDialog: TTagSettingsDialog
         Width = 580
         Caption = 'Свойства канала'
         ClientHeight = 54
-        ClientWidth = 576
+        ClientWidth = 578
         TabOrder = 4
         object fScadaCheck: TCheckBox
           Left = 16
-          Height = 19
+          Height = 21
           Top = 22
-          Width = 56
+          Width = 66
           Caption = 'SCADA'
           TabOrder = 0
         end
@@ -545,8 +555,8 @@ object TagSettingsDialog: TTagSettingsDialog
     end
     object tsSetpoints: TTabSheet
       Caption = 'Уставки'
-      ClientHeight = 508
-      ClientWidth = 596
+      ClientHeight = 716
+      ClientWidth = 1892
       object pnSetpoint0: TPanel
         Left = 16
         Height = 78
@@ -558,9 +568,9 @@ object TagSettingsDialog: TTagSettingsDialog
         TabOrder = 0
         object lbSetpointName0: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 8
-          Width = 115
+          Width = 138
           Caption = 'Верхняя аварийная'
           Font.Style = [fsBold]
           ParentColor = False
@@ -568,9 +578,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointEnabledCheck0: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 34
-          Width = 38
+          Width = 48
           Caption = 'Вкл'
           TabOrder = 0
         end
@@ -586,16 +596,16 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointThresholdEdit0: TEdit
           Left = 246
-          Height = 23
+          Height = 31
           Top = 10
           Width = 72
           TabOrder = 2
         end
         object lbSetpointText0_1: TLabel
           Left = 68
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 103
+          Width = 126
           Caption = 'Запись: выкл'#13#10'Звук: выкл.'#13#10'Брать из: значение'
           Font.Color = clBlue
           ParentColor = False
@@ -603,9 +613,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbSetpointText0_2: TLabel
           Left = 332
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 83
+          Width = 99
           Caption = 'Выдать в:'#13#10'Значение: 1'#13#10'Гистерезис: 0%'
           Font.Color = clBlue
           ParentColor = False
@@ -631,9 +641,9 @@ object TagSettingsDialog: TTagSettingsDialog
         TabOrder = 1
         object lbSetpointName1: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 8
-          Width = 169
+          Width = 204
           Caption = 'Верхняя предупредительная'
           Font.Style = [fsBold]
           ParentColor = False
@@ -641,9 +651,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointEnabledCheck1: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 34
-          Width = 38
+          Width = 48
           Caption = 'Вкл'
           TabOrder = 0
         end
@@ -659,16 +669,16 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointThresholdEdit1: TEdit
           Left = 246
-          Height = 23
+          Height = 31
           Top = 10
           Width = 72
           TabOrder = 2
         end
         object lbSetpointText1_1: TLabel
           Left = 68
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 103
+          Width = 126
           Caption = 'Запись: выкл'#13#10'Звук: выкл.'#13#10'Брать из: значение'
           Font.Color = clBlue
           ParentColor = False
@@ -676,9 +686,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbSetpointText1_2: TLabel
           Left = 332
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 83
+          Width = 99
           Caption = 'Выдать в:'#13#10'Значение: 1'#13#10'Гистерезис: 0%'
           Font.Color = clBlue
           ParentColor = False
@@ -704,9 +714,9 @@ object TagSettingsDialog: TTagSettingsDialog
         TabOrder = 2
         object lbSetpointName2: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 8
-          Width = 167
+          Width = 203
           Caption = 'Нижняя предупредительная'
           Font.Style = [fsBold]
           ParentColor = False
@@ -714,9 +724,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointEnabledCheck2: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 34
-          Width = 38
+          Width = 48
           Caption = 'Вкл'
           TabOrder = 0
         end
@@ -732,16 +742,16 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointThresholdEdit2: TEdit
           Left = 246
-          Height = 23
+          Height = 31
           Top = 10
           Width = 72
           TabOrder = 2
         end
         object lbSetpointText2_1: TLabel
           Left = 68
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 103
+          Width = 126
           Caption = 'Запись: выкл'#13#10'Звук: выкл.'#13#10'Брать из: значение'
           Font.Color = clBlue
           ParentColor = False
@@ -749,9 +759,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbSetpointText2_2: TLabel
           Left = 332
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 83
+          Width = 99
           Caption = 'Выдать в:'#13#10'Значение: 1'#13#10'Гистерезис: 0%'
           Font.Color = clBlue
           ParentColor = False
@@ -777,9 +787,9 @@ object TagSettingsDialog: TTagSettingsDialog
         TabOrder = 3
         object lbSetpointName3: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 8
-          Width = 113
+          Width = 137
           Caption = 'Нижняя аварийная'
           Font.Style = [fsBold]
           ParentColor = False
@@ -787,9 +797,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointEnabledCheck3: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 34
-          Width = 38
+          Width = 48
           Caption = 'Вкл'
           TabOrder = 0
         end
@@ -805,16 +815,16 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointThresholdEdit3: TEdit
           Left = 246
-          Height = 23
+          Height = 31
           Top = 10
           Width = 72
           TabOrder = 2
         end
         object lbSetpointText3_1: TLabel
           Left = 68
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 103
+          Width = 126
           Caption = 'Запись: выкл'#13#10'Звук: выкл.'#13#10'Брать из: значение'
           Font.Color = clBlue
           ParentColor = False
@@ -822,9 +832,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object lbSetpointText3_2: TLabel
           Left = 332
-          Height = 45
+          Height = 57
           Top = 34
-          Width = 83
+          Width = 99
           Caption = 'Выдать в:'#13#10'Значение: 1'#13#10'Гистерезис: 0%'
           Font.Color = clBlue
           ParentColor = False
@@ -850,9 +860,9 @@ object TagSettingsDialog: TTagSettingsDialog
         TabOrder = 4
         object lbSetpointAddName: TLabel
           Left = 12
-          Height = 15
+          Height = 19
           Top = 8
-          Width = 92
+          Width = 112
           Caption = 'Дополнительно'
           Font.Style = [fsBold]
           ParentColor = False
@@ -860,17 +870,17 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointHysteresisCheck: TCheckBox
           Left = 198
-          Height = 19
+          Height = 21
           Top = 8
-          Width = 104
+          Width = 128
           Caption = 'Вкл. гистерезис'
           TabOrder = 0
         end
         object fSetpointStatusChannelCheck: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 34
-          Width = 159
+          Width = 187
           Caption = 'Канал состояния уставки:'
           Color = clDefault
           Font.Color = clBlue
@@ -880,9 +890,9 @@ object TagSettingsDialog: TTagSettingsDialog
         end
         object fSetpointSoundCheck: TCheckBox
           Left = 12
-          Height = 19
+          Height = 21
           Top = 58
-          Width = 265
+          Width = 316
           Caption = 'Прослушать звуковое оповещение до конца'
           TabOrder = 2
         end
@@ -892,12 +902,12 @@ object TagSettingsDialog: TTagSettingsDialog
   object pnBottom: TPanel
     Left = 0
     Height = 42
-    Top = 598
-    Width = 620
+    Top = 809
+    Width = 1918
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 620
+    ClientWidth = 1918
     TabOrder = 1
     object btnOk: TButton
       Left = 376
