@@ -9,6 +9,8 @@
   - [x] Добавить защиту публикации: явно некорректный raw payload заменяется последним хорошим блоком до декоммутации, при этом `num_buff`, `readGaps`, `publishGaps` и `mdpResync` продолжают контролироваться
   - [x] Найти источник оставшегося `corruptRead/corruptPublish` при `readGaps=0`, `publishGaps=0`, `mdpResync=0`
   - [x] Добиться PASS для `Tools/mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0`
+  - [x] Рефакторинг тайминга: машина состояний device, один `WaitFor(DataUpdateMs)` на цикл read-thread, без `Sleep`/warmup/settle (см. `Docs/mic140_legacy_scan_stream.md` §3.5)
+  - [x] Стабильный PASS `mic140_preview_eval.ps1 -Seconds 40` (`corruptRead=0`) — 25.06.2026 после снятия `fAutoPreviewExtraTicks`
   - [ ] Будущая доработка: вернуть TIn/CJC только после точного совпадения с оригинальным портом, не ломая `scanStride=48` для AIn
 
 - [x] Рефакторинг (очистка) от лишних преобразований строк

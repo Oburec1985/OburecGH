@@ -24,7 +24,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
-  uRecorderMic140DataSource, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderMic140DataSource, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderCommandImages;
 
@@ -1424,6 +1424,7 @@ begin
     begin
       lTag.Address := Trim(fModuleEdit.Text);
       lTag.SourceId := 'Mera file: ' + fSelectedMeraFileName;
+      RecorderTagClearMic140Settings(lTag);
     end;
     if Trim(fUnitCombo.Text) <> '' then
       lTag.UnitName := Trim(fUnitCombo.Text);
@@ -1537,6 +1538,8 @@ begin
       lTag.SetpointSoundUntilEnd := fSetpointSoundCheck.Checked;
     if fSetpointStatusChannelCheck.State <> cbGrayed then
       lTag.SetpointStatusChannelEnabled := fSetpointStatusChannelCheck.Checked;
+    if not RecorderTagUsesMic140Settings(lTag) then
+      RecorderTagClearMic140Settings(lTag);
   end;
 end;
 

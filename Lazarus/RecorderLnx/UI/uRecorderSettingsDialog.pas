@@ -28,7 +28,9 @@ uses
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderMic140DataSource, uRecorderMic140LegacyProtocol,
+  uRecorderMic140LegacyTiming,
   uRecorderMic140SettingsDialog, uRecorderMic140Utils,
+  uRecorderMic140DeviceConfig,
   uRecorderMeraSdbThermocouples, uRecorderMeraPaths, uRecorderTagBalance;
 
 type
@@ -151,7 +153,6 @@ type
     fMeraFileName: string;                      // Имя импортированного Mera-файла
     fMeraSignals: TList;                        // Список TMeraSignalInfo, загруженных из файла
     fMic140Signals: TList;                      // Список сигналов MIC-140
-    fMic140SourceConfigs: TStringList;          // Настройки каналов MIC-140 по SourceId
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
@@ -452,8 +453,6 @@ begin
   inherited Create(AOwner);
   fMeraSignals := TList.Create;
   fMic140Signals := TList.Create;
-  fMic140SourceConfigs := TStringList.Create;
-  fMic140SourceConfigs.OwnsObjects := True;
   fSelectedChannelTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -541,7 +540,6 @@ destructor TRecorderSettingsDialog.Destroy;
 begin
   ClearMeraSignals;
   ClearMic140Signals;
-  fMic140SourceConfigs.Free;
   fFrequencyBands.Free;
   fSpectrumConfigTree.Free;
   fSelectedChannelTags.Free;
@@ -662,6 +660,8 @@ begin
     ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
       [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######', ASignal.FrequencyHz),
       ExtractFileName(ASignal.FileName)]);
+  if not RecorderTagUsesMic140Settings(ATag) then
+    RecorderTagClearMic140Settings(ATag);
 end;
 
 function TRecorderSettingsDialog.SignalSourceId(ASignal: TMeraSignalInfo): string;
@@ -1812,91 +1812,9 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.RebuildMic140SourceConfigsFromTags;
-var
-  I: Integer;
-  J: Integer;
-  lCalibrSerial: Integer;
-  lCh: Integer;
-  lConfig: TRecorderMic140SourceConfig;
-  lHost: string;
-  lHostOctet: Integer;
-  lPort: Word;
-  lResult: TRecorderMic140DialogResult;
-  lSourceId: string;
-  lSources: TStringList;
-  lTag: TRecorderTag;
 begin
-  if fTagRegistry = nil then
-    Exit;
-
-  fMic140SourceConfigs.Clear;
-  lSources := TStringList.Create;
-  try
-    lSources.CaseSensitive := False;
-    for I := 0 to fTagRegistry.TagCount - 1 do
-    begin
-      lTag := fTagRegistry.Tags[I];
-      if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) and
-        (lSources.IndexOf(lTag.SourceId) < 0) then
-        lSources.Add(lTag.SourceId);
-    end;
-    for I := 0 to fTagRegistry.ActiveSourceCount - 1 do
-    begin
-      lSourceId := fTagRegistry.ActiveSourceIds[I];
-      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) and
-        (lSources.IndexOf(lSourceId) < 0) then
-        lSources.Add(lSourceId);
-    end;
-
-    for I := 0 to lSources.Count - 1 do
-    begin
-      lSourceId := lSources[I];
-      if not TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
-        Continue;
-      InitRecorderMic140DialogResult(lResult);
-      try
-        lResult.Host := lHost;
-        lResult.Port := lPort;
-        for J := 0 to fTagRegistry.TagCount - 1 do
-        begin
-          lTag := fTagRegistry.Tags[J];
-          if not SameText(lTag.SourceId, lSourceId) then
-            Continue;
-          if ParseMic140ChannelNumber(lTag.Address, lCh) then
-          begin
-            if lResult.SelectedChannels.IndexOf(IntToStr(lCh)) < 0 then
-              lResult.SelectedChannels.Add(IntToStr(lCh));
-            if lTag.Mic140DeviceSerial > 0 then
-              lResult.DeviceSerial := lTag.Mic140DeviceSerial;
-            // Source settings are rebuilt from persisted tags whenever the
-            // main settings dialog is created again.
-            lResult.ThermoCompensationEnabled :=
-              lResult.ThermoCompensationEnabled or
-              lTag.Mic140ThermoCompensationEnabled;
-            if lCh > lResult.ChannelCount then
-              lResult.ChannelCount := MIC140MaxChannelCount;
-            if (lCh > 0) and (lCh <= Length(lResult.ChannelSettings)) then
-              RecorderMic140RestoreChannelSettingsFromTag(fTagRegistry, lTag,
-                lResult.ChannelSettings[lCh - 1]);
-          end;
-        end;
-        if (lResult.DeviceSerial <= 0) or
-           (RecorderMic140HostLastOctet(lHost, lHostOctet) and
-            (lResult.DeviceSerial = lHostOctet)) then
-        begin
-          lCalibrSerial := 0;
-          if RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lCalibrSerial) then
-            lResult.DeviceSerial := lCalibrSerial;
-        end;
-        lConfig := EnsureRecorderMic140SourceConfig(fMic140SourceConfigs, lSourceId);
-        lConfig.LoadFromResult(lResult);
-      finally
-        DoneRecorderMic140DialogResult(lResult);
-      end;
-    end;
-  finally
-    lSources.Free;
-  end;
+  if fTagRegistry <> nil then
+    RecorderMic140RebuildDeviceConfigsFromTags(fTagRegistry);
 end;
 
 procedure TRecorderSettingsDialog.RestoreMic140SignalsFromTags;
@@ -1941,7 +1859,7 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
-      lConfig := FindRecorderMic140SourceConfig(fMic140SourceConfigs, lSourceId);
+      lConfig := FindRecorderMic140DeviceConfig(fTagRegistry, lSourceId);
       if lConfig <> nil then
       begin
         BuildMic140Signals(lSourceId, lConfig.ChannelCount, lConfig.SelectedChannels,
@@ -2128,10 +2046,10 @@ begin
   if fTagRegistry = nil then
     Exit;
   SyncMeraFilesPathFromUi;
-  if not ApplyRecorderMic140SourceDialog(Self, fTagRegistry, fMic140SourceConfigs,
-    ASourceId, lNewSourceId) then
+  if not ApplyRecorderMic140SourceDialog(Self, fTagRegistry,
+    fTagRegistry.Mic140DeviceConfigs, ASourceId, lNewSourceId) then
     Exit;
-  lConfig := FindRecorderMic140SourceConfig(fMic140SourceConfigs, lNewSourceId);
+  lConfig := FindRecorderMic140DeviceConfig(fTagRegistry, lNewSourceId);
   if lConfig <> nil then
     BuildMic140Signals(lNewSourceId, lConfig.ChannelCount,
       lConfig.SelectedChannels, lConfig.ChannelSettings, lConfig.DeviceSerial);

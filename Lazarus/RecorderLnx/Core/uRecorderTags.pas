@@ -375,6 +375,7 @@ type
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
     fFrequencyBands: TRecorderFrequencyBandList;
+    fMic140DeviceConfigs: TStringList;
     function GetActiveSourceCount: Integer;
     function GetActiveSourceId(AIndex: Integer): string;
     function GetSelectedTag: TRecorderTag;
@@ -448,6 +449,7 @@ type
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
     property FrequencyBands: TRecorderFrequencyBandList read fFrequencyBands;
+    property Mic140DeviceConfigs: TStringList read fMic140DeviceConfigs;
     property Tags[AIndex: Integer]: TRecorderTag read GetTag;
   end;
 
@@ -484,11 +486,13 @@ function RecorderNormalizeTagSourceId(const ASourceId: string): string;
 function RecorderIsDetachedTagSource(const ASourceId: string): Boolean;
 function RecorderIsVirtualTagSource(const ASourceId: string): Boolean;
 function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
+function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
+procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 
 implementation
 
 uses
-  StrUtils, uRecorderDebugLog;
+  StrUtils, uRecorderDebugLog, uRecorderMic140DeviceConfig;
 
 const
   CTagThermocoupleInverseMinMv = -20.0;
@@ -1080,11 +1084,15 @@ begin
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
+  fMic140DeviceConfigs := TStringList.Create;
+  fMic140DeviceConfigs.OwnsObjects := True;
+  fMic140DeviceConfigs.CaseSensitive := False;
 end;
 
 destructor TRecorderTagRegistry.Destroy;
 begin
   Clear;
+  fMic140DeviceConfigs.Free;
   fFrequencyBands.Free;
   fSpectrumConfigs.Free;
   fCalibrations.Free;
@@ -1202,11 +1210,19 @@ end;
 
 function TRecorderTagRegistry.FindTagHardwareCalibration(
   ATag: TRecorderTag): TRecorderCalibration;
+var
+  lName: string;
 begin
   Result := nil;
-  if (ATag = nil) or (not ATag.HardwareCalibrationEnabled) then
+  if ATag = nil then
     Exit;
-  if Trim(ATag.HardwareCalibrationName) <> '' then
+  if RecorderMic140TagHardwareCalibrationEnabled(Self, ATag) then
+  begin
+    lName := RecorderMic140TagHardwareCalibrationName(Self, ATag);
+    if Trim(lName) <> '' then
+      Exit(FindCalibrationByName(lName));
+  end;
+  if ATag.HardwareCalibrationEnabled and (Trim(ATag.HardwareCalibrationName) <> '') then
     Result := FindCalibrationByName(ATag.HardwareCalibrationName);
 end;
 
@@ -1347,6 +1363,27 @@ end;
 function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
 begin
   Result := Pos(CMic140TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and RecorderIsHardwareMic140TagSource(ATag.SourceId);
+end;
+
+procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
+begin
+  if ATag = nil then
+    Exit;
+  ATag.MeasRangeIndex := 0;
+  ATag.HardwareCalibrationEnabled := False;
+  ATag.HardwareCalibrationName := '';
+  ATag.Mic140DeviceSerial := 0;
+  ATag.Mic140ThermoCompensationEnabled := False;
+  ATag.Mic140CjcDefault := True;
+  ATag.Mic140CjcChannel := 0;
+  ATag.Mic140ThermocoupleScaleName := '';
+  ATag.Mic140ThermocoupleScalePath := '';
+  ATag.Mic140SoftBalance := 0;
 end;
 
 procedure TRecorderTagRegistry.RefreshActiveSourcesFromTags;
@@ -1540,6 +1577,7 @@ begin
   for I := 0 to fTags.Count - 1 do
     TObject(fTags[I]).Free;
   fTags.Clear;
+  fMic140DeviceConfigs.Clear;
   fSelectedTagName := '';
   fNextId := 1;
 end;

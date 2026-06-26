@@ -1,51 +1,51 @@
-2026-06-25 15:04:11.307 [DEBUG] [TID:17160|UIThread] 15:04:11.306 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-06-25 15:04:11.377 [WARNING] [TID:17160|UIThread] [MIC-140:192.168.14.155:4000] Legacy MIC-140 scan programmed: channels=48 scanStride=48 chanDumpCount=48 chanPtrs=96 descSlots=49 freq=10,000 Hz timerScale=1 timerPeriod=640 scanDivider=5000 wait=57,000 us ground=19,625 us avgPeriod=5,000 us avgCount=4 sportWait=606 sportGround=8 sportAvg=48 fifoBegin=0x0522 fifoEnd=0x07FF fifoReadyWords=96 fifoCapacityWords=192
-2026-06-25 15:04:11.388 [WARNING] [TID:17160|UIThread] [MIC-140:192.168.14.155:4000] Legacy CC BIOS scan start accepted: command=80 attempt=1 probe=False
-2026-06-25 15:04:11.389 [WARNING] [TID:2496|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=3 started
-2026-06-25 15:04:11.588 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy first scan: readSerial=1 num_buff=1 sincePrevMs=0 dataWords=96 stride=48 h=[0,106,0,0,0,0,10007,26602,1,0] d0=[58245,58119,58595,57982,58084,58059,58629,58047] d1=[57976,58099,58019,58608,57943,58074,58077,58617]
-2026-06-25 15:04:11.589 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=1 samples=2 stride=51 rate=10,000 Hz
-2026-06-25 15:04:11.593 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block1 channels: T_01 raw=-7291 mV=-7291,0; MIC140_02 raw=-7417 mV=-7417,0; MIC140_03 raw=-6941 mV=-6941,0; MIC140_04 raw=-7554 mV=-7554,0; MIC140_05 raw=-7452 mV=-7452,0; MIC140_06 raw=-7477 mV=-7477,0; MIC140_07 raw=-6907 mV=-6907,0; MIC140_08 raw=-7489 mV=-7489,0; MIC140_12 raw=-7574 mV=-7574,0; MIC140_24 raw=-7537 mV=-7537,0
-2026-06-25 15:04:11.598 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream: published=1 read=1 num_buff=1 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 ring=0 mdpResync=0
-2026-06-25 15:04:11.792 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=2 num_buff=2 sincePrevMs=203 time_hi=0 time_lo=20006 mdpWords=106 d0=[58617,57939,47321,48128] d1=[48093,57391,51401,41597] corrupt=False
-2026-06-25 15:04:11.792 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block2 published d0=[-6919,-7597,-18215,-17408]
-2026-06-25 15:04:11.997 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=3 num_buff=3 words=96
-2026-06-25 15:04:11.997 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=3 num_buff=3 sincePrevMs=203 time_hi=0 time_lo=28392 mdpWords=106 d0=[58617,57939,47321,48128] d1=[48093,57391,51401,41597] corrupt=False
-2026-06-25 15:04:12.001 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block3 published d0=[-6919,-7597,-18215,-17408]
-2026-06-25 15:04:12.215 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=4 num_buff=4 sincePrevMs=219 time_hi=0 time_lo=36895 mdpWords=106 d0=[58009,58613,57943,58042] d1=[58043,58566,57939,32768] corrupt=False
-2026-06-25 15:04:12.215 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block4 published d0=[-7527,-6923,-7593,-7494]
-2026-06-25 15:04:12.421 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=5 num_buff=5 sincePrevMs=203 time_hi=0 time_lo=46656 mdpWords=106 d0=[57954,58039,58137,58579] d1=[57925,58076,58052,58579] corrupt=False
-2026-06-25 15:04:12.421 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block5 published d0=[-7582,-7497,-7399,-6957]
-2026-06-25 15:04:12.624 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=6 num_buff=6 words=96
-2026-06-25 15:04:12.624 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=6 num_buff=6 sincePrevMs=203 time_hi=0 time_lo=55149 mdpWords=106 d0=[57954,58039,58137,58579] d1=[57925,58076,58052,58579] corrupt=False
-2026-06-25 15:04:12.628 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block6 published d0=[-7582,-7497,-7399,-6957]
-2026-06-25 15:04:12.843 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=7 num_buff=7 sincePrevMs=219 time_hi=0 time_lo=65139 mdpWords=106 d0=[59076,58324,58044,58620] d1=[57983,58011,58082,58556] corrupt=False
-2026-06-25 15:04:12.843 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block7 published d0=[-6460,-7212,-7492,-6916]
-2026-06-25 15:04:13.044 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=8 num_buff=8 sincePrevMs=203 time_hi=1 time_lo=9594 mdpWords=106 d0=[32767,32767,59026,58275] d1=[58134,58589,57954,58056] corrupt=False
-2026-06-25 15:04:13.046 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block8 published d0=[32767,32767,-6510,-7261]
-2026-06-25 15:04:13.261 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=9 num_buff=9 words=96
-2026-06-25 15:04:13.261 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=9 num_buff=9 sincePrevMs=219 time_hi=1 time_lo=19584 mdpWords=106 d0=[32767,32767,59026,58275] d1=[58134,58589,57954,58056] corrupt=False
-2026-06-25 15:04:13.266 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block9 published d0=[32767,32767,-6510,-7261]
-2026-06-25 15:04:13.466 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=10 num_buff=10 sincePrevMs=203 time_hi=1 time_lo=29575 mdpWords=106 d0=[59203,32768,10605,32767] d1=[58050,58582,57964,58088] corrupt=False
-2026-06-25 15:04:13.466 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block10 published d0=[-6333,-32768,10605,32767]
-2026-06-25 15:04:13.668 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=11 num_buff=11 sincePrevMs=203 time_hi=1 time_lo=39566 mdpWords=106 d0=[58685,49934,58676,32768] d1=[58023,58066,58050,58616] corrupt=False
-2026-06-25 15:04:13.668 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block11 published d0=[-6851,-15602,-6860,-32768]
-2026-06-25 15:04:13.871 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=12 num_buff=12 words=96
-2026-06-25 15:04:13.871 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=12 num_buff=12 sincePrevMs=203 time_hi=1 time_lo=49555 mdpWords=106 d0=[58685,49934,58676,32768] d1=[58023,58066,58050,58616] corrupt=False
-2026-06-25 15:04:13.875 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block12 published d0=[-6851,-15602,-6860,-32768]
-2026-06-25 15:04:14.088 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=13 num_buff=13 sincePrevMs=219 time_hi=1 time_lo=59546 mdpWords=106 d0=[58245,58354,58828,42323] d1=[57974,58104,58076,58608] corrupt=False
-2026-06-25 15:04:14.089 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block13 published d0=[-7291,-7182,-6708,-23213]
-2026-06-25 15:04:14.292 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=14 num_buff=14 sincePrevMs=203 time_hi=2 time_lo=4001 mdpWords=106 d0=[57948,32768,58151,58302] d1=[58041,58600,57938,58080] corrupt=False
-2026-06-25 15:04:14.292 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block14 published d0=[-7588,-32768,-7385,-7234]
-2026-06-25 15:04:14.497 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=15 num_buff=15 words=96
-2026-06-25 15:04:14.497 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=15 num_buff=15 sincePrevMs=203 time_hi=2 time_lo=13991 mdpWords=106 d0=[57948,32768,58151,58302] d1=[58041,58600,57938,58080] corrupt=False
-2026-06-25 15:04:14.503 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block15 published d0=[-7588,-32768,-7385,-7234]
-2026-06-25 15:04:15.119 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=18 num_buff=18 words=96
-2026-06-25 15:04:15.528 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=20 samples=2 stride=51 rate=10,000 Hz
-2026-06-25 15:04:15.529 [WARNING] [TID:13472] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream: published=20 read=20 num_buff=20 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 ring=0 mdpResync=0
-2026-06-25 15:04:15.728 [WARNING] [TID:6728] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=21 num_buff=21 words=96
-2026-06-25 15:04:16.339 [WARNING] [TID:2496|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream stop: published=23 read=23 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 ringDropped=0 mdpResync=0
-2026-06-25 15:04:16.339 [WARNING] [TID:2496|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan begin: command=81 timeout=5000 ms readBlocks=23
-2026-06-25 15:04:16.347 [WARNING] [TID:2496|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan completed: readBlocks=23 lastNumBuff=23 readGaps=0 dupRead=0 corruptRead=0 mdpResync=0
-2026-06-25 15:04:16.353 [WARNING] [TID:2496|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
-2026-06-25 15:04:30.553 [WARNING] [TID:17160|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream stop: published=23 read=0 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 ringDropped=0 mdpResync=0
-2026-06-25 15:04:30.553 [WARNING] [TID:17160|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-06-26 16:03:55.058 [DEBUG] [TID:1232|UIThread] 16:03:55.056 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-06-26 16:03:55.132 [WARNING] [TID:1232|UIThread] [MIC-140:192.168.14.155:4000] Legacy MIC-140 scan programmed: channels=48 scanStride=48 chanDumpCount=48 chanPtrs=96 descSlots=49 freq=10,000 Hz timerScale=1 timerPeriod=640 scanDivider=5000 wait=57,000 us ground=19,625 us avgPeriod=5,000 us avgCount=4 sportWait=606 sportGround=8 sportAvg=48 fifoBegin=0x0522 fifoEnd=0x07FF fifoReadyWords=96 fifoCapacityWords=192
+2026-06-26 16:03:55.139 [WARNING] [TID:1232|UIThread] [MIC-140:192.168.14.155:4000] Legacy CC BIOS scan start accepted: command=80 attempt=1 probe=False
+2026-06-26 16:03:55.145 [WARNING] [TID:6360|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=3 started
+2026-06-26 16:03:55.355 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=1 num_buff=1 sincePrevMs=0 corrupt=False
+2026-06-26 16:03:55.355 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=1 samples=2 stride=51 rate=10,000 Hz
+2026-06-26 16:03:55.361 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block1 channels: T_01 raw=-7626 mV=-7626,0; MIC140_02 raw=-7558 mV=-7558,0; MIC140_03 raw=-6962 mV=-6962,0; MIC140_04 raw=-7591 mV=-7591,0; MIC140_05 raw=-7591 mV=-7591,0; MIC140_06 raw=-7529 mV=-7529,0; MIC140_07 raw=-6938 mV=-6938,0; MIC140_08 raw=-7530 mV=-7530,0; MIC140_12 raw=-7538 mV=-7538,0; MIC140_24 raw=-7577 mV=-7577,0
+2026-06-26 16:03:55.365 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream: published=1 read=1 num_buff=1 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 ring=0 mdpResync=0
+2026-06-26 16:03:55.559 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=2 num_buff=2 sincePrevMs=204 corrupt=False
+2026-06-26 16:03:55.559 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block2 published d0=[-19772,-20117,-19138,-19634]
+2026-06-26 16:03:55.765 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=3 num_buff=3 words=96
+2026-06-26 16:03:55.765 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=3 num_buff=3 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:55.774 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block3 published d0=[-19772,-20117,-19138,-19634]
+2026-06-26 16:03:55.986 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=4 num_buff=4 words=96
+2026-06-26 16:03:55.986 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=4 num_buff=4 sincePrevMs=218 corrupt=False
+2026-06-26 16:03:55.992 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block4 published d0=[-19772,-20117,-19138,-19634]
+2026-06-26 16:03:56.192 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=5 num_buff=5 sincePrevMs=219 corrupt=False
+2026-06-26 16:03:56.192 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block5 published d0=[-7473,-7400,-6914,-7566]
+2026-06-26 16:03:56.396 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=6 num_buff=6 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:56.396 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block6 published d0=[-9987,-12254,22363,641]
+2026-06-26 16:03:56.600 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=7 num_buff=7 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:56.600 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block7 published d0=[-7535,-7465,-6967,-7553]
+2026-06-26 16:03:56.806 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=8 num_buff=8 words=96
+2026-06-26 16:03:56.806 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=8 num_buff=8 sincePrevMs=204 corrupt=False
+2026-06-26 16:03:56.812 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block8 published d0=[-7535,-7465,-6967,-7553]
+2026-06-26 16:03:57.013 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=9 num_buff=9 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:57.013 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block9 published d0=[-7454,-7409,-6928,-7563]
+2026-06-26 16:03:57.215 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=10 num_buff=10 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:57.215 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block10 published d0=[-7187,-7503,-6959,-7565]
+2026-06-26 16:03:57.421 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=11 num_buff=11 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:57.421 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block11 published d0=[-9987,-12254,22363,641]
+2026-06-26 16:03:57.626 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=12 num_buff=12 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:57.626 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block12 published d0=[-19691,-6898,-19665,32767]
+2026-06-26 16:03:57.833 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=13 num_buff=13 words=96
+2026-06-26 16:03:57.833 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=13 num_buff=13 sincePrevMs=219 corrupt=False
+2026-06-26 16:03:57.838 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block13 published d0=[-19691,-6898,-19665,32767]
+2026-06-26 16:03:58.038 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=14 num_buff=14 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:58.038 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block14 published d0=[6868,6356,-6637,30024]
+2026-06-26 16:03:58.242 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan: readSerial=15 num_buff=15 sincePrevMs=203 corrupt=False
+2026-06-26 16:03:58.242 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block15 published d0=[7080,6366,-7171,-20253]
+2026-06-26 16:03:58.854 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=18 num_buff=18 words=96
+2026-06-26 16:03:59.265 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 block=20 samples=2 stride=51 rate=10,000 Hz
+2026-06-26 16:03:59.265 [WARNING] [TID:6800] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream: published=20 read=20 num_buff=20 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 ring=0 mdpResync=0
+2026-06-26 16:03:59.881 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=23 num_buff=23 words=96
+2026-06-26 16:04:00.902 [WARNING] [TID:12164] [MIC-140:192.168.14.155:4000] Legacy scan payload replaced with last good block: readSerial=28 num_buff=28 words=96
+2026-06-26 16:04:01.125 [WARNING] [TID:6360|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream stop: published=29 read=29 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 bufferDropped=0 mdpResync=0
+2026-06-26 16:04:01.125 [WARNING] [TID:6360|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan begin: command=81 timeout=5000 ms readBlocks=29
+2026-06-26 16:04:01.131 [WARNING] [TID:6360|Src_MIC-140: 192.168.14.155:4000] [MIC-140:192.168.14.155:4000] Legacy StopScan completed: readBlocks=29 lastNumBuff=29 readGaps=0 dupRead=0 corruptRead=0 mdpResync=0
+2026-06-26 16:04:01.140 [WARNING] [TID:6360|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-06-26 16:04:02.124 [WARNING] [TID:1232|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 stream stop: published=29 read=0 readGaps=0 dupRead=0 corruptRead=0 publishGaps=0 corruptPublish=0 bufferDropped=0 mdpResync=0
+2026-06-26 16:04:02.125 [WARNING] [TID:1232|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped

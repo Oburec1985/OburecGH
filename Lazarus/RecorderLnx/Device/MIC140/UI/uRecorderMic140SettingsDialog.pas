@@ -11,46 +11,13 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids, Buttons, Dialogs, Menus,
-  uRecorderTags, uRecorderDataSources, uRecorderMic140DataSource, uRecorderMic140Utils;
-
-type
-  TRecorderMic140DialogResult = record
-    Host: string;
-    Port: Word;
-    ChannelCount: Integer;
-    DeviceSerial: Integer;
-    VersionText: string;
-    ThermoCompensationEnabled: Boolean;
-    SelectedChannels: TStringList;
-    ChannelSettings: array of TRecorderMic140ChannelSettings;
-  end;
-
-  TRecorderMic140SourceConfig = class(TPersistent)
-  public
-    Host: string;
-    Port: Word;
-    ChannelCount: Integer;
-    DeviceSerial: Integer;
-    VersionText: string;
-    ThermoCompensationEnabled: Boolean;
-    SelectedChannels: TStringList;
-    ChannelSettings: array of TRecorderMic140ChannelSettings;
-    constructor Create;
-    destructor Destroy; override;
-    procedure LoadFromResult(const AResult: TRecorderMic140DialogResult);
-    procedure SaveToResult(var AResult: TRecorderMic140DialogResult);
-  end;
+  uRecorderTags, uRecorderDataSources, uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderMic140DeviceConfig;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
   var AResult: TRecorderMic140DialogResult;
   ATagRegistry: TRecorderTagRegistry = nil; const ASourceId: string = '';
   ADataSources: TRecorderDataSourceManager = nil): Boolean;
-procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
-procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
-function FindRecorderMic140SourceConfig(AList: TStrings;
-  const ASourceId: string): TRecorderMic140SourceConfig;
-function EnsureRecorderMic140SourceConfig(AList: TStrings;
-  const ASourceId: string): TRecorderMic140SourceConfig;
 function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; AMic140Configs: TStringList;
   const ASourceId: string; out ANewSourceId: string): Boolean;
@@ -123,108 +90,6 @@ type
   end;
 
 {$R *.lfm}
-
-procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
-var
-  I: Integer;
-begin
-  AResult.Host := MIC140DefaultHost;
-  AResult.Port := MIC140DefaultPort;
-  AResult.ChannelCount := MIC140DefaultChannelCount;
-  AResult.DeviceSerial := 0;
-  AResult.VersionText := '';
-  AResult.ThermoCompensationEnabled := False;
-  AResult.SelectedChannels := TStringList.Create;
-  SetLength(AResult.ChannelSettings, MIC140MaxChannelCount);
-  for I := 0 to High(AResult.ChannelSettings) do
-    RecorderMic140InitChannelSettings(AResult.ChannelSettings[I], I, CMic140Mic140SubRev1);
-end;
-
-procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
-begin
-  FreeAndNil(AResult.SelectedChannels);
-  SetLength(AResult.ChannelSettings, 0);
-end;
-
-constructor TRecorderMic140SourceConfig.Create;
-begin
-  inherited Create;
-  SelectedChannels := TStringList.Create;
-  SetLength(ChannelSettings, MIC140MaxChannelCount);
-end;
-
-destructor TRecorderMic140SourceConfig.Destroy;
-begin
-  SelectedChannels.Free;
-  SetLength(ChannelSettings, 0);
-  inherited Destroy;
-end;
-
-procedure TRecorderMic140SourceConfig.LoadFromResult(
-  const AResult: TRecorderMic140DialogResult);
-var
-  I: Integer;
-begin
-  Host := AResult.Host;
-  Port := AResult.Port;
-  ChannelCount := AResult.ChannelCount;
-  DeviceSerial := AResult.DeviceSerial;
-  VersionText := AResult.VersionText;
-  ThermoCompensationEnabled := AResult.ThermoCompensationEnabled;
-  SelectedChannels.Clear;
-  if AResult.SelectedChannels <> nil then
-    SelectedChannels.Assign(AResult.SelectedChannels);
-  SetLength(ChannelSettings, Length(AResult.ChannelSettings));
-  for I := 0 to High(AResult.ChannelSettings) do
-    ChannelSettings[I] := AResult.ChannelSettings[I];
-end;
-
-procedure TRecorderMic140SourceConfig.SaveToResult(
-  var AResult: TRecorderMic140DialogResult);
-var
-  I: Integer;
-begin
-  AResult.Host := Host;
-  AResult.Port := Port;
-  AResult.ChannelCount := ChannelCount;
-  AResult.DeviceSerial := DeviceSerial;
-  AResult.VersionText := VersionText;
-  AResult.ThermoCompensationEnabled := ThermoCompensationEnabled;
-  if AResult.SelectedChannels <> nil then
-  begin
-    AResult.SelectedChannels.Clear;
-    AResult.SelectedChannels.Assign(SelectedChannels);
-  end;
-  SetLength(AResult.ChannelSettings, Length(ChannelSettings));
-  for I := 0 to High(ChannelSettings) do
-    AResult.ChannelSettings[I] := ChannelSettings[I];
-end;
-
-function FindRecorderMic140SourceConfig(AList: TStrings;
-  const ASourceId: string): TRecorderMic140SourceConfig;
-var
-  lIndex: Integer;
-begin
-  Result := nil;
-  if AList = nil then
-    Exit;
-  lIndex := AList.IndexOf(ASourceId);
-  if lIndex >= 0 then
-    Result := TRecorderMic140SourceConfig(AList.Objects[lIndex]);
-end;
-
-function EnsureRecorderMic140SourceConfig(AList: TStrings;
-  const ASourceId: string): TRecorderMic140SourceConfig;
-var
-  lIndex: Integer;
-begin
-  Result := FindRecorderMic140SourceConfig(AList, ASourceId);
-  if Result <> nil then
-    Exit;
-  Result := TRecorderMic140SourceConfig.Create;
-  lIndex := AList.AddObject(ASourceId, Result);
-  AList[lIndex] := ASourceId;
-end;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
   var AResult: TRecorderMic140DialogResult;
@@ -321,13 +186,21 @@ end;
 procedure TRecorderMic140SettingsDialog.SyncChannelSoftBalanceToTag(
   AChannelNumber: Integer);
 var
+  lConfig: TRecorderMic140SourceConfig;
+  lSettings: TRecorderMic140ChannelSettings;
   lTag: TRecorderTag;
 begin
   if (AChannelNumber <= 0) or (AChannelNumber > Length(fChannelSettings)) then
     Exit;
+  if (fTagRegistry = nil) or (fSourceId = '') then
+    Exit;
   lTag := FindTagForChannel(AChannelNumber);
-  if lTag <> nil then
-    lTag.Mic140SoftBalance := fChannelSettings[AChannelNumber - 1].SoftBalance;
+  if lTag = nil then
+    Exit;
+  lConfig := EnsureRecorderMic140DeviceConfig(fTagRegistry, fSourceId);
+  lSettings := fChannelSettings[AChannelNumber - 1];
+  lSettings.ChannelAddress := lTag.Address;
+  lConfig.SetChannelSettings(AChannelNumber, lTag.Address, lSettings);
 end;
 
 procedure TRecorderMic140SettingsDialog.EnsureChannelSettings(AChannelCount: Integer);
@@ -586,7 +459,8 @@ begin
           if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
           begin
             if (lChannelNumber > 0) and (lChannelNumber <= Length(fChannelSettings)) then
-              fChannelSettings[lChannelNumber - 1].SoftBalance := lTag.Mic140SoftBalance;
+              RecorderMic140TryGetChannelSettings(fTagRegistry, lTag, lChannelNumber,
+                fChannelSettings[lChannelNumber - 1]);
           end;
         end;
         FillGrid(ReadChannelCount, CollectSelectedChannels);
@@ -783,39 +657,28 @@ begin
     begin
       lResult.Host := lHost;
       lResult.Port := lPort;
-      lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
+      lConfig := FindRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
+      if lConfig = nil then
+        lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
       if lConfig <> nil then
         lConfig.SaveToResult(lResult);
       for I := 0 to ATagRegistry.TagCount - 1 do
       begin
         lTag := ATagRegistry.Tags[I];
-        if SameText(lTag.SourceId, ASourceId) then
+        if not SameText(lTag.SourceId, ASourceId) then
+          Continue;
+        if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
         begin
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) then
-          begin
-            if lResult.SelectedChannels.IndexOf(IntToStr(lChannelNumber)) < 0 then
-              lResult.SelectedChannels.Add(IntToStr(lChannelNumber));
-          end
-          else
-            lResult.SelectedChannels.Add(lTag.Address);
-          // Mic140DeviceSerial is the hardware-calibr folder serial (CCSerNo),
-          // not the display DevSerNo shown in the dialog caption.
-          if (lResult.DeviceSerial <= 0) and TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
-            RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lResult.DeviceSerial);
-          // The source-config list exists only for the lifetime of the
-          // settings dialog. Reconstruct its source-level flag from tags when
-          // the dialog is opened again after Preview/Record.
-          lResult.ThermoCompensationEnabled :=
-            lResult.ThermoCompensationEnabled or
-            lTag.Mic140ThermoCompensationEnabled;
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
-            (lChannelNumber > lResult.ChannelCount) then
+          if lResult.SelectedChannels.IndexOf(IntToStr(lChannelNumber)) < 0 then
+            lResult.SelectedChannels.Add(IntToStr(lChannelNumber));
+          if lChannelNumber > lResult.ChannelCount then
             lResult.ChannelCount := MIC140MaxChannelCount;
-          if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
-            (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
-            RecorderMic140RestoreChannelSettingsFromTag(ATagRegistry, lTag,
-              lResult.ChannelSettings[lChannelNumber - 1]);
-        end;
+        end
+        else
+          lResult.SelectedChannels.Add(lTag.Address);
+        if (lResult.DeviceSerial <= 0) and
+          TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+          RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lResult.DeviceSerial);
       end;
     end;
 
@@ -838,10 +701,14 @@ begin
     if TryParseRecorderMic140SourceId(ANewSourceId, lHost, lPort) then
       RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lCalibrSerial);
 
+    if lCalibrSerial > 0 then
+      lResult.DeviceSerial := lCalibrSerial;
+
+    lConfig := EnsureRecorderMic140DeviceConfig(ATagRegistry, ANewSourceId);
+    lConfig.LoadFromResult(lResult);
     if AMic140Configs <> nil then
     begin
-      lConfig := EnsureRecorderMic140SourceConfig(AMic140Configs, ANewSourceId);
-      lConfig.LoadFromResult(lResult);
+      EnsureRecorderMic140SourceConfig(AMic140Configs, ANewSourceId).LoadFromResult(lResult);
       if (ASourceId <> '') and (not SameText(ASourceId, ANewSourceId)) then
       begin
         lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
@@ -872,21 +739,12 @@ begin
         Continue;
       lTag.SourceId := ANewSourceId;
       lTag.ModuleType := 'MIC-140';
-      if lCalibrSerial > 0 then
-        lTag.Mic140DeviceSerial := lCalibrSerial;
       if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
         (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
       begin
         lSettings := lResult.ChannelSettings[lChannelNumber - 1];
-        lTag.MeasRangeIndex := lSettings.RangeIndex;
-        lTag.Mic140ThermoCompensationEnabled :=
-          lResult.ThermoCompensationEnabled;
-        lTag.Mic140CjcDefault := lSettings.DefaultCjc;
-        lTag.Mic140CjcChannel := RecorderMic140ChannelCjcNumber(lSettings,
-          lChannelNumber - 1, CMic140Mic140SubRev1);
-        lTag.Mic140ThermocoupleScaleName := lSettings.ThermocoupleScaleName;
-        lTag.Mic140ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
-        lTag.Mic140SoftBalance := lSettings.SoftBalance;
+        lSettings.ChannelAddress := lTag.Address;
+        lConfig.SetChannelSettings(lChannelNumber, lTag.Address, lSettings);
         if RecorderMic140ChannelUsesTemperature(lSettings) then
         begin
           if (not lTag.ChannelCalibrationEnabled) or
@@ -901,8 +759,6 @@ begin
           if lCalName <> '' then
             lTag.CalibrationNames.Add(lCalName);
           if lCalName = '' then
-            // The selection is still stored in MIC-140 settings above. Do not
-            // erase it just because the SDB table could not be opened now.
             lTag.CalibrationNames.Add('TC ' + lSettings.ThermocoupleScaleName);
         end
         else
@@ -918,6 +774,7 @@ begin
             lTag.CalibrationNames.Clear;
         end;
       end;
+      RecorderTagClearMic140Settings(lTag);
       lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
         [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
          lTag.SourceValueMode]);

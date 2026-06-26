@@ -1,11 +1,17 @@
 unit uRecorderDeviceInterfaces;
 
 {
-  Core-level device abstractions.
+  Абстракция устройства захвата данных.
 
-  Data sources use these interfaces instead of binding directly to files,
-  sockets, DLLs or concrete hardware. A device can later be backed by a MERA
-  file, MIC-140 over Ethernet, a simulator, or another acquisition module.
+  Соответствует оригинальному Recorder:
+  - этапы Connect / Program / Start / Stop;
+  - параметры через GetDeviceProperty / TrySetDeviceProperty;
+  - список каналов GetChannels.
+
+  Блок отсчётов — uRecorderAcquisitionTypes.
+  Особенности MIC-140 (TIn, CJC) — Device/MIC140 и Device/MIC140v2.
+
+  См. Docs/devices/device_abstraction.md
 }
 
 {$mode objfpc}{$H+}
@@ -13,16 +19,33 @@ unit uRecorderDeviceInterfaces;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Variants,
+  uRecorderAcquisitionTypes;
 
 type
   ERecorderDeviceError = class(Exception);
 
+  { Упрощённая FSM, видимая источнику данных. Детали — rdpStateWord. }
   TRecorderDeviceState = (
     rdsDisconnected,
     rdsConnected,
     rdsProgrammed,
     rdsStarted
+  );
+
+  { Идентификаторы свойств (аналог DEVPROP_* / GetDeviceProperty). }
+  TRecorderDeviceProperty = (
+    rdpName,
+    rdpHost,
+    rdpPort,
+    rdpPollFrequencyHz,  // частота опроса
+    rdpUpdateTimeMs,
+    rdpChannelCount, // количество каналов
+    rdpDeviceSerial, // серийный номер?
+    { Специфичное подсостояние драйвера (см. Mebius DEVICE_STATE). }
+    rdpStateWord,
+    rdpErrorCode,
+    rdpErrorText
   );
 
   TRecorderDeviceChannel = record
@@ -36,16 +59,11 @@ type
 
   TRecorderDeviceChannelArray = array of TRecorderDeviceChannel;
 
-  TRecorderDeviceSampleBlock = record
-    ChannelCount: Integer;
-    SampleCount: Integer;
-    FirstTimeSec: Double;
-    SampleRateHz: Double;
-    Values: array of array of Double;
-    TemperatureCount: Integer;
-    TemperatureValues: array of array of Double;
-    TemperatureValid: array of array of Boolean;
-  end;
+  {
+    Устаревшее имя блока отсчётов. Используйте TRecorderAcquisitionBlock.
+    Поля Temperature* удалены — TIn это каналы устройства, не часть Core.
+  }
+  TRecorderDeviceSampleBlock = TRecorderAcquisitionBlock;
 
   IRecorderDevice = interface
     ['{39D2026D-851C-4EE4-97C7-3C86A02962A6}']
@@ -54,12 +72,24 @@ type
     function GetState: TRecorderDeviceState;
     function GetChannels: TRecorderDeviceChannelArray;
 
+    { Свойства задаются до ProgramDevice / Start (см. device_abstraction.md). }
+    function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
+      AIndex: Integer = -1): Variant;
+    function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
+      const AValue: Variant; AIndex: Integer = -1): Boolean;
+
     procedure Connect;
     procedure Disconnect;
-    procedure ProgramDevice;
+  procedure ProgramDevice;
     procedure Start;
     procedure Stop;
-    function ReadBlock(ATimeoutMs: Cardinal; out ABlock: TRecorderDeviceSampleBlock): Boolean;
+
+    {
+      Legacy pull-модель чтения блока. Целевой путь — push через sink в драйвере v2.
+      Вызывать только из потока источника данных, не из GUI.
+    }
+    function ReadBlock(ATimeoutMs: Cardinal;
+      out ABlock: TRecorderAcquisitionBlock): Boolean;
 
     property DeviceId: string read GetDeviceId;
     property Name: string read GetName;
@@ -74,51 +104,13 @@ implementation
 
 procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBlock;
   var ADest: TRecorderDeviceSampleBlock);
-var
-  I: Integer;
-  lSampleCount: Integer;
 begin
-  ADest.ChannelCount := ASource.ChannelCount;
-  ADest.SampleCount := ASource.SampleCount;
-  ADest.FirstTimeSec := ASource.FirstTimeSec;
-  ADest.SampleRateHz := ASource.SampleRateHz;
-  ADest.TemperatureCount := ASource.TemperatureCount;
-
-  SetLength(ADest.Values, ASource.ChannelCount);
-  lSampleCount := ASource.SampleCount;
-  for I := 0 to ASource.ChannelCount - 1 do
-  begin
-    SetLength(ADest.Values[I], lSampleCount);
-    if lSampleCount > 0 then
-      Move(ASource.Values[I][0], ADest.Values[I][0],
-        lSampleCount * SizeOf(Double));
-  end;
-
-  SetLength(ADest.TemperatureValues, ASource.TemperatureCount);
-  SetLength(ADest.TemperatureValid, ASource.TemperatureCount);
-  for I := 0 to ASource.TemperatureCount - 1 do
-  begin
-    SetLength(ADest.TemperatureValues[I], lSampleCount);
-    SetLength(ADest.TemperatureValid[I], lSampleCount);
-    if lSampleCount > 0 then
-      Move(ASource.TemperatureValues[I][0], ADest.TemperatureValues[I][0],
-        lSampleCount * SizeOf(Double));
-    if lSampleCount > 0 then
-      Move(ASource.TemperatureValid[I][0], ADest.TemperatureValid[I][0],
-        lSampleCount * SizeOf(Boolean));
-  end;
+  CopyRecorderAcquisitionBlock(ASource, ADest);
 end;
 
 procedure ClearRecorderDeviceSampleBlock(var ABlock: TRecorderDeviceSampleBlock);
 begin
-  ABlock.ChannelCount := 0;
-  ABlock.SampleCount := 0;
-  ABlock.FirstTimeSec := 0;
-  ABlock.SampleRateHz := 0;
-  SetLength(ABlock.Values, 0);
-  ABlock.TemperatureCount := 0;
-  SetLength(ABlock.TemperatureValues, 0);
-  SetLength(ABlock.TemperatureValid, 0);
+  ClearRecorderAcquisitionBlock(ABlock);
 end;
 
 end.

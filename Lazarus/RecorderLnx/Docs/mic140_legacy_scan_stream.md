@@ -59,17 +59,16 @@ stride 48 (только 48 пользовательских AIn). Источни
 
 | Поток                                                                          | Действия                                                                                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Src_MIC-140** | `DoTick`: `ReadLegacyRawBlock` → кольцо `TMic140RawBlockRing`; drain; `StopScan` по `TryStop` |
+| **MIC-140.LegacyRead** | `WaitFor(DataUpdateMs)` → `ReadLegacyRawBlock` → `TMic140RawBlockRing` |
 | **MIC-140.BlockPublish** | `Dequeue` → `LegacyDecommutateRawBlock` → CJC/теги |
 | **LegacyClient** (объект) | MDP/TCP: `ReadScanBlock` в reader-потоке; `CallCommand` в `PrepareHardware` |
 | **UIThread** | `StartAll` → `PrepareHardware` (Connect/Program/StartScan) до worker-потоков |
-| *(резерв)* **LegacyRead** | Не стартует |
 
 **Поток данных:**
 
 ```text
 Прибор :4000 TCP
-  -> ReadLegacyRawBlock (Src_MIC-140, LegacyClient.fLock)
+  -> MIC-140.LegacyRead: ReadLegacyRawBlock (LegacyClient.fLock)
   -> TMic140RawBlockRing (фикс. 8 слотов, struct copy)
   -> BlockPublish: LegacyDecommutateRawBlock -> ProcessAndPublishBlock -> теги MIC140_*
 ```
@@ -132,9 +131,10 @@ TCP socket
 UI / main thread (StartAll)
   -> PrepareHardware: Connect, ProgramDevice, StartScan (LegacyClient.CallCommand)
 
-Src_MIC-140 (DoTick)
+MIC-140.LegacyRead (TMic140LegacyReadThread)
   -> ReadLegacyRawBlock: TCP/MDP, memcpy в TMic140LegacyRawBlock
   -> TMic140RawBlockRing.Enqueue (8 слотов, при переполнении — drop oldest + warning)
+  -> WaitFor(DataUpdateMs) — единственная пауза в рабочем цикле опроса (перед чтением)
 
 MIC-140.BlockPublish
   -> Dequeue raw -> LegacyDecommutateRawBlock -> ProcessAndPublishBlock -> теги
@@ -189,6 +189,63 @@ MDP и BIOS разделены.
   сотни `resync +1` за один вызов (~600 ms без чтения сокета);
 - `ClearBufferedPackets` **после** `StartScan` — терялись первые пакеты уже идущего скана;
 - отбрасывание «corrupt» блоков + `ClearLegacyScanBuffer` в publish-пути.
+
+### 3.5. Машина состояний обмена (`TRecorderMic140Device`)
+
+На приборе в останове крутится **суперцикл** BIOS/CC. Наш обмен — конечный автомат на
+стороне хоста; **нет смысла опрашивать TCP чаще периода подготовки данных**
+(`DataUpdateMs`, обычно 200 ms → ~5 блоков/с при 10 Hz).
+
+```mermaid
+stateDiagram-v2
+  [*] --> Disconnected
+  Disconnected --> Connected: TCP probe + Connect + ReadFirmware + orphan StopScan
+  Connected --> Programmed: ProgramLegacyDevice (DM, FIFO, channels)
+  Programmed --> Started: StartScan (CMD_STARTSCANMAIN)
+  Started --> Started: LegacyRead: ReadBlock + WaitFor(DataUpdateMs)
+  Started --> Connected: StopScan
+  Connected --> Disconnected: Disconnect
+  Programmed --> Connected: Stop / reprogram path
+```
+
+| Состояние `fState` | Действия хоста | Ожидание |
+|---|---|---|
+| `rdsDisconnected` | — | — |
+| `rdsConnected` | TCP сессия, firmware, сброс чужого скана | Только таймауты `LegacyClient` на команды (мс), **без `Sleep`** |
+| `rdsProgrammed` | DM/FIFO/каналы записаны, скан ещё не запущен | — |
+| `rdsStarted` | `TMic140LegacyReadThread` читает stream 0 | **Один** `fWakeEvent.WaitFor(DataUpdateMs)` **в начале** каждого цикла read-thread, затем `ReadLegacyRawBlock` |
+
+Правила тайминга (после рефакторинга 25.06.2026):
+
+1. **`Sleep` в MIC-140 device path удалены** — паузы только через `TEvent.WaitFor`.
+2. В фазе **Started** read-thread: `WaitFor(UpdateTimeMs)` → `ReadLegacyRawBlock(timeout)` → enqueue.
+   Дополнительных warmup/settle между блоками нет.
+3. `DoTick` источника **не читает сокет**, если работает `fLegacyReadThread`
+   (только `Stop` по запросу UI).
+4. Переходы **Stop/Start/restart** используют `Mic140LegacyStopScanWithCommandTimeout`
+   и `ClearBufferedPackets` без искусственных задержек; устройство отвечает в своём
+   command timeout (5 s).
+5. При простое read-thread (ещё не Started / уже Stop) — `WaitFor(1000)` без TCP,
+   пробуждение через `SignalWork` / `RequestStop`.
+
+Соответствие оригинальному Recorder: connect → program → start → периодический
+`ScanFifoCallBack`; у нас период задаёт `DataUpdateMs`, а не burst-drain в `DoTick`.
+
+### 3.6. Диагностика заголовка и payload (с 25.06.2026)
+
+Для каждого принятого блока в лог пишется:
+
+- **`header=OK size=106 scan_id=0 state=0 data=96 num_buff=N`** — BIOS-заголовок и длина
+  payload совпадают с программированием (`LegacyExpectedBiosMessageSizeWords`);
+  `num_buff seq=gap` — структура OK, но пропуск в последовательности.
+- **`header=BAD ...`** — пакет отброшен (`headerReject++`), это сбой разметки/протокола.
+- **`payload=ok`** — отсчёты в ожидаемом диапазоне.
+- **`payload=layout_or_phase`** — массовый паттерн ±32767/плюсов при **валидном** заголовке
+  (фазовый/sлужебный блок, не заменяем данные).
+- **`payload=adc_unstable ch12 delta=...`** — скачок кодов при **валидном** заголовке
+  (коммутатор/прибор, не MDP misalignment).
+
+Строка остановки: `headerReject`, `adcJump` в `Legacy StopScan completed`.
 
 ---
 
@@ -468,7 +525,7 @@ resync / timeout.
 
 ---
 
-## 12. Состояние на 2026-06-24
+## 12. Состояние на 2026-06-25
 
 **Сделано:**
 
@@ -479,15 +536,14 @@ resync / timeout.
 - decommutation `J*48+I`;
 - TIn/CJC временно не входят в стабильный scan-блок;
 - ограничение resync, буферизация scan при CallCommand;
-- ClearBuffered перед StartScan.
+- ClearBuffered перед StartScan;
+- **машина состояний device + один `WaitFor(DataUpdateMs)` на цикл read-thread** (раздел 3.5);
+- удалены `Sleep`/warmup/settle в device path (Codex 25.06.2026);
+- 3-секундный smoke-test PASS (`pub=15`, `corrupt=0`).
 
 **Открыто / нестабильно:**
 
-- устойчивый приём 10+ блоков подряд без рассинхрона (сделано для 48 AIn);
+- **40 с** непрерывного Preview: периодические `corruptRead` и stall-restart ~блок 119;
 - полный RX thread + dual FIFO как в mdpEthernet81;
-- сверка `num_buff` при пропусках пакетов на сети;
-- частоты ниже/выше 100 Hz на железе.
-
-**Следующий инженерный шаг (рекомендация):** вынести RX в отдельный поток по образцу
-`mdpEthernet81::RxCallBack`, оставив parse максимально тупым: «10 WORD header, затем
-ровно size-10 WORD data», без сканирования payload.
+- частоты ниже/выше 100 Hz на железе;
+- TIn/CJC в stride после точной сверки с windev.

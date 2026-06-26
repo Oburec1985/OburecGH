@@ -114,8 +114,42 @@ function RecorderMic140DevRevFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Word;
 function RecorderMic140DevSubRevFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Word;
+
+const
+  CMic140LegacyBiosScanIdIdx = 2;
+  CMic140LegacyBiosSlotIdx = 3;
+  CMic140LegacyBiosChanIdx = 4;
+  CMic140LegacyBiosNumBuffIdx = 8;
+  CMic140LegacyBiosStateIdx = 9;
+  CMic140LegacyBiosMessageType = 0;
+  CMic140LegacyBiosMessageSizeWords = 106;
+
+type
+  TMic140LegacyBiosHeaderVerdict = record
+    Ok: Boolean;
+    TypeOk: Boolean;
+    SizeOk: Boolean;
+    ScanIdOk: Boolean;
+    StateOk: Boolean;
+    SlotOk: Boolean;
+    ChanOk: Boolean;
+    DataWordsOk: Boolean;
+    NumBuffOk: Boolean;
+    ExpectedMessageSize: Word;
+    ActualMessageSize: Word;
+    ExpectedDataWords: Word;
+    ActualDataWords: Word;
+    Detail: string;
+  end;
+
+procedure Mic140LegacyEvaluateBiosScanHeader(
+  const AHeaderWords: array of Word; AExpectedMessageSizeWords: Word;
+  AActualDataWords: Integer; APreviousNumBuff: Word;
+  APreviousNumBuffValid: Boolean; out AVerdict: TMic140LegacyBiosHeaderVerdict);
 function Mic140LegacyBiosScanHeaderValid(
   const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
+function Mic140LegacyBiosHeaderVerdictText(
+  const AVerdict: TMic140LegacyBiosHeaderVerdict): string;
 
 implementation
 
@@ -123,8 +157,6 @@ uses
   uRecorderDebugLog;
 
 const
-  CMic140LegacyBiosMessageType = 0;
-  CMic140LegacyBiosMessageSizeWords = 112;
   CLegacySyncWord = Word($12B8);
   CLegacyStreamScan = Word(0);
   CLegacyStreamCommand = Word(1);
@@ -238,31 +270,117 @@ begin
   end;
 end;
 
+procedure Mic140LegacyEvaluateBiosScanHeader(
+  const AHeaderWords: array of Word; AExpectedMessageSizeWords: Word;
+  AActualDataWords: Integer; APreviousNumBuff: Word;
+  APreviousNumBuffValid: Boolean; out AVerdict: TMic140LegacyBiosHeaderVerdict);
+var
+  lExpected: Word;
+  lNumBuff: Word;
+begin
+  FillChar(AVerdict, SizeOf(AVerdict), 0);
+  AVerdict.Detail := 'short header';
+  if Length(AHeaderWords) < CLegacyScanHeaderWords then
+    Exit;
+
+  AVerdict.ActualMessageSize := AHeaderWords[1];
+  AVerdict.ExpectedMessageSize := AExpectedMessageSizeWords;
+  AVerdict.ActualDataWords := AActualDataWords;
+  if AExpectedMessageSizeWords > CLegacyScanHeaderWords then
+    AVerdict.ExpectedDataWords := AExpectedMessageSizeWords - CLegacyScanHeaderWords
+  else
+    AVerdict.ExpectedDataWords := 0;
+
+  AVerdict.TypeOk := AHeaderWords[0] = CMic140LegacyBiosMessageType;
+  if AExpectedMessageSizeWords > 0 then
+    AVerdict.SizeOk := AHeaderWords[1] = AExpectedMessageSizeWords
+  else
+    AVerdict.SizeOk := (AHeaderWords[1] >= CLegacyScanHeaderWords + 1) and
+      (AHeaderWords[1] <= CLegacyMaxPacketWords);
+  AVerdict.ScanIdOk := AHeaderWords[CMic140LegacyBiosScanIdIdx] = 0;
+  AVerdict.SlotOk := AHeaderWords[CMic140LegacyBiosSlotIdx] = 0;
+  AVerdict.ChanOk := AHeaderWords[CMic140LegacyBiosChanIdx] = 0;
+  AVerdict.StateOk := AHeaderWords[CMic140LegacyBiosStateIdx] = 0;
+  if AVerdict.ExpectedDataWords > 0 then
+    AVerdict.DataWordsOk := AActualDataWords = AVerdict.ExpectedDataWords
+  else
+    AVerdict.DataWordsOk := AActualDataWords >= 0;
+
+  lNumBuff := AHeaderWords[CMic140LegacyBiosNumBuffIdx];
+  if not APreviousNumBuffValid then
+    AVerdict.NumBuffOk := lNumBuff > 0
+  else
+  begin
+    lExpected := Word((Integer(APreviousNumBuff) + 1) and $FFFF);
+    AVerdict.NumBuffOk := lNumBuff = lExpected;
+  end;
+
+  AVerdict.Ok := AVerdict.TypeOk and AVerdict.SizeOk and AVerdict.ScanIdOk and
+    AVerdict.StateOk and AVerdict.SlotOk and AVerdict.ChanOk and
+    AVerdict.DataWordsOk;
+
+  if AVerdict.Ok then
+  begin
+    if AVerdict.NumBuffOk then
+      AVerdict.Detail := Format('OK size=%d scan_id=0 state=0 data=%d num_buff=%d',
+        [AVerdict.ActualMessageSize, AActualDataWords, lNumBuff])
+    else
+      AVerdict.Detail := Format('OK size=%d scan_id=0 state=0 data=%d num_buff=%d seq=gap',
+        [AVerdict.ActualMessageSize, AActualDataWords, lNumBuff]);
+  end
+  else
+  begin
+  AVerdict.Detail := '';
+    if not AVerdict.TypeOk then
+      AVerdict.Detail := AVerdict.Detail + Format('type=%d ', [AHeaderWords[0]]);
+    if not AVerdict.SizeOk then
+      AVerdict.Detail := AVerdict.Detail + Format('size=%d expected=%d ',
+        [AVerdict.ActualMessageSize, AVerdict.ExpectedMessageSize]);
+    if not AVerdict.ScanIdOk then
+      AVerdict.Detail := AVerdict.Detail + Format('scan_id=%d ',
+        [AHeaderWords[CMic140LegacyBiosScanIdIdx]]);
+    if not AVerdict.StateOk then
+      AVerdict.Detail := AVerdict.Detail + Format('state=%d ',
+        [AHeaderWords[CMic140LegacyBiosStateIdx]]);
+    if not AVerdict.SlotOk then
+      AVerdict.Detail := AVerdict.Detail + Format('slot=%d ',
+        [AHeaderWords[CMic140LegacyBiosSlotIdx]]);
+    if not AVerdict.ChanOk then
+      AVerdict.Detail := AVerdict.Detail + Format('chan=%d ',
+        [AHeaderWords[CMic140LegacyBiosChanIdx]]);
+    if not AVerdict.DataWordsOk then
+      AVerdict.Detail := AVerdict.Detail + Format('dataWords=%d expected=%d ',
+        [AActualDataWords, AVerdict.ExpectedDataWords]);
+    if not AVerdict.NumBuffOk then
+    begin
+      if APreviousNumBuffValid then
+        AVerdict.Detail := AVerdict.Detail + Format('num_buff=%d expected=%d ',
+          [lNumBuff, Word((Integer(APreviousNumBuff) + 1) and $FFFF)])
+      else
+        AVerdict.Detail := AVerdict.Detail + Format('num_buff=%d ', [lNumBuff]);
+    end;
+    AVerdict.Detail := Trim(AVerdict.Detail);
+  end;
+end;
+
+function Mic140LegacyBiosHeaderVerdictText(
+  const AVerdict: TMic140LegacyBiosHeaderVerdict): string;
+begin
+  if AVerdict.Ok then
+    Result := 'header=' + AVerdict.Detail
+  else
+    Result := 'header=BAD ' + AVerdict.Detail;
+end;
+
 function Mic140LegacyBiosScanHeaderValid(
   const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
 var
-  lMessageSize: Integer;
+  lVerdict: TMic140LegacyBiosHeaderVerdict;
 begin
-  AReason := '';
-  if Length(AHeaderWords) < CLegacyScanHeaderWords then
-  begin
-    AReason := Format('short header words=%d', [Length(AHeaderWords)]);
-    Exit(False);
-  end;
-  if AHeaderWords[0] <> CMic140LegacyBiosMessageType then
-  begin
-    AReason := Format('type=%d expected=%d', [AHeaderWords[0],
-      CMic140LegacyBiosMessageType]);
-    Exit(False);
-  end;
-  lMessageSize := AHeaderWords[1];
-  if (lMessageSize < CLegacyScanHeaderWords + 1) or
-    (lMessageSize > CLegacyMaxPacketWords) then
-  begin
-    AReason := Format('size=%d out of range', [lMessageSize]);
-    Exit(False);
-  end;
-  Result := True;
+  Mic140LegacyEvaluateBiosScanHeader(AHeaderWords, 0, -1, 0, False, lVerdict);
+  AReason := lVerdict.Detail;
+  Result := lVerdict.TypeOk and (lVerdict.ActualMessageSize >= CLegacyScanHeaderWords + 1) and
+    (lVerdict.ActualMessageSize <= CLegacyMaxPacketWords);
 end;
 
 procedure TRecorderMic140LegacyClient.ApplyTimeoutMs(AValue: Cardinal);
@@ -718,6 +836,19 @@ begin
              ABlock.HeaderWords[3], ABlock.HeaderWords[4], ABlock.HeaderWords[5],
              ABlock.HeaderWords[6], ABlock.HeaderWords[7], ABlock.HeaderWords[8],
              ABlock.HeaderWords[9], fMdpResyncBytes]));
+          Continue;
+        end;
+        if (ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx] <> 0) or
+           (ABlock.HeaderWords[CMic140LegacyBiosStateIdx] <> 0) or
+           (ABlock.HeaderWords[CMic140LegacyBiosSlotIdx] <> 0) or
+           (ABlock.HeaderWords[CMic140LegacyBiosChanIdx] <> 0) then
+        begin
+          RecorderDebugLog(Format(
+            '[MIC-140:%s:%d] Legacy BIOS header fields unexpected: scan_id=%d slot=%d chan=%d state=%d',
+            [fHost, fPort, ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx],
+             ABlock.HeaderWords[CMic140LegacyBiosSlotIdx],
+             ABlock.HeaderWords[CMic140LegacyBiosChanIdx],
+             ABlock.HeaderWords[CMic140LegacyBiosStateIdx]]));
           Continue;
         end;
         if Length(lWords) < lMessageSize then

@@ -17,73 +17,46 @@ uses
   Classes, SysUtils, Forms, SyncObjs,
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderMebiusTcpProtocol,
   uRecorderMic140LegacyProtocol, uRecorderMic140Utils,
+  uRecorderMic140StreamTypes, uRecorderMic140DoubleBuffer,
+  uRecorderMic140ScanConfig, uRecorderMic140StreamFsm,
+  uRecorderMic140AcquireTiming,
+  uRecorderMic140StreamHelpers, uRecorderMic140LegacyTiming,
+  uRecorderMic140Calibration, uRecorderMic140LegacyConstants,
+  uRecorderMic140ProtocolDriver,
   uRecorderTags;
 
 const
+  MIC140DefaultDiscoverySubnet = '192.168.14.';
+  CMic140Mic140SubRev1 = 1;
+  { Re-exported from StreamTypes / LegacyConstants for legacy callers. }
   MIC140DefaultChannelCount = 48;
   MIC140MaxChannelCount = 96;
   MIC140TemperatureChannelCount = 3;
   MIC140DefaultPollFrequencyHz = 100.0;
-  MIC140DefaultDiscoverySubnet = '192.168.14.';
-  CMic140LegacyMaxScanDataWords = 102;
-  CMic140RawRingSlotCount = 32;
   CMic140Range100mV = 0;
   CMic140RangeCount = 3;
-  CMic140Mic140SubRev1 = 1;
 
 type
   TRecorderMic140ChannelSettings = record
+    ChannelAddress: string;
     RangeIndex: Integer;
     DefaultCjc: Boolean;
     CjcChannel: Integer;
     ThermocoupleScalePath: string;
     ThermocoupleScaleName: string;
     SoftBalance: Double;
+    OutputMode: string;
+    ChannelCalibrationEnabled: Boolean;
+    HardwareCalibrationEnabled: Boolean;
+    HardwareCalibrationName: string;
+    { CJC offset °C per channel (SetTemperOffset); 0 = none. }
+    CjcTemperOffsetC: Double;
   end;
 
   TRecorderMic140OutputMode = (
     momMillivolts,
     momTemperatureC
   );
-
-  TMic140LegacyRawBlock = record
-    Header: array[0..9] of Word;
-    Data: array[0..CMic140LegacyMaxScanDataWords - 1] of Word;
-    DataWordCount: Word;
-    FirstSampleIndex: Int64;
-    ReadSerial: Int64;
-  end;
-
-  TMic140RawBlockRing = class(TObject)
-  private
-    fSlots: array[0..CMic140RawRingSlotCount - 1] of TMic140LegacyRawBlock;
-    fHead: Integer;
-    fCount: Integer;
-    fLock: TCriticalSection;
-    fDropped: Int64;
-    fLastDropLogTick: QWord;
-    fSourceId: string;
-  public
-    constructor Create(const ASourceId: string);
-    destructor Destroy; override;
-    function Enqueue(const ARaw: TMic140LegacyRawBlock; out ADepth: Integer;
-      out ADroppedOldest: Boolean; out ADroppedRaw: TMic140LegacyRawBlock): Boolean;
-    function Dequeue(out ARaw: TMic140LegacyRawBlock): Boolean;
-    function PendingCount: Integer;
-    function DroppedCount: Int64;
-  end;
-
-  TRecorderMic140Timing = record
-    FrequencyHz: Double;
-    GroundCommutationUs: Double;
-    ChannelCommutationUs: Double;
-    AveragePeriodUs: Double;
-    AverageSampleCount: Word;
-    AveragePower: Word;
-    LegacyGroundDelaySport: Word;
-    LegacyChannelDelaySport: Word;
-    LegacyAverageDelaySport: Word;
-  end;
 
   TRecorderMic140Device = class(TInterfacedObject, IRecorderDevice)
   private
@@ -123,10 +96,15 @@ type
     fState: TRecorderDeviceState;
     fStopRequested: Boolean;
     fUpdateTimeMs: Cardinal;
+    fLastAuxTemperature: TMic140AuxTemperatureBlock;
     function GetDeviceId: string;
     function GetName: string;
     function GetState: TRecorderDeviceState;
     function GetChannels: TRecorderDeviceChannelArray;
+    function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
+      AIndex: Integer): Variant;
+    function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
+      const AValue: Variant; AIndex: Integer): Boolean;
     procedure BuildChannels;
     function LegacyAllocBuffer(AWordCount: Word; out APage, AAddress: Word): Boolean;
     function LegacyAllocHeap(AWordCount: Word; out APage, AAddress: Word): Boolean;
@@ -175,6 +153,7 @@ type
     function LegacyMdpResyncByteCount: Int64;
     function LegacyTryRestartStreamAfterReadStall: Boolean;
     function LegacyConsumeStreamSequenceReset: Boolean;
+    function LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
 
     property Host: string read fHost;
     property Port: Word read fPort;
@@ -185,7 +164,11 @@ type
   private
     fBlockPublishThread: TObject;
     fLegacyReadThread: TObject;
-    fRawRing: TMic140RawBlockRing;
+    fRawBuffer: TMic140RawDoubleBuffer;
+    fAcquireTiming: TRecorderMic140AcquireTiming;
+    fStreamFsm: TMic140StreamFsm;
+    fScanConfig: TRecorderMic140ScanConfig;
+    fProtocolDriver: TRecorderMic140ProtocolDriver;
     fHardwarePrepared: Boolean;
     fHardwarePrepareAttempted: Boolean;
     fChannelTagNames: TStringList;
@@ -224,7 +207,7 @@ type
     procedure PublishDiagnostics(AStatusCode: Integer; const AStatusText: string;
       AForce: Boolean = False);
     procedure PublishBlockCounter(ABlockCount: Int64);
-    procedure PublishTemperatureBlocks(const ABlock: TRecorderDeviceSampleBlock;
+    procedure PublishTemperatureBlocks(const AAux: TMic140AuxTemperatureBlock;
       const ATimes: TRecorderDoubleArray);
     procedure EnsureBlockPublishThread;
     procedure StopBlockPublishThread;
@@ -238,6 +221,9 @@ type
     procedure LogMic140StrideMisalignmentIfNeeded(const ARaw: TMic140LegacyRawBlock;
       const ABlock: TRecorderDeviceSampleBlock);
     procedure ProcessAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
+    procedure SyncScanConfig;
+    procedure EnsureProtocolDriver;
+    procedure FreeProtocolDriver;
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -262,23 +248,11 @@ function RecorderMic140TestConnection(const AHost: string; APort: Word;
 procedure RecorderMic140Discover(AFoundHosts: TStrings;
   const ASubnetPrefix: string = MIC140DefaultDiscoverySubnet;
   APort: Word = MIC140DefaultPort; ATimeoutMs: Cardinal = 180);
-function RecorderMic140FrequencyCount: Integer;
-function RecorderMic140Frequency(AIndex: Integer): Double;
-function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
-function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; AFrequencyHz: Double);
 function RecorderMic140OutputModeToConfigName(AValue: TRecorderMic140OutputMode): string;
 function RecorderMic140ConfigNameToOutputMode(const AValue: string): TRecorderMic140OutputMode;
 function RecorderMic140OutputModeUnitName(AValue: TRecorderMic140OutputMode): string;
-function RecorderMic140CalibrRootDir: string;
-function RecorderMic140RangeCalibrDirName(ARangeIndex: Integer): string;
-function RecorderMic140HardwareCalibrCsvPath(ADeviceSerial, ARangeIndex,
-  AChannelNumber: Integer): string;
-function RecorderMic140TInHardwareCalibrExportCsvPath(ADeviceSerial,
-  ATinChannelNumber: Integer): string;
-function RecorderMic140LoadCalibrationFromCsv(const AFileName: string;
-  ACalibration: TRecorderCalibration): Boolean;
 function RecorderMic140QueryDeviceSerial(const AHost: string; APort: Word;
   out ADeviceSerial: Integer): Boolean;
 function RecorderMic140QueryHardwareCalibrSerial(const AHost: string; APort: Word;
@@ -307,25 +281,18 @@ procedure RecorderMic140RestoreChannelSettingsFromTag(
 function RecorderMic140EnsureThermocoupleCalibration(
   ARegistry: TRecorderTagRegistry;
   const ASettings: TRecorderMic140ChannelSettings): string;
-function RecorderMic140LoadHardwareCalibrationForTag(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  ADeviceSerial: Integer; AEnableOnTag: Boolean = True): Boolean;
-function RecorderMic140DownloadHardwareCalibrationFromDevice(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AErrorMessage: string): Boolean;
-procedure RecorderMic140ApplyHardwareCalibrations(
-  ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  ADeviceSerial: Integer);
-procedure RecorderMic140ApplyTInHardwareCalibrations(
-  ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  ADeviceSerial, ADevSubRev: Integer; const ATemperatureTagNames: TStrings);
 
 implementation
 
 uses
-  Math, StrUtils, LazFileUtils, Controls, Dialogs, LCLIntf,
+  Math, StrUtils, LazFileUtils, Controls, Dialogs, LCLIntf, Variants,
   uSharedFileLogger, uRecorderMeraPaths, uRecorderDebugLog,
-  uRecorderMeraSdbThermocouples, uRecorderSdbStore
+  uRecorderMeraSdbThermocouples, uRecorderSdbStore,
+  uRecorderMic140FlashConstants,
+  uRecorderMic140Thermocouple, uRecorderMic140MebiusConstants,
+  uRecorderMic140DeviceConfig, uRecorderMic140Flash,
+  uRecorderMic140MebiusTypes,
+  uRecorderMic140LegacyChannelDesc, uRecorderMic140LegacyScanDriver
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
@@ -335,326 +302,19 @@ const
   CMic140StatusStarted = 3;
   CMic140StatusError = -1;
   CMic140ReadTimeoutMinMs = 1500;
-  CMic140ScanReadTimeoutExtraMs = 100;
-  // A non-blocking drain uses 1 ms. BIOS commands must never inherit that
-  // value because the device needs a normal round-trip time for stream 1.
-  CMic140LegacyCommandTimeoutMs = 5000;
-  CMic140StopReadTimeoutMs = 50;
-  CMic140MisalignSatThreshold = 32760.0;
-  CMic140MisalignMinSatChannels = 32;
-  CMic140MisalignMinPositiveChannels = 20;
-  CMic140MisalignPositiveThreshold = 500.0;
-  CMic140StrainCodeMax = 500;
-  CMic140StrainCodeMin = -15000;
-  CMic140MisalignMinBadStrainChannels = 8;
-  CMic140LegacyReadTimeoutWarnAfter = 3;
-  CMic140LegacySoftRestartCorruptThreshold = 5;
-  CMic140LegacySoftRestartMaxAttempts = 0;
-  CMic140LegacyStartAttempts = 2;
-  CMic140LegacyStartCommandTimeoutMs = 12000;
-  CMic140LegacyStartProbeTimeoutMs = 3000;
-  CMic140LegacyDrainMaxPacketsPerTick = 2;
-  CMic140LegacyReadStallRestartAfter = 6;
-  CMic140LegacyReadStallRestartMaxAttempts = 2;
-  CMic140LegacyNumBuffDesyncRestartMissed = 32;
-  CMic140NoDataFailThreshold = 10;
-  CMic140ConnectAttempts = 3;
-  CMic140LegacyMaxUiReadFrequencyHz = 1000.0;
-  CMic140MebiusChannelCount = 16;
-  CMic140MebiusTemperatureSettingsCount = 5;
-  CMic140MebiusModuleCount = 4;
-  CMic140FrequencyCount = 8;
-  // Keep only the proven 48-channel legacy scan rate for now. The original
-  // Recorder exposes lower rates too, but their timer/averaging programming must
-  // be ported exactly before we let the UI send them to the real MIC-140.
-  CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
-    (1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0);
   CMic140IoCtlTypeCallCommand = 2;
   CMic140IoCtlCmdSetControllerParams =
     (CMic140IoCtlTypeCallCommand shl 16) or ($000C shl 2);
-  CMic140ChannelCommutIn = 0;
-  CMic140ChannelCommutGround = 1;
   CMic140BalanceMinSamples = 30;
   CMic140BalanceDiscardSamples = 10;
   CMic140BalanceSampleFraction = 0.3;
   CMic140Range5mV = 2;
-  CMic140RangeCalibrDirNames: array[0..CMic140RangeCount - 1] of string =
-    ('06_100mV', '07_50mV', '8_25mV');
-  CMic140HardwareCalibrSubDir = 'hardware' + PathDelim + 'MIC140' + PathDelim;
-  CMic140TInCalibrSubDirName = 'TIn';
-  CMic140TareTypeTable = 1;
-  CMic140RangeCountMic140 = 3;
-  CMic140Mi118TarFileName = 'mi118tar.bin';
-  CMic140FlashDirOffset = 870;
-  CMic140FlashDirSize = 400;
-  CMic140FlashStorageBytes = 524288;
-  CMic140FlashMaxDirEntries = 16;
-  CMic140FlashNameLength = 13;
-  CMic140MaxAinChannels96 = 96;
-  CMic140MaxAinChannels48 = 48;
-  CMic140MaxTinChannels96 = 3;
-  CMic140TareTableMaxPoints = 5;
-  CMic140TareTable2MaxPoints = 153;
-  CMic140SensorSchemeTenzo = 0;
-  CMic140DefaultCorrectorId = 2;
-  CMic140LegacyScanId = 0;
-  CMic140LegacyTypeMic140 = 12;
-  CMic140LegacyCmdAppendScanMain = 82;
-  CMic140LegacyCmdResetScanMain = 83;
-  CMic140LegacyCmdConfigScanMain = 84;
-  CMic140LegacyCmdSetStateScan = 87;
-  CMic140LegacyCmdScanSetChans = 132;
-  CMic140LegacyCmdScanSetBuff = 133;
-  CMic140LegacyCmdAddChannelModule = 152;
-  CMic140LegacyDmBufferBegin = $0522;
-  CMic140LegacyDmBufferEnd = $07FF;
-  CMic140LegacyDmHeapBegin = $0800;
-  CMic140LegacyDmHeapEnd = $2BFF;
-  CMic140LegacyFreqClkHz = 16000000.0;
-  CMic140LegacyTimerPeriod = 640;
-  CMic140LegacySportSclkDivProgr = 4;
-  CMic140LegacyPeriodProgrammingChanCode =
-    (CMic140LegacySportSclkDivProgr + 1) * 2 * (16 * 2 + (16 + 3));
-  CMic140LegacyPeriodAdSec = 5.0E-6;
-  CMic140LegacyInitPeriodDecaySec = 57.0E-6;
-  CMic140LegacyPeriodSumChanCode = 58;
-  CMic140LegacyPeriodWriteChanCode = 115;
-  CMic140LegacyPeriodTimerOsc = 62;
-  CMic140LegacyDeltaSport = 11;
-  CMic140LegacyPeriod1ChanCode = 30;
-  CMic140LegacyPeriod21ChanCode = 21;
-  CMic140LegacyPeriod2ChanCode = 27;
-  CMic140LegacyPeriod3ChanCode = 59;
-  CMic140LegacyPeriod4ChanCode = 120;
-  CMic140LegacyPeriodTimerWork = 80 + 32;
-  CMic140LegacyMinCountAver = 1;
-  CMic140LegacyMaxCountAver = 32767;
-  CMic140LegacyBiosScanContextWords = 6;
-  CMic140LegacyBiosScanBufferDescWords = 10;
-  CMic140LegacyBiosHeaderWords = 10;
-  CMic140LegacyBiosNumBuffIdx = 8;
-  CMic140RawRingDropLogIntervalMs = 1000;
-  CMic140LegacyScanDetailLogBlocks = 15;
-  CMic140LegacyStreamSummaryInterval = 20;
-  CMic140LegacyDescChanWords = 5;
-  CMic140LegacyStartDescChanWords = 3;
-  CMic140LegacyMaskGroundChannel = $4000;
-  CMic140CjcNotAvailable = -1.0E300;
-  CMic140JunctionTempMinC = -80.0;
-  CMic140JunctionTempMaxC = 120.0;
-  CMic140InverseCalibrationMinMv = -20.0;
-  CMic140InverseCalibrationMaxMv = 100.0;
-  CMic140InverseCalibrationIterations = 48;
-  CMic140TemperOffset48: array[0..47] of Double =
-    (-1.031435079, -0.937924386, -0.844413694, -0.750903001,
-     -0.657392308, -0.563881616, -0.583159437, -0.602437259,
-     -0.621715081, -0.640992902, -0.660270724, -0.679548546,
-     -0.694781807, -0.710015069, -0.72524833, -0.740481592,
-     -0.755714853, -0.770948114, -0.794092153, -0.817236192,
-     -0.840380231, -0.863524269, -0.886668308, -0.909812347,
-     -0.822163798, -0.719807632, -0.617451466, -0.5150953,
-     -0.412739133, -0.310382967, -0.208026801, -0.27333683,
-     -0.338646859, -0.403956888, -0.469266918, -0.534576947,
-     -0.599886976, -0.61596964, -0.632052304, -0.648134968,
-     -0.664217632, -0.680300296, -0.696382961, -0.793844092,
-     -0.891305224, -0.988766356, -1.086227488, -1.18368862);
-  CMic140DefaultCjcSplitChannel = 24;
-
-var
-  g_Mic140TInCalibrFailedKeys: TStringList;
-  g_Mic140TInCalibrMissLogged: TStringList;
-
-type
-{$packrecords 8}
-  TMic140BaseChanSettings = record
-    FrequencyHz: Single;
-    Connected: Boolean;
-  end;
-
-  TMic140BaseDeviceChanSettings = record
-    FrequencyHz: Single;
-    Connected: Boolean;
-    Corrector: LongWord;
-    TareName: array[0..127] of AnsiChar;
-    DefaultCorrector: Boolean;
-    SoftBalance: Single;
-    BlockSize: Word;
-    MeasRangeIndex: LongWord;
-    CommutIndex: LongInt;
-    ShuntOn: LongWord;
-    EvalType: LongWord;
-    TensoSensitivity: Double;
-    Resistance: Double;
-    SensorScheme: LongWord;
-  end;
-
-  TMic140BaseSettings = record
-    Channels: array[0..CMic140MebiusChannelCount + CMic140MebiusTemperatureSettingsCount - 1] of TMic140BaseDeviceChanSettings;
-    TemperatureChannels: array[0..CMic140MebiusTemperatureSettingsCount - 1] of TMic140BaseChanSettings;
-    SerialNumber: LongWord;
-    GroundEnabled: Boolean;
-    GroundCommutationUs: LongWord;
-    ChannelCommutationUs: LongWord;
-    BalancePortionLength: LongWord;
-    HardBalance: LongWord;
-    AveragePointCount: Word;
-    PowerMaCode: LongWord;
-    Reserved: LongWord;
-    MaxFreqMode: LongWord;
-    CalibrShuntIndex: LongWord;
-    GroupAddition: array[0..CMic140MebiusModuleCount - 1] of LongWord;
-    DetermineBreak: Boolean;
-    HardwareBalanceOn: Boolean;
-    TemperatureCompensation: Boolean;
-    SoftVersion: LongWord;
-  end;
-{$packrecords default}
-
-procedure Mic140LogWarning(const AMessage: string);
-begin
-  if CMic140StreamLogOnly and not Mic140StreamLogAllowed(AMessage) then
-    Exit;
-  SharedLogger.Enabled := True;
-  SharedLogger.Warning(AMessage);
-end;
-
-procedure Mic140LogFlash(const AMessage: string);
-begin
-  SharedLogger.Enabled := True;
-  SharedLogger.Info(AMessage);
-end;
-
-function Mic140MainScanReadTimeoutMs(AUpdateTimeMs: Cardinal;
-  APollFrequencyHz: Double): Cardinal;
-var
-  lBlockPeriodMs: Cardinal;
-begin
-  if AUpdateTimeMs = 0 then
-    Exit(1);
-  if APollFrequencyHz > 0.1 then
-    lBlockPeriodMs := Cardinal(Ceil(5.0 / APollFrequencyHz * 1000.0))
-  else
-    lBlockPeriodMs := 500;
-  if lBlockPeriodMs < 250 then
-    lBlockPeriodMs := 250;
-  Result := Max(AUpdateTimeMs + CMic140ScanReadTimeoutExtraMs, lBlockPeriodMs);
-end;
-
-function Mic140LegacyReadThreadTimeoutMs(APollFrequencyHz: Double;
-  AUpdateTimeMs: Cardinal): Cardinal;
-var
-  lBlockPeriodMs: Cardinal;
-begin
-  if APollFrequencyHz > 0.1 then
-    lBlockPeriodMs := Cardinal(Ceil(1500.0 / APollFrequencyHz))
-  else if AUpdateTimeMs > 0 then
-    lBlockPeriodMs := AUpdateTimeMs
-  else
-    lBlockPeriodMs := 200;
-  if lBlockPeriodMs < 100 then
-    lBlockPeriodMs := 100;
-  Result := lBlockPeriodMs + 50;
-end;
-
-function Mic140AdcCodeIsSaturated(AValue: Double): Boolean;
-begin
-  Result := (AValue >= 32767) or (AValue <= -32768);
-end;
-
-function Mic140LegacyStrainAdcCodePlausible(AValue: Integer): Boolean;
-begin
-  { MIC-140 100 mV strain idle is near -7k signed codes; allow headroom. }
-  Result := (AValue <= CMic140StrainCodeMax) and (AValue >= CMic140StrainCodeMin);
-end;
-
-function Mic140LegacyStrainBlockLooksCorrupt(
-  const ABlock: TRecorderDeviceSampleBlock): Boolean;
-var
-  lI: Integer;
-  lJ: Integer;
-  lBadCount: Integer;
-  lPosCount: Integer;
-  lSatCount: Integer;
-begin
-  lBadCount := 0;
-  lPosCount := 0;
-  lSatCount := 0;
-  if (ABlock.ChannelCount <= 0) or (ABlock.SampleCount <= 0) then
-    Exit(False);
-  for lJ := 0 to ABlock.SampleCount - 1 do
-    for lI := 0 to ABlock.ChannelCount - 1 do
-    begin
-      if lI >= Length(ABlock.Values) then
-        Continue;
-      if lJ >= Length(ABlock.Values[lI]) then
-        Continue;
-      if Mic140AdcCodeIsSaturated(ABlock.Values[lI][lJ]) then
-        Inc(lSatCount)
-      else if not Mic140LegacyStrainAdcCodePlausible(Trunc(ABlock.Values[lI][lJ])) then
-        Inc(lBadCount)
-      else if ABlock.Values[lI][lJ] > CMic140MisalignPositiveThreshold then
-        Inc(lPosCount);
-    end;
-  Result := (lBadCount >= CMic140MisalignMinBadStrainChannels) or
-    (lSatCount >= CMic140MisalignMinSatChannels) or
-    (lPosCount >= CMic140MisalignMinPositiveChannels);
-end;
-
-function Mic140LegacyRawBlockLooksCorrupt(const ARaw: TMic140LegacyRawBlock;
-  AUserChannelCount: Integer): Boolean;
-var
-  lI: Integer;
-  lPosCount: Integer;
-  lSatCount: Integer;
-  lCode: Integer;
-begin
-  lPosCount := 0;
-  lSatCount := 0;
-  if (ARaw.DataWordCount = 0) or (AUserChannelCount <= 0) then
-    Exit(False);
-  for lI := 0 to Min(AUserChannelCount - 1, 47) do
-  begin
-    lCode := SmallInt(ARaw.Data[lI]);
-    if (lCode >= 32767) or (lCode <= -32768) then
-      Inc(lSatCount)
-    else if lCode > CMic140MisalignPositiveThreshold then
-      Inc(lPosCount);
-  end;
-  Result := (lSatCount >= CMic140MisalignMinSatChannels) or
-    (lPosCount >= CMic140MisalignMinPositiveChannels);
-end;
-
-procedure Mic140LegacyExtractRawSample(const ARaw: TMic140LegacyRawBlock;
-  ASampleIndex, AUserChannelCount: Integer; out ASubRaw: TMic140LegacyRawBlock);
-var
-  lI: Integer;
-  lStride: Integer;
-  lSrcIndex: Integer;
-  lWords: Integer;
-begin
-  FillChar(ASubRaw, SizeOf(ASubRaw), 0);
-  Move(ARaw.Header[0], ASubRaw.Header[0], SizeOf(ARaw.Header));
-  ASubRaw.ReadSerial := ARaw.ReadSerial;
-  lStride := AUserChannelCount;
-  lWords := 0;
-  for lI := 0 to lStride - 1 do
-  begin
-    lSrcIndex := ASampleIndex * lStride + lI;
-    if lSrcIndex >= ARaw.DataWordCount then
-      Break;
-    ASubRaw.Data[lI] := ARaw.Data[lSrcIndex];
-    Inc(lWords);
-  end;
-  ASubRaw.DataWordCount := Word(lWords);
-end;
 
 procedure TRecorderMic140Device.LogLegacyScanBlockDetail(
   const ARaw: TMic140LegacyRawBlock; ASincePrevMs: QWord);
 var
   lCorrupt: Boolean;
-  lNumBuff: Word;
 begin
-  lNumBuff := ARaw.Header[CMic140LegacyBiosNumBuffIdx];
   lCorrupt := Mic140LegacyRawBlockLooksCorrupt(ARaw, fChannelCount);
   if lCorrupt then
   begin
@@ -663,32 +323,14 @@ begin
   end
   else
     fLegacyConsecutiveCorruptCount := 0;
-  if (not fLegacyReadPacketLogged) or
-     (ARaw.ReadSerial <= CMic140LegacyScanDetailLogBlocks) or lCorrupt then
+  if (not fLegacyReadPacketLogged) or lCorrupt or
+     (ARaw.ReadSerial <= CMic140LegacyScanDetailLogBlocks) then
   begin
-    if not fLegacyReadPacketLogged then
-    begin
-      Mic140LogWarning(Format(
-        '[MIC-140:%s:%d] Legacy first scan: readSerial=%d num_buff=%d sincePrevMs=%d dataWords=%d stride=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] d0=[%d,%d,%d,%d,%d,%d,%d,%d] d1=[%d,%d,%d,%d,%d,%d,%d,%d]',
-        [fHost, fPort, ARaw.ReadSerial, lNumBuff, ASincePrevMs, ARaw.DataWordCount,
-         LegacyInternalScanChannelCount,
-         ARaw.Header[0], ARaw.Header[1], ARaw.Header[2], ARaw.Header[3],
-         ARaw.Header[4], ARaw.Header[5], ARaw.Header[6], ARaw.Header[7],
-         ARaw.Header[8], ARaw.Header[9],
-         ARaw.Data[0], ARaw.Data[1], ARaw.Data[2], ARaw.Data[3],
-         ARaw.Data[4], ARaw.Data[5], ARaw.Data[6], ARaw.Data[7],
-         ARaw.Data[51], ARaw.Data[52], ARaw.Data[53], ARaw.Data[54],
-         ARaw.Data[55], ARaw.Data[56], ARaw.Data[57], ARaw.Data[58]]));
-      fLegacyReadPacketLogged := True;
-    end
-    else
-      Mic140LogWarning(Format(
-        '[MIC-140:%s:%d] Legacy scan: readSerial=%d num_buff=%d sincePrevMs=%d time_hi=%d time_lo=%d mdpWords=%d d0=[%d,%d,%d,%d] d1=[%d,%d,%d,%d] corrupt=%s',
-        [fHost, fPort, ARaw.ReadSerial, lNumBuff, ASincePrevMs, ARaw.Header[5],
-         ARaw.Header[6], ARaw.DataWordCount + CMic140LegacyBiosHeaderWords,
-         ARaw.Data[0], ARaw.Data[1], ARaw.Data[2], ARaw.Data[3],
-         ARaw.Data[51], ARaw.Data[52], ARaw.Data[53], ARaw.Data[54],
-         BoolToStr(lCorrupt, True)]));
+    Mic140LogWarning(Format(
+      '[MIC-140:%s:%d] Legacy scan: readSerial=%d num_buff=%d sincePrevMs=%d corrupt=%s',
+      [fHost, fPort, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+       ASincePrevMs, BoolToStr(lCorrupt, True)]));
+    fLegacyReadPacketLogged := True;
   end;
   if lCorrupt then
     LegacyTrySoftRestartScan;
@@ -754,289 +396,6 @@ begin
   fLegacyLastNumBuffValid := True;
 end;
 
-function Mic140FlashLogFilePath: string;
-begin
-  Result := SharedLogger.FileName;
-  if Result = '' then
-    Result := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\LogWindows.log');
-end;
-
-function Mic140BytesToHex(const AData; ASize, AMaxBytes: Integer): string;
-var
-  lCount: Integer;
-  lI: Integer;
-  lBytes: PByte;
-begin
-  Result := '';
-  lBytes := @AData;
-  lCount := ASize;
-  if lCount > AMaxBytes then
-    lCount := AMaxBytes;
-  for lI := 0 to lCount - 1 do
-    Result := Result + IntToHex(lBytes[lI], 2);
-  if ASize > AMaxBytes then
-    Result := Result + '...';
-end;
-
-function RecorderMic140FrequencyCount: Integer;
-begin
-  Result := CMic140FrequencyCount;
-end;
-
-function RecorderMic140Frequency(AIndex: Integer): Double;
-begin
-  if (AIndex < 0) or (AIndex >= CMic140FrequencyCount) then
-    raise ERecorderDeviceError.CreateFmt('MIC-140 frequency index is invalid: %d',
-      [AIndex]);
-  Result := CMic140Frequencies[AIndex];
-end;
-
-function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
-var
-  I: Integer;
-  lBestDelta: Double;
-  lDelta: Double;
-begin
-  Result := MIC140DefaultPollFrequencyHz;
-  lBestDelta := MaxDouble;
-  for I := 0 to High(CMic140Frequencies) do
-  begin
-    lDelta := Abs(CMic140Frequencies[I] - AFrequencyHz);
-    if lDelta < lBestDelta then
-    begin
-      lBestDelta := lDelta;
-      Result := CMic140Frequencies[I];
-    end;
-  end;
-end;
-
-function Mic140LegacyPeriodToSport(APeriodSec: Double): LongWord;
-begin
-  Result := LongWord(Trunc(APeriodSec * CMic140LegacyFreqClkHz + 1.0E-9)) and $00FFFFFF;
-end;
-
-function Mic140LegacySportToPeriod(ACount: LongWord): Double;
-begin
-  Result := (ACount and $00FFFFFF) / CMic140LegacyFreqClkHz;
-end;
-
-function Mic140LegacyCodeToPeriod(ACount: Double): Double;
-begin
-  Result := ACount / (2.0 * CMic140LegacyFreqClkHz);
-end;
-
-function Mic140LegacyMinProgrammingPeriod: Double;
-begin
-  Result := CMic140LegacyPeriodProgrammingChanCode /
-    (2.0 * CMic140LegacyFreqClkHz);
-end;
-
-function Mic140LegacyMinGroundPeriod: Double;
-var
-  lPeriod: Double;
-begin
-  lPeriod := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod4ChanCode) +
-    Mic140LegacyMinProgrammingPeriod;
-  if lPeriod < CMic140LegacyPeriodAdSec then
-    lPeriod := CMic140LegacyPeriodAdSec;
-  Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(lPeriod));
-end;
-
-function Mic140LegacyPeriodDecayToSport(APeriodSec: Double): Word;
-var
-  lPeriod: Double;
-begin
-  // ModuleMIC140_96::PeriodDecayToSport(): the descriptor stores only the
-  // SPORT wait part; fixed ADC/channel-programming delays are subtracted.
-  lPeriod := APeriodSec -
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod3ChanCode) -
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) -
-    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport) -
-    Mic140LegacyMinProgrammingPeriod;
-  if lPeriod < 0.0 then
-    lPeriod := 0.0;
-  Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
-end;
-
-function Mic140LegacySportToPeriodDecay(ACount: Word): Double;
-begin
-  Result := Mic140LegacySportToPeriod(ACount) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod3ChanCode) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport) +
-    Mic140LegacyMinProgrammingPeriod;
-end;
-
-function Mic140LegacyPeriodAverageToSport(APeriodSec: Double): Word;
-var
-  lPeriod: Double;
-begin
-  lPeriod := APeriodSec -
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod21ChanCode) -
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) -
-    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport);
-  if lPeriod < 0.0 then
-    lPeriod := 0.0;
-  Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
-end;
-
-function Mic140LegacySportToPeriodAverage(ACount: Word): Double;
-begin
-  Result := Mic140LegacySportToPeriod(ACount) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod21ChanCode) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriod1ChanCode) +
-    Mic140LegacyCodeToPeriod(CMic140LegacyDeltaSport);
-end;
-
-function Mic140LegacyCalcPeriodDecay(ACountChans: Word; APeriodSec,
-  APeriodAverSec: Double; ACountAver: Word; AGroundEnabled: Boolean): Double;
-var
-  lPeriodProc: Double;
-  lPeriods: Double;
-  lTimerFactor: Double;
-  lGroundPeriod: Double;
-begin
-  lTimerFactor := 1.0 + (2.0 * CMic140LegacyFreqClkHz /
-    CMic140LegacyTimerPeriod) *
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
-  lPeriods := APeriodSec / lTimerFactor;
-  APeriodAverSec := Mic140LegacySportToPeriodAverage(
-    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
-  lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
-  if AGroundEnabled then
-  begin
-    lGroundPeriod := Mic140LegacySportToPeriodDecay(
-      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
-    Result := (lPeriods - (ACountChans div 2) * lGroundPeriod) /
-      (ACountChans div 2) - (lPeriodProc + (ACountAver - 1) * APeriodAverSec);
-  end
-  else
-    Result := lPeriods / ACountChans -
-      (lPeriodProc + (ACountAver - 1) * APeriodAverSec);
-end;
-
-function Mic140LegacyCalcCountAver(ACountChans: Word; APeriodSec,
-  APeriodDecaySec, APeriodAverSec: Double; AGroundEnabled: Boolean): Word;
-var
-  lCount: LongInt;
-  lPeriodProc: Double;
-  lPeriods: Double;
-  lTimerFactor: Double;
-  lGroundPeriod: Double;
-begin
-  lTimerFactor := 1.0 + (2.0 * CMic140LegacyFreqClkHz /
-    CMic140LegacyTimerPeriod) *
-    Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
-  lPeriods := APeriodSec / lTimerFactor;
-  APeriodDecaySec := Mic140LegacySportToPeriodDecay(
-    Mic140LegacyPeriodDecayToSport(APeriodDecaySec));
-  APeriodAverSec := Mic140LegacySportToPeriodAverage(
-    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
-  lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
-  if AGroundEnabled then
-  begin
-    lGroundPeriod := Mic140LegacySportToPeriodDecay(
-      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
-    lCount := Trunc(((lPeriods - (ACountChans div 2) * lGroundPeriod) /
-      (ACountChans div 2) - (lPeriodProc + APeriodDecaySec)) /
-      APeriodAverSec + 1.0);
-  end
-  else
-    lCount := Trunc((lPeriods / ACountChans -
-      (lPeriodProc + APeriodDecaySec)) / APeriodAverSec + 1.0);
-
-  if lCount < CMic140LegacyMinCountAver then
-    lCount := CMic140LegacyMinCountAver;
-  if lCount > CMic140LegacyMaxCountAver then
-    lCount := CMic140LegacyMaxCountAver;
-  Result := Word(lCount);
-end;
-
-function Mic140LegacyCheckPeriodDecay(ACountChans: Word; APeriodSec,
-  APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
-  AGroundEnabled: Boolean): Double;
-var
-  lMaxDecay: Double;
-  lMinDelay: Double;
-begin
-  lMaxDecay := Mic140LegacyCalcPeriodDecay(ACountChans, APeriodSec,
-    APeriodAverSec, ACountAver, AGroundEnabled);
-  lMinDelay := Mic140LegacyMinGroundPeriod;
-  Result := APeriodDecaySec;
-  if lMaxDecay < Result then
-    Result := lMaxDecay;
-  if Result < lMinDelay then
-    Result := lMinDelay;
-  Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(Result));
-end;
-
-function Mic140LegacyCheckCountAver(ACountChans: Word; APeriodSec,
-  APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
-  AGroundEnabled: Boolean): Word;
-var
-  lMaxCount: LongInt;
-begin
-  Result := ACountAver;
-  lMaxCount := Mic140LegacyCalcCountAver(ACountChans, APeriodSec,
-    APeriodDecaySec, APeriodAverSec, AGroundEnabled);
-  if lMaxCount < Result then
-    Result := Word(lMaxCount);
-  if Result < CMic140LegacyMinCountAver then
-    Result := CMic140LegacyMinCountAver;
-end;
-
-function Mic140LegacyTimingForFrequency(AFrequencyHz: Double;
-  AChannelCount: Integer): TRecorderMic140Timing;
-var
-  lCountChans: Word;
-  lPeriodDecaySec: Double;
-begin
-  Result.FrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
-  if AChannelCount <= 0 then
-    AChannelCount := MIC140DefaultChannelCount;
-
-  // ModuleMC114::GetCountChansFor(flag_allch_sampl=0, flag_ground=1):
-  // the stable legacy scan for this 48-channel unit contains only user AIn
-  // descriptors, doubled because every channel is preceded by ground.
-  lCountChans := Word(AChannelCount * 2);
-  lPeriodDecaySec := CMic140LegacyInitPeriodDecaySec;
-  lPeriodDecaySec := Mic140LegacyCheckPeriodDecay(lCountChans,
-    1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec, 1, True);
-  Result.AveragePeriodUs := CMic140LegacyPeriodAdSec * 1000000.0;
-  Result.AverageSampleCount := Mic140LegacyCheckCountAver(lCountChans,
-    1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec,
-    CMic140LegacyMaxCountAver, True);
-  { BIOS scan must finish within the main timer period. The auto formula can
-    request hundreds of averages at 10 Hz / 48 ch and overrun the FIFO. }
-  if (Result.FrequencyHz <= 10.0) and (Result.AverageSampleCount > 4) then
-    Result.AverageSampleCount := 4;
-  Result.ChannelCommutationUs := lPeriodDecaySec * 1000000.0;
-  Result.GroundCommutationUs := Mic140LegacySportToPeriodDecay(
-    Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod)) * 1000000.0;
-  Result.LegacyChannelDelaySport := Mic140LegacyPeriodDecayToSport(
-    lPeriodDecaySec);
-  Result.LegacyGroundDelaySport := Mic140LegacyPeriodDecayToSport(
-    Mic140LegacyMinGroundPeriod);
-  Result.LegacyAverageDelaySport := Mic140LegacyPeriodAverageToSport(
-    CMic140LegacyPeriodAdSec);
-
-  // Newer Mebius/MDQ settings encode averaging as a power of two.
-  Result.AveragePower := 7;
-  if Result.FrequencyHz >= 10000.0 then
-    Result.AveragePower := 0
-  else if Result.FrequencyHz >= 400.0 then
-    Result.AveragePower := 4
-  else if Result.FrequencyHz >= 250.0 then
-    Result.AveragePower := 5
-  else if Result.FrequencyHz >= 150.0 then
-    Result.AveragePower := 6;
-end;
-
-function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
-begin
-  Result := Mic140LegacyTimingForFrequency(AFrequencyHz,
-    MIC140DefaultChannelCount);
-end;
 
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; AFrequencyHz: Double);
@@ -1344,6 +703,72 @@ begin
   Result := Copy(fChannels, 0, Length(fChannels));
 end;
 
+function TRecorderMic140Device.GetDeviceProperty(AProperty: TRecorderDeviceProperty;
+  AIndex: Integer): Variant;
+begin
+  case AProperty of
+    rdpName: Result := GetName;
+    rdpHost: Result := fHost;
+    rdpPort: Result := Integer(fPort);
+    rdpPollFrequencyHz: Result := fPollFrequencyHz;
+    rdpUpdateTimeMs: Result := Integer(fUpdateTimeMs);
+    rdpChannelCount: Result := fChannelCount;
+    rdpDeviceSerial: Result := GetDeviceSerial;
+    rdpStateWord: Result := Ord(fState);
+    rdpErrorCode: Result := 0;
+    rdpErrorText: Result := '';
+  else
+    Result := Null;
+  end;
+end;
+
+function TRecorderMic140Device.TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
+  const AValue: Variant; AIndex: Integer): Boolean;
+var
+  lNum: Double;
+begin
+  Result := False;
+  case AProperty of
+    rdpHost:
+      if VarIsStr(AValue) or VarIsType(AValue, varUString) then
+      begin
+        fHost := string(AValue);
+        Exit(True);
+      end;
+    rdpPort:
+      if VarIsNumeric(AValue) then
+      begin
+        lNum := AValue;
+        fPort := Word(Trunc(lNum));
+        Exit(True);
+      end;
+    rdpPollFrequencyHz:
+      if VarIsNumeric(AValue) then
+      begin
+        fPollFrequencyHz := Double(AValue);
+        Exit(True);
+      end;
+    rdpUpdateTimeMs:
+      if VarIsNumeric(AValue) then
+      begin
+        lNum := AValue;
+        fUpdateTimeMs := Cardinal(Trunc(lNum));
+        Exit(True);
+      end;
+    rdpChannelCount:
+      if VarIsNumeric(AValue) then
+      begin
+        lNum := AValue;
+        if Trunc(lNum) > 0 then
+        begin
+          fChannelCount := Trunc(lNum);
+          BuildChannels;
+          Exit(True);
+        end;
+      end;
+  end;
+end;
+
 procedure TRecorderMic140Device.BuildChannels;
 var
   I: Integer;
@@ -1502,259 +927,6 @@ begin
     Result := 500;
 end;
 
-function Mic140LegacyPackMic140RegDesc(AMuxIn1, AMuxIn2, AK1, AK2, AAmp2, AAmp4,
-  AAmp16, ABreakTst: Word): Word;
-begin
-  // TRegMIC140 bit layout from mic140_96mod.cpp: desc |= reg[j] << j.
-  Result := 0;
-  if AAmp4 <> 0 then
-    Result := Result or (AAmp4 shl 1);
-  if AAmp2 <> 0 then
-    Result := Result or (AAmp2 shl 2);
-  if AAmp16 <> 0 then
-    Result := Result or (AAmp16 shl 3);
-  if AMuxIn1 <> 0 then
-    Result := Result or (AMuxIn1 shl 4);
-  if AMuxIn2 <> 0 then
-    Result := Result or (AMuxIn2 shl 5);
-  if ABreakTst <> 0 then
-    Result := Result or (ABreakTst shl 6);
-  if AK1 <> 0 then
-    Result := Result or (AK1 shl 8);
-  if AK2 <> 0 then
-    Result := Result or (AK2 shl 10);
-end;
-
-procedure Mic140LegacyPackMe04848(const ACode: array of Word; out AW0, AW1: Word);
-var
-  lReg: packed record
-    indicator: Word;
-    XA14: Word;
-    XA13: Word;
-    XA12: Word;
-    XA11: Word;
-    XA10: Word;
-    XA9: Word;
-    XA8: Word;
-    XA7: Word;
-    XA6: Word;
-    XA5: Word;
-    XA4: Word;
-    XA3: Word;
-    XA2: Word;
-    XA1: Word;
-    XA0: Word;
-  end;
-  J: Integer;
-begin
-  // ModuleMIC140_48::PrepareModuleDescForScan packs TRegME048 into code_ME048[1]
-  // when num_me048=0 (all 48 AIn channels on this module).
-  AW0 := 0;
-  AW1 := 0;
-  if Length(ACode) < 16 then
-    Exit;
-  FillChar(lReg, SizeOf(lReg), 0);
-  lReg.XA0 := ACode[0];
-  lReg.XA1 := ACode[1];
-  lReg.XA2 := ACode[2];
-  lReg.XA3 := ACode[3];
-  lReg.XA4 := ACode[4];
-  lReg.XA5 := ACode[5];
-  lReg.XA6 := ACode[6];
-  lReg.XA7 := ACode[7];
-  lReg.XA8 := ACode[8];
-  lReg.XA9 := ACode[9];
-  lReg.XA10 := ACode[10];
-  lReg.XA11 := ACode[11];
-  lReg.XA12 := ACode[12];
-  lReg.XA13 := ACode[13];
-  lReg.XA14 := ACode[14];
-  lReg.indicator := ACode[15];
-  for J := 0 to 15 do
-    AW1 := AW1 or (PWord(@lReg)[J] shl J);
-end;
-
-procedure Mic140LegacyPackMe04896(const ACode: array of Word;
-  ANumMe048: Word; out AW0, AW1: Word);
-var
-  lReg: array[0..15] of Word;
-  J: Integer;
-  lWordIdx: Integer;
-begin
-  // ModuleMIC140_96::PrepareModuleDescForScan packs TRegME048 into two words.
-  AW0 := 0;
-  AW1 := 0;
-  if Length(ACode) < 16 then
-    Exit;
-  lReg[0] := ACode[15];
-  for J := 0 to 14 do
-    lReg[J + 1] := ACode[14 - J];
-  lWordIdx := 1 - Integer(ANumMe048);
-  for J := 0 to 15 do
-    if lWordIdx = 0 then
-      AW0 := AW0 or (lReg[J] shl J)
-    else
-      AW1 := AW1 or (lReg[J] shl J);
-end;
-
-procedure Mic140LegacyMe048ForPhysicalChannel(APhysicalChannel: Integer;
-  out AW0, AW1: Word);
-const
-  CCodeLevel0: array[0..15] of Word =
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
-  CCodeChanAIn: array[0..47, 0..15] of Word = (
-    (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    (1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    (0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1),
-    (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1),
-    (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1),
-    (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1),
-    (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1));
-var
-  lIdx: Integer;
-begin
-  if (APhysicalChannel < 0) or (APhysicalChannel > 47) then
-  begin
-    Mic140LegacyPackMe04848(CCodeLevel0, AW0, AW1);
-    Exit;
-  end;
-  lIdx := APhysicalChannel;
-  Mic140LegacyPackMe04848(CCodeChanAIn[lIdx], AW0, AW1);
-end;
-
-function Mic140LegacyMe048Code48(APhysicalChannel: Integer): Word;
-var
-  lGroup: Integer;
-  lLow: Integer;
-  lSelectLine: Integer;
-begin
-  // Equivalent to packing TRegME048 from MIC140_48mod.cpp. The first 24
-  // physical channels use selector lines XA2..XA7; the second half uses
-  // XA8..XA13 and sets the indicator bit.
-  lLow := APhysicalChannel mod 4;
-  if APhysicalChannel < 24 then
-  begin
-    lGroup := APhysicalChannel div 4;
-    lSelectLine := 2 + lGroup;
-    Result := 0;
-  end
-  else
-  begin
-    lGroup := (APhysicalChannel - 24) div 4;
-    lSelectLine := 8 + lGroup;
-    Result := 1;
-  end;
-
-  if (lLow and 1) <> 0 then
-    Result := Result or (Word(1) shl 15);
-  if (lLow and 2) <> 0 then
-    Result := Result or (Word(1) shl 14);
-  Result := Result or (Word(1) shl (15 - lSelectLine));
-end;
-
-function Mic140LegacyLevel0Code: Word;
-begin
-  Result := Word(1) shl 1;
-end;
-
-function Mic140LegacyTInCode48(ATemperatureIndex: Integer): Word;
-begin
-  // ModuleMIC140_48::code_chanTIn_48 and TInNum={1,0}. The third internal
-  // slot is programmed as level0mV by the original driver, not as an external
-  // user temperature channel.
-  case ATemperatureIndex of
-    0: Result := $C002;
-    1: Result := $4002;
-  else
-    Result := Mic140LegacyLevel0Code;
-  end;
-end;
-
-function Mic140LegacyTInDesc48(ATemperatureIndex: Integer): Word;
-begin
-  // TRegMIC140 packed bits: MUX_IN1 is bit 4, MUX_IN2 is bit 5, K1 is bit 8.
-  // ModuleMIC140_48 forces the last TIn slot to board MUX 2 while keeping the
-  // same hard-amplifier timing bits as ordinary scan channels.
-  if ATemperatureIndex = MIC140TemperatureChannelCount - 1 then
-    Result := $0120
-  else
-    Result := $0110;
-end;
-
-function Mic140LegacyWordAt(const AWords: TRecorderMic140LegacyWordArray;
-  AIndex: Integer): Word;
-begin
-  if (AIndex >= 0) and (AIndex < Length(AWords)) then
-    Result := AWords[AIndex]
-  else
-    Result := 0;
-end;
-
-function Mic140ChannelTemperOffset(AChannelIndex: Integer): Double;
-begin
-  if (AChannelIndex >= Low(CMic140TemperOffset48)) and
-    (AChannelIndex <= High(CMic140TemperOffset48)) then
-    Result := CMic140TemperOffset48[AChannelIndex]
-  else
-    Result := 0.0;
-end;
-
-function Mic140DefaultCjcTChannelNumber(AChannelIndex: Integer): Integer;
-begin
-  if (AChannelIndex >= 0) and (AChannelIndex < CMic140DefaultCjcSplitChannel) then
-    Result := 1
-  else if (AChannelIndex >= CMic140DefaultCjcSplitChannel) and
-    (AChannelIndex < MIC140DefaultChannelCount) then
-    Result := 2
-  else
-    Result := 0;
-end;
-
-function Mic140DefaultCjcIndex(AChannelIndex: Integer): Integer;
-begin
-  Result := Mic140DefaultCjcTChannelNumber(AChannelIndex) - 1;
-end;
 
 function Mic140TagHasThermocoupleCalibration(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): Boolean;
@@ -1876,241 +1048,7 @@ begin
   fState := rdsConnected;
 end;
 
-function Mic140JunctionTemperatureLooksValid(AValue: Double): Boolean;
-begin
-  Result := (AValue > CMic140JunctionTempMinC) and (AValue < CMic140JunctionTempMaxC);
-end;
 
-function Mic140TInCalibrFileNumber(ATInListIndex: Integer): Integer;
-begin
-  { CChannelTInMIC140::GetTransFileName uses GetChanN() -> TIn\01..03.csv.
-    TInNum/TInGetChanN tables map ME048 slots only, not calibration file names. }
-  if (ATInListIndex >= 0) and (ATInListIndex < MIC140TemperatureChannelCount) then
-    Result := ATInListIndex + 1
-  else
-    Result := 0;
-end;
-
-function Mic140FindRegistryTagBySourceAddress(ARegistry: TRecorderTagRegistry;
-  const ASourceId, AAddress: string): TRecorderTag;
-var
-  I: Integer;
-begin
-  Result := nil;
-  if ARegistry = nil then
-    Exit;
-  for I := 0 to ARegistry.TagCount - 1 do
-    if SameText(ARegistry.Tags[I].SourceId, ASourceId) and
-      SameMic140Address(ARegistry.Tags[I].Address, AAddress) then
-      Exit(ARegistry.Tags[I]);
-end;
-
-function RecorderMic140CalibrRootDir: string;
-begin
-  Result := RecorderMeraCalibrRootDir;
-end;
-
-function RecorderMic140RangeCalibrDirName(ARangeIndex: Integer): string;
-begin
-  if (ARangeIndex >= 0) and (ARangeIndex < CMic140RangeCount) then
-    Result := CMic140RangeCalibrDirNames[ARangeIndex]
-  else
-    Result := CMic140RangeCalibrDirNames[CMic140Range100mV];
-end;
-
-function RecorderMic140HardwareCalibrCsvPath(ADeviceSerial, ARangeIndex,
-  AChannelNumber: Integer): string;
-var
-  lRangeDir: string;
-begin
-  if (ADeviceSerial <= 0) or (AChannelNumber <= 0) then
-    Exit('');
-  lRangeDir := RecorderMic140RangeCalibrDirName(ARangeIndex);
-  Result := IncludeTrailingPathDelimiter(RecorderMic140CalibrRootDir) +
-    CMic140HardwareCalibrSubDir + Format('sn%4.4d', [ADeviceSerial]) +
-    PathDelim + lRangeDir + PathDelim + Format('%2.2d.csv', [AChannelNumber]);
-end;
-
-function RecorderMic140TInHardwareCalibrExportCsvPath(ADeviceSerial,
-  ATinChannelNumber: Integer): string;
-begin
-  if (ADeviceSerial <= 0) or (ATinChannelNumber <= 0) then
-    Exit('');
-  { CChannelTInMIC140::GetTransFileName + GetCalibrGroupDir -> ...\TIn\NN.csv }
-  Result := IncludeTrailingPathDelimiter(RecorderMic140CalibrRootDir) +
-    CMic140HardwareCalibrSubDir + Format('sn%4.4d', [ADeviceSerial]) +
-    PathDelim + CMic140TInCalibrSubDirName + PathDelim +
-    Format('%2.2d.csv', [ATinChannelNumber]);
-end;
-
-function RecorderMic140ParseCsvNumber(const AText: string; out AValue: Double): Boolean;
-var
-  lFS: TFormatSettings;
-  lText: string;
-begin
-  lText := Trim(StringReplace(AText, ',', '.', [rfReplaceAll]));
-  lFS := DefaultFormatSettings;
-  lFS.DecimalSeparator := '.';
-  Result := TryStrToFloat(lText, AValue, lFS);
-end;
-
-function RecorderMic140LoadCalibrationFromCsv(const AFileName: string;
-  ACalibration: TRecorderCalibration): Boolean;
-var
-  I: Integer;
-  lLines: TStringList;
-  lParts: TStringList;
-  lX: Double;
-  lY: Double;
-begin
-  Result := False;
-  if (ACalibration = nil) or (Trim(AFileName) = '') or
-    (not FileExistsUTF8(AFileName)) then
-    Exit;
-
-  lLines := TStringList.Create;
-  lParts := TStringList.Create;
-  try
-    lParts.StrictDelimiter := True;
-    lParts.Delimiter := ',';
-    lLines.LoadFromFile(AFileName);
-    ACalibration.ClearPoints;
-    for I := 0 to lLines.Count - 1 do
-    begin
-      if Trim(lLines[I]) = '' then
-        Continue;
-      lParts.DelimitedText := lLines[I];
-      if lParts.Count < 2 then
-        Continue;
-      if not RecorderMic140ParseCsvNumber(lParts[0], lX) then
-        Continue;
-      if not RecorderMic140ParseCsvNumber(lParts[1], lY) then
-        Continue;
-      ACalibration.AddPoint(lX, lY);
-    end;
-    Result := ACalibration.PointCount > 0;
-  finally
-    lParts.Free;
-    lLines.Free;
-  end;
-end;
-
-function RecorderMic140MakeHardwareCalibrationName(ADeviceSerial, ARangeIndex,
-  AChannelNumber: Integer): string;
-begin
-  Result := Format('MIC140 sn%4.4d %s ch%2.2d',
-    [ADeviceSerial, RecorderMic140RangeCalibrDirName(ARangeIndex), AChannelNumber]);
-end;
-
-function RecorderMic140UpsertHardwareCalibration(ARegistry: TRecorderTagRegistry;
-  const AName: string; ASource: TRecorderCalibration): TRecorderCalibration;
-var
-  lExisting: TRecorderCalibration;
-begin
-  Result := nil;
-  if (ARegistry = nil) or (ASource = nil) or (Trim(AName) = '') then
-    Exit;
-  lExisting := ARegistry.FindCalibrationByName(AName);
-  if lExisting = nil then
-  begin
-    Result := TRecorderCalibration.Create(rckPiecewiseLinear);
-    Result.Assign(ASource);
-    Result.Name := AName;
-    ARegistry.Calibrations.Add(Result);
-    Exit;
-  end;
-  lExisting.Assign(ASource);
-  lExisting.Name := AName;
-  Result := lExisting;
-end;
-
-function RecorderMic140MakeTInHardwareCalibrationName(ADeviceSerial,
-  ATInFileNumber: Integer): string;
-begin
-  Result := Format('MIC140 sn%4.4d TIn ch%2.2d', [ADeviceSerial, ATInFileNumber]);
-end;
-
-function RecorderMic140TInHardwareCalibrCsvPath(ADeviceSerial, ATInListIndex,
-  ADevSubRev: Integer): string;
-var
-  lTInFileNumber: Integer;
-begin
-  Result := '';
-  if ADeviceSerial <= 0 then
-    Exit;
-  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex);
-  if lTInFileNumber <= 0 then
-    Exit;
-  Result := IncludeTrailingPathDelimiter(RecorderMic140CalibrRootDir) +
-    CMic140HardwareCalibrSubDir + Format('sn%4.4d', [ADeviceSerial]) +
-    PathDelim + CMic140TInCalibrSubDirName + PathDelim +
-    Format('%2.2d.csv', [lTInFileNumber]);
-end;
-
-function RecorderMic140EnsureTInHardwareCalibration(
-  ARegistry: TRecorderTagRegistry; ADeviceSerial, ATInListIndex,
-  ADevSubRev: Integer; out ACalibrationName: string): Boolean;
-var
-  lCalibration: TRecorderCalibration;
-  lCacheKey: string;
-  lCsvPath: string;
-  lName: string;
-  lTInFileNumber: Integer;
-begin
-  Result := False;
-  ACalibrationName := '';
-  if (ARegistry = nil) or (ADeviceSerial <= 0) or (ATInListIndex < 0) then
-    Exit;
-  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex);
-  if lTInFileNumber <= 0 then
-    Exit;
-  lName := RecorderMic140MakeTInHardwareCalibrationName(ADeviceSerial,
-    lTInFileNumber);
-  if ARegistry.FindCalibrationByName(lName) <> nil then
-  begin
-    ACalibrationName := lName;
-    Exit(True);
-  end;
-  lCsvPath := RecorderMic140TInHardwareCalibrCsvPath(ADeviceSerial,
-    ATInListIndex, ADevSubRev);
-  if lCsvPath = '' then
-    Exit;
-  lCacheKey := Format('%d:%d:%d', [ADeviceSerial, ATInListIndex, ADevSubRev]);
-  if (g_Mic140TInCalibrFailedKeys <> nil) and
-    (g_Mic140TInCalibrFailedKeys.IndexOf(lCacheKey) >= 0) and
-    (not FileExistsUTF8(lCsvPath)) then
-    Exit;
-  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
-  try
-    if not RecorderMic140LoadCalibrationFromCsv(lCsvPath, lCalibration) then
-    begin
-      if g_Mic140TInCalibrFailedKeys <> nil then
-        g_Mic140TInCalibrFailedKeys.Add(lCacheKey);
-      if (g_Mic140TInCalibrMissLogged <> nil) and
-        (g_Mic140TInCalibrMissLogged.IndexOf(lCsvPath) < 0) then
-      begin
-        g_Mic140TInCalibrMissLogged.Add(lCsvPath);
-        Mic140LogWarning(Format('[MIC-140] TIn hardware calibration not found: %s',
-          [lCsvPath]));
-      end;
-      Exit;
-    end;
-    lCalibration.Extrapolation := True;
-    lCalibration.Name := lName;
-    if RecorderMic140UpsertHardwareCalibration(ARegistry, lName, lCalibration) = nil then
-      Exit;
-    if (g_Mic140TInCalibrFailedKeys <> nil) and
-      (g_Mic140TInCalibrFailedKeys.IndexOf(lCacheKey) >= 0) then
-      g_Mic140TInCalibrFailedKeys.Delete(
-        g_Mic140TInCalibrFailedKeys.IndexOf(lCacheKey));
-    ACalibrationName := lName;
-    Result := True;
-    Mic140LogWarning(Format('[MIC-140] loaded TIn hardware calibration from %s',
-      [lCsvPath]));
-  finally
-    lCalibration.Free;
-  end;
-end;
 
 function Mic140TryTransformTInSampleToJunctionC(ARegistry: TRecorderTagRegistry;
   ATemperatureTag: TRecorderTag; ADeviceSerial, ATInListIndex, ADevSubRev: Integer;
@@ -2163,6 +1101,9 @@ var
   lCorrectedMv: Double;
   lJunctionC: Double;
   lJunctionMv: Double;
+  lSettings: TRecorderMic140ChannelSettings;
+  lChannelNumber: Integer;
+  lCjcOffsetC: Double;
 begin
   if (ARegistry = nil) or (ATag = nil) then
     Exit(ARawCode);
@@ -2176,8 +1117,12 @@ begin
     Exit(ARegistry.TransformTagThermocoupleValue(ATag, lChannelMv));
   if not Mic140JunctionTemperatureLooksValid(AColdJunctionC) then
     Exit(ARegistry.TransformTagThermocoupleValue(ATag, lChannelMv));
+  lCjcOffsetC := 0.0;
+  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
+    lSettings) then
+    lCjcOffsetC := lSettings.CjcTemperOffsetC;
   { 2. По T_КТХС найти мВ на ГХ термопары и прибавить к мВ канала. }
-  lJunctionC := AColdJunctionC + Mic140ChannelTemperOffset(AChannelIndex);
+  lJunctionC := AColdJunctionC + lCjcOffsetC;
   if not ARegistry.InvertTagThermocoupleValue(ATag, lJunctionC, lJunctionMv) then
     Exit(ARegistry.TransformTagThermocoupleValue(ATag, lChannelMv));
   lCorrectedMv := lChannelMv + lJunctionMv;
@@ -2186,7 +1131,7 @@ begin
 end;
 
 function Mic140TryGetColdJunctionTemperature(ARegistry: TRecorderTagRegistry;
-  ATemperatureTag: TRecorderTag; const ABlock: TRecorderDeviceSampleBlock;
+  ATemperatureTag: TRecorderTag; const AAux: TMic140AuxTemperatureBlock;
   ACjcChannel, ADeviceSerial, ADevSubRev: Integer;
   out ATemperatureC: Double): Boolean;
 var
@@ -2200,21 +1145,21 @@ begin
   ATemperatureC := CMic140CjcNotAvailable;
   lCjcIndex := ACjcChannel - 1;
   if (ARegistry = nil) or (lCjcIndex < 0) or
-    (lCjcIndex >= ABlock.TemperatureCount) or
-    (lCjcIndex >= Length(ABlock.TemperatureValues)) then
+    (lCjcIndex >= AAux.ChannelCount) or
+    (lCjcIndex >= Length(AAux.Values)) then
     Exit;
 
   lSum := 0;
   lCount := 0;
-  for I := 0 to ABlock.SampleCount - 1 do
-    if (lCjcIndex < Length(ABlock.TemperatureValid)) and
-      (I < Length(ABlock.TemperatureValid[lCjcIndex])) and
-      ABlock.TemperatureValid[lCjcIndex][I] and
-      (I < Length(ABlock.TemperatureValues[lCjcIndex])) then
+  for I := 0 to AAux.SampleCount - 1 do
+    if (lCjcIndex < Length(AAux.Valid)) and
+      (I < Length(AAux.Valid[lCjcIndex])) and
+      AAux.Valid[lCjcIndex][I] and
+      (I < Length(AAux.Values[lCjcIndex])) then
     begin
       if Mic140TryTransformTInSampleToJunctionC(ARegistry, ATemperatureTag,
         ADeviceSerial, lCjcIndex, ADevSubRev,
-        ABlock.TemperatureValues[lCjcIndex][I], lSampleJunctionC) then
+        AAux.Values[lCjcIndex][I], lSampleJunctionC) then
       begin
         lSum := lSum + lSampleJunctionC;
         Inc(lCount);
@@ -2343,6 +1288,7 @@ begin
   ASettings.ThermocoupleScalePath := '';
   ASettings.ThermocoupleScaleName := '';
   ASettings.SoftBalance := 0;
+  ASettings.CjcTemperOffsetC := 0.0;
 end;
 
 function RecorderMic140ChannelUsesTemperature(
@@ -2510,936 +1456,16 @@ begin
   end;
 end;
 
-function RecorderMic140ResolveDeviceSerialForTag(const ATag: TRecorderTag;
-  ADeviceSerial: Integer): Integer;
-var
-  lHost: string;
-  lPort: Word;
-  lSerial: Integer;
-  lHostOctet: Integer;
-  lTagSerial: Integer;
-begin
-  if ADeviceSerial > 0 then
-    Exit(ADeviceSerial);
-  if (ATag <> nil) and (ATag.Mic140DeviceSerial > 0) then
-  begin
-    lTagSerial := ATag.Mic140DeviceSerial;
-    if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) and
-       RecorderMic140HostLastOctet(lHost, lHostOctet) and
-       (lTagSerial = lHostOctet) then
-    begin
-      { Старые конфиги сохраняли DevSerNo (= последний октет IP), не CCSerNo. }
-    end
-    else
-      Exit(lTagSerial);
-  end;
-  if (ATag <> nil) and TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) and
-    RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lSerial) then
-    Exit(lSerial);
-  Result := 0;
-end;
 
-function RecorderMic140EnsureHardwareCalibrationInRegistry(
-  ARegistry: TRecorderTagRegistry; ADeviceSerial, ARangeIndex,
-  AChannelNumber: Integer; out ACalibrationName: string): Boolean;
-var
-  lCalibration: TRecorderCalibration;
-  lCsvPath: string;
-  lName: string;
-begin
-  Result := False;
-  ACalibrationName := '';
-  if (ARegistry = nil) or (ADeviceSerial <= 0) or (AChannelNumber <= 0) then
-    Exit;
-  if ARangeIndex >= CMic140RangeCount then
-    ARangeIndex := CMic140Range100mV;
-  lName := RecorderMic140MakeHardwareCalibrationName(ADeviceSerial, ARangeIndex,
-    AChannelNumber);
-  if ARegistry.FindCalibrationByName(lName) <> nil then
-  begin
-    ACalibrationName := lName;
-    Exit(True);
-  end;
-  lCsvPath := RecorderMic140HardwareCalibrCsvPath(ADeviceSerial, ARangeIndex,
-    AChannelNumber);
-  if lCsvPath = '' then
-    Exit;
-  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
-  try
-    if not RecorderMic140LoadCalibrationFromCsv(lCsvPath, lCalibration) then
-    begin
-      Mic140LogWarning(Format('[MIC-140] hardware calibration not found: %s',
-        [lCsvPath]));
-      Exit;
-    end;
-    lCalibration.Extrapolation := True;
-    lCalibration.Name := lName;
-    if RecorderMic140UpsertHardwareCalibration(ARegistry, lName, lCalibration) = nil then
-      Exit;
-    ACalibrationName := lName;
-    Result := True;
-    Mic140LogWarning(Format('[MIC-140] loaded hardware calibration from %s',
-      [lCsvPath]));
-  finally
-    lCalibration.Free;
-  end;
-end;
-
-function RecorderMic140LoadHardwareCalibrationForTag(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  ADeviceSerial: Integer; AEnableOnTag: Boolean): Boolean;
-var
-  lChannelNumber: Integer;
-  lName: string;
-  lRangeIndex: Integer;
-  lSerial: Integer;
-begin
-  Result := False;
-  if (ARegistry = nil) or (ATag = nil) then
-    Exit;
-  if Pos(CMic140SourcePrefix, ATag.SourceId) <> 1 then
-    Exit;
-  if not ParseMic140ChannelNumber(ATag.Address, lChannelNumber) then
-    Exit;
-
-  lSerial := RecorderMic140ResolveDeviceSerialForTag(ATag, ADeviceSerial);
-  if lSerial <= 0 then
-    Exit;
-
-  lRangeIndex := ATag.MeasRangeIndex;
-  if lRangeIndex >= CMic140RangeCount then
-    lRangeIndex := CMic140Range100mV;
-
-  if not RecorderMic140EnsureHardwareCalibrationInRegistry(ARegistry, lSerial,
-    lRangeIndex, lChannelNumber, lName) then
-    Exit;
-  ATag.Mic140DeviceSerial := lSerial;
-  ATag.HardwareCalibrationName := lName;
-  if AEnableOnTag then
-    ATag.HardwareCalibrationEnabled := True;
-  Result := True;
-  Mic140LogWarning(Format('[MIC-140] assigned hardware calibration %s to tag %s',
-    [lName, ATag.Name]));
-end;
-
-procedure RecorderMic140ApplyHardwareCalibrations(
-  ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  ADeviceSerial: Integer);
-var
-  I: Integer;
-  lCalName: string;
-  lChannelNumber: Integer;
-  lRangeIndex: Integer;
-  lTag: TRecorderTag;
-begin
-  if (ARegistry = nil) or (Trim(ASourceId) = '') then
-    Exit;
-  for I := 0 to ARegistry.TagCount - 1 do
-  begin
-    lTag := ARegistry.Tags[I];
-    if not SameText(lTag.SourceId, ASourceId) or
-      (Pos('diagnostics.', LowerCase(lTag.Address)) = 1) or
-      (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber)) then
-      Continue;
-    lRangeIndex := lTag.MeasRangeIndex;
-    if lRangeIndex >= CMic140RangeCount then
-      lRangeIndex := CMic140Range100mV;
-    if not RecorderMic140EnsureHardwareCalibrationInRegistry(ARegistry,
-      ADeviceSerial, lRangeIndex, lChannelNumber, lCalName) then
-      Continue;
-    if lTag.HardwareCalibrationEnabled then
-    begin
-      if Trim(lTag.HardwareCalibrationName) = '' then
-        lTag.HardwareCalibrationName := lCalName;
-      if lTag.Mic140DeviceSerial <= 0 then
-        lTag.Mic140DeviceSerial := ADeviceSerial;
-    end;
-  end;
-end;
-
-procedure RecorderMic140ApplyTInHardwareCalibrations(
-  ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  ADeviceSerial, ADevSubRev: Integer; const ATemperatureTagNames: TStrings);
-var
-  I: Integer;
-  lCalName: string;
-  lTag: TRecorderTag;
-begin
-  if (ARegistry = nil) or (Trim(ASourceId) = '') or (ADeviceSerial <= 0) or
-    (ATemperatureTagNames = nil) then
-    Exit;
-  for I := 0 to ATemperatureTagNames.Count - 1 do
-  begin
-    if not RecorderMic140EnsureTInHardwareCalibration(ARegistry, ADeviceSerial,
-      I, ADevSubRev, lCalName) then
-      Continue;
-    lTag := Mic140FindRegistryTagBySourceAddress(ARegistry, ASourceId,
-      ATemperatureTagNames[I]);
-    if lTag = nil then
-      lTag := ARegistry.FindByName(ATemperatureTagNames[I]);
-    if lTag = nil then
-      Continue;
-    if lTag.HardwareCalibrationEnabled then
-    begin
-      lTag.HardwareCalibrationName := lCalName;
-      if lTag.Mic140DeviceSerial <= 0 then
-        lTag.Mic140DeviceSerial := ADeviceSerial;
-    end;
-  end;
-end;
-
-type
-  TMic140FltPoint = packed record
-    X: Single;
-    Y: Single;
-  end;
-
-  TMic140TareType1 = packed record
-    Date: Word;
-    Time: Word;
-    OperName: array[0..15] of Byte;
-    TareType: Byte;
-    Range: Byte;
-    TableNodes: Byte;
-    TablePoints: array[0..CMic140TareTableMaxPoints - 1] of TMic140FltPoint;
-  end;
-
-  TMic140TareType2 = packed record
-    Date: Word;
-    Time: Word;
-    OperName: array[0..15] of Byte;
-    TareType: Byte;
-    Range: Byte;
-    TableNodes: Byte;
-    TablePoints: array[0..152] of TMic140FltPoint;
-  end;
-
-  TMic140FlashDirEntry = packed record
-    Name: array[0..CMic140FlashNameLength - 1] of AnsiChar;
-    Size: LongWord;
-    FileTime: LongWord;
-    Addr: LongWord;
-  end;
-
-function Mic140FlashDirEntryName(const AEntry: TMic140FlashDirEntry): string;
-var
-  I: Integer;
-begin
-  SetLength(Result, 0);
-  for I := 0 to CMic140FlashNameLength - 1 do
-  begin
-    if (AEntry.Name[I] = #0) or (AEntry.Name[I] = AnsiChar(#$FF)) then
-      Break;
-    Result := Result + AEntry.Name[I];
-  end;
-  Result := Trim(Result);
-end;
-
-function Mic140FlashDirEntryIsEmpty(const AEntry: TMic140FlashDirEntry): Boolean;
-var
-  I: Integer;
-  lEmpty: Boolean;
-begin
-  lEmpty := True;
-  for I := 0 to CMic140FlashNameLength - 1 do
-  begin
-    if (AEntry.Name[I] <> #0) and (AEntry.Name[I] <> AnsiChar(#$FF)) then
-      Exit(False);
-  end;
-  Result := lEmpty;
-end;
-
-function Mic140ParseFlashDirEntries(const AData: array of Byte;
-  out AEntries: array of TMic140FlashDirEntry): Integer;
-var
-  I, lOffset: Integer;
-begin
-  Result := 0;
-  for I := 0 to CMic140FlashMaxDirEntries - 1 do
-  begin
-    lOffset := I * SizeOf(TMic140FlashDirEntry);
-    if lOffset + SizeOf(TMic140FlashDirEntry) > Length(AData) then
-      Break;
-    Move(AData[lOffset], AEntries[Result], SizeOf(TMic140FlashDirEntry));
-    if Mic140FlashDirEntryIsEmpty(AEntries[Result]) then
-      Break;
-    Inc(Result);
-  end;
-end;
-
-function Mic140Mic118TarFileSize(AMaxAinChannels, AMaxTinChannels: Integer): LongWord;
-begin
-  Result := LongWord(AMaxAinChannels) * SizeOf(TMic140TareType1) * CMic140RangeCountMic140 +
-    LongWord(AMaxTinChannels) * SizeOf(TMic140TareType2) * CMic140RangeCountMic140;
-end;
-
-function Mic140ResolveMaxAinChannels(AChannelCountHint: Integer): Integer;
-begin
-  if (AChannelCountHint > 0) and (AChannelCountHint <= CMic140MaxAinChannels48) then
-    Result := CMic140MaxAinChannels48
-  else
-    Result := CMic140MaxAinChannels96;
-end;
-
-function Mic140FindMi118TarBaseAddress(AClient: TRecorderMic140LegacyClient;
-  AMaxAinChannels, AMaxTinChannels: Integer; out ABaseAddress: LongWord;
-  out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
-var
-  lAddress: LongWord;
-  lDirBytes: array of Byte;
-  lEntries: array of TMic140FlashDirEntry;
-  lFileCount: Integer;
-  lFoundIndex: Integer;
-  lI: Integer;
-  lName: string;
-  lPrefix: string;
-  lSize: LongWord;
-  lTareSize: LongWord;
-begin
-  Result := False;
-  ABaseAddress := 0;
-  AErrorMessage := '';
-  lPrefix := ALogPrefix;
-  if lPrefix <> '' then
-    lPrefix := lPrefix + ' ';
-  SetLength(lDirBytes, CMic140FlashDirSize);
-  if not AClient.ReadFlashStorage(CMic140FlashDirOffset, lDirBytes[0],
-    CMic140FlashDirSize, AErrorMessage) then
-  begin
-    Mic140LogFlash(lPrefix + 'flash dir read failed at offset ' +
-      IntToStr(CMic140FlashDirOffset) + ': ' + AErrorMessage);
-    Exit;
-  end;
-
-  SetLength(lEntries, CMic140FlashMaxDirEntries);
-  lFileCount := Mic140ParseFlashDirEntries(lDirBytes, lEntries);
-  Mic140LogFlash(lPrefix + Format('flash dir entries=%d tareRecSize=%d expectedTareFileSize=%d',
-    [lFileCount, SizeOf(TMic140TareType1),
-    Mic140Mic118TarFileSize(AMaxAinChannels, AMaxTinChannels)]));
-  for lI := 0 to lFileCount - 1 do
-  begin
-    lName := Mic140FlashDirEntryName(lEntries[lI]);
-    Mic140LogFlash(lPrefix + Format('flash dir[%d] name=%s addr=0x%.8x size=%u',
-      [lI, lName, lEntries[lI].Addr, lEntries[lI].Size]));
-  end;
-
-  if lFileCount = 0 then
-  begin
-    AErrorMessage := 'Flash disk directory is empty';
-    Mic140LogFlash(lPrefix + AErrorMessage);
-    Exit;
-  end;
-
-  lTareSize := Mic140Mic118TarFileSize(AMaxAinChannels, AMaxTinChannels);
-  lFoundIndex := -1;
-  for lI := 0 to lFileCount - 1 do
-  begin
-    if SameText(Mic140FlashDirEntryName(lEntries[lI]), CMic140Mi118TarFileName) then
-    begin
-      lFoundIndex := lI;
-      lAddress := lEntries[lI].Addr;
-      lSize := lEntries[lI].Size;
-      Break;
-    end;
-  end;
-
-  if lFoundIndex >= 0 then
-    Mic140LogFlash(lPrefix + Format('mi118tar found at index %d addr=0x%.8x size=%u expected=%u',
-      [lFoundIndex, lAddress, lSize, lTareSize]))
-  else
-    Mic140LogFlash(lPrefix + 'mi118tar not found in flash dir, using fallback placement');
-
-  if (lFoundIndex < 0) or (lSize <> lTareSize) then
-  begin
-    if lFoundIndex < 0 then
-    begin
-      lAddress := lEntries[lFileCount - 1].Addr;
-      lSize := lEntries[lFileCount - 1].Size;
-      Inc(lAddress, lSize);
-    end;
-    Inc(lAddress, lTareSize);
-    Mic140LogFlash(lPrefix + Format('mi118tar fallback base=0x%.8x', [lAddress]));
-  end;
-
-  if lAddress > CMic140FlashStorageBytes then
-  begin
-    AErrorMessage := 'Calibration storage is outside flash memory';
-    Mic140LogFlash(lPrefix + Format('%s (base=0x%.8x diskSize=%d)',
-      [AErrorMessage, lAddress, CMic140FlashStorageBytes]));
-    Exit;
-  end;
-
-  ABaseAddress := lAddress;
-  Mic140LogFlash(lPrefix + Format('mi118tar base=0x%.8x', [ABaseAddress]));
-  Result := True;
-end;
-
-function Mic140CalcBaseCalibrAddress(AMi118TarBase, AChanIndex, ARangeIndex,
-  AMaxAinChannels, AMaxTinChannels: Integer): LongWord;
-begin
-  if AChanIndex < AMaxAinChannels then
-    Result := AMi118TarBase +
-      LongWord(AChanIndex) * SizeOf(TMic140TareType1) * CMic140RangeCountMic140 +
-      LongWord(ARangeIndex) * SizeOf(TMic140TareType1)
-  else
-    Result := AMi118TarBase +
-      LongWord(AMaxAinChannels) * SizeOf(TMic140TareType1) * CMic140RangeCountMic140 +
-      LongWord(AChanIndex - AMaxAinChannels) * SizeOf(TMic140TareType2) *
-      CMic140RangeCountMic140 +
-      LongWord(ARangeIndex) * SizeOf(TMic140TareType2);
-end;
-
-function Mic140TareTypeRangeIsEmpty(const ATare: TMic140TareType1): Boolean;
-var
-  lValue: Word;
-begin
-  lValue := Word(ATare.TareType) or (Word(ATare.Range) shl 8);
-  Result := (lValue = 0) or (lValue = $FFFF);
-end;
-
-function Mic140TareToCalibration(const ATare: TMic140TareType1;
-  ACalibration: TRecorderCalibration): Boolean;
-var
-  lI: Integer;
-begin
-  Result := False;
-  if ACalibration = nil then
-    Exit;
-  if ATare.TareType <> CMic140TareTypeTable then
-    Exit;
-  if (ATare.TableNodes = 0) or (ATare.TableNodes > CMic140TareTableMaxPoints) then
-    Exit;
-
-  ACalibration.ClearPoints;
-  ACalibration.Kind := rckPiecewiseLinear;
-  ACalibration.Extrapolation := True;
-  for lI := 0 to ATare.TableNodes - 1 do
-    ACalibration.AddPoint(ATare.TablePoints[lI].X, ATare.TablePoints[lI].Y);
-  Result := ACalibration.PointCount > 0;
-end;
-
-function RecorderMic140SaveCalibrationToCsv(const AFileName: string;
-  ACalibration: TRecorderCalibration): Boolean;
-var
-  lFS: TFormatSettings;
-  lI: Integer;
-  lLines: TStringList;
-begin
-  Result := False;
-  if (ACalibration = nil) or (Trim(AFileName) = '') then
-    Exit;
-  ForceDirectories(ExtractFileDir(AFileName));
-  lLines := TStringList.Create;
-  try
-    lFS := DefaultFormatSettings;
-    lFS.DecimalSeparator := '.';
-    for lI := 0 to ACalibration.PointCount - 1 do
-      lLines.Add(Format('%.9g,%.9g',
-        [ACalibration.PointAt(lI).X, ACalibration.PointAt(lI).Y], lFS));
-    lLines.SaveToFile(AFileName);
-    Result := lLines.Count > 0;
-  finally
-    lLines.Free;
-  end;
-end;
-
-function Mic140HardwareTareIsUsable(const ATare: TMic140TareType1): Boolean;
-begin
-  Result := not Mic140TareTypeRangeIsEmpty(ATare) and
-    (ATare.TareType = CMic140TareTypeTable) and
-    (ATare.TableNodes > 0) and
-    (ATare.TableNodes <= CMic140TareTableMaxPoints);
-end;
-
-function Mic140DescribeTareRecord(const ATare: TMic140TareType1): string;
-begin
-  Result := Format('date=%u time=%u type=%u range=%u nodes=%u recSize=%d hex=%s',
-    [ATare.Date, ATare.Time, ATare.TareType, ATare.Range, ATare.TableNodes,
-    SizeOf(ATare), Mic140BytesToHex(ATare, SizeOf(ATare), 24)]);
-end;
-
-function Mic140DescribeTareRejectReason(const ATare: TMic140TareType1): string;
-begin
-  if Mic140TareTypeRangeIsEmpty(ATare) then
-    Exit('empty type/range word');
-  if ATare.TareType <> CMic140TareTypeTable then
-    Exit(Format('unsupported tare type %u (expected table=%u)',
-      [ATare.TareType, CMic140TareTypeTable]));
-  if ATare.TableNodes = 0 then
-    Exit('table node count is zero');
-  if ATare.TableNodes > CMic140TareTableMaxPoints then
-    Exit(Format('table node count %u exceeds max %u',
-      [ATare.TableNodes, CMic140TareTableMaxPoints]));
-  Result := 'unknown reject reason';
-end;
-
-function Mic140Tare2TypeRangeIsEmpty(const ATare: TMic140TareType2): Boolean;
-var
-  lValue: Word;
-begin
-  lValue := Word(ATare.TareType) or (Word(ATare.Range) shl 8);
-  Result := (lValue = 0) or (lValue = $FFFF);
-end;
-
-function Mic140Tare2ToCalibration(const ATare: TMic140TareType2;
-  ACalibration: TRecorderCalibration): Boolean;
-var
-  lI: Integer;
-begin
-  Result := False;
-  if ACalibration = nil then
-    Exit;
-  if ATare.TareType <> CMic140TareTypeTable then
-    Exit;
-  if (ATare.TableNodes = 0) or (ATare.TableNodes > CMic140TareTable2MaxPoints) then
-    Exit;
-
-  ACalibration.ClearPoints;
-  ACalibration.Kind := rckPiecewiseLinear;
-  ACalibration.Extrapolation := True;
-  for lI := 0 to ATare.TableNodes - 1 do
-    ACalibration.AddPoint(ATare.TablePoints[lI].X, ATare.TablePoints[lI].Y);
-  Result := ACalibration.PointCount > 0;
-end;
-
-function Mic140HardwareTare2IsUsable(const ATare: TMic140TareType2): Boolean;
-begin
-  Result := not Mic140Tare2TypeRangeIsEmpty(ATare) and
-    (ATare.TareType = CMic140TareTypeTable) and
-    (ATare.TableNodes > 0) and
-    (ATare.TableNodes <= CMic140TareTable2MaxPoints);
-end;
-
-function Mic140DescribeTare2Record(const ATare: TMic140TareType2): string;
-begin
-  Result := Format('date=%u time=%u type=%u range=%u nodes=%u recSize=%d hex=%s',
-    [ATare.Date, ATare.Time, ATare.TareType, ATare.Range, ATare.TableNodes,
-    SizeOf(ATare), Mic140BytesToHex(ATare, SizeOf(ATare), 24)]);
-end;
-
-function Mic140DescribeTare2RejectReason(const ATare: TMic140TareType2): string;
-begin
-  if Mic140Tare2TypeRangeIsEmpty(ATare) then
-    Exit('empty type/range word');
-  if ATare.TareType <> CMic140TareTypeTable then
-    Exit(Format('unsupported tare type %u (expected table=%u)',
-      [ATare.TareType, CMic140TareTypeTable]));
-  if ATare.TableNodes = 0 then
-    Exit('table node count is zero');
-  if ATare.TableNodes > CMic140TareTable2MaxPoints then
-    Exit(Format('table node count %u exceeds max %u',
-      [ATare.TableNodes, CMic140TareTable2MaxPoints]));
-  Result := 'unknown reject reason';
-end;
-
-function Mic140ResolveMaxAinChannelsFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
-begin
-  if (AFirmware.DevType > 0) and (AFirmware.DevType <= CMic140MaxAinChannels48) then
-    Result := CMic140MaxAinChannels48
-  else
-    Result := CMic140MaxAinChannels96;
-end;
-
-function Mic140TryReadHardwareTareFromFlash(AClient: TRecorderMic140LegacyClient;
-  AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
-  APreferredRangeIndex: Integer; out ATare: TMic140TareType1; out ARangeIndex: Integer;
-  out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
-var
-  lAddress: LongWord;
-  lCandidate: TMic140TareType1;
-  lFoundAny: Boolean;
-  lPrefix: string;
-  lTryRange: Integer;
-begin
-  Result := False;
-  ARangeIndex := -1;
-  AErrorMessage := '';
-  FillChar(ATare, SizeOf(ATare), 0);
-  lFoundAny := False;
-  lPrefix := ALogPrefix;
-  if lPrefix <> '' then
-    lPrefix := lPrefix + ' ';
-
-  Mic140LogFlash(lPrefix + Format('scan tare slots: chanIndex=%d preferredRange=%d ain=%d tin=%d base=0x%.8x',
-    [AChanIndex, APreferredRangeIndex, AMaxAinChannels, AMaxTinChannels, AMi118Base]));
-
-  for lTryRange := 0 to CMic140RangeCountMic140 - 1 do
-  begin
-    lAddress := Mic140CalcBaseCalibrAddress(AMi118Base, AChanIndex, lTryRange,
-      AMaxAinChannels, AMaxTinChannels);
-    FillChar(lCandidate, SizeOf(lCandidate), 0);
-    if not AClient.ReadFlashStorage(lAddress, lCandidate, SizeOf(lCandidate),
-      AErrorMessage) then
-    begin
-      Mic140LogFlash(lPrefix + Format('range slot %d read failed at 0x%.8x: %s',
-        [lTryRange, lAddress, AErrorMessage]));
-      Exit;
-    end;
-
-    Mic140LogFlash(lPrefix + Format('range slot %d addr=0x%.8x %s',
-      [lTryRange, lAddress, Mic140DescribeTareRecord(lCandidate)]));
-
-    if not Mic140HardwareTareIsUsable(lCandidate) then
-    begin
-      Mic140LogFlash(lPrefix + Format('range slot %d rejected: %s',
-        [lTryRange, Mic140DescribeTareRejectReason(lCandidate)]));
-      Continue;
-    end;
-
-    ATare := lCandidate;
-    if lCandidate.Range < CMic140RangeCountMic140 then
-      ARangeIndex := lCandidate.Range
-    else
-      ARangeIndex := lTryRange;
-    lFoundAny := True;
-
-    if (APreferredRangeIndex >= 0) and (APreferredRangeIndex < CMic140RangeCountMic140) and
-      ((lTryRange = APreferredRangeIndex) or (lCandidate.Range = Byte(APreferredRangeIndex))) then
-    begin
-      Mic140LogFlash(lPrefix + Format('selected range slot %d (preferred match)', [lTryRange]));
-      Exit(True);
-    end;
-    if lCandidate.Range = Byte(lTryRange) then
-    begin
-      Mic140LogFlash(lPrefix + Format('selected range slot %d (range field match)', [lTryRange]));
-      Exit(True);
-    end;
-  end;
-
-  if lFoundAny then
-  begin
-    Mic140LogFlash(lPrefix + Format('selected first usable tare with rangeIndex=%d', [ARangeIndex]));
-    Exit(True);
-  end;
-
-  AErrorMessage := 'Calibration was not found in device flash memory';
-  Mic140LogFlash(lPrefix + AErrorMessage);
-end;
-
-function Mic140TryReadHardwareTare2FromFlash(AClient: TRecorderMic140LegacyClient;
-  AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
-  APreferredRangeIndex: Integer; out ATare: TMic140TareType2; out ARangeIndex: Integer;
-  out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
-var
-  lAddress: LongWord;
-  lCandidate: TMic140TareType2;
-  lFoundAny: Boolean;
-  lPrefix: string;
-  lTryRange: Integer;
-begin
-  Result := False;
-  ARangeIndex := -1;
-  AErrorMessage := '';
-  FillChar(ATare, SizeOf(ATare), 0);
-  lFoundAny := False;
-  lPrefix := ALogPrefix;
-  if lPrefix <> '' then
-    lPrefix := lPrefix + ' ';
-
-  Mic140LogFlash(lPrefix + Format('scan TIn tare slots: chanIndex=%d preferredRange=%d ain=%d tin=%d base=0x%.8x',
-    [AChanIndex, APreferredRangeIndex, AMaxAinChannels, AMaxTinChannels, AMi118Base]));
-
-  for lTryRange := 0 to CMic140RangeCountMic140 - 1 do
-  begin
-    lAddress := Mic140CalcBaseCalibrAddress(AMi118Base, AChanIndex, lTryRange,
-      AMaxAinChannels, AMaxTinChannels);
-    FillChar(lCandidate, SizeOf(lCandidate), 0);
-    if not AClient.ReadFlashStorage(lAddress, lCandidate, SizeOf(lCandidate),
-      AErrorMessage) then
-    begin
-      Mic140LogFlash(lPrefix + Format('TIn range slot %d read failed at 0x%.8x: %s',
-        [lTryRange, lAddress, AErrorMessage]));
-      Exit;
-    end;
-
-    Mic140LogFlash(lPrefix + Format('TIn range slot %d addr=0x%.8x %s',
-      [lTryRange, lAddress, Mic140DescribeTare2Record(lCandidate)]));
-
-    if not Mic140HardwareTare2IsUsable(lCandidate) then
-    begin
-      Mic140LogFlash(lPrefix + Format('TIn range slot %d rejected: %s',
-        [lTryRange, Mic140DescribeTare2RejectReason(lCandidate)]));
-      Continue;
-    end;
-
-    ATare := lCandidate;
-    if lCandidate.Range < CMic140RangeCountMic140 then
-      ARangeIndex := lCandidate.Range
-    else
-      ARangeIndex := lTryRange;
-    lFoundAny := True;
-
-    if (APreferredRangeIndex >= 0) and (APreferredRangeIndex < CMic140RangeCountMic140) and
-      ((lTryRange = APreferredRangeIndex) or (lCandidate.Range = Byte(APreferredRangeIndex))) then
-    begin
-      Mic140LogFlash(lPrefix + Format('selected TIn range slot %d (preferred match)', [lTryRange]));
-      Exit(True);
-    end;
-    if lCandidate.Range = Byte(lTryRange) then
-    begin
-      Mic140LogFlash(lPrefix + Format('selected TIn range slot %d (range field match)', [lTryRange]));
-      Exit(True);
-    end;
-  end;
-
-  if lFoundAny then
-  begin
-    Mic140LogFlash(lPrefix + Format('selected first usable TIn tare with rangeIndex=%d', [ARangeIndex]));
-    Exit(True);
-  end;
-
-  AErrorMessage := 'Calibration was not found in device flash memory';
-  Mic140LogFlash(lPrefix + AErrorMessage);
-end;
-
-function RecorderMic140DownloadHardwareCalibrationFromDevice(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AErrorMessage: string): Boolean;
-var
-  lCalibration: TRecorderCalibration;
-  lCandidateAinCounts: array[0..1] of Integer;
-  lChanIndex: Integer;
-  lChannelNumber: Integer;
-  lClient: TRecorderMic140LegacyClient;
-  lCsvPath: string;
-  lFirmware: TRecorderMic140LegacyFirmware;
-  lHost: string;
-  lIsTemperature: Boolean;
-  lLayoutIndex: Integer;
-  lLogPrefix: string;
-  lMaxAinChannels: Integer;
-  lMi118Base: LongWord;
-  lName: string;
-  lPort: Word;
-  lRangeIndex: Integer;
-  lSerial: Integer;
-  lStopError: string;
-  lTare: TMic140TareType1;
-  lTare2: TMic140TareType2;
-  lTempIndex: Integer;
-  lTinFileNumber: Integer;
-  lTryError: string;
-begin
-  Result := False;
-  AErrorMessage := '';
-  lLogPrefix := Format('[MIC-140 flash:%s]', [IfThen(ATag <> nil, ATag.Name, '?')]);
-  if (ARegistry = nil) or (ATag = nil) then
-  begin
-    AErrorMessage := 'Tag registry is not available';
-    Exit;
-  end;
-  if Pos(CMic140SourcePrefix, ATag.SourceId) <> 1 then
-  begin
-    AErrorMessage := 'Tag is not linked to MIC-140';
-    Exit;
-  end;
-  lIsTemperature := ParseMic140TemperatureChannelIndex(ATag.Address, lTempIndex);
-  if lIsTemperature then
-  begin
-    if (lTempIndex < 1) or (lTempIndex > MIC140TemperatureChannelCount) then
-    begin
-      AErrorMessage := 'Invalid MIC-140 temperature channel index';
-      Exit;
-    end;
-    lTinFileNumber := lTempIndex;
-    lChannelNumber := 0;
-  end
-  else
-  begin
-    if not ParseMic140ChannelNumber(ATag.Address, lChannelNumber) then
-    begin
-      AErrorMessage := 'Invalid MIC-140 channel address';
-      Exit;
-    end;
-  end;
-  if not TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) then
-  begin
-    AErrorMessage := 'Invalid MIC-140 source id';
-    Exit;
-  end;
-
-  lRangeIndex := ATag.MeasRangeIndex;
-  if lRangeIndex >= CMic140RangeCount then
-    lRangeIndex := CMic140Range100mV;
-
-  if lIsTemperature then
-    lChanIndex := -1
-  else
-  begin
-    lChanIndex := lChannelNumber - 1;
-    if lChanIndex < 0 then
-    begin
-      AErrorMessage := 'Invalid MIC-140 channel number';
-      Exit;
-    end;
-  end;
-
-  Mic140LogFlash(lLogPrefix + Format('start download host=%s port=%d address=%s chanIndex=%d temp=%s tagRange=%d log=%s',
-    [lHost, lPort, ATag.Address, lChanIndex, BoolToStr(lIsTemperature, True),
-     lRangeIndex, Mic140FlashLogFilePath()]));
-
-  FillChar(lTare, SizeOf(lTare), 0);
-  FillChar(lTare2, SizeOf(lTare2), 0);
-  lClient := TRecorderMic140LegacyClient.Create(lHost, lPort, 10000);
-  try
-    lClient.Connect;
-    if not lClient.ReadFirmware(lFirmware, AErrorMessage) then
-    begin
-      Mic140LogFlash(lLogPrefix + 'ReadFirmware failed: ' + AErrorMessage);
-      Exit;
-    end;
-
-    Mic140LogFlash(lLogPrefix + Format('firmware sig=%u mdp=%u devType=%u devRev=%u devSerNo=%u ccType=%u ccSerNo=%u bios=%u.%u',
-      [lFirmware.Signature, lFirmware.MdpType, lFirmware.DevType, lFirmware.DevRevNo, lFirmware.DevSerNo,
-      lFirmware.CCType, lFirmware.CCSerNo, lFirmware.BiosFunction, lFirmware.BiosVersion]));
-
-    if not lClient.StopScan(lStopError) then
-      Mic140LogFlash(lLogPrefix + 'StopScan before flash read failed: ' + lStopError)
-    else
-      Mic140LogFlash(lLogPrefix + 'StopScan before flash read: ok');
-    lClient.ClearBufferedPackets;
-
-    lSerial := RecorderMic140HardwareCalibrSerialFromFirmware(lFirmware);
-    Mic140LogFlash(lLogPrefix + Format(
-      'using hardware calibr serial=%d (DevSerNo=%u CCSerNo=%u tag address=%s)',
-      [lSerial, lFirmware.DevSerNo, lFirmware.CCSerNo, ATag.Address]));
-    if lSerial <= 0 then
-    begin
-      AErrorMessage := 'Device serial number is unknown';
-      Mic140LogFlash(lLogPrefix + AErrorMessage);
-      Exit;
-    end;
-
-    lCandidateAinCounts[0] := CMic140MaxAinChannels48;
-    lCandidateAinCounts[1] := CMic140MaxAinChannels96;
-    if Mic140ResolveMaxAinChannelsFromFirmware(lFirmware) = CMic140MaxAinChannels96 then
-    begin
-      lCandidateAinCounts[0] := CMic140MaxAinChannels96;
-      lCandidateAinCounts[1] := CMic140MaxAinChannels48;
-    end;
-
-    for lLayoutIndex := 0 to High(lCandidateAinCounts) do
-    begin
-      lMaxAinChannels := lCandidateAinCounts[lLayoutIndex];
-      Mic140LogFlash(lLogPrefix + Format('try layout #%d maxAin=%d maxTin=%d',
-        [lLayoutIndex, lMaxAinChannels, CMic140MaxTinChannels96]));
-      if not Mic140FindMi118TarBaseAddress(lClient, lMaxAinChannels,
-        CMic140MaxTinChannels96, lMi118Base, lTryError,
-        lLogPrefix + Format('layout%d', [lLayoutIndex])) then
-      begin
-        AErrorMessage := lTryError;
-        Continue;
-      end;
-
-      if lIsTemperature then
-      begin
-        lChanIndex := lMaxAinChannels + (lTempIndex - 1);
-        if Mic140TryReadHardwareTare2FromFlash(lClient, lMi118Base, lChanIndex,
-          lMaxAinChannels, CMic140MaxTinChannels96, lRangeIndex, lTare2, lRangeIndex,
-          lTryError, lLogPrefix + Format('layout%d', [lLayoutIndex])) then
-          Break;
-      end
-      else
-      if Mic140TryReadHardwareTareFromFlash(lClient, lMi118Base, lChanIndex,
-        lMaxAinChannels, CMic140MaxTinChannels96, lRangeIndex, lTare, lRangeIndex,
-        lTryError, lLogPrefix + Format('layout%d', [lLayoutIndex])) then
-        Break;
-
-      AErrorMessage := lTryError;
-    end;
-
-    if lIsTemperature then
-    begin
-      if not Mic140HardwareTare2IsUsable(lTare2) then
-      begin
-        if Trim(AErrorMessage) = '' then
-          AErrorMessage := 'Calibration was not found in device flash memory';
-        AErrorMessage := AErrorMessage + ' (details in ' + Mic140FlashLogFilePath() + ')';
-        Mic140LogFlash(lLogPrefix + 'TIn download failed: ' + AErrorMessage);
-        Exit;
-      end;
-    end
-    else
-    if not Mic140HardwareTareIsUsable(lTare) then
-    begin
-      if Trim(AErrorMessage) = '' then
-        AErrorMessage := 'Calibration was not found in device flash memory';
-      AErrorMessage := AErrorMessage + ' (details in ' + Mic140FlashLogFilePath() + ')';
-      Mic140LogFlash(lLogPrefix + 'download failed: ' + AErrorMessage);
-      Exit;
-    end;
-
-    lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
-    try
-      if lIsTemperature then
-      begin
-        if not Mic140Tare2ToCalibration(lTare2, lCalibration) then
-        begin
-          AErrorMessage := 'Unsupported TIn calibration format in device flash (details in ' +
-            Mic140FlashLogFilePath() + ')';
-          Mic140LogFlash(lLogPrefix + AErrorMessage + ' ' + Mic140DescribeTare2Record(lTare2));
-          Exit;
-        end;
-        lName := RecorderMic140MakeTInHardwareCalibrationName(lSerial, lTinFileNumber);
-        lCsvPath := RecorderMic140TInHardwareCalibrExportCsvPath(lSerial, lTinFileNumber);
-      end
-      else
-      begin
-        if not Mic140TareToCalibration(lTare, lCalibration) then
-        begin
-          AErrorMessage := 'Unsupported calibration format in device flash (details in ' +
-            Mic140FlashLogFilePath() + ')';
-          Mic140LogFlash(lLogPrefix + AErrorMessage + ' ' + Mic140DescribeTareRecord(lTare));
-          Exit;
-        end;
-        lName := RecorderMic140MakeHardwareCalibrationName(lSerial, lRangeIndex,
-          lChannelNumber);
-        lCsvPath := RecorderMic140HardwareCalibrCsvPath(lSerial, lRangeIndex,
-          lChannelNumber);
-      end;
-      if not RecorderMic140SaveCalibrationToCsv(lCsvPath, lCalibration) then
-      begin
-        AErrorMessage := 'Failed to save calibration CSV';
-        Mic140LogFlash(lLogPrefix + AErrorMessage + ' path=' + lCsvPath);
-        Exit;
-      end;
-
-      if RecorderMic140UpsertHardwareCalibration(ARegistry, lName, lCalibration) = nil then
-      begin
-        AErrorMessage := 'Failed to register hardware calibration';
-        Mic140LogFlash(lLogPrefix + AErrorMessage);
-        Exit;
-      end;
-
-      ATag.Mic140DeviceSerial := lSerial;
-      if not lIsTemperature then
-        ATag.MeasRangeIndex := LongWord(lRangeIndex);
-      ATag.HardwareCalibrationName := lName;
-      ATag.HardwareCalibrationEnabled := True;
-      if lIsTemperature then
-        Mic140LogWarning(Format('[MIC-140] downloaded TIn hardware calibration for tag %s to %s',
-          [ATag.Name, lCsvPath]))
-      else
-        Mic140LogWarning(Format('[MIC-140] downloaded hardware calibration for tag %s to %s',
-          [ATag.Name, lCsvPath]));
-      Mic140LogFlash(lLogPrefix + Format('download success csv=%s points=%d',
-        [lCsvPath, lCalibration.PointCount]));
-      Result := True;
-    finally
-      lCalibration.Free;
-    end;
-  finally
-    lClient.Free;
-  end;
-end;
 
 function TRecorderMic140Device.GetDeviceSerial: Integer;
 begin
-  if fHardwareCalibrSerial > 0 then
-    Exit(fHardwareCalibrSerial);
   if fUseLegacyProtocol then
-    Result := RecorderMic140HardwareCalibrSerialFromFirmware(fLegacyFirmware)
+  begin
+    if fHardwareCalibrSerial > 0 then
+      Exit(fHardwareCalibrSerial);
+    Result := RecorderMic140HardwareCalibrSerialFromFirmware(fLegacyFirmware);
+  end
   else
     Result := 0;
 end;
@@ -3447,7 +1473,7 @@ end;
 function TRecorderMic140Device.GetLegacyFirmware(
   out AFirmware: TRecorderMic140LegacyFirmware): Boolean;
 begin
-  Result := fUseLegacyProtocol;
+  Result := fUseLegacyProtocol and (fLegacyFirmware.DevType > 0);
   if Result then
     AFirmware := fLegacyFirmware;
 end;
@@ -3817,68 +1843,6 @@ begin
   end;
 end;
 
-function Mic140GenerateSessionId: LongWord;
-begin
-  Result := LongWord(GetTickCount64 and $00000FFF) or
-    ((LongWord(Random($1000)) shl 12) and $00FFF000) or $14000000;
-end;
-
-function Mic140BuildSettings(AChannelCount: Integer;
-  APollFrequencyHz: Double): TRecorderByteArray;
-var
-  I: Integer;
-  lSettings: TMic140BaseSettings;
-  lTiming: TRecorderMic140Timing;
-begin
-  FillChar(lSettings, SizeOf(lSettings), 0);
-  lTiming := RecorderMic140TimingForFrequency(APollFrequencyHz);
-
-  for I := 0 to High(lSettings.Channels) do
-  begin
-    lSettings.Channels[I].FrequencyHz := lTiming.FrequencyHz;
-    lSettings.Channels[I].Connected :=
-      I < Min(AChannelCount, CMic140MebiusChannelCount);
-    if Mic140DefaultCjcTChannelNumber(I) > 0 then
-      lSettings.Channels[I].Corrector := Mic140DefaultCjcTChannelNumber(I)
-    else
-      lSettings.Channels[I].Corrector := CMic140DefaultCorrectorId;
-    lSettings.Channels[I].DefaultCorrector := False;
-    lSettings.Channels[I].SoftBalance := 0;
-    lSettings.Channels[I].BlockSize := 1;
-    lSettings.Channels[I].MeasRangeIndex := CMic140Range100mV;
-    lSettings.Channels[I].CommutIndex := CMic140ChannelCommutIn;
-    lSettings.Channels[I].ShuntOn := 0;
-    lSettings.Channels[I].EvalType := 0;
-    lSettings.Channels[I].TensoSensitivity := 2;
-    lSettings.Channels[I].Resistance := 200;
-    lSettings.Channels[I].SensorScheme := CMic140SensorSchemeTenzo;
-  end;
-
-  for I := 0 to High(lSettings.TemperatureChannels) do
-  begin
-    lSettings.TemperatureChannels[I].FrequencyHz := lTiming.FrequencyHz;
-    lSettings.TemperatureChannels[I].Connected := False;
-  end;
-
-  lSettings.SerialNumber := 0;
-  lSettings.GroundEnabled := True;
-  lSettings.GroundCommutationUs := Round(lTiming.GroundCommutationUs);
-  lSettings.ChannelCommutationUs := Round(lTiming.ChannelCommutationUs);
-  lSettings.BalancePortionLength := 30;
-  lSettings.HardBalance := 8192;
-  lSettings.AveragePointCount := lTiming.AveragePower;
-  lSettings.PowerMaCode := 10813;
-  lSettings.Reserved := 0;
-  lSettings.MaxFreqMode := 0;
-  lSettings.CalibrShuntIndex := 3;
-  lSettings.DetermineBreak := False;
-  lSettings.HardwareBalanceOn := False;
-  lSettings.TemperatureCompensation := False;
-  lSettings.SoftVersion := 0;
-
-  SetLength(Result, SizeOf(lSettings));
-  Move(lSettings, Result[0], SizeOf(lSettings));
-end;
 
 procedure TRecorderMic140Device.ProgramDevice;
 var
@@ -4339,6 +2303,7 @@ var
   lInternalChannelCount: Integer;
 begin
   ClearRecorderDeviceSampleBlock(ABlock);
+  ClearMic140AuxTemperatureBlock(fLastAuxTemperature);
   Result := False;
   lInternalChannelCount := LegacyInternalScanChannelCount;
   ABlock.ChannelCount := fChannelCount;
@@ -4358,22 +2323,28 @@ begin
       lDataIndex := J * lInternalChannelCount + I;
       ABlock.Values[I][J] := SmallInt(ARaw.Data[lDataIndex]);
     end;
-  ABlock.TemperatureCount := MIC140TemperatureChannelCount;
-  SetLength(ABlock.TemperatureValues, ABlock.TemperatureCount);
-  SetLength(ABlock.TemperatureValid, ABlock.TemperatureCount);
-  for I := 0 to ABlock.TemperatureCount - 1 do
+  fLastAuxTemperature.ChannelCount := MIC140TemperatureChannelCount;
+  fLastAuxTemperature.SampleCount := ABlock.SampleCount;
+  SetLength(fLastAuxTemperature.Values, fLastAuxTemperature.ChannelCount);
+  SetLength(fLastAuxTemperature.Valid, fLastAuxTemperature.ChannelCount);
+  for I := 0 to fLastAuxTemperature.ChannelCount - 1 do
   begin
-    SetLength(ABlock.TemperatureValues[I], ABlock.SampleCount);
-    SetLength(ABlock.TemperatureValid[I], ABlock.SampleCount);
+    SetLength(fLastAuxTemperature.Values[I], ABlock.SampleCount);
+    SetLength(fLastAuxTemperature.Valid[I], ABlock.SampleCount);
     for J := 0 to ABlock.SampleCount - 1 do
     begin
       lDataIndex := J * lInternalChannelCount + fChannelCount + I;
-      ABlock.TemperatureValid[I][J] := lDataIndex < ARaw.DataWordCount;
-      if ABlock.TemperatureValid[I][J] then
-        ABlock.TemperatureValues[I][J] := SmallInt(ARaw.Data[lDataIndex]);
+      fLastAuxTemperature.Valid[I][J] := lDataIndex < ARaw.DataWordCount;
+      if fLastAuxTemperature.Valid[I][J] then
+        fLastAuxTemperature.Values[I][J] := SmallInt(ARaw.Data[lDataIndex]);
     end;
   end;
   Result := True;
+end;
+
+function TRecorderMic140Device.LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
+begin
+  Result := fLastAuxTemperature;
 end;
 
 function TRecorderMic140Device.LegacyStreamReadCount: Int64;
@@ -4531,7 +2502,10 @@ begin
   fStatusTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'status');
   fBlockCountTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'blocks');
   RebuildTemperatureTagNames;
-  fRawRing := TMic140RawBlockRing.Create(ASourceId);
+  fRawBuffer := TMic140RawDoubleBuffer.Create;
+  fAcquireTiming := TRecorderMic140AcquireTiming.Create(APollFrequencyHz, AUpdateTimeMs);
+  fStreamFsm := TMic140StreamFsm.Create(fAcquireTiming);
+  fScanConfig := TRecorderMic140ScanConfig.Create(AChannelCount, APollFrequencyHz, AUpdateTimeMs);
   fHardwarePrepared := False;
   fHardwarePrepareAttempted := False;
   fLastRingOverloadLogTick := 0;
@@ -4571,17 +2545,17 @@ begin
 end;
 
 procedure TRecorderMic140DataSource.PublishTemperatureBlocks(
-  const ABlock: TRecorderDeviceSampleBlock; const ATimes: TRecorderDoubleArray);
+  const AAux: TMic140AuxTemperatureBlock; const ATimes: TRecorderDoubleArray);
 var
   I: Integer;
   lJ: Integer;
   lTag: TRecorderTag;
   lValues: TRecorderDoubleArray;
 begin
-  if (Registry = nil) or (ABlock.TemperatureCount <= 0) or (ABlock.SampleCount <= 0) then
+  if (Registry = nil) or (AAux.ChannelCount <= 0) or (AAux.SampleCount <= 0) then
     Exit;
-  SetLength(lValues, ABlock.SampleCount);
-  for I := 0 to Min(ABlock.TemperatureCount, fTemperatureTagNames.Count) - 1 do
+  SetLength(lValues, AAux.SampleCount);
+  for I := 0 to Min(AAux.ChannelCount, fTemperatureTagNames.Count) - 1 do
   begin
     if not TemperatureChannelSelected(I + 1) then
       Continue;
@@ -4590,17 +2564,17 @@ begin
       lTag := FindTagBySourceAddress(Registry, fTemperatureTagNames[I]);
     if lTag = nil then
       Continue;
-    for lJ := 0 to ABlock.SampleCount - 1 do
+    for lJ := 0 to AAux.SampleCount - 1 do
     begin
-      if (I < Length(ABlock.TemperatureValid)) and
-        (lJ < Length(ABlock.TemperatureValid[I])) and
-        ABlock.TemperatureValid[I][lJ] then
-        lValues[lJ] := ABlock.TemperatureValues[I][lJ]
+      if (I < Length(AAux.Valid)) and
+        (lJ < Length(AAux.Valid[I])) and
+        AAux.Valid[I][lJ] then
+        lValues[lJ] := AAux.Values[I][lJ]
       else
         lValues[lJ] := 0;
     end;
-    lTag.TextValue := FormatFloat('0.###', lValues[ABlock.SampleCount - 1]);
-    Registry.PublishBlock(lTag.Name, ATimes, lValues, ABlock.SampleCount);
+    lTag.TextValue := FormatFloat('0.###', lValues[AAux.SampleCount - 1]);
+    Registry.PublishBlock(lTag.Name, ATimes, lValues, AAux.SampleCount);
   end;
 end;
 
@@ -4608,7 +2582,10 @@ destructor TRecorderMic140DataSource.Destroy;
 begin
   StopBlockPublishThread;
   Stop;
-  fRawRing.Free;
+  fScanConfig.Free;
+  fStreamFsm.Free;
+  fAcquireTiming.Free;
+  fRawBuffer.Free;
   fMic140Device := nil;
   fDevice := nil;
   fTagNames.Free;
@@ -5040,9 +3017,46 @@ begin
   end;
 end;
 
+
+procedure TRecorderMic140DataSource.SyncScanConfig;
+var
+  lChannels: Integer;
+begin
+  lChannels := MIC140DefaultChannelCount;
+  if fMic140Device <> nil then
+    lChannels := fMic140Device.ChannelCount;
+  if fScanConfig = nil then
+    fScanConfig := TRecorderMic140ScanConfig.Create(lChannels, fPollFrequencyHz, UpdateTimeMs)
+  else
+  begin
+    fScanConfig.ChannelCount := lChannels;
+    fScanConfig.PollFrequencyHz := fPollFrequencyHz;
+    fScanConfig.UpdateTimeMs := UpdateTimeMs;
+  end;
+  if fAcquireTiming <> nil then
+    fAcquireTiming.Apply(fPollFrequencyHz, UpdateTimeMs);
+end;
+
+procedure TRecorderMic140DataSource.EnsureProtocolDriver;
+begin
+  SyncScanConfig;
+  if fProtocolDriver <> nil then
+    Exit;
+  if (fDevice = nil) or (fMic140Device = nil) then
+    Exit;
+  fProtocolDriver := TRecorderMic140LegacyScanDriver.Create(
+    fScanConfig, fDevice, fMic140Device);
+end;
+
+procedure TRecorderMic140DataSource.FreeProtocolDriver;
+begin
+  FreeAndNil(fProtocolDriver);
+end;
+
 procedure TRecorderMic140DataSource.Start;
 begin
   inherited Start;
+  SyncScanConfig;
   fGoodBlockCount := 0;
   fReadFailCount := 0;
   fLastChannelAdcValid := False;
@@ -5057,6 +3071,7 @@ begin
     Exit;
   if fDevice.State = rdsStarted then
   begin
+    fStreamFsm.SetPhase(mspAcquiring);
     EnsureBlockPublishThread;
     EnsureLegacyReadThread;
     PublishDiagnostics(CMic140StatusStarted, 'started', True);
@@ -5066,29 +3081,34 @@ end;
 procedure TRecorderMic140DataSource.RequestStop;
 begin
   inherited RequestStop;
+  if fStreamFsm <> nil then
+    fStreamFsm.SetPhase(mspStopping);
   if fMic140Device <> nil then
     fMic140Device.RequestStopAcquisition;
 end;
 
 procedure TRecorderMic140DataSource.Stop;
 var
-  lRingDropped: Int64;
+  lBufferDropped: Int64;
 begin
+  if fStreamFsm <> nil then
+    fStreamFsm.SetPhase(mspStopping);
   StopLegacyReadThread;
+  FreeProtocolDriver;
   StopBlockPublishThread;
   if (fMic140Device <> nil) and
      ((fGoodBlockCount > 0) or (fMic140Device.LegacyStreamReadCount > 0)) then
   begin
-    if fRawRing <> nil then
-      lRingDropped := fRawRing.DroppedCount
+    if fRawBuffer <> nil then
+      lBufferDropped := fRawBuffer.DroppedCount
     else
-      lRingDropped := 0;
+      lBufferDropped := 0;
     Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 stream stop: published=%d read=%d readGaps=%d dupRead=%d corruptRead=%d publishGaps=%d corruptPublish=%d ringDropped=%d mdpResync=%d',
+      '[DataSource:%s] MIC-140 stream stop: published=%d read=%d readGaps=%d dupRead=%d corruptRead=%d publishGaps=%d corruptPublish=%d bufferDropped=%d mdpResync=%d',
       [SourceId, fGoodBlockCount, fMic140Device.LegacyStreamReadCount,
        fMic140Device.LegacyNumBuffGapCount, fMic140Device.LegacyDuplicateNumBuffCount,
        fMic140Device.LegacyCorruptReadCount, fPublishedNumBuffGapCount,
-       fPublishedCorruptCount, lRingDropped, fMic140Device.LegacyMdpResyncByteCount]));
+       fPublishedCorruptCount, lBufferDropped, fMic140Device.LegacyMdpResyncByteCount]));
   end;
   if fDevice <> nil then
   begin
@@ -5101,6 +3121,8 @@ begin
   end;
   inherited Stop;
   fHardwarePrepared := False;
+  if fStreamFsm <> nil then
+    fStreamFsm.SetPhase(mspOffline);
   fHardwarePrepareAttempted := False;
   if fDevice <> nil then
   begin
@@ -5143,91 +3165,6 @@ type
     procedure RequestStop;
   end;
 
-{ TMic140RawBlockRing }
-
-constructor TMic140RawBlockRing.Create(const ASourceId: string);
-begin
-  inherited Create;
-  fSourceId := ASourceId;
-  fLock := TCriticalSection.Create;
-  fHead := 0;
-  fCount := 0;
-  fDropped := 0;
-  fLastDropLogTick := 0;
-end;
-
-destructor TMic140RawBlockRing.Destroy;
-begin
-  fLock.Free;
-  inherited Destroy;
-end;
-
-function TMic140RawBlockRing.PendingCount: Integer;
-begin
-  fLock.Acquire;
-  try
-    Result := fCount;
-  finally
-    fLock.Release;
-  end;
-end;
-
-function TMic140RawBlockRing.DroppedCount: Int64;
-begin
-  fLock.Acquire;
-  try
-    Result := fDropped;
-  finally
-    fLock.Release;
-  end;
-end;
-
-function TMic140RawBlockRing.Enqueue(const ARaw: TMic140LegacyRawBlock;
-  out ADepth: Integer; out ADroppedOldest: Boolean;
-  out ADroppedRaw: TMic140LegacyRawBlock): Boolean;
-var
-  lWriteIdx: Integer;
-begin
-  ADroppedOldest := False;
-  ADepth := 0;
-  FillChar(ADroppedRaw, SizeOf(ADroppedRaw), 0);
-  fLock.Acquire;
-  try
-    if fCount >= CMic140RawRingSlotCount then
-    begin
-      ADroppedOldest := True;
-      ADroppedRaw := fSlots[fHead];
-      Inc(fDropped);
-      fHead := (fHead + 1) mod CMic140RawRingSlotCount;
-      Dec(fCount);
-    end;
-    lWriteIdx := (fHead + fCount) mod CMic140RawRingSlotCount;
-    fSlots[lWriteIdx] := ARaw;
-    Inc(fCount);
-    ADepth := fCount;
-    Result := True;
-  finally
-    fLock.Release;
-  end;
-end;
-
-function TMic140RawBlockRing.Dequeue(out ARaw: TMic140LegacyRawBlock): Boolean;
-begin
-  Result := False;
-  fLock.Acquire;
-  try
-    if fCount <= 0 then
-      Exit;
-    ARaw := fSlots[fHead];
-    fHead := (fHead + 1) mod CMic140RawRingSlotCount;
-    Dec(fCount);
-    Result := True;
-  finally
-    fLock.Release;
-  end;
-end;
-
-{ TMic140BlockPublishThread }
 
 constructor TMic140BlockPublishThread.Create(AOwner: TRecorderMic140DataSource);
 begin
@@ -5253,7 +3190,7 @@ var
   lSpin: Integer;
 begin
   lSpin := 0;
-  while fOwner.fRawRing.PendingCount > 0 do
+  while fOwner.fRawBuffer.HasPending do
   begin
     if lSpin >= 400 then
       Break;
@@ -5274,16 +3211,21 @@ var
 begin
   while not Terminated do
   begin
-    if not fOwner.fRawRing.Dequeue(lRaw) then
+    if not fOwner.fStreamFsm.ShouldPublish then
     begin
-      fWakeEvent.WaitFor(25);
+      fWakeEvent.WaitFor(fOwner.fStreamFsm.IdleWaitMs);
+      Continue;
+    end;
+    if not fOwner.fRawBuffer.TryTake(lRaw) then
+    begin
+      fWakeEvent.WaitFor(fOwner.fStreamFsm.PublishBlockWaitMs);
       Continue;
     end;
     if not Terminated then
       fOwner.ProcessLegacyRawBlock(lRaw);
   end;
 
-  while fOwner.fRawRing.Dequeue(lRaw) do
+  while fOwner.fRawBuffer.TryTake(lRaw) do
     fOwner.ProcessLegacyRawBlock(lRaw);
 end;
 
@@ -5312,26 +3254,31 @@ end;
 procedure TMic140LegacyReadThread.Execute;
 var
   lConsecutiveFails: Integer;
-  lPacingMs: Cardinal;
   lRaw: TMic140LegacyRawBlock;
   lTimeoutMs: Cardinal;
 begin
   lConsecutiveFails := 0;
   while not Terminated do
   begin
-    if fOwner.ShouldStop or (fOwner.fDevice = nil) or
+    if Terminated or not fOwner.fStreamFsm.ShouldRead or (fOwner.fDevice = nil) or
        (fOwner.fDevice.State <> rdsStarted) then
     begin
-      fWakeEvent.WaitFor(25);
+      fWakeEvent.WaitFor(fOwner.fStreamFsm.IdleWaitMs);
       Continue;
     end;
-    lPacingMs := fOwner.UpdateTimeMs;
-    if lPacingMs = 0 then
-      lPacingMs := 200;
-    lTimeoutMs := Mic140LegacyReadThreadTimeoutMs(fOwner.fPollFrequencyHz,
-      fOwner.UpdateTimeMs);
+    fWakeEvent.WaitFor(fOwner.fStreamFsm.AcquirePacingMs);
+    if Terminated then
+      Break;
+    lTimeoutMs := fOwner.fScanConfig.ReadTimeoutMs;
     try
-      if fOwner.fMic140Device.ReadLegacyRawBlock(lTimeoutMs, lRaw) then
+      if (fOwner.fProtocolDriver <> nil) and
+         fOwner.fProtocolDriver.ReadRawBlock(lRaw) then
+      begin
+        lConsecutiveFails := 0;
+        fOwner.EnqueueLegacyRawBlock(lRaw);
+      end
+      else if (fOwner.fProtocolDriver = nil) and
+        fOwner.fMic140Device.ReadLegacyRawBlock(lTimeoutMs, lRaw) then
       begin
         lConsecutiveFails := 0;
         fOwner.EnqueueLegacyRawBlock(lRaw);
@@ -5339,11 +3286,17 @@ begin
       else
       begin
         Inc(lConsecutiveFails);
-        if (lConsecutiveFails >= CMic140LegacyReadStallRestartAfter) and
-           (fOwner.fMic140Device.LegacyStreamReadCount > 0) and
-           fOwner.fMic140Device.LegacyTryRestartStreamAfterReadStall then
+        if (lConsecutiveFails >= fOwner.fScanConfig.ReadStallRestartAfter) and
+          (
+            ((fOwner.fProtocolDriver <> nil) and
+             (fOwner.fProtocolDriver.StreamReadCount > 0) and
+             fOwner.fProtocolDriver.TryRestartAfterReadStall) or
+            ((fOwner.fProtocolDriver = nil) and
+             (fOwner.fMic140Device.LegacyStreamReadCount > 0) and
+             fOwner.fMic140Device.LegacyTryRestartStreamAfterReadStall)
+          ) then
           lConsecutiveFails := 0;
-        if lConsecutiveFails = CMic140LegacyReadTimeoutWarnAfter then
+        if lConsecutiveFails = fOwner.fScanConfig.ReadTimeoutWarnAfter then
           Mic140LogWarning(Format(
             '[DataSource:%s] MIC-140 read thread: %d consecutive timeouts (%d ms)',
             [fOwner.SourceId, lConsecutiveFails, lTimeoutMs]));
@@ -5353,6 +3306,7 @@ begin
       begin
         Mic140LogWarning(Format('[DataSource:%s] MIC-140 read thread failed: %s: %s',
           [fOwner.SourceId, E.ClassName, E.Message]));
+        fOwner.fStreamFsm.SetPhase(mspError, E.Message);
         fOwner.PublishDiagnostics(CMic140StatusError,
           'read exception: ' + E.Message, True);
         try
@@ -5362,9 +3316,6 @@ begin
         Terminate;
       end;
     end;
-    if Terminated then
-      Break;
-    fWakeEvent.WaitFor(lPacingMs);
   end;
 end;
 
@@ -5399,6 +3350,7 @@ var
 begin
   if fLegacyReadThread <> nil then
     Exit;
+  EnsureProtocolDriver;
   lThread := TMic140LegacyReadThread.Create(Self);
   fLegacyReadThread := lThread;
   lThread.Start;
@@ -5420,35 +3372,24 @@ end;
 procedure TRecorderMic140DataSource.EnqueueLegacyRawBlock(
   const ARaw: TMic140LegacyRawBlock);
 var
-  lDepth: Integer;
   lDropped: Boolean;
-  lDroppedRaw: TMic140LegacyRawBlock;
   lNow: QWord;
   lThread: TMic140BlockPublishThread;
 begin
-  if fRawRing = nil then
+  if fRawBuffer = nil then
   begin
     ProcessLegacyRawBlock(ARaw);
     Exit;
   end;
-  fRawRing.Enqueue(ARaw, lDepth, lDropped, lDroppedRaw);
+  lDropped := fRawBuffer.Publish(ARaw);
   lNow := GetTickCount64;
-  if lDropped and (lNow - fLastRingOverloadLogTick >= CMic140RawRingDropLogIntervalMs) then
+  if lDropped and (lNow - fLastRingOverloadLogTick >= CMic140RawBufferDropLogIntervalMs) then
   begin
     fLastRingOverloadLogTick := lNow;
     Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 raw ring overflow: dropped readSerial=%d num_buff=%d (depth=%d slots=%d)',
-      [SourceId, lDroppedRaw.ReadSerial,
-       lDroppedRaw.Header[CMic140LegacyBiosNumBuffIdx], lDepth,
-       CMic140RawRingSlotCount]));
-  end
-  else
-  if (lDepth > 3) and (lNow - fLastRingOverloadLogTick >= CMic140RawRingDropLogIntervalMs) then
-  begin
-    fLastRingOverloadLogTick := lNow;
-    RecorderDebugLog(Format(
-      '[DataSource:%s] MIC-140 raw ring depth=%d readSerial=%d num_buff=%d',
-      [SourceId, lDepth, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx]]));
+      '[DataSource:%s] MIC-140 raw buffer overflow: readSerial=%d num_buff=%d lag=%d',
+      [SourceId, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+       fRawBuffer.PendingLag]));
   end;
   if fBlockPublishThread <> nil then
   begin
@@ -5500,7 +3441,7 @@ begin
       Mic140LogWarning(Format(
         '[DataSource:%s] MIC-140 num_buff gap on publish: readSerial=%d prev=%d expected=%d cur=%d missed=%d publishGaps=%d ring=%d',
         [SourceId, ARaw.ReadSerial, fLastPublishedNumBuff, lExpected, lCurNumBuff,
-         lMissed, fPublishedNumBuffGapCount, fRawRing.PendingCount]));
+         lMissed, fPublishedNumBuffGapCount, fRawBuffer.PendingLag]));
     end;
   end;
   fLastPublishedNumBuff := lCurNumBuff;
@@ -5521,7 +3462,7 @@ begin
      ARaw.Header[CMic140LegacyBiosNumBuffIdx],
      fMic140Device.LegacyNumBuffGapCount, fMic140Device.LegacyDuplicateNumBuffCount,
      fMic140Device.LegacyCorruptReadCount, fPublishedNumBuffGapCount,
-     fRawRing.PendingCount, fMic140Device.LegacyMdpResyncByteCount]));
+     fRawBuffer.PendingLag, fMic140Device.LegacyMdpResyncByteCount]));
 end;
 
 procedure TRecorderMic140DataSource.ProcessLegacyRawBlock(
@@ -5596,6 +3537,7 @@ var
   lCjcPipelineActive: Boolean;
   lTTag: TRecorderTag;
   lUseCjc: Boolean;
+  lAuxTemperature: TMic140AuxTemperatureBlock;
   lTimes: TRecorderDoubleArray;
   lValues: TRecorderDoubleArray;
   lSum: Double;
@@ -5623,7 +3565,7 @@ begin
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
     Mic140LogWarning(Format('[DataSource:%s] MIC-140 block=%d samples=%d stride=%d rate=%.3f Hz',
       [SourceId, fGoodBlockCount, ABlock.SampleCount, ABlock.ChannelCount +
-       ABlock.TemperatureCount, ABlock.SampleRateHz]));
+       MIC140TemperatureChannelCount, ABlock.SampleRateHz]));
   if fGoodBlockCount = 1 then
   begin
     lPreview := '';
@@ -5670,7 +3612,11 @@ begin
   for lJ := 0 to ABlock.SampleCount - 1 do
     lTimes[lJ] := ABlock.FirstTimeSec + (lJ / ABlock.SampleRateHz);
 
-  PublishTemperatureBlocks(ABlock, lTimes);
+  if fMic140Device <> nil then
+    lAuxTemperature := fMic140Device.LastAuxTemperatureBlock
+  else
+    ClearMic140AuxTemperatureBlock(lAuxTemperature);
+  PublishTemperatureBlocks(lAuxTemperature, lTimes);
 
   SetLength(lValues, ABlock.SampleCount);
   for lI := 0 to lCount - 1 do
@@ -5716,8 +3662,9 @@ begin
       SameText(lTag.SourceValueMode,
         RecorderMic140OutputModeToConfigName(momTemperatureC));
     if lUseCjc then
-      lUseCjc := Mic140TryGetColdJunctionTemperature(Registry, lTTag, ABlock,
-        lCjcChannel, fDeviceSerial, CMic140Mic140SubRev1, lCjcTemperatureC);
+      lUseCjc := Mic140TryGetColdJunctionTemperature(Registry, lTTag,
+        lAuxTemperature, lCjcChannel, fDeviceSerial, CMic140Mic140SubRev1,
+        lCjcTemperatureC);
     if lUseCjc and (not fCjcActiveLogWritten) then
     begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC active: tag=%s T%d=%.3f degC',
@@ -5730,7 +3677,7 @@ begin
       (not fTemperatureModeWarningLogged) then
     begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC T%d unavailable (TIn cal missing or junction temp invalid, block tin=%d); channel will use thermocouple GХ without compensation',
-        [SourceId, lCjcChannel, ABlock.TemperatureCount]));
+        [SourceId, lCjcChannel, lAuxTemperature.ChannelCount]));
       fTemperatureModeWarningLogged := True;
     end;
 
@@ -5804,7 +3751,7 @@ begin
   end;
   try
     if not fMic140Device.ReadLegacyRawBlock(
-      Mic140LegacyReadThreadTimeoutMs(fPollFrequencyHz, UpdateTimeMs), lRaw) then
+      fScanConfig.ReadTimeoutMs, lRaw) then
     begin
       Inc(fReadFailCount);
       if fReadFailCount = 1 then
@@ -5839,16 +3786,5 @@ begin
   end;
 end;
 
-initialization
-  g_Mic140TInCalibrFailedKeys := TStringList.Create;
-  g_Mic140TInCalibrFailedKeys.Sorted := True;
-  g_Mic140TInCalibrFailedKeys.Duplicates := dupIgnore;
-  g_Mic140TInCalibrMissLogged := TStringList.Create;
-  g_Mic140TInCalibrMissLogged.Sorted := True;
-  g_Mic140TInCalibrMissLogged.Duplicates := dupIgnore;
-
-finalization
-  FreeAndNil(g_Mic140TInCalibrMissLogged);
-  FreeAndNil(g_Mic140TInCalibrFailedKeys);
 
 end.

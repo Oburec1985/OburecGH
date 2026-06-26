@@ -63,7 +63,7 @@ implementation
 
 uses
   IniFiles, fpjson, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors;
+  uOglChartColors, uRecorderMic140DeviceConfig;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -603,7 +603,9 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
+    RecorderMic140RebuildDeviceConfigsFromTags(ATags);
     SaveDataSources(lRoot, ATags);
+    SaveMic140DeviceConfigs(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
@@ -628,18 +630,9 @@ begin
       lTagJson.Add('rangeMax', lTag.RangeMax);
       lTagJson.Add('autoRange', lTag.AutoRange);
       lTagJson.Add('autoUnit', lTag.AutoUnit);
-      lTagJson.Add('measRangeIndex', lTag.MeasRangeIndex);
-      lTagJson.Add('hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
-      lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       lTagJson.Add('channelCalibrationEnabled', lTag.ChannelCalibrationEnabled);
-      lTagJson.Add('mic140DeviceSerial', lTag.Mic140DeviceSerial);
-      lTagJson.Add('mic140ThermoCompensationEnabled',
-        lTag.Mic140ThermoCompensationEnabled);
-      lTagJson.Add('mic140CjcDefault', lTag.Mic140CjcDefault);
-      lTagJson.Add('mic140CjcChannel', lTag.Mic140CjcChannel);
-      lTagJson.Add('mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
-      lTagJson.Add('mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
-      lTagJson.Add('mic140SoftBalance', lTag.Mic140SoftBalance);
+      if RecorderTagUsesMic140Settings(lTag) then
+        RecorderTagClearMic140Settings(lTag);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -715,27 +708,32 @@ begin
         lTag.RangeMax := lTagJson.Get('rangeMax', lTag.RangeMax);
         lTag.AutoRange := lTagJson.Get('autoRange', lTag.AutoRange);
         lTag.AutoUnit := lTagJson.Get('autoUnit', lTag.AutoUnit);
-        lTag.MeasRangeIndex := lTagJson.Get('measRangeIndex', lTag.MeasRangeIndex);
-        lTag.HardwareCalibrationEnabled := lTagJson.Get('hardwareCalibrationEnabled',
-          lTag.HardwareCalibrationEnabled);
-        lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
-          lTag.HardwareCalibrationName);
         lTag.ChannelCalibrationEnabled := lTagJson.Get('channelCalibrationEnabled',
           lTag.ChannelCalibrationEnabled);
-        lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
-          lTag.Mic140DeviceSerial);
-        lTag.Mic140ThermoCompensationEnabled := lTagJson.Get(
-          'mic140ThermoCompensationEnabled', lTag.Mic140ThermoCompensationEnabled);
-        lTag.Mic140CjcDefault := lTagJson.Get('mic140CjcDefault',
-          lTag.Mic140CjcDefault);
-        lTag.Mic140CjcChannel := lTagJson.Get('mic140CjcChannel',
-          lTag.Mic140CjcChannel);
-        lTag.Mic140ThermocoupleScaleName := lTagJson.Get(
-          'mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
-        lTag.Mic140ThermocoupleScalePath := lTagJson.Get(
-          'mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
-        lTag.Mic140SoftBalance := lTagJson.Get('mic140SoftBalance',
-          lTag.Mic140SoftBalance);
+        if RecorderTagUsesMic140Settings(lTag) then
+        begin
+          lTag.MeasRangeIndex := lTagJson.Get('measRangeIndex', lTag.MeasRangeIndex);
+          lTag.HardwareCalibrationEnabled := lTagJson.Get('hardwareCalibrationEnabled',
+            lTag.HardwareCalibrationEnabled);
+          lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
+            lTag.HardwareCalibrationName);
+          lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
+            lTag.Mic140DeviceSerial);
+          lTag.Mic140ThermoCompensationEnabled := lTagJson.Get(
+            'mic140ThermoCompensationEnabled', lTag.Mic140ThermoCompensationEnabled);
+          lTag.Mic140CjcDefault := lTagJson.Get('mic140CjcDefault',
+            lTag.Mic140CjcDefault);
+          lTag.Mic140CjcChannel := lTagJson.Get('mic140CjcChannel',
+            lTag.Mic140CjcChannel);
+          lTag.Mic140ThermocoupleScaleName := lTagJson.Get(
+            'mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
+          lTag.Mic140ThermocoupleScalePath := lTagJson.Get(
+            'mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
+          lTag.Mic140SoftBalance := lTagJson.Get('mic140SoftBalance',
+            lTag.Mic140SoftBalance);
+        end
+        else
+          RecorderTagClearMic140Settings(lTag);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -745,6 +743,8 @@ begin
         lTag.Free;
       end;
     end;
+    LoadMic140DeviceConfigs(lRoot, ATags);
+    RecorderMic140RebuildDeviceConfigsFromTags(ATags);
   finally
     lData.Free;
   end;
