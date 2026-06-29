@@ -233,7 +233,6 @@ end;
 
 function TRecorderMic140v2Device.ScanStride: Integer;
 begin
-  { Current scan program is AIn-only: one payload row has fChCnt ADC words. }
   Result := fChCnt;
 end;
 

@@ -464,9 +464,9 @@ begin
     Exit;
 
   fAutoPreviewTicks := 0;
-  // Preview duration is fAutoPreviewSeconds * 500 ms ticks. Extra ticks were needed
-  // when MIC-140 used post-start Sleep/warmup; pacing is now in LegacyReadThread.
-  fAutoPreviewExtraTicks := 0;
+  // The CLI acceptance run measures published acquisition blocks, while MIC-140
+  // starts producing data a little after the UI enters preview state.
+  fAutoPreviewExtraTicks := 2;
   fAutoPreviewTimer := TTimer.Create(Self);
   fAutoPreviewTimer.Interval := 500;
   fAutoPreviewTimer.OnTimer := @AutoPreviewTimer;

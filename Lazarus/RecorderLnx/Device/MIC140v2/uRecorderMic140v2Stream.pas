@@ -112,6 +112,8 @@ begin
     Exit(ADefaultStride);
   if (ADataWords mod 48) = 0 then
     Exit(48);
+  if (ADataWords mod 60) = 0 then
+    Exit(60);
   if (ADataWords mod 51) = 0 then
     Exit(51);
   Result := 0;
@@ -122,12 +124,16 @@ end;
   transition garbage. Keeping good rows prevents spikes while num_buff/read
   counters continue to describe the original packet stream. }
 function Mic140v2KeepGoodSampleRows(var ARaw: TMic140LegacyRawBlock;
-  AUserCh, AStride: Integer; out AFirstKeptRow, ADroppedRows: Integer): Boolean;
+  AUserCh, AStride: Integer; out AFirstKeptRow, ADroppedRows,
+  AShiftedRows, APartialRows: Integer): Boolean;
 var
-  lSample, lSamples, lDst, lOfs: Integer;
+  lSample, lSamples, lDst, lOfs, lShift, lShiftedOfs, lCandOfs,
+  lLastSourceEnd: Integer;
 begin
   AFirstKeptRow := 0;
   ADroppedRows := 0;
+  AShiftedRows := 0;
+  APartialRows := 0;
   Result := False;
   if (AStride <= 0) or (ARaw.DataWordCount <= 0) or
      ((ARaw.DataWordCount mod AStride) <> 0) then
@@ -135,20 +141,46 @@ begin
 
   lSamples := ARaw.DataWordCount div AStride;
   lDst := 0;
+  lLastSourceEnd := 0;
   for lSample := 0 to lSamples - 1 do
   begin
     lOfs := lSample * AStride;
-    if Mic140v2RawRowCorrupt(ARaw, lOfs, AUserCh) then
+    if lOfs < lLastSourceEnd then
     begin
       Inc(ADroppedRows);
       Continue;
     end;
+    if not Mic140v2RawRowRecorderProfile(ARaw, lOfs, AUserCh) then
+    begin
+      lShiftedOfs := -1;
+      for lShift := 1 to AStride - 1 do
+      begin
+        lCandOfs := lOfs + lShift;
+        if lCandOfs + AStride > ARaw.DataWordCount then
+          Continue;
+        if lCandOfs < lLastSourceEnd then
+          Continue;
+        if Mic140v2RawRowRecorderProfile(ARaw, lCandOfs, AUserCh) then
+        begin
+          lShiftedOfs := lCandOfs;
+          Break;
+        end;
+      end;
+      if lShiftedOfs < 0 then
+      begin
+        Inc(ADroppedRows);
+        Continue;
+      end;
+      lOfs := lShiftedOfs;
+      Inc(AShiftedRows);
+    end;
 
     if lDst = 0 then
       AFirstKeptRow := lSample;
-    if lDst <> lSample then
+    if (lDst <> lSample) or (lOfs <> lSample * AStride) then
       Move(ARaw.Data[lOfs], ARaw.Data[lDst * AStride],
         AStride * SizeOf(Word));
+    lLastSourceEnd := lOfs + AStride;
     Inc(lDst);
   end;
 
@@ -247,7 +279,7 @@ var
   pkt: TMic140v2ScanPacket;
   err: string;
   words, samples, since, effStride: Integer;
-  keptFirst, droppedRows, originalSamples: Integer;
+  keptFirst, droppedRows, shiftedRows, partialRows, originalSamples: Integer;
   desync: Boolean;
   corrupt: Boolean;
   verdict: TMic140LegacyBiosHeaderVerdict;
@@ -336,12 +368,17 @@ begin
   end;
   originalSamples := samples;
   if not Mic140v2KeepGoodSampleRows(ARaw, AChCnt, effStride,
-    keptFirst, droppedRows) then
+    keptFirst, droppedRows, shiftedRows, partialRows) then
   begin
     Mic140v2Log(Format(
       '[MIC140v2:%s:%d] reject all sample rows nb=%d words=%d samples=%d stride=%d',
       [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
        words, samples, effStride]));
+    if S.ReadCnt < CMic140v2ScanDetailLogBlocks then
+      RecorderDebugLog(Format(
+        '[MIC140v2:%s:%d] reject raw nb=%d first96=[%s]',
+        [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+         Mic140v2SignedPreview(ARaw, 0, 96)]));
     Exit;
   end;
   if droppedRows > 0 then
@@ -353,6 +390,11 @@ begin
       [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
        droppedRows, samples, keptFirst, S.DroppedSampleRows]));
   end;
+  if shiftedRows > 0 then
+    Mic140v2Log(Format(
+      '[MIC140v2:%s:%d] shifted sample rows nb=%d shifted=%d partial=%d kept=%d',
+      [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+       shiftedRows, partialRows, ARaw.DataWordCount div effStride]));
 
   Inc(S.ReadCnt);
   ARaw.ReadSerial := S.ReadCnt;

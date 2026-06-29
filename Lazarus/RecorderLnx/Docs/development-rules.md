@@ -217,3 +217,31 @@ Lazarus. Модули пакета `LzrObrPack` остаются в `.lpk`, не
 ### 4. Обновление плана
 - По завершении каждого логического шага обновлять `cach/plan.md`, отмечая решенные задачи флагом `[x]`, а текущие — `[/]`.
 
+## 9. Error investigation journal (errors/)
+
+Rule marker: `RLNX_ERROR_JOURNAL_2026_06_29`.
+
+When solving a bug, regression, build failure, crash, device/protocol issue, encoding issue, or any recurring suspicious behavior, keep a persistent investigation file in `D:\works\OburecGH\Lazarus\RecorderLnx\errors\`.
+
+At the start of debugging:
+- Search `errors/` for related symptoms, modules, log text, device names, and error messages.
+- Read the relevant investigation files before creating new hypotheses.
+- Continue an existing file when the symptom is the same or clearly related; create a new file only for a distinct error.
+
+During debugging:
+- Use one Markdown file per error, named `YYYY-MM-DD-short-error-slug.md`.
+- Record confirmed facts separately from hypotheses.
+- For every checked hypothesis, write what was checked, how it was checked, the command/log/test/code location used, and the result.
+- Keep rejected hypotheses in the file so future sessions do not repeat the same checks.
+- After every meaningful change, record what changed and how behavior/build/tests/logs changed.
+- When fixed, record root cause, final fix, verification command, result, and remaining risk.
+
+Minimum sections:
+- `Symptom`
+- `Context`
+- `Facts`
+- `Hypotheses`
+- `Actions`
+- `Current Conclusion`
+
+`cach/notes_last_state.md` may contain a short session summary, but the detailed debugging history for errors belongs in `errors/`.

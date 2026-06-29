@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic140/README.md",
+                "file": "errors/2026-06-29-mic140v2-acceptance.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "2026-06-29-mic140v2-acceptance"
             }
           }
         ]
@@ -185,10 +185,17 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "devices/mic140/protocol.md",
-    "devices/mic140/Pasted image 20260625154044.png",
     "devices/mic140/acquisition_rules.md",
+    "errors/README.md",
+    "errors/2026-06-29-mic140v2-acceptance.md",
+    "errors",
+    "devices/mic140/protocol.md",
+    "devices/mic140/README.md",
+    "devices/mic140/Pasted image 20260625154044.png",
     "devices/mic140/acceptance_tests.md",
+    "devices/device_abstraction.md",
+    "devices/migration_mic140v2.md",
+    "devices/README.md",
     "Pasted image 20260626193036.png",
     "mic140_quickstart.md",
     "development-rules.md",
@@ -196,11 +203,7 @@
     "mic140_legacy_scan_stream.md",
     "original-recorder-trend-component.md",
     "recorder_run_lifecycle.md",
-    "devices/migration_mic140v2.md",
-    "devices/device_abstraction.md",
-    "devices/mic140/README.md",
     "devices/mic140",
-    "devices/README.md",
     "source-encoding.md",
     "Без названия",
     "sdb.md",
@@ -216,14 +219,12 @@
     "Из AGrav/Docs/08_Карта_Исходников_Оригинального_Recorder.md",
     "Из AGrav/Docs/07_UI_Ориентир_Recorder.md",
     "Из AGrav/Docs/06_Идеи_из_руководства_Recorder.md",
-    "Из AGrav/Docs/05_Решения_и_Вопросы.md",
     "Из AGrav/Docs",
     "Из AGrav/cach",
     "Из AGrav/Приложения/Pasted image 20260428235456.png",
     "Из AGrav/Приложения/Pasted image 20260428235059.png",
     "Из AGrav/Приложения",
     "Из AGrav/Docs/Глава_03_Графические_объекты",
-    "Из AGrav/Docs/Глава_02_Архитектурные_решения",
     "screens/settings_recorder_reference.svg"
   ]
 }

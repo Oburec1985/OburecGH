@@ -24,6 +24,46 @@
 **Корректные коды АЦП из Recorder:**
 ![[Pasted image 20260626193036.png]]
 
+### Text rule: Recorder ADC code profile
+
+The screenshot above is the Recorder reference for the current MIC-140 stand.
+Acceptance must not rely on the image only. For every published sample, not only
+for `block1`, AIn channels must keep the same sign and group profile:
+
+| AIn channels | Acceptance range | Meaning |
+| --- | --- | --- |
+| `MIC140_01` .. `MIC140_24` | `-8200..-6300` raw ADC code | first group, Recorder-like negative strain codes |
+| `MIC140_25` .. `MIC140_48` | `-24000..-13000` raw ADC code | second group, Recorder-like lower negative codes |
+
+Hard fail for any published AIn 1..48 value:
+
+- `0` from a recovered or padded row;
+- `32767`, `-32768`, or any saturation near ADC limits;
+- positive values;
+- values outside the group range above;
+- a stable series of garbage values after the first good blocks.
+
+Reference Recorder values from the screenshot:
+
+| Ch | Raw | Ch | Raw | Ch | Raw | Ch | Raw |
+| --- | ---: | --- | ---: | --- | ---: | --- | ---: |
+| 01 | -7173 | 13 | -7175 | 25 | -15964 | 37 | -21720 |
+| 02 | -7124 | 14 | -7123 | 26 | -19948 | 38 | -21600 |
+| 03 | -6601 | 15 | -6602 | 27 | -19913 | 39 | -19077 |
+| 04 | -7233 | 16 | -7234 | 28 | -17813 | 40 | -16798 |
+| 05 | -7175 | 17 | -7174 | 29 | -22240 | 41 | -18149 |
+| 06 | -7124 | 18 | -7125 | 30 | -23161 | 42 | -18786 |
+| 07 | -6601 | 19 | -6603 | 31 | -19082 | 43 | -15961 |
+| 08 | -7234 | 20 | -7234 | 32 | -15377 | 44 | -16499 |
+| 09 | -7174 | 21 | -7175 | 33 | -15884 | 45 | -20232 |
+| 10 | -7122 | 22 | -7126 | 34 | -17339 | 46 | -16064 |
+| 11 | -6603 | 23 | -6603 | 35 | -15462 | 47 | -13875 |
+| 12 | -7235 | 24 | -7235 | 36 | -17765 | 48 | -17504 |
+
+`Tools/mic140_preview_eval.ps1` must fail when the log contains
+`MIC-140 code quality violation` or when the final stream stop line reports
+`corruptPublish > 0`.
+
 **Не считать нормой:** «TCP идёт, но с 3–4-го блока мусор» или стабильные ±32767 —
 это чаще ошибка циклограммы/FIFO, а не «шум на линии».
 

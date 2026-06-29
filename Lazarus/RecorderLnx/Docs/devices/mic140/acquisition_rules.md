@@ -115,3 +115,34 @@ Acceptance evidence, 2026-06-26:
 
 `Tools\mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0` passed repeatedly with
 `corrupt=0`, `pubGaps=0`, `readGaps=0`, `softRestart=0`, readings OK.
+
+## 6. MIC140v2 shifted and partial row recovery
+
+Acceptance evidence on 2026-06-29 showed that the current MIC140v2 stand can return
+a valid MDP/BIOС packet whose 96-word payload contains a valid AIn row shifted away
+from the nominal 48-word boundary. Some packets contain only a valid first-AIn tail
+near the end of the payload.
+
+Driver rule:
+
+- first try the nominal row boundary;
+- if the row is corrupt, search for a shifted full row inside the same payload row;
+- if no full row fits, search the remaining payload for a nominal first-AIn tail of
+  at least 12 words;
+- copy the recovered words to the output row and zero-fill the rest of the row;
+- do not reuse overlapping source words for later rows;
+- keep packet-level counters and `num_buff` continuity tied to the original packet.
+
+Implementation:
+
+- `uRecorderMic140v2Diag.pas`: `Mic140v2RawRowHeadNominal`;
+- `uRecorderMic140v2Stream.pas`: shifted/partial logic inside
+  `Mic140v2KeepGoodSampleRows`.
+
+Acceptance evidence, 2026-06-29:
+
+- Stage A: three consecutive `-Seconds 3 -SettleSec 0` PASS;
+- Stage B: three consecutive `-Seconds 10` PASS;
+- Stage C: one `-Seconds 40` PASS;
+- all final accepted runs had `corrupt=0`, `pubGaps=0`, `readGaps=0`,
+  `softRestart=0`, readings OK.

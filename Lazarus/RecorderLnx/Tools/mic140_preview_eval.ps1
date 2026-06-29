@@ -68,7 +68,7 @@ function Test-Mic140LogPass {
 
 
 
-    if ($stop.Line -match "published=(\d+) read=(\d+) readGaps=(\d+) dupRead=\d+ corruptRead=(\d+) publishGaps=(\d+)") {
+    if ($stop.Line -match "published=(\d+) read=(\d+) readGaps=(\d+) dupRead=\d+ corruptRead=(\d+) publishGaps=(\d+)(?: corruptPublish=(\d+))?") {
 
         $pub = [int]$Matches[1]
 
@@ -79,6 +79,10 @@ function Test-Mic140LogPass {
         $corrupt = [int]$Matches[4]
 
         $pubGaps = [int]$Matches[5]
+
+        $corruptPublish = 0
+
+        if ($Matches[6]) { $corruptPublish = [int]$Matches[6] }
 
     } else {
 
@@ -99,6 +103,8 @@ function Test-Mic140LogPass {
 
 
     $softRestart = ($lines | Select-String -Pattern "soft restart").Count
+
+    $codeViolations = ($lines | Select-String -Pattern "MIC-140 code quality violation").Count
 
 
 
@@ -158,13 +164,13 @@ function Test-Mic140LogPass {
 
     $countOk = ($pub -ge $minPub) -and ($pub -le $maxPub)
 
-    $streamOk = ($corrupt -eq 0) -and ($pubGaps -eq 0) -and ($readGaps -eq 0) -and ($softRestart -eq 0) -and $countOk -and ($pubRatio -ge 85)
+    $streamOk = ($corrupt -eq 0) -and ($pubGaps -eq 0) -and ($readGaps -eq 0) -and ($corruptPublish -eq 0) -and ($codeViolations -eq 0) -and ($softRestart -eq 0) -and $countOk -and ($pubRatio -ge 85)
 
 
 
     $pass = $streamOk -and $readingsOk
 
-    $reason = "pub=$pub read=$read ratio=$([int]$pubRatio)% corrupt=$corrupt pubGaps=$pubGaps readGaps=$readGaps softRestart=$softRestart expected=$expectedPub range=$minPub..$maxPub bps=$blocksPerSec readings=$readReason"
+    $reason = "pub=$pub read=$read ratio=$([int]$pubRatio)% corrupt=$corrupt corruptPublish=$corruptPublish codeBad=$codeViolations pubGaps=$pubGaps readGaps=$readGaps softRestart=$softRestart expected=$expectedPub range=$minPub..$maxPub bps=$blocksPerSec readings=$readReason"
 
     return @{ Pass = $pass; Reason = $reason }
 

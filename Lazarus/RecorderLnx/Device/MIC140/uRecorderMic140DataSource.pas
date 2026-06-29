@@ -124,6 +124,9 @@ type
     procedure LogMic140StreamSummary(const ARaw: TMic140LegacyRawBlock);
     procedure LogMic140StrideMisalignmentIfNeeded(const ARaw: TMic140LegacyRawBlock;
       const ABlock: TRecorderDeviceSampleBlock);
+    function Mic140PublishedCodeInRecorderRange(AChannelIndex: Integer;
+      AValue: Double): Boolean;
+    procedure CheckPublishedRecorderCodes(const ABlock: TRecorderDeviceSampleBlock);
     procedure ProcessAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
     procedure SyncScanConfig;
     procedure EnsureProtocolDriver;
@@ -1886,6 +1889,79 @@ begin
      ARaw.Header[CMic140LegacyBiosNumBuffIdx], lPosCount, lSatCount, lPreview]));
 end;
 
+function TRecorderMic140DataSource.Mic140PublishedCodeInRecorderRange(
+  AChannelIndex: Integer; AValue: Double): Boolean;
+const
+  CGroup1Min = -8200.0;
+  CGroup1Max = -6300.0;
+  CGroup2Min = -24000.0;
+  CGroup2Max = -13000.0;
+begin
+  Result := False;
+  if (AValue >= 32760.0) or (AValue <= -32760.0) or (AValue = 0.0) or
+     (AValue > 0.0) then
+    Exit;
+  if AChannelIndex < 24 then
+    Result := (AValue >= CGroup1Min) and (AValue <= CGroup1Max)
+  else if AChannelIndex < 48 then
+    Result := (AValue >= CGroup2Min) and (AValue <= CGroup2Max)
+  else
+    Result := True;
+end;
+
+procedure TRecorderMic140DataSource.CheckPublishedRecorderCodes(
+  const ABlock: TRecorderDeviceSampleBlock);
+var
+  lChannel: Integer;
+  lSample: Integer;
+  lBad: Integer;
+  lFirstChannel: Integer;
+  lFirstSample: Integer;
+  lFirstValue: Double;
+  lExpected: string;
+begin
+  if ABlock.SampleCount <= 0 then
+    Exit;
+  lBad := 0;
+  lFirstChannel := -1;
+  lFirstSample := -1;
+  lFirstValue := 0.0;
+  for lChannel := 0 to Min(ABlock.ChannelCount, 48) - 1 do
+  begin
+    if lChannel >= Length(ABlock.Values) then
+      Break;
+    for lSample := 0 to ABlock.SampleCount - 1 do
+    begin
+      if lSample >= Length(ABlock.Values[lChannel]) then
+        Break;
+      if not Mic140PublishedCodeInRecorderRange(lChannel,
+        ABlock.Values[lChannel][lSample]) then
+      begin
+        Inc(lBad);
+        if lFirstChannel < 0 then
+        begin
+          lFirstChannel := lChannel;
+          lFirstSample := lSample;
+          lFirstValue := ABlock.Values[lChannel][lSample];
+        end;
+      end;
+    end;
+  end;
+
+  if lBad <= 0 then
+    Exit;
+  Inc(fPublishedCorruptCount);
+  if lFirstChannel < 24 then
+    lExpected := '-8200..-6300'
+  else
+    lExpected := '-24000..-13000';
+  if (fPublishedCorruptCount <= 20) or ((fPublishedCorruptCount mod 20) = 0) then
+    Mic140LogWarning(Format(
+      '[DataSource:%s] MIC-140 code quality violation: publish=%d bad=%d first=ch%d sample=%d raw=%.0f expected=%s',
+      [SourceId, fGoodBlockCount, lBad, lFirstChannel + 1, lFirstSample,
+       lFirstValue, lExpected]));
+end;
+
 procedure TRecorderMic140DataSource.ProcessAndPublishBlock(
   const ABlock: TRecorderDeviceSampleBlock);
 var
@@ -1922,6 +1998,7 @@ begin
   fLastRawBlockValid := True;
   Inc(fGoodBlockCount);
   fReadFailCount := 0;
+  CheckPublishedRecorderCodes(ABlock);
   PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
   PublishBlockCounter(fGoodBlockCount);
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then

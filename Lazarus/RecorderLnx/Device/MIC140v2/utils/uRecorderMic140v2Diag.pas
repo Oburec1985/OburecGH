@@ -21,6 +21,10 @@ const
 procedure Mic140v2Log(const AMsg: string);
 function Mic140v2RawRowCorrupt(const ARaw: TMic140LegacyRawBlock;
   AOffset, AUserCh: Integer): Boolean;
+function Mic140v2RawRowHeadNominal(const ARaw: TMic140LegacyRawBlock;
+  AOffset, AUserCh: Integer): Boolean;
+function Mic140v2RawRowRecorderProfile(const ARaw: TMic140LegacyRawBlock;
+  AOffset, AUserCh: Integer): Boolean;
 function Mic140v2RawCorrupt(const ARaw: TMic140LegacyRawBlock;
   AUserCh: Integer; AStride: Integer = 0): Boolean;
 function Mic140v2RawQualityText(const ARaw: TMic140LegacyRawBlock;
@@ -35,6 +39,17 @@ const
   CPosThr = 500.0;
   CMinSat = 32;
   CMinPos = 20;
+  CStrainMin = -15000;
+  CStrainMax = 500;
+  CStrainWindow = 12;
+  CMinBadStrain = 4;
+  CHeadWindow = 8;
+  CMinBadHead = 2;
+  CHeadNominalMin = -8200;
+  CHeadNominalMax = -6300;
+  CHeadNominalWindow = 12;
+  CMinHeadNominal = 8;
+  CHeadStartWindow = 4;
 
 procedure Mic140v2Log(const AMsg: string);
 begin
@@ -47,13 +62,19 @@ end;
 function Mic140v2RawRowCorrupt(const ARaw: TMic140LegacyRawBlock;
   AOffset, AUserCh: Integer): Boolean;
 var
-  lI, lLast, lCode, lSat, lPos: Integer;
+  lI, lLast, lCode, lSat, lPos, lBadStrain, lBadHead, lHeadSat,
+  lHeadPos, lHeadNominal: Integer;
 begin
   Result := False;
   if (AOffset < 0) or (AOffset >= ARaw.DataWordCount) or (AUserCh <= 0) then
     Exit;
   lSat := 0;
   lPos := 0;
+  lBadStrain := 0;
+  lBadHead := 0;
+  lHeadSat := 0;
+  lHeadPos := 0;
+  lHeadNominal := 0;
   lLast := Min(AUserCh - 1, 47);
   for lI := 0 to lLast do
   begin
@@ -64,8 +85,85 @@ begin
       Inc(lSat)
     else if lCode > CPosThr then
       Inc(lPos);
+    if (lI < CStrainWindow) and
+       ((lCode < CStrainMin) or (lCode > CStrainMax)) then
+      Inc(lBadStrain);
+    if (lI < CHeadWindow) and
+       ((lCode < CStrainMin) or (lCode > CStrainMax)) then
+      Inc(lBadHead);
+    if lI < CHeadNominalWindow then
+    begin
+      if (lCode >= 32767) or (lCode <= -32768) then
+        Inc(lHeadSat)
+      else if lCode > CStrainMax then
+        Inc(lHeadPos);
+      if (lCode >= CHeadNominalMin) and (lCode <= CHeadNominalMax) then
+        Inc(lHeadNominal);
+    end;
   end;
-  Result := (lSat >= CMinSat) or (lPos >= CMinPos);
+  Result := (lSat >= CMinSat) or (lPos >= CMinPos) or
+    (lBadStrain >= CMinBadStrain) or (lBadHead >= CMinBadHead) or
+    (lHeadSat > 0) or (lHeadPos > 0) or
+    (lHeadNominal < CMinHeadNominal);
+end;
+
+function Mic140v2RawRowHeadNominal(const ARaw: TMic140LegacyRawBlock;
+  AOffset, AUserCh: Integer): Boolean;
+var
+  lI, lLast, lCode, lNominal, lStartNominal: Integer;
+begin
+  Result := False;
+  if (AOffset < 0) or (AOffset >= ARaw.DataWordCount) or (AUserCh <= 0) then
+    Exit;
+  lNominal := 0;
+  lStartNominal := 0;
+  lLast := Min(Min(AUserCh - 1, CHeadNominalWindow - 1), 47);
+  for lI := 0 to lLast do
+  begin
+    if AOffset + lI >= ARaw.DataWordCount then
+      Break;
+    lCode := SmallInt(ARaw.Data[AOffset + lI]);
+    if (lCode >= CHeadNominalMin) and (lCode <= CHeadNominalMax) then
+    begin
+      Inc(lNominal);
+      if lI < CHeadStartWindow then
+        Inc(lStartNominal);
+    end;
+  end;
+  Result := (lStartNominal >= CHeadStartWindow) and
+    (lNominal >= CMinHeadNominal);
+end;
+
+function Mic140v2RawRowRecorderProfile(const ARaw: TMic140LegacyRawBlock;
+  AOffset, AUserCh: Integer): Boolean;
+var
+  lI, lLast, lCode, lMin, lMax: Integer;
+begin
+  Result := False;
+  if (AOffset < 0) or (AUserCh < 48) or
+     (AOffset + 48 > ARaw.DataWordCount) then
+    Exit;
+  lLast := Min(AUserCh - 1, 47);
+  for lI := 0 to lLast do
+  begin
+    lCode := SmallInt(ARaw.Data[AOffset + lI]);
+    if (lCode >= 32760) or (lCode <= -32760) or (lCode = 0) or
+       (lCode > 0) then
+      Exit;
+    if lI < 24 then
+    begin
+      lMin := -8200;
+      lMax := -6300;
+    end
+    else
+    begin
+      lMin := -24000;
+      lMax := -13000;
+    end;
+    if (lCode < lMin) or (lCode > lMax) then
+      Exit;
+  end;
+  Result := True;
 end;
 
 function Mic140v2RawCorrupt(const ARaw: TMic140LegacyRawBlock;

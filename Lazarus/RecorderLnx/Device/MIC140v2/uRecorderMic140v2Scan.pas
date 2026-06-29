@@ -38,8 +38,6 @@ type
     fLastFifoReady: Word;
     function AllocBuf(AWords: Word; out APg, AAddr: Word): Boolean;
     function AllocHeap(AWords: Word; out APg, AAddr: Word): Boolean;
-    { Current v2 stream publishes AIn rows only; TIn support stays outside payload
-      until the original all-channel MIC140_48v2 cycle is reproduced fully. }
     function BiosScanSlotCount: Integer;
     function PayloadStride: Integer;
     function FifoReadyWords: Word;
@@ -134,13 +132,11 @@ end;
 
 function TMic140v2ScanProgrammer.BiosScanSlotCount: Integer;
 begin
-  { AIn-only cycle: 48 BIOS slots match the 48-word payload stride. }
   Result := fChCnt;
 end;
 
 function TMic140v2ScanProgrammer.PayloadStride: Integer;
 begin
-  { One row contains the user AIn channels programmed in BiosScanSlotCount. }
   Result := fChCnt;
 end;
 
@@ -367,15 +363,20 @@ begin
     else
     begin
       tIdx := i - fChCnt;
-      Mic140v2PackTInMe04848v2(tIdx, lRev2, me0, me1);
+      Mic140v2PackTInMe04848(tIdx, me0, me1);
       desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
       desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := Mic140v2TInDesc48v2(tIdx);
+      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := Mic140v2TInDesc48(tIdx);
       desc[(i + 1) * CMic140LegacyDescChanWords + 4] :=
         Word(CMaskChanLeft or (valAddr + fChCnt + tIdx));
     end;
     if i < fChCnt then
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
+    begin
+      if i >= 24 then
+        desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc or $0010
+      else
+        desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
+    end;
     desc[(i + 1) * CMic140LegacyDescChanWords + 3] := tim.LegacyChannelDelaySport - 1;
   end;
 
