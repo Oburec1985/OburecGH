@@ -13,9 +13,11 @@
 | 1 | Документация | `Docs/devices/*`, [mic140/protocol.md](mic140/protocol.md) | Описаны этапы, свойства, протокол |
 | 2 | Интерфейс | `uRecorderDeviceInterfaces`, `uRecorderAcquisitionTypes` | Сборка, без TIn в Core |
 | 3 | Каркас v2 | `MIC140v2/*.pas` | Connect/Program/Start, логи |
-| 4 | Обмен v2 | transport + этапы | `mic140_preview_eval.ps1` PASS |
-| 5 | Подключение | DataSource → v2 | Сравнение с MIC140 |
-| 6 | Упрощение | Удаление дублей | Один путь в работе |
+| 4 | Обмен v2 | transport + workers | **этап A:** 3× PASS `mic140_preview_eval.ps1 -Seconds 3` |
+| 5 | Подключение | DataSource → v2 | **этап B:** 3× PASS `-Seconds 10` |
+| 6 | Упрощение | Удаление дублей | **этап C:** PASS `-Seconds 40` |
+
+Критерии трёх проверок и порядок прогонов: [mic140/acceptance_tests.md](mic140/acceptance_tests.md).
 
 ## Что не переносим в Core
 

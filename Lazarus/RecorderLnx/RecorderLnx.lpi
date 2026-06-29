@@ -144,11 +144,55 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Device/MIC140v2/uRecorderMic140v2Types.pas"/>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2Types.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2WireTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2Consts.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/uRecorderMic140v2Protocol.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2Timing.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2Diag.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/utils/uRecorderMic140v2Helper.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/uRecorderMic140v2Scan.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/uRecorderMic140v2Stream.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/uRecorderMic140v2RawRing.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device/MIC140v2/uRecorderMic140v2Device.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140v2/uRecorderMic140v2Factory.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -169,10 +213,6 @@
       </Unit>
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140AcquireTiming.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Device/MIC140/uRecorderMic140RawRing.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -225,6 +265,18 @@
       </Unit>
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140LegacyChannelDesc.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/uRecorderMic140DeviceApi.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMic140DeviceCore.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MIC140/uRecorderMic140LegacyDevice.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -402,7 +454,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Core;UI;Device;Device/MIC140;Device/MIC140/UI;Device/MIC140v2;SDB;../SharedUtils;../Tests/RecorderTests/UITestData"/>
+      <OtherUnitFiles Value="Core;UI;Device;Device/MIC140;Device/MIC140/UI;Device/MIC140v2;Device/MIC140v2/utils;SDB;../SharedUtils;../Tests/RecorderTests/UITestData"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

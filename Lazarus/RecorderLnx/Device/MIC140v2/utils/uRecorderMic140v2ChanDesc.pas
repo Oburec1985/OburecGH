@@ -1,7 +1,11 @@
-unit uRecorderMic140LegacyChannelDesc;
+unit uRecorderMic140v2ChanDesc;
 
 {
-  Legacy scan channel descriptor packing (ME048 / MIC140 reg bits).
+  ME048 / MIC140 reg — упаковка code_ME048[0..1] и desc для BIOS.
+
+  [ORIG] MIC140_96_rce/MIC140_48mod.cpp:
+    code_chanAIn_48[], code_chanTIn_48[], code_level0mV, TRegME048, TRegMIC140.
+  [ORIG] mic140_96mod.cpp — Mic140LegacyPackMe04848 для num_me048=0.
 }
 
 {$mode objfpc}{$H+}
@@ -10,26 +14,32 @@ interface
 
 uses
   SysUtils,
-  uRecorderMic140LegacyProtocol, uRecorderMic140StreamTypes;
+  uRecorderMic140v2WireTypes, uRecorderMic140v2Protocol;
 
-function Mic140LegacyPackMic140RegDesc(AMuxIn1, AMuxIn2, AK1, AK2, AAmp2, AAmp4,
+function Mic140v2PackMic140RegDesc(AMuxIn1, AMuxIn2, AK1, AK2, AAmp2, AAmp4,
   AAmp16, ABreakTst: Word): Word;
-procedure Mic140LegacyPackMe04848(const ACode: array of Word; out AW0, AW1: Word);
-procedure Mic140LegacyPackMe04896(const ACode: array of Word;
+procedure Mic140v2PackMe04848(const ACode: array of Word; out AW0, AW1: Word);
+procedure Mic140v2PackMe04896(const ACode: array of Word;
   ANumMe048: Word; out AW0, AW1: Word);
-procedure Mic140LegacyMe048ForPhysicalChannel(APhysicalChannel: Integer;
+procedure Mic140v2Me048ForPhysicalChannel(APhysicalChannel: Integer;
   out AW0, AW1: Word);
-function Mic140LegacyMe048Code48(APhysicalChannel: Integer): Word;
-function Mic140LegacyLevel0Code: Word;
-function Mic140LegacyTInCode48(ATemperatureIndex: Integer): Word;
-function Mic140LegacyTInDesc48(ATemperatureIndex: Integer): Word;
-procedure Mic140LegacyPackTInMe04848(ATemperatureIndex: Integer; out AW0, AW1: Word);
-function Mic140LegacyWordAt(const AWords: TRecorderMic140LegacyWordArray;
+procedure Mic140v2PackMe04848v2(APhysicalChannel: Integer; ARev2: Boolean;
+  out AW0, AW1: Word);
+procedure Mic140v2PackLevel0Me04848v2(ARev2: Boolean; out AW0, AW1: Word);
+procedure Mic140v2PackTInMe04848v2(ATemperatureIndex: Integer; ARev2: Boolean;
+  out AW0, AW1: Word);
+function Mic140v2Me048Code48(APhysicalChannel: Integer): Word;
+function Mic140v2Level0Code: Word;
+function Mic140v2TInCode48(ATemperatureIndex: Integer): Word;
+function Mic140v2TInDesc48(ATemperatureIndex: Integer): Word;
+function Mic140v2TInDesc48v2(ATemperatureIndex: Integer): Word;
+procedure Mic140v2PackTInMe04848(ATemperatureIndex: Integer; out AW0, AW1: Word);
+function Mic140v2WordAt(const AWords: TMic140v2WordBuf;
   AIndex: Integer): Word;
 
 implementation
 
-function Mic140LegacyPackMic140RegDesc(AMuxIn1, AMuxIn2, AK1, AK2, AAmp2, AAmp4,
+function Mic140v2PackMic140RegDesc(AMuxIn1, AMuxIn2, AK1, AK2, AAmp2, AAmp4,
   AAmp16, ABreakTst: Word): Word;
 begin
   // TRegMIC140 bit layout from mic140_96mod.cpp: desc |= reg[j] << j.
@@ -52,7 +62,45 @@ begin
     Result := Result or (AK2 shl 10);
 end;
 
-procedure Mic140LegacyPackMe04848(const ACode: array of Word; out AW0, AW1: Word);
+procedure Mic140v2PackMe04824(const ACode: array of Word; ARev2: Boolean;
+  out AW0, AW1: Word);
+var
+  lReg: array[0..23] of Word;
+  lJ: Integer;
+  lNumWord: Integer;
+  lNumBit: Integer;
+begin
+  AW0 := 0;
+  AW1 := 0;
+  if Length(ACode) < 24 then
+    Exit;
+
+  if ARev2 then
+  begin
+    for lJ := 0 to 7 do
+      lReg[lJ] := ACode[16 + lJ];
+  end
+  else
+  begin
+    for lJ := 0 to 7 do
+      lReg[lJ] := ACode[23 - lJ];
+  end;
+  for lJ := 0 to 15 do
+    lReg[8 + lJ] := ACode[lJ];
+
+  for lJ := 0 to 23 do
+  begin
+    lNumWord := 1 - (23 - lJ) div 16;
+    lNumBit := (23 - lJ) mod 16;
+    if lReg[lJ] <> 0 then
+      if lNumWord = 0 then
+        AW0 := AW0 or (Word(1) shl lNumBit)
+      else
+        AW1 := AW1 or (Word(1) shl lNumBit);
+  end;
+end;
+
+procedure Mic140v2PackMe04848(const ACode: array of Word; out AW0, AW1: Word);
 var
   lReg: packed record
     indicator: Word;
@@ -101,7 +149,7 @@ begin
     AW1 := AW1 or (PWord(@lReg)[J] shl J);
 end;
 
-procedure Mic140LegacyPackMe04896(const ACode: array of Word;
+procedure Mic140v2PackMe04896(const ACode: array of Word;
   ANumMe048: Word; out AW0, AW1: Word);
 var
   lReg: array[0..15] of Word;
@@ -124,7 +172,7 @@ begin
       AW1 := AW1 or (lReg[J] shl J);
 end;
 
-procedure Mic140LegacyMe048ForPhysicalChannel(APhysicalChannel: Integer;
+procedure Mic140v2Me048ForPhysicalChannel(APhysicalChannel: Integer;
   out AW0, AW1: Word);
 const
   CCodeLevel0: array[0..15] of Word =
@@ -183,14 +231,113 @@ var
 begin
   if (APhysicalChannel < 0) or (APhysicalChannel > 47) then
   begin
-    Mic140LegacyPackMe04848(CCodeLevel0, AW0, AW1);
+    Mic140v2PackMe04848(CCodeLevel0, AW0, AW1);
     Exit;
   end;
   lIdx := APhysicalChannel;
-  Mic140LegacyPackMe04848(CCodeChanAIn[lIdx], AW0, AW1);
+  Mic140v2PackMe04848(CCodeChanAIn[lIdx], AW0, AW1);
 end;
 
-function Mic140LegacyMe048Code48(APhysicalChannel: Integer): Word;
+procedure Mic140v2BuildAInCode48v2(APhysicalChannel: Integer;
+  var ACode: array of Word);
+var
+  lIdx: Integer;
+  lLow: Integer;
+  lGroup: Integer;
+begin
+  for lIdx := 0 to High(ACode) do
+    ACode[lIdx] := 0;
+  if (Length(ACode) < 24) or
+     (APhysicalChannel < 0) or (APhysicalChannel > 47) then
+    Exit;
+  lLow := APhysicalChannel mod 4;
+  if (lLow and 1) <> 0 then
+    ACode[0] := 1;
+  if (lLow and 2) <> 0 then
+    ACode[1] := 1;
+  lGroup := APhysicalChannel div 4;
+  ACode[2 + lGroup] := 1;
+end;
+
+procedure Mic140v2BuildLevel0Code48v2(ARev2: Boolean; var ACode: array of Word);
+var
+  lIdx: Integer;
+begin
+  for lIdx := 0 to High(ACode) do
+    ACode[lIdx] := 0;
+  if Length(ACode) < 24 then
+    Exit;
+  ACode[0] := 1;
+  ACode[1] := 1;
+  if ARev2 then
+    ACode[2] := 1;
+  ACode[14] := 1;
+  if not ARev2 then
+    ACode[16] := 1;
+end;
+
+procedure Mic140v2BuildTInCode48v2(ATemperatureIndex: Integer; ARev2: Boolean;
+  var ACode: array of Word);
+var
+  lIdx: Integer;
+  lTin: Integer;
+begin
+  for lIdx := 0 to High(ACode) do
+    ACode[lIdx] := 0;
+  if Length(ACode) < 24 then
+    Exit;
+
+  lTin := ATemperatureIndex;
+  if (lTin < 0) or (lTin > 11) then
+    Exit;
+  if lTin = 11 then
+    Exit;
+
+  if (lTin and 1) <> 0 then
+    ACode[0] := 1;
+  if (lTin and 2) <> 0 then
+    ACode[1] := 1;
+
+  if lTin < 4 then
+    ACode[15] := 1
+  else
+  begin
+    ACode[14] := 1;
+    if lTin >= 8 then
+      if ARev2 then
+        ACode[2] := 1
+      else
+        ACode[16] := 1;
+  end;
+end;
+
+procedure Mic140v2PackMe04848v2(APhysicalChannel: Integer; ARev2: Boolean;
+  out AW0, AW1: Word);
+var
+  lCode: array[0..23] of Word;
+begin
+  Mic140v2BuildAInCode48v2(APhysicalChannel, lCode);
+  Mic140v2PackMe04824(lCode, ARev2, AW0, AW1);
+end;
+
+procedure Mic140v2PackLevel0Me04848v2(ARev2: Boolean; out AW0, AW1: Word);
+var
+  lCode: array[0..23] of Word;
+begin
+  Mic140v2BuildLevel0Code48v2(ARev2, lCode);
+  Mic140v2PackMe04824(lCode, ARev2, AW0, AW1);
+end;
+
+procedure Mic140v2PackTInMe04848v2(ATemperatureIndex: Integer; ARev2: Boolean;
+  out AW0, AW1: Word);
+var
+  lCode: array[0..23] of Word;
+begin
+  Mic140v2BuildTInCode48v2(ATemperatureIndex, ARev2, lCode);
+  Mic140v2PackMe04824(lCode, ARev2, AW0, AW1);
+end;
+
+function Mic140v2Me048Code48(APhysicalChannel: Integer): Word;
 var
   lGroup: Integer;
   lLow: Integer;
@@ -220,13 +367,18 @@ begin
   Result := Result or (Word(1) shl (15 - lSelectLine));
 end;
 
-function Mic140LegacyLevel0Code: Word;
+function Mic140v2Level0Code: Word;
 begin
+  { [ORIG] code_level0mV → indicator bit → Word(1) shl 1 }
   Result := Word(1) shl 1;
 end;
 
-function Mic140LegacyTInCode48(ATemperatureIndex: Integer): Word;
+function Mic140v2TInCode48(ATemperatureIndex: Integer): Word;
 begin
+  {
+    [ORIG] code_chanTIn_48[0]=$C002, [1]=$4002; последний TIn → code_level0mV.
+    Mic140v2TInDesc48: MUX 2 для последнего слота ($0120).
+  }
   // ModuleMIC140_48::code_chanTIn_48 and TInNum={1,0}. The third internal
   // slot is programmed as level0mV by the original driver, not as an external
   // user temperature channel.
@@ -234,11 +386,11 @@ begin
     0: Result := $C002;
     1: Result := $4002;
   else
-    Result := Mic140LegacyLevel0Code;
+    Result := Mic140v2Level0Code;
   end;
 end;
 
-function Mic140LegacyTInDesc48(ATemperatureIndex: Integer): Word;
+function Mic140v2TInDesc48(ATemperatureIndex: Integer): Word;
 begin
   // TRegMIC140 packed bits: MUX_IN1 is bit 4, MUX_IN2 is bit 5, K1 is bit 8.
   // ModuleMIC140_48 forces the last TIn slot to board MUX 2 while keeping the
@@ -249,7 +401,17 @@ begin
     Result := $0110;
 end;
 
-procedure Mic140LegacyPackTInMe04848(ATemperatureIndex: Integer; out AW0, AW1: Word);
+function Mic140v2TInDesc48v2(ATemperatureIndex: Integer): Word;
+begin
+  { ORIG MIC140_48v2: TIn uses hard K1, no AIn amplifier bits; last TIn
+    switches board MUX2 when its commutator is zero. }
+  if ATemperatureIndex = MIC140v2InternalTemperatureChannelCount - 1 then
+    Result := $0120
+  else
+    Result := $0100;
+end;
+
+procedure Mic140v2PackTInMe04848(ATemperatureIndex: Integer; out AW0, AW1: Word);
 const
   CTIn0: array[0..15] of Word =
     (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
@@ -259,14 +421,14 @@ const
     (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
 begin
   case ATemperatureIndex of
-    0: Mic140LegacyPackMe04848(CTIn0, AW0, AW1);
-    1: Mic140LegacyPackMe04848(CTIn1, AW0, AW1);
+    0: Mic140v2PackMe04848(CTIn0, AW0, AW1);
+    1: Mic140v2PackMe04848(CTIn1, AW0, AW1);
   else
-    Mic140LegacyPackMe04848(CLevel0, AW0, AW1);
+    Mic140v2PackMe04848(CLevel0, AW0, AW1);
   end;
 end;
 
-function Mic140LegacyWordAt(const AWords: TRecorderMic140LegacyWordArray;
+function Mic140v2WordAt(const AWords: TMic140v2WordBuf;
   AIndex: Integer): Word;
 begin
   if (AIndex >= 0) and (AIndex < Length(AWords)) then

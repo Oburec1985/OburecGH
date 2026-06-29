@@ -1,4 +1,6 @@
-unit uRecorderMic140LegacyTiming;
+unit uRecorderMic140v2Timing;
+
+{ Таймер MC114 16 МГц, SPORT-задержки для дескрипторов. }
 
 {
   Legacy MIC-140 scan timing: frequency table, SPORT period math, and derived
@@ -11,17 +13,18 @@ interface
 
 uses
   SysUtils, Math,
-  uRecorderMic140StreamTypes;
+  uRecorderMic140v2WireTypes;
 
 const
+  { [ORIG] mic140_96mod.cpp / Mc114mod.cpp — сетка 16 МГц }
   CMic140FrequencyCount = 8;
-  CMic140LegacyMaxUiReadFrequencyHz = 1000.0;
+  CMic140LegacyMaxUiReadFrequencyHz = 1000.0;  { LNX: потолок UI, не в scale_period }
   CMic140LegacyFreqClkHz = 16000000.0;
-  CMic140LegacyTimerPeriod = 640;
-  CMic140LegacySportSclkDivProgr = 4;
+  CMic140LegacyTimerPeriod = 640;            { ORIG: TIMER_PERIOD, scale_period_16000[].period }
+  CMic140LegacySportSclkDivProgr = 4;          { ORIG: SPORT_SCLK_DIV_PROGR }
   CMic140LegacyPeriodProgrammingChanCode =
     (CMic140LegacySportSclkDivProgr + 1) * 2 * (16 * 2 + (16 + 3));
-  CMic140LegacyPeriodAdSec = 5.0E-6;
+  CMic140LegacyPeriodAdSec = 5.0E-6;           { ORIG: PERIOD_AD_MKS }
   CMic140LegacyInitPeriodDecaySec = 57.0E-6;
   CMic140LegacyPeriodSumChanCode = 58;
   CMic140LegacyPeriodWriteChanCode = 115;
@@ -36,43 +39,44 @@ const
   CMic140LegacyMinCountAver = 1;
   CMic140LegacyMaxCountAver = 32767;
 
-function RecorderMic140FrequencyCount: Integer;
-function RecorderMic140Frequency(AIndex: Integer): Double;
-function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
-function Mic140LegacyTimingForFrequency(AFrequencyHz: Double;
+function Mic140v2FrequencyCount: Integer;
+function Mic140v2Frequency(AIndex: Integer): Double;
+function Mic140v2NormalizeFrequency(AFrequencyHz: Double): Double;
+function Mic140v2TimingForFrequency(AFrequencyHz: Double;
   AChannelCount: Integer): TRecorderMic140Timing;
-function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+function Mic140v2UiTimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 
-function Mic140LegacyPeriodDecayToSport(APeriodSec: Double): Word;
-function Mic140LegacyPeriodAverageToSport(APeriodSec: Double): Word;
-function Mic140LegacySportToPeriodDecay(ACount: Word): Double;
-function Mic140LegacySportToPeriodAverage(ACount: Word): Double;
-function Mic140LegacyCheckPeriodDecay(ACountChans: Word; APeriodSec,
+function Mic140v2PeriodDecayToSport(APeriodSec: Double): Word;
+function Mic140v2PeriodAverageToSport(APeriodSec: Double): Word;
+function Mic140v2SportToPeriodDecay(ACount: Word): Double;
+function Mic140v2SportToPeriodAverage(ACount: Word): Double;
+function Mic140v2CheckPeriodDecay(ACountChans: Word; APeriodSec,
   APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
   AGroundEnabled: Boolean): Double;
-function Mic140LegacyCheckCountAver(ACountChans: Word; APeriodSec,
+function Mic140v2CheckCountAver(ACountChans: Word; APeriodSec,
   APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
   AGroundEnabled: Boolean): Word;
 
 implementation
 
 const
+  { [ORIG] Mc114mod.cpp scale_period_16000 — частоты UI MIC-140 }
   CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
     (1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0);
 
-function RecorderMic140FrequencyCount: Integer;
+function Mic140v2FrequencyCount: Integer;
 begin
   Result := CMic140FrequencyCount;
 end;
 
-function RecorderMic140Frequency(AIndex: Integer): Double;
+function Mic140v2Frequency(AIndex: Integer): Double;
 begin
   if (AIndex < 0) or (AIndex >= CMic140FrequencyCount) then
     raise Exception.CreateFmt('MIC-140 frequency index is invalid: %d', [AIndex]);
   Result := CMic140Frequencies[AIndex];
 end;
 
-function RecorderMic140NormalizeFrequency(AFrequencyHz: Double): Double;
+function Mic140v2NormalizeFrequency(AFrequencyHz: Double): Double;
 var
   I: Integer;
   lBestDelta: Double;
@@ -127,7 +131,7 @@ begin
   Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(lPeriod));
 end;
 
-function Mic140LegacyPeriodDecayToSport(APeriodSec: Double): Word;
+function Mic140v2PeriodDecayToSport(APeriodSec: Double): Word;
 var
   lPeriod: Double;
 begin
@@ -141,7 +145,7 @@ begin
   Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
 end;
 
-function Mic140LegacySportToPeriodDecay(ACount: Word): Double;
+function Mic140v2SportToPeriodDecay(ACount: Word): Double;
 begin
   Result := Mic140LegacySportToPeriod(ACount) +
     Mic140LegacyCodeToPeriod(CMic140LegacyPeriod3ChanCode) +
@@ -150,7 +154,7 @@ begin
     Mic140LegacyMinProgrammingPeriod;
 end;
 
-function Mic140LegacyPeriodAverageToSport(APeriodSec: Double): Word;
+function Mic140v2PeriodAverageToSport(APeriodSec: Double): Word;
 var
   lPeriod: Double;
 begin
@@ -163,7 +167,7 @@ begin
   Result := Word(Mic140LegacyPeriodToSport(lPeriod) and $FFFF);
 end;
 
-function Mic140LegacySportToPeriodAverage(ACount: Word): Double;
+function Mic140v2SportToPeriodAverage(ACount: Word): Double;
 begin
   Result := Mic140LegacySportToPeriod(ACount) +
     Mic140LegacyCodeToPeriod(CMic140LegacyPeriod21ChanCode) +
@@ -183,13 +187,13 @@ begin
     CMic140LegacyTimerPeriod) *
     Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
   lPeriods := APeriodSec / lTimerFactor;
-  APeriodAverSec := Mic140LegacySportToPeriodAverage(
-    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
+  APeriodAverSec := Mic140v2SportToPeriodAverage(
+    Mic140v2PeriodAverageToSport(APeriodAverSec));
   lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
   if AGroundEnabled then
   begin
-    lGroundPeriod := Mic140LegacySportToPeriodDecay(
-      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
+    lGroundPeriod := Mic140v2SportToPeriodDecay(
+      Mic140v2PeriodDecayToSport(Mic140LegacyMinGroundPeriod));
     Result := (lPeriods - (ACountChans div 2) * lGroundPeriod) /
       (ACountChans div 2) - (lPeriodProc + (ACountAver - 1) * APeriodAverSec);
   end
@@ -211,15 +215,15 @@ begin
     CMic140LegacyTimerPeriod) *
     Mic140LegacyCodeToPeriod(CMic140LegacyPeriodTimerWork);
   lPeriods := APeriodSec / lTimerFactor;
-  APeriodDecaySec := Mic140LegacySportToPeriodDecay(
-    Mic140LegacyPeriodDecayToSport(APeriodDecaySec));
-  APeriodAverSec := Mic140LegacySportToPeriodAverage(
-    Mic140LegacyPeriodAverageToSport(APeriodAverSec));
+  APeriodDecaySec := Mic140v2SportToPeriodDecay(
+    Mic140v2PeriodDecayToSport(APeriodDecaySec));
+  APeriodAverSec := Mic140v2SportToPeriodAverage(
+    Mic140v2PeriodAverageToSport(APeriodAverSec));
   lPeriodProc := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod2ChanCode);
   if AGroundEnabled then
   begin
-    lGroundPeriod := Mic140LegacySportToPeriodDecay(
-      Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod));
+    lGroundPeriod := Mic140v2SportToPeriodDecay(
+      Mic140v2PeriodDecayToSport(Mic140LegacyMinGroundPeriod));
     lCount := Trunc(((lPeriods - (ACountChans div 2) * lGroundPeriod) /
       (ACountChans div 2) - (lPeriodProc + APeriodDecaySec)) /
       APeriodAverSec + 1.0);
@@ -234,7 +238,7 @@ begin
   Result := Word(lCount);
 end;
 
-function Mic140LegacyCheckPeriodDecay(ACountChans: Word; APeriodSec,
+function Mic140v2CheckPeriodDecay(ACountChans: Word; APeriodSec,
   APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
   AGroundEnabled: Boolean): Double;
 var
@@ -252,7 +256,7 @@ begin
   Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(Result));
 end;
 
-function Mic140LegacyCheckCountAver(ACountChans: Word; APeriodSec,
+function Mic140v2CheckCountAver(ACountChans: Word; APeriodSec,
   APeriodDecaySec, APeriodAverSec: Double; ACountAver: Word;
   AGroundEnabled: Boolean): Word;
 var
@@ -267,36 +271,36 @@ begin
     Result := CMic140LegacyMinCountAver;
 end;
 
-function Mic140LegacyTimingForFrequency(AFrequencyHz: Double;
+function Mic140v2TimingForFrequency(AFrequencyHz: Double;
   AChannelCount: Integer): TRecorderMic140Timing;
 var
   lCountChans: Word;
   lPeriodDecaySec: Double;
 begin
-  Result.FrequencyHz := RecorderMic140NormalizeFrequency(AFrequencyHz);
+  Result.FrequencyHz := Mic140v2NormalizeFrequency(AFrequencyHz);
   if AChannelCount <= 0 then
     AChannelCount := MIC140DefaultChannelCount;
   // Original ModuleMC114::GetCountChansFor(flag_allch_sampl, flag_ground)
   // uses ModuleMIC140_48.GetMaxChanCount(), i.e. AIn + TIn, and then doubles
   // it because each internal slot is preceded by a ground descriptor.
-  lCountChans := Word((AChannelCount + MIC140TemperatureChannelCount) * 2);
+  lCountChans := Word((AChannelCount + MIC140v2InternalTemperatureChannelCount) * 2);
   lPeriodDecaySec := CMic140LegacyInitPeriodDecaySec;
-  lPeriodDecaySec := Mic140LegacyCheckPeriodDecay(lCountChans,
+  lPeriodDecaySec := Mic140v2CheckPeriodDecay(lCountChans,
     1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec, 1, True);
   Result.AveragePeriodUs := CMic140LegacyPeriodAdSec * 1000000.0;
-  Result.AverageSampleCount := Mic140LegacyCheckCountAver(lCountChans,
+  Result.AverageSampleCount := Mic140v2CheckCountAver(lCountChans,
     1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec,
     CMic140LegacyMaxCountAver, True);
   if (Result.FrequencyHz <= 10.0) and (Result.AverageSampleCount > 4) then
     Result.AverageSampleCount := 4;
   Result.ChannelCommutationUs := lPeriodDecaySec * 1000000.0;
-  Result.GroundCommutationUs := Mic140LegacySportToPeriodDecay(
-    Mic140LegacyPeriodDecayToSport(Mic140LegacyMinGroundPeriod)) * 1000000.0;
-  Result.LegacyChannelDelaySport := Mic140LegacyPeriodDecayToSport(
+  Result.GroundCommutationUs := Mic140v2SportToPeriodDecay(
+    Mic140v2PeriodDecayToSport(Mic140LegacyMinGroundPeriod)) * 1000000.0;
+  Result.LegacyChannelDelaySport := Mic140v2PeriodDecayToSport(
     lPeriodDecaySec);
-  Result.LegacyGroundDelaySport := Mic140LegacyPeriodDecayToSport(
+  Result.LegacyGroundDelaySport := Mic140v2PeriodDecayToSport(
     Mic140LegacyMinGroundPeriod);
-  Result.LegacyAverageDelaySport := Mic140LegacyPeriodAverageToSport(
+  Result.LegacyAverageDelaySport := Mic140v2PeriodAverageToSport(
     CMic140LegacyPeriodAdSec);
   Result.AveragePower := 7;
   if Result.FrequencyHz >= 10000.0 then
@@ -309,9 +313,9 @@ begin
     Result.AveragePower := 6;
 end;
 
-function RecorderMic140TimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
+function Mic140v2UiTimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 begin
-  Result := Mic140LegacyTimingForFrequency(AFrequencyHz,
+  Result := Mic140v2TimingForFrequency(AFrequencyHz,
     MIC140DefaultChannelCount);
 end;
 

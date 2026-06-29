@@ -137,12 +137,12 @@ Device/
       mic140_quickstart.md
 ```
 
-| Модуль | Назначение |
-|---|---|
-| `Device/MIC140/uRecorderMic140Utils` | Парсинг адресов MIC-140, `SourceId`, константы host/port. |
-| `Core/uRecorderMeraPaths` | Пути `{Mera Files}\Calibr\`. |
-| `Core/uMeraFile` | MERA-файлы и сигналы. |
-| `Device/MIC140/uRecorderMic140LegacyProtocol` | Legacy TCP, `RecorderMic140DeviceSerialFromFirmware`. |
+| Модуль                                        | Назначение                                                |
+| --------------------------------------------- | --------------------------------------------------------- |
+| `Device/MIC140/uRecorderMic140Utils`          | Парсинг адресов MIC-140, `SourceId`, константы host/port. |
+| `Core/uRecorderMeraPaths`                     | Пути `{Mera Files}\Calibr\`.                              |
+| `Core/uMeraFile`                              | MERA-файлы и сигналы.                                     |
+| `Device/MIC140/uRecorderMic140LegacyProtocol` | Legacy TCP, `RecorderMic140DeviceSerialFromFirmware`.     |
 
 Все модули SharedUtils, используемые RecorderLnx, должны быть перечислены в
 `RecorderLnx.lpi` (`IsPartOfProject`), чтобы они были видны в инспекторе проекта

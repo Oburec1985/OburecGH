@@ -1,43 +1,8 @@
 unit uRecorderMic140v2Device;
 
 {
-  Драйвер прибора MIC-140 (версия 2) для слоя IRecorderDevice.
-
-  Назначение
-  ----------
-  Управление жизненным циклом прибора: установка TCP-связи, идентификация,
-  запись циклограммы скана в контроллер MC031, запуск/останов опроса, выдача
-  блоков отсчётов источнику данных. Не публикует теги и не знает про UI.
-
-  Этапы работы (наружу — TRecorderDeviceState, внутри — TMic140v2DriverPhase):
-    отключён → подключён → запрограммирован → идёт опрос.
-
-  Параметры (IP, порт, частота, число каналов) задаются через свойства до
-  ProgramDevice / Start, не аргументами Connect.
-
-  Основные правила при разработке этого модуля
-  --------------------------------------------
-  1. Разбор TCP: при неверном sync или контрольной сумме MDP сдвиг потока на
-     один байт до синхрослова 0x12B8 (см. uRecorderMic140LegacyProtocol.ReadPacket).
-  2. Верный заголовок кадра и «мусор» в отсчётах АЦП — в первую очередь
-     проверять настройку коммутатора/FIFO/циклограммы, а не только resync.
-     Такие блоки не отдавать в теги (Mic140LegacyRawBlockLooksCorrupt).
-  3. Поток чтения и поток разбора разделяются кольцом заранее выделенных слотов
-     TMic140RawBlockRing — без длительной блокировки на копировании payload.
-  4. В режиме опроса поток чтения делает один интервал ожидания на итерацию
-     (AcquirePacingMs из TRecorderAcquirePhaseFsm / TRecorderMic140AcquireTiming).
-     Лишние Sleep в цикле опроса не добавлять.
-  5. Connect / Program / Start / Stop вызываются из потока источника данных,
-     не из GUI. Блокирующее чтение сокета в UI не выполнять.
-  6. TIn и компенсация холодного спая — внутри драйвера MIC-140, не в
-     TRecorderAcquisitionBlock (см. TMic140AuxTemperatureBlock в legacy).
-
-  Текущий статус: каркас этапов и свойств; обмен TCP и worker-потоки — TODO.
-
-  Документация:
-    Docs/devices/mic140/protocol.md
-    Docs/devices/mic140/acquisition_rules.md
-    Docs/devices/migration_mic140v2.md
+  MIC-140 v2: IMic140Device, UsesRawRing=True.
+  Ядро: Protocol / Scan / Stream / RawRing. Utils — MIC140v2/utils/.
 }
 
 {$mode objfpc}{$H+}
@@ -46,143 +11,132 @@ interface
 
 uses
   Classes, SysUtils, Variants,
-  uRecorderDeviceInterfaces,
-  uRecorderMic140v2Types;
+  uRecorderDeviceInterfaces, uRecorderMic140DeviceApi, uRecorderTags,
+  uRecorderMic140v2WireTypes,
+  uRecorderMic140v2Protocol, uRecorderMic140v2Consts, uRecorderMic140v2Timing,
+  uRecorderMic140v2Scan, uRecorderMic140v2Stream, uRecorderMic140v2Helper,
+  uRecorderMic140v2Diag;
 
 type
-  { Ошибка: запрошенная возможность ещё не реализована в v2. }
-  EMic140v2NotImplemented = class(ERecorderDeviceError);
-
-  {
-    Реализация IRecorderDevice для MIC-140 v2.
-
-    Один экземпляр на источник данных; владеет параметрами связи, списком
-    логических каналов и текущим этапом работы с прибором.
-  }
-  TRecorderMic140v2Device = class(TInterfacedObject, IRecorderDevice)
+  TRecorderMic140v2Device = class(TInterfacedObject, IMic140Device)
   private
-    fParams: TMic140v2CreateParams;       { IP, порт, частота, период блока UI }
-    fChannels: TRecorderDeviceChannelArray; { кэш имён/адресов каналов для GetChannels }
-    fPhase: TMic140v2DriverPhase;           { подсостояние внутри этапа (rdpStateWord) }
-    fState: TRecorderDeviceState;           { этап, видимый источнику данных }
-    fLastError: string;                     { текст последней ошибки для диагностики }
-
-    { Смена внутреннего подсостояния с записью в лог. }
-    procedure SetPhase(APhase: TMic140v2DriverPhase);
-    { Пересборка fChannels после смены числа каналов или частоты опроса. }
-    procedure RebuildChannels;
-
-    { --- реализация IRecorderDevice --- }
+    fId, fHost: string;
+    fPort: Word;
+    fChCnt: Integer;
+    fFreq: Double;
+    fUpdMs: Cardinal;
+    fNode: Integer;
+    fState: TRecorderDeviceState;
+    fStop: Boolean;
+    fScanOn: Boolean;
+    fCli: TMic140v2Tcp;
+    fFw: TMic140v2Firmware;
+    fHwSer: Integer;
+    fExpDataWords: Word;
+    fExpMsgWords: Word;
+    fCh: TRecorderDeviceChannelArray;
+    fStr: TMic140v2StreamState;
+    fAux: TMic140AuxTemperatureBlock;
+    procedure BuildChannels;
+    function ScanStride: Integer;
+    function ProbeScan: Boolean;
+    procedure RecoverTcp;
+    function SoftRestartScan: Boolean;
+    function StallRestartScan: Boolean;
     function GetDeviceId: string;
     function GetName: string;
     function GetState: TRecorderDeviceState;
     function GetChannels: TRecorderDeviceChannelArray;
-    { Чтение параметра прибора по идентификатору rdp* (аналог GetDeviceProperty оригинала). }
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer): Variant;
-    { Запись параметра до старта опроса; во время опроса изменения отклоняются. }
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer): Boolean;
   public
-    { Создание из полной структуры параметров. }
-    constructor Create(const AParams: TMic140v2CreateParams); overload;
-    { Создание с отдельными полями (удобно для источника данных). }
     constructor Create(const ADeviceId, AHost: string; APort: Word;
-      AChannelCount: Integer; APollFrequencyHz: Double;
-      AUpdateTimeMs: Cardinal); overload;
+      AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal);
+    destructor Destroy; override;
 
-    { Установка TCP и идентификация прибора (CMD_REPLY). → rdsConnected }
+    function GetDeviceSerial: Integer;
+    function GetLegacyFirmware(out AFirmware: TRecorderMic140LegacyFirmware): Boolean;
+    function GetNodeNumber: Integer;
     procedure Connect;
-    { Останов опроса (если был), закрытие связи. → rdsDisconnected }
     procedure Disconnect;
-    { Запись циклограммы и дескрипторов скана в DM контроллера. → rdsProgrammed }
     procedure ProgramDevice;
-    { Запуск опроса (CMD_STARTSCANMAIN) и worker-потоков приёма. → rdsStarted }
     procedure Start;
-    { Останов опроса (CMD_STOPSCANMAIN), без разрыва TCP. → rdsProgrammed }
+    procedure RequestStopAcquisition;
     procedure Stop;
-    {
-      Временный опрос одного блока (наследие legacy).
-      В v2 целевой путь — передача готового блока источнику из потока разбора;
-      этот метод остаётся заглушкой до переключения источника данных.
-    }
+    procedure ClearLegacyScanBuffer;
+    function ReadLegacyRawBlock(ATimeoutMs: Cardinal;
+      out ARaw: TMic140LegacyRawBlock): Boolean;
+    function LegacyDecommutateRawBlock(const ARaw: TMic140LegacyRawBlock;
+      out ABlock: TRecorderDeviceSampleBlock): Boolean;
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean;
-
-    property Phase: TMic140v2DriverPhase read fPhase;
-    property LastError: string read fLastError;
+      out ABlock: TRecorderDeviceSampleBlock): Boolean;
+    function RunServiceZeroBalance(const AChannelNumbers: array of Integer;
+      APollFrequencyHz: Double; out AMeans: TRecorderDoubleArray;
+      out AErrorMessage: string): Boolean;
+    function LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
+    function LegacyStreamReadCount: Int64;
+    function LegacyNumBuffGapCount: Integer;
+    function LegacyDuplicateNumBuffCount: Integer;
+    function LegacyCorruptReadCount: Integer;
+    function LegacyMdpResyncByteCount: Int64;
+    function LegacyTryRestartStreamAfterReadStall: Boolean;
+    function LegacyConsumeStreamSequenceReset: Boolean;
+    function UsesRawRing: Boolean;
+    function ChannelCount: Integer;
   end;
-
-{ Фабрика: возвращает интерфейс IRecorderDevice для подключения в источник данных. }
-function CreateRecorderMic140v2Device(const AParams: TMic140v2CreateParams): IRecorderDevice;
 
 implementation
 
 uses
-  uRecorderDebugLog,
-  uRecorderMic140Utils;
+  Math;
 
-{ Запись строки в общий отладочный лог с префиксом MIC140v2. }
-procedure Mic140v2Log(const AMessage: string);
-begin
-  RecorderDebugLog('[MIC140v2] ' + AMessage);
-end;
-
-constructor TRecorderMic140v2Device.Create(const AParams: TMic140v2CreateParams);
-begin
-  inherited Create;
-  fParams := AParams;
-  fPhase := mv2Idle;
-  fState := rdsDisconnected;
-  RebuildChannels;
-end;
+const
+  CMaxFreq = 1000.0;
+  CBalMin = 30;
+  CBalSkip = 10;
+  CBalFrac = 0.3;
 
 constructor TRecorderMic140v2Device.Create(const ADeviceId, AHost: string;
   APort: Word; AChannelCount: Integer; APollFrequencyHz: Double;
   AUpdateTimeMs: Cardinal);
-var
-  lParams: TMic140v2CreateParams;
 begin
-  lParams := Mic140v2DefaultCreateParams(ADeviceId, AHost);
-  lParams.Port := APort;
-  lParams.ChannelCount := AChannelCount;
-  lParams.PollFrequencyHz := APollFrequencyHz;
-  lParams.UpdateTimeMs := AUpdateTimeMs;
-  Create(lParams);
+  inherited Create;
+  if ADeviceId = '' then
+    raise ERecorderDeviceError.Create('device id empty');
+  if AHost = '' then
+    raise ERecorderDeviceError.Create('host empty');
+  if not (AChannelCount in [1..MIC140MaxChannelCount]) then
+    raise ERecorderDeviceError.CreateFmt('bad channel count %d', [AChannelCount]);
+  fFreq := Mic140v2NormalizeFrequency(APollFrequencyHz);
+  if fFreq > CMaxFreq then
+    fFreq := MIC140DefaultPollFrequencyHz;
+  fId := ADeviceId;
+  fHost := AHost;
+  fPort := APort;
+  fChCnt := AChannelCount;
+  fUpdMs := AUpdateTimeMs;
+  fNode := MIC140v2DefaultNode;
+  fState := rdsDisconnected;
+  Mic140v2StreamClear(fStr);
+  BuildChannels;
 end;
 
-procedure TRecorderMic140v2Device.SetPhase(APhase: TMic140v2DriverPhase);
+destructor TRecorderMic140v2Device.Destroy;
 begin
-  if fPhase = APhase then
-    Exit;
-  fPhase := APhase;
-  Mic140v2Log(Format('фаза: %s', [Mic140v2PhaseToText(fPhase)]));
-end;
-
-procedure TRecorderMic140v2Device.RebuildChannels;
-var
-  I: Integer;
-begin
-  SetLength(fChannels, fParams.ChannelCount);
-  for I := 0 to fParams.ChannelCount - 1 do
-  begin
-    fChannels[I].Name := RecorderMic140ChannelTagName(MIC140DefaultNodeNumber, I + 1);
-    fChannels[I].Address := Format('%d-%2.2d', [MIC140DefaultNodeNumber, I + 1]);
-    fChannels[I].UnitName := '';
-    fChannels[I].ModuleType := 'MIC-140';
-    fChannels[I].PollFrequencyHz := fParams.PollFrequencyHz;
-    fChannels[I].Enabled := True;
-  end;
+  Disconnect;
+  inherited Destroy;
 end;
 
 function TRecorderMic140v2Device.GetDeviceId: string;
 begin
-  Result := fParams.DeviceId;
+  Result := fId;
 end;
 
 function TRecorderMic140v2Device.GetName: string;
 begin
-  Result := Format('MIC-140v2 %s:%d', [fParams.Host, fParams.Port]);
+  Result := Format('MIC-140 %s:%d', [fHost, fPort]);
 end;
 
 function TRecorderMic140v2Device.GetState: TRecorderDeviceState;
@@ -192,8 +146,7 @@ end;
 
 function TRecorderMic140v2Device.GetChannels: TRecorderDeviceChannelArray;
 begin
-  { Копия массива — вызывающий не должен менять внутренний кэш драйвера. }
-  Result := Copy(fChannels, 0, Length(fChannels));
+  Result := Copy(fCh, 0, Length(fCh));
 end;
 
 function TRecorderMic140v2Device.GetDeviceProperty(AProperty: TRecorderDeviceProperty;
@@ -201,148 +154,590 @@ function TRecorderMic140v2Device.GetDeviceProperty(AProperty: TRecorderDevicePro
 begin
   case AProperty of
     rdpName: Result := GetName;
-    rdpHost: Result := fParams.Host;
-    rdpPort: Result := Integer(fParams.Port);
-    rdpPollFrequencyHz: Result := fParams.PollFrequencyHz;
-    rdpUpdateTimeMs: Result := Integer(fParams.UpdateTimeMs);
-    rdpChannelCount: Result := fParams.ChannelCount;
-    rdpStateWord: Result := Ord(fPhase);
-    rdpErrorCode: Result := Ord(fPhase = mv2Error);
-    rdpErrorText: Result := fLastError;
+    rdpHost: Result := fHost;
+    rdpPort: Result := Integer(fPort);
+    rdpPollFrequencyHz: Result := fFreq;
+    rdpUpdateTimeMs: Result := Integer(fUpdMs);
+    rdpChannelCount: Result := fChCnt;
+    rdpDeviceSerial: Result := GetDeviceSerial;
+    rdpStateWord: Result := Ord(fState);
+    rdpErrorCode: Result := 0;
+    rdpErrorText: Result := '';
   else
     Result := Null;
   end;
 end;
 
-function TRecorderMic140v2Device.TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
-  const AValue: Variant; AIndex: Integer): Boolean;
+function TRecorderMic140v2Device.TrySetDeviceProperty(
+  AProperty: TRecorderDeviceProperty; const AValue: Variant;
+  AIndex: Integer): Boolean;
 var
-  lNum: Double;
+  n: Double;
 begin
   Result := False;
-  { Во время опроса менять IP/частоту нельзя — нужен Stop и повторная настройка. }
-  if fState = rdsStarted then
-    Exit;
   case AProperty of
     rdpHost:
       if VarIsStr(AValue) or VarIsType(AValue, varUString) then
       begin
-        fParams.Host := string(AValue);
+        fHost := string(AValue);
         Exit(True);
       end;
     rdpPort:
       if VarIsNumeric(AValue) then
       begin
-        lNum := AValue;
-        fParams.Port := Word(Trunc(lNum));
+        n := AValue;
+        fPort := Word(Trunc(n));
         Exit(True);
       end;
     rdpPollFrequencyHz:
       if VarIsNumeric(AValue) then
       begin
-        fParams.PollFrequencyHz := Double(AValue);
-        RebuildChannels;
+        fFreq := Double(AValue);
         Exit(True);
       end;
     rdpUpdateTimeMs:
       if VarIsNumeric(AValue) then
       begin
-        lNum := AValue;
-        fParams.UpdateTimeMs := Cardinal(Trunc(lNum));
+        n := AValue;
+        fUpdMs := Cardinal(Trunc(n));
         Exit(True);
       end;
     rdpChannelCount:
       if VarIsNumeric(AValue) then
       begin
-        lNum := AValue;
-        if Trunc(lNum) > 0 then
+        n := AValue;
+        if Trunc(n) > 0 then
         begin
-          fParams.ChannelCount := Trunc(lNum);
-          RebuildChannels;
+          fChCnt := Trunc(n);
+          BuildChannels;
           Exit(True);
         end;
       end;
   end;
 end;
 
+procedure TRecorderMic140v2Device.BuildChannels;
+var
+  i: Integer;
+begin
+  SetLength(fCh, fChCnt);
+  for i := 0 to fChCnt - 1 do
+  begin
+    fCh[i].Name := Mic140v2ChannelTag(fNode, i + 1);
+    fCh[i].Address := Format('%d-%2.2d', [fNode, i + 1]);
+    fCh[i].ModuleType := 'MIC-140';
+    fCh[i].PollFrequencyHz := fFreq;
+    fCh[i].Enabled := True;
+  end;
+end;
+
+function TRecorderMic140v2Device.ScanStride: Integer;
+begin
+  { Current scan program is AIn-only: one payload row has fChCnt ADC words. }
+  Result := fChCnt;
+end;
+
+function TRecorderMic140v2Device.GetDeviceSerial: Integer;
+begin
+  if fHwSer > 0 then
+    Exit(fHwSer);
+  if fFw.DevType > 0 then
+    Result := Mic140v2HardwareCalibrSerial(fFw)
+  else
+    Result := 0;
+end;
+
+function TRecorderMic140v2Device.GetLegacyFirmware(
+  out AFirmware: TRecorderMic140LegacyFirmware): Boolean;
+begin
+  Result := fFw.DevType > 0;
+  if Result then
+    AFirmware := fFw;
+end;
+
+function TRecorderMic140v2Device.GetNodeNumber: Integer;
+begin
+  Result := fNode;
+end;
+
+function TRecorderMic140v2Device.UsesRawRing: Boolean;
+begin
+  Result := True;
+end;
+
+function TRecorderMic140v2Device.ChannelCount: Integer;
+begin
+  Result := fChCnt;
+end;
+
 procedure TRecorderMic140v2Device.Connect;
+var
+  err: string;
 begin
   if fState <> rdsDisconnected then
     Exit;
-  fLastError := '';
-  SetPhase(mv2TcpConnecting);
-  { TODO: TCP :4000, затем CMD_REPLY — uRecorderMic140LegacyProtocol }
-  SetPhase(mv2Identifying);
-  fState := rdsConnected;
-  SetPhase(mv2Idle);
-  Mic140v2Log(Format('Connect %s:%d (каркас, без обмена)', [fParams.Host, fParams.Port]));
+  FreeAndNil(fCli);
+  fHwSer := 0;
+  FillChar(fFw, SizeOf(fFw), 0);
+  Mic140v2StreamClear(fStr);
+  fScanOn := False;
+
+  if not Mic140v2TcpProbe(fHost, fPort, 800) then
+  begin
+    Mic140v2Log(Format('[MIC140v2:%s:%d] TCP probe failed', [fHost, fPort]));
+    Exit;
+  end;
+
+  fCli := TMic140v2Tcp.Create(fHost, fPort, 5000);
+  try
+    fCli.Connect;
+    if not fCli.ReadFirmware(fFw, err) then
+    begin
+      Mic140v2Log(Format('[MIC140v2:%s:%d] firmware: %s', [fHost, fPort, err]));
+      FreeAndNil(fCli);
+      Exit;
+    end;
+    fHwSer := Mic140v2HardwareCalibrSerial(fFw);
+    if not Mic140v2StopScan(fCli, err) then
+      Mic140v2Log(Format('[MIC140v2:%s:%d] orphan stop: %s', [fHost, fPort, err]));
+    fCli.ClearBufferedPackets;
+    fStop := False;
+    fState := rdsConnected;
+    Mic140v2Log(Format(
+      '[MIC140v2:%s:%d] connected devType=%d ser=%d rev=%d.%d BIOS=%d.%d hwCal=%d',
+      [fHost, fPort, fFw.DevType, fFw.DevSerNo,
+       Mic140v2DevRevFromFirmware(fFw), Mic140v2DevSubRevFromFirmware(fFw),
+       fFw.BiosFunction, fFw.BiosVersion, fHwSer]));
+  except
+    on E: Exception do
+    begin
+      Mic140v2Log(Format('[MIC140v2:%s:%d] connect: %s', [fHost, fPort, E.Message]));
+      FreeAndNil(fCli);
+    end;
+  end;
 end;
 
 procedure TRecorderMic140v2Device.Disconnect;
 begin
   if fState = rdsStarted then
     Stop;
-  { TODO: закрытие сокета transport }
+  FreeAndNil(fCli);
+  FillChar(fFw, SizeOf(fFw), 0);
+  fHwSer := 0;
+  fScanOn := False;
+  fStop := False;
   fState := rdsDisconnected;
-  SetPhase(mv2Idle);
-  fLastError := '';
-  Mic140v2Log('Disconnect');
 end;
 
 procedure TRecorderMic140v2Device.ProgramDevice;
+var
+  prog: TMic140v2ScanProgrammer;
+  err: string;
+  tim: TRecorderMic140Timing;
 begin
   if fState = rdsDisconnected then
     Connect;
-  if fState <> rdsConnected then
-    raise ERecorderDeviceError.Create(
-      'MIC140v2: программирование возможно только после подключения');
-  SetPhase(mv2Programming);
-  { TODO: CMD_RESETSCANMAIN … CMD_SCAN_SET_CHANS, запись DM — protocol.md §2 }
-  fState := rdsProgrammed;
-  SetPhase(mv2Idle);
-  Mic140v2Log('ProgramDevice (каркас)');
+  if fState = rdsDisconnected then
+    Exit;
+  if fCli = nil then
+    Exit;
+
+  prog := TMic140v2ScanProgrammer.Create(fCli, fChCnt, fFreq, fUpdMs,
+    Mic140v2DevRevFromFirmware(fFw), Mic140v2DevSubRevFromFirmware(fFw));
+  try
+    if prog.ProgramScan(err) then
+    begin
+      fState := rdsProgrammed;
+      tim := prog.LastTiming;
+      fExpDataWords := prog.LastFifoReadyWords;
+      fExpMsgWords := prog.LastExpectedMessageWords;
+      Mic140v2StreamSetExpectedPacket(fStr, fExpDataWords, fExpMsgWords);
+      Mic140v2Log(Format(
+        '[MIC140v2:%s:%d] scan programmed ch=%d stride=%d freq=%.3f Hz fifoReady=%d msgWords=%d',
+        [fHost, fPort, fChCnt, ScanStride, fFreq, fExpDataWords, fExpMsgWords]));
+    end
+    else
+      Mic140v2Log(Format('[MIC140v2:%s:%d] program failed: %s', [fHost, fPort, err]));
+  finally
+    prog.Free;
+  end;
+end;
+
+function TRecorderMic140v2Device.ProbeScan: Boolean;
+var
+  pkt: TMic140v2ScanPacket;
+  err: string;
+  saved: Cardinal;
+begin
+  Result := False;
+  if fCli = nil then
+    Exit;
+  saved := fCli.TimeoutMs;
+  try
+    fCli.TimeoutMs := CMic140LegacyStartProbeTimeoutMs;
+    Result := fCli.ReadScanBlock(pkt, err) and (Length(pkt.DataWords) > 0);
+  finally
+    fCli.TimeoutMs := saved;
+  end;
+end;
+
+procedure TRecorderMic140v2Device.RecoverTcp;
+var
+  err: string;
+begin
+  if fCli = nil then
+    Exit;
+  try
+    fCli.Disconnect;
+  except
+  end;
+  try
+    fCli.Connect;
+    if fCli.ReadFirmware(fFw, err) then
+    begin
+      if not Mic140v2StopScan(fCli, err) then
+        Mic140v2Log(Format('[MIC140v2:%s:%d] recover stop: %s', [fHost, fPort, err]));
+      fCli.ClearBufferedPackets;
+      fScanOn := False;
+    end;
+  except
+    on E: Exception do
+      Mic140v2Log(Format('[MIC140v2:%s:%d] recover: %s', [fHost, fPort, E.Message]));
+  end;
+end;
+
+function TRecorderMic140v2Device.SoftRestartScan: Boolean;
+var
+  err: string;
+begin
+  Result := False;
+  if (fState <> rdsStarted) or (fCli = nil) then
+    Exit;
+  if fStr.CorruptStreak < CMic140LegacySoftRestartCorruptThreshold then
+    Exit;
+  if fStr.SoftRestartCnt >= CMic140LegacySoftRestartMaxAttempts then
+    Exit;
+  Inc(fStr.SoftRestartCnt);
+  Mic140v2Log(Format('[MIC140v2:%s:%d] soft restart %d after %d corrupt',
+    [fHost, fPort, fStr.SoftRestartCnt, fStr.CorruptStreak]));
+  if not Mic140v2StopScan(fCli, err) then
+    Mic140v2Log(Format('[MIC140v2:%s:%d] soft stop: %s', [fHost, fPort, err]));
+  fCli.ClearBufferedPackets;
+  fStr.SeqReset := True;
+  fStr.CorruptStreak := 0;
+  fStr.PktLogged := False;
+  if fCli.StartScan(err) then
+  begin
+    fScanOn := True;
+    fState := rdsStarted;
+    Result := True;
+  end
+  else
+    fState := rdsConnected;
+end;
+
+function TRecorderMic140v2Device.StallRestartScan: Boolean;
+var
+  err: string;
+begin
+  Result := False;
+  if (fState <> rdsStarted) or (fCli = nil) or fStop then
+    Exit;
+  if fStr.StallRestartCnt >= CMic140LegacyReadStallRestartMaxAttempts then
+    Exit;
+  Inc(fStr.StallRestartCnt);
+  Mic140v2Log(Format('[MIC140v2:%s:%d] stall restart %d after %d blocks',
+    [fHost, fPort, fStr.StallRestartCnt, fStr.ReadCnt]));
+  if not Mic140v2StopScan(fCli, err) then
+    Mic140v2Log(Format('[MIC140v2:%s:%d] stall stop: %s', [fHost, fPort, err]));
+  fCli.ClearBufferedPackets;
+  fStr.SeqReset := True;
+  fStr.PktLogged := False;
+  fStr.LastNumBuffOk := False;
+  fStr.LastTickOk := False;
+  if fStr.StallRestartCnt >= CMic140LegacyReadStallRestartMaxAttempts then
+  begin
+    fState := rdsConnected;
+    ProgramDevice;
+    if fState <> rdsProgrammed then
+      Exit;
+  end;
+  if fCli.StartScan(err) then
+  begin
+    fScanOn := True;
+    fState := rdsStarted;
+    Result := True;
+  end
+  else
+    fState := rdsConnected;
 end;
 
 procedure TRecorderMic140v2Device.Start;
+var
+  att: Integer;
+  err: string;
+  cmdOk, probe: Boolean;
 begin
   if fState = rdsDisconnected then
-  begin
     Connect;
-    ProgramDevice;
-  end
-  else if fState = rdsConnected then
+  if fState = rdsDisconnected then
+    Exit;
+  if fState = rdsConnected then
     ProgramDevice;
   if fState <> rdsProgrammed then
-    raise ERecorderDeviceError.Create('MIC140v2: опрос возможен только после настройки');
-  SetPhase(mv2ScanRunning);
-  // TODO: CMD_STARTSCANMAIN, запуск read/publish workers, TMic140RawBlockRing
-  fState := rdsStarted;
-  Mic140v2Log('Start (каркас)');
+    Exit;
+  if fCli = nil then
+    Exit;
+
+  for att := 1 to CMic140LegacyStartAttempts do
+  begin
+    fCli.ClearBufferedPackets;
+    fCli.TimeoutMs := CMic140LegacyStartCommandTimeoutMs;
+    cmdOk := fCli.StartScan(err);
+    probe := False;
+    if not cmdOk then
+      probe := ProbeScan;
+    if cmdOk or probe then
+    begin
+      fCli.TimeoutMs := CMic140LegacyCommandTimeoutMs;
+      // StartScan is a command on stream 1; stream-0 packets may already be
+      // arriving by the time the reply is read. Do not drain TCP here: cutting
+      // a live packet in the middle desynchronizes MDP. The read thread will
+      // consume queued boundary packets and keep sequence/corrupt counters.
+      Mic140v2StreamClear(fStr);
+      Mic140v2StreamSetExpectedPacket(fStr, fExpDataWords, fExpMsgWords);
+      fScanOn := True;
+      fStop := False;
+      fState := rdsStarted;
+      Mic140v2Log(Format('[MIC140v2:%s:%d] scan started att=%d probe=%s',
+        [fHost, fPort, att, BoolToStr(probe, True)]));
+      Exit;
+    end;
+    fCli.TimeoutMs := CMic140LegacyCommandTimeoutMs;
+    Mic140v2Log(Format('[MIC140v2:%s:%d] start fail att=%d: %s', [fHost, fPort, att, err]));
+    if not Mic140v2StopScan(fCli, err) then
+      Mic140v2Log(Format('[MIC140v2:%s:%d] start recovery stop: %s', [fHost, fPort, err]));
+    fCli.ClearBufferedPackets;
+    fScanOn := False;
+    if att < CMic140LegacyStartAttempts then
+    begin
+      RecoverTcp;
+      fState := rdsConnected;
+      ProgramDevice;
+      if fState <> rdsProgrammed then
+        Break;
+    end;
+  end;
+  fState := rdsConnected;
+end;
+
+procedure TRecorderMic140v2Device.RequestStopAcquisition;
+begin
+  fStop := True;
+end;
+
+procedure TRecorderMic140v2Device.ClearLegacyScanBuffer;
+begin
+  if fCli <> nil then
+    fCli.ClearBufferedPackets;
+  fStr.LastNumBuffOk := False;
+  fStr.LastTickOk := False;
+  fStr.PayloadStride := 0;
 end;
 
 procedure TRecorderMic140v2Device.Stop;
+var
+  err: string;
 begin
-  if fState <> rdsStarted then
+  fStop := True;
+  if (fCli <> nil) and ((fState = rdsStarted) or fScanOn) then
+  begin
+    if not Mic140v2StopScan(fCli, err) then
+      Mic140v2Log(Format('[MIC140v2:%s:%d] stop failed: %s', [fHost, fPort, err]))
+    else
+      Mic140v2Log(Format(
+        '[MIC140v2:%s:%d] stopped blocks=%d gaps=%d dup=%d corrupt=%d resync=%d',
+        [fHost, fPort, fStr.ReadCnt, fStr.GapCnt, fStr.DupCnt, fStr.CorruptCnt,
+         LegacyMdpResyncByteCount]));
+    fCli.ClearBufferedPackets;
+    fScanOn := False;
+  end;
+  if fState <> rdsDisconnected then
+    fState := rdsConnected;
+end;
+
+function TRecorderMic140v2Device.ReadLegacyRawBlock(ATimeoutMs: Cardinal;
+  out ARaw: TMic140LegacyRawBlock): Boolean;
+begin
+  Result := False;
+  if (fState <> rdsStarted) or (fCli = nil) then
     Exit;
-  // TODO: останов worker-потоков, CMD_STOPSCANMAIN
-  fState := rdsProgrammed;
-  SetPhase(mv2Idle);
-  Mic140v2Log('Stop (каркас)');
+  Result := Mic140v2StreamReadRaw(fCli, fStr, fChCnt, ScanStride, fFreq, fStop,
+    ATimeoutMs, fHost, fPort, ARaw);
+  if Result and Mic140v2RawCorrupt(ARaw, fChCnt, fStr.PayloadStride) then
+    SoftRestartScan;
+end;
+
+function TRecorderMic140v2Device.LegacyDecommutateRawBlock(
+  const ARaw: TMic140LegacyRawBlock;
+  out ABlock: TRecorderDeviceSampleBlock): Boolean;
+var
+  lStride: Integer;
+begin
+  lStride := fStr.PayloadStride;
+  if lStride <= 0 then
+    lStride := ScanStride;
+  Result := Mic140v2StreamDecommutate(ARaw, fChCnt, lStride, fFreq, fAux, ABlock);
 end;
 
 function TRecorderMic140v2Device.ReadBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderAcquisitionBlock): Boolean;
+  out ABlock: TRecorderDeviceSampleBlock): Boolean;
+var
+  raw: TMic140LegacyRawBlock;
 begin
-  ClearRecorderAcquisitionBlock(ABlock);
-  if fState <> rdsStarted then
+  ClearRecorderDeviceSampleBlock(ABlock);
+  if not ReadLegacyRawBlock(ATimeoutMs, raw) then
     Exit(False);
-  // Целевой v2: блоки из кольца в потоке разбора, не опрос отсюда.
-  Result := False;
+  Result := LegacyDecommutateRawBlock(raw, ABlock);
 end;
 
-function CreateRecorderMic140v2Device(const AParams: TMic140v2CreateParams): IRecorderDevice;
+function TRecorderMic140v2Device.LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
 begin
-  Result := TRecorderMic140v2Device.Create(AParams);
+  Result := fAux;
+end;
+
+function TRecorderMic140v2Device.LegacyStreamReadCount: Int64;
+begin
+  Result := fStr.ReadCnt;
+end;
+
+function TRecorderMic140v2Device.LegacyNumBuffGapCount: Integer;
+begin
+  Result := fStr.GapCnt;
+end;
+
+function TRecorderMic140v2Device.LegacyDuplicateNumBuffCount: Integer;
+begin
+  Result := fStr.DupCnt;
+end;
+
+function TRecorderMic140v2Device.LegacyCorruptReadCount: Integer;
+begin
+  Result := fStr.CorruptCnt;
+end;
+
+function TRecorderMic140v2Device.LegacyMdpResyncByteCount: Int64;
+begin
+  if fCli <> nil then
+    Result := fCli.MdpResyncByteCount
+  else
+    Result := 0;
+end;
+
+function TRecorderMic140v2Device.LegacyTryRestartStreamAfterReadStall: Boolean;
+begin
+  Result := StallRestartScan;
+end;
+
+function TRecorderMic140v2Device.LegacyConsumeStreamSequenceReset: Boolean;
+begin
+  Result := fStr.SeqReset;
+  fStr.SeqReset := False;
+end;
+
+function TRecorderMic140v2Device.RunServiceZeroBalance(
+  const AChannelNumbers: array of Integer; APollFrequencyHz: Double;
+  out AMeans: TRecorderDoubleArray; out AErrorMessage: string): Boolean;
+var
+  blk: TRecorderDeviceSampleBlock;
+  chIdx, i, j, k, tgt: Integer;
+  sums: array of Double;
+  cnt, eff: array of Integer;
+  need: Boolean;
+  savedHz: Double;
+  tEnd: QWord;
+begin
+  Result := False;
+  AErrorMessage := '';
+  SetLength(AMeans, Length(AChannelNumbers));
+  if Length(AChannelNumbers) = 0 then
+  begin
+    AErrorMessage := 'no channels';
+    Exit;
+  end;
+  SetLength(sums, Length(AChannelNumbers));
+  SetLength(cnt, Length(AChannelNumbers));
+  SetLength(eff, Length(AChannelNumbers));
+  tgt := Max(CBalMin, Round(CBalFrac * APollFrequencyHz));
+  savedHz := fFreq;
+  fFreq := Mic140v2NormalizeFrequency(APollFrequencyHz);
+  try
+    if fState = rdsStarted then
+      Stop;
+    if fState = rdsDisconnected then
+      Connect;
+    if fState = rdsDisconnected then
+    begin
+      AErrorMessage := 'connect failed';
+      Exit;
+    end;
+    ProgramDevice;
+    if fState <> rdsProgrammed then
+    begin
+      AErrorMessage := 'program failed';
+      Exit;
+    end;
+    Start;
+    if fState <> rdsStarted then
+    begin
+      AErrorMessage := 'start failed';
+      Exit;
+    end;
+    tEnd := GetTickCount64 + 20000;
+    while GetTickCount64 < tEnd do
+    begin
+      need := False;
+      for j := 0 to High(eff) do
+        if eff[j] < tgt then
+        begin
+          need := True;
+          Break;
+        end;
+      if not need then
+        Break;
+      if not ReadBlock(500, blk) then
+        Continue;
+      for i := 0 to blk.SampleCount - 1 do
+        for j := 0 to High(AChannelNumbers) do
+        begin
+          chIdx := AChannelNumbers[j] - 1;
+          if (chIdx < 0) or (chIdx >= blk.ChannelCount) then
+            Continue;
+          Inc(cnt[j]);
+          if cnt[j] <= CBalSkip then
+            Continue;
+          if eff[j] >= tgt then
+            Continue;
+          sums[j] := sums[j] + blk.Values[chIdx][i];
+          Inc(eff[j]);
+        end;
+    end;
+    Stop;
+    for j := 0 to High(AChannelNumbers) do
+    begin
+      if eff[j] < tgt then
+      begin
+        AErrorMessage := Format('ch %d: %d/%d samples', [AChannelNumbers[j], eff[j], tgt]);
+        Exit;
+      end;
+      AMeans[j] := sums[j] / eff[j];
+    end;
+    Result := True;
+  finally
+    fFreq := savedHz;
+    if fState <> rdsDisconnected then
+      Disconnect;
+  end;
 end;
 
 end.

@@ -122,7 +122,11 @@ begin
   lSatCount := 0;
   if (ARaw.DataWordCount = 0) or (AUserChannelCount <= 0) then
     Exit(False);
-  lStride := AUserChannelCount;
+  lStride := ARaw.PayloadStrideWords;
+  if lStride <= 0 then
+    lStride := AUserChannelCount;
+  if lStride < AUserChannelCount then
+    lStride := AUserChannelCount;
   lSampleCount := ARaw.DataWordCount div lStride;
   if lSampleCount <= 0 then
     Exit(False);

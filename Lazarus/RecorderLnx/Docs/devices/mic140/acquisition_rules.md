@@ -84,3 +84,34 @@
 | Этапы + тайминги | `TMic140StreamFsm` + `ScanConfig` | Наследование от `TRecorderAcquirePhaseFsm` |
 
 См. также [protocol.md](protocol.md) §4, [device_abstraction.md](../device_abstraction.md) §5.
+
+---
+
+## 5. MIC140v2 row-level raw validation
+
+Observed on the current MIC140v2 hardware: a valid MDP packet with a valid BIOS
+scan header and continuous `num_buff` can contain one bad ADC row inside a
+multi-row payload. The packet itself must not be treated as TCP corruption:
+MDP checksum, BIOS routing fields, stream order, and resync counters can all be
+clean.
+
+Driver rule:
+
+- validate each payload row before decommutation;
+- drop only rows whose ADC words clearly match the existing saturation/positive
+  corrupt heuristic;
+- keep valid rows from the same packet;
+- preserve original packet counters (`read`, `num_buff`, gaps, resync);
+- set `FirstSampleIndex` to the first kept row, and advance the stream sample
+  counter by the original row count;
+- log dropped rows compactly.
+
+Implementation:
+
+- `uRecorderMic140v2Diag.pas`: `Mic140v2RawRowCorrupt`;
+- `uRecorderMic140v2Stream.pas`: `Mic140v2KeepGoodSampleRows`.
+
+Acceptance evidence, 2026-06-26:
+
+`Tools\mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0` passed repeatedly with
+`corrupt=0`, `pubGaps=0`, `readGaps=0`, `softRestart=0`, readings OK.

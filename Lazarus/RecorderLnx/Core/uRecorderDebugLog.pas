@@ -35,6 +35,7 @@ begin
     Exit(False);
 
   if (Pos('MIC-140', AMessage) > 0) or
+     (Pos('MIC140v2', AMessage) > 0) or
      (Pos('Legacy ', AMessage) > 0) or
      (Pos('stride misalignment', AMessage) > 0) or
      (Pos('raw ring', AMessage) > 0) or

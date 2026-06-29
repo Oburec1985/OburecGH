@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic140/protocol.md",
+                "file": "devices/mic140/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "protocol"
+              "title": "README"
             }
           }
         ]
@@ -183,27 +183,31 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "307d6ed40ccf77ac",
+  "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "devices/mic140/acquisition_rules.md",
-    "devices/mic140/README.md",
     "devices/mic140/protocol.md",
+    "devices/mic140/Pasted image 20260625154044.png",
+    "devices/mic140/acquisition_rules.md",
+    "devices/mic140/acceptance_tests.md",
+    "Pasted image 20260626193036.png",
+    "mic140_quickstart.md",
+    "development-rules.md",
+    "notes_spectra_lazarus.md",
+    "mic140_legacy_scan_stream.md",
+    "original-recorder-trend-component.md",
+    "recorder_run_lifecycle.md",
     "devices/migration_mic140v2.md",
     "devices/device_abstraction.md",
+    "devices/mic140/README.md",
     "devices/mic140",
     "devices/README.md",
     "source-encoding.md",
     "Без названия",
     "sdb.md",
-    "recorder_run_lifecycle.md",
     "notes_spectrum_math_benchmarks.md",
     "mic140_protocol.md",
     "devices",
-    "mic140_legacy_scan_stream.md",
-    "mic140_quickstart.md",
     "mic140_spectrum_stream_isolation.md",
-    "Pasted image 20260625154044.png",
-    "original-recorder-trend-component.md",
     "vm_atra_lazarus.md",
     "screens/~$$Recorder.~vsd",
     "screens/~$$Документ1.~vsdx",
@@ -213,10 +217,6 @@
     "Из AGrav/Docs/07_UI_Ориентир_Recorder.md",
     "Из AGrav/Docs/06_Идеи_из_руководства_Recorder.md",
     "Из AGrav/Docs/05_Решения_и_Вопросы.md",
-    "Из AGrav/Docs/03_Карта_Интерфейсов.md",
-    "Из AGrav/Docs/02_Правила_Разработки.md",
-    "Из AGrav/Docs/01_Архитектура.md",
-    "Из AGrav/Docs/00_Вводная.md",
     "Из AGrav/Docs",
     "Из AGrav/cach",
     "Из AGrav/Приложения/Pasted image 20260428235456.png",

@@ -1,4 +1,6 @@
-unit uRecorderMic140LegacyProtocol;
+unit uRecorderMic140v2Protocol;
+
+{ TCP + MDP, CC Ethernet BIOS. Только v2. }
 
 {
   MIC-140 48/96 legacy Ethernet protocol.
@@ -6,7 +8,7 @@ unit uRecorderMic140LegacyProtocol;
   This protocol is used by original Recorder modules MIC140_96_rce through
   mdpEthernet81/MC031. It is not compatible with Mebius MEBE packets.
 
-  2026-06: RecorderMic140DeviceSerialFromFirmware РІС‹РЅРµСЃРµРЅ СЃСЋРґР° РёР·
+  2026-06: Mic140v2DeviceSerialFromFirmware РІС‹РЅРµСЃРµРЅ СЃСЋРґР° РёР·
   uRecorderMic140DataSource (СЂР°Р·Р±РѕСЂ TBiosInfoMC031 / ETH81 identify).
 }
 
@@ -20,28 +22,34 @@ uses
   uRecorderMic140v2WireTypes;
 
 type
-  ERecorderMic140LegacyProtocol = class(Exception);
+  TMic140v2Firmware = uRecorderMic140v2WireTypes.TRecorderMic140LegacyFirmware;
 
-  TRecorderMic140LegacyWordArray = array of Word;
-  TRecorderMic140LegacyByteArray = array of Byte;
+  EMic140v2Protocol = class(Exception);
 
-  TRecorderMic140LegacyFirmware =
-    uRecorderMic140v2WireTypes.TRecorderMic140LegacyFirmware;
+  TMic140v2WordBuf = array of Word;
+  TMic140v2ByteBuf = array of Byte;
 
-  TRecorderMic140LegacyScanBlock = record
-    HeaderWords: TRecorderMic140LegacyWordArray;
-    DataWords: TRecorderMic140LegacyWordArray;
+
+
+  TMic140v2ScanPacket = record
+    HeaderWords: TMic140v2WordBuf;
+    DataWords: TMic140v2WordBuf;
   end;
 
-  TRecorderMic140LegacyClient = class
+  TMic140v2Tcp = class
   private
     fHost: string;
     fPort: Word;
-    fRxBuffer: TRecorderMic140LegacyByteArray;
+    fRxBuffer: TMic140v2ByteBuf;
     fSocket: TInetSocket;
     fTimeoutMs: Cardinal;
     fLock: TCriticalSection;
     fMdpResyncBytes: Int64;
+    fScanQueue: array of TMic140v2ScanPacket;
+    fScanQueueHead: Integer;
+    fScanQueueCount: Integer;
+    fScanQueueDropped: Int64;
+    fScanRejectLogCount: Integer;
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer; AResync: Boolean = False);
@@ -49,8 +57,18 @@ type
     procedure ApplyTimeoutMs(AValue: Cardinal);
     procedure SetTimeoutMs(AValue: Cardinal);
     procedure WriteBytes(const ABuffer; ACount: Integer);
-    procedure SendPacket(APort: Word; const AWords: TRecorderMic140LegacyWordArray);
-    function ReadPacket(out APort: Word; out AWords: TRecorderMic140LegacyWordArray): Boolean;
+    procedure SendPacket(APort: Word; const AWords: TMic140v2WordBuf);
+    function ReadPacket(out APort: Word; out AWords: TMic140v2WordBuf): Boolean;
+    procedure ClearScanQueue;
+    function ScanQueueCapacity: Integer;
+    function TryDequeueScan(out ABlock: TMic140v2ScanPacket): Boolean;
+    procedure EnqueueScan(const ABlock: TMic140v2ScanPacket);
+    function TryParseScanWords(const AWords: TMic140v2WordBuf;
+      out ABlock: TMic140v2ScanPacket): Boolean;
+    procedure LogRejectedScanWords(const AReason: string;
+      const AWords: TMic140v2WordBuf);
+    procedure AbsorbScanWords(const AWords: TMic140v2WordBuf);
+    procedure PumpScanFromSocket(AMaxPackets: Integer; ATimeoutMs: Cardinal);
   public
     constructor Create(const AHost: string; APort: Word = 4000;
       ATimeoutMs: Cardinal = 5000);
@@ -58,21 +76,23 @@ type
 
     procedure Connect;
     procedure Disconnect;
-    function CallCommand(ACommand: Word; const AArgs: TRecorderMic140LegacyWordArray;
-      ARetWordCount: Integer; out ARet: TRecorderMic140LegacyWordArray;
+    function CallCommand(ACommand: Word; const AArgs: TMic140v2WordBuf;
+      ARetWordCount: Integer; out ARet: TMic140v2WordBuf;
       out AErrorMessage: string): Boolean;
-    function WriteDmWords(AAddress: Word; const AWords: TRecorderMic140LegacyWordArray;
+    function WriteDmWords(AAddress: Word; const AWords: TMic140v2WordBuf;
       out AErrorMessage: string): Boolean;
-    function ReadFirmware(out AFirmware: TRecorderMic140LegacyFirmware;
+    function ReadFirmware(out AFirmware: TMic140v2Firmware;
       out AErrorMessage: string): Boolean;
     function StartScan(out AErrorMessage: string): Boolean;
     function StopScan(out AErrorMessage: string): Boolean;
     procedure ClearBufferedPackets;
-    function ReadScanBlock(out ABlock: TRecorderMic140LegacyScanBlock;
+    function ReadScanBlock(out ABlock: TMic140v2ScanPacket;
       out AErrorMessage: string): Boolean;
     function ReadFlashStorage(AAddress: LongWord; var ABuffer; AByteCount: Integer;
       out AErrorMessage: string): Boolean;
     function MdpResyncByteCount: Int64;
+    function ScanQueueDepth: Integer;
+    function ScanQueueDropCount: Int64;
 
     property Host: string read fHost;
     property Port: Word read fPort;
@@ -80,29 +100,29 @@ type
   end;
 
 const
-  MIC140_LEGACY_CMD_REPLY = 113;
-  MIC140_LEGACY_CMD_WRITE_DM = 111;
-  MIC140_LEGACY_CMD_START_SCAN_MAIN = 80;
-  MIC140_LEGACY_CMD_STOP_SCAN_MAIN = 81;
-  MIC140_LEGACY_CMD_READ_EEPROM = 126;
+  MIC140v2_CMD_REPLY = 113;
+  MIC140v2_CMD_WRITE_DM = 111;
+  MIC140v2_CMD_START_SCAN_MAIN = 80;
+  MIC140v2_CMD_STOP_SCAN_MAIN = 81;
+  MIC140v2_CMD_READ_EEPROM = 126;
   MIC140_LEGACY_DM_FLAG = Word($4000);
   CMic140MaxPlausibleDeviceSerial = 9999;
   CMic140FirmwareDeviceIdentityMin = $4000;
   CMic140LegacyCrateTypeUnknown = Word($FFFF);
 
-function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
-function RecorderMic140DeviceSerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
-function RecorderMic140DisplaySerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware; const AHost: string): Integer;
-function RecorderMic140HardwareCalibrSerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
-function RecorderMic140FirmwareVersionText(
-  const AFirmware: TRecorderMic140LegacyFirmware): string;
-function RecorderMic140DevRevFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Word;
-function RecorderMic140DevSubRevFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+function Mic140v2HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+function Mic140v2DeviceSerialFromFirmware(
+  const AFirmware: TMic140v2Firmware): Integer;
+function Mic140v2DisplaySerialFromFirmware(
+  const AFirmware: TMic140v2Firmware; const AHost: string): Integer;
+function Mic140v2HardwareCalibrSerial(
+  const AFirmware: TMic140v2Firmware): Integer;
+function Mic140v2FirmwareVersionText(
+  const AFirmware: TMic140v2Firmware): string;
+function Mic140v2DevRevFromFirmware(
+  const AFirmware: TMic140v2Firmware): Word;
+function Mic140v2DevSubRevFromFirmware(
+  const AFirmware: TMic140v2Firmware): Word;
 
 const
   CMic140LegacyBiosScanIdIdx = 2;
@@ -136,7 +156,7 @@ procedure Mic140LegacyEvaluateBiosScanHeader(
   AActualDataWords: Integer; APreviousNumBuff: Word;
   APreviousNumBuffValid: Boolean; out AVerdict: TMic140LegacyBiosHeaderVerdict);
 function Mic140LegacyBiosScanHeaderValid(
-  const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
+  const AHeaderWords: TMic140v2WordBuf; out AReason: string): Boolean;
 function Mic140LegacyBiosHeaderVerdictText(
   const AVerdict: TMic140LegacyBiosHeaderVerdict): string;
 
@@ -154,6 +174,7 @@ const
   CLegacyHeaderBytes = 8;
   CLegacyScanHeaderWords = 10;
   CLegacyFlashReadChunkBytes = 256;
+  CMic140v2ScanQueueCapacity = 32;
 
 function WordSum(const AWords: array of Word): Word;
 var
@@ -177,7 +198,7 @@ begin
   AData[AOffset + 1] := Byte((AValue shr 8) and $FF);
 end;
 
-constructor TRecorderMic140LegacyClient.Create(const AHost: string; APort: Word;
+constructor TMic140v2Tcp.Create(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal);
 begin
   inherited Create;
@@ -186,9 +207,13 @@ begin
   fTimeoutMs := ATimeoutMs;
   fLock := TCriticalSection.Create;
   fMdpResyncBytes := 0;
+  SetLength(fScanQueue, CMic140v2ScanQueueCapacity);
+  fScanQueueHead := 0;
+  fScanQueueCount := 0;
+  fScanQueueDropped := 0;
 end;
 
-destructor TRecorderMic140LegacyClient.Destroy;
+destructor TMic140v2Tcp.Destroy;
 begin
   fLock.Acquire;
   try
@@ -200,7 +225,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TRecorderMic140LegacyClient.Connect;
+procedure TMic140v2Tcp.Connect;
 begin
   fLock.Acquire;
   try
@@ -212,13 +237,13 @@ begin
   end;
 end;
 
-procedure TRecorderMic140LegacyClient.Disconnect;
+procedure TMic140v2Tcp.Disconnect;
 begin
   SetLength(fRxBuffer, 0);
   FreeAndNil(fSocket);
 end;
 
-procedure TRecorderMic140LegacyClient.DrainPendingSocket;
+procedure TMic140v2Tcp.DrainPendingSocket;
 var
   lBuf: array[0..4095] of Byte;
   lOldTimeout: Cardinal;
@@ -237,19 +262,217 @@ begin
   end;
 end;
 
-procedure TRecorderMic140LegacyClient.ClearBufferedPackets;
+procedure TMic140v2Tcp.ClearBufferedPackets;
 begin
   fLock.Acquire;
   try
     SetLength(fRxBuffer, 0);
     fMdpResyncBytes := 0;
+    fScanRejectLogCount := 0;
+    ClearScanQueue;
     DrainPendingSocket;
   finally
     fLock.Release;
   end;
 end;
 
-function TRecorderMic140LegacyClient.MdpResyncByteCount: Int64;
+function TMic140v2Tcp.ScanQueueCapacity: Integer;
+begin
+  Result := Length(fScanQueue);
+end;
+
+procedure TMic140v2Tcp.ClearScanQueue;
+begin
+  fScanQueueHead := 0;
+  fScanQueueCount := 0;
+end;
+
+function TMic140v2Tcp.TryDequeueScan(out ABlock: TMic140v2ScanPacket): Boolean;
+begin
+  Result := fScanQueueCount > 0;
+  if not Result then
+    Exit;
+  ABlock := fScanQueue[fScanQueueHead];
+  fScanQueueHead := (fScanQueueHead + 1) mod ScanQueueCapacity;
+  Dec(fScanQueueCount);
+end;
+
+procedure TMic140v2Tcp.EnqueueScan(const ABlock: TMic140v2ScanPacket);
+var
+  lIdx: Integer;
+begin
+  if ScanQueueCapacity <= 0 then
+    Exit;
+  if fScanQueueCount >= ScanQueueCapacity then
+  begin
+    fScanQueueHead := (fScanQueueHead + 1) mod ScanQueueCapacity;
+    Dec(fScanQueueCount);
+    Inc(fScanQueueDropped);
+  end;
+  lIdx := (fScanQueueHead + fScanQueueCount) mod ScanQueueCapacity;
+  fScanQueue[lIdx] := ABlock;
+  Inc(fScanQueueCount);
+end;
+
+procedure TMic140v2Tcp.LogRejectedScanWords(const AReason: string;
+  const AWords: TMic140v2WordBuf);
+var
+  l0, l1, l2, l3, l4, l8, l9: Word;
+begin
+  if fScanRejectLogCount >= 12 then
+    Exit;
+  Inc(fScanRejectLogCount);
+  l0 := 0;
+  l1 := 0;
+  l2 := 0;
+  l3 := 0;
+  l4 := 0;
+  l8 := 0;
+  l9 := 0;
+  if Length(AWords) > 0 then l0 := AWords[0];
+  if Length(AWords) > 1 then l1 := AWords[1];
+  if Length(AWords) > 2 then l2 := AWords[2];
+  if Length(AWords) > 3 then l3 := AWords[3];
+  if Length(AWords) > 4 then l4 := AWords[4];
+  if Length(AWords) > 8 then l8 := AWords[8];
+  if Length(AWords) > 9 then l9 := AWords[9];
+  RecorderDebugLog(Format(
+    '[MIC140v2:%s:%d] reject stream0 #%d reason=%s mdpWords=%d h0=%d size=%d scan=%d slot=%d chan=%d nb=%d state=%d q=%d',
+    [fHost, fPort, fScanRejectLogCount, AReason, Length(AWords),
+     l0, l1, l2, l3, l4, l8, l9, fScanQueueCount]));
+end;
+
+function TMic140v2Tcp.TryParseScanWords(const AWords: TMic140v2WordBuf;
+  out ABlock: TMic140v2ScanPacket): Boolean;
+var
+  I, lDataCount, lMessageSize: Integer;
+  lBiosReason: string;
+begin
+  Result := False;
+  SetLength(ABlock.HeaderWords, 0);
+  SetLength(ABlock.DataWords, 0);
+  if Length(AWords) < CLegacyScanHeaderWords then
+  begin
+    LogRejectedScanWords('short', AWords);
+    Exit;
+  end;
+
+  SetLength(ABlock.HeaderWords, CLegacyScanHeaderWords);
+  for I := 0 to High(ABlock.HeaderWords) do
+    ABlock.HeaderWords[I] := AWords[I];
+  lMessageSize := ABlock.HeaderWords[1];
+  if not Mic140LegacyBiosScanHeaderValid(ABlock.HeaderWords, lBiosReason) then
+  begin
+    LogRejectedScanWords('header ' + lBiosReason, AWords);
+    Exit;
+  end;
+  if (ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx] <> 0) or
+     (ABlock.HeaderWords[CMic140LegacyBiosStateIdx] <> 0) or
+     (ABlock.HeaderWords[CMic140LegacyBiosSlotIdx] <> 0) or
+     (ABlock.HeaderWords[CMic140LegacyBiosChanIdx] <> 0) then
+  begin
+    LogRejectedScanWords('routing', AWords);
+    Exit;
+  end;
+  if Length(AWords) < lMessageSize then
+  begin
+    LogRejectedScanWords('truncated message', AWords);
+    Exit;
+  end;
+
+  lDataCount := lMessageSize - CLegacyScanHeaderWords;
+  if lDataCount <= 0 then
+  begin
+    LogRejectedScanWords('empty data', AWords);
+    Exit;
+  end;
+  SetLength(ABlock.DataWords, lDataCount);
+  for I := 0 to lDataCount - 1 do
+    ABlock.DataWords[I] := AWords[I + CLegacyScanHeaderWords];
+  Result := True;
+end;
+
+procedure TMic140v2Tcp.AbsorbScanWords(const AWords: TMic140v2WordBuf);
+var
+  lBlock: TMic140v2ScanPacket;
+begin
+  if TryParseScanWords(AWords, lBlock) then
+    EnqueueScan(lBlock);
+end;
+
+procedure TMic140v2Tcp.PumpScanFromSocket(AMaxPackets: Integer;
+  ATimeoutMs: Cardinal);
+var
+  lPort: Word;
+  lWords: TMic140v2WordBuf;
+  lOldTimeout: Cardinal;
+  lStartedAt: QWord;
+  lPumped: Integer;
+  lDrainMode: Boolean;
+begin
+  if AMaxPackets <= 0 then
+    Exit;
+  lDrainMode := ATimeoutMs <= 1;
+  lOldTimeout := fTimeoutMs;
+  if lDrainMode then
+    fTimeoutMs := 1
+  else
+    fTimeoutMs := ATimeoutMs;
+  lStartedAt := GetTickCount64;
+  lPumped := 0;
+  try
+    while lPumped < AMaxPackets do
+    begin
+      if (not lDrainMode) and (GetTickCount64 - lStartedAt >= fTimeoutMs) then
+        Break;
+      if not ReadPacket(lPort, lWords) then
+      begin
+        if fScanRejectLogCount < 12 then
+        begin
+          Inc(fScanRejectLogCount);
+          RecorderDebugLog(Format(
+            '[MIC140v2:%s:%d] scan pump timeout #%d after %d ms q=%d rx=%d resync=%d',
+            [fHost, fPort, fScanRejectLogCount, GetTickCount64 - lStartedAt,
+             fScanQueueCount, Length(fRxBuffer), fMdpResyncBytes]));
+        end;
+        Break;
+      end;
+      if lPort = CLegacyStreamScan then
+      begin
+        if fScanRejectLogCount < 12 then
+          RecorderDebugLog(Format(
+            '[MIC140v2:%s:%d] scan pump stream0 words=%d q=%d',
+            [fHost, fPort, Length(lWords), fScanQueueCount]));
+        AbsorbScanWords(lWords);
+        Inc(lPumped);
+      end;
+    end;
+  finally
+    fTimeoutMs := lOldTimeout;
+  end;
+end;
+
+function TMic140v2Tcp.ScanQueueDepth: Integer;
+begin
+  fLock.Acquire;
+  try
+    Result := fScanQueueCount;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TMic140v2Tcp.ScanQueueDropCount: Int64;
+begin
+  fLock.Acquire;
+  try
+    Result := fScanQueueDropped;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TMic140v2Tcp.MdpResyncByteCount: Int64;
 begin
   fLock.Acquire;
   try
@@ -362,7 +585,7 @@ begin
 end;
 
 function Mic140LegacyBiosScanHeaderValid(
-  const AHeaderWords: TRecorderMic140LegacyWordArray; out AReason: string): Boolean;
+  const AHeaderWords: TMic140v2WordBuf; out AReason: string): Boolean;
 var
   lVerdict: TMic140LegacyBiosHeaderVerdict;
 begin
@@ -372,7 +595,7 @@ begin
     (lVerdict.ActualMessageSize <= CLegacyMaxPacketWords);
 end;
 
-procedure TRecorderMic140LegacyClient.ApplyTimeoutMs(AValue: Cardinal);
+procedure TMic140v2Tcp.ApplyTimeoutMs(AValue: Cardinal);
 begin
   if AValue = 0 then
     AValue := 1;
@@ -381,7 +604,7 @@ begin
     fSocket.IOTimeout := Integer(fTimeoutMs);
 end;
 
-procedure TRecorderMic140LegacyClient.SetTimeoutMs(AValue: Cardinal);
+procedure TMic140v2Tcp.SetTimeoutMs(AValue: Cardinal);
 begin
   fLock.Acquire;
   try
@@ -391,14 +614,14 @@ begin
   end;
 end;
 
-function TRecorderMic140LegacyClient.ReadBytes(var ABuffer; ACount: Integer): Boolean;
+function TMic140v2Tcp.ReadBytes(var ABuffer; ACount: Integer): Boolean;
 var
   lDone: Integer;
   lRead: Integer;
 begin
   Result := False;
   if fSocket = nil then
-    raise ERecorderMic140LegacyProtocol.Create('MIC-140 legacy socket is not connected');
+    raise EMic140v2Protocol.Create('MIC-140 legacy socket is not connected');
   lDone := 0;
   while lDone < ACount do
   begin
@@ -410,7 +633,7 @@ begin
   Result := True;
 end;
 
-function TRecorderMic140LegacyClient.EnsureRxBytes(ACount: Integer): Boolean;
+function TMic140v2Tcp.EnsureRxBytes(ACount: Integer): Boolean;
 var
   lOldLength: Integer;
   lReadCount: Integer;
@@ -420,7 +643,7 @@ begin
   if Result then
     Exit;
   if fSocket = nil then
-    raise ERecorderMic140LegacyProtocol.Create('MIC-140 legacy socket is not connected');
+    raise EMic140v2Protocol.Create('MIC-140 legacy socket is not connected');
 
   while Length(fRxBuffer) < ACount do
   begin
@@ -438,7 +661,7 @@ begin
   Result := True;
 end;
 
-procedure TRecorderMic140LegacyClient.DropRxBytes(ACount: Integer;
+procedure TMic140v2Tcp.DropRxBytes(ACount: Integer;
   AResync: Boolean);
 var
   lRemain: Integer;
@@ -458,25 +681,25 @@ begin
   SetLength(fRxBuffer, lRemain);
 end;
 
-procedure TRecorderMic140LegacyClient.WriteBytes(const ABuffer; ACount: Integer);
+procedure TMic140v2Tcp.WriteBytes(const ABuffer; ACount: Integer);
 var
   lDone: Integer;
   lWritten: Integer;
 begin
   if fSocket = nil then
-    raise ERecorderMic140LegacyProtocol.Create('MIC-140 legacy socket is not connected');
+    raise EMic140v2Protocol.Create('MIC-140 legacy socket is not connected');
   lDone := 0;
   while lDone < ACount do
   begin
     lWritten := fSocket.Write((PByte(@ABuffer) + lDone)^, ACount - lDone);
     if lWritten <= 0 then
-      raise ERecorderMic140LegacyProtocol.Create('MIC-140 legacy TCP write failed');
+      raise EMic140v2Protocol.Create('MIC-140 legacy TCP write failed');
     Inc(lDone, lWritten);
   end;
 end;
 
-procedure TRecorderMic140LegacyClient.SendPacket(APort: Word;
-  const AWords: TRecorderMic140LegacyWordArray);
+procedure TMic140v2Tcp.SendPacket(APort: Word;
+  const AWords: TMic140v2WordBuf);
 var
   I: Integer;
   lBytes: array of Byte;
@@ -485,7 +708,7 @@ var
   lOffset: Integer;
 begin
   if Length(AWords) > CLegacyMaxPacketWords then
-    raise ERecorderMic140LegacyProtocol.Create('MIC-140 legacy packet is too large');
+    raise EMic140v2Protocol.Create('MIC-140 legacy packet is too large');
 
   SetLength(lBytes, CLegacyHeaderBytes + (Length(AWords) + 1) * SizeOf(Word));
   lHeaderSum := Word((LongWord(CLegacySyncWord) + APort + Length(AWords)) and $FFFF);
@@ -506,8 +729,8 @@ begin
   WriteBytes(lBytes[0], Length(lBytes));
 end;
 
-function TRecorderMic140LegacyClient.ReadPacket(out APort: Word;
-  out AWords: TRecorderMic140LegacyWordArray): Boolean;
+function TMic140v2Tcp.ReadPacket(out APort: Word;
+  out AWords: TMic140v2WordBuf): Boolean;
 var
   I: Integer;
   lDataSum: LongWord;
@@ -567,12 +790,13 @@ begin
   end;
 end;
 
-function TRecorderMic140LegacyClient.CallCommand(ACommand: Word;
-  const AArgs: TRecorderMic140LegacyWordArray; ARetWordCount: Integer;
-  out ARet: TRecorderMic140LegacyWordArray; out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.CallCommand(ACommand: Word;
+  const AArgs: TMic140v2WordBuf; ARetWordCount: Integer;
+  out ARet: TMic140v2WordBuf; out AErrorMessage: string): Boolean;
 var
   lPort: Word;
-  lRequest: TRecorderMic140LegacyWordArray;
+  lRequest: TMic140v2WordBuf;
+  lWords: TMic140v2WordBuf;
   lStartedAt: QWord;
 begin
   fLock.Acquire;
@@ -593,18 +817,23 @@ begin
       SendPacket(CLegacyStreamCommand, lRequest);
       lStartedAt := GetTickCount64;
       repeat
-        if not ReadPacket(lPort, ARet) then
+        if not ReadPacket(lPort, lWords) then
         begin
           AErrorMessage := 'MIC-140 legacy command timeout';
           Exit;
         end;
 
-        // Original mdpEthernet81 demultiplexes command and scan streams into
-        // separate FIFOs. RecorderLnx currently reads the same TCP stream
-        // directly, so command calls made while the scan is active must skip
-        // stream-0 packets until the stream-1 reply arrives.
+        { [ORIG] mdpEthernet81: stream 0 → scan FIFO, stream 1 → command reply. }
+        if lPort = CLegacyStreamScan then
+        begin
+          AbsorbScanWords(lWords);
+          Continue;
+        end;
         if lPort = CLegacyStreamCommand then
+        begin
+          ARet := lWords;
           Break;
+        end;
       until GetTickCount64 - lStartedAt >= fTimeoutMs;
 
       if lPort <> CLegacyStreamCommand then
@@ -628,14 +857,14 @@ begin
   end;
 end;
 
-function TRecorderMic140LegacyClient.WriteDmWords(AAddress: Word;
-  const AWords: TRecorderMic140LegacyWordArray; out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.WriteDmWords(AAddress: Word;
+  const AWords: TMic140v2WordBuf; out AErrorMessage: string): Boolean;
 var
   I: Integer;
-  lArgs: TRecorderMic140LegacyWordArray;
+  lArgs: TMic140v2WordBuf;
   lCount: Integer;
   lOffset: Integer;
-  lReply: TRecorderMic140LegacyWordArray;
+  lReply: TMic140v2WordBuf;
 begin
   // This is ADSP DM write used by CC BIOS commands, not the low-level MDP
   // resource write from VTBL.H. Original path: Mc031ethernetifc.cpp
@@ -654,7 +883,7 @@ begin
     for I := 0 to lCount - 1 do
       lArgs[I + 1] := AWords[lOffset + I];
 
-    if not CallCommand(MIC140_LEGACY_CMD_WRITE_DM, lArgs, 0, lReply,
+    if not CallCommand(MIC140v2_CMD_WRITE_DM, lArgs, 0, lReply,
       AErrorMessage) then
       Exit;
     Inc(lOffset, lCount);
@@ -662,13 +891,13 @@ begin
   Result := True;
 end;
 
-function TRecorderMic140LegacyClient.ReadFirmware(
-  out AFirmware: TRecorderMic140LegacyFirmware; out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.ReadFirmware(
+  out AFirmware: TMic140v2Firmware; out AErrorMessage: string): Boolean;
 var
-  lReply: TRecorderMic140LegacyWordArray;
+  lReply: TMic140v2WordBuf;
 begin
   FillChar(AFirmware, SizeOf(AFirmware), 0);
-  Result := CallCommand(MIC140_LEGACY_CMD_REPLY, nil, 11, lReply, AErrorMessage);
+  Result := CallCommand(MIC140v2_CMD_REPLY, nil, 11, lReply, AErrorMessage);
   if not Result then
     Exit;
   if Length(lReply) < 5 then
@@ -697,33 +926,33 @@ begin
     AFirmware.BiosVersion := lReply[10];
 end;
 
-function TRecorderMic140LegacyClient.StartScan(out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.StartScan(out AErrorMessage: string): Boolean;
 var
-  lReply: TRecorderMic140LegacyWordArray;
+  lReply: TMic140v2WordBuf;
 begin
   // Start the CC BIOS main scan. VTBL.H also has CMD_START_SCAN_MAIN = 4,
   // but original CCDevice::OnStartScanMain reaches Ccdevice.h command 80.
-  Result := CallCommand(MIC140_LEGACY_CMD_START_SCAN_MAIN, nil, 0, lReply,
+  Result := CallCommand(MIC140v2_CMD_START_SCAN_MAIN, nil, 0, lReply,
     AErrorMessage);
 end;
 
-function TRecorderMic140LegacyClient.StopScan(out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.StopScan(out AErrorMessage: string): Boolean;
 var
-  lReply: TRecorderMic140LegacyWordArray;
+  lReply: TMic140v2WordBuf;
 begin
   // Paired with Ccdevice.h CMD_STOPSCANMAIN = 81.
-  Result := CallCommand(MIC140_LEGACY_CMD_STOP_SCAN_MAIN, nil, 0, lReply,
+  Result := CallCommand(MIC140v2_CMD_STOP_SCAN_MAIN, nil, 0, lReply,
     AErrorMessage);
 end;
 
-function TRecorderMic140LegacyClient.ReadFlashStorage(AAddress: LongWord;
+function TMic140v2Tcp.ReadFlashStorage(AAddress: LongWord;
   var ABuffer; AByteCount: Integer; out AErrorMessage: string): Boolean;
 var
-  lArgs: TRecorderMic140LegacyWordArray;
+  lArgs: TMic140v2WordBuf;
   lChunkBytes: Integer;
   lCopied: Integer;
   lReadBytes: Integer;
-  lReply: TRecorderMic140LegacyWordArray;
+  lReply: TMic140v2WordBuf;
   lRetWords: Integer;
   lSrc: PByte;
 begin
@@ -747,7 +976,7 @@ begin
     lArgs[1] := Word((AAddress + LongWord(lCopied)) shr 16);
     lArgs[2] := Word(lChunkBytes);
 
-    if not CallCommand(MIC140_LEGACY_CMD_READ_EEPROM, lArgs, lRetWords, lReply,
+    if not CallCommand(MIC140v2_CMD_READ_EEPROM, lArgs, lRetWords, lReply,
       AErrorMessage) then
       Exit;
 
@@ -766,17 +995,10 @@ begin
   Result := True;
 end;
 
-function TRecorderMic140LegacyClient.ReadScanBlock(
-  out ABlock: TRecorderMic140LegacyScanBlock; out AErrorMessage: string): Boolean;
+function TMic140v2Tcp.ReadScanBlock(
+  out ABlock: TMic140v2ScanPacket; out AErrorMessage: string): Boolean;
 var
-  I: Integer;
-  lDataCount: Integer;
   lDrainMode: Boolean;
-  lPort: Word;
-  lWords: TRecorderMic140LegacyWordArray;
-  lBiosReason: string;
-  lMessageSize: Integer;
-  lStartedAt: QWord;
 begin
   Result := False;
   AErrorMessage := '';
@@ -785,82 +1007,19 @@ begin
   fLock.Acquire;
   try
     try
-      { ReadLegacyRawBlock(0) maps to a 1 ms socket timeout — drain every already
-        buffered MDP packet without a wall-clock cap, otherwise one rejected
-        candidate ends burst after ~1 ms and the TCP queue stalls. }
+      if TryDequeueScan(ABlock) then
+        Exit(True);
+
+      { ReadLegacyRawBlock(0) → 1 ms timeout: drain TCP into scan queue. }
       lDrainMode := fTimeoutMs <= 1;
-      lStartedAt := GetTickCount64;
-      while True do
-      begin
-        if (not lDrainMode) and (GetTickCount64 - lStartedAt >= fTimeoutMs) then
-          Break;
-        if not ReadPacket(lPort, lWords) then
-        begin
-          if lDrainMode then
-            Exit;
-          AErrorMessage := 'MIC-140 legacy scan timeout';
-          Exit;
-        end;
-        if lPort <> CLegacyStreamScan then
-          Continue;
+      if lDrainMode then
+        PumpScanFromSocket(MaxInt, 1)
+      else
+        PumpScanFromSocket(1, fTimeoutMs);
 
-        if Length(lWords) < CLegacyScanHeaderWords then
-        begin
-          RecorderDebugLog(Format(
-            '[MIC-140:%s:%d] Legacy scan packet too short: mdpWords=%d mdpResync=%d',
-            [fHost, fPort, Length(lWords), fMdpResyncBytes]));
-          Continue;
-        end;
-
-        SetLength(ABlock.HeaderWords, CLegacyScanHeaderWords);
-        for I := 0 to High(ABlock.HeaderWords) do
-          ABlock.HeaderWords[I] := lWords[I];
-        lMessageSize := ABlock.HeaderWords[1];
-        if not Mic140LegacyBiosScanHeaderValid(ABlock.HeaderWords, lBiosReason) then
-        begin
-          RecorderDebugLog(Format(
-            '[MIC-140:%s:%d] Legacy BIOS header invalid: %s mdpWords=%d h=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d] mdpResync=%d',
-            [fHost, fPort, lBiosReason, Length(lWords),
-             ABlock.HeaderWords[0], ABlock.HeaderWords[1], ABlock.HeaderWords[2],
-             ABlock.HeaderWords[3], ABlock.HeaderWords[4], ABlock.HeaderWords[5],
-             ABlock.HeaderWords[6], ABlock.HeaderWords[7], ABlock.HeaderWords[8],
-             ABlock.HeaderWords[9], fMdpResyncBytes]));
-          Continue;
-        end;
-        if (ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx] <> 0) or
-           (ABlock.HeaderWords[CMic140LegacyBiosStateIdx] <> 0) or
-           (ABlock.HeaderWords[CMic140LegacyBiosSlotIdx] <> 0) or
-           (ABlock.HeaderWords[CMic140LegacyBiosChanIdx] <> 0) then
-        begin
-          RecorderDebugLog(Format(
-            '[MIC-140:%s:%d] Legacy BIOS header fields unexpected: scan_id=%d slot=%d chan=%d state=%d',
-            [fHost, fPort, ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx],
-             ABlock.HeaderWords[CMic140LegacyBiosSlotIdx],
-             ABlock.HeaderWords[CMic140LegacyBiosChanIdx],
-             ABlock.HeaderWords[CMic140LegacyBiosStateIdx]]));
-          Continue;
-        end;
-        if Length(lWords) < lMessageSize then
-        begin
-          RecorderDebugLog(Format(
-            '[MIC-140:%s:%d] Legacy scan MDP short: headerSize=%d mdpWords=%d mdpResync=%d',
-            [fHost, fPort, lMessageSize, Length(lWords), fMdpResyncBytes]));
-          Continue;
-        end;
-        if Length(lWords) <> lMessageSize then
-          RecorderDebugLog(Format(
-            '[MIC-140:%s:%d] Legacy scan MDP extra words: headerSize=%d mdpWords=%d mdpResync=%d',
-            [fHost, fPort, lMessageSize, Length(lWords), fMdpResyncBytes]));
-
-        lDataCount := lMessageSize - CLegacyScanHeaderWords;
-        SetLength(ABlock.DataWords, lDataCount);
-        for I := 0 to lDataCount - 1 do
-          ABlock.DataWords[I] := lWords[I + CLegacyScanHeaderWords];
-
-        Result := True;
-        Exit;
-      end;
-      AErrorMessage := 'MIC-140 legacy scan timeout (no valid BIOS packet)';
+      Result := TryDequeueScan(ABlock);
+      if not Result then
+        AErrorMessage := 'MIC-140 legacy scan timeout (no valid BIOS packet)';
     except
       on E: Exception do
         AErrorMessage := E.Message;
@@ -881,7 +1040,7 @@ begin
     not Mic140FirmwareWordLooksLikeDeviceIdentity(AValue);
 end;
 
-function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+function Mic140v2HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
 var
   lDotPos: Integer;
   lPart: string;
@@ -899,8 +1058,8 @@ begin
   Result := TryStrToInt(lPart, AOctet);
 end;
 
-function RecorderMic140DeviceSerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+function Mic140v2DeviceSerialFromFirmware(
+  const AFirmware: TMic140v2Firmware): Integer;
 begin
   Result := 0;
   { Номер в заголовке диалога / адресе канала (DETECT DevSerNo). }
@@ -912,25 +1071,25 @@ begin
     Exit(AFirmware.CCType);
 end;
 
-function RecorderMic140DisplaySerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware; const AHost: string): Integer;
+function Mic140v2DisplaySerialFromFirmware(
+  const AFirmware: TMic140v2Firmware; const AHost: string): Integer;
 var
   lHostOctet: Integer;
 begin
   Result := 0;
   { DevSerNo на Ethernet MIC часто совпадает с последним октетом IP, не с с/н MIC. }
-  if RecorderMic140HostLastOctet(AHost, lHostOctet) and
+  if Mic140v2HostLastOctet(AHost, lHostOctet) and
      (Integer(AFirmware.DevSerNo) = lHostOctet) then
   begin
     if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
       Exit(AFirmware.CCSerNo);
     Exit(0);
   end;
-  Result := RecorderMic140DeviceSerialFromFirmware(AFirmware);
+  Result := Mic140v2DeviceSerialFromFirmware(AFirmware);
 end;
 
-function RecorderMic140HardwareCalibrSerialFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+function Mic140v2HardwareCalibrSerial(
+  const AFirmware: TMic140v2Firmware): Integer;
 begin
   Result := 0;
   { CCMC031EthernetInterface::ReadCfg: owner->DeviceInfo.SerialNo = CCSerNo;
@@ -945,25 +1104,25 @@ begin
     Exit(AFirmware.CCSerNo);
 end;
 
-function RecorderMic140DevRevFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+function Mic140v2DevRevFromFirmware(
+  const AFirmware: TMic140v2Firmware): Word;
 begin
   { CMIC140::GetDevRev: PROP_REV = DeviceInfo.RevisionNo = bios_info.cfg.DevRevNo. }
   Result := AFirmware.DevRevNo and $FF;
 end;
 
-function RecorderMic140DevSubRevFromFirmware(
-  const AFirmware: TRecorderMic140LegacyFirmware): Word;
+function Mic140v2DevSubRevFromFirmware(
+  const AFirmware: TMic140v2Firmware): Word;
 begin
   Result := (AFirmware.DevRevNo shr 8) and $FF;
 end;
 
-function RecorderMic140FirmwareVersionText(
-  const AFirmware: TRecorderMic140LegacyFirmware): string;
+function Mic140v2FirmwareVersionText(
+  const AFirmware: TMic140v2Firmware): string;
 begin
   Result := Format('%u.%u.%u.%u', [
-    RecorderMic140DevRevFromFirmware(AFirmware),
-    RecorderMic140DevSubRevFromFirmware(AFirmware),
+    Mic140v2DevRevFromFirmware(AFirmware),
+    Mic140v2DevSubRevFromFirmware(AFirmware),
     AFirmware.BiosVersion,
     AFirmware.BiosFunction]);
 end;

@@ -9,6 +9,7 @@
 |------|------------|
 | [protocol.md](protocol.md) | Краткое описание протокола: поиск, настройка, опрос, восстановление обмена |
 | [acquisition_rules.md](acquisition_rules.md) | Правила приёма данных (resync, мусор, кольцо слотов, pacing) |
+| [acceptance_tests.md](acceptance_tests.md) | Критерии успеха по логу: 3 проверки, прогоны 3/10/40 с |
 | [migration_mic140v2.md](../migration_mic140v2.md) | Переход на реализацию `Device/MIC140v2` |
 
 ## Код

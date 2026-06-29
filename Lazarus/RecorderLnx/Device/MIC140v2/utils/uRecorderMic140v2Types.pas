@@ -13,6 +13,10 @@ interface
 uses
   uRecorderDeviceInterfaces;
 
+const
+  MIC140v2DefaultChannelCount = 48;
+  MIC140v2DefaultPollFrequencyHz = 100.0;
+
 type
   { Подсостояния внутри этапа «подключён / настройка / опрос» (rdpStateWord). }
   TMic140v2DriverPhase = (
@@ -40,16 +44,15 @@ function Mic140v2PhaseToText(APhase: TMic140v2DriverPhase): string;
 implementation
 
 uses
-  SysUtils,
-  uRecorderMic140StreamTypes;
+  SysUtils;
 
 function Mic140v2DefaultCreateParams(const ADeviceId, AHost: string): TMic140v2CreateParams;
 begin
   Result.DeviceId := ADeviceId;
   Result.Host := AHost;
   Result.Port := 4000;
-  Result.ChannelCount := MIC140DefaultChannelCount;
-  Result.PollFrequencyHz := MIC140DefaultPollFrequencyHz;
+  Result.ChannelCount := MIC140v2DefaultChannelCount;
+  Result.PollFrequencyHz := MIC140v2DefaultPollFrequencyHz;
   Result.UpdateTimeMs := 200;
 end;
 
