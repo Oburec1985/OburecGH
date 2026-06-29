@@ -33,6 +33,8 @@ type
     SeqReset: Boolean;
     SampleIdx: Int64;
     DroppedSampleRows: Int64;
+    Carry: array[0..47] of Word;
+    CarryCount: Integer;
   end;
 
 procedure Mic140v2StreamClear(var S: TMic140v2StreamState);
@@ -79,6 +81,76 @@ begin
       Result := Result + ',';
     Result := Result + IntToStr(SmallInt(ARaw.Data[I]));
   end;
+end;
+
+function Mic140v2CodeInRecorderBand(ACode, AIndex: Integer): Boolean;
+begin
+  if (ACode >= 32760) or (ACode <= -32760) or (ACode = 0) or
+     (ACode > 0) then
+    Exit(False);
+  if AIndex < 24 then
+    Result := (ACode >= -8200) and (ACode <= -6300)
+  else
+    Result := (ACode >= -24000) and (ACode <= -13000);
+end;
+
+procedure Mic140v2BestBandWindow(const ARaw: TMic140LegacyRawBlock;
+  AStartIndex, ACount: Integer; out ABestOfs, ABestGood: Integer);
+var
+  lOfs, lI, lGood, lCode: Integer;
+begin
+  ABestOfs := -1;
+  ABestGood := -1;
+  if (ACount <= 0) or (ARaw.DataWordCount < ACount) then
+    Exit;
+  for lOfs := 0 to ARaw.DataWordCount - ACount do
+  begin
+    lGood := 0;
+    for lI := 0 to ACount - 1 do
+    begin
+      lCode := SmallInt(ARaw.Data[lOfs + lI]);
+      if Mic140v2CodeInRecorderBand(lCode, AStartIndex + lI) then
+        Inc(lGood);
+    end;
+    if lGood > ABestGood then
+    begin
+      ABestGood := lGood;
+      ABestOfs := lOfs;
+    end;
+  end;
+end;
+
+function Mic140v2RejectedPacketQualityText(const ARaw: TMic140LegacyRawBlock): string;
+var
+  lFullOfs, lFullGood, lHeadOfs, lHeadGood, lTailOfs, lTailGood,
+  lPairOfs, lPairGood, lOfs, lI, lGood, lCode: Integer;
+begin
+  Mic140v2BestBandWindow(ARaw, 0, 48, lFullOfs, lFullGood);
+  Mic140v2BestBandWindow(ARaw, 0, 24, lHeadOfs, lHeadGood);
+  Mic140v2BestBandWindow(ARaw, 24, 24, lTailOfs, lTailGood);
+  lPairOfs := -1;
+  lPairGood := -1;
+  if ARaw.DataWordCount >= 48 then
+  begin
+    for lOfs := 0 to ARaw.DataWordCount - 48 do
+    begin
+      lGood := 0;
+      for lI := 0 to 47 do
+      begin
+        lCode := SmallInt(ARaw.Data[lOfs + lI]);
+        if Mic140v2CodeInRecorderBand(lCode, lI) then
+          Inc(lGood);
+      end;
+      if lGood > lPairGood then
+      begin
+        lPairGood := lGood;
+        lPairOfs := lOfs;
+      end;
+    end;
+  end;
+  Result := Format('profile full48=%d/48@%d head24=%d/24@%d tail24=%d/24@%d pair=%d/48@%d',
+    [lFullGood, lFullOfs, lHeadGood, lHeadOfs, lTailGood, lTailOfs,
+     lPairGood, lPairOfs]);
 end;
 
 procedure Mic140v2StreamClear(var S: TMic140v2StreamState);
@@ -190,6 +262,76 @@ begin
   Result := True;
 end;
 
+procedure Mic140v2SaveCarry(var S: TMic140v2StreamState;
+  const AData: array of Word; ACount: Integer);
+var
+  lI, lKeepFrom: Integer;
+begin
+  S.CarryCount := Min(ACount, Length(S.Carry));
+  if S.CarryCount <= 0 then
+    Exit;
+  lKeepFrom := ACount - S.CarryCount;
+  for lI := 0 to S.CarryCount - 1 do
+    S.Carry[lI] := AData[lKeepFrom + lI];
+end;
+
+function Mic140v2ExtractCarryRows(var S: TMic140v2StreamState;
+  var ARaw: TMic140LegacyRawBlock; AUserCh, AStride: Integer;
+  out AFirstKeptRow, ADroppedRows, AShiftedRows, APartialRows: Integer): Boolean;
+var
+  lBuf: array[0..CMic140LegacyMaxScanDataWords + 47] of Word;
+  lProbe: TMic140LegacyRawBlock;
+  lI, lTotal, lPos, lOut: Integer;
+begin
+  AFirstKeptRow := 0;
+  ADroppedRows := 0;
+  AShiftedRows := 0;
+  APartialRows := 0;
+  Result := False;
+  if (AStride <> 48) or (AUserCh < 48) or (ARaw.DataWordCount <= 0) then
+    Exit;
+
+  lTotal := Min(S.CarryCount + ARaw.DataWordCount, Length(lBuf));
+  for lI := 0 to Min(S.CarryCount, lTotal) - 1 do
+    lBuf[lI] := S.Carry[lI];
+  for lI := 0 to Min(Integer(ARaw.DataWordCount), lTotal - S.CarryCount) - 1 do
+    lBuf[S.CarryCount + lI] := ARaw.Data[lI];
+
+  FillChar(lProbe, SizeOf(lProbe), 0);
+  lProbe.DataWordCount := Word(Min(lTotal, CMic140LegacyMaxScanDataWords));
+  for lI := 0 to lProbe.DataWordCount - 1 do
+    lProbe.Data[lI] := lBuf[lI];
+
+  lOut := 0;
+  lPos := 0;
+  while (lPos + AStride <= lProbe.DataWordCount) and
+        ((lOut + 1) * AStride <= CMic140LegacyMaxScanDataWords) do
+  begin
+    if Mic140v2RawRowRecorderProfile(lProbe, lPos, AUserCh) then
+    begin
+      if lOut = 0 then
+        AFirstKeptRow := Max(0, (lPos - S.CarryCount) div AStride);
+      if (lPos mod AStride) <> 0 then
+        Inc(AShiftedRows);
+      Move(lBuf[lPos], ARaw.Data[lOut * AStride], AStride * SizeOf(Word));
+      Inc(lOut);
+      Inc(lPos, AStride);
+    end
+    else
+    begin
+      Inc(lPos);
+      Inc(APartialRows);
+    end;
+  end;
+
+  ADroppedRows := Max(0, ARaw.DataWordCount div AStride - lOut);
+  if lOut <= 0 then
+    Exit;
+  ARaw.DataWordCount := Word(lOut * AStride);
+  ARaw.PayloadStrideWords := Word(AStride);
+  Result := True;
+end;
+
 procedure Mic140v2StreamCheckNumBuff(var S: TMic140v2StreamState;
   const ARaw: TMic140LegacyRawBlock; ASinceMs: QWord;
   const AHost: string; APort: Word; out ADesync: Boolean);
@@ -279,6 +421,8 @@ var
   pkt: TMic140v2ScanPacket;
   err: string;
   words, samples, since, effStride: Integer;
+  originalData: array[0..CMic140LegacyMaxScanDataWords - 1] of Word;
+  originalWordCount: Integer;
   keptFirst, droppedRows, shiftedRows, partialRows, originalSamples: Integer;
   desync: Boolean;
   corrupt: Boolean;
@@ -356,7 +500,11 @@ begin
   if words > CMic140LegacyMaxScanDataWords then
     words := CMic140LegacyMaxScanDataWords;
   if words > 0 then
+  begin
     Move(pkt.DataWords[0], ARaw.Data[0], words * SizeOf(Word));
+    Move(pkt.DataWords[0], originalData[0], words * SizeOf(Word));
+  end;
+  originalWordCount := words;
   ARaw.DataWordCount := Word(words);
   ARaw.PayloadStrideWords := Word(effStride);
   samples := words div effStride;
@@ -370,17 +518,32 @@ begin
   if not Mic140v2KeepGoodSampleRows(ARaw, AChCnt, effStride,
     keptFirst, droppedRows, shiftedRows, partialRows) then
   begin
-    Mic140v2Log(Format(
-      '[MIC140v2:%s:%d] reject all sample rows nb=%d words=%d samples=%d stride=%d',
-      [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
-       words, samples, effStride]));
-    if S.ReadCnt < CMic140v2ScanDetailLogBlocks then
-      RecorderDebugLog(Format(
-        '[MIC140v2:%s:%d] reject raw nb=%d first96=[%s]',
+    Move(originalData[0], ARaw.Data[0], originalWordCount * SizeOf(Word));
+    ARaw.DataWordCount := Word(originalWordCount);
+    if Mic140v2ExtractCarryRows(S, ARaw, AChCnt, effStride,
+      keptFirst, droppedRows, shiftedRows, partialRows) then
+    begin
+      Mic140v2Log(Format(
+        '[MIC140v2:%s:%d] carry sample rows nb=%d dropped=%d kept=%d shifted=%d partial=%d',
+        [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx], droppedRows,
+         ARaw.DataWordCount div effStride, shiftedRows, partialRows]));
+    end
+    else
+    begin
+      Mic140v2Log(Format(
+        '[MIC140v2:%s:%d] reject all sample rows nb=%d words=%d samples=%d stride=%d %s',
         [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
-         Mic140v2SignedPreview(ARaw, 0, 96)]));
-    Exit;
+         words, samples, effStride, Mic140v2RejectedPacketQualityText(ARaw)]));
+      if S.ReadCnt < CMic140v2ScanDetailLogBlocks then
+        RecorderDebugLog(Format(
+          '[MIC140v2:%s:%d] reject raw nb=%d first96=[%s]',
+          [AHost, APort, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+           Mic140v2SignedPreview(ARaw, 0, 96)]));
+      Mic140v2SaveCarry(S, originalData, originalWordCount);
+      Exit;
+    end;
   end;
+  Mic140v2SaveCarry(S, originalData, originalWordCount);
   if droppedRows > 0 then
   begin
     Inc(S.DroppedSampleRows, droppedRows);

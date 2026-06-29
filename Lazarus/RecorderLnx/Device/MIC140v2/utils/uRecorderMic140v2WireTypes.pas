@@ -13,7 +13,7 @@ unit uRecorderMic140v2WireTypes;
 interface
 
 const
-  CMic140LegacyMaxScanDataWords = 240;  { LNX: room for MIC140v2 60-slot frames at 2+ samples }
+  CMic140LegacyMaxScanDataWords = 512;  { LNX: room for MIC140v2 60-slot half-FIFO frames }
   MIC140DefaultChannelCount = 48;       { ORIG: MIC140_48mod MAX_COUNT_CHAN_AIN_48 }
   MIC140MaxChannelCount = 96;
   MIC140TemperatureChannelCount = 3;      { ORIG: MAX_COUNT_CHAN_TIN_48 }

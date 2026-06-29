@@ -215,10 +215,11 @@ var
   i, intCnt, descCnt, ptrCnt, tIdx: Integer;
   args, desc, chanDump, reply: TMic140v2WordBuf;
   pg, fifoAddr, fifoDesc, scanDesc, scanChan, valAddr, descAddr: Word;
-  fifoPg, fifoReady, me0, me1: Word;
+  fifoPg, fifoReady, fifoCapacity, me0, me1: Word;
   stopErr: string;
   tim: TRecorderMic140Timing;
   lRev2: Boolean;
+  lChannelDelaySport: Word;
 begin
   Result := False;
   AErr := '';
@@ -233,8 +234,10 @@ begin
   tim := Mic140v2TimingForFrequency(fFreq, fChCnt);
   intCnt := BiosScanSlotCount;
   fifoReady := FifoReadyWords;
+  fifoCapacity := 2 * fifoReady;
   fLastFifoReady := fifoReady;
   lRev2 := (fDevRev > 0) and (fDevRev < CMic140v2DevRev12);
+  lChannelDelaySport := tim.LegacyChannelDelaySport;
 
   fCli.TimeoutMs := CMic140LegacyCommandTimeoutMs;
   { [LNX] явный StopScan перед программированием — сиротский scan после обрыва TCP }
@@ -286,7 +289,7 @@ begin
     Exit;
   end;
 
-  if not AllocBuf(2 * fifoReady, fifoPg, fifoAddr) then
+  if not AllocBuf(fifoCapacity, fifoPg, fifoAddr) then
   begin
     AErr := 'FIFO buffer alloc failed';
     Exit;
@@ -303,7 +306,7 @@ begin
   args[3] := fifoAddr;
   args[4] := fifoAddr;
   args[5] := fifoPg;
-  args[6] := 2 * fifoReady;
+  args[6] := fifoCapacity;
   args[7] := fifoReady;
   args[8] := 0;
   args[9] := 0;
@@ -323,7 +326,7 @@ begin
     Exit;
   end;
 
-  if not AllocHeap(intCnt, pg, valAddr) then
+  if not AllocHeap(fChCnt + MIC140v2InternalTemperatureChannelCount, pg, valAddr) then
   begin
     AErr := 'value area alloc failed';
     Exit;
@@ -336,7 +339,8 @@ begin
   end;
 
   SetLength(desc, descCnt * CMic140LegacyDescChanWords);
-  Mic140v2Me048ForPhysicalChannel(-1, me0, me1);
+  me0 := Mic140v2Level0Code;
+  me1 := Mic140v2Level0Code;
   { [ORIG] ground: code_level0mV → code_ME048[1], [0]=0 }
   desc[0] := me0;
   desc[1] := me1;
@@ -357,16 +361,15 @@ begin
       end;
       desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
       desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      { [ORIG] flag_allch_sampl: mask_chan_left=MASK_CHAN_LEFT на все ptr }
       desc[(i + 1) * CMic140LegacyDescChanWords + 4] := Word(valAddr + i);
     end
     else
     begin
       tIdx := i - fChCnt;
-      Mic140v2PackTInMe04848(tIdx, me0, me1);
+      Mic140v2PackTInMe04848v2(tIdx, lRev2, me0, me1);
       desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
       desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := Mic140v2TInDesc48(tIdx);
+      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := Mic140v2TInDesc48v2(tIdx);
       desc[(i + 1) * CMic140LegacyDescChanWords + 4] :=
         Word(CMaskChanLeft or (valAddr + fChCnt + tIdx));
     end;
@@ -377,7 +380,7 @@ begin
       else
         desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
     end;
-    desc[(i + 1) * CMic140LegacyDescChanWords + 3] := tim.LegacyChannelDelaySport - 1;
+    desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
   end;
 
   if not fCli.WriteDmWords(descAddr, desc, AErr) then
@@ -386,23 +389,23 @@ begin
     Exit;
   end;
 
-  ptrCnt := intCnt * 2;
+  { The live rev14 stand is stable only with AIn descriptors in the scan pointer
+    list. Alternating ground pointers reproduce Recorder's flag_chan_ground=1
+    shape but corrupt the second bank after the first rows. }
+  ptrCnt := intCnt;
   SetLength(chanDump, CMic140LegacyStartDescChanWords + ptrCnt);
   chanDump[0] := tim.LegacyAverageDelaySport - 1;
   chanDump[1] := tim.AverageSampleCount;
   chanDump[2] := Word(fChCnt);
   { [ORIG] m_ChanDump[2]=channels.Size() — число пользовательских AIn }
   for i := 0 to intCnt - 1 do
-  begin
-    chanDump[CMic140LegacyStartDescChanWords + i * 2] := descAddr;
-    chanDump[CMic140LegacyStartDescChanWords + i * 2 + 1] :=
+    chanDump[CMic140LegacyStartDescChanWords + i] :=
       Word(descAddr + (i + 1) * CMic140LegacyDescChanWords);
-  end;
 
   RecorderDebugLog(Format(
-    '[MIC140v2 scan] rev=%d.%d rev2=%s slots=%d ptrs=%d val=0x%.4x desc=0x%.4x fifo=0x%.4x ready=%d stride=%d timer(scale=%d period=%d div=%d) desc0=[%s] desc1=[%s] desc48=[%s] ptrHead=[%s]',
-    [fDevRev, fDevSubRev, BoolToStr(lRev2, True), intCnt, ptrCnt, valAddr, descAddr, fifoAddr, fifoReady, PayloadStride,
-     TimerScale, TimerPeriod, ScanDivider,
+    '[MIC140v2 scan] rev=%d.%d rev2=%s slots=%d ptrs=%d val=0x%.4x desc=0x%.4x fifo=0x%.4x ready=%d capacity=%d stride=%d chanDelay=%d timer(scale=%d period=%d div=%d) desc0=[%s] desc1=[%s] desc48=[%s] ptrHead=[%s]',
+    [fDevRev, fDevSubRev, BoolToStr(lRev2, True), intCnt, ptrCnt, valAddr, descAddr, fifoAddr, fifoReady, fifoCapacity, PayloadStride,
+     lChannelDelaySport, TimerScale, TimerPeriod, ScanDivider,
      Mic140v2WordsPreview(desc, 0, 5),
      Mic140v2WordsPreview(desc, CMic140LegacyDescChanWords, 5),
      Mic140v2WordsPreview(desc, 48 * CMic140LegacyDescChanWords, 10),

@@ -1856,6 +1856,27 @@ var
   lSatCount: Integer;
   lPreview: string;
   lI: Integer;
+  lStride: Integer;
+  lOffset: Integer;
+  lSample: Integer;
+  lChannel: Integer;
+  lIndex: Integer;
+  lSampleCount: Integer;
+  lGood: Integer;
+  lBad: Integer;
+  lCandidatePos: Integer;
+  lCandidateSat: Integer;
+  lScore: Integer;
+  lBestScore: Integer;
+  lBestStride: Integer;
+  lBestOffset: Integer;
+  lBestSamples: Integer;
+  lBestGood: Integer;
+  lBestBad: Integer;
+  lBestPos: Integer;
+  lBestSat: Integer;
+  lBestPreview: string;
+  lValue: Integer;
 begin
   if (fMic = nil) or
     (not Mic140LegacyRawBlockLooksCorrupt(ARaw, fMic.ChannelCount)) then
@@ -1887,6 +1908,83 @@ begin
     '[DataSource:%s] MIC-140 stride misalignment: publish=%d readSerial=%d num_buff=%d positive=%d sat=%d preview=[%s]',
     [SourceId, fGoodBlockCount + 1, ARaw.ReadSerial,
      ARaw.Header[CMic140LegacyBiosNumBuffIdx], lPosCount, lSatCount, lPreview]));
+
+  if ARaw.ReadSerial > CMic140LegacyScanDetailLogBlocks then
+    Exit;
+
+  lBestScore := Low(Integer);
+  lBestStride := 0;
+  lBestOffset := 0;
+  lBestSamples := 0;
+  lBestGood := 0;
+  lBestBad := 0;
+  lBestPos := 0;
+  lBestSat := 0;
+  lBestPreview := '';
+  for lStride := 48 to 54 do
+    for lOffset := 0 to 12 do
+    begin
+      if lOffset + 47 >= ARaw.DataWordCount then
+        Continue;
+      lSampleCount := (ARaw.DataWordCount - lOffset) div lStride;
+      while (lSampleCount > 0) and
+        (lOffset + (lSampleCount - 1) * lStride + 47 >= ARaw.DataWordCount) do
+        Dec(lSampleCount);
+      if lSampleCount <= 0 then
+        Continue;
+
+      lGood := 0;
+      lBad := 0;
+      lCandidatePos := 0;
+      lCandidateSat := 0;
+      for lSample := 0 to lSampleCount - 1 do
+        for lChannel := 0 to 47 do
+        begin
+          lIndex := lOffset + lSample * lStride + lChannel;
+          lValue := SmallInt(ARaw.Data[lIndex]);
+          if Mic140AdcCodeIsSaturated(lValue) then
+          begin
+            Inc(lCandidateSat);
+            Inc(lBad);
+          end
+          else if Mic140PublishedCodeInRecorderRange(lChannel, lValue) then
+            Inc(lGood)
+          else
+          begin
+            if lValue > CMic140MisalignPositiveThreshold then
+              Inc(lCandidatePos);
+            Inc(lBad);
+          end;
+        end;
+      lScore := lGood * 3 - lBad * 2 - lCandidateSat * 3 - lCandidatePos;
+      if lScore > lBestScore then
+      begin
+        lBestScore := lScore;
+        lBestStride := lStride;
+        lBestOffset := lOffset;
+        lBestSamples := lSampleCount;
+        lBestGood := lGood;
+        lBestBad := lBad;
+        lBestPos := lCandidatePos;
+        lBestSat := lCandidateSat;
+        lBestPreview := '';
+        for lK := 0 to 7 do
+        begin
+          lIndex := lOffset + lK;
+          if lIndex >= ARaw.DataWordCount then
+            Break;
+          if lBestPreview <> '' then
+            lBestPreview := lBestPreview + ',';
+          lBestPreview := lBestPreview + IntToStr(SmallInt(ARaw.Data[lIndex]));
+        end;
+      end;
+    end;
+
+  RecorderDebugLog(Format(
+    '[DataSource:%s] MIC-140 layout candidate: readSerial=%d num_buff=%d offset=%d stride=%d samples=%d score=%d good=%d bad=%d positive=%d sat=%d preview=[%s]',
+    [SourceId, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
+     lBestOffset, lBestStride, lBestSamples, lBestScore, lBestGood, lBestBad,
+     lBestPos, lBestSat, lBestPreview]));
 end;
 
 function TRecorderMic140DataSource.Mic140PublishedCodeInRecorderRange(

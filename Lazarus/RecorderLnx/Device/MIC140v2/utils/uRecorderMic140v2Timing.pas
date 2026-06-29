@@ -281,9 +281,9 @@ begin
   if AChannelCount <= 0 then
     AChannelCount := MIC140DefaultChannelCount;
   // Original ModuleMC114::GetCountChansFor(flag_allch_sampl, flag_ground)
-  // uses ModuleMIC140_48.GetMaxChanCount(), i.e. AIn + TIn, and then doubles
-  // it because each internal slot is preceded by a ground descriptor.
-  lCountChans := Word((AChannelCount + MIC140v2InternalTemperatureChannelCount) * 2);
+  // uses ModuleMIC140_48.GetMaxChanCount(), i.e. 48 AIn + 3 TIn, and then
+  // doubles it because each internal slot is preceded by a ground descriptor.
+  lCountChans := Word((AChannelCount + MIC140TemperatureChannelCount) * 2);
   lPeriodDecaySec := CMic140LegacyInitPeriodDecaySec;
   lPeriodDecaySec := Mic140v2CheckPeriodDecay(lCountChans,
     1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec, 1, True);
