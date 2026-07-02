@@ -226,6 +226,7 @@ var
 begin
   if fSocket = nil then
     Exit;
+  Sleep(80);
   lOldTimeout := fTimeoutMs;
   try
     ApplyTimeoutMs(1);

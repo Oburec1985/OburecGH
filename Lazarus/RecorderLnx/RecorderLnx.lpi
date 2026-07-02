@@ -418,7 +418,6 @@
       <Unit>
         <Filename Value="../SharedUtils/uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="ubaseobjLaz"/>
       </Unit>
       <Unit>
         <Filename Value="../SharedUtils/uComponentServices.pas"/>
@@ -464,7 +463,7 @@
     </Linking>
     <Other>
       <ExecuteAfter>
-        <Command Value="$(ProjPath)Scripts/copy_sdb_res.cmd $(ProjOutDir)"/>
+        <Command Value="$(ProjPath)Scripts/copy_sdb_res.bat $(ProjOutDir)"/>
       </ExecuteAfter>
     </Other>
   </CompilerOptions>

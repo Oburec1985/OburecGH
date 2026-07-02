@@ -1,0 +1,342 @@
+body, p, ul, li, ol, pre, caption, h1, h2, h3, h4, h5, h6, form { padding:0; margin:0}
+button { padding-left:0; padding-right:0; cursor:pointer}
+
+table { margin:0}
+td { font-size:inherit;}
+a:hover { text-decoration:underline;}
+a img { border:none}
+
+html { font-size:100.01%;}
+body { font-size:80%;}
+
+.column_block {padding-bottom : 15px;}
+.block_header {font-size: 150%; margin-bottom:10px; border-bottom:solid 1px #ADADAD;}
+.block_content {padding-left : 10px;}
+
+.container { min-width:900px; position:relative}
+
+#header { z-index:1000; padding-bottom:20px}
+.side { z-index:100; padding-bottom:30px}
+#content { z-index:101; padding-bottom:50px; text-align: justify;}
+
+.h { visibility:hidden;}
+.b { display:block;}
+.hb { visibility:hidden; display:block;}
+.hbc { visibility:hidden; display:block; clear:both}
+.f { margin:0;}
+.m { vertical-align:middle;}
+.space { clear:left; height:1px;}
+
+.bottomMargin { margin-bottom:1.3em}
+
+.section { line-height:1.3em; width:100%; overflow:hidden}
+.section p { margin-bottom:1.3em;}
+.section ul { margin:7px 0px 1.3em 50px;}
+.section ol { margin:7px 0px 1.3em 50px;}
+.section ul ul, .section ol ul, .section ul ol, .section ol ol { margin:7px 0px 0.8em 50px}
+.section li { margin-bottom:0.5em;}
+
+.section table { margin-bottom:1.5em}
+.section caption { padding-bottom:3px}
+.section caption p { margin-bottom:0.1em}
+.section th { padding-bottom:1em}
+
+.section table.styled { border-collapse:collapse; border:none}
+.section table.styled th { padding:10px 10px 12px 10px; border:1px solid}
+.section table.styled td { padding:5px 10px 7px 10px; border:1px solid}
+.section table.styled td * { margin:0}
+
+.section h1,
+.section h2,
+.section h3,
+.section h4,
+.section h5,
+.section h6 { margin-top:2em; margin-bottom:1em; line-height:1em}
+
+.section hr { height:1px; width:75%; text-align:center; margin-top:10px; margin-bottom:10px}
+
+.section blockquote { margin-left:3em;}
+
+
+.published {color : #be261e; margin-bottom: 0.5em}
+.tags_header_row td {background-color : rgb(236, 234, 193); padding:3px; padding-left:10px; font-weight:bold;}
+.tags_row td {padding:4px;}
+.tags_row .qnt {color : 555; font-size: 80%;}
+
+
+
+
+
+h1 { margin-bottom:0.5em; font-size: 150%}
+
+.path { width:80%; overflow:hidden; padding-left:30px; margin-bottom:1em; line-height:1.3em;}
+.path span { white-space:nowrap; margin-right:0.5em; display:inline-block;}
+.path em { margin-left:0.5em;}
+.path a { zoom:1}
+
+.content { padding-left:30px; width:90%}
+
+
+.toplinks { padding:7px 24px 9px 24px;}
+.toplinks span { padding:0 8px 0 8px;}
+
+.mainThemeImage { width:100%; overflow:hidden; min-height:90px}
+.contactInfoPlace { position:relative; width:33%; margin-left:auto; height:0px;}
+.contactInfoPlace div.text { position:absolute; top:2em}
+
+div.logo { position:relative; height:0px;}
+div.logo div { position:absolute; left:0; top:0; z-index:4900}
+
+.mainMenu { position:relative; z-index:5001; height:34px; padding-left:25px;}
+.mainMenu ul { margin: 0; padding: 0; width:100%; height:34px;}
+.mainMenu li { float: left; list-style: none;}
+.mainMenu li a { display:block; padding: 9px 12px 10px; line-height:15px; text-decoration:none !important; white-space: nowrap; font-weight:bold}
+.mainMenu li ul { position: absolute; border:1px solid; width:220px; overflow:hidden; height:auto; padding:5px 0; top:35px; display:none}
+.mainMenu li ul li { float: none; display: inline;}
+.mainMenu li ul li a { width: auto;  white-space:normal; padding:5px 12px; font-weight:normal}
+.mainMenu .rss {position : absolute; top :5px; right : 10px;}
+
+* html .mainMenu li a { float:left; zoom:1 }
+* html .mainMenu li ul { clear:left }
+* html .mainMenu li ul li a { float:none}
+
+.side .rc_item { margin-bottom:10px}
+.side div.delim { border-bottom:1px solid; height:0px; overflow:hidden}
+.side div.banner { text-align:center;}
+
+.content .rc_item { margin-bottom:20px}
+.content div.delim { border-bottom:1px solid; height:0px; overflow:hidden}
+.content div.banner { text-align:center;}
+
+.side div.textblock { padding:0 15px; width:auto}
+.side div.textblock h1,
+.side div.textblock h2,
+.side div.textblock h3,
+.side div.textblock h4,
+.side div.textblock h5,
+.side div.textblock h6 { margin-bottom:1em; margin-top:0.5em}
+.textblock h4.title { margin-top:0 !important; margin-bottom:0.7em !important}
+.content div.textblock { width:auto}
+
+.rightMenu { padding:7px 0px 7px 0px; line-height:1.4em}
+.rightMenu .item { padding:6px 10px 6px 15px; font-weight:bold; }
+.rightMenu .itemcur { font-weight:bold; }
+.rightMenu .itemcur a { text-decoration:none; padding:6px 10px 6px 15px; display:block; zoom:1}
+.rightMenu .subitems div.item,
+.rightMenu .subitems div.itemcur a { padding-left:44px}
+.rightMenu .subitems div.item { font-weight:normal}
+.rightMenu .item,
+.rightMenu .itemcur { border-bottom:1px dotted;}
+.rightMenu .first { border-top:1px dotted;}
+
+.extraMenu { padding:12px 0px 8px 15px; line-height:1.4em}
+.extraMenu { border:1px solid; }
+.extraMenu .item { padding:2px 10px 5px 20px; }
+.extraMenu .item a { text-decoration:underline;}
+.extraMenu h4 { margin:0px 15px 8px 0px;}
+
+.newsPrew { padding:10px 24px 0px 15px;}
+.newsPrew { border-top:5px solid; }
+.newsPrew .item { padding-bottom:14px}
+.newsPrew .item a { text-decoration:none;}
+.newsPrew .item a:hover { text-decoration:underline;}
+
+.firmattributes { padding:10px 10px 10px 15px; border:1px solid;}
+.firmattributes p { margin:0.5em 0}
+
+.noticeBlock { margin-bottom:1.5em !important}
+.noticeBlock div.image { width:100%; overflow:hidden; margin-bottom:7px}
+.noticeBlock div.period { margin-bottom:6px}
+.noticeBlock div.title { font-weight:bold; padding-left:15px;}
+.noticeBlock div.notice { margin-top:0.5em; padding-left:15px;}
+.noticeBlock div.price { font-weight:bold; margin-top:8px}
+
+
+.searchPrew { padding:14px 11px 14px 15px; margin-bottom:10px; border-top:5px solid;}
+.searchPrew table { border-collapse:collapse;}
+.searchPrew td { padding:0}
+.searchPrew td.input { width:99%}
+.searchPrew td.button { padding-left:0.5em}
+.searchPrew input { width:95%; margin:0; padding:2px; zoom:1}
+.searchPrew input { border:1px solid;}
+.searchPrew button { width:45px; border:none; background:none; text-align:left}
+
+
+.filesList { padding:15px 0px 15px 20px}
+.filesList h4 { font-weight:normal; margin-bottom:0.8em}
+.filesList div.item { padding-left:20px; background-position:left 2px; background-repeat:no-repeat; padding-bottom:0.4em}
+
+
+.childdocs { margin:1em 0 2em; }
+.childdocs ul { margin:0 0 1.3em 50px;}
+.childdocs li { margin-bottom:1em}
+
+.pagelist { border-top:1px dotted; padding-top:0.9em}
+.pagelist div.title { margin-bottom:0.4em}
+.pagelist div.pages a,
+.pagelist div.pages span { display:inline-block; padding:3px 0px 3px 1px; width:21px; text-align:center; line-height:1.3em }
+.pagelist div.pages span { font-weight:bold}
+
+
+.news { margin-bottom:30px}
+.news div.fullitem { margin-bottom:3em; width:100%; overflow:hidden;}
+.news div.image { width:160px; padding:10px; float:left; border:1px solid; text-align:center}
+.news div.txt { margin-left:200px}
+.news div.noimage div.txt { margin-left:0}
+.news h2 { margin-bottom:0; font-weight:normal}
+.news div.source { margin-top:0.7em}
+.news div.source span.title { padding-right:6px}
+.news div.source span.delim { padding:0 8px}
+
+.photogal {}
+.photogal .item { width:180px; margin:0 20px 20px 0; text-align:center; display:inline-block; vertical-align:top; cursor:pointer; position:relative;}
+.photogal .item { text-decoration:none;}
+.photogal a.item:hover span { text-decoration:underline;}
+.photogal .item img { margin-bottom:4px; text-decoration:none !important;}
+
+#footer td.left { vertical-align:middle; padding:10px 25px 10px 25px; width:76%}
+#footer td.right { padding:10px 24px 10px 10px; width:24%}
+#footer p { margin:0}
+
+.footer { border-collapse:collapse; border-top:5px solid}
+
+.searchForm {}
+.searchForm table { margin:5px 0px 20px 0px}
+.searchForm input { padding:2px 0 2px 2px; width:300px;  }
+.searchForm button { margin-left:10px; width:80px;}
+.searchResults { margin-bottom:2em}
+.searchResults div.item { margin-top:1.3em}
+.searchResults div.item div.title { font-weight:bold}
+
+.form_plain {}
+.form_plain .form_item { margin-bottom:2em;}
+.form_plain .fieldTitle { margin-bottom:0.5em}
+.form_plain .form_field_title { font-weight:bold;}
+.form_plain .checkboxNotice { padding-left:3px;}
+
+.form_plain .form_err_item { margin-top:5px}
+.form_plain .form_errors { margin-bottom:1em}
+
+.form_plain .form_item_input,
+.form_plain .form_item_textarea,
+.form_plain .form_item_file { width:400px;}
+.form_plain .form_item_input,
+.form_plain .form_item_textarea { padding:1px }
+
+.form_plain input.radio,
+.form_plain input.checkbox {}
+.form_plain td label { display:inline-block; margin:1px 0 5px 4px}
+
+
+.commonList {}
+.commonList div.fullitem { margin-bottom:2em; width:200px; display:inline-block; vertical-align:top; }
+.commonList div.fullitem { //display:inline; //zoom:1}
+.commonList div.image { border:1px solid; width:160px; height:160px; padding:10px; text-align:center;}
+.commonList div.txt { padding:10px; width:160px;}
+.commonList h2 { margin-bottom:0.3em;}
+
+.switchers { padding:0 1px}
+.switchers td { padding-bottom:5px}
+.switchers a,
+.switchers strong { white-space:nowrap; display:inline-block; padding:0px 3px 1px 3px}
+.switchers strong { font-weight:normal; }
+
+.viewTable { border-top:1px dotted; padding-top:1.3em; margin-bottom:1.3em}
+.viewTable td { padding-bottom:20px}
+.viewTable div.image { border:1px solid; width:160px; height:160px; padding:10px; text-align:center; margin-right:20px}
+.viewTable h2 { margin-bottom:0.8em; font-weight:normal}
+.viewTable p.notice { margin-bottom:0.5em; line-height:1.3em}
+.viewTable .priceLabel { margin-bottom:0.5em}
+
+.viewGallery { border-top:1px dotted; padding-top:1.3em; margin-bottom:1.3em}
+.viewGallery div.fullitem { margin-bottom:2em; width:200px; display:inline-block; vertical-align:top; }
+.viewGallery div.fullitem { //display:inline; //zoom:1}
+.viewGallery div.image { border:1px solid; width:160px; height:160px; padding:10px; text-align:center;}
+.viewGallery div.txt { padding:10px; width:160px;}
+.viewGallery h2 { margin-bottom:0.3em; font-weight:normal}
+
+.printLink  { margin-top:1.3em; font-size:92%; text-align:right}
+.printLink span { padding-left:22px; line-height:16px; display:inline-block}
+
+
+#headerPrint,
+#footerPrint { display:none}
+
+.mainMenuColumn { position:relative; z-index:5001; margin-bottom:3em; border-top:1px dotted}
+.mainMenuColumn ul { margin: 0; padding: 0; width:100%; list-style: none;}
+.mainMenuColumn li { display:block; position:relative; border-bottom:1px dotted}
+.mainMenuColumn li a { display:block; padding: 9px 12px 10px 15px; line-height:15px; font-weight:bold;}
+.mainMenuColumn li ul { position: absolute; border:1px solid; width:220px; overflow:hidden; height:auto; padding:5px 0 7px; right:-215px; top:5px; z-index:5301; display:none}
+.mainMenuColumn li ul li { display: inline; border:none;}
+.mainMenuColumn li ul li a { width: auto;  white-space:normal; padding:5px 12px; font-weight:normal;}
+
+* html .mainMenuColumn li a { zoom:1 }
+
+.exRubricList {margin-bottom:25px; margin-left:-6px}
+.exRubricList .item { display:inline-block; margin-right:15px; padding:3px 6px}
+.exRubricList .cur a { font-weight:bold; text-decoration:none}
+.exItemsList {padding-top:10px}
+.exSelectedList { padding:10px 15px 15px}
+.example_item {margin:0 0 20px 12px}
+.example_item .title { font-weight:bold;}
+.example_item .url { font:0.9em Arial, Helvetica, sans-serif}
+
+#myotziv_box { z-index:50000;}
+.widsnjx { z-index:50000;}
+
+.furjbqy { z-index:100005;}
+.furrghtd { z-index:100005;}
+#poxupih { z-index:101001;}
+#poxupih  a { z-index:100010;}
+a.pokusijy { z-index:100101;}
+
+.unfoldedMenu { margin-top:1em}
+.unfoldedMenu ul { list-style:none;}
+.unfoldedMenu li { display:block;}
+.unfoldedMenu table { border-collapse:collapse}
+.unfoldedMenu td { padding:0}
+
+.unfoldedMenu td { border-left:1px dotted; vertical-align:top; padding: 7px 15px 8px 12px}
+.unfoldedMenu td.first { border-left:none}
+.unfoldedMenu td div a.item_folder { text-decoration:none}
+.unfoldedMenu ul { padding-top:1em; max-width:150px}
+.unfoldedMenu ul li { padding:2px 10px 4px 10px}
+
+/* календарь */
+.calIntro { margin-bottom:1em;}
+
+.switcher { border-bottom:5px solid; margin-bottom:2em}
+.switcher ul { list-style:none; width:100%; overflow:hidden;}
+.switcher li { display:block; float:left; padding:4px 15px 6px; font-weight:bold}
+.switcher li.active { background-position:center bottom; background-repeat:no-repeat}
+
+.calendarItems { margin-bottom:3em}
+.calendarItems div.fullitem { margin-bottom:2.3em; width:100%; overflow:hidden;}
+.calendarItems div.image { width:120px; float:left; padding:3px 0px 0px 3px}
+.calendarItems div.txt { margin-left:143px}
+.calendarItems div.noimage div.txt { margin-left:0}
+.calendarItems div.date { margin-bottom:0.3em;}
+.calendarItems div.title { font-weight:normal;}
+.calendarItems div.notice { margin-top:0.8em; line-height:1.2em}
+/* календарь */
+
+
+/* Резюме */
+.cv {width:630px; } #border : 1px solid black;}
+.cv td {padding-left:10px; padding-top:3px; padding-bottom:3px;}
+
+.cvblockrow {background-color: #efefef; margin-top: 5px; margin-bottom: 5px; font-weight:bold;}
+.cvblockrow td {border-bottom: grey 1px solid; 
+				padding-bottom: 5px; 
+				padding-top: 5px;
+				padding-left: 5px; padding-right: 5px; 
+				border-top: grey 1px solid; }
+.cvheader {}
+.cvheader td {border-top: grey 1px solid; padding-top: 10px; padding-bottom:10px;}
+
+.cvcaption	{width:150px; float:left; clear:left; text-align:right; padding-right:10px;}
+.cvinfo	 	{width:425px; float:left; clear:right; padding-left:10px; padding-right:10px;}
+.cv div.space {clear:both; height:1px; border-top: dotted 1px grey; 
+			   margin-top:4px; margin-bottom:2px; margin-left:20px; margin-right:30px;}
+.cv a {text-decoration:none; color:#444; }			   
+.cv a:hover {color:#be261e}

@@ -28,41 +28,50 @@
 
 The screenshot above is the Recorder reference for the current MIC-140 stand.
 Acceptance must not rely on the image only. For every published sample, not only
-for `block1`, AIn channels must keep the same sign and group profile:
-
-| AIn channels | Acceptance range | Meaning |
-| --- | --- | --- |
-| `MIC140_01` .. `MIC140_24` | `-8200..-6300` raw ADC code | first group, Recorder-like negative strain codes |
-| `MIC140_25` .. `MIC140_48` | `-24000..-13000` raw ADC code | second group, Recorder-like lower negative codes |
+for `block1`, AIn channels must match the Recorder reference code within
+`+/-20` raw ADC codes.
 
 Hard fail for any published AIn 1..48 value:
 
 - `0` from a recovered or padded row;
 - `32767`, `-32768`, or any saturation near ADC limits;
-- positive values;
-- values outside the group range above;
+- values outside the per-channel Recorder reference tolerance;
 - a stable series of garbage values after the first good blocks.
+
+Note: channels `MIC140_29` and `MIC140_30` are positive in the current reference
+because an external test signal is applied. These positive values are valid only
+when they match the table below within `+/-20`.
 
 Reference Recorder values from the screenshot:
 
 | Ch | Raw | Ch | Raw | Ch | Raw | Ch | Raw |
 | --- | ---: | --- | ---: | --- | ---: | --- | ---: |
-| 01 | -7173 | 13 | -7175 | 25 | -15964 | 37 | -21720 |
-| 02 | -7124 | 14 | -7123 | 26 | -19948 | 38 | -21600 |
-| 03 | -6601 | 15 | -6602 | 27 | -19913 | 39 | -19077 |
-| 04 | -7233 | 16 | -7234 | 28 | -17813 | 40 | -16798 |
-| 05 | -7175 | 17 | -7174 | 29 | -22240 | 41 | -18149 |
-| 06 | -7124 | 18 | -7125 | 30 | -23161 | 42 | -18786 |
-| 07 | -6601 | 19 | -6603 | 31 | -19082 | 43 | -15961 |
-| 08 | -7234 | 20 | -7234 | 32 | -15377 | 44 | -16499 |
-| 09 | -7174 | 21 | -7175 | 33 | -15884 | 45 | -20232 |
-| 10 | -7122 | 22 | -7126 | 34 | -17339 | 46 | -16064 |
-| 11 | -6603 | 23 | -6603 | 35 | -15462 | 47 | -13875 |
-| 12 | -7235 | 24 | -7235 | 36 | -17765 | 48 | -17504 |
+| 01 | -7176 | 13 | -7176 | 25 | -16793 | 37 | -20524 |
+| 02 | -7129 | 14 | -7125 | 26 | -15931 | 38 | -17895 |
+| 03 | -6605 | 15 | -6605 | 27 | -17766 | 39 | -18407 |
+| 04 | -7239 | 16 | -7237 | 28 | -17550 | 40 | -18592 |
+| 05 | -7178 | 17 | -7175 | 29 | 6074 | 41 | -20674 |
+| 06 | -7127 | 18 | -7126 | 30 | 13499 | 42 | -17309 |
+| 07 | -6606 | 19 | -6604 | 31 | -12571 | 43 | -17422 |
+| 08 | -7238 | 20 | -7239 | 32 | -15394 | 44 | -17725 |
+| 09 | -7176 | 21 | -7178 | 33 | -16066 | 45 | -19990 |
+| 10 | -7130 | 22 | -7127 | 34 | -13795 | 46 | -15853 |
+| 11 | -6603 | 23 | -6605 | 35 | -16349 | 47 | -16980 |
+| 12 | -7241 | 24 | -7239 | 36 | -17467 | 48 | -19364 |
 
 `Tools/mic140_preview_eval.ps1` must fail when the log contains
 `MIC-140 code quality violation` or when the final stream stop line reports
 `corruptPublish > 0`.
+
+Temperature/CJC raw-code rule from the Recorder screenshot:
+
+- TIn1 (`MIC140-{0164-t 1}` / `T1`) must be `8844 +/-20` raw ADC codes.
+- TIn2 (`MIC140-{0164-t 2}` / `T2`) must be `9019 +/-20` raw ADC codes.
+- TIn3 must be logged as `T3=...`; no numeric acceptance threshold is defined
+  until a clear Recorder reference value is captured.
+- In a 48-word AIn-only payload, the driver must not treat the next AIn row as
+  TIn. Missing TIn is a failure, but fake TIn copied from AIn data is also a
+  failure.
 
 **Не считать нормой:** «TCP идёт, но с 3–4-го блока мусор» или стабильные ±32767 —
 это чаще ошибка циклограммы/FIFO, а не «шум на линии».

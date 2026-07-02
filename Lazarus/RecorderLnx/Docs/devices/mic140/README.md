@@ -7,7 +7,9 @@
 
 | Файл | Содержание |
 |------|------------|
-| [protocol.md](protocol.md) | Краткое описание протокола: поиск, настройка, опрос, восстановление обмена |
+| [protocol.md](protocol.md) | Краткое описание (устаревший монолит; см. [protocol/](protocol/)) |
+| [protocol/](protocol/) | **Полное описание протокола** (MDP, коммутируемый АЦП, BIOS, приёмка) |
+| [protocol/08_timing_and_count_aver.md](protocol/08_timing_and_count_aver.md) | Алгоритм таймингов: 640, 50 kHz, `PERIOD_TIMER_WORK`, расчёт `count_aver` |
 | [acquisition_rules.md](acquisition_rules.md) | Правила приёма данных (resync, мусор, кольцо слотов, pacing) |
 | [acceptance_tests.md](acceptance_tests.md) | Критерии успеха по логу: 3 проверки, прогоны 3/10/40 с |
 | [migration_mic140v2.md](../migration_mic140v2.md) | Переход на реализацию `Device/MIC140v2` |
@@ -18,6 +20,7 @@
 |---------|------------|
 | `Device/MIC140/` | Рабочая реализация (поддержка, исправления обмена) |
 | `Device/MIC140v2/` | Новая реализация по [device_abstraction.md](../device_abstraction.md) |
+| `Tests/Mic140ProtocolDebug/` | Автономный стенд `Mic140Example` |
 
 ## Подробные материалы (архив)
 

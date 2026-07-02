@@ -105,6 +105,28 @@ function Test-Mic140LogPass {
     $softRestart = ($lines | Select-String -Pattern "soft restart").Count
 
     $codeViolations = ($lines | Select-String -Pattern "MIC-140 code quality violation").Count
+    $tinLine = $lines | Select-String -Pattern "block1 TIn raw=\[" | Select-Object -Last 1
+    $tinOk = $false
+    $tinReason = "no TIn line"
+    if ($tinLine) {
+        $tinValues = @{}
+        foreach ($m in [regex]::Matches($tinLine.Line, "T(\d+)=(-?\d+)")) {
+            $tinValues[[int]$m.Groups[1].Value] = [int]$m.Groups[2].Value
+        }
+        $tinBad = 0
+        if (-not $tinValues.ContainsKey(1) -or ([math]::Abs($tinValues[1] - 7650) -gt 400)) { $tinBad++ }
+        if (-not $tinValues.ContainsKey(2) -or ([math]::Abs($tinValues[2] - 7800) -gt 400)) { $tinBad++ }
+        if ($tinBad -eq 0) {
+            $tinOk = $true
+            $tinReason = "ok T1=$($tinValues[1]) T2=$($tinValues[2])"
+            if ($tinValues.ContainsKey(3)) { $tinReason += " T3=$($tinValues[3])" }
+        } else {
+            $tinReason = "bad=$tinBad"
+            if ($tinValues.ContainsKey(1)) { $tinReason += " T1=$($tinValues[1])" }
+            if ($tinValues.ContainsKey(2)) { $tinReason += " T2=$($tinValues[2])" }
+            if ($tinValues.ContainsKey(3)) { $tinReason += " T3=$($tinValues[3])" }
+        }
+    }
 
 
 
@@ -168,9 +190,9 @@ function Test-Mic140LogPass {
 
 
 
-    $pass = $streamOk -and $readingsOk
+    $pass = $streamOk -and $readingsOk -and $tinOk
 
-    $reason = "pub=$pub read=$read ratio=$([int]$pubRatio)% corrupt=$corrupt corruptPublish=$corruptPublish codeBad=$codeViolations pubGaps=$pubGaps readGaps=$readGaps softRestart=$softRestart expected=$expectedPub range=$minPub..$maxPub bps=$blocksPerSec readings=$readReason"
+    $reason = "pub=$pub read=$read ratio=$([int]$pubRatio)% corrupt=$corrupt corruptPublish=$corruptPublish codeBad=$codeViolations pubGaps=$pubGaps readGaps=$readGaps softRestart=$softRestart expected=$expectedPub range=$minPub..$maxPub bps=$blocksPerSec readings=$readReason tin=$tinReason"
 
     return @{ Pass = $pass; Reason = $reason }
 

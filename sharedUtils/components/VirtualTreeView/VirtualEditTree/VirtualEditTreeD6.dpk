@@ -1,0 +1,43 @@
+package VirtualEditTreeD6;
+
+{$R *.res}
+{$R '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\VirtualEditTree.dcr'}
+{$R '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\EditCombo.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $30400000}
+{$DESCRIPTION 'Virtual Treeview'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  dclstd,
+  VclSmp,
+  VirtualTreesD6;
+
+contains
+  VirtualEditTreeReg in '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\VirtualEditTreeReg.pas',
+  VirtualEditTree in '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\VirtualEditTree.pas',
+  VTEditors in '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\VTEditors.pas',
+  EditCombo in '..\..\..\..\Delphi5\3dparty\VirtualTree\VirtualEditTree\EditCombo.pas';
+
+end.
+

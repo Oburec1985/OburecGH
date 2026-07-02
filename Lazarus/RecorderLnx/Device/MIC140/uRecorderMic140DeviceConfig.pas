@@ -14,7 +14,8 @@ interface
 
 uses
   Classes, SysUtils, fpjson,
-  uRecorderTags, uRecorderMic140DataSource, uRecorderMic140Utils;
+  uRecorderTags, uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderDeviceInterfaces;
 
 type
   TRecorderMic140DialogResult = record
@@ -36,6 +37,8 @@ type
     DeviceSerial: Integer;
     VersionText: string;
     ThermoCompensationEnabled: Boolean;
+    { [ORIG] mic140ppext IDC_COMBO_CALIBR2 → SetCommutChanBoard(all, calibr2) }
+    BoardCommutIndex: Integer;
     SelectedChannels: TStringList;
     ChannelSettings: array of TRecorderMic140ChannelSettings;
     constructor Create;
@@ -97,6 +100,7 @@ begin
   inherited Create;
   SelectedChannels := TStringList.Create;
   ChannelCount := MIC140DefaultChannelCount;
+  BoardCommutIndex := CMic140ChannelCommutIn;
   EnsureChannelCapacity(MIC140MaxChannelCount);
 end;
 
@@ -426,6 +430,7 @@ begin
   AJson.Add(lItem);
   lItem.Add('address', ASettings.ChannelAddress);
   lItem.Add('rangeIndex', ASettings.RangeIndex);
+  lItem.Add('commutIndex', ASettings.CommutIndex);
   lItem.Add('softBalance', ASettings.SoftBalance);
   lItem.Add('defaultCjc', ASettings.DefaultCjc);
   lItem.Add('cjcChannel', ASettings.CjcChannel);
@@ -445,6 +450,7 @@ begin
   RecorderMic140InitChannelSettings(ASettings, 0, CMic140Mic140SubRev1);
   ASettings.ChannelAddress := AJson.Get('address', ASettings.ChannelAddress);
   ASettings.RangeIndex := AJson.Get('rangeIndex', ASettings.RangeIndex);
+  ASettings.CommutIndex := AJson.Get('commutIndex', ASettings.CommutIndex);
   ASettings.SoftBalance := AJson.Get('softBalance', ASettings.SoftBalance);
   ASettings.DefaultCjc := AJson.Get('defaultCjc', ASettings.DefaultCjc);
   ASettings.CjcChannel := AJson.Get('cjcChannel', ASettings.CjcChannel);
@@ -481,6 +487,7 @@ begin
   lMic140.Add('deviceSerial', AConfig.DeviceSerial);
   lMic140.Add('versionText', AConfig.VersionText);
   lMic140.Add('thermoCompensationEnabled', AConfig.ThermoCompensationEnabled);
+  lMic140.Add('boardCommutIndex', AConfig.BoardCommutIndex);
   lSelected := TJSONArray.Create;
   lMic140.Add('selectedChannels', lSelected);
   for I := 0 to AConfig.SelectedChannels.Count - 1 do
@@ -491,6 +498,7 @@ begin
     if (Trim(AConfig.ChannelSettings[I].ChannelAddress) <> '') or
       (AConfig.ChannelSettings[I].SoftBalance <> 0) or
       (AConfig.ChannelSettings[I].RangeIndex <> CMic140Range100mV) or
+      (AConfig.ChannelSettings[I].CommutIndex <> CMic140ChannelCommutIn) or
       AConfig.ChannelSettings[I].HardwareCalibrationEnabled or
       AConfig.ChannelSettings[I].ChannelCalibrationEnabled or
       (Trim(AConfig.ChannelSettings[I].ThermocoupleScaleName) <> '') or
@@ -521,6 +529,8 @@ begin
   AConfig.VersionText := lMic140.Get('versionText', AConfig.VersionText);
   AConfig.ThermoCompensationEnabled := lMic140.Get('thermoCompensationEnabled',
     AConfig.ThermoCompensationEnabled);
+  AConfig.BoardCommutIndex := lMic140.Get('boardCommutIndex',
+    AConfig.BoardCommutIndex);
   if lMic140.Find('selectedChannels', lSelected) and (lSelected is TJSONArray) then
   begin
     lSelected := TJSONArray(lSelected);

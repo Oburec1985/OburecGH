@@ -3,16 +3,8 @@ unit uRecorderMic140v2Scan;
 {
   Программирование BIOS-скана MIC-140 (эталон: ModuleMIC140_48 + ScanMIC140 + Modscn).
 
-  Порядок как в Recorder:
-    StopScan → RESETSCANMAIN → CONFIGSCANMAIN → APPENDSCANMAIN → SETSTATESCAN
-    → FIFO (CreateBiosCCScanBuf) → дескрипторы каналов → ADDCHANNELMODULE → SCAN_SET_CHANS
-
-  Сверка windev-v3.9:
-    MIC140_96_rce/MIC140_48mod.cpp   — ME048, AInNum, ground, TIn
-    MIC140_96_rce/mic140_96scn.cpp   — ChannelsToBios, GetScanDivider
-    mtc/Modscn.cpp                   — CreateInternalScan, CreateBiosCCScanBuf
-    mtc/Mc114mod.cpp                 — scale_period_16000 (freq/divider/period)
-    mtcEthernet81/Mc031ethernetifc.cpp — DM buffer с 0x522
+  Отладочные оверрайды (tin-slots, bank2-delay, chan-dump-count, ME048 v2) — только
+  в Tests/Mic140ProtocolDebug/Driver/uRecorderMic140v2Scan.pas (shadow unit).
 }
 {$mode objfpc}{$H+}
 
@@ -33,9 +25,14 @@ type
     fUpdMs: Cardinal;
     fDevRev: Word;
     fDevSubRev: Word;
+    fRangeIndexes: array of Integer;
+    fCommutIndexes: array of Integer;
+    fBoardCommutIndexes: array of Integer;
     fBufCur: Word;
     fHeapCur: Word;
     fLastFifoReady: Word;
+    fLastValAddr: Word;
+    fLastPayloadStride: Integer;
     function AllocBuf(AWords: Word; out APg, AAddr: Word): Boolean;
     function AllocHeap(AWords: Word; out APg, AAddr: Word): Boolean;
     function BiosScanSlotCount: Integer;
@@ -46,12 +43,17 @@ type
     function ScanDivider: Word;
   public
     constructor Create(ACli: TMic140v2Tcp; AChCnt: Integer; AFreq: Double;
-      AUpdMs: Cardinal; ADevRev, ADevSubRev: Word);
+      AUpdMs: Cardinal; ADevRev, ADevSubRev: Word;
+      const ARangeIndexes: array of Integer;
+      const AUserCommutIndexes: array of Integer;
+      const ABoardCommutIndexes: array of Integer);
     { Полный цикл: stop → RESET → timer → FIFO → каналы → SCAN_SET_CHANS. }
     function ProgramScan(out AErr: string): Boolean;
     function LastTiming: TRecorderMic140Timing;
     property LastFifoReadyWords: Word read fLastFifoReady;
     function LastExpectedMessageWords: Word;
+    property LastValAddr: Word read fLastValAddr;
+    property LastPayloadStride: Integer read fLastPayloadStride;
   end;
 
 implementation
@@ -73,7 +75,6 @@ const
   { [ORIG] MIC140_48mod MASK_CHAN_LEFT — TIn ptr с битом 15 }
   CMaskChanLeft = Word($8000);
   CMic140v2DevRev12 = 12;
-
 function Mic140v2WordsPreview(const AWords: TMic140v2WordBuf;
   AFirst, ACount: Integer): string;
 var
@@ -93,7 +94,12 @@ begin
 end;
 
 constructor TMic140v2ScanProgrammer.Create(ACli: TMic140v2Tcp; AChCnt: Integer;
-  AFreq: Double; AUpdMs: Cardinal; ADevRev, ADevSubRev: Word);
+  AFreq: Double; AUpdMs: Cardinal; ADevRev, ADevSubRev: Word;
+  const ARangeIndexes: array of Integer;
+  const AUserCommutIndexes: array of Integer;
+  const ABoardCommutIndexes: array of Integer);
+var
+  I: Integer;
 begin
   inherited Create;
   fCli := ACli;
@@ -103,6 +109,24 @@ begin
   fDevRev := ADevRev;
   fDevSubRev := ADevSubRev;
   fLastFifoReady := 0;
+  SetLength(fRangeIndexes, fChCnt);
+  SetLength(fCommutIndexes, fChCnt);
+  SetLength(fBoardCommutIndexes, fChCnt);
+  for I := 0 to fChCnt - 1 do
+  begin
+    if I <= High(ARangeIndexes) then
+      fRangeIndexes[I] := ARangeIndexes[I]
+    else
+      fRangeIndexes[I] := CMic140Range100mV;
+    if I <= High(AUserCommutIndexes) then
+      fCommutIndexes[I] := AUserCommutIndexes[I]
+    else
+      fCommutIndexes[I] := CMic140ChannelCommutIn;
+    if I <= High(ABoardCommutIndexes) then
+      fBoardCommutIndexes[I] := ABoardCommutIndexes[I]
+    else
+      fBoardCommutIndexes[I] := CMic140ChannelCommutIn;
+  end;
 end;
 
 function TMic140v2ScanProgrammer.LastExpectedMessageWords: Word;
@@ -132,11 +156,13 @@ end;
 
 function TMic140v2ScanProgrammer.BiosScanSlotCount: Integer;
 begin
-  Result := fChCnt;
+  { [ORIG] flag_allch_sampl: GetMaxCountChanAIn + GetMaxCountChanTIn (MIC140_48mod) }
+  Result := fChCnt + MIC140TemperatureChannelCount;
 end;
 
 function TMic140v2ScanProgrammer.PayloadStride: Integer;
 begin
+  { Стабильный FIFO: 48 AIn; TIn — READMEMDM 114 (см. protocol/05_data_stream.md) }
   Result := fChCnt;
 end;
 
@@ -212,10 +238,10 @@ end;
 
 function TMic140v2ScanProgrammer.ProgramScan(out AErr: string): Boolean;
 var
-  i, intCnt, descCnt, ptrCnt, tIdx: Integer;
+  i, intCnt, descCnt, ptrCnt, tIdx, lInternalTempIdx: Integer;
   args, desc, chanDump, reply: TMic140v2WordBuf;
   pg, fifoAddr, fifoDesc, scanDesc, scanChan, valAddr, descAddr: Word;
-  fifoPg, fifoReady, fifoCapacity, me0, me1: Word;
+  fifoPg, fifoReady, fifoCapacity, me0, me1, lRegDesc: Word;
   stopErr: string;
   tim: TRecorderMic140Timing;
   lRev2: Boolean;
@@ -353,7 +379,8 @@ begin
     if i < fChCnt then
     begin
       if i <= High(CAInNum48) then
-        Mic140v2Me048ForPhysicalChannel(CAInNum48[i], me0, me1)
+        Mic140v2Me048ForPhysicalChannelWithUserCommut(CAInNum48[i],
+          fCommutIndexes[i], me0, me1)
       else
       begin
         me0 := 0;
@@ -361,26 +388,48 @@ begin
       end;
       desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
       desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
+      desc[(i + 1) * CMic140LegacyDescChanWords + 2] :=
+        Mic140v2AInRegDesc(fRangeIndexes[i], fBoardCommutIndexes[i]);
+      desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
       desc[(i + 1) * CMic140LegacyDescChanWords + 4] := Word(valAddr + i);
     end
     else
     begin
       tIdx := i - fChCnt;
-      Mic140v2PackTInMe04848v2(tIdx, lRev2, me0, me1);
+      lInternalTempIdx := Mic140v2TInDmWordOffset(tIdx, fDevSubRev);
+
+      if (fDevRev >= CMic140v2DevRev12) or lRev2 then
+      begin
+        if fDevSubRev = 1 then
+        begin
+          Mic140v2PackTInMe04848v2(lInternalTempIdx, lRev2, me0, me1);
+          lRegDesc := Mic140v2TInDesc48v2(lInternalTempIdx);
+        end
+        else if tIdx = 0 then
+          Mic140v2PackTInMe04848(1, me0, me1)
+        else if tIdx = 1 then
+          Mic140v2PackTInMe04848(0, me0, me1)
+        else
+          Mic140v2PackTInMe04848(tIdx, me0, me1);
+
+        if (fDevSubRev <> 1) and (tIdx = 2) then
+          lRegDesc := $0120
+        else if fDevSubRev <> 1 then
+          lRegDesc := $0100;
+      end
+      else
+      begin
+        Mic140v2PackTInMe04848(tIdx, me0, me1);
+        lRegDesc := Mic140v2TInDesc48(tIdx);
+      end;
+
       desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
       desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := Mic140v2TInDesc48v2(tIdx);
+      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := lRegDesc;
+      desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
       desc[(i + 1) * CMic140LegacyDescChanWords + 4] :=
-        Word(CMaskChanLeft or (valAddr + fChCnt + tIdx));
+        Word(CMaskChanLeft or (valAddr + fChCnt + lInternalTempIdx));
     end;
-    if i < fChCnt then
-    begin
-      if i >= 24 then
-        desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc or $0010
-      else
-        desc[(i + 1) * CMic140LegacyDescChanWords + 2] := CNormalDesc;
-    end;
-    desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
   end;
 
   if not fCli.WriteDmWords(descAddr, desc, AErr) then
@@ -389,13 +438,12 @@ begin
     Exit;
   end;
 
-  { The live rev14 stand is stable only with AIn descriptors in the scan pointer
-    list. Alternating ground pointers reproduce Recorder's flag_chan_ground=1
-    shape but corrupt the second bank after the first rows. }
+  { H45: без ground в ptr list. TIn ptr остаются (MASK → DM), chanDump[2]=48 AIn. }
   ptrCnt := intCnt;
   SetLength(chanDump, CMic140LegacyStartDescChanWords + ptrCnt);
   chanDump[0] := tim.LegacyAverageDelaySport - 1;
   chanDump[1] := tim.AverageSampleCount;
+  { [ORIG] m_ChanDump[2]=channels.Size() — visible user AIn count, not internal slot count. }
   chanDump[2] := Word(fChCnt);
   { [ORIG] m_ChanDump[2]=channels.Size() — число пользовательских AIn }
   for i := 0 to intCnt - 1 do
@@ -453,8 +501,10 @@ begin
   end;
 
   Mic140v2Log(Format(
-    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d',
-    [intCnt, ptrCnt, PayloadStride, fifoReady, LastExpectedMessageWords]));
+    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d val=0x%.4x',
+    [intCnt, ptrCnt, PayloadStride, fifoReady, LastExpectedMessageWords, valAddr]));
+  fLastValAddr := valAddr;
+  fLastPayloadStride := PayloadStride;
   Result := True;
 end;
 

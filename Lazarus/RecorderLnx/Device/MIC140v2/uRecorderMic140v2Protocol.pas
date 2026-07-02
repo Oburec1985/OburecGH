@@ -81,6 +81,8 @@ type
       out AErrorMessage: string): Boolean;
     function WriteDmWords(AAddress: Word; const AWords: TMic140v2WordBuf;
       out AErrorMessage: string): Boolean;
+    function ReadDmWords(AAddress: Word; ACount: Integer;
+      out AWords: TMic140v2WordBuf; out AErrorMessage: string): Boolean;
     function ReadFirmware(out AFirmware: TMic140v2Firmware;
       out AErrorMessage: string): Boolean;
     function StartScan(out AErrorMessage: string): Boolean;
@@ -102,6 +104,7 @@ type
 const
   MIC140v2_CMD_REPLY = 113;
   MIC140v2_CMD_WRITE_DM = 111;
+  MIC140v2_CMD_READ_DM = 114;
   MIC140v2_CMD_START_SCAN_MAIN = 80;
   MIC140v2_CMD_STOP_SCAN_MAIN = 81;
   MIC140v2_CMD_READ_EEPROM = 126;
@@ -171,6 +174,7 @@ const
   CLegacyStreamCommand = Word(1);
   CLegacyMaxPacketWords = 1024;
   CLegacyMaxWriteDmDataWords = 31;
+  CLegacyMaxReadDmDataWords = 28;
   CLegacyHeaderBytes = 8;
   CLegacyScanHeaderWords = 10;
   CLegacyFlashReadChunkBytes = 256;
@@ -251,6 +255,7 @@ var
 begin
   if fSocket = nil then
     Exit;
+  Sleep(80);
   lOldTimeout := fTimeoutMs;
   try
     ApplyTimeoutMs(1);
@@ -887,6 +892,44 @@ begin
       AErrorMessage) then
       Exit;
     Inc(lOffset, lCount);
+  end;
+  Result := True;
+end;
+
+function TMic140v2Tcp.ReadDmWords(AAddress: Word; ACount: Integer;
+  out AWords: TMic140v2WordBuf; out AErrorMessage: string): Boolean;
+var
+  lArgs: TMic140v2WordBuf;
+  lChunk, lOffset, lI: Integer;
+  lReply: TMic140v2WordBuf;
+begin
+  { [ORIG] Mc031ethernetifc.cpp ReadRemoteWordArray(IS_DM) -> CMD_READMEMDM=114 }
+  Result := False;
+  AErrorMessage := '';
+  SetLength(AWords, 0);
+  if ACount <= 0 then
+    Exit(True);
+  lOffset := 0;
+  while lOffset < ACount do
+  begin
+    lChunk := ACount - lOffset;
+    if lChunk > CLegacyMaxReadDmDataWords then
+      lChunk := CLegacyMaxReadDmDataWords;
+    SetLength(lArgs, 1);
+    lArgs[0] := MIC140_LEGACY_DM_FLAG or Word(AAddress + lOffset);
+    if not CallCommand(MIC140v2_CMD_READ_DM, lArgs, lChunk, lReply,
+      AErrorMessage) then
+      Exit;
+    if Length(lReply) < lChunk then
+    begin
+      AErrorMessage := Format('READMEMDM short reply: need %d got %d',
+        [lChunk, Length(lReply)]);
+      Exit;
+    end;
+    SetLength(AWords, lOffset + lChunk);
+    for lI := 0 to lChunk - 1 do
+      AWords[lOffset + lI] := lReply[lI];
+    Inc(lOffset, lChunk);
   end;
   Result := True;
 end;

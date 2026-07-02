@@ -27,11 +27,10 @@ procedure RecorderMeraSetThermocoupleLastMeraPath(const APath: string);
 
 implementation
 
+{$IFDEF MSWINDOWS}
 uses
-  {$IFDEF MSWINDOWS}
-  Windows
-  {$ENDIF}
-  ;
+  Windows;
+{$ENDIF}
 
 var
   g_MeraFilesPath: string;

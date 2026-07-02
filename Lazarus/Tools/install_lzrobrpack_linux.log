@@ -1,4 +1,4 @@
-Started at 2026-06-03T14:41:26+03:00
+Started at 2026-06-29T19:23:48+03:00
 WORKS_ROOT=/mnt/win_share
 Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
 Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
@@ -20,6 +20,10 @@ Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2
 Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
 Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
 TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
+Hint: (lazarus) Compiler params changed for LzrObrPack 0.0
+  Old="-MObjFPC -Scghi -Cg -O1 -g -gl -Fu/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux -Fu/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux -Fu/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux -Fu/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux -Fu/home/user/.lazarus_work/lib/units/x86_64-linux/gtk2 -Fu/home/user/.lazarus_work/lib/LazOpenGLContext/lib/x86_64-linux/gtk2 -Fu/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/ -FU/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lib/x86_64-linux/ -dLCL -dLCLgtk2 lzrObrPack.pas"
+  Now="-MObjFPC -Scghi -Cg -O1 -g -gl -Fu/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux -Fu/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux -Fu/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux -Fu/home/user/.lazarus/lib/LCLBase/units/x86_64-linux -Fu/home/user/.lazarus/lib/units/x86_64-linux/gtk2 -Fu/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2 -Fu/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/ -FU/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lib/x86_64-linux/ -dLCL -dLCLgtk2 lzrObrPack.pas"
+  State file="/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lib/x86_64-linux/LzrObrPack.compiled"
 Hint: (11030) Start of reading config file /etc/fpc.cfg
 Hint: (11031) End of reading config file /etc/fpc.cfg
 Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
@@ -31,125 +35,138 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 (3104) Compiling uOglChartChart.pas
 (3104) Compiling uOglChartLog.pas
 (3104) Compiling uOglChartBaseObj.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(62,34) Hint: (5024) Parameter "AJson" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(64,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(63,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(65,34) Hint: (5024) Parameter "AJson" not used
 (3104) Compiling uOglChartDrawObj.pas
 (3104) Compiling uOglChartPage.pas
 (3104) Compiling uOglChartAxis.pas
 (3104) Compiling uOglChartMng.pas
 (3104) Compiling uOglChartRenderer.pas
 (3104) Compiling uOglChartTrend.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+(3104) Compiling uSharedQueue.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(17,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(17,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
 (3104) Compiling uOglChartFontMng.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(280,3) Note: (5025) Local variable "lWidth" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(283,7) Note: (5025) Local variable "lY" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(292,3) Note: (5025) Local variable "lLineStride" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(61,5) Note: (5029) Private field "cOglFont.fPageCaptionFontSize" is never used
 (3104) Compiling uOglChartLineHelper.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(104,3) Warning: (6018) unreachable code
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,24) Hint: (5023) Unit "Math" not used in uOglChartLineHelper
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,46) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartLineHelper
 (3104) Compiling uOglChartTextLabel.pas
 (3104) Compiling uOglChartCursor.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas(9,48) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartCursor
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(366,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(395,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(147,79) Hint: (5024) Parameter "ARect" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(368,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(397,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1050,20) Hint: (5092) Variable "AColors" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1286,9) Note: (5025) Local variable "K" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1764,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1764,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1776,3) Note: (5025) Local variable "lOldUseTextureAtlas" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(150,79) Hint: (5024) Parameter "ARect" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(2030,21) Hint: (5091) Local variable "lBaseY" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(2031,22) Hint: (5091) Local variable "lHeight" of a managed type does not seem to be initialized
 (3104) Compiling uOglChartFrameListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(22,28) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(23,26) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,25) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,43) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,85) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,88) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,104) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,25) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,63) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,66) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,82) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,41) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,28) Hint: (5024) Parameter "ASender" not used
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,26) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,44) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,64) Hint: (5024) Parameter "WheelDelta" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,85) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,88) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,104) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,45) Hint: (5024) Parameter "Key" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,56) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,80) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,24) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,46) Hint: (5024) Parameter "Key" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,61) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,43) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,63) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,66) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,64) Hint: (5024) Parameter "WheelDelta" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,45) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,80) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,24) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,46) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,61) Hint: (5024) Parameter "Handled" not used
 (3104) Compiling uOglChartSelectListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(45,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(27,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(9,32) Hint: (5023) Unit "Math" not used in uOglChartSelectListener
 (3104) Compiling uOglChartPanZoomListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(300,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(347,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(402,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(445,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(40,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(50,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(255,3) Note: (5025) Local variable "lAxis" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(476,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(523,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(578,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(621,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(49,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(54,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(59,44) Hint: (5024) Parameter "Shift" not used
 (3104) Compiling uOglChartPageGeometryListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,41) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(15,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
 (3104) Compiling uOglChartVertexEditListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(66,3) Note: (5025) Local variable "lInnerIndex" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(37,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(38,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(40,56) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(5,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(8,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(72,3) Note: (5025) Local variable "lInnerIndex" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(43,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(44,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(46,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(11,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(14,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
 (3104) Compiling uOglChartLabelEditListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(59,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(63,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(13,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(52,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(52,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(34,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(36,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(11,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
 (3104) Compiling uOglChartCursorListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(107,3) Note: (5025) Local variable "lAxis" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(61,61) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,19) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,37) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,59) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,79) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,82) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(725,17) Note: (5027) Local variable "lFreq" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(32,67) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,19) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,37) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,59) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,79) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,82) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(381,17) Note: (5027) Local variable "lFreq" is assigned but never used
 (3104) Compiling uOglChartTextLabelTests.pas
 (3104) Compiling uOglChartSerializer.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSerializer.pas(277,41) Warning: (5066) Symbol "Create" is deprecated: "use options form instead"
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(87,3) Note: (5025) Local variable "lJsonStr" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(9,3) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTextLabelTests
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(9,55) Hint: (5023) Unit "uOglChartPage" not used in uOglChartTextLabelTests
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTextLabelTests
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSerializer.pas(278,41) Warning: (5066) Symbol "Create" is deprecated: "use options form instead"
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(100,3) Note: (5025) Local variable "lJsonStr" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(15,3) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTextLabelTests
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(15,55) Hint: (5023) Unit "uOglChartPage" not used in uOglChartTextLabelTests
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(16,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTextLabelTests
 (3104) Compiling uOglChartModel.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(23,3) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(24,3) Hint: (5023) Unit "uOglChartDrawObj" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(25,3) Hint: (5023) Unit "uOglChartPage" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(26,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(27,3) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(28,3) Hint: (5023) Unit "uOglChartTextLabel" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(29,3) Hint: (5023) Unit "uOglChartChart" not used in uOglChartModel
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(30,3) Hint: (5023) Unit "uOglChartMng" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(24,3) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(25,3) Hint: (5023) Unit "uOglChartDrawObj" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(26,3) Hint: (5023) Unit "uOglChartPage" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(27,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(28,3) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(29,3) Hint: (5023) Unit "uOglChartTextLabel" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(30,3) Hint: (5023) Unit "uOglChartChart" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(31,3) Hint: (5023) Unit "uOglChartMng" not used in uOglChartModel
+(3104) Compiling uOglChartColors.pas
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,14) Hint: (5023) Unit "uOglChartBaseObj" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,32) Hint: (5023) Unit "uOglChartDrawObj" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,50) Hint: (5023) Unit "uOglChartPage" not used in LzrObrPack
@@ -163,16 +180,16 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(13,52) Hint: (5023) Unit "uOglChartFontMng" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,17) Hint: (5023) Unit "uOglChartSerializer" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,38) Hint: (5023) Unit "uOglChartTypes" not used in LzrObrPack
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,54) Hint: (5023) Unit "uOglChartFrameListener" not used in LzrObrPack
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,3) Hint: (5023) Unit "uOglChartSelectListener" not used in LzrObrPack
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,28) Hint: (5023) Unit "uOglChartPanZoomListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,3) Hint: (5023) Unit "uOglChartFrameListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,27) Hint: (5023) Unit "uOglChartSelectListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,52) Hint: (5023) Unit "uOglChartPanZoomListener" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(16,3) Hint: (5023) Unit "uOglChartPageGeometryListener" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(16,34) Hint: (5023) Unit "uOglChartVertexEditListener" not used in LzrObrPack
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(17,3) Hint: (5023) Unit "uOglChartLabelEditListener" not used in LzrObrPack
-(1008) 10640 lines compiled, 0.5 sec
-(1021) 1 warning(s) issued
-(1022) 111 hint(s) issued
-(1023) 8 note(s) issued
+(1008) 10734 lines compiled, 0.6 sec
+(1021) 2 warning(s) issued
+(1022) 115 hint(s) issued
+(1023) 14 note(s) issued
 Hint: (lazarus) [RunTool] "/usr/bin/fpc" "-iWTOTP" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg"
 Hint: (lazarus) [RunTool] "/usr/bin/fpc" "-va" "compilertest.pas" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg"
 Hint: (lazarus) Missing state file of BuildIntf 1.0: /usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/BuildIntf.compiled
@@ -304,7 +321,7 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 (3104) Compiling lazarus.pp
 (9022) Compiling resource /home/user/.lazarus/units/x86_64-linux/gtk2/lazarus.or
 (9015) Linking /home/user/.lazarus/bin/lazarus
-(1008) 239 lines compiled, 3.8 sec
+(1008) 239 lines compiled, 3.9 sec
 (1022) 4 hint(s) issued
 make[2]: Leaving directory '/usr/lib/lazarus/2.2.6/ide'
 make[1]: Leaving directory '/usr/lib/lazarus/2.2.6/ide'
@@ -329,7 +346,6 @@ Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2
 Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
 Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
 TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
-Hint: (lazarus) Build Project: nothing to do.
 Hint: (11030) Start of reading config file /etc/fpc.cfg
 Hint: (11031) End of reading config file /etc/fpc.cfg
 Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
@@ -340,111 +356,123 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTypes.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLog.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(62,34) Hint: (5024) Parameter "AJson" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(64,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(63,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(65,34) Hint: (5024) Parameter "AJson" not used
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartDrawObj.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPage.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartAxis.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uSharedQueue.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(17,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(17,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(104,3) Warning: (6018) unreachable code
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,24) Hint: (5023) Unit "Math" not used in uOglChartLineHelper
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,46) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartLineHelper
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(22,28) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(23,26) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,25) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,43) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,85) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,88) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,104) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,25) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,63) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,66) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,82) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,41) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,28) Hint: (5024) Parameter "ASender" not used
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,26) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,44) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,64) Hint: (5024) Parameter "WheelDelta" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,85) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,88) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,104) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,45) Hint: (5024) Parameter "Key" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,56) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,80) Hint: (5024) Parameter "Handled" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,24) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,46) Hint: (5024) Parameter "Key" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,61) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,43) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,63) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,66) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(32,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,64) Hint: (5024) Parameter "WheelDelta" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(33,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,45) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(35,80) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,24) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,46) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(36,61) Hint: (5024) Parameter "Handled" not used
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartChart.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(280,3) Note: (5025) Local variable "lWidth" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(283,7) Note: (5025) Local variable "lY" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(292,3) Note: (5025) Local variable "lLineStride" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas(61,5) Note: (5029) Private field "cOglFont.fPageCaptionFontSize" is never used
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabel.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas(9,48) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartCursor
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(366,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(395,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(147,79) Hint: (5024) Parameter "ARect" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(59,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(63,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(13,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(368,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(397,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1050,20) Hint: (5092) Variable "AColors" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1286,9) Note: (5025) Local variable "K" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1764,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1764,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1776,3) Note: (5025) Local variable "lOldUseTextureAtlas" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(150,79) Hint: (5024) Parameter "ARect" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(2030,21) Hint: (5091) Local variable "lBaseY" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(2031,22) Hint: (5091) Local variable "lHeight" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(52,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(52,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(34,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(36,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(38,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(11,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,41) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(34,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(15,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(300,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(347,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(402,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(445,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(40,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(50,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(255,3) Note: (5025) Local variable "lAxis" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(476,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(523,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(578,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(621,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(49,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(54,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(59,44) Hint: (5024) Parameter "Shift" not used
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(45,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(27,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
 /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(9,32) Hint: (5023) Unit "Math" not used in uOglChartSelectListener
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(66,3) Note: (5025) Local variable "lInnerIndex" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(37,65) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(38,43) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,23) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,63) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,83) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,86) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(40,56) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(5,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(8,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(72,3) Note: (5025) Local variable "lInnerIndex" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(43,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(44,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(45,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(46,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(11,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(14,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
 (3104) Compiling unit1.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartMng.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(107,3) Note: (5025) Local variable "lAxis" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(61,61) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,19) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,37) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,59) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,79) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,82) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(725,17) Note: (5027) Local variable "lFreq" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(32,67) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,19) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,37) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,59) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,79) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(34,82) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(381,17) Note: (5027) Local variable "lFreq" is assigned but never used
 /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(46,36) Hint: (5024) Parameter "Sender" not used
 /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(447,23) Hint: (5091) Local variable "lArrValues" of a managed type does not seem to be initialized
 /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(466,23) Hint: (5091) Local variable "lArrPoints" of a managed type does not seem to be initialized
@@ -469,9 +497,10 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(17,3) Hint: (5023) Unit "uOglChartCursorListener" not used in project1
 (9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/lib/x86_64-linux/project1.or
 (9015) Linking /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1_test
-(1008) 11075 lines compiled, 3.1 sec
-(1022) 102 hint(s) issued
-(1023) 7 note(s) issued
+(1008) 11030 lines compiled, 3.3 sec
+(1021) 1 warning(s) issued
+(1022) 106 hint(s) issued
+(1023) 13 note(s) issued
 Hint: (lazarus) Missing state file of BuildIntf 1.0: /usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/BuildIntf.compiled
 Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux" of package "BuildIntf 1.0"
 Hint: (lazarus) normal output directory of package BuildIntf 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/"
@@ -514,7 +543,6 @@ Hint: (lazarus) Compiler unit paths changed for TAChartLazarusPkg 1.0
   State file="/usr/lib/lazarus/2.2.6/components/tachart/lib/x86_64-linux/gtk2/TAChartLazarusPkg.compiled"
 Hint: (lazarus) normal output directory of package TAChartLazarusPkg 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/tachart/lib/x86_64-linux/gtk2/"
 TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/TAChartLazarusPkg/lib/x86_64-linux/gtk2
-Hint: (lazarus) State file of LzrObrPack 0.0 is newer than state file of Проект: RecorderLnx
 Hint: (11030) Start of reading config file /etc/fpc.cfg
 Hint: (11031) End of reading config file /etc/fpc.cfg
 Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
@@ -524,136 +552,568 @@ Copyright (c) 1993-2021 by Florian Klaempfl and others
 (3104) Compiling ./UI/uMainForm.pas
 (3104) Compiling ./Core/uRecorderStateMachine.pas
 (3104) Compiling ./Core/uRecorderRunControlSettings.pas
+(3104) Compiling ./Core/uRecorderMeraPaths.pas
 (3104) Compiling ./Core/uRecorderFormModel.pas
-(3104) Compiling ./Core/uRecorderCoreServices.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderCoreServices.pas(254,27) Hint: (5024) Parameter "ASender" not used
 (3104) Compiling ./Core/uRecorderTags.pas
+(3104) Compiling ./Core/uRecorderCoreServices.pas
 (3104) Compiling ./Core/uRecorderDebugLog.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedFileLogger.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(358,18) Hint: (5060) Function result variable does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(579,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(580,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderCoreServices.pas(262,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling ./Core/uRecorderSpectrumEngine.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderSpectrumEngine.pas(271,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderSpectrumEngine.pas(272,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+(3104) Compiling ./Core/uRecorderFrequencyBands.pas
+(3104) Compiling ./Core/uRecorderTags.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140DeviceConfig.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140DataSource.pas
 (3104) Compiling ./Core/uRecorderDataSources.pas
-(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/mera/uMeraFile.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(709,39) Hint: (5057) Local variable "lDouble" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(714,39) Hint: (5057) Local variable "lSingle" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(719,38) Hint: (5057) Local variable "lInt32" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(724,39) Hint: (5057) Local variable "lUInt32" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(729,38) Hint: (5057) Local variable "lInt16" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(734,39) Hint: (5057) Local variable "lUInt16" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(839,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(840,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(309,3) Hint: (5023) Unit "Math" not used in uRecorderDataSources
+(3104) Compiling ./Core/uMeraFile.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(497,3) Note: (5025) Local variable "lTag" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(822,39) Hint: (5057) Local variable "lDouble" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(827,39) Hint: (5057) Local variable "lSingle" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(832,38) Hint: (5057) Local variable "lInt32" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(837,39) Hint: (5057) Local variable "lUInt32" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(842,38) Hint: (5057) Local variable "lInt16" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(847,39) Hint: (5057) Local variable "lUInt16" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(952,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(953,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(336,3) Hint: (5023) Unit "Math" not used in uRecorderDataSources
+(3104) Compiling ./Device/uRecorderDeviceInterfaces.pas
+(3104) Compiling ./Device/uRecorderAcquisitionTypes.pas
+(3104) Compiling ./Device/MIC140/uRecorderMebiusTcpProtocol.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(178,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(179,19) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(195,20) Hint: (5060) Function result variable does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(207,18) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(306,19) Hint: (5092) Variable "APacket" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(308,27) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(342,29) Hint: (5060) Function result variable does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(358,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(359,18) Hint: (5091) Local variable "lBody" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(419,16) Hint: (5091) Local variable "lIn" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(433,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(435,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMebiusTcpProtocol.pas(464,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+(3104) Compiling ./Device/MIC140/uRecorderMic140LegacyProtocol.pas
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2WireTypes.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(233,29) Hint: (5057) Local variable "lBuf" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(270,20) Hint: (5092) Variable "AVerdict" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(490,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(520,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(582,19) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(586,25) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(652,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(670,21) Hint: (5058) Variable "AFirmware" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(745,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyProtocol.pas(783,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+(3104) Compiling ./Device/MIC140/uRecorderMic140Utils.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(279,19) Hint: (5057) Local variable "lAddr" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(281,23) Warning: (5043) Symbol "ShortHostToNet" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(282,30) Warning: (5043) Symbol "HostToNet" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(300,22) Hint: (5057) Local variable "lTimeVal" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(303,23) Hint: (5057) Local variable "lWriteSet" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Utils.pas(258,3) Note: (5027) Local variable "lBlockMode" is assigned but never used
+(3104) Compiling ./Device/MIC140/uRecorderMic140StreamTypes.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140DoubleBuffer.pas
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2RawRing.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140ScanConfig.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140LegacyTiming.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140StreamFsm.pas
+(3104) Compiling ./Device/uRecorderAcquirePhase.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140AcquireTiming.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140AcquireTiming.pas(14,3) Hint: (5023) Unit "uRecorderMic140StreamTypes" not used in uRecorderMic140AcquireTiming
+(3104) Compiling ./Device/MIC140/uRecorderMic140StreamHelpers.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140StreamHelpers.pas(205,19) Hint: (5058) Variable "ASubRaw" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140StreamHelpers.pas(45,3) Hint: (5028) Local const "CMic140MisalignSatThreshold" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140StreamHelpers.pas(15,3) Hint: (5023) Unit "uRecorderMic140LegacyProtocol" not used in uRecorderMic140StreamHelpers
+(3104) Compiling ./Device/MIC140/uRecorderMic140Calibration.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140Flash.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140FlashConstants.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140MebiusConstants.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(119,19) Hint: (5094) Function result variable of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(154,26) Hint: (5058) Variable "AEntries" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(196,22) Hint: (5091) Local variable "lDirBytes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(205,21) Hint: (5091) Local variable "lEntries" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(62,20) Hint: (5024) Parameter "AMaxTinChannels" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(425,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(438,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(501,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(514,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(89,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Flash
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Flash.pas(89,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140Flash
+(3104) Compiling ./Device/MIC140/uRecorderMic140LegacyConstants.pas
+(3104) Compiling ./Device/MIC140/uRecorderMic140Thermocouple.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Calibration.pas(33,3) Hint: (5024) Parameter "ADevSubRev" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Calibration.pas(612,17) Hint: (5057) Local variable "lTare" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Calibration.pas(613,18) Hint: (5057) Local variable "lTare2" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Calibration.pas(58,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Calibration
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140Calibration.pas(60,35) Hint: (5023) Unit "uRecorderMic140Thermocouple" not used in uRecorderMic140Calibration
+(3104) Compiling ./Device/MIC140/uRecorderMic140ProtocolDriver.pas
+(3104) Compiling ./Device/uRecorderMic140DeviceApi.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(137,15) Note: (3250) Virtual method "PrepareHardware;" has a lower visibility (protected) than parent class TRecorderDataSourceBase (public)
+(3104) Compiling ./Core/uRecorderMeraSdbThermocouples.pas
+(3104) Compiling ./SDB/uRecorderSdbStore.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseObjLaz.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseObjLaz.pas(364,3) Note: (5025) Local variable "i" not used
+(3104) Compiling ./SDB/uRecorderSdbTypes.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbTypes.pas(5,20) Warning: (2005) Comment level 2 found
+(3104) Compiling ./SDB/uRecorderSdbPropBag.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedStringEncoding.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedStringEncoding.pas(14,32) Warning: (2005) Comment level 2 found
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedStringEncoding.pas(15,39) Warning: (2005) Comment level 2 found
+(3104) Compiling ./Device/MIC140/uRecorderMic140DeviceConfig.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DeviceConfig.pas(330,27) Warning: (4045) Comparison might be always true due to range of constant and expression
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DeviceConfig.pas(90,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140DeviceConfig
+(3104) Compiling ./Device/MIC140/uRecorderMic140MebiusTypes.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140MebiusTypes.pas(80,21) Hint: (5057) Local variable "lSettings" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140MebiusTypes.pas(126,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+(3104) Compiling ./Device/MIC140/uRecorderMic140LegacyChannelDesc.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyChannelDesc.pas(83,16) Hint: (5057) Local variable "lReg" does not seem to be initialized
+(3104) Compiling ./Device/MIC140/uRecorderMic140LegacyScanDriver.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140LegacyScanDriver.pas(29,30) Hint: (5023) Unit "uRecorderMic140StreamTypes" not used in uRecorderMic140LegacyScanDriver
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2Factory.pas
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2Device.pas
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2Protocol.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(258,29) Hint: (5057) Local variable "lBuf" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(352,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(493,20) Hint: (5092) Variable "AVerdict" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(713,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(743,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(806,19) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(810,25) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(881,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(899,21) Hint: (5058) Variable "AFirmware" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(974,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Protocol.pas(1005,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2Consts.pas
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2Timing.pas
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2Scan.pas
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas(131,16) Hint: (5057) Local variable "lReg" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas(319,51) Hint: (5057) Local variable "lCode" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas(327,43) Hint: (5057) Local variable "lCode" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas(336,59) Hint: (5057) Local variable "lCode" does not seem to be initialized
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2Helper.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2Helper.pas(108,18) Hint: (5057) Local variable "addr" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2Helper.pas(110,22) Warning: (5043) Symbol "ShortHostToNet" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2Helper.pas(111,29) Warning: (5043) Symbol "HostToNet" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/utils/uRecorderMic140v2Helper.pas(16,3) Hint: (5024) Parameter "ATimeoutMs" not used
+(3104) Compiling ./Device/MIC140v2/utils/uRecorderMic140v2Diag.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Scan.pas(255,17) Hint: (5091) Local variable "args" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Scan.pas(341,17) Hint: (5091) Local variable "desc" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Scan.pas(396,21) Hint: (5091) Local variable "chanDump" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Scan.pas(22,19) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140v2Scan
+(3104) Compiling ./Device/MIC140v2/uRecorderMic140v2Stream.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Stream.pas(300,18) Hint: (5057) Local variable "lProbe" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Stream.pas(431,16) Hint: (5058) Variable "ARaw" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Stream.pas(505,28) Hint: (5057) Local variable "originalData" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Stream.pas(56,29) Hint: (5024) Parameter "AFreq" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Stream.pas(598,40) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(51,7) Hint: (5024) Parameter "AIndex" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(156,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(157,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(158,24) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(159,35) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(160,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(161,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(162,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(163,40) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(164,29) Note: (6058) Call to subroutine "operator :=(const source:ShortInt):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(165,29) Note: (6058) Call to subroutine "operator :=(const source:ShortString):Variant;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(53,30) Hint: (5024) Parameter "AIndex" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(182,18) Note: (6058) Call to subroutine "operator :=(const source:Variant):AnsiString;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(188,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(195,32) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(201,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(208,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(335,3) Note: (5027) Local variable "tim" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(597,40) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(661,19) Hint: (5092) Variable "AMeans" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(667,17) Hint: (5091) Local variable "sums" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(668,16) Hint: (5091) Local variable "cnt" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(669,16) Hint: (5091) Local variable "eff" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140v2/uRecorderMic140v2Device.pas(652,16) Note: (5025) Local variable "k" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(407,23) Hint: (5024) Parameter "AChannelIndex" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(171,3) Hint: (5024) Parameter "ADevSubRev" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(694,27) Warning: (4045) Comparison might be always true due to range of constant and expression
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(860,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(1047,28) Hint: (5091) Local variable "lChannelNumbers" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(2148,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(2158,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(212,3) Hint: (5028) Local const "CMic140ReadTimeoutMinMs" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(214,3) Hint: (5028) Local const "CMic140IoCtlCmdSetControllerParams" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(216,3) Hint: (5028) Local const "CMic140BalanceMinSamples" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(217,3) Hint: (5028) Local const "CMic140BalanceDiscardSamples" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(218,3) Hint: (5028) Local const "CMic140BalanceSampleFraction" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(219,3) Hint: (5028) Local const "CMic140Range5mV" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(18,52) Hint: (5023) Unit "uRecorderMebiusTcpProtocol" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(195,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(198,3) Hint: (5023) Unit "uRecorderMic140FlashConstants" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(199,32) Hint: (5023) Unit "uRecorderMic140MebiusConstants" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(200,32) Hint: (5023) Unit "uRecorderMic140Flash" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(201,3) Hint: (5023) Unit "uRecorderMic140MebiusTypes" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(202,3) Hint: (5023) Unit "uRecorderMic140LegacyChannelDesc" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(204,40) Hint: (5023) Unit "BaseUnix" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(204,50) Hint: (5023) Unit "ctypes" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/uRecorderMic140DataSource.pas(204,58) Hint: (5023) Unit "Sockets" not used in uRecorderMic140DataSource
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(553,18) Hint: (5060) Function result variable does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(693,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(851,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(852,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(893,3) Note: (5025) Local variable "I" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(1473,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderFormModel.pas(387,17) Warning: (3057) An inherited method is hidden by "constructor Create;"
 (3104) Compiling ./Core/uRecorderEventQueue.pas
 (3104) Compiling ./Core/uRecorderAlarms.pas
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderAlarms.pas(90,27) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderEventQueue.pas(96,27) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderEventQueue.pas(137,3) Note: (5025) Local variable "I" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderEventQueue.pas(103,27) Hint: (5024) Parameter "ASender" not used
 (3104) Compiling ./Core/uRecorderTimeSystem.pas
 (3104) Compiling /mnt/win_share/OburecGH/Lazarus/Tests/RecorderTests/UITestData/uRecorderUiTestData.pas
 (3104) Compiling ./UI/uFormPagesDialog.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,26) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,43) Hint: (5024) Parameter "aCol" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,49) Hint: (5024) Parameter "aRow" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(47,11) Hint: (5024) Parameter "CanSelect" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(44,30) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(39,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(41,27) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(43,27) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(42,29) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(40,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(47,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(47,43) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(47,49) Hint: (5024) Parameter "aRow" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(48,11) Hint: (5024) Parameter "CanSelect" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(45,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(40,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(42,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(44,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(43,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(41,29) Hint: (5024) Parameter "Sender" not used
 (3104) Compiling ./UI/uFormEditorController.pas
 (3104) Compiling ./UI/uRecorderOglOscillogramView.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(51,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(105,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(453,44) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(515,18) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(517,10) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(519,22) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(616,44) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(140,31) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(142,31) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(142,48) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(143,29) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(144,7) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(147,47) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(149,7) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(151,7) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(765,42) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(822,29) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(868,23) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(936,25) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1017,21) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1088,45) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1116,23) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1158,21) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1234,31) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1249,19) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1256,29) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1275,21) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1375,39) Hint: (4055) Conversion between ordinals and pointers is not portable
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1383,41) Hint: (4055) Conversion between ordinals and pointers is not portable
+(3104) Compiling ./UI/uRecorderVisualControl.pas
+(3104) Compiling ./UI/uRecorderOglOscillogramView.pas
+(3104) Compiling ./Core/uRecorderTagRefs.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedAlgorithms.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(49,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(499,29) Hint: (5091) Local variable "lTagColors" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(118,32) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderTrendView.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(142,23) Hint: (5091) Local variable "lOglAxes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(238,19) Hint: (5091) Local variable "lPages" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(131,3) Note: (5027) Local variable "lAxisCount" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(56,32) Hint: (5024) Parameter "ALineIndex" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(62,27) Hint: (5024) Parameter "ALineIndex" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(465,3) Note: (5027) Local variable "lLagSec" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(73,30) Hint: (5024) Parameter "ATagRegistry" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(73,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(65,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendView.pas(18,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderTrendView
+(3104) Compiling ./UI/uRecorderSpectrumView.pas
+(3104) Compiling ./Core/uRecorderSpectrumRuntime.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderSpectrumRuntime.pas(80,47) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderSpectrumRuntime.pas(71,27) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderSpectrumRuntime.pas(72,34) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uComponentServices.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uEventTypes.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uEventList.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uEventList.pas(164,97) Warning: (4110) range check error while evaluating constants (4096 must be between 0 and 255)
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(24,25) Hint: (5024) Parameter "ABaseObj" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(24,46) Hint: (5024) Parameter "Root" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(107,25) Hint: (5024) Parameter "ABaseObj" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(107,46) Hint: (5024) Parameter "Root" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(75,41) Hint: (5024) Parameter "AName" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/uBaseClass.pas(8,31) Hint: (5023) Unit "uEventTypes" not used in uBaseClass
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(51,52) Hint: (5024) Parameter "ACol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(52,7) Hint: (5024) Parameter "AState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(629,32) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(71,30) Hint: (5024) Parameter "ATagRegistry" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(71,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(48,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(48,47) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(49,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(49,49) Hint: (5024) Parameter "ARenderTimeMs" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(50,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(50,51) Hint: (5024) Parameter "ACursor" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumView.pas(47,27) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVisualControl.pas(57,63) Hint: (5024) Parameter "ATagRegistry" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVisualControl.pas(58,30) Hint: (5024) Parameter "ATagRegistry" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVisualControl.pas(58,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVisualControl.pas(70,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVisualControl.pas(77,3) Hint: (5023) Unit "uOglChartTrend" not used in uRecorderVisualControl
+(3104) Compiling ./UI/uComponentSettingsDialog.pas
+(3104) Compiling ./UI/uRecorderTrendSettingsDialog.pas
+(3104) Compiling ./UI/uRecorderColorSwatch.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderColorSwatch.pas(21,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(117,84) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(117,89) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(139,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(140,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(72,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(71,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(65,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(66,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(64,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(69,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(63,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(68,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderTrendSettingsDialog.pas(76,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderSpectrumSettingsDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(124,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(125,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(56,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(62,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(63,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(64,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(65,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSpectrumSettingsDialog.pas(66,32) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderOscillogramSettingsDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(7,22) Warning: (2005) Comment level 2 found
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(99,77) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(99,82) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(434,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(60,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(49,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(52,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(55,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(56,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(62,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(61,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOscillogramSettingsDialog.pas(50,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uComponentSettingsDialog.pas(40,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uComponentSettingsDialog.pas(42,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uComponentSettingsDialog.pas(43,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uComponentSettingsDialog.pas(39,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uComponentSettingsDialog.pas(41,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(899,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(601,3) Note: (5025) Local variable "lOsc" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(972,18) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(974,10) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(976,22) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1104,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(172,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(175,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(175,48) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(177,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(179,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(186,47) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(185,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(190,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(193,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1346,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1420,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1477,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1567,25) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1673,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1813,45) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1890,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1943,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2047,31) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2068,19) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2079,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2103,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2224,39) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(2233,41) Hint: (4055) Conversion between ordinals and pointers is not portable
 (3104) Compiling ./UI/uRecorderSettingsDialog.pas
 (3104) Compiling ./UI/uRecorderCommandImages.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(83,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(84,29) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(85,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(86,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(87,34) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(88,37) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(89,46) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(90,47) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(90,64) Hint: (5024) Parameter "Button" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,7) Hint: (5024) Parameter "Shift" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,27) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,30) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,45) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,70) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,73) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,45) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,70) Hint: (5024) Parameter "X" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,73) Hint: (5024) Parameter "Y" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(94,7) Hint: (5024) Parameter "State" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(95,37) Hint: (5024) Parameter "Sender" not used
 (3104) Compiling ./UI/uTagSettingsDialog.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(821,61) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(821,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(64,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(65,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(15,24) Warning: (2005) Comment level 2 found
+(3104) Compiling ./UI/uRecorderCalibrationAddDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationAddDialog.pas(18,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationAddDialog.pas(19,31) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderCalibrationPropertiesDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(51,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(44,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(46,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(45,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(47,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(48,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(49,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(50,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationPropertiesDialog.pas(52,26) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderCalibrationListDialog.pas
+(3104) Compiling ./SDB/uRecorderSdbSelectDialog.pas
+(3104) Compiling ./SDB/uRecorderSdbImages.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(50,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(51,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(55,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(53,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(52,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(52,46) Hint: (5024) Parameter "Node" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(49,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./SDB/uRecorderSdbSelectDialog.pas(18,3) Hint: (5023) Unit "uSharedStringEncoding" not used in uRecorderSdbSelectDialog
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(28,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(23,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(24,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(26,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(27,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(25,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderCalibrationListDialog.pas(29,26) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas
+(3104) Compiling ./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(45,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(46,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(47,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(49,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(50,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140ChannelDialog.pas(51,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(52,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(61,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(55,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(56,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(57,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(53,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(54,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(58,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(538,56) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(538,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(59,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(60,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MIC140/UI/uRecorderMic140SettingsDialog.pas(654,41) Hint: (5091) Local variable "lResult" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(162,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(144,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(180,46) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(1215,61) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(1215,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(161,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(163,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(164,44) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(1627,36) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(1627,34) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(165,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(166,44) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(167,42) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(168,52) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(169,50) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(170,58) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uRecorderFrequencyBandsDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(306,45) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(306,75) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(31,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(32,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(33,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(34,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(35,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderFrequencyBandsDialog.pas(36,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./Core/uRecorderTagBalance.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(852,23) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(852,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(895,25) Warning: (4104) Implicit string type conversion from "TTranslateString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1093,7) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1093,48) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(141,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(142,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(143,59) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(144,44) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1773,56) Warning: (4104) Implicit string type conversion from "RawByteString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1773,93) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1803,72) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(1803,85) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(216,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(222,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(225,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(226,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(227,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(145,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(146,40) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(112,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(113,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(114,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(115,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(116,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(117,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(119,46) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(118,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(125,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(126,85) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(169,61) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(169,83) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(169,103) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(169,106) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(127,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(127,54) Hint: (5024) Parameter "Node" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(128,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(129,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(129,64) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(129,67) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(130,7) Hint: (5024) Parameter "State" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(131,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(132,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(133,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(134,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(135,49) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(136,40) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(137,44) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(122,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(122,70) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(122,73) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(123,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(123,70) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(123,73) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(124,7) Hint: (5024) Parameter "State" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(139,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(140,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(30,30) Hint: (5023) Unit "uRecorderMic140LegacyProtocol" not used in uRecorderSettingsDialog
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(34,3) Hint: (5023) Unit "uRecorderMeraSdbThermocouples" not used in uRecorderSettingsDialog
 (3104) Compiling ./Core/uRecorderProjectFiles.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderProjectFiles.pas(514,3) Note: (5025) Local variable "lTerm" not used
 (3104) Compiling ./UI/uRecorderDigitalPageView.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(89,26) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(90,27) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(91,27) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(94,36) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(94,53) Hint: (5024) Parameter "aCol" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(95,11) Hint: (5024) Parameter "CanSelect" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(92,27) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(93,30) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(176,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(81,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(79,36) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(80,39) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(82,31) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(83,30) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(87,31) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(86,28) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(84,34) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(85,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(78,35) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./Core/uRecorderDataStorage.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(98,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(327,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(99,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(100,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(106,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(106,53) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(107,11) Hint: (5024) Parameter "CanSelect" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(104,39) Hint: (5024) Parameter "sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(104,56) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(101,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(102,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(103,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(336,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(207,33) Hint: (5024) Parameter "Sender" not used
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(88,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(162,32) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(216,35) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(218,40) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(220,29) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(200,34) Hint: (5024) Parameter "APage" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(202,33) Hint: (5024) Parameter "APage" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(206,38) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(208,37) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(257,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(271,40) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(86,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(87,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(89,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(90,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(96,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(95,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(91,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(92,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(94,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(85,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(97,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(193,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(251,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(253,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(255,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(257,40) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(259,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(231,34) Hint: (5024) Parameter "APage" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(233,33) Hint: (5024) Parameter "APage" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(237,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(239,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(284,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(285,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(286,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(337,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(338,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(312,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(332,41) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(333,7) Hint: (5024) Parameter "AOldState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(333,18) Hint: (5024) Parameter "ANewState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(9,33) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(10,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(10,33) Hint: (5023) Unit "uRecorderTrendView" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(11,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(11,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(12,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(12,41) Hint: (5023) Unit "uRecorderMic140SettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(13,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(13,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(14,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(14,54) Hint: (5023) Unit "uRecorderMebiusTcpProtocol" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(15,3) Hint: (5023) Unit "uRecorderMic140DataSource" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(15,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
 (9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
 (9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
-(1008) 13699 lines compiled, 3.9 sec
-(1021) 2 warning(s) issued
-(1022) 108 hint(s) issued
+(1008) 47796 lines compiled, 7.8 sec
+(1021) 40 warning(s) issued
+(1022) 399 hint(s) issued
+(1023) 27 note(s) issued
 LzrObrPack installed and RecorderLnx build checked.

@@ -1,0 +1,6 @@
+﻿# MIC-140 capture session 20260701_123631
+device=192.168.14.155:4000
+proxy_listen=127.0.0.1:4001
+started=2026-07-01 12:36:31
+proxy_log=D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug\Data\captures\mdp_proxy_20260701_123631.log
+netsh_etl=D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug\Data\captures\netsh_192.168.14.155_20260701_123631.etl

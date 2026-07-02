@@ -1,0 +1,18 @@
+---
+description: Сетевое оборудование — снифферы и контрольные дампы пакетов
+globs: "**/*.{pas,lpr,lpi,md,ps1}"
+alwaysApply: false
+---
+
+# Сетевое оборудование: контрольные дампы
+
+При отладке протоколов по TCP/UDP (MIC-140, MDP, Modbus, REST на стенде и т.п.):
+
+1. **Перед правкой драйвера** снимите эталонный трафик с работающего клиента (Windows Recorder, заводская утилита).
+2. **Инструменты** (по приоритету):
+   - `Mic140ProtocolDebugCli.exe --proxy <port>` → текстовый разбор MDP в `Data/captures/`
+   - `Tests/Mic140ProtocolDebug/Tools/mic140_capture_start.ps1` — прокси + netsh по IP прибора
+   - Wireshark/tshark: `host <device_ip> and tcp port <port>`
+3. **Фильтр** — по IP прибора; фиксируйте `stride`, `msgWords`, первые коды AIn/TIn.
+4. **Сравнение** — дамп Recorder vs наш стенд в одной сессии; отклонённые гипотезы в `errors/*.md`.
+5. Не считать протокол «исправленным», пока контрольный дамп не совпадает по форме кадра с эталоном.

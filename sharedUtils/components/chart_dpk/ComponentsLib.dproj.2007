@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{d1b951d1-6f84-4e09-805b-c5a3f5c4d898}</ProjectGuid>
+    <MainSource>ComponentsLib.dpk</MainSource>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Документы\RAD Studio\5.0\Bpl\ComponentsLib.bpl</DCC_DependencyCheckOutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_DebugInformation>False</DCC_DebugInformation>
+    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    <DCC_Define>RELEASE</DCC_Define>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_UnitSearchPath>..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl\;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms</DCC_UnitSearchPath>
+    <DCC_ResourcePath>..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl\;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms</DCC_ResourcePath>
+    <DCC_ObjPath>..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl\;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms</DCC_ObjPath>
+    <DCC_IncludePath>..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl\;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms</DCC_IncludePath>
+    <DCC_MapFile>3</DCC_MapFile>
+    <DCC_DebugInfoInExe>True</DCC_DebugInfoInExe>
+    <DCC_DebugVN>True</DCC_DebugVN>
+    <DCC_RemoteDebug>True</DCC_RemoteDebug>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType>Package</Borland.ProjectType>
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">False</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1049</VersionInfo><VersionInfo Name="CodePage">1251</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">ComponentsLib.dpk</Source></Source><Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dbx100.bpl">CodeGear SQL Explorer UI Package</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\Bin\dclIndyCore100.bpl">Indy 10 Core Design Time</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dclbde100.bpl">CodeGear BDE DB Components</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\Bin\dclIndyProtocols100.bpl">Indy 10 Protocols Design Time</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\bcboffice2k100.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\bcbofficexp100.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dcloffice2k100.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+      <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+    </Excluded_Packages></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <ItemGroup>
+    <DelphiCompile Include="ComponentsLib.dpk">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="..\..\objects\uBaseObj.pas" />
+    <DCCReference Include="..\..\objects\uBaseObjService.pas" />
+    <DCCReference Include="..\..\utils\lists\uSimpleSetList.pas" />
+    <DCCReference Include="..\..\utils\uDescObj.pas" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\bdertl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\dbrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\dcl_own.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\designide.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\Fartl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\Fasrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\FastMM4.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\FastMM4rtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\FastMMrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\FastMrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\Fastrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\Frtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\GlPackage.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\inet.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\rtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\TurboExplorerrtl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcl.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vclactnband.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcldb.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vcljpg.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\VclSmp.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\vclx.dcp" />
+    <DCCReference Include="C:\Documents and Settings\Admin\Рабочий стол\xmlrtl.dcp" />
+    <DCCReference Include="chart\forms\frames\uChartInputFrame.pas">
+      <Form>ChartInputFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uChartCfgForm.pas">
+      <Form>ChartCfgForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uCreateObjForm.pas">
+      <Form>CreateObjForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uCreateTrendFrame.pas">
+      <Form>EditChartCfgFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uCursorForm.pas">
+      <Form>CursorForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uDoubleCursorForm.pas">
+      <Form>DoubleCursorForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uDrawObjEditForm.pas">
+      <Form>DrawObjEditForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uDrawObjFrame.pas">
+      <Form>DrawObjFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uEditChartObjFrame.pas">
+      <Form>EditDrawObjFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uEditMenuChartForm.pas">
+      <Form>EditMenuChartForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uGistForm.pas">
+      <Form>GistForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uGistFrame.pas">
+      <Form>GistFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uPageForm.pas" />
+    <DCCReference Include="chart\forms\uTextLabelForm.pas">
+      <Form>TextLabelForm</Form>
+    </DCCReference>
+    <DCCReference Include="chart\forms\uTrendForm.pas" />
+    <DCCReference Include="chart\forms\uTrendFrame.pas">
+      <Form>TrendFrame</Form>
+    </DCCReference>
+    <DCCReference Include="chart\items\framelisteners\uChartClickFrListener.pas" />
+    <DCCReference Include="chart\items\framelisteners\uObjFrameListener.pas" />
+    <DCCReference Include="chart\items\framelisteners\uPageFrameListener.pas" />
+    <DCCReference Include="chart\items\uAxis.pas" />
+    <DCCReference Include="chart\items\uChartCursor.pas" />
+    <DCCReference Include="chart\items\uDoubleCursor.pas" />
+    <DCCReference Include="chart\items\uDrawObj.pas" />
+    <DCCReference Include="chart\items\uDrawObjMng.pas" />
+    <DCCReference Include="chart\items\uGistogram.pas" />
+    <DCCReference Include="chart\items\uLegend.pas" />
+    <DCCReference Include="chart\items\uMarkers.pas" />
+    <DCCReference Include="chart\items\upage.pas" />
+    <DCCReference Include="chart\items\uPageMng.pas" />
+    <DCCReference Include="chart\items\uPoint.pas" />
+    <DCCReference Include="chart\items\uTextLabel.pas" />
+    <DCCReference Include="chart\items\uTrend.pas" />
+    <DCCReference Include="chart\uChart.pas" />
+    <DCCReference Include="chart\utils\lists\uChartEvents.pas" />
+    <DCCReference Include="chart\utils\uText.pas" />
+    <DCCReference Include="uRegisterComponent.pas" />
+  </ItemGroup>
+</Project>

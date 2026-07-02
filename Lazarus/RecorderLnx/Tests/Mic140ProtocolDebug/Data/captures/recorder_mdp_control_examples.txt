@@ -1,0 +1,144 @@
+# MIC-140 MDP control examples — Recorder vs Mic140ProtocolDebug stand
+# Source: netsh_192.168.14.155_20260701_123631.etl (Recorder Preview sessions 2026-07-01)
+# Parser: Tools/parse_mdp_from_etl.py
+# Static ref: Data/mic140_adc_reference.txt (Recorder UI 2026-06-22, tol ±50)
+
+# =============================================================================
+# 1. КАДР ПОТОКА (PORT=0) — что шлёт Recorder
+# =============================================================================
+#
+# Histogram (68 frames captured): size_words=163 ONLY
+#
+#   MDP header: SYNC=0x12B8 PORT=0 SIZE=163 HCS DCS
+#   Payload layout:
+#     [0..9]   BIOS header (10 words)
+#     [10..60] sample row 0: 51 words = AIn1..48 + TIn1..3
+#     [61..111] sample row 1
+#     [112..162] sample row 2
+#
+#   dataWords = 153 = 3 × stride(51)
+#   msgWords  = 163 = 10 + 153
+#   fifoReady (implicit) = 153 words data per MDP packet
+#
+# Recorder НЕ использует stride=48 / msgWords=106.
+
+# --- Example REC-NB1 (num_buff=1, first Preview start) ---
+EXAMPLE REC-NB1
+  msgWords=163 dataWords=153 stride=51 samples=3 bios_state=0
+  AIn01..12: -7163,-7112,-6594,-7219,-7161,-7113,-6595,-7221,-7164,-7109,-6595,-7219
+  AIn25..27: -18137,-15257,-13874
+  TIn01..03:  7981, 8151,18542
+  vs ref AIn01: Δ=+6 (PASS ±50)
+  vs ref AIn25: Δ=-1794 (drift vs 2026-06-22 snapshot; same order of magnitude)
+  vs ref TIn01: Δ=-325 (PASS ±50)
+
+# --- Example REC-NB5 (mid-session) ---
+EXAMPLE REC-NB5
+  msgWords=163 dataWords=153 stride=51 samples=3
+  AIn01..12: -7162,-7117,-6592,-7226,-7163,-7112,-6595,-7221,-7163,-7111,-6595,-7223
+  AIn25..27: -17584,-15341,-14555
+  TIn01..03:  7980, 8154,18542
+
+# --- Example REC-NB15 (last shown) ---
+EXAMPLE REC-NB15
+  msgWords=163 dataWords=153 stride=51 samples=3
+  AIn01..12: -7164,-7115,-6598,-7224,-7162,-7112,-6595,-7223,-7164,-7114,-6593,-7227
+  AIn25..27: -16875,-15345,-15587
+  TIn01..03:  7982, 8150,18541
+
+# TIn стабильно в слотах 48..50 payload (не только DM).
+# CH25..48 монотонно «прогреваются» между Preview-стартами (ожидаемо для 2-го банка).
+
+# =============================================================================
+# 2. КАДР ПОТОКА — что шлёт стенд (live 2026-07-01, rev 14.1)
+# =============================================================================
+
+# --- Profile STAND-RECORDER-WIRE (--recorder-wire, live 2026-07-01) ---
+EXAMPLE STAND-RECORDER-WIRE
+  programmed: fifoStride=51 fifoReady=153 msgWords=163 chanDump[2]=51
+  ptrHead=[48,323,51,2120,...]   # matches Recorder
+  stream: unstable (~1-6 blocks/10s), reject rows at warmup
+  vs REC wire: msgWords MATCH, programming MATCH; payload quality NOT yet MATCH
+
+# --- Profile STAND-DEFAULT (fifo=48 auto, live 2026-07-01) ---
+EXAMPLE STAND-DEFAULT-NB1
+  programmed: fifoStride=48 fifoReady=96 msgWords=106 chanDump[2]=48
+  stream: ~49 blocks/10s, CH01-24 PASS, CH25+ FAIL, TIn via DM PASS
+  programmed: fifoStride=48 fifoReady=96 msgWords=106 capacity=192 slots=51 ptrs=51
+  received:   dataWords=96 samples=2 stride=48 (carry/shift warnings)
+  AIn01..12: -7162,-7111,-6594,-7222,-7161,-7111,-6592,-7221,-7163,-7113,-6593,-7221
+  AIn25..27: -10115,-16858, 3040        # CH25+ смещены / не тот банк
+  TIn01..03: (из DM CMD114, не в FIFO)  # D20: PASS ±50 при throttle 200ms
+  vs REC-NB1 AIn01..12: совпадает ±3
+  vs REC-NB1 AIn25:     Δ=+8022  FAIL
+  vs REC-NB1 TIn:       в payload отсутствуют
+
+# --- Profile STAND-FIFO51 (--fifo-stride 51) ---
+EXAMPLE STAND-FIFO51-NB5
+  programmed: fifoStride=51 fifoReady=102 msgWords=112 capacity=204
+  received:   dataWords=102 samples=1..2 stride=51 (много reject all sample rows)
+  AIn01..12: -7162,-7114,-6598,-7225,-7162,-7112,-6599,-7225,...
+  AIn25..27: -15839,-13188,-15314        # ближе к REC, но всё ещё FAIL vs ref
+  TIn48..50: -7165,-7113,-6595            # мусор (не TIn); TIn не в FIFO
+  vs REC wire format: msgWords 112≠163, ready 102≠153, samples 2≠3
+
+# =============================================================================
+# 3. СВОДНАЯ ТАБЛИЦА ПРОТОКОЛА
+# =============================================================================
+#
+# | Параметр          | Recorder (дамп) | Стенд fifo=48 | Стенд fifo=51 |
+# |-------------------|-----------------|---------------|---------------|
+# | PORT=0 SIZE words | 163             | 106           | 112           |
+# | BIOS header       | 10              | 10            | 10            |
+# | dataWords         | 153             | 96            | 102           |
+# | stride            | 51              | 48            | 51            |
+# | samples/packet    | 3               | 2             | 2             |
+# | fifoReady         | 153 (3×51)      | 96  (2×48)    | 102 (2×51)    |
+# | TIn в FIFO        | да [48..50]     | нет (DM)      | нет (мусор)   |
+# | CH01..24          | OK              | OK            | OK (head)     |
+# | CH25..48          | OK-ish live     | FAIL          | FAIL          |
+#
+# Вывод: Recorder программирует FIFO stride=51 и отдаёт 3 строки×51 слово за MDP-кадр.
+# Стенд по умолчанию (fifo=48) расходится по формату кадра и по CH25+.
+# fifo=51 приближает stride, но ready=102 и TIn-ptr (MASK) всё ещё не дают эталонный кадр.
+
+# =============================================================================
+# 4. ПРОГРАММИРОВАНИЕ (PORT=1) — Recorder CMD samples
+# =============================================================================
+#
+# CMD 111 (0x6F) WRITE_DM — типичный кадр size=35 words:
+#   [0]=0x006F [1]=0x0020 [2]=0x0001 [3]=0x4862 [4]=0x4041 ...
+#   (32 data words + 3 header — запись в DM page/addr)
+#
+# CMD 0x98 size=9  — служебный (identify / setup)
+# CMD 0x51 size=3  — короткий ACK-подобный
+# CMD 0x50 size=3  — stop-related
+#
+# Полный разбор scan descriptor (fifo ready=153, chanDump, ptr list) из PORT=1
+# требует реконструкции последовательности WRITE_DM → отдельный проход по ETL.
+
+# =============================================================================
+# 5. SCAN LOG СТЕНДА (для сопоставления с Recorder programming)
+# =============================================================================
+#
+# [MIC140v2 scan] rev=14.1 slots=51 ptrs=51 val=0x0810 desc=0x0843 fifo=0x0522
+#   ready=96|102 capacity=192|204 fifoStride=48|51 chanDelay=607
+#   desc0=[2,2,272,8,16384]
+#   desc1=[0,129,256,606,2064]          # AIn1  ($0100 range0)
+#   desc25=[0,49408,256,3641,2088]       # AIn25 ($C100 — 2-й банк ME048)
+#   desc48=[0,8192,256,3641,2111,0,49154,256,606,34880]  # TIn1 ptr 0x8000|...
+#   ptrHead=[48,323,48,2120,2125,2130,...]  # chanDump: [vis=48, avg=323, fifo=48, ...]
+#
+# Recorder ptrHead/fifoReady из дампа: fifoReady≈153 (3 samples), stride=51 в потоке.
+# Расхождение ptrHead[2]=48 vs Recorder implicit 51 — ключевая гипотеза для CH25+ и TIn.
+
+# =============================================================================
+# 6. РЕКОМЕНДАЦИИ СЛЕДУЮЩЕГО ШАГА
+# =============================================================================
+#
+# [DONE 2026-07-01] Shadow-scan defaults → Recorder profile (D23):
+#   PayloadStride auto=51, chanDump[2]=51, fifoReady=153, msgWords=163.
+#   TIn из FIFO при stride=51 (без READ DM).
+#
+# Остаётся: CH25+ vs ref — сверить desc25/ME048 с Recorder programming (PORT=1 dump).
+# Новый захват Recorder — через proxy :4001 для mdp_proxy_*.log.

@@ -1,5 +1,32 @@
 # План: доработка RecorderLnx
 
+- [ ] MIC-140 debug stand (`Tests/Mic140ProtocolDebug`): PASS AIn 1–48 ±50 + TIn 1–3
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: added `device\MIC140\uMic140Device.pas`
+    as a buildable `IRecorderDevice` MIC-140 skeleton with empty programming/read logic
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: decoupled form from MIC-140 implementation
+    through `device\uRecorderDeviceManager.pas` and `device\MIC140\uMic140Registration.pas`
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: moved MIC-140 host/port assignment from
+    device constructor into manager search result; added MainForm test configuration hook
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: replaced MIC-140 constructor IP binding
+    with local registration/search discovery over `192.168.14.*`, keeping form access
+    through `IRecorderDevice` and `RecorderDeviceManager`
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: cleaned back to a minimal visual
+    Lazarus form project; only `.lpi/.lpr/.pas/.lfm` remain in the folder
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: merged GUI, auto CLI, numeric CLI,
+    and proxy/sniffer into the single `Mic140ProtocolDebug_Codex` Lazarus
+    project; removed old separate CLI/example projects
+  - [x] Codex defaults switched to Recorder-wire 48+3 mode; stream filter now
+    requires full 51-word rows before publishing TIn slots
+  - [x] Codex live-dump protocol rewrite: Recorder wire fixed as `chanDump[2]=48`, `fifoStride=51`, `fifoSamples=3`; docs/reference priority updated
+  - [x] Live Recorder dump 20260701_153018: original Recorder preview, `msgWords=163`, `stride=51`, `samples=3`, TIn slots 48..50; protocol docs updated
+  - [x] `Tests/Mic140ProtocolDebug_Codex`: автономный Codex-стенд без внешних unit-ов, Docs/task+protocol+capture, локальный proxy/sniffer, ETL parser, сборка трех `.lpi` OK
+  - [x] Профиль A (fifo=48, tin=0): стабильный поток, CH01–24 PASS
+  - [x] Раздельные эталоны stand / recorder-wire
+  - [x] TIn вне strict-приёмки при tin=0
+  - [x] settle-sec, --recorder-wire, parse_mdp --export-reference
+  - [ ] CH25–48: ME048/desc25 vs Recorder programming (proxy PORT=1)
+  - [ ] TIn через READMEMDM или wire-профиль с отдельным эталоном
+
 - [x] MIC-140 legacy stream: добить стабильность payload scan-блоков
   - [x] Добавить 3-секундный smoke-test в документацию (`Docs/mic140_legacy_scan_stream.md`, раздел 9.1)
   - [x] Убрать ложный рост `mdpResync` при нормальном потреблении MDP-пакетов

@@ -16,7 +16,7 @@ uses
   uObjCtrFrame in '..\..\3d\forms\uObjCtrFrame.pas' {CtrlViewFrame: TFrame},
   uMatrix in '..\..\sharedUtils\math\uMatrix.pas',
   PluginClass3218 in '..\plgEvalFRF\PluginClass3218.pas',
-  uCompMng in '..\SharedRUnits\uCompMng.pas',
+  uCompMng in '..\plgCalibratorPascal\units\uCompMng.pas',
   uRecBasicFactory in '..\SharedRUnits\uRecBasicFactory.pas',
   uRecorderEvents in '..\SharedRUnits\uRecorderEvents.pas',
   uCreateComponents in 'units\uCreateComponents.pas',

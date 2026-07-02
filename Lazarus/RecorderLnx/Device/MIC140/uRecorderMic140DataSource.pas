@@ -40,6 +40,7 @@ type
   TRecorderMic140ChannelSettings = record
     ChannelAddress: string;
     RangeIndex: Integer;
+    CommutIndex: Integer;
     DefaultCjc: Boolean;
     CjcChannel: Integer;
     ThermocoupleScalePath: string;
@@ -126,6 +127,7 @@ type
       const ABlock: TRecorderDeviceSampleBlock);
     function Mic140PublishedCodeInRecorderRange(AChannelIndex: Integer;
       AValue: Double): Boolean;
+    procedure CheckPublishedTinCodes(const AAux: TMic140AuxTemperatureBlock);
     procedure CheckPublishedRecorderCodes(const ABlock: TRecorderDeviceSampleBlock);
     procedure ProcessAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
     procedure SyncScanConfig;
@@ -200,7 +202,7 @@ uses
   uRecorderMic140DeviceConfig, uRecorderMic140Flash,
   uRecorderMic140MebiusTypes,
   uRecorderMic140LegacyChannelDesc, uRecorderMic140LegacyScanDriver,
-  uRecorderMic140v2Factory
+  uRecorderMic140v2Factory, uRecorderMic140v2Diag
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
@@ -592,6 +594,7 @@ procedure RecorderMic140InitChannelSettings(out ASettings: TRecorderMic140Channe
   AChannelIndex, ADevSubRev: Integer);
 begin
   ASettings.RangeIndex := CMic140Range100mV;
+  ASettings.CommutIndex := CMic140ChannelCommutIn;
   ASettings.DefaultCjc := True;
   ASettings.CjcChannel := RecorderMic140DefaultCjcChannel(AChannelIndex, ADevSubRev);
   ASettings.ThermocoupleScalePath := '';
@@ -1211,6 +1214,7 @@ var
   lCalibrationName: string;
   lFirmware: TRecorderMic140LegacyFirmware;
   lSettings: TRecorderMic140ChannelSettings;
+  lConfig: TRecorderMic140SourceConfig;
   lTag: TRecorderTag;
 begin
   if fHardwarePrepared or fHardwarePrepareAttempted then
@@ -1261,9 +1265,17 @@ begin
       if not SameText(lTag.SourceId, SourceId) or
         (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber)) then
         Continue;
-      RecorderMic140InitChannelSettings(lSettings, lChannelNumber - 1,
-        CMic140Mic140SubRev1);
-      RecorderMic140RestoreChannelSettingsFromTag(Registry, lTag, lSettings);
+      if not RecorderMic140TryGetChannelSettings(Registry, lTag,
+        lChannelNumber, lSettings) then
+      begin
+        RecorderMic140InitChannelSettings(lSettings, lChannelNumber - 1,
+          CMic140Mic140SubRev1);
+        RecorderMic140RestoreChannelSettingsFromTag(Registry, lTag, lSettings);
+      end;
+      fDevice.TrySetDeviceProperty(rdpMic140RangeIndex, lSettings.RangeIndex,
+        lChannelNumber - 1);
+      fDevice.TrySetDeviceProperty(rdpMic140CommutIndex, lSettings.CommutIndex,
+        lChannelNumber - 1);
       lTag.Mic140CjcChannel := RecorderMic140ChannelCjcNumber(lSettings,
         lChannelNumber - 1, CMic140Mic140SubRev1);
       if not RecorderMic140ChannelUsesTemperature(lSettings) then
@@ -1290,6 +1302,20 @@ begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve ready: tag=%s SDB=%s',
         [SourceId, lTag.Name, lSettings.ThermocoupleScalePath]));
     end;
+  lConfig := FindRecorderMic140DeviceConfig(Registry, SourceId);
+  if (lConfig <> nil) and (fMic <> nil) then
+  begin
+    for I := 0 to lConfig.ChannelCount - 1 do
+    begin
+      if I <= High(lConfig.ChannelSettings) then
+        lSettings := lConfig.ChannelSettings[I]
+      else
+        RecorderMic140InitChannelSettings(lSettings, I, CMic140Mic140SubRev1);
+      fMic.TrySetDeviceProperty(rdpMic140RangeIndex, lSettings.RangeIndex, I);
+      fMic.TrySetDeviceProperty(rdpMic140CommutIndex, lSettings.CommutIndex, I);
+      fMic.TrySetDeviceProperty(rdpMic140BoardCommutIndex, lConfig.BoardCommutIndex, I);
+    end;
+  end;
   fDevice.ProgramDevice;
   if fDevice.State = rdsProgrammed then
     PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True)
@@ -1989,20 +2015,9 @@ end;
 
 function TRecorderMic140DataSource.Mic140PublishedCodeInRecorderRange(
   AChannelIndex: Integer; AValue: Double): Boolean;
-const
-  CGroup1Min = -8200.0;
-  CGroup1Max = -6300.0;
-  CGroup2Min = -24000.0;
-  CGroup2Max = -13000.0;
 begin
-  Result := False;
-  if (AValue >= 32760.0) or (AValue <= -32760.0) or (AValue = 0.0) or
-     (AValue > 0.0) then
-    Exit;
-  if AChannelIndex < 24 then
-    Result := (AValue >= CGroup1Min) and (AValue <= CGroup1Max)
-  else if AChannelIndex < 48 then
-    Result := (AValue >= CGroup2Min) and (AValue <= CGroup2Max)
+  if AChannelIndex < 48 then
+    Result := Mic140v2CodeInRecorderProfile(Round(AValue), AChannelIndex)
   else
     Result := True;
 end;
@@ -2016,6 +2031,7 @@ var
   lFirstChannel: Integer;
   lFirstSample: Integer;
   lFirstValue: Double;
+  lExpectedCode: Integer;
   lExpected: string;
 begin
   if ABlock.SampleCount <= 0 then
@@ -2049,15 +2065,90 @@ begin
   if lBad <= 0 then
     Exit;
   Inc(fPublishedCorruptCount);
-  if lFirstChannel < 24 then
-    lExpected := '-8200..-6300'
+  if Mic140v2RecorderReferenceCode(lFirstChannel, lExpectedCode) then
+    lExpected := Format('%d +/-20', [lExpectedCode])
   else
-    lExpected := '-24000..-13000';
+    lExpected := 'Recorder reference +/-20';
   if (fPublishedCorruptCount <= 20) or ((fPublishedCorruptCount mod 20) = 0) then
     Mic140LogWarning(Format(
       '[DataSource:%s] MIC-140 code quality violation: publish=%d bad=%d first=ch%d sample=%d raw=%.0f expected=%s',
       [SourceId, fGoodBlockCount, lBad, lFirstChannel + 1, lFirstSample,
        lFirstValue, lExpected]));
+end;
+
+procedure TRecorderMic140DataSource.CheckPublishedTinCodes(
+  const AAux: TMic140AuxTemperatureBlock);
+const
+  CTinRefCount = 2;
+  CTinRecorderReference: array[0..CTinRefCount - 1] of Integer = (7650, 7800);
+  CTolerance = 400;
+var
+  lChannel: Integer;
+  lSample: Integer;
+  lBad: Integer;
+  lFirstChannel: Integer;
+  lFirstSample: Integer;
+  lFirstValue: Double;
+  lPreview: string;
+begin
+  if AAux.SampleCount <= 0 then
+    Exit;
+  lBad := 0;
+  lFirstChannel := -1;
+  lFirstSample := -1;
+  lFirstValue := 0.0;
+  for lChannel := 0 to Min(AAux.ChannelCount, CTinRefCount) - 1 do
+  begin
+    if lChannel >= Length(AAux.Values) then
+      Break;
+    for lSample := 0 to AAux.SampleCount - 1 do
+    begin
+      if lSample >= Length(AAux.Values[lChannel]) then
+        Break;
+      if (lChannel >= Length(AAux.Valid)) or
+        (lSample >= Length(AAux.Valid[lChannel])) or
+        (not AAux.Valid[lChannel][lSample]) or
+        (Abs(Round(AAux.Values[lChannel][lSample]) -
+          CTinRecorderReference[lChannel]) > CTolerance) then
+      begin
+        Inc(lBad);
+        if lFirstChannel < 0 then
+        begin
+          lFirstChannel := lChannel;
+          lFirstSample := lSample;
+          lFirstValue := AAux.Values[lChannel][lSample];
+        end;
+      end;
+    end;
+  end;
+
+  if (fGoodBlockCount = 1) and (AAux.ChannelCount > 0) then
+  begin
+    lPreview := '';
+    for lChannel := 0 to Min(AAux.ChannelCount, MIC140TemperatureChannelCount) - 1 do
+    begin
+      if lChannel >= Length(AAux.Values) then
+        Break;
+      if Length(AAux.Values[lChannel]) <= 0 then
+        Continue;
+      if lPreview <> '' then
+        lPreview := lPreview + ',';
+      lPreview := lPreview + Format('T%d=%.0f', [lChannel + 1,
+        AAux.Values[lChannel][0]]);
+    end;
+    if lPreview <> '' then
+      Mic140LogWarning(Format('[DataSource:%s] MIC-140 block1 TIn raw=[%s]',
+        [SourceId, lPreview]));
+  end;
+
+  if lBad <= 0 then
+    Exit;
+  Inc(fPublishedCorruptCount);
+  if (fPublishedCorruptCount <= 20) or ((fPublishedCorruptCount mod 20) = 0) then
+    Mic140LogWarning(Format(
+      '[DataSource:%s] MIC-140 code quality violation: TIn bad=%d first=T%d sample=%d raw=%.0f expected=%d +/-20',
+      [SourceId, lBad, lFirstChannel + 1, lFirstSample, lFirstValue,
+       CTinRecorderReference[lFirstChannel]]));
 end;
 
 procedure TRecorderMic140DataSource.ProcessAndPublishBlock(
@@ -2079,6 +2170,10 @@ var
   lSum: Double;
   lRaw: Double;
   lPreview: string;
+  lAll48: string;
+  lAll48S1: string;
+  lGood48: Integer;
+  lGood48S1: Integer;
 begin
   lChannels := fDevice.GetChannels;
   lCount := Min(ABlock.ChannelCount, Length(lChannels));
@@ -2101,13 +2196,38 @@ begin
   PublishBlockCounter(fGoodBlockCount);
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
     Mic140LogWarning(Format('[DataSource:%s] MIC-140 block=%d samples=%d stride=%d rate=%.3f Hz',
-      [SourceId, fGoodBlockCount, ABlock.SampleCount, ABlock.ChannelCount +
-       MIC140TemperatureChannelCount, ABlock.SampleRateHz]));
+      [SourceId, fGoodBlockCount, ABlock.SampleCount, ABlock.ChannelCount,
+       ABlock.SampleRateHz]));
   if fGoodBlockCount = 1 then
   begin
     lPreview := '';
+    lAll48 := '';
+    lAll48S1 := '';
+    lGood48 := 0;
+    lGood48S1 := 0;
     for lI := 0 to lCount - 1 do
     begin
+      if lI < 48 then
+      begin
+        if lI < Length(ABlock.Values) then
+        begin
+          lRaw := ABlock.Values[lI][0];
+          if Mic140PublishedCodeInRecorderRange(lI, lRaw) then
+            Inc(lGood48);
+          if lAll48 <> '' then
+            lAll48 := lAll48 + ',';
+          lAll48 := lAll48 + IntToStr(Trunc(lRaw));
+          if (ABlock.SampleCount > 1) and (Length(ABlock.Values[lI]) > 1) then
+          begin
+            lRaw := ABlock.Values[lI][1];
+            if Mic140PublishedCodeInRecorderRange(lI, lRaw) then
+              Inc(lGood48S1);
+            if lAll48S1 <> '' then
+              lAll48S1 := lAll48S1 + ',';
+            lAll48S1 := lAll48S1 + IntToStr(Trunc(lRaw));
+          end;
+        end;
+      end;
       if (lI > 7) and (lI <> 11) and (lI <> 23) then
         Continue;
       if lI >= fChannelTagNames.Count then
@@ -2116,7 +2236,7 @@ begin
       if lTag = nil then
         Continue;
       lRaw := Mic140RawSample(ABlock, lI, 0, lTag);
-      if lTag.HardwareCalibrationEnabled then
+      if RecorderMic140TagHardwareCalibrationEnabled(Registry, lTag) then
         lSum := Registry.TransformTagHardwareValue(lTag, lRaw)
       else
         lSum := lRaw;
@@ -2128,6 +2248,14 @@ begin
     if lPreview <> '' then
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 block1 channels: %s',
         [SourceId, lPreview]));
+    if lAll48 <> '' then
+      Mic140LogWarning(Format(
+        '[DataSource:%s] MIC-140 block1 sample0 all48 good=%d/48 raw=[%s]',
+        [SourceId, lGood48, lAll48]));
+    if lAll48S1 <> '' then
+      Mic140LogWarning(Format(
+        '[DataSource:%s] MIC-140 block1 sample1 all48 good=%d/48 raw=[%s]',
+        [SourceId, lGood48S1, lAll48S1]));
   end
   else if fGoodBlockCount <= CMic140LegacyScanDetailLogBlocks then
   begin
@@ -2153,6 +2281,7 @@ begin
     lAuxTemperature := fMic.LastAuxTemperatureBlock
   else
     ClearMic140AuxTemperatureBlock(lAuxTemperature);
+  CheckPublishedTinCodes(lAuxTemperature);
   PublishTemperatureBlocks(lAuxTemperature, lTimes);
 
   SetLength(lValues, ABlock.SampleCount);
@@ -2166,7 +2295,7 @@ begin
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
 
-    if not lTag.HardwareCalibrationEnabled then
+    if not RecorderMic140TagHardwareCalibrationEnabled(Registry, lTag) then
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
         lValues[lJ] := Mic140RawSample(ABlock, lI, lJ, lTag);

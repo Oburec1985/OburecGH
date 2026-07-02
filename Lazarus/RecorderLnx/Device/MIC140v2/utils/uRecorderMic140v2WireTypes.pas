@@ -21,6 +21,8 @@ const
   MIC140DefaultPollFrequencyHz = 100.0;
   CMic140LegacyBiosNumBuffIdx = 8;      { ORIG: num_buff в header BIOS scan message }
 
+function Mic140v2TInDmWordOffset(AVisibleIndex: Integer; ADevSubRev: Word): Integer;
+
 type
   TRecorderMic140LegacyFirmware = record
     Signature: Word;
@@ -67,6 +69,23 @@ type
 procedure ClearMic140AuxTemperatureBlock(var ABlock: TMic140AuxTemperatureBlock);
 
 implementation
+
+const
+  { [ORIG] MIC140_48mod / MIC140_48v2mod — физический индекс TIn в var_addr+MAX_AIN+n }
+  CMic140TInNum: array[0..11] of Integer =
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+  CMic140TInNumSubRev1: array[0..11] of Integer =
+    (4, 3, 2, 1, 0, 5, 6, 7, 8, 9, 10, 11);
+
+function Mic140v2TInDmWordOffset(AVisibleIndex: Integer; ADevSubRev: Word): Integer;
+begin
+  if (AVisibleIndex < 0) or (AVisibleIndex > High(CMic140TInNum)) then
+    Exit(0);
+  if ADevSubRev = 1 then
+    Result := CMic140TInNumSubRev1[AVisibleIndex]
+  else
+    Result := CMic140TInNum[AVisibleIndex];
+end;
 
 procedure ClearMic140AuxTemperatureBlock(var ABlock: TMic140AuxTemperatureBlock);
 begin

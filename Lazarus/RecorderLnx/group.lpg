@@ -7,13 +7,18 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
-      <Target FileName="..\Tests\RecorderTests\FormModel\RecorderFormModelTest.lpi">
+      <Target FileName="..\SharedUtils\components\chart_lzr\lzrObrPack.lpk"/>
+      <Target FileName="..\OGlChartLaz\Test_component\project1.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
-      <Target FileName="..\SharedUtils\components\chart_lzr\lzrObrPack.lpk"/>
-      <Target FileName="..\OGlChartLaz\Test_component\project1.lpi">
+      <Target FileName="Tests\Mic140ProtocolDebug\Mic140ProtocolDebug.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

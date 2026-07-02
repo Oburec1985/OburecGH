@@ -1,4 +1,4 @@
-unit ubaseobjLaz;
+unit uBaseObjLaz;
 
 {$mode objfpc}{$H+}
 

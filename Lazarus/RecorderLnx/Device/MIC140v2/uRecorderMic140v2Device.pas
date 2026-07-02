@@ -35,9 +35,18 @@ type
     fExpDataWords: Word;
     fExpMsgWords: Word;
     fCh: TRecorderDeviceChannelArray;
+    fRangeIndexes: array of Integer;
+    fCommutIndexes: array of Integer;
+    fBoardCommutIndexes: array of Integer;
     fStr: TMic140v2StreamState;
     fAux: TMic140AuxTemperatureBlock;
+    fValAddr: Word;
+    fTinSlots: Integer;
+    fScanPayloadStride: Integer;
+    fLastTinDmWords: TMic140v2WordBuf;
+    fLastTinDmReadTick: QWord;
     procedure BuildChannels;
+    procedure RefreshAuxFromDm(ASampleCount: Integer);
     function ScanStride: Integer;
     function ProbeScan: Boolean;
     procedure RecoverTcp;
@@ -160,6 +169,21 @@ begin
     rdpUpdateTimeMs: Result := Integer(fUpdMs);
     rdpChannelCount: Result := fChCnt;
     rdpDeviceSerial: Result := GetDeviceSerial;
+    rdpMic140RangeIndex:
+      if (AIndex >= 0) and (AIndex < Length(fRangeIndexes)) then
+        Result := fRangeIndexes[AIndex]
+      else
+        Result := Null;
+    rdpMic140CommutIndex:
+      if (AIndex >= 0) and (AIndex < Length(fCommutIndexes)) then
+        Result := fCommutIndexes[AIndex]
+      else
+        Result := Null;
+    rdpMic140BoardCommutIndex:
+      if (AIndex >= 0) and (AIndex < Length(fBoardCommutIndexes)) then
+        Result := fBoardCommutIndexes[AIndex]
+      else
+        Result := Null;
     rdpStateWord: Result := Ord(fState);
     rdpErrorCode: Result := 0;
     rdpErrorText: Result := '';
@@ -213,14 +237,47 @@ begin
           Exit(True);
         end;
       end;
+    rdpMic140RangeIndex:
+      if VarIsNumeric(AValue) and (AIndex >= 0) and
+        (AIndex < Length(fRangeIndexes)) then
+      begin
+        n := AValue;
+        fRangeIndexes[AIndex] := Trunc(n);
+        Exit(True);
+      end;
+    rdpMic140CommutIndex:
+      if VarIsNumeric(AValue) and (AIndex >= 0) and
+        (AIndex < Length(fCommutIndexes)) then
+      begin
+        n := AValue;
+        fCommutIndexes[AIndex] := Trunc(n);
+        Exit(True);
+      end;
+    rdpMic140BoardCommutIndex:
+      if VarIsNumeric(AValue) and (AIndex >= 0) and
+        (AIndex < Length(fBoardCommutIndexes)) then
+      begin
+        n := AValue;
+        fBoardCommutIndexes[AIndex] := Trunc(n);
+        Exit(True);
+      end;
   end;
 end;
 
 procedure TRecorderMic140v2Device.BuildChannels;
 var
   i: Integer;
+  lOldRangeCount: Integer;
+  lOldCommutCount: Integer;
+  lOldBoardCommutCount: Integer;
 begin
+  lOldRangeCount := Length(fRangeIndexes);
+  lOldCommutCount := Length(fCommutIndexes);
+  lOldBoardCommutCount := Length(fBoardCommutIndexes);
   SetLength(fCh, fChCnt);
+  SetLength(fRangeIndexes, fChCnt);
+  SetLength(fCommutIndexes, fChCnt);
+  SetLength(fBoardCommutIndexes, fChCnt);
   for i := 0 to fChCnt - 1 do
   begin
     fCh[i].Name := Mic140v2ChannelTag(fNode, i + 1);
@@ -228,12 +285,81 @@ begin
     fCh[i].ModuleType := 'MIC-140';
     fCh[i].PollFrequencyHz := fFreq;
     fCh[i].Enabled := True;
+    if (i >= lOldRangeCount) or (fRangeIndexes[i] < 0) then
+      fRangeIndexes[i] := CMic140Range100mV;
+    if (i >= lOldCommutCount) or (fCommutIndexes[i] < 0) then
+      fCommutIndexes[i] := CMic140ChannelCommutIn;
+    if (i >= lOldBoardCommutCount) or (fBoardCommutIndexes[i] < 0) then
+      fBoardCommutIndexes[i] := CMic140ChannelCommutIn;
   end;
 end;
 
 function TRecorderMic140v2Device.ScanStride: Integer;
 begin
-  Result := fChCnt;
+  if fScanPayloadStride > 0 then
+    Result := fScanPayloadStride
+  else
+    Result := fChCnt;
+end;
+
+procedure TRecorderMic140v2Device.RefreshAuxFromDm(ASampleCount: Integer);
+var
+  lWords, lChunk: TMic140v2WordBuf;
+  lErr: string;
+  i, j: Integer;
+  lNow: QWord;
+  lUseCache: Boolean;
+begin
+  if (fCli = nil) or (fValAddr = 0) or (fTinSlots <= 0) or (ASampleCount <= 0) then
+    Exit;
+  lNow := GetTickCount64;
+  lUseCache := (fLastTinDmReadTick <> 0) and (lNow - fLastTinDmReadTick < fUpdMs) and
+    (Length(fLastTinDmWords) >= fTinSlots);
+  if not lUseCache then
+  begin
+    SetLength(lWords, fTinSlots);
+    for i := 0 to fTinSlots - 1 do
+    begin
+      if not fCli.ReadDmWords(
+        Word(fValAddr + fChCnt +
+          Mic140v2TInDmWordOffset(i, Mic140v2DevSubRevFromFirmware(fFw))),
+        1, lChunk, lErr) then
+      begin
+        Mic140v2Log(Format('[MIC140v2:%s:%d] TIn DM read[%d]: %s',
+          [fHost, fPort, i + 1, lErr]));
+        if Length(fLastTinDmWords) < fTinSlots then
+          Exit;
+        lUseCache := True;
+        Break;
+      end;
+      if Length(lChunk) > 0 then
+        lWords[i] := lChunk[0]
+      else
+        lWords[i] := 0;
+    end;
+    if not lUseCache then
+    begin
+      SetLength(fLastTinDmWords, fTinSlots);
+      for i := 0 to fTinSlots - 1 do
+        fLastTinDmWords[i] := lWords[i];
+      fLastTinDmReadTick := lNow;
+    end;
+  end;
+  fAux.ChannelCount := fTinSlots;
+  fAux.SampleCount := ASampleCount;
+  SetLength(fAux.Values, fTinSlots);
+  SetLength(fAux.Valid, fTinSlots);
+  for i := 0 to fTinSlots - 1 do
+  begin
+    SetLength(fAux.Values[i], ASampleCount);
+    SetLength(fAux.Valid[i], ASampleCount);
+    for j := 0 to ASampleCount - 1 do
+    begin
+      fAux.Valid[i][j] := i < Length(fLastTinDmWords);
+      if fAux.Valid[i][j] then
+        fAux.Values[i][j] := SmallInt(fLastTinDmWords[i]);
+    end;
+  end;
 end;
 
 function TRecorderMic140v2Device.GetDeviceSerial: Integer;
@@ -342,7 +468,8 @@ begin
     Exit;
 
   prog := TMic140v2ScanProgrammer.Create(fCli, fChCnt, fFreq, fUpdMs,
-    Mic140v2DevRevFromFirmware(fFw), Mic140v2DevSubRevFromFirmware(fFw));
+    Mic140v2DevRevFromFirmware(fFw), Mic140v2DevSubRevFromFirmware(fFw),
+    fRangeIndexes, fCommutIndexes, fBoardCommutIndexes);
   try
     if prog.ProgramScan(err) then
     begin
@@ -350,10 +477,14 @@ begin
       tim := prog.LastTiming;
       fExpDataWords := prog.LastFifoReadyWords;
       fExpMsgWords := prog.LastExpectedMessageWords;
+      fScanPayloadStride := prog.LastPayloadStride;
+      fValAddr := prog.LastValAddr;
+      fTinSlots := MIC140TemperatureChannelCount;
       Mic140v2StreamSetExpectedPacket(fStr, fExpDataWords, fExpMsgWords);
       Mic140v2Log(Format(
-        '[MIC140v2:%s:%d] scan programmed ch=%d stride=%d freq=%.3f Hz fifoReady=%d msgWords=%d',
-        [fHost, fPort, fChCnt, ScanStride, fFreq, fExpDataWords, fExpMsgWords]));
+        '[MIC140v2:%s:%d] scan programmed ch=%d fifoStride=%d tin=%d val=0x%.4x freq=%.3f Hz fifoReady=%d msgWords=%d',
+        [fHost, fPort, fChCnt, fScanPayloadStride, fTinSlots, fValAddr, fFreq,
+         fExpDataWords, fExpMsgWords]));
     end
     else
       Mic140v2Log(Format('[MIC140v2:%s:%d] program failed: %s', [fHost, fPort, err]));
@@ -587,6 +718,8 @@ begin
   if lStride <= 0 then
     lStride := ScanStride;
   Result := Mic140v2StreamDecommutate(ARaw, fChCnt, lStride, fFreq, fAux, ABlock);
+  if Result and (fTinSlots > 0) and (lStride <= fChCnt) then
+    RefreshAuxFromDm(ABlock.SampleCount);
 end;
 
 function TRecorderMic140v2Device.ReadBlock(ATimeoutMs: Cardinal;

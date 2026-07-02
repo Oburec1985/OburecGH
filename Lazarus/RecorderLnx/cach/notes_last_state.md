@@ -1,274 +1,280 @@
-# MIC-140 refactor — последнее состояние (2026-06-23)
+# MIC-140 debug stand — последнее состояние (2026-07-01)
+
+## Codex continuation 2026-07-02: MIC140 IRecorderDevice stub
+
+**Prompt:** in `Tests\Mic140ProtocolDebug_Codex\device\MIC140`, create a MIC-140
+module with `IRecorderDevice` support; for now it should be a class skeleton
+with empty programming methods.
+
+**Follow-up:** user intentionally keeps `m_MIC140` on the form as an explicit
+MIC-140 debug handle, but wants it obtained through the standard device
+interface. Added `IRecorderDevice.GetNativeObject: TObject`; the MIC-140 object
+returns `Self`. `FindAndConnect` searches through
+`RecorderDeviceManager.Search('MIC140')`, checks that `GetNativeObject` is
+`TRecorderMic140Device`, stores the object in `m_MIC140`, then explicitly calls
+`m_MIC140.AddRef`. The form destructor calls `m_MIC140.Release`. Removed both
+the extra MIC-specific interface and the extra retaining interface field on the
+form.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; only existing hints/notes.
+
+**Commenting update:** user asked to walk through all classes in the example and
+mark interface-method blocks. Added comments in `TRecorderMic140Device` for the
+`IRecorderDevice` implementation blocks and object-only methods; added comments
+in `TMic140DebugForm`, `TRecorderDeviceManager`, and
+`TMic140DiscoveryThread` showing that their methods are object/LCL/TThread
+methods rather than implemented interface methods.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; only existing hints/notes.
+
+## Codex continuation 2026-07-02: device manager decoupling
+
+**Prompt:** the interface form must not depend on a concrete device
+implementation. Build a universal manager where devices are registered, and the
+form searches through that manager. Keep comments with original Recorder method
+names.
+
+## Codex continuation 2026-07-02: connection/search split
+
+**Prompt:** MIC-140 must not be created already bound to a known IP. Move
+connection parameters into universal search logic; device parameters should be
+read from the device; user/software parameters should be written in a test
+configuration function in MainForm.
+
+**Update:** `uMic140Registration.pas` now has a local discovery layer mirroring
+RecorderLnx `RecorderMic140Discover`: it probes `192.168.14.*` with short
+parallel TCP checks, returns the first found host through
+`TRecorderDeviceSearchResult`, and only then the manager applies `rdpHost` /
+`rdpPort` to `IRecorderDevice`. The known stand `192.168.14.155` is kept as a
+last search candidate when the legacy TCP probe is silent; it is no longer a
+constructor default. The form still uses only `IRecorderDevice` and
+`RecorderDeviceManager`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0. `rg` confirms `uMic140DebugForm.pas` has no
+`uMic140Device`, `CreateMic140Device`, or `TRecorderMic140Device` dependency.
+
+**Buildability fix:** user requested project buildability. The first rebuild
+failed because `uMic140Registration.pas` expected search callback types while
+`uRecorderDeviceManager.pas` still had the older registration shape. Restored
+`TRecorderDeviceSearchResult`, `TRecorderDeviceSearch`, the `Search` field, and
+host/port application in `TRecorderDeviceManager.Search`. A second rebuild
+compiled but could not overwrite `Mic140ProtocolDebug_Codex.exe` because a
+running test process held it; stopped PID `22548` and rebuilt again.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; compiler emitted only hints/notes.
+
+**Annotation update:** user asked to annotate `uMic140Registration.pas` and
+describe each function's logic. Added an ASCII module header explaining the
+registration/search workflow and comments for `RegisterMIC140_48`,
+`Mic140TcpProbe`, `TMic140DiscoveryThread.Create`, `Execute`,
+`DiscoverMIC140OnSubnet14`, `FindMIC140OnSubnet14`, and `FindMIC140_48`.
+Later user asked to make comments Russian. Converted the module/function
+comments in `uMic140Registration.pas` to Russian while keeping code identifiers,
+Recorder method names, and behavior unchanged.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; only hints/notes.
+
+**Done:** `TRecorderMic140Device.Create` no longer sets `192.168.14.155` or port.
+The manager now supports `TRecorderDeviceSearchResult` and a registered search
+function. `RecorderDeviceManager.Search` creates the device and applies found
+`rdpHost/rdpPort` through `IRecorderDevice.TrySetDeviceProperty`. MIC-140
+registration has `FindMIC140OnSubnet14` as the future broadcast/subnet probing
+point. `TRecorderMic140Device.Connect` calls `ReadDeviceParameters`, currently a
+stub for hardware-read parameters. The form has `ConfigureTestDevice`, which
+writes test/user parameters only through `IRecorderDevice`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; no compiler errors or warnings.
+
+**Done:** added `device\uRecorderDeviceManager.pas` with a small
+`TRecorderDeviceManager` registry. MIC-140 registration moved to
+`device\MIC140\uMic140Registration.pas`; it mirrors original names
+`RegisterMIC140_48`, `RegisterDeviceClass`, and `RegisterDevice`. The project
+entry includes the registration unit as bootstrap, while `uMic140DebugForm.pas`
+uses only `uRecorderDeviceInterfaces` and `uRecorderDeviceManager`.
+`FindAndConnect` now calls `RecorderDeviceManager.Search('MIC140')` and then
+works only through `IRecorderDevice`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0. `rg` confirms the form has no dependency on
+`uMic140Device`, `CreateMic140Device`, or `TRecorderMic140Device`.
+
+**Done:** added `device\MIC140\uMic140Device.pas` with
+`TRecorderMic140Device = class(TInterfacedObject, IRecorderDevice)` and factory
+`CreateMic140Device`. The class exposes basic identity/properties/channels,
+state transitions for `Connect/Disconnect/ProgramDevice/Start/Stop`, and a stub
+`ReadBlock` that returns `False`. The form now can create/connect this stub via
+`FindAndConnect`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; no compiler errors or warnings, only hints/notes.
+
+## Codex continuation 2026-07-02: Mic140ProtocolDebug_Codex cleanup
+
+**Prompt:** clean `Tests\Mic140ProtocolDebug_Codex` so only the visual form
+project remains. Remove extra code and leave only `CheckRow(i: Integer)` in the
+form module as the row-green decision point.
+
+**Done:** the folder was reduced to four source files only:
+`Mic140ProtocolDebug_Codex.lpi`, `Mic140ProtocolDebug_Codex.lpr`,
+`uMic140DebugForm.pas`, and `uMic140DebugForm.lfm`. All protocol, CLI, sniffer,
+driver, docs/data, stubs, logs, executable, backup, and build-output artifacts
+were removed from this folder. The project is now a minimal LCL GUI with a grid;
+`TMic140DebugForm.CheckRow(i: Integer): Boolean` decides whether a row is painted
+green.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0 before generated `exe/lib` artifacts were removed
+again to keep the folder clean.
+
+## Codex continuation 2026-07-01: single-project GUI/CLI merge
+
+**Prompt:** make `Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpr`
+work like the original GUI stand, keep green rows for codes matching the
+reference, remove separate CLI projects, embed CLI/proxy modes into the same
+GUI project, and fix the 51-channel Recorder-wire mode (48 AIn + 3 TIn).
+
+**Done:**
+- folder now has one Lazarus project only: `Mic140ProtocolDebug_Codex.lpi/.lpr`;
+  old `Mic140ProtocolDebugCli_Codex.*` and `Mic140Example_Codex.*` were removed;
+- `Mic140ProtocolDebug_Codex.exe` now dispatches GUI, `--auto`, numeric CLI
+  duration mode, and `--proxy` sniffer mode from one executable;
+- GUI config parser accepts the same protocol flags as headless mode;
+- defaults are Recorder-wire: `tin=3`, auto FIFO stride resolves to 51, visible
+  AIn remains 48;
+- stream row recovery now accepts shifted rows only when the full 51-word row is
+  present, so TIn words are not silently truncated;
+- GUI table still marks reference-matching rows green through
+  `Mic140AdcTablePrepareCanvas`;
+- capture docs and scripts now point to `Mic140ProtocolDebug_Codex.exe`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0. Headless checks
+`Mic140ProtocolDebug_Codex.exe --auto 1 --no-settle` and
+`Mic140ProtocolDebug_Codex.exe 1` both used the unified executable and logged
+`ch=48 tin=3 fifo=-1`, then stopped at `TCP probe failed` because the device at
+`192.168.14.155:4000` is currently not accepting TCP.
+
+## Codex continuation 2026-07-01: protocol rewritten from live dump
+
+**Prompt:** пользователь попросил на основе снятого дампа переписать протокол
+как в задании и править до рабочего состояния без остановок.
+
+**Confirmed facts from live Recorder dump `20260701_153018`:**
+- stream profile: `PORT=0 size=163`, `msgWords=163`, `dataWords=153`;
+- payload row: `stride=51`, `samples=3`;
+- row layout: 48 AIn words, then TIn slots `48..50`;
+- original Recorder programming keeps `m_ChanDump[2]=channels.Size()=48`.
+
+**Code/doc changes in `Tests\Mic140ProtocolDebug_Codex`:**
+- `--recorder-wire` / `MIC140_DEBUG_RECORDER_PROFILE=1` now mean
+  `fifoStride=51`, `chanDump[2]=48`, `fifoSamples=3`;
+- `VisibleChanDumpCount` no longer returns 51 for env recorder profile;
+- `ADDCHANNELMODULE` argument 3 is now `Length(chanDump)`, matching original
+  `Size=count_chan_bios+SIZE_START_DESC_CHAN_BIOS`; passing only `ptrCnt`
+  produced stream payload with a visible offset/garbage at the row start;
+- CLI/help/config comments corrected from the old wrong `chanDump=51`;
+- acceptance reference loader prefers
+  `Data\mic140_adc_reference_recorder_wire_live_20260701_153018.txt`;
+- protocol and capture docs now explicitly describe the `chanDump=48` vs
+  `stride=51` distinction.
+
+**Verification:** all three Codex `.lpi` rebuild with exit code 0. Live CLI
+before the `Length(chanDump)` fix reached the device and showed correct
+programming headline (`slots=51`, `fifoStride=51`, `fifoReady=153`,
+`msgWords=163`, `ptrHead=[48,323,48,...]`), but payload rows were offset and
+second-bank codes saturated. After the fix, live retest was blocked by device
+network state: `192.168.14.155` stopped accepting TCP `4000`; final check also
+timed out ping while Recorder was open. Recorder process started by Codex was
+closed. Next step after hardware reset/link recovery: rerun
+`Mic140ProtocolDebugCli_Codex.exe --auto 20 --recorder-wire --tin-slots 3`.
+
+## Live Recorder capture 2026-07-01 15:30
+
+**Промпт:** пользователь остановил live-захват оригинального Recorder и попросил разобрать дампы и обновить протокол.
+
+**Сделано:**
+- Разобран свежий ETL `Tests\Mic140ProtocolDebug_Codex\Data\captures\netsh_192.168.14.155_20260701_153018.etl`.
+- Parser: `Tools\parse_mdp_from_etl.py`.
+- Найден рабочий Recorder wire profile просмотра: `total_valid_mdp=142`, `PORT=0=133`, `PORT=1=9`, `PORT=0 size=163 count=133`, `msgWords=163`, `dataWords=153`, `stride=51`, `samples=3`, TIn в слотах `48..50`.
+- Созданы/обновлены:
+  - `Data\captures\recorder_mdp_reference.txt`;
+  - `Data\captures\recorder_mdp_control_examples.txt`;
+  - `Data\mic140_adc_reference_recorder_wire_live_20260701_153018.txt`.
+- Исправлен parser: теперь реально пишет `recorder_mdp_control_examples.txt`, а не только печатает путь.
+- Обновлены `Docs\mic140_protocol.md`, `Docs\capture_workflow.md`, `Data\captures\README.md`.
+
+**Вывод:** старый Cursor ETL `netsh_192.168.14.155_20260701_135935.etl` — валидный MDP-дамп, но не эталон Recorder-просмотра (`msgWords=106`, `stride=48`, `samples=2`). Для дальнейшей сверки использовать live Recorder dump `20260701_153018` и режим стенда `--recorder-wire --tin-slots 3`.
+
+## Codex-стенд `Tests/Mic140ProtocolDebug_Codex`
+
+**Промпт:** создать в `Tests\Mic140ProtocolDebug_Codex` автономный Lazarus-тест для отладки протокола MIC140, без unit-ов из других папок, с документацией протокола, сниффером, контрольными дампами и понятной точкой входа `DevMng.Search -> Connect -> Setup -> Start -> OnGetBlock -> Stop`.
+
+**Сделано:**
+- Создан автономный набор проектов:
+  - `Mic140Example_Codex.lpi` — минимальный event-based пример API.
+  - `Mic140ProtocolDebugCli_Codex.lpi` — CLI авто-прогон и proxy/sniffer.
+  - `Mic140ProtocolDebug_Codex.lpi` — LCL-интерфейс стенда.
+- Все `.lpi` используют только локальные пути `stubs;Driver;Driver\utils`; production units из `Device/` и соседний `Mic140ProtocolDebug` не подключаются.
+- В `Docs` добавлены:
+  - `task.md` — сохраненное задание и критерии готовности.
+  - `mic140_protocol.md` — краткое описание MIC-140/MDP, источники, профили, приемка.
+  - `capture_workflow.md` — как запускать proxy/netsh, Recorder и parser.
+- Локальный parser `Tools\parse_mdp_from_etl.py` исправлен: при переданном ETL пишет результат рядом с этим ETL, а не в старый `Mic140ProtocolDebug`.
+- Дамп `Data\captures\netsh_192.168.14.155_20260701_135935.etl` разобран: `total_valid_mdp=200`, `PORT=0=63`, `PORT=1=137`, `PORT=0 size=106`, `stride=48`. Это валидный MDP-дамп MIC-140, но не Recorder wire profile `msgWords=163/stride=51`.
+- Созданы `Data\captures\recorder_mdp_reference.txt`, `Data\mic140_adc_reference_recorder_wire_exported.txt`, `Data\captures\README.md`.
+
+**Проверка:** все три проекта собраны через `C:\lazarus\lazbuild.exe -B`, exit code 0. Финальные сборки без warnings, только hints/notes.
 
 ## Промпт
-Продолжить план: вынести flash/calibration, Mebius types, подключить LegacyScanDriver, разнести константы.
+Продолжить стенд MIC-140 (`Tests/Mic140ProtocolDebug`): приёмка AIn 1–48 ±50, сверка с Recorder, использовать навык RecorderLnx.
 
 ## Сделано
 
-### Новые unit'ы
-- `uRecorderMic140Flash.pas` — mi118tar, tare records, чтение из ПЗУ (~560 строк)
-- `uRecorderMic140Calibration.pas` — CSV, registry, download из flash (~760 строк)
-- `uRecorderMic140MebiusTypes.pas` — `TMic140BaseSettings`, `Mic140BuildSettings`
-- `uRecorderMic140LegacyChannelDesc.pas` — ME048/MIC140 descriptor packing
+### Эталоны
+- `Data/mic140_adc_reference.txt` — production scan (fifo=48), stand steady-state 01.07
+- `Data/mic140_adc_reference_recorder_wire.txt` — Recorder MDP wire (stride=51, TIn)
 
-### Монолит
-- `uRecorderMic140DataSource.pas`: **~5210 → ~3693 строк** (−30%)
-- Подключён `TRecorderMic140LegacyScanDriver` через `fProtocolDriver` в read-thread
-- `CjcTemperOffsetC` per-channel (без hardcoded `TEMPER_OFFSET[]`)
-- Константы: `LegacyConstants`, `FlashConstants`, `Thermocouple`, `MebiusConstants`
+### Код стенда
+- При `tin-slots=0` strict-приёмка **только AIn 1–48** (TIn пропускается)
+- `stand-good` и ADC-таблица в логе: M/48 без TIn при tin=0
+- Дефолты: production scan, settle=10s, bank2-delay=1, fifo=48
 
 ### Сборка
-`lazbuild -B RecorderLnx.lpi` — **OK** (exit 0)
+`lazbuild -B Mic140ProtocolDebugCli.lpi` — **OK** (exit 0)
 
-## Следующие шаги
-- Mebius protocol driver stub (`mpkMebius`)
-- Вынести thermocouple transform (`Mic140TransformThermocoupleChannelSample`) в `uRecorderMic140Thermocouple`
-- UI: поле `cjcTemperOffsetC` в диалоге канала
-- Smoke: `Tools/mic140_preview_eval.ps1 -Seconds 3`
+## Live-тесты (192.168.14.155 rev14.1)
 
-## 2026-06-26 MIC140v2 preview acceptance
+| Команда | read | published | stand-good | Примечание |
+|---------|------|-----------|------------|------------|
+| `--auto 25` | 124 | 0 | 24/48 @blk49 | CH01–24 OK; CH25 Δ≈388→109 к концу прогрева |
+| `--auto 40 --settle-sec 20` | 199 | 0 | 24/48 @blk99 | CH25 Δ≈109; CH28+ тысячи кодов |
 
-Prompt: RecorderLnx moved from Cursor branch to mic140v2; fix failing preview stream
-acceptance, compare with original Recorder, keep code/logs clean.
+Поток стабилен (`readGaps=0`, `corrupt=0`, ~5 blk/s).
 
-Done:
-- MIC140v2 keeps the AIn-only scan contract: 48 BIOS slots, 48-word payload row.
-- Added row-level raw validation in `uRecorderMic140v2Diag.pas`.
-- Added `Mic140v2KeepGoodSampleRows` in `uRecorderMic140v2Stream.pas`: valid MDP/BIOС
-  packets can contain one bad ADC row; the driver drops only bad rows, preserves
-  num_buff/read counters, shifts `FirstSampleIndex` to the first kept row, and
-  logs dropped rows.
-- Removed verbose per-packet quality logging; kept compact dropped-row and stream
-  summary diagnostics.
-- Checked original `mtc/Modscn.cpp::CreateBiosCCScanBuf`; FIFO descriptor layout
-  matches Recorder (`head/tail/begin`, `size=2*ready`, `sizeready=ready`).
+## Выводы (D26–D28)
 
-Verification:
-- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
-  OK.
-- `Tools\mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0` passed four times after
-  the fix. Final: `PASS pub=14 read=14 ratio=100% corrupt=0 pubGaps=0 readGaps=0
-  softRestart=0 expected=15 range=13..20 bps=5 readings=ok good=10 ch12=-7554`.
+- **D26:** production `tin=0`, 48 slots — правильный путь; `tin=3` ломает 2-й банк
+- **D27:** wire-эталон (stride 51) ≠ stand fifo=48 — два файла эталона
+- **D28:** CH25–26 ещё прогреваются после 10–20 s; CH28+ — programming/ME048, не только settle
 
-Open observation:
-- On the tested device a single bad ADC row appears periodically inside an otherwise
-  valid packet (`num_buff` examples: 3, 8, 13). Stream order, MDP checksum, BIOS
-  header, publish gaps, and resync counters stay clean. Root cause can be researched
-  later; current driver prevents spikes and keeps diagnostics visible.
+## Открыто
 
-## 2026-06-29 MIC140v2 acceptance complete
+1. PASS AIn 25–48 ±50 к stand-эталону
+2. TIn 1–3: гибрид (48 scan + READMEMDM 114) или wire-профиль
+3. Захват programming PORT=1 через proxy для сравнения с Recorder
+4. Сверка shadow `Driver/` с production `Device/MIC140v2/` после PASS стенда
 
-Prompt: finish MIC-140 protocol work until the previously defined acceptance rules pass;
-keep a hypothesis/error history.
+## Команды
 
-Done:
-- Tightened MIC140v2 row validation for the current stand: the first 12 AIn words
-  must look like Recorder strain data, with a nominal row-head window near
-  `-8200..-6300`.
-- Added shifted-row recovery for valid AIn rows embedded inside a 96-word payload.
-- Added partial tail recovery for valid first-AIn tails of at least 12 words; the
-  recovered row tail is zero-filled so bad/absent channels are not published as ADC
-  spikes.
-- Added a 1 s allowance to headless `--preview-seconds` runs because MIC-140 starts
-  publishing blocks after the UI enters preview state.
-- Created/updated `errors/2026-06-29-mic140v2-acceptance.md` with checked hypotheses.
-
-Verification:
-- Build: `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
-  OK.
-- Stage A final code: three consecutive `Tools\mic140_preview_eval.ps1 -Seconds 3 -SettleSec 0`
-  PASS (`pub=18`, `pub=16`, `pub=19`; all clean counters).
-- Stage B final code: three consecutive `Tools\mic140_preview_eval.ps1 -Seconds 10`
-  PASS (`pub=54` each; all clean counters).
-- Stage C final code: `Tools\mic140_preview_eval.ps1 -Seconds 40` PASS
-  (`pub=201/read=201`, `corrupt=0`, `pubGaps=0`, `readGaps=0`,
-  `softRestart=0`, readings OK).
-
-Observation:
-- One 40 s run before the final PASS hit a read-stall around 136 blocks and recovered
-  through `stall restart`; it was not a hard hang. If this repeats as a stable failure,
-  reboot the MIC-140 before further acceptance runs.
-
-## 2026-06-29 MIC140v2 acceptance reopened: Recorder code profile
-
-Prompt update: the Recorder screenshot with correct ADC codes is a mandatory
-acceptance rule. It is now written as text in
-`Docs/devices/mic140/acceptance_tests.md`; published AIn codes must not glitch.
-
-Done:
-- Added the text Recorder ADC profile:
-  AIn1..24 must stay in `-8200..-6300`; AIn25..48 must stay in
-  `-24000..-13000`; zero, saturation, positive, or out-of-range published
-  values are hard failures.
-- Added runtime published-code checking in `uRecorderMic140DataSource.pas`.
-- Updated `Tools/mic140_preview_eval.ps1` so `corruptPublish > 0` or
-  `MIC-140 code quality violation` fails acceptance.
-- Updated the hypothesis journal:
-  `errors/2026-06-29-mic140v2-acceptance.md`.
-
-Current state:
-- Acceptance is NOT complete under the new code-profile rule.
-- Best strict 48-slot/MUX_IN1 run so far: clean published codes but too few
-  blocks (`pub=2/read=2`, `corruptPublish=0`, `codeBad=0`).
-- Legacy fallback failed (`pub=13/read=13`, corrupt published codes).
-- Complete 60-slot MIC140_48v2 experiment (`48 AIn + 12 TIn`, v2 24-bit
-  packing) is rejected and unsafe on the current device: no published rows,
-  then TCP port `192.168.14.155:4000` stopped answering.
-- Active scan programming was reverted to the safer 48-slot state after that
-  experiment; stride-60 detection remains only for diagnostics.
-
-Current state update:
-- MIC-140 is not currently considered hung. User started RecorderLnx and live
-  preview runs read packets and stop normally, although the data stream is still
-  not accepted.
-- Request/recommend reboot only after a real hang: cannot stop/reprogram, no
-  scan packets after recovery attempts, or the app/device cannot return to a
-  clean stopped state.
-
-Next direction:
-- Continue from the 48-slot strict-profile path.
-- Do not retry legacy fallback, unsafe 60-slot v2 scan, H14 51-stride payload,
-  H27 51-pointers/48-payload, H28 102-step timing, or v2 ME048 combinations
-  without new evidence.
-- Investigate board commutator/config loading for ch33..48; this is the best
-  remaining lead.
-
-## 2026-06-29 MIC-140 buffer layout correction
-
-Prompt update: user pointed out the likely real payload is `48 AIn + 3 TIn = 51`
-words per sample row, with 2 rows at 10 Hz / 200 ms -> `102 WORD`. Re-check
-the original Recorder layout instead of changing stride by guessing.
-
-Confirmed facts:
-- Original Recorder decommutation is row-major: each channel has `offset`, the
-  channel `size` is the total row width, and samples are read as
-  `buff[offset + i * size]`.
-- For the current 48-channel MIC-140 stand, the working target is:
-  row = `AIn1..AIn48,TIn1..TIn3`, `stride=51`;
-  block data at 10 Hz / 200 ms = `2 * 51 = 102 WORD`.
-- Active channel sets change offsets/row width through BIOS descriptors, but
-  multiple samples are still row-major rows, not channel-major buffers.
-
-Done:
-- Added `errors/2026-06-29-mic140-buffer-layout.md` as the active hypothesis
-  journal for this investigation.
-- Added `Device/MIC140v2/uRecorderMic140v2CoreDevice.pas`: a v2 wrapper over
-  `TRecorderMic140DeviceCore` with `UsesRawRing=True`.
-- Changed `Device/MIC140v2/uRecorderMic140v2Factory.pas` to create that core
-  wrapper instead of the AIn-only `TRecorderMic140v2Device`.
-- Updated `Docs/devices/mic140/protocol.md` to remove stale `96 WORD / stride 48`
-  protocol text and document `SIZE=112`, `DATA=102 WORD`, `stride=51`.
-
-Verification:
-- Build OK: `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
-  exit code 0.
-- Live acceptance is not blocked by reboot. The latest checked state reads and
-  stops normally, but still fails the strict code-profile acceptance because too
-  few clean blocks are published.
-
-Latest checks:
-- H26 safe 48-slot carry fallback: `FAIL pub=3/read=3`, clean codes, normal stop.
-- H27 `48+3` as 51 BIOS pointers with 48-word payload: `FAIL pub=2/read=2`,
-  clean codes, normal stop.
-- H28 timing as `(48+3)*2=102` while H27 active: `FAIL pub=2/read=2`, clean
-  codes, normal stop.
-- Active code restored to safe 48-slot/48-payload timing profile; continue from
-  there and keep updating `errors/2026-06-29-mic140-buffer-layout.md`.
-
-## 2026-06-29 MIC-140 latest live state after Antigravity theories
-
-Prompt update: check Antigravity's theories, but the main observed failure is
-that packets are accepted rarely and the block counter barely advances while
-some raw data look plausible. Continue until strict Recorder-code acceptance
-passes; show reboot request only for a real instrument hang.
-
-Current truth:
-- Acceptance is NOT passed. Latest short previews still fail around
-  `pub=4/read=4`, expected about 15 blocks for 3 seconds.
-- Device is NOT currently considered hung: it connects, reads packets, and
-  stops normally. Do not request reboot from bad data alone.
-- Active code is the safe 48-slot profile:
-  `BiosScanSlotCount=48`, `PayloadStride=48`, FIFO ready `96`, FIFO capacity
-  `192`, value area reserves 60 words, ground ME048 is `[2,2]`,
-  AIn1..24 descriptor `$0100`, AIn25..48 descriptor `$0110`.
-- Timing is now closer to original MIC140_48: `(48 AIn + 3 TIn) * 2 = 102`
-  ground phases. This is kept because it stays at the current best clean short
-  run and matches original `GetMaxChanCount()` better than the previous v2
-  `48+12` timing.
-
-Rejected/deferred latest hypotheses:
-- Antigravity dynamic `desc`: real architecture gap, but not the immediate
-  cause because first published rows have correct Recorder-like codes.
-- Antigravity channel hardware settings in `TRecorderDeviceChannel`: real
-  config gap, but not enough evidence that it causes the current packet counter
-  stall on the default stand.
-- Antigravity auto-disable ground at high frequency: not relevant for current
-  10 Hz; original constructor has `flag_chan_ground=1`.
-- H33 exact `48+3` hidden descriptor table with only 48 published pointers:
-  rejected (`pub=2/read=2`, rejected-packet quality much worse).
-- H34 disabled stall restart: rejected (`pub=2/read=2`).
-- H35/H39 max FIFO capacity: informative but insufficient; restored original
-  capacity.
-- H36 doubled channel delay: rejected as a fix.
-- H40 FIFO zero-fill: rejected and removed.
-
-Important observed failure signature:
-- After the first two clean rows, rejected 96-word packets often contain a
-  near-complete AIn1..24 head window but only 4..7 valid AIn25..48 tail values,
-  plus repeated service-looking words such as `32767`, `-32768`, `187xx`,
-  and `-196xx`.
-- This is not a pure TCP/stride issue and not just stale FIFO memory. The next
-  useful direction is scan programming/commutation/FIFO phase around the second
-  bank, while keeping the strict no-glitch Recorder code rule.
-
-Files to read first in the next session:
-- `errors/2026-06-29-mic140-buffer-layout.md`
-- `Docs/devices/mic140/acceptance_tests.md`
-- `Device/MIC140v2/uRecorderMic140v2Scan.pas`
-- `Device/MIC140v2/uRecorderMic140v2Stream.pas`
-
-## 2026-06-29 MIC-140 protocol accepted after H45
-
-Prompt update: continue until MIC-140 protocol works under the strict Recorder
-code-profile acceptance rule; check Antigravity's theories, but the immediate
-failure is rare accepted packets / block counter barely advancing while raw
-packets still arrive.
-
-Root cause found:
-- The live rev14 stand is stable only when the BIOS scan pointer list contains
-  the 48 AIn descriptors directly.
-- The previous `ground,AIn` alternating pointer list produced valid first rows
-  and then corrupted the second bank, so strict row filtering accepted only a
-  few packets.
-- This is why TCP traffic and `num_buff` were alive while the Recorder block
-  counter barely advanced.
-
-Accepted active profile:
-- `BiosScanSlotCount=48`, `PayloadStride=48`.
-- FIFO ready `96` words at 10 Hz / 200 ms, FIFO capacity `192`.
-- Value area reserves 60 words.
-- Ground descriptor remains allocated for compatibility/diagnostics, but is not
-  included in the BIOS scan pointer list.
-- `ADDCHANNELMODULE` receives 48 AIn descriptor pointers, not 96
-  `ground,AIn` pointers.
-- AIn1..24 descriptor `$0100`; AIn25..48 descriptor `$0110`.
-- Timing remains original MIC140_48-style `(48 AIn + 3 TIn) * 2 = 102`
-  phases because it was already the best stable timing and passes acceptance.
-
-Files changed in the accepted fix:
-- `Device/MIC140v2/uRecorderMic140v2Scan.pas`
-- `errors/2026-06-29-mic140-buffer-layout.md`
-
-Verification:
-- Build OK:
-  `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
-- Stage A, three consecutive 3 s runs:
-  `PASS pub=18 read=18`, `PASS pub=16 read=16`, `PASS pub=16 read=16`.
-- Stage B, three consecutive 10 s runs:
-  `PASS pub=54 read=54`, `PASS pub=51 read=51`, `PASS pub=52 read=52`.
-- Stage C, one 40 s run:
-  `PASS pub=201 read=201`.
-- All verification runs had:
-  `corrupt=0`, `corruptPublish=0`, `codeBad=0`, `pubGaps=0`, `readGaps=0`,
-  `softRestart=0`.
-- Device stopped normally throughout. No reboot was required.
+```powershell
+cd D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug
+.\Mic140ProtocolDebugCli.exe --auto 25
+.\Mic140ProtocolDebugCli.exe --auto 40 --settle-sec 20
+.\Mic140ProtocolDebugCli.exe --auto 10 --recorder-wire --tin-slots 3
+```

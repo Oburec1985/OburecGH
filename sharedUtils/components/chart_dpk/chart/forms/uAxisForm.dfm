@@ -1,0 +1,271 @@
+object AxisForm: TAxisForm
+  Left = 0
+  Top = 0
+  Caption = 'AxisForm'
+  ClientHeight = 446
+  ClientWidth = 408
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -14
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 120
+  TextHeight = 17
+  object ActionGB: TGroupBox
+    Left = 0
+    Top = 358
+    Width = 408
+    Height = 88
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alBottom
+    Caption = #1042#1099#1073#1077#1088#1080#1090#1077' '#1076#1077#1081#1089#1090#1074#1080#1077
+    TabOrder = 0
+    DesignSize = (
+      408
+      88)
+    object CancelBtn: TButton
+      Left = 12
+      Top = 31
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1054#1090#1084#1077#1085#1072
+      ModalResult = 2
+      TabOrder = 0
+    end
+    object ApplyBtn: TButton
+      Left = 288
+      Top = 31
+      Width = 98
+      Height = 33
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Anchors = [akTop, akRight]
+      Caption = #1055#1088#1080#1084#1077#1085#1080#1090#1100
+      ModalResult = 1
+      TabOrder = 1
+    end
+  end
+  object CommonGB: TGroupBox
+    Left = 0
+    Top = 0
+    Width = 408
+    Height = 148
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alTop
+    Caption = #1057#1074#1086#1081#1089#1090#1074#1072' '#1086#1073#1098#1077#1082#1090#1072
+    Constraints.MinHeight = 148
+    Constraints.MinWidth = 390
+    TabOrder = 1
+    inline DrawObjFrame1: TDrawObjFrame
+      Left = 2
+      Top = 19
+      Width = 404
+      Height = 127
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Align = alClient
+      TabOrder = 0
+      ExplicitLeft = 3
+      ExplicitTop = 20
+      ExplicitWidth = 402
+      ExplicitHeight = 125
+      inherited ColorLabel: TLabel
+        Left = 4
+        Top = 68
+        Width = 34
+        Height = 18
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Font.Height = -15
+        ExplicitLeft = 4
+        ExplicitTop = 68
+        ExplicitWidth = 34
+        ExplicitHeight = 18
+      end
+      inherited NameLabel: TLabel
+        Left = 4
+        Top = 13
+        Width = 82
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 4
+        ExplicitTop = 13
+        ExplicitWidth = 82
+        ExplicitHeight = 17
+      end
+      inherited TypeLabel: TLabel
+        Left = 171
+        Top = 13
+        Width = 81
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 171
+        ExplicitTop = 13
+        ExplicitWidth = 81
+        ExplicitHeight = 17
+      end
+      inherited TypeImage: TImage
+        Left = 337
+        Top = 38
+        Width = 21
+        Height = 21
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 337
+        ExplicitTop = 38
+        ExplicitWidth = 21
+        ExplicitHeight = 21
+      end
+      inherited ColorBox: TPanel
+        Left = 4
+        Top = 90
+        Width = 84
+        Height = 33
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Color = clWindow
+        ExplicitLeft = 4
+        ExplicitTop = 90
+        ExplicitWidth = 84
+        ExplicitHeight = 33
+      end
+      inherited NameEdit: TEdit
+        Left = 4
+        Top = 38
+        Width = 158
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 4
+        ExplicitTop = 38
+        ExplicitWidth = 158
+      end
+      inherited TypeEdit: TEdit
+        Left = 171
+        Top = 38
+        Width = 159
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 171
+        ExplicitTop = 38
+        ExplicitWidth = 159
+      end
+      inherited VisibleCheckBox: TCheckBox
+        Left = 171
+        Top = 97
+        Width = 92
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        ExplicitLeft = 171
+        ExplicitTop = 97
+        ExplicitWidth = 92
+        ExplicitHeight = 22
+      end
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 0
+    Top = 148
+    Width = 408
+    Height = 210
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alClient
+    Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1086#1089#1080
+    TabOrder = 2
+    object MaxLabel: TLabel
+      Left = 12
+      Top = 124
+      Width = 65
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1052#1072#1082#1089#1080#1084#1091#1084
+    end
+    object MinLabel: TLabel
+      Left = 12
+      Top = 75
+      Width = 60
+      Height = 17
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1052#1080#1085#1080#1084#1091#1084
+    end
+    object MAXFE: TFloatEdit
+      Left = 12
+      Top = 149
+      Width = 158
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      TabOrder = 0
+      Text = '0.0'
+    end
+    object MINFE: TFloatEdit
+      Left = 12
+      Top = 97
+      Width = 158
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      TabOrder = 1
+      Text = '0.0'
+    end
+    object LgCB: TCheckBox
+      Left = 12
+      Top = 46
+      Width = 158
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Caption = #1051#1086#1075#1072#1088#1080#1092#1084#1080#1088#1086#1074#1072#1085#1080#1077
+      TabOrder = 2
+    end
+  end
+end

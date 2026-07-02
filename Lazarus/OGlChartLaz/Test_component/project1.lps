@@ -25,7 +25,7 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="ubaseobjLaz"/>
+        <UnitName Value="uBaseObjLaz"/>
         <EditorIndex Value="-1"/>
         <UsageCount Value="61"/>
       </Unit>
@@ -239,7 +239,7 @@
       </Unit>
       <Unit>
         <Filename Value="..\sharedUnits\uBaseObjLaz.pas"/>
-        <UnitName Value="ubaseobjLaz"/>
+        <UnitName Value="uBaseObjLaz"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="58" Y="525"/>
         <UsageCount Value="23"/>
