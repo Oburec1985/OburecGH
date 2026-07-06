@@ -1,0 +1,202 @@
+object Mic185DebugForm: TMic185DebugForm
+  Left = 180
+  Height = 700
+  Top = 80
+  Width = 1100
+  Caption = 'MIC183/185 Protocol Debug'
+  ClientHeight = 700
+  ClientWidth = 1100
+  LCLVersion = '4.2.0.0'
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  object lblHost: TLabel
+    Left = 16
+    Height = 15
+    Top = 16
+    Width = 35
+    Caption = 'Host:'
+  end
+  object lblPort: TLabel
+    Left = 248
+    Height = 15
+    Top = 16
+    Width = 28
+    Caption = 'Port:'
+  end
+  object lblState: TLabel
+    Left = 360
+    Height = 15
+    Top = 16
+    Width = 120
+    Caption = 'Disconnected'
+    Font.Color = clMaroon
+    ParentFont = False
+  end
+  object lblInfo: TLabel
+    Left = 16
+    Height = 15
+    Top = 42
+    Width = 1068
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'MIC183/185 — 64 tenzo + 5 temp + 1 UTS'
+  end
+  object lblPktStats: TLabel
+    Left = 16
+    Height = 15
+    Top = 62
+    Width = 180
+    Caption = 'Packets: 0  Blocks: 0'
+  end
+  object lblWorkTime: TLabel
+    Left = 210
+    Height = 15
+    Top = 62
+    Width = 400
+    Caption = 'Uptime: —'
+    Font.Color = clGray
+    ParentFont = False
+  end
+  object lblVerify: TLabel
+    Left = 620
+    Height = 15
+    Top = 62
+    Width = 464
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'Recorder ref: —'
+    Font.Color = clGray
+    ParentFont = False
+  end
+  object edtHost: TEdit
+    Left = 56
+    Height = 23
+    Top = 12
+    Width = 180
+    TabOrder = 0
+    Text = '192.168.9.142'
+  end
+  object edtPort: TEdit
+    Left = 288
+    Height = 23
+    Top = 12
+    Width = 56
+    TabOrder = 1
+    Text = '4000'
+  end
+  object btnConnect: TButton
+    Left = 680
+    Height = 28
+    Top = 10
+    Width = 100
+    Caption = 'Connect'
+    TabOrder = 2
+    OnClick = btnConnectClick
+  end
+  object btnProgram: TButton
+    Left = 656
+    Height = 28
+    Top = 10
+    Width = 90
+    Caption = 'Program'
+    Enabled = False
+    Visible = False
+    TabOrder = 3
+    OnClick = btnProgramClick
+  end
+  object btnStart: TButton
+    Left = 788
+    Height = 28
+    Top = 10
+    Width = 90
+    Caption = 'Start'
+    Enabled = False
+    TabOrder = 4
+    OnClick = btnStartClick
+  end
+  object btnStop: TButton
+    Left = 884
+    Height = 28
+    Top = 10
+    Width = 90
+    Caption = 'Stop'
+    Enabled = False
+    TabOrder = 5
+    OnClick = btnStopClick
+  end
+  object btnDisconnect: TButton
+    Left = 980
+    Height = 28
+    Top = 10
+    Width = 100
+    Caption = 'Disconnect'
+    Enabled = False
+    TabOrder = 6
+    OnClick = btnDisconnectClick
+  end
+  object sgChannels: TStringGrid
+    Left = 16
+    Height = 372
+    Top = 84
+    Width = 1068
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ColCount = 9
+    DefaultRowHeight = 20
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 7
+    OnPrepareCanvas = sgChannelsPrepareCanvas
+    ColWidths = (
+      40
+      200
+      36
+      48
+      72
+      72
+      56
+      52
+      88
+    )
+  end
+  object lblLog: TLabel
+    Left = 16
+    Height = 15
+    Top = 468
+    Width = 24
+    Anchors = [akLeft, akBottom]
+    Caption = 'Log:'
+  end
+  object memLog: TMemo
+    Left = 16
+    Height = 200
+    Top = 488
+    Width = 1068
+    Anchors = [akLeft, akRight, akBottom]
+    ReadOnly = True
+    ScrollBars = ssBoth
+    TabOrder = 8
+    WordWrap = False
+  end
+  object tmrAcquire: TTimer
+    Enabled = False
+    Interval = 200
+    OnTimer = tmrAcquireTimer
+    Left = 40
+    Top = 120
+  end
+  object tmrAuto: TTimer
+    Enabled = False
+    Interval = 150
+    OnTimer = tmrAutoTimer
+    Left = 88
+    Top = 120
+  end
+  object tmrLog: TTimer
+    Enabled = False
+    Interval = 150
+    OnTimer = tmrLogTimer
+    Left = 136
+    Top = 120
+  end
+end

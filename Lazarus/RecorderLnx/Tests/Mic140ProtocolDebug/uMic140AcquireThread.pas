@@ -415,15 +415,8 @@ begin
 
   lResult := 'FAIL unknown';
 
-  fStats.StartTick := GetTickCount64;
-
-  if fDurationSec > 0 then
-
-    lEndTick := fStats.StartTick + Cardinal(fDurationSec) * 1000
-
-  else
-
-    lEndTick := 0;
+  fStats.StartTick := 0;
+  lEndTick := 0;
 
 
 
@@ -450,6 +443,12 @@ begin
       Exit;
 
     end;
+
+    fStats.StartTick := GetTickCount64;
+    if fDurationSec > 0 then
+      lEndTick := fStats.StartTick + Cardinal(fDurationSec) * 1000
+    else
+      lEndTick := 0;
 
 
 

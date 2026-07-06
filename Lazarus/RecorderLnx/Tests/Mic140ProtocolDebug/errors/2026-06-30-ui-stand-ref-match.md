@@ -45,6 +45,8 @@
 | D23 | Stand must match Recorder: stride=51, chanDump[2]=51, msgWords=163, 3 samples/packet. | `--recorder-wire` → `fifoStride=51`, `chanDump=51`, `fifoSamples=3`, `msgWords=163`, `ptrHead=[48,323,51,...]`. TIn из FIFO (без DM). | Wire format **matches** Recorder dump. Stream **unstable**: reject rows, stall restarts, ~4 blocks/10 s. | partial |
 | D24 | fifo=51 alone (ready=102) insufficient — Recorder uses ready=153. | Prior `--fifo-stride 51` gave msgWords=112; Recorder always 163. | Confirmed; `--recorder-wire` sets fifoSamples=3. | confirmed |
 | D25 | chanDump[2]=51 required for Recorder wire but hurts stability on rev14.1. | Compared chanDump 48 vs 51 at stride=51. Both unstable vs fifo=48 (~40 blocks/10 s). Default reverted to fifo=48; Recorder profile opt-in via `--recorder-wire`. | fifo=48 stable CH01–24; Recorder wire experimental. | confirmed |
+| D29 | Acquisition duration was counted from thread start, not from live acquisition start. | Ran 3 s auto before/after moving `StartTick` below successful prepare/start. | Before: 11 blocks in a 3 s run. After: 15 blocks, matching 10 Hz / 200 ms = 5 blocks/s. | implemented |
+| D30 | Dense Recorder descriptor layout and stable `fifo=48` layout were mixed. | Compared captured Recorder `WRITE_DM` (`desc0=AIn1`, first ptr=`descAddr`) with stable `fifo=48` live profile. After forcing dense layout everywhere, stream stayed gap-free but AIn phase shifted and strict values failed from CH01. | Split layouts: default acceptance reserves descriptor 0 for ground (`first AIn ptr=descAddr+5`); `--recorder-wire` keeps dense Recorder MDP layout. Built OK; live PASS retest blocked because `192.168.14.155:4000` stopped accepting TCP. | implemented / retest blocked |
 
 ## Actions
 - Created this debug-project-local journal so repeated MIC-140 UI stand investigations are not mixed with the main RecorderLnx driver journal.
@@ -61,3 +63,8 @@
 - D26 (2026-07-01): production scan `tin=0`, 48 BIOS slots, val=60 — стабильный поток (~120 blk/25s). CH01–24 PASS ±50; CH25–48 систематически расходятся с эталоном (не только прогрев). `tin-slots=3` ломает 2-й банк.
 - D27 (2026-07-01): эталон из Recorder ETL (stride=51) **не применим** к production fifo=48 — разнесены в `mic140_adc_reference.txt` (stand) и `mic140_adc_reference_recorder_wire.txt` (wire).
 - D28 (2026-07-01): прогрев 10–20 с недостаточен для CH25–26 (Δ≈100–500 к steady-state); CH28+ расхождения тысячи кодов → programming/ME048, не settle. При `tin=0` TIn не проверяется в strict-приёмке.
+
+## Actions 2026-07-06
+
+- D29 code action: `uMic140AcquireThread.pas` starts the duration timer only after `Mic140DebugPrepareHardware` succeeds, so connection/programming time is not counted as acquisition time.
+- D30 code action: `uRecorderMic140v2Scan.pas` now logs `reserveGroundDesc` and uses different descriptor bases for default `fifo=48` acceptance and explicit `--recorder-wire`. Protocol docs `03/05/07` were updated with this distinction.

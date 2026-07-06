@@ -124,13 +124,13 @@ end;
 
 function Mic140LegacyMinGroundPeriod: Double;
 var
-  lPeriod: Double;
+  lEnv: string;
 begin
-  lPeriod := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod4ChanCode) +
-    Mic140LegacyMinProgrammingPeriod;
-  if lPeriod < CMic140LegacyPeriodAdSec then
-    lPeriod := CMic140LegacyPeriodAdSec;
-  Result := Mic140LegacySportToPeriod(Mic140LegacyPeriodToSport(lPeriod));
+  lEnv := GetEnvironmentVariable('MIC140_DEBUG_GROUND_DELAY');
+  if lEnv <> '' then
+    Result := StrToIntDef(lEnv, 61) / 1000000.0
+  else
+    Result := 61.0e-6;
 end;
 
 function Mic140v2PeriodDecayToSport(APeriodSec: Double): Word;

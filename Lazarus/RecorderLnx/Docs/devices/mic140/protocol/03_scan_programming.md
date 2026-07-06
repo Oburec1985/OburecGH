@@ -51,6 +51,14 @@ graph TD
 | 50 Гц | 1000 |
 | 100 Гц | 500 |
 
+Для этой legacy-сетки строки 10/20/25/50/100 Гц дают ровные частоты
+`10.000000`, `20.000000`, `25.000000`, `50.000000`, `100.000000` Гц при
+`GetFreqClk() = 16 MHz`. В диалоге «Дополнительно» `count_aver` сходится с
+Recorder при `Fs=10.000000 Гц`; отличие даёт не частота канала, а эффективная
+поправка обработчика таймера в `CalcCountAver`.
+Подробная таблица влияния этой поправки на `count_aver` — в
+[08_timing_and_count_aver.md §8.9.1](08_timing_and_count_aver.md#891-почему-на-скриншоте-recorder-получается-327--298).
+
 ## 3.3. FIFO (WRITEDM + SCAN_SET_BUFF)
 
 Дескриптор FIFO — 10 слов: Head/Tail/Begin, размер `2×FifoReadyWords`,
@@ -74,6 +82,21 @@ FifoReadyWords = (DataUpdateMs / 1000) × Fs × PayloadStride
 **Правило ptr (MIC140_48mod):** AIn — `var_addr+n` без `0x8000`; TIn — `0x8000|(var_addr+48+n)`.
 
 CLI: `Mic140ProtocolDebugCli.exe --recorder-wire` или `MIC140_DEBUG_RECORDER_PROFILE=1`.
+
+### Descriptor base nuance (2026-07-06)
+
+There are two descriptor layouts that must not be mixed:
+
+| Profile | Descriptor 0 | First AIn pointer | Purpose |
+|---|---|---|---|
+| acceptance/default `fifo=48` | reserved ground descriptor | `descAddr + 5` | stable live test stream, TIn read from DM |
+| `--recorder-wire` | AIn1 descriptor | `descAddr` | reproduces the Recorder MDP dump layout (`msgWords=163`, `stride=51`) |
+
+The default test profile keeps `reserveGroundDesc=True` even when
+`flag_chan_ground`/ground pointer pairs are disabled. This preserves the stable
+48-word payload alignment observed on the stand. The Recorder-wire profile uses
+the dense descriptor list from the captured Recorder `WRITE_DM`: no leading
+ground descriptor, `ptrHead[3] == descAddr`.
 
 ## 3.4. Завершение
 

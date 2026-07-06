@@ -1,0 +1,888 @@
+Attribute VB_Name = "Module3"
+Option Explicit
+' Скрипт сбора статистики по коммерческим предложениям (ТКП) - Версия 2.0
+' Разработчик: Antigravity. Дата: 25.06.2026.
+' Вставить этот модуль в VBA Editor (Alt+F11 -> Insert -> Module). Запуск: СборСтатистикиТКП
+Private Const xlCalculationManual As Long = -4135 ' Константа Excel для ручного режима пересчета формул
+Private Const xlCalculationAutomatic As Long = -4105 ' Константа Excel для автоматического режима пересчета формул
+Private Const msoAutomationSecurityForceDisable As Long = 3 ' Константа отключения макросов в открываемых книгах
+Private Const DELIMITER As String = "|~|" ' Внутренний разделитель для списка тем ТКП
+Private mErrors As Collection ' Глобальная коллекция для хранения предупреждений и ошибок сбора данных
+Public Sub СборСтатистикиТКП()
+    ' Основная процедура сбора статистики
+    Dim reportBook As Workbook ' Книга отчета (статистики)
+    Dim reportSheet As Worksheet ' Первый лист книги отчета со сводными таблицами
+    Dim fso As Object ' Объект Scripting.FileSystemObject для работы с файловой системой
+    Dim records As Object ' Словарь уникальных ТКП (ключ - нормализованный номер ТКП, значение - словарь полей)
+    Dim groupIndex As Object ' Индексы колонок групп (РСС, АВИА и т.д.) на листе отчета
+    Dim themeIndex As Object ' Индексы строк тем ТКП (Виброконтроль и т.д.) на листе отчета
+    Dim reasonIndex As Object ' Индексы строк причин отказа на листе отчета
+    Dim dateFrom As Date ' Начальная дата анализируемого периода
+    Dim dateTo As Date ' Конечная дата анализируемого периода
+    Dim rootPath As String ' Базовый каталог с файлами статуса ТКП
+    Dim yearStart As Long ' Год, с которого начинается поиск папок (год_начала)
+    Dim mainData() As Variant ' Массив для вывода показателей основной таблицы
+    Dim themeCount() As Double ' Массив количества проработанных ТКП по темам и группам
+    Dim themeSum() As Double ' Массив сумм проработанных ТКП по темам и группам
+    Dim themePaidCount() As Double ' Массив количества оплаченных ТКП по темам и группам
+    Dim themePaidSum() As Double ' Массив сумм оплаченных ТКП по темам и группам
+    Dim reasonCount() As Double ' Массив количества отказов по причинам и группам
+    Dim reasonSum() As Double ' Массив сумм отказов по причинам и группам
+    Dim oldScreenUpdating As Boolean ' Исходное состояние обновления экрана Excel
+    Dim oldDisplayAlerts As Boolean ' Исходное состояние вывода системных сообщений Excel
+    Dim oldCalculation As Long ' Исходный режим пересчета формул Excel
+    Dim oldSecurity As Variant ' Исходные настройки безопасности макросов Excel
+    Dim errorCount As Long ' Количество зафиксированных критических ошибок
+    Dim warningCount As Long ' Количество зафиксированных предупреждений
+    Dim useProcLen As Boolean ' Флаг использования фильтра по длительности проработки
+    Dim useSoglLen As Boolean ' Флаг использования фильтра по длительности согласования
+    Dim procLenLimit As Double ' Порог дней для фильтра проработки
+    Dim soglLenLimit As Double ' Порог дней для фильтра согласования
+    Dim useNotSend As Boolean ' Флаг использования фильтра неотправленных
+    Dim notSendSumLimit As Double ' Порог суммы для неотправленных ТКП
+    On Error GoTo FatalError ' Перехват критических ошибок выполнения макроса
+    Set reportBook = ActiveWorkbook ' Сначала пробуем взять активную книгу
+    If reportBook Is Nothing Then Set reportBook = ThisWorkbook ' Если активной книги нет, берем книгу с кодом
+    Set reportSheet = reportBook.Worksheets(1) ' Извлекаем первый лист для чтения параметров
+    Set mErrors = New Collection ' Инициализируем коллекцию ошибок
+    rootPath = Trim$(CStr(GetReportValue(reportBook, reportSheet, "c_TKPpath"))) ' Читаем путь к каталогу ТКП
+    If Len(rootPath) = 0 Then Err.Raise vbObjectError + 100, , "Не заполнен именованный диапазон c_TKPpath."
+    If Not IsDate(GetReportValue(reportBook, reportSheet, "c_fromDate")) Then Err.Raise vbObjectError + 101, , "Не заполнена или некорректна дата c_fromDate."
+    If Not IsDate(GetReportValue(reportBook, reportSheet, "c_ToDate")) Then Err.Raise vbObjectError + 102, , "Не заполнена или некорректна дата c_ToDate."
+    dateFrom = DateValue(CDate(GetReportValue(reportBook, reportSheet, "c_fromDate"))) ' Дата начала периода сбора
+    dateTo = DateValue(CDate(GetReportValue(reportBook, reportSheet, "c_ToDate"))) ' Дата окончания периода сбора
+    If dateFrom > dateTo Then Err.Raise vbObjectError + 103, , "Дата начала периода позже даты окончания."
+    If Not IsNumeric(GetReportValue(reportBook, reportSheet, "год_начала")) Then Err.Raise vbObjectError + 104, , "Не заполнен год_начала."
+    yearStart = CLng(GetReportValue(reportBook, reportSheet, "год_начала")) ' Считываем год начала поиска
+    useProcLen = False ' Чтение флага фильтра по проработке
+    On Error Resume Next
+    useProcLen = CBool(GetReportValue(reportBook, reportSheet, "c_use_procLen"))
+    On Error GoTo FatalError
+    procLenLimit = 0 ' Чтение лимита проработки из c_procLen или смещением на 2 ячейки вправо от чекбокса
+    If useProcLen Then
+        On Error Resume Next
+        procLenLimit = CDbl(GetReportValue(reportBook, reportSheet, "c_procLen"))
+        If Err.number <> 0 Then
+            Err.Clear
+            procLenLimit = CDbl(GetReportRange(reportBook, reportSheet, "c_use_procLen").Offset(0, 2).value)
+        End If
+        On Error GoTo FatalError
+    End If
+    useSoglLen = False ' Чтение флага фильтра по согласованию
+    On Error Resume Next
+    useSoglLen = CBool(GetReportValue(reportBook, reportSheet, "c_use_soglLen"))
+    On Error GoTo FatalError
+    soglLenLimit = 0 ' Чтение лимита согласования из c_soglLen или смещением на 2 ячейки вправо от чекбокса
+    If useSoglLen Then
+        On Error Resume Next
+        soglLenLimit = CDbl(GetReportValue(reportBook, reportSheet, "c_soglLen"))
+        If Err.number <> 0 Then
+            Err.Clear
+            soglLenLimit = CDbl(GetReportRange(reportBook, reportSheet, "c_use_soglLen").Offset(0, 2).value)
+        End If
+        On Error GoTo FatalError
+    End If
+    Set fso = CreateObject("Scripting.FileSystemObject") ' Создаем FSO для обхода каталогов
+    If Not fso.FolderExists(rootPath) Then Err.Raise vbObjectError + 105, , "Не найден каталог ТКП: " & rootPath
+    Set groupIndex = MakeIndex(GetReportRange(reportBook, reportSheet, "Groups"), "группа") ' Индексируем группы
+    Set themeIndex = MakeIndex(GetReportRange(reportBook, reportSheet, "c_Themes"), "тема") ' Индексируем темы ТКП
+    Set reasonIndex = MakeIndex(GetReportRange(reportBook, reportSheet, "const_prichina"), "причина отказа") ' Индексируем причины
+    ClearLog reportBook ' Очищаем предыдущие записи журнала log
+    ClearErrors reportBook ' Очищаем предыдущие записи листа ошибок log_errors
+    oldScreenUpdating = Application.ScreenUpdating ' Сохраняем исходные настройки среды Excel
+    oldDisplayAlerts = Application.DisplayAlerts
+    oldCalculation = Application.Calculation
+    On Error Resume Next
+    oldSecurity = Application.AutomationSecurity
+    Application.AutomationSecurity = msoAutomationSecurityForceDisable ' Отключаем автозапуск макросов в открываемых книгах ТКП
+    On Error GoTo FatalError
+    Application.ScreenUpdating = False ' Отключаем обновление экрана
+    Application.DisplayAlerts = False ' Отключаем предупреждающие окна (для тихого режима)
+    Application.Calculation = xlCalculationManual ' Переводим Excel в ручной режим расчетов
+    Application.StatusBar = "Поиск файлов статуса ТКП..."
+    Set records = CreateObject("Scripting.Dictionary") ' Инициализируем основной словарь записей ТКП
+    records.CompareMode = 1 ' Текстовое сравнение ключей без учета регистра
+    ScanYearFolders fso.GetFolder(rootPath), yearStart, dateFrom, dateTo, records, useProcLen, procLenLimit, useSoglLen, soglLenLimit, useNotSend, notSendSumLimit
+    ' Выделяем память под массивы результатов
+    ReDim mainData(1 To GetReportRange(reportBook, reportSheet, "c_ReportRows").Rows.Count, 1 To GetReportRange(reportBook, reportSheet, "Groups").Columns.Count)
+    ReDim themeCount(1 To themeIndex.Count, 1 To groupIndex.Count)
+    ReDim themeSum(1 To themeIndex.Count, 1 To groupIndex.Count)
+    ReDim themePaidCount(1 To themeIndex.Count, 1 To groupIndex.Count)
+    ReDim themePaidSum(1 To themeIndex.Count, 1 To groupIndex.Count)
+    ReDim reasonCount(1 To reasonIndex.Count, 1 To groupIndex.Count)
+    ReDim reasonSum(1 To reasonIndex.Count, 1 To groupIndex.Count)
+    CalculateStatistics records, groupIndex, themeIndex, reasonIndex, mainData, themeCount, themeSum, themePaidCount, themePaidSum, reasonCount, reasonSum
+    SortRecords records ' Сортируем записи по дате согласования и номеру ТКП перед выводом в лог
+    WriteLog reportBook, records ' Пишем построчные данные в журнал log
+    WriteReports reportBook, reportSheet, records.Count, mainData, themeCount, themeSum, themePaidCount, themePaidSum, reasonCount, reasonSum ' Заполняем сводные таблицы на листе 1
+    WriteErrors reportBook ' Записываем ошибки и предупреждения на лист log_errors
+    CountMessages errorCount, warningCount ' Считаем общее число ошибок/предупреждений
+    RestoreApplicationState oldScreenUpdating, oldDisplayAlerts, oldCalculation, oldSecurity ' Возвращаем Excel в исходное состояние
+    If Application.UserControl Then ' Показываем MsgBox только при интерактивном запуске пользователем (не через COM-автоматизацию)
+        MsgBox "Анализ завершён." & vbCrLf & "Уникальных ТКП: " & records.Count & vbCrLf & "Ошибок: " & errorCount & vbCrLf & "Предупреждений: " & warningCount, vbInformation, "Статистика ТКП"
+    End If
+    Exit Sub
+FatalError:
+    AddMessage "ERROR", "", "", "Работа остановлена: " & Err.Description ' Заносим фатальную ошибку
+    On Error Resume Next
+    WriteErrors reportBook ' Записываем ошибку на лист
+    RestoreApplicationState oldScreenUpdating, oldDisplayAlerts, oldCalculation, oldSecurity ' Восстанавливаем состояние Excel
+    If Application.UserControl Then ' Показываем MsgBox только при ручном запуске
+        MsgBox "Анализ не завершён: " & Err.Description & vbCrLf & "Подробности: лист log_errors.", vbExclamation, "Статистика ТКП"
+    End If
+End Sub
+Private Sub ScanYearFolders(ByVal rootFolder As Object, ByVal yearStart As Long, ByVal dateFrom As Date, ByVal dateTo As Date, ByVal records As Object, ByVal useProcLen As Boolean, ByVal procLenLimit As Double, ByVal useSoglLen As Boolean, ByVal soglLenLimit As Double, ByVal useNotSend As Boolean, ByVal notSendSumLimit As Double)
+    ' Рекурсивный обход папок с фильтрацией по году начала сбора
+    Dim subFolder As Object
+    Dim folderYear As Long
+    For Each subFolder In rootFolder.SubFolders
+        folderYear = YearFromFolderName(CStr(subFolder.name)) ' Проверяем год в названии папки
+        If folderYear >= yearStart Then
+            Application.StatusBar = "Обработка: " & subFolder.Path
+            ScanFolder subFolder, yearStart, dateFrom, dateTo, records, useProcLen, procLenLimit, useSoglLen, soglLenLimit, useNotSend, notSendSumLimit, 1
+        End If
+    Next subFolder
+End Sub
+Private Sub ScanFolder(ByVal folder As Object, ByVal yearStart As Long, ByVal dateFrom As Date, ByVal dateTo As Date, ByVal records As Object, ByVal useProcLen As Boolean, ByVal procLenLimit As Double, ByVal useSoglLen As Boolean, ByVal soglLenLimit As Double, ByVal useNotSend As Boolean, ByVal notSendSumLimit As Double, ByVal depth As Long)
+    ' Чтение файлов в текущей папке и рекурсивный переход во вложенные подпапки
+    Dim file As Object
+    Dim subFolder As Object
+    Dim record As Object
+    On Error GoTo FolderError
+    
+    ' Сканируем файлы только в корневой папке ТКП (на уровне 2: root -> year -> tkp)
+    If depth = 2 Then
+        For Each file In folder.Files
+            If IsStatusFile(CStr(file.name)) Then ' Если это файл статуса ТКП (*_статус.xlsx/xlsm), обрабатываем его
+                Set record = ReadStatusFile(CStr(file.Path), CDate(file.DateLastModified), dateFrom, dateTo, useProcLen, procLenLimit, useSoglLen, soglLenLimit, useNotSend, notSendSumLimit)
+                If Not record Is Nothing Then AddOrReplaceRecord records, record ' Добавляем или обновляем запись
+            End If
+        Next file
+    End If
+    
+    ' Спускаемся глубже только до папок ТКП (на уровень 2), глубже в подпапки ТКП не идем
+    If depth < 2 Then
+        For Each subFolder In folder.SubFolders ' Рекурсивный спуск во вложенные папки
+            ScanFolder subFolder, yearStart, dateFrom, dateTo, records, useProcLen, procLenLimit, useSoglLen, soglLenLimit, useNotSend, notSendSumLimit, depth + 1
+        Next subFolder
+    End If
+    Exit Sub
+FolderError:
+    AddMessage "ERROR", folder.Path, "", "Не удалось прочитать каталог: " & Err.Description
+    Err.Clear
+End Sub
+Private Function ReadStatusFile(ByVal filePath As String, ByVal modifiedAt As Date, ByVal dateFrom As Date, ByVal dateTo As Date, ByVal useProcLen As Boolean, ByVal procLenLimit As Double, ByVal useSoglLen As Boolean, ByVal soglLenLimit As Double, ByVal useNotSend As Boolean, ByVal notSendSumLimit As Double) As Object
+    ' Чтение данных из одиночного файла статуса ТКП
+    Dim sourceBook As Workbook ' Книга файла статуса
+    Dim sourceSheet As Worksheet ' Первый рабочий лист книги статуса
+    Dim record As Object ' Словарь полей записи ТКП
+    Dim resultDate As Variant ' Извлеченная дата согласования/результата
+    Dim number As String ' Номер ТКП
+    Dim amount As Variant ' Сумма ТКП
+    Dim themeMap As Object ' Карта соответствия кодов тем их названиям
+    Dim reasonMap As Object ' Карта соответствия кодов причин отказов их текстовому названию
+    Dim dateStart As Variant ' Дата поступления ТКП
+    Dim dateProces As Variant ' Дата проработки ТКП
+    Dim wasAlreadyOpen As Boolean ' Флаг, указывающий, была ли книга ТКП уже открыта пользователем
+    Dim statusVal As String ' Статус (результат) ТКП
+    Dim isUnsent As Boolean ' Флаг неотправленного ТКП
+    Dim coordDate As Variant ' Извлеченная дата согласования
+    Dim hasRealCoordDate As Boolean ' Флаг наличия реальной даты согласования
+    wasAlreadyOpen = False
+    Dim openBook As Workbook
+    On Error Resume Next
+    Set openBook = Workbooks(Mid$(filePath, InStrRev(filePath, Chr(92)) + 1)) ' Проверяем, открыта ли уже эта книга в Excel
+    On Error GoTo ReadError
+    If Not openBook Is Nothing Then
+        Set sourceBook = openBook
+        wasAlreadyOpen = True
+    Else
+        Set sourceBook = Workbooks.Open(fileName:=filePath, UpdateLinks:=0, ReadOnly:=False, IgnoreReadOnlyRecommended:=True, WriteResPassword:="dummy", Notify:=False, AddToMru:=False) ' Открываем книгу в режиме чтения-записи
+        wasAlreadyOpen = False
+    End If
+    Set sourceSheet = sourceBook.Worksheets(1) ' Работаем с первым листом файла статуса
+    number = Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("ТКП_Номер"), "C3"))) ' Извлекаем номер ТКП
+    If Len(number) = 0 Then
+        AddMessage "ERROR", filePath, "", "Не указан номер ТКП."
+        GoTo CleanUp
+    End If
+    If InStr(1, LCase$(sourceBook.name), LCase$(number), vbTextCompare) = 0 Then
+        AddMessage "WARNING", filePath, number, "Имя файла не содержит номер ТКП."
+    End If
+    ' Сбор даты согласования/окончания с приоритетом: именованный диапазон c_finish -> ячейка J8 -> Результат_дата -> ячейка E14 -> поиск по метке "Согласова" -> дата модификации файла
+    resultDate = GetSourceValue(sourceBook, sourceSheet, Array("c_finish"), "J8")
+    If Not IsDate(resultDate) Then resultDate = GetSourceValue(sourceBook, sourceSheet, Array("Результат_дата"), "E14")
+    If Not IsDate(resultDate) Then resultDate = FindDateByLabel(sourceSheet, "Согласова")
+    Dim hasRealResultDate As Boolean ' Флаг наличия заполненной даты результата в самом файле ТКП
+    hasRealResultDate = IsDate(resultDate)
+    
+    ' Сбор даты проработки с приоритетом: c_proces -> ячейка J7 -> поиск по метке "Проработано"
+    dateProces = GetSourceValue(sourceBook, sourceSheet, Array("c_proces"), "J7")
+    If Not IsDate(dateProces) Then dateProces = FindDateByLabel(sourceSheet, "Проработано")
+    
+    ' Сбор даты согласования/окончания с приоритетом: c_finish -> ячейка J8 -> поиск по метке "Согласова"
+    coordDate = GetSourceValue(sourceBook, sourceSheet, Array("c_finish"), "J8")
+    If Not IsDate(coordDate) Then coordDate = FindDateByLabel(sourceSheet, "Согласова")
+    hasRealCoordDate = IsDate(coordDate)
+    
+    ' Сбор статуса (результата)
+    statusVal = Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("Результат"), "C14")))
+    
+    ' Проверяем критерий неотправленного ТКП
+    isUnsent = False
+    If useNotSend Then
+        If IsDate(dateProces) And Not hasRealResultDate Then
+            Dim normStatus As String
+            normStatus = Normalize(statusVal)
+            If normStatus = "НЕ ПРОРАБОТАНО" Or normStatus = "НЕПРОРАБОТАНО" Then
+                isUnsent = True
+            End If
+        End If
+    End If
+
+    ' Читаем сумму ТКП
+    amount = GetSourceValue(sourceBook, sourceSheet, Array("Сумма"), "C8")
+    If Not IsNumeric(amount) Then
+        amount = 0
+        AddMessage "WARNING", filePath, number, "Сумма не заполнена; принято значение 0."
+    End If
+
+    ' Фильтрация неотправленных по порогу суммы
+    If isUnsent Then
+        If notSendSumLimit > 0 And CDbl(amount) <= notSendSumLimit Then
+            GoTo CleanUp
+        End If
+    End If
+
+    ' Фильтр по дате периода
+    If isUnsent Then
+        ' Для неотправленных фильтруем по дате проработки
+        If CDate(dateProces) < dateFrom Or CDate(dateProces) >= DateAdd("d", 1, dateTo) Then GoTo CleanUp
+    Else
+        ' Для обычных файлов
+        If Not hasRealResultDate Then
+            AddMessage "WARNING", filePath, number, "Не заполнена дата результата. Использована дата изменения файла: " & modifiedAt
+            resultDate = modifiedAt
+        End If
+        If CDate(resultDate) < dateFrom Or CDate(resultDate) >= DateAdd("d", 1, dateTo) Then GoTo CleanUp
+    End If
+
+    ' Сбор даты старта с приоритетом: c_start -> ячейка J6 -> поиск по метке "Получено"
+    dateStart = GetSourceValue(sourceBook, sourceSheet, Array("c_start"), "J6")
+    If Not IsDate(dateStart) Then dateStart = FindDateByLabel(sourceSheet, "Получено")
+    
+    ' Фильтрация записей по длительности проработки (если включено)
+    If useProcLen Then
+        If Not IsDate(dateStart) Or Not IsDate(dateProces) Then
+            AddMessage "WARNING", filePath, number, "Невозможно рассчитать время проработки: некорректные даты."
+            GoTo CleanUp
+        ElseIf CDbl(DateDiff("d", CDate(dateStart), CDate(dateProces))) <= procLenLimit Then
+            GoTo CleanUp
+        End If
+    End If
+    ' Фильтрация записей по длительности согласования (если включено)
+    If useSoglLen Then
+        If Not IsDate(dateProces) Then
+            AddMessage "WARNING", filePath, number, "Невозможно рассчитать время согласования: некорректная дата проработки."
+            GoTo CleanUp
+        Else
+            Dim currentSoglLen As Double
+            If hasRealCoordDate Then
+                currentSoglLen = CDbl(DateDiff("d", CDate(dateProces), CDate(coordDate)))
+            Else
+                currentSoglLen = CDbl(DateDiff("d", CDate(dateProces), Date))
+            End If
+            If currentSoglLen <= soglLenLimit Then
+                GoTo CleanUp
+            End If
+        End If
+    End If
+    Set themeMap = BuildCodeMap(sourceBook, sourceSheet, "ТемыБуквы", False) ' Карта тем ТКП
+    Set reasonMap = BuildCodeMap(sourceBook, sourceSheet, "Причины", True) ' Карта причин отказов
+    Set record = CreateObject("Scripting.Dictionary") ' Заполняем структуру записи
+    record.CompareMode = 1
+    record.Add "Path", filePath
+    record.Add "FileName", sourceBook.name
+    record.Add "Modified", modifiedAt
+    record.Add "Number", number
+    record.Add "Customer", Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("ТКП_Заказчик"), "D3")))
+    record.Add "Result", Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("Результат"), "C14")))
+    record.Add "Reason", ResolveReason(GetSourceValue(sourceBook, sourceSheet, Array("Причина", "Причина_число"), "C16"), reasonMap)
+    record.Add "Amount", CDbl(amount)
+    Dim rawThemes As String
+    rawThemes = Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("ТКП_Тематика", "ТКП_тематика"), "F3")))
+    Dim systemVal As String
+    systemVal = Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("ТКП_Система", "Система"), "E3")))
+    Dim savedFile As Boolean
+    savedFile = False
+    Dim procDuration As Variant
+    procDuration = 0 ' По умолчанию 0, если невозможно вычислить
+    If IsDate(dateStart) And IsDate(dateProces) Then procDuration = CLng(DateDiff("d", CDate(dateStart), CDate(dateProces)))
+    Dim soglDuration As Variant
+    soglDuration = 0 ' По умолчанию 0, если невозможно вычислить
+    If IsDate(dateProces) Then
+        If hasRealCoordDate Then
+            soglDuration = CLng(DateDiff("d", CDate(dateProces), CDate(coordDate)))
+        Else
+            soglDuration = CLng(DateDiff("d", CDate(dateProces), Date))
+        End If
+    End If
+    record.Add "System", systemVal
+    record.Add "RawThemes", rawThemes
+    record.Add "Themes", ResolveThemes(rawThemes, themeMap, filePath, number)
+    record.Add "ProcDuration", procDuration
+    record.Add "SoglDuration", soglDuration
+    record.Add "IsNew", (Normalize(GetSourceValue(sourceBook, sourceSheet, Array("Новый_заказчик"), "H3")) = "ДА")
+    record.Add "Group", Trim$(CStr(GetSourceValue(sourceBook, sourceSheet, Array("Группа"), "I3")))
+    record.Add "DateReceived", dateStart
+    record.Add "DateProcessed", dateProces
+    record.Add "IsUnsent", isUnsent
+    If isUnsent Then
+        record.Add "DateResult", CDate(dateProces)
+        record.Add "DateCoord", Empty
+    Else
+        record.Add "DateResult", CDate(resultDate)
+        If hasRealCoordDate Then
+            record.Add "DateCoord", CDate(coordDate)
+        Else
+            record.Add "DateCoord", Empty
+        End If
+    End If
+CleanUp:
+    On Error Resume Next
+    If Not sourceBook Is Nothing And Not wasAlreadyOpen Then
+        If Not sourceBook.ReadOnly And savedFile Then
+            sourceBook.Close SaveChanges:=True
+        Else
+            sourceBook.Close SaveChanges:=False
+        End If
+    End If
+    Set ReadStatusFile = record
+    Exit Function
+ReadError:
+    AddMessage "ERROR", filePath, "", "Не удалось прочитать файл: " & Err.Description
+    Resume CleanUp
+End Function
+Private Sub AddOrReplaceRecord(ByVal records As Object, ByVal record As Object)
+    ' Добавление записи ТКП с фильтрацией дубликатов по дате изменения (оставляем самый свежий файл)
+    Dim key As String
+    Dim oldRecord As Object
+    key = Normalize(record("Number"))
+    If records.Exists(key) Then
+        Set oldRecord = records(key)
+        If CDate(record("Modified")) > CDate(oldRecord("Modified")) Then
+            AddMessage "WARNING", oldRecord("Path"), oldRecord("Number"), "Дубликат: выбран более новый файл " & record("FileName")
+            records.Remove key
+            records.Add key, record
+        Else
+            AddMessage "WARNING", record("Path"), record("Number"), "Дубликат: оставлен более новый файл " & oldRecord("FileName")
+        End If
+    Else
+        records.Add key, record
+    End If
+End Sub
+Private Sub CalculateStatistics(ByVal records As Object, ByVal groupIndex As Object, ByVal themeIndex As Object, ByVal reasonIndex As Object, ByRef mainData() As Variant, ByRef themeCount() As Double, ByRef themeSum() As Double, ByRef themePaidCount() As Double, ByRef themePaidSum() As Double, ByRef reasonCount() As Double, ByRef reasonSum() As Double)
+    ' Расчет суммарных и количественных показателей для вывода в отчеты
+    Dim key As Variant
+    Dim record As Object
+    Dim groupNo As Long, themeNo As Long, reasonNo As Long
+    Dim themeName As Variant, isProcessed As Boolean, isPaid As Boolean
+    Dim grpKey As String
+    For Each key In records.keys
+        Set record = records(key)
+        grpKey = Normalize(record("Group"))
+        If Len(grpKey) = 0 Then grpKey = "РСС" ' Не указанная группа по умолчанию РСС
+        If Not groupIndex.Exists(grpKey) Then ' Перенаправление неизвестных групп
+            If groupIndex.Exists("РСС") Then
+                AddMessage "WARNING", record("Path"), record("Number"), "Неизвестная группа '" & record("Group") & "' перенаправлена в РСС."
+                grpKey = "РСС"
+            Else
+                Dim firstGroup As Variant
+                For Each firstGroup In groupIndex.keys
+                    grpKey = firstGroup
+                    Exit For
+                Next firstGroup
+                AddMessage "WARNING", record("Path"), record("Number"), "Неизвестная группа '" & record("Group") & "' перенаправлена в " & grpKey & "."
+            End If
+        End If
+        groupNo = CLng(groupIndex(grpKey))
+        isProcessed = IsProcessedStatus(CStr(record("Result"))) Or CBool(record("IsUnsent"))
+        isPaid = (Normalize(record("Result")) = "ОПЛАЧЕНО") And Not CBool(record("IsUnsent"))
+        If isProcessed Then ' Суммирование основной таблицы
+            mainData(1, groupNo) = CDbl(mainData(1, groupNo)) + 1
+            mainData(2, groupNo) = CDbl(mainData(2, groupNo)) + CDbl(record("Amount")) / 1000000#
+            If isPaid Then
+                mainData(3, groupNo) = CDbl(mainData(3, groupNo)) + 1
+                mainData(4, groupNo) = CDbl(mainData(4, groupNo)) + CDbl(record("Amount")) / 1000000#
+            End If
+            If CBool(record("IsNew")) Then
+                mainData(6, groupNo) = CDbl(mainData(6, groupNo)) + 1
+                If isPaid Then mainData(7, groupNo) = CDbl(mainData(7, groupNo)) + 1
+            End If
+        End If
+        If Len(Normalize(record("Reason"))) > 0 And Normalize(record("Reason")) <> "НЕИЗВЕСТНО" Then
+            mainData(5, groupNo) = CDbl(mainData(5, groupNo)) + 1
+        End If
+        If Len(record("Reason")) > 0 Then ' Суммирование причин отказов
+            If reasonIndex.Exists(Normalize(record("Reason"))) Then
+                reasonNo = CLng(reasonIndex(Normalize(record("Reason"))))
+                reasonCount(reasonNo, groupNo) = reasonCount(reasonNo, groupNo) + 1
+                reasonSum(reasonNo, groupNo) = reasonSum(reasonNo, groupNo) + CDbl(record("Amount")) / 1000000#
+            Else
+                AddMessage "WARNING", record("Path"), record("Number"), "Причина отсутствует в const_prichina: " & record("Reason")
+            End If
+        End If
+        For Each themeName In Split(CStr(record("Themes")), DELIMITER) ' Суммирование по темам
+            If Len(CStr(themeName)) > 0 Then
+                If themeIndex.Exists(Normalize(CStr(themeName))) Then
+                    themeNo = CLng(themeIndex(Normalize(CStr(themeName))))
+                    If isProcessed Then
+                        themeCount(themeNo, groupNo) = themeCount(themeNo, groupNo) + 1
+                        themeSum(themeNo, groupNo) = themeSum(themeNo, groupNo) + CDbl(record("Amount")) / 1000000#
+                    End If
+                    If isPaid Then
+                        themePaidCount(themeNo, groupNo) = themePaidCount(themeNo, groupNo) + 1
+                        themePaidSum(themeNo, groupNo) = themePaidSum(themeNo, groupNo) + CDbl(record("Amount")) / 1000000#
+                    End If
+                Else
+                    AddMessage "WARNING", record("Path"), record("Number"), "Тема отсутствует в c_Themes: " & CStr(themeName)
+                End If
+            End If
+        Next themeName
+    Next key
+End Sub
+Private Sub WriteReports(ByVal reportBook As Workbook, ByVal reportSheet As Worksheet, ByVal recordCount As Long, ByRef mainData() As Variant, ByRef themeCount() As Double, ByRef themeSum() As Double, ByRef themePaidCount() As Double, ByRef themePaidSum() As Double, ByRef reasonCount() As Double, ByRef reasonSum() As Double)
+    ' Запись агрегированных массивов в сводные таблицы первого листа
+    Dim target As Range
+    Dim i As Long, j As Long
+    Dim output() As Variant
+    Set target = GetReportRange(reportBook, reportSheet, "отчет_проработано")
+    target.ClearContents
+    target.Resize(UBound(mainData, 1), UBound(mainData, 2)).value = mainData
+    Set target = GetReportRange(reportBook, reportSheet, "отчет_темы")
+    ReDim output(1 To UBound(themeCount, 1), 1 To UBound(themeCount, 2))
+    For i = 1 To UBound(themeCount, 1)
+        For j = 1 To UBound(themeCount, 2)
+            output(i, j) = CStr(CLng(themeCount(i, j))) & "" & FormatMillions(themeSum(i, j)) & vbLf & CStr(CLng(themePaidCount(i, j))) & "" & FormatMillions(themePaidSum(i, j))
+        Next j
+    Next i
+    target.ClearContents
+    target.Resize(UBound(output, 1), UBound(output, 2)).value = output
+    Set target = GetReportRange(reportBook, reportSheet, "отчет_отказы")
+    ReDim output(1 To UBound(reasonCount, 1), 1 To UBound(reasonCount, 2))
+    For i = 1 To UBound(reasonCount, 1)
+        For j = 1 To UBound(reasonCount, 2)
+            output(i, j) = CStr(CLng(reasonCount(i, j))) & "" & FormatMillions(reasonSum(i, j))
+        Next j
+    Next i
+    target.ClearContents
+    target.Resize(UBound(output, 1), UBound(output, 2)).value = output
+    GetReportRange(reportBook, reportSheet, "всего_проанализировано").value = recordCount
+End Sub
+Private Sub ClearLog(ByVal reportBook As Workbook)
+    ' Очистка содержимого журнала log с сохранением шапки и стилей форматирования
+    Dim sheet As Worksheet, lastRow As Long
+    On Error Resume Next
+    Set sheet = reportBook.Worksheets("log")
+    On Error GoTo 0
+    If sheet Is Nothing Then Exit Sub
+    lastRow = sheet.Cells(sheet.Rows.Count, 1).End(xlUp).Row
+    If lastRow >= 2 Then
+        sheet.Range(sheet.Range("A2"), sheet.Cells(lastRow, sheet.Columns.Count)).ClearContents
+        sheet.Hyperlinks.Delete
+    End If
+End Sub
+Private Sub WriteLog(ByVal reportBook As Workbook, ByVal records As Object)
+    ' Заполнение построчных данных журнала log на основе словаря отсортированных записей
+    Dim sheet As Worksheet, key As Variant, record As Object
+    Dim rowNo As Long
+    On Error Resume Next
+    Set sheet = reportBook.Worksheets("log")
+    On Error GoTo 0
+    If sheet Is Nothing Then
+        AddMessage "WARNING", "", "", "Лист log отсутствует; журнал ТКП не заполнен."
+        Exit Sub
+    End If
+    rowNo = 2
+    For Each key In records.keys
+        Set record = records(key)
+        PutByHeader sheet, rowNo, "№", rowNo - 1
+        PutByHeader sheet, rowNo, "ТКП", record("Number")
+        PutByHeader sheet, rowNo, "Наименование", record("System")
+        PutByHeader sheet, rowNo, "результат", record("Result")
+        PutByHeader sheet, rowNo, "причина отказа", record("Reason")
+        PutByHeader sheet, rowNo, "сумма", record("Amount")
+        PutByHeader sheet, rowNo, "тематика", record("RawThemes")
+        PutByHeader sheet, rowNo, "новый заказчик", IIf(record("IsNew"), "Да", "Нет")
+        PutByHeader sheet, rowNo, "группа", record("Group")
+        If CBool(record("IsUnsent")) Then
+            PutByHeader sheet, rowNo, "дата", ""
+        Else
+            PutByHeader sheet, rowNo, "дата", record("DateResult")
+        End If
+        PutByHeader sheet, rowNo, "Получено", record("DateReceived")
+        PutByHeader sheet, rowNo, "Дата - пришло", record("DateReceived")
+        PutByHeader sheet, rowNo, "Проработано", record("DateProcessed")
+        PutByHeader sheet, rowNo, "Дата - проработано", record("DateProcessed")
+        If CBool(record("IsUnsent")) Then
+            PutByHeader sheet, rowNo, "Согласовано", ""
+            PutByHeader sheet, rowNo, "Дата - согласовано", ""
+        Else
+            If IsDate(record("DateCoord")) Then
+                PutByHeader sheet, rowNo, "Согласовано", record("DateCoord")
+                PutByHeader sheet, rowNo, "Дата - согласовано", record("DateCoord")
+            Else
+                PutByHeader sheet, rowNo, "Согласовано", ""
+                PutByHeader sheet, rowNo, "Дата - согласовано", ""
+            End If
+        End If
+        If IsNumeric(record("ProcDuration")) Then
+            PutByHeader sheet, rowNo, "Длительность проработки", record("ProcDuration")
+        Else
+            PutByHeader sheet, rowNo, "Длительность проработки", 0
+        End If
+        If IsNumeric(record("SoglDuration")) Then
+            PutByHeader sheet, rowNo, "Длительность согласования", record("SoglDuration")
+        Else
+            PutByHeader sheet, rowNo, "Длительность согласования", 0
+        End If
+        PutByHeader sheet, rowNo, "Тема", Replace(CStr(record("Themes")), DELIMITER, ", ")
+        PutByHeader sheet, rowNo, "Заказчик", record("Customer")
+        AddLinkByHeader sheet, rowNo, "ТКП", record("Path")
+        rowNo = rowNo + 1
+    Next key
+End Sub
+Private Function BuildCodeMap(ByVal sourceBook As Workbook, ByVal sourceSheet As Worksheet, ByVal rangeName As String, ByVal numericCodes As Boolean) As Object
+    ' Построение словаря кодов тем/причин из файла ТКП (например, ТемыБуквы или Причины)
+    Dim result As Object, sourceRange As Range, rowRange As Range, cell As Range
+    Dim code As String, caption As String, value As String
+    Set result = CreateObject("Scripting.Dictionary")
+    result.CompareMode = 1
+    Set sourceRange = FindNamedRange(sourceBook, sourceSheet, rangeName)
+    If sourceRange Is Nothing Then
+        Set BuildCodeMap = result
+        Exit Function
+    End If
+    For Each rowRange In sourceRange.Rows
+        code = "": caption = ""
+        For Each cell In rowRange.Cells
+            value = Trim$(CStr(cell.Value2))
+            If Len(value) > 0 Then
+                If numericCodes Then
+                    If IsNumeric(value) Then
+                        code = Normalize(value)
+                    ElseIf Len(caption) = 0 Then
+                        caption = value
+                    End If
+                Else
+                    If Len(value) = 1 And Not IsNumeric(value) Then
+                        code = Normalize(value)
+                    ElseIf Len(caption) = 0 Then
+                        caption = value
+                    End If
+                End If
+            End If
+        Next cell
+        If Len(code) > 0 And Len(caption) > 0 Then result(code) = caption
+    Next rowRange
+    Set BuildCodeMap = result
+End Function
+Private Function ResolveThemes(ByVal rawCodes As Variant, ByVal themeMap As Object, ByVal filePath As String, ByVal tkpNumber As String) As String
+    ' Декодирование буквенных кодов тем ТКП на основе справочника ТемыБуквы
+    Dim codes As String, i As Long, code As String
+    Dim seen As Object, output As String
+    Set seen = CreateObject("Scripting.Dictionary")
+    seen.CompareMode = 1
+    codes = CStr(rawCodes)
+    For i = 1 To Len(codes)
+        code = Normalize(Mid$(codes, i, 1))
+        If Len(code) > 0 Then
+            If themeMap.Exists(code) Then
+                If Not seen.Exists(code) Then
+                    If Len(output) > 0 Then output = output & DELIMITER
+                    output = output & CStr(themeMap(code))
+                    seen.Add code, True
+                End If
+            ElseIf code Like "[A-ZА-Я]" Then
+                AddMessage "WARNING", filePath, tkpNumber, "Неизвестный код тематики: " & code
+            End If
+        End If
+    Next i
+    ResolveThemes = output
+End Function
+Private Function ResolveSystemTheme(ByVal rawValue As Variant) As String
+    ' Деление строкового наименования системы по разделителям
+    Dim valStr As String, parts() As String, i As Long
+    Dim outStr As String
+    valStr = Trim$(CStr(rawValue))
+    If Len(valStr) = 0 Then
+        ResolveSystemTheme = ""
+        Exit Function
+    End If
+    valStr = Replace(valStr, ";", ",")
+    valStr = Replace(valStr, "/", ",")
+    parts = Split(valStr, ",")
+    outStr = ""
+    For i = LBound(parts) To UBound(parts)
+        Dim part As String
+        part = Trim$(parts(i))
+        If Len(part) > 0 Then
+            If Len(outStr) > 0 Then outStr = outStr & DELIMITER
+            outStr = outStr & part
+        End If
+    Next i
+    ResolveSystemTheme = outStr
+End Function
+Private Function ResolveReason(ByVal rawValue As Variant, ByVal reasonMap As Object) As String
+    ' Приведение числового или строкового кода причины отказа к текстовому названию
+    Dim value As String
+    value = Trim$(CStr(rawValue))
+    If IsNumeric(value) And reasonMap.Exists(Normalize(value)) Then value = CStr(reasonMap(Normalize(value)))
+    ResolveReason = value
+End Function
+Private Function GetSourceValue(ByVal sourceBook As Workbook, ByVal sourceSheet As Worksheet, ByVal names As Variant, ByVal fallbackAddress As String) As Variant
+    ' Считывание значения ячейки по списку возможных имен или резервной ячейке
+    Dim name As Variant, cell As Range
+    For Each name In names
+        Set cell = FindNamedRange(sourceBook, sourceSheet, CStr(name))
+        If Not cell Is Nothing Then
+            GetSourceValue = cell.Cells(1, 1).value
+            Exit Function
+        End If
+    Next name
+    If Len(fallbackAddress) > 0 Then GetSourceValue = sourceSheet.Range(fallbackAddress).value
+End Function
+Private Function GetReportValue(ByVal reportBook As Workbook, ByVal reportSheet As Worksheet, ByVal name As String) As Variant
+    GetReportValue = GetReportRange(reportBook, reportSheet, name).Cells(1, 1).value
+End Function
+Private Function GetReportRange(ByVal reportBook As Workbook, ByVal reportSheet As Worksheet, ByVal name As String) As Range
+    Set GetReportRange = FindNamedRange(reportBook, reportSheet, name)
+    If GetReportRange Is Nothing Then Err.Raise vbObjectError + 200, , "Не найден именованный диапазон " & name
+End Function
+Private Function FindNamedRange(ByVal book As Workbook, ByVal sheet As Worksheet, ByVal name As String) As Range
+    ' Поиск именованного диапазона на уровне книги или листа
+    On Error Resume Next
+    Set FindNamedRange = book.names(name).RefersToRange
+    If FindNamedRange Is Nothing Then Set FindNamedRange = sheet.Range(name)
+    On Error GoTo 0
+End Function
+Private Function FindDateByLabel(ByVal sheet As Worksheet, ByVal labelText As String) As Variant
+    ' Поиск ячейки с датой справа от текстовой метки на листе ТКП
+    Dim cell As Range
+    On Error Resume Next
+    Set cell = sheet.Cells.Find(What:=labelText, LookIn:=-4163, LookAt:=2, MatchCase:=False) ' -4163 = xlValues, 2 = xlPart
+    If Not cell Is Nothing Then
+        FindDateByLabel = cell.Offset(0, 1).value
+    Else
+        FindDateByLabel = Empty
+    End If
+    On Error GoTo 0
+End Function
+Private Sub SortRecords(ByVal records As Object)
+    ' Пузырьковая сортировка записей словаря по дате согласования, затем по номеру ТКП
+    Dim keys As Variant
+    Dim i As Long, j As Long
+    Dim tempKey As Variant
+    Dim recI As Object, recJ As Object
+    Dim dateI As Date, dateJ As Date
+    Dim numI As String, numJ As String
+    Dim swapNeeded As Boolean
+    keys = records.keys
+    For i = LBound(keys) To UBound(keys) - 1
+        For j = i + 1 To UBound(keys)
+            Set recI = records(keys(i))
+            Set recJ = records(keys(j))
+            dateI = CDate(recI("DateResult"))
+            dateJ = CDate(recJ("DateResult"))
+            swapNeeded = False
+            If dateI > dateJ Then
+                swapNeeded = True
+            ElseIf dateI = dateJ Then
+                numI = CStr(recI("Number"))
+                numJ = CStr(recJ("Number"))
+                If StrComp(numI, numJ, 1) > 0 Then swapNeeded = True ' 1 = vbTextCompare
+            End If
+            If swapNeeded Then
+                tempKey = keys(i)
+                keys(i) = keys(j)
+                keys(j) = tempKey
+            End If
+        Next j
+    Next i
+    Dim sortedDict As Object ' Перестраиваем словарь в порядке сортировки
+    Set sortedDict = CreateObject("Scripting.Dictionary")
+    sortedDict.CompareMode = 1
+    For i = LBound(keys) To UBound(keys)
+        sortedDict.Add keys(i), records(keys(i))
+    Next i
+    records.RemoveAll
+    For Each tempKey In sortedDict.keys
+        records.Add tempKey, sortedDict(tempKey)
+    Next tempKey
+End Sub
+Private Function MakeIndex(ByVal values As Range, ByVal entityName As String) As Object
+    ' Создание словаря индексов строк/колонок для агрегации данных
+    Dim result As Object, cell As Range, key As String, position As Long
+    Set result = CreateObject("Scripting.Dictionary")
+    result.CompareMode = 1
+    position = 0
+    For Each cell In values.Cells
+        position = position + 1
+        key = Normalize(cell.value)
+        If Len(key) = 0 Then key = Normalize(cell.Offset(-1, 0).value) ' Попытка взять надзаголовок
+        If Len(key) > 0 Then
+            If Not result.Exists(key) Then result.Add key, position
+        End If
+    Next cell
+    Set MakeIndex = result
+End Function
+Private Function IsStatusFile(ByVal fileName As String) As Boolean
+    ' Проверка, является ли файл файлом статуса ТКП и не временным
+    Dim lowerName As String
+    lowerName = LCase$(fileName)
+    If Left$(fileName, 1) = "~" Then
+        IsStatusFile = False
+        Exit Function
+    End If
+    IsStatusFile = (Right$(lowerName, 12) = "_статус.xlsm" Or Right$(lowerName, 12) = "_статус.xlsx")
+End Function
+Private Function YearFromFolderName(ByVal folderName As String) As Long
+    ' Извлечение 4-значного года из названия папки (ищем первое вхождение 4 цифр)
+    Dim i As Long
+    Dim charCode As Integer
+    Dim digitCount As Long
+    Dim currentYearStr As String
+    digitCount = 0
+    currentYearStr = ""
+    For i = 1 To Len(folderName)
+        charCode = Asc(Mid$(folderName, i, 1))
+        If charCode >= 48 And charCode <= 57 Then ' Цифра 0-9
+            digitCount = digitCount + 1
+            currentYearStr = currentYearStr & Mid$(folderName, i, 1)
+            If digitCount = 4 Then
+                ' Нашли 4 цифры подряд
+                Dim valYear As Long
+                valYear = CLng(currentYearStr)
+                If valYear >= 1900 And valYear <= 2100 Then
+                    YearFromFolderName = valYear
+                    Exit Function
+                End If
+                ' Если это не год, сдвигаем и продолжаем поиск
+                digitCount = 3
+                currentYearStr = Right$(currentYearStr, 3)
+            End If
+        Else
+            digitCount = 0
+            currentYearStr = ""
+        End If
+    Next i
+    YearFromFolderName = 0
+End Function
+Private Function IsProcessedStatus(ByVal statusText As String) As Boolean
+    ' Проверка статусов, учитываемых как "Проработано"
+    Select Case Normalize(statusText)
+        Case "ОПЛАЧЕНО", "ПРОРАБОТАНО", "ОТПРАВЛЕНО"
+            IsProcessedStatus = True
+    End Select
+End Function
+Private Function Normalize(ByVal value As Variant) As String
+    ' Нормализация строки: очистка пробелов, перевод в верхний регистр и замена латинских 'PCC' на русские 'РСС'
+    Dim valStr As String
+    valStr = UCase$(Trim$(Replace(CStr(value), ChrW$(160), " ")))
+    valStr = Replace(valStr, "P", "Р")
+    valStr = Replace(valStr, "C", "С")
+    Normalize = valStr
+End Function
+Private Function FormatMillions(ByVal value As Double) As String
+    FormatMillions = Format$(value, "0.##")
+End Function
+Private Sub PutByHeader(ByVal sheet As Worksheet, ByVal rowNo As Long, ByVal header As String, ByVal value As Variant)
+    ' Запись значения в ячейку строки по названию заголовка колонки
+    Dim colNo As Long
+    colNo = FindHeaderColumn(sheet, header)
+    If colNo > 0 Then
+        sheet.Cells(rowNo, colNo).value = value
+        ' Если записываем длительность, принудительно устанавливаем числовой формат, чтобы Excel не отображал их как даты
+        If header = "Длительность проработки" Or header = "Длительность согласования" Then
+            sheet.Cells(rowNo, colNo).NumberFormat = "0.00"
+        End If
+    End If
+End Sub
+Private Sub AddLinkByHeader(ByVal sheet As Worksheet, ByVal rowNo As Long, ByVal header As String, ByVal filePath As String)
+    ' Добавление гиперссылки на файл по названию колонки
+    Dim colNo As Long
+    colNo = FindHeaderColumn(sheet, header)
+    If colNo = 0 Then Exit Sub
+    On Error Resume Next
+    sheet.Cells(rowNo, colNo).Hyperlinks.Delete
+    sheet.Hyperlinks.Add Anchor:=sheet.Cells(rowNo, colNo), Address:=filePath
+    On Error GoTo 0
+End Sub
+Private Function FindHeaderColumn(ByVal sheet As Worksheet, ByVal header As String) As Long
+    ' Поиск номера колонки по тексту её первой ячейки
+    Dim lastCol As Long, colNo As Long
+    lastCol = sheet.Cells(1, sheet.Columns.Count).End(xlToLeft).Column
+    For colNo = 1 To lastCol
+        If Normalize(sheet.Cells(1, colNo).value) = Normalize(header) Then
+            FindHeaderColumn = colNo
+            Exit Function
+        End If
+    Next colNo
+End Function
+Private Sub ClearErrors(ByVal reportBook As Workbook)
+    ' Инициализация и очистка листа ошибок log_errors
+    Dim sheet As Worksheet
+    Set sheet = GetErrorSheet(reportBook)
+    sheet.Cells.ClearContents
+    sheet.Range("A1:E1").value = Array("Время", "Уровень", "Файл", "ТКП", "Сообщение")
+End Sub
+Private Sub WriteErrors(ByVal reportBook As Workbook)
+    ' Запись коллекции предупреждений и ошибок на лист log_errors с созданием гиперссылок к файлам
+    Dim sheet As Worksheet, i As Long, item As Variant
+    Set sheet = GetErrorSheet(reportBook)
+    For i = 1 To mErrors.Count
+        item = mErrors(i)
+        sheet.Cells(i + 1, 1).value = item(0)
+        sheet.Cells(i + 1, 2).value = item(1)
+        sheet.Cells(i + 1, 3).value = item(2)
+        sheet.Cells(i + 1, 4).value = item(3)
+        sheet.Cells(i + 1, 5).value = item(4)
+        If Len(item(2)) > 0 Then
+            sheet.Hyperlinks.Add Anchor:=sheet.Cells(i + 1, 3), Address:=item(2)
+        End If
+    Next i
+    sheet.Columns("A:E").AutoFit
+End Sub
+Private Function GetErrorSheet(ByVal reportBook As Workbook) As Worksheet
+    ' Нахождение или создание листа log_errors
+    On Error Resume Next
+    Set GetErrorSheet = reportBook.Worksheets("log_errors")
+    On Error GoTo 0
+    If GetErrorSheet Is Nothing Then
+        Set GetErrorSheet = reportBook.Worksheets.Add(After:=reportBook.Worksheets(reportBook.Worksheets.Count))
+        GetErrorSheet.name = "log_errors"
+    End If
+End Function
+Private Sub AddMessage(ByVal level As String, ByVal filePath As String, ByVal tkpNumber As String, ByVal message As String)
+    ' Добавление информационного сообщения или предупреждения
+    If mErrors Is Nothing Then Set mErrors = New Collection
+    mErrors.Add Array(Now, level, filePath, tkpNumber, message)
+End Sub
+Private Sub CountMessages(ByRef errorCount As Long, ByRef warningCount As Long)
+    ' Подсчет количеств предупреждений и ошибок сбора
+    Dim item As Variant
+    For Each item In mErrors
+        If item(1) = "ERROR" Then errorCount = errorCount + 1
+        If item(1) = "WARNING" Then warningCount = warningCount + 1
+    Next item
+End Sub
+Private Sub RestoreApplicationState(ByVal oldScreenUpdating As Boolean, ByVal oldDisplayAlerts As Boolean, ByVal oldCalculation As Long, ByVal oldSecurity As Variant)
+    ' Восстановление параметров среды Excel к исходному состоянию
+    On Error Resume Next
+    Application.StatusBar = False
+    Application.ScreenUpdating = oldScreenUpdating
+    Application.DisplayAlerts = oldDisplayAlerts
+    Application.Calculation = oldCalculation
+    If Not IsEmpty(oldSecurity) Then Application.AutomationSecurity = oldSecurity
+    On Error GoTo 0
+End Sub

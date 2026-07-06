@@ -5,18 +5,11 @@ unit uMic140DebugForm;
 interface
 
 uses
-  Classes, Forms, Controls, Graphics, Grids, StdCtrls,
-  uMic140Device,
-  uRecorderDeviceInterfaces, uRecorderDeviceManager;
-// тестовый интерфейс для проврки протокола MIC-140
+  Classes, SysUtils, Forms, Controls, Graphics, Grids, StdCtrls, Dialogs,
+  uMic140Device, uRecorderDeviceInterfaces, uRecorderDeviceManager;
 
 type
-
-  { TMic140DebugForm }
-
   TMic140DebugForm = class(TForm)
-    // Объектные методы формы, которые вызывает LCL по событиям компонентов.
-    //  Это не методы IRecorderDevice и не часть логики устройства.
     btnStart3: TButton;
     lblTitle: TLabel;
     sgTags: TStringGrid;
@@ -25,22 +18,12 @@ type
     procedure sgTagsPrepareCanvas(Sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
   protected
-    // ссылка на наш MIC
-    // Объектное поле формы.
-    //  Это явная ссылка на конкретный MIC-140 только для отладочного примера.
+    m_Device: IRecorderDevice;       // держит refcount, иначе объект уничтожается при выходе из FindAndConnect
     m_MIC140: TRecorderMic140Device;
-  protected
-    // Поиск и подключение MIC140
-    // Объектный метод формы.
-    //  Работает через общий RecorderDeviceManager и IRecorderDevice, но сам
-    //  метод не является методом интерфейса устройства.
-    function FindAndConnect:boolean;
+    function FindAndConnect: Boolean;
     procedure ConfigureTestDevice(ADevice: TRecorderMic140Device);
   public
-    // Объектный метод формы: освобождение формы и ее объектных ссылок.
     destructor Destroy; override;
-    // проверка строки в sgTags
-    // Объектный метод формы: решает, красить ли строку sgTags зеленым.
     function CheckRow(i: Integer): Boolean;
   end;
 
@@ -51,49 +34,74 @@ implementation
 
 {$R *.lfm}
 
-function TMic140DebugForm.FindAndConnect:boolean;
+function TMic140DebugForm.FindAndConnect: Boolean;
 var
-   iDev: IRecorderDevice;
-   lDeviceObject: TObject;
+  lObj: TObject;
 begin
-  if m_MIC140 = nil then
+  Result := False;
+  if m_Device = nil then
   begin
-    // Оригинальный Recorder: поиск в register_device_table, затем вызов DevInfo.Creator.
-    iDev:=RecorderDeviceManager.Search('MIC140');
-    if iDev = nil then
-      Exit(False);
-    lDeviceObject := iDev.GetNativeObject;
-    if not (lDeviceObject is TRecorderMic140Device) then
-      Exit(False);
-    m_MIC140 := TRecorderMic140Device(lDeviceObject);
-   //m_MIC140.AddRef;
+    m_Device := RecorderDeviceManager.Search('MIC140');
+    if m_Device = nil then
+    begin
+      ShowMessage('MIC-140 не найден в сети 192.168.14.x');
+      Exit;
+    end;
+    lObj := m_Device.GetNativeObject;
+    if not (lObj is TRecorderMic140Device) then
+    begin
+      m_Device := nil;
+      ShowMessage('Неверный тип устройства MIC140');
+      Exit;
+    end;
+    m_MIC140 := TRecorderMic140Device(lObj);
   end;
-  Result := m_MIC140 <> nil;
-  if not Result then
-    Exit;
 
-  // Жизненный цикл оригинального Recorder: Connect -> ProgramDevice -> Start.
-  m_MIC140.Connect;
+  try
+    m_MIC140.Connect;
+  except
+    on E: ERecorderDeviceError do
+    begin
+      ShowMessage(E.Message);
+      Exit;
+    end;
+  end;
+
   Result := m_MIC140.State = rdsConnected;
   if Result then
-    ConfigureTestDevice(m_MIC140);
+    ConfigureTestDevice(m_MIC140)
+  else
+    ShowMessage('Connect: состояние не Connected');
 end;
 
 destructor TMic140DebugForm.Destroy;
 begin
   m_MIC140 := nil;
-  inherited Destroy;
+  m_Device := nil;
+  inherited;
 end;
 
 procedure TMic140DebugForm.ConfigureTestDevice(ADevice: TRecorderMic140Device);
+var
+  C: TMic140ClockMeasureResult;
+  M: string;
 begin
-  // Оригинальный Recorder:
-  // пользовательские и программные параметры записываются через
-  // GetDeviceProperty / SetDeviceProperty до ProgramDevice.
-  ADevice.TrySetDeviceProperty(rdpPollFrequencyHz, 10.0);
   ADevice.TrySetDeviceProperty(rdpUpdateTimeMs, 200);
   ADevice.TrySetDeviceProperty(rdpChannelCount, 48);
-
+  ADevice.TrySetDeviceProperty(rdpPollFrequencyHz, 10.0);
+  C := ADevice.ClockMeasure;
+  case C.Method of
+    mcmMeasureFreqModule: M := 'CMD_MEASURE_FREQ_MODULE';
+    mcmNominal:           M := 'fallback 16 MHz';
+  else M := 'none';
+  end;
+  lblTitle.Caption := Format(
+    'MIC-140  Fclk=%.3f MHz  Fs(ch)=%.3f Hz  Fs(timer)=%.3f Hz  count_aver=%d  [%s]',
+    [C.ModuleClockHz / 1e6, ADevice.ScanProgram.Timing.FrequencyHz,
+     ADevice.ScanProgram.Mc114.ActualFrequencyHz,
+     ADevice.ScanProgram.Timing.AverageSampleCount, M]);
+  if C.ErrorText <> '' then
+    lblTitle.Caption := lblTitle.Caption + '  err: ' + C.ErrorText;
 end;
 
 function TMic140DebugForm.CheckRow(i: Integer): Boolean;
@@ -104,9 +112,7 @@ end;
 procedure TMic140DebugForm.sgTagsPrepareCanvas(Sender: TObject; aCol,
   aRow: Integer; aState: TGridDrawState);
 begin
-  // функция заглушка - каждая вторая строка в зеленый
-  if CheckRow(aRow) then
-    sgTags.Canvas.Brush.Color := $00E0FFE0;
+  if CheckRow(aRow) then sgTags.Canvas.Brush.Color := $00E0FFE0;
 end;
 
 procedure TMic140DebugForm.btnStart3Click(Sender: TObject);
@@ -116,8 +122,7 @@ end;
 
 procedure TMic140DebugForm.FormCreate(Sender: TObject);
 begin
-  // поиск устройства с тестовыми настройками
-  FindAndConnect;
+  { Подключение только по кнопке Run — не при старте формы. }
 end;
 
 end.

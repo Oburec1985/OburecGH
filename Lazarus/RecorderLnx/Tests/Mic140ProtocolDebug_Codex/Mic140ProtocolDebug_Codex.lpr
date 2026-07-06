@@ -1,6 +1,7 @@
 program Mic140ProtocolDebug_Codex;
 
 {$mode objfpc}{$H+}
+{$APPTYPE CONSOLE}
 
 uses
   {$IFDEF UNIX}

@@ -1,6 +1,7 @@
 # План: доработка RecorderLnx
 
 - [ ] MIC-140 debug stand (`Tests/Mic140ProtocolDebug`): PASS AIn 1–48 ±50 + TIn 1–3
+  - [x] Исправлено падение при connect в GUI: WSAStartup/WSACleanup вынесены в секцию initialization/finalization в uMic140Registration.pas, оптимизирован поиск CDefaultHost
   - [x] `Tests/Mic140ProtocolDebug_Codex`: added `device\MIC140\uMic140Device.pas`
     as a buildable `IRecorderDevice` MIC-140 skeleton with empty programming/read logic
   - [x] `Tests/Mic140ProtocolDebug_Codex`: decoupled form from MIC-140 implementation

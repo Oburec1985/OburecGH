@@ -4,6 +4,275 @@
 
 ---
 
+## 2026-07-06 — MIC183/185 GUI: стабильность после Start (RLM)
+
+**Задача:** Устранить падение/зависание GUI через некоторое время после Start.
+
+**Сделано:**
+- Drain пакетов: короткий timeout (2 ms) после первого чтения; не блокировать по 500 ms × 64.
+- Лог: append в файл вместо Load+Save; лимит memo 400 / буфер 3000 строк.
+- Таймер acquire: `fAcquireBusy`, без ShowMessage/btnStopClick из timer.
+- Режим `--stress` (120 с, ~1000 блоков) для регрессии.
+
+**Документация:** [Tests/mic185/errors/mic185_acquire_stability.md](Tests/mic185/errors/mic185_acquire_stability.md)
+
+---
+
+## 2026-07-06 — MIC183/185: температурные каналы (LM74, 1 Гц)
+
+**Задача:** Разобраться, почему temp не работают в стенде; как в Recorder; есть ли ГХ; задокументировать.
+
+**Сделано:**
+- Документ [Docs/devices/mic185/temperature_channels.md](Docs/devices/mic185/temperature_channels.md): отдельные пакеты `dev_id=2`, 1 Гц, `ConvLM74CodeToC` (×0.0625), **без ГХ**.
+- В стенде: `Mic185ConvLM74CodeToC` + диапазон −50…100 °C; `ReadMeasDataBlock` сливает пачку пакетов (temp не теряется за meas 100 Гц).
+
+**Файлы:** `uMic185MebiusTcpProtocol.pas`, `uMic185Constants.pas`
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: время работы и раскладка шапки
+
+**Задача:** Убрать перекрытие надписей кнопками; показать время работы и сверку `blocks × period ≈ uptime`.
+
+**Сделано:**
+- Статистика (`Packets/Blocks`, `Uptime`, `Recorder ref`) вынесена на отдельную строку под кнопками.
+- Добавлен `lblWorkTime`: `Uptime` и `blocks×period` (period = `tmrAcquire.Interval`, 200 ms).
+- Зелёный/красный цвет при совпадении/расхождении uptime и blocks×period.
+
+**Файлы:** `Tests/mic185/uMic185DebugForm.pas`, `.lfm`
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: fix AV на Start (OnPrepareCanvas)
+
+**Задача:** Устранить Access Violation при нажатии Start (ошибка в `brush.inc`, чтение по адресу $0).
+
+**Сделано:**
+- Исправлена сигнатура `sgChannelsPrepareCanvas`: LCL передаёт 4 параметра, лишний `aCanvas` читался как `nil`.
+- Цвет фона задаётся через `TStringGrid(Sender).Canvas.Brush.Color`.
+
+**Файлы:** `Tests/mic185/uMic185DebugForm.pas`
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: fix Access Violation при Connect
+
+**Задача:** Устранить падение с Access Violation при нажатии Connect в GUI стенда MIC185.
+
+**Сделано:**
+- `OnPrepareCanvas` больше не читает `sgChannels.Cells` (reentrancy LCL) — флаг `fChannelMatch[]`.
+- `InitChannelGrid` / `UpdateChannelGridFromBlock` обёрнуты в `BeginUpdate`/`EndUpdate`.
+- Убрана прямая запись в Memo из `btnConnectClick`; лог только через `tmrLog`.
+- При ошибке Connect — `Disconnect` без `ReleaseDevice` (таймеры не обращаются к уничтоженному объекту).
+- Nil-guards для `fDev` в `ConfigureDevice`, `UpdateChannelGridFromBlock`, `FormDestroy` (отключение `tmrLog`).
+
+**Файлы:** `Tests/mic185/uMic185DebugForm.pas`
+
+---
+
+## 2026-07-06 — MIC183/185: fix blob MSVC alignment, GUI Connect+Program, зелёная подсветка
+
+**Задача:** Совпадение кодов АЦП с Recorder; зелёная подсветка совпадений; убрать кнопку Program (влить в Connect).
+
+**Сделано:**
+- **Критический fix:** `TMic185BaseChanSettings` — явные pad-поля под MSVC `#pragma pack(8)` (`BlockSize` был со смещением 6 вместо 8 → неверное программирование).
+- Connect выполняет Connect + ProgramDevice (Recorder defaults).
+- Кнопка Program скрыта; после Connect доступен сразу Start.
+- Зелёная подсветка строк (Code/Ref/Δ/Match) при `OK`.
+
+**Документация:** [Docs/devices/mic185/protocol.md](Docs/devices/mic185/protocol.md)
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: счётчик пакетов и сверка кодов с Recorder
+
+**Задача:** В GUI вывести счётчик пакетов, сравнение каналов с эталоном Recorder; программирование как в windev-примере.
+
+**Сделано:**
+- Счётчики `Packets` / `Blocks` в шапке формы (`RxDataPacketCount` в TCP-клиенте).
+- Колонки таблицы: Code, Ref, Δ, Match + сводка `Recorder ref: OK/N mismatch`.
+- Проверено на приборе s/n 157: Connect/Program/Start OK, коды АЦП читаются (не нули).
+
+**Документация:** [Tests/mic185/README.md](Tests/mic185/README.md)
+
+---
+
+## 2026-07-06 — MIC183/185: выравнивание с windev mic185_test и сверка кодов АЦП
+
+**Задача:** Скорректировать стенд и документацию по эталону `windev/examples/mebius.daq/tests/mic185_test`; программировать прибор с дефолтами Recorder; проверить коды АЦП.
+
+**Сделано:**
+- Исправлен парсер пакетов: смещение данных 12 байт (`INTERNAL_PACKET_HEADER` MSVC).
+- `Mic185BuildSettings`: `GroupAddition = MOD_ADD_OFF (4)`; единица каналов «m» (коды).
+- Модули `uMic185CodeVerify`, CLI `-verify-codes`, GUI `--verify`.
+- Документация: [windev_mic185_test.md](Docs/devices/mic185/windev_mic185_test.md).
+
+**Документация:** [Docs/devices/mic185/windev_mic185_test.md](Docs/devices/mic185/windev_mic185_test.md)
+
+---
+
+## 2026-07-06 — MIC183/185: документация дефолтов и кодов АЦП
+
+**Задача:** Сохранить в документации настройки по умолчанию, доп. параметры коммутации и эталонные коды АЦП из Recorder.
+
+**Сделано:**
+- Новый [Docs/devices/mic185/defaults.md](Docs/devices/mic185/defaults.md): свойства канала, доп. свойства (коммутация, усреднение 128, 100/150 мкс), формула MaxFreq ≈ 105 Гц.
+- Таблица кодов АЦП модуль 3, каналы 3-1…3-50 (эталон Recorder).
+- Ссылки из `README.md`, `protocol.md`, `Tests/mic185/README.md`.
+
+**Документация:** [Docs/devices/mic185/defaults.md](Docs/devices/mic185/defaults.md)
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: исправлен AV при ручном Connect (лог в Memo)
+
+**Задача:** Устранить падение при нажатии Connect в GUI (Access Violation на `Mic185Log` / `fDevice.Connect`).
+
+**Сделано:**
+- `uMic185DebugLog`: буфер строк + `Mic185LogPumpTo` вместо прямой записи в `Memo.Lines` из обработчиков кнопок.
+- Форма: таймер `tmrLog` (150 ms) переносит новые строки в memo; `btnConnectClick` вызывает `EnsureDevice` явно.
+- Режим `--connect` для автопроверки пути `btnConnectClick` без полного acquire.
+
+**Документация:** [Tests/mic185/README.md](Tests/mic185/README.md)
+
+---
+
+## 2026-07-06 — MIC183/185: рабочий GUI/CLI, исправлен разбор пакетов
+
+**Задача:** Довести стенд MIC185 до рабочего Connect/Start/сбор данных; устранить AV в GUI; автоматический прогон.
+
+**Сделано:**
+- Парсер meas-блоков: `sampl_count` — счётчик, не размер; учёт status ULONG; data `id_from` `0x3E904000`.
+- `TryIoControl` пропускает data-пакеты в очереди (fix Start).
+- Settings blob: `SerialNumber` + `SoftVersion` с прибора; `TimeoutMs` обновляет `IOTimeout` сокета.
+- GUI: `CreateRecorderMic185Device`, отложенный `--auto`, `Mic185LogDetachLines` при автотесте.
+- CLI/GUI auto: 10 блоков × 2 сэмпла × 64 канала — OK на `192.168.9.142:4000` s/n 157.
+- Документация: `Tests/mic185/README.md`, обновлён `protocol.md`.
+
+**Документация:** [Tests/mic185/README.md](Tests/mic185/README.md), [Docs/devices/mic185/protocol.md](Docs/devices/mic185/protocol.md)
+
+---
+
+## 2026-07-06 — MIC183/185 GUI: исправлен AV на Connect
+
+**Задача:** Устранить Access Violation при нажатии Connect в `mic185_acquire_gui`.
+
+**Сделано:**
+- `EnsureDevice` всегда синхронизирует `fDev` с `fDevice` (раньше при `fDevice <> nil` выход без установки `fDev` → AV на `fDev.TrySetDeviceProperty`).
+- Операции Connect/Program/Start/ReadBlock через `IRecorderDevice`; при ошибке Connect — `ReleaseDevice`.
+- Явное подключение `uMic185Registration` в implementation формы.
+
+**Документация:** [Docs/devices/mic185/README.md](Docs/devices/mic185/README.md)
+
+---
+
+## 2026-07-06 — MIC183/185: доработка стенда (сборка, temp/UTS)
+
+**Задача:** Доправить пример MIC185: устранить ошибки сборки CLI/GUI, декоммутировать температуру и СЕВ вместе с тензоканалами.
+
+**Сделано:**
+- `uMic185DebugLog` — без LCL (`TStrings` вместо `TMemo`); CLI подключает юнит в `.lpi`.
+- `ReadMeasDataBlock` в Mebius TCP: пропуск пакетов по `DEV_ID` (0=UTS, 1=meas, 2=temp).
+- `TRecorderMic185Device.ReadBlock` сохраняет последние temp/UTS; GUI обновляет строки 65–70.
+- Исправлен сломанный `TMebeHeader` и конструктор TCP-клиента.
+- Сборка `mic185_acquire_test` и `mic185_acquire_gui` — OK.
+
+**Документация:** [Docs/devices/mic185/README.md](Docs/devices/mic185/README.md)
+
+---
+
+## 2026-07-06 — MIC183/185: GUI-стенд с логом и таблицей каналов
+
+**Задача:** Помимо CLI сделать форму с состоянием подключения, поканальными значениями и логом; приложение не закрывается сразу.
+
+**Сделано:**
+- `mic185_acquire_gui` — форма Connect/Program/Start/Stop, таблица каналов, таймер чтения блоков.
+- `uMic185DebugLog.pas` — лог в `mic185_protocol_debug.log` и на форме.
+- CLI тест пишет в тот же лог-файл.
+- Сборка GUI — OK.
+
+**Документация:** [Docs/devices/mic185/README.md](Docs/devices/mic185/README.md)
+
+---
+
+## 2026-07-06 — MIC185V2: документация и автономный тестовый стенд
+
+**Задача:** Изучить оригинальные исходники MIC183/185, описать архитектуру и протокол; создать тест connect/program/read без зависимостей от каталога MIC-140.
+
+**Сделано:**
+- Документация в `Docs/devices/mic185/`: README, карта исходников, протокол Mebius TCP, архитектура (MIC185V2 vs legacy MIC0185).
+- Автономный стенд `Tests/mic185/`: локальные копии `IRecorderDevice`, Mebius TCP-клиент, `TRecorderMic185Device`, консольный `mic185_acquire_test`.
+- Дефолт прибора из конфигурации: `192.168.9.142:4000`, 20 каналов, Fs=10 Гц.
+- Сборка `mic185_acquire_test.lpi` — OK (`lazbuild -B`).
+
+**Документация:** [Docs/devices/mic185/README.md](Docs/devices/mic185/README.md)
+
+---
+
+## 2026-07-06 — Mic140ProtocolDebug: исправлен Exception в Connect при Run
+
+**Задача:** При нажатии Run в Mic140ProtocolDebug_Codex падало исключение в `Connect`.
+
+**Сделано:**
+- Исправлена утечка `IRecorderDevice`: интерфейс освобождался в конце `FindAndConnect`, а форма держала «голый» `TRecorderMic140Device*` → повторный Run обращался к уничтоженному объекту.
+- Добавлено поле `m_Device: IRecorderDevice` в форме — удерживает refcount на всё время жизни формы.
+- `Connect` обёрнут в `try/except` с `ShowMessage` вместо необработанного исключения.
+- Убран автоматический `FindAndConnect` из `FormCreate` (подключение только по кнопке Run).
+
+---
+
+## 2026-07-03 — MIC-140: частота кварца = номинал 16 МГц (как в оригинальном Recorder)
+
+**Задача:** Определить реальный механизм получения частоты кварца MIC-140 из оригинального Recorder и убрать некорректный подгон 15.8 МГц.
+
+**Сделано:**
+- Исследован оригинальный код Recorder (C++): `MIC140_96_rce/mic140_96mod.cpp` → `FREQ_CLK = 16000000`, `SetSelfClk(SELF_CLK)`, `SetFreqClk(FREQ_CLK)`.
+- Подтверждено: `CCMC031EthernetInterface::MeasureFreqCCFromFreqModule` — пустая заглушка (`return ERROR_NOERROR`), **не модифицирует** `*freq`. Аналогичные заглушки в COM и USB интерфейсах. Функция вообще нигде не вызывается в кодовой базе.
+- Удалена константа `MIC140_48_RECORDER_FREQ_CLK_HZ = 15800000` — значение 15.8 МГц **не существовало** в оригинальном коде.
+- `ResolveDeviceTiming` упрощён: CMD12 (для PCI) → номинал 16 МГц (для Ethernet). Убрана попытка `MeasureClockViaTimerCounter` (MC031 DM не имеет доступных бегущих счётчиков через Ethernet).
+- Удалён метод `MeasureClockViaTimerCounter` и связанные зонды.
+- Enum `TMic140ClockMeasureMethod`: убраны `mcmTimerCounter`/`mcmFallbackNominal` → `mcmNominal`.
+- Тест `mic140_clock_test.lpr` — чистый: CMD_TEST_LOAD + CMD_REPLY + ResolveDeviceTiming + сетка Fs.
+- Результат: `Fclk = 16.0 MHz → Fs = 10.000000 Hz` (Scale=1, Period=640, Div=5000). Сетка точно совпадает с оригиналом.
+
+---
+
+## 2026-07-03 — MIC-140 Codex: persistent TCP + измерение кварца + рефакторинг
+
+**Задача:** Persistent TCP, измерение freq_clk модуля вместо хардкода, рефакторинг MDP-протокола — выделить базовую `SendPacket`/`CallCommandArgs`, убрать дублирующий код.
+
+**Сделано:**
+- `TMic140MdpConnection` — persistent TCP (аналог `hMDP`). Private `SendPacket` + public `CallCommandArgs`/`CallCommand` — базовые методы, `MeasureModuleClockHz`/`ResolveDeviceTiming` — прикладные.
+- Удалены standalone `Mic140MdpCallCommand`/`Mic140MdpCallCommandArgs` (одноразовые connect/close) — нигде не использовались.
+- Удалён `uMic140ClockMeasure.pas` — типы и логика перенесены в `uMic140Device`.
+- Удалена `ProgramScan`-заглушка и неиспользуемые хелперы (`Mic140AppendBytes`, дублирующий `Mic140MdpBuildPacket` в standalone и в классе).
+- Тайминг-функции (`CodeToPeriod`, `PeriodToSport`, `IsrFactor`, etc.) сокращены до компактных inline-функций в `implementation`.
+- Сборка `lazbuild` OK (0 errors).
+
+**Исправление MeasureModuleClockHz — 3 бага:**
+1. `Period = Word(65536) = 0` (Word overflow) → `lPeriod: LongWord`, вычисления в LongWord
+2. Stop-команда слала 5 аргументов вместо 1 → `StopArgs: array[0..0]` (только `$FFFF`)
+3. Отсутствовал fallback-пересчёт Period при measure_count=0 (как в CCIFC.CPP:1573)
+- Добавлены WriteLn-логи на каждый шаг для отладки через консоль
+- Добавлены описания ко всем функциям/методам юнита
+- NB: оригинальный Recorder имел STUB для Ethernet (Mc031) — мы первые, кто делает через TCP
+
+**Верификация CMD_MEASURE_FREQ_MODULE через Ethernet:**
+- Консольный тестер `mic140_clock_test.lpr`: CMD_TEST_LOAD+CMD_REPLY OK, CMD12 возвращает stale-данные от CMD_REPLY (firmware MC031 не обрабатывает CMD=12)
+- Fallback изменён с 16 МГц (номинал кварца) на **15.8 МГц** (`MIC140_48_RECORDER_FREQ_CLK_HZ`) — калиброванное значение из конфигурации оригинального Recorder
+- Результат: `Fclk=15.800 МГц → Fs=9.875 Hz` (при Scale=1, Period=640, Div=5000) — сетка Fs сходится
+
+**Чистка остальных юнитов:**
+- `uRecorderAcquisitionTypes` — удалены неиспользуемые типы `TRecorderTagFrameBlock`, `TRecorderChanDataDesc`, `TRecorderChanDataDescBatch`, `TRecorderScanHandlerEvent` и 8 функций вокруг них (315→57 строк).
+- `uRecorderDeviceInterfaces` — убраны неиспользуемые `AddRef`/`Release`, `GetChannelUnitName`/`GetChannelModuleType`, избыточные комментарии (336→199).
+- `uMic140Registration` — компактные имена, убраны избыточные комментарии, `Mic140TcpProbe`→`TcpProbe` (305→169).
+- `uMic140DebugForm` — убраны лишние комментарии (142→100).
+
+**Файлы:** `Tests/Mic140ProtocolDebug_Codex/device/` — все `.pas` юниты  
+**Документация:** `errors/2026-07-03-mic140-average-count-recorder-match.md`
+
+---
+
 ## 2026-06-23 — MIC-140 КТХС: mV-пайплайн и TIn-калибровка
 
 **Задача:** RecorderLnx ~490 °C vs Recorder ~520 °C.

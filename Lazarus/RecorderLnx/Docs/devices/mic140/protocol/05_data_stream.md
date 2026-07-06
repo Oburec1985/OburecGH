@@ -50,3 +50,18 @@ MessageWords = 10 + SampleCount × PayloadStride
 | 48 | `CMD_READMEMDM=114`, адрес `valAddr+48..50` (ptr с `0x8000` в BIOS) |
 
 Эталон стенда: T1=8306, T2=8496, T3=18624 (±50).
+
+## 5.6. 10 Hz live-test profile (2026-07-06)
+
+For acceptance at `Fs=10 Hz` and `DataUpdateMs=200`, the stable profile is:
+
+- payload stride `48`;
+- FIFO ready `96` data words;
+- MDP message length `106` words;
+- host rate about `5` published blocks/sec;
+- TIn is read separately through `CMD_READMEMDM=114`, not from payload words.
+
+The captured Recorder-wire profile (`stride=51`, `msgWords=163`, three
+51-word rows with TIn in slots 48..50) is kept as a comparison/diagnostic mode.
+On the live stand it can restart or time out after reprogramming, so it is not
+the default acceptance stream until it passes the same no-gap/no-restart rules.

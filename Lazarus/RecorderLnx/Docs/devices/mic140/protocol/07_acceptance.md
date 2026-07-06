@@ -77,4 +77,18 @@ GUI: `Mic140ProtocolDebug.exe` — таблица ADC, строки с совп�
 
 Следующий шаг: чтение TIn из DM + корректная реализация `flag_chan_ground` (чередование ptr) без порчи 2-го банка — см. `MIC140_48mod.cpp` и `SCAN_ORIGIN.md`.
 
+## Текущий вывод 2026-07-06
+
+Для живой приемки 10 Гц используется устойчивый профиль `fifo=48`:
+
+- `Fs=10.000 Hz`, `DataUpdateMs=200`, ожидаемо около `5` блоков/с;
+- `FifoReadyWords=96`, `msgWords=106`;
+- descriptor list резервирует нулевой ground descriptor (`reserveGroundDesc=True`), но не включает ground-pointer пары;
+- TIn читается через `CMD_READMEMDM=114`;
+- `--recorder-wire` остается диагностическим профилем для сверки с MDP-дампом Recorder (`stride=51`, `msgWords=163`), но не считается PASS, если дает read timeout, soft restart или неполное число блоков.
+
+Приемочный PASS по-прежнему требует одновременно: `readGaps=0`,
+`corruptRead=0`, `publishGaps=0`, `corruptPublish=0`, `codeViolations=0`,
+`softRestart=0`, `published/read >= 85%`, и число опубликованных блоков в
+диапазоне для `duration * 5`.
 

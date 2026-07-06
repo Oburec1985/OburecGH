@@ -1,0 +1,13 @@
+=== MIC140 protocol debug log 06.07.2026 13:09:56 ===
+phase: run 5 s, MIC-140: 192.168.14.155:4000
+phase: MIC-140 debug: 192.168.14.155:4000 ch=48 tin=0 fifo=-1 dump=-1 freq=10,0 Hz update=200 ms range=0 bank2-range=-1 user-commut=0 board-commut=0 bank2-board=-1 bank2-delay=1 settle=0s watch=CH29 (~5 blk/s)
+tcp probe 192.168.14.155:4000 => True
+phase: connect
+connected devSerNo=155 ccSerNo=164 ccType=16702 BIOS=1.6 hwCal=164 state=1
+phase: program
+scan programmed
+phase: start
+scan started
+phase: acquire loop timeout=250 ms
+phase: duration elapsed
+phase: stop scan

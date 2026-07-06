@@ -459,11 +459,8 @@ begin
      Mic140v2WordsPreview(desc, 48 * CMic140LegacyDescChanWords, 10),
      Mic140v2WordsPreview(chanDump, 0, 12)]));
 
-  if not AllocHeap(CMic140LegacyDescChanWords, pg, scanChan) then
-  begin
-    AErr := 'scan chan desc alloc failed';
-    Exit;
-  end;
+  scanChan := descAddr;
+  pg := 0;
   if not AllocHeap(Length(chanDump), pg, scanDesc) then
   begin
     AErr := 'chan ptr alloc failed';

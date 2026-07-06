@@ -1,0 +1,528 @@
+2026-07-06 15:23:06.634  CLI test started
+2026-07-06 15:23:31.820  MIC183/185 debug form started
+2026-07-06 15:23:31.820  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:23:41.132  Device instance created
+2026-07-06 15:23:41.133  Connect FAILED: Access violation
+2026-07-06 15:24:27.291  MIC183/185 debug form started
+2026-07-06 15:24:27.291  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:24:32.269  Device instance created
+2026-07-06 15:31:12.803  MIC183/185 debug form started
+2026-07-06 15:31:12.803  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:31:14.319  Connect 192.168.9.142:4000 ...
+2026-07-06 15:33:35.674  CLI test started
+2026-07-06 15:34:28.274  MIC183/185 debug form started
+2026-07-06 15:34:28.274  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:34:30.304  Connect 192.168.9.142:4000 ...
+2026-07-06 15:39:26.613  CLI test started
+2026-07-06 15:40:07.759  CLI test started
+2026-07-06 15:40:08.070  Sniff #1 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.110  Sniff #3 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.130  Sniff #4 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.150  Sniff #5 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.170  Sniff #6 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.190  Sniff #7 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.210  Sniff #8 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.230  Sniff #9 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:08.250  Sniff #10 kind=2 idFrom=3E904000 dataLen=536
+2026-07-06 15:40:44.768  CLI test started
+2026-07-06 15:41:07.007  CLI test started
+2026-07-06 15:41:07.104  Sniff #1 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.124  Sniff #2 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.144  Sniff #3 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.165  Sniff #4 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.185  Sniff #5 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.204  Sniff #6 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.224  Sniff #7 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.244  Sniff #8 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.264  Sniff #9 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:07.284  Sniff #10 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:41:34.296  CLI test started
+2026-07-06 15:41:34.353  meas parse failed len=536 ch=64
+2026-07-06 15:41:34.373  meas parse failed len=536 ch=64
+2026-07-06 15:41:34.393  meas parse failed len=536 ch=64
+2026-07-06 15:42:17.527  CLI test started
+2026-07-06 15:42:17.629  Sniff #1 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 15:42:17.650  meas parse failed len=536 ch=64
+2026-07-06 15:42:17.670  meas parse failed len=536 ch=64
+2026-07-06 15:43:31.206  CLI test started
+2026-07-06 15:43:55.314  MIC183/185 debug form started
+2026-07-06 15:43:55.315  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:43:55.324  AUTO: Connect...
+2026-07-06 15:43:55.325  AUTO error: Access violation
+2026-07-06 15:46:24.615  MIC183/185 debug form started
+2026-07-06 15:46:24.616  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:46:24.781  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 15:46:24.781  AUTO error: Access violation
+2026-07-06 15:48:14.532  MIC183/185 debug form started
+2026-07-06 15:48:14.532  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:48:14.697  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 15:48:14.697  AUTO error: Access violation
+2026-07-06 15:52:24.559  MIC183/185 debug form started
+2026-07-06 15:52:24.560  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:52:24.727  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 15:52:24.727  AUTO error: Access violation
+2026-07-06 15:54:07.025  MIC183/185 debug form started
+2026-07-06 15:54:07.026  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:54:07.186  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 15:54:07.187  AUTO error: Access violation
+2026-07-06 15:55:32.836  MIC183/185 debug form started
+2026-07-06 15:55:32.836  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:55:32.992  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 15:55:32.992  EnsureDevice: begin
+2026-07-06 15:55:32.992  EnsureDevice: created
+2026-07-06 15:55:32.993  EnsureDevice: native ok
+2026-07-06 15:55:32.993  EnsureDevice: done
+2026-07-06 15:55:32.993  AUTO: device ensured
+2026-07-06 15:55:32.994  EnsureDevice: begin
+2026-07-06 15:55:32.994  EnsureDevice: native ok
+2026-07-06 15:55:32.994  EnsureDevice: done
+2026-07-06 15:55:32.995  AUTO: properties set
+2026-07-06 15:55:33.095  AUTO: Program...
+2026-07-06 15:55:33.108  AUTO: Start...
+2026-07-06 15:55:33.129  AUTO block 1: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.149  AUTO block 2: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.169  AUTO block 3: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.189  AUTO block 4: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.208  AUTO block 5: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.228  AUTO block 6: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.248  AUTO block 7: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.268  AUTO block 8: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.288  AUTO block 9: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.309  AUTO block 10: samples=2 ch=64 v1=0,000000
+2026-07-06 15:55:33.309  AUTO: got 10 blocks
+2026-07-06 15:58:44.515  MIC183/185 debug form started
+2026-07-06 15:58:44.516  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 15:58:47.608  Connect 192.168.9.142:4000 ...
+2026-07-06 15:59:59.602  CLI test started
+2026-07-06 16:02:39.580  MIC183/185 debug form started
+2026-07-06 16:02:39.580  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:02:39.749  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 16:02:39.750  AUTO: device ensured
+2026-07-06 16:02:39.750  AUTO: properties set
+2026-07-06 16:02:39.848  AUTO: Program...
+2026-07-06 16:02:39.860  AUTO: Start...
+2026-07-06 16:02:39.882  AUTO block 1: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:39.902  AUTO block 2: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:39.922  AUTO block 3: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:39.941  AUTO block 4: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:39.961  AUTO block 5: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:39.982  AUTO block 6: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:40.002  AUTO block 7: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:40.022  AUTO block 8: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:40.042  AUTO block 9: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:40.062  AUTO block 10: samples=2 ch=64 v1=0,000000
+2026-07-06 16:02:40.062  AUTO: got 10 blocks
+2026-07-06 16:02:45.371  CLI test started
+2026-07-06 16:03:21.588  MIC183/185 debug form started
+2026-07-06 16:03:21.588  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:03:21.747  Connect 192.168.9.142:4000 ...
+2026-07-06 16:03:21.845  Connect OK, state=Connected
+2026-07-06 16:03:21.847  CONNECT-TEST: OK
+2026-07-06 16:03:21.852  Disconnect on form destroy
+2026-07-06 16:05:26.749  MIC183/185 debug form started
+2026-07-06 16:05:26.749  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:05:28.696  Connect 192.168.9.142:4000 ...
+2026-07-06 16:05:28.756  Connect OK, state=Connected
+2026-07-06 16:05:34.599  ProgramDevice ...
+2026-07-06 16:05:34.613  ProgramDevice OK
+2026-07-06 16:05:37.008  Start acquisition ...
+2026-07-06 16:05:37.010  Start OK
+2026-07-06 16:05:37.222  Block 1: samples=2 ch=64 t0=0,000
+2026-07-06 16:05:37.412  Block 2: samples=2 ch=64 t0=0,020
+2026-07-06 16:05:37.617  Block 3: samples=2 ch=64 t0=0,040
+2026-07-06 16:05:42.090  Block 25: samples=2 ch=64 t0=0,480
+2026-07-06 16:05:47.168  Block 50: samples=2 ch=64 t0=0,980
+2026-07-06 16:05:52.277  Block 75: samples=2 ch=64 t0=1,480
+2026-07-06 16:05:57.361  Block 100: samples=2 ch=64 t0=1,980
+2026-07-06 16:05:59.051  Stop OK, blocks=108
+2026-07-06 16:06:17.656  Disconnect on form destroy
+2026-07-06 16:35:08.174  CLI test started
+2026-07-06 16:35:35.041  CLI test started
+2026-07-06 16:37:49.454  CLI test started
+2026-07-06 16:39:20.632  MIC183/185 debug form started
+2026-07-06 16:39:20.633  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:39:22.111  Connect 192.168.9.142:4000 ...
+2026-07-06 16:39:22.180  Connect OK, state=Connected
+2026-07-06 16:39:24.456  ProgramDevice ...
+2026-07-06 16:39:24.468  ProgramDevice OK
+2026-07-06 16:39:26.104  Start acquisition ...
+2026-07-06 16:39:26.106  Start OK
+2026-07-06 16:39:26.309  Block 1: samples=2 ch=64 t0=0,000
+2026-07-06 16:39:26.520  Block 2: samples=2 ch=64 t0=0,020
+2026-07-06 16:39:26.710  Block 3: samples=2 ch=64 t0=0,040
+2026-07-06 16:39:31.200  Block 25: samples=2 ch=64 t0=0,480
+2026-07-06 16:39:36.287  Block 50: samples=2 ch=64 t0=0,980
+2026-07-06 16:39:41.374  Block 75: samples=2 ch=64 t0=1,480
+2026-07-06 16:39:46.471  Block 100: samples=2 ch=64 t0=1,980
+2026-07-06 16:39:51.565  Block 125: samples=2 ch=64 t0=2,480
+2026-07-06 16:39:53.274  Stop OK, blocks=132
+2026-07-06 16:39:53.840  Disconnect on form destroy
+2026-07-06 16:44:59.648  CLI test started
+2026-07-06 16:45:35.119  MIC183/185 debug form started
+2026-07-06 16:45:35.120  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:45:35.360  VERIFY: Program (Recorder defaults)...
+2026-07-06 16:45:35.645  VERIFY: MISMATCH 49:
+ch1 (3-1): got=26070 ref=32767 delta=-6697
+ch2 (3-2): got=-2190 ref=-32768 delta=30578
+ch3 (3-3): got=26083 ref=32767 delta=-6684
+ch4 (3-4): got=-2205 ref=-32768 delta=30563
+ch5 (3-5): got=-827 ref=-32768 delta=31941
+ch6 (3-6): got=-114 ref=-10679 delta=10565
+ch7 (3-7): got=-698 ref=-32768 delta=32070
+ch8 (3-8): got=-201 ref=-21301 delta=21100
+ch9 (3-9): got=-1732 ref=-32768 delta=31036
+ch10 (3-10): got=-2367 ref=-32768 delta=30401
+ch11 (3-11): got=-2451 ref=-32768 delta=30317
+ch12 (3-12): got=-2353 ref=-32768 delta=30415
+ch13 (3-13): got=-698 ref=-32768 delta=32070
+ch14 (3-14): got=-91 ref=-9193 delta=9102
+ch15 (3-15): got=-576 ref=-32768 delta=32192
+ch16 (3-16): got=-234 ref=-23655 delta=23421
+ch17 (3-17): got=-1720 ref=-32768 delta=31048
+ch18 (3-18): got=-2367 ref=-32768 delta=30401
+ch19 (3-19): got=-2062 ref=-32768 delta=30706
+ch20 (3-20): got=-2283 ref=-32768 delta=30485
+ch21 (3-21): got=-480 ref=-32768 delta=32288
+ch22 (3-22): got=-92 ref=-8134 delta=8042
+ch23 (3-23): got=-412 ref=-32768 delta=32356
+ch24 (3-24): got=-73 ref=-6471 delta=6398
+ch25 (3-25): got=-2129 ref=-32768 delta=30639
+ch26 (3-26): got=-2101 ref=-32768 delta=30667
+ch27 (3-27): got=-2205 ref=-32768 delta=30563
+ch28 (3-28): got=-2149 ref=-32768 delta=30619
+ch29 (3-29): got=-602 ref=-32768 delta=32166
+ch30 (3-30): got=-67 ref=-6311 delta=6244
+ch31 (3-31): got=-467 ref=-32768 delta=32301
+ch32 (3-32): got=23 ref=3166 delta=-3143
+ch33 (3-33): got=-1721 ref=-32768 delta=31047
+ch34 (3-34): got=-2393 ref=-32768 delta=30375
+ch35 (3-35): got=-1698 ref=-32768 delta=31070
+ch36 (3-36): got=-2313 ref=-32768 delta=30455
+ch37 (3-37): got=-605 ref=-32768 delta=32163
+ch38 (3-38): got=-80 ref=-5592 delta=5512
+ch39 (3-39): got=-492 ref=-32768 delta=32276
+ch40 (3-40): got=-74 ref=-6083 delta=6009
+ch41 (3-41): got=-1850 ref=-32768 delta=30918
+ch42 (3-42): got=-2159 ref=-32768 delta=30609
+ch43 (3-43): got=-2310 ref=-32768 delta=30458
+ch44 (3-44): got=-2216 ref=-32768 delta=30552
+ch45 (3-45): got=-175 ref=-17967 delta=17792
+ch47 (3-47): got=-529 ref=-32768 delta=32239
+ch48 (3-48): got=-1 ref=1753 delta=-1754
+ch49 (3-49): got=-1809 ref=-32768 delta=30959
+ch50 (3-50): got=-2580 ref=-32768 delta=30188
+
+2026-07-06 16:45:35.647  VERIFY: FAILED
+2026-07-06 16:45:52.017  CLI test started
+2026-07-06 16:45:52.102  Sniff #1 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 16:45:52.122  Sniff #2 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 16:45:52.142  Sniff #3 kind=2 idFrom=3E904000 dataLen=536 devId=1
+2026-07-06 16:49:53.887  MIC183/185 debug form started
+2026-07-06 16:49:53.888  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:49:57.319  Connect 192.168.9.142:4000 ...
+2026-07-06 16:49:57.349  Connect OK, state=Connected
+2026-07-06 16:49:58.911  ProgramDevice ...
+2026-07-06 16:49:58.924  ProgramDevice OK
+2026-07-06 16:49:59.912  Start acquisition ...
+2026-07-06 16:49:59.914  Start OK
+2026-07-06 16:50:00.130  Block 1: samples=2 ch=64 pkts=1 mismatch=49
+2026-07-06 16:50:00.320  Block 2: samples=2 ch=64 pkts=2 mismatch=49
+2026-07-06 16:50:00.524  Block 3: samples=2 ch=64 pkts=3 mismatch=49
+2026-07-06 16:50:05.004  Block 25: samples=2 ch=64 pkts=25 mismatch=49
+2026-07-06 16:50:10.092  Block 50: samples=2 ch=64 pkts=50 mismatch=49
+2026-07-06 16:50:15.185  Block 75: samples=2 ch=64 pkts=76 mismatch=49
+2026-07-06 16:50:20.270  Block 100: samples=2 ch=64 pkts=101 mismatch=49
+2026-07-06 16:50:25.337  Block 125: samples=2 ch=64 pkts=127 mismatch=49
+2026-07-06 16:50:29.356  Stop OK, blocks=144 packets=146
+2026-07-06 16:50:55.160  Disconnect on form destroy
+2026-07-06 16:57:39.758  CLI test started
+2026-07-06 16:57:58.061  CLI test started
+2026-07-06 16:59:04.635  MIC183/185 debug form started
+2026-07-06 16:59:04.636  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 16:59:07.151  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 16:59:07.205  ProgramDevice (Recorder defaults)...
+2026-07-06 16:59:07.218  Connect+Program OK, state=Programmed
+2026-07-06 16:59:08.919  Start acquisition ...
+2026-07-06 16:59:08.921  Start OK
+2026-07-06 16:59:09.117  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:04:39.475  MIC183/185 debug form started
+2026-07-06 17:04:39.476  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:04:39.635  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:04:39.725  ProgramDevice (Recorder defaults)...
+2026-07-06 17:04:39.989  Connect+Program OK, state=Programmed
+2026-07-06 17:04:39.993  CONNECT-TEST: OK
+2026-07-06 17:04:40.002  Disconnect on form destroy
+2026-07-06 17:07:09.889  MIC183/185 debug form started
+2026-07-06 17:07:09.890  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:07:11.247  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:07:11.305  ProgramDevice (Recorder defaults)...
+2026-07-06 17:07:11.318  Connect+Program OK, state=Programmed
+2026-07-06 17:07:11.976  Start acquisition ...
+2026-07-06 17:07:11.979  Start OK
+2026-07-06 17:07:12.185  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:08:53.100  MIC183/185 debug form started
+2026-07-06 17:08:53.101  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:53.265  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:53.332  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:53.596  Connect+Program OK, state=Programmed
+2026-07-06 17:08:53.599  CONNECT-TEST: OK
+2026-07-06 17:08:53.607  Disconnect on form destroy
+2026-07-06 17:08:53.962  MIC183/185 debug form started
+2026-07-06 17:08:53.963  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:54.125  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:54.209  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:54.223  Connect+Program OK, state=Programmed
+2026-07-06 17:08:54.226  CONNECT-TEST: OK
+2026-07-06 17:08:54.234  Disconnect on form destroy
+2026-07-06 17:08:54.567  MIC183/185 debug form started
+2026-07-06 17:08:54.568  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:54.728  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:54.737  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:54.751  Connect+Program OK, state=Programmed
+2026-07-06 17:08:54.754  CONNECT-TEST: OK
+2026-07-06 17:08:54.762  Disconnect on form destroy
+2026-07-06 17:08:55.095  MIC183/185 debug form started
+2026-07-06 17:08:55.096  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:55.271  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:55.366  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:55.379  Connect+Program OK, state=Programmed
+2026-07-06 17:08:55.382  CONNECT-TEST: OK
+2026-07-06 17:08:55.389  Disconnect on form destroy
+2026-07-06 17:08:55.732  MIC183/185 debug form started
+2026-07-06 17:08:55.733  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:55.882  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:55.899  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:55.912  Connect+Program OK, state=Programmed
+2026-07-06 17:08:55.917  CONNECT-TEST: OK
+2026-07-06 17:08:55.926  Disconnect on form destroy
+2026-07-06 17:08:56.262  MIC183/185 debug form started
+2026-07-06 17:08:56.263  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:56.442  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:56.529  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:56.542  Connect+Program OK, state=Programmed
+2026-07-06 17:08:56.546  CONNECT-TEST: OK
+2026-07-06 17:08:56.554  Disconnect on form destroy
+2026-07-06 17:08:56.897  MIC183/185 debug form started
+2026-07-06 17:08:56.898  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:57.054  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:57.158  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:57.172  Connect+Program OK, state=Programmed
+2026-07-06 17:08:57.175  CONNECT-TEST: OK
+2026-07-06 17:08:57.184  Disconnect on form destroy
+2026-07-06 17:08:57.520  MIC183/185 debug form started
+2026-07-06 17:08:57.521  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:57.684  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:57.787  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:57.800  Connect+Program OK, state=Programmed
+2026-07-06 17:08:57.804  CONNECT-TEST: OK
+2026-07-06 17:08:57.812  Disconnect on form destroy
+2026-07-06 17:08:58.146  MIC183/185 debug form started
+2026-07-06 17:08:58.147  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:58.308  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:58.316  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:58.329  Connect+Program OK, state=Programmed
+2026-07-06 17:08:58.333  CONNECT-TEST: OK
+2026-07-06 17:08:58.341  Disconnect on form destroy
+2026-07-06 17:08:58.673  MIC183/185 debug form started
+2026-07-06 17:08:58.674  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:08:58.834  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:08:58.844  ProgramDevice (Recorder defaults)...
+2026-07-06 17:08:58.858  Connect+Program OK, state=Programmed
+2026-07-06 17:08:58.861  CONNECT-TEST: OK
+2026-07-06 17:08:58.869  Disconnect on form destroy
+2026-07-06 17:09:20.572  MIC183/185 debug form started
+2026-07-06 17:09:20.573  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:09:20.728  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 17:09:20.729  AUTO: device ensured
+2026-07-06 17:09:20.730  AUTO: properties set
+2026-07-06 17:09:20.772  AUTO: Program...
+2026-07-06 17:09:20.785  AUTO: Start...
+2026-07-06 17:09:20.797  AUTO block 1: samples=1 ch=64 ch1=32767 ch6=-13156
+2026-07-06 17:09:20.807  AUTO block 2: samples=1 ch=64 ch1=32767 ch6=-13180
+2026-07-06 17:09:20.817  AUTO block 3: samples=1 ch=64 ch1=32767 ch6=-13169
+2026-07-06 17:09:20.827  AUTO block 4: samples=1 ch=64 ch1=32767 ch6=-13162
+2026-07-06 17:09:20.837  AUTO block 5: samples=1 ch=64 ch1=32767 ch6=-13145
+2026-07-06 17:09:20.847  AUTO block 6: samples=1 ch=64 ch1=32767 ch6=-13145
+2026-07-06 17:09:20.857  AUTO block 7: samples=1 ch=64 ch1=32767 ch6=-13136
+2026-07-06 17:09:20.867  AUTO block 8: samples=1 ch=64 ch1=32767 ch6=-13127
+2026-07-06 17:09:20.878  AUTO block 9: samples=1 ch=64 ch1=32767 ch6=-13123
+2026-07-06 17:09:20.887  AUTO block 10: samples=1 ch=64 ch1=32767 ch6=-13117
+2026-07-06 17:09:20.889  AUTO: got 10 blocks
+2026-07-06 17:11:40.808  MIC183/185 debug form started
+2026-07-06 17:11:40.809  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:11:45.384  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:11:45.395  ProgramDevice (Recorder defaults)...
+2026-07-06 17:11:45.407  Connect+Program OK, state=Programmed
+2026-07-06 17:11:47.543  Start acquisition ...
+2026-07-06 17:11:47.546  Start OK
+2026-07-06 17:11:47.745  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:14:07.496  MIC183/185 debug form started
+2026-07-06 17:14:07.497  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:14:07.648  AUTO: Connect 192.168.9.142:4000 ...
+2026-07-06 17:14:07.649  AUTO: device ensured
+2026-07-06 17:14:07.650  AUTO: properties set
+2026-07-06 17:14:07.724  AUTO: Program...
+2026-07-06 17:14:07.988  AUTO: Start...
+2026-07-06 17:14:08.001  AUTO block 1: samples=1 ch=64 ch1=32767 ch6=-13060
+2026-07-06 17:14:08.011  AUTO block 2: samples=1 ch=64 ch1=32767 ch6=-13055
+2026-07-06 17:14:08.020  AUTO block 3: samples=1 ch=64 ch1=32767 ch6=-13057
+2026-07-06 17:14:08.030  AUTO block 4: samples=1 ch=64 ch1=32767 ch6=-13057
+2026-07-06 17:14:08.040  AUTO block 5: samples=1 ch=64 ch1=32767 ch6=-13056
+2026-07-06 17:14:08.050  AUTO block 6: samples=1 ch=64 ch1=32767 ch6=-13061
+2026-07-06 17:14:08.060  AUTO block 7: samples=1 ch=64 ch1=32767 ch6=-13065
+2026-07-06 17:14:08.070  AUTO block 8: samples=1 ch=64 ch1=32767 ch6=-13063
+2026-07-06 17:14:08.080  AUTO block 9: samples=1 ch=64 ch1=32767 ch6=-13054
+2026-07-06 17:14:08.090  AUTO block 10: samples=1 ch=64 ch1=32767 ch6=-13056
+2026-07-06 17:14:08.091  AUTO: got 10 blocks
+2026-07-06 17:16:20.795  MIC183/185 debug form started
+2026-07-06 17:16:20.796  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:16:22.439  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:16:22.497  ProgramDevice (Recorder defaults)...
+2026-07-06 17:16:22.511  Connect+Program OK, state=Programmed
+2026-07-06 17:16:22.943  Start acquisition ...
+2026-07-06 17:16:22.946  Start OK
+2026-07-06 17:16:23.156  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:16:23.358  Block 2: samples=1 ch=64 pkts=2 mismatch=12
+2026-07-06 17:16:23.563  Block 3: samples=1 ch=64 pkts=3 mismatch=12
+2026-07-06 17:16:28.034  Block 25: samples=1 ch=64 pkts=25 mismatch=12
+2026-07-06 17:16:32.618  Stop OK, blocks=47 packets=47
+2026-07-06 17:22:30.437  MIC183/185 debug form started
+2026-07-06 17:22:30.438  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:22:33.288  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:22:33.375  ProgramDevice (Recorder defaults)...
+2026-07-06 17:22:33.388  Connect+Program OK, state=Programmed
+2026-07-06 17:22:34.679  Start acquisition ...
+2026-07-06 17:22:34.682  Start OK
+2026-07-06 17:22:34.883  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:22:35.097  Block 2: samples=1 ch=64 pkts=2 mismatch=12
+2026-07-06 17:22:35.303  Block 3: samples=1 ch=64 pkts=3 mismatch=12
+2026-07-06 17:22:39.788  Block 25: samples=1 ch=64 pkts=25 mismatch=12
+2026-07-06 17:22:40.388  Stop OK, blocks=27 packets=27 uptime=5,71s
+2026-07-06 17:23:23.736  Disconnected
+2026-07-06 17:26:11.967  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:26:12.064  ProgramDevice (Recorder defaults)...
+2026-07-06 17:26:12.078  Connect+Program OK, state=Programmed
+2026-07-06 17:26:12.560  Start acquisition ...
+2026-07-06 17:26:12.563  Start OK
+2026-07-06 17:26:12.759  Block 1: samples=1 ch=64 pkts=1 mismatch=12
+2026-07-06 17:26:12.966  Block 2: samples=1 ch=64 pkts=2 mismatch=12
+2026-07-06 17:26:13.170  Block 3: samples=1 ch=64 pkts=3 mismatch=12
+2026-07-06 17:26:17.643  Block 25: samples=1 ch=64 pkts=25 mismatch=12
+2026-07-06 17:26:22.716  Block 50: samples=1 ch=64 pkts=50 mismatch=12
+2026-07-06 17:26:26.933  Stop OK, blocks=70 packets=70 uptime=14,37s
+2026-07-06 17:26:27.728  Disconnect on form destroy
+2026-07-06 17:34:29.585  MIC183/185 debug form started
+2026-07-06 17:34:29.586  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:47:54.991  CLI test started
+2026-07-06 17:49:37.417  MIC183/185 debug form started
+2026-07-06 17:49:37.418  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:49:39.624  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:49:44.630  ProgramDevice (Recorder defaults)...
+2026-07-06 17:49:59.334  MIC183/185 debug form started
+2026-07-06 17:49:59.335  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:50:00.656  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:50:00.666  ProgramDevice (Recorder defaults)...
+2026-07-06 17:50:00.678  Connect+Program OK, state=Programmed
+2026-07-06 17:50:01.360  Start acquisition ...
+2026-07-06 17:50:01.363  Start OK
+2026-07-06 17:50:02.003  Block 1: samples=1 ch=64 pkts=64 mismatch=12
+2026-07-06 17:50:02.632  Block 2: samples=1 ch=64 pkts=128 mismatch=12
+2026-07-06 17:53:26.990  MIC183/185 debug form started
+2026-07-06 17:53:26.990  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:53:27.154  STRESS: Connect+Start 120s ...
+2026-07-06 17:53:27.154  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:53:27.228  ProgramDevice (Recorder defaults)...
+2026-07-06 17:53:27.492  Connect+Program OK, state=Programmed
+2026-07-06 17:53:27.493  Start acquisition ...
+2026-07-06 17:53:27.495  Start OK
+2026-07-06 17:53:27.762  Block 2: samples=1 ch=64 pkts=26 mismatch=12
+2026-07-06 17:53:30.398  Block 25: samples=1 ch=64 pkts=292 mismatch=12
+2026-07-06 17:53:33.131  STRESS block 50 pkts=568 uptime=5,6s
+2026-07-06 17:53:36.033  Block 75: samples=1 ch=64 pkts=861 mismatch=12
+2026-07-06 17:53:38.800  STRESS block 100 pkts=1141 uptime=11,3s
+2026-07-06 17:53:44.731  STRESS block 150 pkts=1740 uptime=17,2s
+2026-07-06 17:53:50.689  STRESS block 200 pkts=2342 uptime=23,2s
+2026-07-06 17:53:53.820  Block 225: samples=1 ch=64 pkts=2658 mismatch=12
+2026-07-06 17:53:56.820  STRESS block 250 pkts=2961 uptime=29,3s
+2026-07-06 17:54:02.723  Block 300: samples=1 ch=64 pkts=3557 mismatch=12
+2026-07-06 17:54:05.681  Block 325: samples=1 ch=64 pkts=3856 mismatch=12
+2026-07-06 17:54:08.382  STRESS block 350 pkts=4128 uptime=40,9s
+2026-07-06 17:54:14.321  Block 400: samples=1 ch=64 pkts=4728 mismatch=12
+2026-07-06 17:54:20.013  Block 450: samples=1 ch=64 pkts=5303 mismatch=12
+2026-07-06 17:54:25.840  Block 500: samples=1 ch=64 pkts=5892 mismatch=12
+2026-07-06 17:54:28.747  Block 525: samples=1 ch=64 pkts=6186 mismatch=12
+2026-07-06 17:54:31.719  STRESS block 550 pkts=6486 uptime=64,2s
+2026-07-06 17:54:34.882  Block 575: samples=1 ch=64 pkts=6805 mismatch=12
+2026-07-06 17:54:37.816  STRESS block 600 pkts=7102 uptime=70,3s
+2026-07-06 17:54:40.819  Block 625: samples=1 ch=64 pkts=7405 mismatch=12
+2026-07-06 17:54:43.799  Block 650: samples=1 ch=64 pkts=7706 mismatch=12
+2026-07-06 17:54:49.696  STRESS block 700 pkts=8302 uptime=82,2s
+2026-07-06 17:54:52.699  Block 725: samples=1 ch=64 pkts=8605 mismatch=12
+2026-07-06 17:54:55.736  STRESS block 750 pkts=8912 uptime=88,2s
+2026-07-06 17:55:01.649  STRESS block 800 pkts=9509 uptime=94,2s
+2026-07-06 17:55:07.528  STRESS block 850 pkts=10103 uptime=100,0s
+2026-07-06 17:55:13.619  Block 900: samples=1 ch=64 pkts=10718 mismatch=12
+2026-07-06 17:55:19.276  Block 950: samples=1 ch=64 pkts=11289 mismatch=12
+2026-07-06 17:55:22.057  Block 975: samples=1 ch=64 pkts=11570 mismatch=12
+2026-07-06 17:55:24.948  Block 1000: samples=1 ch=64 pkts=11862 mismatch=12
+2026-07-06 17:55:27.652  Stop OK, blocks=1021 packets=12114 uptime=120,16s
+2026-07-06 17:55:27.653  STRESS OK: blocks=1021 pkts=12114 uptime=120,2s
+2026-07-06 17:55:27.661  Disconnect on form destroy
+2026-07-06 17:55:47.953  MIC183/185 debug form started
+2026-07-06 17:55:47.953  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:55:48.109  STRESS: Connect+Start 120s ...
+2026-07-06 17:55:48.109  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:55:48.164  ProgramDevice (Recorder defaults)...
+2026-07-06 17:55:48.176  Connect+Program OK, state=Programmed
+2026-07-06 17:55:48.180  Start acquisition ...
+2026-07-06 17:55:48.183  Start OK
+2026-07-06 17:55:48.436  Block 2: samples=1 ch=64 pkts=25 mismatch=12
+2026-07-06 17:55:51.149  Block 25: samples=1 ch=64 pkts=298 mismatch=12
+2026-07-06 17:55:54.057  Block 50: samples=1 ch=64 pkts=592 mismatch=12
+2026-07-06 17:55:56.978  Block 75: samples=1 ch=64 pkts=887 mismatch=12
+2026-07-06 17:55:59.915  Block 100: samples=1 ch=64 pkts=1184 mismatch=12
+2026-07-06 17:56:05.756  STRESS block 150 pkts=1774 uptime=17,6s
+2026-07-06 17:56:08.669  Block 175: samples=1 ch=64 pkts=2068 mismatch=12
+2026-07-06 17:56:11.366  STRESS block 200 pkts=2341 uptime=23,2s
+2026-07-06 17:56:14.548  Block 225: samples=1 ch=64 pkts=2662 mismatch=12
+2026-07-06 17:56:17.309  STRESS block 250 pkts=2941 uptime=29,1s
+2026-07-06 17:56:20.189  Block 275: samples=1 ch=64 pkts=3232 mismatch=12
+2026-07-06 17:56:22.968  Block 300: samples=1 ch=64 pkts=3512 mismatch=12
+2026-07-06 17:56:28.885  STRESS block 350 pkts=4110 uptime=40,7s
+2026-07-06 17:56:34.870  STRESS block 400 pkts=4714 uptime=46,7s
+2026-07-06 17:56:40.734  STRESS block 450 pkts=5307 uptime=52,6s
+2026-07-06 17:56:46.411  STRESS block 500 pkts=5880 uptime=58,2s
+2026-07-06 17:56:49.408  Block 525: samples=1 ch=64 pkts=6183 mismatch=12
+2026-07-06 17:56:52.387  Block 550: samples=1 ch=64 pkts=6484 mismatch=12
+2026-07-06 17:56:55.317  Block 575: samples=1 ch=64 pkts=6780 mismatch=12
+2026-07-06 17:56:58.337  STRESS block 600 pkts=7085 uptime=70,2s
+2026-07-06 17:57:04.289  Block 650: samples=1 ch=64 pkts=7686 mismatch=12
+2026-07-06 17:57:07.293  Block 675: samples=1 ch=64 pkts=7990 mismatch=12
+2026-07-06 17:57:10.281  Block 700: samples=1 ch=64 pkts=8291 mismatch=12
+2026-07-06 17:57:13.219  Block 725: samples=1 ch=64 pkts=8588 mismatch=12
+2026-07-06 17:57:16.127  Block 750: samples=1 ch=64 pkts=8881 mismatch=12
+2026-07-06 17:57:19.108  Block 775: samples=1 ch=64 pkts=9182 mismatch=12
+2026-07-06 17:57:22.040  STRESS block 800 pkts=9478 uptime=93,9s
+2026-07-06 17:57:28.199  Block 850: samples=1 ch=64 pkts=10101 mismatch=12
+2026-07-06 17:57:34.230  Block 900: samples=1 ch=64 pkts=10710 mismatch=12
+2026-07-06 17:57:37.158  Block 925: samples=1 ch=64 pkts=11005 mismatch=12
+2026-07-06 17:57:40.129  STRESS block 950 pkts=11305 uptime=111,9s
+2026-07-06 17:57:46.285  Block 1000: samples=1 ch=64 pkts=11928 mismatch=12
+2026-07-06 17:57:48.232  Stop OK, blocks=1016 packets=12103 uptime=120,05s
+2026-07-06 17:57:48.233  STRESS OK: blocks=1016 pkts=12103 uptime=120,0s
+2026-07-06 17:57:48.240  Disconnect on form destroy
+2026-07-06 17:59:10.854  MIC183/185 debug form started
+2026-07-06 17:59:10.855  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-07-06 17:59:12.383  Connect+Program 192.168.9.142:4000 ...
+2026-07-06 17:59:12.443  ProgramDevice (Recorder defaults)...
+2026-07-06 17:59:12.455  Connect+Program OK, state=Programmed
+2026-07-06 17:59:13.064  Start acquisition ...
+2026-07-06 17:59:13.066  Start OK
+2026-07-06 17:59:13.288  Block 1: samples=1 ch=64 pkts=22 mismatch=12
+2026-07-06 17:59:13.520  Block 2: samples=1 ch=64 pkts=45 mismatch=12
+2026-07-06 17:59:13.709  Block 3: samples=1 ch=64 pkts=64 mismatch=12
+2026-07-06 17:59:18.182  Block 25: samples=1 ch=64 pkts=516 mismatch=12
+2026-07-06 17:59:23.260  Block 50: samples=1 ch=64 pkts=1029 mismatch=12
+2026-07-06 17:59:28.341  Block 75: samples=1 ch=64 pkts=1542 mismatch=12
+2026-07-06 17:59:29.809  Stop OK, blocks=82 packets=1685 uptime=16,75s
+2026-07-06 17:59:30.416  Disconnect on form destroy

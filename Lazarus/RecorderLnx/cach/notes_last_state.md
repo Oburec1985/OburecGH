@@ -1,4 +1,44 @@
-# MIC-140 debug stand — последнее состояние (2026-07-01)
+# MIC-140 debug stand — последнее состояние (2026-07-06)
+
+## Codex continuation 2026-07-06: MIC140 debug connection fix
+
+**Prompt:** debug MIC-140 connection crash in Mic140ProtocolDebug_Codex stand.
+
+**Fix:**
+- Resolved Winsock race condition in `uMic140Registration.pas`: WSAStartup/WSACleanup moved to global initialization/finalization.
+- Optimized discovery: `FindMIC140_48` now checks `CDefaultHost` (192.168.14.155) first, bypassing the heavy parallel 255-thread subnet probe when the default stand is available.
+- Rebuilt and verified GUI/CLI: connection works stably, CLI runner reads data blocks.
+
+## Codex continuation 2026-07-06: MIC140 10 Hz stream acceptance work
+
+**Prompt:** finish the MIC-140 test so the live data stream at 10 Hz passes the
+documented acceptance rules: no stream failures, data matches Recorder, and the
+block count matches update time/duration.
+
+**Done so far:**
+- Added/rebuilt the headless CLI project
+  `Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebugCli_Codex.lpi`.
+- Fixed acquisition timing: the duration timer now starts after successful
+  connect/program/start preparation, so a 3 s 10 Hz run reads about 15 blocks
+  instead of undercounting connection/programming time.
+- Split scan descriptor layouts:
+  default acceptance `fifo=48` reserves descriptor 0 for ground
+  (`reserveGroundDesc=True`, first AIn pointer `descAddr+5`);
+  `--recorder-wire` keeps the dense Recorder MDP layout (first AIn at
+  `descAddr`, `stride=51`, `msgWords=163`).
+- Documented this distinction in
+  `Docs/devices/mic140/protocol/03_scan_programming.md`,
+  `05_data_stream.md`, and `07_acceptance.md`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebugCli_Codex.lpi` completed with
+exit code 0. Before the TCP port went offline, the stable `fifo=48` stream read
+65 blocks in 13.13 s with `readGaps=0`, `corruptRead=0`, `softRestart=0`
+(5 blocks/s as expected) but strict publication still failed on code-reference
+checks. A later `--recorder-wire` diagnostic showed restarts/timeouts and then
+the device stopped accepting TCP on `192.168.14.155:4000`; direct
+`Test-NetConnection` also failed. Live PASS is therefore still open until the
+MIC-140 port is reachable again.
 
 ## Codex continuation 2026-07-02: MIC140 IRecorderDevice stub
 
@@ -18,6 +58,139 @@ form.
 
 **Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
 completed with exit code 0; only existing hints/notes.
+
+## Codex continuation 2026-07-06: MIC140 count_aver uses Fs=10 and effective ISR
+
+**Prompt:** User clarified that original Recorder channels see `10 Hz`, not
+`9.875 Hz`; therefore matching `count_aver=327` must be done through the
+effective processing-time factor, not by changing channel Fs.
+
+**Fix:** Restored MIC140 default/channel frequency to `10.0 Hz` in
+`TRecorderMic140Device` and `uMic140DebugForm`. `IsrFactor` now uses effective
+`103` timer-work ticks for the count-average budget (`K_eff = 1 + 103/640`),
+which matches Recorder for MIC140-48, 51 slots, ground off:
+`period_decay=57 us -> 327`, `period_decay=200 us -> 298`.
+
+**Docs:** Updated MIC140 protocol docs to remove the old “9.875 for 327”
+explanation from the main calculation path and document the effective ISR
+factor instead.
+
+**Verification:** `mic140_clock_test.exe` rebuilt and printed
+`Default object: Fs(ch)=10.000000 Hz count_aver=327` plus
+`10.000 Hz / period_decay=200 us -> 298`. `lazbuild -B
+Mic140ProtocolDebug_Codex.lpi` compiles all units but cannot relink while
+Lazarus keeps `Mic140ProtocolDebug_Codex.exe` open in a debug session
+(`Can't create executable`, error code 5).
+
+**Additional check:** User provided Recorder screenshot for `100 Hz`,
+`period_decay=57 us`, `period_decay2=19.688 us`, GND off. Current diagnostic
+prints `100.0 Hz / 51 slots / GND off -> count_aver=23`, matching Recorder.
+This control point was added to
+`Docs/devices/mic140/protocol/08_timing_and_count_aver.md`.
+
+## Codex continuation 2026-07-06: Mic140ProtocolDebug_Codex build fix
+
+**Prompt:** User reported that
+`Tests/Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpi` no longer
+builds.
+
+**Cause:** `uMic140Device.pas` had a broken identifier split across two lines in
+`CheckCountAver`: `MIC140` + `_48_MIN_COUNT_AVER`, producing compiler errors
+`Identifier not found "MIC140"` and `";" expected`.
+
+**Fix:** Restored the single identifier `MIC140_48_MIN_COUNT_AVER`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; only existing warnings/hints/notes remain.
+
+## Codex continuation 2026-07-06: MIC140 count_aver 327/298
+
+**Prompt:** User rechecked Recorder: `period_decay=57 us` gives `count_aver=327`,
+`period_decay=200 us` gives `count_aver=298`. Offline Recorder gives the same
+values, so the dialog path should be treated as saved/default math, not live
+quartz detection from MIC-140.
+
+**Confirmed:** In original Recorder `mic140ppext.cpp` passes
+`module->GetFreqSFor(MIC140_AIN_CHTYPE)` into `CheckPeriodDelay`. That value is
+the already stored first AIn channel frequency; the additional dialog does not
+recalculate count averaging from the programmed scan timer frequency and does
+not issue a MIC-140 network query for quartz frequency.
+
+**Done:** `Mic140EvalAverageSampleCount` now uses `Timing.FrequencyHz`
+(`GetFreqSFor` equivalent) as the frame period source, while `ApplyTimerForFreq`
+still fills timer programming fields. The debug form now shows `Fs(ch)` and
+`Fs(timer)` separately and sets the test channel frequency to `9.875 Hz`.
+Protocol docs were updated for 327/298, 57/200 us, the `0.9875 * nominal`
+frequency table, and the offline saved-state nuance.
+
+**Verification:** `lazbuild -B Mic140ProtocolDebug_Codex.lpi` completed with
+exit code 0. `mic140_clock_test.lpr` was compiled with FPC and
+`mic140_clock_test.exe` printed `327` for `9.875 Hz / 57 us` and `298` for
+`9.875 Hz / 200 us`; the live TCP part reported device offline.
+
+**Follow-up fix:** User still saw `323` because `TRecorderMic140Device.Create`
+initialized `fScanProgram` with `10 Hz` and left `fPollFrequencyHz=0`; paths
+that evaluate the offline/default object before the debug form applies
+`rdpPollFrequencyHz=9.875` still used strict 10 Hz. Constructor fallback and
+`ReadMIC140State` zero-frequency fallback now use
+`MIC140_48_RECORDER_DEFAULT_FREQ_HZ = 9.875`. Diagnostic now prints
+`Default object: Fs(ch)=9.875000 Hz count_aver=327`.
+
+**State-read update:** user asked to move the MIC140 real-frequency source into
+`Tests\Mic140ProtocolDebug_Codex`. Added `TRecorderMic140Device.ReadMIC140State`
+in `device\MIC140\uMic140Device.pas`. The stand state now stores
+`ModuleClockHz=15.8 MHz`, derives `ActualFrequencyHz` through the original
+`ModuleMC114::IndexToFreq` formula, and then assigns that value to
+`fPollFrequencyHz` before `SyncScanProgramFromDeviceProperties`. Removed the
+manual poll-frequency assignment from `uMic140DebugForm.ConfigureTestDevice`.
+Rebuild of `Mic140ProtocolDebug_Codex.lpi` completed with exit code 0.
+
+**Network-read update:** user clarified that `ReadMIC140State` must use a real
+network request. Added a minimal MDP TCP command helper in `uMic140Device.pas`
+matching `mdpEthernet81::CallCommand`: MDP header `0x12B8`, `STREAM_CMD_ID=1`,
+payload `[cmd, argc, retc, args...]`, header/data checksums, PORT=1 response
+parsing. `ReadMIC140State` now first sends `CMD_TEST_LOAD=7` with 32 words like
+`CheckInitialized`, then sends `CMD_REPLY=113`, parses the 11-word
+`TBiosInfoMC031`, and fills `fScanProgram.Firmware`. If the network command
+fails, `ReadDeviceParameters` raises `ERecorderDeviceError` instead of silently
+using fake state. Rebuild of `Mic140ProtocolDebug_Codex.lpi` completed with
+exit code 0.
+
+**Docs follow-up:** documented that legacy `scale_period_16000[]` gives exact
+10/20/25/50/100 Hz, while `CheckPeriodDelay` uses the actual AIn channel
+frequency from `GetFreqSFor`. The `0.9875 * nominal` examples are now recorded
+in `Docs/devices/mic140/protocol/08_timing_and_count_aver.md`, with short
+cross-notes in `03_scan_programming.md` and `06_ui_parameters.md`.
+
+**Frequency origin follow-up:** traced the Recorder path more precisely.
+`327/318` is downstream of `CheckPeriodDelay(freq, ...)`; the dialog first gets
+`freq` from `ModuleMC114::GetFreqSFor(MIC140_AIN_CHTYPE)`, i.e. the first AIn
+channel `CChannel::m_Fs`. `9.875 Hz` is not a dialog constant; it is exactly the
+10 Hz timer row if `GetFreqClk() = 15.8 MHz`
+(`2 * 15_800_000 / (1 * 640 * 5000)`). Checked code shows MIC140 defaults to
+16 MHz and `Module::Load()` can restore `freq_clk` from project state; no direct
+EEPROM/hardware read of MIC140 `freq_clk` was found in this dialog path.
+
+**Controller-read follow-up:** checked the likely MIC140 controller path.
+MC031 Ethernet `ReadCfg()`/`GetFirmware()` read BIOS/device identity fields via
+`CMD_REPLY`, but not quartz/frequency. `MeasureFreqCCFromFreqModule()` is a stub
+for MC031 Ethernet and MC021 USB. The generic `ScanClock` correction updates the
+controller clock (`cc->SetFreqClk`), while MIC140 uses `SELF_CLK`, so its
+`Module::GetFreqClk()` continues to use the module's own `freq_clk`.
+
+**Config-file origin follow-up:** traced the physical file writer/reader. The
+hardware configuration is stored in Recorder `*.rcfg` via `CRcCore::SaveConfig`
+or `ExportSettings`, which create a binary `CCfgStream`. The stream starts with
+a top frame containing `CurrentVersion` and `HostDevicesCount`, then each object
+is written as a `SaveDevice` type frame (`type_class`) followed by that object's
+own frame(s). `CCDevice::Save` writes `module_count`, `module[i]`, then
+serializes each module; `Module::Save` writes `bios_path`, `serial_no`,
+`self_clk`, and double `freq_clk`. Tags are saved later by `CRcCore::Save` /
+`SaveTags`; each `CMeasurementTag` writes double `Freq`, and load immediately
+applies it through `m_pDevChan->SetFreq`, so the first AIn channel frequency
+used by the MIC140 dialog can come directly from saved tag `Freq`, not
+necessarily be recalculated from `freq_clk` during that load.
 
 **Commenting update:** user asked to walk through all classes in the example and
 mark interface-method blocks. Added comments in `TRecorderMic140Device` for the
@@ -278,3 +451,24 @@ cd D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug
 .\Mic140ProtocolDebugCli.exe --auto 40 --settle-sec 20
 .\Mic140ProtocolDebugCli.exe --auto 10 --recorder-wire --tin-slots 3
 ```
+
+## Codex continuation 2026-07-03: MIC140 count_aver Recorder match
+
+**Prompt:** Windows Recorder shows MIC140 average counts 327 and 318 in the
+additional settings dialog for `period_decay` 57 us and 100 us; make the Codex
+calculation match exactly.
+
+**Confirmed:** `Mic140EvalAverageSampleCount` follows original
+`MIC140_96_rce/mic140_96mod.cpp::CalcCountAver`. For MIC140-48 the count uses
+51 slots (`48 AIn + 3 TIn`) when all-channel sampling is enabled. At exactly
+10.0 Hz this gives `323/314`; the Recorder screenshot values `327/318` match
+the same original formula when the actual first AIn channel frequency is about
+`9.875..9.885 Hz`.
+
+**Done:** changed the Codex debug stand test configuration in
+`Tests/Mic140ProtocolDebug_Codex/uMic140DebugForm.pas` from `10.0` to `9.875`
+Hz and recorded the investigation in
+`errors/2026-07-03-mic140-average-count-recorder-match.md`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
+completed with exit code 0; only existing hints/notes.
