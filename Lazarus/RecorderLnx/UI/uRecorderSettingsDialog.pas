@@ -120,6 +120,8 @@ type
     procedure fAvailableChannelsGridDblClick(Sender: TObject);
     procedure fAvailableChannelsGridMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure fSelectedChannelsGridDrawCell(Sender: TObject; aCol,
+      aRow: Integer; aRect: TRect; aState: TGridDrawState);
     procedure fSelectedChannelsGridDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure fSelectedChannelsGridDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -180,6 +182,7 @@ type
     function SignalSourceGroup(ASignal: TMeraSignalInfo): string;
     function FindTagBySourceAddress(const ASourceId, AAddress: string): TRecorderTag;
     function SignalHasLinkedTag(ASignal: TMeraSignalInfo): Boolean;
+    function TagLinkedToInactiveHardware(ATag: TRecorderTag): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
     function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
     procedure SortSelectedTags(ATags: TList);
@@ -454,7 +457,10 @@ const
   CDeviceRootImageIndex = CIconDeviceRoot;
   CDeviceControllerImageIndex = CIconDeviceController;
   CDeviceDisabledImageIndex = 41;
+  CDeviceInactiveTagImageIndex = 54;
+  CDeviceInactiveTagIconSize = 16;
   CDeviceModuleImageIndex = CIconDeviceModule;
+  CDeviceTreeProbeTimeoutMs = 1000;
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
@@ -499,6 +505,7 @@ begin
   if fSelectedChannelsGrid <> nil then
   begin
     fSelectedChannelsGrid.OnDblClick := @fSelectedChannelsGridDblClick;
+    fSelectedChannelsGrid.OnDrawCell := @fSelectedChannelsGridDrawCell;
     fSelectedChannelsGrid.OnMouseDown := @fSelectedChannelsGridMouseDown;
     fSelectedChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
     fSelectedChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
@@ -727,6 +734,21 @@ begin
     (FindTagBySourceAddress(SignalSourceId(ASignal), ASignal.Address) <> nil);
 end;
 
+function TRecorderSettingsDialog.TagLinkedToInactiveHardware(
+  ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := False;
+  if (fTagRegistry = nil) or (ATag = nil) then
+    Exit;
+  if not RecorderIsHardwareTagSource(ATag.SourceId) then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  Result := not fTagRegistry.IsSourceActive(lSourceId);
+end;
+
 function TRecorderSettingsDialog.SelectedTagByGridRow(
   ARow: Integer): TRecorderTag;
 begin
@@ -747,30 +769,32 @@ begin
 
   case fSelectedSortColumn of
     0:
-      Result := CompareText(ATagA.Name, ATagB.Name);
+      Result := 0;
     1:
+      Result := CompareText(ATagA.Name, ATagB.Name);
+    2:
       begin
         Result := CompareText(ATagA.Address, ATagB.Address);
         if Result = 0 then
           Result := CompareText(ATagA.Name, ATagB.Name);
       end;
-    2:
-      Result := CompareText(ATagA.ModuleType, ATagB.ModuleType);
     3:
-      Result := CompareValue(ATagA.PollFrequencyHz, ATagB.PollFrequencyHz);
+      Result := CompareText(ATagA.ModuleType, ATagB.ModuleType);
     4:
-      Result := 0;
+      Result := CompareValue(ATagA.PollFrequencyHz, ATagB.PollFrequencyHz);
     5:
-      Result := CompareText(ATagA.SourceId, ATagB.SourceId);
+      Result := 0;
     6:
-      Result := CompareText(ATagA.Description, ATagB.Description);
+      Result := CompareText(ATagA.SourceId, ATagB.SourceId);
     7:
+      Result := CompareText(ATagA.Description, ATagB.Description);
+    8:
       Result := CompareValue(ATagA.Id, ATagB.Id);
   else
     Result := CompareText(ATagA.Name, ATagB.Name);
   end;
 
-  if (Result = 0) and (fSelectedSortColumn <> 1) then
+  if (Result = 0) and (fSelectedSortColumn <> 2) then
   begin
     Result := CompareText(ATagA.Address, ATagB.Address);
     if Result = 0 then
@@ -803,7 +827,7 @@ end;
 
 procedure TRecorderSettingsDialog.SortSelectedChannelsByColumn(AColumn: Integer);
 begin
-  if AColumn < 0 then
+  if AColumn <= 0 then
     Exit;
 
   if fSelectedSortColumn = AColumn then
@@ -2396,8 +2420,9 @@ var
   lRootNode: TTreeNode;
   lSourceNode: TTreeNode;
   I: Integer;
-  lRow: Integer;
   lSignal: TMeraSignalInfo;
+  lSourceActive: Boolean;
+  lSourceConnected: Boolean;
   lSourceIds: TStringList;
   lSourceId: string;
 
@@ -2418,6 +2443,28 @@ var
     end;
   end;
 
+  function Mic140SourceConnected(const ASourceId: string): Boolean;
+  var
+    lHost: string;
+    lPort: Word;
+  begin
+    Result := TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) and
+      RecorderMic140TcpProbe(lHost, lPort, CDeviceTreeProbeTimeoutMs);
+  end;
+
+  function Mic185SourceConnected(const ASourceId: string): Boolean;
+  var
+    lErrorText: string;
+    lHost: string;
+    lPort: Word;
+    lSerialNumber: LongWord;
+    lVersionText: string;
+  begin
+    Result := TryParseRecorderMic185SourceId(ASourceId, lHost, lPort) and
+      RecorderMic185ReadDeviceInfo(lHost, lPort, lSerialNumber, lVersionText,
+        lErrorText, CDeviceTreeProbeTimeoutMs);
+  end;
+
 begin
   if fHardwareTree = nil then
     Exit;
@@ -2425,6 +2472,9 @@ begin
   lSourceIds := TStringList.Create;
   fHardwareTree.Items.BeginUpdate;
   try
+    if fTagRegistry <> nil then
+      fTagRegistry.RefreshActiveSourcesFromTags;
+
     fHardwareTree.Items.Clear;
     lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
     lRootNode.ImageIndex := CDeviceRootImageIndex;
@@ -2444,26 +2494,6 @@ begin
         lSourceNode.ImageIndex := 31;
         lSourceNode.SelectedIndex := 31;
       end;
-
-      for I := 0 to fMeraSignals.Count - 1 do
-      begin
-        lSignal := TMeraSignalInfo(fMeraSignals[I]);
-        if lSignal.Enabled then
-          with fHardwareTree.Items.AddChild(lSourceNode, '[x] ' + lSignal.Name) do
-          begin
-            ImageIndex := CDeviceModuleImageIndex;
-            SelectedIndex := CDeviceModuleImageIndex;
-            Data := lSignal;
-          end
-        else
-          with fHardwareTree.Items.AddChild(lSourceNode, '[ ] ' + lSignal.Name) do
-        begin
-          ImageIndex := CDeviceModuleImageIndex;
-          SelectedIndex := CDeviceModuleImageIndex;
-          Data := lSignal;
-        end;
-      end;
-      lSourceNode.Expand(True);
     end;
 
     if fMic140Signals <> nil then
@@ -2481,7 +2511,15 @@ begin
       begin
         lSourceId := lSourceIds[I];
         lSourceNode := fHardwareTree.Items.AddChild(lRootNode, lSourceId);
-        if SourceHasLinkedTags(fMic140Signals, lSourceId) then
+        lSourceActive := SourceHasLinkedTags(fMic140Signals, lSourceId);
+        lSourceConnected := lSourceActive and Mic140SourceConnected(lSourceId);
+        lSourceActive := lSourceActive and lSourceConnected;
+        if fTagRegistry <> nil then
+          if lSourceActive then
+            fTagRegistry.RegisterActiveSource(lSourceId)
+          else
+            fTagRegistry.UnregisterActiveSource(lSourceId);
+        if lSourceActive then
         begin
           lSourceNode.ImageIndex := CDeviceControllerImageIndex;
           lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
@@ -2491,27 +2529,6 @@ begin
           lSourceNode.ImageIndex := CDeviceDisabledImageIndex;
           lSourceNode.SelectedIndex := CDeviceDisabledImageIndex;
         end;
-        for lRow := 0 to fMic140Signals.Count - 1 do
-        begin
-          lSignal := TMeraSignalInfo(fMic140Signals[lRow]);
-          if not SameText(lSignal.FileName, lSourceId) then
-            Continue;
-          if SignalHasLinkedTag(lSignal) then
-            with fHardwareTree.Items.AddChild(lSourceNode, '[x] ' + lSignal.Name) do
-            begin
-              ImageIndex := CDeviceModuleImageIndex;
-              SelectedIndex := CDeviceModuleImageIndex;
-              Data := lSignal;
-            end
-          else
-            with fHardwareTree.Items.AddChild(lSourceNode, '[ ] ' + lSignal.Name) do
-            begin
-              ImageIndex := CDeviceModuleImageIndex;
-              SelectedIndex := CDeviceModuleImageIndex;
-              Data := lSignal;
-            end;
-        end;
-        lSourceNode.Expand(True);
       end;
     end;
 
@@ -2531,7 +2548,15 @@ begin
       begin
         lSourceId := lSourceIds[I];
         lSourceNode := fHardwareTree.Items.AddChild(lRootNode, lSourceId);
-        if SourceHasLinkedTags(fMic185Signals, lSourceId) then
+        lSourceActive := SourceHasLinkedTags(fMic185Signals, lSourceId);
+        lSourceConnected := lSourceActive and Mic185SourceConnected(lSourceId);
+        lSourceActive := lSourceActive and lSourceConnected;
+        if fTagRegistry <> nil then
+          if lSourceActive then
+            fTagRegistry.RegisterActiveSource(lSourceId)
+          else
+            fTagRegistry.UnregisterActiveSource(lSourceId);
+        if lSourceActive then
         begin
           lSourceNode.ImageIndex := CDeviceControllerImageIndex;
           lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
@@ -2541,27 +2566,6 @@ begin
           lSourceNode.ImageIndex := CDeviceDisabledImageIndex;
           lSourceNode.SelectedIndex := CDeviceDisabledImageIndex;
         end;
-        for lRow := 0 to fMic185Signals.Count - 1 do
-        begin
-          lSignal := TMeraSignalInfo(fMic185Signals[lRow]);
-          if not SameText(lSignal.FileName, lSourceId) then
-            Continue;
-          if SignalHasLinkedTag(lSignal) then
-            with fHardwareTree.Items.AddChild(lSourceNode, '[x] ' + lSignal.Name) do
-            begin
-              ImageIndex := CDeviceModuleImageIndex;
-              SelectedIndex := CDeviceModuleImageIndex;
-              Data := lSignal;
-            end
-          else
-            with fHardwareTree.Items.AddChild(lSourceNode, '[ ] ' + lSignal.Name) do
-            begin
-              ImageIndex := CDeviceModuleImageIndex;
-              SelectedIndex := CDeviceModuleImageIndex;
-              Data := lSignal;
-            end;
-        end;
-        lSourceNode.Expand(True);
       end;
     end;
 
@@ -2590,17 +2594,19 @@ begin
 
   if fSelectedChannelsGrid <> nil then
   begin
-    fSelectedChannelsGrid.ColCount := 8;
+    fSelectedChannelsGrid.ColCount := 9;
     fSelectedChannelsGrid.FixedRows := 1;
     fSelectedChannelsGrid.RowCount := 2;
-    fSelectedChannelsGrid.Cells[0, 0] := 'Имя';
-    fSelectedChannelsGrid.Cells[1, 0] := 'Адрес';
-    fSelectedChannelsGrid.Cells[2, 0] := 'Тип';
-    fSelectedChannelsGrid.Cells[3, 0] := 'Частота';
-    fSelectedChannelsGrid.Cells[4, 0] := 'ГХ';
-    fSelectedChannelsGrid.Cells[5, 0] := 'Группа';
-    fSelectedChannelsGrid.Cells[6, 0] := 'Информация';
-    fSelectedChannelsGrid.Cells[7, 0] := 'ID';
+    fSelectedChannelsGrid.ColWidths[0] := 20;
+    fSelectedChannelsGrid.Cells[0, 0] := '';
+    fSelectedChannelsGrid.Cells[1, 0] := 'Имя';
+    fSelectedChannelsGrid.Cells[2, 0] := 'Адрес';
+    fSelectedChannelsGrid.Cells[3, 0] := 'Тип';
+    fSelectedChannelsGrid.Cells[4, 0] := 'Частота';
+    fSelectedChannelsGrid.Cells[5, 0] := 'ГХ';
+    fSelectedChannelsGrid.Cells[6, 0] := 'Группа';
+    fSelectedChannelsGrid.Cells[7, 0] := 'Информация';
+    fSelectedChannelsGrid.Cells[8, 0] := 'ID';
     fSelectedChannelsGrid.Cells[0, 1] := '';
     fSelectedChannelsGrid.Cells[1, 1] := '';
     fSelectedChannelsGrid.Cells[2, 1] := '';
@@ -2609,6 +2615,7 @@ begin
     fSelectedChannelsGrid.Cells[5, 1] := '';
     fSelectedChannelsGrid.Cells[6, 1] := '';
     fSelectedChannelsGrid.Cells[7, 1] := '';
+    fSelectedChannelsGrid.Cells[8, 1] := '';
   end;
 end;
 
@@ -2696,21 +2703,22 @@ begin
       begin
         lTag := TRecorderTag(lSelectedTags[I]);
         fSelectedChannelTags.Add(lTag);
-        fSelectedChannelsGrid.Cells[0, lRow] := lTag.Name;
-        fSelectedChannelsGrid.Cells[1, lRow] := lTag.Address;
-        fSelectedChannelsGrid.Cells[2, lRow] := lTag.ModuleType;
-        fSelectedChannelsGrid.Cells[3, lRow] := FormatFloat('0.######', lTag.PollFrequencyHz);
-        fSelectedChannelsGrid.Cells[4, lRow] := '-';
+        fSelectedChannelsGrid.Cells[0, lRow] := '';
+        fSelectedChannelsGrid.Cells[1, lRow] := lTag.Name;
+        fSelectedChannelsGrid.Cells[2, lRow] := lTag.Address;
+        fSelectedChannelsGrid.Cells[3, lRow] := lTag.ModuleType;
+        fSelectedChannelsGrid.Cells[4, lRow] := FormatFloat('0.######', lTag.PollFrequencyHz);
+        fSelectedChannelsGrid.Cells[5, lRow] := '-';
         if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-          fSelectedChannelsGrid.Cells[5, lRow] := 'MIC-140'
+          fSelectedChannelsGrid.Cells[6, lRow] := 'MIC-140'
         else if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
-          fSelectedChannelsGrid.Cells[5, lRow] := 'MIC183/185'
+          fSelectedChannelsGrid.Cells[6, lRow] := 'MIC183/185'
         else if Pos('Mera file:', lTag.SourceId) = 1 then
-          fSelectedChannelsGrid.Cells[5, lRow] := 'Mera File'
+          fSelectedChannelsGrid.Cells[6, lRow] := 'Mera File'
         else
-          fSelectedChannelsGrid.Cells[5, lRow] := lTag.SourceId;
-        fSelectedChannelsGrid.Cells[6, lRow] := lTag.Description;
-        fSelectedChannelsGrid.Cells[7, lRow] := IntToStr(lTag.Id);
+          fSelectedChannelsGrid.Cells[6, lRow] := lTag.SourceId;
+        fSelectedChannelsGrid.Cells[7, lRow] := lTag.Description;
+        fSelectedChannelsGrid.Cells[8, lRow] := IntToStr(lTag.Id);
         Inc(lRow);
       end;
     finally
@@ -3525,6 +3533,56 @@ begin
     fDragSelectActive := False;
     lGrid.Invalidate;
   end;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridDrawCell(Sender: TObject;
+  aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
+var
+  lBitmap: TBitmap;
+  lIconLeft: Integer;
+  lIconTop: Integer;
+  lIconRect: TRect;
+  lTag: TRecorderTag;
+begin
+  if (Sender <> fSelectedChannelsGrid) or (aCol <> 0) or (aRow < 1) or
+    (fDeviceImageList = nil) or (CDeviceInactiveTagImageIndex >= fDeviceImageList.Count) then
+    Exit;
+
+  lTag := SelectedTagByGridRow(aRow);
+  if not TagLinkedToInactiveHardware(lTag) then
+    Exit;
+
+  if gdSelected in aState then
+  begin
+    fSelectedChannelsGrid.Canvas.Brush.Color := clHighlight;
+    fSelectedChannelsGrid.Canvas.Font.Color := clHighlightText;
+  end
+  else
+  begin
+    fSelectedChannelsGrid.Canvas.Brush.Color := fSelectedChannelsGrid.Color;
+    fSelectedChannelsGrid.Canvas.Font.Color := fSelectedChannelsGrid.Font.Color;
+  end;
+  fSelectedChannelsGrid.Canvas.FillRect(aRect);
+
+  lIconLeft := aRect.Left + ((aRect.Right - aRect.Left) - CDeviceInactiveTagIconSize) div 2;
+  lIconTop := aRect.Top + ((aRect.Bottom - aRect.Top) - CDeviceInactiveTagIconSize) div 2;
+  if lIconLeft < aRect.Left then
+    lIconLeft := aRect.Left;
+  if lIconTop < aRect.Top then
+    lIconTop := aRect.Top;
+  lIconRect := Rect(lIconLeft, lIconTop, lIconLeft + CDeviceInactiveTagIconSize,
+    lIconTop + CDeviceInactiveTagIconSize);
+
+  lBitmap := TBitmap.Create;
+  try
+    fDeviceImageList.GetBitmap(CDeviceInactiveTagImageIndex, lBitmap);
+    fSelectedChannelsGrid.Canvas.StretchDraw(lIconRect, lBitmap);
+  finally
+    lBitmap.Free;
+  end;
+
+  if gdFocused in aState then
+    fSelectedChannelsGrid.Canvas.DrawFocusRect(aRect);
 end;
 
 procedure TRecorderSettingsDialog.GridPaint(Sender: TObject);

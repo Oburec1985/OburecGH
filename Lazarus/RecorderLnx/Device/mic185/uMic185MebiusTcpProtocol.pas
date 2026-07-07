@@ -285,6 +285,59 @@ begin
   Result := True;
 end;
 
+procedure ClearMebiusFloatBlock(var ABlock: TRecorderMebiusFloatBlock);
+begin
+  SetLength(ABlock.Values, 0);
+  ABlock.DeviceId := 0;
+  ABlock.ChannelCount := 0;
+  ABlock.SampleCount := 0;
+  ABlock.HeaderSampleCount := 0;
+end;
+
+function AppendMebiusFloatBlock(var ADest: TRecorderMebiusFloatBlock;
+  const ASrc: TRecorderMebiusFloatBlock): Boolean;
+var
+  I: Integer;
+  lOldCount: Integer;
+  lNewCount: Integer;
+begin
+  Result := False;
+  if (ASrc.ChannelCount <= 0) or (ASrc.SampleCount <= 0) then
+    Exit;
+
+  if ADest.SampleCount = 0 then
+  begin
+    ADest.DeviceId := ASrc.DeviceId;
+    ADest.ChannelCount := ASrc.ChannelCount;
+    ADest.HeaderSampleCount := ASrc.HeaderSampleCount;
+    SetLength(ADest.Values, ASrc.ChannelCount);
+    for I := 0 to ASrc.ChannelCount - 1 do
+    begin
+      SetLength(ADest.Values[I], ASrc.SampleCount);
+      Move(ASrc.Values[I][0], ADest.Values[I][0],
+        ASrc.SampleCount * SizeOf(Single));
+    end;
+    ADest.SampleCount := ASrc.SampleCount;
+    Exit(True);
+  end;
+
+  if (ADest.DeviceId <> ASrc.DeviceId) or
+    (ADest.ChannelCount <> ASrc.ChannelCount) then
+    Exit;
+
+  lOldCount := ADest.SampleCount;
+  lNewCount := lOldCount + ASrc.SampleCount;
+  for I := 0 to ADest.ChannelCount - 1 do
+  begin
+    SetLength(ADest.Values[I], lNewCount);
+    Move(ASrc.Values[I][0], ADest.Values[I][lOldCount],
+      ASrc.SampleCount * SizeOf(Single));
+  end;
+  ADest.SampleCount := lNewCount;
+  ADest.HeaderSampleCount := ASrc.HeaderSampleCount;
+  Result := True;
+end;
+
 function Mic185PacketDeviceId(const AData: TRecorderByteArray): LongWord;
 begin
   if Length(AData) < SizeOf(LongWord) then
@@ -491,55 +544,60 @@ begin
   Result := False;
   AErrorMessage := '';
   SetLength(AOutData, 0);
-  SetLength(lBody, REC_MEB_IOCTL_COMMAND_HEADER_SIZE + Length(AInData));
-  PutWordLE(lBody, 0, REC_MEB_IOCTL_COMMAND_SIGNATURE);
-  PutWordLE(lBody, 2, REC_MEB_IOCTL_COMMAND_SIGNATURE);
-  PutLongLE(lBody, 4, AIoCode);
-  if Length(AInData) > 0 then
-    Move(AInData[0], lBody[REC_MEB_IOCTL_COMMAND_HEADER_SIZE], Length(AInData));
-  lPacket := RecorderMebiusBuildPacket(REC_MEASUREMENT_TASK_ID, fClientTaskId, lBody);
-  WriteBytes(lPacket[0], Length(lPacket));
+  try
+    SetLength(lBody, REC_MEB_IOCTL_COMMAND_HEADER_SIZE + Length(AInData));
+    PutWordLE(lBody, 0, REC_MEB_IOCTL_COMMAND_SIGNATURE);
+    PutWordLE(lBody, 2, REC_MEB_IOCTL_COMMAND_SIGNATURE);
+    PutLongLE(lBody, 4, AIoCode);
+    if Length(AInData) > 0 then
+      Move(AInData[0], lBody[REC_MEB_IOCTL_COMMAND_HEADER_SIZE], Length(AInData));
+    lPacket := RecorderMebiusBuildPacket(REC_MEASUREMENT_TASK_ID, fClientTaskId, lBody);
+    WriteBytes(lPacket[0], Length(lPacket));
 
-  while True do
-  begin
-    if not ReadPacket(lReply) then
+    while True do
     begin
-      AErrorMessage := 'Mebius IoControl timeout';
+      if not ReadPacket(lReply) then
+      begin
+        AErrorMessage := 'Mebius IoControl timeout';
+        Exit;
+      end;
+      if lReply.Kind = mpkData then
+        Continue;
+      Break;
+    end;
+
+    if Length(lReply.Data) < REC_MEB_IOCTL_COMMAND_HEADER_SIZE then
+    begin
+      AErrorMessage := 'Mebius IoControl reply is too short';
       Exit;
     end;
-    if lReply.Kind = mpkData then
-      Continue;
-    Break;
-  end;
+    lReplyCode := GetLongLE(lReply.Data, 4);
+    if lReplyCode = REC_IOCTL_MEASTASK_NULL then
+    begin
+      AErrorMessage := 'Mebius device returned IOCTL_MEASTASK_NULL';
+      Exit;
+    end;
+    if lReplyCode <> AIoCode then
+    begin
+      AErrorMessage := Format(
+        'Unexpected Mebius IoControl reply %.8x for %.8x', [lReplyCode, AIoCode]);
+      Exit;
+    end;
 
-  if Length(lReply.Data) < REC_MEB_IOCTL_COMMAND_HEADER_SIZE then
-  begin
-    AErrorMessage := 'Mebius IoControl reply is too short';
-    Exit;
+    SetLength(AOutData, Length(lReply.Data) - REC_MEB_IOCTL_COMMAND_HEADER_SIZE);
+    if Length(AOutData) > 0 then
+      Move(lReply.Data[REC_MEB_IOCTL_COMMAND_HEADER_SIZE], AOutData[0],
+        Length(AOutData));
+    if (AOutSize > 0) and (Length(AOutData) < AOutSize) then
+    begin
+      AErrorMessage := 'Mebius IoControl reply is shorter than expected';
+      Exit;
+    end;
+    Result := True;
+  except
+    on E: Exception do
+      AErrorMessage := E.Message;
   end;
-  lReplyCode := GetLongLE(lReply.Data, 4);
-  if lReplyCode = REC_IOCTL_MEASTASK_NULL then
-  begin
-    AErrorMessage := 'Mebius device returned IOCTL_MEASTASK_NULL';
-    Exit;
-  end;
-  if lReplyCode <> AIoCode then
-  begin
-    AErrorMessage := Format(
-      'Unexpected Mebius IoControl reply %.8x for %.8x', [lReplyCode, AIoCode]);
-    Exit;
-  end;
-
-  SetLength(AOutData, Length(lReply.Data) - REC_MEB_IOCTL_COMMAND_HEADER_SIZE);
-  if Length(AOutData) > 0 then
-    Move(lReply.Data[REC_MEB_IOCTL_COMMAND_HEADER_SIZE], AOutData[0],
-      Length(AOutData));
-  if (AOutSize > 0) and (Length(AOutData) < AOutSize) then
-  begin
-    AErrorMessage := 'Mebius IoControl reply is shorter than expected';
-    Exit;
-  end;
-  Result := True;
 end;
 
 procedure TRecorderMebiusTcpClient.StartMeasurement;
@@ -698,7 +756,7 @@ var
   lPending: TRecorderMebiusFloatBlock;
   lSavedTimeout: Cardinal;
 begin
-  FillChar(ABlock, SizeOf(ABlock), 0);
+  ClearMebiusFloatBlock(ABlock);
   SetLength(ATempValues, 0);
   AHasTemp := False;
   AHasUts := False;
@@ -725,8 +783,8 @@ begin
       begin
         if RecorderMebiusParseFloatBlock(lPacket.Data, AChannelCount, lPending) then
         begin
-          ABlock := lPending;
-          lGotMeas := True;
+          if AppendMebiusFloatBlock(ABlock, lPending) then
+            lGotMeas := True;
         end;
         Continue;
       end;

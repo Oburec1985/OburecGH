@@ -499,3 +499,78 @@ Hz and recorded the investigation in
 
 **Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
 completed with exit code 0; only existing hints/notes.
+
+## Codex continuation 2026-07-07: MIC185 recording undercount at 10 Hz
+
+**Prompt:** MIC-185 in RecorderLnx recorded only about 13 values in 3 seconds at
+`Fs=10 Hz`; check and fix recording/buffer efficiency.
+
+**Fix:** `Device/mic185/uMic185MebiusTcpProtocol.pas` no longer drops earlier
+measurement packets during `ReadMeasDataBlock` drain. Previously the code read
+up to 32 packets but replaced `ABlock` with the latest `dev_id=1` packet, so
+with MIC185 `BlockSize=1` the recording effectively followed the 200 ms source
+tick (~15 samples/3 s) instead of the 10 Hz stream. Added block aggregation via
+`AppendMebiusFloatBlock`, using `Move` for per-channel `Single` array copies.
+
+**Buffer check:** tag storage already uses a ring buffer in
+`Core/uRecorderTags.pas` and uses `Move` for last-block / transformed
+`Double` block copies. The remaining per-sample loops in MIC185 publication are
+`Single -> Double` conversion and cannot be replaced by a raw `Move`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit
+code 0. No separate MIC185 `.lpi` test project was found by `rg --files`.
+
+**Stop follow-up:** user reported debugger exception on transition to Stop:
+`Unexpected Mebius packet signature: 00000001` in
+`uMic185MebiusTcpProtocol.pas`. Root cause was a race: MIC185
+`RequestStop` called `fDevice.Stop` from the external/UI thread while the
+worker could still be in `ReadBlock`, creating concurrent reads on the same TCP
+socket. Fixed `TRecorderMic185DataSource.RequestStop` to only set inherited
+`TryStop`; device `Stop/Disconnect` now runs only from the worker-thread
+`Stop`. `TryIoControl` was also hardened so protocol exceptions return `False`
+with an error string. Rebuild of `RecorderLnx.lpi` completed with exit code 0.
+
+## Codex continuation 2026-07-07: MIC140 offline icon in hardware tree
+
+**Prompt:** MIC140 is currently powered off; in the device tree, show the failed
+device picture when the connection function returns `False`, and use 1 second
+timeouts instead of 5 seconds. The requested failure image is index 41 from the
+command image list passed from the main form.
+
+**Fix:** `UI/uRecorderSettingsDialog.pas` now probes MIC140 and MIC185 source
+nodes while populating the hardware tree. MIC140 uses
+`RecorderMic140TcpProbe(..., 1000)`, MIC185 uses
+`RecorderMic185ReadDeviceInfo(..., 1000)`. If the source has no linked tags or
+the probe returns `False`, the source node uses `CDeviceDisabledImageIndex`
+(41); otherwise it keeps the controller image.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit
+code 0. The existing post-build `copy_sdb_res.bat` still prints `#!/bin/sh` is
+not recognized, but lazbuild exits successfully.
+
+**Follow-up:** tags linked to an inactive/offline MIC source are now hidden from
+the main form tag/channel list. `TMainForm.UpdateActiveSourceIds` probes unique
+MIC140/MIC185 sources with a 1000 ms timeout after refreshing tag-based source
+ids and unregisters sources that do not respond. The settings dialog keeps those
+tags visible on the Channels tab but draws image index 54 in the selected
+channels grid. Rebuild of `RecorderLnx.lpi` completed with exit code 0.
+
+**Icon layout follow-up:** the selected-channel grid no longer draws inactive
+source image 54 over the tag name. `UI/uRecorderSettingsDialog.pas` now uses a
+dedicated leading 20 px icon column, keeps tag names in the next column, scales
+the large image-list bitmap into a centered 16x16 px rectangle, and ignores the
+empty icon column for sorting. The first rebuild reached compilation but could
+not relink because `RecorderLnx.exe` was running as PID 21672; after stopping
+that process, rebuild of `RecorderLnx.lpi` completed with exit code 0. The
+existing `copy_sdb_res.bat` `#!/bin/sh` post-build message still does not fail
+the build.
+
+**Hardware tree follow-up:** user asked not to show child tags under devices in
+the settings hardware tree. `UI/uRecorderSettingsDialog.pas` now keeps
+`PopulateHardwareTree` source-only: Mera, MIC140, and MIC183/185 nodes are shown
+without per-channel child nodes; channel membership remains in the channel
+grids. `rg` confirms no `Items.AddChild(lSourceNode, ...)` calls remain.
+Rebuild of `RecorderLnx.lpi` completed with exit code 0 after stopping a running
+`RecorderLnx.exe` process that held the output exe.

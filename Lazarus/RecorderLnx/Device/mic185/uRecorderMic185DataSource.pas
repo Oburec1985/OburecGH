@@ -269,8 +269,6 @@ end;
 procedure TRecorderMic185DataSource.RequestStop;
 begin
   inherited RequestStop;
-  if fDevice <> nil then
-    fDevice.Stop;
 end;
 
 procedure TRecorderMic185DataSource.Stop;

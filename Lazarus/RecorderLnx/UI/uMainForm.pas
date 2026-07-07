@@ -354,6 +354,7 @@ const
     DirectorySeparator + 'default';
   CProjectBaseName = 'default';
   COldRunControlFileName = 'run-control.ini';
+  CDeviceHealthProbeTimeoutMs = 1000;
 
 { TMainForm }
 
@@ -591,10 +592,56 @@ begin
 end;
 
 procedure TMainForm.UpdateActiveSourceIds;
+var
+  I: Integer;
+  lErrorText: string;
+  lHost: string;
+  lPort: Word;
+  lSerialNumber: LongWord;
+  lSourceId: string;
+  lSources: TStringList;
+  lTag: TRecorderTag;
+  lVersionText: string;
 begin
   if fTagRegistry = nil then
     Exit;
+
   fTagRegistry.RefreshActiveSourcesFromTags;
+
+  lSources := TStringList.Create;
+  try
+    lSources.CaseSensitive := False;
+    lSources.Sorted := False;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      if (lTag = nil) or RecorderIsDetachedTagSource(lTag.SourceId) then
+        Continue;
+      lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
+      if not RecorderIsHardwareTagSource(lSourceId) then
+        Continue;
+      if lSources.IndexOf(lSourceId) < 0 then
+        lSources.Add(lSourceId);
+    end;
+
+    for I := 0 to lSources.Count - 1 do
+    begin
+      lSourceId := lSources[I];
+      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
+      begin
+        if not RecorderMic140TcpProbe(lHost, lPort, CDeviceHealthProbeTimeoutMs) then
+          fTagRegistry.UnregisterActiveSource(lSourceId);
+      end
+      else if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+      begin
+        if not RecorderMic185ReadDeviceInfo(lHost, lPort, lSerialNumber,
+          lVersionText, lErrorText, CDeviceHealthProbeTimeoutMs) then
+          fTagRegistry.UnregisterActiveSource(lSourceId);
+      end;
+    end;
+  finally
+    lSources.Free;
+  end;
 end;
 
 procedure TMainForm.OnMenuEditSelectedTags(Sender: TObject);
@@ -762,6 +809,7 @@ begin
     begin
       ApplyDisplayTimingSettings;
       UpdateRecordFrameManager;
+      UpdateActiveSourceIds;
       fDataSourceManager.Clear;
       fDataSourcesConfigured := False;
       PrepareRuntimeForConfiguration;
