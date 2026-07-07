@@ -57,7 +57,9 @@ Start → IOCTL START
 
 ### Парсинг в Lazarus (важно)
 
-Заголовок `INTERNAL_PACKET_HEADER` в MSVC: `USHORT type_` + **2 байта padding** + `ULONG sampl_count_` → смещение данных **12** байт от начала payload (`CMic185PacketDataOffset` в `uMic185Constants.pas`). Раньше ошибочно использовалось 10 байт — давало неверные коды (~0).
+- Смещение данных **12** байт (`CMic185PacketDataOffset`) — MSVC padding в `INTERNAL_PACKET_HEADER`.
+- Blob **3976** байт — явные `_Pad*` в `uMic185MebiusTypes.pas`.
+- `ReadMeasDataBlock`: batch-drain для temp/UTS. См. [protocol.md](protocol.md).
 
 ## Сверка с Recorder
 
@@ -65,8 +67,11 @@ Start → IOCTL START
 |------------|---------|
 | CLI | `mic185_acquire_test.exe -verify-codes 192.168.9.142 4000 100 5` |
 | GUI | `mic185_acquire_gui.exe --verify` |
+| GUI stress | `mic185_acquire_gui.exe --stress` |
 
 Эталонные коды каналов 3-1…3-50 — в [defaults.md](defaults.md), модуль `uMic185CodeVerify.pas` (допуск ±3).
+
+Подробнее о стенде: [test_stand.md](test_stand.md).
 
 Перед прогоном закройте Recorder / другие клиенты на порту 4000.
 

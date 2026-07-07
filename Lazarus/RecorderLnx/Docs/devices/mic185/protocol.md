@@ -104,6 +104,24 @@ IOCTL_CMD_GET_SOFT_VERSION         = CTL_CODE(TYPEIO_CALL_COMMAND, 0x0002, 0, 0)
 
 При активном потоке данных `TryIoControl` должен **пропускать** data-пакеты (`mpkData`), иначе ответы START/PROGRAM парсятся как IOCTL и дают ошибку.
 
+## Чтение data-пакетов в стенде (`ReadMeasDataBlock`)
+
+Три независимых потока (`device_id` 0/1/2) приходят в **одну TCP-сессию**. Стенд не может читать по одному meas-пакету на вызов — temp (1 Гц) теряется за meas (100 Гц).
+
+Алгоритм `TRecorderMebiusTcpClient.ReadMeasDataBlock` (`uMic185MebiusTcpProtocol.pas`):
+
+1. Цикл до **32** пакетов.
+2. **Первый** `ReadPacket` — timeout вызывающего кода (200–500 ms в GUI).
+3. **Следующие** — timeout **2 ms** (drain без блокировки на пустом сокете).
+4. Пакеты `dev_id=1` → парсинг meas, запоминается **последний** успешный блок.
+5. Пакеты `dev_id=2` → `Mic185ParseTempValues` (LM74→°C).
+6. Пакеты `dev_id=0` → UTS.
+7. Возврат: `True`, если хотя бы один meas-блок разобран.
+
+`ReadBlock` в `uMic185Device.pas` возвращает только meas; temp/UTS — side cache (`fLastTempValues`, `fHasLastTemp`).
+
+Счётчик `RxDataPacketCount` растёт на **все** data-пакеты в drain-цикле (обычно в несколько раз больше числа Blocks).
+
 ## Диагностика: версия ПО
 
 `IOCTL_CMD_GET_SOFT_VERSION` возвращает `MIC185V2_HARD_DEVICE_INFO` (s/n, SoftVersion, HardVersion, Revision, метролог).
@@ -112,11 +130,18 @@ IOCTL_CMD_GET_SOFT_VERSION         = CTL_CODE(TYPEIO_CALL_COMMAND, 0x0002, 0, 0)
 
 ## Тестовый стенд
 
-См. [Tests/mic185/README.md](../../../Tests/mic185/README.md).
+Подробно: [test_stand.md](test_stand.md).
 
-- CLI: `mic185_acquire_test.exe [host] [port] [meas_fs_hz] [blocks]`
-- GUI: `mic185_acquire_gui.exe` или `mic185_acquire_gui.exe --auto`
-- Лог: `mic185_protocol_debug.log`
+| Инструмент | Команда |
+|------------|---------|
+| CLI | `mic185_acquire_test.exe [host] [port] [fs] [blocks]` |
+| GUI | `mic185_acquire_gui.exe` |
+| Автотест | `mic185_acquire_gui.exe --auto` |
+| Сверка кодов | `mic185_acquire_gui.exe --verify` |
+| Стабильность | `mic185_acquire_gui.exe --stress` (120 с) |
+| Connect-only | `mic185_acquire_gui.exe --connect` |
+
+Лог: `mic185_protocol_debug.log` (append, буфер до 3000 строк).
 
 Параметры по умолчанию:
 
@@ -124,3 +149,5 @@ IOCTL_CMD_GET_SOFT_VERSION         = CTL_CODE(TYPEIO_CALL_COMMAND, 0x0002, 0, 0)
 - Port: `4000`
 - Каналов: `70` (64+5+1)
 - Fs измерительных: `100` Гц
+- Fs температурных: `1` Гц
+- GUI poll: `tmrAcquire` **200 ms**

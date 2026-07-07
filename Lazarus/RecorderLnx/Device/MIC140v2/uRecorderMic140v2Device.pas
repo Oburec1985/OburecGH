@@ -56,6 +56,7 @@ type
     function GetName: string;
     function GetState: TRecorderDeviceState;
     function GetChannels: TRecorderDeviceChannelArray;
+    function GetNativeObject: TObject;
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer): Variant;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
@@ -156,6 +157,11 @@ end;
 function TRecorderMic140v2Device.GetChannels: TRecorderDeviceChannelArray;
 begin
   Result := Copy(fCh, 0, Length(fCh));
+end;
+
+function TRecorderMic140v2Device.GetNativeObject: TObject;
+begin
+  Result := Self;
 end;
 
 function TRecorderMic140v2Device.GetDeviceProperty(AProperty: TRecorderDeviceProperty;

@@ -481,11 +481,16 @@ const
   CDetachedTagSourcePrefix = 'Detached:';
   CMeraTagSourcePrefix = 'Mera file: ';
   CMic140TagSourcePrefix = 'MIC-140:';
+  CMic185TagSourcePrefix = 'MIC-185: ';
 
 function RecorderNormalizeTagSourceId(const ASourceId: string): string;
 function RecorderIsDetachedTagSource(const ASourceId: string): Boolean;
 function RecorderIsVirtualTagSource(const ASourceId: string): Boolean;
 function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
+function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
+function RecorderIsHardwareTagSource(const ASourceId: string): Boolean;
+function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
 function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
 procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 
@@ -1365,6 +1370,34 @@ begin
   Result := Pos(CMic140TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
 end;
 
+function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CMic185TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+function RecorderIsHardwareTagSource(const ASourceId: string): Boolean;
+begin
+  Result := RecorderIsHardwareMic140TagSource(ASourceId) or
+    RecorderIsHardwareMic185TagSource(ASourceId);
+end;
+
+function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := ATag <> nil;
+  if not Result then
+    Exit;
+  if RecorderIsDetachedTagSource(ATag.SourceId) then
+    Exit(False);
+  if (ARegistry = nil) or not RecorderIsHardwareTagSource(ATag.SourceId) then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  Result := ARegistry.IsSourceActive(lSourceId);
+end;
+
 function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
 begin
   Result := (ATag <> nil) and RecorderIsHardwareMic140TagSource(ATag.SourceId);
@@ -1406,6 +1439,8 @@ begin
     if Pos(CMeraTagSourcePrefix, lSourceId) = 1 then
       RegisterActiveSource(lSourceId)
     else if Pos(CMic140TagSourcePrefix, lSourceId) = 1 then
+      RegisterActiveSource(lSourceId)
+    else if Pos(CMic185TagSourcePrefix, lSourceId) = 1 then
       RegisterActiveSource(lSourceId);
   end;
 end;

@@ -48,6 +48,31 @@
 | Размер блока | 1 | `BlockSize` |
 | Тип оценки | 0 | `EvalType_` |
 | Канал подключён | да | `m_bConnected` = true |
+| Единица в стенде | `m` (коды) | `BuildLogicalChannelUnit` |
+| GroupAddition[0..3] | откл. (4) | `MOD_ADD_OFF` = `CMic185ModAddOff` |
+
+---
+
+## Температурные каналы (дефолт)
+
+См. [temperature_channels.md](temperature_channels.md).
+
+| Параметр | Значение | Поле |
+|----------|----------|------|
+| Число каналов | 5 | `tCh[0..4]` |
+| Частота | **1 Гц** | `TempChannels[I].FrequencyHz` |
+| Подключён | да | `Connected = True` |
+| Единицы UI | °C | LM74 → `ConvLM74CodeToC` |
+| ГХ | нет | физика датчика, не `EvalU` |
+
+Пример значений в Recorder (живой прибор): t1≈37.4 °C, t2≈38.5 °C, …, t5=0.0 °C (нет датчика).
+
+### СЕВ (UTS)
+
+| Параметр | Значение |
+|----------|----------|
+| Флаг | `TASKSEV_EN_FLAG` в `SET_CONTROLLER_PARAMS` |
+| Поток | `dev_id=0`, ~1 Гц |
 
 ---
 
@@ -181,6 +206,8 @@ mic185_acquire_gui.exe --verify
 
 ## См. также
 
-- [protocol.md](protocol.md) — blob `CMIC185V2_BASESETTINGS`, IOCTL
-- [source_map.md](source_map.md) — пути к `mic185v2chanbase.cpp`, `computephysical.h`
-- [Tests/mic185/README.md](../../../Tests/mic185/README.md) — стенд
+- [protocol.md](protocol.md) — blob, IOCTL, drain пакетов
+- [temperature_channels.md](temperature_channels.md) — LM74, temp 1 Гц
+- [test_stand.md](test_stand.md) — GUI, сверка кодов, `--verify`
+- [source_map.md](source_map.md) — пути к исходникам
+- [Tests/mic185/README.md](../../../Tests/mic185/README.md) — краткий README стенда

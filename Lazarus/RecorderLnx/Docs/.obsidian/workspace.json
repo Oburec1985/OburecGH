@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic185/architecture.md",
+                "file": "devices/mic185/temperature_channels.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "architecture"
+              "title": "temperature_channels"
             }
           }
         ]
@@ -185,18 +185,26 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
+    "devices/mic185/recorderlnx_integration.md",
+    "devices/mic185/images/recorder_mic185_units_combo.png",
+    "devices/mic185/images/recorder_mic185_thermo_combo.png",
+    "devices/mic185/images/recorder_mic185_sensor_combo.png",
+    "devices/mic185/images/recorder_mic185_power_combo.png",
+    "devices/mic185/images/recorder_mic185_main.png",
+    "devices/mic185/images/recorder_mic185_channel.png",
+    "devices/mic185/images/recorder_mic185_commutation_combo.png",
+    "devices/mic185/images/recorder_mic185_additional.png",
+    "devices/mic185/images",
+    "devices/mic185/source_map.md",
+    "devices/mic185/test_stand.md",
+    "devices/mic185/README.md",
+    "devices/mic185/protocol.md",
+    "devices/mic185/defaults.md",
+    "devices/mic185/architecture.md",
     "devices/mic185/temperature_channels.md",
     "devices/mic185/windev_mic185_test.md",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x.svg",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x-circle.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/warning.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/terminal.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/sync.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/stop.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/settings.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/search.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/reload.svg",
-    "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/record.svg",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white",
     "devices/mic185/mebius.daq/utils/mera_monitor/config/windows/qt.conf",
     "devices/mic185/mebius.daq/utils/mera_monitor/config/linux/qt.conf",
@@ -206,13 +214,7 @@
     "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_deck.ui",
     "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_board.ui",
     "devices/mic185/mebius.daq/utils/mera_monitor/src/monitor.cpp",
-    "devices/mic185/mebius.daq/utils/mera_monitor/src/main.cpp",
     "devices/mic185/mebius.daq/cmake/custom-triplets/x64-win-llvm/Notes.md",
-    "devices/mic185/defaults.md",
-    "devices/mic185/protocol.md",
-    "devices/mic185/README.md",
-    "devices/mic185/source_map.md",
-    "devices/mic185/architecture.md",
     "devices/mic140/protocol/08_timing_and_count_aver.md",
     "devices/mic140/protocol/02_commutated_adc.md",
     "devices/mic140/protocol/03_scan_programming.md",
@@ -228,8 +230,6 @@
     "devices/mic140/example/README.md",
     "devices/mic140/protocol/README.md",
     "errors/2026-06-29-mic140v2-acceptance.md",
-    "errors/README.md",
-    "old/mic140_legacy_scan_stream.md",
-    "old/mic140_protocol.md"
+    "errors/README.md"
   ]
 }

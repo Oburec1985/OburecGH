@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-07-06 — Документация MIC185: полное обновление Docs/devices/mic185
+
+**Задача:** Синхронизировать документацию прибора с наработками стенда, temp, стабильностью.
+
+**Сделано:**
+- Новый [Docs/devices/mic185/test_stand.md](Docs/devices/mic185/test_stand.md).
+- Обновлены README, protocol, architecture, defaults, source_map, temperature_channels, windev_mic185_test.
+- Ссылки из Tests/mic185/README.md.
+
+---
+
 ## 2026-07-06 — MIC183/185 GUI: стабильность после Start (RLM)
 
 **Задача:** Устранить падение/зависание GUI через некоторое время после Start.

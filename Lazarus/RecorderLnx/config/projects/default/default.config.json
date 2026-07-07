@@ -23,6 +23,7 @@
 								"deviceSerial" : 164,
 								"versionText" : "",
 								"thermoCompensationEnabled" : true,
+								"boardCommutIndex" : 0,
 								"selectedChannels" : [
 										"1",
 										"2",
@@ -77,6 +78,7 @@
 										{
 												"address" : "2-01",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -84,12 +86,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch01"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-02",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -97,12 +100,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch02"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-03",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -110,12 +114,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch03"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-04",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -123,12 +128,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch04"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-05",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -136,12 +142,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch05"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-06",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -149,12 +156,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch06"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-07",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -162,12 +170,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch07"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-08",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -175,12 +184,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch08"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-09",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -188,12 +198,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch09"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-10",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -201,12 +212,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch10"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-11",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -214,12 +226,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch11"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-12",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -227,12 +240,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch12"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-13",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -240,12 +254,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch13"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-14",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -253,12 +268,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch14"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-15",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -266,12 +282,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch15"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-16",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -279,12 +296,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch16"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-17",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -292,12 +310,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch17"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-18",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -305,12 +324,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch18"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-19",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -318,12 +338,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch19"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-20",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -331,12 +352,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch20"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-21",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -344,12 +366,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch21"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-22",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -357,12 +380,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch22"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-23",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -370,12 +394,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch23"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-24",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
@@ -383,12 +408,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch24"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-25",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -396,12 +422,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch25"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-26",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -409,12 +436,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch26"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-27",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -422,12 +450,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch27"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-28",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -435,12 +464,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch28"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-29",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -448,12 +478,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch29"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-30",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -461,12 +492,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch30"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-31",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -474,12 +506,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch31"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-32",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -487,12 +520,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch32"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-33",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -500,12 +534,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch33"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-34",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -513,12 +548,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch34"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-35",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -526,12 +562,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch35"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-36",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -539,12 +576,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch36"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-37",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -552,12 +590,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch37"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-38",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -565,12 +604,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch38"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-39",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -578,12 +618,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch39"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-40",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -591,12 +632,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch40"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-41",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -604,12 +646,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch41"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-42",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -617,12 +660,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch42"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-43",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -630,12 +674,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch43"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-44",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -643,12 +688,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch44"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-45",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -656,12 +702,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch45"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-46",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -669,12 +716,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch46"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-47",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -682,12 +730,13 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch47"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"address" : "2-48",
 												"rangeIndex" : 0,
+												"commutIndex" : 0,
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 2,
@@ -695,11 +744,16 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : true,
-												"hardwareCalibrationName" : "MIC140 sn0164 06_100mV ch48"
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										}
 								]
 						}
+				},
+				{
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"moduleType" : "MIC183/185",
+						"defaultPollFrequencyHz" : 1.0000000000000000E+002
 				}
 		],
 		"calibrations" : [
@@ -10906,7 +10960,7 @@
 						"name" : "T_01",
 						"address" : "2-01",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-01; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-01; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -10968,7 +11022,7 @@
 						"name" : "MIC140_02",
 						"address" : "2-02",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-02; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-02; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11030,7 +11084,7 @@
 						"name" : "MIC140_03",
 						"address" : "2-03",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-03; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-03; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11092,7 +11146,7 @@
 						"name" : "MIC140_04",
 						"address" : "2-04",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-04; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-04; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11154,7 +11208,7 @@
 						"name" : "MIC140_05",
 						"address" : "2-05",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-05; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-05; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11216,7 +11270,7 @@
 						"name" : "MIC140_06",
 						"address" : "2-06",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-06; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-06; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11278,7 +11332,7 @@
 						"name" : "MIC140_07",
 						"address" : "2-07",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-07; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-07; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11340,7 +11394,7 @@
 						"name" : "MIC140_08",
 						"address" : "2-08",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-08; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-08; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11402,7 +11456,7 @@
 						"name" : "MIC140_09",
 						"address" : "2-09",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-09; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-09; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11464,7 +11518,7 @@
 						"name" : "MIC140_10",
 						"address" : "2-10",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-10; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-10; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11526,7 +11580,7 @@
 						"name" : "MIC140_11",
 						"address" : "2-11",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-11; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-11; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11588,7 +11642,7 @@
 						"name" : "MIC140_12",
 						"address" : "2-12",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-12; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-12; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11650,7 +11704,7 @@
 						"name" : "MIC140_13",
 						"address" : "2-13",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-13; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-13; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11712,7 +11766,7 @@
 						"name" : "MIC140_14",
 						"address" : "2-14",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-14; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-14; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11774,7 +11828,7 @@
 						"name" : "MIC140_15",
 						"address" : "2-15",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-15; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-15; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11836,7 +11890,7 @@
 						"name" : "MIC140_16",
 						"address" : "2-16",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-16; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-16; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11898,7 +11952,7 @@
 						"name" : "MIC140_17",
 						"address" : "2-17",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-17; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-17; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -11960,7 +12014,7 @@
 						"name" : "MIC140_18",
 						"address" : "2-18",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-18; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-18; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12022,7 +12076,7 @@
 						"name" : "MIC140_19",
 						"address" : "2-19",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-19; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-19; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12084,7 +12138,7 @@
 						"name" : "MIC140_20",
 						"address" : "2-20",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-20; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-20; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12146,7 +12200,7 @@
 						"name" : "MIC140_21",
 						"address" : "2-21",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-21; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-21; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12208,7 +12262,7 @@
 						"name" : "MIC140_22",
 						"address" : "2-22",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-22; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-22; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12270,7 +12324,7 @@
 						"name" : "MIC140_23",
 						"address" : "2-23",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-23; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-23; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12332,7 +12386,7 @@
 						"name" : "MIC140_24",
 						"address" : "2-24",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-24; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-24; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12394,7 +12448,7 @@
 						"name" : "MIC140_25",
 						"address" : "2-25",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-25; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-25; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12456,7 +12510,7 @@
 						"name" : "MIC140_26",
 						"address" : "2-26",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-26; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-26; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12518,7 +12572,7 @@
 						"name" : "MIC140_27",
 						"address" : "2-27",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-27; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-27; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12580,7 +12634,7 @@
 						"name" : "MIC140_28",
 						"address" : "2-28",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-28; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-28; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12642,7 +12696,7 @@
 						"name" : "MIC140_29",
 						"address" : "2-29",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-29; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-29; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12704,7 +12758,7 @@
 						"name" : "MIC140_30",
 						"address" : "2-30",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-30; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-30; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12766,7 +12820,7 @@
 						"name" : "MIC140_31",
 						"address" : "2-31",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-31; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-31; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12828,7 +12882,7 @@
 						"name" : "MIC140_32",
 						"address" : "2-32",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-32; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-32; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12890,7 +12944,7 @@
 						"name" : "MIC140_33",
 						"address" : "2-33",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-33; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-33; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -12952,7 +13006,7 @@
 						"name" : "MIC140_34",
 						"address" : "2-34",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-34; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-34; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13014,7 +13068,7 @@
 						"name" : "MIC140_35",
 						"address" : "2-35",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-35; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-35; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13076,7 +13130,7 @@
 						"name" : "MIC140_36",
 						"address" : "2-36",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-36; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-36; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13138,7 +13192,7 @@
 						"name" : "MIC140_37",
 						"address" : "2-37",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-37; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-37; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13200,7 +13254,7 @@
 						"name" : "MIC140_38",
 						"address" : "2-38",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-38; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-38; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13262,7 +13316,7 @@
 						"name" : "MIC140_39",
 						"address" : "2-39",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-39; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-39; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13324,7 +13378,7 @@
 						"name" : "MIC140_40",
 						"address" : "2-40",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-40; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-40; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13386,7 +13440,7 @@
 						"name" : "MIC140_41",
 						"address" : "2-41",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-41; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-41; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13448,7 +13502,7 @@
 						"name" : "MIC140_42",
 						"address" : "2-42",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-42; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-42; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13510,7 +13564,7 @@
 						"name" : "MIC140_43",
 						"address" : "2-43",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-43; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-43; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13572,7 +13626,7 @@
 						"name" : "MIC140_44",
 						"address" : "2-44",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-44; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-44; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13634,7 +13688,7 @@
 						"name" : "MIC140_45",
 						"address" : "2-45",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-45; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-45; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13696,7 +13750,7 @@
 						"name" : "MIC140_46",
 						"address" : "2-46",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-46; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-46; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13758,7 +13812,7 @@
 						"name" : "MIC140_47",
 						"address" : "2-47",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-47; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-47; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -13820,7 +13874,7 @@
 						"name" : "MIC140_48",
 						"address" : "2-48",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-48; freq=10 Hz; mode=mV",
+						"description" : "MIC-140 channel 2-48; mode=mV; freq=10 Hz",
 						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
@@ -14064,14 +14118,3982 @@
 						]
 				},
 				{
-						"id" : 263,
-						"name" : "MIC140-2-status",
-						"address" : "diagnostics.status",
-						"unit" : "",
-						"description" : "MIC-140 connection status: stopped",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"id" : 266,
+						"name" : "MIC183_185_{3_1}",
+						"address" : "MIC183_185-{3-1}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-1}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
 						"sourceValueMode" : "",
-						"moduleType" : "MIC-140 diagnostics",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 268,
+						"name" : "MIC183_185_{3_2}",
+						"address" : "MIC183_185-{3-2}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-2}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 270,
+						"name" : "MIC183_185_{3_3}",
+						"address" : "MIC183_185-{3-3}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-3}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 272,
+						"name" : "MIC183_185_{3_4}",
+						"address" : "MIC183_185-{3-4}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-4}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 274,
+						"name" : "MIC183_185_{3_5}",
+						"address" : "MIC183_185-{3-5}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-5}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 276,
+						"name" : "MIC183_185_{3_6}",
+						"address" : "MIC183_185-{3-6}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-6}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 278,
+						"name" : "MIC183_185_{3_7}",
+						"address" : "MIC183_185-{3-7}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-7}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 280,
+						"name" : "MIC183_185_{3_8}",
+						"address" : "MIC183_185-{3-8}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-8}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 282,
+						"name" : "MIC183_185_{3_9}",
+						"address" : "MIC183_185-{3-9}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-9}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 284,
+						"name" : "MIC183_185_{3_10}",
+						"address" : "MIC183_185-{3-10}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-10}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 286,
+						"name" : "MIC183_185_{3_11}",
+						"address" : "MIC183_185-{3-11}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-11}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 288,
+						"name" : "MIC183_185_{3_12}",
+						"address" : "MIC183_185-{3-12}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-12}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 290,
+						"name" : "MIC183_185_{3_13}",
+						"address" : "MIC183_185-{3-13}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-13}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 292,
+						"name" : "MIC183_185_{3_14}",
+						"address" : "MIC183_185-{3-14}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-14}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 294,
+						"name" : "MIC183_185_{3_15}",
+						"address" : "MIC183_185-{3-15}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-15}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 296,
+						"name" : "MIC183_185_{3_16}",
+						"address" : "MIC183_185-{3-16}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-16}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 298,
+						"name" : "MIC183_185_{3_17}",
+						"address" : "MIC183_185-{3-17}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-17}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 300,
+						"name" : "MIC183_185_{3_18}",
+						"address" : "MIC183_185-{3-18}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-18}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 302,
+						"name" : "MIC183_185_{3_19}",
+						"address" : "MIC183_185-{3-19}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-19}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 304,
+						"name" : "MIC183_185_{3_20}",
+						"address" : "MIC183_185-{3-20}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-20}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 306,
+						"name" : "MIC183_185_{3_21}",
+						"address" : "MIC183_185-{3-21}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-21}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 308,
+						"name" : "MIC183_185_{3_22}",
+						"address" : "MIC183_185-{3-22}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-22}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 310,
+						"name" : "MIC183_185_{3_23}",
+						"address" : "MIC183_185-{3-23}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-23}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 312,
+						"name" : "MIC183_185_{3_24}",
+						"address" : "MIC183_185-{3-24}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-24}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 314,
+						"name" : "MIC183_185_{3_25}",
+						"address" : "MIC183_185-{3-25}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-25}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 316,
+						"name" : "MIC183_185_{3_26}",
+						"address" : "MIC183_185-{3-26}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-26}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 318,
+						"name" : "MIC183_185_{3_27}",
+						"address" : "MIC183_185-{3-27}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-27}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 320,
+						"name" : "MIC183_185_{3_28}",
+						"address" : "MIC183_185-{3-28}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-28}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 322,
+						"name" : "MIC183_185_{3_29}",
+						"address" : "MIC183_185-{3-29}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-29}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 324,
+						"name" : "MIC183_185_{3_30}",
+						"address" : "MIC183_185-{3-30}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-30}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 326,
+						"name" : "MIC183_185_{3_31}",
+						"address" : "MIC183_185-{3-31}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-31}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 328,
+						"name" : "MIC183_185_{3_32}",
+						"address" : "MIC183_185-{3-32}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-32}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 330,
+						"name" : "MIC183_185_{3_33}",
+						"address" : "MIC183_185-{3-33}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-33}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 332,
+						"name" : "MIC183_185_{3_34}",
+						"address" : "MIC183_185-{3-34}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-34}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 334,
+						"name" : "MIC183_185_{3_35}",
+						"address" : "MIC183_185-{3-35}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-35}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 336,
+						"name" : "MIC183_185_{3_36}",
+						"address" : "MIC183_185-{3-36}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-36}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 338,
+						"name" : "MIC183_185_{3_37}",
+						"address" : "MIC183_185-{3-37}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-37}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 340,
+						"name" : "MIC183_185_{3_38}",
+						"address" : "MIC183_185-{3-38}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-38}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 342,
+						"name" : "MIC183_185_{3_39}",
+						"address" : "MIC183_185-{3-39}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-39}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 344,
+						"name" : "MIC183_185_{3_40}",
+						"address" : "MIC183_185-{3-40}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-40}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 346,
+						"name" : "MIC183_185_{3_41}",
+						"address" : "MIC183_185-{3-41}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-41}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 348,
+						"name" : "MIC183_185_{3_42}",
+						"address" : "MIC183_185-{3-42}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-42}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 350,
+						"name" : "MIC183_185_{3_43}",
+						"address" : "MIC183_185-{3-43}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-43}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 352,
+						"name" : "MIC183_185_{3_44}",
+						"address" : "MIC183_185-{3-44}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-44}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 354,
+						"name" : "MIC183_185_{3_45}",
+						"address" : "MIC183_185-{3-45}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-45}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 356,
+						"name" : "MIC183_185_{3_46}",
+						"address" : "MIC183_185-{3-46}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-46}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 358,
+						"name" : "MIC183_185_{3_47}",
+						"address" : "MIC183_185-{3-47}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-47}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 360,
+						"name" : "MIC183_185_{3_48}",
+						"address" : "MIC183_185-{3-48}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-48}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 362,
+						"name" : "MIC183_185_{3_49}",
+						"address" : "MIC183_185-{3-49}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-49}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 364,
+						"name" : "MIC183_185_{3_50}",
+						"address" : "MIC183_185-{3-50}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-50}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 366,
+						"name" : "MIC183_185_{3_51}",
+						"address" : "MIC183_185-{3-51}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-51}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 368,
+						"name" : "MIC183_185_{3_52}",
+						"address" : "MIC183_185-{3-52}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-52}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 370,
+						"name" : "MIC183_185_{3_53}",
+						"address" : "MIC183_185-{3-53}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-53}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 372,
+						"name" : "MIC183_185_{3_54}",
+						"address" : "MIC183_185-{3-54}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-54}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 374,
+						"name" : "MIC183_185_{3_55}",
+						"address" : "MIC183_185-{3-55}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-55}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 376,
+						"name" : "MIC183_185_{3_56}",
+						"address" : "MIC183_185-{3-56}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-56}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 378,
+						"name" : "MIC183_185_{3_57}",
+						"address" : "MIC183_185-{3-57}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-57}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 380,
+						"name" : "MIC183_185_{3_58}",
+						"address" : "MIC183_185-{3-58}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-58}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 382,
+						"name" : "MIC183_185_{3_59}",
+						"address" : "MIC183_185-{3-59}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-59}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 384,
+						"name" : "MIC183_185_{3_60}",
+						"address" : "MIC183_185-{3-60}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-60}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 386,
+						"name" : "MIC183_185_{3_61}",
+						"address" : "MIC183_185-{3-61}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-61}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 388,
+						"name" : "MIC183_185_{3_62}",
+						"address" : "MIC183_185-{3-62}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-62}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 390,
+						"name" : "MIC183_185_{3_63}",
+						"address" : "MIC183_185-{3-63}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-63}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 392,
+						"name" : "MIC183_185_{3_64}",
+						"address" : "MIC183_185-{3-64}",
+						"unit" : "мВ",
+						"description" : "MIC183_185-{3-64}; type=R8; freq=100; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+002,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 394,
+						"name" : "MIC183_185_{3_t1}",
+						"address" : "MIC183_185-{3-t1}",
+						"unit" : "°C",
+						"description" : "MIC183_185-{3-t1}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
 						"pollFrequencyHz" : 1.0000000000000000E+000,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
@@ -14126,14 +18148,262 @@
 						]
 				},
 				{
-						"id" : 265,
-						"name" : "MIC140-2-blocks",
-						"address" : "diagnostics.blocks",
-						"unit" : "blocks",
-						"description" : "MIC-140 successfully received scan blocks",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"id" : 396,
+						"name" : "MIC183_185_{3_t2}",
+						"address" : "MIC183_185-{3-t2}",
+						"unit" : "°C",
+						"description" : "MIC183_185-{3-t2}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
 						"sourceValueMode" : "",
-						"moduleType" : "MIC-140 diagnostics",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 398,
+						"name" : "MIC183_185_{3_t3}",
+						"address" : "MIC183_185-{3-t3}",
+						"unit" : "°C",
+						"description" : "MIC183_185-{3-t3}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 400,
+						"name" : "MIC183_185_{3_t4}",
+						"address" : "MIC183_185-{3-t4}",
+						"unit" : "°C",
+						"description" : "MIC183_185-{3-t4}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 402,
+						"name" : "MIC183_185_{3_t5}",
+						"address" : "MIC183_185-{3-t5}",
+						"unit" : "°C",
+						"description" : "MIC183_185-{3-t5}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
+						"pollFrequencyHz" : 1.0000000000000000E+000,
+						"rangeMin" : -3.2000000000000000E+004,
+						"rangeMax" : 3.2000000000000000E+004,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
+				},
+				{
+						"id" : 404,
+						"name" : "MIC183_185_{3_uts}",
+						"address" : "MIC183_185-{3-uts}",
+						"unit" : "с",
+						"description" : "MIC183_185-{3-uts}; type=R8; freq=1; file=4000",
+						"sourceId" : "MIC-185: 192.168.9.142:4000",
+						"sourceValueMode" : "",
+						"moduleType" : "MIC183/185",
 						"pollFrequencyHz" : 1.0000000000000000E+000,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,

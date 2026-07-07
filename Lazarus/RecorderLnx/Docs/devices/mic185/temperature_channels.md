@@ -91,7 +91,7 @@ const USHORT TEMP_NEG_VALUE_MASK = 0x1000;
 
 `ReadMeasDataBlock` раньше **выходил на первом** meas-пакете (`dev_id=1`). При соотношении 100:1 meas:temp пакет температуры часто оставался в буфере за десятками meas-пакетов и не попадал в UI.
 
-Исправление: за один вызов сливать до 64 пакетов, кешировать последний meas и любые temp/UTS в этой пачке.
+Исправление (актуальное): за один вызов drain до **32** пакетов — первый с полным timeout, остальные с **2 ms**; кешируется последний meas и любые temp/UTS. См. [protocol.md](protocol.md), [test_stand.md](test_stand.md).
 
 ### 3. Отображение в GUI
 
@@ -122,6 +122,13 @@ const USHORT TEMP_NEG_VALUE_MASK = 0x1000;
 
 | Файл | Роль |
 |------|------|
-| `device/uMic185MebiusTcpProtocol.pas` | `Mic185ParseTempValues`, `ReadMeasDataBlock` |
+| `device/uMic185MebiusTcpProtocol.pas` | `Mic185ParseTempValues`, `ReadMeasDataBlock`, drain |
 | `device/MIC185/uMic185Device.pas` | кеш temp, `ReadBlock` |
-| `uMic185DebugForm.pas` | строки 65–69 таблицы |
+| `device/MIC185/uMic185Constants.pas` | LM74 константы, `CMic185DevIdTempChannels` |
+| `uMic185DebugForm.pas` | строки 65–69 таблицы, `UpdateAuxChannelGrid` |
+
+## См. также
+
+- [test_stand.md](test_stand.md) — GUI, диагностика, стабильность
+- [defaults.md](defaults.md) — дефолты blob для temp
+- [architecture.md](architecture.md) — потоки данных

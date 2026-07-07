@@ -46,6 +46,7 @@ uses
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderMic185DataSource,
   uRecorderMeraPaths, uRecorderTagBalance, uRecorderMic140SettingsDialog;
 
 type
@@ -428,6 +429,7 @@ begin
   PrepareRuntimeForConfiguration;
   if fTagRegistry.TagCount = 0 then
     EnsureDemoDataSources;
+  UpdateActiveSourceIds;
   RebuildTagList('');
   UpdateStateView;
   AddLog('RecorderLnx started.');
@@ -1997,6 +1999,8 @@ begin
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(fTagRegistry, lTag) then
+        Continue;
       if (lFilter <> '') and
         (Pos(lFilter, LowerCase(lTag.Name + ' ' + lTag.Address + ' ' +
         lTag.Description)) = 0) then
@@ -2167,6 +2171,9 @@ var
   lMicPort: Word;
   lMicOutputMode: TRecorderMic140OutputMode;
   lMicSources: TStringList;
+  lMic185Host: string;
+  lMic185Port: Word;
+  lMic185Sources: TStringList;
   lPollFrequencyHz: Double;
   lSource: IRecorderDataSource;
   lTag: TRecorderTag;
@@ -2190,14 +2197,19 @@ begin
 
   lFiles := TStringList.Create;
   lMicSources := TStringList.Create;
+  lMic185Sources := TStringList.Create;
   try
     lFiles.CaseSensitive := False;
     lFiles.Sorted := False;
     lMicSources.CaseSensitive := False;
     lMicSources.Sorted := False;
+    lMic185Sources.CaseSensitive := False;
+    lMic185Sources.Sorted := False;
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(fTagRegistry, lTag) then
+        Continue;
       if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
       begin
         lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
@@ -2228,6 +2240,23 @@ begin
         end
         else
           lTagNames := TStringList(lMicSources.Objects[lFileIndex]);
+
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end
+      else if TryParseRecorderMic185SourceId(lTag.SourceId, lMic185Host, lMic185Port) then
+      begin
+        lFileIndex := lMic185Sources.IndexOf(lTag.SourceId);
+        if lFileIndex < 0 then
+        begin
+          lTagNames := TStringList.Create;
+          lTagNames.CaseSensitive := False;
+          lFileIndex := lMic185Sources.AddObject(lTag.SourceId, lTagNames);
+        end
+        else
+          lTagNames := TStringList(lMic185Sources.Objects[lFileIndex]);
 
         if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
           lTagNames.Add(lTag.Address);
@@ -2275,6 +2304,30 @@ begin
       AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
         [lMicHost, lMicPort, lChannelCount]));
     end;
+
+    for I := 0 to lMic185Sources.Count - 1 do
+    begin
+      if not TryParseRecorderMic185SourceId(lMic185Sources[I], lMic185Host,
+        lMic185Port) then
+        Continue;
+      lTagNames := TStringList(lMic185Sources.Objects[I]);
+      lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
+      for lFileIndex := 0 to fTagRegistry.TagCount - 1 do
+      begin
+        lTag := fTagRegistry.Tags[lFileIndex];
+        if SameText(lTag.SourceId, lMic185Sources[I]) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      lSource := TRecorderMic185DataSource.Create(lMic185Sources[I],
+        lMic185Host, lMic185Port, lPollFrequencyHz, lDataUpdateMs, lTagNames);
+      fDataSourceManager.AddSource(lSource);
+      AddLog(Format('MIC183/185 source configured: %s:%d (%d channels).',
+        [lMic185Host, lMic185Port, lTagNames.Count]));
+    end;
   finally
     for I := 0 to lFiles.Count - 1 do
       lFiles.Objects[I].Free;
@@ -2282,6 +2335,9 @@ begin
     for I := 0 to lMicSources.Count - 1 do
       lMicSources.Objects[I].Free;
     lMicSources.Free;
+    for I := 0 to lMic185Sources.Count - 1 do
+      lMic185Sources.Objects[I].Free;
+    lMic185Sources.Free;
   end;
   fDataSourceManager.ConfigureTagsAll(fTagRegistry);
   EnsureTagSignalBufferCapacities;

@@ -59,6 +59,33 @@ form.
 **Verification:** `C:\lazarus\lazbuild.exe -B ...\Mic140ProtocolDebug_Codex.lpi`
 completed with exit code 0; only existing hints/notes.
 
+## Codex continuation 2026-07-06: disabled MIC device tree and MIC185 info read
+
+**Prompt:** show disabled MIC140/MIC185 devices in the hardware tree with the
+disabled-device icon from `ilCommandButtons` index 41, hide tags of disabled
+devices from the main tag list, and read MIC183/185 serial/version in the
+settings dialog when the device is reachable by IP.
+
+**Done:** Added hardware source visibility helpers in `uRecorderTags.pas`,
+including MIC185 source-prefix recognition and filtering of `Detached:` tags.
+The main tag list and data-source creation now skip invisible/detached hardware
+tags. The hardware tree uses image index 41 for MIC140/MIC185 source nodes that
+have no linked tags, and restores disabled source nodes from detached tag source
+ids. Deleting/disabling MIC140/MIC185 detaches tags but leaves the source node in
+the current tree as disabled.
+
+**MIC185:** Added `RecorderMic185ReadDeviceInfo`, a short Mebius TCP query that
+calls `CMic185IoCtlCmdGetSoftVersion`, parses `TMic185HardDeviceInfo`, and
+formats the firmware version through `Mic185FormatSoftVersion`. The MIC183/185
+settings dialog invokes it on first source load to fill serial number and
+version when the IP/port respond.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0 and linked `lib\x86_64-win64\RecorderLnx.exe`. Existing post-build
+`copy_sdb_res.bat` still prints a `#!/bin/sh` message, but did not fail
+`lazbuild`.
+
 ## Codex continuation 2026-07-06: MIC140 count_aver uses Fs=10 and effective ISR
 
 **Prompt:** User clarified that original Recorder channels see `10 Hz`, not

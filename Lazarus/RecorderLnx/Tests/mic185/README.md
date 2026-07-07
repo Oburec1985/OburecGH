@@ -78,6 +78,7 @@ mic185_acquire_test.exe -verify-codes 192.168.9.142 4000 100 5
 ## Документация
 
 Подробнее: [Docs/devices/mic185/](../../Docs/devices/mic185/README.md)  
-Настройки по умолчанию и коды АЦП: [defaults.md](../../Docs/devices/mic185/defaults.md)  
-Температурные каналы (LM74, 1 Гц): [temperature_channels.md](../../Docs/devices/mic185/temperature_channels.md)  
+Настройки и коды АЦП: [defaults.md](../../Docs/devices/mic185/defaults.md)  
+Температура (LM74): [temperature_channels.md](../../Docs/devices/mic185/temperature_channels.md)  
+Полное описание стенда: [test_stand.md](../../Docs/devices/mic185/test_stand.md)  
 Эталон windev: [windev_mic185_test.md](../../Docs/devices/mic185/windev_mic185_test.md)
