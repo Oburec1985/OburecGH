@@ -63,7 +63,7 @@ implementation
 
 uses
   IniFiles, fpjson, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors, uRecorderMic140DeviceConfig;
+  uOglChartColors, uRecorderMic140DeviceConfig, uRecorderConfiguredDataSources;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -402,40 +402,8 @@ begin
 end;
 
 procedure SaveDataSources(AJson: TJSONObject; ATags: TRecorderTagRegistry);
-var
-  I: Integer;
-  lArray: TJSONArray;
-  lItem: TJSONObject;
-  lKnown: TStringList;
-  lSourceId: string;
-  lTag: TRecorderTag;
 begin
-  lArray := JsonArray(AJson, 'dataSources');
-  lKnown := TStringList.Create;
-  try
-    lKnown.CaseSensitive := False;
-    lKnown.Sorted := True;
-    lKnown.Duplicates := dupIgnore;
-
-    for I := 0 to ATags.TagCount - 1 do
-    begin
-      lTag := ATags.Tags[I];
-      lSourceId := lTag.SourceId;
-      if lSourceId = '' then
-        lSourceId := 'manual';
-      if lKnown.IndexOf(lSourceId) >= 0 then
-        Continue;
-
-      lKnown.Add(lSourceId);
-      lItem := TJSONObject.Create;
-      lArray.Add(lItem);
-      lItem.Add('sourceId', lSourceId);
-      lItem.Add('moduleType', lTag.ModuleType);
-      lItem.Add('defaultPollFrequencyHz', lTag.PollFrequencyHz);
-    end;
-  finally
-    lKnown.Free;
-  end;
+  SaveRecorderConfiguredDataSources(AJson, ATags);
 end;
 
 procedure SaveSpectrumConfigs(AJson: TJSONArray; ATree: TRecorderSpectrumConfigTree);
@@ -603,7 +571,6 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
-    RecorderMic140RebuildDeviceConfigsFromTags(ATags);
     SaveDataSources(lRoot, ATags);
     SaveMic140DeviceConfigs(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
@@ -660,6 +627,7 @@ var
   lTagJson: TJSONObject;
   lTags: TJSONArray;
   lText: TStringList;
+  lLegacy: TRecorderMic140LegacyTagFields;
 begin
   if not FileExists(AFileName) then
     Exit;
@@ -684,6 +652,7 @@ begin
       Exit;
 
     ATags.Clear;
+    LoadRecorderConfiguredDataSources(lRoot, ATags);
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     LoadFrequencyBands(FindArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
@@ -712,39 +681,28 @@ begin
           lTag.ChannelCalibrationEnabled);
         if RecorderTagUsesMic140Settings(lTag) then
         begin
-          lTag.MeasRangeIndex := lTagJson.Get('measRangeIndex', lTag.MeasRangeIndex);
-          lTag.HardwareCalibrationEnabled := lTagJson.Get('hardwareCalibrationEnabled',
-            lTag.HardwareCalibrationEnabled);
-          lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
-            lTag.HardwareCalibrationName);
-          lTag.Mic140DeviceSerial := lTagJson.Get('mic140DeviceSerial',
-            lTag.Mic140DeviceSerial);
-          lTag.Mic140ThermoCompensationEnabled := lTagJson.Get(
-            'mic140ThermoCompensationEnabled', lTag.Mic140ThermoCompensationEnabled);
-          lTag.Mic140CjcDefault := lTagJson.Get('mic140CjcDefault',
-            lTag.Mic140CjcDefault);
-          lTag.Mic140CjcChannel := lTagJson.Get('mic140CjcChannel',
-            lTag.Mic140CjcChannel);
-          lTag.Mic140ThermocoupleScaleName := lTagJson.Get(
-            'mic140ThermocoupleScaleName', lTag.Mic140ThermocoupleScaleName);
-          lTag.Mic140ThermocoupleScalePath := lTagJson.Get(
-            'mic140ThermocoupleScalePath', lTag.Mic140ThermocoupleScalePath);
-          lTag.Mic140SoftBalance := lTagJson.Get('mic140SoftBalance',
-            lTag.Mic140SoftBalance);
+          RecorderMic140LoadLegacyFieldsFromTagJson(lTagJson, lLegacy);
+          LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
+          LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
+          LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
+          ATags.AddTag(lTag);
+          RecorderMic140MigrateLegacyFieldsToDeviceConfig(ATags, lTag, lLegacy);
+          lTag := nil;
         end
         else
+        begin
           RecorderTagClearMic140Settings(lTag);
-        LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
-        LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
-        LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
-        ATags.AddTag(lTag);
-        lTag := nil;
+          LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
+          LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
+          LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
+          ATags.AddTag(lTag);
+          lTag := nil;
+        end;
       finally
         lTag.Free;
       end;
     end;
     LoadMic140DeviceConfigs(lRoot, ATags);
-    RecorderMic140RebuildDeviceConfigsFromTags(ATags);
   finally
     lData.Free;
   end;

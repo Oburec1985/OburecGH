@@ -39,14 +39,17 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
-  uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
+  uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
-  uRecorderMic185DataSource,
+  uRecorderMic185DataSource, uRecorderMic185SettingsDialog,
+  uRecorderMic185SettingsSelfTest,
+  uRecorderHardwareLiveDevices,
+  uRecorderHardwareTree,
   uRecorderMeraPaths, uRecorderTagBalance, uRecorderMic140SettingsDialog;
 
 type
@@ -144,15 +147,7 @@ type
     fSyncingPages: Boolean;                       // Флаг предотвращения рекурсивного вызова при обновлении вкладок
     
     // Ядро системы рекордера
-    fStateMachine: TRecorderStateMachine;         // Конечный автомат состояний сбора
-    fRunSettings: TRecorderRunControlSettings;     // Настройки старта/останова записи
-    fEventBus: TRecorderEventBus;                 // Локальная шина обмена внутренними событиями
-    fTagRegistry: TRecorderTagRegistry;           // Общий реестр тегов и каналов
-    fEventQueue: TRecorderEventSnapshotQueue;     // Очередь снимков значений для UI-потока
-    fAlarmEngine: IRecorderAlarmEngine;           // Движок тревог/уставок для отображающих компонентов
-    fSpectrumManager: TRecorderSpectrumRuntimeManager;
-    fTimeSystem: TRecorderTimeSystem;             // Подсистема контроля времени
-    fDataSourceManager: TRecorderDataSourceManager; // Менеджер источников сбора данных
+    fRecorder: TRecorder;                         // Корневой объект ядра (теги, источники, runtime)
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
@@ -318,7 +313,7 @@ type
     { Настраивает командные кнопки правого пульта как кнопки-символы. }
     procedure SetupCommandButtons;
     procedure SetupStatusBanner;
-    { Обновляет текстовый индикатор состояния из fStateMachine.State. }
+    { Обновляет текстовый индикатор состояния из fRecorder.StateMachine.State. }
     procedure UpdateStateView;
     { Обновляет текстовый индикатор времени из подсистемы. }
     procedure UpdateTimeView;
@@ -327,6 +322,11 @@ type
     { CLI automation: start preview, stop and quit after N seconds. }
     procedure AutoPreviewTimer(Sender: TObject);
     procedure ParseAutoPreviewCommandLine;
+    procedure ParseMic185SelfTestCommandLine;
+    function Mic185SelfTestDataSourcesRunning: Boolean;
+    procedure Mic185SelfTestStartPreview;
+    procedure Mic185SelfTestLog(const AMessage: string);
+    procedure Mic185SelfTestFinished(Sender: TObject);
     { Обработчик события ядра: фиксирует переход состояния в журнале и на форме. }
     procedure StateMachineStateChanged(ASender: TObject;
       AOldState, ANewState: TRecorderState);
@@ -369,18 +369,10 @@ begin
   OnKeyDown := @FormKeyDown;
 
   fSelectedComponentRow := -1;
-  fStateMachine := TRecorderStateMachine.Create;
-  fStateMachine.OnStateChanging := @StateMachineStateChanging;
-  fStateMachine.OnStateChanged := @StateMachineStateChanged;
+  fRecorder := TRecorder.Create;
+  fRecorder.StateMachine.OnStateChanging := @StateMachineStateChanging;
+  fRecorder.StateMachine.OnStateChanged := @StateMachineStateChanged;
 
-  fRunSettings := TRecorderRunControlSettings.Create;
-  fEventBus := TRecorderEventBus.Create;
-  fTagRegistry := TRecorderTagRegistry.Create(fEventBus);
-  fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
-  fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
-  fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
-  fTimeSystem := TRecorderTimeSystem.Create;
-  fDataSourceManager := TRecorderDataSourceManager.Create;
   fLatestTagValues := TStringList.Create;
   fLogLines := TStringList.Create;
   fLatestTagValues.CaseSensitive := False;
@@ -389,7 +381,7 @@ begin
   fDiagLastLogTickMs := GetTickCount64;
   fUiUpdateTimer := TTimer.Create(Self);
   fUiUpdateTimer.Enabled := False;
-  fUiUpdateTimer.Interval := fTimeSystem.DisplayUpdateMs;
+  fUiUpdateTimer.Interval := fRecorder.TimeSystem.DisplayUpdateMs;
   fUiUpdateTimer.OnTimer := @DrainUiEventQueue;
 
   fComponentFactory := TRecorderComponentFactory.Create;
@@ -410,7 +402,7 @@ begin
   fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
     fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
-  fFormEditor.SetDataContext(fTagRegistry, fAlarmEngine, fRunSettings.DisplayBufferMs / 1000);
+  fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine, fRecorder.RunSettings.DisplayBufferMs / 1000);
   lbTags.OnClick := @lbTagsClick;
   UpdateActiveSourceIds;
   
@@ -428,13 +420,15 @@ begin
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
   PrepareRuntimeForConfiguration;
-  if fTagRegistry.TagCount = 0 then
+  if fRecorder.TagRegistry.TagCount = 0 then
     EnsureDemoDataSources;
   UpdateActiveSourceIds;
   RebuildTagList('');
   UpdateStateView;
+  RenderActivePage;
   AddLog('RecorderLnx started.');
   ParseAutoPreviewCommandLine;
+  ParseMic185SelfTestCommandLine;
 
 end;
 
@@ -482,12 +476,12 @@ procedure TMainForm.AutoPreviewTimer(Sender: TObject);
 begin
   if fAutoPreviewTimer = nil then
     Exit;
-  if fStateMachine.State = rsStop then
+  if fRecorder.StateMachine.State = rsStop then
   begin
     btnPreviewClick(nil);
     Exit;
   end;
-  if fStateMachine.State <> rsPreview then
+  if fRecorder.StateMachine.State <> rsPreview then
     Exit;
   Inc(fAutoPreviewTicks);
   if fAutoPreviewTicks < fAutoPreviewSeconds * 2 + fAutoPreviewExtraTicks then
@@ -495,6 +489,44 @@ begin
   fAutoPreviewTimer.Enabled := False;
   AddLog(Format('Auto preview finished after %d s, stopping.', [fAutoPreviewSeconds]));
   btnStopClick(nil);
+  Application.Terminate;
+end;
+
+procedure TMainForm.ParseMic185SelfTestCommandLine;
+var
+  I: Integer;
+begin
+  for I := 1 to ParamCount do
+  begin
+    if SameText(ParamStr(I), '--selftest-mic185-settings') then
+    begin
+      ScheduleRecorderMic185SettingsSelfTest(Self, fRecorder,
+        ilCommandButtons, ilTagDialogButtons, @Mic185SelfTestStartPreview,
+        @Mic185SelfTestDataSourcesRunning, @Mic185SelfTestLog,
+        @Mic185SelfTestFinished);
+      Break;
+    end;
+  end;
+end;
+
+function TMainForm.Mic185SelfTestDataSourcesRunning: Boolean;
+begin
+  Result := (fRecorder <> nil) and fRecorder.DataSources.Running;
+end;
+
+procedure TMainForm.Mic185SelfTestStartPreview;
+begin
+  btnPreviewClick(nil);
+end;
+
+procedure TMainForm.Mic185SelfTestLog(const AMessage: string);
+begin
+  AddLog(AMessage);
+end;
+
+procedure TMainForm.Mic185SelfTestFinished(Sender: TObject);
+begin
+  ReleaseRecorderMic185SelfTestHost(Sender);
   Application.Terminate;
 end;
 
@@ -510,17 +542,9 @@ begin
   CloseRecordFrame;
   FreeAndNil(fMeraWriter);
   FreeAndNil(fRecordFrameManager);
-  FreeAndNil(fDataSourceManager);
-  FreeAndNil(fTimeSystem);
-  fAlarmEngine := nil;
-  FreeAndNil(fSpectrumManager);
-  FreeAndNil(fEventQueue);
-  FreeAndNil(fTagRegistry);
-  FreeAndNil(fEventBus);
   FreeAndNil(fLatestTagValues);
   FreeAndNil(fLogLines);
-  FreeAndNil(fRunSettings);
-  FreeAndNil(fStateMachine);
+  FreeAndNil(fRecorder);
 end;
 
 procedure TMainForm.FormKeyDown(Sender: TObject; var Key: Word;
@@ -548,7 +572,7 @@ var
   lRowIdx: Integer;
 begin
   if (aRow > 0) and (gdSelected in aState) then Exit;
-  if (aRow > 0) and (fTagRegistry <> nil) and (fAlarmEngine <> nil) then
+  if (aRow > 0) and (fRecorder.TagRegistry <> nil) and (fRecorder.AlarmEngine <> nil) then
   begin
     lRowIdx := aRow;
     while (lRowIdx > 0) and (sgFormular.Cells[0, lRowIdx] = '') do
@@ -556,10 +580,10 @@ begin
     if lRowIdx > 0 then
     begin
       lTagName := sgFormular.Cells[0, lRowIdx];
-      lTag := fTagRegistry.FindByName(lTagName);
+      lTag := fRecorder.TagRegistry.FindByName(lTagName);
       if lTag <> nil then
       begin
-        lColor := fAlarmEngine.GetTagAlarmColor(lTag);
+        lColor := fRecorder.AlarmEngine.GetTagAlarmColor(lTag);
         if lColor <> 0 then
         begin
           sgFormular.Canvas.Brush.Color := TColor(lColor);
@@ -594,31 +618,29 @@ end;
 procedure TMainForm.UpdateActiveSourceIds;
 var
   I: Integer;
-  lErrorText: string;
-  lHost: string;
-  lPort: Word;
-  lSerialNumber: LongWord;
   lSourceId: string;
   lSources: TStringList;
   lTag: TRecorderTag;
-  lVersionText: string;
 begin
-  if fTagRegistry = nil then
+  if fRecorder.TagRegistry = nil then
     Exit;
 
-  fTagRegistry.RefreshActiveSourcesFromTags;
+  fRecorder.TagRegistry.RefreshActiveSourcesFromTags;
 
   lSources := TStringList.Create;
   try
     lSources.CaseSensitive := False;
     lSources.Sorted := False;
-    for I := 0 to fTagRegistry.TagCount - 1 do
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
-      lTag := fTagRegistry.Tags[I];
+      lTag := fRecorder.TagRegistry.Tags[I];
       if (lTag = nil) or RecorderIsDetachedTagSource(lTag.SourceId) then
         Continue;
       lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
-      if not RecorderIsHardwareTagSource(lSourceId) then
+      if lSourceId = '' then
+        Continue;
+      if not (RecorderIsHardwareTagSource(lSourceId) or
+        RecorderIsVirtualTagSource(lSourceId)) then
         Continue;
       if lSources.IndexOf(lSourceId) < 0 then
         lSources.Add(lSourceId);
@@ -627,17 +649,8 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
-      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
-      begin
-        if not RecorderMic140TcpProbe(lHost, lPort, CDeviceHealthProbeTimeoutMs) then
-          fTagRegistry.UnregisterActiveSource(lSourceId);
-      end
-      else if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
-      begin
-        if not RecorderMic185ReadDeviceInfo(lHost, lPort, lSerialNumber,
-          lVersionText, lErrorText, CDeviceHealthProbeTimeoutMs) then
-          fTagRegistry.UnregisterActiveSource(lSourceId);
-      end;
+      if not RecorderHardwareSourceLinkOk(lSourceId) then
+        fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
     end;
   finally
     lSources.Free;
@@ -724,9 +737,9 @@ end;
 procedure TMainForm.btnPreviewClick(Sender: TObject);
 begin
   try
-    if fStateMachine.State = rsPreview then
+    if fRecorder.StateMachine.State = rsPreview then
       Exit;
-    fStateMachine.StartPreview(rscManual);
+    fRecorder.StateMachine.StartPreview(rscManual);
   except
     on E: Exception do
       LogCommandError('Preview', E);
@@ -736,8 +749,8 @@ end;
 procedure TMainForm.btnRecordClick(Sender: TObject);
 begin
   try
-    fRunSettings.RequireValid;
-    fStateMachine.StartRecord(fRunSettings.StartCondition);
+    fRecorder.RunSettings.RequireValid;
+    fRecorder.StateMachine.StartRecord(fRecorder.RunSettings.StartCondition);
   except
     on E: Exception do
       LogCommandError('Record', E);
@@ -747,7 +760,7 @@ end;
 procedure TMainForm.btnTriggerClick(Sender: TObject);
 begin
   try
-    fStateMachine.StartConditionMet;
+    fRecorder.StateMachine.StartConditionMet;
   except
     on E: Exception do
       LogCommandError('Trigger', E);
@@ -757,7 +770,7 @@ end;
 procedure TMainForm.btnStopClick(Sender: TObject);
 begin
   try
-    fStateMachine.Stop;
+    fRecorder.StateMachine.Stop;
   except
     on E: Exception do
       LogCommandError('Stop', E);
@@ -798,19 +811,19 @@ end;
 procedure TMainForm.btnSettingsClick(Sender: TObject);
 begin
   try
-    if fStateMachine.State <> rsStop then
+    if fRecorder.StateMachine.State = rsRecord then
     begin
-      fStateMachine.Stop;
-      AddLog('Configuration mode requested: Recorder stopped before settings.');
+      fRecorder.StateMachine.Stop;
+      AddLog('Configuration mode requested: recording stopped before settings.');
     end;
 
     AddLog('Configuration mode: settings dialog opened.');
-    if ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry, ilCommandButtons, ilTagDialogButtons) then
+    if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons, ilTagDialogButtons) then
     begin
       ApplyDisplayTimingSettings;
       UpdateRecordFrameManager;
       UpdateActiveSourceIds;
-      fDataSourceManager.Clear;
+      fRecorder.DataSources.Clear;
       fDataSourcesConfigured := False;
       PrepareRuntimeForConfiguration;
       RebuildTagList(edTagSearch.Text);
@@ -839,8 +852,8 @@ end;
 function TMainForm.CurrentRecordRootDir: string;
 begin
   Result := '';
-  if fRunSettings <> nil then
-    Result := Trim(fRunSettings.RecordRootDir);
+  if fRecorder.RunSettings <> nil then
+    Result := Trim(fRecorder.RunSettings.RecordRootDir);
   if Result = '' then
     Result := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'records';
   Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
@@ -1176,8 +1189,8 @@ begin
   try
     lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
     lComponent.Name := Format('Oscillogram%d', [fNextComponentNo]);
-    if (fTagRegistry <> nil) and (fTagRegistry.SelectedTag <> nil) then
-      RecorderBindComponentTag(lComponent, fTagRegistry.SelectedTag);
+    if (fRecorder.TagRegistry <> nil) and (fRecorder.TagRegistry.SelectedTag <> nil) then
+      RecorderBindComponentTag(lComponent, fRecorder.TagRegistry.SelectedTag);
     lComponent.BindingMode := rtbmRelativeSelectedTag;
     lComponent.TagOffset := 0;
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 360, 220);
@@ -1227,11 +1240,11 @@ begin
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
 
     lTag := nil;
-    if fTagRegistry <> nil then
+    if fRecorder.TagRegistry <> nil then
     begin
-      lTag := fTagRegistry.SelectedTag;
-      if (lTag = nil) and (fTagRegistry.TagCount > 0) then
-        lTag := fTagRegistry.Tags[0];
+      lTag := fRecorder.TagRegistry.SelectedTag;
+      if (lTag = nil) and (fRecorder.TagRegistry.TagCount > 0) then
+        lTag := fRecorder.TagRegistry.Tags[0];
     end;
 
     if lTag <> nil then
@@ -1299,11 +1312,11 @@ begin
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
 
     lTag := nil;
-    if fTagRegistry <> nil then
+    if fRecorder.TagRegistry <> nil then
     begin
-      lTag := fTagRegistry.SelectedTag;
-      if (lTag = nil) and (fTagRegistry.TagCount > 0) then
-        lTag := fTagRegistry.Tags[0];
+      lTag := fRecorder.TagRegistry.SelectedTag;
+      if (lTag = nil) and (fRecorder.TagRegistry.TagCount > 0) then
+        lTag := fRecorder.TagRegistry.Tags[0];
     end;
 
     if lTag <> nil then
@@ -1540,7 +1553,7 @@ begin
   ShowEditorSurface(False);
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  RenderRecorderDigitalPage(sgFormular, fTagRegistry, fAlarmEngine);
+  RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry, fRecorder.AlarmEngine);
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -1583,14 +1596,14 @@ end;
 procedure TMainForm.RebuildBaseOscillograms(ACount: Integer);
 begin
   EnsureBaseToolbar;
-  RebuildRecorderOglOscillograms(Self, fBaseChartsPanel, fTagRegistry, ACount,
-    fRunSettings.DisplayBufferMs / 1000);
+  RebuildRecorderOglOscillograms(Self, fBaseChartsPanel, fRecorder.TagRegistry, ACount,
+    fRecorder.RunSettings.DisplayBufferMs / 1000);
 end;
 
 procedure TMainForm.RefreshBaseOscillograms;
 begin
-  RefreshRecorderOglOscillograms(fBaseChartsPanel, fTagRegistry,
-    fRunSettings.DisplayBufferMs / 1000, fStateMachine.State = rsPreview);
+  RefreshRecorderOglOscillograms(fBaseChartsPanel, fRecorder.TagRegistry,
+    fRecorder.RunSettings.DisplayBufferMs / 1000, fRecorder.StateMachine.State = rsPreview);
   if fBaseFpsLabel <> nil then
     fBaseFpsLabel.Caption := RecorderOglOscillogramsFpsText(fBaseChartsPanel);
 end;
@@ -1601,7 +1614,7 @@ begin
   ShowEditorSurface(True);
   if fFormEditor <> nil then
   begin
-    fFormEditor.SetDataContext(fTagRegistry, fAlarmEngine, fRunSettings.DisplayBufferMs / 1000);
+    fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine, fRecorder.RunSettings.DisplayBufferMs / 1000);
     fFormEditor.Render;
   end;
 end;
@@ -1704,7 +1717,7 @@ begin
   end;
 
   if not FileExists(fRunControlFileName) then
-    fRunSettings.SaveToFile(fRunControlFileName);
+    fRecorder.RunSettings.SaveToFile(fRunControlFileName);
 end;
 
 function TMainForm.GetDevProjectDir: string;
@@ -1733,7 +1746,7 @@ begin
   // The component settings dialog invokes this callback after it stores a
   // spectrum configuration. Prepare a newly selected FFT size while stopped,
   // never from the MIC-140 acquisition callback.
-  if (fStateMachine <> nil) and (fStateMachine.State = rsStop) then
+  if (fRecorder.StateMachine <> nil) and (fRecorder.StateMachine.State = rsStop) then
     PrepareRuntimeForConfiguration;
 end;
 
@@ -1744,37 +1757,37 @@ var
 begin
   if FileExists(fRunControlFileName) then
   begin
-    fRunSettings.LoadFromFile(fRunControlFileName);
+    fRecorder.RunSettings.LoadFromFile(fRunControlFileName);
     AddLog('Project run-control config loaded: ' + fRunControlFileName);
   end;
   lOldFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) +
     COldRunControlFileName;
   if (not FileExists(fRunControlFileName)) and FileExists(lOldFileName) then
   begin
-    fRunSettings.LoadFromFile(lOldFileName);
+    fRecorder.RunSettings.LoadFromFile(lOldFileName);
     AddLog('Legacy run-control config loaded: ' + lOldFileName);
   end;
-  SetRecorderMeraFilesPath(fRunSettings.MeraFilesPath);
+  SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
   UpdateRecordFrameManager;
 end;
 
 procedure TMainForm.SaveRunSettings;
 begin
   ForceDirectories(fProjectConfigDir);
-  fRunSettings.SaveToFile(fRunControlFileName);
+  fRecorder.RunSettings.SaveToFile(fRunControlFileName);
 end;
 
 procedure TMainForm.ApplyDisplayTimingSettings;
 begin
-  if (fRunSettings = nil) or (fTimeSystem = nil) then
+  if (fRecorder.RunSettings = nil) or (fRecorder.TimeSystem = nil) then
     Exit;
 
-  fTimeSystem.DisplayUpdateMs := fRunSettings.ScreenUpdateMs;
+  fRecorder.TimeSystem.DisplayUpdateMs := fRecorder.RunSettings.ScreenUpdateMs;
   if fUiUpdateTimer <> nil then
-    fUiUpdateTimer.Interval := fTimeSystem.DisplayUpdateMs;
+    fUiUpdateTimer.Interval := fRecorder.TimeSystem.DisplayUpdateMs;
   AddLog(Format('Update settings applied: screenUpdate=%d ms dataUpdate=%d ms historyWindow=%d ms',
-    [fRunSettings.ScreenUpdateMs, fRunSettings.DataUpdateMs,
-    fRunSettings.DisplayBufferMs]));
+    [fRecorder.RunSettings.ScreenUpdateMs, fRecorder.RunSettings.DataUpdateMs,
+    fRecorder.RunSettings.DisplayBufferMs]));
 end;
 
 { Комплексная загрузка всего пакета настроек проекта (теги, формы, gui, ini) }
@@ -1784,15 +1797,15 @@ var
 begin
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
 
-  LoadRecorderProjectConfig(lFiles.MainConfigFileName, fTagRegistry);
-  if fAlarmEngine <> nil then
-    fAlarmEngine.Reset;
+  LoadRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
+  if fRecorder.AlarmEngine <> nil then
+    fRecorder.AlarmEngine.Reset;
   if FileExists(lFiles.MainConfigFileName) then
     AddLog('Project main config loaded: ' + lFiles.MainConfigFileName);
 
   LoadRecorderGuiConfig(lFiles.GuiFileName, fFormManager, fComponentFactory);
-  RecorderResolveTagIdsInManager(fTagRegistry, fFormManager);
-  RecorderSyncTagNamesInManager(fTagRegistry, fFormManager);
+  RecorderResolveTagIdsInManager(fRecorder.TagRegistry, fFormManager);
+  RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
   if FileExists(lFiles.GuiFileName) then
   begin
     ResetProjectCounters;
@@ -1816,7 +1829,7 @@ begin
   ForceDirectories(lFiles.DirectoryName);
 
   SaveRunSettings;
-  SaveRecorderProjectConfig(lFiles.MainConfigFileName, fTagRegistry);
+  SaveRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
   SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
 
   AddLog('Project package saved: ' + lFiles.BaseName);
@@ -1901,14 +1914,14 @@ begin
   if not SelectDirectory(CP1251ToUTF8('Выберите каталог конфигурации для загрузки'), '', lDir) then
     Exit;
 
-  if fStateMachine.State <> rsStop then
-    fStateMachine.Stop;
+  if fRecorder.StateMachine.State <> rsStop then
+    fRecorder.StateMachine.Stop;
   SetProjectConfigDir(lDir);
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
   PrepareRuntimeForConfiguration;
-  fDataSourceManager.Clear;
+  fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
   RebuildTagList(edTagSearch.Text);
   RenderActivePage;
@@ -1997,11 +2010,11 @@ var
   I: Integer;
 begin
   Result := nil;
-  if (AObj = nil) or (fTagRegistry = nil) then
+  if (AObj = nil) or (fRecorder.TagRegistry = nil) then
     Exit;
-  for I := 0 to fTagRegistry.TagCount - 1 do
-    if fTagRegistry.Tags[I] = AObj then
-      Exit(fTagRegistry.Tags[I]);
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    if fRecorder.TagRegistry.Tags[I] = AObj then
+      Exit(fRecorder.TagRegistry.Tags[I]);
 end;
 
 function TMainForm.CurrentTagListSelectionName: string;
@@ -2009,17 +2022,17 @@ var
   lTag: TRecorderTag;
 begin
   Result := '';
-  if (fTagRegistry = nil) or (lbTags = nil) then
+  if (fRecorder.TagRegistry = nil) or (lbTags = nil) then
     Exit;
-  if Trim(fTagRegistry.SelectedTagName) <> '' then
-    Exit(Trim(fTagRegistry.SelectedTagName));
+  if Trim(fRecorder.TagRegistry.SelectedTagName) <> '' then
+    Exit(Trim(fRecorder.TagRegistry.SelectedTagName));
   if (lbTags.ItemIndex < 0) or (lbTags.ItemIndex >= lbTags.Items.Count) then
     Exit;
   lTag := FindRegistryTagForListObject(lbTags.Items.Objects[lbTags.ItemIndex]);
   if lTag <> nil then
     Exit(lTag.Name);
   Result := TagListItemName(lbTags.Items[lbTags.ItemIndex]);
-  if fTagRegistry.FindByName(Result) = nil then
+  if fRecorder.TagRegistry.FindByName(Result) = nil then
     Result := '';
 end;
 
@@ -2037,17 +2050,17 @@ begin
   lSelectedName := CurrentTagListSelectionName;
   lSelectedTag := nil;
   if lSelectedName <> '' then
-    lSelectedTag := fTagRegistry.FindByName(lSelectedName);
+    lSelectedTag := fRecorder.TagRegistry.FindByName(lSelectedName);
 
   lbTags.Items.BeginUpdate;
   try
     lbTags.Items.Clear;
     lFilter := LowerCase(Trim(AFilter));
 
-    for I := 0 to fTagRegistry.TagCount - 1 do
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
-      lTag := fTagRegistry.Tags[I];
-      if not RecorderTagSourceIsVisible(fTagRegistry, lTag) then
+      lTag := fRecorder.TagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(fRecorder.TagRegistry, lTag) then
         Continue;
       if (lFilter <> '') and
         (Pos(lFilter, LowerCase(lTag.Name + ' ' + lTag.Address + ' ' +
@@ -2091,14 +2104,14 @@ begin
       Continue;
     lTag := FindRegistryTagForListObject(lbTags.Items.Objects[I]);
     if lTag = nil then
-      lTag := fTagRegistry.FindByName(TagListItemName(lbTags.Items[I]));
+      lTag := fRecorder.TagRegistry.FindByName(TagListItemName(lbTags.Items[I]));
     if lTag <> nil then
       ATags.Add(lTag);
   end;
 
   if ATags.Count = 0 then
   begin
-    lTag := fTagRegistry.FindByName(CurrentTagListSelectionName);
+    lTag := fRecorder.TagRegistry.FindByName(CurrentTagListSelectionName);
     if lTag <> nil then
       ATags.Add(lTag);
   end;
@@ -2108,12 +2121,12 @@ procedure TMainForm.UpdateSelectedTagFromList;
 var
   lTag: TRecorderTag;
 begin
-  if (fTagRegistry = nil) or (lbTags = nil) then
+  if (fRecorder.TagRegistry = nil) or (lbTags = nil) then
     Exit;
 
-  lTag := fTagRegistry.FindByName(CurrentTagListSelectionName);
+  lTag := fRecorder.TagRegistry.FindByName(CurrentTagListSelectionName);
   if lTag <> nil then
-    fTagRegistry.SelectedTagName := lTag.Name;
+    fRecorder.TagRegistry.SelectedTagName := lTag.Name;
 end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
@@ -2126,24 +2139,24 @@ begin
     if lTags.Count = 0 then
       Exit;
 
-    if ShowTagSettingsDialog(Self, fTagRegistry, lTags, ilTagDialogButtons,
-      fRunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
+    if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, ilTagDialogButtons,
+      fRecorder.RunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
       ilCommandButtons) then
     begin
-      if fAlarmEngine <> nil then
-        fAlarmEngine.Reset;
+      if fRecorder.AlarmEngine <> nil then
+        fRecorder.AlarmEngine.Reset;
 
-      lWasRunning := (fDataSourceManager <> nil) and fDataSourceManager.Running;
+      lWasRunning := (fRecorder.DataSources <> nil) and fRecorder.DataSources.Running;
       if lWasRunning then
         StopDataSources;
 
-      fDataSourceManager.Clear;
+      fRecorder.DataSources.Clear;
       fDataSourcesConfigured := False;
 
       if lWasRunning then
         StartDataSources;
 
-      RecorderSyncTagNamesInManager(fTagRegistry, fFormManager);
+      RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
       RebuildTagList(edTagSearch.Text);
       if fFormEditor <> nil then
         fFormEditor.RefreshLive;
@@ -2175,12 +2188,19 @@ begin
     lConfigs := TStringList.Create;
     try
       lConfigs.OwnsObjects := True;
-      if ApplyRecorderMic140SourceDialog(Self, fTagRegistry, lConfigs, ATag.SourceId,
+      if ApplyRecorderMic140SourceDialog(Self, fRecorder.TagRegistry, lConfigs, ATag.SourceId,
         lNewSourceId) then
         AddLog('MIC-140 hardware settings updated.');
     finally
       lConfigs.Free;
     end;
+    Exit;
+  end;
+  if TryParseRecorderMic185SourceId(ATag.SourceId, lHost, lPort) then
+  begin
+    if ApplyRecorderMic185SourceDialog(Self, fRecorder.TagRegistry, ATag.SourceId,
+      lNewSourceId) then
+      AddLog('MIC183/185 hardware settings updated.');
     Exit;
   end;
   if Pos(CMeraSourcePrefix, ATag.SourceId) = 1 then
@@ -2192,8 +2212,7 @@ begin
       lDialog.Filter := 'Mera files (*.mera)|*.mera|All files (*.*)|*.*';
       lDialog.FileName := lPath;
       if lDialog.Execute then
-        ShowRecorderSettingsDialog(Self, fRunSettings, fTagRegistry,
-          ilCommandButtons, ilTagDialogButtons);
+        ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons, ilTagDialogButtons);
     finally
       lDialog.Free;
     end;
@@ -2203,7 +2222,7 @@ end;
 procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
   ATags: TList);
 begin
-  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, fDataSourceManager);
+  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, fRecorder.DataSources);
 end;
 
 { Инициализация демонстрационных отладочных источников данных (MemTag и Mera-файлы) }
@@ -2233,15 +2252,15 @@ begin
   if fDataSourcesConfigured then
     Exit;
 
-  fDataSourceManager.Clear;
+  fRecorder.DataSources.Clear;
 
-  lDataUpdateMs := fRunSettings.DataUpdateMs;
+  lDataUpdateMs := fRecorder.RunSettings.DataUpdateMs;
   if lDataUpdateMs = 0 then
     lDataUpdateMs := 300;
 
   lSource := TRecorderDiagnosticsDataSource.Create('debug.diagnostics', lDataUpdateMs,
     'MemTag', 'CpuUsage');
-  fDataSourceManager.AddSource(lSource);
+  fRecorder.DataSources.AddSource(lSource);
 
   lFiles := TStringList.Create;
   lMicSources := TStringList.Create;
@@ -2253,10 +2272,10 @@ begin
     lMicSources.Sorted := False;
     lMic185Sources.CaseSensitive := False;
     lMic185Sources.Sorted := False;
-    for I := 0 to fTagRegistry.TagCount - 1 do
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
-      lTag := fTagRegistry.Tags[I];
-      if not RecorderTagSourceIsVisible(fTagRegistry, lTag) then
+      lTag := fRecorder.TagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(fRecorder.TagRegistry, lTag) then
         Continue;
       if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
       begin
@@ -2318,7 +2337,7 @@ begin
       lTagNames := TStringList(lFiles.Objects[I]);
       lSource := TRecorderMeraFileDataSource.Create('mera.file.' + IntToStr(I + 1),
         lFiles[I], lDataUpdateMs, lTagNames, 0);
-      fDataSourceManager.AddSource(lSource);
+      fRecorder.DataSources.AddSource(lSource);
       AddLog(Format('MERA playback source configured: %s (%d channels).',
         [ExtractFileName(lFiles[I]), lTagNames.Count]));
     end;
@@ -2335,9 +2354,9 @@ begin
         if TryStrToInt(lTagNames[lFileIndex], lChannelNumber) and
           (lChannelNumber > lChannelCount) then
           lChannelCount := MIC140MaxChannelCount;
-      for lFileIndex := 0 to fTagRegistry.TagCount - 1 do
+      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
       begin
-        lTag := fTagRegistry.Tags[lFileIndex];
+        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
         if SameText(lTag.SourceId, lMicSources[I]) and (lTag.PollFrequencyHz > 0) then
         begin
           lPollFrequencyHz := lTag.PollFrequencyHz;
@@ -2348,7 +2367,7 @@ begin
       end;
       lSource := TRecorderMic140DataSource.Create(lMicSources[I], lMicHost, lMicPort,
         lChannelCount, lPollFrequencyHz, lDataUpdateMs, lTagNames, lMicOutputMode);
-      fDataSourceManager.AddSource(lSource);
+      fRecorder.DataSources.AddSource(lSource);
       AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
         [lMicHost, lMicPort, lChannelCount]));
     end;
@@ -2360,9 +2379,9 @@ begin
         Continue;
       lTagNames := TStringList(lMic185Sources.Objects[I]);
       lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
-      for lFileIndex := 0 to fTagRegistry.TagCount - 1 do
+      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
       begin
-        lTag := fTagRegistry.Tags[lFileIndex];
+        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
         if SameText(lTag.SourceId, lMic185Sources[I]) and
           (lTag.PollFrequencyHz > 0) then
         begin
@@ -2372,7 +2391,7 @@ begin
       end;
       lSource := TRecorderMic185DataSource.Create(lMic185Sources[I],
         lMic185Host, lMic185Port, lPollFrequencyHz, lDataUpdateMs, lTagNames);
-      fDataSourceManager.AddSource(lSource);
+      fRecorder.DataSources.AddSource(lSource);
       AddLog(Format('MIC183/185 source configured: %s:%d (%d channels).',
         [lMic185Host, lMic185Port, lTagNames.Count]));
     end;
@@ -2387,7 +2406,7 @@ begin
       lMic185Sources.Objects[I].Free;
     lMic185Sources.Free;
   end;
-  fDataSourceManager.ConfigureTagsAll(fTagRegistry);
+  fRecorder.DataSources.ConfigureTagsAll(fRecorder.TagRegistry);
   EnsureTagSignalBufferCapacities;
   fDataSourcesConfigured := True;
   AddLog('Diagnostics data source configured: MemTag, CpuUsage.');
@@ -2404,16 +2423,16 @@ var
   lRequired: Integer;
   lTag: TRecorderTag;
 begin
-  if (fTagRegistry = nil) or (fRunSettings = nil) then
+  if (fRecorder.TagRegistry = nil) or (fRecorder.RunSettings = nil) then
     Exit;
 
-  lDisplaySeconds := fRunSettings.DisplayBufferMs / 1000.0;
+  lDisplaySeconds := fRecorder.RunSettings.DisplayBufferMs / 1000.0;
   if lDisplaySeconds <= 0 then
     lDisplaySeconds := 1.0;
 
-  for I := 0 to fTagRegistry.TagCount - 1 do
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
-    lTag := fTagRegistry.Tags[I];
+    lTag := fRecorder.TagRegistry.Tags[I];
     lPortionLength := lTag.EstimateSettings.PortionLength;
     if lPortionLength < 1 then
       lPortionLength := 1;
@@ -2422,7 +2441,7 @@ begin
     if lTag.PollFrequencyHz > 0 then
     begin
       lRequired := Ceil(lTag.PollFrequencyHz * lDisplaySeconds) + 1;
-      lBlockSamples := Ceil(lTag.PollFrequencyHz * fRunSettings.DataUpdateMs / 1000.0) + 1;
+      lBlockSamples := Ceil(lTag.PollFrequencyHz * fRecorder.RunSettings.DataUpdateMs / 1000.0) + 1;
       lRequired := lRequired + lBlockSamples;
       if lRequired > lCapacity then
         lCapacity := lRequired;
@@ -2435,9 +2454,9 @@ end;
 procedure TMainForm.StartDataSources;
 begin
   EnsureDemoDataSources;
-  if not fDataSourceManager.Running then
+  if not fRecorder.DataSources.Running then
   begin
-    fDataSourceManager.StartAll;
+    fRecorder.DataSources.StartAll;
     fUiUpdateTimer.Enabled := True;
     AddLog('Data sources started.');
   end;
@@ -2448,9 +2467,9 @@ begin
   if fUiUpdateTimer <> nil then
     fUiUpdateTimer.Enabled := False;
 
-  if (fDataSourceManager <> nil) and fDataSourceManager.Running then
+  if (fRecorder.DataSources <> nil) and fRecorder.DataSources.Running then
   begin
-    fDataSourceManager.StopAll;
+    fRecorder.DataSources.StopAll;
     DrainUiEventQueue(nil);
     AddLog('Data sources stopped.');
   end;
@@ -2467,7 +2486,7 @@ begin
   lCount := 0;
   Inc(fDiagUiTicks);
   repeat
-    lSnapshot := fEventQueue.Pop;
+    lSnapshot := fRecorder.EventQueue.Pop;
     if lSnapshot = nil then
       Break;
     try
@@ -2522,7 +2541,7 @@ begin
   { MIC-140 stream debug: periodic UI update diag suppressed.
   AddLog(Format('Update diag: elapsed=%d ms uiTicks=%d dataEvents=%d renders=%d screenTimer=%d ms dataUpdate=%d ms',
     [lElapsedMs, fDiagUiTicks, fDiagDataEvents, fDiagRenderCount,
-    fUiUpdateTimer.Interval, fRunSettings.DataUpdateMs]), rlkData); }
+    fUiUpdateTimer.Interval, fRecorder.RunSettings.DataUpdateMs]), rlkData); }
   fDiagLastLogTickMs := lNowMs;
   fDiagUiTicks := 0;
   fDiagDataEvents := 0;
@@ -2551,12 +2570,12 @@ begin
 
   fLatestTagValues.Values[ASnapshot.TagName] :=
     FormatFloat('0.000', ASnapshot.Value);
-  fTimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
+  fRecorder.TimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
 
-  if (fStateMachine <> nil) and (fStateMachine.State = rsRecord) and
+  if (fRecorder.StateMachine <> nil) and (fRecorder.StateMachine.State = rsRecord) and
     (fMeraWriter <> nil) and fMeraWriter.FileOpen then
   begin
-    lTag := fTagRegistry.FindByName(ASnapshot.TagName);
+    lTag := fRecorder.TagRegistry.FindByName(ASnapshot.TagName);
     if lTag <> nil then
     begin
       lBlock := lTag.LastBlockSnapshot;
@@ -2681,10 +2700,10 @@ end;
 { Обновление индикатора автомата состояний и цвета панели статуса }
 procedure TMainForm.UpdateStateView;
 begin
-  lbState.Caption := TRecorderStateMachine.StateToString(fStateMachine.State);
+  lbState.Caption := TRecorderStateMachine.StateToString(fRecorder.StateMachine.State);
   UpdateTimeView;
 
-  case fStateMachine.State of
+  case fRecorder.StateMachine.State of
     rsStop:
       pnRightStatus.Color := clSilver;
     rsPreviewArmed, rsPreview, rsRecordArmed:
@@ -2701,8 +2720,8 @@ end;
 
 procedure TMainForm.UpdateTimeView;
 begin
-  if fTimeSystem <> nil then
-    lbTime.Caption := fTimeSystem.Snapshot.DisplayText
+  if fRecorder.TimeSystem <> nil then
+    lbTime.Caption := fRecorder.TimeSystem.Snapshot.DisplayText
   else
     lbTime.Caption := '00:00:00';
 end;
@@ -2715,11 +2734,11 @@ end;
 { Реакция на смену состояний сбора данных }
 procedure TMainForm.PrepareRuntimeForConfiguration;
 begin
-  if fSpectrumManager <> nil then
-    fSpectrumManager.PrepareConfiguration;
+  if fRecorder.SpectrumManager <> nil then
+    fRecorder.SpectrumManager.PrepareConfiguration;
 
-  if fEventBus <> nil then
-    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
+  if fRecorder.EventBus <> nil then
+    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
       Self, 'ConfigurationPrepared'));
 end;
 
@@ -2733,12 +2752,12 @@ begin
   { No allocation, FFT benchmark or channel creation is permitted here.
     A configuration must have prepared the spectrum runtime while stopped. }
   if (ATransition in [rstStopToView, rstStopToRecord]) and
-    (fSpectrumManager <> nil) and (not fSpectrumManager.IsPrepared) then
+    (fRecorder.SpectrumManager <> nil) and (not fRecorder.SpectrumManager.IsPrepared) then
     raise ERecorderStateError.Create(
       'Spectrum runtime is not prepared. Apply configuration while Recorder is stopped.');
 
-  if fEventBus <> nil then
-    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionBefore,
+  if fRecorder.EventBus <> nil then
+    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionBefore,
       Self, TRecorderStateMachine.TransitionToString(ATransition), '', 0, nil,
       ATransition));
 end;
@@ -2758,7 +2777,7 @@ begin
       begin
         if lTransition in [rstStopToView, rstStopToRecord] then
         begin
-          fTimeSystem.Start;
+          fRecorder.TimeSystem.Start;
           StartDataSources;
         end;
       end;
@@ -2768,9 +2787,9 @@ begin
         begin
           StopDataSources;
           CloseRecordFrame;
-          fTimeSystem.Stop;
-          if fSpectrumManager <> nil then
-            fSpectrumManager.ResetForNextRun;
+          fRecorder.TimeSystem.Stop;
+          if fRecorder.SpectrumManager <> nil then
+            fRecorder.SpectrumManager.ResetForNextRun;
         end;
       end;
   end;
@@ -2779,8 +2798,8 @@ begin
     CloseRecordFrame;
 
   UpdateStateView;
-  if (lTransition <> rstNone) and (fEventBus <> nil) then
-    fEventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionAfter,
+  if (lTransition <> rstNone) and (fRecorder.EventBus <> nil) then
+    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionAfter,
       Self, TRecorderStateMachine.TransitionToString(lTransition), '', 0, nil,
       lTransition));
   AddLog(Format('State changed: %s -> %s',

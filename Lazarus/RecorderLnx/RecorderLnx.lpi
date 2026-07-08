@@ -81,6 +81,18 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderHardwareLiveDevices.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderConfiguredDataSources.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderHardwareTree.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="SDB/uRecorderSdbStore.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -446,6 +458,69 @@
       <Unit>
         <Filename Value="../Tests/RecorderTests/UITestData/uRecorderUiTestData.pas"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uMic185MebiusTcpProtocol.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uMic185Device.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uRecorderMic185Runtime.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uMic185Constants.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uMic185DebugLog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uMic185MebiusTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uRecorderMic185DataSource.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/uRecorderMic185DeviceInfoProbe.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185AdditionalDialog.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185AdditionalDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMic185AdditionalForm"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185ChannelDialog.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185ChannelDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMic185ChannelForm"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185SettingsDialog.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/mic185/UI/uRecorderMic185SettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMic185SettingsForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>
   </ProjectOptions>

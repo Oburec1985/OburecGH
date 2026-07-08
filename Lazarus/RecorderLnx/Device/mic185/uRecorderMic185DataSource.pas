@@ -29,6 +29,18 @@ function TryParseRecorderMic185SourceId(const ASourceId: string;
 function RecorderMic185ReadDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AErrorText: string; ATimeoutMs: Cardinal = 700): Boolean;
+function RecorderMic185IsEndpointLive(const AHost: string; APort: Word): Boolean;
+function RecorderMic185IsLiveDeviceConnected(const AHost: string; APort: Word): Boolean;
+function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;
+function RecorderMic185TcpProbe(const AHost: string; APort: Word;
+  ATimeoutMs: Cardinal): Boolean;
+function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
+  out ASerialNumber: LongWord; out AVersionText: string;
+  out AAcquiring: Boolean): Boolean;
+procedure RecorderMic185RegisterLiveDevice(AOwner: TObject; const AHost: string;
+  APort: Word; ADevice: IRecorderDevice);
+procedure RecorderMic185UnregisterLiveDevice(AOwner: TObject);
+procedure RecorderMic185Log(const AMessage: string);
 
 type
   TRecorderMic185DataSource = class(TRecorderDataSourceBase)
@@ -54,20 +66,118 @@ type
       APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
       ASelectedNames: TStrings = nil);
     destructor Destroy; override;
+    procedure RequestStop; override;
     procedure Start; override;
     procedure Stop; override;
-    procedure RequestStop; override;
   end;
 
 implementation
 
 uses
   Math, StrUtils, Variants,
-  uMic185MebiusTcpProtocol, uMic185MebiusTypes;
+  uMic185MebiusTcpProtocol, uMic185MebiusTypes, uRecorderMic185Runtime,
+  uRecorderHardwareLiveDevices, uRecorderMic140Utils;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
   CMic185ModuleName = 'MIC183/185';
+
+function RecorderMic185FindLiveDevice(const AHost: string; APort: Word): TRecorderMic185Device;
+var
+  lDevice: IRecorderDevice;
+begin
+  Result := nil;
+  lDevice := RecorderHardwareFindLiveDevice(RecorderMic185SourceId(AHost, APort));
+  if (lDevice <> nil) and (lDevice.GetNativeObject is TRecorderMic185Device) then
+    Result := TRecorderMic185Device(lDevice.GetNativeObject);
+end;
+
+procedure RecorderMic185RegisterLiveDevice(AOwner: TObject; const AHost: string;
+  APort: Word; ADevice: IRecorderDevice);
+begin
+  if (AOwner = nil) or (ADevice = nil) then
+    Exit;
+  RecorderHardwareRegisterLiveDevice(AOwner, RecorderMic185SourceId(AHost, APort),
+    ADevice);
+end;
+
+procedure RecorderMic185UnregisterLiveDevice(AOwner: TObject);
+begin
+  RecorderHardwareUnregisterLiveDevice(AOwner);
+end;
+
+function RecorderMic185IsLiveDeviceConnected(const AHost: string; APort: Word): Boolean;
+begin
+  Result := RecorderHardwareIsSourceLinkOk(RecorderMic185SourceId(AHost, APort));
+end;
+
+function RecorderMic185TcpProbe(const AHost: string; APort: Word;
+  ATimeoutMs: Cardinal): Boolean;
+begin
+  if RecorderMic185RuntimeIsBusy(AHost, APort) then
+    Exit(True);
+  Result := RecorderMic140TcpProbe(AHost, APort, ATimeoutMs);
+end;
+
+function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;
+var
+  lHost: string;
+  lPort: Word;
+  lCanonId: string;
+begin
+  lCanonId := Trim(ASourceId);
+  if RecorderHardwareIsSourceLinkOk(lCanonId) then
+    Exit(True);
+  if TryParseRecorderMic185SourceId(lCanonId, lHost, lPort) then
+  begin
+    lCanonId := RecorderMic185SourceId(lHost, lPort);
+    if not SameText(lCanonId, Trim(ASourceId)) and
+      RecorderHardwareIsSourceLinkOk(lCanonId) then
+      Exit(True);
+    if RecorderMic185RuntimeIsBusy(lHost, lPort) then
+      Exit(True);
+    Result := RecorderMic185TcpProbe(lHost, lPort, 1000);
+    Exit;
+  end;
+  Result := False;
+end;
+
+function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
+  out ASerialNumber: LongWord; out AVersionText: string;
+  out AAcquiring: Boolean): Boolean;
+var
+  lDevice: TRecorderMic185Device;
+  lErrorText: string;
+begin
+  Result := False;
+  ASerialNumber := 0;
+  AVersionText := '';
+  AAcquiring := False;
+  lDevice := RecorderMic185FindLiveDevice(AHost, APort);
+  if lDevice = nil then
+    Exit;
+  if not lDevice.TestLink(lErrorText) then
+    Exit;
+  ASerialNumber := lDevice.DeviceSerial;
+  if lDevice.SoftVersion <> 0 then
+    AVersionText := Mic185FormatSoftVersion(lDevice.SoftVersion);
+  AAcquiring := lDevice.State = rdsStarted;
+  Result := True;
+  RecorderMic185Log(Format(
+    'LiveDeviceInfo %s:%d sn=%d ver=%s acquiring=%s state=%d',
+    [Trim(AHost), APort, ASerialNumber, AVersionText, BoolToStr(AAcquiring, True),
+     Ord(lDevice.State)]));
+end;
+
+function RecorderMic185IsEndpointLive(const AHost: string; APort: Word): Boolean;
+begin
+  Result := RecorderMic185IsLiveDeviceConnected(AHost, APort);
+end;
+
+procedure RecorderMic185Log(const AMessage: string);
+begin
+  RecorderMic185RuntimeLog(AMessage);
+end;
 
 function RecorderMic185SourceId(const AHost: string; APort: Word): string;
 begin
@@ -105,9 +215,7 @@ function RecorderMic185ReadDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AErrorText: string; ATimeoutMs: Cardinal): Boolean;
 var
-  lClient: TRecorderMebiusTcpClient;
-  lOut: TRecorderByteArray;
-  lInfo: TMic185HardDeviceInfo;
+  lAcquiring: Boolean;
 begin
   Result := False;
   ASerialNumber := 0;
@@ -119,31 +227,16 @@ begin
     Exit;
   end;
 
-  lClient := TRecorderMebiusTcpClient.Create(AHost, APort, ATimeoutMs);
-  try
-    try
-      lClient.Connect;
-      if not lClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
-        CMic185HardDeviceInfoSize, lOut, AErrorText) then
-        Exit;
-      if Length(lOut) < CMic185HardDeviceInfoSize then
-      begin
-        AErrorText := Format('MIC183/185 info response is too short: %d bytes',
-          [Length(lOut)]);
-        Exit;
-      end;
-
-      Move(lOut[0], lInfo, SizeOf(lInfo));
-      ASerialNumber := lInfo.SerialNumber;
-      AVersionText := Mic185FormatSoftVersion(lInfo.SoftVersion);
-      Result := True;
-    except
-      on E: Exception do
-        AErrorText := E.Message;
-    end;
-  finally
-    lClient.Free;
+  if RecorderMic185TryGetLiveDeviceInfo(Trim(AHost), APort, ASerialNumber,
+    AVersionText, lAcquiring) then
+  begin
+    Result := True;
+    Exit;
   end;
+
+  AErrorText := 'Нет активного подключения MIC183/185';
+  RecorderMic185Log(Format('ReadDeviceInfo %s:%d: no live device (%s)',
+    [Trim(AHost), APort, AErrorText]));
 end;
 
 constructor TRecorderMic185DataSource.Create(const ASourceId, AHost: string;
@@ -255,6 +348,7 @@ begin
     ConfigureDevice;
   fDevice.Connect;
   fDevice.ProgramDevice;
+  RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
 end;
 
 procedure TRecorderMic185DataSource.Start;
@@ -268,6 +362,7 @@ end;
 
 procedure TRecorderMic185DataSource.RequestStop;
 begin
+  RecorderMic185RuntimeHoldBusy(Trim(fHost), fPort, True);
   inherited RequestStop;
 end;
 
@@ -284,6 +379,8 @@ begin
     end;
     fDevice := nil;
   end;
+  RecorderHardwareUnregisterLiveDevice(Self);
+  RecorderMic185RuntimeHoldBusy(Trim(fHost), fPort, False);
   inherited Stop;
 end;
 

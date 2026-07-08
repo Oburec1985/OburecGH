@@ -4,6 +4,275 @@
 
 ---
 
+---
+
+## 2026-07-07 — Чтение серийника/версии MIC183/185 в диалоге настроек
+
+**Задача:** При открытии диалога MIC183/185 показывать серийный номер и версию ПО прибора, не затрагивая существующий протокол опроса.
+
+**Сделано:**
+- Новый модуль `uRecorderMic185DeviceInfoProbe.pas` — отдельная функция `RecorderMic185ProbeDeviceInfo`.
+- Порядок: live-сессия → кэш runtime при занятом порте → короткий TCP + IOCTL `GetSoftVersion`.
+- `TRecorderMic185Device` и цикл опроса не изменялись.
+- Диалог MIC185 вызывает probe при `LoadSource` / `RefreshDeviceInfo`.
+- Сборка OK.
+
+**Файлы:** `Device/mic185/uRecorderMic185DeviceInfoProbe.pas`, `Device/mic185/UI/uRecorderMic185SettingsDialog.pas`
+
+---
+
+## 2026-07-07 — MIC-185 в цифровом формуляре после загрузки проекта
+
+**Задача:** Теги MIC-185 отображались в списке каналов, но не попадали в цифровой формуляр на главной форме.
+
+**Сделано:**
+- Причина: `RenderDigitalPage` вызывался при инициализации страниц до `UpdateActiveSourceIds`; Mera-теги видны через fallback по файлу, аппаратные — только при активном sourceId.
+- После загрузки проекта и `RebuildTagList` добавлен `RenderActivePage`.
+- Сборка OK.
+
+**Файлы:** `UI/uMainForm.pas`
+
+---
+
+## 2026-07-07 — Диагностика MIC-185/Mera и видимость тегов
+
+**Задача:** MIC-185 ошибочно показывался offline; теги Mera File не попадали в список каналов и цифровую форму при существующем файле.
+
+**Сделано:**
+- MIC-140/MIC-185: TCP-probe (1 с) когда нет live-сессии; MIC-185 учитывает `RuntimeIsBusy`.
+- Mera File: `ExpandFileName` при проверке `FileExists`; эквивалентность sourceId по пути файла.
+- `RecorderTagSourceIsVisible` — Mera-тег виден, если файл существует (даже при расхождении sourceId).
+- Сборка OK.
+
+**Файлы:** `Core/uRecorderHardwareTree.pas`, `Device/mic185/uRecorderMic185DataSource.pas`, `Core/uRecorderTags.pas`
+
+---
+
+## 2026-07-07 — Настройка источника через IRecorderConfiguredSourceEditor
+
+**Задача:** Убрать сравнения с `MIC-140`/`MIC183/185` в обработчике двойного клика дерева устройств; по dblclick вызывать абстрактный метод настройки, конкретный диалог — в реализации устройства.
+
+**Сделано:**
+- `Device/uRecorderConfiguredSourceEditor.pas` — интерфейс `IRecorderConfiguredSourceEditor`, диспетчер `RecorderEditConfiguredDataSource`.
+- Регистрация редакторов в `uRecorderMic140SettingsDialog` и `uRecorderMic185SettingsDialog` (initialization).
+- `uRecorderSettingsDialog` — `EditHardwareSource` / dblclick / кнопка «…» вызывают диспетчер; удалены `ToggleHardwareSignal`, `ConfigureMic140/185`, `SelectedMic140/185*`.
+- Mera file по-прежнему через `EditMeraFileSource` (virtual source).
+- Сборка OK.
+
+**Файлы:** `Device/uRecorderConfiguredSourceEditor.pas`, `UI/uRecorderSettingsDialog.pas`, `Device/MIC140/UI/uRecorderMic140SettingsDialog.pas`, `Device/mic185/UI/uRecorderMic185SettingsDialog.pas`
+
+---
+
+## 2026-07-07 — Неактивные источники: иконка в настройках, скрытие на формах
+
+**Задача:** Помечать теги с неактивным источником иконкой в списке выбранных каналов диалога настроек; не показывать такие теги в списке каналов главной формы и на цифровой форме.
+
+**Сделано:**
+- `PopulateHardwareTree` — источник активен только при `HasLinkedTags and LinkOk` (раньше игнорировался offline).
+- `UpdateActiveSourceIds` — probe связи для MIC/Mera всегда, не только при `DataSources.Running`.
+- `RecorderTagSourceIsVisible` — фильтр и для virtual (Mera file), не только hardware.
+- `RenderRecorderDigitalPage` — пропуск тегов с неактивным источником.
+- Иконка 54 в колонке 0 сетки выбранных каналов (MIC/Mera offline).
+- Сборка OK.
+
+**Файлы:** `UI/uRecorderSettingsDialog.pas`, `UI/uMainForm.pas`, `Core/uRecorderTags.pas`, `UI/uRecorderDigitalPageView.pas`
+
+---
+
+## 2026-07-07 — Диалог настроек: только lfm, без динамического UI
+
+**Задача:** В `uRecorderSettingsDialog` оставить только форму (`.lfm`) для внешнего вида; убрать мёртвый код динамической генерации контролов; исправить падение при открытии формы.
+
+**Сделано:**
+- Удалены `BuildUi`, `BuildRecorderTab`, `BuildHardwareTab`, `BuildPlaceholderTab` и хелперы `AddLabel`/`AddEdit`/… (~300 строк).
+- `btnChannelEdit` и обработчики кнопок устройств/каталогов перенесены в `.lfm`; убраны `FindComponent` и runtime-создание кнопок в `Create`.
+- **Исправлен AV при открытии:** `InitializeHardwareTree` больше не вызывает `PopulateHardwareTree` до `SetRecorder`; добавлены nil-проверки `fRecorder` в `PopulateHardwareTree` и `PopulateChannelGrids`.
+- Сборка OK (`lazbuild -B RecorderLnx.lpi`).
+
+**Файлы:** `UI/uRecorderSettingsDialog.pas`, `UI/uRecorderSettingsDialog.lfm`
+
+---
+
+## 2026-07-07 — Ядро без Channels; MIC-140 настройки вне TRecorderTag
+
+**Задача:** Убрать `fChannels` из ядра; теги знают родителя через `SourceId` и отображаются в списке каналов диалога с сортировкой; базовые объекты ядра не ссылаются на MIC-140-специфичные поля в `TRecorderTag`.
+
+**Сделано:**
+- `TRecorder` — без `Channels`; удалён `Core/uRecorderChannelCatalog.pas`.
+- `UI/uRecorderSettingsSourceProbe.pas` — UI-слой: временные `TMeraSignalInfo` для доступных каналов в диалоге настроек (`fSourceProbe`).
+- `TRecorderTag` — удалены поля `MeasRangeIndex`, `Mic140*`; MIC-140 runtime/persist в `TRecorderMic140SourceConfig` и channel settings.
+- Миграция legacy JSON тегов → device config при загрузке проекта (`RecorderMic140MigrateLegacyFieldsToDeviceConfig`).
+- Обновлены MIC-140 data source, calibration, tag settings dialog.
+- Сборка OK (`RecorderLnx_tagcore_buildtest.exe`).
+
+**Файлы:** `Core/uRecorder.pas`, `Core/uRecorderTags.pas`, `UI/uRecorderSettingsSourceProbe.pas`, `UI/uRecorderSettingsDialog.pas`, `Device/MIC140/uRecorderMic140DeviceConfig.pas`
+
+---
+
+## 2026-07-07 — TRecorder: корневой объект ядра
+
+**Задача:** Ввести корневой объект `TRecorder` (аналог `IRecorder`), владеющий менеджерами; главная форма и диалоги ссылаются на него.
+
+**Сделано:**
+- `Core/uRecorder.pas` — `TRecorder` владеет TagRegistry, DataSources, StateMachine, RunSettings, EventQueue, TimeSystem, SpectrumManager, AlarmEngine.
+- `uMainForm` — поле `fRecorder: TRecorder` вместо разрозненных менеджеров.
+- `uRecorderSettingsDialog` — `property Recorder`, probe-каналы в UI-слое (см. запись выше).
+
+**Файлы:** `Core/uRecorder.pas`, `UI/uMainForm.pas`, `UI/uRecorderSettingsDialog.pas`
+
+---
+
+**Задача:** Список устройств — отдельный лист в движке; устройства только через менеджер (поиск/ручное добавление) или загрузку конфигурации; теги не должны создавать узлы в дереве и записи в `dataSources`.
+
+**Сделано:**
+- Новый модуль `Core/uRecorderConfiguredDataSources.pas` — `ConfiguredDataSources` в реестре, load/save секции `dataSources`.
+- `RecorderCollectHardwareTreeEntries` и `RestoreDevicesFromRegistry` читают только `ConfiguredDataSources`, не теги.
+- Удалены `Restore*FromTags` и `RecorderMic140RebuildDeviceConfigsFromTags` из load/save и диалога настроек.
+- Добавление/удаление устройства в UI синхронизирует `ConfiguredDataSources`; при OK — `SyncConfiguredDevicesToRegistry`.
+- Сборка OK (`RecorderLnx_buildtest.exe`).
+
+**Файлы:** `Core/uRecorderConfiguredDataSources.pas`, `Core/uRecorderTags.pas`, `Core/uRecorderHardwareTree.pas`, `Core/uRecorderProjectFiles.pas`, `UI/uRecorderSettingsDialog.pas`
+
+---
+
+## 2026-07-07 — Дерево устройств: без manual и debug.diagnostics
+
+**Задача:** Убрать из дерева устройств служебные источники `manual` и `debug.diagnostics`.
+
+**Сделано:**
+- `RecorderHardwareTreeShowsSourceId` — в дереве только Mera file и MIC-140/185.
+- `RecorderCollectHardwareTreeEntries` фильтрует остальные sourceId.
+
+**Файлы:** `Core/uRecorderTags.pas`, `Core/uRecorderHardwareTree.pas`
+
+---
+
+**Задача:** Убрать из `PopulateHardwareTree` прямые обращения к MeraFile/MIC140/MIC185; оставить только абстрактные методы источника; сократить `uses` в interface.
+
+**Сделано:**
+- Новый модуль `Core/uRecorderHardwareTree.pas` — сбор sourceId, подпись узла, link OK, привязка `SourceId` к `TTreeNode.Data`.
+- `PopulateHardwareTree` — единый цикл по `TRecorderHardwareTreeEntry`, без вложенных `Mic140SourceConnected` / `fMeraFileName`.
+- Из interface `uRecorderSettingsDialog` убраны MIC185/MIC140 dialog/runtime units; device-специфика — в `implementation`.
+- `SignalSourceId` → `RecorderSignalConfiguredSourceId`.
+- Сборка OK.
+
+**Файлы:** `Core/uRecorderHardwareTree.pas`, `UI/uRecorderSettingsDialog.pas`
+
+---
+
+**Задача:** Устранить падение при выходе из RecorderLnx и показывать рабочий MIC185 в дереве устройств зелёной иконкой, без ложного «сбойного» состояния.
+
+**Сделано:**
+- `finalization` в `uRecorderMic185Runtime` и `uRecorderHardwareLiveDevices`: `Free` + `Delete(0)` вместо бесконечного `while Count > 0`.
+- `TestLink` MIC185: при открытой сессии (`rdsConnected`+) OK без IOCTL во время опроса.
+- Регистрация live-устройства через канонический `RecorderMic185RegisterLiveDevice(host, port)`.
+- `RecorderMic185IsSourceLinkOk` — нормализация sourceId + fallback на `RuntimeIsBusy`.
+- Дерево устройств и health probe используют новую проверку.
+- Сборка OK.
+
+**Файлы:** `uRecorderMic185Runtime.pas`, `uRecorderHardwareLiveDevices.pas`, `uMic185Device.pas`, `uRecorderMic185DataSource.pas`, `uRecorderSettingsDialog.pas`, `uMainForm.pas`
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+**Задача:** Восстановить сборку основного проекта RecorderLnx после ошибки компиляции.
+
+**Сделано:**
+- Убран `uMic185Registration` из `RecorderLnx.lpr` / `.lpi` — модуль только для тестового стенда (`Tests/mic185`) и тянет отсутствующий в основном проекте `uRecorderDeviceManager`.
+- Сборка `lazbuild -B` проходит успешно (exit 0).
+
+**Файлы:** `RecorderLnx.lpr`, `RecorderLnx.lpi`
+
+---
+
+## 2026-07-07 — IRecorderDevice.TestLink и зелёная иконка без второго TCP
+
+**Задача:** Корректная диагностика MIC/MIC140 в дереве устройств: не открывать второе соединение; после connect держать «зелёное» состояние и проверять link тестовой командой на существующей сессии.
+
+**Сделано:**
+- `IRecorderDevice.TestLink` в абстракции устройства; реализации MIC185 (IOCTL sn), MIC140 core/v2 (ReadFirmware/ProbeScan).
+- `uRecorderHardwareLiveDevices` — реестр live-сессий от data source.
+- Дерево и health probe: `RecorderHardwareIsSourceLinkOk` вместо `TcpProbe`.
+- Открытие настроек не останавливает preview (только запись).
+- Сборка OK, self-test `LiveDeviceInfo` при активном опросе.
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+## 2026-07-07 — MIC185: состояние из TRecorderMic185Device, без probe TCP
+
+**Задача:** Убрать ESocketError при редактировании MIC185; состояние «мик подключён» брать из класса устройства, не открывая дополнительное TCP-соединение.
+
+**Сделано:**
+- Реестр live-устройств (`RecorderMic185RegisterLiveDevice`) привязан к `TRecorderMic185Device` в data source.
+- `ReadDeviceInfo` / диалог / дерево читают sn/версию/опрос только из live device.
+- Probe TCP для UI полностью удалён.
+- Автотест `--selftest-mic185-settings` на устройстве 192.168.9.142: `LiveDeviceInfo` без `opening probe TCP`.
+- Сборка OK.
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+## 2026-07-07 — MIC185: self-test dblClick, HoldBusy, StopDataSources перед настройками
+
+**Задача:** Воспроизвести и устранить ESocketError при dblClick/редактировании MIC185 в настройках во время или сразу после активного опроса; добавить автотест пути UI.
+
+**Сделано:**
+- `RuntimeHoldBusy` при `RequestStop` — порт помечен занятым до disconnect worker-thread.
+- Порядок `Disconnect`: закрытие сокета до снятия из TCP-реестра.
+- `btnSettings`: `StopDataSources` перед `ShowRecorderSettingsDialog`.
+- `Mic185SourceConnected` без лишнего TCP при live endpoint.
+- CLI `--selftest-mic185-settings`, `DebugEditMic185Source`, счётчик probe TCP.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+## 2026-07-07 — MIC185: runtime endpoint (v2, занятый порт при опросе)
+
+**Задача:** dblClick на MIC185 при активном просмотре всё ещё давал ESocketError — второй TCP на :4000.
+
+**Сделано:**
+- `uRecorderMic185Runtime.pas` — реестр busy endpoint на уровне `TRecorderMic185Device`.
+- `TryConnect` / `ReadDeviceInfo` не открывают сокет, если порт занят.
+- Диалог: состояние «Опрос активен»; лог в `LogWindows.log`.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+## 2026-07-07 — MIC185: dblClick при активном опросе (занятый порт 4000)
+
+**Задача:** При dblClick на MIC185 во время просмотра/записи — ESocketError timeout; не открывать второй TCP-клиент; логирование и устойчивость.
+
+**Сделано:**
+- Реестр live-сессии `TRecorderMic185DataSource` — `ReadDeviceInfo` берёт sn/версию из кэша без TCP.
+- `RecorderMic185Log` → `LogWindows.log`.
+- `TryWriteBytes` — IOCTL не бросает `ESocketError` наружу.
+- Skill `recorderlnx`: всегда сам запускать логирование и итерации по ошибке.
+
+**Документация:** [errors/2026-07-07-mic185-dblclick-socket-busy.md](errors/2026-07-07-mic185-dblclick-socket-busy.md)
+
+---
+
+## 2026-07-07 — MIC185: dblClick в дереве устройств (диалог настройки)
+
+**Задача:** При двойном клике по MIC185 в дереве устройств RecorderLnx возникала ошибка (останов в `TInetSocket.Create`).
+
+**Сделано:**
+- Перед `TInetSocket.Create` добавлен TCP-probe (`RecorderMic140TcpProbe`), как у MIC-140 — без исключения при недоступном приборе.
+- `RecorderMic185ReadDeviceInfo` использует `TryConnect` вместо `Connect`.
+- Исправлены адреса каналов в `Format`: `MIC183_185-{%d-%d}` вместо ошибочного `{3-%d}`.
+
+**Документация:** [Docs/devices/mic185/recorderlnx_integration.md](Docs/devices/mic185/recorderlnx_integration.md)
+
+---
+
 ## 2026-07-06 — Документация MIC185: полное обновление Docs/devices/mic185
 
 **Задача:** Синхронизировать документацию прибора с наработками стенда, temp, стабильностью.

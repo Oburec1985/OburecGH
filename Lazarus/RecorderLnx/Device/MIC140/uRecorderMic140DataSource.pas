@@ -180,8 +180,8 @@ function RecorderMic140ChannelUsesTemperature(
   const ASettings: TRecorderMic140ChannelSettings): Boolean;
 function RecorderMic140ChannelCjcNumber(const ASettings: TRecorderMic140ChannelSettings;
   AChannelIndex, ADevSubRev: Integer): Integer;
-function RecorderMic140TagEffectiveCjcChannel(ATag: TRecorderTag;
-  AChannelIndex, ADevSubRev: Integer): Integer;
+function RecorderMic140TagEffectiveCjcChannel(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AChannelIndex, ADevSubRev: Integer): Integer;
 function RecorderMic140ChannelGradRangeText(
   const ASettings: TRecorderMic140ChannelSettings): string;
 procedure RecorderMic140RestoreChannelSettingsFromTag(
@@ -202,7 +202,8 @@ uses
   uRecorderMic140DeviceConfig, uRecorderMic140Flash,
   uRecorderMic140MebiusTypes,
   uRecorderMic140LegacyChannelDesc, uRecorderMic140LegacyScanDriver,
-  uRecorderMic140v2Factory, uRecorderMic140v2Diag
+  uRecorderMic140v2Factory, uRecorderMic140v2Diag,
+  uRecorderHardwareLiveDevices
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
@@ -618,20 +619,16 @@ begin
     Result := ASettings.CjcChannel;
 end;
 
-function RecorderMic140TagEffectiveCjcChannel(ATag: TRecorderTag;
-  AChannelIndex, ADevSubRev: Integer): Integer;
+function RecorderMic140TagEffectiveCjcChannel(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AChannelIndex, ADevSubRev: Integer): Integer;
 var
   lSettings: TRecorderMic140ChannelSettings;
+  lChannelNumber: Integer;
 begin
+  if (ATag <> nil) and RecorderMic140TryGetChannelSettings(ARegistry, ATag,
+    lChannelNumber, lSettings) then
+    Exit(RecorderMic140ChannelCjcNumber(lSettings, AChannelIndex, ADevSubRev));
   RecorderMic140InitChannelSettings(lSettings, AChannelIndex, ADevSubRev);
-  if ATag <> nil then
-  begin
-    lSettings.DefaultCjc := ATag.Mic140CjcDefault;
-    if (not ATag.Mic140CjcDefault) and
-      (ATag.Mic140CjcChannel >= 1) and
-      (ATag.Mic140CjcChannel <= MIC140TemperatureChannelCount) then
-      lSettings.CjcChannel := ATag.Mic140CjcChannel;
-  end;
   Result := RecorderMic140ChannelCjcNumber(lSettings, AChannelIndex, ADevSubRev);
 end;
 
@@ -694,26 +691,6 @@ var
 begin
   if ATag = nil then
     Exit;
-  if (ATag.MeasRangeIndex >= 0) and (ATag.MeasRangeIndex < CMic140RangeCount) then
-    ASettings.RangeIndex := ATag.MeasRangeIndex;
-  ASettings.SoftBalance := ATag.Mic140SoftBalance;
-  ASettings.DefaultCjc := ATag.Mic140CjcDefault;
-  if (ATag.Mic140CjcChannel >= 1) and
-    (ATag.Mic140CjcChannel <= MIC140TemperatureChannelCount) then
-    ASettings.CjcChannel := ATag.Mic140CjcChannel;
-  if Trim(ATag.Mic140ThermocoupleScaleName) <> '' then
-  begin
-    ASettings.ThermocoupleScaleName := ATag.Mic140ThermocoupleScaleName;
-    ASettings.ThermocoupleScalePath := ATag.Mic140ThermocoupleScalePath;
-    if Trim(ASettings.ThermocoupleScalePath) = '' then
-      ASettings.ThermocoupleScalePath :=
-        RecorderMeraThermocoupleRelativePath(ASettings.ThermocoupleScaleName);
-    lResolvedKey := RecorderMeraResolveThermocoupleScaleKey(
-      ASettings.ThermocoupleScalePath, ASettings.ThermocoupleScaleName);
-    if lResolvedKey <> '' then
-      ASettings.ThermocoupleScalePath := lResolvedKey;
-    Exit;
-  end;
   if ATag.CalibrationNames = nil then
     Exit;
   for J := 0 to ATag.CalibrationNames.Count - 1 do
@@ -971,10 +948,14 @@ end;
 function TRecorderMic140DataSource.Mic140RawSample(
   const ABlock: TRecorderDeviceSampleBlock; AChannelIndex, ASampleIndex: Integer;
   ATag: TRecorderTag): Double;
+var
+  lSettings: TRecorderMic140ChannelSettings;
+  lChannelNumber: Integer;
 begin
   Result := ABlock.Values[AChannelIndex][ASampleIndex];
-  if (ATag <> nil) and (ATag.Mic140SoftBalance <> 0) then
-    Result := Result - ATag.Mic140SoftBalance;
+  if (ATag <> nil) and RecorderMic140TryGetChannelSettings(Registry, ATag,
+    lChannelNumber, lSettings) and (lSettings.SoftBalance <> 0) then
+    Result := Result - lSettings.SoftBalance;
 end;
 
 function TRecorderMic140DataSource.ZeroBalanceTags(AOwner: TComponent; ATags: TList;
@@ -1102,7 +1083,7 @@ begin
       for J := 0 to High(lChannelNumbers) do
         if lChannelNumbers[J] = lChannelNumber then
         begin
-          lTag.Mic140SoftBalance := lMeans[J];
+          RecorderMic140SetChannelSoftBalance(ARegistry, lTag, lMeans[J]);
           AMessages.Add(Format('%s: смещение нуля %.3f', [lTag.Name, lMeans[J]]));
           Result := True;
           Break;
@@ -1228,6 +1209,7 @@ begin
     Exit;
   end;
   PublishDiagnostics(CMic140StatusConnected, 'connected', True);
+  RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
   if fMic <> nil then
   begin
     fDeviceSerial := fMic.GetDeviceSerial;
@@ -1241,15 +1223,7 @@ begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 hardware calibr serial=%d',
         [SourceId, fDeviceSerial]));
     if fDeviceSerial > 0 then
-    begin
-      for I := 0 to Registry.TagCount - 1 do
-      begin
-        lTag := Registry.Tags[I];
-        if SameText(lTag.SourceId, SourceId) and
-          (Pos('diagnostics.', LowerCase(lTag.Address)) <> 1) then
-          lTag.Mic140DeviceSerial := fDeviceSerial;
-      end;
-    end;
+      RecorderMic140SetDeviceSerialForSource(Registry, SourceId, fDeviceSerial);
     RebuildTemperatureTagNames;
     if (fDeviceSerial > 0) and (Registry <> nil) then
     begin
@@ -1276,14 +1250,11 @@ begin
         lChannelNumber - 1);
       fDevice.TrySetDeviceProperty(rdpMic140CommutIndex, lSettings.CommutIndex,
         lChannelNumber - 1);
-      lTag.Mic140CjcChannel := RecorderMic140ChannelCjcNumber(lSettings,
-        lChannelNumber - 1, CMic140Mic140SubRev1);
       if not RecorderMic140ChannelUsesTemperature(lSettings) then
         Continue;
       if not lTag.ChannelCalibrationEnabled then
         Continue;
-      if not lTag.Mic140ThermoCompensationEnabled then
-        lTag.Mic140ThermoCompensationEnabled := True;
+      RecorderMic140EnsureThermoCompensationForSource(Registry, SourceId);
       lCalibrationName := RecorderMic140EnsureThermocoupleCalibration(Registry,
         lSettings);
       if lCalibrationName = '' then
@@ -1296,7 +1267,7 @@ begin
       end;
       if lTag.CalibrationNames.IndexOf(lCalibrationName) < 0 then
         lTag.CalibrationNames.Add(lCalibrationName);
-      lTag.Mic140ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
+      RecorderMic140UpdateChannelSettings(Registry, lTag, lSettings);
       lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
       lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve ready: tag=%s SDB=%s',
@@ -1420,6 +1391,7 @@ procedure TRecorderMic140DataSource.Stop;
 var
   lBufferDropped: Int64;
 begin
+  RecorderHardwareUnregisterLiveDevice(Self);
   if fStreamFsm <> nil then
     fStreamFsm.SetPhase(mspStopping);
   StopLegacyReadThread;
@@ -2314,7 +2286,7 @@ begin
       Continue;
     end;
 
-    lCjcChannel := RecorderMic140TagEffectiveCjcChannel(lTag, lI,
+    lCjcChannel := RecorderMic140TagEffectiveCjcChannel(Registry, lTag, lI,
       CMic140Mic140SubRev1);
     lTTag := nil;
     if (lCjcChannel >= 1) and (lCjcChannel <= fTemperatureTagNames.Count) then
@@ -2324,7 +2296,7 @@ begin
       if lTTag = nil then
         lTTag := Registry.FindByName(fTemperatureTagNames[lCjcChannel - 1]);
     end;
-    lUseCjc := lTag.Mic140ThermoCompensationEnabled and
+    lUseCjc := RecorderMic140TagUsesThermoCompensation(Registry, lTag) and
       SameText(lTag.SourceValueMode,
         RecorderMic140OutputModeToConfigName(momTemperatureC));
     if lUseCjc then
@@ -2337,7 +2309,7 @@ begin
         [SourceId, lTag.Name, lCjcChannel, lCjcTemperatureC]));
       fCjcActiveLogWritten := True;
     end;
-    if (not lUseCjc) and lTag.Mic140ThermoCompensationEnabled and
+    if (not lUseCjc) and RecorderMic140TagUsesThermoCompensation(Registry, lTag) and
       SameText(lTag.SourceValueMode,
         RecorderMic140OutputModeToConfigName(momTemperatureC)) and
       (not fTemperatureModeWarningLogged) then

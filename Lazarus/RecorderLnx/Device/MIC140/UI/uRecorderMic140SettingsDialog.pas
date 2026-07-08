@@ -25,7 +25,7 @@ function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
 implementation
 
 uses
-  Math, uRecorderMic140ChannelDialog;
+  Math, uRecorderMic140ChannelDialog, uRecorderConfiguredSourceEditor;
 
 type
   TRecorderMic140SettingsDialog = class(TForm)
@@ -785,5 +785,34 @@ begin
     DoneRecorderMic140DialogResult(lResult);
   end;
 end;
+
+type
+  TRecorderMic140ConfiguredSourceEditor = class(TInterfacedObject,
+    IRecorderConfiguredSourceEditor)
+  public
+    function SupportsSource(const ASourceId, AModuleType: string): Boolean;
+    function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
+      const ASourceId: string; out ANewSourceId: string): Boolean;
+  end;
+
+function TRecorderMic140ConfiguredSourceEditor.SupportsSource(
+  const ASourceId, AModuleType: string): Boolean;
+begin
+  Result := SameText(AModuleType, 'MIC-140') or
+    RecorderIsHardwareMic140TagSource(ASourceId);
+end;
+
+function TRecorderMic140ConfiguredSourceEditor.EditSource(AOwner: TComponent;
+  ARegistry: TRecorderTagRegistry; const ASourceId: string;
+  out ANewSourceId: string): Boolean;
+begin
+  if ARegistry = nil then
+    Exit(False);
+  Result := ApplyRecorderMic140SourceDialog(AOwner, ARegistry,
+    ARegistry.Mic140DeviceConfigs, ASourceId, ANewSourceId);
+end;
+
+initialization
+  RecorderRegisterConfiguredSourceEditor(TRecorderMic140ConfiguredSourceEditor.Create);
 
 end.

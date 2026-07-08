@@ -170,96 +170,56 @@ type
 
 
     procedure CanvasMouseDown(Sender: TObject; Button: TMouseButton;
-
-      Shift: TShiftState; X, Y: Integer);
+     Shift: TShiftState; X, Y: Integer);
     procedure CanvasMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-
     procedure CanvasMouseUp(Sender: TObject; Button: TMouseButton;
-
       Shift: TShiftState; X, Y: Integer);
     procedure ComponentMouseDown(Sender: TObject; Button: TMouseButton;
-
       Shift: TShiftState; X, Y: Integer);
     procedure ComponentMouseUp(Sender: TObject; Button: TMouseButton;
-
       Shift: TShiftState; X, Y: Integer);
     procedure ChildMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-
     procedure ChildMouseUp(Sender: TObject; Button: TMouseButton;
-
       Shift: TShiftState; X, Y: Integer);
     procedure ResizeHandleMouseDown(Sender: TObject; Button: TMouseButton;
-
       Shift: TShiftState; X, Y: Integer);
     procedure SetEnabled(AValue: Boolean);
-
     function GetActivePage: TRecorderFormPage;
     function GetActivePagePanel: TPanel;
-
     procedure BeginOperation(AOperation: TFormEditorOperation; X, Y: Integer);
-
     procedure UpdateOperation(X, Y: Integer);
-
     procedure EndOperation;
-
     procedure ClearDragStartBounds;
-
     procedure ClearClipboard;
-
     procedure ClearUndoStack;
-
     procedure PushUndoState;
-
     procedure RestoreUndoState(AState: TFormEditorUndoState);
-
     function CreateUndoState(APage: TRecorderFormPage): TFormEditorUndoState;
-
     function CreateComponentFromSnapshot(
-
       AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
     procedure RenderLive;
-
     procedure NotifyChanged;
-
     procedure CopySelected;
-
     procedure PasteClipboard;
-
     function ClipboardItemFromComponent(
-
       AComponent: TRecorderVisualComponent): TFormEditorClipboardItem;
     function CreateComponentFromClipboard(
-
       AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
     function UniqueComponentId(APage: TRecorderFormPage;
-
-      const ABaseId: string): string;
-
+       const ABaseId: string): string;
     function UniqueComponentName(APage: TRecorderFormPage;
-
       const ABaseName: string): string;
-
     function IsSelected(AIndex: Integer): Boolean;
-
     procedure SelectIndex(AIndex: Integer; AAdd: Boolean);
-
     procedure ToggleIndex(AIndex: Integer);
-
     procedure SelectByRect(const ARect: TRect);
-
     function GetGroupBounds(out ABounds: TRecorderRect): Boolean;
-
     function GetResizeOperationAtControlPoint(AControl: TControl; X,
-
       Y: Integer): TFormEditorOperation;
     function CursorForOperation(AOperation: TFormEditorOperation): TCursor;
-
     procedure UpdateHoverCursor(AControl: TControl; X, Y: Integer);
-
     function NormalizeRect(X1, Y1, X2, Y2: Integer): TRect;
-
     function RecorderRectToRect(const ABounds: TRecorderRect): TRect;
-
     function RectsIntersectPartial(const A, B: TRect): Boolean;
 
   public
@@ -268,44 +228,25 @@ type
       AGetPage - callback, возвращающий активную страницу модели.
       AComponentFactory - фабрика компонентов. }
     constructor Create(ACanvas: TPanel; AGetPage: TGetEditorPageEvent;
-
       AComponentFactory: TRecorderComponentFactory);
     { Деструктор корректно очищает буфер обмена, стек Undo и выделения }
     destructor Destroy; override;
-
-
-
     { Снимает выделение со всех компонентов, не меняя модель страницы. }
     procedure ClearSelection;
-
-
-
     { Задает контекст данных для live-компонентов на мнемосхеме. }
     procedure SetDataContext(ATagRegistry: TRecorderTagRegistry;
-
       AAlarmEngine: IRecorderAlarmEngine; ADisplaySeconds: Double);
-
-
     { Полностью перестраивает визуальное представление активной страницы. }
     procedure Render;
-
     procedure RefreshLive;
-
-
-
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
-
     { Фиксирует текущую точку отката в Undo }
     procedure RememberUndoStep;
-
     { Возвращает на один шаг Undo назад }
     procedure UndoLastStep;
-
     { Полностью очищает историю изменений для текущей страницы }
     procedure ClearUndoHistory;
-
-
 
     { Обрабатывает клавиатуру редактора.
       Стрелки двигают выбранные компоненты на 1 пиксель.
@@ -315,9 +256,6 @@ type
       Ctrl+C копирует выбранные компоненты.
       Ctrl+V вставляет компоненты со смещением. }
     procedure HandleKeyDown(var Key: Word; Shift: TShiftState);
-
-    
-
     property Enabled: Boolean read fEnabled write SetEnabled;
     property OnChanged: TEditorNotifyEvent read fOnChanged write fOnChanged;
   end;
@@ -1215,16 +1153,11 @@ var
 begin
   if (not fEnabled) or (not (Sender is TControl)) then
     Exit;
-
-
   if fOperation = feoNone then
   begin
     UpdateHoverCursor(TControl(Sender), X, Y);
     Exit;
   end;
-
-
-
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
   UpdateOperation(lPoint.X, lPoint.Y);
 end;

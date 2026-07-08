@@ -49,13 +49,24 @@ function ApplyRecorderMic185SourceDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
   out ANewSourceId: string): Boolean;
 
+procedure SetRecorderMic185SettingsSelfTestActive(AActive: Boolean);
+
 implementation
 
 {$R *.lfm}
 
 uses
   StrUtils, uRecorderMic185DataSource, uRecorderMic185AdditionalDialog,
-  uRecorderMic185ChannelDialog;
+  uRecorderMic185ChannelDialog, uRecorderConfiguredSourceEditor,
+  uRecorderMic185DeviceInfoProbe;
+
+var
+  GRecorderMic185SettingsSelfTestActive: Boolean = False;
+
+procedure SetRecorderMic185SettingsSelfTestActive(AActive: Boolean);
+begin
+  GRecorderMic185SettingsSelfTestActive := AActive;
+end;
 
 procedure TRecorderMic185SettingsForm.FormCreate(Sender: TObject);
 begin
@@ -83,9 +94,9 @@ begin
   for I := 1 to 70 do
   begin
     if I <= 64 then
-      lName := Format('MIC183_185-{3-%d}', [I])
+      lName := Format('MIC183_185-{%d-%d}', [3, I])
     else if I <= 69 then
-      lName := Format('MIC183_185-{3-t%d}', [I - 64])
+      lName := Format('MIC183_185-{%d-t%d}', [3, I - 64])
     else
       lName := 'MIC183_185-{3-uts}';
     gridChannels.Cells[0, I] := IntToStr(I);
@@ -129,6 +140,7 @@ end;
 
 procedure TRecorderMic185SettingsForm.RefreshDeviceInfo;
 var
+  lAcquiring: Boolean;
   lErrorText: string;
   lPort: Integer;
   lSerialNumber: LongWord;
@@ -139,13 +151,25 @@ begin
   if (lPort < 1) or (lPort > 65535) then
     Exit;
 
-  if RecorderMic185ReadDeviceInfo(Trim(edAddress.Text), Word(lPort),
-    lSerialNumber, lVersionText, lErrorText) then
+  if RecorderMic185ProbeDeviceInfo(Trim(edAddress.Text), Word(lPort),
+    lSerialNumber, lVersionText, lAcquiring, lErrorText, 3000) then
   begin
-    edSerial.Text := IntToStr(lSerialNumber);
+    if lSerialNumber <> 0 then
+      edSerial.Text := IntToStr(lSerialNumber)
+    else
+      edSerial.Text := '';
     edVersion.Text := lVersionText;
-    edState.Text := 'Норма';
-  end
+    if lAcquiring then
+      edState.Text := 'Опрос активен'
+    else
+      edState.Text := 'Подключён';
+    Exit;
+  end;
+
+  edSerial.Text := '';
+  edVersion.Text := '';
+  if lErrorText <> '' then
+    edState.Text := lErrorText
   else if Trim(edAddress.Text) <> '' then
     edState.Text := 'Нет связи';
 end;
@@ -202,6 +226,12 @@ begin
   lForm := TRecorderMic185SettingsForm.Create(AOwner);
   try
     lForm.LoadSource(ARegistry, ASourceId);
+    if GRecorderMic185SettingsSelfTestActive then
+    begin
+      Result := True;
+      ANewSourceId := lForm.BuildSourceId;
+      Exit;
+    end;
     Result := lForm.ShowModal in [mrOk, mrYes];
     if Result then
       ANewSourceId := lForm.BuildSourceId
@@ -211,5 +241,33 @@ begin
     lForm.Free;
   end;
 end;
+
+type
+  TRecorderMic185ConfiguredSourceEditor = class(TInterfacedObject,
+    IRecorderConfiguredSourceEditor)
+  public
+    function SupportsSource(const ASourceId, AModuleType: string): Boolean;
+    function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
+      const ASourceId: string; out ANewSourceId: string): Boolean;
+  end;
+
+function TRecorderMic185ConfiguredSourceEditor.SupportsSource(
+  const ASourceId, AModuleType: string): Boolean;
+begin
+  Result := SameText(AModuleType, 'MIC183/185') or
+    SameText(AModuleType, 'MIC185') or
+    RecorderIsHardwareMic185TagSource(ASourceId);
+end;
+
+function TRecorderMic185ConfiguredSourceEditor.EditSource(AOwner: TComponent;
+  ARegistry: TRecorderTagRegistry; const ASourceId: string;
+  out ANewSourceId: string): Boolean;
+begin
+  Result := ApplyRecorderMic185SourceDialog(AOwner, ARegistry, ASourceId,
+    ANewSourceId);
+end;
+
+initialization
+  RecorderRegisterConfiguredSourceEditor(TRecorderMic185ConfiguredSourceEditor.Create);
 
 end.

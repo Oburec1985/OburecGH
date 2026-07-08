@@ -65,6 +65,7 @@ type
     function LastUts: Double;
     function HasTempData: Boolean;
     function HasUtsData: Boolean;
+    function TestLink(out AErrorText: string): Boolean; override;
     function SniffPackets(APacketCount: Integer; ATimeoutMs: Cardinal): Integer;
     function RxDataPacketCount: Int64;
   end;
@@ -72,6 +73,9 @@ type
 function CreateRecorderMic185Device: IRecorderDevice;
 
 implementation
+
+uses
+  uRecorderMic185Runtime;
 
 const
   CMic185ConnectAttempts = 3;
@@ -216,6 +220,7 @@ begin
     Move(lOut[0], lInfo, SizeOf(lInfo));
     fDeviceSerial := lInfo.SerialNumber;
     fSoftVersion := lInfo.SoftVersion;
+    RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial, fSoftVersion);
   end;
 end;
 
@@ -236,6 +241,8 @@ begin
       fClient.Connect;
       QueryDeviceInfo;
       fState := rdsConnected;
+      RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial, fSoftVersion,
+        False);
       Exit;
     except
       on E: Exception do
@@ -253,6 +260,7 @@ begin
   if fState = rdsStarted then
     Stop;
   FreeAndNil(fClient);
+  RecorderMic185RuntimeDetach(fHost, Word(fPort));
   fState := rdsDisconnected;
 end;
 
@@ -308,6 +316,7 @@ begin
     raise ERecorderDeviceError.CreateFmt('StartMeasurement: %s', [lErrorMessage]);
   fSampleIndex := 0;
   fState := rdsStarted;
+  RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), True);
 end;
 
 procedure TRecorderMic185Device.Stop;
@@ -317,7 +326,10 @@ begin
   if (fClient <> nil) and (fState = rdsStarted) then
     fClient.TryStopMeasurement(lErrorMessage);
   if fState = rdsStarted then
+  begin
     fState := rdsProgrammed;
+    RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), False);
+  end;
 end;
 
 function TRecorderMic185Device.LastTempValue(AIndex: Integer): Double;
@@ -356,6 +368,38 @@ begin
   Result := 0;
   if fClient <> nil then
     Result := fClient.RxDataPacketCount;
+end;
+
+function TRecorderMic185Device.TestLink(out AErrorText: string): Boolean;
+var
+  lInfo: TMic185HardDeviceInfo;
+  lOut: TRecorderByteArray;
+begin
+  Result := False;
+  AErrorText := '';
+  if (fState = rdsDisconnected) or (fClient = nil) then
+  begin
+    AErrorText := 'MIC183/185 is not connected';
+    Exit;
+  end;
+  if fState = rdsStarted then
+    Exit(True);
+  if fState >= rdsConnected then
+    Exit(True);
+  if not fClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
+    CMic185HardDeviceInfoSize, lOut, AErrorText) then
+    Exit;
+  if Length(lOut) < CMic185HardDeviceInfoSize then
+  begin
+    AErrorText := Format('MIC183/185 info response is too short: %d bytes',
+      [Length(lOut)]);
+    Exit;
+  end;
+  Move(lOut[0], lInfo, SizeOf(lInfo));
+  fDeviceSerial := lInfo.SerialNumber;
+  fSoftVersion := lInfo.SoftVersion;
+  RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial, fSoftVersion);
+  Result := True;
 end;
 
 function TRecorderMic185Device.ReadBlock(ATimeoutMs: Cardinal;

@@ -11,7 +11,8 @@ unit uRecorderDeviceInterfaces;
   Блок отсчётов — uRecorderAcquisitionTypes.
   Особенности MIC-140 (TIn, CJC) — Device/MIC140 и Device/MIC140v2.
 
-  См. Docs/devices/device_abstraction.md
+  См. Docs/devices/device_abstractio
+  n.md
 }
 
 {$mode objfpc}{$H+}
@@ -95,6 +96,9 @@ type
     function ReadBlock(ATimeoutMs: Cardinal;
       out ABlock: TRecorderAcquisitionBlock): Boolean;
 
+    { Проверка связи по уже открытой сессии (без нового TCP). }
+    function TestLink(out AErrorText: string): Boolean;
+
     property DeviceId: string read GetDeviceId;
     property Name: string read GetName;
     property State: TRecorderDeviceState read GetState;
@@ -121,17 +125,26 @@ type
     function GetNativeObject: TObject; virtual;
   public
     constructor Create(const ADeviceId, AName: string); virtual;
+    // получить/установить свойство
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer = -1): Variant; virtual;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; virtual;
+    // подключить устройство
     procedure Connect; virtual;
+    // отключить устройство
     procedure Disconnect; virtual;
+    // запрограммировать устройство
     procedure ProgramDevice; virtual;
+    // запустить сбор данных
     procedure Start; virtual;
+    // остановить сбор данных
     procedure Stop; virtual;
+    // прочитать блок данных
     function ReadBlock(ATimeoutMs: Cardinal;
       out ABlock: TRecorderAcquisitionBlock): Boolean; virtual;
+    // проверка связи
+    function TestLink(out AErrorText: string): Boolean; virtual;
     property DeviceId: string read GetDeviceId;
     property Name: string read GetName;
     property State: TRecorderDeviceState read GetState;
@@ -273,6 +286,14 @@ function TRecorderDevice.ReadBlock(ATimeoutMs: Cardinal;
 begin
   ClearRecorderAcquisitionBlock(ABlock);
   Result := False;
+end;
+
+function TRecorderDevice.TestLink(out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  Result := fState <> rdsDisconnected;
+  if not Result then
+    AErrorText := 'Device is not connected';
 end;
 
 procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBlock;

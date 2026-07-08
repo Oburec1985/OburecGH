@@ -34,8 +34,8 @@ function RecorderMic140TInHardwareCalibrCsvPath(ADeviceSerial, ATInListIndex,
 function RecorderMic140EnsureTInHardwareCalibration(
   ARegistry: TRecorderTagRegistry; ADeviceSerial, ATInListIndex,
   ADevSubRev: Integer; out ACalibrationName: string): Boolean;
-function RecorderMic140ResolveDeviceSerialForTag(const ATag: TRecorderTag;
-  ADeviceSerial: Integer): Integer;
+function RecorderMic140ResolveDeviceSerialForTag(ARegistry: TRecorderTagRegistry;
+  const ATag: TRecorderTag; ADeviceSerial: Integer): Integer;
 function RecorderMic140EnsureHardwareCalibrationInRegistry(
   ARegistry: TRecorderTagRegistry; ADeviceSerial, ARangeIndex,
   AChannelNumber: Integer; out ACalibrationName: string): Boolean;
@@ -59,7 +59,8 @@ uses
   uRecorderMeraPaths, uRecorderMic140Utils, uRecorderMic140StreamTypes,
   uRecorderMic140LegacyConstants, uRecorderMic140Thermocouple,
   uRecorderMic140StreamHelpers, uRecorderMic140LegacyProtocol,
-  uRecorderMic140MebiusConstants;
+  uRecorderMic140MebiusConstants, uRecorderMic140DataSource,
+  uRecorderMic140DeviceConfig;
 
 const
   CMic140RangeCalibrDirNames: array[0..CMic140RangeCount - 1] of string =
@@ -322,8 +323,8 @@ begin
   end;
 end;
 
-function RecorderMic140ResolveDeviceSerialForTag(const ATag: TRecorderTag;
-  ADeviceSerial: Integer): Integer;
+function RecorderMic140ResolveDeviceSerialForTag(ARegistry: TRecorderTagRegistry;
+  const ATag: TRecorderTag; ADeviceSerial: Integer): Integer;
 var
   lHost: string;
   lPort: Word;
@@ -333,17 +334,20 @@ var
 begin
   if ADeviceSerial > 0 then
     Exit(ADeviceSerial);
-  if (ATag <> nil) and (ATag.Mic140DeviceSerial > 0) then
+  if (ATag <> nil) and (ARegistry <> nil) then
   begin
-    lTagSerial := ATag.Mic140DeviceSerial;
-    if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) and
-       RecorderMic140HostLastOctet(lHost, lHostOctet) and
-       (lTagSerial = lHostOctet) then
+    lTagSerial := RecorderMic140DeviceSerialForSource(ARegistry, ATag.SourceId);
+    if lTagSerial > 0 then
     begin
-      { Старые конфиги сохраняли DevSerNo (= последний октет IP), не CCSerNo. }
-    end
-    else
-      Exit(lTagSerial);
+      if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) and
+         RecorderMic140HostLastOctet(lHost, lHostOctet) and
+         (lTagSerial = lHostOctet) then
+      begin
+        { Старые конфиги сохраняли DevSerNo (= последний октет IP), не CCSerNo. }
+      end
+      else
+        Exit(lTagSerial);
+    end;
   end;
   if (ATag <> nil) and TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) and
     RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lSerial) then
@@ -405,6 +409,7 @@ var
   lName: string;
   lRangeIndex: Integer;
   lSerial: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
   Result := False;
   if (ARegistry = nil) or (ATag = nil) then
@@ -414,18 +419,24 @@ begin
   if not ParseMic140ChannelNumber(ATag.Address, lChannelNumber) then
     Exit;
 
-  lSerial := RecorderMic140ResolveDeviceSerialForTag(ATag, ADeviceSerial);
+  lSerial := RecorderMic140ResolveDeviceSerialForTag(ARegistry, ATag, ADeviceSerial);
   if lSerial <= 0 then
     Exit;
 
-  lRangeIndex := ATag.MeasRangeIndex;
+  lRangeIndex := CMic140Range100mV;
+  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber, lSettings) then
+    lRangeIndex := lSettings.RangeIndex;
   if lRangeIndex >= CMic140RangeCount then
     lRangeIndex := CMic140Range100mV;
 
   if not RecorderMic140EnsureHardwareCalibrationInRegistry(ARegistry, lSerial,
     lRangeIndex, lChannelNumber, lName) then
     Exit;
-  ATag.Mic140DeviceSerial := lSerial;
+  RecorderMic140SetDeviceSerialForSource(ARegistry, ATag.SourceId, lSerial);
+  lSettings.HardwareCalibrationName := lName;
+  if AEnableOnTag then
+    lSettings.HardwareCalibrationEnabled := True;
+  RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
   ATag.HardwareCalibrationName := lName;
   if AEnableOnTag then
     ATag.HardwareCalibrationEnabled := True;
@@ -443,9 +454,11 @@ var
   lChannelNumber: Integer;
   lRangeIndex: Integer;
   lTag: TRecorderTag;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
   if (ARegistry = nil) or (Trim(ASourceId) = '') then
     Exit;
+  RecorderMic140SetDeviceSerialForSource(ARegistry, ASourceId, ADeviceSerial);
   for I := 0 to ARegistry.TagCount - 1 do
   begin
     lTag := ARegistry.Tags[I];
@@ -453,7 +466,10 @@ begin
       (Pos('diagnostics.', LowerCase(lTag.Address)) = 1) or
       (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber)) then
       Continue;
-    lRangeIndex := lTag.MeasRangeIndex;
+    lRangeIndex := CMic140Range100mV;
+    if RecorderMic140TryGetChannelSettings(ARegistry, lTag, lChannelNumber,
+      lSettings) then
+      lRangeIndex := lSettings.RangeIndex;
     if lRangeIndex >= CMic140RangeCount then
       lRangeIndex := CMic140Range100mV;
     if not RecorderMic140EnsureHardwareCalibrationInRegistry(ARegistry,
@@ -463,8 +479,6 @@ begin
     begin
       if Trim(lTag.HardwareCalibrationName) = '' then
         lTag.HardwareCalibrationName := lCalName;
-      if lTag.Mic140DeviceSerial <= 0 then
-        lTag.Mic140DeviceSerial := ADeviceSerial;
     end;
   end;
 end;
@@ -492,11 +506,7 @@ begin
     if lTag = nil then
       Continue;
     if lTag.HardwareCalibrationEnabled then
-    begin
       lTag.HardwareCalibrationName := lCalName;
-      if lTag.Mic140DeviceSerial <= 0 then
-        lTag.Mic140DeviceSerial := ADeviceSerial;
-    end;
   end;
 end;
 function RecorderMic140SaveCalibrationToCsv(const AFileName: string;
@@ -544,6 +554,7 @@ var
   lPort: Word;
   lRangeIndex: Integer;
   lSerial: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
   lStopError: string;
   lTare: TMic140TareType1;
   lTare2: TMic140TareType2;
@@ -589,7 +600,10 @@ begin
     Exit;
   end;
 
-  lRangeIndex := ATag.MeasRangeIndex;
+  lRangeIndex := CMic140Range100mV;
+  if (not lIsTemperature) and
+    RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber, lSettings) then
+    lRangeIndex := lSettings.RangeIndex;
   if lRangeIndex >= CMic140RangeCount then
     lRangeIndex := CMic140Range100mV;
 
@@ -742,9 +756,18 @@ begin
         Exit;
       end;
 
-      ATag.Mic140DeviceSerial := lSerial;
+      RecorderMic140SetDeviceSerialForSource(ARegistry, ATag.SourceId, lSerial);
       if not lIsTemperature then
-        ATag.MeasRangeIndex := LongWord(lRangeIndex);
+      begin
+        if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
+          lSettings) then
+        begin
+          lSettings.RangeIndex := lRangeIndex;
+          lSettings.HardwareCalibrationName := lName;
+          lSettings.HardwareCalibrationEnabled := True;
+          RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
+        end;
+      end;
       ATag.HardwareCalibrationName := lName;
       ATag.HardwareCalibrationEnabled := True;
       if lIsTemperature then

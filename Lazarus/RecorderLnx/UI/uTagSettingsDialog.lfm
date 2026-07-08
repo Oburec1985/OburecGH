@@ -486,24 +486,24 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object gbPortion: TGroupBox
         Left = 16
-        Height = 58
-        Top = 306
+        Height = 78
+        Top = 316
         Width = 200
         Caption = 'Длина порции'
-        ClientHeight = 56
+        ClientHeight = 58
         ClientWidth = 198
         TabOrder = 2
         object fPortionLengthEdit: TEdit
           Left = 12
           Height = 31
-          Top = 22
+          Top = 30
           Width = 104
           TabOrder = 0
         end
         object lbPortionUnit: TLabel
           Left = 124
           Height = 19
-          Top = 26
+          Top = 34
           Width = 58
           Caption = 'отсчетов'
           ParentColor = False
@@ -511,17 +511,17 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object gbSmoothing: TGroupBox
         Left = 284
-        Height = 58
-        Top = 306
+        Height = 78
+        Top = 316
         Width = 316
         Caption = 'Усреднение y''=kx+(1-k)y'
-        ClientHeight = 38
+        ClientHeight = 58
         ClientWidth = 314
         TabOrder = 3
         object fSmoothingCheck: TCheckBox
           Left = 12
           Height = 21
-          Top = 24
+          Top = 32
           Width = 39
           Caption = 'k='
           TabOrder = 0
@@ -529,7 +529,7 @@ object TagSettingsDialog: TTagSettingsDialog
         object fSmoothingKEdit: TEdit
           Left = 62
           Height = 31
-          Top = 22
+          Top = 30
           Width = 92
           TabOrder = 1
         end
@@ -537,7 +537,7 @@ object TagSettingsDialog: TTagSettingsDialog
       object gbChannelProps: TGroupBox
         Left = 8
         Height = 74
-        Top = 376
+        Top = 408
         Width = 580
         Caption = 'Свойства канала'
         ClientHeight = 54

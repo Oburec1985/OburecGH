@@ -1,5 +1,19 @@
 # MIC-140 debug stand — последнее состояние (2026-07-06)
 
+## Codex continuation 2026-07-08: tag settings additional-tab layout
+
+**Prompt:** в настройках тега в диалоге наползание элементов окна друг на друга.
+
+**Fix:** In `UI/uTagSettingsDialog.lfm`, increased and shifted the compact
+`Дополнительно` tab groups for `Длина порции` and `Усреднение`, moved their
+edit/check controls lower inside the group boxes, and moved `Свойства канала`
+down to keep spacing between groups.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
+but it does not fail the build.
+
 ## Codex continuation 2026-07-06: MIC140 debug connection fix
 
 **Prompt:** debug MIC-140 connection crash in Mic140ProtocolDebug_Codex stand.

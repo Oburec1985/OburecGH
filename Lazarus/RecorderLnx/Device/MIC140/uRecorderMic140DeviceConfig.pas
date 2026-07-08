@@ -54,6 +54,19 @@ type
     procedure SaveToResult(var AResult: TRecorderMic140DialogResult);
   end;
 
+  TRecorderMic140LegacyTagFields = record
+    MeasRangeIndex: LongWord;
+    HardwareCalibrationEnabled: Boolean;
+    HardwareCalibrationName: string;
+    DeviceSerial: Integer;
+    ThermoCompensationEnabled: Boolean;
+    CjcDefault: Boolean;
+    CjcChannel: Integer;
+    ThermocoupleScaleName: string;
+    ThermocoupleScalePath: string;
+    SoftBalance: Double;
+  end;
+
 function RecorderMic140DeviceConfigList(
   ARegistry: TRecorderTagRegistry): TStringList;
 function FindRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
@@ -76,6 +89,23 @@ function RecorderMic140TagHardwareCalibrationEnabled(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
 function RecorderMic140TagHardwareCalibrationName(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): string;
+
+procedure RecorderMic140InitLegacyTagFields(out AFields: TRecorderMic140LegacyTagFields);
+procedure RecorderMic140LoadLegacyFieldsFromTagJson(AJson: TJSONObject;
+  out AFields: TRecorderMic140LegacyTagFields);
+procedure RecorderMic140MigrateLegacyFieldsToDeviceConfig(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ALegacy: TRecorderMic140LegacyTagFields);
+procedure RecorderMic140SetChannelSoftBalance(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AValue: Double);
+procedure RecorderMic140SetDeviceSerialForSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; ADeviceSerial: Integer);
+procedure RecorderMic140EnsureThermoCompensationForSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
+procedure RecorderMic140UpdateChannelSettings(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TRecorderMic140ChannelSettings);
+function RecorderMic140TagUsesThermoCompensation(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
 
 procedure RecorderMic140MigrateTagHardwareToDeviceConfig(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
@@ -318,8 +348,38 @@ begin
   Result := lSettings.HardwareCalibrationName;
 end;
 
-procedure RecorderMic140CopyLegacyTagFieldsToChannelSettings(
+procedure RecorderMic140InitLegacyTagFields(out AFields: TRecorderMic140LegacyTagFields);
+begin
+  FillChar(AFields, SizeOf(AFields), 0);
+  AFields.CjcDefault := True;
+end;
+
+procedure RecorderMic140LoadLegacyFieldsFromTagJson(AJson: TJSONObject;
+  out AFields: TRecorderMic140LegacyTagFields);
+begin
+  RecorderMic140InitLegacyTagFields(AFields);
+  if AJson = nil then
+    Exit;
+  AFields.MeasRangeIndex := AJson.Get('measRangeIndex', AFields.MeasRangeIndex);
+  AFields.HardwareCalibrationEnabled := AJson.Get('hardwareCalibrationEnabled',
+    AFields.HardwareCalibrationEnabled);
+  AFields.HardwareCalibrationName := AJson.Get('hardwareCalibrationName',
+    AFields.HardwareCalibrationName);
+  AFields.DeviceSerial := AJson.Get('mic140DeviceSerial', AFields.DeviceSerial);
+  AFields.ThermoCompensationEnabled := AJson.Get('mic140ThermoCompensationEnabled',
+    AFields.ThermoCompensationEnabled);
+  AFields.CjcDefault := AJson.Get('mic140CjcDefault', AFields.CjcDefault);
+  AFields.CjcChannel := AJson.Get('mic140CjcChannel', AFields.CjcChannel);
+  AFields.ThermocoupleScaleName := AJson.Get('mic140ThermocoupleScaleName',
+    AFields.ThermocoupleScaleName);
+  AFields.ThermocoupleScalePath := AJson.Get('mic140ThermocoupleScalePath',
+    AFields.ThermocoupleScalePath);
+  AFields.SoftBalance := AJson.Get('mic140SoftBalance', AFields.SoftBalance);
+end;
+
+procedure RecorderMic140ApplyLegacyFieldsToChannelSettings(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ALegacy: TRecorderMic140LegacyTagFields;
   var ASettings: TRecorderMic140ChannelSettings);
 var
   J: Integer;
@@ -331,17 +391,17 @@ begin
     Exit;
   if Trim(ATag.Address) <> '' then
     ASettings.ChannelAddress := ATag.Address;
-  if (ATag.MeasRangeIndex >= 0) and (ATag.MeasRangeIndex < CMic140RangeCount) then
-    ASettings.RangeIndex := ATag.MeasRangeIndex;
-  ASettings.SoftBalance := ATag.Mic140SoftBalance;
-  ASettings.DefaultCjc := ATag.Mic140CjcDefault;
-  if (ATag.Mic140CjcChannel >= 1) and
-    (ATag.Mic140CjcChannel <= MIC140TemperatureChannelCount) then
-    ASettings.CjcChannel := ATag.Mic140CjcChannel;
-  if Trim(ATag.Mic140ThermocoupleScaleName) <> '' then
+  if (ALegacy.MeasRangeIndex >= 0) and (ALegacy.MeasRangeIndex < CMic140RangeCount) then
+    ASettings.RangeIndex := ALegacy.MeasRangeIndex;
+  ASettings.SoftBalance := ALegacy.SoftBalance;
+  ASettings.DefaultCjc := ALegacy.CjcDefault;
+  if (ALegacy.CjcChannel >= 1) and
+    (ALegacy.CjcChannel <= MIC140TemperatureChannelCount) then
+    ASettings.CjcChannel := ALegacy.CjcChannel;
+  if Trim(ALegacy.ThermocoupleScaleName) <> '' then
   begin
-    ASettings.ThermocoupleScaleName := ATag.Mic140ThermocoupleScaleName;
-    ASettings.ThermocoupleScalePath := ATag.Mic140ThermocoupleScalePath;
+    ASettings.ThermocoupleScaleName := ALegacy.ThermocoupleScaleName;
+    ASettings.ThermocoupleScalePath := ALegacy.ThermocoupleScalePath;
   end
   else if ATag.CalibrationNames <> nil then
     for J := 0 to ATag.CalibrationNames.Count - 1 do
@@ -368,29 +428,38 @@ begin
   if Trim(ATag.SourceValueMode) <> '' then
     ASettings.OutputMode := ATag.SourceValueMode;
   ASettings.ChannelCalibrationEnabled := ATag.ChannelCalibrationEnabled;
-  ASettings.HardwareCalibrationEnabled := ATag.HardwareCalibrationEnabled;
-  ASettings.HardwareCalibrationName := ATag.HardwareCalibrationName;
+  ASettings.HardwareCalibrationEnabled := ALegacy.HardwareCalibrationEnabled;
+  ASettings.HardwareCalibrationName := ALegacy.HardwareCalibrationName;
 end;
 
-procedure RecorderMic140MigrateTagHardwareToDeviceConfig(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
+procedure RecorderMic140MigrateLegacyFieldsToDeviceConfig(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ALegacy: TRecorderMic140LegacyTagFields);
 var
   lChannelNumber: Integer;
   lConfig: TRecorderMic140SourceConfig;
   lSettings: TRecorderMic140ChannelSettings;
+  lHasLegacy: Boolean;
 begin
   if (ARegistry = nil) or (ATag = nil) or
     (not RecorderTagUsesMic140Settings(ATag)) or
     (not ParseMic140ChannelNumber(ATag.Address, lChannelNumber)) then
     Exit;
 
+  lHasLegacy := (ALegacy.MeasRangeIndex > 0) or (ALegacy.DeviceSerial > 0) or
+    ALegacy.ThermoCompensationEnabled or (ALegacy.SoftBalance <> 0) or
+    (Trim(ALegacy.ThermocoupleScaleName) <> '') or (ALegacy.CjcChannel > 0) or
+    (not ALegacy.CjcDefault) or ALegacy.HardwareCalibrationEnabled;
+  if not lHasLegacy then
+    Exit;
+
   lConfig := EnsureRecorderMic140DeviceConfig(ARegistry, ATag.SourceId);
   if not TryParseRecorderMic140SourceId(ATag.SourceId, lConfig.Host, lConfig.Port) then
     Exit;
   if lConfig.DeviceSerial <= 0 then
-    lConfig.DeviceSerial := ATag.Mic140DeviceSerial;
+    lConfig.DeviceSerial := ALegacy.DeviceSerial;
   lConfig.ThermoCompensationEnabled :=
-    lConfig.ThermoCompensationEnabled or ATag.Mic140ThermoCompensationEnabled;
+    lConfig.ThermoCompensationEnabled or ALegacy.ThermoCompensationEnabled;
   if lChannelNumber > lConfig.ChannelCount then
     lConfig.ChannelCount := MIC140MaxChannelCount;
   if lConfig.SelectedChannels.IndexOf(IntToStr(lChannelNumber)) < 0 then
@@ -399,26 +468,104 @@ begin
   RecorderMic140InitChannelSettings(lSettings, lChannelNumber - 1,
     CMic140Mic140SubRev1);
   lConfig.TryGetChannelSettings(ATag.Address, lChannelNumber, lSettings);
-  RecorderMic140CopyLegacyTagFieldsToChannelSettings(ARegistry, ATag, lSettings);
+  RecorderMic140ApplyLegacyFieldsToChannelSettings(ARegistry, ATag, ALegacy, lSettings);
   lConfig.SetChannelSettings(lChannelNumber, ATag.Address, lSettings);
-  RecorderTagClearMic140Settings(ATag);
   ATag.HardwareCalibrationEnabled := False;
   ATag.HardwareCalibrationName := '';
 end;
 
-procedure RecorderMic140RebuildDeviceConfigsFromTags(ARegistry: TRecorderTagRegistry);
+procedure RecorderMic140SetChannelSoftBalance(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AValue: Double);
 var
-  I: Integer;
-  lTag: TRecorderTag;
+  lChannelNumber: Integer;
+  lConfig: TRecorderMic140SourceConfig;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
-  if ARegistry = nil then
+  if (ARegistry = nil) or (ATag = nil) or (not RecorderTagUsesMic140Settings(ATag)) then
     Exit;
-  for I := 0 to ARegistry.TagCount - 1 do
+  lConfig := EnsureRecorderMic140DeviceConfig(ARegistry, ATag.SourceId);
+  if not lConfig.TryGetChannelSettings(ATag.Address, lChannelNumber, lSettings) then
   begin
-    lTag := ARegistry.Tags[I];
-    if RecorderTagUsesMic140Settings(lTag) then
-      RecorderMic140MigrateTagHardwareToDeviceConfig(ARegistry, lTag);
+    if not ParseMic140ChannelNumber(ATag.Address, lChannelNumber) then
+      Exit;
+    RecorderMic140InitChannelSettings(lSettings, lChannelNumber - 1,
+      CMic140Mic140SubRev1);
+    lSettings.ChannelAddress := ATag.Address;
   end;
+  lSettings.SoftBalance := AValue;
+  lConfig.SetChannelSettings(lChannelNumber, ATag.Address, lSettings);
+end;
+
+procedure RecorderMic140SetDeviceSerialForSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; ADeviceSerial: Integer);
+var
+  lConfig: TRecorderMic140SourceConfig;
+begin
+  if (ARegistry = nil) or (ADeviceSerial <= 0) or (Trim(ASourceId) = '') then
+    Exit;
+  lConfig := EnsureRecorderMic140DeviceConfig(ARegistry, ASourceId);
+  if lConfig.DeviceSerial <= 0 then
+    lConfig.DeviceSerial := ADeviceSerial;
+end;
+
+procedure RecorderMic140EnsureThermoCompensationForSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
+var
+  lConfig: TRecorderMic140SourceConfig;
+begin
+  if (ARegistry = nil) or (Trim(ASourceId) = '') then
+    Exit;
+  lConfig := EnsureRecorderMic140DeviceConfig(ARegistry, ASourceId);
+  lConfig.ThermoCompensationEnabled := True;
+end;
+
+procedure RecorderMic140UpdateChannelSettings(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TRecorderMic140ChannelSettings);
+var
+  lChannelNumber: Integer;
+  lConfig: TRecorderMic140SourceConfig;
+  lDummy: TRecorderMic140ChannelSettings;
+begin
+  if (ARegistry = nil) or (ATag = nil) then
+    Exit;
+  lConfig := EnsureRecorderMic140DeviceConfig(ARegistry, ATag.SourceId);
+  if not ParseMic140ChannelNumber(ATag.Address, lChannelNumber) then
+  begin
+    if not lConfig.TryGetChannelSettings(ATag.Address, lChannelNumber, lDummy) then
+      Exit;
+  end;
+  lConfig.SetChannelSettings(lChannelNumber, ATag.Address, ASettings);
+end;
+
+function RecorderMic140TagUsesThermoCompensation(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and
+    RecorderMic140ThermoCompensationForSource(ARegistry, ATag.SourceId);
+end;
+
+procedure RecorderMic140CopyLegacyTagFieldsToChannelSettings(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ASettings: TRecorderMic140ChannelSettings);
+var
+  lLegacy: TRecorderMic140LegacyTagFields;
+begin
+  RecorderMic140InitLegacyTagFields(lLegacy);
+  RecorderMic140ApplyLegacyFieldsToChannelSettings(ARegistry, ATag, lLegacy, ASettings);
+end;
+
+procedure RecorderMic140MigrateTagHardwareToDeviceConfig(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
+var
+  lLegacy: TRecorderMic140LegacyTagFields;
+begin
+  RecorderMic140InitLegacyTagFields(lLegacy);
+  RecorderMic140MigrateLegacyFieldsToDeviceConfig(ARegistry, ATag, lLegacy);
+end;
+
+procedure RecorderMic140RebuildDeviceConfigsFromTags(ARegistry: TRecorderTagRegistry);
+begin
+  { Legacy no-op: MIC-140 settings live in device config, not in tags. }
 end;
 
 procedure SaveMic140ChannelSettingsJson(AJson: TJSONArray;

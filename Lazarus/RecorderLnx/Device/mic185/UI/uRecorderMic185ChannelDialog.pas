@@ -86,13 +86,12 @@ begin
   edOuterResistance.Text := '200.000';
   edInnerResistance.Text := '10000';
   edHardBalance.Text := '0.000';
-  if ATag <> nil then
-  begin
-    Caption := 'Свойства канала ' + ATag.Address;
-    if ATag.UnitName <> '' then
-      cbActualRangeUnit.Text := ATag.UnitName;
-    edSoftBalance.Text := FormatFloat('0.000', ATag.Mic140SoftBalance);
-  end;
+    if ATag <> nil then
+    begin
+      Caption := 'Свойства канала ' + ATag.Address;
+      if ATag.UnitName <> '' then
+        cbActualRangeUnit.Text := ATag.UnitName;
+    end;
 end;
 
 procedure TRecorderMic185ChannelForm.SaveTag(ATag: TRecorderTag);
@@ -103,8 +102,6 @@ begin
     Exit;
   ATag.UnitName := cbActualRangeUnit.Text;
   ATag.SourceValueMode := cbCommutation.Text;
-  if TryStrToFloat(StringReplace(edSoftBalance.Text, ',', '.', []), lValue) then
-    ATag.Mic140SoftBalance := lValue;
 end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;

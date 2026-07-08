@@ -1,0 +1,158 @@
+unit uMic185MebiusTypes;
+
+{
+  Mebius MIC185V2 device settings blob (ProgramDeviceBin).
+  Layout matches CMIC185V2_BASESETTINGS (MSVC pack 8).
+}
+
+{$mode objfpc}{$H+}
+{$PACKRECORDS 8}
+
+interface
+
+uses
+  SysUtils,
+  uMic185MebiusTcpProtocol, uMic185Constants;
+
+type
+  { MSVC #pragma pack(8): после bool — 3 байта pad; после Word BlockSize — 2 байта pad. }
+  TMic185BaseChanSettings = record
+    FrequencyHz: Single;
+    Connected: Boolean;
+    _PadAfterConnected: array[0..2] of Byte;
+    BlockSize: Word;
+    _PadBeforeMeasRange: Word;
+    MeasRangeIndex: LongWord;
+    SoftBalance: LongInt;
+    CommutIndex: LongWord;
+    ShuntOn: LongWord;
+    EvalType: LongWord;
+    TensoSensitivity: Double;
+    Resistance: Double;
+    SensorScheme: LongWord;
+  end;
+
+  TMic185TempChanSettings = record
+    FrequencyHz: Single;
+    Connected: Boolean;
+    _PadAfterConnected: array[0..2] of Byte;
+  end;
+
+  TMic185BaseSettings = record
+    Channels: array[0..CMic185SettingsChannelSlots - 1] of TMic185BaseChanSettings;
+    TempChannels: array[0..CMic185TempChannelCount - 1] of TMic185TempChanSettings;
+    SerialNumber: LongWord;
+    GroundEnabled: Boolean;
+    _PadAfterGround: array[0..2] of Byte;
+    GroundCommutationUs: LongWord;
+    ChannelCommutationUs: LongWord;
+    BalancePortionLength: LongWord;
+    HardBalance: LongWord;
+    AveragePointCount: Word;
+    _PadAfterAverage: Word;
+    PowerMaCode: LongWord;
+    Reserved: LongWord;
+    MaxFreqMode: LongWord;
+    CalibrShuntIndex: LongWord;
+    GroupAddition: array[0..CMic185ModuleCount - 1] of LongWord;
+    DetermineBreak: Boolean;
+    HardwareBalanceOn: Boolean;
+    TemperatureCompensation: Boolean;
+    _PadBeforeSoftVersion: Byte;
+    SoftVersion: LongWord;
+  end;
+
+  TMic185HardDeviceInfo = packed record
+    SerialNumber: LongWord;
+    SoftVersion: LongWord;
+    HardVersion: LongWord;
+    Revision: LongWord;
+    IniDateTimeLow: LongWord;
+    IniDateTimeHigh: LongWord;
+    Metrolog: array[0..31] of AnsiChar;
+    MetroDateTimeLow: LongWord;
+    MetroDateTimeHigh: LongWord;
+  end;
+
+function Mic185GenerateSessionId(ASerialNumber: LongWord): LongWord;
+function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
+  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
+function Mic185FormatSoftVersion(AVersion: LongWord): string;
+
+implementation
+
+function Mic185GenerateSessionId(ASerialNumber: LongWord): LongWord;
+begin
+  Result := (ASerialNumber and $FF) shl 24;
+  Result := Result or (LongWord(GetTickCount64 and $00000FFF));
+  Result := Result or ((LongWord(Random($1000)) shl 12) and $00FFF000);
+end;
+
+function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
+  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
+var
+  I: Integer;
+  lSettings: TMic185BaseSettings;
+begin
+  FillChar(lSettings, SizeOf(lSettings), 0);
+
+  for I := 0 to CMic185ChannelCountMax - 1 do
+  begin
+    lSettings.Channels[I].FrequencyHz := AMeasFrequencyHz;
+    lSettings.Channels[I].Connected := True;
+    lSettings.Channels[I].BlockSize := 1;
+    lSettings.Channels[I].MeasRangeIndex := CMic185Range5mV;
+    lSettings.Channels[I].SoftBalance := 0;
+    lSettings.Channels[I].CommutIndex := CMic185CommutInput;
+    lSettings.Channels[I].ShuntOn := 0;
+    lSettings.Channels[I].EvalType := 0;
+    lSettings.Channels[I].TensoSensitivity := 2;
+    lSettings.Channels[I].Resistance := 200;
+    lSettings.Channels[I].SensorScheme := CMic185SensorSchemeTenzo;
+  end;
+
+  for I := CMic185ChannelCountMax to High(lSettings.Channels) do
+    FillChar(lSettings.Channels[I], SizeOf(lSettings.Channels[I]), 0);
+
+  for I := 0 to High(lSettings.TempChannels) do
+  begin
+    lSettings.TempChannels[I].FrequencyHz := ATempFrequencyHz;
+    lSettings.TempChannels[I].Connected := True;
+  end;
+
+  lSettings.SerialNumber := ADeviceSerial;
+  lSettings.GroundEnabled := True;
+  lSettings.GroundCommutationUs := CMic185DefaultGndCommutUs;
+  lSettings.ChannelCommutationUs := CMic185DefaultChnCommutUs;
+  lSettings.BalancePortionLength := CMic185DefaultBlnPortionLength;
+  lSettings.HardBalance := CMic185DefaultHardBalance;
+  lSettings.AveragePointCount := CMic185DefaultAveragePointCount;
+  lSettings.PowerMaCode := CMic185DefaultPowerMaCode;
+  lSettings.Reserved := 0;
+  lSettings.MaxFreqMode := 0;
+  lSettings.CalibrShuntIndex := CMic185DefaultCalibrShuntIndex;
+  for I := 0 to High(lSettings.GroupAddition) do
+    lSettings.GroupAddition[I] := CMic185ModAddOff;
+  lSettings.DetermineBreak := False;
+  lSettings.HardwareBalanceOn := False;
+  lSettings.TemperatureCompensation := False;
+  lSettings.SoftVersion := ASoftVersion;
+
+  if not AUtsEnabled then
+    ; // UTS flag is passed separately via SET_CONTROLLER_PARAMS
+
+  SetLength(Result, SizeOf(lSettings));
+  Move(lSettings, Result[0], SizeOf(lSettings));
+end;
+
+function Mic185FormatSoftVersion(AVersion: LongWord): string;
+var
+  lOmap, lNios, lFpga: Integer;
+begin
+  lOmap := (AVersion shr 20) and $FF;
+  lNios := (AVersion shr 10) and $3F;
+  lFpga := AVersion and $3F;
+  Result := Format('%d.%d.%d', [lOmap, lNios, lFpga]);
+end;
+
+end.

@@ -24,7 +24,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
-  uRecorderMic140DataSource, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderCommandImages;
 
@@ -1407,6 +1407,8 @@ var
   lInt: Integer;
   lSetpoint: TRecorderTagSetpoint;
   lSetpointKind: TRecorderTagSetpointKind;
+  lChannelNumber: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
@@ -1468,8 +1470,10 @@ begin
       begin
         if fChannelCurveCheck.Checked then
         begin
-          if (Trim(lTag.Mic140ThermocoupleScalePath) <> '') or
-            (Trim(lTag.Mic140ThermocoupleScaleName) <> '') then
+          lSettings.ChannelAddress := '';
+          if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag, lChannelNumber,
+            lSettings) and ((Trim(lSettings.ThermocoupleScalePath) <> '') or
+            (Trim(lSettings.ThermocoupleScaleName) <> '')) then
           begin
             if lTag.SourceValueMode <>
               RecorderMic140OutputModeToConfigName(momTemperatureC) then

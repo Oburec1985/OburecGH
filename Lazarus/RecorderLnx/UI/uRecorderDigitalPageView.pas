@@ -61,7 +61,12 @@ begin
   lRowCount := 1;
   if ATagRegistry <> nil then
     for I := 0 to ATagRegistry.TagCount - 1 do
-      Inc(lRowCount, EnabledEstimateCount(ATagRegistry.Tags[I]));
+    begin
+      lTag := ATagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
+        Continue;
+      Inc(lRowCount, EnabledEstimateCount(lTag));
+    end;
   if lRowCount < 2 then
     lRowCount := 2;
 
@@ -84,6 +89,8 @@ begin
   for I := 0 to ATagRegistry.TagCount - 1 do
   begin
     lTag := ATagRegistry.Tags[I];
+    if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
+      Continue;
     lFirstTagRow := True;
     for J := tekMean to tekPeakToPeakByRmsDeviation do
     begin
