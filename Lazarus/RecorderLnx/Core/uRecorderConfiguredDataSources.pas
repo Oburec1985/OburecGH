@@ -20,6 +20,7 @@ type
     SourceId: string;
     ModuleType: string;
     DefaultPollFrequencyHz: Double;
+    SpecificConfigText: string;
   end;
 
 function RecorderConfiguredDataSourceList(

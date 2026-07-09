@@ -118,6 +118,12 @@ begin
       cbCommutation.ItemIndex := lSettings.CommutIndex;
     if lSettings.SensorScheme <= CMic185SensorSchemeBridge then
       cbSensorScheme.ItemIndex := lSettings.SensorScheme;
+    cbModulePower.ItemIndex := Round(Mic185PowerCodeToMa(
+      lSettings.PowerMaCode));
+    if cbModulePower.ItemIndex < 0 then
+      cbModulePower.ItemIndex := 0
+    else if cbModulePower.ItemIndex >= cbModulePower.Items.Count then
+      cbModulePower.ItemIndex := cbModulePower.Items.Count - 1;
     if lSettings.ShuntOn = 0 then
       cbShuntValue.ItemIndex := 0
     else if lSettings.ShuntOn < LongWord(cbShuntValue.Items.Count) then
@@ -147,6 +153,8 @@ begin
     lSettings.CommutIndex := cbCommutation.ItemIndex;
   if cbSensorScheme.ItemIndex >= 0 then
     lSettings.SensorScheme := cbSensorScheme.ItemIndex;
+  if cbModulePower.ItemIndex >= 0 then
+    lSettings.PowerMaCode := Mic185PowerMaToCode(cbModulePower.ItemIndex);
   lSettings.SoftBalance := Round(TextToFloatDef(edSoftBalance.Text, 0));
   if chkChannelShunt.Checked then
   begin

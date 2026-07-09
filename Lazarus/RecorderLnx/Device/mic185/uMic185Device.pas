@@ -30,6 +30,7 @@ type
     fTempFrequencyHz: Double;
     fChannelProgramSettings: TMic185ChannelProgramSettingsArray;
     fHasChannelProgramSettings: Boolean;
+    fPowerMaCode: LongWord;
     fRecorderDeviceIndex: Integer;
     fLastTempValues: array of Double;
     fLastUtsValue: Double;
@@ -99,6 +100,7 @@ begin
   fUpdateTimeMs := 100;
   fRecorderDeviceIndex := 3;
   Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz, fChannelProgramSettings);
+  fPowerMaCode := CMic185DefaultPowerMaCode;
   fHasChannelProgramSettings := False;
 end;
 
@@ -277,6 +279,8 @@ procedure TRecorderMic185Device.ApplyChannelProgramSettings(
   const ASettings: TMic185ChannelProgramSettingsArray);
 begin
   fChannelProgramSettings := ASettings;
+  if ASettings[0].PowerMaCode <> 0 then
+    fPowerMaCode := ASettings[0].PowerMaCode;
   fHasChannelProgramSettings := True;
 end;
 
@@ -306,7 +310,8 @@ begin
     Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz,
       fChannelProgramSettings);
   lSettings := Mic185BuildSettingsEx(fMeasFrequencyHz, fTempFrequencyHz,
-    fUtsEnabled, fDeviceSerial, fSoftVersion, fChannelProgramSettings);
+    fUtsEnabled, fDeviceSerial, fSoftVersion, fChannelProgramSettings,
+    fPowerMaCode);
   if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('ProgramDeviceBin: %s', [lErrorMessage]);
 

@@ -50,6 +50,7 @@ type
     TensoSensitivity: Double;
     Resistance: Double;
     SensorScheme: LongWord;
+    PowerMaCode: LongWord;
   end;
 
   TMic185ChannelProgramSettingsArray =
@@ -100,7 +101,10 @@ function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
-  const AChannelSettings: TMic185ChannelProgramSettingsArray): TRecorderByteArray;
+  const AChannelSettings: TMic185ChannelProgramSettingsArray;
+  APowerMaCode: LongWord = CMic185DefaultPowerMaCode): TRecorderByteArray;
+function Mic185PowerMaToCode(APowerMa: Double): LongWord;
+function Mic185PowerCodeToMa(APowerMaCode: LongWord): Double;
 function Mic185FormatSoftVersion(AVersion: LongWord): string;
 
 implementation
@@ -127,6 +131,7 @@ begin
   ASettings.TensoSensitivity := 2;
   ASettings.Resistance := 200;
   ASettings.SensorScheme := CMic185SensorSchemeTenzo;
+  ASettings.PowerMaCode := CMic185DefaultPowerMaCode;
 end;
 
 procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
@@ -140,7 +145,8 @@ end;
 
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
-  const AChannelSettings: TMic185ChannelProgramSettingsArray): TRecorderByteArray;
+  const AChannelSettings: TMic185ChannelProgramSettingsArray;
+  APowerMaCode: LongWord): TRecorderByteArray;
 var
   I: Integer;
   lSettings: TMic185BaseSettings;
@@ -184,7 +190,10 @@ begin
   lSettings.BalancePortionLength := CMic185DefaultBlnPortionLength;
   lSettings.HardBalance := CMic185DefaultHardBalance;
   lSettings.AveragePointCount := CMic185DefaultAveragePointCount;
-  lSettings.PowerMaCode := CMic185DefaultPowerMaCode;
+  if APowerMaCode = 0 then
+    lSettings.PowerMaCode := CMic185DefaultPowerMaCode
+  else
+    lSettings.PowerMaCode := APowerMaCode;
   lSettings.Reserved := 0;
   lSettings.MaxFreqMode := 0;
   lSettings.CalibrShuntIndex := CMic185DefaultCalibrShuntIndex;
@@ -200,6 +209,20 @@ begin
 
   SetLength(Result, SizeOf(lSettings));
   Move(lSettings, Result[0], SizeOf(lSettings));
+end;
+
+function Mic185PowerMaToCode(APowerMa: Double): LongWord;
+begin
+  if (APowerMa < -12.5) or (APowerMa > 12.5) then
+    Exit(CMic185DefaultPowerMaCode);
+  Result := Round((200.0 * (APowerMa / 1000.0) + 2.5) * 16384.0 / 5.0);
+end;
+
+function Mic185PowerCodeToMa(APowerMaCode: LongWord): Double;
+begin
+  if APowerMaCode > 16384 then
+    Exit(0);
+  Result := ((((APowerMaCode * 5.0) / 16384.0) - 2.5) / 200.0) * 1000.0;
 end;
 
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;

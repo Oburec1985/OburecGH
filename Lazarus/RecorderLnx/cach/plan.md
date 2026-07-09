@@ -112,3 +112,16 @@
   - [x] `Balance` and `Metrology` are wired and explicitly report that the functions are not implemented yet
   - [x] Project save/load calls MIC185-specific data-source config hooks; `dataSources[].mic185.tagLinks[]` records tag links, addresses, channel modes and poll rates
   - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded
+
+- [x] MIC-185 settings multi-select and programming trace
+  - [x] `Select all` now also sets the visible grid selection rectangle
+  - [x] `Properties` applies edited MIC185 channel settings to all selected measurement rows
+  - [x] Temperature and UTS rows are excluded from group application of measurement-channel properties
+  - [x] MIC185 project load restores `dataSources[].mic185.tagLinks[]` into tags
+  - [x] Programming preparation logs channel/range/commutation/block settings to `LogWindows.log`
+  - [x] Re-checked original MIC185V2 range indices and programming command order against `windev-v3.9`
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded
+  - [x] Fixed startup crash after saving MIC185 config: MIC185 `tagLinks[]` load now runs after generic `tags[]` load to avoid duplicate tag IDs
+  - [x] Moved MIC185 hardware channel settings out of tags: tags keep only source/channel binding, while source node saves hardware ranges and switching in `dataSources[].mic185.channels[]`
+  - [x] `Apply` and `OK` now store MIC185 source settings and immediately call device programming; `OK` stays open if programming fails
+  - [x] Source-level MIC185 module current is saved as `dataSources[].mic185.powerMaCode` and sent in `ProgramDeviceBin`

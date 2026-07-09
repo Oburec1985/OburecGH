@@ -645,3 +645,66 @@ from tag settings.
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
 but it does not fail `lazbuild`.
+
+## Codex continuation 2026-07-09: MIC185 multi-row settings and programming trace
+
+**Prompt:** `Select all` in the MIC183/185 settings dialog did not visibly select
+all channels, changing a range affected only one row, and live programming of
+500 mV needed comparison with the original Recorder/Mebius MIC185V2 code.
+
+**Findings:**
+- Original MIC185V2 range indices match RecorderLnx: `0 = +/-500 mV`,
+  `1 = +/-50 mV`, `2 = +/-5 mV`, `3 = +/-0.5 mV`.
+- Original programming order is also matched: `PROGRAMM_DEVICE_BIN`,
+  `SET_SESSION_ID`, then `PROGRAM`.
+- `RecorderMic185ChannelAddressToIndex` parses `MIC183_185-{3-14}` from the
+  last dash to `ch14`, so the observed channel-4 overrange is not explained by
+  the tag-address parser.
+
+**Fix:**
+- `Device/mic185/UI/uRecorderMic185SettingsDialog.pas`: `Select all` now sets
+  the grid selection rectangle after creating/linking all 70 rows, so the UI
+  shows the selected range. `Properties` collects the selected measurement rows
+  and applies the edited channel settings to every selected measurement channel.
+  Temperature/UTS rows are not mass-edited by the measurement-channel dialog.
+- `Device/mic185/uRecorderMic185DataSource.pas`: `ApplyChannelProgramSettings`
+  writes a concise trace to `LogWindows.log`, e.g. `ch14 range=0 commut=0`, so
+  the next live run can prove which slot is actually sent to the device.
+- `LoadMic185DataSourceConfigs` now restores `dataSources[].mic185.tagLinks[]`
+  into tags when loading a project, not only registers the data source.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0 and linked `lib\x86_64-win64\RecorderLnx.exe`. The existing post-build
+`copy_sdb_res.bat` still prints the `#!/bin/sh` message, but it does not fail
+`lazbuild`.
+
+**Startup crash follow-up:** after saving MIC185 settings, startup could crash
+in `TRecorderTagRegistry.AddTag` with `Tag id already exists`. Root cause was
+load order: `LoadMic185DataSourceConfigs` created tags from `mic185.tagLinks[]`
+before the generic `tags[]` loader added the saved tags with persisted IDs.
+`Core/uRecorderProjectFiles.pas` now calls `LoadMic185DataSourceConfigs` after
+the generic tag loop, so MIC185 links update existing tags and only create truly
+missing links. Rebuild of `RecorderLnx.lpi` completed with exit code 0 after
+stopping a running `RecorderLnx.exe` process that held the output file.
+
+**MIC185 source-settings follow-up:** user clarified that MIC185 hardware
+settings must not live in tags. Tags are now treated only as bindings
+(`SourceId` + channel `Address`); range/commutation/sensor/shunt/balance/etc.
+are stored in the source node under `dataSources[].mic185.channels[]`.
+`tagLinks[]` keeps only tag binding data. Old `sourceValueMode` values in
+MIC185 tags or old `tagLinks[]` are migrated into the source config on load and
+then cleared from tags. Programming now reads from the source config. Rebuild of
+`RecorderLnx.lpi` completed with exit code 0.
+
+**MIC185 Apply/OK programming follow-up:** user reported that multi-channel
+range changes were reset after `Apply` -> `OK` and asked to save settings in
+the device/source and program the instrument when leaving settings. MIC185
+settings dialog now keeps channel hardware settings in `fChannelSettings`, loads
+them from `dataSources[].mic185.channels[]`, stores them on `Apply`/`OK`, and
+calls `RecorderMic185ProgramConfiguredSource` immediately. Source-level module
+current is persisted as `dataSources[].mic185.powerMaCode`; the channel dialog
+module power combo now maps mA to the MIC185 DAC code using the original Mebius
+formula. `ProgramDeviceBin` writes the configured power code and logs the full
+programming summary. If programming fails on `OK`, the MIC185 settings dialog
+stays open. Rebuild of `RecorderLnx.lpi` completed with exit code 0.
