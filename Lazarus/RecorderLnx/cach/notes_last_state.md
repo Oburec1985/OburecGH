@@ -708,3 +708,24 @@ module power combo now maps mA to the MIC185 DAC code using the original Mebius
 formula. `ProgramDeviceBin` writes the configured power code and logs the full
 programming summary. If programming fails on `OK`, the MIC185 settings dialog
 stays open. Rebuild of `RecorderLnx.lpi` completed with exit code 0.
+
+**MIC185 OK persistence follow-up:** user reported that setting a channel range
+to `500 mV` and reopening the MIC185 settings dialog still showed `5 mV`.
+`Device/mic185/UI/uRecorderMic185SettingsDialog.lfm` no longer lets the `OK`
+button close the form by its own `ModalResult`; `btnOkClick` now explicitly
+stores all grid tags/source channel settings, calls MIC185 programming, and only
+then sets `ModalResult := mrOk`. `ApplyRecorderMic185SourceDialog` also repeats
+`StoreAllGridTags` after a successful modal close so the source node is flushed
+before the caller refreshes UI. `StoreChannelSettingsConfig` logs
+`SettingsDialog stored ... ch4 range=...` for the user's overrange channel
+check. Rebuild of `RecorderLnx.lpi` completed with exit code 0 after stopping
+the running `RecorderLnx.exe` that locked the output exe.
+
+**MIC185 final persistence root cause:** fresh logs showed the MIC185 dialog did
+store/program `range=0`, but the common settings close path immediately called
+`TRecorderSettingsSourceProbe.SyncToRegistry`, which removed the existing
+MIC185 configured source and recreated it without `SpecificConfigText`.
+`UI/uRecorderSettingsSourceProbe.pas` now removes only hardware sources that are
+no longer desired and preserves existing MIC185 source entries, so
+`dataSources[].mic185.channels[]` survives `OK`, runtime source restart, and
+project save. Rebuild of `RecorderLnx.lpi` completed with exit code 0.

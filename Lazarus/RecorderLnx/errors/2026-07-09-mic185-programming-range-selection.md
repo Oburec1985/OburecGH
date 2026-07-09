@@ -176,3 +176,116 @@ completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
 
 The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
 message, but `lazbuild` returned success.
+
+## 2026-07-09 source restart overwrote dialog programming
+
+### Symptom
+
+Changing MIC185 channels to `+/-500 mV` in the dialog did call programming:
+`LogWindows.log` showed `ProgramConfiguredSource ... ch1 range=0 ... ch64
+range=0`. A few seconds later, when the acquisition source resumed,
+`ApplyChannelProgramSettings` logged `range=2` for all channels and programmed
+the device back to `+/-5 mV`.
+
+The saved `default.config.json` also had `dataSources[].mic185.tagLinks[]` but
+no `dataSources[].mic185.channels[]` and no `powerMaCode`, so reopening the
+dialog could only show defaults.
+
+### Fix
+
+- `SaveMic185DataSourceConfigs` now enumerates MIC185 sources from the
+  configured-source list as well as from tags.
+- MIC185 save now always writes the complete source-level hardware config:
+  `dataSources[].mic185.powerMaCode` and `dataSources[].mic185.channels[64]`
+  with `sourceValueMode` for every measurement channel.
+- `TRecorderMic185DataSource.ApplyChannelProgramSettings` now builds the
+  64-channel programming array directly from the MIC185 source config instead
+  of looping over tags and falling back to defaults when tag hardware settings
+  are empty.
+
+### Verification
+
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
+
+The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
+message, but `lazbuild` returned success.
+
+## 2026-07-09 OK close path still allowed stale reopen
+
+### Symptom
+
+The user changed a MIC185 channel range to `500 mV`, closed the settings dialog,
+opened it again, and still saw `5 mV`.
+
+### Fix
+
+- `uRecorderMic185SettingsDialog.lfm`
+  - Removed `ModalResult = mrOk` from the `OK` button. The form no longer closes
+    automatically before the handler finishes the MIC185 source flush and
+    programming path.
+
+- `uRecorderMic185SettingsDialog.pas`
+  - `btnOkClick` now explicitly sets `ModalResult := mrOk` only after
+    `StoreAllGridTags` and `ApplySettingsToDevice` succeed.
+  - `ApplyRecorderMic185SourceDialog` repeats `StoreAllGridTags` after a
+    successful modal close so the caller sees the latest source node state.
+  - `StoreChannelSettingsConfig` logs a diagnostic line for channel 4:
+    `SettingsDialog stored ... ch4 range=... commut=... scheme=... power=...`.
+
+### Verification
+
+The first rebuild compiled but could not relink because a running
+`RecorderLnx.exe` held the output file (`error code: 5`). After stopping that
+process, `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
+
+The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
+message, but `lazbuild` returned success.
+
+## 2026-07-09 common settings sync deleted MIC185 channel config
+
+### Symptom
+
+After selecting all MIC185 channels and changing the range to `500 mV`, the log
+showed that the MIC185-specific dialog stored and programmed the expected
+settings:
+
+- `SettingsDialog stored ... ch4 range=0`
+- `ProgramConfiguredSource ... ch1 range=0 ... ch64 range=0`
+
+A few seconds later the runtime data source programmed the device back to
+defaults:
+
+- `ApplyChannelProgramSettings ... ch1 range=2 ... ch64 range=2`
+
+The visible dialog also showed `5 mV` again on the next entry.
+
+### Root Cause
+
+`TRecorderSettingsSourceProbe.SyncToRegistry` removed every configured hardware
+source shown in the hardware tree before re-adding the currently known sources.
+For MIC185 this deleted `TRecorderConfiguredDataSource.SpecificConfigText`,
+which is where `dataSources[].mic185.channels[]` lives. Re-adding the source
+with `RecorderConfiguredDataSourcesEnsure` recreated only the generic source
+record, so channel hardware settings were lost immediately after closing the
+common settings dialog with `OK`.
+
+### Fix
+
+- `UI/uRecorderSettingsSourceProbe.pas`
+  - Builds a desired hardware source-id set from the current Mera/MIC140/MIC185
+    probe lists.
+  - Removes only configured hardware sources that are no longer desired.
+  - Keeps existing desired configured sources intact, preserving
+    `SpecificConfigText` for MIC185 channel ranges, commutation, sensor scheme,
+    shunt, balance, and power settings.
+
+### Verification
+
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
+
+The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
+message, but `lazbuild` returned success.

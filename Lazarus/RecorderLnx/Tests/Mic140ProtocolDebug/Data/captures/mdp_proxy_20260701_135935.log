@@ -1,4 +1,0 @@
-MIC-140 MDP proxy listen :4001 -> 192.168.14.155:4000
-Log: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\Mic140ProtocolDebug\Data\captures\mic140_mdp_20260701_135936.log
-Point Recorder to 127.0.0.1:4001
-Press Ctrl+C to stop.

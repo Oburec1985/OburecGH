@@ -25,7 +25,6 @@
       <Unit>
         <Filename Value="..\..\SharedUtils\uBaseObjLaz.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uBaseObjLaz"/>
         <EditorIndex Value="-1"/>
         <UsageCount Value="61"/>
       </Unit>
@@ -194,8 +193,8 @@
         <IsPartOfProject Value="True"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="25"/>
-        <CursorPos X="101" Y="25"/>
+        <TopLine Value="23"/>
+        <CursorPos X="112" Y="59"/>
         <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit>
@@ -239,7 +238,6 @@
       </Unit>
       <Unit>
         <Filename Value="..\sharedUnits\uBaseObjLaz.pas"/>
-        <UnitName Value="uBaseObjLaz"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="58" Y="525"/>
         <UsageCount Value="23"/>

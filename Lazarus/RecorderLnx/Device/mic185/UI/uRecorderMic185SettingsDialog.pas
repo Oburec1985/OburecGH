@@ -296,6 +296,7 @@ var
   I: Integer;
   lAddress: string;
   lSourceId: string;
+  lStored: TMic185ChannelProgramSettings;
 begin
   if fRegistry = nil then
     Exit;
@@ -311,6 +312,11 @@ begin
     RecorderMic185SetSourceChannelMode(fRegistry, lSourceId, lAddress,
       MIC185DefaultPollFrequencyHz, fChannelSettings[I]);
   end;
+  if RecorderMic185GetSourceChannelMode(fRegistry, lSourceId,
+    'MIC183_185-{3-4}', MIC185DefaultPollFrequencyHz, lStored) then
+    RecorderMic185Log(Format('SettingsDialog stored %s ch4 range=%d commut=%d scheme=%d power=%d',
+      [lSourceId, lStored.MeasRangeIndex, lStored.CommutIndex,
+       lStored.SensorScheme, fPowerMaCode]));
 end;
 
 procedure TRecorderMic185SettingsForm.UpdateGridRow(ARow: Integer;
@@ -508,7 +514,9 @@ end;
 procedure TRecorderMic185SettingsForm.btnOkClick(Sender: TObject);
 begin
   StoreAllGridTags;
-  if not ApplySettingsToDevice then
+  if ApplySettingsToDevice then
+    ModalResult := mrOk
+  else
     ModalResult := mrNone;
 end;
 
@@ -605,7 +613,10 @@ begin
     end;
     Result := lForm.ShowModal in [mrOk, mrYes];
     if Result then
+    begin
+      lForm.StoreAllGridTags;
       ANewSourceId := lForm.BuildSourceId
+    end
     else
       ANewSourceId := ASourceId;
   finally

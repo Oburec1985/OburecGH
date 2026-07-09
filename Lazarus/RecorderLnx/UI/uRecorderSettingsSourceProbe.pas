@@ -505,6 +505,7 @@ var
   I, J: Integer;
   g: TRecorderSettingsSourceGroup;
   lConfigured: TRecorderConfiguredDataSource;
+  lDesired: TStringList;
   lExisting: TStringList;
   lHost: string;
   lPollHz: Double;
@@ -517,13 +518,34 @@ begin
     Exit;
 
   lExisting := TStringList.Create;
+  lDesired := TStringList.Create;
   lUnique := TStringList.Create;
   try
     lExisting.CaseSensitive := False;
+    lDesired.CaseSensitive := False;
     lUnique.CaseSensitive := False;
+
+    if fMeraFilePath <> '' then
+      lDesired.Add(MeraSourceIdForPath(fMeraFilePath));
+    for g in [rsgMic140, rsgMic185] do
+      for I := 0 to GroupSignalCount(g) - 1 do
+      begin
+        lSignal := GroupSignal(g, I);
+        lSourceId := RecorderNormalizeTagSourceId(lSignal.FileName);
+        if (g = rsgMic140) and
+          (not TryParseRecorderMic140SourceId(lSourceId, lHost, lPort)) then
+          Continue;
+        if (g = rsgMic185) and
+          (not RecorderIsHardwareMic185TagSource(lSourceId)) then
+          Continue;
+        if lDesired.IndexOf(lSourceId) < 0 then
+          lDesired.Add(lSourceId);
+      end;
+
     RecorderEnumerateConfiguredSourceIds(fRegistry, lExisting, False);
     for I := lExisting.Count - 1 downto 0 do
-      if RecorderHardwareTreeShowsSourceId(lExisting[I]) then
+      if RecorderHardwareTreeShowsSourceId(lExisting[I]) and
+        (lDesired.IndexOf(lExisting[I]) < 0) then
         RecorderConfiguredDataSourcesRemove(fRegistry, lExisting[I]);
 
     if fMeraFilePath <> '' then
@@ -574,9 +596,9 @@ begin
     end;
   finally
     lUnique.Free;
+    lDesired.Free;
     lExisting.Free;
   end;
 end;
 
 end.
-

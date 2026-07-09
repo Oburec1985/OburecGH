@@ -645,7 +645,7 @@ var
   I: Integer;
   J: Integer;
   lChannels: TJSONArray;
-  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
   lHost: string;
   lItem: TJSONObject;
   lLink: TJSONObject;
@@ -655,6 +655,7 @@ var
   lPort: Word;
   lSourceId: string;
   lSources: TStringList;
+  lSettings: TMic185ChannelProgramSettingsArray;
   lTag: TRecorderTag;
 begin
   if (AJson = nil) or (ARegistry = nil) then
@@ -663,6 +664,17 @@ begin
   try
     lSources.CaseSensitive := False;
     lSources.Sorted := False;
+    if RecorderConfiguredDataSourceList(ARegistry) <> nil then
+      for I := 0 to RecorderConfiguredDataSourceList(ARegistry).Count - 1 do
+      begin
+        lEntry := TRecorderConfiguredDataSource(
+          RecorderConfiguredDataSourceList(ARegistry)[I]);
+        lSourceId := RecorderNormalizeTagSourceId(lEntry.SourceId);
+        if not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+          Continue;
+        if lSources.IndexOf(lSourceId) < 0 then
+          lSources.Add(lSourceId);
+      end;
     for I := 0 to ARegistry.TagCount - 1 do
     begin
       lTag := ARegistry.Tags[I];
@@ -697,6 +709,8 @@ begin
       lMic185.Add('host', lHost);
       lMic185.Add('port', Integer(lPort));
       lMic185.Add('defaultPollFrequencyHz', lPollHz);
+      lMic185.Add('powerMaCode', Integer(RecorderMic185GetSourcePowerMaCode(
+        ARegistry, lSourceId)));
       lLinks := TJSONArray.Create;
       lMic185.Add('tagLinks', lLinks);
       for J := 0 to ARegistry.TagCount - 1 do
@@ -711,17 +725,19 @@ begin
         lLink.Add('address', lTag.Address);
         lLink.Add('pollFrequencyHz', lTag.PollFrequencyHz);
       end;
-      lConfig := Mic185SourceConfigObject(
-        RecorderConfiguredDataSourcesFind(ARegistry, lSourceId), False);
-      try
-        lChannels := Mic185ConfigChannels(lConfig, False);
-        if lChannels <> nil then
-          lMic185.Add('channels', lChannels.Clone);
-        if lConfig <> nil then
-          lMic185.Add('powerMaCode', lConfig.Get('powerMaCode',
-            Integer(CMic185DefaultPowerMaCode)));
-      finally
-        lConfig.Free;
+
+      RecorderMic185BuildSourceProgramSettings(ARegistry, lSourceId, lPollHz,
+        lSettings);
+      lChannels := TJSONArray.Create;
+      lMic185.Add('channels', lChannels);
+      for J := 0 to High(lSettings) do
+      begin
+        lLink := TJSONObject.Create;
+        lChannels.Add(lLink);
+        lLink.Add('address', Format('MIC183_185-{%d-%d}', [3, J + 1]));
+        lLink.Add('sourceValueMode',
+          RecorderMic185FormatChannelMode(lSettings[J]));
+        lLink.Add('pollFrequencyHz', lPollHz);
       end;
     end;
   finally
@@ -1077,48 +1093,31 @@ end;
 
 procedure TRecorderMic185DataSource.ApplyChannelProgramSettings;
 var
-  I, lIndex: Integer;
+  I: Integer;
   lDevice: TRecorderMic185Device;
-  lPowerMaCode: LongWord;
   lSummary: string;
   lSettings: TMic185ChannelProgramSettingsArray;
-  lTag: TRecorderTag;
 begin
   if (fDevice = nil) or (not (fDevice.GetNativeObject is TRecorderMic185Device)) then
     Exit;
   lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
 
-  Mic185DefaultChannelProgramSettingsArray(fPollFrequencyHz, lSettings);
-  lPowerMaCode := RecorderMic185GetSourcePowerMaCode(Registry, SourceId);
-  for I := 0 to High(lSettings) do
-    lSettings[I].PowerMaCode := lPowerMaCode;
+  RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
+    lSettings);
   lSummary := '';
 
-  if Registry <> nil then
-    for I := 0 to Registry.TagCount - 1 do
-    begin
-      lTag := Registry.Tags[I];
-      if not SameText(lTag.SourceId, SourceId) then
-        Continue;
-      lIndex := RecorderMic185ChannelAddressToIndex(lTag.Address);
-      if lIndex < 0 then
-        Continue;
-      RecorderMic185GetSourceChannelMode(Registry, SourceId, lTag.Address,
-        lTag.PollFrequencyHz, lSettings[lIndex]);
-      if lSettings[lIndex].FrequencyHz <= 0 then
-        lSettings[lIndex].FrequencyHz := fPollFrequencyHz;
-      lSettings[lIndex].Connected := True;
-      lSettings[lIndex].PowerMaCode := lPowerMaCode;
-      if lSummary <> '' then
-        lSummary := lSummary + '; ';
-      lSummary := lSummary + Format('ch%d range=%d commut=%d block=%d',
-        [lIndex + 1, lSettings[lIndex].MeasRangeIndex,
-         lSettings[lIndex].CommutIndex, lSettings[lIndex].BlockSize]);
-    end;
+  for I := 0 to High(lSettings) do
+  begin
+    if lSummary <> '' then
+      lSummary := lSummary + '; ';
+    lSummary := lSummary + Format('ch%d range=%d commut=%d block=%d',
+      [I + 1, lSettings[I].MeasRangeIndex,
+       lSettings[I].CommutIndex, lSettings[I].BlockSize]);
+  end;
 
   if lSummary <> '' then
     RecorderMic185Log(Format('ApplyChannelProgramSettings %s power=%d: %s',
-      [SourceId, lPowerMaCode, lSummary]));
+      [SourceId, lSettings[0].PowerMaCode, lSummary]));
   lDevice.ApplyChannelProgramSettings(lSettings);
 end;
 

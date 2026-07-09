@@ -154,7 +154,6 @@ object RecorderMic185SettingsForm: TRecorderMic185SettingsForm
     Width = 76
     Anchors = [akRight, akBottom]
     Caption = 'OK'
-    ModalResult = 1
     TabOrder = 11
     OnClick = btnOkClick
   end
