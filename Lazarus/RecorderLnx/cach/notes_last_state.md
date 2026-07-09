@@ -588,3 +588,32 @@ without per-channel child nodes; channel membership remains in the channel
 grids. `rg` confirms no `Items.AddChild(lSourceNode, ...)` calls remain.
 Rebuild of `RecorderLnx.lpi` completed with exit code 0 after stopping a running
 `RecorderLnx.exe` process that held the output exe.
+
+## Codex continuation 2026-07-08: MIC185 channel programming
+
+**Prompt:** реализовать программирование каналов MIC-185 как в оригинальном
+Recorder, не менять базовый `TRecorderDevice` и не задеть поток сбора данных.
+
+**Fix:**
+- `Device/mic185/uMic185MebiusTypes.pas`: добавлен
+  `TMic185ChannelProgramSettings` и `Mic185BuildSettingsEx`, который заполняет
+  `CMIC185V2_BASECHAN_SETTINGS` по каждому измерительному каналу: connected,
+  frequency, block size, range, soft balance, commutation, shunt, eval,
+  sensitivity, resistance, sensor scheme. Старый `Mic185BuildSettings` оставлен
+  wrapper-ом с дефолтами Recorder.
+- `Device/mic185/uMic185Device.pas`: добавлен только MIC185-специфичный метод
+  `ApplyChannelProgramSettings`; базовый `TRecorderDevice` не менялся.
+- `Device/mic185/uRecorderMic185DataSource.pas`: настройки канала читаются из
+  `TRecorderTag.SourceValueMode` в формате `mic185:range=...;commut=...` и
+  передаются в прибор перед `Connect/ProgramDevice`. `DoTick`, `ReadBlock` и
+  stop/read threading не менялись. Все 64 измерительных канала остаются
+  `Connected=True`, чтобы не менять размер и порядок потокового кадра.
+- `Device/mic185/UI/uRecorderMic185ChannelDialog.pas`: диалог канала теперь
+  загружает/сохраняет диапазон, коммутацию, схему включения, шунт,
+  программный баланс, чувствительность и сопротивление в `SourceValueMode`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0 and linked `lib\x86_64-win64\RecorderLnx.exe`. Existing post-build
+`copy_sdb_res.bat` still prints the `#!/bin/sh` message, but it does not fail
+`lazbuild`.

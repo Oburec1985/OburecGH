@@ -90,3 +90,16 @@
   - [x] Выделена логика публикации в локальную процедуру ProcessAndPublishBlock в uRecorderMic140DataSource.pas
   - [x] Внедрен цикл while fDevice.ReadBlock(0, lBlock) do ... в DoTick для вычитывания всех накопленных блоков
   - [x] Успешно пересобран проект и запущены тесты
+- [x] MIC-185: программирование каналов как в оригинальном Recorder без
+  изменения `TRecorderDevice` и без вмешательства в поток чтения
+  - [x] Добавлен MIC185-специфичный record настроек канала и сборка
+    `ProgramDeviceBin` из массива настроек (`uMic185MebiusTypes.pas`)
+  - [x] Добавлен `TRecorderMic185Device.ApplyChannelProgramSettings`; базовый
+    `TRecorderDevice` не менялся
+  - [x] `uRecorderMic185DataSource.pas` читает `mic185:` настройки из тегов и
+    применяет их перед `Connect/ProgramDevice`
+  - [x] Все 64 измерительных канала оставлены `Connected=True`, чтобы не менять
+    размер/порядок кадра в текущем потоке чтения
+  - [x] Диалог канала MIC185 сохраняет диапазон, коммутацию, схему включения,
+    шунт, баланс, чувствительность и сопротивление в `SourceValueMode`
+  - [x] Сборка `RecorderLnx.lpi` через `lazbuild -B` успешна

@@ -28,6 +28,8 @@ type
     fUtsEnabled: Boolean;
     fMeasFrequencyHz: Double;
     fTempFrequencyHz: Double;
+    fChannelProgramSettings: TMic185ChannelProgramSettingsArray;
+    fHasChannelProgramSettings: Boolean;
     fRecorderDeviceIndex: Integer;
     fLastTempValues: array of Double;
     fLastUtsValue: Double;
@@ -52,6 +54,8 @@ type
     procedure Connect; override;
     procedure Disconnect; override;
     procedure ProgramDevice; override;
+    procedure ApplyChannelProgramSettings(
+      const ASettings: TMic185ChannelProgramSettingsArray);
     procedure Start; override;
     procedure Stop; override;
     function ReadBlock(ATimeoutMs: Cardinal;
@@ -94,6 +98,8 @@ begin
   fPollFrequencyHz := fMeasFrequencyHz;
   fUpdateTimeMs := 100;
   fRecorderDeviceIndex := 3;
+  Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz, fChannelProgramSettings);
+  fHasChannelProgramSettings := False;
 end;
 
 destructor TRecorderMic185Device.Destroy;
@@ -187,6 +193,9 @@ begin
       begin
         fMeasFrequencyHz := Double(AValue);
         fPollFrequencyHz := fMeasFrequencyHz;
+        if not fHasChannelProgramSettings then
+          Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz,
+            fChannelProgramSettings);
       end;
     rdpChannelCount:
       begin
@@ -264,6 +273,13 @@ begin
   fState := rdsDisconnected;
 end;
 
+procedure TRecorderMic185Device.ApplyChannelProgramSettings(
+  const ASettings: TMic185ChannelProgramSettingsArray);
+begin
+  fChannelProgramSettings := ASettings;
+  fHasChannelProgramSettings := True;
+end;
+
 procedure TRecorderMic185Device.ProgramDevice;
 var
   lCommandIn: TRecorderByteArray;
@@ -286,8 +302,11 @@ begin
     0, lCommandOut, lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('SetControllerParams: %s', [lErrorMessage]);
 
-  lSettings := Mic185BuildSettings(fMeasFrequencyHz, fTempFrequencyHz, fUtsEnabled,
-    fDeviceSerial, fSoftVersion);
+  if not fHasChannelProgramSettings then
+    Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz,
+      fChannelProgramSettings);
+  lSettings := Mic185BuildSettingsEx(fMeasFrequencyHz, fTempFrequencyHz,
+    fUtsEnabled, fDeviceSerial, fSoftVersion, fChannelProgramSettings);
   if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('ProgramDeviceBin: %s', [lErrorMessage]);
 

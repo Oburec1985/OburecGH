@@ -213,17 +213,39 @@ object MainForm: TMainForm
         OnClick = btnClearSearchClick
       end
     end
-    object lbTags: TListBox
+    object lbTags: TListView
       Left = 1
       Height = 396
       Top = 259
       Width = 188
       Align = alClient
-      ItemHeight = 0
+      Columns = <
+        item
+          Caption = 'Имя'
+          Width = 120
+        end
+        item
+          Alignment = taRightJustify
+          Caption = 'Частота'
+          Width = 64
+        end>
+      ColumnClick = False
+      ReadOnly = True
+      RowSelect = True
+      ShowColumnHeaders = False
+      SortType = stNone
       MultiSelect = True
       TabOrder = 3
+      ViewStyle = vsReport
+      OnClick = lbTagsClick
       OnDblClick = lbTagsDblClick
     end
+  end
+  object SplitterRight: TSplitter
+    Cursor = crVSplit
+    Align = alRight
+    ResizeAnchor = akRight
+    Width = 5
   end
   object pnMain: TPanel
     Left = 0

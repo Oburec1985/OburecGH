@@ -24,6 +24,7 @@ const
   CMic185Range500mV = 0;
   CMic185Range50mV = 1;
   CMic185Range5mV = 2;
+  CMic185Range05mV = 3;
 
   CMic185CommutInput = 0;
   CMic185CommutGround = 1;

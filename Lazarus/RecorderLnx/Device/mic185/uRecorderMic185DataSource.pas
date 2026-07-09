@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils,
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
-  uRecorderTags, uMic185Device, uMic185Constants;
+  uRecorderTags, uMic185Device, uMic185Constants, uMic185MebiusTypes;
 
 const
   MIC185DefaultHost = '192.168.9.142';
@@ -34,6 +34,17 @@ function RecorderMic185IsLiveDeviceConnected(const AHost: string; APort: Word): 
 function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;
 function RecorderMic185TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
+function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
+function RecorderMic185FormatChannelMode(
+  const ASettings: TMic185ChannelProgramSettings): string;
+procedure RecorderMic185ReadChannelMode(const AMode: string; AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettings);
+function RecorderMic185RangeText(ARangeIndex: LongWord): string;
+function RecorderMic185RangeUnitText(ARangeIndex: LongWord): string;
+function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
+function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
+function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
+function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
 function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AAcquiring: Boolean): Boolean;
@@ -54,6 +65,7 @@ type
     function ChannelSelected(const AChannel: TRecorderDeviceChannel): Boolean;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
+    procedure ApplyChannelProgramSettings;
     procedure ConfigureDevice;
     procedure PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
     procedure PublishAuxChannels(ATimeSec: Double);
@@ -75,12 +87,205 @@ implementation
 
 uses
   Math, StrUtils, Variants,
-  uMic185MebiusTcpProtocol, uMic185MebiusTypes, uRecorderMic185Runtime,
+  uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
   uRecorderHardwareLiveDevices, uRecorderMic140Utils;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
   CMic185ModuleName = 'MIC183/185';
+  CMic185ChannelModePrefix = 'mic185:';
+
+function Mic185FloatToText(AValue: Double): string;
+begin
+  Result := StringReplace(FormatFloat('0.######', AValue), ',', '.', []);
+end;
+
+function Mic185TextToFloatDef(const AText: string; ADefault: Double): Double;
+var
+  lText: string;
+begin
+  lText := Trim(AText);
+  if TryStrToFloat(lText, Result) then
+    Exit;
+  lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator, []);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator, []);
+  if not TryStrToFloat(lText, Result) then
+    Result := ADefault;
+end;
+
+function Mic185TextToIntDef(const AText: string; ADefault: Integer): Integer;
+begin
+  if not TryStrToInt(Trim(AText), Result) then
+    Result := ADefault;
+end;
+
+function RecorderMic185FormatChannelMode(
+  const ASettings: TMic185ChannelProgramSettings): string;
+begin
+  Result := Format(
+    '%srange=%d;commut=%d;scheme=%d;soft=%d;shunt=%d;eval=%d;sens=%s;res=%s;block=%d',
+    [CMic185ChannelModePrefix, ASettings.MeasRangeIndex, ASettings.CommutIndex,
+     ASettings.SensorScheme, ASettings.SoftBalance, ASettings.ShuntOn,
+     ASettings.EvalType, Mic185FloatToText(ASettings.TensoSensitivity),
+     Mic185FloatToText(ASettings.Resistance), ASettings.BlockSize]);
+end;
+
+function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
+var
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  Mic185DefaultChannelProgramSettings(AFrequencyHz, lSettings);
+  Result := RecorderMic185FormatChannelMode(lSettings);
+end;
+
+function Mic185ModeValue(const AMode, AKey: string; const ADefault: string): string;
+var
+  I, lPos: Integer;
+  lItems: TStringList;
+  lName: string;
+begin
+  Result := ADefault;
+  lItems := TStringList.Create;
+  try
+    lItems.Delimiter := ';';
+    lItems.StrictDelimiter := True;
+    lItems.DelimitedText := AMode;
+    for I := 0 to lItems.Count - 1 do
+    begin
+      lPos := Pos('=', lItems[I]);
+      if lPos <= 0 then
+        Continue;
+      lName := Trim(Copy(lItems[I], 1, lPos - 1));
+      if SameText(lName, AKey) then
+      begin
+        Result := Trim(Copy(lItems[I], lPos + 1, MaxInt));
+        Exit;
+      end;
+    end;
+  finally
+    lItems.Free;
+  end;
+end;
+
+procedure RecorderMic185ReadChannelMode(const AMode: string; AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettings);
+var
+  lMode: string;
+begin
+  Mic185DefaultChannelProgramSettings(AFrequencyHz, ASettings);
+  lMode := Trim(AMode);
+  if SameText(Copy(lMode, 1, Length(CMic185ChannelModePrefix)),
+    CMic185ChannelModePrefix) then
+  begin
+    Delete(lMode, 1, Length(CMic185ChannelModePrefix));
+    ASettings.MeasRangeIndex :=
+      LongWord(Mic185TextToIntDef(Mic185ModeValue(lMode, 'range',
+      IntToStr(CMic185Range5mV)), CMic185Range5mV));
+    ASettings.CommutIndex :=
+      LongWord(Mic185TextToIntDef(Mic185ModeValue(lMode, 'commut',
+      IntToStr(CMic185CommutInput)), CMic185CommutInput));
+    ASettings.SensorScheme :=
+      LongWord(Mic185TextToIntDef(Mic185ModeValue(lMode, 'scheme',
+      IntToStr(CMic185SensorSchemeTenzo)), CMic185SensorSchemeTenzo));
+    ASettings.SoftBalance :=
+      Mic185TextToIntDef(Mic185ModeValue(lMode, 'soft', '0'), 0);
+    ASettings.ShuntOn :=
+      LongWord(Mic185TextToIntDef(Mic185ModeValue(lMode, 'shunt', '0'), 0));
+    ASettings.EvalType :=
+      LongWord(Mic185TextToIntDef(Mic185ModeValue(lMode, 'eval', '0'), 0));
+    ASettings.TensoSensitivity :=
+      Mic185TextToFloatDef(Mic185ModeValue(lMode, 'sens', '2'), 2);
+    ASettings.Resistance :=
+      Mic185TextToFloatDef(Mic185ModeValue(lMode, 'res', '200'), 200);
+    ASettings.BlockSize :=
+      Word(Mic185TextToIntDef(Mic185ModeValue(lMode, 'block', '1'), 1));
+    if ASettings.BlockSize = 0 then
+      ASettings.BlockSize := 1;
+    Exit;
+  end;
+
+  if lMode <> '' then
+  begin
+    if (Pos('49', lMode) > 0) or (Pos('39', lMode) > 0) then
+      ASettings.CommutIndex := CMic185CommutCalibr
+    else if Pos('Зем', lMode) > 0 then
+      ASettings.CommutIndex := CMic185CommutGround
+    else
+      ASettings.CommutIndex := CMic185CommutInput;
+  end;
+end;
+
+function RecorderMic185RangeText(ARangeIndex: LongWord): string;
+begin
+  case ARangeIndex of
+    CMic185Range500mV: Result := '±500.000';
+    CMic185Range50mV: Result := '±50.000';
+    CMic185Range05mV: Result := '±0.500';
+  else
+    Result := '±5.000';
+  end;
+end;
+
+function RecorderMic185RangeUnitText(ARangeIndex: LongWord): string;
+begin
+  if ARangeIndex = CMic185Range05mV then
+    Result := 'мВ(тензо)'
+  else
+    Result := 'мВ';
+end;
+
+function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
+begin
+  case ARangeIndex of
+    CMic185Range500mV: Result := 500;
+    CMic185Range50mV: Result := 50;
+    CMic185Range05mV: Result := 0.5;
+  else
+    Result := 5;
+  end;
+end;
+
+function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
+begin
+  case ACommutIndex of
+    CMic185CommutGround: Result := 'Земля';
+    CMic185CommutCalibr: Result := '49 мВ';
+  else
+    Result := 'Вход';
+  end;
+end;
+
+function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
+begin
+  case ASensorScheme of
+    CMic185SensorSchemeHalf: Result := 'Полумост';
+    CMic185SensorSchemeBridge: Result := 'Мост';
+  else
+    Result := 'Тензометр';
+  end;
+end;
+
+function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+var
+  lEndPos, lStartPos: Integer;
+  lText: string;
+begin
+  Result := -1;
+  lStartPos := RPos('-', AAddress);
+  if lStartPos <= 0 then
+    Exit;
+  lEndPos := PosEx('}', AAddress, lStartPos + 1);
+  if lEndPos <= lStartPos then
+    Exit;
+  lText := Copy(AAddress, lStartPos + 1, lEndPos - lStartPos - 1);
+  if (Pos('t', LowerCase(lText)) > 0) or SameText(lText, 'uts') then
+    Exit;
+  if not TryStrToInt(lText, Result) then
+    Exit(-1);
+  Dec(Result);
+  if (Result < 0) or (Result >= CMic185ChannelCountMax) then
+    Result := -1;
+end;
 
 function RecorderMic185FindLiveDevice(const AHost: string; APort: Word): TRecorderMic185Device;
 var
@@ -299,11 +504,44 @@ begin
   fDevice.TrySetDeviceProperty(rdpUpdateTimeMs, Integer(UpdateTimeMs));
 end;
 
+procedure TRecorderMic185DataSource.ApplyChannelProgramSettings;
+var
+  I, lIndex: Integer;
+  lDevice: TRecorderMic185Device;
+  lSettings: TMic185ChannelProgramSettingsArray;
+  lTag: TRecorderTag;
+begin
+  if (fDevice = nil) or (not (fDevice.GetNativeObject is TRecorderMic185Device)) then
+    Exit;
+  lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+
+  Mic185DefaultChannelProgramSettingsArray(fPollFrequencyHz, lSettings);
+
+  if Registry <> nil then
+    for I := 0 to Registry.TagCount - 1 do
+    begin
+      lTag := Registry.Tags[I];
+      if not SameText(lTag.SourceId, SourceId) then
+        Continue;
+      lIndex := RecorderMic185ChannelAddressToIndex(lTag.Address);
+      if lIndex < 0 then
+        Continue;
+      RecorderMic185ReadChannelMode(lTag.SourceValueMode, lTag.PollFrequencyHz,
+        lSettings[lIndex]);
+      if lSettings[lIndex].FrequencyHz <= 0 then
+        lSettings[lIndex].FrequencyHz := fPollFrequencyHz;
+      lSettings[lIndex].Connected := True;
+    end;
+
+  lDevice.ApplyChannelProgramSettings(lSettings);
+end;
+
 procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
   lCapacity: Integer;
   lChannels: TRecorderDeviceChannelArray;
+  lChannelSettings: TMic185ChannelProgramSettings;
   lTag: TRecorderTag;
 begin
   if fDevice = nil then
@@ -329,10 +567,27 @@ begin
     lTag.SourceId := SourceId;
     lTag.Address := lChannels[I].Address;
     lTag.ModuleType := CMic185ModuleName;
-    lTag.UnitName := lChannels[I].UnitName;
     lTag.PollFrequencyHz := lChannels[I].PollFrequencyHz;
-    lTag.RangeMin := -5;
-    lTag.RangeMax := 5;
+    if I < CMic185ChannelCountMax then
+    begin
+      if Trim(lTag.SourceValueMode) = '' then
+        lTag.SourceValueMode :=
+          RecorderMic185DefaultChannelModeText(lChannels[I].PollFrequencyHz);
+      RecorderMic185ReadChannelMode(lTag.SourceValueMode, lChannels[I].PollFrequencyHz,
+        lChannelSettings);
+      lTag.UnitName := RecorderMic185RangeUnitText(lChannelSettings.MeasRangeIndex);
+      lTag.RangeMax := RecorderMic185RangeMax(lChannelSettings.MeasRangeIndex);
+      lTag.RangeMin := -lTag.RangeMax;
+    end
+    else
+    begin
+      lTag.UnitName := lChannels[I].UnitName;
+      if I < CMic185ChannelCountMax + CMic185TempChannelCount then
+      begin
+        lTag.RangeMin := CMic185TempMinRangeC;
+        lTag.RangeMax := CMic185TempMaxRangeC;
+      end;
+    end;
     lTag.AutoRange := False;
     lTag.AutoUnit := False;
     lTag.Description := Format('%s channel %s', [CMic185ModuleName, lChannels[I].Address]);
@@ -346,6 +601,7 @@ begin
   inherited PrepareHardware;
   if fDevice = nil then
     ConfigureDevice;
+  ApplyChannelProgramSettings;
   fDevice.Connect;
   fDevice.ProgramDevice;
   RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);

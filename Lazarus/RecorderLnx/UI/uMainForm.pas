@@ -73,7 +73,7 @@ type
     ilCommandButtons: TImageList;                // Список картинок для кнопок управления
     ilTagDialogButtons: TImageList;              // Список картинок для кнопок настройки каналов
     lbState: TLabel;                             // Текстовый индикатор текущего состояния автомата
-    lbTags: TListBox;                            // Список тегов проекта с их текущими значениями
+    lbTags: TListView;                           // Список тегов проекта с их текущими значениями
     lbTime: TLabel;                              // Индикатор времени (системного или длительности записи)
     mmLog: TMemo;                                // Поле вывода протокола (лога) работы программы
     pnMain: TPanel;                              // Главная центральная панель (область формуляров)
@@ -1998,6 +1998,12 @@ function TMainForm.TagListItemName(const AItemText: string): string;
 var
   lSepPos: Integer;
 begin
+  // New format: "<name><TAB><freq>"
+  lSepPos := Pos(#9, AItemText);
+  if lSepPos > 0 then
+    Exit(Copy(AItemText, 1, lSepPos - 1));
+
+  // Backward compatible fallback (old format used fixed spaces).
   lSepPos := Pos('     ', AItemText);
   if lSepPos > 0 then
     Result := Copy(AItemText, 1, lSepPos - 1)
@@ -2019,6 +2025,7 @@ end;
 
 function TMainForm.CurrentTagListSelectionName: string;
 var
+  lItem: TListItem;
   lTag: TRecorderTag;
 begin
   Result := '';
@@ -2026,12 +2033,13 @@ begin
     Exit;
   if Trim(fRecorder.TagRegistry.SelectedTagName) <> '' then
     Exit(Trim(fRecorder.TagRegistry.SelectedTagName));
-  if (lbTags.ItemIndex < 0) or (lbTags.ItemIndex >= lbTags.Items.Count) then
+  lItem := lbTags.Selected;
+  if lItem = nil then
     Exit;
-  lTag := FindRegistryTagForListObject(lbTags.Items.Objects[lbTags.ItemIndex]);
+  lTag := FindRegistryTagForListObject(TObject(lItem.Data));
   if lTag <> nil then
     Exit(lTag.Name);
-  Result := TagListItemName(lbTags.Items[lbTags.ItemIndex]);
+  Result := Trim(lItem.Caption);
   if fRecorder.TagRegistry.FindByName(Result) = nil then
     Result := '';
 end;
@@ -2041,12 +2049,15 @@ var
   I: Integer;
   lFilter: string;
   lFrequencyText: string;
+  lItem: TListItem;
   lSelectedName: string;
   lSelectedTag: TRecorderTag;
   lTag: TRecorderTag;
   lTopIndex: Integer;
 begin
-  lTopIndex := lbTags.TopIndex;
+  lTopIndex := 0;
+  if lbTags.TopItem <> nil then
+    lTopIndex := lbTags.TopItem.Index;
   lSelectedName := CurrentTagListSelectionName;
   lSelectedTag := nil;
   if lSelectedName <> '' then
@@ -2072,18 +2083,22 @@ begin
       else
         lFrequencyText := '-';
 
-      lbTags.Items.AddObject(Format('%s     %s', [lTag.Name, lFrequencyText]), lTag);
+      lItem := lbTags.Items.Add;
+      lItem.Caption := lTag.Name;
+      lItem.SubItems.Add(lFrequencyText);
+      lItem.Data := lTag;
     end;
 
     if lSelectedTag <> nil then
       for I := 0 to lbTags.Items.Count - 1 do
-        if lbTags.Items.Objects[I] = lSelectedTag then
+        if TObject(lbTags.Items[I].Data) = lSelectedTag then
         begin
-          lbTags.ItemIndex := I;
+          lbTags.Items[I].Selected := True;
+          lbTags.Items[I].Focused := True;
           Break;
         end;
-    if (lbTags.Items.Count > 0) and (lTopIndex < lbTags.Items.Count) then
-      lbTags.TopIndex := lTopIndex;
+    if (lbTags.Items.Count > 0) and (lTopIndex >= 0) and (lTopIndex < lbTags.Items.Count) then
+      lbTags.Items[lTopIndex].MakeVisible(False);
   finally
     lbTags.Items.EndUpdate;
   end;
@@ -2092,6 +2107,7 @@ end;
 procedure TMainForm.CollectSelectedTags(ATags: TList);
 var
   I: Integer;
+  lItem: TListItem;
   lTag: TRecorderTag;
 begin
   if ATags = nil then
@@ -2100,11 +2116,12 @@ begin
 
   for I := 0 to lbTags.Items.Count - 1 do
   begin
-    if not lbTags.Selected[I] then
+    lItem := lbTags.Items[I];
+    if (lItem = nil) or not lItem.Selected then
       Continue;
-    lTag := FindRegistryTagForListObject(lbTags.Items.Objects[I]);
+    lTag := FindRegistryTagForListObject(TObject(lItem.Data));
     if lTag = nil then
-      lTag := fRecorder.TagRegistry.FindByName(TagListItemName(lbTags.Items[I]));
+      lTag := fRecorder.TagRegistry.FindByName(Trim(lItem.Caption));
     if lTag <> nil then
       ATags.Add(lTag);
   end;

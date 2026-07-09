@@ -38,6 +38,23 @@ type
     _PadAfterConnected: array[0..2] of Byte;
   end;
 
+  TMic185ChannelProgramSettings = record
+    FrequencyHz: Double;
+    Connected: Boolean;
+    BlockSize: Word;
+    MeasRangeIndex: LongWord;
+    SoftBalance: LongInt;
+    CommutIndex: LongWord;
+    ShuntOn: LongWord;
+    EvalType: LongWord;
+    TensoSensitivity: Double;
+    Resistance: Double;
+    SensorScheme: LongWord;
+  end;
+
+  TMic185ChannelProgramSettingsArray =
+    array[0..CMic185ChannelCountMax - 1] of TMic185ChannelProgramSettings;
+
   TMic185BaseSettings = record
     Channels: array[0..CMic185SettingsChannelSlots - 1] of TMic185BaseChanSettings;
     TempChannels: array[0..CMic185TempChannelCount - 1] of TMic185TempChanSettings;
@@ -75,8 +92,15 @@ type
   end;
 
 function Mic185GenerateSessionId(ASerialNumber: LongWord): LongWord;
+procedure Mic185DefaultChannelProgramSettings(AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettings);
+procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettingsArray);
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
+function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
+  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
+  const AChannelSettings: TMic185ChannelProgramSettingsArray): TRecorderByteArray;
 function Mic185FormatSoftVersion(AVersion: LongWord): string;
 
 implementation
@@ -88,27 +112,60 @@ begin
   Result := Result or ((LongWord(Random($1000)) shl 12) and $00FFF000);
 end;
 
-function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
-  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
+procedure Mic185DefaultChannelProgramSettings(AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettings);
+begin
+  FillChar(ASettings, SizeOf(ASettings), 0);
+  ASettings.FrequencyHz := AFrequencyHz;
+  ASettings.Connected := True;
+  ASettings.BlockSize := 1;
+  ASettings.MeasRangeIndex := CMic185Range5mV;
+  ASettings.SoftBalance := 0;
+  ASettings.CommutIndex := CMic185CommutInput;
+  ASettings.ShuntOn := 0;
+  ASettings.EvalType := 0;
+  ASettings.TensoSensitivity := 2;
+  ASettings.Resistance := 200;
+  ASettings.SensorScheme := CMic185SensorSchemeTenzo;
+end;
+
+procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
+  out ASettings: TMic185ChannelProgramSettingsArray);
+var
+  I: Integer;
+begin
+  for I := 0 to High(ASettings) do
+    Mic185DefaultChannelProgramSettings(AFrequencyHz, ASettings[I]);
+end;
+
+function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
+  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
+  const AChannelSettings: TMic185ChannelProgramSettingsArray): TRecorderByteArray;
 var
   I: Integer;
   lSettings: TMic185BaseSettings;
+  lChannel: TMic185ChannelProgramSettings;
 begin
   FillChar(lSettings, SizeOf(lSettings), 0);
 
   for I := 0 to CMic185ChannelCountMax - 1 do
   begin
-    lSettings.Channels[I].FrequencyHz := AMeasFrequencyHz;
-    lSettings.Channels[I].Connected := True;
-    lSettings.Channels[I].BlockSize := 1;
-    lSettings.Channels[I].MeasRangeIndex := CMic185Range5mV;
-    lSettings.Channels[I].SoftBalance := 0;
-    lSettings.Channels[I].CommutIndex := CMic185CommutInput;
-    lSettings.Channels[I].ShuntOn := 0;
-    lSettings.Channels[I].EvalType := 0;
-    lSettings.Channels[I].TensoSensitivity := 2;
-    lSettings.Channels[I].Resistance := 200;
-    lSettings.Channels[I].SensorScheme := CMic185SensorSchemeTenzo;
+    lChannel := AChannelSettings[I];
+    if lChannel.FrequencyHz <= 0 then
+      lChannel.FrequencyHz := AMeasFrequencyHz;
+    if lChannel.BlockSize = 0 then
+      lChannel.BlockSize := 1;
+    lSettings.Channels[I].FrequencyHz := lChannel.FrequencyHz;
+    lSettings.Channels[I].Connected := lChannel.Connected;
+    lSettings.Channels[I].BlockSize := lChannel.BlockSize;
+    lSettings.Channels[I].MeasRangeIndex := lChannel.MeasRangeIndex;
+    lSettings.Channels[I].SoftBalance := lChannel.SoftBalance;
+    lSettings.Channels[I].CommutIndex := lChannel.CommutIndex;
+    lSettings.Channels[I].ShuntOn := lChannel.ShuntOn;
+    lSettings.Channels[I].EvalType := lChannel.EvalType;
+    lSettings.Channels[I].TensoSensitivity := lChannel.TensoSensitivity;
+    lSettings.Channels[I].Resistance := lChannel.Resistance;
+    lSettings.Channels[I].SensorScheme := lChannel.SensorScheme;
   end;
 
   for I := CMic185ChannelCountMax to High(lSettings.Channels) do
@@ -143,6 +200,16 @@ begin
 
   SetLength(Result, SizeOf(lSettings));
   Move(lSettings, Result[0], SizeOf(lSettings));
+end;
+
+function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
+  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
+var
+  lChannelSettings: TMic185ChannelProgramSettingsArray;
+begin
+  Mic185DefaultChannelProgramSettingsArray(AMeasFrequencyHz, lChannelSettings);
+  Result := Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz, AUtsEnabled,
+    ADeviceSerial, ASoftVersion, lChannelSettings);
 end;
 
 function Mic185FormatSoftVersion(AVersion: LongWord): string;
