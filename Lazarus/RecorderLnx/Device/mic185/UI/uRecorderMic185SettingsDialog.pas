@@ -10,6 +10,9 @@ uses
   uRecorderTags;
 
 type
+
+  { TRecorderMic185SettingsForm }
+
   TRecorderMic185SettingsForm = class(TForm)
     btnAdditional: TButton;
     btnApply: TButton;
@@ -32,13 +35,23 @@ type
     Label5: TLabel;
     Label6: TLabel;
     procedure btnAdditionalClick(Sender: TObject);
+    procedure btnApplyClick(Sender: TObject);
+    procedure btnBalanceClick(Sender: TObject);
+    procedure btnMetrologyClick(Sender: TObject);
+    procedure btnOkClick(Sender: TObject);
     procedure btnPropertiesClick(Sender: TObject);
+    procedure btnSelectAllClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
     fRegistry: TRecorderTagRegistry;
     fSourceId: string;
+    function EnsureTagForGridRow(ARow: Integer): TRecorderTag;
+    function FindTagBySourceAddress(const ASourceId,
+      AAddress: string): TRecorderTag;
     procedure FillGrid;
     procedure RefreshDeviceInfo;
+    procedure StoreSourceConfig;
+    procedure UpdateGridRow(ARow: Integer; ATag: TRecorderTag);
     function SelectedChannelAddress: string;
   public
     procedure LoadSource(ARegistry: TRecorderTagRegistry; const ASourceId: string);
@@ -56,9 +69,9 @@ implementation
 {$R *.lfm}
 
 uses
-  StrUtils, uRecorderMic185DataSource, uRecorderMic185AdditionalDialog,
+  Dialogs, Math, StrUtils, uRecorderMic185DataSource, uRecorderMic185AdditionalDialog,
   uRecorderMic185ChannelDialog, uRecorderConfiguredSourceEditor,
-  uRecorderMic185DeviceInfoProbe;
+  uRecorderMic185DeviceInfoProbe, uMic185Constants, uMic185MebiusTypes;
 
 var
   GRecorderMic185SettingsSelfTestActive: Boolean = False;
@@ -90,7 +103,10 @@ procedure TRecorderMic185SettingsForm.FillGrid;
 var
   I: Integer;
   lName: string;
+  lSourceId: string;
+  lTag: TRecorderTag;
 begin
+  lSourceId := BuildSourceId;
   for I := 1 to 70 do
   begin
     if I <= 64 then
@@ -114,7 +130,124 @@ begin
     gridChannels.Cells[7, I] := '-';
     gridChannels.Cells[8, I] := '1';
     gridChannels.Cells[9, I] := '-';
+    lTag := FindTagBySourceAddress(lSourceId, lName);
+    if lTag <> nil then
+      UpdateGridRow(I, lTag);
   end;
+end;
+
+function TRecorderMic185SettingsForm.FindTagBySourceAddress(const ASourceId,
+  AAddress: string): TRecorderTag;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if fRegistry = nil then
+    Exit;
+  for I := 0 to fRegistry.TagCount - 1 do
+    if SameText(fRegistry.Tags[I].SourceId, ASourceId) and
+      SameText(fRegistry.Tags[I].Address, AAddress) then
+      Exit(fRegistry.Tags[I]);
+end;
+
+procedure TRecorderMic185SettingsForm.StoreSourceConfig;
+begin
+  fSourceId := BuildSourceId;
+  RecorderMic185EnsureConfiguredSource(fRegistry, fSourceId,
+    MIC185DefaultPollFrequencyHz);
+end;
+
+procedure TRecorderMic185SettingsForm.UpdateGridRow(ARow: Integer;
+  ATag: TRecorderTag);
+var
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  if (ARow < 1) or (ATag = nil) then
+    Exit;
+  gridChannels.Cells[1, ARow] := ATag.Address;
+  if ARow <= CMic185ChannelCountMax then
+  begin
+    RecorderMic185ReadChannelMode(ATag.SourceValueMode, ATag.PollFrequencyHz,
+      lSettings);
+    gridChannels.Cells[2, ARow] := RecorderMic185RangeText(lSettings.MeasRangeIndex);
+    gridChannels.Cells[3, ARow] := '0.000';
+    gridChannels.Cells[4, ARow] := FloatToStr(lSettings.SoftBalance);
+    gridChannels.Cells[5, ARow] := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+    gridChannels.Cells[6, ARow] := RecorderMic185CommutationText(lSettings.CommutIndex);
+    gridChannels.Cells[7, ARow] := RecorderMic185SensorSchemeText(lSettings.SensorScheme);
+  end
+  else
+  begin
+    gridChannels.Cells[5, ARow] := ATag.UnitName;
+    gridChannels.Cells[6, ARow] := '-';
+    gridChannels.Cells[7, ARow] := '-';
+  end;
+  gridChannels.Cells[9, ARow] := 'связан';
+end;
+
+function TRecorderMic185SettingsForm.EnsureTagForGridRow(
+  ARow: Integer): TRecorderTag;
+var
+  lAddress: string;
+  lCapacity: Integer;
+  lName: string;
+  lPollHz: Double;
+  lSettings: TMic185ChannelProgramSettings;
+  lSourceId: string;
+begin
+  Result := nil;
+  if (fRegistry = nil) or (ARow < 1) or (ARow > 70) then
+    Exit;
+  StoreSourceConfig;
+  lSourceId := fSourceId;
+  lAddress := gridChannels.Cells[1, ARow];
+  lName := lAddress;
+  if Trim(lName) = '' then
+    Exit;
+  if ARow <= CMic185ChannelCountMax then
+    lPollHz := MIC185DefaultPollFrequencyHz
+  else
+    lPollHz := CMic185DefaultTempFrequencyHz;
+  Result := FindTagBySourceAddress(lSourceId, lAddress);
+  if Result = nil then
+    Result := fRegistry.FindByName(lName);
+  if Result = nil then
+  begin
+    lCapacity := Ceil(Max(4096, lPollHz * 4));
+    Result := fRegistry.CreateTag(lName, lCapacity);
+  end;
+  Result.SourceId := lSourceId;
+  Result.Address := lAddress;
+  Result.ModuleType := 'MIC183/185';
+  Result.PollFrequencyHz := lPollHz;
+  Result.AutoRange := False;
+  Result.AutoUnit := False;
+  Result.Description := Format('MIC183/185 channel %s', [lAddress]);
+  if ARow <= CMic185ChannelCountMax then
+  begin
+    if Trim(Result.SourceValueMode) = '' then
+      Result.SourceValueMode := RecorderMic185DefaultChannelModeText(lPollHz);
+    RecorderMic185ReadChannelMode(Result.SourceValueMode, lPollHz, lSettings);
+    Result.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+    Result.RangeMax := RecorderMic185RangeMax(lSettings.MeasRangeIndex);
+    Result.RangeMin := -Result.RangeMax;
+  end
+  else if ARow <= CMic185ChannelCountMax + CMic185TempChannelCount then
+  begin
+    Result.UnitName := '°C';
+    Result.RangeMin := CMic185TempMinRangeC;
+    Result.RangeMax := CMic185TempMaxRangeC;
+    Result.SourceValueMode := '';
+  end
+  else
+  begin
+    Result.UnitName := 'с';
+    Result.RangeMin := 0;
+    Result.RangeMax := 0;
+    Result.SourceValueMode := '';
+  end;
+  Result.EnsureBufferCapacity(Ceil(Max(4096, lPollHz * 4)));
+  UpdateGridRow(ARow, Result);
 end;
 
 procedure TRecorderMic185SettingsForm.LoadSource(ARegistry: TRecorderTagRegistry;
@@ -136,6 +269,7 @@ begin
   edVersion.Text := '';
   edState.Text := 'Норма';
   RefreshDeviceInfo;
+  FillGrid;
 end;
 
 procedure TRecorderMic185SettingsForm.RefreshDeviceInfo;
@@ -198,23 +332,60 @@ begin
   ShowRecorderMic185AdditionalDialog(Self);
 end;
 
+procedure TRecorderMic185SettingsForm.btnApplyClick(Sender: TObject);
+begin
+  StoreSourceConfig;
+  FillGrid;
+end;
+
+procedure TRecorderMic185SettingsForm.btnBalanceClick(Sender: TObject);
+begin
+  ShowMessage('Балансировка MIC183/185 пока не реализована.');
+end;
+
+procedure TRecorderMic185SettingsForm.btnMetrologyClick(Sender: TObject);
+begin
+  ShowMessage('Метрология MIC183/185 пока не реализована.');
+end;
+
+procedure TRecorderMic185SettingsForm.btnOkClick(Sender: TObject);
+begin
+  StoreSourceConfig;
+end;
+
 procedure TRecorderMic185SettingsForm.btnPropertiesClick(Sender: TObject);
 var
   I: Integer;
   lAddress: string;
+  lRow: Integer;
   lTag: TRecorderTag;
 begin
   lTag := nil;
+  lRow := gridChannels.Row;
+  if lRow < 1 then
+    lRow := 1;
   lAddress := SelectedChannelAddress;
   if fRegistry <> nil then
     for I := 0 to fRegistry.TagCount - 1 do
-      if SameText(fRegistry.Tags[I].SourceId, fSourceId) and
+      if SameText(fRegistry.Tags[I].SourceId, BuildSourceId) and
         SameText(fRegistry.Tags[I].Address, lAddress) then
       begin
         lTag := fRegistry.Tags[I];
         Break;
       end;
-  ShowRecorderMic185ChannelDialog(Self, lTag);
+  if lTag = nil then
+    lTag := EnsureTagForGridRow(lRow);
+  if ShowRecorderMic185ChannelDialog(Self, lTag) then
+    UpdateGridRow(lRow, lTag);
+end;
+
+procedure TRecorderMic185SettingsForm.btnSelectAllClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  for I := 1 to 70 do
+    EnsureTagForGridRow(I);
+  FillGrid;
 end;
 
 function ApplyRecorderMic185SourceDialog(AOwner: TComponent;

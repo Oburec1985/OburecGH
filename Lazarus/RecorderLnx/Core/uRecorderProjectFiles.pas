@@ -63,7 +63,8 @@ implementation
 
 uses
   IniFiles, fpjson, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors, uRecorderMic140DeviceConfig, uRecorderConfiguredDataSources;
+  uOglChartColors, uRecorderMic140DeviceConfig, uRecorderConfiguredDataSources,
+  uRecorderMic185DataSource;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -573,6 +574,7 @@ begin
     lRoot.Add('version', 1);
     SaveDataSources(lRoot, ATags);
     SaveMic140DeviceConfigs(lRoot, ATags);
+    SaveMic185DataSourceConfigs(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
@@ -653,6 +655,7 @@ begin
 
     ATags.Clear;
     LoadRecorderConfiguredDataSources(lRoot, ATags);
+    LoadMic185DataSourceConfigs(lRoot, ATags);
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     LoadFrequencyBands(FindArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);

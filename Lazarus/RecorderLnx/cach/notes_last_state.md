@@ -617,3 +617,31 @@ D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0 and linked `lib\x86_64-win64\RecorderLnx.exe`. Existing post-build
 `copy_sdb_res.bat` still prints the `#!/bin/sh` message, but it does not fail
 `lazbuild`.
+## Codex continuation 2026-07-09: MIC185 settings buttons and source persistence
+
+**Prompt:** Check MIC-185 settings dialog buttons; `Select all` was not
+implemented. Inspect MIC-185 settings storage. When saving project settings,
+each data source should have its own save function. MIC-185 settings must store
+links to tags so hardware setup for each tag is understandable and reachable
+from tag settings.
+
+**Fix:**
+- `Device/mic185/UI/uRecorderMic185SettingsDialog.pas/.lfm`: wired `Select all`,
+  `Properties`, `Apply`, `OK`, `Balance`, and `Metrology`. `Select all` creates
+  or relinks tags for all MIC183/185 rows. `Properties` creates a missing tag
+  for the selected row and opens the MIC185 channel dialog. `Apply` now stores
+  source config without closing the dialog. `OK` stores the source before close.
+  `Balance`/`Metrology` now show explicit not-implemented messages instead of
+  silently doing nothing.
+- `Device/mic185/uRecorderMic185DataSource.pas`: added MIC185-specific
+  save/load helpers for project data-source config. The JSON data source entry
+  gets a `mic185` object with host, port, default poll frequency and
+  `tagLinks[]` records (`tagName`, `address`, `sourceValueMode`,
+  `pollFrequencyHz`).
+- `Core/uRecorderProjectFiles.pas`: project save/load now calls the MIC185
+  source-specific config hooks alongside the existing generic and MIC140 saves.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
+but it does not fail `lazbuild`.

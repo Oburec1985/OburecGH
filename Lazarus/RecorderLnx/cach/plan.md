@@ -103,3 +103,12 @@
   - [x] Диалог канала MIC185 сохраняет диапазон, коммутацию, схему включения,
     шунт, баланс, чувствительность и сопротивление в `SourceValueMode`
   - [x] Сборка `RecorderLnx.lpi` через `lazbuild -B` успешна
+ 
+- [x] MIC-185 settings dialog buttons and source persistence
+  - [x] `Select all` creates/links all 70 MIC183/185 rows as tags and refreshes the grid
+  - [x] `Properties` creates a tag for the selected channel if missing and opens MIC185 channel settings
+  - [x] `Apply` stores the configured MIC185 data source without closing the dialog
+  - [x] `OK` stores the configured MIC185 data source before closing
+  - [x] `Balance` and `Metrology` are wired and explicitly report that the functions are not implemented yet
+  - [x] Project save/load calls MIC185-specific data-source config hooks; `dataSources[].mic185.tagLinks[]` records tag links, addresses, channel modes and poll rates
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded

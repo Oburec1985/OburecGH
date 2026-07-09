@@ -14,7 +14,7 @@ unit uRecorderMic185DataSource;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, fpjson,
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
   uRecorderTags, uMic185Device, uMic185Constants, uMic185MebiusTypes;
 
@@ -45,6 +45,12 @@ function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+procedure RecorderMic185EnsureConfiguredSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; APollFrequencyHz: Double);
+procedure SaveMic185DataSourceConfigs(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry);
+procedure LoadMic185DataSourceConfigs(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry);
 function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AAcquiring: Boolean): Boolean;
@@ -88,7 +94,8 @@ implementation
 uses
   Math, StrUtils, Variants,
   uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
-  uRecorderHardwareLiveDevices, uRecorderMic140Utils;
+  uRecorderHardwareLiveDevices, uRecorderMic140Utils,
+  uRecorderConfiguredDataSources;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -285,6 +292,175 @@ begin
   Dec(Result);
   if (Result < 0) or (Result >= CMic185ChannelCountMax) then
     Result := -1;
+end;
+
+procedure RecorderMic185EnsureConfiguredSource(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; APollFrequencyHz: Double);
+begin
+  RecorderConfiguredDataSourcesEnsure(ARegistry, ASourceId, CMic185ModuleName,
+    APollFrequencyHz);
+end;
+
+function Mic185JsonArray(AOwner: TJSONObject; const AName: string): TJSONArray;
+var
+  lData: TJSONData;
+begin
+  Result := nil;
+  if AOwner = nil then
+    Exit;
+  lData := AOwner.Find(AName);
+  if lData is TJSONArray then
+    Exit(TJSONArray(lData));
+  Result := TJSONArray.Create;
+  AOwner.Add(AName, Result);
+end;
+
+function Mic185FindOrCreateDataSourceJson(AJson: TJSONObject;
+  const ASourceId: string): TJSONObject;
+var
+  I: Integer;
+  lArray: TJSONArray;
+begin
+  Result := nil;
+  lArray := Mic185JsonArray(AJson, 'dataSources');
+  if lArray = nil then
+    Exit;
+  for I := 0 to lArray.Count - 1 do
+    if (lArray.Items[I] is TJSONObject) and
+      SameText(TJSONObject(lArray.Items[I]).Get('sourceId', ''), ASourceId) then
+      Exit(TJSONObject(lArray.Items[I]));
+
+  Result := TJSONObject.Create;
+  lArray.Add(Result);
+  Result.Add('sourceId', ASourceId);
+  Result.Add('moduleType', CMic185ModuleName);
+  Result.Add('defaultPollFrequencyHz', MIC185DefaultPollFrequencyHz);
+end;
+
+function Mic185FindOrCreateObject(AOwner: TJSONObject;
+  const AName: string): TJSONObject;
+var
+  lData: TJSONData;
+begin
+  Result := nil;
+  if AOwner = nil then
+    Exit;
+  lData := AOwner.Find(AName);
+  if lData is TJSONObject then
+  begin
+    Result := TJSONObject(lData);
+    Result.Clear;
+    Exit;
+  end;
+  Result := TJSONObject.Create;
+  AOwner.Add(AName, Result);
+end;
+
+procedure SaveMic185DataSourceConfigs(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  J: Integer;
+  lChannel: TJSONObject;
+  lChannels: TJSONArray;
+  lHost: string;
+  lItem: TJSONObject;
+  lMic185: TJSONObject;
+  lPollHz: Double;
+  lPort: Word;
+  lSourceId: string;
+  lSources: TStringList;
+  lTag: TRecorderTag;
+begin
+  if (AJson = nil) or (ARegistry = nil) then
+    Exit;
+  lSources := TStringList.Create;
+  try
+    lSources.CaseSensitive := False;
+    lSources.Sorted := False;
+    for I := 0 to ARegistry.TagCount - 1 do
+    begin
+      lTag := ARegistry.Tags[I];
+      lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
+      if not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+        Continue;
+      if lSources.IndexOf(lSourceId) < 0 then
+        lSources.Add(lSourceId);
+    end;
+
+    for I := 0 to lSources.Count - 1 do
+    begin
+      lSourceId := lSources[I];
+      if not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+        Continue;
+      lPollHz := MIC185DefaultPollFrequencyHz;
+      for J := 0 to ARegistry.TagCount - 1 do
+      begin
+        lTag := ARegistry.Tags[J];
+        if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      RecorderMic185EnsureConfiguredSource(ARegistry, lSourceId, lPollHz);
+      lItem := Mic185FindOrCreateDataSourceJson(AJson, lSourceId);
+      if lItem = nil then
+        Continue;
+      lMic185 := Mic185FindOrCreateObject(lItem, 'mic185');
+      lMic185.Add('host', lHost);
+      lMic185.Add('port', Integer(lPort));
+      lMic185.Add('defaultPollFrequencyHz', lPollHz);
+      lChannels := TJSONArray.Create;
+      lMic185.Add('tagLinks', lChannels);
+      for J := 0 to ARegistry.TagCount - 1 do
+      begin
+        lTag := ARegistry.Tags[J];
+        if not SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) then
+          Continue;
+        lChannel := TJSONObject.Create;
+        lChannels.Add(lChannel);
+        lChannel.Add('tagName', lTag.Name);
+        lChannel.Add('address', lTag.Address);
+        lChannel.Add('sourceValueMode', lTag.SourceValueMode);
+        lChannel.Add('pollFrequencyHz', lTag.PollFrequencyHz);
+      end;
+    end;
+  finally
+    lSources.Free;
+  end;
+end;
+
+procedure LoadMic185DataSourceConfigs(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lArray: TJSONArray;
+  lData: TJSONData;
+  lHost: string;
+  lItem: TJSONObject;
+  lPollHz: Double;
+  lPort: Word;
+  lSourceId: string;
+begin
+  if (AJson = nil) or (ARegistry = nil) then
+    Exit;
+  lData := AJson.Find('dataSources');
+  if not (lData is TJSONArray) then
+    Exit;
+  lArray := TJSONArray(lData);
+  for I := 0 to lArray.Count - 1 do
+  begin
+    if not (lArray.Items[I] is TJSONObject) then
+      Continue;
+    lItem := TJSONObject(lArray.Items[I]);
+    lSourceId := RecorderNormalizeTagSourceId(lItem.Get('sourceId', ''));
+    if not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+      Continue;
+    lPollHz := lItem.Get('defaultPollFrequencyHz', MIC185DefaultPollFrequencyHz);
+    RecorderMic185EnsureConfiguredSource(ARegistry, lSourceId, lPollHz);
+  end;
 end;
 
 function RecorderMic185FindLiveDevice(const AHost: string; APort: Word): TRecorderMic185Device;
