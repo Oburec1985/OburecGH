@@ -729,3 +729,56 @@ MIC185 configured source and recreated it without `SpecificConfigText`.
 no longer desired and preserves existing MIC185 source entries, so
 `dataSources[].mic185.channels[]` survives `OK`, runtime source restart, and
 project save. Rebuild of `RecorderLnx.lpi` completed with exit code 0.
+
+## Codex continuation 2026-07-10: MIC185 settings packet table / TKC channel
+
+**Prompt:** User reported that MIC-185 range switching works, but enabling the
+thermocompensation/reference channel in the original Recorder causes hardware
+subtraction like a bridge circuit, while RecorderLnx currently shows no effect.
+User asked to assemble a table for the device settings packet with parameter
+purpose, byte size, original behavior, RecorderLnx behavior, and source header;
+also asked whether `windev-v3.9\examples\mebius.daq` contains useful info.
+
+**Done:** Added
+`Docs/devices/mic185/settings_packet_table.md`. The document records sources,
+the `CMIC185V2_BASECHAN_SETTINGS` 56-byte slot map, the 3976-byte
+`CMIC185V2_BASESETTINGS` map with offsets, and original-vs-RecorderLnx
+behavior for every relevant field.
+
+**Finding:** The likely reason the thermocompensation/reference channel has no
+effect in RecorderLnx is not range programming. Original
+`CMIC185V2Channel::SetProperty(MEPROPCH_MIC185V2_CHANTC)` writes the selected
+addition input into `GroupAddition_[channel div 16]`, and
+`MEPROP_TERMO_COMP` writes `bTKC_`. RecorderLnx currently sends all
+`GroupAddition[] = CMic185ModAddOff` and `TemperatureCompensation=False`.
+
+**examples\mebius.daq:** Useful as a portable MIC185 Mebius DAQ example and
+programming-order confirmation (`SET_CONTROLLER_PARAMS`,
+`PROGRAMM_DEVICE_BIN`, finish programming), but the authoritative packet layout
+is in the shared `Mebius\MebiusDAQDevices\mic185v2` sources.
+
+## Codex continuation 2026-07-10: MIC185 TKC/reference-channel programming
+
+**Prompt:** User confirmed that the original Recorder currently assigns
+compensation channel 1 to the first 16 measurement channels and asked to bring
+RecorderLnx to the analogous state so the thermocompensation/reference channel
+works.
+
+**Fix:** `Device/mic185/uMic185MebiusTypes.pas` now has
+`TMic185GroupAdditionArray` and default group additions
+`[CMic185ModAdd1, CMic185ModAddOff, CMic185ModAddOff, CMic185ModAddOff]`.
+`Mic185BuildSettingsEx` writes caller-provided `GroupAddition[]` and
+`TemperatureCompensation` into `ProgramDeviceBin` instead of hard-coding all
+groups off and TKC false.
+
+**Data source:** `Device/mic185/uRecorderMic185DataSource.pas` now reads, logs,
+saves and loads `dataSources[].mic185.groupAddition[]` plus
+`dataSources[].mic185.temperatureCompensation`. Missing fields in older project
+files default to the observed original state: compensation channel 1 for group
+0 (channels 1..16), other groups off, TKC enabled. Live programming logs now
+include `tkc=True groupAddition=[0,4,4,4]`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
+but it does not fail `lazbuild`.

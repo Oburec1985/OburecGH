@@ -177,6 +177,56 @@ completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
 The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
 message, but `lazbuild` returned success.
 
+## 2026-07-10 thermocompensation/reference channel did not affect readings
+
+### Symptom
+
+Range programming was visible on MIC185, but enabling the thermocompensation
+channel in the original Recorder caused hardware subtraction, while RecorderLnx
+showed no comparable effect. The user confirmed that the original setup assigns
+compensation channel 1 to the first 16 measurement channels.
+
+### Root Cause
+
+RecorderLnx already wrote per-channel range, commutation, sensor scheme, shunt,
+soft balance, sensitivity and resistance into `ProgramDeviceBin`, but two
+module-level fields stayed hard-coded:
+
+- `GroupAddition[0..3] := CMic185ModAddOff`
+- `TemperatureCompensation := False`
+
+In the original MIC185V2 code, `MEPROPCH_MIC185V2_CHANTC` writes
+`GroupAddition_[channel div 16]`, and `MEPROP_TERMO_COMP` writes `bTKC_`.
+Without those fields, the selected reference/thermocompensation input never
+became an active group addition in the hardware packet.
+
+### Fix
+
+- `Device/mic185/uMic185MebiusTypes.pas`
+  - Added `TMic185GroupAdditionArray`.
+  - Added default group additions `[0,4,4,4]`: compensation channel 1 for
+    channels 1..16, other groups off.
+  - `Mic185BuildSettingsEx` now writes caller-provided `GroupAddition[]` and
+    `TemperatureCompensation`.
+
+- `Device/mic185/uMic185Device.pas`
+  - Stores group additions and TKC flag in `TRecorderMic185Device`.
+  - Passes them to `Mic185BuildSettingsEx` during `ProgramDevice`.
+
+- `Device/mic185/uRecorderMic185DataSource.pas`
+  - Saves/loads `dataSources[].mic185.groupAddition[]`.
+  - Saves/loads `dataSources[].mic185.temperatureCompensation`.
+  - Missing fields in old projects default to `[0,4,4,4]` and `true`.
+  - Programming logs now include `tkc=True groupAddition=[0,4,4,4]`.
+
+### Verification
+
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
+
+The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
+message, but `lazbuild` returned success.
+
 ## 2026-07-09 source restart overwrote dialog programming
 
 ### Symptom

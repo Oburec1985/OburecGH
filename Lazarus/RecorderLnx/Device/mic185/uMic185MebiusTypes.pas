@@ -56,6 +56,9 @@ type
   TMic185ChannelProgramSettingsArray =
     array[0..CMic185ChannelCountMax - 1] of TMic185ChannelProgramSettings;
 
+  TMic185GroupAdditionArray =
+    array[0..CMic185ModuleCount - 1] of LongWord;
+
   TMic185BaseSettings = record
     Channels: array[0..CMic185SettingsChannelSlots - 1] of TMic185BaseChanSettings;
     TempChannels: array[0..CMic185TempChannelCount - 1] of TMic185TempChanSettings;
@@ -97,12 +100,17 @@ procedure Mic185DefaultChannelProgramSettings(AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettings);
 procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettingsArray);
+procedure Mic185DefaultGroupAdditionSettings(
+  out ASettings: TMic185GroupAdditionArray);
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
-function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
-  AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
-  const AChannelSettings: TMic185ChannelProgramSettingsArray;
-  APowerMaCode: LongWord = CMic185DefaultPowerMaCode): TRecorderByteArray;
+// формирует буфер который идет на программирование устройства
+function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double; AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
+         // Список настроек по каналам
+         const AChannelSettings: TMic185ChannelProgramSettingsArray;
+         const AGroupAddition: TMic185GroupAdditionArray;
+         ATemperatureCompensation: Boolean;
+         APowerMaCode: LongWord = CMic185DefaultPowerMaCode): TRecorderByteArray;
 function Mic185PowerMaToCode(APowerMa: Double): LongWord;
 function Mic185PowerCodeToMa(APowerMaCode: LongWord): Double;
 function Mic185FormatSoftVersion(AVersion: LongWord): string;
@@ -143,9 +151,21 @@ begin
     Mic185DefaultChannelProgramSettings(AFrequencyHz, ASettings[I]);
 end;
 
+procedure Mic185DefaultGroupAdditionSettings(
+  out ASettings: TMic185GroupAdditionArray);
+var
+  I: Integer;
+begin
+  for I := 0 to High(ASettings) do
+    ASettings[I] := CMic185ModAddOff;
+  ASettings[0] := CMic185ModAdd1;
+end;
+
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
   const AChannelSettings: TMic185ChannelProgramSettingsArray;
+  const AGroupAddition: TMic185GroupAdditionArray;
+  ATemperatureCompensation: Boolean;
   APowerMaCode: LongWord): TRecorderByteArray;
 var
   I: Integer;
@@ -171,6 +191,7 @@ begin
     lSettings.Channels[I].EvalType := lChannel.EvalType;
     lSettings.Channels[I].TensoSensitivity := lChannel.TensoSensitivity;
     lSettings.Channels[I].Resistance := lChannel.Resistance;
+    // схема подключения
     lSettings.Channels[I].SensorScheme := lChannel.SensorScheme;
   end;
 
@@ -198,10 +219,13 @@ begin
   lSettings.MaxFreqMode := 0;
   lSettings.CalibrShuntIndex := CMic185DefaultCalibrShuntIndex;
   for I := 0 to High(lSettings.GroupAddition) do
-    lSettings.GroupAddition[I] := CMic185ModAddOff;
+    if AGroupAddition[I] <= CMic185ModAddOff then
+      lSettings.GroupAddition[I] := AGroupAddition[I]
+    else
+      lSettings.GroupAddition[I] := CMic185ModAddOff;
   lSettings.DetermineBreak := False;
   lSettings.HardwareBalanceOn := False;
-  lSettings.TemperatureCompensation := False;
+  lSettings.TemperatureCompensation := ATemperatureCompensation;
   lSettings.SoftVersion := ASoftVersion;
 
   if not AUtsEnabled then
@@ -229,10 +253,12 @@ function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
 var
   lChannelSettings: TMic185ChannelProgramSettingsArray;
+  lGroupAddition: TMic185GroupAdditionArray;
 begin
   Mic185DefaultChannelProgramSettingsArray(AMeasFrequencyHz, lChannelSettings);
+  Mic185DefaultGroupAdditionSettings(lGroupAddition);
   Result := Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz, AUtsEnabled,
-    ADeviceSerial, ASoftVersion, lChannelSettings);
+    ADeviceSerial, ASoftVersion, lChannelSettings, lGroupAddition, True);
 end;
 
 function Mic185FormatSoftVersion(AVersion: LongWord): string;

@@ -10,6 +10,9 @@ uses
   uRecorderTags;
 
 type
+
+  { TRecorderMic185ChannelForm }
+
   TRecorderMic185ChannelForm = class(TForm)
     btnApply: TButton;
     btnCancel: TButton;
@@ -45,6 +48,7 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    procedure btnApplyClick(Sender: TObject);
   public
     procedure LoadTag(ATag: TRecorderTag);
     procedure SaveTag(ATag: TRecorderTag);
@@ -85,6 +89,11 @@ begin
   lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator, []);
   if not TryStrToFloat(lText, Result) then
     Result := ADefault;
+end;
+
+procedure TRecorderMic185ChannelForm.btnApplyClick(Sender: TObject);
+begin
+
 end;
 
 procedure TRecorderMic185ChannelForm.LoadTag(ATag: TRecorderTag);

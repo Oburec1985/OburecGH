@@ -125,3 +125,24 @@
   - [x] Moved MIC185 hardware channel settings out of tags: tags keep only source/channel binding, while source node saves hardware ranges and switching in `dataSources[].mic185.channels[]`
   - [x] `Apply` and `OK` now store MIC185 source settings and immediately call device programming; `OK` stays open if programming fails
   - [x] Source-level MIC185 module current is saved as `dataSources[].mic185.powerMaCode` and sent in `ProgramDeviceBin`
+
+- [x] MIC-185 settings packet table and TKC/reference-channel comparison
+  - [x] Added `Docs/devices/mic185/settings_packet_table.md` with byte offsets,
+    field sizes, original Recorder/Mebius behavior, and current RecorderLnx behavior
+  - [x] Confirmed likely reference-channel gap: original `MEPROPCH_MIC185V2_CHANTC`
+    writes `GroupAddition_[group]`, while RecorderLnx currently sends all
+    `GroupAddition[] = MOD_ADD_OFF`; original `MEPROP_TERMO_COMP` writes `bTKC_`,
+    while RecorderLnx currently sends `TemperatureCompensation=False`
+  - [x] Checked `windev-v3.9\examples\mebius.daq`: useful as a portable MIC185
+    Mebius DAQ example and programming-order confirmation, but base packet
+    layout comes from the shared `Mebius\MebiusDAQDevices\mic185v2` sources
+
+- [x] MIC-185 TKC/reference-channel programming parity
+  - [x] Added `TMic185GroupAdditionArray` and default `groupAddition=[0,4,4,4]`
+    (`CMic185ModAdd1` for channels 1..16, other groups off)
+  - [x] `Mic185BuildSettingsEx` now writes configured `GroupAddition[]` and
+    `TemperatureCompensation` instead of hard-coded off/false
+  - [x] MIC185 source config saves/loads `dataSources[].mic185.groupAddition[]`
+    and `dataSources[].mic185.temperatureCompensation`; old projects get the
+    same defaults automatically
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded

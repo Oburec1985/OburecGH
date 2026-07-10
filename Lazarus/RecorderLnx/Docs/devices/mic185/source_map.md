@@ -8,25 +8,25 @@
 
 ### Драйвер и протокол
 
-| Файл | Роль |
-|------|------|
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2.cpp` | `CMIC185V2`: Init, OnProgram, CallCommand, TCP 4000 |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2scan.cpp` | Decommutate, `CheckTemperature`, meas/temp/UTS |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2chan.cpp` | Канал: Eval (код→мВ), свойства UI |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2base.cpp` | `ConvLM74CodeToC`, `CalcMaxRate`, Init |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2base.h` | `CMIC185V2_BASESETTINGS`, `DEV_ID_*`, `CHN_COMMUT_TABLE` |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2chanbase.cpp` | Дефолты канала и temp (Fs 100/1 Гц) |
-| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\computephysical.h` | `MIC185V2_DEFAULT`, диапазоны, коммутация |
-| `Mebius\MebiusDAQ\Base\UniversalDataSample.h` | `INTERNAL_PACKET_HEADER`, padding MSVC |
+| Файл                                                                 | Роль                                                     |
+| -------------------------------------------------------------------- | -------------------------------------------------------- |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2.cpp`          | `CMIC185V2`: Init, OnProgram, CallCommand, TCP 4000      |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2scan.cpp`      | Decommutate, `CheckTemperature`, meas/temp/UTS           |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2_pc\mic185v2chan.cpp`      | Канал: Eval (код→мВ), свойства UI                        |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2base.cpp`     | `ConvLM74CodeToC`, `CalcMaxRate`, Init                   |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2base.h`       | `CMIC185V2_BASESETTINGS`, `DEV_ID_*`, `CHN_COMMUT_TABLE` |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\mic185v2chanbase.cpp` | Дефолты канала и temp (Fs 100/1 Гц)                      |
+| `Mebius\MebiusDAQDevices\mic185v2\mic185v2base\computephysical.h`    | `MIC185V2_DEFAULT`, диапазоны, коммутация                |
+| `Mebius\MebiusDAQ\Base\UniversalDataSample.h`                        | `INTERNAL_PACKET_HEADER`, padding MSVC                   |
 
 ### Транспорт Mebius
 
-| Файл | Роль |
-|------|------|
-| `Mebius\MebiusDAQ\DAQ\TCPLink\TCPLink.cpp` | `IoControlEx`, MEBE + IOCTL |
-| `Mebius\MebiusDAQ\DAQ\TCPLink\EthernetPacket.h` | `MEBE_PACKET_SIGNATURE` |
+| Файл                                              | Роль                           |
+| ------------------------------------------------- | ------------------------------ |
+| `Mebius\MebiusDAQ\DAQ\TCPLink\TCPLink.cpp`        | `IoControlEx`, MEBE + IOCTL    |
+| `Mebius\MebiusDAQ\DAQ\TCPLink\EthernetPacket.h`   | `MEBE_PACKET_SIGNATURE`        |
 | `Mebius\MebiusDAQ\DAQ\TCPLink\PacketDispatch.cpp` | command vs data (`0x3E904000`) |
-| `Mebius\Include\IoControlIds.h` | `IOCTL_MEASTASK_*` |
+| `Mebius\Include\IoControlIds.h`                   | `IOCTL_MEASTASK_*`             |
 
 ### Обёртка Recorder / UI
 

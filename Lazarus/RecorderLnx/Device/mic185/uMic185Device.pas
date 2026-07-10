@@ -30,6 +30,8 @@ type
     fTempFrequencyHz: Double;
     fChannelProgramSettings: TMic185ChannelProgramSettingsArray;
     fHasChannelProgramSettings: Boolean;
+    fGroupAddition: TMic185GroupAdditionArray;
+    fTemperatureCompensation: Boolean;
     fPowerMaCode: LongWord;
     fRecorderDeviceIndex: Integer;
     fLastTempValues: array of Double;
@@ -56,7 +58,9 @@ type
     procedure Disconnect; override;
     procedure ProgramDevice; override;
     procedure ApplyChannelProgramSettings(
-      const ASettings: TMic185ChannelProgramSettingsArray);
+      const ASettings: TMic185ChannelProgramSettingsArray;
+      const AGroupAddition: TMic185GroupAdditionArray;
+      ATemperatureCompensation: Boolean);
     procedure Start; override;
     procedure Stop; override;
     function ReadBlock(ATimeoutMs: Cardinal;
@@ -100,6 +104,8 @@ begin
   fUpdateTimeMs := 100;
   fRecorderDeviceIndex := 3;
   Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz, fChannelProgramSettings);
+  Mic185DefaultGroupAdditionSettings(fGroupAddition);
+  fTemperatureCompensation := True;
   fPowerMaCode := CMic185DefaultPowerMaCode;
   fHasChannelProgramSettings := False;
 end;
@@ -276,9 +282,13 @@ begin
 end;
 
 procedure TRecorderMic185Device.ApplyChannelProgramSettings(
-  const ASettings: TMic185ChannelProgramSettingsArray);
+  const ASettings: TMic185ChannelProgramSettingsArray;
+  const AGroupAddition: TMic185GroupAdditionArray;
+  ATemperatureCompensation: Boolean);
 begin
   fChannelProgramSettings := ASettings;
+  fGroupAddition := AGroupAddition;
+  fTemperatureCompensation := ATemperatureCompensation;
   if ASettings[0].PowerMaCode <> 0 then
     fPowerMaCode := ASettings[0].PowerMaCode;
   fHasChannelProgramSettings := True;
@@ -311,7 +321,7 @@ begin
       fChannelProgramSettings);
   lSettings := Mic185BuildSettingsEx(fMeasFrequencyHz, fTempFrequencyHz,
     fUtsEnabled, fDeviceSerial, fSoftVersion, fChannelProgramSettings,
-    fPowerMaCode);
+    fGroupAddition, fTemperatureCompensation, fPowerMaCode);
   if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('ProgramDeviceBin: %s', [lErrorMessage]);
 

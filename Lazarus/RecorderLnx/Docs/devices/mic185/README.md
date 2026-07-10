@@ -17,6 +17,7 @@
 | [test_stand.md](test_stand.md) | **Стенд Lazarus**: CLI/GUI, стабильность, диагностика |
 | [windev_mic185_test.md](windev_mic185_test.md) | Эталонный GTest windev |
 | [source_map.md](source_map.md) | Карта исходников windev и порта Lazarus |
+| [settings_packet_table.md](settings_packet_table.md) | Таблица `ProgramDeviceBin`: назначение, размер, оригинал, RecorderLnx |
 | [recorderlnx_integration.md](recorderlnx_integration.md) | Интеграция драйвера MIC183/185 в RecorderLnx, LFM-диалоги и поток тегов |
 
 ## Быстрый старт (стенд)

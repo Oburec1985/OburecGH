@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic185/temperature_channels.md",
+                "file": "devices/mic185/settings_packet_table.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "temperature_channels"
+              "title": "settings_packet_table"
             }
           }
         ]
@@ -185,23 +185,24 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "devices/mic185/recorderlnx_integration.md",
-    "devices/mic185/images/recorder_mic185_units_combo.png",
-    "devices/mic185/images/recorder_mic185_thermo_combo.png",
-    "devices/mic185/images/recorder_mic185_sensor_combo.png",
-    "devices/mic185/images/recorder_mic185_power_combo.png",
-    "devices/mic185/images/recorder_mic185_main.png",
-    "devices/mic185/images/recorder_mic185_channel.png",
-    "devices/mic185/images/recorder_mic185_commutation_combo.png",
-    "devices/mic185/images/recorder_mic185_additional.png",
-    "devices/mic185/images",
     "devices/mic185/source_map.md",
-    "devices/mic185/test_stand.md",
+    "devices/mic185/settings_packet_table.md",
+    "devices/mic185/temperature_channels.md",
+    "devices/mic185/recorderlnx_integration.md",
     "devices/mic185/README.md",
     "devices/mic185/protocol.md",
     "devices/mic185/defaults.md",
     "devices/mic185/architecture.md",
-    "devices/mic185/temperature_channels.md",
+    "devices/mic185/images/recorder_mic185_main.png",
+    "devices/mic185/images/recorder_mic185_commutation_combo.png",
+    "devices/mic185/images/recorder_mic185_channel.png",
+    "devices/mic185/images/recorder_mic185_additional.png",
+    "devices/mic185/images/recorder_mic185_units_combo.png",
+    "devices/mic185/images/recorder_mic185_thermo_combo.png",
+    "devices/mic185/images/recorder_mic185_sensor_combo.png",
+    "devices/mic185/images/recorder_mic185_power_combo.png",
+    "devices/mic185/images",
+    "devices/mic185/test_stand.md",
     "devices/mic185/windev_mic185_test.md",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x.svg",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x-circle.svg",
@@ -229,7 +230,6 @@
     "devices/mic140/acquisition_rules.md",
     "devices/mic140/example/README.md",
     "devices/mic140/protocol/README.md",
-    "errors/2026-06-29-mic140v2-acceptance.md",
-    "errors/README.md"
+    "errors/2026-06-29-mic140v2-acceptance.md"
   ]
 }

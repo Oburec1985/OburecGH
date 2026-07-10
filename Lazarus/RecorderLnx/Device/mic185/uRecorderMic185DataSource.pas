@@ -413,6 +413,91 @@ begin
   end;
 end;
 
+procedure RecorderMic185GetSourceGroupAddition(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out AGroupAddition: TMic185GroupAdditionArray);
+var
+  I: Integer;
+  lConfig: TJSONObject;
+  lData: TJSONData;
+  lEntry: TRecorderConfiguredDataSource;
+  lValue: Integer;
+begin
+  Mic185DefaultGroupAdditionSettings(AGroupAddition);
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  lConfig := Mic185SourceConfigObject(lEntry, False);
+  try
+    if lConfig = nil then
+      Exit;
+    lData := lConfig.Find('groupAddition');
+    if not (lData is TJSONArray) then
+      Exit;
+    for I := 0 to Min(High(AGroupAddition), TJSONArray(lData).Count - 1) do
+    begin
+      lValue := TJSONArray(lData).Items[I].AsInteger;
+      if (lValue >= Integer(CMic185ModAdd1)) and
+        (lValue <= Integer(CMic185ModAddOff)) then
+        AGroupAddition[I] := LongWord(lValue);
+    end;
+  finally
+    lConfig.Free;
+  end;
+end;
+
+function RecorderMic185GetSourceTemperatureCompensation(
+  ARegistry: TRecorderTagRegistry; const ASourceId: string): Boolean;
+var
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  Result := True;
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  lConfig := Mic185SourceConfigObject(lEntry, False);
+  try
+    if lConfig <> nil then
+      Result := lConfig.Get('temperatureCompensation', True);
+  finally
+    lConfig.Free;
+  end;
+end;
+
+procedure RecorderMic185StoreSourceCompensation(AConfig: TJSONObject;
+  const AGroupAddition: TMic185GroupAdditionArray;
+  ATemperatureCompensation: Boolean);
+var
+  I: Integer;
+  lArray: TJSONArray;
+  lIndex: Integer;
+begin
+  if AConfig = nil then
+    Exit;
+  lIndex := AConfig.IndexOfName('temperatureCompensation');
+  if lIndex >= 0 then
+    AConfig.Delete(lIndex);
+  lIndex := AConfig.IndexOfName('groupAddition');
+  if lIndex >= 0 then
+    AConfig.Delete(lIndex);
+  AConfig.Add('temperatureCompensation', ATemperatureCompensation);
+  lArray := TJSONArray.Create;
+  AConfig.Add('groupAddition', lArray);
+  for I := 0 to High(AGroupAddition) do
+    lArray.Add(Integer(AGroupAddition[I]));
+end;
+
+function RecorderMic185FormatGroupAddition(
+  const AGroupAddition: TMic185GroupAdditionArray): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to High(AGroupAddition) do
+  begin
+    if Result <> '' then
+      Result := Result + ',';
+    Result := Result + IntToStr(AGroupAddition[I]);
+  end;
+  Result := '[' + Result + ']';
+end;
+
 procedure RecorderMic185BuildSourceProgramSettings(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettingsArray);
@@ -440,12 +525,14 @@ function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
 var
   I: Integer;
   lDevice: IRecorderDevice;
+  lGroupAddition: TMic185GroupAdditionArray;
   lHost: string;
   lNative: TRecorderMic185Device;
   lPollHz: Double;
   lPort: Word;
   lSettings: TMic185ChannelProgramSettingsArray;
   lSummary: string;
+  lTemperatureCompensation: Boolean;
 begin
   Result := False;
   AErrorText := '';
@@ -461,6 +548,9 @@ begin
 
   RecorderMic185BuildSourceProgramSettings(ARegistry, ASourceId, lPollHz,
     lSettings);
+  RecorderMic185GetSourceGroupAddition(ARegistry, ASourceId, lGroupAddition);
+  lTemperatureCompensation :=
+    RecorderMic185GetSourceTemperatureCompensation(ARegistry, ASourceId);
   lSummary := '';
   for I := 0 to High(lSettings) do
   begin
@@ -470,8 +560,11 @@ begin
       [I + 1, lSettings[I].MeasRangeIndex, lSettings[I].CommutIndex,
        lSettings[I].SensorScheme, lSettings[I].ShuntOn, lSettings[I].BlockSize]);
   end;
-  RecorderMic185Log(Format('ProgramConfiguredSource %s power=%d: %s',
-    [ASourceId, lSettings[0].PowerMaCode, lSummary]));
+  RecorderMic185Log(Format(
+    'ProgramConfiguredSource %s power=%d tkc=%s groupAddition=%s: %s',
+    [ASourceId, lSettings[0].PowerMaCode,
+     BoolToStr(lTemperatureCompensation, True),
+     RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
 
   lDevice := CreateRecorderMic185Device;
   try
@@ -484,7 +577,8 @@ begin
       Exit;
     end;
     lNative := TRecorderMic185Device(lDevice.GetNativeObject);
-    lNative.ApplyChannelProgramSettings(lSettings);
+    lNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
+      lTemperatureCompensation);
     try
       lDevice.Connect;
       lDevice.ProgramDevice;
@@ -646,6 +740,7 @@ var
   J: Integer;
   lChannels: TJSONArray;
   lEntry: TRecorderConfiguredDataSource;
+  lGroupAddition: TMic185GroupAdditionArray;
   lHost: string;
   lItem: TJSONObject;
   lLink: TJSONObject;
@@ -657,6 +752,7 @@ var
   lSources: TStringList;
   lSettings: TMic185ChannelProgramSettingsArray;
   lTag: TRecorderTag;
+  lTemperatureCompensation: Boolean;
 begin
   if (AJson = nil) or (ARegistry = nil) then
     Exit;
@@ -711,6 +807,11 @@ begin
       lMic185.Add('defaultPollFrequencyHz', lPollHz);
       lMic185.Add('powerMaCode', Integer(RecorderMic185GetSourcePowerMaCode(
         ARegistry, lSourceId)));
+      RecorderMic185GetSourceGroupAddition(ARegistry, lSourceId, lGroupAddition);
+      lTemperatureCompensation :=
+        RecorderMic185GetSourceTemperatureCompensation(ARegistry, lSourceId);
+      RecorderMic185StoreSourceCompensation(lMic185, lGroupAddition,
+        lTemperatureCompensation);
       lLinks := TJSONArray.Create;
       lMic185.Add('tagLinks', lLinks);
       for J := 0 to ARegistry.TagCount - 1 do
@@ -757,6 +858,7 @@ var
   lConfig: TJSONObject;
   lData: TJSONData;
   lEntry: TRecorderConfiguredDataSource;
+  lGroupAddition: TMic185GroupAdditionArray;
   lHost: string;
   lItem: TJSONObject;
   lLink: TJSONObject;
@@ -769,6 +871,7 @@ var
   lSourceId: string;
   lTag: TRecorderTag;
   lTagName: string;
+  lTemperatureCompensation: Boolean;
 begin
   if (AJson = nil) or (ARegistry = nil) then
     Exit;
@@ -798,6 +901,19 @@ begin
     end;
     lConfig.Add('powerMaCode', lMic185.Get('powerMaCode',
       Integer(CMic185DefaultPowerMaCode)));
+    if lMic185.Find('temperatureCompensation') <> nil then
+      lTemperatureCompensation := lMic185.Get('temperatureCompensation', True)
+    else
+      lTemperatureCompensation := True;
+    Mic185DefaultGroupAdditionSettings(lGroupAddition);
+    lData := lMic185.Find('groupAddition');
+    if lData is TJSONArray then
+      for J := 0 to Min(High(lGroupAddition), TJSONArray(lData).Count - 1) do
+        if (TJSONArray(lData).Items[J].AsInteger >= Integer(CMic185ModAdd1)) and
+          (TJSONArray(lData).Items[J].AsInteger <= Integer(CMic185ModAddOff)) then
+          lGroupAddition[J] := LongWord(TJSONArray(lData).Items[J].AsInteger);
+    RecorderMic185StoreSourceCompensation(lConfig, lGroupAddition,
+      lTemperatureCompensation);
     Mic185StoreSourceConfigObject(lEntry, lConfig);
     lConfig.Free;
     lData := lMic185.Find('tagLinks');
@@ -1095,8 +1211,10 @@ procedure TRecorderMic185DataSource.ApplyChannelProgramSettings;
 var
   I: Integer;
   lDevice: TRecorderMic185Device;
+  lGroupAddition: TMic185GroupAdditionArray;
   lSummary: string;
   lSettings: TMic185ChannelProgramSettingsArray;
+  lTemperatureCompensation: Boolean;
 begin
   if (fDevice = nil) or (not (fDevice.GetNativeObject is TRecorderMic185Device)) then
     Exit;
@@ -1104,6 +1222,9 @@ begin
 
   RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
     lSettings);
+  RecorderMic185GetSourceGroupAddition(Registry, SourceId, lGroupAddition);
+  lTemperatureCompensation :=
+    RecorderMic185GetSourceTemperatureCompensation(Registry, SourceId);
   lSummary := '';
 
   for I := 0 to High(lSettings) do
@@ -1116,9 +1237,13 @@ begin
   end;
 
   if lSummary <> '' then
-    RecorderMic185Log(Format('ApplyChannelProgramSettings %s power=%d: %s',
-      [SourceId, lSettings[0].PowerMaCode, lSummary]));
-  lDevice.ApplyChannelProgramSettings(lSettings);
+    RecorderMic185Log(Format(
+      'ApplyChannelProgramSettings %s power=%d tkc=%s groupAddition=%s: %s',
+      [SourceId, lSettings[0].PowerMaCode,
+       BoolToStr(lTemperatureCompensation, True),
+       RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
+  lDevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
+    lTemperatureCompensation);
 end;
 
 procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
