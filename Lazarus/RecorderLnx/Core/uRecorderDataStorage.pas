@@ -176,6 +176,13 @@ type
 
 { TRecorderMeraSignalWriter }
 
+{ TRecorderMeraSignalWriter.Destroy
+  Назначение:
+    Освобождает все файловые потоки данных и времени для одного MERA-канала.
+  Вызывается из:
+    Вызывается при очистке списка сигналов в TRecorderMeraTagWriter.Destroy или Close.
+  Аналог в оригинальном Recorder:
+    Очистка файловых потоков MERA-канала. }
 destructor TRecorderMeraSignalWriter.Destroy;
 begin
   FreeAndNil(DataStream);
@@ -186,12 +193,26 @@ begin
 end;
 { TRecorderRecordFrameManager }
 
+{ TRecorderRecordFrameManager.Create
+  Назначение:
+    Конструктор менеджера кадров записи. Задает корневой каталог для хранения кадров и нормализует путь.
+  Вызывается из:
+    Вызывается при инициализации фасада TRecorder.
+  Аналог в оригинальном Recorder:
+    Инициализация подсистемы файлов данных оригинального Recorder. }
 constructor TRecorderRecordFrameManager.Create(const ARootDir: string);
 begin
   inherited Create;
   fRootDir := NormalizeRootDir(ARootDir);
 end;
 
+{ TRecorderRecordFrameManager.NormalizeRootDir
+  Назначение:
+    Нормализует путь к корневому каталогу, добавляя разделитель и разворачивая относительные пути.
+  Вызывается из:
+    Вызывается в конструкторе Create.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 function TRecorderRecordFrameManager.NormalizeRootDir(
   const ARootDir: string): string;
 begin
@@ -227,6 +248,13 @@ begin
   Result := StrToIntDef(AName, 0) > 0;
 end;
 
+{ TRecorderRecordFrameManager.FindLastFrameNo
+  Назначение:
+    Сканирует корневой каталог и находит максимальный существующий номер кадра записи.
+  Вызывается из:
+    Вызывается перед созданием следующего кадра в OpenNextFrame.
+  Аналог в оригинальном Recorder:
+    Поиск последнего кадра записи в оригинальном Recorder. }
 function TRecorderRecordFrameManager.FindLastFrameNo: Integer;
 var
   lFrameNo: Integer;
@@ -254,6 +282,13 @@ begin
   end;
 end;
 
+{ TRecorderRecordFrameManager.GetCurrentFrameName
+  Назначение:
+    Геттер имени текущего кадра записи (например, '0002').
+  Вызывается из:
+    Используется для вывода имени кадра в интерфейс.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 function TRecorderRecordFrameManager.GetCurrentFrameName: string;
 begin
   if fCurrentFrameNo > 0 then
@@ -262,6 +297,13 @@ begin
     Result := '';
 end;
 
+{ TRecorderRecordFrameManager.OpenNextFrame
+  Назначение:
+    Находит следующий свободный номер кадра, создает для него физический каталог на диске и устанавливает его текущим.
+  Вызывается из:
+    Вызывается при старте режима записи (rsRecord) для подготовки дискового пространства.
+  Аналог в оригинальном Recorder:
+    Создание каталога кадра записи в оригинальном Recorder. }
 function TRecorderRecordFrameManager.OpenNextFrame: string;
 begin
   if fRecording then
@@ -284,6 +326,13 @@ begin
   Result := fCurrentFrameDir;
 end;
 
+{ TRecorderRecordFrameManager.WriteFrameInfo
+  Назначение:
+    Создает файл frame.ini в текущем каталоге кадра и записывает туда имя проекта и комментарий пользователя.
+  Вызывается из:
+    Вызывается сразу после успешного вызова OpenNextFrame.
+  Аналог в оригинальном Recorder:
+    Запись параметров кадра в оригинальном Recorder. }
 procedure TRecorderRecordFrameManager.WriteFrameInfo(const AProjectName,
   AComment: string);
 var
@@ -306,6 +355,13 @@ begin
   end;
 end;
 
+{ TRecorderRecordFrameManager.CloseFrame
+  Назначение:
+    Сбрасывает флаг активности записи и закрывает текущий кадр в менеджере.
+  Вызывается из:
+    Вызывается при остановке режима записи (rsRecord).
+  Аналог в оригинальном Recorder:
+    Завершение записи кадра в оригинальном Recorder. }
 procedure TRecorderRecordFrameManager.CloseFrame;
 begin
   fRecording := False;
@@ -315,12 +371,26 @@ end;
 
 { TRecorderCsvTagWriter }
 
+{ TRecorderCsvTagWriter.Create
+  Назначение:
+    Конструктор CSV-писателя. Инициализирует критическую секцию для многопоточной защиты записи.
+  Вызывается из:
+    Вызывается при создании сервиса записи данных.
+  Аналог в оригинальном Recorder:
+    Инициализация писателя данных. }
 constructor TRecorderCsvTagWriter.Create;
 begin
   inherited Create;
   InitCriticalSection(fLock);
 end;
 
+{ TRecorderCsvTagWriter.Destroy
+  Назначение:
+    Деструктор CSV-писателя. Закрывает файл и освобождает критическую секцию.
+  Вызывается из:
+    Вызывается при уничтожении сервиса записи.
+  Аналог в оригинальном Recorder:
+    Очистка ресурсов писателя. }
 destructor TRecorderCsvTagWriter.Destroy;
 begin
   Close;
@@ -328,6 +398,13 @@ begin
   inherited Destroy;
 end;
 
+{ TRecorderCsvTagWriter.FloatToCsv
+  Назначение:
+    Преобразует число с плавающей точкой в строку с разделителем 'точка' независимо от локали.
+  Вызывается из:
+    Вызывается внутри WriteSample.
+  Аналог в оригинальном Recorder:
+    Вспомогательный локализационно-безопасный метод. }
 function TRecorderCsvTagWriter.FloatToCsv(AValue: Double): string;
 var
   lFormatSettings: TFormatSettings;
@@ -337,12 +414,26 @@ begin
   Result := FloatToStr(AValue, lFormatSettings);
 end;
 
+{ TRecorderCsvTagWriter.RequireOpen
+  Назначение:
+    Проверяет, открыт ли файл. Если нет, выбрасывает исключение ERecorderDataStorageError.
+  Вызывается из:
+    Вызывается перед операциями записи или сброса буферов.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 procedure TRecorderCsvTagWriter.RequireOpen;
 begin
   if not fFileOpen then
     raise ERecorderDataStorageError.Create('CSV writer is not open');
 end;
 
+{ TRecorderCsvTagWriter.Open
+  Назначение:
+    Открывает или создает CSV-файл для записи значений тегов внутри указанного каталога кадра.
+  Вызывается из:
+    Вызывается при начале записи кадра.
+  Аналог в оригинальном Recorder:
+    Открытие файлов данных записи. }
 procedure TRecorderCsvTagWriter.Open(const AFrameDir: string;
   const AFileName: string);
 begin
@@ -361,6 +452,13 @@ begin
   System.Flush(fTextFile);
 end;
 
+{ TRecorderCsvTagWriter.WriteSample
+  Назначение:
+    Потокобезопасно записывает одну строку измерения (имя тега, время, значение) в CSV-файл.
+  Вызывается из:
+    Вызывается из обработчика очереди событий при записи данных.
+  Аналог в оригинальном Recorder:
+    Запись отсчета в файлы данных в оригинальном Recorder. }
 procedure TRecorderCsvTagWriter.WriteSample(const ATagName: string; ATimeSec,
   AValue: Double);
 begin
@@ -377,6 +475,13 @@ begin
   end;
 end;
 
+{ TRecorderCsvTagWriter.Flush
+  Назначение:
+    Сбрасывает буферы операционной системы на диск, гарантируя сохранение данных.
+  Вызывается из:
+    Вызывается периодически или при остановке записи.
+  Аналог в оригинальном Recorder:
+    Сброс буферов файлов в оригинальном Recorder. }
 procedure TRecorderCsvTagWriter.Flush;
 begin
   EnterCriticalSection(fLock);
@@ -388,6 +493,13 @@ begin
   end;
 end;
 
+{ TRecorderCsvTagWriter.Close
+  Назначение:
+    Закрывает CSV-файл и сбрасывает флаги открытия.
+  Вызывается из:
+    Вызывается при завершении записи.
+  Аналог в оригинальном Recorder:
+    Закрытие файлов данных записи. }
 procedure TRecorderCsvTagWriter.Close;
 begin
   EnterCriticalSection(fLock);
@@ -405,6 +517,13 @@ end;
 
 { TRecorderMeraTagWriter }
 
+{ TRecorderMeraTagWriter.Create
+  Назначение:
+    Конструктор MERA-писателя. Инициализирует критическую секцию и список сигналов.
+  Вызывается из:
+    Вызывается при создании сервиса записи MERA.
+  Аналог в оригинальном Recorder:
+    Инициализация MERA writer-а. }
 constructor TRecorderMeraTagWriter.Create;
 begin
   inherited Create;
@@ -412,6 +531,13 @@ begin
   InitCriticalSection(fLock);
 end;
 
+{ TRecorderMeraTagWriter.Destroy
+  Назначение:
+    Деструктор MERA-писателя. Закрывает MERA-файлы и освобождает ресурсы.
+  Вызывается из:
+    Вызывается при уничтожении сервиса записи MERA.
+  Аналог в оригинальном Recorder:
+    Очистка MERA writer-а. }
 destructor TRecorderMeraTagWriter.Destroy;
 begin
   Close;
@@ -420,6 +546,13 @@ begin
   inherited Destroy;
 end;
 
+{ TRecorderMeraTagWriter.FloatToMera
+  Назначение:
+    Преобразует число с плавающей точкой в строку с разделителем 'точка' для файла дескриптора MERA.
+  Вызывается из:
+    Вызывается при генерации record.mera.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 function TRecorderMeraTagWriter.FloatToMera(AValue: Double): string;
 var
   lFormatSettings: TFormatSettings;
@@ -429,6 +562,13 @@ begin
   Result := FloatToStr(AValue, lFormatSettings);
 end;
 
+{ TRecorderMeraTagWriter.FindSignal
+  Назначение:
+    Находит структуру TRecorderMeraSignalWriter для указанного тега в списке.
+  Вызывается из:
+    Вызывается внутри WriteSample и WriteBlock.
+  Аналог в оригинальном Recorder:
+    Поиск MERA канала в оригинальном Recorder. }
 function TRecorderMeraTagWriter.FindSignal(const ATagName: string): TObject;
 var
   I: Integer;
@@ -445,6 +585,13 @@ end;
 
 function MeraFileSystemName(const AFileName: string): string; forward;
 
+{ TRecorderMeraTagWriter.MakeSectionName
+  Назначение:
+    Формирует имя секции для файла дескриптора MERA на основе имени тега.
+  Вызывается из:
+    Вызывается при создании нового MERA канала.
+  Аналог в оригинальном Recorder:
+    Формирование имени секции MERA в оригинальном Recorder. }
 function TRecorderMeraTagWriter.MakeSectionName(const ATagName: string): string;
 var
   I: Integer;
@@ -576,12 +723,26 @@ begin
       ASignal.TimeStream.WriteBuffer(lTime, SizeOf(lTime));
     end;
 end;
+{ TRecorderMeraTagWriter.RequireOpen
+  Назначение:
+    Проверяет, открыта ли сессия записи MERA. Если нет, выбрасывает исключение.
+  Вызывается из:
+    Вызывается перед операциями записи MERA.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 procedure TRecorderMeraTagWriter.RequireOpen;
 begin
   if not fFileOpen then
     raise ERecorderDataStorageError.Create('MERA writer is not open');
 end;
 
+{ TRecorderMeraTagWriter.WriteDescriptor
+  Назначение:
+    Генерирует и записывает текстовый файл-дескриптор record.mera с описанием всех каналов и калибровок.
+  Вызывается из:
+    Вызывается внутри Close.
+  Аналог в оригинальном Recorder:
+    Запись файла record.mera в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.WriteDescriptor;
 var
   I: Integer;
@@ -637,6 +798,13 @@ begin
   end;
 end;
 
+{ TRecorderMeraTagWriter.Open
+  Назначение:
+    Открывает или создает файлы структуры MERA внутри указанного каталога кадра.
+  Вызывается из:
+    Вызывается при начале записи кадра.
+  Аналог в оригинальном Recorder:
+    Открытие MERA дескриптора и файлов данных. }
 procedure TRecorderMeraTagWriter.Open(const AFrameDir: string);
 begin
   if Trim(AFrameDir) = '' then
@@ -648,6 +816,13 @@ begin
   fFileOpen := True;
 end;
 
+{ TRecorderMeraTagWriter.WriteSample
+  Назначение:
+    Записывает одиночную точку измерения в бинарный поток MERA для указанного тега.
+  Вызывается из:
+    Вызывается из обработчика очереди событий при записи данных в формате MERA.
+  Аналог в оригинальном Recorder:
+    Запись отсчета в бинарные файлы MERA в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.WriteSample(const ATagName, AUnitName,
   ADescription: string; ATimeSec, AValue: Double; APollFrequencyHz: Double);
 var
@@ -660,6 +835,13 @@ begin
     APollFrequencyHz);
 end;
 
+{ TRecorderMeraTagWriter.WriteBlock
+  Назначение:
+    Записывает блок точек измерения в бинарный поток MERA для ускорения записи.
+  Вызывается из:
+    Вызывается при блочной записи данных.
+  Аналог в оригинальном Recorder:
+    Блочная запись MERA в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.WriteBlock(const ATagName, AUnitName,
   ADescription, ASensorCalibration, AAmplifierCalibration: string; const ATimes,
   AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
@@ -759,12 +941,26 @@ begin
   end;
 end;
 
+{ TRecorderMeraTagWriter.Flush
+  Назначение:
+    Сбрасывает буферы всех бинарных потоков сигналов MERA на диск.
+  Вызывается из:
+    Вызывается периодически или при остановке записи MERA.
+  Аналог в оригинальном Recorder:
+    Сброс буферов MERA в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.Flush;
 begin
   { TFileStream buffers are owned by OS/file handle; durable flush is performed
     by closing streams in Close. The method is kept for writer API symmetry. }
 end;
 
+{ TRecorderMeraTagWriter.Close
+  Назначение:
+    Закрывает все бинарные потоки MERA и записывает текстовый файл-дескриптор record.mera.
+  Вызывается из:
+    Вызывается при завершении записи MERA кадра.
+  Аналог в оригинальном Recorder:
+    Закрытие MERA файлов в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.Close;
 var
   I: Integer;

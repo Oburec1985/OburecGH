@@ -145,6 +145,13 @@ implementation
 
 { TRecorderStateMachine }
 
+{ TRecorderStateMachine.Create
+  Назначение:
+    Инициализирует конечный автомат состояний регистратора, устанавливая начальное состояние rsStop (остановлено) и пустую историю переходов.
+  Вызывается из:
+    Вызывается из конструктора TRecorder.Create при старте ядра.
+  Аналог в оригинальном Recorder:
+    В оригинальном C++ ядре rc_core состояние хранилось как RSt_Stop. }
 constructor TRecorderStateMachine.Create;
 begin
   inherited Create;
@@ -153,6 +160,13 @@ begin
   fLastTransition := rstInit;
 end;
 
+{ TRecorderStateMachine.SetState
+  Назначение:
+    Устанавливает новое состояние автомата, вычисляя переход и последовательно вызывая внешние обработчики OnStateChanging и OnStateChanged.
+  Вызывается из:
+    Внутренний метод, вызывается при вызовах StartPreview, StartRecord, StartConditionMet и Stop.
+  Аналог в оригинальном Recorder:
+    Аналогичен логике переключения состояний ядра Recorder C++. }
 procedure TRecorderStateMachine.SetState(AState: TRecorderState);
 var
   lOldState: TRecorderState;
@@ -175,17 +189,38 @@ begin
     fArmedOrigin := fState;
 end;
 
+{ TRecorderStateMachine.CheckState
+  Назначение:
+    Вспомогательный метод проверки выполнения условий перехода. Выбрасывает исключение ERecorderStateError при нарушении условий.
+  Вызывается из:
+    Вызывается при попытках изменения режимов (StartPreview, StartRecord, StartConditionMet).
+  Аналог в оригинальном Recorder:
+    Соответствует внутренним assert-проверкам переходов в C++ ядре. }
 procedure TRecorderStateMachine.CheckState(ACondition: Boolean; const AMessage: string);
 begin
   if not ACondition then
     raise ERecorderStateError.Create(AMessage);
 end;
 
+{ TRecorderStateMachine.NeedsStartTrigger
+  Назначение:
+    Проверяет, требует ли заданный тип запуска внешнего триггера (возвращает True, если запуск не ручной).
+  Вызывается из:
+    Вызывается в методах StartPreview и StartRecord.
+  Аналог в оригинальном Recorder:
+    Соответствует проверке типа триггера в настройках запуска оригинального Recorder. }
 function TRecorderStateMachine.NeedsStartTrigger(ACondition: TRecorderStartCondition): Boolean;
 begin
   Result := ACondition <> rscManual;
 end;
 
+{ TRecorderStateMachine.ResolveTransition
+  Назначение:
+    Сопоставляет старое и новое состояния со стабильным типом перехода TRecorderStateTransition для внешнего уведомления.
+  Вызывается из:
+    Вызывается внутри SetState.
+  Аналог в оригинальном Recorder:
+    Соответствует маппингу кодов событий (RSt_Stop -> RSt_View и т.д.) в C++ ядре. }
 function TRecorderStateMachine.ResolveTransition(AOldState,
   ANewState: TRecorderState): TRecorderStateTransition;
 var
@@ -213,6 +248,13 @@ begin
     Result := rstRecordToView;
 end;
 
+{ TRecorderStateMachine.StartPreview
+  Назначение:
+    Переводит автомат в режим просмотра (rsPreview) или режим ожидания триггера просмотра (rsPreviewArmed) в зависимости от условия запуска.
+  Вызывается из:
+    Вызывается из UI-контроллера главной формы uMainForm при нажатии кнопки 'Наблюдение'.
+  Аналог в оригинальном Recorder:
+    Аналогичен переходу в режим просмотра в оригинальном IRecorder. }
 procedure TRecorderStateMachine.StartPreview(ACondition: TRecorderStartCondition);
 begin
   CheckState(fState in [rsStop, rsRecord],
@@ -227,6 +269,13 @@ begin
     SetState(rsPreview);
 end;
 
+{ TRecorderStateMachine.StartRecord
+  Назначение:
+    Переводит автомат в режим записи (rsRecord) или режим ожидания триггера записи (rsRecordArmed) в зависимости от условия запуска.
+  Вызывается из:
+    Вызывается из UI-контроллера главной формы uMainForm при нажатии кнопки 'Запись'.
+  Аналог в оригинальном Recorder:
+    Аналогичен переходу в режим записи в оригинальном IRecorder. }
 procedure TRecorderStateMachine.StartRecord(ACondition: TRecorderStartCondition);
 begin
   CheckState(fState in [rsStop, rsPreview],
@@ -241,6 +290,13 @@ begin
     SetState(rsRecord);
 end;
 
+{ TRecorderStateMachine.StartConditionMet
+  Назначение:
+    Сигнализирует о том, что ожидаемое условие старта выполнено (переводит автомат из rsPreviewArmed в rsPreview, либо из rsRecordArmed в rsRecord).
+  Вызывается из:
+    Вызывается из модуля проверки триггеров при прохождении уровня сигнала или получении внешнего события.
+  Аналог в оригинальном Recorder:
+    Аналогичен обработчику аппаратного триггера в оригинальном Recorder C++. }
 procedure TRecorderStateMachine.StartConditionMet;
 begin
   case fState of
@@ -254,6 +310,13 @@ begin
   end;
 end;
 
+{ TRecorderStateMachine.Stop
+  Назначение:
+    Переводит автомат в состояние rsStop (остановлено), прекращая сбор или запись данных.
+  Вызывается из:
+    Вызывается из UI при нажатии кнопки 'Стоп', при ошибках или по истечении длительности записи.
+  Аналог в оригинальном Recorder:
+    Аналогичен методу Stop в оригинальном IRecorder. }
 procedure TRecorderStateMachine.Stop;
 begin
   if fState <> rsStop then

@@ -120,6 +120,13 @@ const
 
 { TRecorderTimeSystem }
 
+{ TRecorderTimeSystem.Create
+  Назначение:
+    Конструктор класса TRecorderTimeSystem. Инициализирует критическую секцию защиты данных и устанавливает параметры обновления по умолчанию.
+  Вызывается из:
+    Вызывается при создании фасада TRecorder.
+  Аналог в оригинальном Recorder:
+    Инициализация подсистемы синхронизации времени оригинального Recorder. }
 constructor TRecorderTimeSystem.Create;
 begin
   inherited Create;
@@ -130,12 +137,26 @@ begin
   Reset;
 end;
 
+{ TRecorderTimeSystem.Destroy
+  Назначение:
+    Деструктор класса TRecorderTimeSystem. Освобождает критическую секцию и ресурсы времени.
+  Вызывается из:
+    Вызывается при уничтожении фасада TRecorder.
+  Аналог в оригинальном Recorder:
+    Удаление объектов синхронизации времени в оригинальном Recorder. }
 destructor TRecorderTimeSystem.Destroy;
 begin
   DoneCriticalSection(fLock);
   inherited Destroy;
 end;
 
+{ TRecorderTimeSystem.GetDisplayUpdateMs
+  Назначение:
+    Потокобезопасный геттер интервала обновления дисплея (в миллисекундах).
+  Вызывается из:
+    Вызывается UI-таймером обновления формы.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 function TRecorderTimeSystem.GetDisplayUpdateMs: Integer;
 begin
   EnterCriticalSection(fLock);
@@ -146,6 +167,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.GetResetAtStart
+  Назначение:
+    Потокобезопасный геттер флага сброса времени при запуске записи.
+  Вызывается из:
+    Вызывается при конфигурации запуска.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 function TRecorderTimeSystem.GetResetAtStart: Boolean;
 begin
   EnterCriticalSection(fLock);
@@ -156,6 +184,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.GetSourceKind
+  Назначение:
+    Потокобезопасный геттер текущего выбранного источника отображаемого времени (ПК, Elapsed, Tag, UTS).
+  Вызывается из:
+    Вызывается UI-слоем при форматировании времени в статус-баре.
+  Аналог в оригинальном Recorder:
+    Считывание режима отображения времени в строке состояния оригинального Recorder. }
 function TRecorderTimeSystem.GetSourceKind: TRecorderTimeSourceKind;
 begin
   EnterCriticalSection(fLock);
@@ -166,6 +201,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.SetDisplayUpdateMs
+  Назначение:
+    Потокобезопасный сеттер интервала обновления дисплея с защитой от слишком малых значений (< 20 мс).
+  Вызывается из:
+    Вызывается при настройке частоты обновления UI.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 procedure TRecorderTimeSystem.SetDisplayUpdateMs(AValue: Integer);
 begin
   if AValue < 20 then
@@ -179,6 +221,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.SetResetAtStart
+  Назначение:
+    Потокобезопасный сеттер флага сброса времени при запуске.
+  Вызывается из:
+    Вызывается при настройке параметров запуска.
+  Аналог в оригинальном Recorder:
+    Вспомогательный метод. }
 procedure TRecorderTimeSystem.SetResetAtStart(AValue: Boolean);
 begin
   EnterCriticalSection(fLock);
@@ -189,6 +238,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.SetSourceKind
+  Назначение:
+    Потокобезопасный сеттер текущего выбранного источника отображаемого времени.
+  Вызывается из:
+    Вызывается UI при переключении кликом по панели строки состояния.
+  Аналог в оригинальном Recorder:
+    Переключение режима отображения времени по клику в строке состояния оригинального Recorder. }
 procedure TRecorderTimeSystem.SetSourceKind(AValue: TRecorderTimeSourceKind);
 begin
   EnterCriticalSection(fLock);
@@ -199,6 +255,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.InternalElapsedSec
+  Назначение:
+    Вычисляет прошедшее время в секундах между текущим тиком ПК и тиком старта.
+  Вызывается из:
+    Внутренний вспомогательный метод, вызывается из Snapshot.
+  Аналог в оригинальном Recorder:
+    Соответствует расчету Elapsed Time в оригинальном Recorder. }
 function TRecorderTimeSystem.InternalElapsedSec(ANowTickMs: QWord): Double;
 begin
   if (not fRunning) or (fStartTickMs = 0) or (ANowTickMs < fStartTickMs) then
@@ -207,6 +270,13 @@ begin
   Result := (ANowTickMs - fStartTickMs) / CMsecsPerSec;
 end;
 
+{ TRecorderTimeSystem.Start
+  Назначение:
+    Потокобезопасно запускает отсчет времени записи/просмотра, фиксируя начальное время ПК и системные тики.
+  Вызывается из:
+    Вызывается при переходе автомата состояний в Preview или Record.
+  Аналог в оригинальном Recorder:
+    Синхронизировано с переходом ядра в активное состояние. }
 procedure TRecorderTimeSystem.Start;
 begin
   EnterCriticalSection(fLock);
@@ -224,6 +294,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.Stop
+  Назначение:
+    Потокобезопасно останавливает активный временной интервал.
+  Вызывается из:
+    Вызывается при остановке сбора/записи данных.
+  Аналог в оригинальном Recorder:
+    Синхронизировано со стопом ядра. }
 procedure TRecorderTimeSystem.Stop;
 begin
   EnterCriticalSection(fLock);
@@ -234,6 +311,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.Reset
+  Назначение:
+    Потокобезопасно сбрасывает все накопленные данные о времени, обнуляя счетчики тиков, времени тегов и UTS.
+  Вызывается из:
+    Вызывается при сбросе состояния ядра.
+  Аналог в оригинальном Recorder:
+    Аналогичен сбросу таймеров в оригинальном Recorder. }
 procedure TRecorderTimeSystem.Reset;
 begin
   EnterCriticalSection(fLock);
@@ -248,6 +332,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.UpdateFromTagSample
+  Назначение:
+    Обновляет внутренние переменные времени тегов и UTS на основе времени последнего обработанного кадра данных.
+  Вызывается из:
+    Вызывается из обработчика очереди событий при получении пакетов данных от устройств.
+  Аналог в оригинальном Recorder:
+    Соответствует синхронизации дисплея по аппаратному времени прибора в оригинальном Recorder. }
 procedure TRecorderTimeSystem.UpdateFromTagSample(ATagTimeSec: Double;
   AUtsTimeSec: Double);
 begin
@@ -262,6 +353,13 @@ begin
   end;
 end;
 
+{ TRecorderTimeSystem.Snapshot
+  Назначение:
+    Потокобезопасно формирует снимок состояния времени TRecorderTimeSnapshot и готовит строку DisplayText для панели состояния.
+  Вызывается из:
+    Вызывается по таймеру UI (обычно 5-10 Гц) для обновления времени на экране.
+  Аналог в оригинальном Recorder:
+    Обновление строки состояния оригинального Recorder. }
 function TRecorderTimeSystem.Snapshot: TRecorderTimeSnapshot;
 var
   lNowTickMs: QWord;
