@@ -13,30 +13,45 @@ interface
 uses
   Classes, SysUtils;
 
+{ Инициализирует общий runtime-кэш и путь лога MIC-185. }
 procedure RecorderMic185RuntimeInit;
+{ Пишет диагностическую строку MIC-185 в файл и общий лог. }
 procedure RecorderMic185RuntimeLog(const AMessage: string);
 
+{ Помечает endpoint занятым активным драйвером и кэширует идентификацию. }
 procedure RecorderMic185RuntimeAttach(const AHost: string; APort: Word;
   ASerialNumber, ASoftVersion: LongWord; AAcquiring: Boolean);
+{ Обновляет флаг активного сбора для endpoint. }
 procedure RecorderMic185RuntimeSetAcquiring(const AHost: string; APort: Word;
   AAcquiring: Boolean);
+{ Обновляет серийный номер/версию, полученные probe или драйвером. }
 procedure RecorderMic185RuntimeUpdateInfo(const AHost: string; APort: Word;
   ASerialNumber, ASoftVersion: LongWord);
+{ Освобождает endpoint после остановки/отключения драйвера. }
 procedure RecorderMic185RuntimeDetach(const AHost: string; APort: Word);
 
+{ Проверяет, занят ли endpoint активным сбором, hold-флагом или TCP-клиентом. }
 function RecorderMic185RuntimeIsBusy(const AHost: string; APort: Word): Boolean;
+{ Проверяет, есть ли другой TCP-клиент к тому же endpoint. }
 function RecorderMic185RuntimeHasForeignTcpClient(const AHost: string; APort: Word;
   AClient: TObject): Boolean;
+{ Регистрирует TCP-клиент, чтобы probe не открыл второй сокет к прибору. }
 procedure RecorderMic185RuntimeRegisterTcpClient(AClient: TObject;
   const AHost: string; APort: Word);
+{ Удаляет TCP-клиент из runtime-реестра. }
 procedure RecorderMic185RuntimeUnregisterTcpClient(AClient: TObject);
+{ Возвращает кэшированную идентификацию занятого endpoint. }
 function RecorderMic185RuntimeTryGetInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string): Boolean;
+{ Временно удерживает endpoint занятым во время критичных операций UI. }
 procedure RecorderMic185RuntimeHoldBusy(const AHost: string; APort: Word;
   AHold: Boolean);
 
+{ Счетчик probe-соединений для регрессионных тестов. }
 function RecorderMic185SelfTestProbeTcpOpenCount: Integer;
+{ Сбрасывает счетчик probe-соединений. }
 procedure RecorderMic185SelfTestResetProbeTcpOpenCount;
+{ Фиксирует попытку probe открыть TCP-сокет. }
 procedure RecorderMic185RuntimeNoteProbeTcpOpen;
 
 implementation

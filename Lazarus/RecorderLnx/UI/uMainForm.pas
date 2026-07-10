@@ -289,6 +289,7 @@ type
     function TagListItemName(const AItemText: string): string;
     function FindRegistryTagForListObject(AObj: TObject): TRecorderTag;
     function CurrentTagListSelectionName: string;
+    // отобразить список тегов
     procedure RebuildTagList(const AFilter: string);
     { Собирает выбранные в списке TListBox теги }
     procedure CollectSelectedTags(ATags: TList);
@@ -409,7 +410,7 @@ begin
   // Создание контекстного меню для настройки каналов
   lPopupMenu := TPopupMenu.Create(Self);
   lMenuItem := TMenuItem.Create(lPopupMenu);
-  lMenuItem.Caption := CP1251ToUTF8('Настроить выделенные каналы...');
+  lMenuItem.Caption := 'Настроить выделенные каналы...';
   lMenuItem.OnClick := @OnMenuEditSelectedTags;
   lPopupMenu.Items.Add(lMenuItem);
   lbTags.PopupMenu := lPopupMenu;
@@ -649,7 +650,9 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
-      if not RecorderHardwareSourceLinkOk(lSourceId) then
+      if RecorderHardwareSourceLinkOk(lSourceId) then
+        fRecorder.TagRegistry.RegisterActiveSource(lSourceId)
+      else
         fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
     end;
   finally
@@ -1859,17 +1862,17 @@ begin
   fConfigPopupMenu := TPopupMenu.Create(Self);
 
   lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := CP1251ToUTF8('Сохранить текущую конфигурацию');
+  lMenuItem.Caption := 'Сохранить текущую конфигурацию';
   lMenuItem.OnClick := @SaveCurrentConfigClick;
   fConfigPopupMenu.Items.Add(lMenuItem);
 
   lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := CP1251ToUTF8('Сохранить конфигурацию в каталог...');
+  lMenuItem.Caption := 'Сохранить конфигурацию в каталог...';
   lMenuItem.OnClick := @SaveConfigAsClick;
   fConfigPopupMenu.Items.Add(lMenuItem);
 
   lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := CP1251ToUTF8('Загрузить конфигурацию из каталога...');
+  lMenuItem.Caption := 'Загрузить конфигурацию из каталога...';
   lMenuItem.OnClick := @LoadConfigFromClick;
   fConfigPopupMenu.Items.Add(lMenuItem);
 end;
@@ -1898,7 +1901,7 @@ var
   lDir: string;
 begin
   lDir := fProjectConfigDir;
-  if not SelectDirectory(CP1251ToUTF8('Выберите каталог для сохранения конфигурации'), '', lDir) then
+  if not SelectDirectory('Выберите каталог для сохранения конфигурации', '', lDir) then
     Exit;
 
   SetProjectConfigDir(lDir);
@@ -1911,7 +1914,7 @@ var
   lDir: string;
 begin
   lDir := fProjectConfigDir;
-  if not SelectDirectory(CP1251ToUTF8('Выберите каталог конфигурации для загрузки'), '', lDir) then
+  if not SelectDirectory('Выберите каталог конфигурации для загрузки', '', lDir) then
     Exit;
 
   if fRecorder.StateMachine.State <> rsStop then

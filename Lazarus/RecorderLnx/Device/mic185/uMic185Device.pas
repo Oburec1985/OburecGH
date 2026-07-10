@@ -7,6 +7,7 @@ unit uMic185Device;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -38,31 +39,50 @@ type
     fLastUtsValue: Double;
     fHasLastTemp: Boolean;
     fHasLastUts: Boolean;
+    { Читает серийный номер и версию прошивки короткой Mebius-командой. }
     procedure QueryDeviceInfo;
+    { Возвращает количество каналов, видимых RecorderLnx: AIn + TIn + UTS. }
     function TotalLogicalChannelCount: Integer;
+    { Формирует имя канала в стиле original Recorder: MIC183_185-{3-1}. }
     function BuildLogicalChannelName(AIndex: Integer): string;
+    { Адрес канала сейчас совпадает с именем, чтобы теги однозначно связывались
+      с аппаратным слотом. }
     function BuildLogicalChannelAddress(AIndex: Integer): string;
+    { Единица по умолчанию для канала устройства до пользовательского выбора. }
     function BuildLogicalChannelUnit(AIndex: Integer): string;
+    { Частота канала для создания тегов и буферов RecorderLnx. }
     function BuildLogicalChannelFrequency(AIndex: Integer): Double;
   protected
+    { Обновляет общие параметры TRecorderDevice после чтения конфигурации. }
     procedure ReadDeviceParameters; override;
   public
     constructor Create(const ADeviceId, AName: string); override;
     destructor Destroy; override;
+    { Возвращает логические каналы прибора для дерева оборудования. }
     function GetChannels: TRecorderDeviceChannelArray; override;
+    { Читает свойства прибора через общий интерфейс RecorderLnx. }
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer = -1): Variant; override;
+    { Меняет свойства прибора, которые задаются из источника данных/диалога. }
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
+    { Открывает TCP-клиент и читает идентификацию прибора. }
     procedure Connect; override;
+    { Закрывает TCP-клиент и снимает runtime-занятость endpoint. }
     procedure Disconnect; override;
+    { Отправляет ProgramDeviceBin, session_id и команду PROGRAM. }
     procedure ProgramDevice; override;
+    { Принимает настройки каналов от RecorderLnx без изменения базового
+      интерфейса TRecorderDevice. }
     procedure ApplyChannelProgramSettings(
       const ASettings: TMic185ChannelProgramSettingsArray;
       const AGroupAddition: TMic185GroupAdditionArray;
       ATemperatureCompensation: Boolean);
+    { Запускает измерительную задачу MIC185V2. }
     procedure Start; override;
+    { Останавливает измерительную задачу MIC185V2. }
     procedure Stop; override;
+    { Читает очередной блок измерений и перекладывает его в acquisition block. }
     function ReadBlock(ATimeoutMs: Cardinal;
       out ABlock: TRecorderAcquisitionBlock): Boolean; override;
     property SoftVersion: LongWord read fSoftVersion;
@@ -70,15 +90,23 @@ type
     property MeasChannelCount: Integer read fMeasChannelCount;
     property TempChannelCount: Integer read fTempChannelCount;
     property UtsEnabled: Boolean read fUtsEnabled;
+    { Последнее кэшированное значение температурного канала. }
     function LastTempValue(AIndex: Integer): Double;
+    { Последнее кэшированное значение UTS/SEV. }
     function LastUts: Double;
+    { Признак, что хотя бы один температурный пакет уже получен. }
     function HasTempData: Boolean;
+    { Признак, что UTS/SEV пакет уже получен. }
     function HasUtsData: Boolean;
+    { Быстрая проверка TCP/Mebius связи без запуска измерений. }
     function TestLink(out AErrorText: string): Boolean; override;
+    { Диагностическое чтение нескольких сырых Mebius-пакетов. }
     function SniffPackets(APacketCount: Integer; ATimeoutMs: Cardinal): Integer;
+    { Счетчик принятых DATA_TRANSMIT пакетов для диагностики. }
     function RxDataPacketCount: Int64;
   end;
 
+{ Фабрика для регистрации MIC183/185 в общем менеджере устройств. }
 function CreateRecorderMic185Device: IRecorderDevice;
 
 implementation

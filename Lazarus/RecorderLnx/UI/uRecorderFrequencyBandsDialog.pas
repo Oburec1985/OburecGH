@@ -93,7 +93,7 @@ var
   lBottomPanel: TPanel;
   lButton: TButton;
 begin
-  Caption := CP1251ToUTF8('Частотные полосы');
+  Caption := 'Частотные полосы';
   Width := 680;
   Height := 420;
   Position := poOwnerFormCenter;
@@ -136,7 +136,7 @@ begin
   begin
     Parent := lRightPanel;
     SetBounds(12, 14, 90, 18);
-    Caption := CP1251ToUTF8('Название');
+    Caption := 'Название';
   end;
   fNameEdit := TEdit.Create(Self);
   fNameEdit.Parent := lRightPanel;
@@ -146,14 +146,14 @@ begin
   begin
     Parent := lRightPanel;
     SetBounds(320, 14, 42, 18);
-    Caption := CP1251ToUTF8('Тип');
+    Caption := 'Тип';
   end;
   fKindCombo := TComboBox.Create(Self);
   fKindCombo.Parent := lRightPanel;
   fKindCombo.SetBounds(368, 10, 130, 24);
   fKindCombo.Style := csDropDownList;
-  fKindCombo.Items.Add(CP1251ToUTF8('абсолютная'));
-  fKindCombo.Items.Add(CP1251ToUTF8('формула'));
+  fKindCombo.Items.Add('абсолютная');
+  fKindCombo.Items.Add('формула');
   fKindCombo.ItemIndex := 0;
 
   with TLabel.Create(Self) do
@@ -187,8 +187,8 @@ begin
   fTermsGrid.ColCount := 2;
   fTermsGrid.RowCount := 2;
   fTermsGrid.FixedCols := 0;
-  fTermsGrid.Cells[0, 0] := CP1251ToUTF8('Тахо/частота');
-  fTermsGrid.Cells[1, 0] := CP1251ToUTF8('Коэффициент');
+  fTermsGrid.Cells[0, 0] := 'Тахо/частота';
+  fTermsGrid.Cells[1, 0] := 'Коэффициент';
   fTermsGrid.Options := fTermsGrid.Options + [goEditing, goRowSelect];
 
   lBottomPanel := TPanel.Create(Self);
@@ -200,19 +200,19 @@ begin
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(12, 10, 86, 28);
-  lButton.Caption := CP1251ToUTF8('+ слагаемое');
+  lButton.Caption := '+ слагаемое';
   lButton.OnClick := @AddTermClick;
 
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(106, 10, 86, 28);
-  lButton.Caption := CP1251ToUTF8('- слагаемое');
+  lButton.Caption := '- слагаемое';
   lButton.OnClick := @DeleteTermClick;
 
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(210, 10, 90, 28);
-  lButton.Caption := CP1251ToUTF8('Применить');
+  lButton.Caption := 'Применить';
   lButton.OnClick := @ApplyBandClick;
 
   lButton := TButton.Create(Self);
@@ -224,7 +224,7 @@ begin
   lButton := TButton.Create(Self);
   lButton.Parent := lBottomPanel;
   lButton.SetBounds(406, 10, 78, 28);
-  lButton.Caption := CP1251ToUTF8('Закрыть');
+  lButton.Caption := 'Закрыть';
   lButton.ModalResult := mrCancel;
 end;
 

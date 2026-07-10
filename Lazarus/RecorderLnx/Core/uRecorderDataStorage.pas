@@ -605,7 +605,7 @@ begin
       lText.Add('Address=' + lSignal.TagName);
       lText.Add('ModName=RecorderLnx');
       lText.Add('XUnitsId=4294967553');
-      lText.Add('XUnits=' + CP1251ToUTF8('сек'));
+      lText.Add('XUnits=сек');
       lText.Add('YFormat=' + lSignal.ValueFormatName);
       lText.Add('YFile=' + lSignal.SectionName + '.dat');
       if lSignal.ExplicitXRequired then

@@ -31,7 +31,25 @@ I_mA = ((((code * 5.0) / 16384.0) - 2.5) / 200.0) * 1000.0
 
 ## Как сделано в RecorderLnx
 
-Протокол MIC-185 не меняется. Поток данных от устройства остается в мВ на уровне драйвера/протокола. Пересчет в выбранные единицы выполняется в `TRecorderMic185DataSource.PublishMeasurementBlock` перед записью samples в теги.
+Протокол MIC-185 не меняется. Поток данных от устройства сейчас трактуется как сырой код канала. Перед записью samples в теги `TRecorderMic185DataSource.PublishMeasurementBlock` сначала переводит код в номинальные мВ, а затем пересчитывает результат в выбранные единицы.
+
+Пока реальная аппаратная ГХ MIC-185 не прочитана из памяти прибора, используется номинальный fallback:
+
+```text
+U_mV = code * nominal_mV / 32768
+```
+
+Runtime mode note, 2026-07-10:
+
+- If `TRecorderTag.HardwareCalibrationEnabled = False`, RecorderLnx publishes
+  MIC185 raw ADC codes into the tag. The selected display unit and the stored
+  hardware calibration name are not used in this mode.
+- If `TRecorderTag.HardwareCalibrationEnabled = True`, RecorderLnx converts the
+  code before publishing: assigned hardware GX is used when present; otherwise
+  the nominal fallback above is used. The result is then converted to the
+  selected MIC185 tag unit (`mV`, `Ohm`, `microstrain`, `mV(tenzo)`).
+
+То есть `32768` кодов соответствует `100%` выбранного номинального диапазона. После появления чтения аппаратной ГХ этот шаг должен быть заменен пересчетом по реальным коэффициентам канала.
 
 | Единица тега | Расчет значения в источнике данных | Расчет фактического диапазона |
 | --- | --- | --- |
@@ -47,7 +65,7 @@ I_mA = ((((code * 5.0) / 16384.0) - 2.5) / 200.0) * 1000.0
 - `K` - тензочувствительность;
 - `schemeCoeff`: тензометр `4`, полумост `2`, мост `1`.
 
-Аппаратная ГХ важна на предыдущем шаге: она определяет, как коды устройства превращаются в мВ. В текущей реализации RecorderLnx пересчет единиц работает от уже полученного `U_mV`; чтение аппаратной ГХ MIC-185 из памяти прибора пока не реализовано без изменения протокольного слоя.
+Аппаратная ГХ важна на первом шаге: она определяет, как коды устройства превращаются в мВ. В текущей реализации RecorderLnx чтение аппаратной ГХ MIC-185 из памяти прибора пока не реализовано без изменения протокольного слоя, поэтому используется номинальный пересчет `32768 -> 100% диапазона`.
 
 ## UI
 

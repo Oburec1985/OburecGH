@@ -6,9 +6,11 @@ unit uMic185Registration;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
+{ Регистрирует MIC183/185 и alias MIC185 в общем менеджере устройств. }
 procedure RegisterMIC183_185;
 
 implementation
@@ -18,10 +20,12 @@ uses
   uRecorderDeviceManager, uMic185Device;
 
 const
+  { Endpoint, который показывает локальный поиск MIC183/185 без широкого subnet scan. }
   CDefaultHost = '192.168.9.142';
   CDefaultPort = 4000;
   CDeviceType = 'MIC183/185';
 
+{ Возвращает стендовый MIC183/185 endpoint для RecorderDeviceManager.Search. }
 function FindMIC183_185(out AResult: TRecorderDeviceSearchResult): Boolean;
 begin
   AResult.DeviceType := CDeviceType;

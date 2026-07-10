@@ -5,10 +5,13 @@ unit uMic185Constants;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 const
+  { Количество логических каналов MIC183/185 в потоке:
+    64 измерительных, 5 температурных LM74 и 1 служебный UTS. }
   CMic185ChannelCountMax = 64;
   CMic185TempChannelCount = 5;
   CMic185UtsChannelCount = 1;
@@ -17,23 +20,30 @@ const
   CMic185ModuleCount = 4;
   CMic185SettingsChannelSlots = CMic185ChannelCountMax + CMic185TempChannelCount;
 
+  { Частоты и служебный флаг задачи по умолчанию, совпадающие с базовой
+    настройкой original/Mebius MIC185V2. }
   CMic185DefaultMeasFrequencyHz = 100.0;
   CMic185DefaultTempFrequencyHz = 1.0;
   CMic185TaskSevEnFlag = 1;
 
+  { Индексы входных диапазонов в ProgramDeviceBin. Порядок важен:
+    его ожидает прошивка прибора и исходный MIC185V2 Recorder. }
   CMic185Range500mV = 0;
   CMic185Range50mV = 1;
   CMic185Range5mV = 2;
   CMic185Range05mV = 3;
 
+  { Коммутация измерительного канала: вход, земля, калибровочный источник. }
   CMic185CommutInput = 0;
   CMic185CommutGround = 1;
   CMic185CommutCalibr = 2;
 
+  { Схема включения датчика для пересчета тензоканала в физические единицы. }
   CMic185SensorSchemeTenzo = 0;
   CMic185SensorSchemeHalf = 1;
   CMic185SensorSchemeBridge = 2;
 
+  { Модульные настройки по умолчанию для программирования MIC185V2. }
   CMic185DefaultGndCommutUs = 100;
   CMic185DefaultChnCommutUs = 150;
   CMic185DefaultBlnPortionLength = 30;
@@ -54,15 +64,23 @@ const
   CMic185PacketInternalHeaderSize = 8;
   CMic185PacketDataOffset = CMic185PacketDeviceIdSize + CMic185PacketInternalHeaderSize;
 
+  { IOCTL-коды Mebius для команд прибора: программирование и чтение версии. }
   CMic185IoCtlTypeCallCommand = 2;
+  CMic185IoCtlCmdGetCalibrKoef =
+    (CMic185IoCtlTypeCallCommand shl 16) or ($0001 shl 2);
   CMic185IoCtlCmdSetControllerParams =
     (CMic185IoCtlTypeCallCommand shl 16) or ($000C shl 2);
   CMic185IoCtlCmdGetSoftVersion =
     (CMic185IoCtlTypeCallCommand shl 16) or ($0002 shl 2);
+  CMic185IoCtlCmdReloadCalibr =
+    (CMic185IoCtlTypeCallCommand shl 16) or ($0008 shl 2);
+  CMic185CalibrTypeDefault = 0;
+  CMic185CalibrTypeInner = 1;
 
   CMic185HardDeviceInfoSize = 64;
   CMic185DeviceTypeCode = $442A;
 
+  { Идентификаторы устройств внутри пакетов DATA_TRANSMIT_TASK_ID. }
   CMic185DevIdUts = 0;
   CMic185DevIdMeasChannels = 1;
   CMic185DevIdTempChannels = 2;

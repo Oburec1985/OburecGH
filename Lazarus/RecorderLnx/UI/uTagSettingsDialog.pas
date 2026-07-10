@@ -27,6 +27,7 @@ uses
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
+  uRecorderMic185Calibration,
   uRecorderCommandImages;
 
 type
@@ -325,7 +326,6 @@ begin
     raise ERecorderTagError.Create('No tags selected');
 
   fTagRegistry := ATagRegistry;
-  fTagRegistry.RefreshActiveSourcesFromTags;
   if AImages <> nil then
   begin
     ilTagDialogButtons.Assign(AImages);
@@ -481,12 +481,55 @@ begin
 end;
 
 procedure TTagSettingsDialog.UpdateHardwareCurveText;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lFirstEnabled: Boolean;
+  lFirstName: string;
+  lSameEnabled: Boolean;
+  lSameName: Boolean;
 begin
   if fTags.Count = 0 then
     Exit;
-  fHardwareCurveEdit.Text := TagAt(0).HardwareCalibrationName;
-  fHardwareCurveCheck.Checked := TagAt(0).HardwareCalibrationEnabled and
-    (Trim(fHardwareCurveEdit.Text) <> '');
+
+  lFirstName := Trim(TagAt(0).HardwareCalibrationName);
+  lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
+  lSameName := True;
+  lSameEnabled := True;
+  for I := 1 to fTags.Count - 1 do
+  begin
+    if not SameText(lFirstName, Trim(TagAt(I).HardwareCalibrationName)) then
+      lSameName := False;
+    if lFirstEnabled <> TagAt(I).HardwareCalibrationEnabled then
+      lSameEnabled := False;
+  end;
+
+  fHardwareCurveCheck.AllowGrayed := fTags.Count > 1;
+  if lSameEnabled then
+    fHardwareCurveCheck.Checked := lFirstEnabled and (lFirstName <> '')
+  else
+    fHardwareCurveCheck.State := cbGrayed;
+
+  if not lSameName then
+  begin
+    fHardwareCurveEdit.Text := '<разные аппаратные ГХ>';
+    Exit;
+  end;
+
+  lCalibration := fTagRegistry.FindCalibrationByName(
+    lFirstName);
+  if (lCalibration = nil) and (lFirstName <> '') and
+    (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+  begin
+    RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), False);
+    lFirstName := Trim(TagAt(0).HardwareCalibrationName);
+    lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
+  end;
+  if (Pos('MIC-185:', TagAt(0).SourceId) = 1) and (lCalibration <> nil) then
+    fHardwareCurveEdit.Text :=
+      RecorderMic185HardwareCalibrationDisplayText(lCalibration)
+  else
+    fHardwareCurveEdit.Text := lFirstName;
 end;
 
 function TTagSettingsDialog.TagAt(AIndex: Integer): TRecorderTag;
@@ -1467,8 +1510,8 @@ begin
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
-    if (fTags.Count = 1) and fHardwareCurveEdit.Enabled then
-      lTag.HardwareCalibrationName := Trim(fHardwareCurveEdit.Text);
+    { Hardware curve edit may show MIC-185 k,b details; calibration assignment
+      itself is changed only by explicit read/select actions. }
     if fChannelCurveCheck.State <> cbGrayed then
     begin
       if lTag.ChannelCalibrationEnabled <> fChannelCurveCheck.Checked then
@@ -1550,7 +1593,8 @@ begin
       lTag.SetpointSoundUntilEnd := fSetpointSoundCheck.Checked;
     if fSetpointStatusChannelCheck.State <> cbGrayed then
       lTag.SetpointStatusChannelEnabled := fSetpointStatusChannelCheck.Checked;
-    if not RecorderTagUsesMic140Settings(lTag) then
+    if (not RecorderTagUsesMic140Settings(lTag)) and
+      (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
   end;
 end;
@@ -1725,33 +1769,27 @@ begin
     Exit;
   end;
 
-  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
+  if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
     MessageDlg('Аппаратная ГХ',
-      'Загрузка из аппаратной базы поддерживается только для каналов MIC-140.',
+      'У выбранного тега нет назначенной аппаратной ГХ. Сначала выполните вычитку ГХ из модуля.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
-  if not RecorderMic140LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), 0,
-    fHardwareCurveCheck.Checked) then
-  begin
-    MessageDlg('Аппаратная ГХ',
-      'Не удалось загрузить аппаратную ГХ. Проверьте каталог calibr/hardware/MIC140 и серийный номер прибора.',
-      mtWarning, [mbOK], 0);
-    Exit;
-  end;
-  UpdateHardwareCurveText;
   lCalibration := fTagRegistry.FindCalibrationByName(
     Trim(TagAt(0).HardwareCalibrationName));
-  if lCalibration = nil then
+  if lCalibration <> nil then
+  begin
+    if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+      UpdateHardwareCurveText;
+  end
+  else
   begin
     MessageDlg('Аппаратная ГХ',
       'Градуировка аппаратной ГХ не найдена в реестре калибровок.',
       mtInformation, [mbOK], 0);
-    Exit;
   end;
-  ShowRecorderCalibrationPropertiesDialog(Self, lCalibration);
 end;
 
 procedure TTagSettingsDialog.EditHardwareCalibrationButtonClick(Sender: TObject);
@@ -1762,14 +1800,6 @@ begin
   begin
     MessageDlg('Аппаратная ГХ',
       'Редактирование доступно только для одного значения тега.',
-      mtInformation, [mbOK], 0);
-    Exit;
-  end;
-
-  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
-  begin
-    MessageDlg('Аппаратная ГХ',
-      'Редактирование доступно только для каналов MIC-140.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -1841,21 +1871,42 @@ procedure TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick(Sender: 
 const
   sGhDownloadTitle = 'Выгрузка ГХ';
   sGhDownloadOk = 'Градуировки успешно выгружены из памяти устройства.';
-  sGhDownloadNoMic140 = 'Среди выбранных тегов нет каналов MIC-140.';
+  sGhDownloadNoSupportedMic =
+    'Среди выбранных тегов нет каналов MIC-140 или MIC-185.';
 var
+  lB: Double;
+  lCalibrationName: string;
   lErrorMessage: string;
   lErrors: TStringList;
   lI: Integer;
+  lK: Double;
+  lMessageText: string;
+  lMessages: TStringList;
   lOkCount: Integer;
 begin
   if fTags.Count = 0 then
     Exit;
 
   lErrors := TStringList.Create;
+  lMessages := TStringList.Create;
   try
     lOkCount := 0;
     for lI := 0 to fTags.Count - 1 do
     begin
+      if Pos('MIC-185:', TagAt(lI).SourceId) = 1 then
+      begin
+        if RecorderMic185DownloadHardwareCalibrationFromDeviceEx(fTagRegistry,
+          TagAt(lI), lK, lB, lCalibrationName, lErrorMessage) then
+        begin
+          Inc(lOkCount);
+          lMessages.Add(Format('%s (%s): %s', [TagAt(lI).Name,
+            TagAt(lI).Address, RecorderMic185FormatHardwareKx(lK, lB)]));
+        end
+        else
+          lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name, TagAt(lI).Address,
+            lErrorMessage]));
+        Continue;
+      end;
       if Pos('MIC-140:', TagAt(lI).SourceId) <> 1 then
         Continue;
       if RecorderMic140DownloadHardwareCalibrationFromDevice(fTagRegistry,
@@ -1868,12 +1919,25 @@ begin
 
     UpdateHardwareCurveText;
     if (lErrors.Count = 0) and (lOkCount > 0) then
-      MessageDlg(sGhDownloadTitle, sGhDownloadOk, mtInformation, [mbOK], 0)
+    begin
+      if lMessages.Count > 0 then
+      begin
+        lMessageText := lMessages[0];
+        if lMessages.Count > 1 then
+          lMessageText := lMessageText + LineEnding + '...';
+        MessageDlg(sGhDownloadTitle, sGhDownloadOk + LineEnding +
+          lMessageText, mtInformation, [mbOK], 0);
+      end
+      else
+        MessageDlg(sGhDownloadTitle, sGhDownloadOk, mtInformation, [mbOK], 0);
+    end
     else if lErrors.Count > 0 then
       MessageDlg(sGhDownloadTitle, lErrors.Text, mtError, [mbOK], 0)
     else
-      MessageDlg(sGhDownloadTitle, sGhDownloadNoMic140, mtInformation, [mbOK], 0);
+      MessageDlg(sGhDownloadTitle, sGhDownloadNoSupportedMic,
+        mtInformation, [mbOK], 0);
   finally
+    lMessages.Free;
     lErrors.Free;
   end;
 end;

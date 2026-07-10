@@ -646,6 +646,39 @@ D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
 but it does not fail `lazbuild`.
 
+## Codex continuation 2026-07-10: MIC185 units from codes, GX message, comments, encoding
+
+**Prompt:** User reported that MIC185 hardware-GX memory read shows a MIC-140
+message, changing tag units to Ohm still leaves values looking like codes,
+MIC185 modules need comments, and dynamic dialogs/menus showed mojibake.
+
+**Fix:**
+- `Device/mic185/uRecorderMic185DataSource.pas`: raw MIC185 sample values are
+  now treated as codes first. Without real hardware-GX coefficients the source
+  applies nominal fallback `U_mV = code * nominal_mV / 32768`, then converts to
+  the selected tag unit. This keeps the MIC185 protocol unchanged.
+- `Device/mic185/UI/uRecorderMic185SettingsDialog.pas`: linking/creating a
+  MIC185 measurement tag no longer overwrites an existing selected unit; range
+  is recalculated through `RecorderMic185EffectiveRangeMax`.
+- `UI/uTagSettingsDialog.pas`: the hardware-GX download button no longer says
+  "no MIC-140 channels" for MIC185. It now reports that MIC185 hardware-GX read
+  from device memory is not implemented yet and must be separate protocol work.
+- Added comments/codepage markers across MIC185 constants/exported functions
+  and updated `Docs/devices/mic185/value_units_conversion.md` with the nominal
+  `32768 -> 100% range` fallback.
+- Removed redundant `CP1251ToUTF8('...')` from active dynamic UTF-8 UI strings
+  and fixed detected mojibake in calibration properties, MIC185 source probe
+  units, and one MERA parser comment.
+- Added `errors/2026-07-10-mic185-units-gx-encoding.md` with facts, actions and
+  verification.
+
+**Verification:** `rg` found no remaining active `CP1251ToUTF8('...')` dynamic
+literal wrappers and no active mojibake patterns in UI/Core/MIC185 `.pas/.lfm`.
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed; one earlier run hit a timing flake in the mock-thread test, immediate
+reruns passed.
+
 ## Codex continuation 2026-07-10: MIC185 physical units and tag dialog buttons
 
 **Prompt:** User asked to make the MIC185 channel dialog calculate the actual
@@ -816,3 +849,197 @@ include `tkc=True groupAddition=[0,4,4,4]`.
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
 but it does not fail `lazbuild`.
+## Codex continuation 2026-07-10: MIC185 hardware GX read and tag dialog buttons
+
+**Prompt:** User reported that the hardware-GX edit/view button in tag settings
+still opens a MIC-140-only message, while MIC-185 should open the GX settings
+dialog. The explicit read-GX button should read MIC-185 hardware coefficients
+like the original Recorder device-level path, but without damaging the MIC-185
+measurement protocol.
+
+**Fix:**
+- Added `Device/mic185/uRecorderMic185Calibration.pas`. It reads the current
+  MIC-183/185 channel evaluator through `CallCommand(IOCTL_CMD_GET_CALIBR_KOEF)`,
+  using the original sources as layout reference:
+  `examples\mebius.daq\...\mic185.cpp::LoadCalibrCoefficients` and
+  `MebiusDAQDevices\mic183\mic183base\ComputePhysical.h`.
+- The read result is stored as a two-point `TRecorderCalibration`
+  implementing original linear math `k * (code - b)`, then assigned to the
+  tag as `HardwareCalibrationName` with `HardwareCalibrationEnabled=True`.
+- `uRecorderMic185DataSource.pas` now applies the tag hardware calibration
+  before unit conversion. If no hardware GX is assigned, the previous nominal
+  fallback remains: `32768` codes = `100%` of the selected range.
+- `UI/uTagSettingsDialog.pas` now separates actions:
+  hardware-GX select/view opens the calibration list and properties dialog,
+  edit opens properties for any assigned hardware GX, and read-GX calls either
+  MIC-140 or MIC-185 depending on the selected tag source.
+
+**Safety note:** `IOCTL_CMD_RELOAD_CALIBR` was documented but not called from
+the tag dialog because it changes the OMAP-loaded flash calibration slot and
+requires a separate device `fileType`. The explicit button reads the evaluator
+already loaded by the device, matching the original working-channel path.
+
+**Verification:** First rebuild compiled but could not relink because
+`RecorderLnx.exe` was running as PID 15324; stopped it and rebuilt successfully:
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+exit code 0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
+message but does not fail `lazbuild`. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.
+
+## Codex continuation 2026-07-10: MIC185 hardware GX display k,b
+
+**Prompt:** User reported that the hardware-GX view/edit button opened a
+confusing channel/calibration list instead of showing the MIC-185 hardware GX,
+and the module memory read result showed an id-like string while it should show
+the `k` multiplier and `b` offset.
+
+**Fix:** `Device/mic185/uRecorderMic185Calibration.pas` now exposes the detailed
+MIC185 read result (`k`, `b`, calibration name) and helper functions that format
+or reconstruct `k,b` from the stored two-point hardware calibration
+(`y = k * (code - b)`). `UI/uTagSettingsDialog.pas` now uses the hardware-GX
+field as display text for MIC185 `k,b` and no longer writes that display text
+back into `HardwareCalibrationName` on OK/Apply. The hardware-GX view button
+opens the assigned calibration properties directly. The explicit read-GX button
+adds per-tag `k=...; b=...` lines to the success message.
+
+**Verification:** First `lazbuild -B RecorderLnx.lpi` reached linking but failed
+with error code 5 because `RecorderLnx.exe` PID 14752 held the output file.
+After `Stop-Process -Id 14752`, `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed after the final display change.
+
+## Codex continuation 2026-07-10: active hardware sources after tag settings OK
+
+**Prompt:** User reported that after opening tag settings and closing it with
+OK, MIC140 tags appeared in the main tag list even though the MIC140 source was
+not connected. The suspected cause was `fActiveSourceIds` receiving MIC140 from
+tag-dialog logic.
+
+**Fix:** `TTagSettingsDialog.CreateDialog` no longer calls
+`RefreshActiveSourcesFromTags`. `TRecorderTagRegistry.RefreshActiveSourcesFromTags`
+now keeps baseline virtual/manual/debug/MERA visibility but does not mark
+MIC140/MIC185 hardware sources active just because tags exist.
+`TMainForm.UpdateActiveSourceIds` now explicitly registers a hardware source
+only when `RecorderHardwareSourceLinkOk` passes and unregisters it otherwise.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed. Added `errors/2026-07-10-active-source-tag-dialog.md`.
+
+## Codex continuation 2026-07-10: MIC185 hardware-GX checkbox mode
+
+**Prompt:** User clarified that when the hardware-GX checkbox is unchecked, the
+tag must show raw codes. When it is checked and GX exists, values should be
+shown according to the selected unit/conversion mode.
+
+**Fix:** `TRecorderMic185DataSource.PublishMeasurementBlock` now checks
+`TRecorderTag.HardwareCalibrationEnabled` before MIC185 unit conversion. If the
+checkbox is off, raw `ABlock.Values` are published as already-transformed
+values, so the common tag path does not apply hardware GX. If the checkbox is
+on, the previous path remains: assigned hardware GX is applied when present,
+otherwise the nominal `32768 -> 100% range` fallback is used before converting
+to the selected MIC185 unit.
+
+**Verification:** First rebuild failed only at link because `RecorderLnx.exe`
+PID 19184 held the output file; after `Stop-Process -Id 19184`,
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0.
+`D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.
+
+## Codex continuation 2026-07-10: MIC185 hardware-GX assignment persistence
+
+**Prompt:** After reading hardware GX for many selected MIC185 channels and
+pressing OK, reopening one channel showed an empty hardware-GX field. The tag
+must remember the assigned GX and display either the GX name or an alias when
+only coefficients are available.
+
+**Fix:** `Core/uRecorderProjectFiles.pas` now persists
+`hardwareCalibrationEnabled` and `hardwareCalibrationName` for every tag.
+`UI/uTagSettingsDialog.pas` now treats the MIC185 hardware-GX edit field as a
+display field: for an existing MIC185 calibration it shows reconstructed
+`k,b`, for a missing calibration object it shows the stored name/alias, and for
+multi-selection with different assignments it shows `<разные аппаратные ГХ>`
+with the checkbox grayed so OK does not overwrite individual assignments.
+
+**Verification:** A running `RecorderLnx.exe` PID 21752 first held the output
+exe; after stopping it,
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0. The existing post-build `copy_sdb_res.bat` still
+prints the `#!/bin/sh` message but does not fail `lazbuild`.
+`D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.
+
+## Codex continuation 2026-07-10: MIC185 hardware-GX cleared on tag OK
+
+**Prompt:** User still reproduced the issue in one dialog session: open MIC185
+channel, read hardware GX, press OK, reopen the same channel, and the hardware
+GX line is empty again.
+
+**Root cause:** `TTagSettingsDialog.StoreToTags` called
+`RecorderTagClearMic140Settings` for every tag that was not MIC140. That helper
+clears the generic tag fields `HardwareCalibrationEnabled` and
+`HardwareCalibrationName`, so MIC185 read-GX was erased by the OK path itself.
+
+**Fix:** The cleanup now excludes MIC185 hardware sources. MIC185
+`dataSources[].mic185.tagLinks[]` also saves/loads `hardwareCalibrationEnabled`
+and `hardwareCalibrationName`, so source-specific link restoration keeps the
+same GX assignment.
+
+**Verification:** Stopped running `RecorderLnx.exe` PID 11208, rebuilt
+`RecorderLnx.lpi` with exit code 0, and
+`RecorderDataSourcesTest.exe` passed.
+
+## Codex continuation 2026-07-10: MIC185 bulk read-GX message shortened
+
+**Prompt:** User reported that reading hardware GX for many selected MIC185
+channels opens an oversized message listing every channel. The dialog should
+show the first channel, then `...`, and OK.
+
+**Fix:** `TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick` now
+builds a short `lMessageText`: first successful per-channel line, plus `...`
+when more than one channel was read. Full per-channel assignment still happens;
+only the message box text is shortened.
+
+**Verification:** Stopped running `RecorderLnx.exe` PID 8144, rebuilt
+`RecorderLnx.lpi` with exit code 0, and
+`RecorderDataSourcesTest.exe` passed.
+
+## Codex continuation 2026-07-10: MIC185 hardware-GX disk cache
+
+**Prompt:** User asked to persist MIC185 hardware GX like MIC140 under
+`C:\Mera Files\Calibr\hardware`, e.g. `MIC-185\sn...\range1...`, so the same
+coefficients do not need to be read from the device again on every range change
+or next project load. User also asked to compare with original Recorder linear
+GX storage.
+
+**Findings:** Current RecorderLnx MIC140 uses text CSV files under
+`Calibr\hardware\MIC140\snXXXX\<range>\NN.csv`. The live
+`C:\Mera Files\Calibr\hardware\MIC140\sn0164\06_100mV\01.csv` file is plain
+`x,y` CSV. Original Mebius `CBaseVirtualChannel` also forms
+`GetCalibrDir + GetCalibrSubDir + "%02d.csv"` and calls evaluator
+`ExportToText/ImportFromText`. Original MIC185 itself is the exception: it
+loads `k,b` through the device evaluator path (`IOCTL_CMD_GET_CALIBR_KOEF`) and
+does not reliably use that standard disk branch.
+
+**Fix:** `Device/mic185/uRecorderMic185Calibration.pas` now:
+- names MIC185 hardware GX as `MIC185 snXXXX rangeN chCC`;
+- stores and loads CSV at
+  `C:\Mera Files\Calibr\hardware\MIC-185\snXXXX\rangeN\CC.csv`;
+- stores the two-point equivalent of `y = k * (code - b)`;
+- checks the disk cache before calling the device, and saves CSV after a
+  successful device read.
+
+`UI/uTagSettingsDialog.pas` now tries to restore a MIC185 hardware GX object
+from disk when the tag has a saved GX name but the registry object is not loaded
+yet. `Device/mic185/uRecorderMic185DataSource.pas` also lazily restores the
+saved GX from disk during publication when a project was loaded with only the
+persisted GX name. Added `Docs/devices/mic185/hardware_calibration_cache.md`
+and linked it from the MIC185 README.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.

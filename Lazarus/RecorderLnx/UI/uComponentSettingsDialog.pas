@@ -90,7 +90,7 @@ begin
   inherited CreateNew(AOwner, 1);
   fComponent := AComponent;
   fTagRegistry := ATagRegistry;
-  Caption := CP1251ToUTF8('Настройка компонента - ') + AComponent.Name;
+  Caption := 'Настройка компонента - ' + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 460;
@@ -111,7 +111,7 @@ begin
     fTagSearchLabel := TLabel.Create(Self);
     fTagSearchLabel.Parent := Self;
     fTagSearchLabel.SetBounds(16, lTop + 4, 120, 16);
-    fTagSearchLabel.Caption := CP1251ToUTF8('Поиск тега:');
+    fTagSearchLabel.Caption := 'Поиск тега:';
 
     fTagSearchEdit := TEdit.Create(Self);
     fTagSearchEdit.Parent := Self;
@@ -122,7 +122,7 @@ begin
     fTagComboLabel := TLabel.Create(Self);
     fTagComboLabel.Parent := Self;
     fTagComboLabel.SetBounds(16, lTop + 4, 120, 16);
-    fTagComboLabel.Caption := CP1251ToUTF8('Выбранный тег:');
+    fTagComboLabel.Caption := 'Выбранный тег:';
 
     fTagCombo := TComboBox.Create(Self);
     fTagCombo.Parent := Self;
@@ -136,7 +136,7 @@ begin
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Текст метки:');
+    lLabel.Caption := 'Текст метки:';
 
     fTextEdit := TEdit.Create(Self);
     fTextEdit.Parent := Self;
@@ -149,18 +149,18 @@ begin
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 10, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Шрифт компонента:');
+    lLabel.Caption := 'Шрифт компонента:';
 
     fFontButton := TButton.Create(Self);
     fFontButton.Parent := Self;
     fFontButton.SetBounds(140, lTop, 100, 25);
-    fFontButton.Caption := CP1251ToUTF8('Выбрать...');
+    fFontButton.Caption := 'Выбрать...';
     fFontButton.OnClick := @FontButtonClick;
 
     fFontPreviewLabel := TLabel.Create(Self);
     fFontPreviewLabel.Parent := Self;
     fFontPreviewLabel.SetBounds(250, lTop + 4, 190, 25);
-    fFontPreviewLabel.Caption := CP1251ToUTF8('Образец текста');
+    fFontPreviewLabel.Caption := 'Образец текста';
     Inc(lTop, 40);
   end;
 
@@ -169,7 +169,7 @@ begin
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Формат (Format):');
+    lLabel.Caption := 'Формат (Format):';
 
     fDisplayFormatEdit := TEdit.Create(Self);
     fDisplayFormatEdit.Parent := Self;
@@ -179,27 +179,27 @@ begin
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Отображение имени:');
+    lLabel.Caption := 'Отображение имени:';
 
     fShowNameCombo := TComboBox.Create(Self);
     fShowNameCombo.Parent := Self;
     fShowNameCombo.SetBounds(140, lTop, 180, 23);
     fShowNameCombo.Style := csDropDownList;
-    fShowNameCombo.Items.Add(CP1251ToUTF8('Скрыть имя'));
-    fShowNameCombo.Items.Add(CP1251ToUTF8('Скрыть имя'));
-    fShowNameCombo.Items.Add(CP1251ToUTF8('Имя слева'));
+    fShowNameCombo.Items.Add('Скрыть имя');
+    fShowNameCombo.Items.Add('Скрыть имя');
+    fShowNameCombo.Items.Add('Имя слева');
     Inc(lTop, 32);
 
     fUseDefaultEstimateCheck := TCheckBox.Create(Self);
     fUseDefaultEstimateCheck.Parent := Self;
     fUseDefaultEstimateCheck.SetBounds(16, lTop, 220, 20);
-    fUseDefaultEstimateCheck.Caption := CP1251ToUTF8('Оценка по умолчанию из тега');
+    fUseDefaultEstimateCheck.Caption := 'Оценка по умолчанию из тега';
     fUseDefaultEstimateCheck.OnChange := @UseDefaultEstimateCheckChange;
 
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(240, lTop + 2, 70, 16);
-    lLabel.Caption := CP1251ToUTF8('Оценка:');
+    lLabel.Caption := 'Оценка:';
 
     fEstimateKindCombo := TComboBox.Create(Self);
     fEstimateKindCombo.Parent := Self;
@@ -215,21 +215,21 @@ begin
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Привязка к каналу:');
+    lLabel.Caption := 'Привязка к каналу:';
 
     fBindingModeCombo := TComboBox.Create(Self);
     fBindingModeCombo.Parent := Self;
     fBindingModeCombo.SetBounds(140, lTop, 220, 23);
     fBindingModeCombo.Style := csDropDownList;
-    fBindingModeCombo.Items.Add(CP1251ToUTF8('Относительная (выбранный тег)'));
-    fBindingModeCombo.Items.Add(CP1251ToUTF8('Абсолютная привязка'));
+    fBindingModeCombo.Items.Add('Относительная (выбранный тег)');
+    fBindingModeCombo.Items.Add('Абсолютная привязка');
     fBindingModeCombo.OnChange := @BindingModeComboChange;
     Inc(lTop, 32);
 
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
-    lLabel.Caption := CP1251ToUTF8('Относит. смещение:');
+    lLabel.Caption := 'Относит. смещение:';
 
     fTagOffsetEdit := TEdit.Create(Self);
     fTagOffsetEdit.Parent := Self;
@@ -240,7 +240,7 @@ begin
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(350, lTop, 90, 25);
-  fCancelButton.Caption := CP1251ToUTF8('Отмена');
+  fCancelButton.Caption := 'Отмена';
   fCancelButton.ModalResult := mrCancel;
 
   fOkButton := TButton.Create(Self);

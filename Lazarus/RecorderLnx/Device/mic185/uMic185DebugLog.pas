@@ -6,17 +6,24 @@ unit uMic185DebugLog;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 uses
   Classes, SysUtils;
 
+{ Инициализирует файл и кольцевой буфер лога MIC-185. }
 procedure Mic185LogInit(const ALogPath: string = '');
+{ Совместимость со старым UI: теперь только прокачивает буфер в Lines. }
 procedure Mic185LogAttachLines(ALines: TStrings); deprecated 'use Mic185LogPumpTo from a timer';
+{ Совместимость со старым UI, реального detach больше не требуется. }
 procedure Mic185LogDetachLines; deprecated 'no longer needed';
+{ Переносит новые строки лога в Memo/ListBox из GUI-таймера. }
 procedure Mic185LogPumpTo(ALines: TStrings);
+{ Добавляет строку в файл и память, защищая доступ critical section. }
 procedure Mic185Log(const AMsg: string);
+{ Возвращает текущий путь файла лога. }
 function Mic185LogFilePath: string;
 
 implementation

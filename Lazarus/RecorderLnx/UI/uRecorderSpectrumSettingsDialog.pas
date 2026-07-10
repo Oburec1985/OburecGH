@@ -98,7 +98,7 @@ begin
   fDraft := TRecorderSpectrumComponent.Create;
   fDraft.Assign(fComponent);
 
-  Caption := CP1251ToUTF8('Настройка спектрального графика - ') + AComponent.Name;
+  Caption := 'Настройка спектрального графика - ' + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 710;
@@ -185,7 +185,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, 12, 200, 15);
-  lLabel.Caption := CP1251ToUTF8('Доступные теги (спектры):');
+  lLabel.Caption := 'Доступные теги (спектры):';
 
   fFilterEdit := TEdit.Create(Self);
   fFilterEdit.Parent := Self;
@@ -215,7 +215,7 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(262, 12, 200, 15);
-  lLabel.Caption := CP1251ToUTF8('Отображаемые теги:');
+  lLabel.Caption := 'Отображаемые теги:';
 
   fUsedList := TListBox.Create(Self);
   fUsedList.Parent := Self;
@@ -227,12 +227,12 @@ begin
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 24, 220, 180);
-  lGroupBox.Caption := CP1251ToUTF8('Настройка осей');
+  lGroupBox.Caption := 'Настройка осей';
 
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 20, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Мин X (Гц):');
+  lLabel.Caption := 'Мин X (Гц):';
 
   fMinXEdit := TEdit.Create(lGroupBox);
   fMinXEdit.Parent := lGroupBox;
@@ -241,7 +241,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 50, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Макс X (Гц):');
+  lLabel.Caption := 'Макс X (Гц):';
 
   fMaxXEdit := TEdit.Create(lGroupBox);
   fMaxXEdit.Parent := lGroupBox;
@@ -250,7 +250,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 80, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Мин Y:');
+  lLabel.Caption := 'Мин Y:';
 
   fMinYEdit := TEdit.Create(lGroupBox);
   fMinYEdit.Parent := lGroupBox;
@@ -259,7 +259,7 @@ begin
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   lLabel.SetBounds(10, 110, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Макс Y:');
+  lLabel.Caption := 'Макс Y:';
 
   fMaxYEdit := TEdit.Create(lGroupBox);
   fMaxYEdit.Parent := lGroupBox;
@@ -268,66 +268,66 @@ begin
   fLgXCheck := TCheckBox.Create(lGroupBox);
   fLgXCheck.Parent := lGroupBox;
   fLgXCheck.SetBounds(10, 137, 90, 20);
-  fLgXCheck.Caption := CP1251ToUTF8('Лог X');
+  fLgXCheck.Caption := 'Лог X';
 
   fLgYCheck := TCheckBox.Create(lGroupBox);
   fLgYCheck.Parent := lGroupBox;
   fLgYCheck.SetBounds(110, 137, 90, 20);
-  fLgYCheck.Caption := CP1251ToUTF8('Лог Y');
+  fLgYCheck.Caption := 'Лог Y';
 
   // 5. Параметры отображения
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 215, 220, 225);
-  lGroupBox.Caption := CP1251ToUTF8('Отображение');
+  lGroupBox.Caption := 'Отображение';
 
   fShowAlarmsCheck := TCheckBox.Create(lGroupBox);
   fShowAlarmsCheck.Parent := lGroupBox;
   fShowAlarmsCheck.SetBounds(10, 20, 180, 20);
-  fShowAlarmsCheck.Caption := CP1251ToUTF8('Аварийные уровни');
+  fShowAlarmsCheck.Caption := 'Аварийные уровни';
 
   fShowWarningsCheck := TCheckBox.Create(lGroupBox);
   fShowWarningsCheck.Parent := lGroupBox;
   fShowWarningsCheck.SetBounds(10, 45, 180, 20);
-  fShowWarningsCheck.Caption := CP1251ToUTF8('Предупредительные');
+  fShowWarningsCheck.Caption := 'Предупредительные';
 
   fShowProfileCheck := TCheckBox.Create(lGroupBox);
   fShowProfileCheck.Parent := lGroupBox;
   fShowProfileCheck.SetBounds(10, 70, 180, 20);
-  fShowProfileCheck.Caption := CP1251ToUTF8('Профили');
+  fShowProfileCheck.Caption := 'Профили';
 
   fShowLabelsCheck := TCheckBox.Create(lGroupBox);
   fShowLabelsCheck.Parent := lGroupBox;
   fShowLabelsCheck.SetBounds(10, 95, 180, 20);
-  fShowLabelsCheck.Caption := CP1251ToUTF8('Метки пиков');
+  fShowLabelsCheck.Caption := 'Метки пиков';
 
   lLabel := TLabel.Create(lGroupBox);
   lLabel.Parent := lGroupBox;
   fShowLegendCheck := TCheckBox.Create(lGroupBox);
   fShowLegendCheck.Parent := lGroupBox;
   fShowLegendCheck.SetBounds(10, 120, 180, 20);
-  fShowLegendCheck.Caption := CP1251ToUTF8('Легенда');
+  fShowLegendCheck.Caption := 'Легенда';
 
   fZeroY0Check := TCheckBox.Create(lGroupBox);
   fZeroY0Check.Parent := lGroupBox;
   fZeroY0Check.SetBounds(10, 145, 180, 20);
-  fZeroY0Check.Caption := CP1251ToUTF8('Занулять Y0');
+  fZeroY0Check.Caption := 'Занулять Y0';
 
   lLabel.SetBounds(10, 175, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Результат:');
+  lLabel.Caption := 'Результат:';
 
   fResultTypeCombo := TComboBox.Create(lGroupBox);
   fResultTypeCombo.Parent := lGroupBox;
   fResultTypeCombo.SetBounds(90, 172, 120, 23);
   fResultTypeCombo.Style := csDropDownList;
-  fResultTypeCombo.Items.Add(CP1251ToUTF8('Амплитуда'));
-  fResultTypeCombo.Items.Add(CP1251ToUTF8('Фаза'));
+  fResultTypeCombo.Items.Add('Амплитуда');
+  fResultTypeCombo.Items.Add('Фаза');
 
   // 6. Прочее (Тахометр)
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(478, 452, 80, 15);
-  lLabel.Caption := CP1251ToUTF8('Тахометр:');
+  lLabel.Caption := 'Тахометр:';
 
   fTahoCombo := TComboBox.Create(Self);
   fTahoCombo.Parent := Self;
@@ -344,14 +344,14 @@ begin
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
   fOkButton.SetBounds(520, 515, 80, 25);
-  fOkButton.Caption := CP1251ToUTF8('ОК');
+  fOkButton.Caption := 'ОК';
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(615, 515, 80, 25);
-  fCancelButton.Caption := CP1251ToUTF8('Отмена');
+  fCancelButton.Caption := 'Отмена';
   fCancelButton.Cancel := True;
   fCancelButton.ModalResult := mrCancel;
 end;

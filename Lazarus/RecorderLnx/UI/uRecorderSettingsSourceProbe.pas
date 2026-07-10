@@ -1,9 +1,9 @@
 unit uRecorderSettingsSourceProbe;
 
 {
-  РљР°С‚Р°Р»РѕРі РґРѕСЃС‚СѓРїРЅС‹С… Р°РїРїР°СЂР°С‚РЅС‹С… РєР°РЅР°Р»РѕРІ РїРѕ РЅР°СЃС‚СЂРѕРµРЅРЅС‹Рј РёСЃС‚РѕС‡РЅРёРєР°Рј РґР°РЅРЅС‹С….
-  Р’Р»Р°РґРµРµС‚ РґРµСЃРєСЂРёРїС‚РѕСЂР°РјРё РєР°РЅР°Р»РѕРІ (TMeraSignalInfo) РґР»СЏ Mera file / MIC-140 / MIC-185.
-  UI РЅРµ С…СЂР°РЅРёС‚ РѕС‚РґРµР»СЊРЅС‹Рµ СЃРїРёСЃРєРё РїРѕ С‚РёРїР°Рј СѓСЃС‚СЂРѕР№СЃС‚РІ вЂ” С‚РѕР»СЊРєРѕ РѕР±СЂР°С‰Р°РµС‚СЃСЏ СЃСЋРґР°.
+  Каталог доступных аппаратных каналов по настроенным источникам данных.
+  Владеет дескрипторами каналов (TMeraSignalInfo) для Mera file / MIC-140 / MIC-185.
+  UI не хранит отдельные списки по типам устройств — только обращается сюда.
 }
 
 {$mode objfpc}{$H+}
@@ -434,11 +434,11 @@ begin
     lSignal.DataType := mvtFloat64;
     lSignal.FrequencyHz := lFreqHz;
     if I <= CMic185ChannelCountMax then
-      lSignal.UnitsName := 'РјР’'
+      lSignal.UnitsName := 'мВ'
     else if I <= CMic185ChannelCountMax + CMic185TempChannelCount then
-      lSignal.UnitsName := 'В°C'
+      lSignal.UnitsName := '°C'
     else
-      lSignal.UnitsName := 'СЃ';
+      lSignal.UnitsName := 'с';
     lSignal.Description := Format('MIC183/185 channel %s', [lAddress]);
     lSignal.FileName := ASourceId;
     lSignal.Enabled := True;

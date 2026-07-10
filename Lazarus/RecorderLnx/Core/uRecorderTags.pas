@@ -473,8 +473,8 @@ function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
 function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
 function RecorderIsHardwareTagSource(const ASourceId: string): Boolean;
 function RecorderHardwareTreeShowsSourceId(const ASourceId: string): Boolean;
-function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry;
-  ATag: TRecorderTag): Boolean;
+// требуется ли отображать тег в таблицах
+function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
 function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
 procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 
@@ -1434,20 +1434,20 @@ begin
     if lSourceId = '' then
       Continue;
     if Pos(CMeraTagSourcePrefix, lSourceId) = 1 then
-      RegisterActiveSource(lSourceId)
-    else if Pos(CMic140TagSourcePrefix, lSourceId) = 1 then
-      RegisterActiveSource(lSourceId)
-    else if Pos(CMic185TagSourcePrefix, lSourceId) = 1 then
       RegisterActiveSource(lSourceId);
   end;
 end;
 
 function TRecorderTagRegistry.IsSourceActive(const ASourceId: string): Boolean;
 var
-  lSourceId: string;
+  lSourceId,s: string;
+  ind:integer;
 begin
   lSourceId := Trim(ASourceId);
-  Result := (lSourceId = '') or (fActiveSourceIds.IndexOf(lSourceId) >= 0);
+  ind:=fActiveSourceIds.IndexOf(lSourceId);
+  if ind>=0 then
+    s:=fActiveSourceIds.Strings[ind];
+  Result := (lSourceId = '') or (ind >= 0);
 end;
 
 procedure TRecorderTagRegistry.PublishValue(const ATagName: string; ATimeSec,

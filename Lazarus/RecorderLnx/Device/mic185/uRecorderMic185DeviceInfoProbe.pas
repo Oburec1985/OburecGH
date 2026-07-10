@@ -15,6 +15,8 @@ interface
 uses
   SysUtils;
 
+{ Читает идентификацию MIC-185 для UI. Если источник уже ведет сбор, возвращает
+  кэшированную информацию и не открывает второй TCP-клиент. }
 function RecorderMic185ProbeDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AAcquiring: Boolean; out AErrorText: string;

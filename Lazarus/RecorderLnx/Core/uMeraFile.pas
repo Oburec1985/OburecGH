@@ -1,7 +1,7 @@
 unit uMeraFile;
 
 {
-  РџР°СЂСЃРёРЅРі MERA-РґРµСЃРєСЂРёРїС‚РѕСЂРѕРІ Рё СЃРёРіРЅР°Р»РѕРІ РґР»СЏ RecorderLnx (РЅРµ SharedUtils).
+  Парсинг MERA-дескрипторов и сигналов для RecorderLnx (не SharedUtils).
 }
 
 {$mode objfpc}{$H+}

@@ -20,62 +20,96 @@ uses
   uMic185Device, uMic185Constants, uMic185MebiusTypes;
 
 const
+  { Endpoint стендового MIC-185 по умолчанию. }
   MIC185DefaultHost = '192.168.9.142';
   MIC185DefaultPort = 4000;
   MIC185DefaultPollFrequencyHz = CMic185DefaultMeasFrequencyHz;
 
+{ Формирует SourceId RecorderLnx для MIC-185 endpoint. }
 function RecorderMic185SourceId(const AHost: string; APort: Word): string;
+{ Разбирает SourceId вида "MIC-185: host:port". }
 function TryParseRecorderMic185SourceId(const ASourceId: string;
   out AHost: string; out APort: Word): Boolean;
+{ Читает серийный номер/версию прибора через безопасный probe. }
 function RecorderMic185ReadDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AErrorText: string; ATimeoutMs: Cardinal = 700): Boolean;
+{ Проверяет, что endpoint отвечает на идентификационный запрос. }
 function RecorderMic185IsEndpointLive(const AHost: string; APort: Word): Boolean;
+{ Проверяет live-device кэш активного источника. }
 function RecorderMic185IsLiveDeviceConnected(const AHost: string; APort: Word): Boolean;
+{ Проверяет живость источника по SourceId. }
 function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;
+{ Быстрая TCP/Mebius проба для дерева оборудования. }
 function RecorderMic185TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
+{ Текст режима канала по умолчанию для хранения в старых проектах. }
 function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
+{ Сериализует настройки канала MIC-185 в компактную строку. }
 function RecorderMic185FormatChannelMode(
   const ASettings: TMic185ChannelProgramSettings): string;
+{ Десериализует строку режима канала с fallback на defaults. }
 procedure RecorderMic185ReadChannelMode(const AMode: string; AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettings);
+{ Получает аппаратные настройки канала из конфигурации источника. }
 function RecorderMic185GetSourceChannelMode(ARegistry: TRecorderTagRegistry;
   const ASourceId, AAddress: string; AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettings): Boolean;
+{ Сохраняет аппаратные настройки канала в конфигурации источника. }
 procedure RecorderMic185SetSourceChannelMode(ARegistry: TRecorderTagRegistry;
   const ASourceId, AAddress: string; AFrequencyHz: Double;
   const ASettings: TMic185ChannelProgramSettings);
+{ Возвращает код тока питания датчика из конфигурации источника. }
 function RecorderMic185GetSourcePowerMaCode(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): LongWord;
+{ Сохраняет код тока питания датчика в конфигурации источника. }
 procedure RecorderMic185SetSourcePowerMaCode(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; APollFrequencyHz: Double; APowerMaCode: LongWord);
+{ Программирует уже настроенный MIC-185 source без открытия общего диалога. }
 function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; out AErrorText: string): Boolean;
+{ Текст номинального входного диапазона для UI. }
 function RecorderMic185RangeText(ARangeIndex: LongWord): string;
+{ Единица по умолчанию для выбранного диапазона. }
 function RecorderMic185RangeUnitText(ARangeIndex: LongWord): string;
+{ Верхняя граница номинального диапазона в мВ. }
 function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
+{ Верхняя граница диапазона в выбранной пользователем единице. }
 function RecorderMic185EffectiveRangeMax(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+{ Текст фактического диапазона для диалога канала. }
 function RecorderMic185EffectiveRangeText(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
-function RecorderMic185ConvertValue(AValueMv: Double;
-  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+{ Пересчитывает сырые коды MIC-185 в выбранную единицу тега. При отсутствии
+  аппаратной ГХ используется номинал: 32768 кодов = 100% диапазона. }
+function RecorderMic185ConvertValue(AValueCode: Double;
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
+  AHardwareCalibration: TRecorderCalibration = nil): Double;
+{ Текст коммутации канала для таблицы настройки. }
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
+{ Текст схемы включения датчика для таблицы настройки. }
 function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
+{ Преобразует адрес MIC183_185-{3-N} в индекс канала 0..63. }
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+{ Создает или возвращает конфигурацию источника MIC-185. }
 function RecorderMic185EnsureConfiguredSource(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; APollFrequencyHz: Double): TRecorderConfiguredDataSource;
+{ Сохраняет MIC-185 секции dataSources[].mic185 в проект. }
 procedure SaveMic185DataSourceConfigs(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
+{ Загружает MIC-185 секции dataSources[].mic185 из проекта. }
 procedure LoadMic185DataSourceConfigs(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
+{ Берет идентификацию из активного live-device или runtime кэша. }
 function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AAcquiring: Boolean): Boolean;
+{ Регистрирует активный MIC-185 device для UI/probe без второго TCP-клиента. }
 procedure RecorderMic185RegisterLiveDevice(AOwner: TObject; const AHost: string;
   APort: Word; ADevice: IRecorderDevice);
+{ Снимает регистрацию live-device владельца. }
 procedure RecorderMic185UnregisterLiveDevice(AOwner: TObject);
+{ Пишет строку в MIC-185 runtime/debug log. }
 procedure RecorderMic185Log(const AMessage: string);
 
 type
@@ -113,12 +147,15 @@ implementation
 uses
   Math, StrUtils, Variants,
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
-  uRecorderHardwareLiveDevices, uRecorderMic140Utils;
+  uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
   CMic185ModuleName = 'MIC183/185';
   CMic185ChannelModePrefix = 'mic185:';
+  { Fallback scale when no real hardware characteristic is loaded:
+    32768 ADC codes correspond to 100% of the selected nominal input range. }
+  CMic185NominalAdcFullScale = 32768.0;
 
 function Mic185FloatToText(AValue: Double): string;
 begin
@@ -661,6 +698,13 @@ begin
   end;
 end;
 
+function Mic185CodeToNominalMv(AValueCode: Double;
+  const ASettings: TMic185ChannelProgramSettings): Double;
+begin
+  Result := AValueCode * RecorderMic185RangeMax(ASettings.MeasRangeIndex) /
+    CMic185NominalAdcFullScale;
+end;
+
 function RecorderMic185EffectiveRangeMax(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
 var
@@ -693,27 +737,33 @@ begin
     ASettings, AUnitName));
 end;
 
-function RecorderMic185ConvertValue(AValueMv: Double;
-  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+function RecorderMic185ConvertValue(AValueCode: Double;
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
+  AHardwareCalibration: TRecorderCalibration): Double;
 var
   lExcitationMv: Double;
+  lMv: Double;
   lSensitivity: Double;
   lUnit: string;
 begin
+  if AHardwareCalibration <> nil then
+    lMv := AHardwareCalibration.Transform(AValueCode)
+  else
+    lMv := Mic185CodeToNominalMv(AValueCode, ASettings);
   lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
   if SameText(lUnit, 'Ом') then
-    Exit(AValueMv / Mic185EffectivePowerMa(ASettings));
+    Exit(lMv / Mic185EffectivePowerMa(ASettings));
 
   if SameText(lUnit, 'мкм/м') then
   begin
     lExcitationMv := Mic185EffectivePowerMa(ASettings) *
       Max(Abs(ASettings.Resistance), 1E-9);
     lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
-    Exit((AValueMv / lExcitationMv) *
+    Exit((lMv / lExcitationMv) *
       (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) * 1000000.0);
   end;
 
-  Result := AValueMv;
+  Result := lMv;
 end;
 
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
@@ -912,6 +962,9 @@ begin
         lLink.Add('tagName', lTag.Name);
         lLink.Add('address', lTag.Address);
         lLink.Add('pollFrequencyHz', lTag.PollFrequencyHz);
+        lLink.Add('hardwareCalibrationEnabled',
+          lTag.HardwareCalibrationEnabled);
+        lLink.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       end;
 
       RecorderMic185BuildSourceProgramSettings(ARegistry, lSourceId, lPollHz,
@@ -1037,6 +1090,10 @@ begin
       lTag.Address := lAddress;
       lTag.ModuleType := CMic185ModuleName;
       lTag.PollFrequencyHz := lLink.Get('pollFrequencyHz', lPollHz);
+      lTag.HardwareCalibrationEnabled := lLink.Get(
+        'hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
+      lTag.HardwareCalibrationName := lLink.Get('hardwareCalibrationName',
+        lTag.HardwareCalibrationName);
       lMode := lLink.Get('sourceValueMode', '');
       if Trim(lMode) = '' then
         lMode := lTag.SourceValueMode;
@@ -1447,6 +1504,7 @@ var
   lTag: TRecorderTag;
   lTimes: TRecorderDoubleArray;
   lValues: TRecorderDoubleArray;
+  lHardwareCalibration: TRecorderCalibration;
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
@@ -1464,10 +1522,19 @@ begin
     lTag := Registry.FindByName(fChannelTagNames[I]);
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
+    lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
+    if lTag.HardwareCalibrationEnabled and (lHardwareCalibration = nil) and
+      (Trim(lTag.HardwareCalibrationName) <> '') then
+    begin
+      RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
+      lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
+    end;
     for J := 0 to ABlock.SampleCount - 1 do
-      if I <= High(lChannelSettings) then
+      if not lTag.HardwareCalibrationEnabled then
+        lValues[J] := ABlock.Values[I][J]
+      else if I <= High(lChannelSettings) then
         lValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
-          lChannelSettings[I], lTag.UnitName)
+          lChannelSettings[I], lTag.UnitName, lHardwareCalibration)
       else
         lValues[J] := ABlock.Values[I][J];
     Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);

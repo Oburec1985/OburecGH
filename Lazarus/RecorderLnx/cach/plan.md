@@ -161,3 +161,96 @@
     source references and RecorderLnx behavior
   - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
     regression test passed
+
+- [x] MIC-185 nominal-code units, hardware-GX message, comments, and UI encoding
+  - [x] MIC185 tag values are converted in the data source from raw codes using
+    nominal fallback `32768 -> 100%` of the selected range, then into the
+    selected tag unit (`mV`, `Ohm`, `microstrain`, `mV(tenzo)`)
+  - [x] MIC185 tag creation/linking preserves the selected unit and recalculates
+    the displayed range in that unit
+  - [x] Hardware-GX download button no longer reports "no MIC-140 channels" for
+    MIC185; it reports that MIC185 memory read is not implemented without
+    protocol work
+  - [x] Added comments/codepage markers across MIC185 constants and exported
+    functions; documented the nominal fallback in `Docs/devices/mic185/value_units_conversion.md`
+  - [x] Cleaned dynamic UTF-8 UI strings in menus/dialogs and fixed detected
+    mojibake in calibration properties and MIC185 source probe strings
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
+    regression test passed
+
+- [x] MIC-185 explicit hardware-GX read and tag-dialog button split
+  - [x] Added MIC185 hardware-GX reader using `IOCTL_CMD_GET_CALIBR_KOEF`
+    from the original Recorder/Mebius device-level path
+  - [x] Stored read `k,b` as a two-point hardware `TRecorderCalibration`
+    implementing `k * (code - b)` and assigned it to the tag
+  - [x] MIC185 source conversion now applies assigned tag hardware GX before
+    unit conversion; nominal `32768 -> 100%` fallback remains when no GX exists
+  - [x] Hardware-GX view/select opens the calibration list/properties dialog,
+    edit opens properties for any assigned hardware GX, and read-GX dispatches
+    to MIC140 or MIC185 by source type
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded after stopping a
+    running `RecorderLnx.exe`; data-source regression test passed
+
+- [x] MIC-185 hardware-GX display and read result cleanup
+  - [x] Hardware-GX view button now opens the assigned calibration properties
+    directly instead of the common MIC140-style calibration/source list
+  - [x] MIC185 hardware-GX field displays the extracted `k,b` pair, while the
+    internal `HardwareCalibrationName` remains the stable registry key
+  - [x] Read-GX success message lists MIC185 `k,b` for each read tag
+  - [x] Bulk read-GX success dialog now shows only the first read channel
+    result and `...`, instead of a tall message box with every selected channel.
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
+    regression test passed
+
+- [x] Active hardware source regression after tag settings OK
+  - [x] `TTagSettingsDialog.CreateDialog` no longer refreshes active sources
+    from the tag set.
+  - [x] `TRecorderTagRegistry.RefreshActiveSourcesFromTags` no longer marks
+    MIC140/MIC185 sources active only because tags exist; it keeps only always
+    visible virtual/manual/debug/MERA sources.
+  - [x] `TMainForm.UpdateActiveSourceIds` now registers hardware sources as
+    active only when `RecorderHardwareSourceLinkOk` passes, and unregisters
+    them otherwise.
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
+    regression test passed.
+
+- [x] MIC-185 hardware-GX checkbox controls published units
+  - [x] With hardware GX unchecked, MIC185 measurement tags publish raw ADC
+    codes even if a calibration name exists.
+  - [x] With hardware GX checked, MIC185 applies assigned GX when available;
+    otherwise it keeps the nominal `32768 -> 100% range` fallback and converts
+    to the selected tag unit.
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded after stopping
+    a running `RecorderLnx.exe`; data-source regression test passed.
+
+- [x] MIC-185 hardware-GX assignment persistence in tag dialog
+  - [x] Project JSON now saves/loads each tag's `HardwareCalibrationName` and
+    `HardwareCalibrationEnabled`.
+  - [x] Tag settings OK no longer clears MIC185 `HardwareCalibrationName` /
+    `HardwareCalibrationEnabled` through the MIC140 legacy cleanup helper.
+  - [x] MIC185 `tagLinks[]` also saves/loads the hardware-GX assignment fields.
+  - [x] The tag dialog no longer blanks MIC185 hardware-GX display after a
+    multi-tag read/OK/reopen cycle.
+  - [x] For MIC185 the hardware-GX field displays stored `k,b` when the
+    calibration exists; if the calibration object is missing, it shows the
+    stored name/alias instead of an empty field.
+  - [x] Multi-select with different hardware-GX assignments shows
+    `<разные аппаратные ГХ>` and keeps the checkbox grayed, so OK does not
+    overwrite per-channel assignments.
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded after stopping
+    a running `RecorderLnx.exe`; data-source regression test passed.
+
+- [x] MIC-185 hardware-GX disk cache
+  - [x] Hardware GX read now uses disk cache before device read:
+    `C:\Mera Files\Calibr\hardware\MIC-185\snXXXX\rangeN\CC.csv`.
+  - [x] Successful device reads save the two-point CSV equivalent of
+    `y = k * (code - b)` and assign a stable name
+    `MIC185 snXXXX rangeN chCC`.
+  - [x] Reopening a MIC185 tag dialog can restore a saved GX object from disk
+    when the project still has only the persisted GX name.
+  - [x] MIC185 runtime publication lazily restores the saved GX from disk
+    before falling back to nominal conversion after project reload.
+  - [x] Added `Docs/devices/mic185/hardware_calibration_cache.md` with sources,
+    file format and original Recorder comparison.
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
+    regression test passed.

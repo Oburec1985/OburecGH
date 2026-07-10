@@ -759,426 +759,573 @@
 								"port" : 4000,
 								"defaultPollFrequencyHz" : 1.0000000000000000E+002,
 								"powerMaCode" : 10813,
+								"temperatureCompensation" : true,
+								"groupAddition" : [
+										0,
+										4,
+										4,
+										4
+								],
 								"tagLinks" : [
 										{
 												"tagId" : 266,
 												"tagName" : "MIC183_185_{3_1}",
 												"address" : "MIC183_185-{3-1}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch01 range0"
 										},
 										{
 												"tagId" : 268,
 												"tagName" : "MIC183_185_{3_2}",
 												"address" : "MIC183_185-{3-2}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch02 range0"
 										},
 										{
 												"tagId" : 270,
 												"tagName" : "MIC183_185_{3_3}",
 												"address" : "MIC183_185-{3-3}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch03 range0"
 										},
 										{
 												"tagId" : 272,
 												"tagName" : "MIC183_185_{3_4}",
 												"address" : "MIC183_185-{3-4}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch04 range0"
 										},
 										{
 												"tagId" : 274,
 												"tagName" : "MIC183_185_{3_5}",
 												"address" : "MIC183_185-{3-5}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch05 range0"
 										},
 										{
 												"tagId" : 276,
 												"tagName" : "MIC183_185_{3_6}",
 												"address" : "MIC183_185-{3-6}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch06 range0"
 										},
 										{
 												"tagId" : 278,
 												"tagName" : "MIC183_185_{3_7}",
 												"address" : "MIC183_185-{3-7}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch07 range0"
 										},
 										{
 												"tagId" : 280,
 												"tagName" : "MIC183_185_{3_8}",
 												"address" : "MIC183_185-{3-8}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch08 range0"
 										},
 										{
 												"tagId" : 282,
 												"tagName" : "MIC183_185_{3_9}",
 												"address" : "MIC183_185-{3-9}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch09 range0"
 										},
 										{
 												"tagId" : 284,
 												"tagName" : "MIC183_185_{3_10}",
 												"address" : "MIC183_185-{3-10}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch10 range0"
 										},
 										{
 												"tagId" : 286,
 												"tagName" : "MIC183_185_{3_11}",
 												"address" : "MIC183_185-{3-11}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch11 range0"
 										},
 										{
 												"tagId" : 288,
 												"tagName" : "MIC183_185_{3_12}",
 												"address" : "MIC183_185-{3-12}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch12 range0"
 										},
 										{
 												"tagId" : 290,
 												"tagName" : "MIC183_185_{3_13}",
 												"address" : "MIC183_185-{3-13}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch13 range0"
 										},
 										{
 												"tagId" : 292,
 												"tagName" : "MIC183_185_{3_14}",
 												"address" : "MIC183_185-{3-14}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch14 range0"
 										},
 										{
 												"tagId" : 294,
 												"tagName" : "MIC183_185_{3_15}",
 												"address" : "MIC183_185-{3-15}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch15 range0"
 										},
 										{
 												"tagId" : 296,
 												"tagName" : "MIC183_185_{3_16}",
 												"address" : "MIC183_185-{3-16}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch16 range0"
 										},
 										{
 												"tagId" : 298,
 												"tagName" : "MIC183_185_{3_17}",
 												"address" : "MIC183_185-{3-17}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch17 range0"
 										},
 										{
 												"tagId" : 300,
 												"tagName" : "MIC183_185_{3_18}",
 												"address" : "MIC183_185-{3-18}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch18 range0"
 										},
 										{
 												"tagId" : 302,
 												"tagName" : "MIC183_185_{3_19}",
 												"address" : "MIC183_185-{3-19}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch19 range0"
 										},
 										{
 												"tagId" : 304,
 												"tagName" : "MIC183_185_{3_20}",
 												"address" : "MIC183_185-{3-20}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch20 range0"
 										},
 										{
 												"tagId" : 306,
 												"tagName" : "MIC183_185_{3_21}",
 												"address" : "MIC183_185-{3-21}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch21 range0"
 										},
 										{
 												"tagId" : 308,
 												"tagName" : "MIC183_185_{3_22}",
 												"address" : "MIC183_185-{3-22}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch22 range0"
 										},
 										{
 												"tagId" : 310,
 												"tagName" : "MIC183_185_{3_23}",
 												"address" : "MIC183_185-{3-23}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch23 range0"
 										},
 										{
 												"tagId" : 312,
 												"tagName" : "MIC183_185_{3_24}",
 												"address" : "MIC183_185-{3-24}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch24 range0"
 										},
 										{
 												"tagId" : 314,
 												"tagName" : "MIC183_185_{3_25}",
 												"address" : "MIC183_185-{3-25}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch25 range0"
 										},
 										{
 												"tagId" : 316,
 												"tagName" : "MIC183_185_{3_26}",
 												"address" : "MIC183_185-{3-26}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch26 range0"
 										},
 										{
 												"tagId" : 318,
 												"tagName" : "MIC183_185_{3_27}",
 												"address" : "MIC183_185-{3-27}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch27 range0"
 										},
 										{
 												"tagId" : 320,
 												"tagName" : "MIC183_185_{3_28}",
 												"address" : "MIC183_185-{3-28}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch28 range0"
 										},
 										{
 												"tagId" : 322,
 												"tagName" : "MIC183_185_{3_29}",
 												"address" : "MIC183_185-{3-29}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch29 range0"
 										},
 										{
 												"tagId" : 324,
 												"tagName" : "MIC183_185_{3_30}",
 												"address" : "MIC183_185-{3-30}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch30 range0"
 										},
 										{
 												"tagId" : 326,
 												"tagName" : "MIC183_185_{3_31}",
 												"address" : "MIC183_185-{3-31}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch31 range0"
 										},
 										{
 												"tagId" : 328,
 												"tagName" : "MIC183_185_{3_32}",
 												"address" : "MIC183_185-{3-32}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch32 range0"
 										},
 										{
 												"tagId" : 330,
 												"tagName" : "MIC183_185_{3_33}",
 												"address" : "MIC183_185-{3-33}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch33 range0"
 										},
 										{
 												"tagId" : 332,
 												"tagName" : "MIC183_185_{3_34}",
 												"address" : "MIC183_185-{3-34}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch34 range0"
 										},
 										{
 												"tagId" : 334,
 												"tagName" : "MIC183_185_{3_35}",
 												"address" : "MIC183_185-{3-35}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch35 range0"
 										},
 										{
 												"tagId" : 336,
 												"tagName" : "MIC183_185_{3_36}",
 												"address" : "MIC183_185-{3-36}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch36 range0"
 										},
 										{
 												"tagId" : 338,
 												"tagName" : "MIC183_185_{3_37}",
 												"address" : "MIC183_185-{3-37}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch37 range0"
 										},
 										{
 												"tagId" : 340,
 												"tagName" : "MIC183_185_{3_38}",
 												"address" : "MIC183_185-{3-38}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch38 range0"
 										},
 										{
 												"tagId" : 342,
 												"tagName" : "MIC183_185_{3_39}",
 												"address" : "MIC183_185-{3-39}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch39 range0"
 										},
 										{
 												"tagId" : 344,
 												"tagName" : "MIC183_185_{3_40}",
 												"address" : "MIC183_185-{3-40}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch40 range0"
 										},
 										{
 												"tagId" : 346,
 												"tagName" : "MIC183_185_{3_41}",
 												"address" : "MIC183_185-{3-41}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch41 range0"
 										},
 										{
 												"tagId" : 348,
 												"tagName" : "MIC183_185_{3_42}",
 												"address" : "MIC183_185-{3-42}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch42 range0"
 										},
 										{
 												"tagId" : 350,
 												"tagName" : "MIC183_185_{3_43}",
 												"address" : "MIC183_185-{3-43}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch43 range0"
 										},
 										{
 												"tagId" : 352,
 												"tagName" : "MIC183_185_{3_44}",
 												"address" : "MIC183_185-{3-44}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch44 range0"
 										},
 										{
 												"tagId" : 354,
 												"tagName" : "MIC183_185_{3_45}",
 												"address" : "MIC183_185-{3-45}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch45 range0"
 										},
 										{
 												"tagId" : 356,
 												"tagName" : "MIC183_185_{3_46}",
 												"address" : "MIC183_185-{3-46}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch46 range0"
 										},
 										{
 												"tagId" : 358,
 												"tagName" : "MIC183_185_{3_47}",
 												"address" : "MIC183_185-{3-47}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch47 range0"
 										},
 										{
 												"tagId" : 360,
 												"tagName" : "MIC183_185_{3_48}",
 												"address" : "MIC183_185-{3-48}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch48 range0"
 										},
 										{
 												"tagId" : 362,
 												"tagName" : "MIC183_185_{3_49}",
 												"address" : "MIC183_185-{3-49}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch49 range0"
 										},
 										{
 												"tagId" : 364,
 												"tagName" : "MIC183_185_{3_50}",
 												"address" : "MIC183_185-{3-50}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch50 range0"
 										},
 										{
 												"tagId" : 366,
 												"tagName" : "MIC183_185_{3_51}",
 												"address" : "MIC183_185-{3-51}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch51 range0"
 										},
 										{
 												"tagId" : 368,
 												"tagName" : "MIC183_185_{3_52}",
 												"address" : "MIC183_185-{3-52}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch52 range0"
 										},
 										{
 												"tagId" : 370,
 												"tagName" : "MIC183_185_{3_53}",
 												"address" : "MIC183_185-{3-53}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch53 range0"
 										},
 										{
 												"tagId" : 372,
 												"tagName" : "MIC183_185_{3_54}",
 												"address" : "MIC183_185-{3-54}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch54 range0"
 										},
 										{
 												"tagId" : 374,
 												"tagName" : "MIC183_185_{3_55}",
 												"address" : "MIC183_185-{3-55}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch55 range0"
 										},
 										{
 												"tagId" : 376,
 												"tagName" : "MIC183_185_{3_56}",
 												"address" : "MIC183_185-{3-56}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch56 range0"
 										},
 										{
 												"tagId" : 378,
 												"tagName" : "MIC183_185_{3_57}",
 												"address" : "MIC183_185-{3-57}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch57 range0"
 										},
 										{
 												"tagId" : 380,
 												"tagName" : "MIC183_185_{3_58}",
 												"address" : "MIC183_185-{3-58}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch58 range0"
 										},
 										{
 												"tagId" : 382,
 												"tagName" : "MIC183_185_{3_59}",
 												"address" : "MIC183_185-{3-59}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch59 range0"
 										},
 										{
 												"tagId" : 384,
 												"tagName" : "MIC183_185_{3_60}",
 												"address" : "MIC183_185-{3-60}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch60 range0"
 										},
 										{
 												"tagId" : 386,
 												"tagName" : "MIC183_185_{3_61}",
 												"address" : "MIC183_185-{3-61}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch61 range0"
 										},
 										{
 												"tagId" : 388,
 												"tagName" : "MIC183_185_{3_62}",
 												"address" : "MIC183_185-{3-62}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch62 range0"
 										},
 										{
 												"tagId" : 390,
 												"tagName" : "MIC183_185_{3_63}",
 												"address" : "MIC183_185-{3-63}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch63 range0"
 										},
 										{
 												"tagId" : 392,
 												"tagName" : "MIC183_185_{3_64}",
 												"address" : "MIC183_185-{3-64}",
-												"pollFrequencyHz" : 1.0000000000000000E+002
+												"pollFrequencyHz" : 1.0000000000000000E+002,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch64 range0"
 										},
 										{
 												"tagId" : 394,
 												"tagName" : "MIC183_185_{3_t1}",
 												"address" : "MIC183_185-{3-t1}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"tagId" : 396,
 												"tagName" : "MIC183_185_{3_t2}",
 												"address" : "MIC183_185-{3-t2}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"tagId" : 398,
 												"tagName" : "MIC183_185_{3_t3}",
 												"address" : "MIC183_185-{3-t3}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"tagId" : 400,
 												"tagName" : "MIC183_185_{3_t4}",
 												"address" : "MIC183_185-{3-t4}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"tagId" : 402,
 												"tagName" : "MIC183_185_{3_t5}",
 												"address" : "MIC183_185-{3-t5}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										},
 										{
 												"tagId" : 404,
 												"tagName" : "MIC183_185_{3_uts}",
 												"address" : "MIC183_185-{3-uts}",
-												"pollFrequencyHz" : 1.0000000000000000E+000
+												"pollFrequencyHz" : 1.0000000000000000E+000,
+												"hardwareCalibrationEnabled" : false,
+												"hardwareCalibrationName" : ""
 										}
 								],
 								"channels" : [
@@ -10689,6 +10836,1222 @@
 										"y" : 1.0000000000000000E+002
 								}
 						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch01 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306625199; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662519857287407E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch02 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306621008; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662100762128830E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch03 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306623001; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662300065159798E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch04 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306623708; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662370845675468E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch05 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306620207; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662020668387413E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch06 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306625497; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662549659609795E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch07 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306621902; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662190169095993E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch08 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306620691; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662069097161293E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch09 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306624603; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662460252642632E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch10 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306620803; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662080273032188E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch11 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306623504; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662350356578827E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch12 range0",
+						"description" : "MIC-185 hardware GX: k=0,03066241; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662409961223602E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch13 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306623206; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662320554256439E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch14 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306622107; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662210658192635E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch15 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306622703; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662270262837410E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch16 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306621604; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0662160366773605E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch17 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306699295; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669929459691048E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch18 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306700002; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670000240206718E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch19 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306700803; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670080333948135E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch20 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306698605; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669860541820526E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch21 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306698699; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669869855046272E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch22 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306700692; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670069158077240E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch23 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306698903; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669890344142914E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch24 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306701101; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670110136270523E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch25 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306701493; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670149251818657E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch26 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306696706; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669670552015305E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch27 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306699201; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669920146465302E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch28 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306701194; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670119449496269E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch29 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306697208; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669720843434334E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch30 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306702908; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670290812849998E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch31 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306700207; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0670020729303360E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch32 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306697898; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0669789761304855E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch33 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306493491; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649349093437195E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch34 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306491498; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649149790406227E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch35 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306489803; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0648980289697647E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch36 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306491796; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649179592728615E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch37 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306492895; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649289488792419E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch38 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306492392; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649239197373390E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch39 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306490492; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649049207568169E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch40 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306494795; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649479478597641E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch41 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306490492; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649049207568169E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch42 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306492504; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649250373244286E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch43 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306492597; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649259686470032E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch44 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306491498; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649149790406227E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch45 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306493901; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649390071630478E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch46 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306489095; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0648909509181976E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch47 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306495205; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649520456790924E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch48 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306492392; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0649239197373390E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch49 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306854099; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685409903526306E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch50 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306851696; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685169622302055E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch51 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306854695; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685469508171082E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch52 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306851398; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685139819979668E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch53 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306854695; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685469508171082E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch54 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853205; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685320496559143E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch55 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853298; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685329809784889E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch56 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853503; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685350298881531E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch57 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306855794; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685579404234886E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch58 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306851305; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685130506753922E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch59 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853391; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685339123010635E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch60 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853801; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685380101203918E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch61 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306851808; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685180798172951E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch62 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306855496; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685549601912498E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch63 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306853205; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685320496559143E-002
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC185 MIC-185: 192.168.9.142:4000 ch64 range0",
+						"description" : "MIC-185 hardware GX: k=0,0306854192; b=0; evaluator k*(code-b)",
+						"unitIn" : "codes",
+						"unitOut" : "mV",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : 0.0000000000000000E+000,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 1.0000000000000000E+000,
+										"y" : 3.0685419216752052E-002
+								}
+						]
 				}
 		],
 		"spectrumConfigs" : [
@@ -10787,6 +12150,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -10849,6 +12214,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -10911,6 +12278,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -10975,6 +12344,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11037,6 +12408,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11099,6 +12472,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11161,6 +12536,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11223,6 +12600,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11285,6 +12664,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11347,6 +12728,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11409,6 +12792,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11471,6 +12856,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11533,6 +12920,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11595,6 +12984,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11657,6 +13048,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -11719,6 +13112,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -11781,6 +13176,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -11843,6 +13240,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -11905,6 +13304,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -11967,6 +13368,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12029,6 +13432,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12091,6 +13496,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12153,6 +13560,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12215,6 +13624,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12277,6 +13688,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12339,6 +13752,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12401,6 +13816,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12463,6 +13880,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12525,6 +13944,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12587,6 +14008,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12649,6 +14072,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12711,6 +14136,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12773,6 +14200,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12835,6 +14264,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12897,6 +14328,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -12959,6 +14392,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13021,6 +14456,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13083,6 +14520,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13145,6 +14584,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13207,6 +14648,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13269,6 +14712,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13331,6 +14776,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13393,6 +14840,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13455,6 +14904,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13517,6 +14968,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13579,6 +15032,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13641,6 +15096,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13703,6 +15160,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13765,6 +15224,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13827,6 +15288,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13889,6 +15352,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13951,6 +15416,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14013,6 +15480,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14075,6 +15544,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14137,6 +15608,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14199,6 +15672,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14261,6 +15736,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14323,6 +15800,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14385,6 +15864,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14447,6 +15928,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14509,6 +15992,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14571,6 +16056,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14633,6 +16120,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -14695,6 +16184,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -14757,6 +16248,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -14819,6 +16312,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -14881,6 +16376,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch01 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -14943,6 +16440,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch02 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15005,6 +16504,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch03 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15067,6 +16568,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch04 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15129,6 +16632,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch05 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15191,6 +16696,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch06 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15253,6 +16760,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch07 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15315,6 +16824,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch08 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15377,6 +16888,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch09 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15439,6 +16952,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch10 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15501,6 +17016,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch11 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15563,6 +17080,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch12 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15625,6 +17144,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch13 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15687,6 +17208,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch14 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15749,6 +17272,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch15 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15811,6 +17336,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch16 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15873,6 +17400,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch17 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15935,6 +17464,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch18 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -15997,6 +17528,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch19 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16059,6 +17592,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch20 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16121,6 +17656,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch21 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16183,6 +17720,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch22 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16245,6 +17784,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch23 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16307,6 +17848,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch24 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16369,6 +17912,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch25 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16431,6 +17976,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch26 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16493,6 +18040,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch27 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16555,6 +18104,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch28 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16617,6 +18168,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch29 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16679,6 +18232,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch30 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16741,6 +18296,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch31 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16803,6 +18360,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch32 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16865,6 +18424,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch33 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16927,6 +18488,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch34 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -16989,6 +18552,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch35 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17051,6 +18616,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch36 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17113,6 +18680,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch37 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17175,6 +18744,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch38 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17237,6 +18808,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch39 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17299,6 +18872,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch40 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17361,6 +18936,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch41 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17423,6 +19000,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch42 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17485,6 +19064,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch43 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17547,6 +19128,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch44 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17609,6 +19192,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch45 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17671,6 +19256,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch46 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17733,6 +19320,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch47 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17795,6 +19384,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch48 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17857,6 +19448,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch49 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17919,6 +19512,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch50 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -17981,6 +19576,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch51 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18043,6 +19640,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch52 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18105,6 +19704,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch53 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18167,6 +19768,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch54 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18229,6 +19832,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch55 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18291,6 +19896,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch56 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18353,6 +19960,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch57 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18415,6 +20024,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch58 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18477,6 +20088,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch59 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18539,6 +20152,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch60 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18601,6 +20216,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch61 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18663,6 +20280,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch62 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18725,6 +20344,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch63 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18787,6 +20408,8 @@
 						"rangeMax" : 5.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC185 MIC-185: 192.168.9.142:4000 ch64 range0",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18849,6 +20472,8 @@
 						"rangeMax" : 1.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18911,6 +20536,8 @@
 						"rangeMax" : 1.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -18973,6 +20600,8 @@
 						"rangeMax" : 1.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -19035,6 +20664,8 @@
 						"rangeMax" : 1.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -19097,6 +20728,8 @@
 						"rangeMax" : 1.0000000000000000E+002,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
@@ -19159,6 +20792,8 @@
 						"rangeMax" : 0.0000000000000000E+000,
 						"autoRange" : false,
 						"autoUnit" : false,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
 						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",

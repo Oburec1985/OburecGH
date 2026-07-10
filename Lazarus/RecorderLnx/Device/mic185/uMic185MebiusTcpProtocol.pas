@@ -92,26 +92,37 @@ type
     procedure ResetRxCounters;
   end;
 
+{ Собирает IOCTL code по той же битовой раскладке, что IoCtlMacro.h. }
 function RecorderMebiusCtlCode(AType, AFunction, AMethod, AAccess: LongWord): LongWord;
+{ Собирает task id Mebius из core/class/index/spec для заголовка MEBE_PACKET. }
 function RecorderMebiusMakeTaskId(ACore, AClassId, AIndex, ASpec: LongWord): LongWord;
+{ Упаковывает полезные данные в сетевой MEBE_PACKET с checksum заголовка. }
 function RecorderMebiusBuildPacket(AIdTo, AIdFrom: LongWord;
   const AData: TRecorderByteArray): TRecorderByteArray;
+{ Разбирает пакет измерительных Single-значений в матрицу channel x sample. }
 function RecorderMebiusParseFloatBlock(const AData: TRecorderByteArray;
   AChannelCount: Integer; out ABlock: TRecorderMebiusFloatBlock): Boolean;
+{ Читает dev_id из начала Mebius DATA_TRANSMIT payload. }
 function Mic185PacketDeviceId(const AData: TRecorderByteArray): LongWord;
+{ Переводит 13-битный код LM74 в градусы C. }
 function Mic185ConvLM74CodeToC(ACode: Word): Single;
+{ Разбирает температурный DATA_TRANSMIT payload в массив градусов C. }
 function Mic185ParseTempValues(const AData: TRecorderByteArray;
   AChannelCount: Integer; out AValues: TRecorderSingleArray): Boolean;
+{ Разбирает UTS/SEV значение времени из отдельного DATA_TRANSMIT payload. }
 function Mic185ParseUtsValue(const AData: TRecorderByteArray;
   out AValue: Single): Boolean;
 
 const
+  { Заголовок сетевого пакета Mebius Ethernet. }
   REC_MEBE_PACKET_SIGNATURE = LongWord($A0A0CAFE);
   REC_MEBE_PACKET_SIGNATURE_SIZE_BIG = LongWord($A0A0CAFF);
   REC_MEBE_PACKET_HEADER_SIZE = 20;
+  { Заголовок тела MEB_IOCTL_COMMAND внутри командного пакета. }
   REC_MEB_IOCTL_COMMAND_SIGNATURE = Word($F10C);
   REC_MEB_IOCTL_COMMAND_HEADER_SIZE = 8;
 
+  { Базовые идентификаторы задач/портов Mebius. }
   REC_CLASSID_BASE_TASKS = 200;
   REC_CLASSID_BASE_HOSTS = 1200;
   REC_MEASUREMENT_TASK_CLASSID = REC_CLASSID_BASE_TASKS + 1;
@@ -123,6 +134,7 @@ const
   REC_HOST_SETTINGS_PORT_ID =
     ((REC_CLASSID_BASE_HOSTS + 1) shl 20) or (1 shl 14);
 
+  { IOCTL-команды задачи измерения MIC185V2. }
   REC_TYPEIO_MEAS_TASK = 1;
 
   REC_IOCTL_MEASTASK_NULL = (REC_TYPEIO_MEAS_TASK shl 16);
@@ -133,6 +145,7 @@ const
   REC_IOCTL_MEASTASK_CALL_COMMAND = (REC_TYPEIO_MEAS_TASK shl 16) or ($000D shl 2);
   REC_IOCTL_MEASTASK_PROGRAM = (REC_TYPEIO_MEAS_TASK shl 16) or ($0010 shl 2);
 
+  { Код успешного ответа Mebius. }
   REC_S_MEB_OK = 0;
 
 implementation

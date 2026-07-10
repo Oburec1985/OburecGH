@@ -18,6 +18,7 @@
 | [windev_mic185_test.md](windev_mic185_test.md) | Эталонный GTest windev |
 | [source_map.md](source_map.md) | Карта исходников windev и порта Lazarus |
 | [settings_packet_table.md](settings_packet_table.md) | Таблица `ProgramDeviceBin`: назначение, размер, оригинал, RecorderLnx |
+| [hardware_calibration_cache.md](hardware_calibration_cache.md) | Дисковый кэш аппаратной ГХ MIC185 в `Mera Files\Calibr\hardware\MIC-185` |
 | [recorderlnx_integration.md](recorderlnx_integration.md) | Интеграция драйвера MIC183/185 в RecorderLnx, LFM-диалоги и поток тегов |
 
 ## Быстрый старт (стенд)

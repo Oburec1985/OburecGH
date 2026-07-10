@@ -75,13 +75,13 @@ implementation
 procedure TRecorderCalibrationPropertiesDialog.FormCreate(Sender: TObject);
 begin
   cbType.Items.Clear;
-  cbType.Items.AddObject('РљСѓСЃРѕС‡РЅРѕ-Р»РёРЅРµР№РЅР°СЏ РёРЅС‚РµСЂРїРѕР»СЏС†РёСЏ', TObject(PtrInt(Ord(rckPiecewiseLinear))));
-  cbType.Items.AddObject('РњР°СЃС€С‚Р°Р±РЅС‹Р№ РјРЅРѕР¶РёС‚РµР»СЊ', TObject(PtrInt(Ord(rckScale))));
+  cbType.Items.AddObject('Кусочно-линейная интерполяция', TObject(PtrInt(Ord(rckPiecewiseLinear))));
+  cbType.Items.AddObject('Масштабный множитель', TObject(PtrInt(Ord(rckScale))));
   gridProps.ColCount := 2;
   gridProps.RowCount := 2;
   gridProps.FixedRows := 1;
-  gridProps.Cells[0, 0] := 'РЎРІРѕР№СЃС‚РІРѕ';
-  gridProps.Cells[1, 0] := 'Р—РЅР°С‡РµРЅРёРµ';
+  gridProps.Cells[0, 0] := 'Свойство';
+  gridProps.Cells[1, 0] := 'Значение';
   gridPoints.ColCount := 3;
   gridPoints.RowCount := 2;
   gridPoints.FixedRows := 1;

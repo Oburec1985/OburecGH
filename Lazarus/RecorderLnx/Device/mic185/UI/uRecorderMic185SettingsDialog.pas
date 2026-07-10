@@ -388,8 +388,10 @@ begin
   if ARow <= CMic185ChannelCountMax then
   begin
     lSettings := fChannelSettings[ARow - 1];
-    Result.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-    Result.RangeMax := RecorderMic185RangeMax(lSettings.MeasRangeIndex);
+    if Trim(Result.UnitName) = '' then
+      Result.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+    Result.RangeMax := RecorderMic185EffectiveRangeMax(lSettings,
+      Result.UnitName);
     Result.RangeMin := -Result.RangeMax;
   end
   else if ARow <= CMic185ChannelCountMax + CMic185TempChannelCount then

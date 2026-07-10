@@ -599,6 +599,9 @@ begin
       lTagJson.Add('rangeMax', lTag.RangeMax);
       lTagJson.Add('autoRange', lTag.AutoRange);
       lTagJson.Add('autoUnit', lTag.AutoUnit);
+      lTagJson.Add('hardwareCalibrationEnabled',
+        lTag.HardwareCalibrationEnabled);
+      lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       lTagJson.Add('channelCalibrationEnabled', lTag.ChannelCalibrationEnabled);
       if RecorderTagUsesMic140Settings(lTag) then
         RecorderTagClearMic140Settings(lTag);
@@ -679,6 +682,10 @@ begin
         lTag.RangeMax := lTagJson.Get('rangeMax', lTag.RangeMax);
         lTag.AutoRange := lTagJson.Get('autoRange', lTag.AutoRange);
         lTag.AutoUnit := lTagJson.Get('autoUnit', lTag.AutoUnit);
+        lTag.HardwareCalibrationEnabled := lTagJson.Get(
+          'hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
+        lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
+          lTag.HardwareCalibrationName);
         lTag.ChannelCalibrationEnabled := lTagJson.Get('channelCalibrationEnabled',
           lTag.ChannelCalibrationEnabled);
         if RecorderTagUsesMic140Settings(lTag) then

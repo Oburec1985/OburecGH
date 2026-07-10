@@ -6,6 +6,7 @@ unit uMic185MebiusTypes;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 {$PACKRECORDS 8}
 
 interface
@@ -32,12 +33,15 @@ type
     SensorScheme: LongWord;
   end;
 
+  { Температурный канал LM74 в ProgramDeviceBin. }
   TMic185TempChanSettings = record
     FrequencyHz: Single;
     Connected: Boolean;
     _PadAfterConnected: array[0..2] of Byte;
   end;
 
+  { Редактируемые настройки одного измерительного канала до упаковки в
+    бинарный пакет MIC185V2. }
   TMic185ChannelProgramSettings = record
     FrequencyHz: Double;
     Connected: Boolean;
@@ -56,9 +60,11 @@ type
   TMic185ChannelProgramSettingsArray =
     array[0..CMic185ChannelCountMax - 1] of TMic185ChannelProgramSettings;
 
+  { Выбор компенсационного входа для каждой четверти прибора по 16 каналов. }
   TMic185GroupAdditionArray =
     array[0..CMic185ModuleCount - 1] of LongWord;
 
+  { Полный пакет настроек CMIC185V2_BASESETTINGS для PROGRAMM_DEVICE_BIN. }
   TMic185BaseSettings = record
     Channels: array[0..CMic185SettingsChannelSlots - 1] of TMic185BaseChanSettings;
     TempChannels: array[0..CMic185TempChannelCount - 1] of TMic185TempChanSettings;
@@ -83,6 +89,7 @@ type
     SoftVersion: LongWord;
   end;
 
+  { Ответ команды GetSoftVersion: серийный номер, версия ПО и метрология. }
   TMic185HardDeviceInfo = packed record
     SerialNumber: LongWord;
     SoftVersion: LongWord;
@@ -95,24 +102,36 @@ type
     MetroDateTimeHigh: LongWord;
   end;
 
+{ Формирует session_id так же, как Mebius-клиент: привязка к серийному номеру
+  плюс случайная/временная младшая часть. }
 function Mic185GenerateSessionId(ASerialNumber: LongWord): LongWord;
+{ Заполняет настройки одного измерительного канала безопасными значениями
+  original Recorder: диапазон 5 мВ, вход, тензометр 2 мВ/В, 200 Ом. }
 procedure Mic185DefaultChannelProgramSettings(AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettings);
+{ Заполняет массив из 64 измерительных каналов одинаковыми настройками. }
 procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
   out ASettings: TMic185ChannelProgramSettingsArray);
+{ Настройка по умолчанию для термокомпенсации: первый компенсационный вход
+  назначен первой группе из 16 каналов, остальные группы отключены. }
 procedure Mic185DefaultGroupAdditionSettings(
   out ASettings: TMic185GroupAdditionArray);
+{ Совместимый wrapper для старого пути программирования без индивидуальных
+  настроек каналов. }
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord): TRecorderByteArray;
-// формирует буфер который идет на программирование устройства
+{ Формирует бинарный буфер ProgramDeviceBin: каналы, температуры, питание,
+  компенсационные входы и флаг TKC. }
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double; AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
-         // Список настроек по каналам
          const AChannelSettings: TMic185ChannelProgramSettingsArray;
          const AGroupAddition: TMic185GroupAdditionArray;
          ATemperatureCompensation: Boolean;
          APowerMaCode: LongWord = CMic185DefaultPowerMaCode): TRecorderByteArray;
+{ Перевод тока питания датчика из мА в код DAC MIC185V2. }
 function Mic185PowerMaToCode(APowerMa: Double): LongWord;
+{ Обратный перевод кода DAC в мА для расчетов диапазонов и Ом. }
 function Mic185PowerCodeToMa(APowerMaCode: LongWord): Double;
+{ Форматирует версию прошивки из DWORD в привычный текст x.y.z.w. }
 function Mic185FormatSoftVersion(AVersion: LongWord): string;
 
 implementation

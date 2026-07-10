@@ -185,6 +185,7 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
+    "devices/mic185/hardware_calibration_cache.md",
     "devices/mic185/value_units_conversion.md",
     "devices/mic185/source_map.md",
     "devices/mic185/settings_packet_table.md",
@@ -229,7 +230,6 @@
     "devices/mic140/protocol.md",
     "devices/mic140/mic140_configuration_details.md",
     "devices/mic140/acquisition_rules.md",
-    "devices/mic140/example/README.md",
-    "devices/mic140/protocol/README.md"
+    "devices/mic140/example/README.md"
   ]
 }
