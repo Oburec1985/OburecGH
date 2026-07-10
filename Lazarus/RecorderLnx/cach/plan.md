@@ -146,3 +146,18 @@
     and `dataSources[].mic185.temperatureCompensation`; old projects get the
     same defaults automatically
   - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded
+
+- [x] MIC-185 physical units and tag dialog parity
+  - [x] Added MIC185 source-level helpers for effective range and sample value
+    conversion without changing MIC185 protocol units
+  - [x] MIC185 tags now keep selected units (`mV`, `Ohm`, `microstrain`,
+    `mV(tenzo)`) and `PublishMeasurementBlock` converts values before pushing
+    samples into tags
+  - [x] MIC185 channel dialog recalculates actual range when range/unit/current,
+    sensor scheme, sensitivity, or resistance changes
+  - [x] Tag settings dialog now exposes hardware-source setup and zero-balance
+    actions for MIC185, and uses command icon 57 for hardware-curve read
+  - [x] Added `Docs/devices/mic185/value_units_conversion.md` with original
+    source references and RecorderLnx behavior
+  - [x] Rebuild `RecorderLnx.lpi` via `lazbuild -B` succeeded; data-source
+    regression test passed

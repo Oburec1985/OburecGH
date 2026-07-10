@@ -51,7 +51,8 @@ const
   CRecorderCommandImageCount = 39;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
-  CTagDialogImageCount = 52;
+  CTagDialogIconHardwareCurveRead = 57;
+  CTagDialogImageCount = 58;
 
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
 procedure EnsureRecorderTagDialogImages(AImages: TCustomImageList);
@@ -300,6 +301,13 @@ begin
     CWindevRoot + 'rc_guisrv\res\zbalance.ico',
     ImageFile('zbalance.ico'),
     ImageFile('from_rcguisrv\res\v3\ico\zbalance.ico')
+  ]));
+  SetImageListIconAt(AImages, CTagDialogIconHardwareCurveRead, FirstExistingFile([
+    CWindevRoot + 'rc_guisrv\res\v3\ico\ram_out.ico',
+    CWindevRoot + 'rc_guisrv\res\ram_out.ico',
+    ImageFile('ram_out.ico'),
+    ImageFile('from_rcguisrv\res\v3\ico\ram_out.ico'),
+    ImageFile('from_rcguisrv\res\harf_t.ico')
   ]));
 end;
 

@@ -646,6 +646,40 @@ D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. Existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh` message,
 but it does not fail `lazbuild`.
 
+## Codex continuation 2026-07-10: MIC185 physical units and tag dialog buttons
+
+**Prompt:** User asked to make the MIC185 channel dialog calculate the actual
+range from selected settings, publish MIC185 tag values in selected units, and
+restore original-like tag settings dialog controls: hardware-source setup,
+zero-balance, hardware characteristic view/edit, and read-GX button with icon
+57. User explicitly asked not to damage the MIC185 protocol.
+
+**Fix:** `Device/mic185/uRecorderMic185DataSource.pas` now contains MIC185
+effective-range and value-conversion helpers. Protocol/raw acquisition remains
+in mV; `TRecorderMic185DataSource.PublishMeasurementBlock` converts values just
+before adding samples to tags. Existing MIC185 tag units are no longer reset to
+mV during source/tag creation, so selected `Ом`/`мкм/м` units survive.
+
+**UI:** `Device/mic185/UI/uRecorderMic185ChannelDialog.pas` recalculates
+`edActualRange` when nominal range, actual unit, module current, sensor scheme,
+strain sensitivity, or external resistance changes. `UI/uTagSettingsDialog.pas`
+now treats MIC185 like MIC140 for hardware-source setup and zero-balance button
+visibility; the address-line setup button is no longer forcibly hidden.
+`UI/uRecorderCommandImages.pas` reserves tag-dialog icon index 57 for the
+hardware-curve read action.
+
+**Docs:** Added `Docs/devices/mic185/value_units_conversion.md` with source
+references from original `windev-v3.9` and a RecorderLnx behavior table. The
+document records that MIC185 hardware-GX download from module is still not
+implemented without protocol work; the current change only restores the UI and
+keeps conversion in the data source.
+
+**Verification:** First `lazbuild -B RecorderLnx.lpi` compiled but could not
+overwrite `RecorderLnx.exe` because a running process held it. Stopped PID 9200
+and rebuilt successfully. Existing post-build `copy_sdb_res.bat` still prints
+the `#!/bin/sh` message but lazbuild exits 0. Also ran
+`Tests/RecorderTests/DataSources/lib/RecorderDataSourcesTest.exe`: passed.
+
 ## Codex continuation 2026-07-09: MIC185 multi-row settings and programming trace
 
 **Prompt:** `Select all` in the MIC183/185 settings dialog did not visibly select

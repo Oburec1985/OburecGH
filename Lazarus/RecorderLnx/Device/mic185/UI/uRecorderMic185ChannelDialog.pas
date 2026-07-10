@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
-  uRecorderTags;
+  uRecorderTags, uMic185MebiusTypes;
 
 type
 
@@ -49,6 +49,10 @@ type
     Label8: TLabel;
     Label9: TLabel;
     procedure btnApplyClick(Sender: TObject);
+    procedure SettingsChanged(Sender: TObject);
+  private
+    procedure ReadSettingsFromUi(var ASettings: TMic185ChannelProgramSettings);
+    procedure UpdateActualRange;
   public
     procedure LoadTag(ATag: TRecorderTag);
     procedure SaveTag(ATag: TRecorderTag);
@@ -62,7 +66,7 @@ implementation
 {$R *.lfm}
 
 uses
-  uRecorderMic185DataSource, uMic185Constants, uMic185MebiusTypes;
+  uRecorderMic185DataSource, uMic185Constants;
 
 procedure FillCombo(ACombo: TComboBox; const AValues: array of string;
   AIndex: Integer);
@@ -96,6 +100,47 @@ begin
 
 end;
 
+procedure TRecorderMic185ChannelForm.SettingsChanged(Sender: TObject);
+begin
+  UpdateActualRange;
+end;
+
+procedure TRecorderMic185ChannelForm.ReadSettingsFromUi(
+  var ASettings: TMic185ChannelProgramSettings);
+begin
+  if cbNominalRange.ItemIndex >= 0 then
+    ASettings.MeasRangeIndex := cbNominalRange.ItemIndex;
+  if cbCommutation.ItemIndex >= 0 then
+    ASettings.CommutIndex := cbCommutation.ItemIndex;
+  if cbSensorScheme.ItemIndex >= 0 then
+    ASettings.SensorScheme := cbSensorScheme.ItemIndex;
+  if cbModulePower.ItemIndex >= 0 then
+    ASettings.PowerMaCode := Mic185PowerMaToCode(cbModulePower.ItemIndex);
+  ASettings.SoftBalance := Round(TextToFloatDef(edSoftBalance.Text, 0));
+  if chkChannelShunt.Checked then
+  begin
+    if cbShuntValue.ItemIndex > 0 then
+      ASettings.ShuntOn := cbShuntValue.ItemIndex - 1
+    else
+      ASettings.ShuntOn := 1;
+  end
+  else
+    ASettings.ShuntOn := 0;
+  ASettings.TensoSensitivity := TextToFloatDef(edStrainSensitivity.Text, 2);
+  ASettings.Resistance := TextToFloatDef(edOuterResistance.Text, 200);
+  ASettings.BlockSize := 1;
+end;
+
+procedure TRecorderMic185ChannelForm.UpdateActualRange;
+var
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  RecorderMic185ReadChannelMode('', MIC185DefaultPollFrequencyHz, lSettings);
+  ReadSettingsFromUi(lSettings);
+  edActualRange.Text := RecorderMic185EffectiveRangeText(lSettings,
+    cbActualRangeUnit.Text);
+end;
+
 procedure TRecorderMic185ChannelForm.LoadTag(ATag: TRecorderTag);
 var
   lSettings: TMic185ChannelProgramSettings;
@@ -116,6 +161,12 @@ begin
   edInnerResistance.Text := '10000';
   edHardBalance.Text := '0.000';
   chkChannelShunt.Checked := False;
+  cbNominalRange.OnChange := @SettingsChanged;
+  cbActualRangeUnit.OnChange := @SettingsChanged;
+  cbModulePower.OnChange := @SettingsChanged;
+  cbSensorScheme.OnChange := @SettingsChanged;
+  edStrainSensitivity.OnChange := @SettingsChanged;
+  edOuterResistance.OnChange := @SettingsChanged;
   if ATag <> nil then
   begin
     Caption := 'Свойства канала ' + ATag.Address;
@@ -146,6 +197,7 @@ begin
     if ATag.UnitName <> '' then
       cbActualRangeUnit.Text := ATag.UnitName;
   end;
+  UpdateActualRange;
 end;
 
 procedure TRecorderMic185ChannelForm.SaveTag(ATag: TRecorderTag);
@@ -156,29 +208,9 @@ begin
     Exit;
   RecorderMic185ReadChannelMode(ATag.SourceValueMode, ATag.PollFrequencyHz,
     lSettings);
-  if cbNominalRange.ItemIndex >= 0 then
-    lSettings.MeasRangeIndex := cbNominalRange.ItemIndex;
-  if cbCommutation.ItemIndex >= 0 then
-    lSettings.CommutIndex := cbCommutation.ItemIndex;
-  if cbSensorScheme.ItemIndex >= 0 then
-    lSettings.SensorScheme := cbSensorScheme.ItemIndex;
-  if cbModulePower.ItemIndex >= 0 then
-    lSettings.PowerMaCode := Mic185PowerMaToCode(cbModulePower.ItemIndex);
-  lSettings.SoftBalance := Round(TextToFloatDef(edSoftBalance.Text, 0));
-  if chkChannelShunt.Checked then
-  begin
-    if cbShuntValue.ItemIndex > 0 then
-      lSettings.ShuntOn := cbShuntValue.ItemIndex - 1
-    else
-      lSettings.ShuntOn := 1;
-  end
-  else
-    lSettings.ShuntOn := 0;
-  lSettings.TensoSensitivity := TextToFloatDef(edStrainSensitivity.Text, 2);
-  lSettings.Resistance := TextToFloatDef(edOuterResistance.Text, 200);
-  lSettings.BlockSize := 1;
+  ReadSettingsFromUi(lSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
-  ATag.RangeMax := RecorderMic185RangeMax(lSettings.MeasRangeIndex);
+  ATag.RangeMax := RecorderMic185EffectiveRangeMax(lSettings, ATag.UnitName);
   ATag.RangeMin := -ATag.RangeMax;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
 end;

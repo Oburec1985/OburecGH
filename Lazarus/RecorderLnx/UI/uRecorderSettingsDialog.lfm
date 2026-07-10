@@ -2,10 +2,10 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
   Left = 322
   Height = 631
   Top = 122
-  Width = 1002
+  Width = 925
   Caption = 'Настройка'
   ClientHeight = 631
-  ClientWidth = 1002
+  ClientWidth = 925
   Constraints.MinHeight = 590
   Constraints.MinWidth = 760
   Position = poOwnerFormCenter
@@ -13,7 +13,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     Left = 0
     Height = 589
     Top = 0
-    Width = 1002
+    Width = 925
     ActivePage = tsHardware
     Align = alClient
     TabIndex = 1
@@ -21,16 +21,16 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsRecorder: TTabSheet
       Caption = 'Рекордер'
       ClientHeight = 561
-      ClientWidth = 994
+      ClientWidth = 917
       object pnRecorderLeft: TPanel
         Left = 0
         Height = 561
         Top = 0
-        Width = 756
+        Width = 679
         Align = alClient
         BevelOuter = bvNone
         ClientHeight = 561
-        ClientWidth = 756
+        ClientWidth = 679
         TabOrder = 0
         object gbDisplay: TGroupBox
           Left = 8
@@ -320,7 +320,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         end
       end
       object pnRecorderRight: TPanel
-        Left = 756
+        Left = 679
         Height = 561
         Top = 0
         Width = 238
@@ -537,26 +537,26 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsHardware: TTabSheet
       Caption = 'Аппаратные свойства'
       ClientHeight = 561
-      ClientWidth = 994
+      ClientWidth = 917
       object gbHardware: TGroupBox
         Left = 8
         Height = 531
         Top = 8
-        Width = 970
+        Width = 893
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'Устройства'
         ClientHeight = 511
-        ClientWidth = 966
+        ClientWidth = 889
         TabOrder = 0
         object pnHardwareButtons: TPanel
           Left = 0
           Height = 52
           Top = 459
-          Width = 966
+          Width = 889
           Align = alBottom
           BevelOuter = bvNone
           ClientHeight = 52
-          ClientWidth = 966
+          ClientWidth = 889
           TabOrder = 0
           object btnDeviceAdd: TBitBtn
             Left = 8
@@ -607,7 +607,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Left = 0
           Height = 459
           Top = 0
-          Width = 966
+          Width = 889
           Align = alClient
           ImagesWidth = 16
           ReadOnly = True
@@ -620,7 +620,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsChannels: TTabSheet
       Caption = 'Каналы'
       ClientHeight = 561
-      ClientWidth = 994
+      ClientWidth = 917
       object gbAvailableChannels: TGroupBox
         Left = 0
         Height = 561
@@ -701,33 +701,33 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         Left = 227
         Height = 561
         Top = 0
-        Width = 384
+        Width = 307
         Align = alClient
         Caption = 'Выбранные каналы'
         ClientHeight = 541
-        ClientWidth = 380
+        ClientWidth = 303
         TabOrder = 2
         object pnFilter: TPanel
           Left = 0
           Height = 36
           Top = 0
-          Width = 380
+          Width = 303
           Align = alTop
           BevelOuter = bvNone
           ClientHeight = 36
-          ClientWidth = 380
+          ClientWidth = 303
           TabOrder = 0
           object edSelectedChannelsFilter: TEdit
             Left = 8
             Height = 23
             Top = 6
-            Width = 329
+            Width = 252
             Anchors = [akTop, akLeft, akRight]
             TabOrder = 0
             Text = 'Filter'
           end
           object btnSelectedChannelsClear: TButton
-            Left = 346
+            Left = 269
             Height = 24
             Top = 6
             Width = 24
@@ -740,7 +740,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Left = 0
           Height = 505
           Top = 36
-          Width = 380
+          Width = 303
           Align = alClient
           ColCount = 7
           DragMode = dmAutomatic
@@ -753,7 +753,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         end
       end
       object spChannelAlgorithms: TSplitter
-        Left = 611
+        Left = 534
         Height = 561
         Top = 0
         Width = 5
@@ -761,7 +761,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         ResizeAnchor = akRight
       end
       object gbChannelAlgorithms: TGroupBox
-        Left = 616
+        Left = 539
         Height = 561
         Top = 0
         Width = 378
@@ -1036,7 +1036,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsPlugins: TTabSheet
       Caption = 'Плагины'
       ClientHeight = 561
-      ClientWidth = 994
+      ClientWidth = 917
       object lbPluginsPlaceholder: TLabel
         Left = 16
         Height = 15
@@ -1051,36 +1051,34 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     Left = 0
     Height = 42
     Top = 589
-    Width = 1002
+    Width = 925
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 1002
+    ClientWidth = 925
     TabOrder = 1
     object btnOk: TButton
-      Left = 732
+      Left = 655
       Height = 28
       Top = 7
       Width = 82
       Anchors = [akTop, akRight]
       Caption = 'OK'
-      Default = True
       TabOrder = 0
       OnClick = OkButtonClick
     end
     object btnClose: TButton
-      Left = 820
+      Left = 743
       Height = 28
       Top = 7
       Width = 82
       Anchors = [akTop, akRight]
-      Cancel = True
       Caption = 'Закрыть'
       ModalResult = 2
       TabOrder = 1
     end
     object fApplyButton: TButton
-      Left = 908
+      Left = 831
       Height = 28
       Top = 7
       Width = 82

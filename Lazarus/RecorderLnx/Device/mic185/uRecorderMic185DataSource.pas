@@ -55,6 +55,12 @@ function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
 function RecorderMic185RangeText(ARangeIndex: LongWord): string;
 function RecorderMic185RangeUnitText(ARangeIndex: LongWord): string;
 function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
+function RecorderMic185EffectiveRangeMax(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+function RecorderMic185EffectiveRangeText(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
+function RecorderMic185ConvertValue(AValueMv: Double;
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
@@ -629,6 +635,87 @@ begin
   end;
 end;
 
+function Mic185EffectivePowerMa(
+  const ASettings: TMic185ChannelProgramSettings): Double;
+begin
+  Result := Abs(Mic185PowerCodeToMa(ASettings.PowerMaCode));
+  if SameValue(Result, 0.0, 1E-9) then
+    Result := 1.0;
+end;
+
+function Mic185NormalizeUnitName(const AUnitName: string;
+  ARangeIndex: LongWord): string;
+begin
+  Result := Trim(AUnitName);
+  if Result = '' then
+    Result := RecorderMic185RangeUnitText(ARangeIndex);
+end;
+
+function Mic185SensorSchemeCoeff(ASensorScheme: LongWord): Double;
+begin
+  case ASensorScheme of
+    CMic185SensorSchemeHalf: Result := 2.0;
+    CMic185SensorSchemeBridge: Result := 1.0;
+  else
+    Result := 4.0;
+  end;
+end;
+
+function RecorderMic185EffectiveRangeMax(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+var
+  lExcitationMv: Double;
+  lRangeMv: Double;
+  lSensitivity: Double;
+  lUnit: string;
+begin
+  lRangeMv := RecorderMic185RangeMax(ASettings.MeasRangeIndex);
+  lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
+  if SameText(lUnit, 'Ом') then
+    Exit(lRangeMv / Mic185EffectivePowerMa(ASettings));
+
+  if SameText(lUnit, 'мкм/м') then
+  begin
+    lExcitationMv := Mic185EffectivePowerMa(ASettings) *
+      Max(Abs(ASettings.Resistance), 1E-9);
+    lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
+    Exit((lRangeMv / lExcitationMv) *
+      (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) * 1000000.0);
+  end;
+
+  Result := lRangeMv;
+end;
+
+function RecorderMic185EffectiveRangeText(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
+begin
+  Result := '±' + FormatFloat('0.000', RecorderMic185EffectiveRangeMax(
+    ASettings, AUnitName));
+end;
+
+function RecorderMic185ConvertValue(AValueMv: Double;
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+var
+  lExcitationMv: Double;
+  lSensitivity: Double;
+  lUnit: string;
+begin
+  lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
+  if SameText(lUnit, 'Ом') then
+    Exit(AValueMv / Mic185EffectivePowerMa(ASettings));
+
+  if SameText(lUnit, 'мкм/м') then
+  begin
+    lExcitationMv := Mic185EffectivePowerMa(ASettings) *
+      Max(Abs(ASettings.Resistance), 1E-9);
+    lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
+    Exit((AValueMv / lExcitationMv) *
+      (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) * 1000000.0);
+  end;
+
+  Result := AValueMv;
+end;
+
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 begin
   case ACommutIndex of
@@ -969,8 +1056,9 @@ begin
       begin
         RecorderMic185GetSourceChannelMode(ARegistry, lSourceId, lAddress,
           lTag.PollFrequencyHz, lSettings);
-        lTag.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-        lTag.RangeMax := RecorderMic185RangeMax(lSettings.MeasRangeIndex);
+        if Trim(lTag.UnitName) = '' then
+          lTag.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+        lTag.RangeMax := RecorderMic185EffectiveRangeMax(lSettings, lTag.UnitName);
         lTag.RangeMin := -lTag.RangeMax;
       end
       else if Pos('-t', LowerCase(lAddress)) > 0 then
@@ -1283,8 +1371,10 @@ begin
     begin
       RecorderMic185GetSourceChannelMode(ARegistry, SourceId,
         lChannels[I].Address, lChannels[I].PollFrequencyHz, lChannelSettings);
-      lTag.UnitName := RecorderMic185RangeUnitText(lChannelSettings.MeasRangeIndex);
-      lTag.RangeMax := RecorderMic185RangeMax(lChannelSettings.MeasRangeIndex);
+      if Trim(lTag.UnitName) = '' then
+        lTag.UnitName := RecorderMic185RangeUnitText(lChannelSettings.MeasRangeIndex);
+      lTag.RangeMax := RecorderMic185EffectiveRangeMax(lChannelSettings,
+        lTag.UnitName);
       lTag.RangeMin := -lTag.RangeMax;
     end
     else
@@ -1352,6 +1442,7 @@ procedure TRecorderMic185DataSource.PublishMeasurementBlock(
   const ABlock: TRecorderAcquisitionBlock);
 var
   I, J: Integer;
+  lChannelSettings: TMic185ChannelProgramSettingsArray;
   lCount: Integer;
   lTag: TRecorderTag;
   lTimes: TRecorderDoubleArray;
@@ -1365,6 +1456,8 @@ begin
   for J := 0 to ABlock.SampleCount - 1 do
     lTimes[J] := ABlock.FirstTimeSec + (J / ABlock.SampleRateHz);
 
+  RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
+    lChannelSettings);
   lCount := Min(ABlock.ChannelCount, fChannelTagNames.Count);
   for I := 0 to lCount - 1 do
   begin
@@ -1372,7 +1465,11 @@ begin
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
     for J := 0 to ABlock.SampleCount - 1 do
-      lValues[J] := ABlock.Values[I][J];
+      if I <= High(lChannelSettings) then
+        lValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
+          lChannelSettings[I], lTag.UnitName)
+      else
+        lValues[J] := ABlock.Values[I][J];
     Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
   end;
 

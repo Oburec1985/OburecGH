@@ -26,7 +26,8 @@ uses
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
-  uRecorderMic140SettingsDialog, uRecorderCommandImages;
+  uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
+  uRecorderCommandImages;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
@@ -381,7 +382,10 @@ begin
   AssignSpeedButtonImage(fDescriptionEditBtn, fImages, CTagDialogIconEdit);
   AssignSpeedButtonImage(fHardwareCurveSelectBtn, fImages, CTagDialogIconProperty);
   AssignSpeedButtonImage(fHardwareCurveSetupBtn, fImages, CTagDialogIconHardwareCurve);
-  AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
+  AssignSpeedButtonImage(fHardwareCurveDownloadBtn, fCommandImages,
+    CTagDialogIconHardwareCurveRead, 'Выгрузка из памяти ГХ');
+  if (fHardwareCurveDownloadBtn <> nil) and (fHardwareCurveDownloadBtn.Images = nil) then
+    AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
   AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty);
   AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CTagDialogIconAdd);
   AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CTagDialogIconRemove);
@@ -1028,6 +1032,8 @@ begin
   lTag := TagAt(0);
   if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
     Exit(True);
+  if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
+    Exit(True);
   Result := Pos(CMeraSourcePrefix, lTag.SourceId) = 1;
 end;
 
@@ -1036,7 +1042,7 @@ begin
   if fHardwareSourceSetupBtn = nil then
     Exit;
   fHardwareSourceSetupBtn.Enabled := CanConfigureHardwareSource;
-  fHardwareSourceSetupBtn.Visible := False;
+  fHardwareSourceSetupBtn.Visible := CanConfigureHardwareSource;
 end;
 
 procedure TTagSettingsDialog.LayoutTagDeviceActionButtons;
@@ -1086,6 +1092,8 @@ begin
     if Pos('Detached:', lTag.SourceId) = 1 then
       Continue;
     if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+      Exit(True);
+    if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
       Exit(True);
   end;
 end;
@@ -1813,19 +1821,20 @@ end;
 procedure TTagSettingsDialog.UpdateHardwareCurveButtons;
 var
   lI: Integer;
-  lHasMic140: Boolean;
+  lHasHardwareDevice: Boolean;
 begin
-  lHasMic140 := False;
+  lHasHardwareDevice := False;
   for lI := 0 to fTags.Count - 1 do
   begin
-    if Pos('MIC-140:', TagAt(lI).SourceId) = 1 then
+    if (Pos('MIC-140:', TagAt(lI).SourceId) = 1) or
+      (Pos('MIC-185:', TagAt(lI).SourceId) = 1) then
     begin
-      lHasMic140 := True;
+      lHasHardwareDevice := True;
       Break;
     end;
   end;
   if fHardwareCurveDownloadBtn <> nil then
-    fHardwareCurveDownloadBtn.Visible := lHasMic140;
+    fHardwareCurveDownloadBtn.Visible := lHasHardwareDevice;
 end;
 
 procedure TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
