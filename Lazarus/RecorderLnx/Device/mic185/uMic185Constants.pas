@@ -13,6 +13,7 @@ const
   { Количество логических каналов MIC183/185 в потоке:
     64 измерительных, 5 температурных LM74 и 1 служебный UTS. }
   CMic185ChannelCountMax = 64;
+  CMic185ChannelsPerModule = 16;
   CMic185TempChannelCount = 5;
   CMic185UtsChannelCount = 1;
   CMic185TotalLogicalChannelCount =

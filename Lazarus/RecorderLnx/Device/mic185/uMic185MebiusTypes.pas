@@ -64,6 +64,20 @@ type
   TMic185GroupAdditionArray =
     array[0..CMic185ModuleCount - 1] of LongWord;
 
+  { Editable module-wide settings stored by original MIC185V2 driver.
+    AveragePointCount is the binary exponent: 7 means 2^7 = 128 ADC samples. }
+  TMic185ModuleProgramSettings = record
+    GroundCommutationUs: LongWord;
+    ChannelCommutationUs: LongWord;
+    BalancePortionLength: LongWord;
+    HardBalance: LongWord;
+    AveragePointCount: Word;
+    MaxFreqMode: LongWord;
+    CalibrShuntIndex: LongWord;
+    DetermineBreak: Boolean;
+    HardwareBalanceOn: Boolean;
+  end;
+
   { Полный пакет настроек CMIC185V2_BASESETTINGS для PROGRAMM_DEVICE_BIN. }
   TMic185BaseSettings = record
     Channels: array[0..CMic185SettingsChannelSlots - 1] of TMic185BaseChanSettings;
@@ -116,6 +130,16 @@ procedure Mic185DefaultChannelProgramSettingsArray(AFrequencyHz: Double;
   назначен первой группе из 16 каналов, остальные группы отключены. }
 procedure Mic185DefaultGroupAdditionSettings(
   out ASettings: TMic185GroupAdditionArray);
+{ Fills module-wide settings with MIC185V2_DEFAULT values from original Recorder. }
+procedure Mic185DefaultModuleProgramSettings(
+  out ASettings: TMic185ModuleProgramSettings);
+{ Converts protocol exponent to the UI point count. }
+function Mic185AverageExponentToPointCount(AExponent: Word): LongWord;
+{ Converts UI point count to the protocol exponent. }
+function Mic185AveragePointCountToExponent(APointCount: LongWord): Word;
+{ Calculates the same max channel rate as CMIC185V2Base::CalcMaxRate. }
+function Mic185CalcMaxFrequencyHz(
+  const ASettings: TMic185ModuleProgramSettings): Double;
 { Совместимый wrapper для старого пути программирования без индивидуальных
   настроек каналов. }
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
@@ -126,6 +150,7 @@ function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double; AUtsE
          const AChannelSettings: TMic185ChannelProgramSettingsArray;
          const AGroupAddition: TMic185GroupAdditionArray;
          ATemperatureCompensation: Boolean;
+         const AModuleSettings: TMic185ModuleProgramSettings;
          APowerMaCode: LongWord = CMic185DefaultPowerMaCode): TRecorderByteArray;
 { Перевод тока питания датчика из мА в код DAC MIC185V2. }
 function Mic185PowerMaToCode(APowerMa: Double): LongWord;
@@ -180,11 +205,66 @@ begin
   ASettings[0] := CMic185ModAdd1;
 end;
 
+procedure Mic185DefaultModuleProgramSettings(
+  out ASettings: TMic185ModuleProgramSettings);
+begin
+  FillChar(ASettings, SizeOf(ASettings), 0);
+  ASettings.GroundCommutationUs := CMic185DefaultGndCommutUs;
+  ASettings.ChannelCommutationUs := CMic185DefaultChnCommutUs;
+  ASettings.BalancePortionLength := CMic185DefaultBlnPortionLength;
+  ASettings.HardBalance := CMic185DefaultHardBalance;
+  ASettings.AveragePointCount := CMic185DefaultAveragePointCount;
+  ASettings.MaxFreqMode := 0;
+  ASettings.CalibrShuntIndex := CMic185DefaultCalibrShuntIndex;
+  ASettings.DetermineBreak := False;
+  ASettings.HardwareBalanceOn := False;
+end;
+
+function Mic185AverageExponentToPointCount(AExponent: Word): LongWord;
+begin
+  if AExponent >= 31 then
+    Exit(1 shl 30);
+  Result := LongWord(1) shl AExponent;
+end;
+
+function Mic185AveragePointCountToExponent(APointCount: LongWord): Word;
+begin
+  Result := 0;
+  if APointCount = 0 then
+    Exit;
+  while (APointCount > 1) and (Result < 30) do
+  begin
+    APointCount := APointCount shr 1;
+    Inc(Result);
+  end;
+end;
+
+function Mic185CalcMaxFrequencyHz(
+  const ASettings: TMic185ModuleProgramSettings): Double;
+const
+  CMic185NiosIrqDelayUs = 10.0;
+var
+  lChannelTimeUs: Double;
+  lGroupCount: Double;
+begin
+  if ASettings.MaxFreqMode <> 0 then
+    lGroupCount := 1.0
+  else
+    lGroupCount := CMic185ChannelsPerModule;
+  lChannelTimeUs := ASettings.GroundCommutationUs + CMic185NiosIrqDelayUs +
+    ASettings.ChannelCommutationUs + CMic185NiosIrqDelayUs + 5.0 +
+    2.0 * Mic185AverageExponentToPointCount(ASettings.AveragePointCount);
+  if (lChannelTimeUs <= 0) or (lGroupCount <= 0) then
+    Exit(0);
+  Result := (1000000.0 / (lChannelTimeUs * lGroupCount)) * 0.90;
+end;
+
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;
   AUtsEnabled: Boolean; ADeviceSerial, ASoftVersion: LongWord;
   const AChannelSettings: TMic185ChannelProgramSettingsArray;
   const AGroupAddition: TMic185GroupAdditionArray;
   ATemperatureCompensation: Boolean;
+  const AModuleSettings: TMic185ModuleProgramSettings;
   APowerMaCode: LongWord): TRecorderByteArray;
 var
   I: Integer;
@@ -225,25 +305,25 @@ begin
 
   lSettings.SerialNumber := ADeviceSerial;
   lSettings.GroundEnabled := True;
-  lSettings.GroundCommutationUs := CMic185DefaultGndCommutUs;
-  lSettings.ChannelCommutationUs := CMic185DefaultChnCommutUs;
-  lSettings.BalancePortionLength := CMic185DefaultBlnPortionLength;
-  lSettings.HardBalance := CMic185DefaultHardBalance;
-  lSettings.AveragePointCount := CMic185DefaultAveragePointCount;
+  lSettings.GroundCommutationUs := AModuleSettings.GroundCommutationUs;
+  lSettings.ChannelCommutationUs := AModuleSettings.ChannelCommutationUs;
+  lSettings.BalancePortionLength := AModuleSettings.BalancePortionLength;
+  lSettings.HardBalance := AModuleSettings.HardBalance;
+  lSettings.AveragePointCount := AModuleSettings.AveragePointCount;
   if APowerMaCode = 0 then
     lSettings.PowerMaCode := CMic185DefaultPowerMaCode
   else
     lSettings.PowerMaCode := APowerMaCode;
   lSettings.Reserved := 0;
-  lSettings.MaxFreqMode := 0;
-  lSettings.CalibrShuntIndex := CMic185DefaultCalibrShuntIndex;
+  lSettings.MaxFreqMode := AModuleSettings.MaxFreqMode;
+  lSettings.CalibrShuntIndex := AModuleSettings.CalibrShuntIndex;
   for I := 0 to High(lSettings.GroupAddition) do
     if AGroupAddition[I] <= CMic185ModAddOff then
       lSettings.GroupAddition[I] := AGroupAddition[I]
     else
       lSettings.GroupAddition[I] := CMic185ModAddOff;
-  lSettings.DetermineBreak := False;
-  lSettings.HardwareBalanceOn := False;
+  lSettings.DetermineBreak := AModuleSettings.DetermineBreak;
+  lSettings.HardwareBalanceOn := AModuleSettings.HardwareBalanceOn;
   lSettings.TemperatureCompensation := ATemperatureCompensation;
   lSettings.SoftVersion := ASoftVersion;
 
@@ -273,11 +353,14 @@ function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
 var
   lChannelSettings: TMic185ChannelProgramSettingsArray;
   lGroupAddition: TMic185GroupAdditionArray;
+  lModuleSettings: TMic185ModuleProgramSettings;
 begin
   Mic185DefaultChannelProgramSettingsArray(AMeasFrequencyHz, lChannelSettings);
   Mic185DefaultGroupAdditionSettings(lGroupAddition);
+  Mic185DefaultModuleProgramSettings(lModuleSettings);
   Result := Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz, AUtsEnabled,
-    ADeviceSerial, ASoftVersion, lChannelSettings, lGroupAddition, True);
+    ADeviceSerial, ASoftVersion, lChannelSettings, lGroupAddition, True,
+    lModuleSettings);
 end;
 
 function Mic185FormatSoftVersion(AVersion: LongWord): string;

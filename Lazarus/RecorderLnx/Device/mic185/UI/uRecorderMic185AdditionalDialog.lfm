@@ -50,6 +50,7 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     Width = 86
     Style = csDropDownList
     TabOrder = 0
+    OnChange = cbAverageCountChange
   end
   object edGroundCommutUs: TEdit
     Left = 256
@@ -57,6 +58,7 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     Top = 50
     Width = 86
     TabOrder = 1
+    OnEditingDone = edTimingEditingDone
   end
   object edChannelCommutUs: TEdit
     Left = 256
@@ -64,6 +66,7 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     Top = 82
     Width = 86
     TabOrder = 2
+    OnEditingDone = edTimingEditingDone
   end
   object edMaxFrequencyHz: TEdit
     Left = 256

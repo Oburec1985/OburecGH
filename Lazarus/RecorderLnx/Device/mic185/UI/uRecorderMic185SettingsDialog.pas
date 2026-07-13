@@ -506,8 +506,26 @@ begin
 end;
 
 procedure TRecorderMic185SettingsForm.btnAdditionalClick(Sender: TObject);
+var
+  lModuleSettings: TMic185ModuleProgramSettings;
+  lSourceId: string;
+  lTemperatureCompensation: Boolean;
 begin
-  ShowRecorderMic185AdditionalDialog(Self);
+  lSourceId := BuildSourceId;
+  RecorderMic185EnsureConfiguredSource(fRegistry, lSourceId,
+    MIC185DefaultPollFrequencyHz);
+  RecorderMic185GetSourceModuleSettings(fRegistry, lSourceId, lModuleSettings);
+  lTemperatureCompensation :=
+    RecorderMic185GetSourceTemperatureCompensation(fRegistry, lSourceId);
+  if ShowRecorderMic185AdditionalDialog(Self, lModuleSettings,
+    lTemperatureCompensation) then
+  begin
+    RecorderMic185SetSourceModuleSettings(fRegistry, lSourceId,
+      MIC185DefaultPollFrequencyHz, lModuleSettings);
+    RecorderMic185SetSourceTemperatureCompensation(fRegistry, lSourceId,
+      MIC185DefaultPollFrequencyHz, lTemperatureCompensation);
+    ApplySettingsToDevice;
+  end;
 end;
 
 procedure TRecorderMic185SettingsForm.btnApplyClick(Sender: TObject);

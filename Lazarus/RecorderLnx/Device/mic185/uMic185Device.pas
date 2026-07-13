@@ -32,6 +32,7 @@ type
     fChannelProgramSettings: TMic185ChannelProgramSettingsArray;
     fHasChannelProgramSettings: Boolean;
     fGroupAddition: TMic185GroupAdditionArray;
+    fModuleProgramSettings: TMic185ModuleProgramSettings;
     fTemperatureCompensation: Boolean;
     fPowerMaCode: LongWord;
     fRecorderDeviceIndex: Integer;
@@ -77,7 +78,8 @@ type
     procedure ApplyChannelProgramSettings(
       const ASettings: TMic185ChannelProgramSettingsArray;
       const AGroupAddition: TMic185GroupAdditionArray;
-      ATemperatureCompensation: Boolean);
+      ATemperatureCompensation: Boolean;
+      const AModuleSettings: TMic185ModuleProgramSettings);
     { Запускает измерительную задачу MIC185V2. }
     procedure Start; override;
     { Останавливает измерительную задачу MIC185V2. }
@@ -133,6 +135,7 @@ begin
   fRecorderDeviceIndex := 3;
   Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz, fChannelProgramSettings);
   Mic185DefaultGroupAdditionSettings(fGroupAddition);
+  Mic185DefaultModuleProgramSettings(fModuleProgramSettings);
   fTemperatureCompensation := True;
   fPowerMaCode := CMic185DefaultPowerMaCode;
   fHasChannelProgramSettings := False;
@@ -312,10 +315,12 @@ end;
 procedure TRecorderMic185Device.ApplyChannelProgramSettings(
   const ASettings: TMic185ChannelProgramSettingsArray;
   const AGroupAddition: TMic185GroupAdditionArray;
-  ATemperatureCompensation: Boolean);
+  ATemperatureCompensation: Boolean;
+  const AModuleSettings: TMic185ModuleProgramSettings);
 begin
   fChannelProgramSettings := ASettings;
   fGroupAddition := AGroupAddition;
+  fModuleProgramSettings := AModuleSettings;
   fTemperatureCompensation := ATemperatureCompensation;
   if ASettings[0].PowerMaCode <> 0 then
     fPowerMaCode := ASettings[0].PowerMaCode;
@@ -349,7 +354,8 @@ begin
       fChannelProgramSettings);
   lSettings := Mic185BuildSettingsEx(fMeasFrequencyHz, fTempFrequencyHz,
     fUtsEnabled, fDeviceSerial, fSoftVersion, fChannelProgramSettings,
-    fGroupAddition, fTemperatureCompensation, fPowerMaCode);
+    fGroupAddition, fTemperatureCompensation, fModuleProgramSettings,
+    fPowerMaCode);
   if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('ProgramDeviceBin: %s', [lErrorMessage]);
 

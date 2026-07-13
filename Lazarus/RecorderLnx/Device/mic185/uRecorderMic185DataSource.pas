@@ -65,6 +65,20 @@ function RecorderMic185GetSourcePowerMaCode(ARegistry: TRecorderTagRegistry;
 { Сохраняет код тока питания датчика в конфигурации источника. }
 procedure RecorderMic185SetSourcePowerMaCode(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; APollFrequencyHz: Double; APowerMaCode: LongWord);
+{ Возвращает модульные настройки MIC-185 из конфигурации источника. }
+procedure RecorderMic185GetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out ASettings: TMic185ModuleProgramSettings);
+{ Сохраняет модульные настройки MIC-185 в конфигурации источника. }
+procedure RecorderMic185SetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; APollFrequencyHz: Double;
+  const ASettings: TMic185ModuleProgramSettings);
+{ Возвращает флаг аппаратной термокомпенсации из конфигурации источника. }
+function RecorderMic185GetSourceTemperatureCompensation(
+  ARegistry: TRecorderTagRegistry; const ASourceId: string): Boolean;
+{ Сохраняет флаг термокомпенсации, не меняя назначение входов дополнений. }
+procedure RecorderMic185SetSourceTemperatureCompensation(
+  ARegistry: TRecorderTagRegistry; const ASourceId: string;
+  APollFrequencyHz: Double; ATemperatureCompensation: Boolean);
 { Программирует уже настроенный MIC-185 source без открытия общего диалога. }
 function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; out AErrorText: string): Boolean;
@@ -457,6 +471,94 @@ begin
   end;
 end;
 
+procedure RecorderMic185GetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out ASettings: TMic185ModuleProgramSettings);
+var
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  Mic185DefaultModuleProgramSettings(ASettings);
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  lConfig := Mic185SourceConfigObject(lEntry, False);
+  try
+    if lConfig = nil then
+      Exit;
+    ASettings.GroundCommutationUs := LongWord(lConfig.Get(
+      'groundCommutationUs', Integer(ASettings.GroundCommutationUs)));
+    ASettings.ChannelCommutationUs := LongWord(lConfig.Get(
+      'channelCommutationUs', Integer(ASettings.ChannelCommutationUs)));
+    ASettings.BalancePortionLength := LongWord(lConfig.Get(
+      'balancePortionLength', Integer(ASettings.BalancePortionLength)));
+    ASettings.HardBalance := LongWord(lConfig.Get('hardBalance',
+      Integer(ASettings.HardBalance)));
+    ASettings.AveragePointCount := Word(lConfig.Get('averagePointCount',
+      Integer(ASettings.AveragePointCount)));
+    ASettings.MaxFreqMode := LongWord(lConfig.Get('maxFreqMode',
+      Integer(ASettings.MaxFreqMode)));
+    ASettings.CalibrShuntIndex := LongWord(lConfig.Get('calibrShuntIndex',
+      Integer(ASettings.CalibrShuntIndex)));
+    ASettings.DetermineBreak := lConfig.Get('determineBreak',
+      ASettings.DetermineBreak);
+    ASettings.HardwareBalanceOn := lConfig.Get('hardwareBalanceOn',
+      ASettings.HardwareBalanceOn);
+  finally
+    lConfig.Free;
+  end;
+end;
+
+procedure RecorderMic185StoreSourceModuleSettings(AConfig: TJSONObject;
+  const ASettings: TMic185ModuleProgramSettings);
+var
+  lIndex: Integer;
+
+  procedure ReplaceInteger(const AName: string; AValue: LongInt);
+  begin
+    lIndex := AConfig.IndexOfName(AName);
+    if lIndex >= 0 then
+      AConfig.Delete(lIndex);
+    AConfig.Add(AName, AValue);
+  end;
+
+  procedure ReplaceBoolean(const AName: string; AValue: Boolean);
+  begin
+    lIndex := AConfig.IndexOfName(AName);
+    if lIndex >= 0 then
+      AConfig.Delete(lIndex);
+    AConfig.Add(AName, AValue);
+  end;
+
+begin
+  if AConfig = nil then
+    Exit;
+  ReplaceInteger('groundCommutationUs', Integer(ASettings.GroundCommutationUs));
+  ReplaceInteger('channelCommutationUs', Integer(ASettings.ChannelCommutationUs));
+  ReplaceInteger('balancePortionLength', Integer(ASettings.BalancePortionLength));
+  ReplaceInteger('hardBalance', Integer(ASettings.HardBalance));
+  ReplaceInteger('averagePointCount', Integer(ASettings.AveragePointCount));
+  ReplaceInteger('maxFreqMode', Integer(ASettings.MaxFreqMode));
+  ReplaceInteger('calibrShuntIndex', Integer(ASettings.CalibrShuntIndex));
+  ReplaceBoolean('determineBreak', ASettings.DetermineBreak);
+  ReplaceBoolean('hardwareBalanceOn', ASettings.HardwareBalanceOn);
+end;
+
+procedure RecorderMic185SetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; APollFrequencyHz: Double;
+  const ASettings: TMic185ModuleProgramSettings);
+var
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  lEntry := RecorderConfiguredDataSourcesEnsure(ARegistry, ASourceId,
+    CMic185ModuleName, APollFrequencyHz);
+  lConfig := Mic185SourceConfigObject(lEntry, True);
+  try
+    RecorderMic185StoreSourceModuleSettings(lConfig, ASettings);
+    Mic185StoreSourceConfigObject(lEntry, lConfig);
+  finally
+    lConfig.Free;
+  end;
+end;
+
 procedure RecorderMic185GetSourceGroupAddition(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; out AGroupAddition: TMic185GroupAdditionArray);
 var
@@ -527,6 +629,27 @@ begin
     lArray.Add(Integer(AGroupAddition[I]));
 end;
 
+procedure RecorderMic185SetSourceTemperatureCompensation(
+  ARegistry: TRecorderTagRegistry; const ASourceId: string;
+  APollFrequencyHz: Double; ATemperatureCompensation: Boolean);
+var
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+  lGroupAddition: TMic185GroupAdditionArray;
+begin
+  RecorderMic185GetSourceGroupAddition(ARegistry, ASourceId, lGroupAddition);
+  lEntry := RecorderConfiguredDataSourcesEnsure(ARegistry, ASourceId,
+    CMic185ModuleName, APollFrequencyHz);
+  lConfig := Mic185SourceConfigObject(lEntry, True);
+  try
+    RecorderMic185StoreSourceCompensation(lConfig, lGroupAddition,
+      ATemperatureCompensation);
+    Mic185StoreSourceConfigObject(lEntry, lConfig);
+  finally
+    lConfig.Free;
+  end;
+end;
+
 function RecorderMic185FormatGroupAddition(
   const AGroupAddition: TMic185GroupAdditionArray): string;
 var
@@ -572,6 +695,7 @@ var
   lGroupAddition: TMic185GroupAdditionArray;
   lHost: string;
   lNative: TRecorderMic185Device;
+  lModuleSettings: TMic185ModuleProgramSettings;
   lPollHz: Double;
   lPort: Word;
   lSettings: TMic185ChannelProgramSettingsArray;
@@ -593,6 +717,7 @@ begin
   RecorderMic185BuildSourceProgramSettings(ARegistry, ASourceId, lPollHz,
     lSettings);
   RecorderMic185GetSourceGroupAddition(ARegistry, ASourceId, lGroupAddition);
+  RecorderMic185GetSourceModuleSettings(ARegistry, ASourceId, lModuleSettings);
   lTemperatureCompensation :=
     RecorderMic185GetSourceTemperatureCompensation(ARegistry, ASourceId);
   lSummary := '';
@@ -605,9 +730,12 @@ begin
        lSettings[I].SensorScheme, lSettings[I].ShuntOn, lSettings[I].BlockSize]);
   end;
   RecorderMic185Log(Format(
-    'ProgramConfiguredSource %s power=%d tkc=%s groupAddition=%s: %s',
+    'ProgramConfiguredSource %s power=%d tkc=%s avg=%d/%d max=%.3fHz groupAddition=%s: %s',
     [ASourceId, lSettings[0].PowerMaCode,
      BoolToStr(lTemperatureCompensation, True),
+     lModuleSettings.AveragePointCount,
+     Mic185AverageExponentToPointCount(lModuleSettings.AveragePointCount),
+     Mic185CalcMaxFrequencyHz(lModuleSettings),
      RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
 
   lDevice := CreateRecorderMic185Device;
@@ -622,7 +750,7 @@ begin
     end;
     lNative := TRecorderMic185Device(lDevice.GetNativeObject);
     lNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
-      lTemperatureCompensation);
+      lTemperatureCompensation, lModuleSettings);
     try
       lDevice.Connect;
       lDevice.ProgramDevice;
@@ -888,6 +1016,7 @@ var
   lLink: TJSONObject;
   lLinks: TJSONArray;
   lMic185: TJSONObject;
+  lModuleSettings: TMic185ModuleProgramSettings;
   lPollHz: Double;
   lPort: Word;
   lSourceId: string;
@@ -950,8 +1079,10 @@ begin
       lMic185.Add('powerMaCode', Integer(RecorderMic185GetSourcePowerMaCode(
         ARegistry, lSourceId)));
       RecorderMic185GetSourceGroupAddition(ARegistry, lSourceId, lGroupAddition);
+      RecorderMic185GetSourceModuleSettings(ARegistry, lSourceId, lModuleSettings);
       lTemperatureCompensation :=
         RecorderMic185GetSourceTemperatureCompensation(ARegistry, lSourceId);
+      RecorderMic185StoreSourceModuleSettings(lMic185, lModuleSettings);
       RecorderMic185StoreSourceCompensation(lMic185, lGroupAddition,
         lTemperatureCompensation);
       lLinks := TJSONArray.Create;
@@ -1010,6 +1141,7 @@ var
   lLinks: TJSONArray;
   lMic185: TJSONObject;
   lMode: string;
+  lModuleSettings: TMic185ModuleProgramSettings;
   lPollHz: Double;
   lPort: Word;
   lSettings: TMic185ChannelProgramSettings;
@@ -1046,6 +1178,26 @@ begin
     end;
     lConfig.Add('powerMaCode', lMic185.Get('powerMaCode',
       Integer(CMic185DefaultPowerMaCode)));
+    Mic185DefaultModuleProgramSettings(lModuleSettings);
+    lModuleSettings.GroundCommutationUs := LongWord(lMic185.Get(
+      'groundCommutationUs', Integer(lModuleSettings.GroundCommutationUs)));
+    lModuleSettings.ChannelCommutationUs := LongWord(lMic185.Get(
+      'channelCommutationUs', Integer(lModuleSettings.ChannelCommutationUs)));
+    lModuleSettings.BalancePortionLength := LongWord(lMic185.Get(
+      'balancePortionLength', Integer(lModuleSettings.BalancePortionLength)));
+    lModuleSettings.HardBalance := LongWord(lMic185.Get('hardBalance',
+      Integer(lModuleSettings.HardBalance)));
+    lModuleSettings.AveragePointCount := Word(lMic185.Get('averagePointCount',
+      Integer(lModuleSettings.AveragePointCount)));
+    lModuleSettings.MaxFreqMode := LongWord(lMic185.Get('maxFreqMode',
+      Integer(lModuleSettings.MaxFreqMode)));
+    lModuleSettings.CalibrShuntIndex := LongWord(lMic185.Get('calibrShuntIndex',
+      Integer(lModuleSettings.CalibrShuntIndex)));
+    lModuleSettings.DetermineBreak := lMic185.Get('determineBreak',
+      lModuleSettings.DetermineBreak);
+    lModuleSettings.HardwareBalanceOn := lMic185.Get('hardwareBalanceOn',
+      lModuleSettings.HardwareBalanceOn);
+    RecorderMic185StoreSourceModuleSettings(lConfig, lModuleSettings);
     if lMic185.Find('temperatureCompensation') <> nil then
       lTemperatureCompensation := lMic185.Get('temperatureCompensation', True)
     else
@@ -1362,6 +1514,7 @@ var
   I: Integer;
   lDevice: TRecorderMic185Device;
   lGroupAddition: TMic185GroupAdditionArray;
+  lModuleSettings: TMic185ModuleProgramSettings;
   lSummary: string;
   lSettings: TMic185ChannelProgramSettingsArray;
   lTemperatureCompensation: Boolean;
@@ -1373,6 +1526,7 @@ begin
   RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
     lSettings);
   RecorderMic185GetSourceGroupAddition(Registry, SourceId, lGroupAddition);
+  RecorderMic185GetSourceModuleSettings(Registry, SourceId, lModuleSettings);
   lTemperatureCompensation :=
     RecorderMic185GetSourceTemperatureCompensation(Registry, SourceId);
   lSummary := '';
@@ -1393,7 +1547,7 @@ begin
        BoolToStr(lTemperatureCompensation, True),
        RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
   lDevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
-    lTemperatureCompensation);
+    lTemperatureCompensation, lModuleSettings);
 end;
 
 procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);

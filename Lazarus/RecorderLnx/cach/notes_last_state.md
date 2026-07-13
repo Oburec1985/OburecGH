@@ -1,5 +1,27 @@
 # MIC-140 debug stand — последнее состояние (2026-07-06)
 
+## Codex continuation 2026-07-13: MIC185 additional average count
+
+**Prompt:** MIC185 additional settings dialog shows an empty averaging count;
+at 100 Hz it should be 128 points. Check average calculation and dialog logic
+against original Recorder.
+
+**Findings:** Original MIC185V2 stores `AveragePointCount` as an exponent:
+`7` means `2^7 = 128` ADC samples. RecorderLnx put protocol value `7` directly
+into a `csDropDownList` with point-count items, so the field became blank. The
+additional dialog also did not persist/program module-wide fields.
+
+**Fix:** Added module-wide MIC185 settings, conversion helpers, and the original
+`CalcMaxRate` formula. The dialog now displays point count `128`, stores/programs
+the exponent `7`, saves module settings in `dataSources[].mic185`, and applies
+them through `ProgramDeviceBin`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0; existing post-build `copy_sdb_res.bat` still prints `#! is not recognized`.
+`D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.
+
 ## Codex continuation 2026-07-08: tag settings additional-tab layout
 
 **Prompt:** в настройках тега в диалоге наползание элементов окна друг на друга.
