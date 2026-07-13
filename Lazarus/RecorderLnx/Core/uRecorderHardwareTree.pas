@@ -52,7 +52,7 @@ uses
   uRecorderConfiguredDataSources, uRecorderMic140Utils;
 
 const
-  CDeviceTreeProbeTimeoutMs = 1000;
+  CDeviceTreeProbeTimeoutMs = 250;
 
 function RecorderMeraFilePathExists(const ASourceId: string): Boolean;
 var
@@ -145,6 +145,8 @@ begin
     Exit;
   if RecorderIsVirtualTagSource(lNorm) then
     Exit(RecorderMeraFilePathExists(lNorm));
+  if RecorderHardwareIsSourceOffline(lNorm) then
+    Exit(False);
   if RecorderIsHardwareMic185TagSource(lNorm) then
     Exit(RecorderMic185IsSourceLinkOk(lNorm));
   if RecorderIsHardwareMic140TagSource(lNorm) then

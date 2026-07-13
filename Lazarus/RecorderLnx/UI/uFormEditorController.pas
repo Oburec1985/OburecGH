@@ -112,6 +112,7 @@ type
     DisplayFormat: string;     { Формат отображения вещественных чисел }
     Name: string;              { Имя компонента }
     OscExtraLines: TStringList; { ?. ? ? }
+    Snapshot: TRecorderVisualComponent;
     TagName: string;           { Привязанный тег }
     TagOffset: Integer;        { Смещение относительно выбранного тега }
     Text: string;              { Отображаемый статический текст }
@@ -163,6 +164,8 @@ type
     fUndoStack: TList;                             { Стек отката изменений (TFormEditorUndoState) }
     fTagRegistry: TRecorderTagRegistry;            { Реестр тегов для live-компонентов }
     fOperationUndoSaved: Boolean;
+    fOperationChanged: Boolean;
+    fLastOperationRenderTickMs: QWord;
     fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
     fPagePanels: TStringList;                      { Панели отдельных страниц мнемосхем }
 
@@ -198,7 +201,9 @@ type
     function CreateComponentFromSnapshot(
       AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
     procedure RenderLive;
+    procedure RenderLiveDuringOperation(AForce: Boolean);
     procedure NotifyChanged;
+    procedure CopyComponentState(ASource, ADest: TRecorderVisualComponent);
     procedure CopySelected;
     procedure PasteClipboard;
     function ClipboardItemFromComponent(
@@ -280,6 +285,7 @@ type
 const
 
   CMinComponentSize = 8;
+  COperationRenderIntervalMs = 40;
   CPasteOffset = 16;
   CResizeHandleSize = 8;
   CResizeHotZone = 5;
@@ -343,6 +349,7 @@ end;
 
 destructor TFormEditorClipboardItem.Destroy;
 begin
+  Snapshot.Free;
   OscExtraLines.Free;
   inherited Destroy;
 end;
@@ -497,6 +504,76 @@ procedure TFormEditorController.NotifyChanged;
 begin
   if Assigned(fOnChanged) then
     fOnChanged;
+end;
+
+procedure TFormEditorController.RenderLiveDuringOperation(AForce: Boolean);
+var
+  lNow: QWord;
+begin
+  fOperationChanged := True;
+  lNow := GetTickCount64;
+  if (not AForce) and (fLastOperationRenderTickMs <> 0) and
+    (lNow - fLastOperationRenderTickMs < COperationRenderIntervalMs) then
+    Exit;
+
+  RenderLive;
+  fLastOperationRenderTickMs := lNow;
+end;
+
+procedure TFormEditorController.CopyComponentState(ASource,
+  ADest: TRecorderVisualComponent);
+var
+  lSrcStatic: TRecorderStaticTextComponent;
+  lDstStatic: TRecorderStaticTextComponent;
+  lSrcTagValue: TRecorderTagValueComponent;
+  lDstTagValue: TRecorderTagValueComponent;
+begin
+  if (ASource = nil) or (ADest = nil) then
+    Exit;
+
+  ADest.Id := ASource.Id;
+  ADest.Name := ASource.Name;
+  ADest.TagName := ASource.TagName;
+  ADest.TagId := ASource.TagId;
+  ADest.Bounds := ASource.Bounds;
+
+  if (ASource is TRecorderStaticTextComponent) and
+    (ADest is TRecorderStaticTextComponent) then
+  begin
+    lSrcStatic := TRecorderStaticTextComponent(ASource);
+    lDstStatic := TRecorderStaticTextComponent(ADest);
+    lDstStatic.Text := lSrcStatic.Text;
+    lDstStatic.FontName := lSrcStatic.FontName;
+    lDstStatic.FontSize := lSrcStatic.FontSize;
+    lDstStatic.FontColor := lSrcStatic.FontColor;
+    lDstStatic.FontStyleBold := lSrcStatic.FontStyleBold;
+    lDstStatic.FontStyleItalic := lSrcStatic.FontStyleItalic;
+  end
+  else if (ASource is TRecorderTagValueComponent) and
+    (ADest is TRecorderTagValueComponent) then
+  begin
+    lSrcTagValue := TRecorderTagValueComponent(ASource);
+    lDstTagValue := TRecorderTagValueComponent(ADest);
+    lDstTagValue.DisplayFormat := lSrcTagValue.DisplayFormat;
+    lDstTagValue.FontName := lSrcTagValue.FontName;
+    lDstTagValue.FontSize := lSrcTagValue.FontSize;
+    lDstTagValue.FontColor := lSrcTagValue.FontColor;
+    lDstTagValue.FontStyleBold := lSrcTagValue.FontStyleBold;
+    lDstTagValue.FontStyleItalic := lSrcTagValue.FontStyleItalic;
+    lDstTagValue.ShowNameMode := lSrcTagValue.ShowNameMode;
+    lDstTagValue.EstimateKind := lSrcTagValue.EstimateKind;
+    lDstTagValue.UseDefaultEstimate := lSrcTagValue.UseDefaultEstimate;
+  end
+  else if (ASource is TRecorderOscillogramComponent) and
+    (ADest is TRecorderOscillogramComponent) then
+    TRecorderOscillogramComponent(ADest).AssignOscillogram(
+      TRecorderOscillogramComponent(ASource))
+  else if (ASource is TRecorderTrendComponent) and
+    (ADest is TRecorderTrendComponent) then
+    TRecorderTrendComponent(ADest).AssignTrend(TRecorderTrendComponent(ASource))
+  else if (ASource is TRecorderSpectrumComponent) and
+    (ADest is TRecorderSpectrumComponent) then
+    TRecorderSpectrumComponent(ADest).Assign(TRecorderSpectrumComponent(ASource));
 end;
 
 
@@ -1259,6 +1336,8 @@ begin
   ClearDragStartBounds;
   fOperation := AOperation;
   fOperationUndoSaved := False;
+  fOperationChanged := False;
+  fLastOperationRenderTickMs := 0;
   fDragStartPoint := Point(X, Y);
   SetCaptureControl(fCanvas);
 
@@ -1357,8 +1436,7 @@ begin
             lStartBounds^.Height);
         end;
 
-        NotifyChanged;
-        RenderLive;
+        RenderLiveDuringOperation(False);
         Exit;
       end;
 
@@ -1422,17 +1500,26 @@ begin
 
 
 
-  NotifyChanged;
-  RenderLive;
+  RenderLiveDuringOperation(False);
 end;
 
 
 
 procedure TFormEditorController.EndOperation;
 
+var
+  lChanged: Boolean;
 begin
+  lChanged := fOperationChanged;
+  if lChanged then
+  begin
+    RenderLiveDuringOperation(True);
+    NotifyChanged;
+  end;
   fOperation := feoNone;
   fOperationUndoSaved := False;
+  fOperationChanged := False;
+  fLastOperationRenderTickMs := 0;
   if GetCaptureControl = fCanvas then
     SetCaptureControl(nil);
   ClearDragStartBounds;
@@ -1539,11 +1626,19 @@ function TFormEditorController.CreateComponentFromSnapshot(
 begin
   Result := fComponentFactory.CreateComponent(AItem.TypeId);
   try
-    Result.Id := AItem.Id;
-    Result.Name := AItem.Name;
-    Result.TagName := AItem.TagName;
-    Result.Bounds := AItem.Bounds;
+    if AItem.Snapshot <> nil then
+      CopyComponentState(AItem.Snapshot, Result)
+    else
+    begin
+      Result.Id := AItem.Id;
+      Result.Name := AItem.Name;
+      Result.TagName := AItem.TagName;
+      Result.Bounds := AItem.Bounds;
+    end;
 
+
+    if AItem.Snapshot <> nil then
+      Exit;
 
     if Result is TRecorderStaticTextComponent then
       TRecorderStaticTextComponent(Result).Text := AItem.Text
@@ -1903,6 +1998,8 @@ begin
   Result.Name := AComponent.Name;
   Result.TagName := AComponent.TagName;
   Result.TypeId := AComponent.TypeId;
+  Result.Snapshot := fComponentFactory.CreateComponent(AComponent.TypeId);
+  CopyComponentState(AComponent, Result.Snapshot);
 
 
   if AComponent is TRecorderStaticTextComponent then
@@ -1926,6 +2023,8 @@ function TFormEditorController.CreateComponentFromClipboard(
   AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
 begin
   Result := fComponentFactory.CreateComponent(AItem.TypeId);
+  if AItem.Snapshot <> nil then
+    CopyComponentState(AItem.Snapshot, Result);
 end;
 
 

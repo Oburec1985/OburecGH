@@ -1205,6 +1205,7 @@ begin
   fDevice.Connect;
   if fDevice.State = rdsDisconnected then
   begin
+    RecorderHardwareMarkSourceOffline(SourceId, 'connection failed');
     PublishDiagnostics(CMic140StatusError, 'connection failed', True);
     Exit;
   end;
@@ -1300,6 +1301,7 @@ begin
   fHardwarePrepared := fDevice.State = rdsStarted;
   if not fHardwarePrepared then
   begin
+    RecorderHardwareMarkSourceOffline(SourceId, 'start failed');
     PublishDiagnostics(CMic140StatusError, 'start failed', True);
     Mic140LogWarning(Format(
       '[DataSource:%s] MIC-140 source is not started; preview will continue without device samples',

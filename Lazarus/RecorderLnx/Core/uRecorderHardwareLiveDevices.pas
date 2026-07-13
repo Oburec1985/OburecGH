@@ -21,6 +21,11 @@ function RecorderHardwareFindLiveDevice(const ASourceId: string): IRecorderDevic
 function RecorderHardwareIsSourceLinkOk(const ASourceId: string): Boolean;
 function RecorderHardwareTestSourceLink(const ASourceId: string;
   out AErrorText: string): Boolean;
+procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);
+procedure RecorderHardwareClearSourceOffline(const ASourceId: string);
+procedure RecorderHardwareClearAllOfflineSources;
+function RecorderHardwareIsSourceOffline(const ASourceId: string): Boolean;
+function RecorderHardwareSourceOfflineReason(const ASourceId: string): string;
 
 implementation
 
@@ -35,13 +40,22 @@ type
     Owner: TObject;
   end;
 
+  TRecorderHardwareOfflineEntry = class
+  public
+    SourceId: string;
+    Reason: string;
+  end;
+
 var
   gHardwareLiveEntries: TThreadList;
+  gHardwareOfflineEntries: TThreadList;
 
 procedure RecorderHardwareEnsureRegistry;
 begin
   if gHardwareLiveEntries = nil then
     gHardwareLiveEntries := TThreadList.Create;
+  if gHardwareOfflineEntries = nil then
+    gHardwareOfflineEntries := TThreadList.Create;
 end;
 
 function RecorderHardwareFindEntry(const ASourceId: string;
@@ -71,6 +85,33 @@ begin
   end;
 end;
 
+function RecorderHardwareFindOfflineEntry(const ASourceId: string;
+  out AEntry: TRecorderHardwareOfflineEntry): Boolean;
+var
+  I: Integer;
+  lEntry: TRecorderHardwareOfflineEntry;
+  lList: TList;
+begin
+  Result := False;
+  AEntry := nil;
+  if (Trim(ASourceId) = '') or (gHardwareOfflineEntries = nil) then
+    Exit;
+  lList := gHardwareOfflineEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+    begin
+      lEntry := TRecorderHardwareOfflineEntry(lList[I]);
+      if SameText(lEntry.SourceId, ASourceId) then
+      begin
+        AEntry := lEntry;
+        Exit(True);
+      end;
+    end;
+  finally
+    gHardwareOfflineEntries.UnlockList;
+  end;
+end;
+
 procedure RecorderHardwareRegisterLiveDevice(AOwner: TObject;
   const ASourceId: string; ADevice: IRecorderDevice);
 var
@@ -81,6 +122,7 @@ begin
     Exit;
   RecorderHardwareEnsureRegistry;
   RecorderHardwareUnregisterLiveDevice(AOwner);
+  RecorderHardwareClearSourceOffline(ASourceId);
   lEntry := TRecorderHardwareLiveEntry.Create;
   lEntry.SourceId := Trim(ASourceId);
   lEntry.Device := ADevice;
@@ -149,6 +191,88 @@ begin
   Result := RecorderHardwareTestSourceLink(ASourceId, lErrorText);
 end;
 
+procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);
+var
+  lEntry: TRecorderHardwareOfflineEntry;
+  lList: TList;
+begin
+  if Trim(ASourceId) = '' then
+    Exit;
+  RecorderHardwareEnsureRegistry;
+  if RecorderHardwareFindOfflineEntry(ASourceId, lEntry) then
+  begin
+    lEntry.Reason := AReason;
+    Exit;
+  end;
+  lEntry := TRecorderHardwareOfflineEntry.Create;
+  lEntry.SourceId := Trim(ASourceId);
+  lEntry.Reason := AReason;
+  lList := gHardwareOfflineEntries.LockList;
+  try
+    lList.Add(lEntry);
+  finally
+    gHardwareOfflineEntries.UnlockList;
+  end;
+end;
+
+procedure RecorderHardwareClearSourceOffline(const ASourceId: string);
+var
+  I: Integer;
+  lEntry: TRecorderHardwareOfflineEntry;
+  lList: TList;
+begin
+  if (Trim(ASourceId) = '') or (gHardwareOfflineEntries = nil) then
+    Exit;
+  lList := gHardwareOfflineEntries.LockList;
+  try
+    for I := lList.Count - 1 downto 0 do
+    begin
+      lEntry := TRecorderHardwareOfflineEntry(lList[I]);
+      if SameText(lEntry.SourceId, ASourceId) then
+      begin
+        lEntry.Free;
+        lList.Delete(I);
+      end;
+    end;
+  finally
+    gHardwareOfflineEntries.UnlockList;
+  end;
+end;
+
+procedure RecorderHardwareClearAllOfflineSources;
+var
+  lList: TList;
+begin
+  if gHardwareOfflineEntries = nil then
+    Exit;
+  lList := gHardwareOfflineEntries.LockList;
+  try
+    while lList.Count > 0 do
+    begin
+      TRecorderHardwareOfflineEntry(lList[0]).Free;
+      lList.Delete(0);
+    end;
+  finally
+    gHardwareOfflineEntries.UnlockList;
+  end;
+end;
+
+function RecorderHardwareIsSourceOffline(const ASourceId: string): Boolean;
+var
+  lEntry: TRecorderHardwareOfflineEntry;
+begin
+  Result := RecorderHardwareFindOfflineEntry(ASourceId, lEntry);
+end;
+
+function RecorderHardwareSourceOfflineReason(const ASourceId: string): string;
+var
+  lEntry: TRecorderHardwareOfflineEntry;
+begin
+  Result := '';
+  if RecorderHardwareFindOfflineEntry(ASourceId, lEntry) then
+    Result := lEntry.Reason;
+end;
+
 finalization
   if gHardwareLiveEntries <> nil then
   begin
@@ -163,6 +287,20 @@ finalization
       gHardwareLiveEntries.UnlockList;
     end;
     FreeAndNil(gHardwareLiveEntries);
+  end;
+  if gHardwareOfflineEntries <> nil then
+  begin
+    with gHardwareOfflineEntries.LockList do
+    try
+      while Count > 0 do
+      begin
+        TRecorderHardwareOfflineEntry(Items[0]).Free;
+        Delete(0);
+      end;
+    finally
+      gHardwareOfflineEntries.UnlockList;
+    end;
+    FreeAndNil(gHardwareOfflineEntries);
   end;
 
 end.

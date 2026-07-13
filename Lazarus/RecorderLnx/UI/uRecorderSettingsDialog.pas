@@ -26,7 +26,8 @@ uses
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
-  uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe;
+  uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
+  uRecorderHardwareLiveDevices;
 
 type
   { TRecorderSettingsDialog }
@@ -207,6 +208,8 @@ type
     procedure DeleteMic140Source(const ASourceId: string);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
+    procedure HardwareResetSourceClick(Sender: TObject);
+    procedure HardwareResetAllSourcesClick(Sender: TObject);
     procedure HardwareEditSourceClick(Sender: TObject);
     
     // Методы инициализации и обновления интерфейса
@@ -1954,6 +1957,25 @@ begin
   ReloadCurrentMeraSource;
 end;
 
+procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
+var
+  lSourceId: string;
+begin
+  lSourceId := SelectedHardwareSourceId;
+  if lSourceId = '' then
+    Exit;
+  RecorderHardwareClearSourceOffline(lSourceId);
+  PopulateHardwareTree;
+  PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.HardwareResetAllSourcesClick(Sender: TObject);
+begin
+  RecorderHardwareClearAllOfflineSources;
+  PopulateHardwareTree;
+  PopulateChannelGrids;
+end;
+
 procedure TRecorderSettingsDialog.HardwareEditSourceClick(Sender: TObject);
 var
   lSourceId: string;
@@ -2197,6 +2219,16 @@ begin
     lItem := TMenuItem.Create(lPopup);
     lItem.Caption := 'Настройка источника...';
     lItem.OnClick := @HardwareEditSourceClick;
+    lPopup.Items.Add(lItem);
+
+    lItem := TMenuItem.Create(lPopup);
+    lItem.Caption := 'Сбросить состояние устройства';
+    lItem.OnClick := @HardwareResetSourceClick;
+    lPopup.Items.Add(lItem);
+
+    lItem := TMenuItem.Create(lPopup);
+    lItem.Caption := 'Сбросить состояние всех устройств';
+    lItem.OnClick := @HardwareResetAllSourcesClick;
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);

@@ -133,6 +133,8 @@ type
     fChannelTagNames: TStringList;
     fDevice: IRecorderDevice;
     fHost: string;
+    fHardwarePrepared: Boolean;
+    fHardwarePrepareAttempted: Boolean;
     fPort: Word;
     fPollFrequencyHz: Double;
     fSelectedNames: TStringList;
@@ -1612,22 +1614,57 @@ end;
 
 procedure TRecorderMic185DataSource.PrepareHardware;
 begin
+  if fHardwarePrepared or fHardwarePrepareAttempted then
+    Exit;
+  if RecorderHardwareIsSourceOffline(SourceId) then
+    Exit;
+  fHardwarePrepareAttempted := True;
   inherited PrepareHardware;
-  if fDevice = nil then
-    ConfigureDevice;
-  ApplyChannelProgramSettings;
-  fDevice.Connect;
-  fDevice.ProgramDevice;
-  RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
+  try
+    if fDevice = nil then
+      ConfigureDevice;
+    ApplyChannelProgramSettings;
+    fDevice.Connect;
+    fDevice.ProgramDevice;
+    RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
+    fHardwarePrepared := True;
+  except
+    on E: Exception do
+    begin
+      RecorderHardwareMarkSourceOffline(SourceId, E.Message);
+      RecorderHardwareUnregisterLiveDevice(Self);
+      if fDevice <> nil then
+      begin
+        try
+          fDevice.Disconnect;
+        except
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TRecorderMic185DataSource.Start;
 begin
   inherited Start;
+  if RecorderHardwareIsSourceOffline(SourceId) then
+    Exit;
   if fDevice = nil then
     ConfigureDevice;
+  if (not fHardwarePrepared) and fHardwarePrepareAttempted then
+    Exit;
   if fDevice.State <> rdsStarted then
-    fDevice.Start;
+  begin
+    try
+      fDevice.Start;
+    except
+      on E: Exception do
+      begin
+        RecorderHardwareMarkSourceOffline(SourceId, E.Message);
+        Exit;
+      end;
+    end;
+  end;
 end;
 
 procedure TRecorderMic185DataSource.RequestStop;
@@ -1651,6 +1688,8 @@ begin
   end;
   RecorderHardwareUnregisterLiveDevice(Self);
   RecorderMic185RuntimeHoldBusy(Trim(fHost), fPort, False);
+  fHardwarePrepared := False;
+  fHardwarePrepareAttempted := False;
   inherited Stop;
 end;
 

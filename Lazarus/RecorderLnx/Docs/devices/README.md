@@ -11,6 +11,7 @@
 | [migration_mic140v2.md](migration_mic140v2.md) | Переход `Device/MIC140` → `Device/MIC140v2` |
 | [mic140/](mic140/) | Документация по прибору MIC-140 (протокол обмена) |
 | [mic185/](mic185/) | MIC183/185V2 — Mebius TCP, карта исходников, тестовый стенд |
+| [mc/](mc/) | MC-крейты и MC-модули, включая MC-201 |
 
 ## Связанные материалы
 
@@ -28,4 +29,3 @@ Device/
   MIC140v2/                       — новая реализация
 Tests/mic185/                     — автономный стенд MIC185V2 (connect/program/read)
 ```
-

@@ -117,8 +117,8 @@ uses
   uRecorderMic185Runtime;
 
 const
-  CMic185ConnectAttempts = 3;
-  CMic185ConnectTimeoutMs = 5000;
+  CMic185ConnectAttempts = 1;
+  CMic185ConnectTimeoutMs = 1200;
 
 constructor TRecorderMic185Device.Create(const ADeviceId, AName: string);
 begin

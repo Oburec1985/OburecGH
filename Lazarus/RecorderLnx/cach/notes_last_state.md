@@ -22,6 +22,36 @@ D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
 passed.
 
+## Codex continuation 2026-07-13: preview offline sources and form editor lag
+
+**Prompt:** User reported slow first transition into preview, repeated attempts
+to connect disconnected devices, lag while dragging a display-form container,
+and Ctrl+Z restoring deleted elements with empty settings.
+
+**Findings:** Preview startup prepares hardware sources sequentially before
+threads are started. Active-source refresh and hardware tree checks could also
+perform synchronous TCP probes. MIC-185 connect waited up to 3 x 5000 ms. The
+form editor rebuilt live controls and fired `NotifyChanged` on every mouse
+move. Undo/copy stored only a partial set of component properties.
+
+**Fix:** Added a shared offline-source registry in
+`uRecorderHardwareLiveDevices`. Failed MIC-140/MIC-185 prepare/start marks the
+source offline; `UpdateActiveSourceIds`, hardware-tree link checks, and runtime
+data-source creation skip offline sourceIds until a manual reset. Added
+hardware-tree context menu commands to reset one device or all devices. Reduced
+hardware-tree probe timeout to 250 ms and MIC-185 connect to 1 x 1200 ms. The
+form editor now throttles live rendering during drag/resize and sends
+`NotifyChanged` once at operation end. Undo/copy snapshots now clone component
+settings for StaticText, TagValue, Oscillogram, Trend, and Spectrum.
+
+**Docs:** Added `Docs/devices/hardware_source_lifecycle.md` and error journal
+`errors/2026-07-13-preview-offline-and-form-editor-lag.md`.
+
+**Verification:** Initial rebuild reached linking but failed because running
+`RecorderLnx.exe` PID 2004 locked the output file. After stopping that process,
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0. `RecorderDataSourcesTest.exe` passed.
+
 ## Codex continuation 2026-07-08: tag settings additional-tab layout
 
 **Prompt:** в настройках тега в диалоге наползание элементов окна друг на друга.
@@ -1065,6 +1095,52 @@ and linked it from the MIC185 README.
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
 passed.
+
+## Codex continuation 2026-07-13: MC-201 protocol debug stand
+
+**Prompt:** Find the MC-201 / MC-031 / MC-032 example under
+`windev-v3.9\examples\mebius.daq` and create an independent RecorderLnx-compatible
+test example for later protocol porting. Target controller:
+`192.169.12.87`, expected four MC-201 modules.
+
+**Findings:** `medaq_mc_test.cpp` creates `MICCRATE`, connects through
+`BUSID_ETHERNET81_TCP`, gets `BUSID_MC`, then calls `SearchDevices`. The older
+Recorder MC-031 Ethernet path uses legacy MDP/TCP command packets; module
+auto-search reads slot flash offset `0` for type and offset `1` for MC-201
+version discriminator.
+
+**Fix:** Added standalone console project
+`Tests\RecorderTests\Mc201ProtocolDebug`. It does not use RecorderLnx device
+units and does not write/program hardware. It reads `CMD_REPLY`, scans module
+flash offsets `0/1/61/62`, prints used slots and MC-201 module count, and writes
+a `.log` beside the exe.
+
+**GUI follow-up:** CLI and GUI are now merged into the single
+`Mc201ProtocolDebug.lpi` project. GUI is the default mode; CLI starts with
+`Mc201ProtocolDebug.exe --cli ...`. The separate `Mc032ProtocolDebugGui.lpi/.lpr`
+project and stale `Mc032ProtocolDebugGui.*` build artifacts were removed. All
+test units are listed in the `.lpi` for Lazarus Project Inspector. The GUI uses
+independent `TMc032Device` states `Disconnected/Connected/Play`,
+controller actions `Search/TestConnection/SearchModules/Connect/Disconnect/Reset/Config/Play/Stop`,
+a read thread, and a callback that fills a raw-word oscilloscope on the form.
+`Config` currently stores `TMc032Config`, updates timeout and sends
+`CMD_RESETSCANMAIN`; full MC-201 scan descriptor programming still needs the
+original `CMD_ADDCHANNELMODULE` / `CMD_SCAN_SET_CHANS` path.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
+completed with exit code 0. `Mc201ProtocolDebug.exe --help` completed with exit
+code 0 and created `lib\Mc201ProtocolDebug.log`. Live TCP run against
+`192.169.12.87:4000` from this environment timed out before protocol exchange.
+The same executable starts GUI by default; `--cli` and `--help` remain CLI paths.
+
+**MC documentation follow-up:** User provided original Recorder screenshots with
+the actual detected stand: four-slot controller `[0841] MIC-200m - Ethernet`,
+MC-201 modules slot 1 `01462`, slot 2 `01465`, slot 3 `01464`, slot 4 `01463`,
+all version `5.0`. Added `Docs/devices/mc/README.md` and
+`Docs/devices/mc/mc201.md` documenting the stand, MC-201 channel settings,
+range list, input/filter/ICP fields, and frequency grid
+`300..19200 Hz`.
 
 ## Codex continuation 2026-07-13: MIC185 selected-row tag units
 
