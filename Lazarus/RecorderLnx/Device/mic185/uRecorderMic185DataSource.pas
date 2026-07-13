@@ -84,7 +84,8 @@ function RecorderMic185EffectiveRangeText(
   аппаратной ГХ используется номинал: 32768 кодов = 100% диапазона. }
 function RecorderMic185ConvertValue(AValueCode: Double;
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
-  AHardwareCalibration: TRecorderCalibration = nil): Double;
+  AHardwareCalibration: TRecorderCalibration = nil;
+  AEffectivePowerMa: Double = 0.0): Double;
 { Текст коммутации канала для таблицы настройки. }
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 { Текст схемы включения датчика для таблицы настройки. }
@@ -739,10 +740,11 @@ end;
 
 function RecorderMic185ConvertValue(AValueCode: Double;
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
-  AHardwareCalibration: TRecorderCalibration): Double;
+  AHardwareCalibration: TRecorderCalibration; AEffectivePowerMa: Double): Double;
 var
   lExcitationMv: Double;
   lMv: Double;
+  lPowerMa: Double;
   lSensitivity: Double;
   lUnit: string;
 begin
@@ -751,12 +753,15 @@ begin
   else
     lMv := Mic185CodeToNominalMv(AValueCode, ASettings);
   lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
+  lPowerMa := AEffectivePowerMa;
+  if SameValue(lPowerMa, 0.0, 1E-9) then
+    lPowerMa := Mic185EffectivePowerMa(ASettings);
   if SameText(lUnit, 'Ом') then
-    Exit(lMv / Mic185EffectivePowerMa(ASettings));
+    Exit(lMv / lPowerMa);
 
   if SameText(lUnit, 'мкм/м') then
   begin
-    lExcitationMv := Mic185EffectivePowerMa(ASettings) *
+    lExcitationMv := lPowerMa *
       Max(Abs(ASettings.Resistance), 1E-9);
     lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
     Exit((lMv / lExcitationMv) *
@@ -1505,6 +1510,8 @@ var
   lTimes: TRecorderDoubleArray;
   lValues: TRecorderDoubleArray;
   lHardwareCalibration: TRecorderCalibration;
+  lPowerMa: Double;
+  lUnit: string;
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
@@ -1529,12 +1536,23 @@ begin
       RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
       lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
     end;
+    lPowerMa := 0.0;
+    if I <= High(lChannelSettings) then
+    begin
+      lPowerMa := Mic185EffectivePowerMa(lChannelSettings[I]);
+      lUnit := Mic185NormalizeUnitName(lTag.UnitName,
+        lChannelSettings[I].MeasRangeIndex);
+      if lTag.HardwareCalibrationEnabled and
+        (SameText(lUnit, 'Ом') or SameText(lUnit, 'мкм/м')) then
+        lPowerMa := RecorderMic185ApplyCurrentCalibration(Registry, lTag,
+          lPowerMa);
+    end;
     for J := 0 to ABlock.SampleCount - 1 do
       if not lTag.HardwareCalibrationEnabled then
         lValues[J] := ABlock.Values[I][J]
       else if I <= High(lChannelSettings) then
         lValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
-          lChannelSettings[I], lTag.UnitName, lHardwareCalibration)
+          lChannelSettings[I], lTag.UnitName, lHardwareCalibration, lPowerMa)
       else
         lValues[J] := ABlock.Values[I][J];
     Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);

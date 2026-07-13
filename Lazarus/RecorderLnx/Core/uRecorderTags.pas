@@ -1355,6 +1355,7 @@ begin
   Result := Pos(CMic140TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
 end;
 
+
 function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
 begin
   Result := Pos(CMic185TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;

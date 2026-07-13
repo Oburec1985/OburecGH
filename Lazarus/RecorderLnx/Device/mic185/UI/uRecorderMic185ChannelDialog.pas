@@ -107,6 +107,8 @@ end;
 
 procedure TRecorderMic185ChannelForm.ReadSettingsFromUi(
   var ASettings: TMic185ChannelProgramSettings);
+var
+  lPowerMa: Double;
 begin
   if cbNominalRange.ItemIndex >= 0 then
     ASettings.MeasRangeIndex := cbNominalRange.ItemIndex;
@@ -115,7 +117,10 @@ begin
   if cbSensorScheme.ItemIndex >= 0 then
     ASettings.SensorScheme := cbSensorScheme.ItemIndex;
   if cbModulePower.ItemIndex >= 0 then
-    ASettings.PowerMaCode := Mic185PowerMaToCode(cbModulePower.ItemIndex);
+  begin
+    lPowerMa := TextToFloatDef(cbModulePower.Text, cbModulePower.ItemIndex);
+    ASettings.PowerMaCode := Mic185PowerMaToCode(lPowerMa);
+  end;
   ASettings.SoftBalance := Round(TextToFloatDef(edSoftBalance.Text, 0));
   if chkChannelShunt.Checked then
   begin

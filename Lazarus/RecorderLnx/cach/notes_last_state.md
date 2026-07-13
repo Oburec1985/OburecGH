@@ -1043,3 +1043,19 @@ and linked it from the MIC185 README.
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
 passed.
+
+## Codex continuation 2026-07-13: MIC185 selected-row tag units
+
+**Prompt:** User reported that in MIC185 hardware settings, after using
+`Select all`, changing units or other channel properties in the channel
+properties dialog must apply to all selected tags.
+
+**Fix:** `Device/mic185/UI/uRecorderMic185SettingsDialog.pas` now propagates
+the edited tag unit from the master channel dialog to every selected MIC185
+measurement tag. For each selected row it also recalculates `RangeMin/RangeMax`
+in that unit while keeping the existing source-level hardware settings path.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
+0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+passed.

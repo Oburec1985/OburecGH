@@ -33,6 +33,10 @@ function RecorderMic185LoadHardwareCalibrationForTag(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   AEnableOnTag: Boolean = True): Boolean;
 
+function RecorderMic185ApplyCurrentCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ANominalPowerMa: Double): Double;
+
 function RecorderMic185TryExtractHardwareKx(ACalibration: TRecorderCalibration;
   out AK, AB: Double): Boolean;
 
@@ -46,7 +50,7 @@ implementation
 uses
   Math, LazFileUtils,
   uMic185Constants, uMic185MebiusTcpProtocol, uMic185MebiusTypes,
-  uRecorderMeraPaths, uRecorderMic185DataSource;
+  uRecorderMeraPaths, uRecorderMic185DataSource, uRecorderMic185Runtime;
 
 const
   { In original MIC183/185: four mV ranges plus one current/Ohm evaluator. }
@@ -74,6 +78,24 @@ begin
     CMic185HardwareCalibrSubDir + Format('sn%4.4d', [ASerial]) +
     PathDelim + Format('range%d', [ARangeIndex + 1]) + PathDelim +
     Format('%2.2d.csv', [AChannelNumber]);
+end;
+
+function RecorderMic185CurrentCalibrCsvPath(ASerial: LongWord;
+  AChannelNumber: Integer): string;
+begin
+  Result := '';
+  if (ASerial = 0) or (AChannelNumber <= 0) then
+    Exit;
+  Result := IncludeTrailingPathDelimiter(RecorderMeraCalibrRootDir) +
+    CMic185HardwareCalibrSubDir + Format('sn%4.4d', [ASerial]) +
+    PathDelim + 'current' + PathDelim + Format('%2.2d.csv', [AChannelNumber]);
+end;
+
+function RecorderMic185MakeCurrentCalibrationName(ASerial: LongWord;
+  AChannelNumber: Integer): string;
+begin
+  Result := Format('MIC185 sn%4.4d current ch%2.2d',
+    [ASerial, AChannelNumber]);
 end;
 
 function Mic185ParseCsvNumber(const AText: string; out AValue: Double): Boolean;
@@ -290,7 +312,7 @@ begin
   Result[0] := Byte(AChannelIndex);
 end;
 
-function Mic185LinearKxToCalibration(const AName, AUnitOut: string;
+function Mic185LinearKxToCalibration(const AName, AUnitIn, AUnitOut: string;
   AK, AB: Double): TRecorderCalibration;
 var
   lX0: Double;
@@ -300,7 +322,7 @@ begin
   Result.Name := AName;
   Result.Description := 'MIC-185 hardware GX: ' +
     RecorderMic185FormatHardwareKx(AK, AB) + '; evaluator k*(code-b)';
-  Result.UnitIn := 'codes';
+  Result.UnitIn := AUnitIn;
   Result.UnitOut := AUnitOut;
   Result.Extrapolation := True;
   lX0 := 0.0;
@@ -355,6 +377,46 @@ begin
   end;
 end;
 
+function Mic185LoadCachedCurrentCalibration(ARegistry: TRecorderTagRegistry;
+  ASerial: LongWord; AChannelIndex: Integer; out AK, AB: Double;
+  out ACalibration: TRecorderCalibration): Boolean;
+var
+  lCsvPath: string;
+  lExisting: TRecorderCalibration;
+  lLoaded: TRecorderCalibration;
+  lName: string;
+  lStored: TRecorderCalibration;
+begin
+  Result := False;
+  AK := 0;
+  AB := 0;
+  ACalibration := nil;
+  if (ARegistry = nil) or (ASerial = 0) or (AChannelIndex < 0) then
+    Exit;
+
+  lName := RecorderMic185MakeCurrentCalibrationName(ASerial,
+    AChannelIndex + 1);
+  lExisting := ARegistry.FindCalibrationByName(lName);
+  if lExisting <> nil then
+  begin
+    Result := RecorderMic185TryExtractHardwareKx(lExisting, AK, AB);
+    ACalibration := lExisting;
+    Exit;
+  end;
+
+  lCsvPath := RecorderMic185CurrentCalibrCsvPath(ASerial, AChannelIndex + 1);
+  if not Mic185LoadCalibrationFromCsv(lCsvPath, lName, AK, AB, lLoaded) then
+    Exit;
+  try
+    lStored := Mic185UpsertHardwareCalibration(ARegistry, lLoaded);
+    Result := lStored <> nil;
+    if Result then
+      ACalibration := lStored;
+  finally
+    lLoaded.Free;
+  end;
+end;
+
 function Mic185UpsertHardwareCalibration(ARegistry: TRecorderTagRegistry;
   ASource: TRecorderCalibration): TRecorderCalibration;
 var
@@ -378,7 +440,8 @@ begin
 end;
 
 function Mic185ReadChannelRangeKx(AClient: TRecorderMebiusTcpClient;
-  AChannelIndex, ARangeIndex: Integer; out AK, AB: Double;
+  AChannelIndex, ARangeIndex: Integer; out AK, AB, ACurrentK,
+  ACurrentB: Double;
   out AErrorMessage: string): Boolean;
 var
   lIn: TRecorderByteArray;
@@ -388,6 +451,8 @@ begin
   Result := False;
   AK := 0;
   AB := 0;
+  ACurrentK := 0;
+  ACurrentB := 0;
   if ARangeIndex < 0 then
     ARangeIndex := 0;
   if ARangeIndex >= CMic185HardwareRangeCount then
@@ -407,13 +472,54 @@ begin
   lOffset := ARangeIndex * CMic185ChannelKxSize;
   AK := Mic185SingleFromBytes(lOut, lOffset);
   AB := Mic185SingleFromBytes(lOut, lOffset + SizeOf(Single));
+  lOffset := CMic185HardwareRangeCount * CMic185ChannelKxSize;
+  ACurrentK := Mic185SingleFromBytes(lOut, lOffset);
+  ACurrentB := Mic185SingleFromBytes(lOut, lOffset + SizeOf(Single));
   if (AK <> AK) or (AB <> AB) or (Abs(AK) > 1E20) or (Abs(AB) > 1E20) then
   begin
     AErrorMessage := 'MIC-185 calibration reply contains invalid k,b values';
     Exit;
   end;
+  if (ACurrentK <> ACurrentK) or (ACurrentB <> ACurrentB) or
+    (Abs(ACurrentK) > 1E20) or (Abs(ACurrentB) > 1E20) then
+  begin
+    ACurrentK := 0;
+    ACurrentB := 0;
+  end;
 
   Result := True;
+end;
+
+function Mic185ReadSerialFromConnectedClient(AClient: TRecorderMebiusTcpClient;
+  const AHost: string; APort: Word; out ASerial: LongWord): Boolean;
+var
+  lError: string;
+  lInfo: TMic185HardDeviceInfo;
+  lOut: TRecorderByteArray;
+begin
+  Result := False;
+  ASerial := 0;
+  if AClient = nil then
+    Exit;
+  if not AClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
+    CMic185HardDeviceInfoSize, lOut, lError) then
+  begin
+    RecorderMic185Log(Format('Hardware GX serial read failed %s:%d: %s',
+      [AHost, APort, lError]));
+    Exit;
+  end;
+  if Length(lOut) < CMic185HardDeviceInfoSize then
+  begin
+    RecorderMic185Log(Format('Hardware GX serial read short reply %s:%d: %d bytes',
+      [AHost, APort, Length(lOut)]));
+    Exit;
+  end;
+  FillChar(lInfo, SizeOf(lInfo), 0);
+  Move(lOut[0], lInfo, SizeOf(lInfo));
+  ASerial := lInfo.SerialNumber;
+  Result := ASerial <> 0;
+  if Result then
+    RecorderMic185RuntimeUpdateInfo(AHost, APort, ASerial, lInfo.SoftVersion);
 end;
 
 function RecorderMic185DownloadHardwareCalibrationFromDevice(
@@ -435,6 +541,9 @@ var
   lCalibration: TRecorderCalibration;
   lChannelIndex: Integer;
   lClient: TRecorderMebiusTcpClient;
+  lCurrentB: Double;
+  lCurrentCalibration: TRecorderCalibration;
+  lCurrentK: Double;
   lHost: string;
   lName: string;
   lPort: Word;
@@ -472,9 +581,13 @@ begin
     Mic185LoadCachedCalibration(ARegistry, ATag, lSerial, lSettings.MeasRangeIndex,
       lChannelIndex, AK, AB, ACalibrationName) then
   begin
-    ATag.HardwareCalibrationName := ACalibrationName;
-    ATag.HardwareCalibrationEnabled := True;
-    Exit(True);
+    if Mic185LoadCachedCurrentCalibration(ARegistry, lSerial, lChannelIndex,
+      lCurrentK, lCurrentB, lCurrentCalibration) then
+    begin
+      ATag.HardwareCalibrationName := ACalibrationName;
+      ATag.HardwareCalibrationEnabled := True;
+      Exit(True);
+    end;
   end;
 
   lClient := TRecorderMebiusTcpClient.Create(lHost, lPort, 5000);
@@ -487,8 +600,11 @@ begin
       is intentionally not called here because its flash fileType is a separate
       device setting and changing it from the tag dialog would alter OMAP state. }
     if not Mic185ReadChannelRangeKx(lClient, lChannelIndex,
-      lSettings.MeasRangeIndex, AK, AB, AErrorMessage) then
+      lSettings.MeasRangeIndex, AK, AB, lCurrentK, lCurrentB,
+      AErrorMessage) then
       Exit;
+    if lSerial = 0 then
+      Mic185ReadSerialFromConnectedClient(lClient, lHost, lPort, lSerial);
   finally
     lClient.Free;
   end;
@@ -501,14 +617,32 @@ begin
   else
     lName := Format('MIC185 %s ch%2.2d range%d',
       [ATag.SourceId, lChannelIndex + 1, lSettings.MeasRangeIndex]);
-  lCalibration := Mic185LinearKxToCalibration(lName, 'mV', AK, AB);
+  lCalibration := Mic185LinearKxToCalibration(lName, 'codes', 'mV', AK, AB);
   try
     if lSerial > 0 then
     begin
       lCsvPath := RecorderMic185HardwareCalibrCsvPath(lSerial,
         lSettings.MeasRangeIndex, lChannelIndex + 1);
       Mic185SaveCalibrationToCsv(lCsvPath, lCalibration);
+      if not SameValue(lCurrentK, 0.0) then
+      begin
+        lCurrentCalibration := Mic185LinearKxToCalibration(
+          RecorderMic185MakeCurrentCalibrationName(lSerial, lChannelIndex + 1),
+          'mA', 'mA', lCurrentK, lCurrentB);
+        try
+          lCsvPath := RecorderMic185CurrentCalibrCsvPath(lSerial,
+            lChannelIndex + 1);
+          Mic185SaveCalibrationToCsv(lCsvPath, lCurrentCalibration);
+          Mic185UpsertHardwareCalibration(ARegistry, lCurrentCalibration);
+        finally
+          lCurrentCalibration.Free;
+        end;
+      end;
     end;
+    if lSerial = 0 then
+      RecorderMic185Log(Format(
+        'Hardware GX cache skipped for %s %s: serial number is unknown',
+        [ATag.SourceId, ATag.Address]));
     lStored := Mic185UpsertHardwareCalibration(ARegistry, lCalibration);
     if lStored = nil then
     begin
@@ -523,6 +657,36 @@ begin
   finally
     lCalibration.Free;
   end;
+end;
+
+function RecorderMic185ApplyCurrentCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ANominalPowerMa: Double): Double;
+var
+  lB: Double;
+  lCalibration: TRecorderCalibration;
+  lChannelIndex: Integer;
+  lChannelNumber: Integer;
+  lK: Double;
+  lRangeIndex: Integer;
+  lSerial: LongWord;
+begin
+  Result := ANominalPowerMa;
+  if (ARegistry = nil) or (ATag = nil) or SameValue(ANominalPowerMa, 0.0) then
+    Exit;
+  lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
+  if lChannelIndex < 0 then
+    Exit;
+  if not Mic185TryParseCalibrationName(ATag.HardwareCalibrationName, lSerial,
+    lRangeIndex, lChannelNumber) then
+    if not Mic185ResolveSerialFromTag(ARegistry, ATag, lSerial) then
+      Exit;
+  if not Mic185LoadCachedCurrentCalibration(ARegistry, lSerial, lChannelIndex,
+    lK, lB, lCalibration) then
+    Exit;
+  Result := lCalibration.Transform(ANominalPowerMa);
+  if SameValue(Result, 0.0, 1E-9) or (Result <> Result) then
+    Result := ANominalPowerMa;
 end;
 
 function RecorderMic185LoadHardwareCalibrationForTag(

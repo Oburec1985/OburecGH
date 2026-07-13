@@ -15,12 +15,14 @@
 
 ```text
 C:\Mera Files\Calibr\hardware\MIC-185\snXXXX\rangeN\CC.csv
+C:\Mera Files\Calibr\hardware\MIC-185\snXXXX\current\CC.csv
 ```
 
 Где:
 
 - `snXXXX` - серийный номер прибора с ведущими нулями, например `sn0164`;
 - `rangeN` - выбранный диапазон MIC185 в пользовательской нумерации `1..4`;
+- `current` - линейная аппаратная ГХ тока питания датчика, используемая оригинальным Recorder в пересчете Ом как `mV / power_mA`;
 - `CC.csv` - номер измерительного канала `01..64`.
 
 Пример:
