@@ -115,6 +115,26 @@ with exit code 0. Live CLI run of the same sequential device path against
 `STOPSCANMAIN OK`, `PLAY messages=35`, and
 `RESULT Mc201PlayDiagnostic passed`.
 
+## Codex continuation 2026-07-14: Embedded MC-201 BIOS resource
+
+**Prompt:** User asked to stop depending on the original `windev-v3.9` BIOS file
+at runtime: copy it into the test project resources and compile it into the exe,
+with a pattern suitable for Linux and future MIC-185/other hardware binaries.
+
+**Action:** Added project-local copy
+`resources\devices\mc201\mc_201a.bio` and resource script
+`resources\mc201_protocol_debug.rc`. The resource is named `MC201A_BIO` and uses
+custom type `MC201BIO`; this avoided platform-specific `RT_RCDATA` lookup and
+works with `TResourceStream` by string type. Added `uMc201FirmwareResources.pas`
+as the shared binary-resource loader. `LoadMc201BiosIdma` now loads BIOS from
+the embedded resource first and keeps the old source path only as fallback.
+
+**Verification:** Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0.
+`--cli --check-resources` confirmed `source=resource:MC201A_BIO bytes=22040`.
+Live `--cli --play-diagnostic-ms=1` still passed: `Config OK`,
+`STARTSCANMAIN OK`, stream packets, `STOPSCANMAIN OK`,
+`RESULT Mc201PlayDiagnostic passed`.
+
 ## Codex continuation 2026-07-14: Play button disabled in disconnected state
 
 **Prompt:** User reported that the GUI `Play` button is disabled and cannot be
@@ -226,6 +246,32 @@ with exit code 0. Ran
 `D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201ProtocolDebug.exe --gui-connect-on-create-test`;
 it returned exit code 0 and printed
 `RESULT Mc201GuiConnectOnCreate passed: Connect: Connection to 192.169.12.87:4000 timed out.`
+
+## Codex continuation 2026-07-14: Fast MC-201 module programming
+
+**Prompt:** User reported that MC-201 module programming is much slower than
+original Recorder and looks like every module is reconfigured separately with
+long timeouts. User also requested Russian documentation/comments.
+
+**Finding:** Original `Module::LoadBiosIdma()` sets module state
+`BIOS_LOADED`; normal `ScanModule::ModuleIdmaProgramming()` then programs scan
+commands through already loaded module BIOS. Our test always entered the heavy
+upload path for a new TCP client, so each module could be reloaded from `.bio`
+even when Recorder or a previous run had already prepared it.
+
+**Fix:** `TMc201LegacyMdpClient.LoadMc201BiosIdma` now validates an already
+loaded BIOS before full upload: set IDMA register to `0x6000`, read
+`VAR_TMODE`, require `A5A5`, and run module `CMD_INIT`. Passing validation marks
+the slot loaded in the current client and skips the heavy `.bio` transfer. Full
+upload is still used as fallback when validation fails. Test README, MC-201
+project document and Pascal comments were rewritten to Russian.
+
+**Verification:** `lazbuild -B Mc201ProtocolDebug.lpi` completed with exit code
+0. Live run
+`Mc201ProtocolDebug.exe --cli --play-diagnostic-ms=1 --host=192.169.12.87 --port=4000 --timeout-ms=1200 --slots=4`
+completed in under a second from process start with `Config OK`,
+`STARTSCANMAIN OK`, stream packets, `STOPSCANMAIN OK`, and
+`RESULT Mc201PlayDiagnostic passed`.
 
 ## Codex continuation 2026-07-14: Documented MC-201 protocol decisions
 

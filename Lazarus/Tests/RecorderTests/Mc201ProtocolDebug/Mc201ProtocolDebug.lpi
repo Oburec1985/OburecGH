@@ -50,6 +50,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="src/uMc201FirmwareResources.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="src/uMc201ProtocolTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>

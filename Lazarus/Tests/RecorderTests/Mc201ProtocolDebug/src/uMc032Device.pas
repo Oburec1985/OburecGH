@@ -1,12 +1,11 @@
 unit uMc032Device;
 
 {
-  Independent MC-031/MC-032 crate-controller device class for protocol tests.
+  Независимый класс крейт-контроллера MC-031/MC-032 для тестов протокола.
 
-  The class intentionally does not use RecorderLnx device units. It wraps the
-  legacy Ethernet81 MDP packet client and exposes the controller-level actions
-  needed for debugging: search, test, module scan, connect, disconnect, reset,
-  config and play with a data callback.
+  Класс намеренно не использует рабочие устройства RecorderLnx. Он оборачивает
+  старый Ethernet81 MDP-клиент и дает действия уровня контроллера: поиск, тест,
+  поиск модулей, connect, disconnect, reset, config и play с callback данных.
 }
 
 {$mode objfpc}{$H+}
@@ -266,10 +265,10 @@ begin
   Result := 2 * (7 - FreqToFreqCode(AFreqHz)) + (1 - FreqToGridCode(AFreqHz));
 end;
 
-{ Programs the scan layers in the same order as the original Recorder path:
-  controller scan reset/config, module BIOS and IDMA descriptors, MC-201
-  channel chains/final flags, controller scan descriptors, ADC start trigger,
-  then STARTSCANMAIN is left for Play. }
+{ Программирует слои скана в порядке оригинального Recorder: сброс/настройка
+  скана контроллера, BIOS и IDMA-дескрипторы модулей, цепочки каналов MC-201 и
+  final flags, дескрипторы скана контроллера, стартовый триггер ADC. Команда
+  STARTSCANMAIN остается для Play. }
 function TMc032Device.ProgramMc201Scan(const AConfig: TMc032Config;
   out AErrorMessage: string): Boolean;
 var
@@ -610,9 +609,9 @@ begin
     raise EMc032Device.Create(lError);
 end;
 
-{ GUI-facing connection path. Ordinary timeout/refused states are returned as
-  text and keep the device disconnected; Connect wraps this method when a
-  raising API is more convenient for CLI/internal code. }
+{ Путь подключения для GUI. Обычные timeout/refused возвращаются текстом и
+  оставляют устройство отключенным; Connect оборачивает этот метод там, где для
+  CLI/внутреннего кода удобнее исключение. }
 function TMc032Device.TryConnect(out AErrorMessage: string): Boolean;
 var
   lError: string;
@@ -794,9 +793,10 @@ begin
   end;
 end;
 
-{ Config is intentionally idempotent for the GUI. If a module rejects the scan
-  programming after an earlier failed run, the device performs one controller
-  reset/reconnect and repeats the original-like programming sequence. }
+{ Config сделан повторяемым для GUI. Если после прошлого неудачного запуска
+  модуль отвергает программирование скана, устройство делает один
+  reset/reconnect и повторяет последовательность, близкую к оригинальному
+  Recorder. }
 function TMc032Device.Config(const AConfig: TMc032Config;
   out AErrorMessage: string): Boolean;
 var

@@ -1,11 +1,11 @@
 unit uMc201LegacyMdpClient;
 
 {
-  Minimal MC-031/MC-032 legacy MDP/TCP client.
+  Минимальный TCP/MDP-клиент для MC-031/MC-032.
 
-  This is a standalone diagnostic copy of the packet mechanics used by the
-  original Recorder path mdpEthernet81::CallCommand. It does not use any
-  RecorderLnx MIC/MEB device units.
+  Это автономная диагностическая копия обмена пакетами из оригинального пути
+  Recorder mdpEthernet81::CallCommand. Модуль не использует классы устройств
+  MIC/MEB из RecorderLnx, чтобы отладка MC-201 не затрагивала рабочие драйверы.
 }
 
 {$mode objfpc}{$H+}
@@ -25,9 +25,9 @@ uses
 
 type
   EMc201MdpProtocol = class(Exception);
-  { BIOS upload is slow. The cache is deliberately scoped to one TCP client:
-    the module loader flag can be stale after reconnect/reset, so a new client
-    must reload BIOS instead of trusting old module memory state. }
+  { Загрузка BIOS медленная. Кеш намеренно живет внутри одного TCP-клиента:
+    после переподключения/сброса признак в памяти модуля может быть устаревшим,
+    поэтому новый клиент сначала валидирует уже загруженный BIOS легким INIT. }
   TMc201LoadedBiosSlots = set of 0..31;
 
   TMc201LegacyMdpClient = class
@@ -98,6 +98,9 @@ type
 
 implementation
 
+uses
+  uMc201FirmwareResources;
+
 function GetWordLE(const AData: array of Byte; AOffset: Integer): Word;
 begin
   Result := Word(AData[AOffset]) or (Word(AData[AOffset + 1]) shl 8);
@@ -126,9 +129,9 @@ begin
   inherited Destroy;
 end;
 
-{ TInetSocket.Create raises ESocketError on ordinary connect timeouts. The GUI
-  uses this non-throwing open so Search/Test/Connect can show "not found" in the
-  log without stopping in the Lazarus debugger on a handled exception. }
+{ TInetSocket.Create бросает ESocketError при обычном timeout соединения. GUI
+  использует этот вариант без исключения, чтобы Search/Test/Connect писали
+  "не найдено" в лог и не останавливали отладчик Lazarus на штатной ошибке. }
 function TMc201LegacyMdpClient.OpenTcpStreamNoRaise(out AStream: TSocketStream;
   out AErrorMessage: string): Boolean;
 var
@@ -599,9 +602,10 @@ begin
   Result := CallCommand(CMc201CmdWriteDm, lArgs, 0, lReply, AErrorMessage);
 end;
 
-{ Module IDMA GETARRAY goes through the original 32-word command argument
-  window. PM memory is pair-addressed, so non-DM addresses advance by count div
-  2. The shared chunk constant keeps GETARRAY and PUTARRAY aligned. }
+{ IDMA GETARRAY проходит через исходное 32-словное окно аргументов команды.
+  PM-память адресуется парами слов, поэтому не-DM адрес увеличивается на
+  count div 2. Общая константа размера куска держит GETARRAY и PUTARRAY
+  одинаково выровненными. }
 function TMc201LegacyMdpClient.ReadRemoteWordArrayModule(ASlot, AAddress,
   ACount: Word; out AData: TMc201WordArray; out AErrorMessage: string): Boolean;
 var
@@ -640,9 +644,9 @@ begin
   Result := True;
 end;
 
-{ Module IDMA PUTARRAY must use the same chunking as the original Recorder path.
-  Larger chunks fit into the raw Ethernet frame but not into mdpEthernet81's
-  command argument buffer, and odd PM chunks shift the next write address. }
+{ IDMA PUTARRAY должен использовать такое же разбиение, как исходный Recorder.
+  Большие куски помещаются в сырой Ethernet-пакет, но не в буфер аргументов
+  mdpEthernet81; нечетные куски PM сдвигают адрес следующей записи. }
 function TMc201LegacyMdpClient.WriteRemoteWordArrayModule(ASlot,
   AAddress: Word; const AData: TMc201WordArray;
   out AErrorMessage: string): Boolean;
@@ -692,9 +696,9 @@ begin
   Result := CallCommand(CMc201CmdPutRemote, lArgs, 0, lReply, AErrorMessage);
 end;
 
-{ Loads the small MC-201 module BIOS used by subsequent module commands. The
-  first Config in a TCP session uploads the .bio into module memory; repeated
-  Config calls in the same session reuse it through fLoadedBiosSlots. }
+{ Готовит небольшой BIOS MC-201, через который затем выполняются модульные
+  команды. Быстрый путь сначала проверяет уже загруженный BIOS по A5A5 и INIT;
+  если проверка не прошла, выполняется полная загрузка .bio в память модуля. }
 function TMc201LegacyMdpClient.LoadMc201BiosIdma(ASlot: Word;
   const ABiosPath: string; out AErrorMessage: string): Boolean;
 var
@@ -705,36 +709,57 @@ var
   lK: Word;
   lN: Word;
   lReply: TMc201WordArray;
-  lStream: TFileStream;
+  lSource: string;
   lStartTick: QWord;
   lStatus: TMc201WordArray;
   lVars: TMc201WordArray;
+
+  function TryUseLoadedBios(out ALocalError: string): Boolean;
+  begin
+    Result := False;
+    ALocalError := '';
+    if not WriteModuleReg(ASlot, CMc201ModuleIdmaReg, $6000, ALocalError) then
+      Exit;
+    if not ReadRemoteWordArrayModule(ASlot, CMc201ModuleBiosLoadTMode, 1,
+      lStatus, ALocalError) then
+      Exit;
+    if (Length(lStatus) = 0) or
+      (lStatus[0] <> CMc201ModuleBiosLoadFlag) then
+    begin
+      if Length(lStatus) > 0 then
+        ALocalError := Format('признак BIOS slot=%d status=0x%.4x',
+          [ASlot, lStatus[0]])
+      else
+        ALocalError := Format('признак BIOS slot=%d не прочитан', [ASlot]);
+      Exit;
+    end;
+    Result := CallCommandModuleIdmaNotActivated(ASlot, CMc201ModuleCmdInit,
+      nil, 2, lReply, ALocalError);
+  end;
+
 begin
   Result := False;
   AErrorMessage := '';
   if (ASlot <= 31) and (ASlot in fLoadedBiosSlots) then
     Exit(True);
 
+  if TryUseLoadedBios(AErrorMessage) then
+  begin
+    if ASlot <= 31 then
+      Include(fLoadedBiosSlots, ASlot);
+    Exit(True);
+  end;
+
   if not WriteModuleReg(ASlot, CMc201ModuleIdmaReg, $6000, AErrorMessage) then
     Exit;
   Sleep(50);
 
-  if not FileExists(ABiosPath) then
-  begin
-    AErrorMessage := 'MC201 BIOS file not found: ' + ABiosPath;
+  if not LoadDeviceBinaryResource(CMc201BiosResourceName, ABiosPath,
+    lBiosBytes, lSource, AErrorMessage) then
     Exit;
-  end;
-  lStream := TFileStream.Create(ABiosPath, fmOpenRead or fmShareDenyNone);
-  try
-    SetLength(lBiosBytes, lStream.Size);
-    if Length(lBiosBytes) > 0 then
-      lStream.ReadBuffer(lBiosBytes[0], Length(lBiosBytes));
-  finally
-    lStream.Free;
-  end;
   if (Length(lBiosBytes) < 8) or ((Length(lBiosBytes) mod 2) <> 0) then
   begin
-    AErrorMessage := 'MC201 BIOS file has invalid size: ' + ABiosPath;
+    AErrorMessage := 'MC201 BIOS имеет неверный размер: ' + lSource;
     Exit;
   end;
   SetLength(lBiosWords, Length(lBiosBytes) div 2);

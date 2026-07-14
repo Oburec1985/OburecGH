@@ -1,10 +1,10 @@
 unit uMc032DebugForm;
 
 {
-  Code-only LCL form for MC032 controller protocol debugging.
+  LCL-форма без .lfm для отладки протокола контроллера MC032.
 
-  The form uses TMc032Device and receives play data through a callback. The
-  callback appends raw stream words into a simple oscilloscope buffer.
+  Форма использует TMc032Device и получает данные Play через callback. Callback
+  складывает сырые слова потока в простой буфер осциллограммы.
 }
 
 {$mode objfpc}{$H+}

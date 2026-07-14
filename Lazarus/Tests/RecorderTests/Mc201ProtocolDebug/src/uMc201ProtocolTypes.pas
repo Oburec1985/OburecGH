@@ -1,16 +1,16 @@
 unit uMc201ProtocolTypes;
 
 {
-  Standalone MC-031/MC-032 + MC-201 protocol constants.
+  Автономные константы протокола MC-031/MC-032 + MC-201.
 
-  Sources:
+  Источники:
     - windev-v3.9/examples/mebius.daq/tests/medaq_mc_test/src/medaq_mc_test.cpp
     - windev-v3.9/mtcEthernet81/Mc031ethernetifc.cpp
     - windev-v3.9/mtc/CCDEVAPI.CPP
     - windev-v3.9/mtc/Ccdevice.h
     - windev-v3.9/mtc/Module.cpp
 
-  The unit is intentionally independent from RecorderLnx device units.
+  Модуль намеренно независим от рабочих классов устройств RecorderLnx.
 }
 
 {$mode objfpc}{$H+}
@@ -79,8 +79,8 @@ type
     const APacket: TMc032DataPacket) of object;
 
 const
-  { Defaults match the current live four-slot MC-201 stand used for protocol
-    debugging. They are test defaults, not RecorderLnx global device policy. }
+  { Значения по умолчанию соответствуют текущему четырехслотовому стенду MC-201.
+    Это настройки теста, а не глобальная политика устройств RecorderLnx. }
   CMc201DefaultHost = '192.169.12.87';
   CMc201DefaultPort = 4000;
   CMc201DefaultTimeoutMs = 1200;
@@ -93,26 +93,26 @@ const
   CMc201Cc81TimerScale = 1;
   CMc201Cc81TimerPeriod = 640;
 
-  { Original mdpEthernet81 packet layer: stream 1 is command/reply. A packet can
-    carry 1024 words, but command argument arrays in the original Ethernet81
-    implementation are intentionally smaller; see CMc201CommandMaxArgWords. }
+  { Исходный слой mdpEthernet81: поток 1 используется для команд/ответов.
+    Пакет может нести 1024 слова, но массив аргументов команды в оригинальном
+    Ethernet81 меньше; см. CMc201CommandMaxArgWords. }
   CMc201MdpSyncWord = Word($12B8);
   CMc201MdpStreamCommand = Word(1);
   CMc201MdpMaxPacketWords = 1024;
   CMc201MdpCommandHeaderWords = 3;
   CMc201MdpHeaderBytes = 8;
-  { mdpEthernet81.cpp uses MAX_TX/SIZE_TX_ARRAY = 32 for command arguments.
-    Sending larger CallCommand payloads looks attractive, but live MC-201 BIOS
-    upload then times out because the original driver never relied on that. }
+  { В mdpEthernet81.cpp для аргументов команд используется
+    MAX_TX/SIZE_TX_ARRAY = 32. Увеличение CallCommand-пакета выглядит заманчиво,
+    но на живом MC-201 приводит к timeout загрузки BIOS. }
   CMc201CommandMaxArgWords = 32;
-  { IDMA array commands spend five argument words before data: slot, dataReg,
-    idmaReg, address, count. PM memory addresses advance by count div 2, so the
-    data chunk is kept even. Live check: 27 breaks PM alignment, 26 works. }
+  { Команды IDMA-массивов тратят пять слов аргументов до данных: slot, dataReg,
+    idmaReg, address, count. Адрес PM-памяти идет как count div 2, поэтому кусок
+    данных оставлен четным. Проверка на стенде: 27 ломает PM, 26 работает. }
   CMc201IdmaArrayHeaderWords = 5;
   CMc201IdmaArrayMaxDataWords =
     ((CMc201CommandMaxArgWords - CMc201IdmaArrayHeaderWords) div 2) * 2;
 
-  { Original CC BIOS commands. }
+  { Команды BIOS крейт-контроллера из оригинального Recorder. }
   CMc201CmdPutRemote = Word(2);
   CMc201CmdReadFlash = Word(3);
   CMc201CmdTestLoad = Word(7);
@@ -137,7 +137,7 @@ const
   CMc201CmdConfigModuleIdma = Word(146);
   CMc201CmdAddChannelModule = Word(152);
 
-  { Original MC-201 module BIOS commands from devapi/Const.h and Module.h. }
+  { Команды BIOS модуля MC-201 из devapi/Const.h и Module.h. }
   CMc201ModuleCmdSendControlRegister = Word(22);
   CMc201ModuleCmdSetTimeoutStart = Word(28);
   CMc201ModuleCmdSetTimeoutStartAdc = Word(29);
@@ -152,7 +152,7 @@ const
   CMc201ModuleCmdConfigMix = Word(60);
   CMc201ModuleCmdGetFinalFlag = Word(63);
 
-  { MC-201/CC81 address constants used by ScanMC201::Programming. }
+  { Адресные константы MC-201/CC81, используемые ScanMC201::Programming. }
   CMc201IsDm = Word($4000);
   CMc201ModuleDataReg = Word(0);
   CMc201ModuleIdmaReg = Word(1);
@@ -175,13 +175,13 @@ const
   CMc201ScanTypeMc201 = Word(10);
   CMc201MaxModuleChannels = 4;
 
-  { Module flash offsets from Ccdevice.h / Module.cpp. }
+  { Смещения flash модуля из Ccdevice.h / Module.cpp. }
   CMc201FlashTypeOffset = Word(0);
   CMc201FlashVersionOffset = Word(1);
   CMc201FlashSerialHiOffset = Word(61);
   CMc201FlashSerialLoOffset = Word(62);
 
-  { AutoSearchModule MC-201 signatures from mtc/Main.cpp. }
+  { Сигнатуры MC-201 для AutoSearchModule из mtc/Main.cpp. }
   CMc201FlashTypeId = Word(201);
   CMc201VersionCount = 9;
   CMc201VersionCodes: array[0..CMc201VersionCount - 1] of Word =

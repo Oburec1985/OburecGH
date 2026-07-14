@@ -3,6 +3,8 @@ program Mc201ProtocolDebug;
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
+{$R resources/mc201_protocol_debug.rc}
+
 uses
   Interfaces, Forms, SysUtils, uMc201ProtocolDebugRunner, uMc032DebugForm;
 
@@ -32,8 +34,8 @@ begin
     Halt(RunMc201ProtocolDebug(ParamStr(0)))
   else if HasSwitch('--gui-connect-on-create-test') then
   begin
-    { Regression mode: create the GUI form and execute the same connect action
-      used by the button, but exit without entering the message loop. }
+    { Регрессионный режим: создать GUI-форму и выполнить тот же connect,
+      что у кнопки, но выйти без входа в цикл сообщений. }
     RequireDerivedFormResource := False;
     Application.Scaled := True;
     Application.Initialize;

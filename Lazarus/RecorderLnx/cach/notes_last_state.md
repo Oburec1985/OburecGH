@@ -998,6 +998,48 @@ to the selected MIC185 unit.
 PID 19184 held the output file; after `Stop-Process -Id 19184`,
 `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
 completed with exit code 0.
+
+## Codex continuation 2026-07-14: MC-201 fast Config and Russian docs
+
+**Prompt:** User reported that programming MC-201 modules is still slow compared
+with original Recorder and asked to rewrite test documentation/comments in
+Russian.
+
+**Fix:** Added a fast path in `TMc201LegacyMdpClient.LoadMc201BiosIdma`: before
+full `.bio` upload the client writes IDMA `0x6000`, reads `VAR_TMODE`, checks
+`A5A5`, and validates the loaded module BIOS with `CMD_INIT`. If validation
+passes, full upload is skipped and the slot is cached for the current TCP
+client. If validation fails, full upload remains as fallback. Rewrote
+`Mc201ProtocolDebug\README.md`, `Docs\devices\mc\mc201.md`, and Pascal comments
+in the test to Russian.
+
+**Verification:** Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0. Live
+`--cli --play-diagnostic-ms=1 --host=192.169.12.87 --port=4000 --timeout-ms=1200 --slots=4`
+completed successfully in under a second from process start with `Config OK`,
+`STARTSCANMAIN OK`, data packets, `STOPSCANMAIN OK`, and
+`RESULT Mc201PlayDiagnostic passed`.
+
+## Codex continuation 2026-07-14: MC-201 BIOS embedded resource
+
+**Prompt:** User asked to copy the MC-201 BIOS binary into project resources and
+compile it into the executable in a Linux-compatible way; future MIC-185 and
+other hardware binaries should follow the same rule.
+
+**Fix:** Copied `mc_201a.bio` to
+`Tests\RecorderTests\Mc201ProtocolDebug\resources\devices\mc201\mc_201a.bio`.
+Added `resources\mc201_protocol_debug.rc` with resource `MC201A_BIO` of custom
+type `MC201BIO`, included it from `Mc201ProtocolDebug.lpr`, and added
+`uMc201FirmwareResources.pas`. `TMc201LegacyMdpClient.LoadMc201BiosIdma` now
+loads BIOS bytes from the embedded resource first and uses the original
+`windev-v3.9` path only as fallback. Added CLI check `--check-resources`.
+
+**Verification:** `lazbuild -B Mc201ProtocolDebug.lpi` completed with exit code
+0 and compiled `resources\mc201_protocol_debug.rc`. `Mc201ProtocolDebug.exe
+--cli --check-resources` printed `RESOURCE MC201A_BIO OK
+source=resource:MC201A_BIO bytes=22040`. Live
+`--cli --play-diagnostic-ms=1 --host=192.169.12.87 --port=4000 --timeout-ms=1200 --slots=4`
+still completed with `Config OK`, data packets, `STOPSCANMAIN OK`, and
+`RESULT Mc201PlayDiagnostic passed`.
 `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
 passed.
 

@@ -1,10 +1,10 @@
 unit uMc201ProtocolDebugRunner;
 
 {
-  Console runner for MC-201 protocol debugging.
+  Консольный запускатель для отладки протокола MC-201.
 
-  The runner probes a controller, reads BIOS information and scans module flash
-  slots without creating RecorderLnx devices or programming hardware.
+  Запускатель проверяет контроллер, читает информацию BIOS и сканирует flash
+  слотов модулей, не создавая рабочие устройства RecorderLnx.
 }
 
 {$mode objfpc}{$H+}
@@ -17,7 +17,8 @@ function RunMc201ProtocolDebug(const AExeName: string): Integer;
 implementation
 
 uses
-  Classes, SysUtils, uMc032Device, uMc201LegacyMdpClient, uMc201ProtocolTypes;
+  Classes, SysUtils, uMc032Device, uMc201FirmwareResources,
+  uMc201LegacyMdpClient, uMc201ProtocolTypes;
 
 type
   TMc201Options = record
@@ -71,6 +72,8 @@ begin
     ' --cli --acceptance-ms=5000 [--update-ms=200] [--connect-attempts=5]');
   LogLine('       ' + ExtractFileName(AExeName) +
     ' --cli --play-diagnostic-ms=5000');
+  LogLine('       ' + ExtractFileName(AExeName) +
+    ' --cli --check-resources');
   LogLine('Without --cli the application starts the GUI.');
 end;
 
@@ -90,6 +93,32 @@ begin
       Exit(True);
     end;
   end;
+end;
+
+function HasSwitch(const AName: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if SameText(ParamStr(I), AName) then
+      Exit(True);
+end;
+
+function RunResourceCheck: Boolean;
+var
+  lBytes: TBytes;
+  lError: string;
+  lSource: string;
+begin
+  Result := LoadDeviceBinaryResource(CMc201BiosResourceName,
+    CMc201DefaultBiosPath, lBytes, lSource, lError);
+  if Result then
+    LogLine(Format('RESOURCE %s OK source=%s bytes=%d',
+      [CMc201BiosResourceName, lSource, Length(lBytes)]))
+  else
+    LogLine(Format('RESOURCE %s failed: %s',
+      [CMc201BiosResourceName, lError]));
 end;
 
 function LoadOptions(out AOptions: TMc201Options): Boolean;
@@ -661,6 +690,15 @@ begin
     LoadOptions(lOptions);
     LogLine(Format('MC-201 protocol debug: %s:%d timeout=%dms slots=%d',
       [lOptions.Host, lOptions.Port, lOptions.TimeoutMs, lOptions.MaxSlots]));
+
+    if HasSwitch('--check-resources') then
+    begin
+      if RunResourceCheck then
+        Result := 0
+      else
+        Result := 6;
+      Exit;
+    end;
 
     if lOptions.RunPlayDiagnostic then
     begin
