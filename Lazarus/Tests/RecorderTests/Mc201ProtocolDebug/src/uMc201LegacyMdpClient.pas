@@ -25,6 +25,10 @@ uses
 
 type
   EMc201MdpProtocol = class(Exception);
+  { BIOS upload is slow. The cache is deliberately scoped to one TCP client:
+    the module loader flag can be stale after reconnect/reset, so a new client
+    must reload BIOS instead of trusting old module memory state. }
+  TMc201LoadedBiosSlots = set of 0..31;
 
   TMc201LegacyMdpClient = class
   private
@@ -35,6 +39,7 @@ type
     fTimeoutMs: Cardinal;
     fDmHeapAddr: Word;
     fDmHeapRemain: Word;
+    fLoadedBiosSlots: TMc201LoadedBiosSlots;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer);
     function OpenTcpStreamNoRaise(out AStream: TSocketStream;
@@ -111,6 +116,7 @@ begin
   fHost := AHost;
   fPort := APort;
   fTimeoutMs := ATimeoutMs;
+  fLoadedBiosSlots := [];
   ResetLocalMemoryHeap;
 end;
 
@@ -120,6 +126,9 @@ begin
   inherited Destroy;
 end;
 
+{ TInetSocket.Create raises ESocketError on ordinary connect timeouts. The GUI
+  uses this non-throwing open so Search/Test/Connect can show "not found" in the
+  log without stopping in the Lazarus debugger on a handled exception. }
 function TMc201LegacyMdpClient.OpenTcpStreamNoRaise(out AStream: TSocketStream;
   out AErrorMessage: string): Boolean;
 var
@@ -590,6 +599,9 @@ begin
   Result := CallCommand(CMc201CmdWriteDm, lArgs, 0, lReply, AErrorMessage);
 end;
 
+{ Module IDMA GETARRAY goes through the original 32-word command argument
+  window. PM memory is pair-addressed, so non-DM addresses advance by count div
+  2. The shared chunk constant keeps GETARRAY and PUTARRAY aligned. }
 function TMc201LegacyMdpClient.ReadRemoteWordArrayModule(ASlot, AAddress,
   ACount: Word; out AData: TMc201WordArray; out AErrorMessage: string): Boolean;
 var
@@ -605,12 +617,12 @@ begin
   while lDone < ACount do
   begin
     lReadCount := ACount - lDone;
-    if lReadCount > 24 then
-      lReadCount := 24;
-  SetLength(lArgs, 5);
-  lArgs[0] := ASlot;
-  lArgs[1] := GetAddrModuleReg(ASlot, CMc201ModuleDataReg);
-  lArgs[2] := GetAddrModuleReg(ASlot, CMc201ModuleIdmaReg);
+    if lReadCount > CMc201IdmaArrayMaxDataWords then
+      lReadCount := CMc201IdmaArrayMaxDataWords;
+    SetLength(lArgs, CMc201IdmaArrayHeaderWords);
+    lArgs[0] := ASlot;
+    lArgs[1] := GetAddrModuleReg(ASlot, CMc201ModuleDataReg);
+    lArgs[2] := GetAddrModuleReg(ASlot, CMc201ModuleIdmaReg);
     lArgs[3] := AAddress;
     lArgs[4] := lReadCount;
     if not CallCommand(CMc201CmdIdmaGetArray, lArgs, lReadCount, lChunk,
@@ -628,6 +640,9 @@ begin
   Result := True;
 end;
 
+{ Module IDMA PUTARRAY must use the same chunking as the original Recorder path.
+  Larger chunks fit into the raw Ethernet frame but not into mdpEthernet81's
+  command argument buffer, and odd PM chunks shift the next write address. }
 function TMc201LegacyMdpClient.WriteRemoteWordArrayModule(ASlot,
   AAddress: Word; const AData: TMc201WordArray;
   out AErrorMessage: string): Boolean;
@@ -643,15 +658,14 @@ begin
   while lDone < Length(AData) do
   begin
     lWriteCount := Length(AData) - lDone;
-    if lWriteCount > 24 then
-      lWriteCount := 24;
-  SetLength(lArgs, Length(AData) + 5);
-  lArgs[0] := ASlot;
-  lArgs[1] := GetAddrModuleReg(ASlot, CMc201ModuleDataReg);
-  lArgs[2] := GetAddrModuleReg(ASlot, CMc201ModuleIdmaReg);
-  lArgs[3] := AAddress;
+    if lWriteCount > CMc201IdmaArrayMaxDataWords then
+      lWriteCount := CMc201IdmaArrayMaxDataWords;
+    SetLength(lArgs, lWriteCount + CMc201IdmaArrayHeaderWords);
+    lArgs[0] := ASlot;
+    lArgs[1] := GetAddrModuleReg(ASlot, CMc201ModuleDataReg);
+    lArgs[2] := GetAddrModuleReg(ASlot, CMc201ModuleIdmaReg);
+    lArgs[3] := AAddress;
     lArgs[4] := lWriteCount;
-    SetLength(lArgs, lWriteCount + 5);
     for I := 0 to lWriteCount - 1 do
       lArgs[5 + I] := AData[lDone + I];
     if not CallCommand(CMc201CmdIdmaPutArray, lArgs, 0, lReply,
@@ -678,6 +692,9 @@ begin
   Result := CallCommand(CMc201CmdPutRemote, lArgs, 0, lReply, AErrorMessage);
 end;
 
+{ Loads the small MC-201 module BIOS used by subsequent module commands. The
+  first Config in a TCP session uploads the .bio into module memory; repeated
+  Config calls in the same session reuse it through fLoadedBiosSlots. }
 function TMc201LegacyMdpClient.LoadMc201BiosIdma(ASlot: Word;
   const ABiosPath: string; out AErrorMessage: string): Boolean;
 var
@@ -695,6 +712,13 @@ var
 begin
   Result := False;
   AErrorMessage := '';
+  if (ASlot <= 31) and (ASlot in fLoadedBiosSlots) then
+    Exit(True);
+
+  if not WriteModuleReg(ASlot, CMc201ModuleIdmaReg, $6000, AErrorMessage) then
+    Exit;
+  Sleep(50);
+
   if not FileExists(ABiosPath) then
   begin
     AErrorMessage := 'MC201 BIOS file not found: ' + ABiosPath;
@@ -731,10 +755,6 @@ begin
       [lK, lN, Length(lBiosWords)]);
     Exit;
   end;
-
-  if not WriteModuleReg(ASlot, CMc201ModuleIdmaReg, $6000, AErrorMessage) then
-    Exit;
-  Sleep(50);
 
   SetLength(lVars, lN);
   for I := 0 to lN - 1 do
@@ -788,6 +808,8 @@ begin
     lReply, AErrorMessage) then
     Exit;
   Sleep(350);
+  if ASlot <= 31 then
+    Include(fLoadedBiosSlots, ASlot);
   Result := True;
 end;
 

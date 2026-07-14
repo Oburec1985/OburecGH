@@ -74,3 +74,27 @@ D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201Protoc
 The CLI aggregates raw Ethernet stream frames into 200 ms update blocks. On the
 current stand at `57600 Hz`, the expected 5-second result is `25` update blocks;
 raw frame sizes are normally around `266`, `532`, and `798` words.
+
+## Implementation Notes
+
+The source files contain comments around the protocol traps found during live
+debugging:
+
+- `uMc201ProtocolTypes.pas`: live-stand defaults, MDP packet size versus
+  command argument size, and the 26-word IDMA chunk limit.
+- `uMc201LegacyMdpClient.pas`: non-throwing GUI TCP connect, IDMA PM address
+  chunking, and per-client MC-201 BIOS cache.
+- `uMc032Device.pas`: original-like scan programming order and the single
+  reset/reconnect retry used by `Config`.
+- `Mc201ProtocolDebug.lpr`: `--gui-connect-on-create-test`, which invokes the
+  same form connect action as the GUI button.
+
+Do not replace the 26-word IDMA chunk with the raw packet maximum. A raw MDP
+packet can carry more data, but original `mdpEthernet81` command calls are
+limited to 32 argument words. Live testing showed that 1016-word chunks time out
+and 27-word PM chunks misalign the next PM address; 26-word chunks pass.
+
+Repeated GUI `Config` in one TCP session is faster because successfully loaded
+BIOS slots are cached in `TMc201LegacyMdpClient`. The cache is not persisted and
+is not shared across reconnects; a fresh TCP client reloads the module BIOS for
+safety.

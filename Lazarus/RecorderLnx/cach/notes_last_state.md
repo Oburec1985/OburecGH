@@ -1261,3 +1261,41 @@ CLI/internal callers.
 **Verification:** Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0. The
 connect-on-create regression still passes and returns
 `Connect: Connection to 192.169.12.87:4000 timed out.`
+
+## Codex continuation 2026-07-14: MC-201 Config speed and IDMA chunking
+
+**Prompt:** User reported that `Play` now receives apparently correct data, but
+`Config` is much slower than original Recorder; maybe module programming should
+use fewer packets.
+
+**Fix:** Compared with original `mdpEthernet81`, `Mc031ethernetifc` and
+`Mc201.cpp`. The raw Ethernet packet can carry 1024 words, but original command
+arguments are limited to `MAX_TX = 32` words. For `CMD_IDMAPUTARRAY` this leaves
+27 data words, and PM writes must be even, so the safe chunk is `26` words.
+Encoded this as `CMc201CommandMaxArgWords = 32` and
+`CMc201IdmaArrayMaxDataWords = 26`. Added per-client loaded-BIOS slot cache so
+repeated GUI `Config` in the same connection skips the heavy `.bio` upload.
+
+**Verification:** `lazbuild -B Mc201ProtocolDebug.lpi` completed with exit code
+0. Live command `Mc201ProtocolDebug.exe --cli --play-diagnostic-ms=1
+--host=192.169.12.87 --port=4000 --timeout-ms=1200 --slots=4` completed with
+`Config OK`, `STARTSCANMAIN OK`, data packets, `STOPSCANMAIN OK`, and
+`RESULT Mc201PlayDiagnostic passed`.
+
+## Codex continuation 2026-07-14: MC-201 documentation pass
+
+**Prompt:** User asked to document what was developed in project documents and
+add comments explaining what each part does and why.
+
+**Fix:** Added focused Pascal comments to the MC-201 debug project around the
+hard protocol decisions: stand defaults, 32-word MDP command argument limit,
+26-word IDMA chunks, non-throwing GUI TCP connect, per-client BIOS cache,
+original-like scan programming order, Config retry, and GUI connect regression
+mode. Expanded `Docs/devices/mc/mc201.md` and the test `README.md` with the
+same decisions and command examples for future transfer into RecorderLnx.
+
+**Verification:** First rebuild failed only because a running
+`Mc201ProtocolDebug.exe` held the target executable. After stopping that
+process, `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
+completed with exit code 0.

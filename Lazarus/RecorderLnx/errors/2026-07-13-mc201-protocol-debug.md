@@ -227,6 +227,73 @@ with exit code 0. Ran
 it returned exit code 0 and printed
 `RESULT Mc201GuiConnectOnCreate passed: Connect: Connection to 192.169.12.87:4000 timed out.`
 
+## Codex continuation 2026-07-14: Documented MC-201 protocol decisions
+
+**Prompt:** User asked to document the accumulated MC-201 work in project
+documents and code comments.
+
+**Action:** Added durable documentation for the confirmed implementation
+decisions:
+
+- The debug project stays independent from RecorderLnx production device units.
+- GUI and CLI are two entry modes for one executable and one `TMc032Device`
+  protocol path.
+- The live stand defaults are `192.169.12.87:4000`, four slots, `57600 Hz`.
+- MDP raw packet capacity must not be confused with command argument capacity:
+  `CMD_IDMAPUTARRAY`/`CMD_IDMAGETARRAY` are limited to 26 data words after the
+  five-word header.
+- GUI connect/search/test paths must return errors as text instead of raising
+  ordinary timeout/refused exceptions from `TInetSocket.Create`.
+- MC-201 BIOS upload is cached only per TCP client, never persisted across
+  reconnects.
+- Config follows the original Recorder scan sequence and performs one
+  reset/reconnect retry after a programming failure.
+
+**Verification:** First rebuild failed at link time because a running
+`Mc201ProtocolDebug.exe` held the target executable (`error code: 5`). After
+stopping PID 13216, `lazbuild -B Mc201ProtocolDebug.lpi` completed with exit
+code 0.
+
+## Codex continuation 2026-07-14: Config programming speed
+
+**Prompt:** User reported that `Play` now receives apparently correct data, but
+`Config` is much slower than original Recorder. Suspected cause: sending module
+programming in too many small packets.
+
+**Findings:**
+- Original MC-201 scan programming still sends many module commands per module;
+  it is not one command for all four modules. `ModuleMC201::Programming()`
+  sends STOP/RESET, RAW/DBL/MIX per channel, one control-register array,
+  grid/frequency/channel-list and final-flag reads.
+- The large slow part in the test stand is BIOS/IDMA upload. The original
+  transport does not allow arbitrary 1024-word command arguments:
+  `mdpEthernet81.cpp` defines `MAX_TX = 32`, and `Mc031ethernetifc.cpp` uses
+  `ARGC_SIZE_PROPERTY` to set `size_tx_array`.
+- For `CMD_IDMAPUTARRAY`, 5 argument words are used before data. PM writes also
+  need even data counts because PM address advances by `count / 2`.
+
+**Fix:** Documented and encoded the original command-argument limit:
+`CMc201CommandMaxArgWords = 32`, `CMc201IdmaArrayMaxDataWords = 26`. Added a
+per-client loaded-BIOS slot cache so repeated GUI `Config` calls in the same
+TCP session skip the heavy `.bio` upload after the first successful load. Fresh
+connections still reload BIOS safely.
+
+**Rejected attempts:**
+- `1016` data words matched the raw MDP packet payload capacity but exceeded
+  the original command argument buffer and caused `LOAD_MC201_BIOS ... MDP
+  command timeout`.
+- `27` data words matched `32 - 5`, but broke PM chunk alignment and produced
+  BIOS-load timeout/status errors.
+- Skipping BIOS based only on the old module loader flag `0xA5A5` was unsafe
+  across new TCP clients; module commands then timed out with status `0x8005`.
+
+**Verification:** Rebuilt
+`D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
+with exit code 0. Live run
+`Mc201ProtocolDebug.exe --cli --play-diagnostic-ms=1 --host=192.169.12.87 --port=4000 --timeout-ms=1200 --slots=4`
+completed with `Config OK`, `STARTSCANMAIN OK`, data packets, `STOPSCANMAIN OK`
+and `RESULT Mc201PlayDiagnostic passed`.
+
 ## Codex continuation 2026-07-14: Search also stops at TInetSocket.Create
 
 **Prompt:** User reported that even the GUI `Search` button stops at

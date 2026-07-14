@@ -79,6 +79,8 @@ type
     const APacket: TMc032DataPacket) of object;
 
 const
+  { Defaults match the current live four-slot MC-201 stand used for protocol
+    debugging. They are test defaults, not RecorderLnx global device policy. }
   CMc201DefaultHost = '192.169.12.87';
   CMc201DefaultPort = 4000;
   CMc201DefaultTimeoutMs = 1200;
@@ -91,11 +93,24 @@ const
   CMc201Cc81TimerScale = 1;
   CMc201Cc81TimerPeriod = 640;
 
-  { Original mdpEthernet81 packet layer: stream 1 is command/reply. }
+  { Original mdpEthernet81 packet layer: stream 1 is command/reply. A packet can
+    carry 1024 words, but command argument arrays in the original Ethernet81
+    implementation are intentionally smaller; see CMc201CommandMaxArgWords. }
   CMc201MdpSyncWord = Word($12B8);
   CMc201MdpStreamCommand = Word(1);
   CMc201MdpMaxPacketWords = 1024;
+  CMc201MdpCommandHeaderWords = 3;
   CMc201MdpHeaderBytes = 8;
+  { mdpEthernet81.cpp uses MAX_TX/SIZE_TX_ARRAY = 32 for command arguments.
+    Sending larger CallCommand payloads looks attractive, but live MC-201 BIOS
+    upload then times out because the original driver never relied on that. }
+  CMc201CommandMaxArgWords = 32;
+  { IDMA array commands spend five argument words before data: slot, dataReg,
+    idmaReg, address, count. PM memory addresses advance by count div 2, so the
+    data chunk is kept even. Live check: 27 breaks PM alignment, 26 works. }
+  CMc201IdmaArrayHeaderWords = 5;
+  CMc201IdmaArrayMaxDataWords =
+    ((CMc201CommandMaxArgWords - CMc201IdmaArrayHeaderWords) div 2) * 2;
 
   { Original CC BIOS commands. }
   CMc201CmdPutRemote = Word(2);
