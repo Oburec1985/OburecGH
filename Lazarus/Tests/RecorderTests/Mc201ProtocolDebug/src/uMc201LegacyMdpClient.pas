@@ -14,7 +14,14 @@ unit uMc201LegacyMdpClient;
 interface
 
 uses
-  Classes, SysUtils, ssockets, uMc201ProtocolTypes;
+  Classes, SysUtils, ctypes, sockets, ssockets, resolve,
+{$ifdef windows}
+  WinSock2, Windows,
+{$endif}
+{$ifdef unix}
+  BaseUnix, Unix,
+{$endif}
+  uMc201ProtocolTypes;
 
 type
   EMc201MdpProtocol = class(Exception);
@@ -24,12 +31,14 @@ type
     fHost: string;
     fPort: Word;
     fRxBuffer: array of Byte;
-    fSocket: TInetSocket;
+    fSocket: TSocketStream;
     fTimeoutMs: Cardinal;
     fDmHeapAddr: Word;
     fDmHeapRemain: Word;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer);
+    function OpenTcpStreamNoRaise(out AStream: TSocketStream;
+      out AErrorMessage: string): Boolean;
     procedure WriteBytes(const ABuffer; ACount: Integer);
     procedure SendPacket(APort: Word; const AWords: TMc201WordArray);
     function ReadPacket(out APort: Word; out AWords: TMc201WordArray): Boolean;
@@ -38,10 +47,15 @@ type
     constructor Create(const AHost: string; APort: Word; ATimeoutMs: Cardinal);
     destructor Destroy; override;
     procedure Connect;
+    function TryConnect(out AErrorMessage: string): Boolean;
     procedure Disconnect;
+    function DrainPackets(ATimeoutMs: Cardinal; out APacketCount: Integer;
+      out AErrorMessage: string): Boolean;
     function ReadRawPacket(out APort: Word; out AWords: TMc201WordArray): Boolean;
     function CallCommand(ACommand: Word; const AArgs: TMc201WordArray;
       ARetWordCount: Integer; out ARet: TMc201WordArray;
+      out AErrorMessage: string): Boolean;
+    function SendCommandNoWait(ACommand: Word; const AArgs: TMc201WordArray;
       out AErrorMessage: string): Boolean;
     function ReadControllerBios(out ABios: TMc201ControllerBios;
       out AErrorMessage: string): Boolean;
@@ -60,6 +74,8 @@ type
     function WriteRemoteWordArrayModule(ASlot, AAddress: Word;
       const AData: TMc201WordArray; out AErrorMessage: string): Boolean;
     function WriteModuleReg(ASlot, AReg, AValue: Word;
+      out AErrorMessage: string): Boolean;
+    function LoadMc201BiosIdma(ASlot: Word; const ABiosPath: string;
       out AErrorMessage: string): Boolean;
     function CallCommandModuleIdmaNotActivated(ASlot, ACommand: Word;
       const AArgs: TMc201WordArray; ARetWordCount: Integer;
@@ -104,11 +120,145 @@ begin
   inherited Destroy;
 end;
 
-procedure TMc201LegacyMdpClient.Connect;
+function TMc201LegacyMdpClient.OpenTcpStreamNoRaise(out AStream: TSocketStream;
+  out AErrorMessage: string): Boolean;
+var
+  lAddr: TInetSockAddr;
+  lErr: Longint;
+  lErrLen: Longint;
+  lFds: TFDSet;
+  lHostAddr: THostAddr;
+{$ifdef unix}
+  lFlags: Longint;
+{$endif}
+{$ifdef windows}
+  lMode: DWord;
+{$endif}
+  lRes: Longint;
+  lSocket: cint;
+  lTime: TTimeVal;
+begin
+  Result := False;
+  AStream := nil;
+  AErrorMessage := '';
+  lSocket := -1;
+  try
+    lHostAddr := StrToHostAddr(fHost);
+    if lHostAddr.s_bytes[1] = 0 then
+      with THostResolver.Create(nil) do
+        try
+          if not NameLookup(fHost) then
+          begin
+            AErrorMessage := 'Host name resolution for "' + fHost + '" failed.';
+            Exit;
+          end;
+          lHostAddr := HostAddress;
+        finally
+          Free;
+        end;
+
+    FillChar(lAddr, SizeOf(lAddr), 0);
+    lAddr.sin_family := AF_INET;
+    lAddr.sin_port := ShortHostToNet(fPort);
+    lAddr.sin_addr.s_addr := HostToNet(lHostAddr.s_addr);
+
+    lSocket := fpSocket(AF_INET, SOCK_STREAM, 0);
+    if lSocket < 0 then
+    begin
+      AErrorMessage := 'Creation of socket failed: ' + IntToStr(SocketError);
+      Exit;
+    end;
+
+{$ifdef unix}
+    lFlags := FpFcntl(lSocket, F_GetFl, 0);
+    if FpFcntl(lSocket, F_SetFl, lFlags or O_NONBLOCK) <> 0 then
+    begin
+      AErrorMessage := 'Setting nonblocking socket mode failed: ' +
+        IntToStr(SocketError);
+      Exit;
+    end;
+{$endif}
+{$ifdef windows}
+    lMode := 1;
+    if ioctlsocket(lSocket, Longint(FIONBIO), @lMode) <> 0 then
+    begin
+      AErrorMessage := 'Setting nonblocking socket mode failed: ' +
+        IntToStr(SocketError);
+      Exit;
+    end;
+{$endif}
+
+    lErr := 0;
+    if fpConnect(lSocket, @lAddr, SizeOf(lAddr)) <> 0 then
+    begin
+      FillChar(lFds, SizeOf(lFds), 0);
+{$ifdef unix}
+      fpFD_Zero(lFds);
+      fpFD_Set(lSocket, lFds);
+{$endif}
+{$ifdef windows}
+      FD_Zero(lFds);
+      FD_Set(lSocket, lFds);
+{$endif}
+      lTime.tv_sec := fTimeoutMs div 1000;
+      lTime.tv_usec := (fTimeoutMs mod 1000) * 1000;
+{$ifdef unix}
+      lRes := fpSelect(lSocket + 1, nil, @lFds, nil, @lTime);
+{$endif}
+{$ifdef windows}
+      lRes := WinSock2.select(lSocket + 1, nil, @lFds, nil, @lTime);
+{$endif}
+      if lRes = 0 then
+      begin
+        AErrorMessage := Format('Connection to %s:%d timed out.',
+          [fHost, fPort]);
+        Exit;
+      end;
+      if lRes < 0 then
+      begin
+        AErrorMessage := 'TCP connect select failed: ' + IntToStr(SocketError);
+        Exit;
+      end;
+      lErrLen := SizeOf(lErr);
+      fpGetSockOpt(lSocket, SOL_SOCKET, SO_ERROR, @lErr, @lErrLen);
+      if lErr <> 0 then
+      begin
+        AErrorMessage := Format('Connection to %s:%d failed: %d',
+          [fHost, fPort, lErr]);
+        Exit;
+      end;
+    end;
+
+{$ifdef unix}
+    FpFcntl(lSocket, F_SetFl, lFlags and (not O_NONBLOCK));
+{$endif}
+{$ifdef windows}
+    lMode := 0;
+    ioctlsocket(lSocket, Longint(FIONBIO), @lMode);
+{$endif}
+
+    AStream := TSocketStream.Create(lSocket);
+    AStream.IOTimeout := Integer(fTimeoutMs);
+    lSocket := -1;
+    Result := True;
+  finally
+    if lSocket >= 0 then
+      CloseSocket(lSocket);
+  end;
+end;
+
+function TMc201LegacyMdpClient.TryConnect(out AErrorMessage: string): Boolean;
 begin
   Disconnect;
-  fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
-  fSocket.IOTimeout := Integer(fTimeoutMs);
+  Result := OpenTcpStreamNoRaise(fSocket, AErrorMessage);
+end;
+
+procedure TMc201LegacyMdpClient.Connect;
+var
+  lError: string;
+begin
+  if not TryConnect(lError) then
+    raise EMc201MdpProtocol.Create(lError);
 end;
 
 procedure TMc201LegacyMdpClient.Disconnect;
@@ -128,6 +278,29 @@ function TMc201LegacyMdpClient.ReadRawPacket(out APort: Word;
   out AWords: TMc201WordArray): Boolean;
 begin
   Result := ReadPacket(APort, AWords);
+end;
+
+function TMc201LegacyMdpClient.DrainPackets(ATimeoutMs: Cardinal;
+  out APacketCount: Integer; out AErrorMessage: string): Boolean;
+var
+  lOldTimeout: Cardinal;
+  lPort: Word;
+  lWords: TMc201WordArray;
+begin
+  Result := False;
+  APacketCount := 0;
+  AErrorMessage := '';
+  lOldTimeout := fTimeoutMs;
+  try
+    SetTimeoutMs(ATimeoutMs);
+    while ReadPacket(lPort, lWords) do
+      Inc(APacketCount);
+    Result := True;
+  except
+    on E: Exception do
+      AErrorMessage := E.Message;
+  end;
+  SetTimeoutMs(lOldTimeout);
 end;
 
 function TMc201LegacyMdpClient.EnsureRxBytes(ACount: Integer): Boolean;
@@ -273,6 +446,7 @@ function TMc201LegacyMdpClient.CallCommand(ACommand: Word;
 var
   lPort: Word;
   lRequest: TMc201WordArray;
+  lStartTick: QWord;
 begin
   Result := False;
   AErrorMessage := '';
@@ -285,10 +459,19 @@ begin
     if Length(AArgs) > 0 then
       Move(AArgs[0], lRequest[3], Length(AArgs) * SizeOf(Word));
     SendPacket(CMc201MdpStreamCommand, lRequest);
+    lStartTick := GetTickCount64;
     repeat
       if not ReadPacket(lPort, ARet) then
       begin
         AErrorMessage := 'MDP command timeout';
+        Exit;
+      end;
+      if (lPort <> CMc201MdpStreamCommand) and
+        (GetTickCount64 - lStartTick >= fTimeoutMs) then
+      begin
+        AErrorMessage := Format(
+          'MDP command reply timeout: cmd=%d, last port=%d',
+          [ACommand, lPort]);
         Exit;
       end;
     until lPort = CMc201MdpStreamCommand;
@@ -298,6 +481,28 @@ begin
         [Length(ARet), ARetWordCount]);
       Exit;
     end;
+    Result := True;
+  except
+    on E: Exception do
+      AErrorMessage := E.Message;
+  end;
+end;
+
+function TMc201LegacyMdpClient.SendCommandNoWait(ACommand: Word;
+  const AArgs: TMc201WordArray; out AErrorMessage: string): Boolean;
+var
+  lRequest: TMc201WordArray;
+begin
+  Result := False;
+  AErrorMessage := '';
+  try
+    SetLength(lRequest, 3 + Length(AArgs));
+    lRequest[0] := ACommand;
+    lRequest[1] := Length(AArgs);
+    lRequest[2] := 0;
+    if Length(AArgs) > 0 then
+      Move(AArgs[0], lRequest[3], Length(AArgs) * SizeOf(Word));
+    SendPacket(CMc201MdpStreamCommand, lRequest);
     Result := True;
   except
     on E: Exception do
@@ -471,6 +676,119 @@ begin
   lArgs[0] := GetAddrModuleReg(ASlot, AReg);
   lArgs[1] := AValue;
   Result := CallCommand(CMc201CmdPutRemote, lArgs, 0, lReply, AErrorMessage);
+end;
+
+function TMc201LegacyMdpClient.LoadMc201BiosIdma(ASlot: Word;
+  const ABiosPath: string; out AErrorMessage: string): Boolean;
+var
+  I: Integer;
+  lBiosBytes: TBytes;
+  lBiosWords: TMc201WordArray;
+  lCodeWords: TMc201WordArray;
+  lK: Word;
+  lN: Word;
+  lReply: TMc201WordArray;
+  lStream: TFileStream;
+  lStartTick: QWord;
+  lStatus: TMc201WordArray;
+  lVars: TMc201WordArray;
+begin
+  Result := False;
+  AErrorMessage := '';
+  if not FileExists(ABiosPath) then
+  begin
+    AErrorMessage := 'MC201 BIOS file not found: ' + ABiosPath;
+    Exit;
+  end;
+  lStream := TFileStream.Create(ABiosPath, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(lBiosBytes, lStream.Size);
+    if Length(lBiosBytes) > 0 then
+      lStream.ReadBuffer(lBiosBytes[0], Length(lBiosBytes));
+  finally
+    lStream.Free;
+  end;
+  if (Length(lBiosBytes) < 8) or ((Length(lBiosBytes) mod 2) <> 0) then
+  begin
+    AErrorMessage := 'MC201 BIOS file has invalid size: ' + ABiosPath;
+    Exit;
+  end;
+  SetLength(lBiosWords, Length(lBiosBytes) div 2);
+  for I := 0 to High(lBiosWords) do
+    lBiosWords[I] := GetWordLE(lBiosBytes, I * 2);
+
+  lK := lBiosWords[0];
+  if (lK < 3) or (lK + 1 > High(lBiosWords)) then
+  begin
+    AErrorMessage := Format('MC201 BIOS header is invalid: k=%d words=%d',
+      [lK, Length(lBiosWords)]);
+    Exit;
+  end;
+  lN := lBiosWords[lK + 1];
+  if lK + 1 + lN > High(lBiosWords) then
+  begin
+    AErrorMessage := Format('MC201 BIOS var block is invalid: k=%d n=%d words=%d',
+      [lK, lN, Length(lBiosWords)]);
+    Exit;
+  end;
+
+  if not WriteModuleReg(ASlot, CMc201ModuleIdmaReg, $6000, AErrorMessage) then
+    Exit;
+  Sleep(50);
+
+  SetLength(lVars, lN);
+  for I := 0 to lN - 1 do
+    lVars[I] := lBiosWords[lK + 2 + I];
+  if not WriteRemoteWordArrayModule(ASlot, CMc201ModuleBiosLoadVarSpace,
+    lVars, AErrorMessage) then
+    Exit;
+
+  SetLength(lCodeWords, lK - 2);
+  for I := 0 to High(lCodeWords) do
+    lCodeWords[I] := lBiosWords[3 + I];
+  if not WriteRemoteWordArrayModule(ASlot, 1, lCodeWords, AErrorMessage) then
+    Exit;
+
+  SetLength(lVars, 1);
+  lVars[0] := ASlot;
+  if not WriteRemoteWordArrayModule(ASlot, CMc201ModuleBiosLoadTMode, lVars,
+    AErrorMessage) then
+    Exit;
+
+  SetLength(lCodeWords, 2);
+  lCodeWords[0] := lBiosWords[1];
+  lCodeWords[1] := lBiosWords[2];
+  if not WriteRemoteWordArrayModule(ASlot, 0, lCodeWords, AErrorMessage) then
+    Exit;
+
+  lStartTick := GetTickCount64;
+  repeat
+    if not ReadRemoteWordArrayModule(ASlot, CMc201ModuleBiosLoadTMode, 1,
+      lStatus, AErrorMessage) then
+      Exit;
+    if (Length(lStatus) > 0) and
+      (lStatus[0] = CMc201ModuleBiosLoadFlag) then
+      Break;
+    Sleep(1);
+  until GetTickCount64 - lStartTick >= 10000;
+
+  if (Length(lStatus) = 0) or
+    (lStatus[0] <> CMc201ModuleBiosLoadFlag) then
+  begin
+    if Length(lStatus) > 0 then
+      AErrorMessage := Format('MC201 BIOS load timeout slot=%d status=0x%.4x',
+        [ASlot, lStatus[0]])
+    else
+      AErrorMessage := Format('MC201 BIOS load timeout slot=%d no status',
+        [ASlot]);
+    Exit;
+  end;
+
+  if not CallCommandModuleIdmaNotActivated(ASlot, CMc201ModuleCmdInit, nil, 2,
+    lReply, AErrorMessage) then
+    Exit;
+  Sleep(350);
+  Result := True;
 end;
 
 function TMc201LegacyMdpClient.CallCommandModuleIdmaNotActivated(ASlot,

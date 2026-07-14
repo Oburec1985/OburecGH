@@ -83,9 +83,13 @@ const
   CMc201DefaultPort = 4000;
   CMc201DefaultTimeoutMs = 1200;
   CMc201DefaultMaxSlots = 4;
+  CMc201CrateMaxStartSlots = 16;
   CMc201DefaultSampleRateHz = 57600;
   CMc201DefaultUpdateMs = 200;
   CMc201DefaultAcceptanceMs = 5000;
+  CMc201DefaultBiosPath = 'D:\works\windev-v3.9\examples\mebius.daq\BIOS\mc_201a.bio';
+  CMc201Cc81TimerScale = 1;
+  CMc201Cc81TimerPeriod = 640;
 
   { Original mdpEthernet81 packet layer: stream 1 is command/reply. }
   CMc201MdpSyncWord = Word($12B8);
@@ -101,12 +105,14 @@ const
   CMc201CmdIdmaCallCommand = Word(74);
   CMc201CmdIdmaGetArray = Word(77);
   CMc201CmdIdmaPutArray = Word(78);
+  CMc201CmdConfigSyncStart = Word(79);
   CMc201CmdStartScanMain = Word(80);
   CMc201CmdStopScanMain = Word(81);
   CMc201CmdAppendScanMain = Word(82);
   CMc201CmdResetScanMain = Word(83);
   CMc201CmdConfigScanMain = Word(84);
   CMc201CmdStartTriggerStartAdc = Word(85);
+  CMc201CmdSetTimeoutStartTimer = Word(98);
   CMc201CmdWriteDm = Word(111);
   CMc201CmdReply = Word(113);
   CMc201CmdReadMemDm = Word(114);
@@ -118,6 +124,9 @@ const
 
   { Original MC-201 module BIOS commands from devapi/Const.h and Module.h. }
   CMc201ModuleCmdSendControlRegister = Word(22);
+  CMc201ModuleCmdSetTimeoutStart = Word(28);
+  CMc201ModuleCmdSetTimeoutStartAdc = Word(29);
+  CMc201ModuleCmdInit = Word(21);
   CMc201ModuleCmdStopScan = Word($8005);
   CMc201ModuleCmdResetScan = Word($8006);
   CMc201ModuleCmdSetChanList = Word(41);
@@ -133,13 +142,19 @@ const
   CMc201ModuleDataReg = Word(0);
   CMc201ModuleIdmaReg = Word(1);
   CMc201ModuleIrqReg = Word(3);
+  CMc201ModuleResetReg = Word(3);
+  CMc201ModuleBiosLoadVarSpace = Word($4000 or $3800);
+  CMc201ModuleBiosLoadTMode = Word($4000 or $3F00);
+  CMc201ModuleBiosLoadFlag = Word($A5A5);
   CMc201ModuleVarVars = Word($4000 or $3F02);
   CMc201ModuleVarCommand = Word($4000 or $3F01);
   CMc201FlagCommandFinish = Word($A5A5);
   CMc201DmHeapBegin = Word($0800);
   CMc201DmHeapEnd = Word($2BFF);
-  CMc201BiosScanContextWords = Word(16);
-  CMc201DescModuleWords = Word(5);
+  CMc201BiosScanContextWords = Word(6);
+  CMc201BiosMessageHeaderWords = 10;
+  CMc201BiosMessageMaxWords = CMc201BiosMessageHeaderWords + 1024;
+  CMc201DescModuleWords = Word(4);
   CMc201DescChanWords = Word(5);
   CMc201ScanIdDefault = Word(0);
   CMc201ScanTypeMc201 = Word(10);
@@ -160,6 +175,7 @@ const
 
 function Mc201IsKnownVersionCode(AValue: Word): Boolean;
 function Mc201FormatBios(const ABios: TMc201ControllerBios): string;
+function Mc201FormatProgramInfo(const AInfo: TMc201ModuleProgramInfo): string;
 
 implementation
 
@@ -183,6 +199,16 @@ begin
     [ABios.Signature, ABios.MdpType, ABios.DevType, ABios.DevRevNo,
      ABios.DevSerNo, ABios.CCType, ABios.CCSerNo,
      ABios.BiosVersion, ABios.BiosFunction]);
+end;
+
+function Mc201FormatProgramInfo(const AInfo: TMc201ModuleProgramInfo): string;
+begin
+  Result := Format(
+    'slot=%u mask=0x%s fifo=%u freqIndex=%u grid=%u divider=0x%s final=[0x%s 0x%s 0x%s 0x%s]',
+    [AInfo.Slot, IntToHex(AInfo.MaskChan, 4), AInfo.FifoSize,
+     AInfo.FreqIndex, AInfo.GridCode, IntToHex(AInfo.DividerCode, 4),
+     IntToHex(AInfo.FinalFlags[0], 4), IntToHex(AInfo.FinalFlags[1], 4),
+     IntToHex(AInfo.FinalFlags[2], 4), IntToHex(AInfo.FinalFlags[3], 4)]);
 end;
 
 end.

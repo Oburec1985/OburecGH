@@ -1157,3 +1157,107 @@ in that unit while keeping the existing source-level hardware settings path.
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code
 0. `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
 passed.
+
+## Codex continuation 2026-07-14: MC-201 Config GUI freeze
+
+**Prompt:** User reported that the MC-201 protocol-debug GUI hangs after
+`Connect`, `Modules`, `Config`.
+
+**Fix:** `TMc032DebugForm.ButtonConfig` no longer runs
+`TMc032Device.Config` in the LCL main thread. Added a background
+`TMc032ConfigThread`, a form-level busy state, disabled action buttons while
+Config is running, and guarded normal window close until the worker finishes.
+The change does not alter MC-201/MC-032 packet programming; it only moves the
+long BIOS/config sequence off the UI thread.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
+completed with exit code 0.
+
+**Follow-up:** User reproduced a hang after `Config`. The deeper cause was an
+unbounded wait in `TMc201LegacyMdpClient.CallCommand`: while the controller was
+returning stream packets, the code skipped non-command ports forever and never
+hit a command-reply deadline. Added an overall reply timeout and a GUI busy
+heartbeat. Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0. Live
+`--play-diagnostic-ms=3000` against `192.169.12.87:4000` passed:
+`Config OK`, `STARTSCANMAIN OK`, `STOPSCANMAIN OK`, `PLAY messages=35`,
+`RESULT Mc201PlayDiagnostic passed`.
+
+**GUI-specific follow-up:** User reproduced `Connect -> Modules -> Config`
+hanging in the GUI while the status heartbeat still updated. Changed GUI Config
+again: removed the worker thread because it used a socket created on the LCL
+thread. `ButtonConfig` now follows the same single-thread device path as the
+passing CLI run and keeps the window responsive through device progress
+callbacks plus `Application.ProcessMessages`. The log now records
+`Config step: ...` before each controller/module operation. Rebuilt
+`Mc201ProtocolDebug.lpi` with exit code 0.
+
+## Codex continuation 2026-07-14: MC-201 Play one packet / STOP timeout
+
+**Prompt:** After `Play`, some MC-201 data arrives and then stops; repeated
+`Play` or `Reset` often leads to `MDP TCP write failed`.
+
+**Update:** Reproduced the current live behavior through CLI before the
+controller port stopped accepting TCP: one 26-word stream packet arrives
+(`header.chan=0x78F1`), then read timeouts and `STOPSCANMAIN` timeout. Repeated
+CLI runs no longer reproduced `MDP TCP write failed`, because Stop now waits
+for the Stop command and force-disconnects on timeout instead of leaving a bad
+socket in `Connected`.
+
+**Fix:** Corrected CLI and GUI demultiplexing to compare full MC-201
+`final_flag`/`header.chan` including `0x4000` (`IS_DM`), matching original
+`ScanMC201::Decommutation`. Added first-packet word dump to CLI diagnostics.
+Made `--play-diagnostic-ms` fail unless `STOPSCANMAIN` succeeds and packet
+count reaches the expected `duration / 200 ms`.
+
+**Verification:** Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0. Final live
+check could not connect: `Connection to 192.169.12.87:4000 timed out`, likely
+because the previous bad scan/another client still owns the controller port.
+
+## Codex continuation 2026-07-14: MC-201 GUI Connect exception
+
+**Prompt:** GUI falls/stops on `Connect` at `TInetSocket.Create`.
+
+**Fix:** Added `TMc032Device.TryConnect(out AErrorMessage): Boolean` and routed
+the GUI `Connect` button plus `Play` auto-connect through it. Expected TCP
+connection failures now stay in device state `Disconnected` and are written to
+the GUI log instead of being re-raised by `TMc032Device.Connect`.
+
+**Verification:** Closed the stale Lazarus debug session, rebuilt
+`Mc201ProtocolDebug.lpi` with exit code 0, launched the GUI, clicked `Connect`
+through UI Automation/mouse coordinates, and confirmed the app logs
+`Connect: Connection to 192.169.12.87:4000 timed out.` instead of falling out of
+the button handler.
+
+## Codex continuation 2026-07-14: MC-201 GUI connect-on-create test
+
+**Prompt:** User asked to add a unit/regression test that invokes the same
+connect function from form creation instead of pressing the GUI button.
+
+**Fix:** In `Tests\RecorderTests\Mc201ProtocolDebug`, extracted GUI connect
+logic into `TMc032DebugForm.RunConnectAction` and added
+`--gui-connect-on-create-test`. The mode creates the form, runs connect from the
+creation hook, prints `RESULT Mc201GuiConnectOnCreate ...`, and exits without
+`Application.Run`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
+completed with exit code 0. The new test returned exit code 0 with
+`RESULT Mc201GuiConnectOnCreate passed: Connect: Connection to 192.169.12.87:4000 timed out.`
+
+## Codex continuation 2026-07-14: MC-201 non-throwing GUI TCP connect
+
+**Prompt:** User reported that even GUI `Search` stops at
+`TInetSocket.Create`; this did not happen earlier.
+
+**Fix:** Root cause is that `Search -> TestConnection` used the same TCP open as
+`Connect`, and `TInetSocket.Create` raises on timeout/refused connection.
+Replaced the GUI-facing connection path with `TMc201LegacyMdpClient.TryConnect`,
+which opens the socket with a nonblocking connect/select timeout and returns an
+error string instead of throwing. `TMc032Device.TryConnect` and
+`TestConnection` now use this path; the old throwing `Connect` remains for
+CLI/internal callers.
+
+**Verification:** Rebuilt `Mc201ProtocolDebug.lpi` with exit code 0. The
+connect-on-create regression still passes and returns
+`Connect: Connection to 192.169.12.87:4000 timed out.`

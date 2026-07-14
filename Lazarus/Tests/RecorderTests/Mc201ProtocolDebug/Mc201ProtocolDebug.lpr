@@ -17,9 +17,40 @@ begin
       Exit(True);
 end;
 
+function HasSwitch(const AName: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if SameText(ParamStr(I), AName) then
+      Exit(True);
+end;
+
 begin
   if HasCliSwitch then
     Halt(RunMc201ProtocolDebug(ParamStr(0)))
+  else if HasSwitch('--gui-connect-on-create-test') then
+  begin
+    RequireDerivedFormResource := False;
+    Application.Scaled := True;
+    Application.Initialize;
+    Application.ShowMainForm := False;
+    Mc032EnableConnectOnCreateTest;
+    Application.CreateForm(TMc032DebugForm, Mc032DebugForm);
+    if Mc032ConnectOnCreateTestPassed then
+    begin
+      WriteLn('RESULT Mc201GuiConnectOnCreate passed: ' +
+        Mc032ConnectOnCreateTestMessage);
+      Halt(0);
+    end
+    else
+    begin
+      WriteLn('RESULT Mc201GuiConnectOnCreate failed: ' +
+        Mc032ConnectOnCreateTestMessage);
+      Halt(5);
+    end;
+  end
   else
   begin
     RequireDerivedFormResource := False;

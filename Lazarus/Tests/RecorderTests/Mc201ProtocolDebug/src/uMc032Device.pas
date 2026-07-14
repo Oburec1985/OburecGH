@@ -21,6 +21,7 @@ type
   EMc032Device = class(Exception);
 
   TMc032Device = class;
+  TMc032ProgressCallback = procedure(Sender: TObject; const AText: string) of object;
 
   TMc032QueuedPacket = class
   private
@@ -52,18 +53,23 @@ type
     fOnData: TMc032DataCallback;
     fPacketIndex: Int64;
     fPort: Word;
+    fOnProgress: TMc032ProgressCallback;
     fReadThread: TMc032ReadThread;
     fState: TMc032DeviceState;
+    fStreamBuffer: TMc201WordArray;
     fTimeoutMs: Cardinal;
     fProgramInfo: TMc201ModuleProgramInfoArray;
+    fReceivedPacketCount: Int64;
     procedure EnsureConnected;
     function FreqToIndex(AFreqHz: Double): Word;
     function FreqIndexToFreq(AIndex: Word): Double;
     function FreqToFreqCode(AFreqHz: Double): Word;
     function FreqToGridCode(AFreqHz: Double): Word;
     procedure HandleThreadPacket(APort: Word; const AWords: TMc201WordArray);
+    procedure QueueStreamMessage(APort: Word; const AWords: TMc201WordArray);
     function ProgramMc201Scan(const AConfig: TMc032Config;
       out AErrorMessage: string): Boolean;
+    procedure Progress(const AText: string);
     function ReadSlotInfo(ASlot: Word; out AInfo: TMc201SlotInfo;
       out AErrorMessage: string): Boolean;
     procedure StopReadThread;
@@ -75,9 +81,11 @@ type
     function SearchModules(AMaxSlots: Word; out AModules: TMc201SlotInfoArray;
       out AErrorMessage: string): Boolean;
     procedure Connect;
+    function TryConnect(out AErrorMessage: string): Boolean;
     procedure Disconnect;
     function Reset(out AErrorMessage: string): Boolean;
     function Config(const AConfig: TMc032Config; out AErrorMessage: string): Boolean;
+    procedure ForceDisconnect(AClearProgram: Boolean);
     function Play(AOnData: TMc032DataCallback; out AErrorMessage: string): Boolean;
     function ReadRawPacket(out APort: Word; out AWords: TMc201WordArray): Boolean;
     function StartRawScan(out AErrorMessage: string): Boolean;
@@ -86,6 +94,7 @@ type
     property ConfigValue: TMc032Config read fConfig;
     property Host: string read fHost write fHost;
     property LastModules: TMc201SlotInfoArray read fLastModules;
+    property OnProgress: TMc032ProgressCallback read fOnProgress write fOnProgress;
     property ProgramInfo: TMc201ModuleProgramInfoArray read fProgramInfo;
     property Port: Word read fPort write fPort;
     property State: TMc032DeviceState read fState;
@@ -131,6 +140,12 @@ begin
   end;
 end;
 
+procedure TMc032Device.Progress(const AText: string);
+begin
+  if Assigned(fOnProgress) then
+    fOnProgress(Self, AText);
+end;
+
 constructor TMc032ReadThread.Create(AOwner: TMc032Device);
 begin
   inherited Create(True);
@@ -150,9 +165,27 @@ begin
       if (fOwner = nil) or (fOwner.fClient = nil) then
         Exit;
       if fOwner.fClient.ReadRawPacket(lPort, lWords) then
+      begin
+        if Length(lWords) >= CMc201BiosMessageHeaderWords then
+          fOwner.Progress(Format(
+            'RX packet port=%d words=%d head=[%u %u %u %u 0x%s %u %u %u %u 0x%s]',
+            [lPort, Length(lWords), lWords[0], lWords[1], lWords[2],
+             lWords[3], IntToHex(lWords[4], 4), lWords[5], lWords[6],
+             lWords[7], lWords[8], IntToHex(lWords[9], 4)]))
+        else
+          fOwner.Progress(Format('RX packet port=%d words=%d',
+            [lPort, Length(lWords)]));
         fOwner.HandleThreadPacket(lPort, lWords);
+      end
+      else
+        fOwner.Progress('RX read timeout/no packet');
     except
-      Exit;
+      on E: Exception do
+      begin
+        if fOwner <> nil then
+          fOwner.Progress('RX read exception: ' + E.Message);
+        Exit;
+      end;
     end;
   end;
 end;
@@ -171,7 +204,7 @@ end;
 
 destructor TMc032Device.Destroy;
 begin
-  Disconnect;
+  ForceDisconnect(False);
   inherited Destroy;
 end;
 
@@ -255,9 +288,22 @@ var
   lScanPage: Word;
   lWords: TMc201WordArray;
 
+  function ModuleTimeoutCycle(ATimeoutSec: Double): Word;
+  var
+    lCycle: Integer;
+  begin
+    lCycle := Trunc(ATimeoutSec * 2.0 * 16384000.0);
+    if lCycle = 0 then
+      lCycle := 1;
+    if lCycle > $3FFF then
+      lCycle := $3FFF;
+    Result := Word(lCycle);
+  end;
+
   function CallCC(ACommand: Word; const AArgs: TMc201WordArray;
     const AName: string): Boolean;
   begin
+    Progress(AName);
     Result := fClient.CallCommand(ACommand, AArgs, 0, lReply, AErrorMessage);
     if not Result then
       AErrorMessage := AName + ' failed: ' + AErrorMessage;
@@ -266,6 +312,7 @@ var
   function CallMod(ASlot, ACommand: Word; const AArgs: TMc201WordArray;
     ARetCount: Integer; out ARet: TMc201WordArray; const AName: string): Boolean;
   begin
+    Progress(Format('slot %d %s', [ASlot, AName]));
     Result := fClient.CallCommandModuleIdmaActivated(ASlot, ACommand, AArgs,
       ARetCount, ARet, AErrorMessage);
     if not Result then
@@ -279,8 +326,11 @@ begin
   SetLength(fProgramInfo, 0);
 
   if Length(fLastModules) = 0 then
+  begin
+    Progress('SearchModules');
     if not SearchModules(AConfig.MaxSlots, fLastModules, AErrorMessage) then
       Exit;
+  end;
 
   lModuleCount := 0;
   for I := 0 to High(fLastModules) do
@@ -293,6 +343,7 @@ begin
   end;
 
   fClient.ResetLocalMemoryHeap;
+  Progress('RESETSCANMAIN');
   if not fClient.CallCommand(CMc201CmdResetScanMain, nil, 0, lReply,
     AErrorMessage) then
   begin
@@ -300,10 +351,22 @@ begin
     Exit;
   end;
 
-  lFifoPerChan := 256;
+  SetLength(lArgs, 2);
+  lArgs[0] := CMc201Cc81TimerScale - 1;
+  lArgs[1] := CMc201Cc81TimerPeriod - 1;
+  if not CallCC(CMc201CmdConfigScanMain, lArgs, 'CONFIGSCANMAIN') then
+    Exit;
+
+  lFifoPerChan := 256 div (lModuleCount * CMc201MaxModuleChannels);
+  if lFifoPerChan < 1 then
+    lFifoPerChan := 1;
   lGridCode := FreqToGridCode(AConfig.SampleRateHz);
   lFreqCode := FreqToFreqCode(AConfig.SampleRateHz);
-  lInternalDivider := 1;
+  lInternalDivider := Trunc(lFifoPerChan * 5.0 / 100.0 /
+    (AConfig.SampleRateHz *
+     (CMc201Cc81TimerScale * CMc201Cc81TimerPeriod / 32000000.0)));
+  if lInternalDivider < 1 then
+    lInternalDivider := 1;
 
   SetLength(fProgramInfo, lModuleCount);
   C := 0;
@@ -319,6 +382,15 @@ begin
     fProgramInfo[C].FreqIndex := FreqToIndex(AConfig.SampleRateHz);
     fProgramInfo[C].GridCode := lGridCode;
     fProgramInfo[C].DividerCode := lFreqCode or (lFreqCode shl 4);
+
+    Progress(Format('slot %d LOAD_MC201_BIOS', [lInfo.Slot]));
+    if not fClient.LoadMc201BiosIdma(lInfo.Slot, CMc201DefaultBiosPath,
+      AErrorMessage) then
+    begin
+      AErrorMessage := Format('LOAD_MC201_BIOS failed slot=%d: %s',
+        [lInfo.Slot, AErrorMessage]);
+      Exit;
+    end;
 
     if not fClient.GetInternalMemHeap(CMc201DescModuleWords, lPage, lAddr,
       AErrorMessage) then
@@ -435,25 +507,68 @@ begin
   if not CallCC(CMc201CmdScanSetChans, lArgs, 'SCAN_SET_CHANS') then
     Exit;
 
-  for I := 0 to CMc201DefaultMaxSlots - 1 do
-  begin
-    SetLength(lArgs, 2);
-    lArgs[0] := 1;
-    if I < Length(fProgramInfo) then
-      lArgs[1] := fProgramInfo[I].Slot
-    else
-      lArgs[1] := 0;
-    if not CallCC(CMc201CmdAddListStartModuleIdma, lArgs,
-      'ADD_LISTSTARTMODULEIDMA') then
-      Exit;
-  end;
-
   for I := 0 to High(fProgramInfo) do
   begin
     SetLength(lArgs, 1);
     lArgs[0] := fProgramInfo[I].Slot;
     if not CallCC(CMc201CmdAddListStartAdcModuleIdma, lArgs,
       'ADD_LISTSTARTADCMODULEIDMA') then
+      Exit;
+  end;
+
+  for I := High(fProgramInfo) downto 0 do
+  begin
+    SetLength(lArgs, 1);
+    lArgs[0] := ModuleTimeoutCycle((High(fProgramInfo) - I) *
+      ((23 + 11 + 2 + 1) / 32000000.0));
+    if not CallMod(fProgramInfo[I].Slot, CMc201ModuleCmdSetTimeoutStartAdc,
+      lArgs, 0, lReply, 'SET_TIMEOUTSTARTADC_201') then
+      Exit;
+  end;
+
+  SetLength(lArgs, 3);
+  lArgs[0] := 0;
+  lArgs[1] := 0;
+  lArgs[2] := 1;
+  if not CallCC(CMc201CmdConfigSyncStart, lArgs, 'CONFIG_SYNC_START') then
+    Exit;
+
+  for I := 0 to CMc201CrateMaxStartSlots - Length(fProgramInfo) - 1 do
+  begin
+    SetLength(lArgs, 2);
+    lArgs[0] := 0;
+    lArgs[1] := I;
+    if not CallCC(CMc201CmdAddListStartModuleIdma, lArgs,
+      'ADD_LISTSTARTMODULEIDMA empty') then
+      Exit;
+  end;
+
+  for I := 0 to High(fProgramInfo) do
+  begin
+    SetLength(lArgs, 2);
+    lArgs[0] := 1;
+    lArgs[1] := fProgramInfo[I].Slot;
+    if not CallCC(CMc201CmdAddListStartModuleIdma, lArgs,
+      'ADD_LISTSTARTMODULEIDMA') then
+      Exit;
+  end;
+
+  SetLength(lArgs, 1);
+  lArgs[0] := Trunc((((25 + 9 + 2 + 11) / (2.0 * 16384000.0)) -
+    (5 / 32000000.0) - ((2 + 2) / 32000000.0)) * 32000000.0 + 1);
+  if lArgs[0] < 1 then
+    lArgs[0] := 1;
+  if not CallCC(CMc201CmdSetTimeoutStartTimer, lArgs,
+    'SET_TIMEOUTSTARTTIMER') then
+    Exit;
+
+  for I := High(fProgramInfo) downto 0 do
+  begin
+    SetLength(lArgs, 1);
+    lArgs[0] := ModuleTimeoutCycle((High(fProgramInfo) - I) *
+      ((28 + 11 + 2 + 2) / 32000000.0));
+    if not CallMod(fProgramInfo[I].Slot, CMc201ModuleCmdSetTimeoutStart,
+      lArgs, 0, lReply, 'SET_TIMEOUTSTART_201') then
       Exit;
   end;
 
@@ -487,19 +602,44 @@ procedure TMc032Device.Connect;
 var
   lError: string;
 begin
+  if not TryConnect(lError) then
+    raise EMc032Device.Create(lError);
+end;
+
+function TMc032Device.TryConnect(out AErrorMessage: string): Boolean;
+var
+  lError: string;
+begin
+  Result := False;
+  AErrorMessage := '';
   if fState <> mcsDisconnected then
-    Exit;
+    Exit(True);
   FreeAndNil(fClient);
+  SetLength(fStreamBuffer, 0);
   fClient := TMc201LegacyMdpClient.Create(fHost, fPort, fTimeoutMs);
   try
-    fClient.Connect;
+    if not fClient.TryConnect(AErrorMessage) then
+    begin
+      FreeAndNil(fClient);
+      fState := mcsDisconnected;
+      Exit;
+    end;
     if not fClient.ReadControllerBios(fBios, lError) then
-      raise EMc032Device.Create('CMD_REPLY failed: ' + lError);
+    begin
+      AErrorMessage := 'CMD_REPLY failed: ' + lError;
+      FreeAndNil(fClient);
+      fState := mcsDisconnected;
+      Exit;
+    end;
     fState := mcsConnected;
+    Result := True;
   except
-    FreeAndNil(fClient);
-    fState := mcsDisconnected;
-    raise;
+    on E: Exception do
+    begin
+      AErrorMessage := E.Message;
+      FreeAndNil(fClient);
+      fState := mcsDisconnected;
+    end;
   end;
 end;
 
@@ -508,9 +648,21 @@ var
   lError: string;
 begin
   Stop(lError);
+  ForceDisconnect(False);
+end;
+
+procedure TMc032Device.ForceDisconnect(AClearProgram: Boolean);
+begin
+  fOnData := nil;
   StopReadThread;
+  SetLength(fStreamBuffer, 0);
   FreeAndNil(fClient);
   fState := mcsDisconnected;
+  if AClearProgram then
+  begin
+    SetLength(fProgramInfo, 0);
+    SetLength(fLastModules, 0);
+  end;
 end;
 
 function TMc032Device.Search(out AFoundHost: string;
@@ -535,7 +687,8 @@ begin
     if lOwnClient then
     begin
       fClient := TMc201LegacyMdpClient.Create(fHost, fPort, fTimeoutMs);
-      fClient.Connect;
+      if not fClient.TryConnect(AErrorMessage) then
+        Exit;
     end;
     SetLength(lTestData, 32);
     Result := fClient.CallCommand(CMc201CmdTestLoad, lTestData, 2, lReply,
@@ -638,6 +791,7 @@ function TMc032Device.Config(const AConfig: TMc032Config;
   out AErrorMessage: string): Boolean;
 var
   lReply: TMc201WordArray;
+  lRetryError: string;
 begin
   Result := False;
   AErrorMessage := '';
@@ -646,6 +800,20 @@ begin
     fConfig := AConfig;
     fClient.TimeoutMs := AConfig.ReadTimeoutMs;
     Result := ProgramMc201Scan(AConfig, AErrorMessage);
+    if (not Result) and (fState = mcsConnected) then
+    begin
+      lRetryError := AErrorMessage;
+      if Reset(AErrorMessage) then
+      begin
+        Disconnect;
+        Sleep(1500);
+        Connect;
+        SetLength(fLastModules, 0);
+        Result := ProgramMc201Scan(AConfig, AErrorMessage);
+      end
+      else
+        AErrorMessage := lRetryError + '; reset failed: ' + AErrorMessage;
+    end;
   except
     on E: Exception do
       AErrorMessage := E.Message;
@@ -655,6 +823,7 @@ end;
 function TMc032Device.Play(AOnData: TMc032DataCallback;
   out AErrorMessage: string): Boolean;
 var
+  lDrained: Integer;
   lReply: TMc201WordArray;
 begin
   Result := False;
@@ -665,6 +834,12 @@ begin
       Exit(True);
     fOnData := AOnData;
     fPacketIndex := 0;
+    fReceivedPacketCount := 0;
+    SetLength(fStreamBuffer, 0);
+    if fClient.DrainPackets(20, lDrained, AErrorMessage) and
+      (lDrained > 0) then
+      Progress(Format('RX drained before STARTSCANMAIN: %d packets',
+        [lDrained]));
     if not fClient.CallCommand(CMc201CmdStartScanMain, nil, 0, lReply,
       AErrorMessage) then
       Exit;
@@ -679,6 +854,7 @@ end;
 
 function TMc032Device.StartRawScan(out AErrorMessage: string): Boolean;
 var
+  lDrained: Integer;
   lReply: TMc201WordArray;
 begin
   Result := False;
@@ -689,6 +865,10 @@ begin
       Exit(True);
     fOnData := nil;
     fPacketIndex := 0;
+    if fClient.DrainPackets(20, lDrained, AErrorMessage) and
+      (lDrained > 0) then
+      Progress(Format('RX drained before STARTSCANMAIN: %d packets',
+        [lDrained]));
     if not fClient.CallCommand(CMc201CmdStartScanMain, nil, 0, lReply,
       AErrorMessage) then
       Exit;
@@ -718,24 +898,68 @@ begin
   StopReadThread;
   Result := fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
     AErrorMessage);
-  fState := mcsConnected;
+  if Result then
+    fState := mcsConnected
+  else
+    ForceDisconnect(False);
 end;
 
 procedure TMc032Device.HandleThreadPacket(APort: Word;
   const AWords: TMc201WordArray);
 var
-  lCallback: TMc032DataCallback;
+  I: Integer;
+  lMessage: TMc201WordArray;
+  lOldLength: Integer;
+  lSizeWords: Word;
+begin
+  if not Assigned(fOnData) then
+    Exit;
+  if APort = CMc201MdpStreamCommand then
+    Exit;
+
+  lOldLength := Length(fStreamBuffer);
+  SetLength(fStreamBuffer, lOldLength + Length(AWords));
+  for I := 0 to High(AWords) do
+    fStreamBuffer[lOldLength + I] := AWords[I];
+
+  while Length(fStreamBuffer) >= CMc201BiosMessageHeaderWords do
+  begin
+    lSizeWords := fStreamBuffer[1];
+    if (fStreamBuffer[0] <> 0) or
+      (lSizeWords < CMc201BiosMessageHeaderWords) or
+      (lSizeWords > CMc201BiosMessageMaxWords) then
+    begin
+      for I := 1 to High(fStreamBuffer) do
+        fStreamBuffer[I - 1] := fStreamBuffer[I];
+      SetLength(fStreamBuffer, Length(fStreamBuffer) - 1);
+      Continue;
+    end;
+    if Length(fStreamBuffer) < lSizeWords then
+      Break;
+
+    SetLength(lMessage, lSizeWords);
+    for I := 0 to lSizeWords - 1 do
+      lMessage[I] := fStreamBuffer[I];
+    QueueStreamMessage(APort, lMessage);
+
+    for I := lSizeWords to High(fStreamBuffer) do
+      fStreamBuffer[I - lSizeWords] := fStreamBuffer[I];
+    SetLength(fStreamBuffer, Length(fStreamBuffer) - lSizeWords);
+  end;
+end;
+
+procedure TMc032Device.QueueStreamMessage(APort: Word;
+  const AWords: TMc201WordArray);
+var
   lPacket: TMc032DataPacket;
   lQueued: TMc032QueuedPacket;
 begin
-  lCallback := fOnData;
-  if not Assigned(lCallback) then
-    Exit;
+  Inc(fReceivedPacketCount);
   lPacket.StreamPort := APort;
-  lPacket.PacketIndex := fPacketIndex;
+  lPacket.PacketIndex := fReceivedPacketCount;
   lPacket.Words := Copy(AWords, 0, Length(AWords));
   Inc(fPacketIndex);
-  lQueued := TMc032QueuedPacket.Create(Self, lCallback, lPacket);
+  lQueued := TMc032QueuedPacket.Create(Self, fOnData, lPacket);
   TThread.Queue(nil, @lQueued.Deliver);
 end;
 

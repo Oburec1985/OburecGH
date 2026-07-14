@@ -7,6 +7,9 @@ Sources used:
 - `D:\works\windev-v3.9\mtcEthernet81\Mc031ethernetifc.cpp`
 - `D:\works\windev-v3.9\mtc\CCDEVAPI.CPP`
 - `D:\works\windev-v3.9\mtc\Ccdevice.h`
+- `D:\works\windev-v3.9\mtc\Ccdevice.cpp`
+- `D:\works\windev-v3.9\mtc\cc81ifc.cpp`
+- `D:\works\windev-v3.9\mtc\Mc201.cpp`
 - `D:\works\windev-v3.9\mtc\Module.cpp`
 
 The test does not use RecorderLnx device units. It opens the legacy MC-031/032
@@ -36,6 +39,16 @@ CLI mode uses the same project and executable:
 D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201ProtocolDebug.exe --cli --host=192.169.12.87 --port=4000 --slots=16
 ```
 
+GUI connect-on-create regression test:
+
+```powershell
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201ProtocolDebug.exe --gui-connect-on-create-test
+```
+
+This creates the GUI form, calls the same connect action from the form creation
+path, prints `RESULT Mc201GuiConnectOnCreate ...`, and exits without
+`Application.Run`.
+
 `TMc032Device` supports:
 - `Search`: probes the configured host/port with `TEST_LOAD`.
 - `TestConnection`: sends `CMD_TEST_LOAD`.
@@ -43,8 +56,21 @@ D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201Protoc
 - `Connect` / `Disconnect`: open and close MDP TCP stream.
 - `Reset`: sends controller `CMD_RESET`.
 - `Config`: stores `TMc032Config`, applies read timeout and sends
-  `CMD_RESETSCANMAIN`. Full MC-201 scan descriptor programming still requires
-  porting the original `CMD_ADDCHANNELMODULE` / `CMD_SCAN_SET_CHANS` path.
+  the Recorder-like MC-201 scan programming sequence: `CMD_RESETSCANMAIN`,
+  `CMD_CONFIGSCANMAIN(scale=1, period=640)` for the CC81 Ethernet timing base,
+  module IDMA descriptors, module channel chains, `GET_FINAL_FLAG_CC`,
+  `CMD_APPENDSCANMAIN`, `CMD_ADDCHANNELMODULE`, `CMD_SCAN_SET_CHANS`, ADC start
+  trigger list and `CMD_START_TRIGGERSTARTADC`.
 - `Play` / `Stop`: sends `CMD_STARTSCANMAIN` / `CMD_STOPSCANMAIN` and starts a
   read thread. Raw stream packets are delivered through `TMc032DataCallback`;
   the GUI callback draws a simple raw-word oscilloscope.
+
+Acceptance check:
+
+```powershell
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\lib\Mc201ProtocolDebug.exe --cli --acceptance-ms=5000 --update-ms=200 --timeout-ms=1200 --connect-attempts=3 --connect-retry-ms=1000 --slots=4
+```
+
+The CLI aggregates raw Ethernet stream frames into 200 ms update blocks. On the
+current stand at `57600 Hz`, the expected 5-second result is `25` update blocks;
+raw frame sizes are normally around `266`, `532`, and `798` words.
