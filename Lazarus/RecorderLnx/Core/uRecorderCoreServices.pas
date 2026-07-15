@@ -49,7 +49,8 @@ type
     rceUser                  { Пользовательское событие }
     , rceConfigurationPrepared,
     rceRunTransitionBefore,
-    rceRunTransitionAfter
+    rceRunTransitionAfter,
+    rceInitialized           { Проект загружен, формы и источники созданы, runtime подготовлен }
   );
 
   { Данные одного события core-шины.

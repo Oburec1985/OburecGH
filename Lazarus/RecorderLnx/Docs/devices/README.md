@@ -27,5 +27,6 @@ Device/
   uRecorderAcquisitionTypes.pas   — блок отсчётов
   MIC140/                         — рабочая реализация (багфиксы обмена)
   MIC140v2/                       — новая реализация
+  MCbus/                          — MC-032, модули MC-201, runtime-источник и UI
 Tests/mic185/                     — автономный стенд MIC185V2 (connect/program/read)
 ```

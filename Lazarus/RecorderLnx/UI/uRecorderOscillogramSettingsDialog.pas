@@ -1,9 +1,16 @@
 unit uRecorderOscillogramSettingsDialog;
 
 {
-  Settings dialog for oscillogram components on user mnemonics.
-  Presents all synchronized channels as one list; the first channel is stored in
-  the component tag binding for backward compatibility with existing projects.
+  Диалог настройки осциллограммы на пользовательской мнемосхеме.
+
+  UI показывает единый список каналов: первый добавленный канал — синяя линия,
+  второй — зелёная, третий — красная. Ограничение выбора каналами того же
+  аппаратного модуля выполняется существующей фильтрацией реестра тегов.
+
+  Для совместимости проекта первая линия хранится в TagName компонента, а
+  остальные — в Lines[]. Это внутренняя деталь модели: отдельной пользовательской
+  опции «Основной канал» быть не должно. При удалении первой линии следующая
+  дополнительная линия повышается до первой.
   Кодировка (2026-06):
   Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
   См. Docs/source-encoding.md.

@@ -1,8 +1,17 @@
 unit uRecorderMcbusDataSource;
 
 {
-  Runtime bridge between the MC-032/MC-201 TRecorderDevice adapter and the
-  Recorder data-source manager. Network I/O runs only in the source worker.
+  Рабочий источник данных Preview для MC-032/MC-201.
+
+  Создаётся фабрикой главной формы для выбранных MCbus-тегов. В рабочем потоке
+  выполняет Connect/ProgramDevice/Start/ReadBlock/Stop, сопоставляет нативный
+  адрес slot-channel с адресом тега <индекс устройства>-<слот>-<канал> и
+  публикует готовые блоки в TRecorderTagRegistry. Сетевой обмен из UI запрещён.
+
+  DoCreateTags пуст намеренно: теги создаются аппаратными настройками, а этот
+  класс только привязывает выбранные теги к каналам уже запрограммированного
+  устройства. Жизненный цикл отмечается в LogWindows.log префиксом [MCBUS].
+  Полная карта: Docs/devices/mc/recorderlnx-integration.md.
 }
 
 {$mode objfpc}{$H+}
@@ -24,7 +33,9 @@ type
     fPollFrequencyHz: Double;
     fTagNames: TStringList;
     fChannelTags: array of TRecorderTag;
+    fTimes: array of Double;
     fEmptyReadCount: Cardinal;
+    fHardwarePrepareAttempted: Boolean;
     procedure BuildChannelMap;
     procedure PublishBlock(const ABlock: TRecorderAcquisitionBlock);
   protected
@@ -94,17 +105,56 @@ begin
 end;
 
 procedure TRecorderMcbusDataSource.PrepareHardware;
+const
+  CConnectAttempts = 5;
+  CConnectRetryMs = 1000;
+var
+  I: Integer;
+  lTestError: string;
 begin
   inherited PrepareHardware;
+  if (fDevice.State = rdsProgrammed) or fHardwarePrepareAttempted then
+    Exit;
+  fHardwarePrepareAttempted := True;
   fDevice.TrySetDeviceProperty(rdpHost, fHost);
   fDevice.TrySetDeviceProperty(rdpPort, Integer(fPort));
   fDevice.TrySetDeviceProperty(rdpPollFrequencyHz, fPollFrequencyHz);
   fDevice.TrySetDeviceProperty(rdpUpdateTimeMs, Integer(UpdateTimeMs));
   RecorderDebugLog(Format('[MCBUS] connect %s:%d fs=%.0f tags=%d',
     [fHost, fPort, fPollFrequencyHz, fTagNames.Count]));
-  fDevice.Connect;
+  { TEST не бросает исключение. Если контроллер недоступен, не вызываем
+    Connect/ProgramDevice, которые предназначены уже для подтверждённой связи. }
+  if not fDevice.TestLink(lTestError) then
+  begin
+    RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+    RecorderDebugLog('[MCBUS] link test failed, source skipped: ' + lTestError);
+    Exit;
+  end;
+  RecorderHardwareClearSourceOffline(SourceId);
+  { Контроллер после предыдущего TCP-сеанса не всегда принимает первое SYN.
+    Повторяем соединение так же, как проверенный Mc201ProtocolDebug. Важно
+    повторять только Connect: программирование модуля выполняется один раз. }
+  for I := 1 to CConnectAttempts do
+  begin
+    try
+      RecorderDebugLog(Format('[MCBUS] connect attempt %d/%d',
+        [I, CConnectAttempts]));
+      fDevice.Connect;
+      Break;
+    except
+      on E: Exception do
+      begin
+        RecorderDebugLog(Format('[MCBUS] connect attempt %d failed: %s',
+          [I, E.Message]));
+        if I = CConnectAttempts then
+          raise;
+        Sleep(CConnectRetryMs);
+      end;
+    end;
+  end;
   fDevice.ProgramDevice;
   BuildChannelMap;
+  SetLength(fTimes, Round(fPollFrequencyHz * UpdateTimeMs / 1000.0));
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
 end;
 
@@ -137,9 +187,14 @@ end;
 
 procedure TRecorderMcbusDataSource.Start;
 begin
+  { Базовый Start нужен даже пропущенному источнику: runner затем вызывает
+    Tick, который должен спокойно завершиться, а не ругаться на dssStopped. }
+  inherited Start;
+  if RecorderHardwareIsSourceOffline(SourceId) or
+    (fDevice.State <> rdsProgrammed) then
+    Exit;
   fDevice.Start;
   fEmptyReadCount := 0;
-  inherited Start;
   RecorderDebugLog('[MCBUS] scan started');
 end;
 
@@ -149,6 +204,13 @@ var
 begin
   if fDevice <> nil then
   begin
+    if fDevice.State = rdsDisconnected then
+    begin
+      RecorderHardwareUnregisterLiveDevice(Self);
+      RecorderDebugLog('[MCBUS] stopped (source was offline)');
+      inherited Stop;
+      Exit;
+    end;
     try
       fDevice.Stop;
       if fDevice.State = rdsDisconnected then
@@ -158,7 +220,8 @@ begin
       end;
     except on E: Exception do
       RecorderDebugLog('[MCBUS] stop error: ' + E.Message); end;
-    try fDevice.Disconnect; except end;
+    { Подключение и программирование сохраняются между остановками Preview.
+      Полное отключение выполняет деструктор при загрузке/переконфигурации. }
   end;
   RecorderHardwareUnregisterLiveDevice(Self);
   RecorderDebugLog('[MCBUS] stopped');
@@ -169,17 +232,19 @@ procedure TRecorderMcbusDataSource.PublishBlock(
   const ABlock: TRecorderAcquisitionBlock);
 var
   I, J: Integer;
-  lTimes: array of Double;
 begin
   if (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then Exit;
-  SetLength(lTimes, ABlock.SampleCount);
+  if Length(fTimes) < ABlock.SampleCount then
+    raise ERecorderDataSourceError.CreateFmt(
+      'MCbus time buffer too small: need=%d capacity=%d',
+      [ABlock.SampleCount, Length(fTimes)]);
   for J := 0 to ABlock.SampleCount - 1 do
-    lTimes[J] := ABlock.FirstTimeSec + J / ABlock.SampleRateHz;
+    fTimes[J] := ABlock.FirstTimeSec + J / ABlock.SampleRateHz;
   for I := 0 to Min(High(fChannelTags), High(ABlock.Values)) do
     if (fChannelTags[I] <> nil) and
       (Length(ABlock.Values[I]) >= ABlock.SampleCount) then
     begin
-      Registry.PublishBlock(fChannelTags[I].Name, lTimes, ABlock.Values[I],
+      Registry.PublishBlock(fChannelTags[I].Name, fTimes, ABlock.Values[I],
         ABlock.SampleCount, True);
     end;
 end;
@@ -188,6 +253,8 @@ procedure TRecorderMcbusDataSource.DoTick;
 var
   lBlock: TRecorderAcquisitionBlock;
 begin
+  if RecorderHardwareIsSourceOffline(SourceId) then
+    Exit;
   if fDevice.State <> rdsStarted then fDevice.Start;
   if fDevice.ReadBlock(Max(Cardinal(1000), UpdateTimeMs * 4), lBlock) then
   begin

@@ -1918,6 +1918,9 @@ begin
   end
   else if TryParseRecorderMc032SourceId(ANewSourceId, lHost, lPort) then
   begin
+    { MC-032 хранится в общем RecorderConfiguredDataSources, а не в частном
+      списке конкретного прибора. Это сохраняет контроллер, найденные слоты
+      MC-201 и их настройки после Применить/OK и повторного открытия диалога. }
     if (AOldSourceId <> '') and not SameText(AOldSourceId, ANewSourceId) then
     begin
       fRecorder.TagRegistry.UnregisterActiveSource(AOldSourceId);
@@ -3305,7 +3308,9 @@ begin
   Accept := Source = fAvailableChannelsGrid;
 end;
 
-{ Двойной клик на узле источника в дереве устройств — настройка источника }
+{ Двойной клик по дочернему узлу MC-201 открывает свойства именно модуля.
+  Проверка Parent + разбор номера слота обязательны: fallback ниже предназначен
+  для родительского MC-032 и иначе снова откроет диалог контроллера. }
 procedure TRecorderSettingsDialog.fHardwareTreeDblClick(Sender: TObject);
 var
   lConfig: TRecorderConfiguredDataSource;

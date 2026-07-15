@@ -8,6 +8,7 @@ RecorderLnx protocol/debug work.
 | File | Contents |
 | --- | --- |
 | [mc201.md](mc201.md) | MC-201 module identification, channel settings, frequency grid, and current test-stand assumptions |
+| [recorderlnx-integration.md](recorderlnx-integration.md) | Рабочая архитектура MCbus в RecorderLnx: конфигурация, дерево, Preview, формат потока, тесты и осциллограмма |
 
 ## Current Test Stand
 

@@ -308,6 +308,9 @@ type
       ARegistry - общий реестр тегов проекта. Владение не передается. }
     procedure ConfigureTagsAll(ARegistry: TRecorderTagRegistry);
 
+    { Подключает и программирует оборудование после полной загрузки конфигурации. }
+    procedure PrepareHardwareAll;
+
     { Запускает все источники, создавая отдельный thread-runner на каждый. }
     procedure StartAll;
 
@@ -1419,6 +1422,23 @@ begin
   fRegistry := ARegistry;
   for I := 0 to fSources.Count - 1 do
     GetSourceContext(I).Source.ConfigureTags(fRegistry);
+end;
+
+procedure TRecorderDataSourceManager.PrepareHardwareAll;
+var
+  I: Integer;
+begin
+  if fRunning then
+    raise ERecorderDataSourceError.Create(
+      'Cannot prepare data source hardware while manager is running');
+  if fRegistry = nil then
+    raise ERecorderDataSourceError.Create(
+      'Data source manager tags are not configured');
+  { Подготовка идёт в обратном порядке регистрации. Аппаратные источники
+    добавляются после файловых и диагностических; они должны получить сетевой
+    сеанс до необязательных probe других устройств. }
+  for I := fSources.Count - 1 downto 0 do
+    GetSourceContext(I).Source.PrepareHardware;
 end;
 
 procedure TRecorderDataSourceManager.StartAll;

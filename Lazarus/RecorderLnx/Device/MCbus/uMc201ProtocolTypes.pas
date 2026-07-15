@@ -10,7 +10,9 @@ unit uMc201ProtocolTypes;
     - windev-v3.9/mtc/Ccdevice.h
     - windev-v3.9/mtc/Module.cpp
 
-  Модуль намеренно независим от рабочих классов устройств RecorderLnx.
+  Модуль не зависит от UI и классов конкретных устройств RecorderLnx, но входит
+  в рабочий production-путь MCbus. Значения Default описывают текущий стенд и
+  начальные настройки, а не глобальную политику приложения.
 }
 
 {$mode objfpc}{$H+}

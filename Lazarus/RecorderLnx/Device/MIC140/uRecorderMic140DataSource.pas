@@ -1206,11 +1206,25 @@ var
   lSettings: TRecorderMic140ChannelSettings;
   lConfig: TRecorderMic140SourceConfig;
   lTag: TRecorderTag;
+  lTestError: string;
 begin
   if fHardwarePrepared or fHardwarePrepareAttempted then
     Exit;
   fHardwarePrepareAttempted := True;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
+  { Недоступное сетевое устройство является штатной конфигурацией проекта.
+    Сначала используем не бросающий исключение TestLink и только после успеха
+    вызываем Connect/ProgramDevice. Это не останавливает Lazarus debugger. }
+  if not RecorderMic140HardwareLinkProbe(SourceId) then
+  begin
+    lTestError := 'TCP TEST failed';
+    RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+    PublishDiagnostics(CMic140StatusError, 'connection test failed', True);
+    Mic140LogWarning(Format('[DataSource:%s] MIC-140 link test failed: %s',
+      [SourceId, lTestError]));
+    Exit;
+  end;
+  RecorderHardwareClearSourceOffline(SourceId);
   fDevice.Connect;
   if fDevice.State = rdsDisconnected then
   begin

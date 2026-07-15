@@ -421,9 +421,16 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  { Источники создаются сразу при загрузке проекта. Крупные буферы и подготовка
+    MCbus не должны откладываться до первого нажатия Preview. }
+  EnsureDemoDataSources;
   PrepareRuntimeForConfiguration;
-  if fRecorder.TagRegistry.TagCount = 0 then
-    EnsureDemoDataSources;
+  { rstInit — только начальная отметка автомата состояний. Явная нотификация
+    отправляется после загрузки проекта, создания форм и источников, а также
+    конфигурирования доступного оборудования. }
+  if fRecorder.EventBus <> nil then
+    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceInitialized,
+      Self, 'Initialized'));
   UpdateActiveSourceIds;
   RebuildTagList('');
   UpdateStateView;
@@ -829,6 +836,7 @@ begin
       UpdateActiveSourceIds;
       fRecorder.DataSources.Clear;
       fDataSourcesConfigured := False;
+      EnsureDemoDataSources;
       PrepareRuntimeForConfiguration;
       RebuildTagList(edTagSearch.Text);
       RenderActivePage;
@@ -1924,9 +1932,10 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
-  PrepareRuntimeForConfiguration;
   fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
+  EnsureDemoDataSources;
+  PrepareRuntimeForConfiguration;
   RebuildTagList(edTagSearch.Text);
   RenderActivePage;
   AddLog('Project config loaded from directory: ' + fProjectConfigDir);
@@ -2174,6 +2183,10 @@ begin
       fRecorder.DataSources.Clear;
       fDataSourcesConfigured := False;
 
+      { Память источников перевыделяется при изменении конфигурации тегов. }
+      EnsureDemoDataSources;
+      PrepareRuntimeForConfiguration;
+
       if lWasRunning then
         StartDataSources;
 
@@ -2302,8 +2315,9 @@ begin
     for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
       lTag := fRecorder.TagRegistry.Tags[I];
-      if not RecorderTagSourceIsVisible(fRecorder.TagRegistry, lTag) then
-        Continue;
+      { Runtime-источники строятся по сохранённой конфигурации тегов, а не по
+        UI-признаку видимости. ActiveSourceIds заполняется только после создания
+        источников; фильтрация здесь образует цикл и полностью удаляет MCbus. }
       if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
       begin
         lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
@@ -2357,6 +2371,10 @@ begin
         if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
           lTagNames.Add(lTag.Name);
       end
+      { MCbus должен участвовать в той же фабрике runtime-источников, что MERA,
+        MIC-140 и MIC-185. Наличие контроллера только в аппаратном дереве не
+        запускает Preview: здесь выбранные теги группируются по SourceId, после
+        чего ниже создаётся один TRecorderMcbusDataSource на один MC-032. }
       else if TryParseRecorderMc032SourceId(lTag.SourceId, lMcbusHost,
         lMcbusPort) then
       begin
@@ -2438,6 +2456,10 @@ begin
         [lMic185Host, lMic185Port, lTagNames.Count]));
     end;
 
+    { Production-путь MC-032/MC-201. Частота берётся из тегов, период блока —
+      из общей настройки Recorder. Источник сам выполняет сетевой жизненный
+      цикл в рабочем потоке и публикует полные блоки по 11 520 отсчётов при
+      57,6 кГц и периоде 200 мс. }
     for I := 0 to lMcbusSources.Count - 1 do
     begin
       if not TryParseRecorderMc032SourceId(lMcbusSources[I], lMcbusHost,
@@ -2804,6 +2826,18 @@ procedure TMainForm.PrepareRuntimeForConfiguration;
 begin
   if fRecorder.SpectrumManager <> nil then
     fRecorder.SpectrumManager.PrepareConfiguration;
+
+  { Источники и теги к этому моменту уже созданы. Подключение, программирование
+    модулей и выделение аппаратных буферов выполняются здесь, а не при Preview. }
+  if (fRecorder.DataSources <> nil) and fDataSourcesConfigured then
+    try
+      fRecorder.DataSources.PrepareHardwareAll;
+    except
+      on E: Exception do
+        { Проект можно открыть без подключённого стенда. StartAll повторит
+          подготовку оборудования при запуске просмотра. }
+        AddLog('Hardware preparation deferred: ' + E.Message);
+    end;
 
   if fRecorder.EventBus <> nil then
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,

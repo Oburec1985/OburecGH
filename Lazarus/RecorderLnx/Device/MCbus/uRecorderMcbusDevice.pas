@@ -1,5 +1,21 @@
 unit uRecorderMcbusDevice;
 
+{
+  Production-адаптер шины MC к архитектуре устройств RecorderLnx.
+
+  Важно:
+  - MC-032 управляет крейтом, MC-201 даёт по четыре измерительных канала;
+  - MIC-200 является названием конструктива и не образует отдельный слой кода;
+  - наружу устройство предоставляет стандартный жизненный цикл TRecorderDevice;
+  - входной MDP-пакет может содержать несколько BIOS-сообщений: AcceptPacket
+    раскладывает их по полной паре slot/final flag, удаляет 10 слов заголовка и
+    накапливает 11 520 отсчётов на канал за блок 200 мс при 57,6 кГц;
+  - размер ADSP FIFO 256 относится к каждому каналу, делить его на 16 нельзя.
+
+  Runtime-обёртка находится в uRecorderMcbusDataSource.pas.
+  Полная карта: Docs/devices/mc/recorderlnx-integration.md.
+}
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
@@ -11,11 +27,7 @@ uses
   uMc032Device, uMc201ProtocolTypes;
 
 type
-  { RecorderLnx adapter for an MC module bus with an MC-032 Ethernet
-    controller and MC-201 four-channel modules. MIC-200 is only one possible
-    instrument construction using this bus. The protocol implementation
-    stays device-local; the application sees the standard TRecorderDevice
-    lifecycle. }
+  { Адаптер MC-032 + MC-201 к стандартному TRecorderDevice. }
   TRecorderMcbusDevice = class(TRecorderDevice)
   private
     fController: TMc032Device;
@@ -24,9 +36,11 @@ type
     fProgramInfo: TMc201ModuleProgramInfoArray;
     fPending: array of array of Double;
     fPendingCount: array of Integer;
+    fReadBlock: TRecorderAcquisitionBlock;
     fSampleIndex: Int64;
     fLastError: string;
-    procedure ClearPending;
+    procedure AllocateBuffers;
+    procedure ResetPending;
     function ChannelIndex(ASlot, AFlag: Word): Integer;
     function AcceptPacket(const AWords: TMc201WordArray): Boolean;
     function PendingComplete: Boolean;
@@ -119,7 +133,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TRecorderMcbusDevice.ClearPending;
+procedure TRecorderMcbusDevice.AllocateBuffers;
 var
   I, lCapacity: Integer;
 begin
@@ -131,6 +145,18 @@ begin
     SetLength(fPending[I], lCapacity);
     fPendingCount[I] := 0;
   end;
+  SetLength(fReadBlock.Values, fChannelCount);
+  for I := 0 to fChannelCount - 1 do
+    SetLength(fReadBlock.Values[I], TargetSampleCount);
+end;
+
+procedure TRecorderMcbusDevice.ResetPending;
+var
+  I: Integer;
+begin
+  { Start/Stop только сбрасывают счётчики, не меняя ёмкость массивов. }
+  for I := 0 to High(fPendingCount) do
+    fPendingCount[I] := 0;
 end;
 
 function TRecorderMcbusDevice.TargetSampleCount: Integer;
@@ -206,7 +232,7 @@ begin
   SetLength(fModules, 0);
   SetLength(fProgramInfo, 0);
   fChannelCount := 0;
-  ClearPending;
+  ResetPending;
   fState := rdsDisconnected;
 end;
 
@@ -222,7 +248,7 @@ begin
   fChannelCount := Length(fProgramInfo) * CMc201MaxModuleChannels;
   if fChannelCount = 0 then
     raise ERecorderDeviceError.Create('MC-032 programming: no MC-201 channels');
-  ClearPending;
+  AllocateBuffers;
   fState := rdsProgrammed;
 end;
 
@@ -237,7 +263,7 @@ begin
   if not fController.StartRawScan(fLastError) then
     raise ERecorderDeviceError.Create('MC-032 start: ' + fLastError);
   fSampleIndex := 0;
-  ClearPending;
+  ResetPending;
   fState := rdsStarted;
 end;
 
@@ -251,11 +277,11 @@ begin
       streaming long enough for its command reply to be lost among data
       packets. TMc032Device already closes that ambiguous TCP session; do not
       turn an idempotent Recorder stop into an application exception. }
-    ClearPending;
+    ResetPending;
     fState := rdsDisconnected;
     Exit;
   end;
-  ClearPending;
+  ResetPending;
   fState := rdsProgrammed;
 end;
 
@@ -274,7 +300,7 @@ end;
 function TRecorderMcbusDevice.AcceptPacket(
   const AWords: TMc201WordArray): Boolean;
 var
-  I, lChannel, lNeeded, lNewCapacity: Integer;
+  I, lChannel, lNeeded: Integer;
 begin
   Result := False;
   if Length(AWords) <= CMc201BiosMessageHeaderWords then
@@ -288,8 +314,9 @@ begin
     CMc201BiosMessageHeaderWords;
   if Length(fPending[lChannel]) < lNeeded then
   begin
-    lNewCapacity := Max(lNeeded, Max(1, Length(fPending[lChannel]) * 2));
-    SetLength(fPending[lChannel], lNewCapacity);
+    fLastError := Format('MC-201 pending overflow channel=%d need=%d capacity=%d',
+      [lChannel, lNeeded, Length(fPending[lChannel])]);
+    Exit;
   end;
   for I := CMc201BiosMessageHeaderWords to High(AWords) do
   begin
@@ -317,7 +344,8 @@ var
   lPort: Word;
   lWords: TMc201WordArray;
 begin
-  ClearRecorderAcquisitionBlock(ABlock);
+  ABlock.ChannelCount := 0;
+  ABlock.SampleCount := 0;
   Result := False;
   if fState <> rdsStarted then
     Exit;
@@ -332,16 +360,14 @@ begin
     Exit;
 
   lCount := TargetSampleCount;
-  ABlock.ChannelCount := fChannelCount;
-  ABlock.SampleCount := lCount;
-  ABlock.SampleRateHz := fPollFrequencyHz;
-  ABlock.FirstTimeSec := fSampleIndex / fPollFrequencyHz;
-  SetLength(ABlock.Values, fChannelCount);
+  fReadBlock.ChannelCount := fChannelCount;
+  fReadBlock.SampleCount := lCount;
+  fReadBlock.SampleRateHz := fPollFrequencyHz;
+  fReadBlock.FirstTimeSec := fSampleIndex / fPollFrequencyHz;
   for I := 0 to fChannelCount - 1 do
   begin
-    SetLength(ABlock.Values[I], lCount);
     for J := 0 to lCount - 1 do
-      ABlock.Values[I][J] := fPending[I][J];
+      fReadBlock.Values[I][J] := fPending[I][J];
   end;
   Inc(fSampleIndex, lCount);
   for I := 0 to fChannelCount - 1 do
@@ -351,16 +377,26 @@ begin
       Move(fPending[I][lCount], fPending[I][0], lRemaining * SizeOf(Double));
     fPendingCount[I] := lRemaining;
   end;
+  { Блок передаётся по ссылке на заранее выделенные массивы устройства. }
+  ABlock := fReadBlock;
   Result := True;
 end;
 
 function TRecorderMcbusDevice.TestLink(out AErrorText: string): Boolean;
 begin
-  if fState = rdsDisconnected then
+  { TEST обязан работать до Connect: источник вызывает его как безопасный
+    предикат перед операциями, которые используют исключения. }
+  fController.Host := Trim(fHost);
+  fController.Port := Word(fPort);
+  fController.TimeoutMs := fConfig.ReadTimeoutMs;
+  if not fController.TryConnect(AErrorText) then
   begin
-    AErrorText := 'MC bus is not connected';
+    fLastError := AErrorText;
     Exit(False);
   end;
+  { TEST выполняется в том же TCP-сеансе, который затем использует Connect.
+    Не закрываем успешную проверку: старый контроллер может не принять
+    немедленное повторное соединение после отдельного probe-сеанса. }
   Result := fController.TestConnection(AErrorText);
   if not Result then
     fLastError := AErrorText;
