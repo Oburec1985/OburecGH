@@ -12,7 +12,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Dialogs, uRecorderTags, uRecorderDataSources,
-  uRecorderMic140DataSource, uRecorderMic140Utils;
+  Contnrs;
 
 function RecorderTryZeroBalanceTags(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATags: TList;
@@ -28,8 +28,6 @@ var
   lMessages: TStringList;
   lBalance: IRecorderZeroBalanceSupport;
   lBalanceTags: TList;
-  lHost: string;
-  lPort: Word;
   lSource: IRecorderDataSource;
   I, J: Integer;
   lTag: TRecorderTag;
@@ -76,14 +74,6 @@ begin
       end;
       if lBalanceTags.Count = 0 then
         Continue;
-
-      if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
-      begin
-        if RecorderMic140ZeroBalanceTags(AOwner, ARegistry, lBalanceTags,
-          ADataSources, lMessages) then
-          lHandledAny := True;
-        Continue;
-      end;
 
       lSource := nil;
       if (ADataSources <> nil) then

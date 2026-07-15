@@ -1,6 +1,7 @@
 program RecorderLnx;
 
 {$mode objfpc}{$H+}
+{$R Device/MCbus/resources/mcbus.rc}
 
 uses
   {$IFDEF UNIX}
@@ -16,7 +17,9 @@ uses
   uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMic185AdditionalDialog, uRecorderMic185ChannelDialog,
   uRecorderMic185SettingsDialog, uRecorderMebiusTcpProtocol,
-  uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger;
+  uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
+  uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
+  uMc032Device, uRecorderMcbusDevice;
 
 begin
   RequireDerivedFormResource := True;

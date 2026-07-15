@@ -30,6 +30,7 @@ function RecorderMic185SourceId(const AHost: string; APort: Word): string;
 { Разбирает SourceId вида "MIC-185: host:port". }
 function TryParseRecorderMic185SourceId(const ASourceId: string;
   out AHost: string; out APort: Word): Boolean;
+function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
 { Читает серийный номер/версию прибора через безопасный probe. }
 function RecorderMic185ReadDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
@@ -164,7 +165,8 @@ implementation
 uses
   Math, StrUtils, Variants,
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
-  uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration;
+  uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration,
+  uRecorderProjectFiles, uRecorderHardwareTree;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -173,6 +175,17 @@ const
   { Fallback scale when no real hardware characteristic is loaded:
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
+
+function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CMic185SourcePrefix,
+    RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+function RecorderMic185HardwareLinkProbe(const ASourceId: string): Boolean;
+begin
+  Result := RecorderMic185IsSourceLinkOk(ASourceId);
+end;
 
 function Mic185FloatToText(AValue: Double): string;
 begin
@@ -1803,5 +1816,10 @@ begin
   if fDevice.ReadBlock(lTimeout, lBlock) then
     PublishMeasurementBlock(lBlock);
 end;
+
+initialization
+  RecorderRegisterProjectConfigExtension(@SaveMic185DataSourceConfigs,
+    @LoadMic185DataSourceConfigs);
+  RecorderRegisterHardwareSourceLinkProbe(@RecorderMic185HardwareLinkProbe);
 
 end.

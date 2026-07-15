@@ -203,7 +203,7 @@ uses
   uRecorderMic140MebiusTypes,
   uRecorderMic140LegacyChannelDesc, uRecorderMic140LegacyScanDriver,
   uRecorderMic140v2Factory, uRecorderMic140v2Diag,
-  uRecorderHardwareLiveDevices
+  uRecorderHardwareLiveDevices, uRecorderHardwareTree
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 const
@@ -220,6 +220,15 @@ const
   CMic140BalanceDiscardSamples = 10;
   CMic140BalanceSampleFraction = 0.3;
   CMic140Range5mV = 2;
+
+function RecorderMic140HardwareLinkProbe(const ASourceId: string): Boolean;
+var
+  lHost: string;
+  lPort: Word;
+begin
+  Result := TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) and
+    RecorderMic140TcpProbe(lHost, lPort, 250);
+end;
 
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; AFrequencyHz: Double);
@@ -2425,5 +2434,8 @@ begin
     end;
   end;
 end;
+
+initialization
+  RecorderRegisterHardwareSourceLinkProbe(@RecorderMic140HardwareLinkProbe);
 
 end.

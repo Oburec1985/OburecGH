@@ -20,7 +20,8 @@ type
   TRecorderSettingsSourceGroup = (
     rsgMeraFile,
     rsgMic140,
-    rsgMic185
+    rsgMic185,
+    rsgMcbus
   );
 
   TRecorderSettingsSourceProbe = class
@@ -31,6 +32,7 @@ type
     fMeraSignals: TList;
     fMic140Signals: TList;
     fMic185Signals: TList;
+    fMcbusSignals: TList;
 
     function GroupList(AGroup: TRecorderSettingsSourceGroup): TList;
     function MeraSourceIdForPath(const AFileName: string): string;
@@ -39,6 +41,7 @@ type
       AChannelNumber: Integer): Double;
     function Mic140TagOutputModeForChannel(const ASourceId: string;
       AChannelNumber: Integer; out AMode: TRecorderMic140OutputMode): Boolean;
+    procedure ApplyMeraTreeAddresses;
   public
     constructor Create(ARegistry: TRecorderTagRegistry);
     destructor Destroy; override;
@@ -61,6 +64,8 @@ type
       const AChannelSettings: array of TRecorderMic140ChannelSettings;
       ADeviceSerial: Integer = 0);
     procedure BuildMic185(const ASourceId: string);
+    procedure BuildMcbus(const ASourceId, AModulesText: string;
+      APollFrequencyHz: Double);
     procedure RestoreFromRegistry;
     procedure SyncToRegistry;
     procedure MarkSignalsFromRegistry;
@@ -75,7 +80,8 @@ implementation
 
 uses
   uRecorderMic140Utils, uRecorderMic140LegacyProtocol, uRecorderMic140LegacyTiming,
-  uRecorderMic185DataSource, uMic185Constants;
+  uRecorderMic185DataSource, uMic185Constants, uRecorderMc032SettingsDialog,
+  uRecorderMc201SlotSettingsDialog, uMc201ProtocolTypes;
 
 function IsChannelEnabled(AEnabledChannels: TStrings; const AAddress: string): Boolean;
 var
@@ -105,11 +111,13 @@ begin
   fMeraSignals := TList.Create;
   fMic140Signals := TList.Create;
   fMic185Signals := TList.Create;
+  fMcbusSignals := TList.Create;
 end;
 
 destructor TRecorderSettingsSourceProbe.Destroy;
 begin
   ClearAll;
+  fMcbusSignals.Free;
   fMic185Signals.Free;
   fMic140Signals.Free;
   fMeraSignals.Free;
@@ -121,8 +129,8 @@ begin
   case AGroup of
     rsgMeraFile: Result := fMeraSignals;
     rsgMic140: Result := fMic140Signals;
-  else
-    Result := fMic185Signals;
+    rsgMic185: Result := fMic185Signals;
+  else Result := fMcbusSignals;
   end;
 end;
 
@@ -153,6 +161,7 @@ begin
   ClearGroup(rsgMeraFile);
   ClearGroup(rsgMic140);
   ClearGroup(rsgMic185);
+  ClearGroup(rsgMcbus);
   fMeraFilePath := '';
   fMeraFolder := '';
 end;
@@ -162,10 +171,26 @@ begin
   fMeraFolder := ExtractFilePath(AFileName);
   fMeraFilePath := AFileName;
   LoadMeraSignalsFromFile(AFileName, fMeraSignals);
+  ApplyMeraTreeAddresses;
   if fRegistry <> nil then
     RecorderConfiguredDataSourcesEnsure(fRegistry, MeraSourceIdForPath(fMeraFilePath),
       'MC-201', 0);
   MarkSignalsFromRegistry;
+end;
+
+procedure TRecorderSettingsSourceProbe.ApplyMeraTreeAddresses;
+var
+  I: Integer;
+  lSignal: TMeraSignalInfo;
+  lSourceId: string;
+begin
+  lSourceId := MeraSourceIdForPath(fMeraFilePath);
+  for I := 0 to fMeraSignals.Count - 1 do
+  begin
+    lSignal := TMeraSignalInfo(fMeraSignals[I]);
+    lSignal.Address := RecorderTreeIndexedAddress(fRegistry, lSourceId,
+      lSignal.Address, True);
+  end;
 end;
 
 procedure TRecorderSettingsSourceProbe.ReloadMeraFile;
@@ -175,6 +200,7 @@ begin
   if not FileExists(fMeraFilePath) then
     Exit;
   LoadMeraSignalsFromFile(fMeraFilePath, fMeraSignals);
+  ApplyMeraTreeAddresses;
   MarkSignalsFromRegistry;
 end;
 
@@ -219,6 +245,8 @@ end;
 
 function TRecorderSettingsSourceProbe.SignalSourceId(ASignal: TMeraSignalInfo): string;
 begin
+  if (ASignal <> nil) and (fMeraSignals.IndexOf(ASignal) >= 0) then
+    Exit(MeraSourceIdForPath(fMeraFilePath));
   Result := RecorderSignalConfiguredSourceId(ASignal, MeraSourceIdForPath(fMeraFilePath));
 end;
 
@@ -250,7 +278,7 @@ begin
     end;
   end;
 
-  for g in [rsgMic140, rsgMic185] do
+  for g in [rsgMic140, rsgMic185, rsgMcbus] do
     for I := 0 to GroupSignalCount(g) - 1 do
     begin
       lSignal := GroupSignal(g, I);
@@ -447,9 +475,53 @@ begin
   end;
 end;
 
+procedure TRecorderSettingsSourceProbe.BuildMcbus(const ASourceId,
+  AModulesText: string; APollFrequencyHz: Double);
+var
+  I, lChannel, lSlot: Integer;
+  lCaptions: TStringList;
+  lSerial, lVersion: string;
+  lSignal: TMeraSignalInfo;
+begin
+  RemoveSourceSignals(ASourceId);
+  if APollFrequencyHz <= 0 then
+    APollFrequencyHz := CMc201DefaultSampleRateHz;
+  lCaptions := TStringList.Create;
+  try
+    RecorderMc032ModuleCaptions(AModulesText, lCaptions);
+    for I := 0 to lCaptions.Count - 1 do
+    begin
+      if not TryParseRecorderMc201ModuleCaption(lCaptions[I], lSlot,
+        lSerial, lVersion) then
+        Continue;
+      for lChannel := 1 to 4 do
+      begin
+        lSignal := TMeraSignalInfo.Create;
+        lSignal.Address := RecorderTreeIndexedAddress(fRegistry, ASourceId,
+          Format('%d-%d', [lSlot, lChannel]), False);
+        lSignal.Name := 'MC201_' + lSignal.Address;
+        lSignal.ModuleName := 'MC-201';
+        lSignal.DataTypeName := 'R8';
+        lSignal.DataType := mvtFloat64;
+        lSignal.FrequencyHz := APollFrequencyHz;
+        lSignal.UnitsName := 'В';
+        lSignal.Description := Format('MC-201 slot %d channel %d; SN=%s',
+          [lSlot, lChannel, lSerial]);
+        lSignal.FileName := ASourceId;
+        lSignal.Enabled := True;
+        lSignal.Selected := SignalHasLinkedTag(lSignal);
+        fMcbusSignals.Add(lSignal);
+      end;
+    end;
+  finally
+    lCaptions.Free;
+  end;
+end;
+
 procedure TRecorderSettingsSourceProbe.RestoreFromRegistry;
 var
   I: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
   lConfig: TRecorderMic140SourceConfig;
   lHost: string;
   lPort: Word;
@@ -480,6 +552,7 @@ begin
         if FileExists(lPath) then
         begin
           LoadMeraSignalsFromFile(lPath, fMeraSignals);
+          ApplyMeraTreeAddresses;
           MarkSignalsFromRegistry;
         end;
       end
@@ -493,7 +566,14 @@ begin
           BuildMic140(lSourceId, MIC140DefaultChannelCount, nil, []);
       end
       else if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
-        BuildMic185(lSourceId);
+        BuildMic185(lSourceId)
+      else if TryParseRecorderMc032SourceId(lSourceId, lHost, lPort) then
+      begin
+        lConfigured := RecorderConfiguredDataSourcesFind(fRegistry, lSourceId);
+        if lConfigured <> nil then
+          BuildMcbus(lSourceId, lConfigured.SpecificConfigText,
+            lConfigured.DefaultPollFrequencyHz);
+      end;
     end;
   finally
     lSourceIds.Free;
@@ -527,7 +607,7 @@ begin
 
     if fMeraFilePath <> '' then
       lDesired.Add(MeraSourceIdForPath(fMeraFilePath));
-    for g in [rsgMic140, rsgMic185] do
+    for g in [rsgMic140, rsgMic185, rsgMcbus] do
       for I := 0 to GroupSignalCount(g) - 1 do
       begin
         lSignal := GroupSignal(g, I);
@@ -538,15 +618,29 @@ begin
         if (g = rsgMic185) and
           (not RecorderIsHardwareMic185TagSource(lSourceId)) then
           Continue;
+        if (g = rsgMcbus) and
+          (not TryParseRecorderMc032SourceId(lSourceId, lHost, lPort)) then
+          Continue;
         if lDesired.IndexOf(lSourceId) < 0 then
           lDesired.Add(lSourceId);
       end;
 
     RecorderEnumerateConfiguredSourceIds(fRegistry, lExisting, False);
     for I := lExisting.Count - 1 downto 0 do
-      if RecorderHardwareTreeShowsSourceId(lExisting[I]) and
+    begin
+      { This probe owns only Mera, MIC-140 and MIC-185 lists. Never remove a
+        configured source owned by another device adapter (for example
+        MC-032/MCbus) merely because it has no signal group in this probe. }
+      lConfigured := RecorderConfiguredDataSourcesFind(fRegistry, lExisting[I]);
+      if (lConfigured <> nil) and
+        (SameText(lConfigured.ModuleType, 'MIC-140') or
+         SameText(lConfigured.ModuleType, 'MIC183/185') or
+         SameText(lConfigured.ModuleType, 'MC-032') or
+         RecorderIsVirtualTagSource(lConfigured.SourceId)) and
+        RecorderHardwareTreeShowsSourceId(lExisting[I]) and
         (lDesired.IndexOf(lExisting[I]) < 0) then
         RecorderConfiguredDataSourcesRemove(fRegistry, lExisting[I]);
+    end;
 
     if fMeraFilePath <> '' then
     begin
@@ -557,7 +651,7 @@ begin
         'MC-201', lPollHz);
     end;
 
-    for g in [rsgMic140, rsgMic185] do
+    for g in [rsgMic140, rsgMic185, rsgMcbus] do
     begin
       lUnique.Clear;
       for I := 0 to GroupSignalCount(g) - 1 do
@@ -567,6 +661,9 @@ begin
         if (g = rsgMic140) and (not TryParseRecorderMic140SourceId(lSourceId, lHost, lPort)) then
           Continue;
         if (g = rsgMic185) and (not RecorderIsHardwareMic185TagSource(lSourceId)) then
+          Continue;
+        if (g = rsgMcbus) and
+          (not TryParseRecorderMc032SourceId(lSourceId, lHost, lPort)) then
           Continue;
         if lUnique.IndexOf(lSourceId) < 0 then
           lUnique.Add(lSourceId);
@@ -587,9 +684,12 @@ begin
         if g = rsgMic140 then
           lConfigured := RecorderConfiguredDataSourcesEnsure(fRegistry,
             lSourceId, 'MIC-140', lPollHz)
+        else if g = rsgMic185 then
+          lConfigured := RecorderConfiguredDataSourcesEnsure(fRegistry,
+            lSourceId, 'MIC183/185', lPollHz)
         else
           lConfigured := RecorderConfiguredDataSourcesEnsure(fRegistry,
-            lSourceId, 'MIC183/185', lPollHz);
+            lSourceId, 'MC-032', lPollHz);
         if (lConfigured <> nil) and (lConfigured.DefaultPollFrequencyHz <= 0) then
           lConfigured.DefaultPollFrequencyHz := lPollHz;
       end;

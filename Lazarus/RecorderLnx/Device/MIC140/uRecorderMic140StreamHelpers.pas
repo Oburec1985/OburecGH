@@ -39,7 +39,7 @@ procedure Mic140LegacyExtractRawSample(const ARaw: TMic140LegacyRawBlock;
 implementation
 
 uses
-  uSharedFileLogger, uRecorderDebugLog;
+  uSharedFileLogger;
 
 const
   CMic140MisalignSatThreshold = 32760.0;
@@ -52,8 +52,6 @@ const
 
 procedure Mic140LogWarning(const AMessage: string);
 begin
-  if CMic140StreamLogOnly and not Mic140StreamLogAllowed(AMessage) then
-    Exit;
   SharedLogger.Enabled := True;
   SharedLogger.Warning(AMessage);
 end;

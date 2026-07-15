@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <Title Value="McbusPreviewSmoke"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <RequiredPackages>
+      <Item><PackageName Value="LCL"/></Item>
+      <Item><PackageName Value="LazUtils"/></Item>
+    </RequiredPackages>
+    <Units>
+      <Unit><Filename Value="McbusPreviewSmoke.lpr"/><IsPartOfProject Value="True"/></Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../../RecorderLnx/Device;../../../RecorderLnx/Device/MCbus;../../../RecorderLnx/Core;../../../SharedUtils"/>
+      <UnitOutputDirectory Value="lib"/>
+    </SearchPaths>
+    <Linking><Debugging><DebugInfoType Value="dsDwarf3"/></Debugging></Linking>
+  </CompilerOptions>
+</CONFIG>

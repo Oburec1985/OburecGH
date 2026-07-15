@@ -1341,3 +1341,96 @@ same decisions and command examples for future transfer into RecorderLnx.
 process, `C:\lazarus\lazbuild.exe -B
 D:\works\OburecGH\Lazarus\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi`
 completed with exit code 0.
+# Codex continuation 2026-07-15: MIC-200 production device driver
+
+**Prompt:** Add MIC-200 support (MC-201 modules and MC-032 controller) under
+`Device/mic200`, based on `TRecorderDevice`, without regressing existing
+devices; evaluate a shared TCP layer.
+
+**Implementation:** Moved the verified low-level protocol units from the
+independent `Mc201ProtocolDebug` stand into `Device/mic200` and added
+`TRecorderMic200Device`. It implements Connect/ProgramDevice/Start/ReadBlock/
+Stop/Disconnect, discovers MC-201 modules, maps each slot to four Recorder
+channels, matches stream messages by the complete MC-201 final flag, converts
+signed 16-bit samples, and assembles one rectangular acquisition block only
+after every programmed channel has arrived. Added the MC-201 BIOS as the
+cross-platform `MC201A_BIO` resource in the main executable. Existing MIC-140
+and MIC-185 units were not changed. A shared raw socket class was deliberately
+not introduced: the safe common abstraction is `TRecorderDevice`, while the
+MDP and MIC-185 packet/session formats differ.
+
+**Verification:** `lazbuild -B RecorderLnx.lpi` completed with exit code 0 and
+linked the new resource. `lazbuild -B Mc201ProtocolDebug.lpi` completed with
+exit code 0; `--cli --check-resources` reported 22040 bytes and passed.
+`RecorderDataSourcesTest.lpi` could not build because its existing search path
+does not include `Device/MIC140` and therefore cannot find
+`uRecorderMic140DeviceConfig`; this failure is outside the MIC-200 changes.
+# 2026-07-15 — MC-032 в аппаратной конфигурации
+
+- В список добавляемых источников добавлен контроллер `MC-032`; название
+  `MIC-200` больше не используется как пользовательский тип устройства.
+- Новый диалог `Device/mic200/UI/uRecorderMc032SettingsDialog.pas` позволяет
+  задать адрес, выполнить автопоиск по `192.169.13.*`, проверить командой
+  `TEST_LOAD` и прочитать flash-идентификацию модулей по слотам.
+- В конфигурацию допускается только узел, успешно ответивший на протокольный
+  тест. Поддерживаемые модули сейчас определяются как MC-201/MC-201A.
+- Для дерева аппаратуры зарегистрирован MC-032 link probe через тот же TEST.
+- Полная сборка `RecorderLnx.lpi`: OK.
+- После поиска и сохранения MC-032 найденные MC-201 отображаются дочерними
+  узлами контроллера в дереве: слот, тип, версия и серийный номер. Узел MC-032
+  автоматически раскрывается; список восстанавливается из конфигурации проекта.
+
+# 2026-07-15 — MC bus и диалог MC-201
+
+- Папка `Device/mic200` переименована в `Device/MCbus`: MIC-200 — конструктив,
+  а программная граница здесь — шина MC с MC-032 и MC-201.
+- Адаптер переименован в `TRecorderMcbusDevice`; `TMc032Device` остался
+  низкоуровневым TCP/MDP-драйвером контроллера.
+- Двойной клик на дочернем узле слота MC-201 открывает
+  `Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.lfm`: 4 канала, HPF/LPF/ICP,
+  режим входа, коммутация, тип и ревизия субмодуля.
+- Настройки хранятся по номеру слота и сохраняются при повторном поиске модулей.
+- Полная сборка `lazbuild -B RecorderLnx.lpi`: OK, exit code 0.
+
+# 2026-07-15 — double click MC-201 routing fix
+
+Исправлено открытие диалога MC-032 вместо MC-201: парсер номера слота
+был небезопасен для UTF-8 из-за фиксированной байтовой позиции. Теперь дочерний
+узел с маркером MC-201 открывает LFM-форму аппаратных свойств MC-201. Сборка OK.
+
+# 2026-07-15 — MC-032 persistence fix
+
+MC-032 исчезал при `OK`, потому что `TRecorderSettingsSourceProbe.SyncToRegistry`
+удалял все аппаратные источники, отсутствующие в его списках Mera/MIC-140/MIC-185.
+Синхронизация ограничена типами, которыми probe владеет. `SpecificConfigText` добавлен
+в JSON `dataSources`, чтобы слоты MC-201 и их настройки переживали повторную загрузку проекта.
+Полная сборка RecorderLnx: OK.
+
+# 2026-07-15 — MC-201 channels and source-indexed addresses
+
+Для каждого найденного MC-201 source probe создаёт 4 доступных канала. Адрес
+включает индекс источника в аппаратном дереве. Для Mera-источника старый первый индекс
+заменяется текущим, для MC-032 индекс добавляется перед `слот-канал`. Ошибка дублирования
+выбранных Mera-каналов в доступных и их удаления при `OK` исправлена: группа Mera всегда
+использует descriptor `SourceId`, а не `FileName` сигнала. Compile-only `lazbuild -B --opt=-Cn`: OK;
+полная линковка ожидает закрытия RecorderLnx.exe.
+
+После закрытия приложения полная сборка прошла с exit code 0. Имя канала MC-201 теперь
+равно его цифровому tree-indexed адресу; служебный адрес `virtual` сокращён до `v`, при этом
+тип источника `virtual` сохранён.
+# 2026-07-15 — MC-032/MC-201 runtime in Preview
+
+По `LogWindows.log` установлено, что режим просмотра не создавал источник MCbus: запускались только MERA playback и диагностика. Добавлен `TRecorderMcbusDataSource`, который в рабочем потоке выполняет connect/program/start/read/stop через существующий `TRecorderMcbusDevice`, сопоставляет нативные `slot-channel` с tree-indexed адресами выбранных тегов и публикует блоки в реестр. `TMainForm` теперь создаёт этот источник для выбранных тегов MC-032. В лог добавлены lifecycle-метки `[MCBUS]`, сообщения о блоках и разреженная диагностика таймаутов. Подробности: `errors/2026-07-15-mcbus-preview-no-data.md`.
+# 2026-07-15 — MCbus Preview smoke и безопасный Stop
+
+Устранено исключение `MC-032 stop: MDP command timeout`: неподтверждённый STOPSCANMAIN теперь приводит к безопасному закрытию неоднозначной TCP-сессии и состоянию disconnected, а не к исключению в UI. Добавлен production smoke-тест `Tests/RecorderTests/McbusPreviewSmoke`. На реальном `192.169.12.87:4000` при периоде 200 мс он получил 15/15 блоков за 3 секунды (5,00 блока/с), 16 каналов × 68 отсчётов, и остановился без исключения. Подробности: `errors/2026-07-15-mcbus-stop-command-timeout.md`.
+# 2026-07-15 — MC-201 полный поток 57,6 кГц
+
+Исправлены ложные значения и потеря объёма данных MC-201. MDP-пакеты теперь разделяются на вложенные BIOS-сообщения, 10 слов заголовка исключаются из сигнала, payload накапливается по slot/final-flag до 11 520 отсчётов на канал за 200 мс. Корневая ошибка темпа: ADSP FIFO 256 ошибочно делился на 16 каналов; оригинальный `SetADSPFifoSize(256)` задаёт 256 отсчётов каждому каналу. Реальный smoke-тест: 16 каналов, 25 блоков × 11 520 = 288 000 отсчётов на канал за 5 секунд, ровно 57 600 отсчётов/с.
+# 2026-07-15: единый список каналов осциллограммы
+
+- Убран отдельный UI-сценарий «Основной канал»; теперь канал выбирается и
+  добавляется одной кнопкой.
+- Первый канал попадает в синюю линию, второй — в зелёную, третий — в красную.
+- Внутренняя схема `TagName + Lines[]` сохранена для совместимости файлов проекта.
+- Полная сборка `RecorderLnx.lpi`: exit code 0.

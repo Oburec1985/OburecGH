@@ -404,7 +404,7 @@ begin
     lSnapshot.Free;
   end;
   if GetTickCount64 - lStart > 5 then
-    { MIC-140 stream debug: EventBus timing suppressed.
+    { Streaming debug: EventBus timing suppressed.
     RecorderDebugLog(Format('[EventBus] Publish: Kind=%d, Time=%d ms, ThreadID=%d',
       [Ord(AEvent.Kind), GetTickCount64 - lStart, PtrUInt(GetThreadID)])); }
 end;

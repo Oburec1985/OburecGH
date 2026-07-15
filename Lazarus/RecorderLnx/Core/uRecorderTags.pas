@@ -356,7 +356,9 @@ type
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
     fFrequencyBands: TRecorderFrequencyBandList;
-    fMic140DeviceConfigs: TStringList;
+    { Opaque per-source extension objects. Core owns them but does not know
+      which device or plugin supplied their concrete types. }
+    fSourceSpecificConfigs: TStringList;
     fConfiguredDataSources: TObjectList;
     function GetActiveSourceCount: Integer;
     function GetActiveSourceId(AIndex: Integer): string;
@@ -412,7 +414,7 @@ type
       AValuesAlreadyTransformed: Boolean = False);
     { Подписчик на полный блок до публикации легковесного UI-события.
       Используется рантаймом спектров, чтобы не копировать блоки в EventBus
-      из потока опроса MIC-140. }
+      из потока опроса устройства. }
     procedure SetBlockPublishedHandler(ATarget: TObject;
       AHandler: TRecorderTagBlockPublishedEvent);
     { Публикует спектр/UI-уведомления после AddBlockSamples. }
@@ -431,7 +433,7 @@ type
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
     property FrequencyBands: TRecorderFrequencyBandList read fFrequencyBands;
-    property Mic140DeviceConfigs: TStringList read fMic140DeviceConfigs;
+    property SourceSpecificConfigs: TStringList read fSourceSpecificConfigs;
     property ConfiguredDataSources: TObjectList read fConfiguredDataSources;
     property Tags[AIndex: Integer]: TRecorderTag read GetTag;
   end;
@@ -463,26 +465,19 @@ function RecorderTagsShareSourceIdList(ARegistry: TRecorderTagRegistry;
 const
   CDetachedTagSourcePrefix = 'Detached:';
   CMeraTagSourcePrefix = 'Mera file: ';
-  CMic140TagSourcePrefix = 'MIC-140:';
-  CMic185TagSourcePrefix = 'MIC-185: ';
 
 function RecorderNormalizeTagSourceId(const ASourceId: string): string;
 function RecorderIsDetachedTagSource(const ASourceId: string): Boolean;
 function RecorderIsVirtualTagSource(const ASourceId: string): Boolean;
-function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
-function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
 function RecorderIsHardwareTagSource(const ASourceId: string): Boolean;
 function RecorderHardwareTreeShowsSourceId(const ASourceId: string): Boolean;
 // требуется ли отображать тег в таблицах
 function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
-function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
-procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 
 implementation
 
 uses
-  StrUtils, uRecorderDebugLog, uRecorderMic140DeviceConfig,
-  uRecorderHardwareTree;
+  StrUtils, uRecorderDebugLog;
 
 const
   CTagThermocoupleInverseMinMv = -20.0;
@@ -1072,9 +1067,9 @@ begin
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
-  fMic140DeviceConfigs := TStringList.Create;
-  fMic140DeviceConfigs.OwnsObjects := True;
-  fMic140DeviceConfigs.CaseSensitive := False;
+  fSourceSpecificConfigs := TStringList.Create;
+  fSourceSpecificConfigs.OwnsObjects := True;
+  fSourceSpecificConfigs.CaseSensitive := False;
   fConfiguredDataSources := TObjectList.Create(True);
 end;
 
@@ -1082,7 +1077,7 @@ destructor TRecorderTagRegistry.Destroy;
 begin
   Clear;
   fConfiguredDataSources.Free;
-  fMic140DeviceConfigs.Free;
+  fSourceSpecificConfigs.Free;
   fFrequencyBands.Free;
   fSpectrumConfigs.Free;
   fCalibrations.Free;
@@ -1200,18 +1195,10 @@ end;
 
 function TRecorderTagRegistry.FindTagHardwareCalibration(
   ATag: TRecorderTag): TRecorderCalibration;
-var
-  lName: string;
 begin
   Result := nil;
   if ATag = nil then
     Exit;
-  if RecorderMic140TagHardwareCalibrationEnabled(Self, ATag) then
-  begin
-    lName := RecorderMic140TagHardwareCalibrationName(Self, ATag);
-    if Trim(lName) <> '' then
-      Exit(FindCalibrationByName(lName));
-  end;
   if ATag.HardwareCalibrationEnabled and (Trim(ATag.HardwareCalibrationName) <> '') then
     Result := FindCalibrationByName(ATag.HardwareCalibrationName);
 end;
@@ -1350,21 +1337,16 @@ begin
   Result := Pos(CMeraTagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
 end;
 
-function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
-begin
-  Result := Pos(CMic140TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
-end;
-
-
-function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
-begin
-  Result := Pos(CMic185TagSourcePrefix, RecorderNormalizeTagSourceId(ASourceId)) = 1;
-end;
-
 function RecorderIsHardwareTagSource(const ASourceId: string): Boolean;
+var
+  lSourceId: string;
 begin
-  Result := RecorderIsHardwareMic140TagSource(ASourceId) or
-    RecorderIsHardwareMic185TagSource(ASourceId);
+  lSourceId := RecorderNormalizeTagSourceId(ASourceId);
+  Result := (lSourceId <> '') and
+    (not RecorderIsDetachedTagSource(ASourceId)) and
+    (not RecorderIsVirtualTagSource(lSourceId)) and
+    (not SameText(lSourceId, 'manual')) and
+    (not SameText(lSourceId, 'debug.diagnostics'));
 end;
 
 function RecorderHardwareTreeShowsSourceId(const ASourceId: string): Boolean;
@@ -1380,6 +1362,7 @@ end;
 function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): Boolean;
 var
+  lPath: string;
   lSourceId: string;
 begin
   Result := ATag <> nil;
@@ -1397,24 +1380,13 @@ begin
   begin
     if ARegistry.IsSourceActive(lSourceId) then
       Exit(True);
-    Result := RecorderMeraFilePathExists(lSourceId);
+    lPath := Trim(Copy(lSourceId, Length(CMeraTagSourcePrefix) + 1, MaxInt));
+    Result := (lPath <> '') and
+      (FileExists(lPath) or FileExists(ExpandFileName(lPath)));
     Exit;
   end;
   if RecorderIsHardwareTagSource(lSourceId) then
     Result := ARegistry.IsSourceActive(lSourceId);
-end;
-
-function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
-begin
-  Result := (ATag <> nil) and RecorderIsHardwareMic140TagSource(ATag.SourceId);
-end;
-
-procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
-begin
-  if ATag = nil then
-    Exit;
-  ATag.HardwareCalibrationEnabled := False;
-  ATag.HardwareCalibrationName := '';
 end;
 
 procedure TRecorderTagRegistry.RefreshActiveSourcesFromTags;
@@ -1571,7 +1543,7 @@ begin
   AddBlockSamples(ATagName, ATimes, AValues, ACount, AValuesAlreadyTransformed);
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay
-  // the next MIC-140 TCP read. Device-level diagnostics log block summaries.
+  // the next device read. Device-level diagnostics log block summaries.
 
   lTag := FindByName(ATagName);
   if lTag = nil then
@@ -1610,7 +1582,7 @@ begin
   for I := 0 to fTags.Count - 1 do
     TObject(fTags[I]).Free;
   fTags.Clear;
-  fMic140DeviceConfigs.Clear;
+  fSourceSpecificConfigs.Clear;
   fConfiguredDataSources.Clear;
   fSelectedTagName := '';
   fNextId := 1;

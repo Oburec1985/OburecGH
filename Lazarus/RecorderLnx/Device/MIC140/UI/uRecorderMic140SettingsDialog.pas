@@ -809,7 +809,7 @@ begin
   if ARegistry = nil then
     Exit(False);
   Result := ApplyRecorderMic140SourceDialog(AOwner, ARegistry,
-    ARegistry.Mic140DeviceConfigs, ASourceId, ANewSourceId);
+    ARegistry.SourceSpecificConfigs, ASourceId, ANewSourceId);
 end;
 
 initialization

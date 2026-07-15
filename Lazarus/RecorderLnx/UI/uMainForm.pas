@@ -47,6 +47,7 @@ uses
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
   uRecorderMic185DataSource, uRecorderMic185SettingsDialog,
+  uRecorderMcbusDataSource, uRecorderMc032SettingsDialog,
   uRecorderMic185SettingsSelfTest,
   uRecorderHardwareLiveDevices,
   uRecorderHardwareTree,
@@ -2261,6 +2262,9 @@ var
   lMic185Host: string;
   lMic185Port: Word;
   lMic185Sources: TStringList;
+  lMcbusHost: string;
+  lMcbusPort: Word;
+  lMcbusSources: TStringList;
   lPollFrequencyHz: Double;
   lSource: IRecorderDataSource;
   lTag: TRecorderTag;
@@ -2285,6 +2289,7 @@ begin
   lFiles := TStringList.Create;
   lMicSources := TStringList.Create;
   lMic185Sources := TStringList.Create;
+  lMcbusSources := TStringList.Create;
   try
     lFiles.CaseSensitive := False;
     lFiles.Sorted := False;
@@ -2292,6 +2297,8 @@ begin
     lMicSources.Sorted := False;
     lMic185Sources.CaseSensitive := False;
     lMic185Sources.Sorted := False;
+    lMcbusSources.CaseSensitive := False;
+    lMcbusSources.Sorted := False;
     for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
       lTag := fRecorder.TagRegistry.Tags[I];
@@ -2347,6 +2354,21 @@ begin
 
         if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
           lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end
+      else if TryParseRecorderMc032SourceId(lTag.SourceId, lMcbusHost,
+        lMcbusPort) then
+      begin
+        lFileIndex := lMcbusSources.IndexOf(lTag.SourceId);
+        if lFileIndex < 0 then
+        begin
+          lTagNames := TStringList.Create;
+          lTagNames.CaseSensitive := False;
+          lFileIndex := lMcbusSources.AddObject(lTag.SourceId, lTagNames);
+        end
+        else
+          lTagNames := TStringList(lMcbusSources.Objects[lFileIndex]);
         if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
           lTagNames.Add(lTag.Name);
       end;
@@ -2415,6 +2437,29 @@ begin
       AddLog(Format('MIC183/185 source configured: %s:%d (%d channels).',
         [lMic185Host, lMic185Port, lTagNames.Count]));
     end;
+
+    for I := 0 to lMcbusSources.Count - 1 do
+    begin
+      if not TryParseRecorderMc032SourceId(lMcbusSources[I], lMcbusHost,
+        lMcbusPort) then Continue;
+      lTagNames := TStringList(lMcbusSources.Objects[I]);
+      lPollFrequencyHz := 57600;
+      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
+        if SameText(lTag.SourceId, lMcbusSources[I]) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lMcbusHost,
+        lMcbusPort, lPollFrequencyHz, lDataUpdateMs, lTagNames);
+      fRecorder.DataSources.AddSource(lSource);
+      AddLog(Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
+        [lMcbusHost, lMcbusPort, lTagNames.Count]));
+    end;
   finally
     for I := 0 to lFiles.Count - 1 do
       lFiles.Objects[I].Free;
@@ -2425,6 +2470,9 @@ begin
     for I := 0 to lMic185Sources.Count - 1 do
       lMic185Sources.Objects[I].Free;
     lMic185Sources.Free;
+    for I := 0 to lMcbusSources.Count - 1 do
+      lMcbusSources.Objects[I].Free;
+    lMcbusSources.Free;
   end;
   fRecorder.DataSources.ConfigureTagsAll(fRecorder.TagRegistry);
   EnsureTagSignalBufferCapacities;

@@ -14,7 +14,7 @@ unit uRecorderMic140Utils;
 interface
 
 uses
-  SysUtils;
+  SysUtils, uRecorderTags;
 
 const
   CMic140SourcePrefix = 'MIC-140:';
@@ -28,6 +28,9 @@ function ParseMic140NodeNumber(const AAddress: string;
   out ANodeNumber: Integer): Boolean;
 function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
 function RecorderMic140SourceId(const AHost: string; APort: Word): string;
+function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
+function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
+procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 function RecorderMic140NodeTagPrefix(ANodeNumber: Integer): string;
 function RecorderMic140ChannelTagName(ANodeNumber, AChannelNumber: Integer): string;
 function RecorderMic140TemperatureAddressText(ADeviceSerial,
@@ -147,6 +150,26 @@ end;
 function RecorderMic140SourceId(const AHost: string; APort: Word): string;
 begin
   Result := CMic140SourcePrefix + ' ' + Trim(AHost) + ':' + IntToStr(APort);
+end;
+
+function RecorderIsHardwareMic140TagSource(const ASourceId: string): Boolean;
+begin
+  Result := Pos(CMic140SourcePrefix,
+    RecorderNormalizeTagSourceId(ASourceId)) = 1;
+end;
+
+function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and
+    RecorderIsHardwareMic140TagSource(ATag.SourceId);
+end;
+
+procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
+begin
+  if ATag = nil then
+    Exit;
+  ATag.HardwareCalibrationEnabled := False;
+  ATag.HardwareCalibrationName := '';
 end;
 
 function TryParseRecorderMic140SourceId(const ASourceId: string;

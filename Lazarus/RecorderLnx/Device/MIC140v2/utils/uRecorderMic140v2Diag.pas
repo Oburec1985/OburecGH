@@ -35,7 +35,7 @@ function Mic140v2RawQualityText(const ARaw: TMic140LegacyRawBlock;
 implementation
 
 uses
-  SysUtils, Math, uSharedFileLogger, uRecorderDebugLog;
+  SysUtils, Math, uSharedFileLogger;
 
 const
   CPosThr = 500.0;
@@ -63,8 +63,6 @@ const
 
 procedure Mic140v2Log(const AMsg: string);
 begin
-  if CMic140StreamLogOnly and not Mic140StreamLogAllowed(AMsg) then
-    Exit;
   SharedLogger.Enabled := True;
   SharedLogger.Warning(AMsg);
 end;

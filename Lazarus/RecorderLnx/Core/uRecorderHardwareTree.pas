@@ -2,7 +2,7 @@ unit uRecorderHardwareTree;
 
 {
   Абстракции дерева устройств в диалоге настроек.
-  UI не должен знать о MeraFile / MIC140 / MIC185 — только sourceId и эти функции.
+  UI знает только sourceId и зарегистрированные generic link probes.
 }
 
 {$mode objfpc}{$H+}
@@ -14,6 +14,8 @@ uses
   Classes, SysUtils, ComCtrls, uRecorderTags, uMeraFile;
 
 type
+  TRecorderHardwareSourceLinkProbe = function(
+    const ASourceId: string): Boolean;
   TRecorderHardwareTreeEntry = record
     SourceId: string;
     NodeCaption: string;
@@ -33,6 +35,8 @@ function RecorderSignalConfiguredSourceId(ASignal: TMeraSignalInfo;
 
 function RecorderHardwareTreeNodeCaption(const ASourceId: string): string;
 function RecorderHardwareSourceLinkOk(const ASourceId: string): Boolean;
+procedure RecorderRegisterHardwareSourceLinkProbe(
+  AProbe: TRecorderHardwareSourceLinkProbe);
 function RecorderHardwareSourceHasLinkedTags(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): Boolean;
 
@@ -48,11 +52,26 @@ procedure RecorderHardwareTreeClearNodes(ATree: TTreeView);
 implementation
 
 uses
-  uRecorderHardwareLiveDevices, uRecorderMic185DataSource,
-  uRecorderConfiguredDataSources, uRecorderMic140Utils;
+  uRecorderHardwareLiveDevices, uRecorderConfiguredDataSources;
 
 const
-  CDeviceTreeProbeTimeoutMs = 250;
+  CRecorderHardwareSourceLinkProbeMax = 32;
+
+var
+  g_HardwareSourceLinkProbes: array[0..CRecorderHardwareSourceLinkProbeMax - 1]
+    of TRecorderHardwareSourceLinkProbe;
+  g_HardwareSourceLinkProbeCount: Integer = 0;
+
+procedure RecorderRegisterHardwareSourceLinkProbe(
+  AProbe: TRecorderHardwareSourceLinkProbe);
+begin
+  if not Assigned(AProbe) then
+    Exit;
+  if g_HardwareSourceLinkProbeCount >= CRecorderHardwareSourceLinkProbeMax then
+    raise Exception.Create('Too many hardware source link probes');
+  g_HardwareSourceLinkProbes[g_HardwareSourceLinkProbeCount] := AProbe;
+  Inc(g_HardwareSourceLinkProbeCount);
+end;
 
 function RecorderMeraFilePathExists(const ASourceId: string): Boolean;
 var
@@ -135,9 +154,8 @@ end;
 
 function RecorderHardwareSourceLinkOk(const ASourceId: string): Boolean;
 var
-  lHost: string;
+  I: Integer;
   lNorm: string;
-  lPort: Word;
 begin
   Result := False;
   lNorm := RecorderNormalizeTagSourceId(ASourceId);
@@ -147,16 +165,11 @@ begin
     Exit(RecorderMeraFilePathExists(lNorm));
   if RecorderHardwareIsSourceOffline(lNorm) then
     Exit(False);
-  if RecorderIsHardwareMic185TagSource(lNorm) then
-    Exit(RecorderMic185IsSourceLinkOk(lNorm));
-  if RecorderIsHardwareMic140TagSource(lNorm) then
-  begin
-    if RecorderHardwareIsSourceLinkOk(lNorm) then
+  if RecorderHardwareIsSourceLinkOk(lNorm) then
+    Exit(True);
+  for I := 0 to g_HardwareSourceLinkProbeCount - 1 do
+    if g_HardwareSourceLinkProbes[I](lNorm) then
       Exit(True);
-    if TryParseRecorderMic140SourceId(lNorm, lHost, lPort) then
-      Exit(RecorderMic140TcpProbe(lHost, lPort, CDeviceTreeProbeTimeoutMs));
-    Exit(False);
-  end;
 end;
 
 function RecorderHardwareSourceHasLinkedTags(ARegistry: TRecorderTagRegistry;

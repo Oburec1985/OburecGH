@@ -148,7 +148,7 @@ begin
       fManager.ProcessQueuedInputs;
     except
       on E: Exception do
-        { MIC-140 stream debug: spectrum worker errors suppressed.
+        { Streaming debug: spectrum worker errors suppressed.
         RecorderDebugLog('Spectrum worker failed: ' + E.ClassName + ': ' + E.Message); }
     end;
     fManager.fInputEvent.WaitFor(50);
@@ -157,7 +157,7 @@ begin
     fManager.ProcessQueuedInputs;
   except
     on E: Exception do
-      { MIC-140 stream debug: spectrum worker shutdown errors suppressed.
+      { Streaming debug: spectrum worker shutdown errors suppressed.
       RecorderDebugLog('Spectrum worker shutdown failed: ' + E.ClassName + ': ' + E.Message); }
   end;
 end;
@@ -432,7 +432,7 @@ begin
       if SameText(lInput.TagName, ATagName) then
       begin
         // Spectrum is derived real-time output. Coalescing preserves the
-        // newest input without allowing a slow FFT to backlog MIC-140 blocks.
+        // newest input without allowing a slow FFT to backlog source blocks.
         lInput.AssignSamples(ATimes, AValues, ACount);
         fInputEvent.SetEvent;
         Exit;

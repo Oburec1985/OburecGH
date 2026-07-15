@@ -3,7 +3,7 @@ unit uRecorderMeraSdbThermocouples;
 {
   GOST thermocouple scales from Mera SDB (same tree as original Recorder).
 
-  Original MIC140pp loads IDC_COMBO_TARE from IMeSDB folder
+  Загружает таблицы термопар из системной базы Mera SDB.
   "ГОСТ\\Термопары" under DEFAULT_SDB_PATH (Mera Files\\sdb\\sdb.xml).
   Each scale is a pair of .xml metadata + .csv points (mV -> degC).
 }

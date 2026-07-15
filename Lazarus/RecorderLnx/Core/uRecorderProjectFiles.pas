@@ -21,10 +21,15 @@ unit uRecorderProjectFiles;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, fpjson,
   uRecorderFormModel, uRecorderTags;
 
 type
+  TRecorderProjectConfigExtensionProc = procedure(AJson: TJSONObject;
+    ARegistry: TRecorderTagRegistry);
+  TRecorderProjectTagLoadedExtensionProc = procedure(AJson: TJSONObject;
+    ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
+
   { TRecorderProjectFileSet
     Набор путей к файлам проекта.
     
@@ -52,6 +57,10 @@ procedure SaveRecorderProjectConfig(const AFileName: string;
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 
+procedure RecorderRegisterProjectConfigExtension(
+  ASaveProc, ALoadProc: TRecorderProjectConfigExtensionProc;
+  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc = nil);
+
 { Сохраняет структуру страниц формуляров и их компонентов в INI-файл }
 procedure SaveRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager);
@@ -62,9 +71,35 @@ procedure LoadRecorderGuiConfig(const AFileName: string;
 implementation
 
 uses
-  IniFiles, fpjson, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors, uRecorderMic140DeviceConfig, uRecorderConfiguredDataSources,
-  uRecorderMic185DataSource;
+  IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
+  uOglChartColors, uRecorderConfiguredDataSources;
+
+const
+  CRecorderProjectConfigExtensionMax = 32;
+
+type
+  TRecorderProjectConfigExtension = record
+    SaveProc: TRecorderProjectConfigExtensionProc;
+    LoadProc: TRecorderProjectConfigExtensionProc;
+    TagLoadedProc: TRecorderProjectTagLoadedExtensionProc;
+  end;
+
+var
+  g_ProjectConfigExtensions: array[0..CRecorderProjectConfigExtensionMax - 1]
+    of TRecorderProjectConfigExtension;
+  g_ProjectConfigExtensionCount: Integer = 0;
+
+procedure RecorderRegisterProjectConfigExtension(
+  ASaveProc, ALoadProc: TRecorderProjectConfigExtensionProc;
+  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc);
+begin
+  if g_ProjectConfigExtensionCount >= CRecorderProjectConfigExtensionMax then
+    raise Exception.Create('Too many project config extensions');
+  g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].SaveProc := ASaveProc;
+  g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].LoadProc := ALoadProc;
+  g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].TagLoadedProc := ATagLoadedProc;
+  Inc(g_ProjectConfigExtensionCount);
+end;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
@@ -557,7 +592,7 @@ end;
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 var
-  I: Integer;
+  I, J: Integer;
   lRoot: TJSONObject;
   lTags: TJSONArray;
   lTagJson: TJSONObject;
@@ -573,8 +608,9 @@ begin
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
     SaveDataSources(lRoot, ATags);
-    SaveMic140DeviceConfigs(lRoot, ATags);
-    SaveMic185DataSourceConfigs(lRoot, ATags);
+    for J := 0 to g_ProjectConfigExtensionCount - 1 do
+      if Assigned(g_ProjectConfigExtensions[J].SaveProc) then
+        g_ProjectConfigExtensions[J].SaveProc(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
@@ -603,8 +639,6 @@ begin
         lTag.HardwareCalibrationEnabled);
       lTagJson.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       lTagJson.Add('channelCalibrationEnabled', lTag.ChannelCalibrationEnabled);
-      if RecorderTagUsesMic140Settings(lTag) then
-        RecorderTagClearMic140Settings(lTag);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
       SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
@@ -625,14 +659,13 @@ end;
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 var
-  I: Integer;
+  I, J: Integer;
   lData: TJSONData;
   lRoot: TJSONObject;
   lTag: TRecorderTag;
   lTagJson: TJSONObject;
   lTags: TJSONArray;
   lText: TStringList;
-  lLegacy: TRecorderMic140LegacyTagFields;
 begin
   if not FileExists(AFileName) then
     Exit;
@@ -688,31 +721,21 @@ begin
           lTag.HardwareCalibrationName);
         lTag.ChannelCalibrationEnabled := lTagJson.Get('channelCalibrationEnabled',
           lTag.ChannelCalibrationEnabled);
-        if RecorderTagUsesMic140Settings(lTag) then
-        begin
-          RecorderMic140LoadLegacyFieldsFromTagJson(lTagJson, lLegacy);
-          LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
-          LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
-          LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
-          ATags.AddTag(lTag);
-          RecorderMic140MigrateLegacyFieldsToDeviceConfig(ATags, lTag, lLegacy);
-          lTag := nil;
-        end
-        else
-        begin
-          RecorderTagClearMic140Settings(lTag);
-          LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
-          LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
-          LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
-          ATags.AddTag(lTag);
-          lTag := nil;
-        end;
+        LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
+        LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
+        LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
+        ATags.AddTag(lTag);
+        for J := 0 to g_ProjectConfigExtensionCount - 1 do
+          if Assigned(g_ProjectConfigExtensions[J].TagLoadedProc) then
+            g_ProjectConfigExtensions[J].TagLoadedProc(lTagJson, ATags, lTag);
+        lTag := nil;
       finally
         lTag.Free;
       end;
     end;
-    LoadMic185DataSourceConfigs(lRoot, ATags);
-    LoadMic140DeviceConfigs(lRoot, ATags);
+    for J := 0 to g_ProjectConfigExtensionCount - 1 do
+      if Assigned(g_ProjectConfigExtensions[J].LoadProc) then
+        g_ProjectConfigExtensions[J].LoadProc(lRoot, ATags);
   finally
     lData.Free;
   end;

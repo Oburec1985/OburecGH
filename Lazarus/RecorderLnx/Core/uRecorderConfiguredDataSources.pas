@@ -36,6 +36,10 @@ procedure RecorderConfiguredDataSourcesRemove(ARegistry: TRecorderTagRegistry;
 
 procedure RecorderEnumerateConfiguredSourceIds(ARegistry: TRecorderTagRegistry;
   ASourceIds: TStrings; AHardwareTreeOnly: Boolean = False);
+function RecorderConfiguredSourceTreeIndex(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Integer;
+function RecorderTreeIndexedAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ANativeAddress: string; AReplaceLeadingIndex: Boolean): string;
 
 procedure LoadRecorderConfiguredDataSources(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
@@ -154,6 +158,48 @@ begin
   end;
 end;
 
+function RecorderConfiguredSourceTreeIndex(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Integer;
+var
+  I: Integer;
+  lIds: TStringList;
+  lNorm: string;
+begin
+  Result := 0;
+  lNorm := RecorderNormalizeTagSourceId(ASourceId);
+  lIds := TStringList.Create;
+  try
+    lIds.CaseSensitive := False;
+    RecorderEnumerateConfiguredSourceIds(ARegistry, lIds, True);
+    for I := 0 to lIds.Count - 1 do
+      if SameText(RecorderNormalizeTagSourceId(lIds[I]), lNorm) then
+        Exit(I + 1);
+  finally
+    lIds.Free;
+  end;
+end;
+
+function RecorderTreeIndexedAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ANativeAddress: string; AReplaceLeadingIndex: Boolean): string;
+var
+  lDash: SizeInt;
+  lIndex: Integer;
+begin
+  Result := Trim(ANativeAddress);
+  lIndex := RecorderConfiguredSourceTreeIndex(ARegistry, ASourceId);
+  if (lIndex <= 0) or (Result = '') then Exit;
+  if AReplaceLeadingIndex then
+  begin
+    lDash := Pos('-', Result);
+    if lDash > 0 then
+      Result := IntToStr(lIndex) + Copy(Result, lDash, MaxInt)
+    else
+      Result := IntToStr(lIndex) + '-' + Result;
+  end
+  else
+    Result := IntToStr(lIndex) + '-' + Result;
+end;
+
 procedure LoadRecorderConfiguredDataSources(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
 var
@@ -181,6 +227,7 @@ begin
     lEntry.SourceId := RecorderNormalizeTagSourceId(lItem.Get('sourceId', ''));
     lEntry.ModuleType := lItem.Get('moduleType', '');
     lEntry.DefaultPollFrequencyHz := lItem.Get('defaultPollFrequencyHz', 0.0);
+    lEntry.SpecificConfigText := lItem.Get('specificConfigText', '');
     RecorderConfiguredDataSourceList(ARegistry).Add(lEntry);
   end;
 end;
@@ -219,6 +266,7 @@ begin
     lItem.Add('sourceId', lEntry.SourceId);
     lItem.Add('moduleType', lEntry.ModuleType);
     lItem.Add('defaultPollFrequencyHz', lEntry.DefaultPollFrequencyHz);
+    lItem.Add('specificConfigText', lEntry.SpecificConfigText);
   end;
 end;
 

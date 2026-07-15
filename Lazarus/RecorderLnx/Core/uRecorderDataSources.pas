@@ -333,7 +333,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF}
-  Math, LazFileUtils;
+  Math, LazFileUtils, uRecorderConfiguredDataSources;
 
 {$IFDEF MSWINDOWS}
 type
@@ -514,7 +514,7 @@ begin
       fTag := ARegistry.CreateTag(fTagName, 4096);
   end;
 
-  fTag.Address := 'virtual';
+  fTag.Address := 'v';
   fTag.UnitName := 'a.u.';
   fTag.Description := 'Mock sine signal';
   fTag.SourceId := SourceId;
@@ -975,7 +975,7 @@ begin
       Break;
 
     ARegistry.PublishBlock(fTagName, lTimes, lValues, lCount);
-    { MIC-140 stream debug: MERA block log suppressed.
+    { Streaming debug: MERA block log suppressed.
     RecorderDebugLog(Format('MERA block: tag=%s count=%d first=%.6f last=%.6f blockLength=%d update=%dms',
       [fTagName, lCount, lTimes[0], lTimes[lCount - 1], ABlockLength,
       AUpdateTimeMs])); }
@@ -1041,10 +1041,11 @@ var
   lSignals: TList;
   lTag: TRecorderTag;
   lUpdated: Boolean;
+  lDisplayAddress: string;
 
   procedure UpdateTag(ATag: TRecorderTag);
   begin
-    ATag.Address := lSignal.Address;
+    ATag.Address := lDisplayAddress;
     ATag.UnitName := lSignal.UnitsName;
     ATag.ModuleType := lSignal.ModuleName;
     ATag.PollFrequencyHz := lSignal.FrequencyHz;
@@ -1069,13 +1070,15 @@ begin
       lSignal := TMeraSignalInfo(lSignals[I]);
       if not IsSignalSelected(lSignal) then
         Continue;
+      lDisplayAddress := RecorderTreeIndexedAddress(ARegistry,
+        'Mera file: ' + fFileName, lSignal.Address, True);
 
       lUpdated := False;
       for J := 0 to ARegistry.TagCount - 1 do
       begin
         lTag := ARegistry.Tags[J];
         if SameText(lTag.SourceId, 'Mera file: ' + fFileName) and
-          SameText(lTag.Address, lSignal.Address) then
+          SameText(lTag.Address, lDisplayAddress) then
         begin
           UpdateTag(lTag);
           lUpdated := True;
@@ -1103,6 +1106,7 @@ var
   lSignal: TMeraSignalInfo;
   lSignals: TList;
   lTag: TRecorderTag;
+  lDisplayAddress: string;
 
   procedure AddPlaybackSignal(ASourceSignal: TMeraSignalInfo; const ATagName: string);
   var
@@ -1160,6 +1164,8 @@ begin
       lSignal := TMeraSignalInfo(lSignals[I]);
       if not IsSignalSelected(lSignal) then
         Continue;
+      lDisplayAddress := RecorderTreeIndexedAddress(Registry, lSourceId,
+        lSignal.Address, True);
       if (not lHasRange) or (lSignal.StartSec < fPlayRangeMinSec) then
       begin
         fPlayRangeMinSec := lSignal.StartSec;
@@ -1172,7 +1178,7 @@ begin
         begin
           lTag := Registry.Tags[J];
           if SameText(lTag.SourceId, lSourceId) and
-            SameText(lTag.Address, lSignal.Address) then
+            SameText(lTag.Address, lDisplayAddress) then
           begin
             AddPlaybackSignal(lSignal, lTag.Name);
             lLinked := True;
@@ -1291,7 +1297,7 @@ begin
       if fSource.TryStop then
         Break;
       lElapsed := GetTickCount64 - lStart;
-      if (lElapsed > 10) and (Pos('MIC-140', fSource.SourceId) > 0) then
+      if lElapsed > 10 then
         RecorderDebugLog(Format('[DataSource:%s] Tick took %d ms on Thread %d',
           [fSource.SourceId, lElapsed, PtrUInt(GetThreadID)]));
 

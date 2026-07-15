@@ -121,7 +121,18 @@ implementation
 
 uses
   Math, StrUtils, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
-  uRecorderMic140StreamTypes;
+  uRecorderMic140StreamTypes, uRecorderProjectFiles;
+
+procedure RecorderMic140ProjectTagLoaded(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
+var
+  lLegacy: TRecorderMic140LegacyTagFields;
+begin
+  if not RecorderTagUsesMic140Settings(ATag) then
+    Exit;
+  RecorderMic140LoadLegacyFieldsFromTagJson(AJson, lLegacy);
+  RecorderMic140MigrateLegacyFieldsToDeviceConfig(ARegistry, ATag, lLegacy);
+end;
 
 { TRecorderMic140SourceConfig }
 
@@ -243,7 +254,7 @@ begin
   if ARegistry = nil then
     Result := nil
   else
-    Result := ARegistry.Mic140DeviceConfigs;
+    Result := ARegistry.SourceSpecificConfigs;
 end;
 
 function FindRecorderMic140SourceConfig(AList: TStrings;
@@ -813,5 +824,9 @@ begin
   FreeAndNil(AResult.SelectedChannels);
   SetLength(AResult.ChannelSettings, 0);
 end;
+
+initialization
+  RecorderRegisterProjectConfigExtension(@SaveMic140DeviceConfigs,
+    @LoadMic140DeviceConfigs, @RecorderMic140ProjectTagLoaded);
 
 end.

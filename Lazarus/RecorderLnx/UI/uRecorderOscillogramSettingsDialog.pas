@@ -2,7 +2,8 @@ unit uRecorderOscillogramSettingsDialog;
 
 {
   Settings dialog for oscillogram components on user mnemonics.
-  Supports one primary tag plus additional synchronized lines from the same device.
+  Presents all synchronized channels as one list; the first channel is stored in
+  the component tag binding for backward compatibility with existing projects.
   Кодировка (2026-06):
   Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
   См. Docs/source-encoding.md.
@@ -132,13 +133,19 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop + 4, 120, 16);
-  lLabel.Caption := 'Основной канал:';
+  lLabel.Caption := 'Канал:';
 
   fTagCombo := TComboBox.Create(Self);
   fTagCombo.Parent := Self;
-  fTagCombo.SetBounds(130, lTop, 410, 23);
+  fTagCombo.SetBounds(130, lTop, 310, 23);
   fTagCombo.Style := csDropDownList;
   fTagCombo.OnChange := @PrimaryTagChange;
+
+  fAddLineButton := TButton.Create(Self);
+  fAddLineButton.Parent := Self;
+  fAddLineButton.SetBounds(450, lTop, 90, 25);
+  fAddLineButton.Caption := 'Добавить';
+  fAddLineButton.OnClick := @AddLineClick;
   Inc(lTop, 32);
 
   lLabel := TLabel.Create(Self);
@@ -168,22 +175,16 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
   lLabel.SetBounds(12, lTop, 320, 16);
-  lLabel.Caption := 'Доп. линии (та же плата/устройство):';
+  lLabel.Caption := 'Добавленные каналы:';
 
   fLineList := TListBox.Create(Self);
   fLineList.Parent := Self;
   fLineList.SetBounds(12, lTop + 20, 320, 120);
   fLineList.OnClick := @LineSelectionChange;
 
-  fAddLineButton := TButton.Create(Self);
-  fAddLineButton.Parent := Self;
-  fAddLineButton.SetBounds(340, lTop + 20, 90, 25);
-  fAddLineButton.Caption := 'Добавить';
-  fAddLineButton.OnClick := @AddLineClick;
-
   fDeleteLineButton := TButton.Create(Self);
   fDeleteLineButton.Parent := Self;
-  fDeleteLineButton.SetBounds(340, lTop + 50, 90, 25);
+  fDeleteLineButton.SetBounds(340, lTop + 20, 90, 25);
   fDeleteLineButton.Caption := 'Удалить';
   fDeleteLineButton.OnClick := @DeleteLineClick;
   Inc(lTop, 150);
@@ -277,8 +278,10 @@ begin
   if fLineTagCombo = nil then
     Exit;
   lPrimary := fTagRegistry.FindByName(fDraft.TagName);
-  if (fSelectedLine >= 0) and (fSelectedLine < fDraft.LineCount) then
-    lCurrent := fDraft.Lines[fSelectedLine].TagName
+  if fSelectedLine = 0 then
+    lCurrent := fDraft.TagName
+  else if (fSelectedLine > 0) and (fSelectedLine <= fDraft.LineCount) then
+    lCurrent := fDraft.Lines[fSelectedLine - 1].TagName
   else
     lCurrent := '';
   fLineTagCombo.Items.BeginUpdate;
@@ -344,8 +347,11 @@ begin
   fUpdating := True;
   try
     fLineList.Items.Clear;
+    if Trim(fDraft.TagName) <> '' then
+      fLineList.Items.Add(OglChartLinePaletteName(0) + ' - ' + fDraft.TagName);
     for I := 0 to fDraft.LineCount - 1 do
-      fLineList.Items.Add(fDraft.Lines[I].Name);
+      fLineList.Items.Add(fDraft.Lines[I].Name + ' - ' +
+        fDraft.Lines[I].TagName);
     if (fSelectedLine >= 0) and (fSelectedLine < fLineList.Items.Count) then
       fLineList.ItemIndex := fSelectedLine
     else if fLineList.Items.Count > 0 then
@@ -366,7 +372,8 @@ var
   lLine: TRecorderTrendLine;
   lEnabled: Boolean;
 begin
-  lEnabled := (AIndex >= 0) and (AIndex < fDraft.LineCount);
+  lEnabled := (AIndex >= 0) and (AIndex <= fDraft.LineCount) and
+    (fDraft.TagName <> '');
   fLineTagCombo.Enabled := lEnabled;
   fLineColorSwatch.Enabled := lEnabled;
   fLineVisibleCheck.Enabled := lEnabled;
@@ -377,9 +384,19 @@ begin
     fLineVisibleCheck.Checked := True;
     Exit;
   end;
-  lLine := fDraft.Lines[AIndex];
-  fLineColorSwatch.LineColor := TColor(lLine.Color);
-  fLineVisibleCheck.Checked := lLine.Visible;
+  if AIndex = 0 then
+  begin
+    fLineColorSwatch.LineColor := OglChartLinePaletteColor(0);
+    fLineColorSwatch.Enabled := False;
+    fLineVisibleCheck.Checked := True;
+    fLineVisibleCheck.Enabled := False;
+  end
+  else
+  begin
+    lLine := fDraft.Lines[AIndex - 1];
+    fLineColorSwatch.LineColor := TColor(lLine.Color);
+    fLineVisibleCheck.Checked := lLine.Visible;
+  end;
   FillLineTagCombo;
 end;
 
@@ -388,9 +405,17 @@ var
   lLine: TRecorderTrendLine;
   lName: string;
 begin
-  if (fSelectedLine < 0) or (fSelectedLine >= fDraft.LineCount) then
+  if (fSelectedLine < 0) or (fSelectedLine > fDraft.LineCount) then
     Exit;
-  lLine := fDraft.Lines[fSelectedLine];
+  if fSelectedLine = 0 then
+  begin
+    if (fLineTagCombo.ItemIndex >= 0) and
+      (fLineTagCombo.Items.Objects[fLineTagCombo.ItemIndex] is TRecorderTag) then
+      RecorderBindComponentTag(fDraft,
+        TRecorderTag(fLineTagCombo.Items.Objects[fLineTagCombo.ItemIndex]));
+    Exit;
+  end;
+  lLine := fDraft.Lines[fSelectedLine - 1];
   if (fLineTagCombo.ItemIndex >= 0) and
     (fLineTagCombo.Items.Objects[fLineTagCombo.ItemIndex] is TRecorderTag) then
     RecorderBindTrendLineTag(lLine, TRecorderTag(fLineTagCombo.Items.Objects[fLineTagCombo.ItemIndex]));
@@ -403,9 +428,6 @@ end;
 
 procedure TRecorderOscillogramSettingsDialog.StoreToComponent;
 begin
-  if (fTagCombo.ItemIndex >= 0) and
-    (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
-    RecorderBindComponentTag(fDraft, TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]));
   fDraft.BindingMode := TRecorderTagBindingMode(fBindingModeCombo.ItemIndex);
   fDraft.TagOffset := StrToIntDef(fTagOffsetEdit.Text, 0);
   StoreLineControls;
@@ -424,7 +446,7 @@ begin
   Result := False;
   if fDraft.TagName = '' then
   begin
-    ShowMessage('Выберите основной канал.');
+    ShowMessage('Добавьте хотя бы один канал.');
     Exit;
   end;
   lCount := 1;
@@ -460,22 +482,56 @@ end;
 procedure TRecorderOscillogramSettingsDialog.AddLineClick(Sender: TObject);
 var
   lLine: TRecorderTrendLine;
+  lTag: TRecorderTag;
+  I: Integer;
 begin
   StoreLineControls;
-  lLine := fDraft.AddLine;
-  if fDraft.TagName <> '' then
-    lLine.TagName := fDraft.TagName;
-  fSelectedLine := fDraft.LineCount - 1;
+  if (fTagCombo.ItemIndex < 0) or
+    not (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
+    Exit;
+  lTag := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]);
+  if SameText(fDraft.TagName, lTag.Name) then
+    Exit;
+  for I := 0 to fDraft.LineCount - 1 do
+    if SameText(fDraft.Lines[I].TagName, lTag.Name) then
+      Exit;
+  if fDraft.TagName = '' then
+  begin
+    RecorderBindComponentTag(fDraft, lTag);
+    fSelectedLine := 0;
+  end
+  else
+  begin
+    lLine := fDraft.AddLine;
+    RecorderBindTrendLineTag(lLine, lTag);
+    fSelectedLine := fDraft.LineCount;
+  end;
   RefreshLineList;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.DeleteLineClick(Sender: TObject);
 begin
-  if (fSelectedLine < 0) or (fSelectedLine >= fDraft.LineCount) then
+  if (fSelectedLine < 0) or (fSelectedLine > fDraft.LineCount) then
     Exit;
-  fDraft.DeleteLine(fSelectedLine);
-  if fSelectedLine >= fDraft.LineCount then
-    fSelectedLine := fDraft.LineCount - 1;
+  if fSelectedLine = 0 then
+  begin
+    if fDraft.LineCount > 0 then
+    begin
+      if fTagRegistry.FindByName(fDraft.Lines[0].TagName) <> nil then
+        RecorderBindComponentTag(fDraft,
+          fTagRegistry.FindByName(fDraft.Lines[0].TagName));
+      fDraft.DeleteLine(0);
+    end
+    else
+    begin
+      fDraft.TagId := 0;
+      fDraft.TagName := '';
+    end;
+  end
+  else
+    fDraft.DeleteLine(fSelectedLine - 1);
+  if fSelectedLine > fDraft.LineCount then
+    fSelectedLine := fDraft.LineCount;
   RefreshLineList;
 end;
 
@@ -494,8 +550,7 @@ begin
   if fUpdating then
     Exit;
   StoreLineControls;
-  if (fSelectedLine >= 0) and (fSelectedLine < fLineList.Items.Count) then
-    fLineList.Items[fSelectedLine] := fDraft.Lines[fSelectedLine].Name;
+  RefreshLineList;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.TagSearchEditChange(Sender: TObject);
@@ -505,10 +560,7 @@ end;
 
 procedure TRecorderOscillogramSettingsDialog.PrimaryTagChange(Sender: TObject);
 begin
-  if (fTagCombo.ItemIndex >= 0) and
-    (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
-    RecorderBindComponentTag(fDraft, TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]));
-  FillLineTagCombo;
+  fAddLineButton.Enabled := fTagCombo.ItemIndex >= 0;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.BindingModeComboChange(Sender: TObject);
@@ -520,8 +572,7 @@ procedure TRecorderOscillogramSettingsDialog.UpdatePrimaryTagVisibility;
 var
   lShowTagChoice: Boolean;
 begin
-  lShowTagChoice := TRecorderTagBindingMode(fBindingModeCombo.ItemIndex) <>
-    rtbmRelativeSelectedTag;
+  lShowTagChoice := True;
   fTagSearchEdit.Visible := lShowTagChoice;
   fTagCombo.Visible := lShowTagChoice;
 end;
