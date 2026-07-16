@@ -20,6 +20,9 @@ unit uMc201ProtocolTypes;
 
 interface
 
+uses
+  Math, uRecorderFrequencyGrids;
+
 type
   TMc201WordArray = array of Word;
 
@@ -52,15 +55,35 @@ type
 
   TMc032DeviceState = (mcsDisconnected, mcsConnected, mcsPlay);
 
+  TMc201ChannelConfig = packed record
+    RangeIndex: Word;
+    Hpf: Word;
+    Lpf: Word;
+    Integrator: Word;
+    IcpOn: Word;
+    IcpHpf: Word;
+    IcpSingle: Word;
+  end;
+
+  TMc201SlotConfig = packed record
+    SampleRateHz: Word;
+    Channels: array[0..3] of TMc201ChannelConfig;
+    Commutator: Word;
+    SubmoduleType: Word;
+  end;
+
   TMc032Config = packed record
     SampleRateHz: Word;
     MaxSlots: Word;
     ReadTimeoutMs: Word;
     Reserved: Word;
+    BackplaneFrequencyHz: LongWord;
+    Slots: array[0..15] of TMc201SlotConfig;
   end;
 
   TMc201ModuleProgramInfo = record
     Slot: Word;
+    SampleRateHz: Double;
     MaskChan: Word;
     FifoSize: Word;
     FreqIndex: Word;
@@ -90,6 +113,11 @@ const
   CMc201CrateMaxStartSlots = 16;
   CMc201DefaultSampleRateHz = 57600;
   CMc201DefaultUpdateMs = 200;
+  CMc201FrequencyGridCount = 16;
+  { MC-201 работает от backplane, так как Module::SelfClk=NOSELF_CLK.
+    mdpEthernet81::GetProperty(PROP_DEV_FREQ_BACKPLANE) возвращает 14,7456 МГц. }
+  CMc201BackplaneFrequencyHz = 14745600.0;
+  CMc201SpecialBackplaneFrequencyHz = 16384000.0;
   { ModuleMC201::SetADSPFifoSize(256): capacity is per channel, not a
     controller-wide budget shared by every module/channel. }
   CMc201AdspFifoSamplesPerChannel = 256;
@@ -155,6 +183,15 @@ const
   CMc201ModuleCmdConfigRaw = Word(58);
   CMc201ModuleCmdConfigDbl = Word(59);
   CMc201ModuleCmdConfigMix = Word(60);
+  { Команды и свойства ICP-субмодуля MM202: include/VTBL.H и Property.h. }
+  CMc201ModuleCmdSetProperty = Word(10);
+  CMc201ModuleCmdGetObject = Word(38);
+  CMc201ModuleCmdSendSubmoduleControl = Word(45);
+  CMc201ObjectTypeIcpSubmodule = Word(4);
+  CMc201PropertyOk = Word(0);
+  CMc201PropertyIcpOn = Word(4124);
+  CMc201PropertyIcpHpf = Word(4125);
+  CMc201PropertySingle = Word(4126);
   CMc201ModuleCmdGetFinalFlag = Word(63);
 
   { Адресные константы MC-201/CC81, используемые ScanMC201::Programming. }
@@ -193,6 +230,11 @@ const
     (128, 129, 2170, 2171, 2176, 2177, 2178, 2179, 2180);
   CMc201AVersionCode = Word(2180);
 
+function RecorderMc201FrequencyGridValue(AIndex: Integer;
+  ABackplaneFrequencyHz: Double = CMc201BackplaneFrequencyHz): Double;
+procedure RecorderMc201RegisterFrequencyGrid(const ASourceId: string;
+  ABackplaneFrequencyHz: Double);
+function RecorderMc201BackplaneFromConfig(const AConfigText: string): Double;
 function Mc201IsKnownVersionCode(AValue: Word): Boolean;
 function Mc201FormatBios(const ABios: TMc201ControllerBios): string;
 function Mc201FormatProgramInfo(const AInfo: TMc201ModuleProgramInfo): string;
@@ -200,7 +242,66 @@ function Mc201FormatProgramInfo(const AInfo: TMc201ModuleProgramInfo): string;
 implementation
 
 uses
-  SysUtils;
+  Classes, SysUtils;
+
+function RecorderMc201FrequencyGridValue(AIndex: Integer;
+  ABackplaneFrequencyHz: Double): Double;
+begin
+  if (AIndex < 0) or (AIndex >= CMc201FrequencyGridCount) then
+    Exit(0.0);
+  { Точная формула ModuleMC201::IndexToFreq из оригинального Recorder. }
+  if ABackplaneFrequencyHz <= 0 then
+    ABackplaneFrequencyHz := CMc201BackplaneFrequencyHz;
+  Result := ABackplaneFrequencyHz / 256.0 / Power(2.0, 7.0) *
+    Power(2.0, AIndex div 2);
+  if (AIndex mod 2) = 0 then
+    Result := Result / 1.5;
+end;
+
+procedure RecorderMc201RegisterFrequencyGrid(const ASourceId: string;
+  ABackplaneFrequencyHz: Double);
+var
+  I: Integer;
+  lGrid: TRecorderFrequencyGrid;
+begin
+  SetLength(lGrid, CMc201FrequencyGridCount);
+  for I := 0 to High(lGrid) do
+    lGrid[I] := RecorderMc201FrequencyGridValue(I, ABackplaneFrequencyHz);
+  RecorderRegisterFrequencyGrid(ASourceId, lGrid);
+end;
+
+function RecorderMc201BackplaneFromConfig(const AConfigText: string): Double;
+var
+  I: Integer;
+  lLine: string;
+  lLines: TStringList;
+begin
+  Result := CMc201BackplaneFrequencyHz;
+  lLines := TStringList.Create;
+  try
+    lLines.Text := AConfigText;
+    for I := 0 to lLines.Count - 1 do
+    begin
+      lLine := Trim(lLines[I]);
+      if Pos('CFG backplane=', lLine) <> 1 then
+        Continue;
+      Result := StrToFloatDef(Copy(lLine, Length('CFG backplane=') + 1,
+        MaxInt), CMc201BackplaneFrequencyHz);
+      if Abs(Result - CMc201SpecialBackplaneFrequencyHz) < 1.0 then
+        Result := CMc201SpecialBackplaneFrequencyHz
+      else
+        Result := CMc201BackplaneFrequencyHz;
+      Exit;
+    end;
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure RegisterMc201FrequencyGrid;
+begin
+  RecorderMc201RegisterFrequencyGrid('MC-032: ', CMc201BackplaneFrequencyHz);
+end;
 
 function Mc201IsKnownVersionCode(AValue: Word): Boolean;
 var
@@ -230,5 +331,8 @@ begin
      IntToHex(AInfo.FinalFlags[0], 4), IntToHex(AInfo.FinalFlags[1], 4),
      IntToHex(AInfo.FinalFlags[2], 4), IntToHex(AInfo.FinalFlags[3], 4)]);
 end;
+
+initialization
+  RegisterMc201FrequencyGrid;
 
 end.

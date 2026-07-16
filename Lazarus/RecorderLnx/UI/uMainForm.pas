@@ -2311,6 +2311,7 @@ var
   I: Integer;
   lChannelCount: Integer;
   lChannelNumber: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
   lFileIndex: Integer;
   lFileName: string;
   lFiles: TStringList;
@@ -2326,6 +2327,7 @@ var
   lMcbusSources: TStringList;
   lPollFrequencyHz: Double;
   lSource: IRecorderDataSource;
+  lSpecificConfigText: string;
   lTag: TRecorderTag;
   lTagNames: TStringList;
   lDataUpdateMs: Cardinal;
@@ -2511,6 +2513,11 @@ begin
       if not TryParseRecorderMc032SourceId(lMcbusSources[I], lMcbusHost,
         lMcbusPort) then Continue;
       lTagNames := TStringList(lMcbusSources.Objects[I]);
+      lSpecificConfigText := '';
+      lConfigured := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+        lMcbusSources[I]);
+      if lConfigured <> nil then
+        lSpecificConfigText := lConfigured.SpecificConfigText;
       lPollFrequencyHz := 57600;
       for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
       begin
@@ -2518,12 +2525,12 @@ begin
         if SameText(lTag.SourceId, lMcbusSources[I]) and
           (lTag.PollFrequencyHz > 0) then
         begin
-          lPollFrequencyHz := lTag.PollFrequencyHz;
-          Break;
+          lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
         end;
       end;
       lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lMcbusHost,
-        lMcbusPort, lPollFrequencyHz, lDataUpdateMs, lTagNames);
+        lMcbusPort, lPollFrequencyHz, lDataUpdateMs, lTagNames,
+        lSpecificConfigText);
       fRecorder.DataSources.AddSource(lSource);
       AddLog(Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
         [lMcbusHost, lMcbusPort, lTagNames.Count]));

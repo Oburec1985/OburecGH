@@ -32,6 +32,7 @@ type
     fHost: string;
     fPort: Word;
     fPollFrequencyHz: Double;
+    fSpecificConfigText: string;
     fTagNames: TStringList;
     fChannelTags: array of TRecorderTag;
     fTimes: array of Double;
@@ -44,7 +45,8 @@ type
     procedure DoTick; override;
   public
     constructor Create(const ASourceId, AHost: string; APort: Word;
-      APollFrequencyHz: Double; AUpdateTimeMs: Cardinal; ATagNames: TStrings);
+      APollFrequencyHz: Double; AUpdateTimeMs: Cardinal; ATagNames: TStrings;
+      const ASpecificConfigText: string = '');
     destructor Destroy; override;
     procedure PrepareHardware; override;
     procedure Start; override;
@@ -81,16 +83,23 @@ end;
 
 constructor TRecorderMcbusDataSource.Create(const ASourceId, AHost: string;
   APort: Word; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
-  ATagNames: TStrings);
+  ATagNames: TStrings; const ASpecificConfigText: string);
 begin
   inherited Create(ASourceId, 'MC-032 / MC-201', AUpdateTimeMs);
   fHost := AHost;
   fPort := APort;
   fPollFrequencyHz := APollFrequencyHz;
+  fSpecificConfigText := ASpecificConfigText;
   fTagNames := TStringList.Create;
   fTagNames.CaseSensitive := False;
   if ATagNames <> nil then fTagNames.Assign(ATagNames);
   fDevice := CreateRecorderMcbusDevice;
+  { Аппаратные настройки принадлежат конфигурации источника. Передаём их
+    драйверу до первого ProgramDevice, а не читаем из UI во время старта. }
+  if (fDevice <> nil) and
+    (fDevice.GetNativeObject is TRecorderMcbusDevice) then
+    TRecorderMcbusDevice(fDevice.GetNativeObject).SetSpecificConfigText(
+      fSpecificConfigText);
 end;
 
 destructor TRecorderMcbusDataSource.Destroy;
@@ -112,8 +121,10 @@ const
   CConnectAttempts = 5;
   CConnectRetryMs = 1000;
 var
-  I: Integer;
+  I, lChannel, lSlot: Integer;
   lTestError: string;
+  lTag: TRecorderTag;
+  lNative: TRecorderMcbusDevice;
 begin
   inherited PrepareHardware;
   if (fDevice.State = rdsProgrammed) or fHardwarePrepareAttempted then
@@ -123,6 +134,18 @@ begin
   fDevice.TrySetDeviceProperty(rdpPort, Integer(fPort));
   fDevice.TrySetDeviceProperty(rdpPollFrequencyHz, fPollFrequencyHz);
   fDevice.TrySetDeviceProperty(rdpUpdateTimeMs, Integer(UpdateTimeMs));
+  if fDevice.GetNativeObject is TRecorderMcbusDevice then
+  begin
+    lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
+    for I := 0 to Registry.TagCount - 1 do
+    begin
+      lTag := Registry.Tags[I];
+      if SameText(lTag.SourceId, SourceId) and
+        AddressSlotChannel(lTag.Address, lSlot, lChannel) and
+        (lTag.PollFrequencyHz > 0) then
+        lNative.SetSlotSampleRate(lSlot, lTag.PollFrequencyHz);
+    end;
+  end;
   RecorderDebugLog(Format('[MCBUS] connect %s:%d fs=%.0f tags=%d',
     [fHost, fPort, fPollFrequencyHz, fTagNames.Count]));
   { TEST не бросает исключение. Если контроллер недоступен, не вызываем
@@ -287,21 +310,32 @@ end;
 procedure TRecorderMcbusDataSource.PublishBlock(
   const ABlock: TRecorderAcquisitionBlock);
 var
-  I, J: Integer;
+  I, J, lCount: Integer;
+  lFirstTime, lSampleRate: Double;
 begin
   if (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then Exit;
   if Length(fTimes) < ABlock.SampleCount then
     raise ERecorderDataSourceError.CreateFmt(
       'MCbus time buffer too small: need=%d capacity=%d',
       [ABlock.SampleCount, Length(fTimes)]);
-  for J := 0 to ABlock.SampleCount - 1 do
-    fTimes[J] := ABlock.FirstTimeSec + J / ABlock.SampleRateHz;
   for I := 0 to Min(High(fChannelTags), High(ABlock.Values)) do
-    if (fChannelTags[I] <> nil) and
-      (Length(ABlock.Values[I]) >= ABlock.SampleCount) then
+    if fChannelTags[I] <> nil then
     begin
+      lCount := ABlock.SampleCount;
+      lFirstTime := ABlock.FirstTimeSec;
+      lSampleRate := ABlock.SampleRateHz;
+      if I <= High(ABlock.ChannelSampleCounts) then
+        lCount := ABlock.ChannelSampleCounts[I];
+      if I <= High(ABlock.ChannelFirstTimesSec) then
+        lFirstTime := ABlock.ChannelFirstTimesSec[I];
+      if I <= High(ABlock.ChannelSampleRatesHz) then
+        lSampleRate := ABlock.ChannelSampleRatesHz[I];
+      if (lCount <= 0) or (lSampleRate <= 0) or
+        (Length(ABlock.Values[I]) < lCount) then Continue;
+      for J := 0 to lCount - 1 do
+        fTimes[J] := lFirstTime + J / lSampleRate;
       Registry.PublishBlock(fChannelTags[I].Name, fTimes, ABlock.Values[I],
-        ABlock.SampleCount, True);
+        lCount, True);
     end;
 end;
 

@@ -292,8 +292,6 @@ begin
           // Вычисляем радиус примагничивания 10 пикселей
           lMouseWorldXPlus5 := lRenderer.PixelToXValue(fActivePage, nil, X + 10, lContentRect.Left, lContentRect.Right);
           lDeltaXWorld := Abs(lMouseWorldXPlus5 - lMouseWorldX);
-          lMouseWorldY := lRenderer.PixelToAxisValue(nil, Y, lContentRect.Bottom, lContentRect.Top);
-
           // Определяем активный объект по правилам приоритета
           lTrend := nil;
           if Assigned(lRenderer.SelectedObject) then
@@ -340,10 +338,18 @@ begin
           end;
           if Assigned(lTrend) then
           begin
+            lAxis := nil;
+            if Assigned(lTrend.Parent) and (lTrend.Parent is TChartAxis) then
+              lAxis := TChartAxis(lTrend.Parent);
+            lMouseWorldY := lRenderer.PixelToAxisValue(lAxis, Y,
+              lContentRect.Bottom, lContentRect.Top);
             if ssCtrl in Shift then
               lSnappedX := GetSnappedX(lTrend, lMouseWorldX, lMouseWorldY, lDeltaXWorld, 'min')
             else
-              lSnappedX := GetSnappedX(lTrend, lMouseWorldX, lMouseWorldY, lDeltaXWorld, 'max');
+              { Обычный Shift выбирает ближайший к указателю локальный минимум
+                или максимум выбранной линии. Ctrl+Shift оставляет явный минимум. }
+              lSnappedX := GetSnappedX(lTrend, lMouseWorldX, lMouseWorldY,
+                lDeltaXWorld, 'nearest');
             lMouseWorldX := lSnappedX;
           end;
         end;

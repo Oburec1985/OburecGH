@@ -29,7 +29,8 @@ uses
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
   uRecorderMic185Calibration,
   uRecorderCommandImages, uRecorderMc032SettingsDialog,
-  uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices;
+  uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices,
+  uRecorderFrequencyGrids;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
@@ -235,6 +236,43 @@ type
 function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
 
 implementation
+
+function RecorderMc201SlotFromAddress(const AAddress: string;
+  out ASlot: Integer): Boolean;
+var
+  lParts: TStringList;
+begin
+  Result := False;
+  ASlot := 0;
+  lParts := TStringList.Create;
+  try
+    lParts.StrictDelimiter := True;
+    lParts.Delimiter := '-';
+    lParts.DelimitedText := Trim(AAddress);
+    if lParts.Count < 2 then Exit;
+    Result := TryStrToInt(lParts[lParts.Count - 2], ASlot) and (ASlot > 0);
+  finally
+    lParts.Free;
+  end;
+end;
+
+procedure RecorderMc201ApplySlotFrequency(ARegistry: TRecorderTagRegistry;
+  const ASourceId, AAddress: string; AFrequencyHz: Double);
+var
+  I, lSlot, lTagSlot: Integer;
+  lTag: TRecorderTag;
+begin
+  if (ARegistry = nil) or
+    not RecorderMc201SlotFromAddress(AAddress, lSlot) then Exit;
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(lTag.SourceId, ASourceId) and
+      RecorderMc201SlotFromAddress(lTag.Address, lTagSlot) and
+      (lTagSlot = lSlot) then
+      lTag.PollFrequencyHz := AFrequencyHz;
+  end;
+end;
 
 {$R *.lfm}
 
@@ -1265,6 +1303,7 @@ var
   lSourceId: string;
   lSourceActive: Boolean;
   lTagTemp: TRecorderTag;
+  lFrequencyGrid: TRecorderFrequencyGrid;
 begin
   if fTags.Count = 1 then
   begin
@@ -1319,9 +1358,10 @@ begin
     fDescriptionEdit.Text := '';
 
   fFrequencyCombo.Items.Clear;
-  if AllSourceId(lSourceId) and (Pos('MIC-140:', lSourceId) = 1) then
-    for I := 0 to RecorderMic140FrequencyCount - 1 do
-      fFrequencyCombo.Items.Add(FormatFloat('0.######', RecorderMic140Frequency(I)));
+  if AllSourceId(lSourceId) and
+    RecorderFrequencyGridForSource(lSourceId, lFrequencyGrid) then
+    for I := 0 to High(lFrequencyGrid) do
+      fFrequencyCombo.Items.Add(FormatFloat('0.######', lFrequencyGrid[I]));
 
   if AllFloat(0, lFloat) and (lFloat > 0) then
     fFrequencyCombo.Text := FormatFloat('0.######', lFloat)
@@ -1495,6 +1535,9 @@ begin
         raise ERecorderTagError.Create('Invalid poll frequency');
       if Pos('MIC-140:', lTag.SourceId) = 1 then
         RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat)
+      else if Pos('MC-032:', lTag.SourceId) = 1 then
+        RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
+          lTag.Address, lFloat)
       else
         lTag.PollFrequencyHz := lFloat;
     end;

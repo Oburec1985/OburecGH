@@ -483,6 +483,8 @@ var
   lSerial, lVersion: string;
   lSignal: TMeraSignalInfo;
 begin
+  RecorderMc201RegisterFrequencyGrid(ASourceId,
+    RecorderMc201BackplaneFromConfig(AModulesText));
   RemoveSourceSignals(ASourceId);
   if APollFrequencyHz <= 0 then
     APollFrequencyHz := CMc201DefaultSampleRateHz;

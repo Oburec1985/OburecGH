@@ -203,6 +203,7 @@ begin
   fTimeoutMs := CMc201DefaultTimeoutMs;
   fState := mcsDisconnected;
   fConfig.SampleRateHz := CMc201DefaultSampleRateHz;
+  fConfig.BackplaneFrequencyHz := Round(CMc201BackplaneFrequencyHz);
   fConfig.MaxSlots := CMc201DefaultMaxSlots;
   fConfig.ReadTimeoutMs := CMc201DefaultTimeoutMs;
 end;
@@ -215,10 +216,8 @@ end;
 
 function TMc032Device.FreqIndexToFreq(AIndex: Word): Double;
 begin
-  Result := 16384000.0 / 256.0 / Power(2.0, 7.0) *
-    Power(2.0, AIndex div 2);
-  if (AIndex mod 2) = 0 then
-    Result := Result / 1.5;
+  Result := RecorderMc201FrequencyGridValue(AIndex,
+    fConfig.BackplaneFrequencyHz);
 end;
 
 function TMc032Device.FreqToFreqCode(AFreqHz: Double): Word;
@@ -290,11 +289,17 @@ var
   lGridCode: Word;
   lInfo: TMc201SlotInfo;
   lInternalDivider: Word;
+  lAmplif: Word;
+  lAtt: Boolean;
+  lOffset: Integer;
+  lIsOdd: Integer;
   lModuleCount: Integer;
   lPage: Word;
   lReply: TMc201WordArray;
   lScanAddr: Word;
   lScanPage: Word;
+  lSubmoduleHandle: Word;
+  lSlotSampleRate: Double;
   lWords: TMc201WordArray;
 
   function ModuleTimeoutCycle(ATimeoutSec: Double): Word;
@@ -327,6 +332,26 @@ var
     if not Result then
       AErrorMessage := Format('%s failed slot=%d: %s',
         [AName, ASlot, AErrorMessage]);
+  end;
+
+  function SetMm202Property(ASlot, AChannel, AProperty,
+    AValue: Word): Boolean;
+  begin
+    SetLength(lArgs, 4);
+    lArgs[0] := AProperty;
+    lArgs[1] := AChannel;
+    lArgs[2] := AValue;
+    lArgs[3] := 0;
+    Result := CallMod(ASlot, CMc201ModuleCmdSetProperty, lArgs, 4, lReply,
+      Format('MM202 SET_PROPERTY %d ch%d=%d',
+        [AProperty, AChannel, AValue]));
+    if Result and ((Length(lReply) = 0) or
+      (lReply[0] <> CMc201PropertyOk)) then
+    begin
+      AErrorMessage := Format('MM202 property %d rejected slot=%d channel=%d',
+        [AProperty, ASlot, AChannel]);
+      Result := False;
+    end;
   end;
 
 begin
@@ -367,14 +392,6 @@ begin
     Exit;
 
   lFifoPerChan := CMc201AdspFifoSamplesPerChannel;
-  lGridCode := FreqToGridCode(AConfig.SampleRateHz);
-  lFreqCode := FreqToFreqCode(AConfig.SampleRateHz);
-  lInternalDivider := Trunc(lFifoPerChan * 5.0 / 100.0 /
-    (AConfig.SampleRateHz *
-     (CMc201Cc81TimerScale * CMc201Cc81TimerPeriod / 32000000.0)));
-  if lInternalDivider < 1 then
-    lInternalDivider := 1;
-
   SetLength(fProgramInfo, lModuleCount);
   C := 0;
   for I := 0 to High(fLastModules) do
@@ -383,10 +400,22 @@ begin
     if not lInfo.IsMc201 then
       Continue;
 
+    lSlotSampleRate := AConfig.Slots[lInfo.Slot].SampleRateHz;
+    if lSlotSampleRate <= 0 then
+      lSlotSampleRate := AConfig.SampleRateHz;
+    lGridCode := FreqToGridCode(lSlotSampleRate);
+    lFreqCode := FreqToFreqCode(lSlotSampleRate);
+    lInternalDivider := Trunc(lFifoPerChan * 5.0 / 100.0 /
+      (lSlotSampleRate *
+       (CMc201Cc81TimerScale * CMc201Cc81TimerPeriod / 32000000.0)));
+    if lInternalDivider < 1 then
+      lInternalDivider := 1;
+
     fProgramInfo[C].Slot := lInfo.Slot;
+    fProgramInfo[C].SampleRateHz := lSlotSampleRate;
     fProgramInfo[C].MaskChan := $000F;
     fProgramInfo[C].FifoSize := lFifoPerChan;
-    fProgramInfo[C].FreqIndex := FreqToIndex(AConfig.SampleRateHz);
+    fProgramInfo[C].FreqIndex := FreqToIndex(lSlotSampleRate);
     fProgramInfo[C].GridCode := lGridCode;
     fProgramInfo[C].DividerCode := lFreqCode or (lFreqCode shl 4);
 
@@ -436,17 +465,90 @@ begin
         Exit;
     end;
 
+    { MM202 программируется отдельными BIOS-командами, а не битами основного
+      регистра MC-201. Последовательность повторяет CChannelMC201::ProgrammingMm202. }
+    if AConfig.Slots[lInfo.Slot].SubmoduleType <> 0 then
+      for J := 0 to CMc201MaxModuleChannels - 1 do
+      begin
+        if not SetMm202Property(lInfo.Slot, J, CMc201PropertyIcpOn,
+          AConfig.Slots[lInfo.Slot].Channels[J].IcpOn) then Exit;
+        if not SetMm202Property(lInfo.Slot, J, CMc201PropertyIcpHpf,
+          AConfig.Slots[lInfo.Slot].Channels[J].IcpHpf) then Exit;
+        if not SetMm202Property(lInfo.Slot, J, CMc201PropertySingle,
+          AConfig.Slots[lInfo.Slot].Channels[J].IcpSingle) then Exit;
+      end;
+
     SetLength(lWords, 33);
     lWords[0] := 32;
     for J := 0 to 31 do
       lWords[J + 1] := 0;
-    lWords[6] := 1;
-    lWords[14] := 1;
-    lWords[22] := 1;
-    lWords[30] := 1;
+    { ModuleMC201::SetRange преобразует индекс диапазона в Amplif/Att, после
+      чего SetControlRegV5 раскладывает их по 32-разрядному регистру. Ранее
+      здесь был постоянный шаблон 2 В, поэтому настройки UI не работали. }
+    if lInfo.VersionCode = 2180 then
+    begin
+      lWords[32] := Ord((AConfig.Slots[lInfo.Slot].Commutator and 1) <> 0);
+      lWords[31] := Ord((AConfig.Slots[lInfo.Slot].Commutator and 2) <> 0);
+      for J := 0 to CMc201MaxModuleChannels - 1 do
+      begin
+        lAmplif := AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex div 2;
+        lAtt := (AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex mod 2) = 0;
+        lOffset := (3 - J) * 8;
+        lWords[lOffset + 1] := Ord((lAmplif and 2) <> 0);
+        lWords[lOffset + 2] := Ord((lAmplif and 1) <> 0);
+        lWords[lOffset + 3] := AConfig.Slots[lInfo.Slot].Channels[J].Integrator;
+        lWords[lOffset + 4] := AConfig.Slots[lInfo.Slot].Channels[J].Lpf;
+        lWords[lOffset + 5] := AConfig.Slots[lInfo.Slot].Channels[J].Hpf;
+        lWords[lOffset + 6] := Ord(not lAtt);
+      end;
+    end
+    else
+    begin
+      lWords[21] := Ord((AConfig.Slots[lInfo.Slot].Commutator and 1) <> 0);
+      lWords[22] := Ord((AConfig.Slots[lInfo.Slot].Commutator and 2) <> 0);
+      for J := 0 to CMc201MaxModuleChannels - 1 do
+      begin
+        lAmplif := AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex div 2;
+        lAtt := (AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex mod 2) = 0;
+        lOffset := (J div 2) * 8;
+        lIsOdd := J mod 2;
+        lWords[lOffset + lIsOdd * 2 + 1] := Ord((lAmplif and 1) <> 0);
+        lWords[lOffset + lIsOdd * 2 + 2] := Ord((lAmplif and 2) <> 0);
+        lWords[lOffset + lIsOdd + 5] := AConfig.Slots[lInfo.Slot].Channels[J].Hpf;
+        lWords[lOffset + lIsOdd + 7] := Ord(lAtt);
+        lWords[17 + J] := AConfig.Slots[lInfo.Slot].Channels[J].Integrator;
+      end;
+    end;
     if not CallMod(lInfo.Slot, CMc201ModuleCmdSendControlRegister, lWords, 0,
       lReply, 'SEND_2_CONT_REG_CC') then
       Exit;
+
+    { После установки свойств и основного регистра оригинал получает HANDLE
+      MM202 и одной командой применяет его накопленное управляющее слово. }
+    if AConfig.Slots[lInfo.Slot].SubmoduleType <> 0 then
+    begin
+      SetLength(lArgs, 1);
+      lArgs[0] := CMc201ObjectTypeIcpSubmodule;
+      if not CallMod(lInfo.Slot, CMc201ModuleCmdGetObject, lArgs, 2, lReply,
+        'MM202 GET_OBJECT') then Exit;
+      if (Length(lReply) < 2) or (lReply[0] <> CMc201PropertyOk) then
+      begin
+        AErrorMessage := Format('MM202 is not available in slot %d',
+          [lInfo.Slot]);
+        Exit;
+      end;
+      lSubmoduleHandle := lReply[1];
+      SetLength(lArgs, 1);
+      lArgs[0] := lSubmoduleHandle;
+      if not CallMod(lInfo.Slot, CMc201ModuleCmdSendSubmoduleControl, lArgs,
+        2, lReply, 'MM202 SEND_CONTROL_WORD') then Exit;
+      if (Length(lReply) < 1) or (lReply[0] <> CMc201PropertyOk) then
+      begin
+        AErrorMessage := Format('MM202 control word failed in slot %d',
+          [lInfo.Slot]);
+        Exit;
+      end;
+    end;
 
     SetLength(lArgs, 1);
     lArgs[0] := lGridCode;

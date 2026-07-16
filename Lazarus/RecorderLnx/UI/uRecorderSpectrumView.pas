@@ -50,6 +50,8 @@ type
     procedure ChartCursorChanged(Sender: TObject; ACursor: TObject);
     procedure LegendPrepareCanvas(Sender: TObject; ACol, ARow: Integer;
       AState: TGridDrawState);
+    procedure LegendSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
     procedure ClearSeries;
     procedure ClearHeader;
     procedure ClearBandObjects;
@@ -148,6 +150,18 @@ begin
     TStringGrid(Sender).Canvas.Font.Color := GetSpectrumColor(ARow - 1);
     TStringGrid(Sender).Canvas.Font.Style := [];
   end;
+end;
+
+procedure TRecorderSpectrumView.LegendSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  CanSelect := (ARow > 0) and (ARow <= fSeriesList.Count);
+  if not CanSelect or (fChart = nil) then
+    Exit;
+  { Выбор строки легенды является выбором конкретного тренда, а не только его
+    общей оси. Этим же выбором пользуются Shift-привязка и одномерный курсор. }
+  fChart.SelectedObject := cBuffTrend1d(fSeriesList[ARow - 1]);
+  fChart.Invalidate;
 end;
 
 function TRecorderSpectrumView.GetSpectrumColor(AIndex: Integer): TColor;
@@ -276,6 +290,7 @@ begin
       goFixedHorzLine, goVertLine, goHorzLine, goColSizing] -
       [goEditing, goRangeSelect];
     fLegendGrid.OnPrepareCanvas := @LegendPrepareCanvas;
+    fLegendGrid.OnSelectCell := @LegendSelectCell;
   end;
 end;
 

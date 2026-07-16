@@ -17,6 +17,11 @@ type
     SampleCount: Integer;
     FirstTimeSec: Double;
     SampleRateHz: Double;
+    { Необязательные поканальные параметры. Нужны устройствам, у которых
+      частота задаётся на модуль/слот. Пустые массивы означают общие поля выше. }
+    ChannelSampleCounts: array of Integer;
+    ChannelFirstTimesSec: array of Double;
+    ChannelSampleRatesHz: array of Double;
     { Values[channel][sample] — коды или физические величины до тарировки тега. }
     Values: array of array of Double;
   end;
@@ -44,6 +49,9 @@ begin
   ADest.SampleCount := ASource.SampleCount;
   ADest.FirstTimeSec := ASource.FirstTimeSec;
   ADest.SampleRateHz := ASource.SampleRateHz;
+  ADest.ChannelSampleCounts := Copy(ASource.ChannelSampleCounts);
+  ADest.ChannelFirstTimesSec := Copy(ASource.ChannelFirstTimesSec);
+  ADest.ChannelSampleRatesHz := Copy(ASource.ChannelSampleRatesHz);
 
   SetLength(ADest.Values, ASource.ChannelCount);
   lSampleCount := ASource.SampleCount;
@@ -63,6 +71,9 @@ begin
   ABlock.FirstTimeSec := 0;
   ABlock.SampleRateHz := 0;
   SetLength(ABlock.Values, 0);
+  SetLength(ABlock.ChannelSampleCounts, 0);
+  SetLength(ABlock.ChannelFirstTimesSec, 0);
+  SetLength(ABlock.ChannelSampleRatesHz, 0);
 end;
 
 end.

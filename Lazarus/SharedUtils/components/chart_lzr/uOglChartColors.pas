@@ -28,16 +28,18 @@ procedure OglChartLineAppearance(AChartLineIndex: Integer; out AName: string;
 implementation
 
 const
-  { Исходный ColorArray из uCommonTypes проекта plgControlCyclogram.
-    Значения point3 RGB переведены в системный BGR-формат TColor. }
+  { Палитра основана на ColorArray из uCommonTypes проекта plgControlCyclogram.
+    Значения point3 RGB переведены в системный BGR-формат TColor.
+    Второй цвет намеренно затемнён до травяного зелёного. Цвет с индексом 5
+    задан пользователем как RGB(0, 128, 128). }
   CLineColors: array[0..OGL_CHART_LINE_COLOR_COUNT - 1] of TColor = (
-    $00FF0000, $0000FF00, $000000FF, $00168EDA, $00C50040, $0001EF5A,
+    $00FF0000, $00228B22, $000000FF, $00168EDA, $00C50040, $00808000,
     $009E544C, $00C710E2, $00E8BA7D, $007AE0C4, $00577A3B, $002E1C85,
     $009640E8, $005E701A, $005440CC, $002100E3, $00A67A00, $001FA89E
   );
 
   CLineColorNames: array[0..OGL_CHART_LINE_COLOR_COUNT - 1] of string = (
-    'Синий', 'Зелёный', 'Красный', 'Оранжевый', 'Пурпурный', 'Кислотный',
+    'Синий', 'Травяной зелёный', 'Красный', 'Оранжевый', 'Пурпурный', 'Бирюзовый',
     'Фиолетовый', 'Сиреневый', 'Aero', 'Alien Armpit', 'Amazon',
     'Antique Ruby', 'Barbie Pink', 'Bittersweet', 'Brick Red', 'Cadmium Red',
     'Cerulean', 'Citron'

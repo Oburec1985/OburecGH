@@ -56,6 +56,9 @@ function Mic140LegacyCheckCountAver(ACountChans: Word; APeriodSec,
 
 implementation
 
+uses
+  uRecorderFrequencyGrids;
+
 const
   CMic140Frequencies: array[0..CMic140FrequencyCount - 1] of Double =
     (1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0);
@@ -314,5 +317,8 @@ begin
   Result := Mic140LegacyTimingForFrequency(AFrequencyHz,
     MIC140DefaultChannelCount);
 end;
+
+initialization
+  RecorderRegisterFrequencyGrid('MIC-140:', CMic140Frequencies);
 
 end.

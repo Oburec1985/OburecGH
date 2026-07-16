@@ -46,7 +46,12 @@ type
     fSubmoduleCombo: TComboBox;
     fVersionEdit: TEdit;
   private
+    fUpdating: Boolean;
     procedure FillChoices;
+    procedure IcpClick(Sender: TObject);
+    procedure SubmoduleChange(Sender: TObject);
+    procedure SyncIcpControls(AResetUnchecked: Boolean);
+    procedure SyncSubmoduleControls;
     procedure LoadSettings(const AConfigText: string; ASlot: Integer);
     procedure SaveSettings(var AConfigText: string; ASlot: Integer);
   public
@@ -121,22 +126,87 @@ begin
   lInputs[2] := fInput3; lInputs[3] := fInput4;
   for I := 0 to 3 do
   begin
+    { Порядок обязан совпадать с таблицей ranges_MC201 из оригинального
+      Mc201.cpp: индекс элемента является аппаратным кодом диапазона. }
+    lRanges[I].Items.Add('8.5 В');
     lRanges[I].Items.Add('2 В');
     lRanges[I].Items.Add('1 В');
     lRanges[I].Items.Add('0.2 В');
     lRanges[I].Items.Add('0.1 В');
-    lRanges[I].ItemIndex := 0;
+    lRanges[I].Items.Add('0.02 В');
+    { Исходное состояние MC-201 соответствует диапазону 2 В (индекс 1). }
+    lRanges[I].ItemIndex := 1;
     lInputs[I].Items.Add('Дифференциальный');
     lInputs[I].Items.Add('Однопроводный');
     lInputs[I].ItemIndex := 0;
   end;
+  fIcp1.OnClick := @IcpClick;
+  fIcp2.OnClick := @IcpClick;
+  fIcp3.OnClick := @IcpClick;
+  fIcp4.OnClick := @IcpClick;
   fSubmoduleCombo.Items.Add('Отсутствует');
   fSubmoduleCombo.Items.Add('Выбромодуль 4 канала');
   fSubmoduleCombo.ItemIndex := 1;
+  fSubmoduleCombo.OnChange := @SubmoduleChange;
   fRevisionCombo.Items.Add('v5.0');
   fRevisionCombo.Items.Add('Другая');
   fRevisionCombo.ItemIndex := 0;
   fCommutationGroup.ItemIndex := 0;
+  SyncSubmoduleControls;
+end;
+
+procedure TRecorderMc201SlotSettingsDialog.SyncIcpControls(
+  AResetUnchecked: Boolean);
+var
+  I: Integer;
+  lHasMm202: Boolean;
+  lIcps: array[0..3] of TCheckBox;
+  lInputs: array[0..3] of TComboBox;
+begin
+  lIcps[0] := fIcp1; lIcps[1] := fIcp2;
+  lIcps[2] := fIcp3; lIcps[3] := fIcp4;
+  lInputs[0] := fInput1; lInputs[1] := fInput2;
+  lInputs[2] := fInput3; lInputs[3] := fInput4;
+  lHasMm202 := fSubmoduleCombo.ItemIndex = 1;
+  for I := 0 to 3 do
+  begin
+    if lIcps[I].Checked then
+      lInputs[I].ItemIndex := 1
+    else if AResetUnchecked then
+      lInputs[I].ItemIndex := 0;
+    lInputs[I].Enabled := lHasMm202 and (not lIcps[I].Checked);
+  end;
+end;
+
+procedure TRecorderMc201SlotSettingsDialog.SyncSubmoduleControls;
+var
+  I: Integer;
+  lEnabled: Boolean;
+  lIcps: array[0..3] of TCheckBox;
+begin
+  lEnabled := fSubmoduleCombo.ItemIndex = 1;
+  fRevisionCombo.Enabled := lEnabled;
+  lIcps[0] := fIcp1; lIcps[1] := fIcp2;
+  lIcps[2] := fIcp3; lIcps[3] := fIcp4;
+  for I := 0 to 3 do
+    lIcps[I].Enabled := lEnabled;
+  SyncIcpControls(False);
+end;
+
+procedure TRecorderMc201SlotSettingsDialog.IcpClick(Sender: TObject);
+begin
+  if fUpdating then
+    Exit;
+  { Точное поведение Cmc201pp::OnIcpCheck: ICP всегда означает
+    недифференциальный вход; снятие галочки сбрасывает режим в дифференциальный. }
+  SyncIcpControls(True);
+end;
+
+procedure TRecorderMc201SlotSettingsDialog.SubmoduleChange(Sender: TObject);
+begin
+  if fUpdating then
+    Exit;
+  SyncSubmoduleControls;
 end;
 
 procedure TRecorderMc201SlotSettingsDialog.LoadSettings(
@@ -149,6 +219,7 @@ var
   lChecks: array[0..11] of TCheckBox;
   lCombos: array[0..7] of TComboBox;
 begin
+  fUpdating := True;
   lPrefix := 'CFG slot=' + IntToStr(ASlot) + ';';
   lCombos[0] := fRange1; lCombos[1] := fRange2;
   lCombos[2] := fRange3; lCombos[3] := fRange4;
@@ -179,7 +250,11 @@ begin
   finally
     lFields.Free;
     lLines.Free;
+    fUpdating := False;
   end;
+  { OnInitDialog оригинала принудительно показывает недифференциальный режим
+    для уже сохранённого ICP и запрещает ручное изменение combo. }
+  SyncSubmoduleControls;
 end;
 
 procedure TRecorderMc201SlotSettingsDialog.SaveSettings(

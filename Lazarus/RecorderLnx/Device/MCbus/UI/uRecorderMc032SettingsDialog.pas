@@ -31,7 +31,7 @@ function ShowRecorderMc032SettingsDialog(AOwner: TComponent;
 implementation
 
 uses
-  StrUtils;
+  Math, StrUtils;
 
 const
   CMc032SourcePrefix = 'MC-032: ';
@@ -42,12 +42,16 @@ type
   private
     fHostEdit: TEdit;
     fPortEdit: TSpinEdit;
+    fClockCombo: TComboBox;
     fModulesMemo: TMemo;
     procedure AutoSearchClick(Sender: TObject);
     procedure TestClick(Sender: TObject);
     procedure ModulesClick(Sender: TObject);
     function ConfigureDevice(ADevice: TMc032Device): Boolean;
     procedure ShowModules(const AModules: TMc201SlotInfoArray);
+    function BackplaneFrequencyHz: Double;
+    procedure LoadBackplaneFrequency(const AConfigText: string);
+    procedure StoreBackplaneFrequency;
   public
     constructor Create(AOwner: TComponent); override;
     property HostEdit: TEdit read fHostEdit;
@@ -117,7 +121,7 @@ begin
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 540;
-  ClientHeight := 330;
+  ClientHeight := 370;
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
@@ -139,41 +143,82 @@ begin
   fPortEdit.MaxValue := 65535;
   fPortEdit.Value := CMc201DefaultPort;
 
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(16, 56, 130, 20);
+  lLabel.Caption := 'Частота backplane:';
+  fClockCombo := TComboBox.Create(Self);
+  fClockCombo.Parent := Self;
+  fClockCombo.SetBounds(150, 50, 374, 26);
+  fClockCombo.Style := csDropDownList;
+  fClockCombo.Items.Add('14,7456 МГц — стандарт, до 57,6 кГц');
+  fClockCombo.Items.Add('16,384 МГц — специсполнение, до 64 кГц');
+  fClockCombo.ItemIndex := 0;
+
   lButton := TButton.Create(Self);
   lButton.Parent := Self;
-  lButton.SetBounds(16, 52, 150, 30);
+  lButton.SetBounds(16, 88, 150, 30);
   lButton.Caption := 'Автопоиск';
   lButton.OnClick := @AutoSearchClick;
   lButton := TButton.Create(Self);
   lButton.Parent := Self;
-  lButton.SetBounds(176, 52, 150, 30);
+  lButton.SetBounds(176, 88, 150, 30);
   lButton.Caption := 'Проверить TEST';
   lButton.OnClick := @TestClick;
   lButton := TButton.Create(Self);
   lButton.Parent := Self;
-  lButton.SetBounds(336, 52, 188, 30);
+  lButton.SetBounds(336, 88, 188, 30);
   lButton.Caption := 'Найти модули по слотам';
   lButton.OnClick := @ModulesClick;
 
   fModulesMemo := TMemo.Create(Self);
   fModulesMemo.Parent := Self;
-  fModulesMemo.SetBounds(16, 94, 508, 180);
+  fModulesMemo.SetBounds(16, 130, 508, 180);
   fModulesMemo.ReadOnly := True;
   fModulesMemo.ScrollBars := ssAutoVertical;
   fModulesMemo.Lines.Add('Сначала выполните TEST или поиск модулей.');
 
   lButton := TButton.Create(Self);
   lButton.Parent := Self;
-  lButton.SetBounds(350, 286, 82, 30);
+  lButton.SetBounds(350, 326, 82, 30);
   lButton.Caption := 'OK';
   lButton.Default := True;
   lButton.ModalResult := mrOk;
   lButton := TButton.Create(Self);
   lButton.Parent := Self;
-  lButton.SetBounds(442, 286, 82, 30);
+  lButton.SetBounds(442, 326, 82, 30);
   lButton.Caption := 'Отмена';
   lButton.Cancel := True;
   lButton.ModalResult := mrCancel;
+end;
+
+function TRecorderMc032SettingsForm.BackplaneFrequencyHz: Double;
+begin
+  if fClockCombo.ItemIndex = 1 then
+    Result := CMc201SpecialBackplaneFrequencyHz
+  else
+    Result := CMc201BackplaneFrequencyHz;
+end;
+
+procedure TRecorderMc032SettingsForm.LoadBackplaneFrequency(
+  const AConfigText: string);
+begin
+  if Abs(RecorderMc201BackplaneFromConfig(AConfigText) -
+    CMc201SpecialBackplaneFrequencyHz) < 1.0 then
+    fClockCombo.ItemIndex := 1
+  else
+    fClockCombo.ItemIndex := 0;
+end;
+
+procedure TRecorderMc032SettingsForm.StoreBackplaneFrequency;
+var
+  I: Integer;
+begin
+  for I := fModulesMemo.Lines.Count - 1 downto 0 do
+    if Pos('CFG backplane=', Trim(fModulesMemo.Lines[I])) = 1 then
+      fModulesMemo.Lines.Delete(I);
+  fModulesMemo.Lines.Insert(0, 'CFG backplane=' +
+    IntToStr(Round(BackplaneFrequencyHz)));
 end;
 
 function TRecorderMc032SettingsForm.ConfigureDevice(
@@ -254,7 +299,7 @@ begin
   lSlotSettings := TStringList.Create;
   try
     for I := 0 to fModulesMemo.Lines.Count - 1 do
-      if Pos('CFG slot=', Trim(fModulesMemo.Lines[I])) = 1 then
+      if Pos('CFG ', Trim(fModulesMemo.Lines[I])) = 1 then
         lSlotSettings.Add(Trim(fModulesMemo.Lines[I]));
     fModulesMemo.Clear;
     if Length(AModules) = 0 then
@@ -326,7 +371,9 @@ begin
     end;
     if Trim(AInitialConfigText) <> '' then
       lForm.ModulesMemo.Lines.Text := AInitialConfigText;
+    lForm.LoadBackplaneFrequency(AInitialConfigText);
     if lForm.ShowModal <> mrOk then Exit;
+    lForm.StoreBackplaneFrequency;
     lDevice := TMc032Device.Create;
     try
       if not lForm.ConfigureDevice(lDevice) then Exit;
@@ -342,6 +389,8 @@ begin
     ANewSourceId := RecorderMc032SourceId(lForm.HostEdit.Text,
       Word(lForm.PortEdit.Value));
     AModulesText := lForm.ModulesMemo.Lines.Text;
+    RecorderMc201RegisterFrequencyGrid(ANewSourceId,
+      lForm.BackplaneFrequencyHz);
     Result := True;
   finally
     lForm.Free;
