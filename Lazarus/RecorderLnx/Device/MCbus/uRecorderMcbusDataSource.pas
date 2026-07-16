@@ -25,7 +25,8 @@ uses
   uRecorderAcquisitionTypes;
 
 type
-  TRecorderMcbusDataSource = class(TRecorderDataSourceBase)
+  TRecorderMcbusDataSource = class(TRecorderDataSourceBase,
+    IRecorderZeroBalanceSupport)
   private
     fDevice: IRecorderDevice;
     fHost: string;
@@ -48,6 +49,8 @@ type
     procedure PrepareHardware; override;
     procedure Start; override;
     procedure Stop; override;
+    function ZeroBalanceTags(AOwner: TComponent; ATags: TList;
+      AMessages: TStrings): Boolean;
   end;
 
 implementation
@@ -235,6 +238,50 @@ begin
   RecorderDebugLog('[MCBUS] stopped; live state=' +
     IntToStr(Ord(fDevice.State)) + ' source=' + SourceId);
   inherited Stop;
+end;
+
+function TRecorderMcbusDataSource.ZeroBalanceTags(AOwner: TComponent;
+  ATags: TList; AMessages: TStrings): Boolean;
+var
+  I, J, lChannel, lTagChannel, lTagSlot, lSlot: Integer;
+  lIndices: array of Integer;
+  lValues: TRecorderDeviceActionValues;
+  lChannels: TRecorderDeviceChannelArray;
+  lError: string;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if (ATags = nil) or (fDevice = nil) then
+    Exit;
+  lChannels := fDevice.GetChannels;
+  SetLength(lIndices, ATags.Count);
+  for I := 0 to ATags.Count - 1 do
+  begin
+    lIndices[I] := -1;
+    lTag := TRecorderTag(ATags[I]);
+    if (lTag = nil) or not SameText(lTag.SourceId, SourceId) or
+      not AddressSlotChannel(lTag.Address, lTagSlot, lTagChannel) then
+      Continue;
+    for J := 0 to High(lChannels) do
+      if AddressSlotChannel(lChannels[J].Address, lSlot, lChannel) and
+        (lSlot = lTagSlot) and (lChannel = lTagChannel) then
+      begin
+        lIndices[I] := J;
+        Break;
+      end;
+  end;
+  if not fDevice.ExecuteDeviceAction(rdaZeroBalance, lIndices, lValues,
+    lError) then
+  begin
+    if AMessages <> nil then
+      AMessages.Add('MC-201: ' + lError);
+    Exit;
+  end;
+  Result := True;
+  if AMessages <> nil then
+    for I := 0 to High(lValues) do
+      AMessages.Add(Format('%s: ноль скорректирован на %.3f',
+        [TRecorderTag(ATags[I]).Name, lValues[I]]));
 end;
 
 procedure TRecorderMcbusDataSource.PublishBlock(

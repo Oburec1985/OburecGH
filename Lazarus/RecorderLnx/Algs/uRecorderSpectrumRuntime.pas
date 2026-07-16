@@ -1,6 +1,6 @@
 unit uRecorderSpectrumRuntime;
 
-{ Связующий слой спектрального алгоритма с реестром тегов и EventBus.
+{ Runtime спектрального алгоритма с явным входом от менеджера алгоритмов.
   Создание выходных тегов выполняется только в PrepareConfiguration, то есть
   при загрузке/переконфигурировании. На потоке данных HandleChannelFrame лишь
   считает разрешённые оценки и публикует готовые значения без изменения
@@ -38,7 +38,7 @@ type
   end;
 
   { TRecorderSpectrumFrameEventData
-    Контейнер события для передачи кадра спектра через EventBus. }
+    Контейнер динамического UI-уведомления о готовом кадре спектра. }
   TRecorderSpectrumFrameEventData = class(TObject)
   private
     fFrame: TRecorderSpectrumFrame;
@@ -63,7 +63,6 @@ type
   private
     fEventBus: TRecorderEventBus;
     fTagRegistry: TRecorderTagRegistry;
-    fToken: Integer;
     fChannels: TList; // Список TRecorderSpectrumChannel
     fCache: TList;    // Список кэшированных кадров (TRecorderCachedSpectrumFrame)
     fLock: TCriticalSection;
@@ -74,7 +73,6 @@ type
     fInputEvent: TEvent;
     fWorker: TThread;
     fPrepared: Boolean;
-    procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure HandleChannelFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);
     function FindChannel(const ATagName: string): TRecorderSpectrumChannel;
     procedure UpdateCache(const AFrame: TRecorderSpectrumFrame);
@@ -83,8 +81,6 @@ type
     procedure QueueInput(const ATagName: string; const ATimes, AValues: array of Double;
       ACount: Integer);
     procedure ProcessQueuedInputs;
-    procedure HandleTagRegistryBlockPublished(Sender: TObject; const ATagName: string;
-      const ATimes, AValues: array of Double; ACount: Integer);
     function FindBindingSettings(const ATagName: string;
       out ASettings: TRecorderSpectrumSettings; out AOutputPrefix: string): Boolean;
     function EstimateTagName(const APrefix, ABandName, ASuffix: string): string;
@@ -105,6 +101,7 @@ type
     function GetLastFrame(const ATagName: string; var AFrame: TRecorderSpectrumFrame): Boolean;
     procedure FeedTagSamples(const ATagName: string; const ATimes, AValues: array of Double;
       ACount: Integer);
+    function HasInputTag(const ATagName: string): Boolean;
     property IsPrepared: Boolean read fPrepared;
   end;
 
@@ -248,10 +245,6 @@ begin
   fInputQueue := TList.Create;
   fInputEvent := TEvent.Create(nil, False, False, '');
   fInstance := Self;
-  if fEventBus <> nil then
-    fToken := fEventBus.Subscribe(@HandleEvent);
-  if fTagRegistry <> nil then
-    fTagRegistry.SetBlockPublishedHandler(Self, @HandleTagRegistryBlockPublished);
   fWorker := TRecorderSpectrumWorker.Create(Self);
 end;
 
@@ -259,13 +252,6 @@ destructor TRecorderSpectrumRuntimeManager.Destroy;
 begin
   if fInstance = Self then
     fInstance := nil;
-  if fTagRegistry <> nil then
-    fTagRegistry.SetBlockPublishedHandler(nil, nil);
-  if (fEventBus <> nil) and (fToken <> 0) then
-  begin
-    fEventBus.Unsubscribe(fToken);
-    fToken := 0;
-  end;
   if fWorker <> nil then
   begin
     fWorker.Terminate;
@@ -600,6 +586,7 @@ var
   procedure EnsureOne(const ASuffix, AUnitName, ADescription: string);
   var
     lTagIndex: Integer;
+    lLegacyName: string;
   begin
     lName := EstimateTagName(lPrefix, lBand.Name, ASuffix);
     lSourceId := 'spectrum:' + lBinding.SourceTagName;
@@ -609,6 +596,25 @@ var
       применение ищет уже созданную оценку не только по имени, но и по её
       устойчивой паре владелец/адрес. Материализация обязана быть идемпотентной. }
     lTag := fTagRegistry.FindByName(lName);
+    { До 16.07.2026 частота максимума имела суффикс fmax. Мигрируем
+      автоматически созданный тег на f1 по имени или устойчивому адресу,
+      сохраняя его Id и все ссылки визуальных компонентов. }
+    if (lTag = nil) and SameText(ASuffix, 'f1') then
+    begin
+      lLegacyName := EstimateTagName(lPrefix, lBand.Name, 'fmax');
+      lTag := fTagRegistry.FindByName(lLegacyName);
+      if lTag = nil then
+        for lTagIndex := 0 to fTagRegistry.TagCount - 1 do
+          if SameText(fTagRegistry.Tags[lTagIndex].SourceId, lSourceId) and
+            SameText(fTagRegistry.Tags[lTagIndex].Address,
+              lBand.Name + '/fmax') then
+          begin
+            lTag := fTagRegistry.Tags[lTagIndex];
+            Break;
+          end;
+      if lTag <> nil then
+        lTag.Name := lName;
+    end;
     if lTag = nil then
       for lTagIndex := 0 to fTagRegistry.TagCount - 1 do
         if SameText(fTagRegistry.Tags[lTagIndex].SourceId, lSourceId) and
@@ -651,7 +657,7 @@ begin
         if lSettings.CalculateBandMaximum then
           EnsureOne('max', '', 'Максимум спектра');
         if lSettings.CalculateBandMaximumFrequency then
-          EnsureOne('fmax', 'Hz', 'Частота максимума спектра');
+          EnsureOne('f1', 'Hz', 'Частота максимума спектра');
       end;
     end;
   end;
@@ -676,7 +682,7 @@ begin
         AFrame.Bands[I].MaxRms);
     if ASettings.CalculateBandMaximumFrequency then
       fTagRegistry.PublishValue(EstimateTagName(AOutputPrefix,
-        AFrame.Bands[I].BandName, 'fmax'), AFrame.EndTimeSec,
+        AFrame.Bands[I].BandName, 'f1'), AFrame.EndTimeSec,
         AFrame.Bands[I].MaxFrequencyHz);
   end;
 end;
@@ -767,51 +773,15 @@ begin
   QueueInput(ATagName, ATimes, AValues, ACount);
 end;
 
-procedure TRecorderSpectrumRuntimeManager.HandleTagRegistryBlockPublished(
-  Sender: TObject; const ATagName: string; const ATimes, AValues: array of Double;
-  ACount: Integer);
+function TRecorderSpectrumRuntimeManager.HasInputTag(
+  const ATagName: string): Boolean;
 begin
-  FeedTagSamples(ATagName, ATimes, AValues, ACount);
-end;
-
-procedure TRecorderSpectrumRuntimeManager.HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
-var
-  lTagData: TRecorderTagUpdateEventData;
-  lHasChannel: Boolean;
-begin
-  if (AEvent.Kind <> rceDataUpdated) or (not (AEvent.Data is TRecorderTagUpdateEventData)) then
-    Exit;
-
-  lTagData := TRecorderTagUpdateEventData(AEvent.Data);
-  if lTagData.SampleCount > 1 then
-  begin
-    fChannelLock.Acquire;
-    try
-      lHasChannel := FindChannel(lTagData.Tag.Name) <> nil;
-    finally
-      fChannelLock.Release;
-    end;
-    if not lHasChannel then
-      Exit;
-    QueueInput(lTagData.Tag.Name, lTagData.Times, lTagData.Values,
-      lTagData.SampleCount);
-    Exit;
-  end;
-
   fChannelLock.Acquire;
   try
-    lHasChannel := FindChannel(lTagData.Tag.Name) <> nil;
+    Result := FindChannel(ATagName) <> nil;
   finally
     fChannelLock.Release;
   end;
-  if not lHasChannel then
-    Exit;
-
-  if lTagData.BlockTailNotify then
-    Exit;
-
-  // Scalar updates from PublishValue.
-  QueueInput(lTagData.Tag.Name, [lTagData.TimeSec], [lTagData.Value], 1);
 end;
 
 procedure TRecorderSpectrumRuntimeManager.HandleChannelFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);

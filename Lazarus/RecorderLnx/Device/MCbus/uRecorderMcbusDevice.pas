@@ -37,6 +37,7 @@ type
     fPending: array of array of Double;
     fPendingCount: array of Integer;
     fReadBlock: TRecorderAcquisitionBlock;
+    fSoftBalance: array of Double;
     fSampleIndex: Int64;
     fLastError: string;
     procedure AllocateBuffers;
@@ -63,6 +64,10 @@ type
     function ReadBlock(ATimeoutMs: Cardinal;
       out ABlock: TRecorderAcquisitionBlock): Boolean; override;
     function TestLink(out AErrorText: string): Boolean; override;
+    function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean; override;
+    function ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+      const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
+      out AErrorText: string): Boolean; override;
   end;
 
 function CreateRecorderMcbusDevice: IRecorderDevice;
@@ -146,6 +151,7 @@ begin
     fPendingCount[I] := 0;
   end;
   SetLength(fReadBlock.Values, fChannelCount);
+  SetLength(fSoftBalance, fChannelCount);
   for I := 0 to fChannelCount - 1 do
     SetLength(fReadBlock.Values[I], TargetSampleCount);
 end;
@@ -367,7 +373,7 @@ begin
   for I := 0 to fChannelCount - 1 do
   begin
     for J := 0 to lCount - 1 do
-      fReadBlock.Values[I][J] := fPending[I][J];
+      fReadBlock.Values[I][J] := fPending[I][J] - fSoftBalance[I];
   end;
   Inc(fSampleIndex, lCount);
   for I := 0 to fChannelCount - 1 do
@@ -411,6 +417,55 @@ begin
     fLastError := ''
   else
     fLastError := AErrorText;
+end;
+
+function TRecorderMcbusDevice.SupportsDeviceAction(
+  AAction: TRecorderDeviceAction): Boolean;
+begin
+  Result := AAction in [rdaZeroBalance, rdaHardwareSetup,
+    rdaReadHardwareCalibration];
+end;
+
+function TRecorderMcbusDevice.ExecuteDeviceAction(
+  AAction: TRecorderDeviceAction; const AChannelIndices: array of Integer;
+  out AValues: TRecorderDeviceActionValues; out AErrorText: string): Boolean;
+var
+  I, J, lChannel, lCount: Integer;
+  lMean: Double;
+begin
+  SetLength(AValues, 0);
+  AErrorText := '';
+  if AAction <> rdaZeroBalance then
+    Exit(inherited ExecuteDeviceAction(AAction, AChannelIndices, AValues,
+      AErrorText));
+  if fState <> rdsStarted then
+  begin
+    AErrorText := 'Для балансировки MC-201 требуется запущенный просмотр';
+    Exit(False);
+  end;
+  SetLength(AValues, Length(AChannelIndices));
+  for I := 0 to High(AChannelIndices) do
+  begin
+    lChannel := AChannelIndices[I];
+    if (lChannel < 0) or (lChannel >= fChannelCount) then
+    begin
+      AErrorText := Format('Канал MC-201 с индексом %d не найден', [lChannel]);
+      Exit(False);
+    end;
+    lCount := fReadBlock.SampleCount;
+    if lCount <= 0 then
+    begin
+      AErrorText := 'Нет текущего блока данных MC-201 для балансировки';
+      Exit(False);
+    end;
+    lMean := 0;
+    for J := 0 to lCount - 1 do
+      lMean := lMean + fReadBlock.Values[lChannel][J];
+    lMean := lMean / lCount;
+    fSoftBalance[lChannel] := fSoftBalance[lChannel] + lMean;
+    AValues[I] := lMean;
+  end;
+  Result := True;
 end;
 
 initialization

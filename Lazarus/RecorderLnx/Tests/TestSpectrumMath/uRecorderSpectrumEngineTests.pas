@@ -10,7 +10,9 @@ implementation
 
 uses
   SysUtils, Math,
-  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderTags, uRecorderSpectrumRuntime, uRecorderEventQueue, uRecorderCoreServices;
+  uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderTags,
+  uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderEventQueue,
+  uRecorderCoreServices;
 
 type
   TFrameCounter = class
@@ -197,6 +199,7 @@ var
   lF1, lF2: Double;
   lFrame: TRecorderSpectrumFrame;
   lManager: TRecorderSpectrumRuntimeManager;
+  lAlgorithmManager: TRecorderAlgorithmManager;
   lEventBus: TRecorderEventBus;
   lNode: TRecorderSpectrumConfigNode;
   lSettings: TRecorderSpectrumSettings;
@@ -205,6 +208,7 @@ var
   lTimes2: array[0..7] of Double;
   lValues2: array[0..7] of Double;
   lTag: TRecorderTag;
+  lLegacyTagId: TRecorderTagId;
   I: Integer;
 begin
   lEventBus := TRecorderEventBus.Create;
@@ -254,12 +258,24 @@ begin
     lNode.AddBinding('Sensor1');
     lNode.AddBinding('Sensor2');
 
+    { Проверяем миграцию прежнего автоматически созданного имени fmax -> f1
+      без смены TagId и появления второго тега. }
+    lTag := lRegistry.CreateTag('Sensor1_spm_AbsBand_fmax', 4096, True);
+    lTag.SourceId := 'spectrum:Sensor1';
+    lTag.Address := 'AbsBand/fmax';
+    lLegacyTagId := lTag.Id;
+
     // Инициализируем менеджер рантайма
     lManager := TRecorderSpectrumRuntimeManager.Create(lEventBus, lRegistry);
+    lAlgorithmManager := TRecorderAlgorithmManager.Create(lRegistry, lManager);
     try
-      lManager.PrepareConfiguration;
+      lAlgorithmManager.PrepareConfiguration;
       if lRegistry.FindByName('Sensor1_spm_AbsBand_rms') = nil then
         raise Exception.Create('Spectrum estimate tags were not created');
+      lTag := lRegistry.FindByName('Sensor1_spm_AbsBand_f1');
+      if (lTag = nil) or (lTag.Id <> lLegacyTagId) or
+        (lRegistry.FindByName('Sensor1_spm_AbsBand_fmax') <> nil) then
+        raise Exception.Create('Spectrum fmax to f1 tag migration failed');
 
       // Создаем синусоиду 100 Гц (период 8 точек при Fs=800 Гц)
       for I := 0 to 7 do
@@ -301,7 +317,7 @@ begin
         raise Exception.Create('FormulaBand MaxFrequencyHz failed');
       if lRegistry.FindByName('Sensor1_spm_AbsBand_rms').SignalBuffer.Count = 0 then
         raise Exception.Create('Spectrum RMS estimate was not published to tag');
-      if lRegistry.FindByName('Sensor1_spm_AbsBand_fmax').SignalBuffer.LatestValue <> 100.0 then
+      if lRegistry.FindByName('Sensor1_spm_AbsBand_f1').SignalBuffer.LatestValue <> 100.0 then
         raise Exception.Create('Spectrum maximum frequency was not published to tag');
 
       { Один узел может содержать каналы с разными Fs. Частотный шаг обязан
@@ -328,6 +344,7 @@ begin
           [lFrame.FrequencyStepHz]);
         
     finally
+      lAlgorithmManager.Free;
       lManager.Free;
     end;
 

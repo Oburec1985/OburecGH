@@ -1,7 +1,4 @@
 unit uRecorder;
-
-
-
 {
   Корневой объект RecorderLnx — аналог IRecorder в оригинальном Recorder.
   Владеет реестром тегов, менеджером источников данных и прочими подсистемами ядра.
@@ -17,7 +14,7 @@ uses
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderEventQueue, uRecorderTimeSystem,
-  uRecorderSpectrumRuntime, uRecorderAlarms;
+  uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderAlarms;
 
 type
 
@@ -31,7 +28,10 @@ type
     fEventQueue: TRecorderEventSnapshotQueue;
     fTimeSystem: TRecorderTimeSystem;
     fSpectrumManager: TRecorderSpectrumRuntimeManager;
+    fAlgorithmManager: TRecorderAlgorithmManager;
     fAlarmEngine: IRecorderAlarmEngine;
+    procedure HandleTagAlarmValue(Sender: TObject; ATag: TRecorderTag;
+      ATimeSec, AValue: Double);
   public
     constructor Create;
     destructor Destroy; override;
@@ -44,6 +44,7 @@ type
     property EventQueue: TRecorderEventSnapshotQueue read fEventQueue;
     property TimeSystem: TRecorderTimeSystem read fTimeSystem;
     property SpectrumManager: TRecorderSpectrumRuntimeManager read fSpectrumManager;
+    property AlgorithmManager: TRecorderAlgorithmManager read fAlgorithmManager;
     property AlarmEngine: IRecorderAlarmEngine read fAlarmEngine;
   end;
 
@@ -71,7 +72,16 @@ begin
   fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
   fTimeSystem := TRecorderTimeSystem.Create;
   fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
+  fAlgorithmManager := TRecorderAlgorithmManager.Create(fTagRegistry, fSpectrumManager);
   fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
+  fTagRegistry.SetAlarmValuePublishedHandler(Self, @HandleTagAlarmValue);
+end;
+
+procedure TRecorder.HandleTagAlarmValue(Sender: TObject; ATag: TRecorderTag;
+  ATimeSec, AValue: Double);
+begin
+  if fAlarmEngine <> nil then
+    fAlarmEngine.ProcessTagValue(ATag, ATimeSec, AValue);
 end;
 
 
@@ -85,7 +95,9 @@ end;
     Аналогичен деструктору TRecorder.Destroy в оригинальном recorder.pas. }
 destructor TRecorder.Destroy;
 begin
+  fTagRegistry.SetAlarmValuePublishedHandler(nil, nil);
   fAlarmEngine := nil;
+  FreeAndNil(fAlgorithmManager);
   FreeAndNil(fSpectrumManager);
   FreeAndNil(fEventQueue);
   FreeAndNil(fDataSourceManager);

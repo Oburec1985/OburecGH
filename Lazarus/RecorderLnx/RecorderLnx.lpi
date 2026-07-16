@@ -73,6 +73,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Algs/uRecorderAlgorithmManager.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uRecorderMeraSdbThermocouples.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -120,7 +124,7 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderSpectrumRuntime.pas"/>
+        <Filename Value="Algs/uRecorderSpectrumRuntime.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>

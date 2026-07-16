@@ -48,6 +48,7 @@ uses
   uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
   uRecorderMic185DataSource, uRecorderMic185SettingsDialog,
   uRecorderMcbusDataSource, uRecorderMc032SettingsDialog,
+  uRecorderMc201SlotSettingsDialog, uRecorderConfiguredDataSources,
   uRecorderMic185SettingsSelfTest,
   uRecorderHardwareLiveDevices,
   uRecorderHardwareTree,
@@ -2048,15 +2049,21 @@ begin
   Result := '';
   if (fRecorder.TagRegistry = nil) or (lbTags = nil) then
     Exit;
-  if Trim(fRecorder.TagRegistry.SelectedTagName) <> '' then
-    Exit(Trim(fRecorder.TagRegistry.SelectedTagName));
+
+  { Выделенная пользователем строка имеет приоритет над прежним состоянием
+    реестра. Иначе старый SelectedTagName не даёт клику выбрать новый канал. }
   lItem := lbTags.Selected;
-  if lItem = nil then
-    Exit;
-  lTag := FindRegistryTagForListObject(TObject(lItem.Data));
-  if lTag <> nil then
-    Exit(lTag.Name);
-  Result := Trim(lItem.Caption);
+  if lItem <> nil then
+  begin
+    lTag := FindRegistryTagForListObject(TObject(lItem.Data));
+    if lTag <> nil then
+      Exit(lTag.Name);
+    Result := Trim(lItem.Caption);
+    if fRecorder.TagRegistry.FindByName(Result) <> nil then
+      Exit;
+  end;
+
+  Result := Trim(fRecorder.TagRegistry.SelectedTagName);
   if fRecorder.TagRegistry.FindByName(Result) = nil then
     Result := '';
 end;
@@ -2210,17 +2217,52 @@ end;
 
 procedure TMainForm.TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
 var
+  I, lSlot: Integer;
+  lConfig: TRecorderConfiguredDataSource;
   lConfigs: TStringList;
   lDialog: TOpenDialog;
   lHost: string;
   lNewSourceId: string;
   lPath: string;
   lPort: Word;
+  lLines: TStringList;
+  lCaption: string;
 const
   CMeraSourcePrefix = 'Mera file: ';
 begin
   if ATag = nil then
     Exit;
+  if TryParseRecorderMc032SourceId(ATag.SourceId, lHost, lPort) then
+  begin
+    lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+      ATag.SourceId);
+    if lConfig = nil then
+      Exit;
+    lLines := TStringList.Create;
+    try
+      lLines.StrictDelimiter := True;
+      lLines.Delimiter := '-';
+      lLines.DelimitedText := ATag.Address;
+      if (lLines.Count < 2) or
+        not TryStrToInt(lLines[lLines.Count - 2], lSlot) then
+        Exit;
+      lLines.Text := lConfig.SpecificConfigText;
+      lCaption := '';
+      for I := 0 to lLines.Count - 1 do
+        if Pos('Слот ' + IntToStr(lSlot) + ':', Trim(lLines[I])) = 1 then
+        begin
+          lCaption := Trim(lLines[I]);
+          Break;
+        end;
+      if (lConfig <> nil) and (lCaption <> '') and
+        ShowRecorderMc201SlotSettingsDialog(Self, lCaption,
+          lConfig.SpecificConfigText) then
+        AddLog(Format('MC-201 slot %d settings updated.', [lSlot]));
+    finally
+      lLines.Free;
+    end;
+    Exit;
+  end;
   if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) then
   begin
     lConfigs := TStringList.Create;
@@ -2828,8 +2870,8 @@ end;
 { Реакция на смену состояний сбора данных }
 procedure TMainForm.PrepareRuntimeForConfiguration;
 begin
-  if fRecorder.SpectrumManager <> nil then
-    fRecorder.SpectrumManager.PrepareConfiguration;
+  if fRecorder.AlgorithmManager <> nil then
+    fRecorder.AlgorithmManager.PrepareConfiguration;
 
   { Источники и теги к этому моменту уже созданы. Подключение, программирование
     модулей и выделение аппаратных буферов выполняются здесь, а не при Preview. }
@@ -2857,10 +2899,8 @@ begin
 
   { No allocation, FFT benchmark or channel creation is permitted here.
     A configuration must have prepared the spectrum runtime while stopped. }
-  if (ATransition in [rstStopToView, rstStopToRecord]) and
-    (fRecorder.SpectrumManager <> nil) and (not fRecorder.SpectrumManager.IsPrepared) then
-    raise ERecorderStateError.Create(
-      'Spectrum runtime is not prepared. Apply configuration while Recorder is stopped.');
+  if fRecorder.AlgorithmManager <> nil then
+    fRecorder.AlgorithmManager.ValidateStateTransition(ATransition);
 
   if fRecorder.EventBus <> nil then
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionBefore,
@@ -2883,6 +2923,8 @@ begin
       begin
         if lTransition in [rstStopToView, rstStopToRecord] then
         begin
+          if fRecorder.AlgorithmManager <> nil then
+            fRecorder.AlgorithmManager.HandleStateTransition(lTransition);
           fRecorder.TimeSystem.Start;
           StartDataSources;
         end;
@@ -2894,8 +2936,8 @@ begin
           StopDataSources;
           CloseRecordFrame;
           fRecorder.TimeSystem.Stop;
-          if fRecorder.SpectrumManager <> nil then
-            fRecorder.SpectrumManager.ResetForNextRun;
+          if fRecorder.AlgorithmManager <> nil then
+            fRecorder.AlgorithmManager.HandleStateTransition(lTransition);
         end;
       end;
   end;

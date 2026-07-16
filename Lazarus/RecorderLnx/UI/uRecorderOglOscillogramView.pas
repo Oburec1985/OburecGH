@@ -359,7 +359,9 @@ begin
   lPage.BorderColor := $FF707070;
   lPage.XMinValue := 0;
   lPage.XMaxValue := 1;
-  lPage.AutoScaleOnZoomReset := False;
+  { Обратная рамка масштабирует по точкам текущего кадра. Общий FitZoomY
+    добавляет по 10% сверху и снизу, то есть 20% к полному диапазону сигнала. }
+  lPage.AutoScaleOnZoomReset := True;
   lAxis := TChartAxis.Create;
   lAxis.Name := 'Axis1';
   lAxis.Caption := '';
@@ -1007,10 +1009,60 @@ end;
 
 function TRecorderOglOscillogramSurface.ResolveTag(
   ATagRegistry: TRecorderTagRegistry; AIndex: Integer): TRecorderTag;
+var
+  I: Integer;
+  lActiveCount: Integer;
+  lActiveIndex: Integer;
+  lSelectedActiveIndex: Integer;
+  lCurrentActiveIndex: Integer;
+  lSelectedTag: TRecorderTag;
+  lTag: TRecorderTag;
 begin
   Result := nil;
-  if (ATagRegistry <> nil) and (ATagRegistry.TagCount > 0) then
-    Result := ATagRegistry.Tags[AIndex mod ATagRegistry.TagCount];
+  if (ATagRegistry = nil) or (ATagRegistry.TagCount = 0) then
+    Exit;
+
+  { Базовая страница назначает графики автоматически, поэтому отключённый
+    аппаратный источник не должен занимать страницу старым буфером. Настройки
+    тегов не меняются: после восстановления источника тег снова попадёт в цикл. }
+  lActiveCount := 0;
+  for I := 0 to ATagRegistry.TagCount - 1 do
+    if RecorderTagSourceIsVisible(ATagRegistry, ATagRegistry.Tags[I]) then
+      Inc(lActiveCount);
+  if lActiveCount = 0 then
+    Exit;
+
+  { Первая осциллограмма начинается с выделенного в списке каналов тега.
+    Следующие страницы получают последующие активные теги с циклическим
+    переходом к началу списка. }
+  lSelectedTag := ATagRegistry.SelectedTag;
+  lSelectedActiveIndex := 0;
+  lCurrentActiveIndex := 0;
+  if (lSelectedTag <> nil) and
+    RecorderTagSourceIsVisible(ATagRegistry, lSelectedTag) then
+    for I := 0 to ATagRegistry.TagCount - 1 do
+    begin
+      lTag := ATagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
+        Continue;
+      if lTag = lSelectedTag then
+      begin
+        lSelectedActiveIndex := lCurrentActiveIndex;
+        Break;
+      end;
+      Inc(lCurrentActiveIndex);
+    end;
+
+  lActiveIndex := (lSelectedActiveIndex + AIndex) mod lActiveCount;
+  for I := 0 to ATagRegistry.TagCount - 1 do
+  begin
+    lTag := ATagRegistry.Tags[I];
+    if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
+      Continue;
+    if lActiveIndex = 0 then
+      Exit(lTag);
+    Dec(lActiveIndex);
+  end;
 end;
 
 procedure TRecorderOglOscillogramSurface.ResetFpsMeasure;
@@ -1091,7 +1143,9 @@ begin
     lPage.Name := Format('OscPage%d', [I + 1]);
     lPage.Caption := 'Tag: None | FPS: -';
     lPage.Align := cpaAuto;
-    lPage.AutoScaleOnZoomReset := False;
+    { Для базовой страницы действует тот же сброс по текущему кадру +20%,
+      что и для осциллограммы на редактируемой странице. }
+    lPage.AutoScaleOnZoomReset := True;
     lPage.FillColor := $FFFFFFFF;
     lPage.BorderColor := $FF808080;
     lTabSpace.Left := 42;

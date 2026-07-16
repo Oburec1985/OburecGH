@@ -96,6 +96,10 @@ type
     function UsesRawRing: Boolean;
     function ChannelCount: Integer;
     function TestLink(out AErrorText: string): Boolean;
+    function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean;
+    function ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+      const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
+      out AErrorText: string): Boolean;
   end;
 
 implementation
@@ -108,6 +112,21 @@ const
   CBalMin = 30;
   CBalSkip = 10;
   CBalFrac = 0.3;
+
+function TRecorderMic140v2Device.SupportsDeviceAction(
+  AAction: TRecorderDeviceAction): Boolean;
+begin
+  Result := AAction = rdaZeroBalance;
+end;
+
+function TRecorderMic140v2Device.ExecuteDeviceAction(
+  AAction: TRecorderDeviceAction; const AChannelIndices: array of Integer;
+  out AValues: TRecorderDeviceActionValues; out AErrorText: string): Boolean;
+begin
+  SetLength(AValues, 0);
+  AErrorText := 'Действие выполняется специализированным API MIC-140';
+  Result := False;
+end;
 
 constructor TRecorderMic140v2Device.Create(const ADeviceId, AHost: string;
   APort: Word; AChannelCount: Integer; APollFrequencyHz: Double;

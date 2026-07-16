@@ -14,7 +14,7 @@ uses
   Graphics;
 
 const
-  OGL_CHART_LINE_COLOR_COUNT = 14;
+  OGL_CHART_LINE_COLOR_COUNT = 18;
 
 function OglChartLinePaletteColor(AIndex: Integer): TColor;
 function OglChartLinePaletteGLColor(AIndex: Integer): Cardinal;
@@ -28,17 +28,19 @@ procedure OglChartLineAppearance(AChartLineIndex: Integer; out AName: string;
 implementation
 
 const
-  { BGR order, matches wpgLineSett::m_Colors from the Delphi chart component. }
+  { Исходный ColorArray из uCommonTypes проекта plgControlCyclogram.
+    Значения point3 RGB переведены в системный BGR-формат TColor. }
   CLineColors: array[0..OGL_CHART_LINE_COLOR_COUNT - 1] of TColor = (
-    $00FF0000, $00008000, $000000FF, $00800000, $0000FF00, $00FFFF00,
-    $00FF8000, $00FF0080, $00FF00FF, $008080FF, $000080FF, $00008080,
-    $00004080, $00000040
+    $00FF0000, $0000FF00, $000000FF, $00168EDA, $00C50040, $0001EF5A,
+    $009E544C, $00C710E2, $00E8BA7D, $007AE0C4, $00577A3B, $002E1C85,
+    $009640E8, $005E701A, $005440CC, $002100E3, $00A67A00, $001FA89E
   );
 
   CLineColorNames: array[0..OGL_CHART_LINE_COLOR_COUNT - 1] of string = (
-    'Синий', 'Зелёный', 'Красный', 'Тёмно-синий', 'Лайм', 'Бирюзовый',
-    'Голубой', 'Фиолетовый', 'Пурпурный', 'Розовый', 'Оранжевый', 'Оливковый',
-    'Коричневый', 'Бордовый'
+    'Синий', 'Зелёный', 'Красный', 'Оранжевый', 'Пурпурный', 'Кислотный',
+    'Фиолетовый', 'Сиреневый', 'Aero', 'Alien Armpit', 'Amazon',
+    'Antique Ruby', 'Barbie Pink', 'Bittersweet', 'Brick Red', 'Cadmium Red',
+    'Cerulean', 'Citron'
   );
 
 function OglChartNormalizeIndex(AIndex: Integer): Integer;

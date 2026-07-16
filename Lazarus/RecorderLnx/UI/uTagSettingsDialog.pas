@@ -28,7 +28,8 @@ uses
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
   uRecorderMic185Calibration,
-  uRecorderCommandImages;
+  uRecorderCommandImages, uRecorderMc032SettingsDialog,
+  uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
@@ -1077,6 +1078,8 @@ begin
     Exit(True);
   if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
     Exit(True);
+  if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
+    Exit(True);
   Result := Pos(CMeraSourcePrefix, lTag.SourceId) = 1;
 end;
 
@@ -1137,6 +1140,8 @@ begin
     if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
       Exit(True);
     if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
+      Exit(True);
+    if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
       Exit(True);
   end;
 end;
@@ -1858,7 +1863,8 @@ begin
   for lI := 0 to fTags.Count - 1 do
   begin
     if (Pos('MIC-140:', TagAt(lI).SourceId) = 1) or
-      (Pos('MIC-185:', TagAt(lI).SourceId) = 1) then
+      (Pos('MIC-185:', TagAt(lI).SourceId) = 1) or
+      (Pos('MC-032: ', TagAt(lI).SourceId) = 1) then
     begin
       lHasHardwareDevice := True;
       Break;
@@ -1884,6 +1890,8 @@ var
   lMessageText: string;
   lMessages: TStringList;
   lOkCount: Integer;
+  lDevice: IRecorderDevice;
+  lValues: TRecorderDeviceActionValues;
 begin
   if fTags.Count = 0 then
     Exit;
@@ -1894,6 +1902,18 @@ begin
     lOkCount := 0;
     for lI := 0 to fTags.Count - 1 do
     begin
+      if Pos('MC-032: ', TagAt(lI).SourceId) = 1 then
+      begin
+        lDevice := RecorderHardwareFindLiveDevice(TagAt(lI).SourceId);
+        if lDevice = nil then
+          lErrors.Add(Format('%s (%s): нет активной сессии MC-032',
+            [TagAt(lI).Name, TagAt(lI).Address]))
+        else if not lDevice.ExecuteDeviceAction(rdaReadHardwareCalibration,
+          [], lValues, lErrorMessage) then
+          lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name,
+            TagAt(lI).Address, lErrorMessage]));
+        Continue;
+      end;
       if Pos('MIC-185:', TagAt(lI).SourceId) = 1 then
       begin
         if RecorderMic185DownloadHardwareCalibrationFromDeviceEx(fTagRegistry,

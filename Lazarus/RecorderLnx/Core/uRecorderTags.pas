@@ -345,12 +345,18 @@ type
 
   TRecorderTagBlockPublishedEvent = procedure(Sender: TObject; const ATagName: string;
     const ATimes, AValues: array of Double; ACount: Integer) of object;
+  TRecorderTagValuePublishedEvent = procedure(Sender: TObject; ATag: TRecorderTag;
+    ATimeSec, AValue: Double) of object;
 
   TRecorderTagRegistry = class
   private
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fBlockPublishedTarget: TObject;
     fOnBlockPublished: TRecorderTagBlockPublishedEvent;
+    fValuePublishedTarget: TObject;
+    fOnValuePublished: TRecorderTagValuePublishedEvent;
+    fAlarmValuePublishedTarget: TObject;
+    fOnAlarmValuePublished: TRecorderTagValuePublishedEvent;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
@@ -415,11 +421,16 @@ type
     procedure PublishBlock(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
       AValuesAlreadyTransformed: Boolean = False);
-    { Подписчик на полный блок до публикации легковесного UI-события.
-      Используется рантаймом спектров, чтобы не копировать блоки в EventBus
-      из потока опроса устройства. }
+    { Явный получатель полного блока до публикации легковесного динамического
+      UI/extension-события. Назначается менеджером алгоритмов. }
     procedure SetBlockPublishedHandler(ATarget: TObject;
       AHandler: TRecorderTagBlockPublishedEvent);
+    { Прямой обработчик скалярного обновления для менеджера алгоритмов. }
+    procedure SetValuePublishedHandler(ATarget: TObject;
+      AHandler: TRecorderTagValuePublishedEvent);
+    { Явный штатный маршрут значения в модель тревог. }
+    procedure SetAlarmValuePublishedHandler(ATarget: TObject;
+      AHandler: TRecorderTagValuePublishedEvent);
     { Публикует спектр/UI-уведомления после AddBlockSamples. }
     procedure PublishBlockNotifications(const ATagName: string);
 
@@ -1447,6 +1458,11 @@ begin
   lValue := TransformTagValue(lTag, AValue);
   lTag.AddSample(ATimeSec, lValue);
 
+  if Assigned(fOnValuePublished) then
+    fOnValuePublished(fValuePublishedTarget, lTag, ATimeSec, lValue);
+  if Assigned(fOnAlarmValuePublished) then
+    fOnAlarmValuePublished(fAlarmValuePublishedTarget, lTag, ATimeSec, lValue);
+
   if fEventBus <> nil then
   begin
     lEventData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, lValue);
@@ -1465,6 +1481,20 @@ procedure TRecorderTagRegistry.SetBlockPublishedHandler(ATarget: TObject;
 begin
   fBlockPublishedTarget := ATarget;
   fOnBlockPublished := AHandler;
+end;
+
+procedure TRecorderTagRegistry.SetValuePublishedHandler(ATarget: TObject;
+  AHandler: TRecorderTagValuePublishedEvent);
+begin
+  fValuePublishedTarget := ATarget;
+  fOnValuePublished := AHandler;
+end;
+
+procedure TRecorderTagRegistry.SetAlarmValuePublishedHandler(ATarget: TObject;
+  AHandler: TRecorderTagValuePublishedEvent);
+begin
+  fAlarmValuePublishedTarget := ATarget;
+  fOnAlarmValuePublished := AHandler;
 end;
 
 procedure TRecorderTagRegistry.AddBlockSamples(const ATagName: string;
@@ -1503,11 +1533,13 @@ var
   lTag: TRecorderTag;
   lEventData: TRecorderTagUpdateEventData;
 begin
-  if fEventBus = nil then
-    Exit;
   lTag := FindByName(ATagName);
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
+  if Assigned(fOnAlarmValuePublished) then
+    fOnAlarmValuePublished(fAlarmValuePublishedTarget, lTag, ATimeSec, AValue);
+  if fEventBus = nil then
+    Exit;
   lEventData := TRecorderTagUpdateEventData.CreateBlockTailNotify(lTag, ATimeSec,
     AValue);
   try
@@ -1533,9 +1565,8 @@ begin
   if Assigned(fOnBlockPublished) then
     fOnBlockPublished(fBlockPublishedTarget, ATagName, lSnapshot.Times,
       lSnapshot.Values, lSnapshot.Count);
-  if fEventBus <> nil then
-    NotifyBlockTail(ATagName, lSnapshot.Times[lSnapshot.Count - 1],
-      lSnapshot.Values[lSnapshot.Count - 1]);
+  NotifyBlockTail(ATagName, lSnapshot.Times[lSnapshot.Count - 1],
+    lSnapshot.Values[lSnapshot.Count - 1]);
 end;
 
 procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
@@ -1558,7 +1589,7 @@ begin
   if lTag = nil then
     Exit;
 
-  if Assigned(fOnBlockPublished) then
+  if Assigned(fOnBlockPublished) or Assigned(fOnAlarmValuePublished) then
     PublishBlockNotifications(ATagName)
   else if fEventBus <> nil then
   begin

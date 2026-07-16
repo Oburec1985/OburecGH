@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mc/mc201.md",
+                "file": "algorithm-manager-requirements.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "mc201"
+              "title": "algorithm-manager-requirements"
             }
           }
         ]
@@ -185,8 +185,9 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "devices/mc/README.md",
+    "eventbus-audit.md",
     "devices/mc/mc201.md",
+    "devices/mc/README.md",
     "devices/mic185/settings_packet_table.md",
     "devices/mic185/hardware_calibration_cache.md",
     "devices/mic185/value_units_conversion.md",
@@ -229,7 +230,6 @@
     "devices/mic140/protocol/07_acceptance.md",
     "devices/mic140/protocol/01_mdp_transport.md",
     "devices/README.md",
-    "devices/mic140/protocol.md",
-    "devices/mic140/mic140_configuration_details.md"
+    "devices/mic140/protocol.md"
   ]
 }

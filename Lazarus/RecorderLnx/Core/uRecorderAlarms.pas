@@ -11,7 +11,7 @@ unit uRecorderAlarms;
     в TRecorderEventBus как rceAlarmChanged.
 
   Логика:
-    - движок подписывается на rceDataUpdated;
+    - TRecorderTagRegistry явно вызывает движок через модель TRecorder;
     - проверяет включенные уставки тега;
     - хранит активность каждой уставки между значениями;
     - публикует событие только при входе в тревогу или выходе из нее.
@@ -69,8 +69,8 @@ type
   end;
 
   { TRecorderAlarmEngine
-    Реализация проверки уставок. Может работать как подписчик TRecorderEventBus
-    или вызываться явно через ProcessTagValue. }
+    Реализация проверки уставок. Входные значения получает только явным вызовом
+    ProcessTagValue; EventBus используется лишь для динамического уведомления UI. }
   TRecorderAlarmEngine = class(TInterfacedObject, IRecorderAlarmEngine)
   private type
     TTagAlarmState = class
@@ -82,21 +82,16 @@ type
     fEventBus: TRecorderEventBus;
     fLastEventData: TRecorderAlarmEventData;
     fStates: TList;
-    fToken: Integer;
     function AcquireState(ATag: TRecorderTag): TTagAlarmState;
     function EvaluateSetpoint(ATag: TRecorderTag; AKind: TRecorderTagSetpointKind;
       const ASetpoint: TRecorderTagSetpoint; AWasActive: Boolean;
       AValue: Double): Boolean;
-    procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure PublishAlarmChange(ATag: TRecorderTag; AKind: TRecorderTagSetpointKind;
       ALevel: TRecorderAlarmLevel; AActive: Boolean; ATimeSec, AValue,
       AThreshold: Double);
   public
     constructor Create(AEventBus: TRecorderEventBus = nil);
     destructor Destroy; override;
-
-    procedure Attach(AEventBus: TRecorderEventBus);
-    procedure Detach;
 
     function GetTagAlarmLevel(ATag: TRecorderTag): TRecorderAlarmLevel;
     function GetTagAlarmText(ATag: TRecorderTag): string;
@@ -208,8 +203,7 @@ constructor TRecorderAlarmEngine.Create(AEventBus: TRecorderEventBus);
 begin
   inherited Create;
   fStates := TList.Create;
-  if AEventBus <> nil then
-    Attach(AEventBus);
+  fEventBus := AEventBus;
 end;
 
 { TRecorderAlarmEngine.Destroy
@@ -221,44 +215,11 @@ end;
     Очистка ресурсов тревог оригинального Recorder. }
 destructor TRecorderAlarmEngine.Destroy;
 begin
-  Detach;
+  fEventBus := nil;
   Reset;
   fStates.Free;
   fLastEventData.Free;
   inherited Destroy;
-end;
-
-{ TRecorderAlarmEngine.Attach
-  Назначение:
-    Подключает движок к шине событий EventBus и подписывается на событие rceDataUpdated для автоматической обработки новых данных тегов.
-  Вызывается из:
-    Вызывается из конструктора или UI при активации сбора данных.
-  Аналог в оригинальном Recorder:
-    Соответствует подключению обработчиков тревог к потоку данных приборов. }
-procedure TRecorderAlarmEngine.Attach(AEventBus: TRecorderEventBus);
-begin
-  if AEventBus = nil then
-    Exit;
-  if fEventBus <> nil then
-    Detach;
-
-  fEventBus := AEventBus;
-  fToken := fEventBus.Subscribe(@HandleEvent);
-end;
-
-{ TRecorderAlarmEngine.Detach
-  Назначение:
-    Отключает движок от шины событий, прекращая подписку.
-  Вызывается из:
-    Вызывается в деструкторе или при временном отключении тревог.
-  Аналог в оригинальном Recorder:
-    Отключение обработчиков тревог. }
-procedure TRecorderAlarmEngine.Detach;
-begin
-  if (fEventBus <> nil) and (fToken <> 0) then
-    fEventBus.Unsubscribe(fToken);
-  fToken := 0;
-  fEventBus := nil;
 end;
 
 { TRecorderAlarmEngine.AcquireState
@@ -329,26 +290,6 @@ begin
           Result := AValue <= ASetpoint.Threshold;
       end;
   end;
-end;
-
-{ TRecorderAlarmEngine.HandleEvent
-  Назначение:
-    Обработчик событий шины EventBus. Извлекает обновленные значения тегов и передает их в метод ProcessTagValue.
-  Вызывается из:
-    Вызывается шиной EventBus в контексте рабочего потока при публикации rceDataUpdated.
-  Аналог в оригинальном Recorder:
-    Соответствует методу обратного вызова IAlarmEventHandler в оригинальном Recorder. }
-procedure TRecorderAlarmEngine.HandleEvent(ASender: TObject;
-  const AEvent: TRecorderEvent);
-var
-  lTagData: TRecorderTagUpdateEventData;
-begin
-  if (AEvent.Kind <> rceDataUpdated) or
-    (not (AEvent.Data is TRecorderTagUpdateEventData)) then
-    Exit;
-
-  lTagData := TRecorderTagUpdateEventData(AEvent.Data);
-  ProcessTagValue(lTagData.Tag, lTagData.TimeSec, lTagData.Value);
 end;
 
 { TRecorderAlarmEngine.PublishAlarmChange

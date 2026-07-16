@@ -2032,10 +2032,47 @@ end;
 procedure TRecorderSettingsDialog.TagHardwareSourceSetup(Sender: TObject;
   ATag: TRecorderTag);
 var
+  I, lSlot: Integer;
+  lCaption: string;
+  lConfig: TRecorderConfiguredDataSource;
+  lLines: TStringList;
   lPath: string;
 begin
   if ATag = nil then
     Exit;
+  if Pos('MC-032: ', ATag.SourceId) = 1 then
+  begin
+    lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+      ATag.SourceId);
+    if lConfig = nil then
+      Exit;
+    lLines := TStringList.Create;
+    try
+      lLines.StrictDelimiter := True;
+      lLines.Delimiter := '-';
+      lLines.DelimitedText := ATag.Address;
+      if (lLines.Count < 2) or
+        not TryStrToInt(lLines[lLines.Count - 2], lSlot) then
+        Exit;
+      lLines.Text := lConfig.SpecificConfigText;
+      lCaption := '';
+      for I := 0 to lLines.Count - 1 do
+        if Pos('Слот ' + IntToStr(lSlot) + ':', Trim(lLines[I])) = 1 then
+        begin
+          lCaption := Trim(lLines[I]);
+          Break;
+        end;
+      if (lCaption <> '') and ShowRecorderMc201SlotSettingsDialog(Self,
+        lCaption, lConfig.SpecificConfigText) then
+      begin
+        PopulateHardwareTree;
+        PopulateChannelGrids;
+      end;
+    finally
+      lLines.Free;
+    end;
+    Exit;
+  end;
   if Pos(CMeraSourcePrefix, ATag.SourceId) = 1 then
   begin
     lPath := Trim(Copy(ATag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
@@ -2048,7 +2085,7 @@ end;
 procedure TRecorderSettingsDialog.TagZeroBalance(Sender: TObject;
   ARegistry: TRecorderTagRegistry; ATags: TList);
 begin
-  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, nil);
+  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, fRecorder.DataSources);
 end;
 
 procedure TRecorderSettingsDialog.DebugEditMic185Source(const ASourceId: string);
@@ -3515,11 +3552,11 @@ end;
 
 procedure TRecorderSettingsDialog.ApplySpectrumConfiguration;
 begin
-  if (fRecorder = nil) or (fRecorder.SpectrumManager = nil) then
+  if (fRecorder = nil) or (fRecorder.AlgorithmManager = nil) then
     Exit;
   { Производные теги являются частью применённой конфигурации. Создаём их
     сразу, чтобы результат «Создать теги» был виден в этом же диалоге. }
-  fRecorder.SpectrumManager.PrepareConfiguration;
+  fRecorder.AlgorithmManager.PrepareConfiguration;
   PopulateChannelGrids;
 end;
 

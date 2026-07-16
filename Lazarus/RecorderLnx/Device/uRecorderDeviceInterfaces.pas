@@ -62,6 +62,16 @@ type
   end;
 
   TRecorderDeviceChannelArray = array of TRecorderDeviceChannel;
+  TRecorderDeviceActionValues = array of Double;
+
+  { Возможности сервисных кнопок общего диалога канала. UI не должен
+    определять тип прибора по SourceId: конкретный драйвер объявляет и
+    выполняет поддерживаемые действия через базовый TRecorderDevice. }
+  TRecorderDeviceAction = (
+    rdaZeroBalance,
+    rdaHardwareSetup,
+    rdaReadHardwareCalibration
+  );
 
   {
     Устаревшее имя блока отсчётов. Используйте TRecorderAcquisitionBlock.
@@ -98,6 +108,10 @@ type
 
     { Проверка связи по уже открытой сессии (без нового TCP). }
     function TestLink(out AErrorText: string): Boolean;
+    function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean;
+    function ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+      const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
+      out AErrorText: string): Boolean;
 
     property DeviceId: string read GetDeviceId;
     property Name: string read GetName;
@@ -145,6 +159,10 @@ type
       out ABlock: TRecorderAcquisitionBlock): Boolean; virtual;
     // проверка связи
     function TestLink(out AErrorText: string): Boolean; virtual;
+    function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean; virtual;
+    function ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+      const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
+      out AErrorText: string): Boolean; virtual;
     property DeviceId: string read GetDeviceId;
     property Name: string read GetName;
     property State: TRecorderDeviceState read GetState;
@@ -294,6 +312,21 @@ begin
   Result := fState <> rdsDisconnected;
   if not Result then
     AErrorText := 'Device is not connected';
+end;
+
+function TRecorderDevice.SupportsDeviceAction(
+  AAction: TRecorderDeviceAction): Boolean;
+begin
+  Result := False;
+end;
+
+function TRecorderDevice.ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+  const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
+  out AErrorText: string): Boolean;
+begin
+  SetLength(AValues, 0);
+  AErrorText := 'Действие не поддерживается устройством';
+  Result := False;
 end;
 
 procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBlock;
