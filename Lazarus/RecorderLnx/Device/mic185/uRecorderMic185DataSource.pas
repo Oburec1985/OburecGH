@@ -1715,7 +1715,10 @@ begin
   RecorderHardwareUnregisterLiveDevice(Self);
   RecorderMic185RuntimeHoldBusy(Trim(fHost), fPort, False);
   fHardwarePrepared := False;
-  fHardwarePrepareAttempted := False;
+  { Offline-прибор уже проверен при загрузке конфигурации. Повторный TEST на
+    каждом Preview только добавляет сетевой timeout; новая конфигурация создаст
+    новый источник и выполнит проверку заново. }
+  fHardwarePrepareAttempted := RecorderHardwareIsSourceOffline(SourceId);
   inherited Stop;
 end;
 

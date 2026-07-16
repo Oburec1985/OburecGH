@@ -52,7 +52,8 @@ procedure RecorderHardwareTreeClearNodes(ATree: TTreeView);
 implementation
 
 uses
-  uRecorderHardwareLiveDevices, uRecorderConfiguredDataSources;
+  uRecorderHardwareLiveDevices, uRecorderConfiguredDataSources,
+  uRecorderDeviceInterfaces;
 
 const
   CRecorderHardwareSourceLinkProbeMax = 32;
@@ -155,6 +156,7 @@ end;
 function RecorderHardwareSourceLinkOk(const ASourceId: string): Boolean;
 var
   I: Integer;
+  lDevice: IRecorderDevice;
   lNorm: string;
 begin
   Result := False;
@@ -163,6 +165,18 @@ begin
     Exit;
   if RecorderIsVirtualTagSource(lNorm) then
     Exit(RecorderMeraFilePathExists(lNorm));
+  { Запущенная живая сессия и поступающий поток новее сохранённой offline-метки.
+    Не допускаем, чтобы старая ошибка оставляла реально работающее устройство
+    красным в дереве. }
+  lDevice := RecorderHardwareFindLiveDevice(lNorm);
+  { Любая сохраненная рабочая MCbus-сессия (connected/programmed/started)
+    надежнее отдельного probe: старый контроллер допускает один TCP-клиент.
+    Общий контракт TestLink сам решает, нужна ли команда протокола. }
+  if (lDevice <> nil) and RecorderHardwareIsSourceLinkOk(lNorm) then
+  begin
+    RecorderHardwareClearSourceOffline(lNorm);
+    Exit(True);
+  end;
   if RecorderHardwareIsSourceOffline(lNorm) then
     Exit(False);
   if RecorderHardwareIsSourceLinkOk(lNorm) then

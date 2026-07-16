@@ -77,6 +77,24 @@ begin
     raise Exception.Create('Spectrum compute manager did not retain prepared plans');
 end;
 
+procedure TestBandBinRange;
+var
+  lFirstBin: Integer;
+  lLastBin: Integer;
+begin
+  if not RecorderSpectrumBandBinRange(10.0, 20.0, 57600.0 / 8192.0,
+    4096, lFirstBin, lLastBin) then
+    raise Exception.Create('Band bin range 10..20 Hz is empty');
+  AssertEquals('Band lower bin must not be below 10 Hz', 2, lFirstBin);
+  AssertEquals('Band upper bin must not be above 20 Hz', 2, lLastBin);
+
+  if not RecorderSpectrumBandBinRange(100.0, 200.0, 1000.0 / 100.0,
+    50, lFirstBin, lLastBin) then
+    raise Exception.Create('Exact band bin range is empty');
+  AssertEquals('Exact lower bin', 10, lFirstBin);
+  AssertEquals('Exact upper bin', 20, lLastBin);
+end;
+
 procedure TestMultipleFramesWithoutOverlap;
 var
   lSettings: TRecorderSpectrumSettings;
@@ -184,6 +202,9 @@ var
   lSettings: TRecorderSpectrumSettings;
   lTimes: array[0..7] of Double;
   lValues: array[0..7] of Double;
+  lTimes2: array[0..7] of Double;
+  lValues2: array[0..7] of Double;
+  lTag: TRecorderTag;
   I: Integer;
 begin
   lEventBus := TRecorderEventBus.Create;
@@ -191,7 +212,10 @@ begin
   try
     // Создаем тахоканал
     lRegistry.CreateTag('Tacho1', 10);
-    lRegistry.CreateTag('Sensor1', 4096);
+    lTag := lRegistry.CreateTag('Sensor1', 4096);
+    lTag.PollFrequencyHz := 800.0;
+    lTag := lRegistry.CreateTag('Sensor2', 4096);
+    lTag.PollFrequencyHz := 1000.0;
     lRegistry.PublishValue('Tacho1', 0.0, 100.0);
 
     // Добавляем полосы частот
@@ -222,13 +246,20 @@ begin
     lSettings.SampleRateHz := 800.0;
     lSettings.WindowKind := swkRect;
     lSettings.KeepPhase := False;
+    lSettings.CalculateBandRms := True;
+    lSettings.CalculateBandMaximum := True;
+    lSettings.CalculateBandMaximumFrequency := True;
+    lSettings.WriteEstimatesToTags := True;
     lNode.Settings := lSettings;
     lNode.AddBinding('Sensor1');
+    lNode.AddBinding('Sensor2');
 
     // Инициализируем менеджер рантайма
     lManager := TRecorderSpectrumRuntimeManager.Create(lEventBus, lRegistry);
     try
-      lManager.RebuildChannels;
+      lManager.PrepareConfiguration;
+      if lRegistry.FindByName('Sensor1_spm_AbsBand_rms') = nil then
+        raise Exception.Create('Spectrum estimate tags were not created');
 
       // Создаем синусоиду 100 Гц (период 8 точек при Fs=800 Гц)
       for I := 0 to 7 do
@@ -268,6 +299,33 @@ begin
         raise Exception.Create('FormulaBand MaxRms failed');
       if lFrame.Bands[1].MaxFrequencyHz <> 100.0 then
         raise Exception.Create('FormulaBand MaxFrequencyHz failed');
+      if lRegistry.FindByName('Sensor1_spm_AbsBand_rms').SignalBuffer.Count = 0 then
+        raise Exception.Create('Spectrum RMS estimate was not published to tag');
+      if lRegistry.FindByName('Sensor1_spm_AbsBand_fmax').SignalBuffer.LatestValue <> 100.0 then
+        raise Exception.Create('Spectrum maximum frequency was not published to tag');
+
+      { Один узел может содержать каналы с разными Fs. Частотный шаг обязан
+        вычисляться по PollFrequencyHz конкретного тега, а не первого binding. }
+      for I := 0 to 7 do
+      begin
+        lTimes2[I] := I / 1000.0;
+        lValues2[I] := Sin(2.0 * Pi * 125.0 * lTimes2[I]);
+      end;
+      lRegistry.PublishBlock('Sensor2', lTimes2, lValues2, 8);
+      for I := 1 to 100 do
+      begin
+        if lManager.GetLastFrame('Sensor2', lFrame) then
+          Break;
+        Sleep(5);
+      end;
+      if not lManager.GetLastFrame('Sensor2', lFrame) then
+        raise Exception.Create('Mixed sample-rate frame was not calculated');
+      if not SameValue(lFrame.SampleRateHz, 1000.0, 1e-9) then
+        raise Exception.CreateFmt('Per-tag sample rate failed: %.12g',
+          [lFrame.SampleRateHz]);
+      if not SameValue(lFrame.FrequencyStepHz, 125.0, 1e-9) then
+        raise Exception.CreateFmt('Per-tag frequency step failed: %.12g',
+          [lFrame.FrequencyStepHz]);
         
     finally
       lManager.Free;
@@ -283,6 +341,7 @@ procedure RunRecorderSpectrumEngineTests;
 begin
   Writeln('Recorder spectrum engine tests...');
   TestSpectrumComputeManager;
+  TestBandBinRange;
   TestMultipleFramesWithoutOverlap;
   TestMultipleFramesWithOverlap;
   TestConfigInheritance;

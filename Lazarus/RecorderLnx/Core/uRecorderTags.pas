@@ -165,6 +165,7 @@ type
     fAutoUnit: Boolean;                                        { Автоматические единицы измерения }
     fCalibrationNames: TStringList;                          { Цепочка имен канальных ГХ }
     fId: TRecorderTagId;                                       { Уникальный ID тега }
+    fIsVirtual: Boolean;                                      { Тег создан программным, а не аппаратным источником }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fModuleType: string;                                       { Тип модуля/устройства }
     fName: string;                                             { Уникальное имя тега }
@@ -196,7 +197,7 @@ type
       AName     - уникальное имя тега.
       ACapacity - размер кольцевого буфера значений. }
     constructor Create(AId: TRecorderTagId; const AName: string;
-      ACapacity: Integer = 4096);
+      ACapacity: Integer = 4096; AIsVirtual: Boolean = False);
     { Деструктор уничтожает внутренний буфер сигнала }
     destructor Destroy; override;
 
@@ -217,6 +218,7 @@ type
     function Estimate(AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
 
     property Id: TRecorderTagId read fId;
+    property IsVirtual: Boolean read fIsVirtual write fIsVirtual;
     property Name: string read fName write fName;
     property Address: string read fAddress write fAddress;
     property UnitName: string read fUnitName write fUnitName;
@@ -374,7 +376,8 @@ type
     { Создает тег с автоматическим id и добавляет его в registry.
       AName     - уникальное имя тега.
       ACapacity - размер кольцевого буфера тега. }
-    function CreateTag(const AName: string; ACapacity: Integer = 4096): TRecorderTag;
+    function CreateTag(const AName: string; ACapacity: Integer = 4096;
+      AIsVirtual: Boolean = False): TRecorderTag;
 
     { Добавляет заранее созданный тег. Registry принимает владение. }
     function AddTag(ATag: TRecorderTag): TRecorderTag;
@@ -895,7 +898,7 @@ end;
 { TRecorderTag }
 
 constructor TRecorderTag.Create(AId: TRecorderTagId; const AName: string;
-  ACapacity: Integer);
+  ACapacity: Integer; AIsVirtual: Boolean);
 var
   lKind: TRecorderTagEstimateKind;
 begin
@@ -905,6 +908,7 @@ begin
 
   fId := AId;
   fName := AName;
+  fIsVirtual := AIsVirtual;
   fAutoRange := True;
   fAutoUnit := True;
   fPollFrequencyHz := 0;
@@ -1112,9 +1116,9 @@ begin
 end;
 
 function TRecorderTagRegistry.CreateTag(const AName: string;
-  ACapacity: Integer): TRecorderTag;
+  ACapacity: Integer; AIsVirtual: Boolean): TRecorderTag;
 begin
-  Result := TRecorderTag.Create(fNextId, AName, ACapacity);
+  Result := TRecorderTag.Create(fNextId, AName, ACapacity, AIsVirtual);
   try
     AddTag(Result);
     Inc(fNextId);
@@ -1370,6 +1374,11 @@ begin
     Exit;
   if RecorderIsDetachedTagSource(ATag.SourceId) then
     Exit(False);
+  { Виртуальность задаётся явно при создании тега. Такой тег не должен
+    исчезать из представлений только потому, что его SourceId не является
+    зарегистрированным аппаратным источником. }
+  if ATag.IsVirtual then
+    Exit(True);
   if ARegistry = nil then
     Exit;
 

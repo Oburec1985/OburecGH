@@ -566,8 +566,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TRecorderExtensionManager.HandleEvent(ASender: TObject;
-  const AEvent: TRecorderEvent);
+procedure TRecorderExtensionManager.HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
 var
   I: Integer;
   lContext: TExtensionContext;

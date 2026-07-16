@@ -628,6 +628,7 @@ begin
       lTagJson.Add('unit', lTag.UnitName);
       lTagJson.Add('description', lTag.Description);
       lTagJson.Add('sourceId', lTag.SourceId);
+      lTagJson.Add('isVirtual', lTag.IsVirtual);
       lTagJson.Add('sourceValueMode', lTag.SourceValueMode);
       lTagJson.Add('moduleType', lTag.ModuleType);
       lTagJson.Add('pollFrequencyHz', lTag.PollFrequencyHz);
@@ -707,6 +708,12 @@ begin
         lTag.UnitName := lTagJson.Get('unit', lTag.UnitName);
         lTag.Description := lTagJson.Get('description', lTag.Description);
         lTag.SourceId := lTagJson.Get('sourceId', lTag.SourceId);
+        { Совместимость со старыми проектами: до появления явного поля
+          виртуальность можно было восстановить только по известным источникам. }
+        lTag.IsVirtual := lTagJson.Get('isVirtual',
+          RecorderIsVirtualTagSource(lTag.SourceId) or
+          SameText(RecorderNormalizeTagSourceId(lTag.SourceId), 'debug.diagnostics') or
+          (Pos('spectrum:', RecorderNormalizeTagSourceId(lTag.SourceId)) = 1));
         lTag.SourceValueMode := lTagJson.Get('sourceValueMode', lTag.SourceValueMode);
         lTag.ModuleType := lTagJson.Get('moduleType', lTag.ModuleType);
         lTag.PollFrequencyHz := lTagJson.Get('pollFrequencyHz',
@@ -799,8 +806,12 @@ begin
           lIni.WriteString(lSection, 'Text',
             TRecorderStaticTextComponent(lComponent).Text);
         if lComponent is TRecorderTagValueComponent then
+        begin
           lIni.WriteString(lSection, 'DisplayFormat',
             TRecorderTagValueComponent(lComponent).DisplayFormat);
+          lIni.WriteInteger(lSection, 'ShowNameMode',
+            Ord(TRecorderTagValueComponent(lComponent).ShowNameMode));
+        end;
         if lComponent is TRecorderOscillogramComponent then
         begin
           lIni.WriteInteger(lSection, 'BindingMode',
@@ -951,8 +962,16 @@ begin
             TRecorderStaticTextComponent(lComponent).Text :=
               lIni.ReadString(lSection, 'Text', '');
           if lComponent is TRecorderTagValueComponent then
+          begin
             TRecorderTagValueComponent(lComponent).DisplayFormat :=
               lIni.ReadString(lSection, 'DisplayFormat', '0.###');
+            lItemCount := lIni.ReadInteger(lSection, 'ShowNameMode', Ord(tvnmTop));
+            if (lItemCount < Ord(Low(TRecorderTagValueNameMode))) or
+              (lItemCount > Ord(High(TRecorderTagValueNameMode))) then
+              lItemCount := Ord(tvnmTop);
+            TRecorderTagValueComponent(lComponent).ShowNameMode :=
+              TRecorderTagValueNameMode(lItemCount);
+          end;
           if lComponent is TRecorderOscillogramComponent then
           begin
             TRecorderOscillogramComponent(lComponent).BindingMode :=

@@ -514,13 +514,14 @@ begin
   begin
     fTag := ARegistry.FindByName(fTagName);
     if fTag = nil then
-      fTag := ARegistry.CreateTag(fTagName, 4096);
+      fTag := ARegistry.CreateTag(fTagName, 4096, True);
   end;
 
   fTag.Address := 'v';
   fTag.UnitName := 'a.u.';
   fTag.Description := 'Mock sine signal';
   fTag.SourceId := SourceId;
+  fTag.IsVirtual := True;
   fTag.ModuleType := 'virtual';
   fTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 end;
@@ -595,12 +596,13 @@ begin
   begin
     fMemoryTag := ARegistry.FindByName(fMemoryTagName);
     if fMemoryTag = nil then
-      fMemoryTag := ARegistry.CreateTag(fMemoryTagName, 4096);
+      fMemoryTag := ARegistry.CreateTag(fMemoryTagName, 4096, True);
   end;
   fMemoryTag.Address := 'diagnostics.memory';
   fMemoryTag.UnitName := 'MB';
   fMemoryTag.Description := 'Recorder process memory usage';
   fMemoryTag.SourceId := SourceId;
+  fMemoryTag.IsVirtual := True;
   fMemoryTag.ModuleType := 'diagnostics';
   fMemoryTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 
@@ -610,12 +612,13 @@ begin
   begin
     fCpuTag := ARegistry.FindByName(fCpuTagName);
     if fCpuTag = nil then
-      fCpuTag := ARegistry.CreateTag(fCpuTagName, 4096);
+      fCpuTag := ARegistry.CreateTag(fCpuTagName, 4096, True);
   end;
   fCpuTag.Address := 'diagnostics.cpu';
   fCpuTag.UnitName := '%';
   fCpuTag.Description := 'Recorder process CPU usage';
   fCpuTag.SourceId := SourceId;
+  fCpuTag.IsVirtual := True;
   fCpuTag.ModuleType := 'diagnostics';
   fCpuTag.PollFrequencyHz := 1000.0 / UpdateTimeMs;
 end;
@@ -1055,6 +1058,7 @@ var
     ATag.SensorCalibrationName := lSignal.SensorCalibrationName;
     ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
     ATag.SourceId := 'Mera file: ' + fFileName;
+    ATag.IsVirtual := True;
     ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
       [lSignal.Name, lSignal.DataTypeName,
       FormatFloat('0.######', lSignal.FrequencyHz),
@@ -1090,7 +1094,7 @@ begin
 
       if not lUpdated then
       begin
-        lTag := ARegistry.CreateTag(MeraSignalToRecorderTagName(lSignal), 4096);
+        lTag := ARegistry.CreateTag(MeraSignalToRecorderTagName(lSignal), 4096, True);
         UpdateTag(lTag);
       end;
     end;

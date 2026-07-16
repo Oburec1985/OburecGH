@@ -838,12 +838,16 @@ begin
       fDataSourcesConfigured := False;
       EnsureDemoDataSources;
       PrepareRuntimeForConfiguration;
-      RebuildTagList(edTagSearch.Text);
-      RenderActivePage;
       AddLog('Project settings applied.');
     end
     else
       AddLog('Configuration mode: settings dialog closed without applying OK.');
+
+    { Внутренняя и общая кнопки «Применить» изменяют реестр ещё до закрытия
+      диалога. Поэтому список тегов надо перечитать и после «Закрыть», а не
+      только после OK. При чистой отмене это безопасное обновление представления. }
+    RebuildTagList(edTagSearch.Text);
+    RenderActivePage;
   except
     on E: Exception do
       LogCommandError('Settings', E);

@@ -46,6 +46,10 @@ type
     spChannels: TSplitter;                      // Разделитель между сетками доступных и выбранных каналов
     fAvailableChannelsGrid: TStringGrid;        // Таблица доступных для выбора каналов
     fSelectedChannelsGrid: TStringGrid;         // Таблица выбранных (активных) каналов
+    edSelectedChannelsFilter: TEdit;
+    btnSelectedChannelsClear: TButton;
+    cbHideInactiveSelectedChannels: TCheckBox;
+    cbOnlyVirtualSelectedChannels: TCheckBox;
     spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
     fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
     fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
@@ -65,6 +69,10 @@ type
     fAlgorithmZeroPadCheck: TCheckBox;          // Дополнять нулями
     fAlgorithmAhCorrectionCheck: TCheckBox;     // Коррекция АЧХ
     fAlgorithmIntegrationGroup: TRadioGroup;    // Режим интегрирования
+    fAlgorithmBandRmsCheck: TCheckBox;
+    fAlgorithmBandMaxCheck: TCheckBox;
+    fAlgorithmBandMaxFrequencyCheck: TCheckBox;
+    fAlgorithmWriteEstimatesCheck: TCheckBox;
     Cfg: TEdit;
 
     // Поля ввода общих настроек
@@ -134,6 +142,8 @@ type
     procedure fAlgorithmFftParamChange(Sender: TObject);
     procedure fAlgorithmOverlapComboChange(Sender: TObject);
     procedure fHardwareTreeDblClick(Sender: TObject);
+    procedure fHardwareTreeMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
@@ -161,6 +171,8 @@ type
     fSavedSelection: TGridRect;
     procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure SelectedChannelsFilterChanged(Sender: TObject);
+    procedure SelectedChannelsFilterClearClick(Sender: TObject);
     procedure GridPaint(Sender: TObject);
     
     // Вспомогательные методы работы с Mera-сигналами
@@ -172,6 +184,7 @@ type
     function SignalSourceGroup(ASignal: TMeraSignalInfo): string;
     function FindTagBySourceAddress(const ASourceId, AAddress: string): TRecorderTag;
     function SignalHasLinkedTag(ASignal: TMeraSignalInfo): Boolean;
+    function TagIsVirtual(ATag: TRecorderTag): Boolean;
     function TagLinkedToInactiveHardware(ATag: TRecorderTag): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
     function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
@@ -183,6 +196,7 @@ type
       ATargetNode: TRecorderSpectrumConfigNode);
     function CreateSpectrumConfigNode(ATag: TRecorderTag): TRecorderSpectrumConfigNode;
     function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
+    function SelectedSpectrumBinding: TRecorderSpectrumTagBinding;
     procedure CreateSelectedMeraTags;
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
@@ -241,6 +255,7 @@ type
     procedure SyncMeraFilesPathFromUi;
     procedure LoadFromSettings;
     procedure StoreToSettings;
+    procedure ApplySpectrumConfiguration;
     procedure UpdateConditionControls;
     function ReadFloatEdit(AEdit: TEdit; ADefault: Double): Double;
     function ReadSecondsAsMs(AEdit: TEdit; ADefaultMs: Cardinal): Cardinal;
@@ -464,6 +479,7 @@ const
   CDeviceControllerImageIndex = 42;
   CDeviceDisabledImageIndex = 41;
   CDeviceInactiveTagImageIndex = 54;
+  CDeviceVirtualTagImageIndex = 20;
   CDeviceInactiveTagIconSize = 16;
   CDeviceModuleImageIndex = CIconDeviceModule;
   CDeviceTreeProbeTimeoutMs = 1000;
@@ -516,6 +532,15 @@ begin
     fSelectedChannelsGrid.DragMode := dmManual;
   end;
 
+  if edSelectedChannelsFilter <> nil then
+    edSelectedChannelsFilter.OnChange := @SelectedChannelsFilterChanged;
+  if btnSelectedChannelsClear <> nil then
+    btnSelectedChannelsClear.OnClick := @SelectedChannelsFilterClearClick;
+  if cbHideInactiveSelectedChannels <> nil then
+    cbHideInactiveSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
+  if cbOnlyVirtualSelectedChannels <> nil then
+    cbOnlyVirtualSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
+
   if fAvailableChannelsGrid <> nil then
   begin
     fAvailableChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
@@ -537,6 +562,14 @@ begin
     fAlgorithmWindowCombo.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmZeroPadCheck <> nil then
     fAlgorithmZeroPadCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmBandRmsCheck <> nil then
+    fAlgorithmBandRmsCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmBandMaxCheck <> nil then
+    fAlgorithmBandMaxCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmBandMaxFrequencyCheck <> nil then
+    fAlgorithmBandMaxFrequencyCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmWriteEstimatesCheck <> nil then
+    fAlgorithmWriteEstimatesCheck.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmIntegrationGroup <> nil then
     fAlgorithmIntegrationGroup.OnClick := @fAlgorithmFftParamChange;
   if Cfg <> nil then
@@ -668,6 +701,7 @@ begin
   ATag.Address := ASignal.Address;
   ATag.UnitName := ASignal.UnitsName;
   ATag.SourceId := lSourceId;
+  ATag.IsVirtual := RecorderIsVirtualTagSource(lSourceId);
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
   ATag.SourceValueMode := ASignal.SourceValueMode;
@@ -717,6 +751,11 @@ begin
   if fSourceProbe = nil then
     Exit(False);
   Result := fSourceProbe.SignalHasLinkedTag(ASignal);
+end;
+
+function TRecorderSettingsDialog.TagIsVirtual(ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and ATag.IsVirtual;
 end;
 
 function TRecorderSettingsDialog.TagLinkedToInactiveHardware(
@@ -1046,12 +1085,17 @@ end;
 procedure TRecorderSettingsDialog.LoadSelectedAlgorithmSettings;
 var
   lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
 begin
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
-  lSettings := lNode.Settings;
+  lBinding := SelectedSpectrumBinding;
+  if lBinding <> nil then
+    lSettings := lBinding.ResolveSettings(lNode.Settings)
+  else
+    lSettings := lNode.Settings;
   if fAlgorithmFftSizeEdit <> nil then
     fAlgorithmFftSizeEdit.Text := IntToStr(lSettings.FFTSize);
   if fAlgorithmSampleRateEdit <> nil then
@@ -1070,6 +1114,10 @@ begin
     fAlgorithmAhCorrectionCheck.Checked := lSettings.AhCorrectionEnabled;
   if fAlgorithmIntegrationGroup <> nil then
     fAlgorithmIntegrationGroup.ItemIndex := Ord(lSettings.IntegrationMode);
+  fAlgorithmBandRmsCheck.Checked := lSettings.CalculateBandRms;
+  fAlgorithmBandMaxCheck.Checked := lSettings.CalculateBandMaximum;
+  fAlgorithmBandMaxFrequencyCheck.Checked := lSettings.CalculateBandMaximumFrequency;
+  fAlgorithmWriteEstimatesCheck.Checked := lSettings.WriteEstimatesToTags;
   if Cfg <> nil then
     Cfg.Text := lSettings.AsString;
   UpdateAlgorithmDerivedControls;
@@ -1078,19 +1126,30 @@ end;
 procedure TRecorderSettingsDialog.StoreSelectedAlgorithmSettings;
 var
   lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
 begin
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
 
-  lSettings := lNode.Settings;
+  lBinding := SelectedSpectrumBinding;
+  if lBinding <> nil then
+    lSettings := lBinding.ResolveSettings(lNode.Settings)
+  else
+    lSettings := lNode.Settings;
   if (Cfg <> nil) and (Cfg.Text <> '') then
   begin
     try
       lSettings.FromString(Cfg.Text);
       lSettings.Validate;
-      lNode.Settings := lSettings;
+      if lBinding <> nil then
+      begin
+        lBinding.Settings := lSettings;
+        lBinding.UseOwnSettings := True;
+      end
+      else
+        lNode.Settings := lSettings;
       LoadSelectedAlgorithmSettings;
       Exit;
     except
@@ -1100,7 +1159,13 @@ begin
 
   lSettings := GetSettingsFromControls(lSettings);
   lSettings.Validate;
-  lNode.Settings := lSettings;
+  if lBinding <> nil then
+  begin
+    lBinding.Settings := lSettings;
+    lBinding.UseOwnSettings := True;
+  end
+  else
+    lNode.Settings := lSettings;
   UpdateAlgorithmDerivedControls;
 end;
 
@@ -1231,18 +1296,27 @@ begin
   if (fAlgorithmIntegrationGroup <> nil) and
     (fAlgorithmIntegrationGroup.ItemIndex >= 0) then
     Result.IntegrationMode := TRecorderSpectrumIntegrationMode(fAlgorithmIntegrationGroup.ItemIndex);
+  Result.CalculateBandRms := fAlgorithmBandRmsCheck.Checked;
+  Result.CalculateBandMaximum := fAlgorithmBandMaxCheck.Checked;
+  Result.CalculateBandMaximumFrequency := fAlgorithmBandMaxFrequencyCheck.Checked;
+  Result.WriteEstimatesToTags := fAlgorithmWriteEstimatesCheck.Checked;
   Result.NormalizeMode := snmNone;
 end;
 
 procedure TRecorderSettingsDialog.UpdateConfigStr;
 var
   lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
 begin
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
-  lSettings := GetSettingsFromControls(lNode.Settings);
+  lBinding := SelectedSpectrumBinding;
+  if lBinding <> nil then
+    lSettings := GetSettingsFromControls(lBinding.ResolveSettings(lNode.Settings))
+  else
+    lSettings := GetSettingsFromControls(lNode.Settings);
   if Cfg <> nil then
     Cfg.Text := lSettings.AsString;
 end;
@@ -1408,7 +1482,6 @@ var
       end;
     end;
   end;
-
   procedure CreateTagsFromGroup(AGroup: TRecorderSettingsSourceGroup);
   var
     J: Integer;
@@ -1431,7 +1504,8 @@ var
         lTagName := MeraSignalToRecorderTagName(lSignal);
         lTag := fRecorder.TagRegistry.FindByName(lTagName);
         if lTag = nil then
-          lTag := fRecorder.TagRegistry.CreateTag(lTagName, Ceil(Max(4096, lSignal.FrequencyHz)));
+          lTag := fRecorder.TagRegistry.CreateTag(lTagName,
+            Ceil(Max(4096, lSignal.FrequencyHz)), AGroup = rsgMeraFile);
       end;
 
       ApplyMeraSignalToTag(lTag, lSignal);
@@ -1797,6 +1871,15 @@ begin
   ApplyConfiguredSourceChange(ASourceId, lNewSourceId);
 end;
 
+function TRecorderSettingsDialog.SelectedSpectrumBinding:
+  TRecorderSpectrumTagBinding;
+begin
+  Result := nil;
+  if (fAlgorithmsTree <> nil) and (fAlgorithmsTree.Selected <> nil) and
+    (TObject(fAlgorithmsTree.Selected.Data) is TRecorderSpectrumTagBinding) then
+    Result := TRecorderSpectrumTagBinding(fAlgorithmsTree.Selected.Data);
+end;
+
 procedure TRecorderSettingsDialog.EditMc032Source(const ASourceId: string);
 var
   lConfig: TRecorderConfiguredDataSource;
@@ -2051,12 +2134,24 @@ end;
 
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
+  lErrorText: string;
   lSourceId: string;
 begin
   lSourceId := SelectedHardwareSourceId;
   if lSourceId = '' then
     Exit;
+  { Сброс статуса сам по себе не означает исправность. Сразу подтверждаем
+    устройство через TEST и только после успеха снимаем offline-метку. }
   RecorderHardwareClearSourceOffline(lSourceId);
+  if RecorderHardwareTestSourceLink(lSourceId, lErrorText) or
+    RecorderHardwareSourceLinkOk(lSourceId) then
+    RecorderHardwareClearSourceOffline(lSourceId)
+  else
+  begin
+    if Trim(lErrorText) = '' then
+      lErrorText := 'TEST устройства не выполнен';
+    RecorderHardwareMarkSourceOffline(lSourceId, lErrorText);
+  end;
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -2076,6 +2171,38 @@ begin
   if lSourceId = '' then
     Exit;
   EditHardwareSource(lSourceId);
+end;
+
+procedure TRecorderSettingsDialog.fHardwareTreeMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
+  lReason: string;
+  lSourceId: string;
+begin
+  if fHardwareTree = nil then
+    Exit;
+  lNode := fHardwareTree.GetNodeAt(X, Y);
+  lSourceId := '';
+  while lNode <> nil do
+  begin
+    lSourceId := RecorderHardwareTreeSourceId(lNode);
+    if lSourceId <> '' then
+      Break;
+    lNode := lNode.Parent;
+  end;
+  if lSourceId = '' then
+  begin
+    fHardwareTree.Hint := '';
+    Exit;
+  end;
+  lReason := RecorderHardwareSourceOfflineReason(lSourceId);
+  if lReason <> '' then
+    fHardwareTree.Hint := 'Ошибка устройства: ' + lReason
+  else if (lNode <> nil) and (lNode.ImageIndex = CDeviceControllerImageIndex) then
+    fHardwareTree.Hint := 'Устройство доступно'
+  else
+    fHardwareTree.Hint := 'Ошибка устройства: TEST не выполнен';
 end;
 
 procedure TRecorderSettingsDialog.PopulateHardwareTree;
@@ -2210,6 +2337,28 @@ var
   lSelectedTags: TList;
   lSignal: TMeraSignalInfo;
   lTag: TRecorderTag;
+  lFilterText: string;
+
+  function SelectedTagPassesFilter(ATag: TRecorderTag): Boolean;
+  var
+    lSearchText: string;
+  begin
+    Result := ATag <> nil;
+    if not Result then
+      Exit;
+    if (cbHideInactiveSelectedChannels <> nil) and
+      cbHideInactiveSelectedChannels.Checked and TagLinkedToInactiveHardware(ATag) then
+      Exit(False);
+    if (cbOnlyVirtualSelectedChannels <> nil) and
+      cbOnlyVirtualSelectedChannels.Checked and
+      (not TagIsVirtual(ATag)) then
+      Exit(False);
+    if lFilterText = '' then
+      Exit(True);
+    lSearchText := LowerCase(ATag.Name + ' ' + ATag.Address + ' ' +
+      ATag.ModuleType + ' ' + ATag.SourceId + ' ' + ATag.Description);
+    Result := Pos(lFilterText, lSearchText) > 0;
+  end;
 
   procedure CountAvailableSignals(AGroup: TRecorderSettingsSourceGroup);
   var
@@ -2242,6 +2391,14 @@ var
 begin
   SetGridHeaders;
 
+  lFilterText := '';
+  if edSelectedChannelsFilter <> nil then
+  begin
+    lFilterText := Trim(LowerCase(edSelectedChannelsFilter.Text));
+    if SameText(lFilterText, 'filter') then
+      lFilterText := '';
+  end;
+
   if fRecorder = nil then
     Exit;
 
@@ -2273,7 +2430,8 @@ begin
         for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
         begin
           lTag := fRecorder.TagRegistry.Tags[I];
-          lSelectedTags.Add(lTag);
+          if SelectedTagPassesFilter(lTag) then
+            lSelectedTags.Add(lTag);
         end;
 
       SortSelectedTags(lSelectedTags);
@@ -2327,6 +2485,9 @@ begin
 
   fHardwareTree.OnDblClick := @fHardwareTreeDblClick;
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
+  fHardwareTree.OnMouseMove := @fHardwareTreeMouseMove;
+  fHardwareTree.ShowHint := True;
+  fHardwareTree.ParentShowHint := False;
   if fHardwareTree.PopupMenu = nil then
   begin
     lPopup := TPopupMenu.Create(Self);
@@ -2739,6 +2900,11 @@ begin
   if fRecorder.RunSettings = nil then
     Exit;
 
+  { Внешние кнопки «Применить» и OK также должны сохранить текущую строку
+    алгоритма, даже если внутренняя кнопка спектра не была нажата. }
+  if SelectedSpectrumConfigNode <> nil then
+    StoreSelectedAlgorithmSettings;
+
   if fStartLevelRadio.Checked then
     fRecorder.RunSettings.StartCondition := rscSignalLevel
   else if fStartTriggerRadio.Checked then
@@ -2855,6 +3021,7 @@ end;
 procedure TRecorderSettingsDialog.ApplyButtonClick(Sender: TObject);
 begin
   StoreToSettings;
+  ApplySpectrumConfiguration;
 end;
 
 
@@ -3089,14 +3256,22 @@ var
   lIconLeft: Integer;
   lIconTop: Integer;
   lIconRect: TRect;
+  lImageIndex: Integer;
   lTag: TRecorderTag;
 begin
   if (Sender <> fSelectedChannelsGrid) or (aCol <> 0) or (aRow < 1) or
-    (fDeviceImageList = nil) or (CDeviceInactiveTagImageIndex >= fDeviceImageList.Count) then
+    (fDeviceImageList = nil) then
     Exit;
 
   lTag := SelectedTagByGridRow(aRow);
-  if not TagLinkedToInactiveHardware(lTag) then
+  if TagIsVirtual(lTag) then
+    lImageIndex := CDeviceVirtualTagImageIndex
+  else if TagLinkedToInactiveHardware(lTag) then
+    lImageIndex := CDeviceInactiveTagImageIndex
+  else
+    Exit;
+
+  if (lImageIndex < 0) or (lImageIndex >= fDeviceImageList.Count) then
     Exit;
 
   if gdSelected in aState then
@@ -3122,7 +3297,7 @@ begin
 
   lBitmap := TBitmap.Create;
   try
-    fDeviceImageList.GetBitmap(CDeviceInactiveTagImageIndex, lBitmap);
+    fDeviceImageList.GetBitmap(lImageIndex, lBitmap);
     fSelectedChannelsGrid.Canvas.StretchDraw(lIconRect, lBitmap);
   finally
     lBitmap.Free;
@@ -3192,7 +3367,8 @@ end;
 procedure TRecorderSettingsDialog.btnAlgorithmConfigClick(Sender: TObject);
 begin
   try
-    StoreSelectedAlgorithmSettings;
+    StoreToSettings;
+    ApplySpectrumConfiguration;
   except
     on E: Exception do
       MessageDlg('Настройка спектра', E.Message, mtError, [mbOK], 0);
@@ -3335,6 +3511,27 @@ begin
     Exit;
   end;
   EditHardwareSource(lSourceId);
+end;
+
+procedure TRecorderSettingsDialog.ApplySpectrumConfiguration;
+begin
+  if (fRecorder = nil) or (fRecorder.SpectrumManager = nil) then
+    Exit;
+  { Производные теги являются частью применённой конфигурации. Создаём их
+    сразу, чтобы результат «Создать теги» был виден в этом же диалоге. }
+  fRecorder.SpectrumManager.PrepareConfiguration;
+  PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.SelectedChannelsFilterChanged(Sender: TObject);
+begin
+  PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.SelectedChannelsFilterClearClick(Sender: TObject);
+begin
+  if edSelectedChannelsFilter <> nil then
+    edSelectedChannelsFilter.Clear;
 end;
 
 procedure TRecorderSettingsDialog.fHardwareTreeKeyDown(Sender: TObject;

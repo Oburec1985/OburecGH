@@ -3,6 +3,11 @@ unit uRecorderSpectrumEngine;
 {
   RecorderLnx FFT runtime engine.
 
+  Алгоритмические юниты располагаются в Algs. Этот модуль хранит настройки,
+  FFT-планы и вычисление спектрального кадра, но не создаёт теги и не зависит
+  от UI. Флаги CalculateBand* описывают требуемые оценки итогового спектра;
+  при IntegrationMode x1/x2 оценки относятся уже к интегрированным значениям.
+
   The unit deliberately has no LCL/UI dependencies. The settings dialog can edit
   TRecorderSpectrumConfigTree, while the runtime code receives already resolved
   tag bindings and feeds TRecorderSpectrumChannel with driver blocks.
@@ -69,6 +74,10 @@ type
     AhCorrectionEnabled: Boolean;
     AhCorrectionProfileName: string;
     IntegrationMode: TRecorderSpectrumIntegrationMode;
+    CalculateBandRms: Boolean;
+    CalculateBandMaximum: Boolean;
+    CalculateBandMaximumFrequency: Boolean;
+    WriteEstimatesToTags: Boolean;
     WindowKind: TRecorderSpectrumWindowKind;
     NormalizeMode: TRecorderSpectrumNormalizeMode;
     KeepPhase: Boolean;
@@ -167,6 +176,10 @@ type
   TRecorderSpectrumFrameEvent = procedure(ASender: TObject;
     const AFrame: TRecorderSpectrumFrame) of object;
 
+function RecorderSpectrumBandBinRange(AF1, AF2, AFrequencyStepHz: Double;
+  ABinCount: Integer; out AFirstBin, ALastBin: Integer): Boolean;
+
+type
   TRecorderSpectrumFFTPlan = class
   private
     fBackendName: string;
@@ -256,6 +269,34 @@ function RecorderSpectrumIntegrationName(AMode: TRecorderSpectrumIntegrationMode
 function RecorderSpectrumComputeManager: TRecorderSpectrumComputeManager;
 
 implementation
+
+function RecorderSpectrumBandBinRange(AF1, AF2, AFrequencyStepHz: Double;
+  ABinCount: Integer; out AFirstBin, ALastBin: Integer): Boolean;
+var
+  lFrequency: Double;
+begin
+  Result := False;
+  AFirstBin := 0;
+  ALastBin := -1;
+  if (AFrequencyStepHz <= 0.0) or (ABinCount <= 0) then
+    Exit;
+  if AF1 > AF2 then
+  begin
+    lFrequency := AF1;
+    AF1 := AF2;
+    AF2 := lFrequency;
+  end;
+  { Полоса включает только центры FFT-бинов внутри [F1; F2]. Round для
+    нижней границы ошибочно захватывает бин ниже F1 (10 Гц -> 7,03125 Гц). }
+  AFirstBin := Ceil(AF1 / AFrequencyStepHz - 1e-12);
+  ALastBin := Floor(AF2 / AFrequencyStepHz + 1e-12);
+  if AFirstBin < 0 then
+    AFirstBin := 0;
+  if ALastBin >= ABinCount then
+    ALastBin := ABinCount - 1;
+  Result := (AFirstBin < ABinCount) and (ALastBin >= 0) and
+    (AFirstBin <= ALastBin);
+end;
 
 const
   CTwoPi = 2.0 * Pi;
@@ -412,6 +453,10 @@ begin
   AhCorrectionEnabled := False;
   AhCorrectionProfileName := '';
   IntegrationMode := simNone;
+  CalculateBandRms := False;
+  CalculateBandMaximum := False;
+  CalculateBandMaximumFrequency := False;
+  WriteEstimatesToTags := False;
   WindowKind := swkHann;
   NormalizeMode := snmNone;
   KeepPhase := True;
@@ -425,10 +470,13 @@ begin
   lFS.DecimalSeparator := '.';
   Result := Format(
     'FFTSize=%d,Overlap=%d,OverlapMode=%d,SampleRateHz=%s,AverageBlockCount=%d,ZeroPad=%d,' +
-    'AhCorrectionEnabled=%d,AhCorrectionProfileName=%s,IntegrationMode=%d,WindowKind=%d,NormalizeMode=%d,KeepPhase=%d',
+    'AhCorrectionEnabled=%d,AhCorrectionProfileName=%s,IntegrationMode=%d,WindowKind=%d,NormalizeMode=%d,KeepPhase=%d,' +
+    'CalculateBandRms=%d,CalculateBandMaximum=%d,CalculateBandMaximumFrequency=%d,WriteEstimatesToTags=%d',
     [FFTSize, Overlap, Ord(OverlapMode), FloatToStr(SampleRateHz, lFS), AverageBlockCount, Ord(ZeroPad),
      Ord(AhCorrectionEnabled), AhCorrectionProfileName, Ord(IntegrationMode),
-     Ord(WindowKind), Ord(NormalizeMode), Ord(KeepPhase)]);
+     Ord(WindowKind), Ord(NormalizeMode), Ord(KeepPhase), Ord(CalculateBandRms),
+     Ord(CalculateBandMaximum), Ord(CalculateBandMaximumFrequency),
+     Ord(WriteEstimatesToTags)]);
 end;
 
 procedure TRecorderSpectrumSettings.FromString(const AValue: string);
@@ -493,7 +541,15 @@ begin
           NormalizeMode := TRecorderSpectrumNormalizeMode(lInt);
       end
       else if SameText(lKey, 'KeepPhase') then
-        KeepPhase := StrToIntDef(lVal, 0) <> 0;
+        KeepPhase := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'CalculateBandRms') then
+        CalculateBandRms := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'CalculateBandMaximum') then
+        CalculateBandMaximum := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'CalculateBandMaximumFrequency') then
+        CalculateBandMaximumFrequency := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'WriteEstimatesToTags') then
+        WriteEstimatesToTags := StrToIntDef(lVal, 0) <> 0;
     end;
   finally
     lList.Free;

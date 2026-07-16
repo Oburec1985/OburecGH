@@ -1477,6 +1477,7 @@ begin
     begin
       lTag.Address := Trim(fModuleEdit.Text);
       lTag.SourceId := 'Mera file: ' + fSelectedMeraFileName;
+      lTag.IsVirtual := True;
       RecorderTagClearMic140Settings(lTag);
     end;
     if Trim(fUnitCombo.Text) <> '' then

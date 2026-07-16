@@ -384,6 +384,15 @@ end;
 
 function TRecorderMcbusDevice.TestLink(out AErrorText: string): Boolean;
 begin
+  { Во время сканирования сам поток корректных данных уже подтверждает связь.
+    Посылать служебный TEST в занятую потоковую MDP-сессию нельзя: ответ может
+    смешаться с пакетами данных и дать ложный offline-статус. }
+  if fState = rdsStarted then
+  begin
+    AErrorText := '';
+    fLastError := '';
+    Exit(True);
+  end;
   { TEST обязан работать до Connect: источник вызывает его как безопасный
     предикат перед операциями, которые используют исключения. }
   fController.Host := Trim(fHost);
@@ -398,7 +407,9 @@ begin
     Не закрываем успешную проверку: старый контроллер может не принять
     немедленное повторное соединение после отдельного probe-сеанса. }
   Result := fController.TestConnection(AErrorText);
-  if not Result then
+  if Result then
+    fLastError := ''
+  else
     fLastError := AErrorText;
 end;
 

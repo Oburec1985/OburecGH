@@ -185,8 +185,8 @@ begin
     fShowNameCombo.Parent := Self;
     fShowNameCombo.SetBounds(140, lTop, 180, 23);
     fShowNameCombo.Style := csDropDownList;
-    fShowNameCombo.Items.Add('Скрыть имя');
-    fShowNameCombo.Items.Add('Скрыть имя');
+    fShowNameCombo.Items.Add('Не отображать имя');
+    fShowNameCombo.Items.Add('Автоматически');
     fShowNameCombo.Items.Add('Имя слева');
     Inc(lTop, 32);
 
@@ -348,14 +348,31 @@ begin
 end;
 
 procedure TComponentSettingsDialog.StoreToComponent;
+var
+  lTag: TRecorderTag;
 begin
   if fTagCombo <> nil then
   begin
     if (fTagCombo.ItemIndex >= 0) and
       (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
-      fComponent.TagName := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]).Name
+    begin
+      { Привязка хранится парой TagId/TagName. Нельзя менять только имя:
+        последующая синхронизация по старому Id вернет прежний тег. }
+      lTag := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]);
+      fComponent.TagId := lTag.Id;
+      fComponent.TagName := lTag.Name;
+    end
     else
+    begin
       fComponent.TagName := fTagCombo.Text;
+      lTag := nil;
+      if fTagRegistry <> nil then
+        lTag := fTagRegistry.FindByName(fComponent.TagName);
+      if lTag <> nil then
+        fComponent.TagId := lTag.Id
+      else
+        fComponent.TagId := 0;
+    end;
   end;
 
   if fComponent is TRecorderStaticTextComponent then

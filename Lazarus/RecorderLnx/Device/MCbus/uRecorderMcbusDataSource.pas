@@ -194,8 +194,12 @@ begin
     (fDevice.State <> rdsProgrammed) then
     Exit;
   fDevice.Start;
+  { После каждого успешного Start подтверждаем живую сессию в общем реестре.
+    Это обязательно после повторного Preview: дерево оборудования не должно
+    переходить к отдельному TCP-probe, пока рабочий сокет уже занят потоком. }
+  RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
   fEmptyReadCount := 0;
-  RecorderDebugLog('[MCBUS] scan started');
+  RecorderDebugLog('[MCBUS] scan started; live device registered: ' + SourceId);
 end;
 
 procedure TRecorderMcbusDataSource.Stop;
@@ -223,8 +227,13 @@ begin
     { Подключение и программирование сохраняются между остановками Preview.
       Полное отключение выполняет деструктор при загрузке/переконфигурации. }
   end;
-  RecorderHardwareUnregisterLiveDevice(Self);
-  RecorderDebugLog('[MCBUS] stopped');
+  { При штатном Stop устройство остается запрограммированным и подключенным,
+    поэтому оставляем его в live-реестре. Иначе дерево выполнит второй TEST по
+    отдельному сокету и ошибочно покажет занятый контроллер неактивным. }
+  if (fDevice = nil) or (fDevice.State = rdsDisconnected) then
+    RecorderHardwareUnregisterLiveDevice(Self);
+  RecorderDebugLog('[MCBUS] stopped; live state=' +
+    IntToStr(Ord(fDevice.State)) + ' source=' + SourceId);
   inherited Stop;
 end;
 

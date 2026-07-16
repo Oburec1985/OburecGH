@@ -709,12 +709,12 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         TabOrder = 2
         object pnFilter: TPanel
           Left = 0
-          Height = 36
+          Height = 62
           Top = 0
           Width = 303
           Align = alTop
           BevelOuter = bvNone
-          ClientHeight = 36
+          ClientHeight = 62
           ClientWidth = 303
           TabOrder = 0
           object edSelectedChannelsFilter: TEdit
@@ -735,11 +735,27 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Caption = 'X'
             TabOrder = 1
           end
+          object cbHideInactiveSelectedChannels: TCheckBox
+            Left = 8
+            Height = 19
+            Top = 36
+            Width = 132
+            Caption = 'Скрыть неактивные'
+            TabOrder = 2
+          end
+          object cbOnlyVirtualSelectedChannels: TCheckBox
+            Left = 148
+            Height = 19
+            Top = 36
+            Width = 143
+            Caption = 'Только виртуальные'
+            TabOrder = 3
+          end
         end
         object fSelectedChannelsGrid: TStringGrid
           Left = 0
-          Height = 505
-          Top = 36
+          Height = 479
+          Top = 62
           Width = 303
           Align = alClient
           ColCount = 7
@@ -831,12 +847,12 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         end
         object pnAlgorithmSettings: TPanel
           Left = 0
-          Height = 239
-          Top = 302
+          Height = 315
+          Top = 226
           Width = 374
           Align = alBottom
           BevelOuter = bvNone
-          ClientHeight = 239
+          ClientHeight = 315
           ClientWidth = 374
           TabOrder = 1
           object lbAlgorithmFftSize: TLabel
@@ -1000,13 +1016,45 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             )
             TabOrder = 8
           end
+          object fAlgorithmBandRmsCheck: TCheckBox
+            Left = 206
+            Height = 19
+            Top = 153
+            Width = 154
+            Caption = 'СКЗ в полосах'
+            TabOrder = 9
+          end
+          object fAlgorithmBandMaxCheck: TCheckBox
+            Left = 206
+            Height = 19
+            Top = 176
+            Width = 154
+            Caption = 'Максимум в полосах'
+            TabOrder = 10
+          end
+          object fAlgorithmBandMaxFrequencyCheck: TCheckBox
+            Left = 206
+            Height = 19
+            Top = 199
+            Width = 162
+            Caption = 'Частота максимума'
+            TabOrder = 11
+          end
+          object fAlgorithmWriteEstimatesCheck: TCheckBox
+            Left = 206
+            Height = 19
+            Top = 222
+            Width = 154
+            Caption = 'Создать теги'
+            TabOrder = 12
+          end
           object btnAlgorithmConfig: TBitBtn
             Left = 206
             Height = 28
-            Top = 207
+            Top = 264
             Width = 88
             Caption = 'Применить'
-            TabOrder = 9
+            TabOrder = 13
             OnClick = btnAlgorithmConfigClick
           end
           object Cfg: TEdit
@@ -1014,7 +1062,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Height = 23
             Top = 8
             Width = 335
-            TabOrder = 10
+            TabOrder = 14
           end
         end
         object fAlgorithmsTree: TTreeView

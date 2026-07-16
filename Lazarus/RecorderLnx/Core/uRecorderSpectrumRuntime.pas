@@ -1,5 +1,11 @@
 unit uRecorderSpectrumRuntime;
 
+{ Связующий слой спектрального алгоритма с реестром тегов и EventBus.
+  Создание выходных тегов выполняется только в PrepareConfiguration, то есть
+  при загрузке/переконфигурировании. На потоке данных HandleChannelFrame лишь
+  считает разрешённые оценки и публикует готовые значения без изменения
+  конфигурации и без выделения набора тегов. }
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
@@ -79,11 +85,18 @@ type
     procedure ProcessQueuedInputs;
     procedure HandleTagRegistryBlockPublished(Sender: TObject; const ATagName: string;
       const ATimes, AValues: array of Double; ACount: Integer);
+    function FindBindingSettings(const ATagName: string;
+      out ASettings: TRecorderSpectrumSettings; out AOutputPrefix: string): Boolean;
+    function EstimateTagName(const APrefix, ABandName, ASuffix: string): string;
+    procedure EnsureEstimateTags;
+    procedure PublishBandEstimates(const AFrame: TRecorderSpectrumFrame;
+      const ASettings: TRecorderSpectrumSettings; const AOutputPrefix: string);
   public
     class var fInstance: TRecorderSpectrumRuntimeManager;
     class function Instance: TRecorderSpectrumRuntimeManager;
     constructor Create(AEventBus: TRecorderEventBus; ATagRegistry: TRecorderTagRegistry);
     destructor Destroy; override;
+    // создание планов FFT
     procedure PrepareConfiguredPlans;
     procedure PrepareConfiguration;
     procedure RebuildChannels;
@@ -525,8 +538,147 @@ begin
     only activate already prepared objects. }
   fPrepared := False;
   PrepareConfiguredPlans;
+  EnsureEstimateTags;
   RebuildChannels;
   fPrepared := True;
+end;
+
+function TRecorderSpectrumRuntimeManager.FindBindingSettings(
+  const ATagName: string; out ASettings: TRecorderSpectrumSettings;
+  out AOutputPrefix: string): Boolean;
+var
+  I, J: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+begin
+  Result := False;
+  AOutputPrefix := '';
+  if (fTagRegistry = nil) or (fTagRegistry.SpectrumConfigs = nil) then
+    Exit;
+  for I := 0 to fTagRegistry.SpectrumConfigs.NodeCount - 1 do
+  begin
+    lNode := fTagRegistry.SpectrumConfigs.Nodes[I];
+    for J := 0 to lNode.BindingCount - 1 do
+    begin
+      lBinding := lNode.Bindings[J];
+      if SameText(lBinding.SourceTagName, ATagName) then
+      begin
+        ASettings := lBinding.ResolveSettings(lNode.Settings);
+        AOutputPrefix := Trim(lBinding.OutputPrefix);
+        if AOutputPrefix = '' then
+          AOutputPrefix := ATagName + '_spm';
+        Exit(True);
+      end;
+    end;
+  end;
+end;
+
+function TRecorderSpectrumRuntimeManager.EstimateTagName(const APrefix,
+  ABandName, ASuffix: string): string;
+var
+  I: Integer;
+  lPart: string;
+begin
+  lPart := Trim(ABandName);
+  for I := 1 to Length(lPart) do
+    if not ((lPart[I] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-']) or
+      (Ord(lPart[I]) >= 128)) then
+      lPart[I] := '_';
+  Result := APrefix + '_' + lPart + '_' + ASuffix;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.EnsureEstimateTags;
+var
+  I, J, K: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+  lSettings: TRecorderSpectrumSettings;
+  lBand: TRecorderFrequencyBand;
+  lPrefix, lName, lSourceId, lAddress: string;
+  lTag: TRecorderTag;
+
+  procedure EnsureOne(const ASuffix, AUnitName, ADescription: string);
+  var
+    lTagIndex: Integer;
+  begin
+    lName := EstimateTagName(lPrefix, lBand.Name, ASuffix);
+    lSourceId := 'spectrum:' + lBinding.SourceTagName;
+    lAddress := lBand.Name + '/' + ASuffix;
+
+    { Имя тега может быть отредактировано пользователем. Поэтому повторное
+      применение ищет уже созданную оценку не только по имени, но и по её
+      устойчивой паре владелец/адрес. Материализация обязана быть идемпотентной. }
+    lTag := fTagRegistry.FindByName(lName);
+    if lTag = nil then
+      for lTagIndex := 0 to fTagRegistry.TagCount - 1 do
+        if SameText(fTagRegistry.Tags[lTagIndex].SourceId, lSourceId) and
+          SameText(fTagRegistry.Tags[lTagIndex].Address, lAddress) then
+        begin
+          lTag := fTagRegistry.Tags[lTagIndex];
+          Break;
+        end;
+    if lTag = nil then
+      lTag := fTagRegistry.CreateTag(lName, 4096, True);
+    lTag.SourceId := lSourceId;
+    lTag.IsVirtual := True;
+    lTag.ModuleType := 'Spectrum estimate';
+    lTag.Address := lAddress;
+    lTag.UnitName := AUnitName;
+    lTag.Description := ADescription + ' в полосе ' + lBand.Name;
+    lTag.PollFrequencyHz := 0.0;
+  end;
+begin
+  if (fTagRegistry = nil) or (fTagRegistry.SpectrumConfigs = nil) or
+    (fTagRegistry.FrequencyBands = nil) then
+    Exit;
+  for I := 0 to fTagRegistry.SpectrumConfigs.NodeCount - 1 do
+  begin
+    lNode := fTagRegistry.SpectrumConfigs.Nodes[I];
+    for J := 0 to lNode.BindingCount - 1 do
+    begin
+      lBinding := lNode.Bindings[J];
+      lSettings := lBinding.ResolveSettings(lNode.Settings);
+      if not lSettings.WriteEstimatesToTags then
+        Continue;
+      lPrefix := Trim(lBinding.OutputPrefix);
+      if lPrefix = '' then
+        lPrefix := lBinding.SourceTagName + '_spm';
+      for K := 0 to fTagRegistry.FrequencyBands.BandCount - 1 do
+      begin
+        lBand := fTagRegistry.FrequencyBands.Bands[K];
+        if lSettings.CalculateBandRms then
+          EnsureOne('rms', '', 'СКЗ спектра');
+        if lSettings.CalculateBandMaximum then
+          EnsureOne('max', '', 'Максимум спектра');
+        if lSettings.CalculateBandMaximumFrequency then
+          EnsureOne('fmax', 'Hz', 'Частота максимума спектра');
+      end;
+    end;
+  end;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.PublishBandEstimates(
+  const AFrame: TRecorderSpectrumFrame;
+  const ASettings: TRecorderSpectrumSettings; const AOutputPrefix: string);
+var
+  I: Integer;
+begin
+  if (fTagRegistry = nil) or (not ASettings.WriteEstimatesToTags) then
+    Exit;
+  for I := 0 to Length(AFrame.Bands) - 1 do
+  begin
+    if ASettings.CalculateBandRms then
+      fTagRegistry.PublishValue(EstimateTagName(AOutputPrefix,
+        AFrame.Bands[I].BandName, 'rms'), AFrame.EndTimeSec, AFrame.Bands[I].Rms);
+    if ASettings.CalculateBandMaximum then
+      fTagRegistry.PublishValue(EstimateTagName(AOutputPrefix,
+        AFrame.Bands[I].BandName, 'max'), AFrame.EndTimeSec,
+        AFrame.Bands[I].MaxRms);
+    if ASettings.CalculateBandMaximumFrequency then
+      fTagRegistry.PublishValue(EstimateTagName(AOutputPrefix,
+        AFrame.Bands[I].BandName, 'fmax'), AFrame.EndTimeSec,
+        AFrame.Bands[I].MaxFrequencyHz);
+  end;
 end;
 
 procedure TRecorderSpectrumRuntimeManager.RebuildChannels;
@@ -536,6 +688,7 @@ var
   lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
   lChannel: TRecorderSpectrumChannel;
+  lTag: TRecorderTag;
   lTagName: string;
 begin
   ClearChannels;
@@ -550,6 +703,15 @@ begin
       lBinding := lNode.Bindings[J];
       lTagName := lBinding.SourceTagName;
       lSettings := lBinding.ResolveSettings(lNode.Settings);
+
+      { FFT/окно/полосы могут быть общими для узла, но частотная сетка всегда
+        принадлежит конкретному каналу. Поэтому Fs берем из привязанного тега,
+        а не из первого канала, которым когда-то был настроен общий узел. }
+      lTag := nil;
+      if fTagRegistry <> nil then
+        lTag := fTagRegistry.FindByName(lTagName);
+      if (lTag <> nil) and (lTag.PollFrequencyHz > 0.0) then
+        lSettings.SampleRateHz := lTag.PollFrequencyHz;
 
       // Валидируем настройки
       try
@@ -662,8 +824,12 @@ var
   lF1, lF2: Double;
   lIdx1, lIdx2: Integer;
   lSumSq, lMaxVal, lMaxHz: Double;
+  lSettings: TRecorderSpectrumSettings;
+  lOutputPrefix: string;
 begin
   lFrame := AFrame;
+  if not FindBindingSettings(lFrame.SourceTagName, lSettings, lOutputPrefix) then
+    Exit;
   
   if (fTagRegistry <> nil) and (fTagRegistry.FrequencyBands <> nil) and (fTagRegistry.FrequencyBands.BandCount > 0) then
   begin
@@ -677,39 +843,23 @@ begin
       lFrame.Bands[I].F1 := lF1;
       lFrame.Bands[I].F2 := lF2;
       
-      if lFrame.FrequencyStepHz > 0 then
-      begin
-        lIdx1 := Round(lF1 / lFrame.FrequencyStepHz);
-        lIdx2 := Round(lF2 / lFrame.FrequencyStepHz);
-      end
-      else
-      begin
-        lIdx1 := 0;
-        lIdx2 := 0;
-      end;
-      
-      if lIdx1 < 0 then lIdx1 := 0;
-      if lIdx1 >= lFrame.Bins then lIdx1 := lFrame.Bins - 1;
-      if lIdx2 < 0 then lIdx2 := 0;
-      if lIdx2 >= lFrame.Bins then lIdx2 := lFrame.Bins - 1;
-      
-      if lIdx1 > lIdx2 then
-      begin
-        K := lIdx1;
-        lIdx1 := lIdx2;
-        lIdx2 := K;
-      end;
+      RecorderSpectrumBandBinRange(lF1, lF2, lFrame.FrequencyStepHz,
+        lFrame.Bins, lIdx1, lIdx2);
       
       lSumSq := 0.0;
       lMaxVal := -1.0;
       lMaxHz := 0.0;
       
-      if (lIdx1 < lFrame.Bins) and (lIdx2 < lFrame.Bins) then
+      if (lIdx1 >= 0) and (lIdx1 <= lIdx2) and
+        (lIdx2 < lFrame.Bins) then
       begin
         for K := lIdx1 to lIdx2 do
         begin
-          lSumSq := lSumSq + Sqr(lFrame.Rms[K]);
-          if lFrame.Rms[K] > lMaxVal then
+          if lSettings.CalculateBandRms then
+            lSumSq := lSumSq + Sqr(lFrame.Rms[K]);
+          if (lSettings.CalculateBandMaximum or
+            lSettings.CalculateBandMaximumFrequency) and
+            (lFrame.Rms[K] > lMaxVal) then
           begin
             lMaxVal := lFrame.Rms[K];
             lMaxHz := K * lFrame.FrequencyStepHz;
@@ -719,15 +869,25 @@ begin
       
       if lMaxVal < 0.0 then lMaxVal := 0.0;
       
-      lFrame.Bands[I].Rms := Sqrt(lSumSq);
-      lFrame.Bands[I].MaxRms := lMaxVal;
-      lFrame.Bands[I].MaxFrequencyHz := lMaxHz;
+      if lSettings.CalculateBandRms then
+        lFrame.Bands[I].Rms := Sqrt(lSumSq)
+      else
+        lFrame.Bands[I].Rms := 0.0;
+      if lSettings.CalculateBandMaximum then
+        lFrame.Bands[I].MaxRms := lMaxVal
+      else
+        lFrame.Bands[I].MaxRms := 0.0;
+      if lSettings.CalculateBandMaximumFrequency then
+        lFrame.Bands[I].MaxFrequencyHz := lMaxHz
+      else
+        lFrame.Bands[I].MaxFrequencyHz := 0.0;
     end;
   end
   else
     SetLength(lFrame.Bands, 0);
 
   UpdateCache(lFrame);
+  PublishBandEstimates(lFrame, lSettings, lOutputPrefix);
   if fEventBus = nil then Exit;
   lEventData := TRecorderSpectrumFrameEventData.Create(lFrame);
   try

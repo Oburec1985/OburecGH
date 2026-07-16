@@ -1451,7 +1451,10 @@ begin
   fHardwarePrepared := False;
   if fStreamFsm <> nil then
     fStreamFsm.SetPhase(mspOffline);
-  fHardwarePrepareAttempted := False;
+  { Отрицательный TEST действителен до загрузки/изменения конфигурации.
+    Не повторяем сетевой timeout при каждом Stop -> Preview. Для реально
+    работавшего устройства подготовка следующего запуска остаётся разрешена. }
+  fHardwarePrepareAttempted := RecorderHardwareIsSourceOffline(SourceId);
   if fDevice <> nil then
   begin
     try

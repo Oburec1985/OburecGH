@@ -175,7 +175,16 @@ procedure TRecorderTagValueView.Configure(AComponent: TRecorderVisualComponent;
 begin
   fComponent := TRecorderTagValueComponent(AComponent);
   Alignment := taCenter;
-  Font.Style := [fsBold];
+  WordWrap := True;
+  Font.Name := fComponent.FontName;
+  if fComponent.FontSize > 0 then
+    Font.Size := fComponent.FontSize;
+  Font.Color := TColor(fComponent.FontColor);
+  Font.Style := [];
+  if fComponent.FontStyleBold then
+    Font.Style := Font.Style + [fsBold];
+  if fComponent.FontStyleItalic then
+    Font.Style := Font.Style + [fsItalic];
   Color := $00F2F8FF;
   RefreshControl(ATagRegistry, 0);
 end;
@@ -184,8 +193,10 @@ procedure TRecorderTagValueView.RefreshControl(ATagRegistry: TRecorderTagRegistr
   ADisplaySeconds: Double);
 var
   lTag: TRecorderTag;
+  lTagName: string;
   lValue: Double;
   lValueStr: string;
+  lSingleLine: string;
 begin
   if not IsVisible then
     Exit;
@@ -199,15 +210,32 @@ begin
   if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) then
   begin
     lValue := lTag.SignalBuffer.LatestValue;
-    lValueStr := FormatFloat('0.000', lValue);
+    lValueStr := FormatFloat(fComponent.DisplayFormat, lValue);
   end
   else
     lValueStr := '0.0';
 
   if lTag <> nil then
-    Caption := lTag.Name + '  ' + lValueStr
+    lTagName := lTag.Name
   else
-    Caption := fComponent.TagName + '  ' + lValueStr;
+    lTagName := fComponent.TagName;
+
+  case fComponent.ShowNameMode of
+    tvnmNone:
+      Caption := lValueStr;
+    tvnmLeft:
+      Caption := lTagName + '  ' + lValueStr;
+  else
+    begin
+      { Автоматический режим сохраняет компактную строку, пока она помещается.
+        Для длинного имени значение переносится целиком на следующую строку. }
+      lSingleLine := lTagName + '  ' + lValueStr;
+      if Canvas.TextWidth(lTagName) > ClientWidth - 4 then
+        Caption := lTagName + LineEnding + lValueStr
+      else
+        Caption := lSingleLine;
+    end;
+  end;
 end;
 
 function TRecorderTagValueView.GetChartControl: TOglChart;
