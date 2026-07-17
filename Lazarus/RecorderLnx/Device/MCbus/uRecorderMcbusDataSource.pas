@@ -41,7 +41,8 @@ type
     fIoLock: TRTLCriticalSection;
     procedure BuildChannelMap;
     procedure PublishBlock(const ABlock: TRecorderAcquisitionBlock);
-    procedure StoreBalanceDac(ASlot, AChannel: Integer; ACode: Word);
+    procedure StoreBalanceDac(ASlot, AChannel: Integer; ACode: Word;
+      AApplyRuntime: Boolean = True);
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -71,7 +72,7 @@ begin
 end;
 
 procedure TRecorderMcbusDataSource.StoreBalanceDac(ASlot, AChannel: Integer;
-  ACode: Word);
+  ACode: Word; AApplyRuntime: Boolean);
 var
   I, J, lRange: Integer;
   lConfigured: TRecorderConfiguredDataSource;
@@ -115,7 +116,7 @@ begin
         RecorderDebugLog(Format(
           '[MCBUS][BALANCE] DAC persisted source=%s slot=%d channel=%d range=%d code=$%.4x cfg=%s',
           [SourceId, ASlot, AChannel + 1, lRange, ACode, lLines[I]]));
-        if (fDevice <> nil) and
+        if AApplyRuntime and (fDevice <> nil) and
           (fDevice.GetNativeObject is TRecorderMcbusDevice) then
         begin
           lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
@@ -147,7 +148,7 @@ begin
       '[MCBUS][BALANCE] DAC config created source=%s slot=%d channel=%d range=%d code=$%.4x cfg=%s',
       [SourceId, ASlot, AChannel + 1, lRange, ACode,
        lLines[lLines.Count - 1]]));
-    if (fDevice <> nil) and
+    if AApplyRuntime and (fDevice <> nil) and
       (fDevice.GetNativeObject is TRecorderMcbusDevice) then
     begin
       lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
@@ -370,12 +371,14 @@ function TRecorderMcbusDataSource.ZeroBalanceTags(AOwner: TComponent;
 var
   I, J, lChannel, lTagChannel, lTagSlot, lSlot: Integer;
   lIndices: array of Integer;
+  lCodes: array of Word;
   lValues: TRecorderDeviceActionValues;
   lChannels: TRecorderDeviceChannelArray;
   lError: string;
   lTag: TRecorderTag;
   lStartedHere: Boolean;
   lMapped: Integer;
+  lNative: TRecorderMcbusDevice;
 begin
   Result := False;
   if (ATags = nil) or (fDevice = nil) then
@@ -453,19 +456,32 @@ begin
     Exit;
   end;
   Result := True;
+  { Сначала снимаем все коды с soft-config. StoreBalanceDac с ApplyRuntime
+    перечитывает CFG и затирал бы ещё не сохранённые каналы обратно в $8080
+    (мульти-баланс: первый Store убивал 2..N). }
   if fDevice.GetNativeObject is TRecorderMcbusDevice then
+  begin
+    lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
+    SetLength(lCodes, Length(lIndices));
+    for I := 0 to High(lIndices) do
+      if lIndices[I] >= 0 then
+        lCodes[I] := lNative.GetChannelBalanceDac(lIndices[I])
+      else
+        lCodes[I] := $8080;
     for I := 0 to High(lIndices) do
       if (lIndices[I] >= 0) and AddressSlotChannel(
         TRecorderTag(ATags[I]).Address, lTagSlot, lTagChannel) then
-        StoreBalanceDac(lTagSlot, lTagChannel - 1,
-          TRecorderMcbusDevice(fDevice.GetNativeObject).
-            GetChannelBalanceDac(lIndices[I]));
+        StoreBalanceDac(lTagSlot, lTagChannel - 1, lCodes[I], False);
+    lNative.SetSpecificConfigText(fSpecificConfigText);
+    RecorderDebugLog('[MCBUS][BALANCE] runtime fConfig reloaded once after all DAC stores');
+  end;
   if AMessages <> nil then
     for I := 0 to High(lValues) do
-      AMessages.Add(Format('%s: среднее до коррекции %.3f кода, ЦАП=$%.4x',
-        [TRecorderTag(ATags[I]).Name, lValues[I],
-         TRecorderMcbusDevice(fDevice.GetNativeObject).
-           GetChannelBalanceDac(lIndices[I])]));
+      if (I <= High(lIndices)) and (lIndices[I] >= 0) then
+        AMessages.Add(Format('%s: среднее до коррекции %.3f кода, ЦАП=$%.4x',
+          [TRecorderTag(ATags[I]).Name, lValues[I],
+           TRecorderMcbusDevice(fDevice.GetNativeObject).
+             GetChannelBalanceDac(lIndices[I])]));
 end;
 
 procedure TRecorderMcbusDataSource.PublishBlock(
