@@ -772,18 +772,37 @@ function TRecorderMcbusDevice.ExecuteDeviceAction(
 var
   I, lChannel: Integer;
   lMean: Double;
+  lStartedHere: Boolean;
 begin
   SetLength(AValues, 0);
   AErrorText := '';
   if AAction <> rdaZeroBalance then
     Exit(inherited ExecuteDeviceAction(AAction, AChannelIndices, AValues,
       AErrorText));
+  { Балансировка из диалога тега часто вызывается без Preview. Нужен активный
+    скан (STARTSCANMAIN) для сбора среднего; поднимаем его здесь, если ещё не
+    запущен. Остановленный сами — только если старт был служебным. }
+  lStartedHere := False;
   if fState <> rdsStarted then
   begin
-    AErrorText := 'Для балансировки MC-201 требуется запущенный просмотр';
+    try
+      Start;
+      lStartedHere := True;
+      BalanceTrace('служебный скан для балансировки запущен');
+    except
+      on E: Exception do
+      begin
+        AErrorText := 'Не удалось запустить скан для балансировки MC-201: ' +
+          E.Message;
+        Exit(False);
+      end;
+    end;
+  end;
+  if fState <> rdsStarted then
+  begin
+    AErrorText := 'Скан MC-201 не активен, балансировка невозможна';
     Exit(False);
   end;
-  // останов основного потока сбора данных, чтоб запустить вместо него балансировочный поток
   fController.PauseStreamingReader;
   BalanceTrace('фоновое чтение просмотра приостановлено');
   try
@@ -804,6 +823,11 @@ begin
   finally
     fController.ResumeStreamingReader;
     BalanceTrace('фоновое чтение просмотра восстановлено');
+    if lStartedHere and (fState = rdsStarted) then
+    begin
+      Stop;
+      BalanceTrace('служебный скан после балансировки остановлен');
+    end;
   end;
 end;
 

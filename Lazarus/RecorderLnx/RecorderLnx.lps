@@ -221,10 +221,11 @@
       <Unit>
         <Filename Value="Device\uRecorderDeviceInterfaces.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="303"/>
-        <CursorPos X="50" Y="324"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="305"/>
+        <CursorPos X="45" Y="323"/>
         <UsageCount Value="201"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Types.pas"/>
@@ -835,18 +836,19 @@
       <Unit>
         <Filename Value="Device\MCbus\uMc032Device.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="4"/>
-        <TopLine Value="151"/>
-        <CursorPos X="36" Y="174"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="139"/>
+        <CursorPos X="18" Y="165"/>
         <UsageCount Value="48"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="79"/>
-        <CursorPos X="37" Y="102"/>
+        <TopLine Value="771"/>
+        <CursorPos X="67" Y="789"/>
         <UsageCount Value="48"/>
         <Loaded Value="True"/>
       </Unit>
@@ -1104,69 +1106,21 @@
       <Unit>
         <Filename Value="Core\uRecorderTagBalance.pas"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="65" Y="15"/>
+        <TopLine Value="191"/>
+        <CursorPos X="32" Y="217"/>
         <UsageCount Value="14"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uRecorderMcbusDataSource.pas"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="2"/>
-        <CursorPos X="63" Y="36"/>
+        <TopLine Value="116"/>
+        <CursorPos X="32" Y="11"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="100" Column="47" TopLine="81"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="104" TopLine="81"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="105" TopLine="81"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="102" TopLine="81"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="106" TopLine="81"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="623" TopLine="605"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="103" TopLine="83"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="102" Column="32" TopLine="83"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="105" TopLine="83"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="102" TopLine="83"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="587" TopLine="569"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Caret Line="556" Column="25" TopLine="544"/>
-      </Position>
       <Position>
         <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
         <Caret Line="549" Column="7" TopLine="542"/>
@@ -1239,6 +1193,53 @@
         <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
         <Caret Line="97" Column="52" TopLine="79"/>
       </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="107" Column="29" TopLine="85"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="86" Column="75" TopLine="54"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="94" Column="43" TopLine="62"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="96" Column="75" TopLine="64"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="98" Column="16" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="101" Column="23" TopLine="69"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="104" Column="28" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="86" Column="49" TopLine="61"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\uRecorderDeviceInterfaces.pas"/>
+        <Caret Line="163" Column="33" TopLine="148"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="73" Column="70" TopLine="63"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
+        <Caret Line="75" Column="33" TopLine="63"/>
+      </Position>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -1252,14 +1253,14 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Line Value="799"/>
+        <Line Value="625"/>
       </Item>
       <Item>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
-        <Line Value="625"/>
+        <Line Value="799"/>
       </Item>
     </BreakPoints>
     <Watches>
