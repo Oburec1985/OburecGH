@@ -127,6 +127,12 @@ const
   CMc201Cc81TimerScale = 1;
   CMc201Cc81TimerPeriod = 640;
 
+  { ИОН балансировочного/Play ЦАП MC-201 из ModuleMC201 (Mc201.cpp):
+    UREF_DA_ = 2.5 В; для Rev 2180 Play DAC — UREF_DA_2180 = 1.225 В.
+    Баланс: V = UREF * (Lo/128) * (Hi/128), Lo/Hi — смещённые -128..+127. }
+  CMc201BalanceUrefVolt = 2.5;
+  CMc201BalanceDacMidCode = 128;
+
   { Исходный слой mdpEthernet81: поток 1 используется для команд/ответов.
     Пакет может нести 1024 слова, но массив аргументов команды в оригинальном
     Ethernet81 меньше; см. CMc201CommandMaxArgWords. }
@@ -241,6 +247,13 @@ function Mc201IsKnownVersionCode(AValue: Word): Boolean;
 function Mc201FormatBios(const ABios: TMc201ControllerBios): string;
 function Mc201FormatProgramInfo(const AInfo: TMc201ModuleProgramInfo): string;
 
+function RecorderMc201BalanceVoltFromSigned(ALo, AHi: Integer): Double;
+procedure RecorderMc201BalanceSignedFromVolt(AVolt: Double;
+  out ALo, AHi: Integer);
+function RecorderMc201BalancePackWord(ALo, AHi: Integer): Word;
+procedure RecorderMc201BalanceUnpackWord(ACode: Word; out ALo, AHi: Integer);
+
+
 implementation
 
 uses
@@ -332,6 +345,51 @@ begin
      AInfo.FreqIndex, AInfo.GridCode, IntToHex(AInfo.DividerCode, 4),
      IntToHex(AInfo.FinalFlags[0], 4), IntToHex(AInfo.FinalFlags[1], 4),
      IntToHex(AInfo.FinalFlags[2], 4), IntToHex(AInfo.FinalFlags[3], 4)]);
+end;
+
+function RecorderMc201BalanceVoltFromSigned(ALo, AHi: Integer): Double;
+begin
+  { V = UREF * (Lo/128) * (Hi/128). Lo/Hi — знаковые смещения от mid=128. }
+  Result := CMc201BalanceUrefVolt * Double(ALo) * Double(AHi) /
+    (Double(CMc201BalanceDacMidCode) * Double(CMc201BalanceDacMidCode));
+end;
+
+procedure RecorderMc201BalanceSignedFromVolt(AVolt: Double;
+  out ALo, AHi: Integer);
+var
+  lAbsProduct, lProduct: Double;
+  lLoOff, lHiOff: Integer;
+begin
+  { Обратная задача к V = UREF*(Lo/128)*(Hi/128): product = Lo*Hi = V/UREF*128^2.
+    Как в open-loop балансировке — минимальный |Lo|, остальное в Hi. }
+  ALo := 0;
+  AHi := 0;
+  if Abs(AVolt) < 1e-12 then
+    Exit;
+  lProduct := AVolt / CMc201BalanceUrefVolt * CMc201BalanceDacMidCode *
+    CMc201BalanceDacMidCode;
+  lAbsProduct := Abs(lProduct);
+  lLoOff := EnsureRange(Ceil(lAbsProduct / 127.0), 1, 127);
+  lHiOff := EnsureRange(Round(lAbsProduct / lLoOff), 0, 127);
+  ALo := lLoOff;
+  if lProduct >= 0 then
+    AHi := lHiOff
+  else
+    AHi := -lHiOff;
+end;
+
+function RecorderMc201BalancePackWord(ALo, AHi: Integer): Word;
+begin
+  ALo := EnsureRange(ALo, -128, 127);
+  AHi := EnsureRange(AHi, -128, 127);
+  Result := Word(((AHi + CMc201BalanceDacMidCode) and $ff) shl 8) or
+    Word((ALo + CMc201BalanceDacMidCode) and $ff);
+end;
+
+procedure RecorderMc201BalanceUnpackWord(ACode: Word; out ALo, AHi: Integer);
+begin
+  ALo := Integer(ACode and $ff) - CMc201BalanceDacMidCode;
+  AHi := Integer(ACode shr 8) - CMc201BalanceDacMidCode;
 end;
 
 initialization

@@ -78,6 +78,9 @@ type
     procedure SetSpecificConfigText(const AText: string);
     procedure SetSlotSampleRate(ASlot: Integer; AFrequencyHz: Double);
     function GetChannelBalanceDac(AChannel: Integer): Word;
+    function GetSlotBalanceDac(ASlot1Based, AChannel, ARange: Integer): Word;
+    procedure MergeSlotBalanceDacsIntoConfigText(var AConfigText: string;
+      ASlot1Based: Integer);
     procedure ApplySavedBalanceDac;
     function TryApplySavedBalanceDac(out AErrorText: string): Boolean;
   end;
@@ -246,6 +249,84 @@ begin
   lRange := EnsureRange(fConfig.Slots[lSlot].Channels[lChannel].RangeIndex,
     0, High(fConfig.Slots[lSlot].Channels[lChannel].BalanceDac));
   Result := fConfig.Slots[lSlot].Channels[lChannel].BalanceDac[lRange];
+end;
+
+function TRecorderMcbusDevice.GetSlotBalanceDac(ASlot1Based, AChannel,
+  ARange: Integer): Word;
+var
+  lSlot: Integer;
+begin
+  Result := $8080;
+  lSlot := ASlot1Based - 1;
+  if (lSlot < 0) or (lSlot > High(fConfig.Slots)) then
+    Exit;
+  if (AChannel < 0) or (AChannel > High(fConfig.Slots[lSlot].Channels)) then
+    Exit;
+  ARange := EnsureRange(ARange, 0,
+    High(fConfig.Slots[lSlot].Channels[AChannel].BalanceDac));
+  Result := fConfig.Slots[lSlot].Channels[AChannel].BalanceDac[ARange];
+end;
+
+procedure TRecorderMcbusDevice.MergeSlotBalanceDacsIntoConfigText(
+  var AConfigText: string; ASlot1Based: Integer);
+var
+  I, J, K, lRange: Integer;
+  lFields, lLines: TStringList;
+  lPrefix, lLine: string;
+  lSlot: Integer;
+  lCode: Word;
+begin
+  { Диалог свойств читает CFG-текст. После балансировки актуальные коды живут
+    в runtime fConfig (их же шлёт ApplySavedBalanceDac). Подмешиваем их в CFG,
+    иначе UI показывает нейтраль 0/0 при живом $E182. }
+  lSlot := ASlot1Based - 1;
+  if (lSlot < 0) or (lSlot > High(fConfig.Slots)) then
+    Exit;
+  lPrefix := 'CFG slot=' + IntToStr(ASlot1Based) + ';';
+  lLines := TStringList.Create;
+  lFields := TStringList.Create;
+  try
+    lLines.Text := AConfigText;
+    lFields.StrictDelimiter := True;
+    lFields.Delimiter := ';';
+    lFields.NameValueSeparator := '=';
+    for I := lLines.Count - 1 downto 0 do
+      if Pos(lPrefix, lLines[I]) = 1 then
+      begin
+        lFields.DelimitedText := StringReplace(
+          Copy(lLines[I], Length(lPrefix) + 1, MaxInt), ',', ';',
+          [rfReplaceAll]);
+        lLines.Delete(I);
+      end;
+    if lFields.Count = 0 then
+    begin
+      for J := 0 to 3 do
+        lFields.Values['c' + IntToStr(J)] := '1';
+      for J := 4 to 7 do
+        lFields.Values['c' + IntToStr(J)] := '0';
+      for J := 0 to 11 do
+        lFields.Values['b' + IntToStr(J)] := '0';
+      lFields.Values['comm'] := '0';
+      lFields.Values['sub'] := '1';
+      lFields.Values['rev'] := '0';
+    end;
+    for J := 0 to High(fConfig.Slots[lSlot].Channels) do
+    begin
+      lRange := EnsureRange(fConfig.Slots[lSlot].Channels[J].RangeIndex, 0, 5);
+      lFields.Values['c' + IntToStr(J)] := IntToStr(lRange);
+      for K := 0 to High(fConfig.Slots[lSlot].Channels[J].BalanceDac) do
+      begin
+        lCode := fConfig.Slots[lSlot].Channels[J].BalanceDac[K];
+        lFields.Values['d' + IntToStr(J) + 'r' + IntToStr(K)] := IntToStr(lCode);
+      end;
+    end;
+    lLine := lPrefix + lFields.DelimitedText;
+    lLines.Add(lLine);
+    AConfigText := lLines.Text;
+  finally
+    lFields.Free;
+    lLines.Free;
+  end;
 end;
 
 procedure TRecorderMcbusDevice.SetSpecificConfigText(const AText: string);

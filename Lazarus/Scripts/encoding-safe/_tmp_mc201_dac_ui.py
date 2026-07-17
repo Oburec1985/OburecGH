@@ -1,4 +1,21 @@
-unit uRecorderMc201SlotSettingsDialog;
+# -*- coding: utf-8 -*-
+"""Add editable balance DAC fields to MC-201 slot settings dialog."""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+from pas_io import read_pas, write_utf8_crlf
+
+PAS = Path(
+    r"D:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas"
+)
+LFM = Path(
+    r"D:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.lfm"
+)
+
+pas = r'''unit uRecorderMc201SlotSettingsDialog;
 
 {
   LFM-диалог аппаратных свойств одного слота MC-201.
@@ -15,25 +32,16 @@ unit uRecorderMc201SlotSettingsDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ButtonPanel, Dialogs,
-  uRecorderDataSources;
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ButtonPanel, Dialogs;
 
 type
   TRecorderMc201SlotSettingsDialog = class(TForm)
     fButtonPanel: TButtonPanel;
     fCommutationGroup: TRadioGroup;
-    fDacHi1: TEdit;
-    fDacHi2: TEdit;
-    fDacHi3: TEdit;
-    fDacHi4: TEdit;
-    fDacLo1: TEdit;
-    fDacLo2: TEdit;
-    fDacLo3: TEdit;
-    fDacLo4: TEdit;
-    fDacVolt1: TEdit;
-    fDacVolt2: TEdit;
-    fDacVolt3: TEdit;
-    fDacVolt4: TEdit;
+    fDac1: TEdit;
+    fDac2: TEdit;
+    fDac3: TEdit;
+    fDac4: TEdit;
     fHpf1: TCheckBox;
     fHpf2: TCheckBox;
     fHpf3: TCheckBox;
@@ -72,16 +80,8 @@ type
     procedure ResetDacCodes;
     procedure ShowDacEdits;
     function ChannelIndexOfRangeCombo(ACombo: TComboBox): Integer;
-    function TryParseSignedDac(const AText: string; out ASigned: Integer): Boolean;
-    function TryReadChannelDac(AChannel: Integer; out ACode: Word;
-      AShowErrors: Boolean): Boolean;
+    function TryParseDacText(const AText: string; out ACode: Word): Boolean;
     function CommitDacEdits(AShowErrors: Boolean): Boolean;
-    procedure SetChannelDacEdits(AChannel: Integer; ACode: Word);
-    procedure SetChannelVoltEdit(AChannel: Integer; ALo, AHi: Integer);
-    procedure DacCodeChange(Sender: TObject);
-    procedure DacVoltChange(Sender: TObject);
-    function ChannelIndexOfDacEdit(AEdit: TEdit; out AIsVolt: Boolean): Integer;
-    function TryParseVoltText(const AText: string; out AVolt: Double): Boolean;
     procedure LoadSettings(const AConfigText: string; ASlot: Integer);
     procedure SaveSettings(var AConfigText: string; ASlot: Integer);
   public
@@ -91,15 +91,12 @@ type
 function TryParseRecorderMc201ModuleCaption(const ACaption: string;
   out ASlot: Integer; out ASerial, AVersion: string): Boolean;
 function ShowRecorderMc201SlotSettingsDialog(AOwner: TComponent;
-  const AModuleCaption: string; var AConfigText: string;
-  const ASourceId: string = '';
-  ADataSources: TRecorderDataSourceManager = nil): Boolean;
+  const AModuleCaption: string; var AConfigText: string): Boolean;
 
 implementation
 
 uses
-  Math, StrUtils, uMc201ProtocolTypes, uRecorderMcbusDevice,
-  uRecorderHardwareLiveDevices, uRecorderDeviceInterfaces;
+  Math, StrUtils;
 
 {$R *.lfm}
 
@@ -160,139 +157,20 @@ begin
   end;
 end;
 
-procedure TRecorderMc201SlotSettingsDialog.SetChannelVoltEdit(
-  AChannel: Integer; ALo, AHi: Integer);
-var
-  lVolts: array[0..3] of TEdit;
-  lFS: TFormatSettings;
-begin
-  lVolts[0] := fDacVolt1; lVolts[1] := fDacVolt2;
-  lVolts[2] := fDacVolt3; lVolts[3] := fDacVolt4;
-  lFS := DefaultFormatSettings;
-  lVolts[AChannel].Text := FormatFloat('0.########',
-    RecorderMc201BalanceVoltFromSigned(ALo, AHi), lFS);
-end;
-
-procedure TRecorderMc201SlotSettingsDialog.SetChannelDacEdits(
-  AChannel: Integer; ACode: Word);
-var
-  lLos: array[0..3] of TEdit;
-  lHis: array[0..3] of TEdit;
-  lLo, lHi: Integer;
-begin
-  lLos[0] := fDacLo1; lLos[1] := fDacLo2; lLos[2] := fDacLo3; lLos[3] := fDacLo4;
-  lHis[0] := fDacHi1; lHis[1] := fDacHi2; lHis[2] := fDacHi3; lHis[3] := fDacHi4;
-  { Два 8-бит ЦАП в смещённом формате: 0=-128, 128=0, 255=+127. }
-  RecorderMc201BalanceUnpackWord(ACode, lLo, lHi);
-  fUpdating := True;
-  try
-    lLos[AChannel].Text := IntToStr(lLo);
-    lHis[AChannel].Text := IntToStr(lHi);
-  finally
-    fUpdating := False;
-  end;
-  SetChannelVoltEdit(AChannel, lLo, lHi);
-end;
-
-function TRecorderMc201SlotSettingsDialog.ChannelIndexOfDacEdit(AEdit: TEdit;
-  out AIsVolt: Boolean): Integer;
-begin
-  AIsVolt := False;
-  if (AEdit = fDacLo1) or (AEdit = fDacHi1) then Result := 0
-  else if (AEdit = fDacLo2) or (AEdit = fDacHi2) then Result := 1
-  else if (AEdit = fDacLo3) or (AEdit = fDacHi3) then Result := 2
-  else if (AEdit = fDacLo4) or (AEdit = fDacHi4) then Result := 3
-  else if AEdit = fDacVolt1 then begin AIsVolt := True; Result := 0; end
-  else if AEdit = fDacVolt2 then begin AIsVolt := True; Result := 1; end
-  else if AEdit = fDacVolt3 then begin AIsVolt := True; Result := 2; end
-  else if AEdit = fDacVolt4 then begin AIsVolt := True; Result := 3; end
-  else Result := -1;
-end;
-
-function TRecorderMc201SlotSettingsDialog.TryParseVoltText(const AText: string;
-  out AVolt: Double): Boolean;
-var
-  lText: string;
-  lFs: TFormatSettings;
-begin
-  AVolt := 0;
-  lText := Trim(AText);
-  if lText = '' then
-  begin
-    Result := True;
-    Exit;
-  end;
-  lText := StringReplace(lText, ',', '.', [rfReplaceAll]);
-  lFs := DefaultFormatSettings;
-  lFs.DecimalSeparator := '.';
-  Result := TryStrToFloat(lText, AVolt, lFs);
-end;
-
-procedure TRecorderMc201SlotSettingsDialog.DacCodeChange(Sender: TObject);
-var
-  lChannel: Integer;
-  lIsVolt: Boolean;
-  lCode: Word;
-  lLo, lHi: Integer;
-begin
-  if fUpdating then
-    Exit;
-  lChannel := ChannelIndexOfDacEdit(Sender as TEdit, lIsVolt);
-  if (lChannel < 0) or lIsVolt then
-    Exit;
-  if not TryReadChannelDac(lChannel, lCode, False) then
-    Exit;
-  RecorderMc201BalanceUnpackWord(lCode, lLo, lHi);
-  fUpdating := True;
-  try
-    SetChannelVoltEdit(lChannel, lLo, lHi);
-  finally
-    fUpdating := False;
-  end;
-end;
-
-procedure TRecorderMc201SlotSettingsDialog.DacVoltChange(Sender: TObject);
-var
-  lChannel: Integer;
-  lIsVolt: Boolean;
-  lVolt: Double;
-  lLo, lHi: Integer;
-  lLos: array[0..3] of TEdit;
-  lHis: array[0..3] of TEdit;
-begin
-  if fUpdating then
-    Exit;
-  lChannel := ChannelIndexOfDacEdit(Sender as TEdit, lIsVolt);
-  if (lChannel < 0) or (not lIsVolt) then
-    Exit;
-  if not TryParseVoltText((Sender as TEdit).Text, lVolt) then
-    Exit;
-  RecorderMc201BalanceSignedFromVolt(lVolt, lLo, lHi);
-  lLos[0] := fDacLo1; lLos[1] := fDacLo2; lLos[2] := fDacLo3; lLos[3] := fDacLo4;
-  lHis[0] := fDacHi1; lHis[1] := fDacHi2; lHis[2] := fDacHi3; lHis[3] := fDacHi4;
-  fUpdating := True;
-  try
-    lLos[lChannel].Text := IntToStr(lLo);
-    lHis[lChannel].Text := IntToStr(lHi);
-    { Нормализуем отображение вольт под фактически выбранные Lo/Hi. }
-    SetChannelVoltEdit(lChannel, lLo, lHi);
-  finally
-    fUpdating := False;
-  end;
-end;
-
 procedure TRecorderMc201SlotSettingsDialog.ShowDacEdits;
 var
+  lDacs: array[0..3] of TEdit;
   lRanges: array[0..3] of TComboBox;
   I, lRange: Integer;
 begin
+  lDacs[0] := fDac1; lDacs[1] := fDac2; lDacs[2] := fDac3; lDacs[3] := fDac4;
   lRanges[0] := fRange1; lRanges[1] := fRange2;
   lRanges[2] := fRange3; lRanges[3] := fRange4;
   for I := 0 to 3 do
   begin
     lRange := EnsureRange(lRanges[I].ItemIndex, 0, 5);
     fLastRange[I] := lRange;
-    SetChannelDacEdits(I, fDacCodes[I, lRange]);
+    lDacs[I].Text := Format('$%.4x', [fDacCodes[I, lRange]]);
   end;
 end;
 
@@ -306,72 +184,57 @@ begin
   else Result := -1;
 end;
 
-function TRecorderMc201SlotSettingsDialog.TryParseSignedDac(
-  const AText: string; out ASigned: Integer): Boolean;
+function TRecorderMc201SlotSettingsDialog.TryParseDacText(const AText: string;
+  out ACode: Word): Boolean;
 var
   lText: string;
+  lValue: Integer;
 begin
-  ASigned := 0;
+  ACode := $8080;
   lText := Trim(AText);
   if lText = '' then
   begin
     Result := True;
     Exit;
   end;
-  Result := TryStrToInt(lText, ASigned);
+  if (Length(lText) > 0) and (lText[1] = '$') then
+    Delete(lText, 1, 1);
+  if (Length(lText) > 1) and ((lText[1] = '0') or (lText[1] = '0')) and
+    ((lText[2] = 'x') or (lText[2] = 'X')) then
+    Delete(lText, 1, 2);
+  Result := TryStrToInt('$' + lText, lValue);
+  if not Result then
+    Result := TryStrToInt(lText, lValue);
   if Result then
-    Result := (ASigned >= -128) and (ASigned <= 127);
-end;
-
-function TRecorderMc201SlotSettingsDialog.TryReadChannelDac(AChannel: Integer;
-  out ACode: Word; AShowErrors: Boolean): Boolean;
-var
-  lLos: array[0..3] of TEdit;
-  lHis: array[0..3] of TEdit;
-  lLo, lHi: Integer;
-begin
-  Result := False;
-  ACode := $8080;
-  lLos[0] := fDacLo1; lLos[1] := fDacLo2; lLos[2] := fDacLo3; lLos[3] := fDacLo4;
-  lHis[0] := fDacHi1; lHis[1] := fDacHi2; lHis[2] := fDacHi3; lHis[3] := fDacHi4;
-  if not TryParseSignedDac(lLos[AChannel].Text, lLo) then
-  begin
-    if AShowErrors then
-      MessageDlg('Свойства MC-201',
-        Format('Канал %d, грубый ЦАП: нужно целое -128..+127 (сейчас "%s").',
-          [AChannel + 1, lLos[AChannel].Text]), mtWarning, [mbOK], 0);
-    Exit;
-  end;
-  if not TryParseSignedDac(lHis[AChannel].Text, lHi) then
-  begin
-    if AShowErrors then
-      MessageDlg('Свойства MC-201',
-        Format('Канал %d, тонкий ЦАП: нужно целое -128..+127 (сейчас "%s").',
-          [AChannel + 1, lHis[AChannel].Text]), mtWarning, [mbOK], 0);
-    Exit;
-  end;
-  ACode := RecorderMc201BalancePackWord(lLo, lHi);
-  Result := True;
+    ACode := Word(EnsureRange(lValue, 0, $ffff));
 end;
 
 function TRecorderMc201SlotSettingsDialog.CommitDacEdits(
   AShowErrors: Boolean): Boolean;
 var
+  lDacs: array[0..3] of TEdit;
   lRanges: array[0..3] of TComboBox;
   I, lRange: Integer;
   lCode: Word;
 begin
   Result := False;
+  lDacs[0] := fDac1; lDacs[1] := fDac2; lDacs[2] := fDac3; lDacs[3] := fDac4;
   lRanges[0] := fRange1; lRanges[1] := fRange2;
   lRanges[2] := fRange3; lRanges[3] := fRange4;
   for I := 0 to 3 do
   begin
-    if not TryReadChannelDac(I, lCode, AShowErrors) then
+    if not TryParseDacText(lDacs[I].Text, lCode) then
+    begin
+      if AShowErrors then
+        MessageDlg('Свойства MC-201',
+          Format('Канал %d: неверный код ЦАП "%s". Ожидается $0000..$FFFF.',
+            [I + 1, lDacs[I].Text]), mtWarning, [mbOK], 0);
       Exit;
+    end;
     lRange := EnsureRange(lRanges[I].ItemIndex, 0, 5);
     fDacCodes[I, lRange] := lCode;
     fLastRange[I] := lRange;
-    SetChannelDacEdits(I, lCode);
+    lDacs[I].Text := Format('$%.4x', [lCode]);
   end;
   Result := True;
 end;
@@ -415,26 +278,6 @@ begin
   fRevisionCombo.Items.Add('Другая');
   fRevisionCombo.ItemIndex := 0;
   fCommutationGroup.ItemIndex := 0;
-  fDacLo1.OnChange := @DacCodeChange;
-  fDacLo2.OnChange := @DacCodeChange;
-  fDacLo3.OnChange := @DacCodeChange;
-  fDacLo4.OnChange := @DacCodeChange;
-  fDacHi1.OnChange := @DacCodeChange;
-  fDacHi2.OnChange := @DacCodeChange;
-  fDacHi3.OnChange := @DacCodeChange;
-  fDacHi4.OnChange := @DacCodeChange;
-  fDacLo1.OnExit := @DacCodeChange;
-  fDacLo2.OnExit := @DacCodeChange;
-  fDacLo3.OnExit := @DacCodeChange;
-  fDacLo4.OnExit := @DacCodeChange;
-  fDacHi1.OnExit := @DacCodeChange;
-  fDacHi2.OnExit := @DacCodeChange;
-  fDacHi3.OnExit := @DacCodeChange;
-  fDacHi4.OnExit := @DacCodeChange;
-  fDacVolt1.OnChange := @DacVoltChange;
-  fDacVolt2.OnChange := @DacVoltChange;
-  fDacVolt3.OnChange := @DacVoltChange;
-  fDacVolt4.OnChange := @DacVoltChange;
   ShowDacEdits;
   SyncSubmoduleControls;
 end;
@@ -495,6 +338,7 @@ end;
 
 procedure TRecorderMc201SlotSettingsDialog.RangeChange(Sender: TObject);
 var
+  lDacs: array[0..3] of TEdit;
   lChannel: Integer;
   lCode: Word;
   lNewRange: Integer;
@@ -504,12 +348,13 @@ begin
   lChannel := ChannelIndexOfRangeCombo(Sender as TComboBox);
   if lChannel < 0 then
     Exit;
+  lDacs[0] := fDac1; lDacs[1] := fDac2; lDacs[2] := fDac3; lDacs[3] := fDac4;
   { Сохраняем правку в код предыдущего диапазона, затем показываем код нового. }
-  if TryReadChannelDac(lChannel, lCode, False) then
+  if TryParseDacText(lDacs[lChannel].Text, lCode) then
     fDacCodes[lChannel, EnsureRange(fLastRange[lChannel], 0, 5)] := lCode;
   lNewRange := EnsureRange((Sender as TComboBox).ItemIndex, 0, 5);
   fLastRange[lChannel] := lNewRange;
-  SetChannelDacEdits(lChannel, fDacCodes[lChannel, lNewRange]);
+  lDacs[lChannel].Text := Format('$%.4x', [fDacCodes[lChannel, lNewRange]]);
 end;
 
 procedure TRecorderMc201SlotSettingsDialog.OkClick(Sender: TObject);
@@ -624,27 +469,16 @@ begin
 end;
 
 function ShowRecorderMc201SlotSettingsDialog(AOwner: TComponent;
-  const AModuleCaption: string; var AConfigText: string;
-  const ASourceId: string = '';
-  ADataSources: TRecorderDataSourceManager = nil): Boolean;
+  const AModuleCaption: string; var AConfigText: string): Boolean;
 var
   lDialog: TRecorderMc201SlotSettingsDialog;
   lSerial: string;
   lSlot: Integer;
   lVersion: string;
-  lDevice: IRecorderDevice;
 begin
   Result := TryParseRecorderMc201ModuleCaption(AModuleCaption, lSlot,
     lSerial, lVersion);
   if not Result then Exit;
-  { Подтянуть коды ЦАП, которые реально уйдут в SEND_BALANCE / ApplySaved. }
-  if ASourceId <> '' then
-  begin
-    lDevice := RecorderHardwareFindLiveDevice(ASourceId);
-    if (lDevice <> nil) and (lDevice.GetNativeObject is TRecorderMcbusDevice) then
-      TRecorderMcbusDevice(lDevice.GetNativeObject).MergeSlotBalanceDacsIntoConfigText(
-        AConfigText, lSlot);
-  end;
   lDialog := TRecorderMc201SlotSettingsDialog.Create(AOwner);
   try
     lDialog.Caption := Format('Слот %d — свойства MC-201', [lSlot]);
@@ -661,3 +495,354 @@ begin
 end;
 
 end.
+'''
+
+# Fix the silly redundant check I left in TryParseDacText
+pas = pas.replace(
+    """  if (Length(lText) > 1) and ((lText[1] = '0') or (lText[1] = '0')) and
+    ((lText[2] = 'x') or (lText[2] = 'X')) then
+    Delete(lText, 1, 2);
+""",
+    """  if (Length(lText) > 1) and (lText[1] = '0') and
+    ((lText[2] = 'x') or (lText[2] = 'X')) then
+    Delete(lText, 1, 2);
+""",
+)
+
+write_utf8_crlf(PAS, pas)
+
+lfm = '''object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
+  Left = 420
+  Height = 430
+  Top = 220
+  Width = 740
+  BorderStyle = bsDialog
+  Caption = 'Аппаратные свойства MC-201'
+  ClientHeight = 430
+  ClientWidth = 740
+  Position = poOwnerFormCenter
+  object fSerialEdit: TEdit
+    Left = 120
+    Height = 25
+    Top = 16
+    Width = 190
+    ReadOnly = True
+    TabOrder = 0
+  end
+  object fVersionEdit: TEdit
+    Left = 430
+    Height = 25
+    Top = 16
+    Width = 190
+    ReadOnly = True
+    TabOrder = 1
+  end
+  object SerialLabel: TLabel
+    Left = 16
+    Top = 21
+    Caption = 'Серийный номер'
+  end
+  object VersionLabel: TLabel
+    Left = 330
+    Top = 21
+    Caption = 'Версия'
+  end
+  object ChannelGroup: TGroupBox
+    Left = 16
+    Height = 190
+    Top = 55
+    Width = 708
+    Caption = 'Каналы'
+    TabOrder = 2
+    object HeaderRange: TLabel
+      Left = 45
+      Top = 24
+      Caption = 'Диапазон'
+    end
+    object HeaderHpf: TLabel
+      Left = 160
+      Top = 24
+      Caption = 'HPF'
+    end
+    object HeaderLpf: TLabel
+      Left = 200
+      Top = 24
+      Caption = 'LPF'
+    end
+    object HeaderInput: TLabel
+      Left = 280
+      Top = 24
+      Caption = 'Режим входа'
+    end
+    object HeaderDac: TLabel
+      Left = 500
+      Top = 24
+      Caption = 'ЦАП'
+    end
+    object HeaderIcp: TLabel
+      Left = 590
+      Top = 24
+      Caption = 'ICP'
+    end
+    object Ch1Label: TLabel
+      Left = 15
+      Top = 55
+      Caption = '1.'
+    end
+    object Ch2Label: TLabel
+      Left = 15
+      Top = 87
+      Caption = '2.'
+    end
+    object Ch3Label: TLabel
+      Left = 15
+      Top = 119
+      Caption = '3.'
+    end
+    object Ch4Label: TLabel
+      Left = 15
+      Top = 151
+      Caption = '4.'
+    end
+    object fRange1: TComboBox
+      Left = 40
+      Height = 25
+      Top = 48
+      Width = 110
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object fRange2: TComboBox
+      Left = 40
+      Height = 25
+      Top = 80
+      Width = 110
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object fRange3: TComboBox
+      Left = 40
+      Height = 25
+      Top = 112
+      Width = 110
+      Style = csDropDownList
+      TabOrder = 2
+    end
+    object fRange4: TComboBox
+      Left = 40
+      Height = 25
+      Top = 144
+      Width = 110
+      Style = csDropDownList
+      TabOrder = 3
+    end
+    object fHpf1: TCheckBox
+      Left = 165
+      Height = 23
+      Top = 49
+      Width = 22
+      TabOrder = 4
+    end
+    object fHpf2: TCheckBox
+      Left = 165
+      Height = 23
+      Top = 81
+      Width = 22
+      TabOrder = 5
+    end
+    object fHpf3: TCheckBox
+      Left = 165
+      Height = 23
+      Top = 113
+      Width = 22
+      TabOrder = 6
+    end
+    object fHpf4: TCheckBox
+      Left = 165
+      Height = 23
+      Top = 145
+      Width = 22
+      TabOrder = 7
+    end
+    object fLpf1: TCheckBox
+      Left = 205
+      Height = 23
+      Top = 49
+      Width = 22
+      TabOrder = 8
+    end
+    object fLpf2: TCheckBox
+      Left = 205
+      Height = 23
+      Top = 81
+      Width = 22
+      TabOrder = 9
+    end
+    object fLpf3: TCheckBox
+      Left = 205
+      Height = 23
+      Top = 113
+      Width = 22
+      TabOrder = 10
+    end
+    object fLpf4: TCheckBox
+      Left = 205
+      Height = 23
+      Top = 145
+      Width = 22
+      TabOrder = 11
+    end
+    object fInput1: TComboBox
+      Left = 245
+      Height = 25
+      Top = 48
+      Width = 235
+      Style = csDropDownList
+      TabOrder = 12
+    end
+    object fInput2: TComboBox
+      Left = 245
+      Height = 25
+      Top = 80
+      Width = 235
+      Style = csDropDownList
+      TabOrder = 13
+    end
+    object fInput3: TComboBox
+      Left = 245
+      Height = 25
+      Top = 112
+      Width = 235
+      Style = csDropDownList
+      TabOrder = 14
+    end
+    object fInput4: TComboBox
+      Left = 245
+      Height = 25
+      Top = 144
+      Width = 235
+      Style = csDropDownList
+      TabOrder = 15
+    end
+    object fDac1: TEdit
+      Left = 495
+      Height = 25
+      Top = 48
+      Width = 75
+      TabOrder = 16
+      Text = '$8080'
+    end
+    object fDac2: TEdit
+      Left = 495
+      Height = 25
+      Top = 80
+      Width = 75
+      TabOrder = 17
+      Text = '$8080'
+    end
+    object fDac3: TEdit
+      Left = 495
+      Height = 25
+      Top = 112
+      Width = 75
+      TabOrder = 18
+      Text = '$8080'
+    end
+    object fDac4: TEdit
+      Left = 495
+      Height = 25
+      Top = 144
+      Width = 75
+      TabOrder = 19
+      Text = '$8080'
+    end
+    object fIcp1: TCheckBox
+      Left = 595
+      Height = 23
+      Top = 49
+      Width = 22
+      TabOrder = 20
+    end
+    object fIcp2: TCheckBox
+      Left = 595
+      Height = 23
+      Top = 81
+      Width = 22
+      TabOrder = 21
+    end
+    object fIcp3: TCheckBox
+      Left = 595
+      Height = 23
+      Top = 113
+      Width = 22
+      TabOrder = 22
+    end
+    object fIcp4: TCheckBox
+      Left = 595
+      Height = 23
+      Top = 145
+      Width = 22
+      TabOrder = 23
+    end
+  end
+  object fCommutationGroup: TRadioGroup
+    Left = 16
+    Height = 95
+    Top = 255
+    Width = 220
+    Caption = 'Коммутация'
+    Items.Strings = (
+      'Разъём модуля'
+      'Земля'
+    )
+    TabOrder = 3
+  end
+  object SubmoduleGroup: TGroupBox
+    Left = 248
+    Height = 95
+    Top = 255
+    Width = 476
+    Caption = 'Субмодуль'
+    TabOrder = 4
+    object SubmoduleLabel: TLabel
+      Left = 16
+      Top = 28
+      Caption = 'Тип'
+    end
+    object RevisionLabel: TLabel
+      Left = 16
+      Top = 62
+      Caption = 'Версия'
+    end
+    object fSubmoduleCombo: TComboBox
+      Left = 90
+      Height = 25
+      Top = 20
+      Width = 360
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object fRevisionCombo: TComboBox
+      Left = 90
+      Height = 25
+      Top = 54
+      Width = 360
+      Style = csDropDownList
+      TabOrder = 1
+    end
+  end
+  object fButtonPanel: TButtonPanel
+    Left = 0
+    Height = 50
+    Top = 380
+    Width = 740
+    Align = alBottom
+    AutoSize = True
+    ShowButtons = [pbOK, pbCancel]
+    TabOrder = 5
+  end
+end
+'''
+
+LFM.write_text(lfm, encoding="utf-8", newline="\r\n")
+print("written pas+lfm")

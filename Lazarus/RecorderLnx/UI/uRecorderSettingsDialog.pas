@@ -2063,7 +2063,8 @@ begin
           Break;
         end;
       if (lCaption <> '') and ShowRecorderMc201SlotSettingsDialog(Self,
-        lCaption, lConfig.SpecificConfigText) then
+        lCaption, lConfig.SpecificConfigText, ATag.SourceId,
+        fRecorder.DataSources) then
       begin
         PopulateHardwareTree;
         PopulateChannelGrids;
@@ -3543,7 +3544,7 @@ begin
     lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, lSourceId);
     if (lConfig <> nil) and SameText(lConfig.ModuleType, 'MC-032') and
       ShowRecorderMc201SlotSettingsDialog(Self, fHardwareTree.Selected.Text,
-        lConfig.SpecificConfigText) then
+        lConfig.SpecificConfigText, lSourceId, fRecorder.DataSources) then
       fHardwareTree.Invalidate;
     Exit;
   end;

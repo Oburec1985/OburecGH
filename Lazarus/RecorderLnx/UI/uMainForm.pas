@@ -2256,7 +2256,8 @@ begin
         end;
       if (lConfig <> nil) and (lCaption <> '') and
         ShowRecorderMc201SlotSettingsDialog(Self, lCaption,
-          lConfig.SpecificConfigText) then
+          lConfig.SpecificConfigText, ATag.SourceId,
+          fRecorder.DataSources) then
         AddLog(Format('MC-201 slot %d settings updated.', [lSlot]));
     finally
       lLines.Free;
