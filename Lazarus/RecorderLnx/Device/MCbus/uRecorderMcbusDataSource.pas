@@ -77,6 +77,7 @@ var
   lConfigured: TRecorderConfiguredDataSource;
   lFields, lLines: TStringList;
   lPrefix: string;
+  lNative: TRecorderMcbusDevice;
 begin
   lConfigured := RecorderConfiguredDataSourcesEnsure(Registry, SourceId,
     'MC-032', fPollFrequencyHz);
@@ -90,14 +91,20 @@ begin
   lLines := TStringList.Create;
   lFields := TStringList.Create;
   try
+    { Всегда ';': иначе DelimitedText даёт c0=1,c1=1 и ApplySpecificConfigText
+      не видит dXrY → при пересоздании источника ЦАП снова . }
+    lFields.StrictDelimiter := True;
+    lFields.Delimiter := ';';
+    lFields.NameValueSeparator := '=';
     lLines.Text := lConfigured.SpecificConfigText;
     lPrefix := 'CFG slot=' + IntToStr(ASlot) + ';';
     for I := 0 to lLines.Count - 1 do
       if Pos(lPrefix, lLines[I]) = 1 then
       begin
-        lFields.StrictDelimiter := True;
-        lFields.Delimiter := ';';
-        lFields.DelimitedText := Copy(lLines[I], Length(lPrefix) + 1, MaxInt);
+        { Нормализуем старые CFG с запятыми в поля через ';'. }
+        lFields.DelimitedText := StringReplace(
+          Copy(lLines[I], Length(lPrefix) + 1, MaxInt), ',', ';',
+          [rfReplaceAll]);
         lRange := EnsureRange(StrToIntDef(lFields.Values['c' +
           IntToStr(AChannel)], 1), 0, 5);
         lFields.Values['d' + IntToStr(AChannel) + 'r' + IntToStr(lRange)] :=
@@ -108,6 +115,13 @@ begin
         RecorderDebugLog(Format(
           '[MCBUS][BALANCE] DAC persisted source=%s slot=%d channel=%d range=%d code=$%.4x cfg=%s',
           [SourceId, ASlot, AChannel + 1, lRange, ACode, lLines[I]]));
+        if (fDevice <> nil) and
+          (fDevice.GetNativeObject is TRecorderMcbusDevice) then
+        begin
+          lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
+          lNative.SetSpecificConfigText(fSpecificConfigText);
+          RecorderDebugLog('[MCBUS][BALANCE] runtime fConfig reloaded from CFG');
+        end;
         Exit;
       end;
     { Старые проекты могут содержать только строки описания найденных модулей.
@@ -133,6 +147,13 @@ begin
       '[MCBUS][BALANCE] DAC config created source=%s slot=%d channel=%d range=%d code=$%.4x cfg=%s',
       [SourceId, ASlot, AChannel + 1, lRange, ACode,
        lLines[lLines.Count - 1]]));
+    if (fDevice <> nil) and
+      (fDevice.GetNativeObject is TRecorderMcbusDevice) then
+    begin
+      lNative := TRecorderMcbusDevice(fDevice.GetNativeObject);
+      lNative.SetSpecificConfigText(fSpecificConfigText);
+      RecorderDebugLog('[MCBUS][BALANCE] runtime fConfig reloaded from new CFG');
+    end;
   finally
     lFields.Free;
     lLines.Free;
@@ -354,14 +375,27 @@ var
   lError: string;
   lTag: TRecorderTag;
   lStartedHere: Boolean;
+  lMapped: Integer;
 begin
   Result := False;
   if (ATags = nil) or (fDevice = nil) then
+  begin
+    RecorderDebugLog('[MCBUS][BALANCE] ZeroBalanceTags: no tags/device');
     Exit;
+  end;
+  RecorderDebugLog(Format(
+    '[MCBUS][BALANCE] ZeroBalanceTags enter source=%s tags=%d state=%d',
+    [SourceId, ATags.Count, Ord(fDevice.State)]));
   if fDevice.State = rdsDisconnected then
+  begin
+    RecorderDebugLog('[MCBUS][BALANCE] PrepareHardware before balance');
     PrepareHardware;
+    RecorderDebugLog(Format('[MCBUS][BALANCE] after PrepareHardware state=%d',
+      [Ord(fDevice.State)]));
+  end;
   lChannels := fDevice.GetChannels;
   SetLength(lIndices, ATags.Count);
+  lMapped := 0;
   for I := 0 to ATags.Count - 1 do
   begin
     lIndices[I] := -1;
@@ -374,9 +408,16 @@ begin
         (lSlot = lTagSlot) and (lChannel = lTagChannel) then
       begin
         lIndices[I] := J;
+        Inc(lMapped);
         Break;
       end;
+    RecorderDebugLog(Format(
+      '[MCBUS][BALANCE] map tag=%s addr=%s -> idx=%d',
+      [lTag.Name, lTag.Address, lIndices[I]]));
   end;
+  RecorderDebugLog(Format(
+    '[MCBUS][BALANCE] mapped=%d/%d deviceChannels=%d',
+    [lMapped, ATags.Count, Length(lChannels)]));
   EnterCriticalSection(fIoLock);
   lStartedHere := False;
   try
@@ -386,14 +427,23 @@ begin
       запущенного, иначе повторный вызов остаётся без активного скана. }
     if fDevice.State <> rdsStarted then
     begin
+      RecorderDebugLog('[MCBUS][BALANCE] DataSource Start for balance');
       fDevice.Start;
       lStartedHere := True;
+      RecorderDebugLog(Format('[MCBUS][BALANCE] DataSource Start done state=%d',
+        [Ord(fDevice.State)]));
     end;
     Result := fDevice.ExecuteDeviceAction(rdaZeroBalance, lIndices, lValues,
       lError);
+    RecorderDebugLog(Format(
+      '[MCBUS][BALANCE] ExecuteDeviceAction result=%s err=%s',
+      [BoolToStr(Result, True), lError]));
   finally
     if lStartedHere then
+    begin
+      RecorderDebugLog('[MCBUS][BALANCE] DataSource Stop after balance');
       fDevice.Stop;
+    end;
     LeaveCriticalSection(fIoLock);
   end;
   if not Result then

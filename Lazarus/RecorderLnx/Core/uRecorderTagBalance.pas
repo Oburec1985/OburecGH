@@ -289,8 +289,9 @@ begin
         lHandledAny := True;
     end;
 
-    if lMessages.Count > 0 then
-      MessageDlg('Балансировка нуля', lMessages.Text, mtInformation, [mbOK], 0);
+    { Успех — без MessageDlg (детали уже в LogWindows). Диалог только при ошибке. }
+    if (not lHandledAny) and (lMessages.Count > 0) then
+      MessageDlg('Балансировка нуля', lMessages.Text, mtWarning, [mbOK], 0);
 
     if lHandledAny then
       Result := True

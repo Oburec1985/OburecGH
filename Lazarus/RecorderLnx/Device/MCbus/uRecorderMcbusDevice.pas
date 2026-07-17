@@ -193,8 +193,10 @@ begin
       lPrefix := 'CFG slot=';
       if Pos(lPrefix, Trim(lLines[I])) <> 1 then
         Continue;
-      lFields.DelimitedText := Copy(Trim(lLines[I]), Length(lPrefix) + 1,
-        MaxInt);
+      { Поля CFG должны разделяться ';'. Старые записи с ',' тоже читаем. }
+      lFields.DelimitedText := StringReplace(
+        Copy(Trim(lLines[I]), Length(lPrefix) + 1, MaxInt), ',', ';',
+        [rfReplaceAll]);
       lSlot := StrToIntDef(lFields[0], 0) - 1;
       if (lSlot < 0) or (lSlot > High(fConfig.Slots)) then
         Continue;
@@ -462,11 +464,16 @@ begin
     lSlot := fProgramInfo[I div CMc201MaxModuleChannels].Slot;
     lChannelInSlot := I mod CMc201MaxModuleChannels;
     lCode := GetChannelBalanceDac(I);
+    if lCode <> $8080 then
+      BalanceTrace(Format(
+        'ApplySavedBalanceDac ch=%d slot=%d idx=%d code=$%.4x',
+        [I, lSlot + 1, lChannelInSlot, lCode]));
     if not fController.SendBalanceDac(lSlot, lChannelInSlot,
       lCode and $ff, lCode shr 8, fLastError) then
     begin
       AErrorText := Format('MC-032 restore balance slot=%d channel=%d: %s',
         [lSlot + 1, lChannelInSlot + 1, fLastError]);
+      BalanceTrace(AErrorText);
       Exit;
     end;
   end;
@@ -545,10 +552,11 @@ end;
 function TRecorderMcbusDevice.CollectChannelMean(AChannel,
   ASampleCount: Integer; out AMean: Double; out AErrorText: string): Boolean;
 var
-  I, lCount, lPacketChannel: Integer;
+  I, lCount, lPacketChannel, lMsgTotal, lMsgMatch, lMsgSkip: Integer;
   lSum: Double;
-  lDeadline: QWord;
+  lDeadline, lStartedAt: QWord;
   lPort: Word;
+  lTimeoutMs: Cardinal;
   lWords: TMc201WordArray;
 begin
   Result := False;
@@ -556,16 +564,30 @@ begin
   AErrorText := '';
   lCount := 0;
   lSum := 0;
-  { Секундная служебная выборка должна иметь жёстко ограниченное время.
-    Среднее считаем сразу по входным пакетам, не накапливая полный кадр. }
-  lDeadline := GetTickCount64 + Max(Cardinal(2000), fConfig.ReadTimeoutMs);
+  lMsgTotal := 0;
+  lMsgMatch := 0;
+  lMsgSkip := 0;
+  { Таймаут: время на нужное число отсчётов канала + запас на прогрев потока. }
+  lTimeoutMs := Max(Cardinal(3000), fConfig.ReadTimeoutMs);
+  if ChannelSampleRate(AChannel) > 0 then
+    lTimeoutMs := Max(lTimeoutMs, Cardinal(Round(
+      ASampleCount / ChannelSampleRate(AChannel) * 1000.0) + 1500));
+  lStartedAt := GetTickCount64;
+  lDeadline := lStartedAt + lTimeoutMs;
+  BalanceTrace(Format(
+    'CollectChannelMean: ch=%d need=%d timeoutMs=%d state=%d ctrlState=%s',
+    [AChannel, ASampleCount, lTimeoutMs, Ord(fState),
+     Mc032StateToString(fController.State)]));
   repeat
     if fController.ReadRawMessage(lPort, lWords) and
       (Length(lWords) > CMc201BiosMessageHeaderWords) and
       (lWords[1] = Length(lWords)) then
     begin
+      Inc(lMsgTotal);
       lPacketChannel := ChannelIndex(lWords[3], lWords[4]);
       if lPacketChannel = AChannel then
+      begin
+        Inc(lMsgMatch);
         for I := CMc201BiosMessageHeaderWords to High(lWords) do
         begin
           lSum := lSum + SmallInt(lWords[I]);
@@ -573,13 +595,20 @@ begin
           if lCount >= ASampleCount then
             Break;
         end;
+      end
+      else
+        Inc(lMsgSkip);
     end;
     if lCount >= ASampleCount then Break;
   until GetTickCount64 >= lDeadline;
+  BalanceTrace(Format(
+    'CollectChannelMean done: got=%d/%d msgs=%d match=%d skip=%d elapsedMs=%d',
+    [lCount, ASampleCount, lMsgTotal, lMsgMatch, lMsgSkip,
+     GetTickCount64 - lStartedAt]));
   if lCount < ASampleCount then
   begin
-    AErrorText := Format('MC-201 balance sample timeout: %d/%d',
-      [lCount, ASampleCount]);
+    AErrorText := Format('MC-201 balance sample timeout: %d/%d (msgs=%d match=%d)',
+      [lCount, ASampleCount, lMsgTotal, lMsgMatch]);
     BalanceTrace(AErrorText);
     Exit;
   end;
@@ -614,12 +643,47 @@ begin
   lModuleIndex := AChannel div CMc201MaxModuleChannels;
   lSlot := fProgramInfo[lModuleIndex].Slot;
   lChannelInSlot := AChannel mod CMc201MaxModuleChannels;
-  { Однопроходная балансировка: одна секундная оценка и одна команда ЦАП. }
-  lSamples := Max(3, Round(ChannelSampleRate(AChannel)));
+  { Оценка среднего: окно как у оригинала (~0.06*Fs), но не больше одной
+    завершённой MDP-порции (2048). Запрос на целую секунду при Fs=57600
+    давал timeout 2048/57600 и требовал несколько повторных нажатий. }
+  lSamples := Max(3, Min(2048, Round(ChannelSampleRate(AChannel) * 0.06)));
   lOldCode := GetChannelBalanceDac(AChannel);
-  BalanceTrace(Format('начало: индекс=%d, слот=%d, канал=%d, Fs=%.3f, проба=%d, старый ЦАП=$%.4x',
+  BalanceTrace(Format(
+    'начало: индекс=%d, слот=%d, канал=%d, Fs=%.3f, проба=%d, старый ЦАП=$%.4x, devState=%d',
     [AChannel, lSlot + 1, lChannelInSlot + 1, ChannelSampleRate(AChannel),
-     lSamples, lOldCode]));
+     lSamples, lOldCode, Ord(fState)]));
+  { Open-loop считает поправку только от нейтрали ($8080). Сначала всегда
+    гасим ЦАП через Stop → SEND $8080 → Start, иначе повтор меряет уже
+    скорректированный вход и ломает рабочий код. }
+  BalanceTrace(Format('сброс ЦАП в нейтраль $8080 (было $%.4x)', [lOldCode]));
+  fBalanceDac[AChannel] := $8080;
+  fConfig.Slots[lSlot].Channels[AChannel mod CMc201MaxModuleChannels].
+    BalanceDac[EnsureRange(fConfig.Slots[lSlot].Channels[AChannel mod
+      CMc201MaxModuleChannels].RangeIndex, 0, 5)] := $8080;
+  if not fController.Stop(AErrorText) then
+  begin
+    fState := rdsDisconnected;
+    AErrorText := 'MC-201 balance neutral stop: ' + AErrorText;
+    BalanceTrace(AErrorText);
+    Exit;
+  end;
+  if fState = rdsStarted then
+    fState := rdsProgrammed;
+  if not fController.SendBalanceDac(lSlot, lChannelInSlot, $80, $80,
+    AErrorText) then
+  begin
+    BalanceTrace('neutral SEND_BALANCE failed: ' + AErrorText);
+    Exit;
+  end;
+  if not fController.StartRawScan(AErrorText) then
+  begin
+    fState := rdsDisconnected;
+    AErrorText := 'MC-201 balance neutral start: ' + AErrorText;
+    BalanceTrace(AErrorText);
+    Exit;
+  end;
+  fState := rdsStarted;
+  ResetPending;
   if not CollectChannelMean(AChannel, lSamples, AFinalMean, AErrorText) then
     Exit;
   lTargetProduct := Abs(AFinalMean) / CMc201AdcCodesPerDacProduct;
@@ -632,45 +696,57 @@ begin
     lHi := 128 - lHiOffset;
   lHi := EnsureRange(lHi, 0, 255);
   lNewCode := Word((lHi shl 8) or lLo);
-  BalanceTrace(Format('расчёт: среднее=%.3f, произведение=%.3f, два 8-битных ЦАП: lo=%d hi=%d ($%.4x)',
+  BalanceTrace(Format(
+    'расчёт от нейтрали: среднее=%.3f, произведение=%.3f, lo=%d hi=%d ($%.4x)',
     [AFinalMean, lTargetProduct, lLo, lHi, lNewCode]));
-  if not fController.SendBalanceDac(lSlot, lChannelInSlot, lLo, lHi,
-    AErrorText) then
-    Exit;
-  { Оригинальный ModuleMC201::ChanCalibrFullSingleScan после КАЖДОГО
-    SendBalanceDAC вызывает GetChanMeanSingleScan, а тот выполняет отдельный
-    single_scan->StartStop(). Именно этот следующий цикл скана применяет код.
-    Повторяем последовательность: расчёт остаётся однопроходным, последующая
-    короткая выборка только защёлкивает и проверяет уже рассчитанный код. }
+  { Soft + Stop → SEND новый код → Start → verify. STOPSCANMAIN сбрасывает
+    регистр ЦАП, поэтому SEND до STARTSCANMAIN обязателен. }
+  fBalanceDac[AChannel] := lNewCode;
+  fConfig.Slots[lSlot].Channels[AChannel mod CMc201MaxModuleChannels].
+    BalanceDac[EnsureRange(fConfig.Slots[lSlot].Channels[AChannel mod
+      CMc201MaxModuleChannels].RangeIndex, 0, 5)] := lNewCode;
+  BalanceTrace(Format('SEND_BALANCE_CC slot=%d ch=%d lo=%d hi=%d',
+    [lSlot, lChannelInSlot, lLo, lHi]));
   if not fController.Stop(AErrorText) then
   begin
     fState := rdsDisconnected;
     AErrorText := 'MC-201 balance apply stop: ' + AErrorText;
+    BalanceTrace(AErrorText);
     Exit;
   end;
+  if fState = rdsStarted then
+    fState := rdsProgrammed;
+  if not fController.SendBalanceDac(lSlot, lChannelInSlot, lLo, lHi,
+    AErrorText) then
+  begin
+    BalanceTrace('SEND_BALANCE_CC failed: ' + AErrorText);
+    Exit;
+  end;
+  BalanceTrace('DAC set after Stop; StartRawScan + verify');
   if not fController.StartRawScan(AErrorText) then
   begin
     fState := rdsDisconnected;
     AErrorText := 'MC-201 balance apply start: ' + AErrorText;
+    BalanceTrace(AErrorText);
     Exit;
   end;
+  fState := rdsStarted;
   ResetPending;
-  lVerifySamples := Max(3, Round(ChannelSampleRate(AChannel) * 0.06));
+  lVerifySamples := Max(3, Min(2048, Round(ChannelSampleRate(AChannel) * 0.06)));
+  BalanceTrace(Format('verify samples=%d', [lVerifySamples]));
   if not CollectChannelMean(AChannel, lVerifySamples, lVerifyMean,
     AErrorText) then
   begin
     AErrorText := 'MC-201 balance apply sample: ' + AErrorText;
+    BalanceTrace(AErrorText);
     Exit;
   end;
-  BalanceTrace(Format('применяющий цикл скана завершён, контрольное среднее=%.3f',
-    [lVerifyMean]));
+  BalanceTrace(Format(
+    'apply cycle done: verifyMean=%.3f code=$%.4x (было $%.4x)',
+    [lVerifyMean, lNewCode, lOldCode]));
   RecorderDebugLog(Format(
-    '[MCBUS] balance DAC applied slot=%d channel=%d code=$%.4x mean=%.3f',
-    [lSlot + 1, lChannelInSlot + 1, lNewCode, AFinalMean]));
-  fBalanceDac[AChannel] := lNewCode;
-  fConfig.Slots[lSlot].Channels[AChannel mod CMc201MaxModuleChannels].
-    BalanceDac[EnsureRange(fConfig.Slots[lSlot].Channels[AChannel mod
-      CMc201MaxModuleChannels].RangeIndex, 0, 5)] := fBalanceDac[AChannel];
+    '[MCBUS] balance DAC applied slot=%d channel=%d code=$%.4x mean=%.3f verify=%.3f',
+    [lSlot + 1, lChannelInSlot + 1, lNewCode, AFinalMean, lVerifyMean]));
   ResetPending;
   Result := True;
 end;
@@ -782,18 +858,24 @@ begin
   { Балансировка из диалога тега часто вызывается без Preview. Нужен активный
     скан (STARTSCANMAIN) для сбора среднего; поднимаем его здесь, если ещё не
     запущен. Остановленный сами — только если старт был служебным. }
+  BalanceTrace(Format(
+    'ExecuteDeviceAction ZeroBalance: channels=%d state=%d ctrl=%s',
+    [Length(AChannelIndices), Ord(fState), Mc032StateToString(fController.State)]));
   lStartedHere := False;
   if fState <> rdsStarted then
   begin
     try
+      BalanceTrace('Start before balance...');
       Start;
       lStartedHere := True;
-      BalanceTrace('служебный скан для балансировки запущен');
+      BalanceTrace(Format('служебный скан запущен; state=%d ctrl=%s',
+        [Ord(fState), Mc032StateToString(fController.State)]));
     except
       on E: Exception do
       begin
         AErrorText := 'Не удалось запустить скан для балансировки MC-201: ' +
           E.Message;
+        BalanceTrace(AErrorText);
         Exit(False);
       end;
     end;
@@ -801,6 +883,7 @@ begin
   if fState <> rdsStarted then
   begin
     AErrorText := 'Скан MC-201 не активен, балансировка невозможна';
+    BalanceTrace(AErrorText);
     Exit(False);
   end;
   fController.PauseStreamingReader;
@@ -810,16 +893,23 @@ begin
     for I := 0 to High(AChannelIndices) do
     begin
       lChannel := AChannelIndices[I];
+      BalanceTrace(Format('channel[%d]=%d', [I, lChannel]));
       if (lChannel < 0) or (lChannel >= fChannelCount) then
       begin
         AErrorText := Format('Канал MC-201 с индексом %d не найден', [lChannel]);
+        BalanceTrace(AErrorText);
         Exit(False);
       end;
       if not BalanceChannelHardware(lChannel, lMean, AErrorText) then
+      begin
+        BalanceTrace(Format('BalanceChannelHardware failed: %s', [AErrorText]));
         Exit(False);
+      end;
       AValues[I] := lMean;
+      BalanceTrace(Format('channel[%d] ok mean=%.3f', [I, lMean]));
     end;
     Result := True;
+    BalanceTrace('ExecuteDeviceAction ZeroBalance OK');
   finally
     fController.ResumeStreamingReader;
     BalanceTrace('фоновое чтение просмотра восстановлено');

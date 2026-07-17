@@ -1669,7 +1669,7 @@
 						"sourceId" : "MC-032: 192.169.12.87:4000",
 						"moduleType" : "MC-032",
 						"defaultPollFrequencyHz" : 5.7600000000000000E+004,
-						"specificConfigText" : "Слот 1: MC-201, type=$00C9, version=$0884, SN=1462\r\nСлот 2: MC-201, type=$00C9, version=$0884, SN=1465\r\nСлот 3: MC-201, type=$00C9, version=$0884, SN=1464\r\nСлот 4: MC-201, type=$00C9, version=$0884, SN=1463\r\n"
+						"specificConfigText" : "Слот 1: MC-201, type=$00C9, version=$0884, SN=1462\r\nСлот 2: MC-201, type=$00C9, version=$0884, SN=1465\r\nСлот 3: MC-201, type=$00C9, version=$0884, SN=1464\r\nСлот 4: MC-201, type=$00C9, version=$0884, SN=1463\r\nCFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730\r\n"
 				}
 		],
 		"calibrations" : [
