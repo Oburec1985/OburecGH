@@ -260,9 +260,10 @@ end;
 procedure TRecorderMc201SlotSettingsDialog.SaveSettings(
   var AConfigText: string; ASlot: Integer);
 var
-  I: Integer;
+  I, J, K: Integer;
   lLine: string;
   lLines: TStringList;
+  lOldFields: TStringList;
   lPrefix: string;
   lChecks: array[0..11] of TCheckBox;
   lCombos: array[0..7] of TComboBox;
@@ -279,13 +280,29 @@ begin
   lLine += Format('comm=%d;sub=%d;rev=%d;', [fCommutationGroup.ItemIndex,
     fSubmoduleCombo.ItemIndex, fRevisionCombo.ItemIndex]);
   lLines := TStringList.Create;
+  lOldFields := TStringList.Create;
   try
     lLines.Text := AConfigText;
     for I := lLines.Count - 1 downto 0 do
-      if Pos(lPrefix, lLines[I]) = 1 then lLines.Delete(I);
+      if Pos(lPrefix, lLines[I]) = 1 then
+      begin
+        lOldFields.StrictDelimiter := True;
+        lOldFields.Delimiter := ';';
+        lOldFields.DelimitedText := Copy(lLines[I], Length(lPrefix) + 1,
+          MaxInt);
+        lLines.Delete(I);
+      end;
+    { Балансировочный ЦАП хранится отдельно для каждого диапазона. Диалог
+      аппаратных свойств не редактирует эти коды и обязан перенести их без потерь. }
+    for J := 0 to 3 do
+      for K := 0 to 5 do
+        if lOldFields.Values['d' + IntToStr(J) + 'r' + IntToStr(K)] <> '' then
+          lLine += Format('d%dr%d=%s;', [J, K,
+            lOldFields.Values['d' + IntToStr(J) + 'r' + IntToStr(K)]]);
     lLines.Add(lLine);
     AConfigText := lLines.Text;
   finally
+    lOldFields.Free;
     lLines.Free;
   end;
 end;

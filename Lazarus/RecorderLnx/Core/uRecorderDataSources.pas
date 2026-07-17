@@ -28,6 +28,8 @@ uses
   uRecorderTags, uMeraFile, uRecorderDebugLog;
 
 type
+  TRecorderZeroBalanceTraceEvent = procedure(const AText: string) of object;
+
   { Базовый класс исключения для источников данных }
   ERecorderDataSourceError = class(Exception);
 
@@ -83,6 +85,13 @@ type
     ['{E4C9A1B2-7D3F-4E5A-9B8C-1A2B3C4D5E6F}']
     function ZeroBalanceTags(AOwner: TComponent; ATags: TList;
       AMessages: TStrings): Boolean;
+  end;
+
+  // интерфейс для аппаратной балансировки источника данных - Умею стримить прогресс в UI
+  // IRecorderDevice.ExecuteDeviceAction(rdaZeroBalance) - Низкоуровневое действие драйвера
+  IRecorderZeroBalanceTraceSupport = interface
+    ['{7317C81E-5834-4BD5-AAB4-F12B53F08D8A}']
+    procedure SetZeroBalanceTrace(AHandler: TRecorderZeroBalanceTraceEvent);
   end;
 
   { TRecorderDataSourceBase

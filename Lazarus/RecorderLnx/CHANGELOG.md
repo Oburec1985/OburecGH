@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-07-17 — Математика балансировки MC-201 в комментариях
+
+**Задача (переформулировка):** Подробно пояснить формулу `BalanceChannelHardware` и сравнить с итеративным `ChanCalibrFullSingleScan` оригинала.
+
+**Сделано:**
+- В `uRecorderMcbusDevice.BalanceChannelHardware` — комментарии: модель `k*(lo-128)*(hi-128)`, разложение product→loOff/hiOff, отличие от бинарного поиска оригинала, защёлка Stop/Start.
+- Encoding verify OK; сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `Device/MCbus/uRecorderMcbusDevice.pas`
+
+**Документация:** [recorderlnx-integration.md](Docs/devices/mc/recorderlnx-integration.md); оригинал `mtc/Mc201.cpp`
+
+---
+## 2026-07-17 — Комментарии к API `uMc032Device`
+
+**Задача (переформулировка):** Подписать методы низкоуровневого драйвера MC-032 по смыслу работы (параметры, момент вызова), без формальных «метод Stop останавливает».
+
+**Сделано:**
+- В секции `interface` добавлены комментарии к public/private API, helper-классам и callback’ам.
+- Запись через encoding-safe `pas_io` (UTF-8+CRLF); `verify_russian_comments.py` — OK.
+- Сборка `RecorderLnx.lpi` — OK.
+
+**Файлы:** `Device/MCbus/uMc032Device.pas`
+
+**Документация:** [recorderlnx-integration.md](Docs/devices/mc/recorderlnx-integration.md)
+
 ---
 ## 2026-07-08 — Splitter правой панели и колонки списка тегов
 

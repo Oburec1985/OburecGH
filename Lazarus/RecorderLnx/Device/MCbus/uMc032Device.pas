@@ -24,25 +24,36 @@ type
   EMc032Device = class(Exception);
 
   TMc032Device = class;
+  { Диагностический callback для длинных BIOS/IDMA шагов (Config/Play/RX).
+    AText — одна строка прогресса; вызывается из рабочего кода драйвера и
+    из read-thread, поэтому UI должен только логировать, не трогать железо. }
   TMc032ProgressCallback = procedure(Sender: TObject; const AText: string) of object;
 
+  { Перенос готового BIOS-сообщения в GUI-поток через TThread.Queue.
+    Create копирует пакет; Deliver вызывает ACallback и освобождает себя. }
   TMc032QueuedPacket = class
   private
     fCallback: TMc032DataCallback;
     fPacket: TMc032DataPacket;
     fSender: TObject;
   public
+    { ASender — обычно TMc032Device; ACallback — потребитель данных (адаптер
+      uRecorderMcbusDevice); APacket — уже выделенное BIOS-сообщение. }
     constructor Create(ASender: TObject; ACallback: TMc032DataCallback;
       const APacket: TMc032DataPacket);
+    { Вызывается из главного потока после Queue; после callback объект Free. }
     procedure Deliver;
   end;
 
+  { Фоновый потребитель MDP TCP: крутит ReadRawPacket и отдаёт кадры в
+    HandleThreadPacket. Живёт только в состоянии Play после Play(). }
   TMc032ReadThread = class(TThread)
   private
     fOwner: TMc032Device;
   protected
     procedure Execute; override;
   public
+    { Сразу Start; AOwner обязан пережить поток до StopReadThread. }
     constructor Create(AOwner: TMc032Device);
   end;
 
@@ -63,37 +74,101 @@ type
     fTimeoutMs: Cardinal;
     fProgramInfo: TMc201ModuleProgramInfoArray;
     fReceivedPacketCount: Int64;
+    { Поднимает TCP+BIOS, если State=Disconnected; иначе бросает исключение.
+      Вызывается из API, которому нужна уже живая сессия (SearchModules, Config…). }
     procedure EnsureConnected;
+    { Ближайший индекс частотной сетки контроллера (0..15) к AFreqHz. }
     function FreqToIndex(AFreqHz: Double): Word;
+    { Частота Hz по индексу сетки с учётом BackplaneFrequencyHz из fConfig. }
     function FreqIndexToFreq(AIndex: Word): Double;
+    { Код делителя частоты модуля (поле Freq в SET_FREQ_CC) для AFreqHz. }
     function FreqToFreqCode(AFreqHz: Double): Word;
+    { Код grid (SET_GRID_CC): чётный индекс сетки → 1, нечётный → 0. }
     function FreqToGridCode(AFreqHz: Double): Word;
+    { Склеивает сырой MDP-кадр в fStreamBuffer и вытаскивает целые BIOS-
+      сообщения; вызывается только из TMc032ReadThread.
+      APort — MDP stream port; AWords — payload кадра без разбора. }
     procedure HandleThreadPacket(APort: Word; const AWords: TMc201WordArray);
+    { Пытается снять одно валидное BIOS-сообщение с головы fStreamBuffer
+      (word0=0, size в пределах лимита). True — AWords заполнен. }
     function TryExtractStreamMessage(out AWords: TMc201WordArray): Boolean;
+    { Упаковывает сообщение в TMc032DataPacket и ставит Deliver в GUI-очередь.
+      APort копируется в StreamPort пакета. }
     procedure QueueStreamMessage(APort: Word; const AWords: TMc201WordArray);
+    { Полная программа скана MC-201 по AConfig (RESETSCANMAIN…START_TRIGGER).
+      Вызывается из Config; STARTSCANMAIN сюда не входит — его даёт Play/
+      StartRawScan. AErrorMessage — текст первого упавшего BIOS/IDMA шага. }
     function ProgramMc201Scan(const AConfig: TMc032Config;
       out AErrorMessage: string): Boolean;
+    { Пробрасывает AText в OnProgress, если назначен. }
     procedure Progress(const AText: string);
+    { Читает flash слота ASlot (type/version/serial) и помечает IsMc201.
+      Пустой слот (TypeId 0 или 0xFFFF) — Success с нулевым типом, без ошибки. }
     function ReadSlotInfo(ASlot: Word; out AInfo: TMc201SlotInfo;
       out AErrorMessage: string): Boolean;
+    { Terminate+WaitFor фонового RX; безопасен при nil. Нужен перед STOPSCAN
+      и при PauseStreamingReader (скан на железе может продолжаться). }
     procedure StopReadThread;
   public
     constructor Create;
     destructor Destroy; override;
+    { Проверка доступности Host/Port через TEST_LOAD. При успехе AFoundHost:=Host.
+      UI «найти контроллер» без полного Connect. }
     function Search(out AFoundHost: string; out AErrorMessage: string): Boolean;
+    { CMD TEST_LOAD на текущем Host/Port. Если сессии ещё нет — открывает
+      временный клиент и закрывает его в finally. True при reply[0]=1. }
     function TestConnection(out AErrorMessage: string): Boolean;
+    { Обход слотов 0..AMaxSlots-1, возвращает только занятые модули в AModules
+      и кэширует их в LastModules (нужно ProgramMc201Scan). Требует Connect. }
     function SearchModules(AMaxSlots: Word; out AModules: TMc201SlotInfoArray;
       out AErrorMessage: string): Boolean;
+    { TCP + ReadControllerBios; при ошибке — исключение. Для CLI/адаптера. }
     procedure Connect;
+    { Тот же Connect для GUI: False + AErrorMessage вместо исключения;
+      при уже Connected сразу True. }
     function TryConnect(out AErrorMessage: string): Boolean;
+    { Stop (если Play) и ForceDisconnect(False): рвёт TCP, программу скана
+      в LastModules/ProgramInfo не сбрасывает. }
     procedure Disconnect;
+    { CMD RESET контроллера на живой сессии. Перед повторным Config после
+      сбоя или по явной команде UI. }
     function Reset(out AErrorMessage: string): Boolean;
+    { Применяет AConfig: ProgramMc201Scan; при отказе — один Reset+reconnect
+      и повтор. Вызывать из UI/адаптера до Play. AConfig копируется в ConfigValue. }
     function Config(const AConfig: TMc032Config; out AErrorMessage: string): Boolean;
+    { Жёсткий teardown без STOPSCAN: гасит callback/reader/TCP, State:=Disconnected.
+      AClearProgram=True — ещё чистит ProgramInfo и LastModules (полный сброс
+      после смены крейта); False — оставляет кэш модулей для быстрого Config. }
     procedure ForceDisconnect(AClearProgram: Boolean);
+    { STARTSCANMAIN + фоновый reader. AOnData получает BIOS-сообщения через
+      Queue в GUI-потоке. Повторный вызов в mcsPlay — no-op True. }
     function Play(AOnData: TMc032DataCallback; out AErrorMessage: string): Boolean;
+    { Временно гасит TMc032ReadThread (фоновый RX просмотра) чтобы можно было включить поток балансировки,
+      не посылая STOPSCANMAIN: скан на контроллере продолжает лить данные в TCP.
+      Нужен zero-balance: CollectChannelMean сам читает ReadRawMessage на том
+      же сокете. Два потребителя (thread + balance) иначе делят один поток
+      кадров — пакеты «уводят» друг у друга, среднее/таймаут ломаются.
+      Вызов: ExecuteDeviceAction(rdaZeroBalance) при уже запущенном Play. }
+    procedure PauseStreamingReader;
+    { После балансировки снова поднимает TMc032ReadThread, если Play и
+      callback ещё задан — просмотр продолжает получать BIOS-сообщения. }
+    procedure ResumeStreamingReader;
+    { Один сырой MDP-кадр с TCP (без склейки BIOS). Для стендов/отладки.
+      APort/AWords — выход клиента; False при timeout. }
     function ReadRawPacket(out APort: Word; out AWords: TMc201WordArray): Boolean;
+    { Синхронно читает до целого BIOS-сообщения, дописывая кадры в fStreamBuffer.
+      Используется StartRawScan-путём без Play/callback (балансировка, CLI). }
     function ReadRawMessage(out APort: Word; out AWords: TMc201WordArray): Boolean;
+    { SEND_BALANCE_CC в слот ASlot: канал AChannel, код ЦАП как Lo/Hi байты.
+      Сессия должна быть уже открыта (скан может идти). Для zero-balance. }
+    function SendBalanceDac(ASlot, AChannel, ACodeLo, ACodeHi: Word;
+      out AErrorMessage: string): Boolean;
+    { STARTSCANMAIN без callback и без read-thread: поток читает вызывающий код
+      через ReadRawMessage. Нужен служебным сценариям (оценка среднего). }
     function StartRawScan(out AErrorMessage: string): Boolean;
+    { Если State=Play: гасит reader, шлёт STOPSCANMAIN → mcsConnected.
+      При отказе STOP — ForceDisconnect(False), чтобы UI не завис на полуживом TCP.
+      Если не Play — сразу True без команды. }
     function Stop(out AErrorMessage: string): Boolean;
     property Bios: TMc201ControllerBios read fBios;
     property ConfigValue: TMc032Config read fConfig;
@@ -106,6 +181,7 @@ type
     property TimeoutMs: Cardinal read fTimeoutMs write fTimeoutMs;
   end;
 
+{ Строка состояния для логов/UI (Disconnected/Connected/Play). }
 function Mc032StateToString(AState: TMc032DeviceState): string;
 
 implementation
@@ -559,6 +635,19 @@ begin
     if not CallMod(lInfo.Slot, CMc201ModuleCmdSetFreq, lArgs, 0, lReply,
       'SET_FREQ_CC') then
       Exit;
+    for J := 0 to CMc201MaxModuleChannels - 1 do
+    begin
+      SetLength(lArgs, 3);
+      lArgs[0] := J;
+      lArgs[1] := AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac[
+        EnsureRange(AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex,
+          0, High(AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac))] and $ff;
+      lArgs[2] := AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac[
+        EnsureRange(AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex,
+          0, High(AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac))] shr 8;
+      if not CallMod(lInfo.Slot, CMc201ModuleCmdSendBalance, lArgs, 0,
+        lReply, 'SEND_BALANCE_CC') then Exit;
+    end;
     lArgs[0] := $000F;
     if not CallMod(lInfo.Slot, CMc201ModuleCmdSetChanList, lArgs, 0, lReply,
       'SET_CHAN_LIST_CC') then
@@ -636,6 +725,9 @@ begin
   end;
 
   SetLength(lArgs, 3);
+  { Старые отсчёты, уже собранные до смены кода ЦАП, не должны попадать
+    в следующую 60-мс оценку среднего. }
+  SetLength(fStreamBuffer, 0);
   lArgs[0] := 0;
   lArgs[1] := 0;
   lArgs[2] := 1;
@@ -971,6 +1063,19 @@ begin
   end;
 end;
 
+procedure TMc032Device.PauseStreamingReader;
+begin
+  { Скан контроллера не останавливаем: на время служебного измерения убираем
+    только конкурирующего потребителя TCP-потока. }
+  StopReadThread;
+end;
+
+procedure TMc032Device.ResumeStreamingReader;
+begin
+  if (fState = mcsPlay) and (fReadThread = nil) and Assigned(fOnData) then
+    fReadThread := TMc032ReadThread.Create(Self);
+end;
+
 function TMc032Device.StartRawScan(out AErrorMessage: string): Boolean;
 var
   lDrained: Integer;
@@ -1057,6 +1162,29 @@ begin
       fStreamBuffer[lOldLength + I] := lPacket[I];
   until TryExtractStreamMessage(AWords);
   Result := True;
+end;
+
+function TMc032Device.SendBalanceDac(ASlot, AChannel, ACodeLo,
+  ACodeHi: Word; out AErrorMessage: string): Boolean;
+var
+  lArgs, lReply: TMc201WordArray;
+begin
+  Result := False;
+  AErrorMessage := '';
+  if fClient = nil then
+  begin
+    AErrorMessage := 'MC-032 is not connected';
+    Exit;
+  end;
+  SetLength(lArgs, 3);
+  lArgs[0] := AChannel;
+  lArgs[1] := ACodeLo and $00ff;
+  lArgs[2] := ACodeHi and $00ff;
+  Result := fClient.CallCommandModuleIdmaActivated(ASlot,
+    CMc201ModuleCmdSendBalance, lArgs, 0, lReply, AErrorMessage);
+  if not Result then
+    AErrorMessage := Format('SEND_BALANCE_CC failed slot=%d channel=%d: %s',
+      [ASlot + 1, AChannel + 1, AErrorMessage]);
 end;
 
 function TMc032Device.Stop(out AErrorMessage: string): Boolean;

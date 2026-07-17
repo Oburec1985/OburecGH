@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "algorithm-manager-requirements.md",
+                "file": "old/mic140_protocol.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "algorithm-manager-requirements"
+              "title": "mic140_protocol"
             }
           }
         ]
@@ -185,19 +185,32 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
-    "eventbus-audit.md",
+    "old/mic140_quickstart.md",
+    "algorithm-manager-requirements.md",
+    "data_sources_architecture.md",
+    "lazarus_vm_docking.md",
+    "development-rules.md",
+    "errors/README.md",
+    "errors/2026-06-29-mic140v2-acceptance.md",
+    "old/mic140_protocol.md",
+    "settings_dialog.md",
+    "spectrum_best_pipeline.md",
+    "spectrum_runtime_engine.md",
+    "spectrum-estimates.md",
+    "vm_atra_lazarus.md",
+    "old/mic140_legacy_scan_stream.md",
+    "devices/device_abstraction.md",
+    "devices/hardware_source_lifecycle.md",
+    "devices/migration_mic140v2.md",
+    "devices/README.md",
     "devices/mc/mc201.md",
     "devices/mc/README.md",
+    "devices/mc/recorderlnx-integration.md",
+    "eventbus-audit.md",
     "devices/mic185/settings_packet_table.md",
     "devices/mic185/hardware_calibration_cache.md",
     "devices/mic185/value_units_conversion.md",
     "devices/mic185/source_map.md",
-    "devices/mic185/temperature_channels.md",
-    "devices/mic185/recorderlnx_integration.md",
-    "devices/mic185/README.md",
-    "devices/mic185/protocol.md",
-    "devices/mic185/defaults.md",
-    "devices/mic185/architecture.md",
     "devices/mic185/images/recorder_mic185_main.png",
     "devices/mic185/images/recorder_mic185_commutation_combo.png",
     "devices/mic185/images/recorder_mic185_channel.png",
@@ -207,8 +220,6 @@
     "devices/mic185/images/recorder_mic185_sensor_combo.png",
     "devices/mic185/images/recorder_mic185_power_combo.png",
     "devices/mic185/images",
-    "devices/mic185/test_stand.md",
-    "devices/mic185/windev_mic185_test.md",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x.svg",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white/x-circle.svg",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white",
@@ -219,17 +230,6 @@
     "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_outliner.ui",
     "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_deck.ui",
     "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_board.ui",
-    "devices/mic185/mebius.daq/utils/mera_monitor/src/monitor.cpp",
-    "devices/mic185/mebius.daq/cmake/custom-triplets/x64-win-llvm/Notes.md",
-    "devices/mic140/protocol/08_timing_and_count_aver.md",
-    "devices/mic140/protocol/02_commutated_adc.md",
-    "devices/mic140/protocol/03_scan_programming.md",
-    "devices/mic140/protocol/04_channel_descriptors.md",
-    "devices/mic140/protocol/05_data_stream.md",
-    "devices/mic140/protocol/06_ui_parameters.md",
-    "devices/mic140/protocol/07_acceptance.md",
-    "devices/mic140/protocol/01_mdp_transport.md",
-    "devices/README.md",
-    "devices/mic140/protocol.md"
+    "devices/mic185/mebius.daq/utils/mera_monitor/src/monitor.cpp"
   ]
 }

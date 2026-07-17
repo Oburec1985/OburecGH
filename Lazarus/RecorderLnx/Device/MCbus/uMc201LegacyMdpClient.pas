@@ -932,10 +932,6 @@ var
   lReply: TMc201WordArray;
   lTail: TMc201WordArray;
 begin
-  Result := CallCommandModuleIdmaNotActivated(ASlot, ACommand, AArgs,
-    ARetWordCount, ARet, AErrorMessage);
-  Exit;
-
   SetLength(ARet, 0);
   if Length(AArgs) > 1 then
   begin

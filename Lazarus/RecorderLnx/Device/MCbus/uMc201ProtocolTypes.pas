@@ -63,6 +63,7 @@ type
     IcpOn: Word;
     IcpHpf: Word;
     IcpSingle: Word;
+    BalanceDac: array[0..5] of Word;
   end;
 
   TMc201SlotConfig = packed record
@@ -180,6 +181,7 @@ const
   CMc201ModuleCmdSetChanList = Word(41);
   CMc201ModuleCmdSetGrid = Word(50);
   CMc201ModuleCmdSetFreq = Word(51);
+  CMc201ModuleCmdSendBalance = Word(53);
   CMc201ModuleCmdConfigRaw = Word(58);
   CMc201ModuleCmdConfigDbl = Word(59);
   CMc201ModuleCmdConfigMix = Word(60);
