@@ -1,3 +1,127 @@
+## 2026-07-17 — Stop сразу после collect; quiet без ACK
+
+**Задача:** `STOPSCANMAIN ack not seen drained=126 quiet=True` — поток встал, ACK на no-wait нет; требовать ACK было ошибкой. Плюс Stop после compute копил RX.
+
+**Сделано:**
+- порядок: collect → **Stop** → compute → SEND → StartRawScan
+- `StopAfterHeavyStream`: CallCommand STOP (3с), иначе no-wait+quiet; **quiet без ACK = OK**
+- не слать второй CallCommand STOP после quiet
+- lazbuild `-B` exit 0
+
+**Файлы:** `Device/MCbus/uMc032Device.pas`, `Device/MCbus/uRecorderMcbusDevice.pas`
+
+## 2026-07-17 — Apply: сохранить ACK STOP при drain
+
+**Задача:** Диалог зависал на `SEND while streaming`; soft-STOP раньше выбрасывал command-port ACK и глушил шину.
+
+**Сделано:**
+- `StopAfterHeavyStream`: no-wait STOP → drain, **command-port = ACK** (без второго CallCommand STOP)
+- apply снова: keep-ACK stop → SEND → StartRawScan
+- `SendBalanceDac`: без длинных 15с×4 retry (не вешать диалог)
+- lazbuild `-B` exit 0
+
+**Документация:** [errors/2026-07-17-mc201-soft-stop-kills-commands.md](errors/2026-07-17-mc201-soft-stop-kills-commands.md)
+
+## 2026-07-17 — Apply: SEND на живом потоке (без Stop)
+
+**Задача:** После soft/quiet STOP шина глухая (`sync STOP` / SEND → MDP timeout); prepare со Stop+reply работает.
+
+**Сделано:**
+- apply: только `TryApplySavedBalanceDac` при `mcsPlay`, без Stop/RESET/StartRawScan
+- timeout ≥15с (reply среди data-port), как идея PlayDAC в оригинале
+- зафиксировано в `errors/2026-07-17-mc201-soft-stop-kills-commands.md`
+- lazbuild `-B` exit 0
+
+**Документация:** [errors/2026-07-17-mc201-soft-stop-kills-commands.md](errors/2026-07-17-mc201-soft-stop-kills-commands.md)
+
+## 2026-07-17 — Apply: sync STOP после quiet + SEND retry
+
+**Задача:** После `StopAfterHeavyStream` quiet-ok SEND_BALANCE на ch0 всё ещё MDP timeout (~1.2с) — soft-тишина 300мс недостаточна / не было confirmed STOP как в prepare.
+
+**Сделано:**
+- quiet ≥1с → `CallCommand(STOP)` на тихой шине (как prepare) → ещё 400мс quiet; без sync — fail
+- `TimeoutMs` setter пишет и в `fClient`
+- `SendBalanceDac`: drain + IDMA-activated, fallback IDMA-not-activated, 2 попытки
+- apply по-прежнему без RESET/`Start.Raise`
+- lazbuild `-B` exit 0
+
+**Файлы:** `Device/MCbus/uMc032Device.pas`, `Device/MCbus/uRecorderMcbusDevice.pas`
+
+## 2026-07-17 — Apply: quiet Stop + SEND без Start.Raise
+
+**Задача:** После Stop apply падал в `ApplySavedBalanceDac` (`SEND_BALANCE` MDP timeout) — soft preview-Stop ждал 15с и не давал тишины на шине.
+
+**Сделано:**
+- `StopAfterHeavyStream`: сразу STOP no-wait, drain до ≥300 мс тишины (без CallCommand)
+- apply: StopAfterHeavyStream → `TryApplySavedBalanceDac` → `StartRawScan` (без `ProgramDevice`/`Start` raise)
+- prepare без изменений (Stop+SEND $8080+Start)
+- **сборка:** exe залочен отладчиком Lazarus (PID 9492 zombie) — Stop debugger (Ctrl+F2) и `lazbuild -B`
+
+**Файлы:** `Device/MCbus/uMc032Device.pas`, `Device/MCbus/uRecorderMcbusDevice.pas`
+
+## 2026-07-17 — Apply без RESETSCANMAIN (SEND как Programming)
+
+**Задача:** В конце multi-balance `ProgramDevice` падал на `RESETSCANMAIN` / MDP timeout — нужен Stop как просмотр, затем запись ЦАП без полного Config.
+
+**Сделано:**
+- apply: Stop → (при необходимости Connect) → `Start` с `ApplySavedBalanceDac` + `StartRawScan`
+- полный `ProgramDevice`/RESET только если нет `ProgramInfo` после Connect
+- как оригинал `ModuleMC201::Programming()` — SEND на тихой шине
+- lazbuild `-B` exit 0
+
+**Файлы:** `Device/MCbus/uRecorderMcbusDevice.pas`
+
+## 2026-07-17 — Apply: preview Stop + полное ProgramDevice
+
+**Задача:** После multi-scan коды ЦАП посчитаны, но apply зависает на останове (`RESETSCANMAIN` / MDP timeout); нужен обычный Stop как из просмотра, затем программирование всего девайса.
+
+**Сделано:**
+- apply: soft-коды ЦАП → `TRecorderMcbusDevice.Stop` (как просмотр) → при обрыве Sleep+Connect → полное `ProgramDevice` → `Start`
+- убраны apply-пути `StopAfterHeavyStream` / `ConfigKeepSession` / per-channel SEND
+- `TMc032Device.Stop`: при промахе reply — no-wait STOP + drain, **без ForceDisconnect** (TCP жив для ProgramDevice)
+- lazbuild `-B` exit 0
+
+**Файлы:** `Device/MCbus/uRecorderMcbusDevice.pas`, `Device/MCbus/uMc032Device.pas`
+
+## 2026-07-17 — Баланс apply без ForceDisconnect
+
+**Задача:** После ForceDisconnect+reconnect контроллер «умирал» до сброса оригинальным Recorder; сброс у нас вешал UI.
+
+**Сделано:**
+- apply: StopAfterHeavyStream + ConfigKeepSession (RESETSCANMAIN/SEND на той же TCP)
+- ConfigKeepSession: при сбое CMD_RESET + Sleep + Program без Disconnect
+- ForceDisconnect из apply убран
+- lazbuild exit
+
+## 2026-07-17 — Apply: Config после reconnect (лог SEND timeout)
+
+**Задача:** По логу StopAfterHeavyStream прошёл, SEND_BALANCE на той же сессии — MDP timeout.
+
+**Сделано:**
+- apply: soft-коды → ForceDisconnect → Sleep(1.5с) → TryConnect×5 → Config (SEND внутри) → Start
+- prepare без изменений (Stop+SEND \)
+- lazbuild exit 0
+
+## 2026-07-17 — Почему apply stop тупит, а просмотр нет
+
+**Задача:** apply stop MDP timeout при живом просмотре — найти разницу и починить только apply.
+
+**Сделано:**
+- Просмотр: ReadBlock постоянно дренирует RX → Stop видит короткий хвост.
+- Баланс после collect: чтение стоп → RX забит → CallCommand(STOP) не находит reply → ForceDisconnect.
+- StopAfterHeavyStream: no-wait STOP + drain до тишины, TCP жив для SEND; просмотр по-прежнему Stop.
+- lazbuild exit code 0
+
+## 2026-07-17 — Мультибаланс MC-201 v2 (без правок CallCommand)
+
+**Задача:** Параллельная балансировка каналов на откатанной базе, не ломая просмотр.
+
+**Сделано:**
+- CollectChannelsMean + BalanceChannelsHardware: prepare всем → settle 1с → сбор по Fs → skip без данных → Stop+SEND+Start
+- Stop: только TimeoutMs≥5с на STOPSCANMAIN
+- CallCommand/DrainPackets не трогали
+- lazbuild exit code 0
+
 ## 2026-07-17 — MC-201: исправлен показ вольт баланса (целочисленное деление)
 
 **Задача (переформулировка):** UI всегда показывал 0 В для |Lo|,|Hi|<128 из-за Integer-division в VoltFromSigned.

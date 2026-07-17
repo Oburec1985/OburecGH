@@ -7,7 +7,8 @@ unit uMc032Device;
   запуск/остановку и выделение вложенных BIOS-сообщений из MDP-потока. Класс не
   зависит от UI и TRecorderDevice: адаптацию выполняет uRecorderMcbusDevice.
 
-  После неподтверждённого STOP соединение закрывается безопасно; teardown не
+  После неподтверждённого STOP: no-wait + drain, TCP сохраняется (без
+  ForceDisconnect — обрыв после потока «убивал» контроллер). Teardown не
   должен выбрасывать исключение в UI. При повторном Config допускается один
   reset/reconnect. Полная карта: Docs/devices/mc/recorderlnx-integration.md.
 }
@@ -136,10 +137,15 @@ type
     { Применяет AConfig: ProgramMc201Scan; при отказе — один Reset+reconnect
       и повтор. Вызывать из UI/адаптера до Play. AConfig копируется в ConfigValue. }
     function Config(const AConfig: TMc032Config; out AErrorMessage: string): Boolean;
+    { Config без Disconnect: при сбое Program — CMD_RESET + Sleep + повтор Program
+      на той же TCP. Нужен apply баланса (ForceDisconnect убивал контроллер). }
+    function ConfigKeepSession(const AConfig: TMc032Config;
+      out AErrorMessage: string): Boolean;
     { Жёсткий teardown без STOPSCAN: гасит callback/reader/TCP, State:=Disconnected.
       AClearProgram=True — ещё чистит ProgramInfo и LastModules (полный сброс
       после смены крейта); False — оставляет кэш модулей для быстрого Config. }
     procedure ForceDisconnect(AClearProgram: Boolean);
+    procedure SetTimeoutMs(AValue: Cardinal);
     { STARTSCANMAIN + фоновый reader. AOnData получает BIOS-сообщения через
       Queue в GUI-потоке. Повторный вызов в mcsPlay — no-op True. }
     function Play(AOnData: TMc032DataCallback; out AErrorMessage: string): Boolean;
@@ -170,6 +176,10 @@ type
       При отказе STOP — ForceDisconnect(False), чтобы UI не завис на полуживом TCP.
       Если не Play — сразу True без команды. }
     function Stop(out AErrorMessage: string): Boolean;
+    { Остановка после плотного ReadRawMessage (мультибаланс): без CallCommand
+      (reply тонет в RX). STOP no-wait + drain до тишины ≥300 мс, TCP жив
+      для SEND_BALANCE. Просмотр по-прежнему использует Stop. }
+    function StopAfterHeavyStream(out AErrorMessage: string): Boolean;
     property Bios: TMc201ControllerBios read fBios;
     property ConfigValue: TMc032Config read fConfig;
     property Host: string read fHost write fHost;
@@ -178,7 +188,7 @@ type
     property ProgramInfo: TMc201ModuleProgramInfoArray read fProgramInfo;
     property Port: Word read fPort write fPort;
     property State: TMc032DeviceState read fState;
-    property TimeoutMs: Cardinal read fTimeoutMs write fTimeoutMs;
+    property TimeoutMs: Cardinal read fTimeoutMs write SetTimeoutMs;
   end;
 
 { Строка состояния для логов/UI (Disconnected/Connected/Play). }
@@ -225,6 +235,13 @@ procedure TMc032Device.Progress(const AText: string);
 begin
   if Assigned(fOnProgress) then
     fOnProgress(Self, AText);
+end;
+
+procedure TMc032Device.SetTimeoutMs(AValue: Cardinal);
+begin
+  fTimeoutMs := AValue;
+  if fClient <> nil then
+    fClient.TimeoutMs := AValue;
 end;
 
 constructor TMc032ReadThread.Create(AOwner: TMc032Device);
@@ -1001,7 +1018,6 @@ end;
 function TMc032Device.Config(const AConfig: TMc032Config;
   out AErrorMessage: string): Boolean;
 var
-  lReply: TMc201WordArray;
   lRetryError: string;
 begin
   Result := False;
@@ -1025,6 +1041,45 @@ begin
       else
         AErrorMessage := lRetryError + '; reset failed: ' + AErrorMessage;
     end;
+  except
+    on E: Exception do
+      AErrorMessage := E.Message;
+  end;
+end;
+
+function TMc032Device.ConfigKeepSession(const AConfig: TMc032Config;
+  out AErrorMessage: string): Boolean;
+var
+  lRetryError: string;
+  lOldTimeout: Cardinal;
+begin
+  Result := False;
+  AErrorMessage := '';
+  try
+    EnsureConnected;
+    fConfig := AConfig;
+    lOldTimeout := fClient.TimeoutMs;
+    if AConfig.ReadTimeoutMs > lOldTimeout then
+      fClient.TimeoutMs := AConfig.ReadTimeoutMs;
+    if fClient.TimeoutMs < 5000 then
+      fClient.TimeoutMs := 5000;
+    Result := ProgramMc201Scan(AConfig, AErrorMessage);
+    if Result then
+      Exit;
+    if fState <> mcsConnected then
+      Exit;
+    lRetryError := AErrorMessage;
+    Progress('ConfigKeepSession: Program failed, CMD_RESET + retry (no disconnect)');
+    if not Reset(AErrorMessage) then
+    begin
+      AErrorMessage := lRetryError + '; reset failed: ' + AErrorMessage;
+      Exit;
+    end;
+    Sleep(1500);
+    SetLength(fLastModules, 0);
+    Result := ProgramMc201Scan(AConfig, AErrorMessage);
+    if not Result then
+      AErrorMessage := lRetryError + '; retry: ' + AErrorMessage;
   except
     on E: Exception do
       AErrorMessage := E.Message;
@@ -1168,6 +1223,8 @@ function TMc032Device.SendBalanceDac(ASlot, AChannel, ACodeLo,
   ACodeHi: Word; out AErrorMessage: string): Boolean;
 var
   lArgs, lReply: TMc201WordArray;
+  lDrained: Integer;
+  lErr: string;
 begin
   Result := False;
   AErrorMessage := '';
@@ -1180,28 +1237,173 @@ begin
   lArgs[0] := AChannel;
   lArgs[1] := ACodeLo and $00ff;
   lArgs[2] := ACodeHi and $00ff;
-  Result := fClient.CallCommandModuleIdmaActivated(ASlot,
-    CMc201ModuleCmdSendBalance, lArgs, 0, lReply, AErrorMessage);
-  if not Result then
-    AErrorMessage := Format('SEND_BALANCE_CC failed slot=%d channel=%d: %s',
-      [ASlot + 1, AChannel + 1, AErrorMessage]);
+  { Без длинных retry в потоке — иначе диалог «висит» по 15с×4 на канал. }
+  fClient.DrainPackets(20, lDrained, lErr);
+  if fClient.CallCommandModuleIdmaActivated(ASlot,
+    CMc201ModuleCmdSendBalance, lArgs, 0, lReply, AErrorMessage) then
+    Exit(True);
+  fClient.DrainPackets(30, lDrained, lErr);
+  if fClient.CallCommandModuleIdmaNotActivated(ASlot,
+    CMc201ModuleCmdSendBalance, lArgs, 0, lReply, AErrorMessage) then
+    Exit(True);
+  AErrorMessage := Format('SEND_BALANCE_CC failed slot=%d channel=%d: %s',
+    [ASlot + 1, AChannel + 1, AErrorMessage]);
 end;
 
 function TMc032Device.Stop(out AErrorMessage: string): Boolean;
 var
   lReply: TMc201WordArray;
+  lOldTimeout: Cardinal;
+  lPort: Word;
+  lWords: TMc201WordArray;
+  lDeadline: QWord;
+  lDrained: Integer;
+  lErr: string;
 begin
   Result := True;
   AErrorMessage := '';
   if (fClient = nil) or (fState <> mcsPlay) then
     Exit;
   StopReadThread;
-  Result := fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
-    AErrorMessage);
+  SetLength(fStreamBuffer, 0);
+  lOldTimeout := fClient.TimeoutMs;
+  try
+    if fClient.TimeoutMs < 15000 then
+      fClient.TimeoutMs := 15000;
+    Result := fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
+      AErrorMessage);
+  finally
+    fClient.TimeoutMs := lOldTimeout;
+  end;
   if Result then
-    fState := mcsConnected
-  else
-    ForceDisconnect(False);
+  begin
+    fState := mcsConnected;
+    Exit;
+  end;
+  { Не ForceDisconnect: обрыв TCP после потока «убивал» контроллер до сброса
+    оригиналом. STOP no-wait + drain — сессия для ProgramDevice остаётся. }
+  Progress('Stop: reply missed, no-wait + drain (keep TCP): ' + AErrorMessage);
+  fClient.SendCommandNoWait(CMc201CmdStopScanMain, nil, lErr);
+  lOldTimeout := fClient.TimeoutMs;
+  lDrained := 0;
+  try
+    fClient.TimeoutMs := 50;
+    lDeadline := GetTickCount64 + 10000;
+    while GetTickCount64 < lDeadline do
+    begin
+      if not fClient.ReadRawPacket(lPort, lWords) then
+        Break;
+      Inc(lDrained);
+    end;
+  finally
+    fClient.TimeoutMs := lOldTimeout;
+  end;
+  SetLength(fStreamBuffer, 0);
+  fState := mcsConnected;
+  AErrorMessage := '';
+  Result := True;
+  Progress(Format('Stop soft-ok keep-TCP drained=%d', [lDrained]));
+end;
+
+function TMc032Device.StopAfterHeavyStream(out AErrorMessage: string): Boolean;
+var
+  lOldTimeout: Cardinal;
+  lPort: Word;
+  lWords: TMc201WordArray;
+  lReply: TMc201WordArray;
+  lDeadline: QWord;
+  lQuietSince: QWord;
+  lDrained: Integer;
+  lAckCount: Integer;
+  lErr: string;
+  lGotAck: Boolean;
+  lQuietOk: Boolean;
+begin
+  { 1) CallCommand(STOP) как prepare — сам вычитывает хвост до reply.
+    2) Если timeout: no-wait + drain; quiet без ACK тоже OK (лог: ack=0
+    quiet=True — поток встал, ACK на fire-and-forget часто нет).
+    Не слать второй CallCommand(STOP) после quiet — глушит CC. }
+  Result := False;
+  AErrorMessage := '';
+  if (fClient = nil) or (fState <> mcsPlay) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  StopReadThread;
+  SetLength(fStreamBuffer, 0);
+
+  lOldTimeout := fClient.TimeoutMs;
+  try
+    if fClient.TimeoutMs < 3000 then
+      fClient.TimeoutMs := 3000;
+    Progress('StopAfterHeavyStream: CallCommand STOP');
+    if fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
+      AErrorMessage) then
+    begin
+      fState := mcsConnected;
+      AErrorMessage := '';
+      Progress('StopAfterHeavyStream CallCommand STOP ok');
+      Exit(True);
+    end;
+  finally
+    fClient.TimeoutMs := lOldTimeout;
+  end;
+  Progress('StopAfterHeavyStream CallCommand miss: ' + AErrorMessage);
+
+  if not fClient.SendCommandNoWait(CMc201CmdStopScanMain, nil, lErr) then
+  begin
+    AErrorMessage := 'STOPSCANMAIN no-wait failed: ' + lErr;
+    Exit;
+  end;
+
+  lOldTimeout := fClient.TimeoutMs;
+  lDrained := 0;
+  lAckCount := 0;
+  lGotAck := False;
+  lQuietOk := False;
+  try
+    fClient.TimeoutMs := 50;
+    lDeadline := GetTickCount64 + 12000;
+    lQuietSince := 0;
+    while GetTickCount64 < lDeadline do
+    begin
+      if fClient.ReadRawPacket(lPort, lWords) then
+      begin
+        if lPort = CMc201MdpStreamCommand then
+        begin
+          lGotAck := True;
+          Inc(lAckCount);
+        end
+        else
+          Inc(lDrained);
+        lQuietSince := 0;
+        Continue;
+      end;
+      if lQuietSince = 0 then
+        lQuietSince := GetTickCount64
+      else if GetTickCount64 - lQuietSince >= 400 then
+      begin
+        lQuietOk := True;
+        Break;
+      end;
+    end;
+  finally
+    fClient.TimeoutMs := lOldTimeout;
+  end;
+  SetLength(fStreamBuffer, 0);
+  fState := mcsConnected;
+  Progress(Format(
+    'StopAfterHeavyStream drained=%d ack=%d quiet=%s',
+    [lDrained, lAckCount, BoolToStr(lQuietOk, True)]));
+  if not (lGotAck or lQuietOk) then
+  begin
+    AErrorMessage := Format(
+      'STOPSCANMAIN no quiet drained=%d', [lDrained]);
+    Exit;
+  end;
+  AErrorMessage := '';
+  Result := True;
 end;
 
 procedure TMc032Device.HandleThreadPacket(APort: Word;

@@ -1,404 +1,390 @@
-2026-07-17 17:30:39.667 [DEBUG] [TID:20568|UIThread] 17:30:39.664 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-07-17 17:30:39.668 [DEBUG] [TID:20568|UIThread] 17:30:39.667 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-07-17 17:30:39.709 [DEBUG] [TID:20568|UIThread] 17:30:39.708 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-07-17 17:30:40.574 [DEBUG] [TID:20568|UIThread] 17:30:40.573 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-07-17 17:30:40.579 [DEBUG] [TID:20568|UIThread] 17:30:40.579 MERA playback source configured: signal0005.mera (10 channels).
-2026-07-17 17:30:40.581 [DEBUG] [TID:20568|UIThread] 17:30:40.580 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-07-17 17:30:40.584 [DEBUG] [TID:20568|UIThread] 17:30:40.584 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-17 17:30:40.588 [DEBUG] [TID:20568|UIThread] 17:30:40.588 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-17 17:30:40.629 [DEBUG] [TID:20568|UIThread] 17:30:40.629 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-17 17:30:42.043 [DEBUG] [TID:20568|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-17 17:30:42.045 [DEBUG] [TID:20568|UIThread] [MCBUS] connect attempt 1/5
-2026-07-17 17:30:42.509 [DEBUG] [TID:20568|UIThread] [MCBUS] programmed channels=16
-2026-07-17 17:30:42.524  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 17:30:42.524 [DEBUG] [TID:20568|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 17:30:43.531 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
-2026-07-17 17:30:43.793 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
-2026-07-17 17:30:43.794 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
-2026-07-17 17:30:43.830 [DEBUG] [TID:20568|UIThread] 17:30:43.830 RecorderLnx started.
-2026-07-17 17:30:46.690 [DEBUG] [TID:20568|UIThread] 17:30:46.683 Data sources started.
-2026-07-17 17:30:46.690 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
-2026-07-17 17:30:46.699 [DEBUG] [TID:20568|UIThread] 17:30:46.693 State changed: Stop -> Preview
-2026-07-17 17:30:46.727 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
-2026-07-17 17:30:46.932 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:46.935 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 16944
-2026-07-17 17:30:47.132 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:47.134 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:47.232 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 6512
-2026-07-17 17:30:47.331 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:47.333 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:47.460 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:47.532 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:47.534 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:47.683 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 6512
-2026-07-17 17:30:47.731 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:47.733 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 16944
-2026-07-17 17:30:47.905 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 6512
-2026-07-17 17:30:47.932 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:47.934 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 16944
-2026-07-17 17:30:48.131 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:48.131 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:48.138 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 16944
-2026-07-17 17:30:48.331 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:48.334 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:48.364 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:48.532 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:48.535 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 16944
-2026-07-17 17:30:48.586 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:48.732 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:48.735 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:48.809 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 6512
-2026-07-17 17:30:48.932 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:48.935 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 16944
-2026-07-17 17:30:49.032 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 6512
-2026-07-17 17:30:49.131 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:49.134 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 16944
-2026-07-17 17:30:49.266 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:49.331 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:49.333 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 16944
-2026-07-17 17:30:49.500 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:49.531 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:49.534 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 16944
-2026-07-17 17:30:49.720 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 6512
-2026-07-17 17:30:49.732 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:49.734 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 16944
-2026-07-17 17:30:49.931 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:49.934 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 16944
-2026-07-17 17:30:49.941 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 6512
-2026-07-17 17:30:50.132 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:50.134 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 16944
-2026-07-17 17:30:50.176 [DEBUG] [TID:6512|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 6512
-2026-07-17 17:30:50.219  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:30:50.224  RuntimeDetach 192.168.9.142:4000
-2026-07-17 17:30:50.219 [DEBUG] [TID:20568|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:30:50.228 [WARNING] [TID:6996|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
-2026-07-17 17:30:50.233 [DEBUG] [TID:18488|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-17 17:30:50.332 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:30:50.339 [DEBUG] [TID:16944|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
-2026-07-17 17:30:50.373 [DEBUG] [TID:20568|UIThread] 17:30:50.372 Data sources stopped.
-2026-07-17 17:30:50.375 [DEBUG] [TID:20568|UIThread] 17:30:50.374 State changed: Preview -> Stop
-2026-07-17 17:30:50.701 [DEBUG] [TID:20568|UIThread] 17:30:50.696 Configuration mode: settings dialog opened.
-2026-07-17 17:31:02.485 [DEBUG] [TID:20568|UIThread] 17:31:02.483 Configuration mode: settings dialog closed without applying OK.
-2026-07-17 17:31:14.330 [DEBUG] [TID:3396] [MCBUS][BALANCE] ZeroBalanceTags enter source=MC-032: 192.169.12.87:4000 tags=12 state=2
-2026-07-17 17:31:14.331 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_2_1 addr=4-2-1 -> idx=4
-2026-07-17 17:31:14.344 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_2_2 addr=4-2-2 -> idx=5
-2026-07-17 17:31:14.350 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_2_3 addr=4-2-3 -> idx=6
-2026-07-17 17:31:14.355 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_2_4 addr=4-2-4 -> idx=7
-2026-07-17 17:31:14.360 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_3_1 addr=4-3-1 -> idx=8
-2026-07-17 17:31:14.364 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_3_2 addr=4-3-2 -> idx=9
-2026-07-17 17:31:14.369 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_3_3 addr=4-3-3 -> idx=10
-2026-07-17 17:31:14.373 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_3_4 addr=4-3-4 -> idx=11
-2026-07-17 17:31:14.377 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_4_1 addr=4-4-1 -> idx=12
-2026-07-17 17:31:14.382 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_4_2 addr=4-4-2 -> idx=13
-2026-07-17 17:31:14.386 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_4_3 addr=4-4-3 -> idx=14
-2026-07-17 17:31:14.391 [DEBUG] [TID:3396] [MCBUS][BALANCE] map tag=MC201_4_4_4 addr=4-4-4 -> idx=15
-2026-07-17 17:31:14.395 [DEBUG] [TID:3396] [MCBUS][BALANCE] mapped=12/12 deviceChannels=16
-2026-07-17 17:31:14.399 [DEBUG] [TID:3396] [MCBUS][BALANCE] DataSource Start for balance
-2026-07-17 17:31:14.406 [DEBUG] [TID:3396] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
-2026-07-17 17:31:14.442 [DEBUG] [TID:3396] [MCBUS][BALANCE] DataSource Start done state=3
-2026-07-17 17:31:14.442 [DEBUG] [TID:3396] [MCBUS][BALANCE] ExecuteDeviceAction ZeroBalance: channels=12 state=3 ctrl=Play
-2026-07-17 17:31:14.448 [DEBUG] [TID:3396] [MCBUS][BALANCE] фоновое чтение просмотра приостановлено
-2026-07-17 17:31:14.454 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[0]=4
-2026-07-17 17:31:14.458 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=4, слот=2, канал=1, Fs=57600,000, проба=2048, старый ЦАП=$E182, devState=3
-2026-07-17 17:31:14.463 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $E182)
-2026-07-17 17:31:14.489 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=4 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:14.526 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=93 match=8 skip=85 elapsedMs=31
-2026-07-17 17:31:14.527 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=541,913
-2026-07-17 17:31:14.533 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=541,913, произведение=193,540, lo=130 hi=225 ($E182)
-2026-07-17 17:31:14.538 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=1 ch=0 lo=130 hi=225
-2026-07-17 17:31:14.545 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:14.582 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:14.582 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=4 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:14.619 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=94 match=8 skip=86 elapsedMs=31
-2026-07-17 17:31:14.619 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=8,599
-2026-07-17 17:31:14.628 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=8,599 code=$E182 (было $E182)
-2026-07-17 17:31:14.633 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=2 channel=1 code=$E182 mean=541,913 verify=8,599
-2026-07-17 17:31:14.638 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[0] ok mean=541,913
-2026-07-17 17:31:14.642 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[1]=5
-2026-07-17 17:31:14.647 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=5, слот=2, канал=2, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:14.651 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:14.690 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=5 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:14.728 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=98 match=8 skip=90 elapsedMs=31
-2026-07-17 17:31:14.728 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=485,305
-2026-07-17 17:31:14.737 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=485,305, произведение=173,323, lo=130 hi=215 ($D782)
-2026-07-17 17:31:14.741 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=1 ch=1 lo=130 hi=215
-2026-07-17 17:31:14.748 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:14.783 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:14.783 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=5 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:14.821 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=97 match=8 skip=89 elapsedMs=31
-2026-07-17 17:31:14.821 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=0,729
-2026-07-17 17:31:14.828 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=0,729 code=$D782 (было $8080)
-2026-07-17 17:31:14.833 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=2 channel=2 code=$D782 mean=485,305 verify=0,729
-2026-07-17 17:31:14.838 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[1] ok mean=485,305
-2026-07-17 17:31:14.842 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[2]=6
-2026-07-17 17:31:14.847 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=6, слот=2, канал=3, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:14.852 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:14.891 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=6 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:14.930 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=98 match=8 skip=90 elapsedMs=31
-2026-07-17 17:31:14.930 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=575,378
-2026-07-17 17:31:14.940 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=575,378, произведение=205,492, lo=130 hi=231 ($E782)
-2026-07-17 17:31:14.944 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=1 ch=2 lo=130 hi=231
-2026-07-17 17:31:14.951 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:14.984 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:14.984 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=6 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.023 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=100 match=8 skip=92 elapsedMs=31
-2026-07-17 17:31:15.023 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=58,558
-2026-07-17 17:31:15.030 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=58,558 code=$E782 (было $8080)
-2026-07-17 17:31:15.035 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=2 channel=3 code=$E782 mean=575,378 verify=58,558
-2026-07-17 17:31:15.039 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[2] ok mean=575,378
-2026-07-17 17:31:15.044 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[3]=7
-2026-07-17 17:31:15.049 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=7, слот=2, канал=4, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:15.055 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:15.092 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=7 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.131 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=105 match=8 skip=97 elapsedMs=47
-2026-07-17 17:31:15.131 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=560,625
-2026-07-17 17:31:15.140 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=560,625, произведение=200,223, lo=130 hi=228 ($E482)
-2026-07-17 17:31:15.144 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=1 ch=3 lo=130 hi=228
-2026-07-17 17:31:15.152 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:15.184 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:15.184 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=7 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.223 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=103 match=8 skip=95 elapsedMs=47
-2026-07-17 17:31:15.223 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=4,515
-2026-07-17 17:31:15.231 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=4,515 code=$E482 (было $8080)
-2026-07-17 17:31:15.235 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=2 channel=4 code=$E482 mean=560,625 verify=4,515
-2026-07-17 17:31:15.241 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[3] ok mean=560,625
-2026-07-17 17:31:15.245 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[4]=8
-2026-07-17 17:31:15.250 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=8, слот=3, канал=1, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:15.255 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:15.292 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=8 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.330 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=94 match=8 skip=86 elapsedMs=47
-2026-07-17 17:31:15.330 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=451,873
-2026-07-17 17:31:15.337 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=451,873, произведение=161,383, lo=130 hi=209 ($D182)
-2026-07-17 17:31:15.342 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=2 ch=0 lo=130 hi=209
-2026-07-17 17:31:15.349 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:15.383 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:15.384 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=8 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.420 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=94 match=8 skip=86 elapsedMs=31
-2026-07-17 17:31:15.420 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=37,638
-2026-07-17 17:31:15.428 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=37,638 code=$D182 (было $8080)
-2026-07-17 17:31:15.434 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=3 channel=1 code=$D182 mean=451,873 verify=37,638
-2026-07-17 17:31:15.439 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[4] ok mean=451,873
-2026-07-17 17:31:15.445 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[5]=9
-2026-07-17 17:31:15.449 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=9, слот=3, канал=2, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:15.454 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:15.491 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=9 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.529 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=99 match=8 skip=91 elapsedMs=31
-2026-07-17 17:31:15.529 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=462,001
-2026-07-17 17:31:15.537 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=462,001, произведение=165,000, lo=130 hi=211 ($D382)
-2026-07-17 17:31:15.542 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=2 ch=1 lo=130 hi=211
-2026-07-17 17:31:15.549 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:15.584 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:15.584 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=9 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.623 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=100 match=8 skip=92 elapsedMs=31
-2026-07-17 17:31:15.623 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=-11,930
-2026-07-17 17:31:15.630 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=-11,930 code=$D382 (было $8080)
-2026-07-17 17:31:15.635 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=3 channel=2 code=$D382 mean=462,001 verify=-11,930
-2026-07-17 17:31:15.640 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[5] ok mean=462,001
-2026-07-17 17:31:15.645 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[6]=10
-2026-07-17 17:31:15.649 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=10, слот=3, канал=3, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:15.654 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:15.690 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=10 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.725 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=90 match=8 skip=82 elapsedMs=31
-2026-07-17 17:31:15.725 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=525,397
-2026-07-17 17:31:15.733 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=525,397, произведение=187,642, lo=130 hi=222 ($DE82)
-2026-07-17 17:31:15.737 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=2 ch=2 lo=130 hi=222
-2026-07-17 17:31:15.742 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:15.783 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:15.783 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=10 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.822 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=100 match=8 skip=92 elapsedMs=31
-2026-07-17 17:31:15.822 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=33,570
-2026-07-17 17:31:15.828 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=33,570 code=$DE82 (было $8080)
-2026-07-17 17:31:15.833 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=3 channel=3 code=$DE82 mean=525,397 verify=33,570
-2026-07-17 17:31:15.837 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[6] ok mean=525,397
-2026-07-17 17:31:15.842 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[7]=11
-2026-07-17 17:31:15.848 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=11, слот=3, канал=4, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:15.853 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:15.892 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=11 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:15.932 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=105 match=8 skip=97 elapsedMs=31
-2026-07-17 17:31:15.932 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=437,179
-2026-07-17 17:31:15.942 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=437,179, произведение=156,135, lo=130 hi=206 ($CE82)
-2026-07-17 17:31:15.947 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=2 ch=3 lo=130 hi=206
-2026-07-17 17:31:15.954 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:15.985 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:15.985 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=11 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.024 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=104 match=8 skip=96 elapsedMs=31
-2026-07-17 17:31:16.024 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=44,626
-2026-07-17 17:31:16.029 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=44,626 code=$CE82 (было $8080)
-2026-07-17 17:31:16.034 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=3 channel=4 code=$CE82 mean=437,179 verify=44,626
-2026-07-17 17:31:16.038 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[7] ok mean=437,179
-2026-07-17 17:31:16.043 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[8]=12
-2026-07-17 17:31:16.048 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=12, слот=4, канал=1, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:16.053 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:16.092 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=12 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.130 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=95 match=8 skip=87 elapsedMs=47
-2026-07-17 17:31:16.130 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=483,294
-2026-07-17 17:31:16.139 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=483,294, произведение=172,605, lo=130 hi=214 ($D682)
-2026-07-17 17:31:16.144 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=3 ch=0 lo=130 hi=214
-2026-07-17 17:31:16.150 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:16.185 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:16.185 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=12 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.223 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=97 match=8 skip=89 elapsedMs=47
-2026-07-17 17:31:16.223 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=14,785
-2026-07-17 17:31:16.232 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=14,785 code=$D682 (было $8080)
-2026-07-17 17:31:16.237 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=4 channel=1 code=$D682 mean=483,294 verify=14,785
-2026-07-17 17:31:16.241 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[8] ok mean=483,294
-2026-07-17 17:31:16.245 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[9]=13
-2026-07-17 17:31:16.250 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=13, слот=4, канал=2, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:16.255 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:16.293 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=13 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.331 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=98 match=8 skip=90 elapsedMs=47
-2026-07-17 17:31:16.331 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=428,584
-2026-07-17 17:31:16.338 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=428,584, произведение=153,066, lo=130 hi=205 ($CD82)
-2026-07-17 17:31:16.342 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=3 ch=1 lo=130 hi=205
-2026-07-17 17:31:16.346 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:16.385 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:16.385 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=13 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.423 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=97 match=8 skip=89 elapsedMs=46
-2026-07-17 17:31:16.424 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=17,724
-2026-07-17 17:31:16.428 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=17,724 code=$CD82 (было $8080)
-2026-07-17 17:31:16.432 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=4 channel=2 code=$CD82 mean=428,584 verify=17,724
-2026-07-17 17:31:16.436 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[9] ok mean=428,584
-2026-07-17 17:31:16.440 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[10]=14
-2026-07-17 17:31:16.444 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=14, слот=4, канал=3, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:16.449 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:16.480 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=14 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.519 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=102 match=8 skip=94 elapsedMs=47
-2026-07-17 17:31:16.519 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=490,839
-2026-07-17 17:31:16.526 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=490,839, произведение=175,300, lo=130 hi=216 ($D882)
-2026-07-17 17:31:16.530 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=3 ch=2 lo=130 hi=216
-2026-07-17 17:31:16.537 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:16.571 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:16.574 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=14 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.611 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=103 match=8 skip=95 elapsedMs=47
-2026-07-17 17:31:16.611 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=20,044
-2026-07-17 17:31:16.617 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=20,044 code=$D882 (было $8080)
-2026-07-17 17:31:16.621 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=4 channel=3 code=$D882 mean=490,839 verify=20,044
-2026-07-17 17:31:16.625 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[10] ok mean=490,839
-2026-07-17 17:31:16.629 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[11]=15
-2026-07-17 17:31:16.634 [DEBUG] [TID:3396] [MCBUS][BALANCE] начало: индекс=15, слот=4, канал=4, Fs=57600,000, проба=2048, старый ЦАП=$8080, devState=3
-2026-07-17 17:31:16.637 [DEBUG] [TID:3396] [MCBUS][BALANCE] сброс ЦАП в нейтраль $8080 (было $8080)
-2026-07-17 17:31:16.664 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=15 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.699 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=93 match=8 skip=85 elapsedMs=31
-2026-07-17 17:31:16.699 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=477,561
-2026-07-17 17:31:16.705 [DEBUG] [TID:3396] [MCBUS][BALANCE] расчёт от нейтрали: среднее=477,561, произведение=170,557, lo=130 hi=213 ($D582)
-2026-07-17 17:31:16.709 [DEBUG] [TID:3396] [MCBUS][BALANCE] SEND_BALANCE_CC slot=3 ch=3 lo=130 hi=213
-2026-07-17 17:31:16.715 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC set after Stop; StartRawScan + verify
-2026-07-17 17:31:16.741 [DEBUG] [TID:3396] [MCBUS][BALANCE] verify samples=2048
-2026-07-17 17:31:16.741 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean: ch=15 need=2048 timeoutMs=3000 state=3 ctrlState=Play
-2026-07-17 17:31:16.781 [DEBUG] [TID:3396] [MCBUS][BALANCE] CollectChannelMean done: got=2048/2048 msgs=103 match=8 skip=95 elapsedMs=47
-2026-07-17 17:31:16.781 [DEBUG] [TID:3396] [MCBUS][BALANCE] собрано 2048 отсчётов, среднее=28,193
-2026-07-17 17:31:16.788 [DEBUG] [TID:3396] [MCBUS][BALANCE] apply cycle done: verifyMean=28,193 code=$D582 (было $8080)
-2026-07-17 17:31:16.793 [DEBUG] [TID:3396] [MCBUS] balance DAC applied slot=4 channel=4 code=$D582 mean=477,561 verify=28,193
-2026-07-17 17:31:16.797 [DEBUG] [TID:3396] [MCBUS][BALANCE] channel[11] ok mean=477,561
-2026-07-17 17:31:16.802 [DEBUG] [TID:3396] [MCBUS][BALANCE] ExecuteDeviceAction ZeroBalance OK
-2026-07-17 17:31:16.807 [DEBUG] [TID:3396] [MCBUS][BALANCE] фоновое чтение просмотра восстановлено
-2026-07-17 17:31:16.812 [DEBUG] [TID:3396] [MCBUS][BALANCE] ExecuteDeviceAction result=True err=
-2026-07-17 17:31:16.817 [DEBUG] [TID:3396] [MCBUS][BALANCE] DataSource Stop after balance
-2026-07-17 17:31:16.822 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=1 range=1 code=$E182 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d0r0=32896;d0r2=32896;d0r3=32896;d0r4=32896;d0r5=32896;d1r0=32896;d1r1=32896;d1r2=32896;d1r3=32896;d1r4=32896;d1r5=32896;d2r0=32896;d2r1=32896;d2r2=32896;d2r3=32896;d2r4=32896;d2r5=32896;d3r0=32896;d3r1=32896;d3r2=32896;d3r3=32896;d3r4=32896;d3r5=32896
-2026-07-17 17:31:16.827 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=2 range=1 code=$D782 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d0r0=32896;d0r2=32896;d0r3=32896;d0r4=32896;d0r5=32896;d1r0=32896;d1r1=55170;d1r2=32896;d1r3=32896;d1r4=32896;d1r5=32896;d2r0=32896;d2r1=32896;d2r2=32896;d2r3=32896;d2r4=32896;d2r5=32896;d3r0=32896;d3r1=32896;d3r2=32896;d3r3=32896;d3r4=32896;d3r5=32896
-2026-07-17 17:31:16.831 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=3 range=1 code=$E782 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d0r0=32896;d0r2=32896;d0r3=32896;d0r4=32896;d0r5=32896;d1r0=32896;d1r1=55170;d1r2=32896;d1r3=32896;d1r4=32896;d1r5=32896;d2r0=32896;d2r1=59266;d2r2=32896;d2r3=32896;d2r4=32896;d2r5=32896;d3r0=32896;d3r1=32896;d3r2=32896;d3r3=32896;d3r4=32896;d3r5=32896
-2026-07-17 17:31:16.836 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=4 range=1 code=$E482 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d0r0=32896;d0r2=32896;d0r3=32896;d0r4=32896;d0r5=32896;d1r0=32896;d1r1=55170;d1r2=32896;d1r3=32896;d1r4=32896;d1r5=32896;d2r0=32896;d2r1=59266;d2r2=32896;d2r3=32896;d2r4=32896;d2r5=32896;d3r0=32896;d3r1=58498;d3r2=32896;d3r3=32896;d3r4=32896;d3r5=32896
-2026-07-17 17:31:16.841 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC config created source=MC-032: 192.169.12.87:4000 slot=3 channel=1 range=1 code=$D182 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53634
-2026-07-17 17:31:16.845 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=2 range=1 code=$D382 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53634;d1r1=54146
-2026-07-17 17:31:16.849 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=3 range=1 code=$DE82 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53634;d1r1=54146;d2r1=56962
-2026-07-17 17:31:16.856 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=4 range=1 code=$CE82 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53634;d1r1=54146;d2r1=56962;d3r1=52866
-2026-07-17 17:31:16.862 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC config created source=MC-032: 192.169.12.87:4000 slot=4 channel=1 range=1 code=$D682 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=54914
-2026-07-17 17:31:16.866 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=2 range=1 code=$CD82 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=54914;d1r1=52610
-2026-07-17 17:31:16.871 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=3 range=1 code=$D882 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=54914;d1r1=52610;d2r1=55426
-2026-07-17 17:31:16.876 [DEBUG] [TID:3396] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=4 range=1 code=$D582 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=54914;d1r1=52610;d2r1=55426;d3r1=54658
-2026-07-17 17:31:16.882 [DEBUG] [TID:3396] [MCBUS][BALANCE] runtime fConfig reloaded once after all DAC stores
-2026-07-17 17:31:18.667  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:31:18.667 [DEBUG] [TID:20568|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:31:18.687 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
-2026-07-17 17:31:18.711 [DEBUG] [TID:20568|UIThread] 17:31:18.709 MERA playback source configured: signal0005.mera (10 channels).
-2026-07-17 17:31:18.734 [DEBUG] [TID:20568|UIThread] 17:31:18.733 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-07-17 17:31:18.761 [DEBUG] [TID:20568|UIThread] 17:31:18.759 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-17 17:31:18.789 [DEBUG] [TID:20568|UIThread] 17:31:18.787 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-17 17:31:18.811 [DEBUG] [TID:20568|UIThread] 17:31:18.810 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-17 17:31:18.832 [DEBUG] [TID:20568|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-17 17:31:18.845 [DEBUG] [TID:20568|UIThread] [MCBUS] connect attempt 1/5
-2026-07-17 17:31:19.330 [DEBUG] [TID:20568|UIThread] [MCBUS] programmed channels=16
-2026-07-17 17:31:19.346  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 17:31:19.347 [DEBUG] [TID:20568|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 17:31:20.387 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
-2026-07-17 17:31:20.649 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
-2026-07-17 17:31:20.649 [WARNING] [TID:20568|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
-2026-07-17 17:31:20.701 [DEBUG] [TID:20568|UIThread] 17:31:20.699 Tag settings updated: 12 channel(s).
-2026-07-17 17:31:20.706 [DEBUG] [TID:20568|UIThread] 17:31:20.703 Data sources started.
-2026-07-17 17:31:20.707 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
-2026-07-17 17:31:20.711 [DEBUG] [TID:20568|UIThread] 17:31:20.706 State changed: Stop -> Preview
-2026-07-17 17:31:20.715 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=5 slot=2 idx=1 code=$D782
-2026-07-17 17:31:20.721 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=6 slot=2 idx=2 code=$E782
-2026-07-17 17:31:20.725 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=7 slot=2 idx=3 code=$E482
-2026-07-17 17:31:20.730 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=8 slot=3 idx=0 code=$D182
-2026-07-17 17:31:20.734 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=9 slot=3 idx=1 code=$D382
-2026-07-17 17:31:20.739 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=10 slot=3 idx=2 code=$DE82
-2026-07-17 17:31:20.744 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=11 slot=3 idx=3 code=$CE82
-2026-07-17 17:31:20.749 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=12 slot=4 idx=0 code=$D682
-2026-07-17 17:31:20.754 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=13 slot=4 idx=1 code=$CD82
-2026-07-17 17:31:20.759 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=14 slot=4 idx=2 code=$D882
-2026-07-17 17:31:20.764 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=15 slot=4 idx=3 code=$D582
-2026-07-17 17:31:20.790 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
-2026-07-17 17:31:20.994 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:20.997 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 15752
-2026-07-17 17:31:21.194 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:21.197 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 15752
-2026-07-17 17:31:21.238 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:21.394 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:21.398 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 15752
-2026-07-17 17:31:21.460 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:21.595 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:21.600 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:21.680 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 19992
-2026-07-17 17:31:21.794 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:21.800 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 15752
-2026-07-17 17:31:21.902 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:21.994 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:21.999 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 15752
-2026-07-17 17:31:22.137 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:22.194 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:22.200 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 15752
-2026-07-17 17:31:22.357 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 19992
-2026-07-17 17:31:22.394 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:22.399 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 15752
-2026-07-17 17:31:22.576 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 19992
-2026-07-17 17:31:22.594 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:22.602 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 15752
-2026-07-17 17:31:22.794 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:22.795 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 19992
-2026-07-17 17:31:22.801 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 15752
-2026-07-17 17:31:22.994 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:22.998 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:23.029 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:23.194 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:23.198 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:23.250 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:23.394 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:23.398 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 15752
-2026-07-17 17:31:23.473 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 19992
-2026-07-17 17:31:23.595 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:23.600 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:23.690 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:23.795 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:23.800 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 15752
-2026-07-17 17:31:23.913 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:23.994 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:24.000 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 204 ms on Thread 15752
-2026-07-17 17:31:24.137 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:24.194 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:24.198 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 15752
-2026-07-17 17:31:24.358 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 19992
-2026-07-17 17:31:24.394 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:24.397 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:24.578 [DEBUG] [TID:19992|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 19992
-2026-07-17 17:31:24.594 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:24.600 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 15752
-2026-07-17 17:31:24.612  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:31:24.612 [DEBUG] [TID:20568|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 17:31:24.625  RuntimeDetach 192.168.9.142:4000
-2026-07-17 17:31:24.625 [DEBUG] [TID:22340|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-17 17:31:24.625 [WARNING] [TID:14696|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
-2026-07-17 17:31:24.795 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 17:31:24.805 [DEBUG] [TID:15752|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
-2026-07-17 17:31:24.840 [DEBUG] [TID:20568|UIThread] 17:31:24.839 Data sources stopped.
-2026-07-17 17:31:24.842 [DEBUG] [TID:20568|UIThread] 17:31:24.841 State changed: Preview -> Stop
+2026-07-17 19:50:37.751 [DEBUG] [TID:9680|UIThread] 19:50:37.747 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-17 19:50:37.751 [DEBUG] [TID:9680|UIThread] 19:50:37.751 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-17 19:50:37.793 [DEBUG] [TID:9680|UIThread] 19:50:37.793 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-17 19:50:38.561 [DEBUG] [TID:9680|UIThread] 19:50:38.561 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-17 19:50:38.566 [DEBUG] [TID:9680|UIThread] 19:50:38.566 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-17 19:50:38.568 [DEBUG] [TID:9680|UIThread] 19:50:38.567 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-17 19:50:38.571 [DEBUG] [TID:9680|UIThread] 19:50:38.571 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-17 19:50:38.576 [DEBUG] [TID:9680|UIThread] 19:50:38.576 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-17 19:50:38.617 [DEBUG] [TID:9680|UIThread] 19:50:38.616 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-17 19:50:40.064 [DEBUG] [TID:9680|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-17 19:50:40.076 [DEBUG] [TID:9680|UIThread] [MCBUS] connect attempt 1/5
+2026-07-17 19:50:40.533 [DEBUG] [TID:9680|UIThread] [MCBUS] programmed channels=16
+2026-07-17 19:50:40.546  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:50:40.547 [DEBUG] [TID:9680|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:50:41.559 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-17 19:50:41.822 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-17 19:50:41.823 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
+2026-07-17 19:50:41.866 [DEBUG] [TID:9680|UIThread] 19:50:41.866 RecorderLnx started.
+2026-07-17 19:50:45.707 [DEBUG] [TID:9680|UIThread] 19:50:45.699 Data sources started.
+2026-07-17 19:50:45.711 [DEBUG] [TID:9680|UIThread] 19:50:45.709 State changed: Stop -> Preview
+2026-07-17 19:50:45.825 [DEBUG] [TID:17472|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
+2026-07-17 19:50:46.236 [DEBUG] [TID:17472|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
+2026-07-17 19:50:46.237 [DEBUG] [TID:20860|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 20860
+2026-07-17 19:50:46.389  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:50:46.392  RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:50:46.389 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:50:46.399 [DEBUG] [TID:19712|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:50:46.399 [WARNING] [TID:6996|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-17 19:50:46.441 [DEBUG] [TID:17472|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:50:46.444 [DEBUG] [TID:17472|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
+2026-07-17 19:50:46.470 [DEBUG] [TID:9680|UIThread] 19:50:46.469 Data sources stopped.
+2026-07-17 19:50:46.472 [DEBUG] [TID:9680|UIThread] 19:50:46.471 State changed: Preview -> Stop
+2026-07-17 19:50:51.180 [DEBUG] [TID:4260] [MCBUS][BALANCE] ZeroBalanceTags enter source=MC-032: 192.169.12.87:4000 tags=16 state=2
+2026-07-17 19:50:51.181 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_1_1 addr=4-1-1 -> idx=0
+2026-07-17 19:50:51.193 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_1_2 addr=4-1-2 -> idx=1
+2026-07-17 19:50:51.200 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_1_3 addr=4-1-3 -> idx=2
+2026-07-17 19:50:51.206 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_1_4 addr=4-1-4 -> idx=3
+2026-07-17 19:50:51.211 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_2_1 addr=4-2-1 -> idx=4
+2026-07-17 19:50:51.217 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_2_2 addr=4-2-2 -> idx=5
+2026-07-17 19:50:51.222 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_2_3 addr=4-2-3 -> idx=6
+2026-07-17 19:50:51.227 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_2_4 addr=4-2-4 -> idx=7
+2026-07-17 19:50:51.231 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_3_1 addr=4-3-1 -> idx=8
+2026-07-17 19:50:51.235 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_3_2 addr=4-3-2 -> idx=9
+2026-07-17 19:50:51.240 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_3_3 addr=4-3-3 -> idx=10
+2026-07-17 19:50:51.244 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_3_4 addr=4-3-4 -> idx=11
+2026-07-17 19:50:51.248 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_4_1 addr=4-4-1 -> idx=12
+2026-07-17 19:50:51.252 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_4_2 addr=4-4-2 -> idx=13
+2026-07-17 19:50:51.256 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_4_3 addr=4-4-3 -> idx=14
+2026-07-17 19:50:51.260 [DEBUG] [TID:4260] [MCBUS][BALANCE] map tag=MC201_4_4_4 addr=4-4-4 -> idx=15
+2026-07-17 19:50:51.264 [DEBUG] [TID:4260] [MCBUS][BALANCE] mapped=16/16 deviceChannels=16
+2026-07-17 19:50:51.269 [DEBUG] [TID:4260] [MCBUS][BALANCE] DataSource Start for balance
+2026-07-17 19:50:51.391 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
+2026-07-17 19:50:51.794 [DEBUG] [TID:4260] [MCBUS][BALANCE] DataSource Start done state=3
+2026-07-17 19:50:51.795 [DEBUG] [TID:4260] [MCBUS][BALANCE] ExecuteDeviceAction ZeroBalance: channels=16 state=3 ctrl=Play
+2026-07-17 19:50:51.807 [DEBUG] [TID:4260] [MCBUS][BALANCE] фоновое чтение просмотра приостановлено
+2026-07-17 19:50:51.815 [DEBUG] [TID:4260] [MCBUS][BALANCE] BalanceChannelsHardware: n=16 (prepare → settle 1s → collect → apply)
+2026-07-17 19:50:51.821 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase prepare: Stop + SEND $8080 all + Start
+2026-07-17 19:50:52.352 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase settle: 1000 ms warmup discard
+2026-07-17 19:50:53.344 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase collect
+2026-07-17 19:50:53.345 [DEBUG] [TID:4260] [MCBUS][BALANCE] CollectChannelsMean: n=16 timeoutMs=3000
+2026-07-17 19:50:53.358 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[0] ch=0 samples=1152 fs=19200,0
+2026-07-17 19:50:53.365 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[1] ch=1 samples=1152 fs=19200,0
+2026-07-17 19:50:53.371 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[2] ch=2 samples=1152 fs=19200,0
+2026-07-17 19:50:53.376 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[3] ch=3 samples=1152 fs=19200,0
+2026-07-17 19:50:53.381 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[4] ch=4 samples=2048 fs=57600,0
+2026-07-17 19:50:53.386 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[5] ch=5 samples=2048 fs=57600,0
+2026-07-17 19:50:53.390 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[6] ch=6 samples=2048 fs=57600,0
+2026-07-17 19:50:53.394 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[7] ch=7 samples=2048 fs=57600,0
+2026-07-17 19:50:53.399 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[8] ch=8 samples=2048 fs=57600,0
+2026-07-17 19:50:53.402 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[9] ch=9 samples=2048 fs=57600,0
+2026-07-17 19:50:53.409 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[10] ch=10 samples=2048 fs=57600,0
+2026-07-17 19:50:53.413 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[11] ch=11 samples=2048 fs=57600,0
+2026-07-17 19:50:53.417 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[12] ch=12 samples=2048 fs=57600,0
+2026-07-17 19:50:53.422 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[13] ch=13 samples=2048 fs=57600,0
+2026-07-17 19:50:53.426 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[14] ch=14 samples=2048 fs=57600,0
+2026-07-17 19:50:53.430 [DEBUG] [TID:4260] [MCBUS][BALANCE]   need[15] ch=15 samples=2048 fs=57600,0
+2026-07-17 19:50:53.435 [DEBUG] [TID:4260] [MCBUS][BALANCE] CollectChannelsMean done: ok=16/16 msgs=199 elapsedMs=78
+2026-07-17 19:50:53.439 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[0] ch=0 = 499,995
+2026-07-17 19:50:53.444 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[1] ch=1 = 474,104
+2026-07-17 19:50:53.448 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[2] ch=2 = 501,604
+2026-07-17 19:50:53.452 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[3] ch=3 = 551,028
+2026-07-17 19:50:53.456 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[4] ch=4 = 542,065
+2026-07-17 19:50:53.461 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[5] ch=5 = 485,002
+2026-07-17 19:50:53.466 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[6] ch=6 = 577,654
+2026-07-17 19:50:53.470 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[7] ch=7 = 562,889
+2026-07-17 19:50:53.474 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[8] ch=8 = 450,690
+2026-07-17 19:50:53.479 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[9] ch=9 = 462,602
+2026-07-17 19:50:53.483 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[10] ch=10 = 526,706
+2026-07-17 19:50:53.488 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[11] ch=11 = 438,604
+2026-07-17 19:50:53.492 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[12] ch=12 = 484,745
+2026-07-17 19:50:53.496 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[13] ch=13 = 430,125
+2026-07-17 19:50:53.500 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[14] ch=14 = 491,347
+2026-07-17 19:50:53.505 [DEBUG] [TID:4260] [MCBUS][BALANCE]   mean[15] ch=15 = 476,364
+2026-07-17 19:50:53.510 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase stop-before-compute: StopAfterHeavyStream
+2026-07-17 19:50:53.519 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase compute
+2026-07-17 19:50:53.519 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=0 mean=499,995 code=$D982
+2026-07-17 19:50:53.524 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=1 mean=474,104 code=$D582
+2026-07-17 19:50:53.528 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=2 mean=501,604 code=$DA82
+2026-07-17 19:50:53.533 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=3 mean=551,028 code=$E282
+2026-07-17 19:50:53.537 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=4 mean=542,065 code=$E182
+2026-07-17 19:50:53.541 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=5 mean=485,002 code=$D782
+2026-07-17 19:50:53.546 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=6 mean=577,654 code=$E782
+2026-07-17 19:50:53.550 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=7 mean=562,889 code=$E582
+2026-07-17 19:50:53.554 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=8 mean=450,690 code=$D082
+2026-07-17 19:50:53.559 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=9 mean=462,602 code=$D382
+2026-07-17 19:50:53.563 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=10 mean=526,706 code=$DE82
+2026-07-17 19:50:53.568 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=11 mean=438,604 code=$CE82
+2026-07-17 19:50:53.572 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=12 mean=484,745 code=$D782
+2026-07-17 19:50:53.576 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=13 mean=430,125 code=$CD82
+2026-07-17 19:50:53.580 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=14 mean=491,347 code=$D882
+2026-07-17 19:50:53.584 [DEBUG] [TID:4260] [MCBUS][BALANCE]   ch=15 mean=476,364 code=$D582
+2026-07-17 19:50:53.588 [DEBUG] [TID:4260] [MCBUS][BALANCE] phase apply: SEND + StartRawScan (16 new)
+2026-07-17 19:50:53.592 [DEBUG] [TID:4260] [MCBUS][BALANCE] apply: TryApplySavedBalanceDac
+2026-07-17 19:50:53.598 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=0 slot=1 idx=0 code=$D982
+2026-07-17 19:50:53.637 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=1 slot=1 idx=1 code=$D582
+2026-07-17 19:50:53.667 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=2 slot=1 idx=2 code=$DA82
+2026-07-17 19:50:53.697 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=3 slot=1 idx=3 code=$E282
+2026-07-17 19:50:53.729 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
+2026-07-17 19:50:53.760 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=5 slot=2 idx=1 code=$D782
+2026-07-17 19:50:53.790 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=6 slot=2 idx=2 code=$E782
+2026-07-17 19:50:53.821 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=7 slot=2 idx=3 code=$E582
+2026-07-17 19:50:53.851 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=8 slot=3 idx=0 code=$D082
+2026-07-17 19:50:53.882 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=9 slot=3 idx=1 code=$D382
+2026-07-17 19:50:53.911 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=10 slot=3 idx=2 code=$DE82
+2026-07-17 19:50:53.943 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=11 slot=3 idx=3 code=$CE82
+2026-07-17 19:50:53.973 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=12 slot=4 idx=0 code=$D782
+2026-07-17 19:50:54.004 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=13 slot=4 idx=1 code=$CD82
+2026-07-17 19:50:54.035 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=14 slot=4 idx=2 code=$D882
+2026-07-17 19:50:54.066 [DEBUG] [TID:4260] [MCBUS][BALANCE] ApplySavedBalanceDac ch=15 slot=4 idx=3 code=$D582
+2026-07-17 19:50:54.095 [DEBUG] [TID:4260] [MCBUS][BALANCE] apply: StartRawScan
+2026-07-17 19:50:54.127 [DEBUG] [TID:4260] [MCBUS][BALANCE] BalanceChannelsHardware OK programmed=16/16
+2026-07-17 19:50:54.127 [DEBUG] [TID:4260] [MCBUS][BALANCE] ExecuteDeviceAction ZeroBalance OK
+2026-07-17 19:50:54.136 [DEBUG] [TID:4260] [MCBUS][BALANCE] фоновое чтение просмотра восстановлено
+2026-07-17 19:50:54.141 [DEBUG] [TID:4260] [MCBUS][BALANCE] ExecuteDeviceAction result=True err=
+2026-07-17 19:50:54.146 [DEBUG] [TID:4260] [MCBUS][BALANCE] DataSource Stop after balance
+2026-07-17 19:50:54.153 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC config created source=MC-032: 192.169.12.87:4000 slot=1 channel=1 range=1 code=$D982 cfg=CFG slot=1;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55682
+2026-07-17 19:50:54.155 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=1 channel=2 range=1 code=$D582 cfg=CFG slot=1;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55682;d1r1=54658
+2026-07-17 19:50:54.160 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=1 channel=3 range=1 code=$DA82 cfg=CFG slot=1;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55682;d1r1=54658;d2r1=55938
+2026-07-17 19:50:54.164 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=1 channel=4 range=1 code=$E282 cfg=CFG slot=1;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55682;d1r1=54658;d2r1=55938;d3r1=57986
+2026-07-17 19:50:54.169 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=1 range=1 code=$E182 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730
+2026-07-17 19:50:54.174 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=2 range=1 code=$D782 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d1r1=55170
+2026-07-17 19:50:54.179 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=3 range=1 code=$E782 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d1r1=55170;d2r1=59266
+2026-07-17 19:50:54.184 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=2 channel=4 range=1 code=$E582 cfg=CFG slot=2;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=57730;d1r1=55170;d2r1=59266;d3r1=58754
+2026-07-17 19:50:54.189 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC config created source=MC-032: 192.169.12.87:4000 slot=3 channel=1 range=1 code=$D082 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53378
+2026-07-17 19:50:54.194 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=2 range=1 code=$D382 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53378;d1r1=54146
+2026-07-17 19:50:54.198 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=3 range=1 code=$DE82 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53378;d1r1=54146;d2r1=56962
+2026-07-17 19:50:54.203 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=3 channel=4 range=1 code=$CE82 cfg=CFG slot=3;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=53378;d1r1=54146;d2r1=56962;d3r1=52866
+2026-07-17 19:50:54.208 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC config created source=MC-032: 192.169.12.87:4000 slot=4 channel=1 range=1 code=$D782 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55170
+2026-07-17 19:50:54.213 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=2 range=1 code=$CD82 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55170;d1r1=52610
+2026-07-17 19:50:54.217 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=3 range=1 code=$D882 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55170;d1r1=52610;d2r1=55426
+2026-07-17 19:50:54.222 [DEBUG] [TID:4260] [MCBUS][BALANCE] DAC persisted source=MC-032: 192.169.12.87:4000 slot=4 channel=4 range=1 code=$D582 cfg=CFG slot=4;c0=1;c1=1;c2=1;c3=1;c4=0;c5=0;c6=0;c7=0;b0=0;b1=0;b2=0;b3=0;b4=0;b5=0;b6=0;b7=0;b8=0;b9=0;b10=0;b11=0;comm=0;sub=1;rev=0;d0r1=55170;d1r1=52610;d2r1=55426;d3r1=54658
+2026-07-17 19:50:54.227 [DEBUG] [TID:4260] [MCBUS][BALANCE] runtime fConfig reloaded once after all DAC stores
+2026-07-17 19:50:59.643  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:50:59.644 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:50:59.653 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-17 19:50:59.661 [DEBUG] [TID:9680|UIThread] 19:50:59.660 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-17 19:50:59.663 [DEBUG] [TID:9680|UIThread] 19:50:59.662 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-17 19:50:59.668 [DEBUG] [TID:9680|UIThread] 19:50:59.667 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-17 19:50:59.673 [DEBUG] [TID:9680|UIThread] 19:50:59.672 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-17 19:50:59.692 [DEBUG] [TID:9680|UIThread] 19:50:59.690 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-17 19:50:59.717 [DEBUG] [TID:9680|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-17 19:50:59.729 [DEBUG] [TID:9680|UIThread] [MCBUS] connect attempt 1/5
+2026-07-17 19:51:00.207 [DEBUG] [TID:9680|UIThread] [MCBUS] programmed channels=16
+2026-07-17 19:51:00.223  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:51:00.223 [DEBUG] [TID:9680|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:51:01.231 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-17 19:51:01.492 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-17 19:51:01.492 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
+2026-07-17 19:51:01.545 [DEBUG] [TID:9680|UIThread] 19:51:01.544 Tag settings updated: 16 channel(s).
+2026-07-17 19:51:05.513 [DEBUG] [TID:9680|UIThread] 19:51:05.511 MC-201 slot 2 settings updated.
+2026-07-17 19:51:06.147  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:06.147 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:06.157  RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:51:06.158 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:51:06.166 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-17 19:51:06.176 [DEBUG] [TID:9680|UIThread] 19:51:06.174 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-17 19:51:06.177 [DEBUG] [TID:9680|UIThread] 19:51:06.176 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-17 19:51:06.182 [DEBUG] [TID:9680|UIThread] 19:51:06.181 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-17 19:51:06.188 [DEBUG] [TID:9680|UIThread] 19:51:06.187 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-17 19:51:06.208 [DEBUG] [TID:9680|UIThread] 19:51:06.206 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-17 19:51:06.226 [DEBUG] [TID:9680|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-17 19:51:06.228 [DEBUG] [TID:9680|UIThread] [MCBUS] connect attempt 1/5
+2026-07-17 19:51:06.712 [DEBUG] [TID:9680|UIThread] [MCBUS] programmed channels=16
+2026-07-17 19:51:06.729  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:51:06.729 [DEBUG] [TID:9680|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-17 19:51:07.737 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-17 19:51:08.000 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-17 19:51:08.001 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
+2026-07-17 19:51:08.073 [DEBUG] [TID:9680|UIThread] 19:51:08.071 Tag settings updated: 1 channel(s).
+2026-07-17 19:51:08.076 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=0 slot=1 idx=0 code=$D982
+2026-07-17 19:51:08.078 [DEBUG] [TID:9680|UIThread] 19:51:08.075 Data sources started.
+2026-07-17 19:51:08.085 [DEBUG] [TID:9680|UIThread] 19:51:08.084 State changed: Stop -> Preview
+2026-07-17 19:51:08.110 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=1 slot=1 idx=1 code=$D582
+2026-07-17 19:51:08.141 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=2 slot=1 idx=2 code=$DA82
+2026-07-17 19:51:08.172 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=3 slot=1 idx=3 code=$E282
+2026-07-17 19:51:08.203 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
+2026-07-17 19:51:08.234 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=5 slot=2 idx=1 code=$D782
+2026-07-17 19:51:08.265 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=6 slot=2 idx=2 code=$E782
+2026-07-17 19:51:08.294 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=7 slot=2 idx=3 code=$E582
+2026-07-17 19:51:08.326 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=8 slot=3 idx=0 code=$D082
+2026-07-17 19:51:08.357 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=9 slot=3 idx=1 code=$D382
+2026-07-17 19:51:08.387 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=10 slot=3 idx=2 code=$DE82
+2026-07-17 19:51:08.418 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=11 slot=3 idx=3 code=$CE82
+2026-07-17 19:51:08.450 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=12 slot=4 idx=0 code=$D782
+2026-07-17 19:51:08.482 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=13 slot=4 idx=1 code=$CD82
+2026-07-17 19:51:08.513 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=14 slot=4 idx=2 code=$D882
+2026-07-17 19:51:08.545 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=15 slot=4 idx=3 code=$D582
+2026-07-17 19:51:08.608 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:08.609 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
+2026-07-17 19:51:08.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:08.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 6916
+2026-07-17 19:51:08.841 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:09.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:09.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:09.063 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:09.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:09.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:09.284 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:09.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:09.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:09.518 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:09.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:09.617 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:09.751 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:09.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:09.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:09.986 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:10.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:10.018 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:10.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:10.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:10.221 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:10.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:10.418 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:10.454 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:10.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:10.617 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:10.685 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:10.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:10.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:10.918 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:11.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:11.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:11.153 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:11.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:11.218 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:11.384 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:11.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:11.418 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:11.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:11.618 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:11.620 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:11.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:11.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:11.850 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:12.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:12.018 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:12.071 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:12.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:12.218 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:12.303 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:12.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:12.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:12.522 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:12.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:12.618 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:12.742 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:12.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:12.818 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:12.964 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:13.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:13.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:13.185 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:13.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:13.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:13.407 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:13.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:13.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:13.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:13.619 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:13.627 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:13.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:13.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:13.847 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:14.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:14.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:14.066 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:14.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:14.218 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:14.287 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:14.413 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:14.418 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:14.508 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:14.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:14.617 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:14.727 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:14.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:14.819 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:14.951 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:15.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:15.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:15.171 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1156
+2026-07-17 19:51:15.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:15.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:15.392 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:15.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:15.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:15.613 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:15.615 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:15.620 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:15.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:15.818 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 6916
+2026-07-17 19:51:15.852 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:16.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:16.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:16.073 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:16.213 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:16.218 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 6916
+2026-07-17 19:51:16.293 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:16.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:16.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:16.513 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:16.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:16.617 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:16.734 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:16.813 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:16.819 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:16.957 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:17.013 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:17.017 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:17.178 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:17.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:17.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 6916
+2026-07-17 19:51:17.398 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:17.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:17.418 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:17.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:17.618 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:17.621 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:17.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:17.818 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:17.855 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:18.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:18.018 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:18.081 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:18.213 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:18.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 6916
+2026-07-17 19:51:18.314 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:18.413 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:18.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:18.535 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:18.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:18.618 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 6916
+2026-07-17 19:51:18.754 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:18.814 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:18.817 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:18.976 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:19.013 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:19.016 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:19.199 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:19.214 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:19.217 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 6916
+2026-07-17 19:51:19.414 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:19.417 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 6916
+2026-07-17 19:51:19.421 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:19.614 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:19.616 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:19.651 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:19.813 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:19.816 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:19.884 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1156
+2026-07-17 19:51:20.014 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:20.016 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 6916
+2026-07-17 19:51:20.106 [DEBUG] [TID:1156|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 1156
+2026-07-17 19:51:20.205  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:20.209  RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:51:20.205 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:20.216 [DEBUG] [TID:4280|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-17 19:51:20.216 [WARNING] [TID:19048|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-17 19:51:20.226 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-17 19:51:20.234 [DEBUG] [TID:6916|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
+2026-07-17 19:51:20.244 [DEBUG] [TID:9680|UIThread] 19:51:20.243 Data sources stopped.
+2026-07-17 19:51:20.245 [DEBUG] [TID:9680|UIThread] 19:51:20.244 State changed: Preview -> Stop
+2026-07-17 19:51:21.705 [DEBUG] [TID:9680|UIThread] 19:51:21.704 Project package saved: default
+2026-07-17 19:51:21.706 [DEBUG] [TID:9680|UIThread] 19:51:21.705   main config: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-17 19:51:21.712 [DEBUG] [TID:9680|UIThread] 19:51:21.710   GUI config: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-17 19:51:21.716 [DEBUG] [TID:9680|UIThread] 19:51:21.715   run-control: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-17 19:51:22.654  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:22.654 [DEBUG] [TID:9680|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-17 19:51:22.662 [WARNING] [TID:9680|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped

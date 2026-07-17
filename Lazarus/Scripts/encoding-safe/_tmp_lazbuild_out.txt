@@ -1,0 +1,918 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FiD:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Algs"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Core"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\UI"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140"
+Info: (lazarus) Param[14]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140\UI"
+Info: (lazarus) Param[15]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\mic185"
+Info: (lazarus) Param[16]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\mic185\UI"
+Info: (lazarus) Param[17]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus"
+Info: (lazarus) Param[18]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\UI"
+Info: (lazarus) Param[19]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140v2"
+Info: (lazarus) Param[20]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140v2\utils"
+Info: (lazarus) Param[21]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SDB"
+Info: (lazarus) Param[22]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[23]="-FuD:\works\OburecGH\Lazarus\Tests\RecorderTests\UITestData"
+Info: (lazarus) Param[24]="-FuC:\lazarus\components\tachart\lib\x86_64-win64\win32"
+Info: (lazarus) Param[25]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64"
+Info: (lazarus) Param[26]="-FuC:\lazarus\components\ideintf\units\x86_64-win64\win32"
+Info: (lazarus) Param[27]="-FuC:\lazarus\components\opengl\lib\x86_64-win64\win32"
+Info: (lazarus) Param[28]="-FuC:\lazarus\components\lazcontrols\lib\x86_64-win64\win32"
+Info: (lazarus) Param[29]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[30]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[31]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[32]="-FuC:\lazarus\components\debuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[33]="-FuC:\lazarus\components\buildintf\units\x86_64-win64"
+Info: (lazarus) Param[34]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[35]="-FuC:\lazarus\components\lazdebuggers\lazdebuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[36]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[37]="-FED:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\"
+Info: (lazarus) Param[38]="-oD:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe"
+Info: (lazarus) Param[39]="-dLCL"
+Info: (lazarus) Param[40]="-dLCLwin32"
+Info: (lazarus) Param[41]="RecorderLnx.lpr"
+Info: (lazarus) Param[42]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling RecorderLnx.lpr
+(3104) Compiling .\UI\uMainForm.pas
+(3104) Compiling .\Core\uRecorderStateMachine.pas
+(3104) Compiling .\Core\uRecorderRunControlSettings.pas
+(3104) Compiling uRecorderMeraPaths.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas(76,22) Hint: (5057) Local variable "lSystemDir" does not seem to be initialized
+(3104) Compiling .\Core\uRecorderFormModel.pas
+(3104) Compiling .\Core\uRecorderTags.pas
+(3104) Compiling .\Core\uRecorderCoreServices.pas
+(3104) Compiling .\Core\uRecorderDebugLog.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedFileLogger.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderCoreServices.pas(263,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling .\Algs\uRecorderSpectrumEngine.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumEngine.pas(312,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumEngine.pas(313,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumEngine.pas(336,35) Hint: (5057) Local variable "lCounter" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumEngine.pas(337,39) Hint: (5057) Local variable "lFrequency" does not seem to be initialized
+(3104) Compiling .\Algs\uRecorderFrequencyBands.pas
+(3104) Compiling .\Core\uRecorderTags.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(552,18) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(692,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(850,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(851,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(892,3) Note: (5025) Local variable "I" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(1436,13) Note: (5027) Local variable "s" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTags.pas(1517,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderFormModel.pas(387,17) Warning: (3057) An inherited method is hidden by "constructor Create;"
+(3104) Compiling .\Core\uRecorderDataSources.pas
+(3104) Compiling .\Core\uMeraFile.pas
+(3104) Compiling .\Core\uRecorderConfiguredDataSources.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(509,3) Note: (5025) Local variable "lTag" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(640,21) Hint: (5057) Local variable "lCounters" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(678,14) Hint: (5057) Local variable "lUserTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(677,82) Hint: (5057) Local variable "lKernelTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(677,69) Hint: (5057) Local variable "lExitTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(677,58) Hint: (5057) Local variable "lCreationTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(696,28) Hint: (5057) Local variable "lSystemInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(837,39) Hint: (5057) Local variable "lDouble" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(842,39) Hint: (5057) Local variable "lSingle" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(847,38) Hint: (5057) Local variable "lInt32" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(852,39) Hint: (5057) Local variable "lUInt32" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(857,38) Hint: (5057) Local variable "lInt16" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(862,39) Hint: (5057) Local variable "lUInt16" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(967,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderDataSources.pas(968,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+(3104) Compiling .\Core\uRecorder.pas
+(3104) Compiling .\Core\uRecorderEventQueue.pas
+(3104) Compiling .\Core\uRecorderAlarms.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderEventQueue.pas(137,3) Note: (5025) Local variable "I" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderEventQueue.pas(103,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling .\Core\uRecorderTimeSystem.pas
+(3104) Compiling .\Algs\uRecorderSpectrumRuntime.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumRuntime.pas(633,25) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumRuntime.pas(633,67) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumRuntime.pas(633,60) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderSpectrumRuntime.pas(76,34) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling .\Algs\uRecorderAlgorithmManager.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(226,77) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(226,85) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(53,27) Hint: (5024) Parameter "ATag" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(53,47) Hint: (5024) Parameter "ATimeSec" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(53,57) Hint: (5024) Parameter "AValue" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(54,27) Hint: (5024) Parameter "ATag" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(54,53) Hint: (5024) Parameter "ATimes" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(54,61) Hint: (5024) Parameter "AValues" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(55,7) Hint: (5024) Parameter "ACount" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(358,87) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(358,96) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(146,39) Hint: (5024) Parameter "ATransition" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(126,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Algs\uRecorderAlgorithmManager.pas(128,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorder.pas(33,35) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\Tests\RecorderTests\UITestData\uRecorderUiTestData.pas
+(3104) Compiling .\UI\uFormPagesDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(47,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(47,43) Hint: (5024) Parameter "aCol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(47,49) Hint: (5024) Parameter "aRow" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(48,11) Hint: (5024) Parameter "CanSelect" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(45,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(40,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(42,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(44,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(43,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormPagesDialog.pas(41,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uFormEditorController.pas
+(3104) Compiling .\UI\uRecorderOglOscillogramView.pas
+(3104) Compiling .\UI\uRecorderVisualControl.pas
+(3104) Compiling .\UI\uRecorderOglOscillogramView.pas
+(3104) Compiling .\Core\uRecorderTagRefs.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedAlgorithms.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOglOscillogramView.pas(49,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOglOscillogramView.pas(501,29) Hint: (5091) Local variable "lTagColors" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOglOscillogramView.pas(118,32) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderTrendView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(142,23) Hint: (5091) Local variable "lOglAxes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(238,19) Hint: (5091) Local variable "lPages" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(131,3) Note: (5027) Local variable "lAxisCount" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(56,32) Hint: (5024) Parameter "ALineIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(62,27) Hint: (5024) Parameter "ALineIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(465,3) Note: (5027) Local variable "lLagSec" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(73,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(73,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(65,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendView.pas(18,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderTrendView
+(3104) Compiling .\UI\uRecorderSpectrumView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uComponentServices.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uEventTypes.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uEventList.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uEventList.pas(164,97) Warning: (4110) range check error while evaluating constants (4096 must be between 0 and 255)
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(24,25) Hint: (5024) Parameter "ABaseObj" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(24,46) Hint: (5024) Parameter "Root" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(107,25) Hint: (5024) Parameter "ABaseObj" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(107,46) Hint: (5024) Parameter "Root" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(75,41) Hint: (5024) Parameter "AName" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(8,31) Hint: (5023) Unit "uEventTypes" not used in uBaseClass
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(51,52) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(52,7) Hint: (5024) Parameter "AState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(53,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(53,49) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(644,32) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(73,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(73,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(48,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(48,47) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(49,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(49,49) Hint: (5024) Parameter "ARenderTimeMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(50,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(50,51) Hint: (5024) Parameter "ACursor" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumView.pas(47,27) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderVisualControl.pas(57,63) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderVisualControl.pas(58,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderVisualControl.pas(58,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderVisualControl.pas(70,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderVisualControl.pas(77,3) Hint: (5023) Unit "uOglChartTrend" not used in uRecorderVisualControl
+(3104) Compiling .\UI\uComponentSettingsDialog.pas
+(3104) Compiling .\UI\uRecorderTrendSettingsDialog.pas
+(3104) Compiling .\UI\uRecorderColorSwatch.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderColorSwatch.pas(21,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(117,84) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(117,89) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(139,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(140,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(72,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(71,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(65,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(66,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(64,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(69,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(63,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(68,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderTrendSettingsDialog.pas(76,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderSpectrumSettingsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(101,92) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(101,97) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(124,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(125,54) Warning: (5043) Symbol "DecimalSeparator" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(56,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(62,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(63,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(64,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(65,37) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSpectrumSettingsDialog.pas(66,32) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderOscillogramSettingsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(15,22) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(105,77) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(105,82) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(435,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(66,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(56,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(59,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(61,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(68,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(67,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderOscillogramSettingsDialog.pas(57,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(93,71) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(93,76) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(40,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(42,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(43,45) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(39,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uComponentSettingsDialog.pas(41,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(914,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(616,3) Note: (5025) Local variable "lOsc" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(987,18) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(989,10) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(991,22) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1119,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(175,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(177,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(177,48) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(178,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(179,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(184,47) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(183,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(186,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(188,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1358,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1432,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1488,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1587,25) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1701,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1841,45) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1918,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(1971,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2079,31) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2100,19) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2111,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2135,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2256,39) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uFormEditorController.pas(2265,41) Hint: (4055) Conversion between ordinals and pointers is not portable
+(3104) Compiling .\UI\uRecorderSettingsDialog.pas
+(3104) Compiling .\UI\uRecorderCommandImages.pas
+(3104) Compiling .\UI\uTagSettingsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(15,24) Warning: (2005) Comment level 2 found
+(3104) Compiling .\Device\MIC140\uRecorderMic140DataSource.pas
+(3104) Compiling .\Device\uRecorderDeviceInterfaces.pas
+(3104) Compiling .\Device\uRecorderAcquisitionTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(228,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(144,7) Hint: (5024) Parameter "AIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(244,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(245,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(246,24) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(247,35) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(248,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(249,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(250,40) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(251,29) Note: (6058) Call to subroutine "operator :=(const source:ShortInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(252,29) Note: (6058) Call to subroutine "operator :=(const source:ShortString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(146,30) Hint: (5024) Parameter "AIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(266,38) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(267,45) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(268,54) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(269,54) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(305,39) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(158,24) Hint: (5024) Parameter "ATimeoutMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(162,35) Hint: (5024) Parameter "AAction" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(327,20) Hint: (5092) Variable "AValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(163,34) Hint: (5024) Parameter "AAction" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\uRecorderDeviceInterfaces.pas(164,13) Hint: (5024) Parameter "AChannelIndices" not used
+(3104) Compiling .\Device\MIC140\uRecorderMebiusTcpProtocol.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(178,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(179,19) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(195,20) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(207,18) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(306,19) Hint: (5092) Variable "APacket" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(308,27) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(342,29) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(358,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(359,18) Hint: (5091) Local variable "lBody" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(419,16) Hint: (5091) Local variable "lIn" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(433,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(435,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMebiusTcpProtocol.pas(464,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140LegacyProtocol.pas
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2WireTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(234,29) Hint: (5057) Local variable "lBuf" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(271,20) Hint: (5092) Variable "AVerdict" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(491,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(521,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(583,19) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(587,25) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(653,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(671,21) Hint: (5058) Variable "AFirmware" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(746,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyProtocol.pas(784,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140Utils.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Utils.pas(228,32) Hint: (5057) Local variable "lWsaData" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Utils.pas(239,21) Hint: (5057) Local variable "lAddr" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Utils.pas(254,24) Hint: (5057) Local variable "lTimeVal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Utils.pas(257,24) Hint: (5057) Local variable "lWriteSet" does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140StreamTypes.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140DoubleBuffer.pas
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2RawRing.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140ScanConfig.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140LegacyTiming.pas
+(3104) Compiling .\Core\uRecorderFrequencyGrids.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderFrequencyGrids.pas(74,18) Hint: (5092) Variable "AGrid" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140StreamFsm.pas
+(3104) Compiling .\Device\uRecorderAcquirePhase.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140AcquireTiming.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140AcquireTiming.pas(14,3) Hint: (5023) Unit "uRecorderMic140StreamTypes" not used in uRecorderMic140AcquireTiming
+(3104) Compiling .\Device\MIC140\uRecorderMic140StreamHelpers.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140StreamHelpers.pas(203,19) Hint: (5058) Variable "ASubRaw" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140StreamHelpers.pas(45,3) Hint: (5028) Local const "CMic140MisalignSatThreshold" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140StreamHelpers.pas(15,3) Hint: (5023) Unit "uRecorderMic140LegacyProtocol" not used in uRecorderMic140StreamHelpers
+(3104) Compiling .\Device\MIC140\uRecorderMic140Calibration.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140Flash.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140FlashConstants.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140MebiusConstants.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(119,19) Hint: (5094) Function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(154,26) Hint: (5058) Variable "AEntries" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(196,22) Hint: (5091) Local variable "lDirBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(205,21) Hint: (5091) Local variable "lEntries" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(62,20) Hint: (5024) Parameter "AMaxTinChannels" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(425,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(438,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(501,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(514,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(89,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Flash
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(89,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140Flash
+(3104) Compiling .\Device\MIC140\uRecorderMic140LegacyConstants.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140Thermocouple.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140DataSource.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140ProtocolDriver.pas
+(3104) Compiling .\Device\uRecorderMic140DeviceApi.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(139,15) Note: (3250) Virtual method "PrepareHardware;" has a lower visibility (protected) than parent class TRecorderDataSourceBase (public)
+(3104) Compiling .\Core\uRecorderMeraSdbThermocouples.pas
+(3104) Compiling .\SDB\uRecorderSdbStore.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uBaseObjLaz.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseObjLaz.pas(364,3) Note: (5025) Local variable "i" not used
+(3104) Compiling .\SDB\uRecorderSdbTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbTypes.pas(5,20) Warning: (2005) Comment level 2 found
+(3104) Compiling .\SDB\uRecorderSdbPropBag.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedStringEncoding.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uSharedStringEncoding.pas(14,32) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\SharedUtils\uSharedStringEncoding.pas(15,39) Warning: (2005) Comment level 2 found
+(3104) Compiling .\Device\MIC140\uRecorderMic140DeviceConfig.pas
+(3104) Compiling .\Core\uRecorderProjectFiles.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(518,3) Note: (5025) Local variable "lTerm" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DeviceConfig.pas(364,19) Hint: (5092) Variable "AFields" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DeviceConfig.pas(405,30) Warning: (4045) Comparison might be always true due to range of constant and expression
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DeviceConfig.pas(112,54) Hint: (5024) Parameter "ARegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DeviceConfig.pas(18,3) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in uRecorderMic140DeviceConfig
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DeviceConfig.pas(123,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140DeviceConfig
+(3104) Compiling .\Device\MIC140\uRecorderMic140MebiusTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140MebiusTypes.pas(80,21) Hint: (5057) Local variable "lSettings" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140MebiusTypes.pas(126,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140LegacyChannelDesc.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyChannelDesc.pas(83,16) Hint: (5057) Local variable "lReg" does not seem to be initialized
+(3104) Compiling .\Device\MIC140\uRecorderMic140LegacyScanDriver.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140LegacyScanDriver.pas(29,30) Hint: (5023) Unit "uRecorderMic140StreamTypes" not used in uRecorderMic140LegacyScanDriver
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2Factory.pas
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2Device.pas
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2Protocol.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(263,29) Hint: (5057) Local variable "lBuf" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(357,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(498,20) Hint: (5092) Variable "AVerdict" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(718,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(748,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(811,19) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(815,25) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(886,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(909,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(918,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(942,21) Hint: (5058) Variable "AFirmware" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(1017,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Protocol.pas(1048,13) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2Consts.pas
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2Timing.pas
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2Scan.pas
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas(193,16) Hint: (5057) Local variable "lReg" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas(381,51) Hint: (5057) Local variable "lCode" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas(389,43) Hint: (5057) Local variable "lCode" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas(398,59) Hint: (5057) Local variable "lCode" does not seem to be initialized
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2Helper.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2Helper.pas(49,27) Hint: (5057) Local variable "wsa" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2Helper.pas(59,20) Hint: (5057) Local variable "addr" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2Helper.pas(70,18) Hint: (5057) Local variable "tv" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2Helper.pas(73,17) Hint: (5057) Local variable "ws" does not seem to be initialized
+(3104) Compiling .\Device\MIC140v2\utils\uRecorderMic140v2Diag.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\utils\uRecorderMic140v2Diag.pas(155,43) Hint: (5024) Parameter "AChannelIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Scan.pas(281,17) Hint: (5091) Local variable "args" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Scan.pas(367,17) Hint: (5091) Local variable "desc" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Scan.pas(443,21) Hint: (5091) Local variable "chanDump" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Scan.pas(72,3) Hint: (5028) Local const "CNormalDesc" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Scan.pas(14,19) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140v2Scan
+(3104) Compiling .\Device\MIC140v2\uRecorderMic140v2Stream.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Stream.pas(299,18) Hint: (5057) Local variable "lProbe" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Stream.pas(430,16) Hint: (5058) Variable "ARaw" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Stream.pas(504,28) Hint: (5057) Local variable "originalData" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Stream.pas(56,29) Hint: (5024) Parameter "AFreq" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Stream.pas(597,40) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(126,20) Hint: (5092) Variable "AValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(100,34) Hint: (5024) Parameter "AAction" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(101,13) Hint: (5024) Parameter "AChannelIndices" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(191,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(192,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(193,24) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(194,35) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(195,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(196,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(197,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(200,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(205,33) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(210,38) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(213,40) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(214,29) Note: (6058) Call to subroutine "operator :=(const source:ShortInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(215,29) Note: (6058) Call to subroutine "operator :=(const source:ShortString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(232,18) Note: (6058) Call to subroutine "operator :=(const source:Variant):AnsiString;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(238,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(245,32) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(251,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(258,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(270,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(278,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(286,14) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(346,21) Hint: (5091) Local variable "lWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(487,3) Note: (5027) Local variable "tim" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(756,40) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(820,19) Hint: (5092) Variable "AMeans" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(826,17) Hint: (5091) Local variable "sums" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(827,16) Hint: (5091) Local variable "cnt" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(828,16) Hint: (5091) Local variable "eff" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140v2\uRecorderMic140v2Device.pas(811,16) Note: (5025) Local variable "k" not used
+(3104) Compiling .\Core\uRecorderHardwareLiveDevices.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderHardwareLiveDevices.pas(33,3) Hint: (5023) Unit "syncobjs" not used in uRecorderHardwareLiveDevices
+(3104) Compiling .\Core\uRecorderHardwareTree.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderHardwareTree.pas(218,21) Hint: (5092) Variable "AEntries" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(419,23) Hint: (5024) Parameter "AChannelIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(173,3) Hint: (5024) Parameter "ADevSubRev" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(699,3) Note: (5025) Local variable "lResolvedKey" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(849,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1040,28) Hint: (5091) Local variable "lChannelNumbers" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1273,77) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1275,79) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1309,74) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1310,76) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1311,84) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(2276,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(2287,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(215,3) Hint: (5028) Local const "CMic140ReadTimeoutMinMs" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(217,3) Hint: (5028) Local const "CMic140IoCtlCmdSetControllerParams" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(219,3) Hint: (5028) Local const "CMic140BalanceMinSamples" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(220,3) Hint: (5028) Local const "CMic140BalanceDiscardSamples" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(221,3) Hint: (5028) Local const "CMic140BalanceSampleFraction" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(222,3) Hint: (5028) Local const "CMic140Range5mV" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(18,52) Hint: (5023) Unit "uRecorderMebiusTcpProtocol" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(197,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(200,3) Hint: (5023) Unit "uRecorderMic140FlashConstants" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(201,32) Hint: (5023) Unit "uRecorderMic140MebiusConstants" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(202,32) Hint: (5023) Unit "uRecorderMic140Flash" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(203,3) Hint: (5023) Unit "uRecorderMic140MebiusTypes" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(204,3) Hint: (5023) Unit "uRecorderMic140LegacyChannelDesc" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(207,23) Hint: (5023) Unit "WinSock2" not used in uRecorderMic140DataSource
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(33,3) Hint: (5024) Parameter "ADevSubRev" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(626,17) Hint: (5057) Local variable "lTare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(627,18) Hint: (5057) Local variable "lTare2" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(58,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Calibration
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(59,45) Hint: (5023) Unit "uRecorderMic140StreamTypes" not used in uRecorderMic140Calibration
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(60,3) Hint: (5023) Unit "uRecorderMic140LegacyConstants" not used in uRecorderMic140Calibration
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(60,35) Hint: (5023) Unit "uRecorderMic140Thermocouple" not used in uRecorderMic140Calibration
+(3104) Compiling .\UI\uRecorderCalibrationAddDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationAddDialog.pas(18,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationAddDialog.pas(19,31) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderCalibrationPropertiesDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(51,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(44,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(46,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(45,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(47,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(48,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(49,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(50,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationPropertiesDialog.pas(52,26) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderCalibrationListDialog.pas
+(3104) Compiling .\SDB\uRecorderSdbSelectDialog.pas
+(3104) Compiling .\SDB\uRecorderSdbImages.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(50,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(51,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(55,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(53,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(52,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(52,46) Hint: (5024) Parameter "Node" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(49,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbSelectDialog.pas(18,3) Hint: (5023) Unit "uSharedStringEncoding" not used in uRecorderSdbSelectDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(28,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(23,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(24,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(26,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(27,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(25,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderCalibrationListDialog.pas(29,26) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas
+(3104) Compiling .\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(45,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(46,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(47,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(49,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(50,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(51,32) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\Device\uRecorderConfiguredSourceEditor.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(52,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(61,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(55,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(56,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(57,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(53,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(54,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(58,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(538,56) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(538,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(59,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(60,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(654,41) Hint: (5091) Local variable "lResult" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\mic185\uRecorderMic185DataSource.pas
+(3104) Compiling .\Device\mic185\uMic185Device.pas
+(3104) Compiling .\Device\mic185\uMic185MebiusTcpProtocol.pas
+(3104) Compiling .\Device\mic185\uMic185Constants.pas
+(3104) Compiling .\Device\mic185\uMic185DebugLog.pas
+(3104) Compiling .\Device\mic185\uRecorderMic185Runtime.pas
+(3104) Compiling .\Device\mic185\uMic185MebiusTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTypes.pas(174,21) Hint: (5058) Variable "ASettings" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTypes.pas(211,21) Hint: (5058) Variable "ASettings" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTypes.pas(274,21) Hint: (5057) Local variable "lSettings" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTypes.pas(333,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Runtime.pas(60,3) Hint: (5023) Unit "syncobjs" not used in uRecorderMic185Runtime
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(241,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(242,19) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(258,20) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(271,18) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(390,20) Hint: (5092) Variable "AValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(570,19) Hint: (5092) Variable "APacket" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(572,27) Hint: (5057) Local variable "lHeader" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(606,29) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(622,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(624,20) Hint: (5091) Local variable "lBody" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(693,16) Hint: (5091) Local variable "lIn" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(707,21) Hint: (5092) Variable "AOutData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(709,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(738,19) Hint: (5091) Local variable "lBlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(836,31) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185MebiusTcpProtocol.pas(837,24) Hint: (5092) Variable "ATempValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(47,90) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(201,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(217,32) Note: (6058) Call to subroutine "operator :=(const source:LongWord):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(218,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(219,35) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(233,43) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(242,28) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(268,24) Hint: (5057) Local variable "lInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(346,23) Hint: (5091) Local variable "lCommandIn" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(466,22) Hint: (5057) Local variable "lInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uMic185Device.pas(482,39) Hint: (5092) Variable "ABlock" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(108,48) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(152,15) Note: (3250) Virtual method "PrepareHardware;" has a lower visibility (protected) than parent class TRecorderDataSourceBase (public)
+(3104) Compiling .\Device\mic185\uRecorderMic185Calibration.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Calibration.pas(228,37) Hint: (5024) Parameter "ARegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Calibration.pas(311,19) Warning: (5093) function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Calibration.pas(517,17) Hint: (5057) Local variable "lInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(758,48) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(759,57) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(760,61) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(880,20) Warning: (4104) Implicit string type conversion from "AnsiString" to "WideString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(880,18) Warning: (4105) Implicit string type conversion with potential data loss from "WideString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(37,27) Hint: (5024) Parameter "ATimeoutMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1521,46) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1522,55) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1523,68) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1524,70) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1741,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1742,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(167,15) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in uRecorderMic185DataSource
+(3104) Compiling .\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas
+(3104) Compiling .\Device\MCbus\uMc032Device.pas
+(3104) Compiling .\Device\MCbus\uMc201LegacyMdpClient.pas
+(3104) Compiling .\Device\MCbus\uMc201ProtocolTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201ProtocolTypes.pas(282,18) Hint: (5091) Local variable "lGrid" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\MCbus\uMc201FirmwareResources.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201FirmwareResources.pas(30,19) Hint: (5092) Variable "ABytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201FirmwareResources.pas(44,19) Hint: (5092) Variable "ABytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(172,19) Hint: (5057) Local variable "lAddr" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(174,23) Warning: (5043) Symbol "ShortHostToNet" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(175,30) Warning: (5043) Symbol "HostToNet" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(206,20) Hint: (5057) Local variable "lFds" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(387,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(416,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(465,17) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(467,23) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(511,23) Hint: (5091) Local variable "lRequest" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(530,17) Hint: (5058) Variable "ABios" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(544,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(585,18) Hint: (5092) Variable "AData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(586,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(598,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(619,18) Hint: (5092) Variable "AData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(626,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(667,20) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(693,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(762,80) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(762,78) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(765,23) Hint: (5091) Local variable "lBiosWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(784,18) Hint: (5091) Local variable "lVars" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(791,23) Hint: (5091) Local variable "lCodeWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(850,17) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(855,21) Hint: (5091) Local variable "lCommand" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(897,17) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(898,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(935,17) Hint: (5092) Variable "ARet" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(938,20) Hint: (5091) Local variable "lTail" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc201LegacyMdpClient.pas(945,22) Hint: (5091) Local variable "lFirstArg" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(561,21) Hint: (5091) Local variable "lWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(902,26) Hint: (5091) Local variable "lTestData" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(926,17) Hint: (5058) Variable "AInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(963,21) Hint: (5092) Variable "AModules" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(1008,3) Note: (5025) Local variable "lReply" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(1125,19) Hint: (5092) Variable "AWords" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(1183,18) Hint: (5091) Local variable "lArgs" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(1321,23) Hint: (5091) Local variable "lMessage" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uMc032Device.pas(1336,3) Note: (5027) Local variable "lQueued" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(256,71) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(257,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(47,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(284,100) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(284,106) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(48,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(333,100) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(333,106) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(343,75) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(343,81) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(49,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(383,63) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(383,69) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc032SettingsDialog.pas(34,3) Hint: (5023) Unit "Math" not used in uRecorderMc032SettingsDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(166,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(148,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(184,46) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1310,61) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1310,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(165,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(167,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(168,44) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1732,36) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1732,34) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(169,41) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(170,44) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(171,42) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(172,52) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(173,50) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1993,11) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(1993,23) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(174,58) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\UI\uRecorderFrequencyBandsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(306,45) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(306,75) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(31,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(32,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(33,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(34,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(35,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderFrequencyBandsDialog.pas(36,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\Core\uRecorderTagBalance.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTagBalance.pas(59,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTagBalance.pas(18,3) Hint: (5024) Parameter "ARegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderTagBalance.pas(15,40) Hint: (5023) Unit "Contnrs" not used in uRecorderTagBalance
+(3104) Compiling .\UI\uRecorderSettingsSourceProbe.pas
+(3104) Compiling .\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas
+(3104) Compiling .\Device\MCbus\uRecorderMcbusDevice.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(435,43) Note: (6058) Call to subroutine "operator :=(const source:Word):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(436,29) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(723,19) Hint: (5092) Variable "AMeans" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(724,16) Hint: (5092) Variable "AOk" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(725,20) Hint: (5091) Local variable "lCounts" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(726,18) Hint: (5091) Local variable "lSums" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(837,19) Hint: (5092) Variable "AMeans" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(851,19) Hint: (5091) Local variable "lNeeds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(852,22) Hint: (5091) Local variable "lOldCodes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(853,19) Hint: (5091) Local variable "lCodes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(1020,19) Hint: (5091) Local variable "lChans" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(1128,20) Hint: (5092) Variable "AValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(1152,12) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDevice.pas(1151,114) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(66,24) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(69,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(67,23) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(608,40) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(608,53) Warning: (2005) Comment level 2 found
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\UI\uRecorderMc201SlotSettingsDialog.pas(96,3) Hint: (5024) Parameter "ADataSources" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsSourceProbe.pas(82,25) Hint: (5023) Unit "uRecorderMic140LegacyProtocol" not used in uRecorderSettingsSourceProbe
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(924,23) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(924,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(967,25) Warning: (4104) Implicit string type conversion from "TTranslateString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1191,7) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1191,48) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(149,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(150,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(151,59) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(152,44) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1693,56) Warning: (4104) Implicit string type conversion from "RawByteString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1693,105) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1725,84) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(1725,97) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(210,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(2060,30) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(219,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(220,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(2100,3) Note: (5025) Local variable "lSignal" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(2125,3) Note: (5025) Local variable "lSignal" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(224,41) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(225,41) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(226,40) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(227,44) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(228,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(2239,67) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(2240,3) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(145,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(145,55) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(153,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(154,40) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(116,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(117,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(118,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(119,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(120,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(121,37) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(123,46) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(122,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(131,45) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(132,85) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(173,61) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(173,83) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(173,103) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(173,106) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(133,37) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(133,54) Hint: (5024) Parameter "Node" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(134,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(135,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(135,64) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(135,67) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(136,7) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(137,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(138,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(139,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(140,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(141,49) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(142,40) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(143,44) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(128,45) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(128,70) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(128,73) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(129,45) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(129,70) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(129,73) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(130,7) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(144,37) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(174,45) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(175,48) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(147,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(148,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(485,3) Hint: (5028) Local const "CDeviceTreeProbeTimeoutMs" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(28,26) Hint: (5023) Unit "uRecorderMeraSdbThermocouples" not used in uRecorderSettingsDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(294,3) Hint: (5023) Unit "uRecorderMic140LegacyProtocol" not used in uRecorderSettingsDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(296,30) Hint: (5023) Unit "uMic185Constants" not used in uRecorderSettingsDialog
+(3104) Compiling .\UI\uRecorderDigitalPageView.pas
+(3104) Compiling .\Core\uRecorderDataStorage.pas
+(3104) Compiling .\Device\mic185\UI\uRecorderMic185SettingsDialog.pas
+(3104) Compiling .\Device\mic185\UI\uRecorderMic185AdditionalDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185AdditionalDialog.pas(31,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185AdditionalDialog.pas(32,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185AdditionalDialog.pas(33,35) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling .\Device\mic185\UI\uRecorderMic185ChannelDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185ChannelDialog.pas(51,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185ChannelDialog.pas(52,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185ChannelDialog.pas(177,55) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185ChannelDialog.pas(177,63) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+(3104) Compiling .\Device\mic185\uRecorderMic185DeviceInfoProbe.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DeviceInfoProbe.pas(73,19) Hint: (5057) Local variable "lInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(45,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(246,18) Hint: (5092) Variable "ARows" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(38,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(39,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(40,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(41,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(42,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(43,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(44,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\UI\uRecorderMic185SettingsDialog.pas(85,18) Hint: (5023) Unit "StrUtils" not used in uRecorderMic185SettingsDialog
+(3104) Compiling .\Device\MCbus\uRecorderMcbusDataSource.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(47,28) Hint: (5024) Parameter "ARegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(236,46) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(237,55) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(238,68) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(239,70) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(400,21) Hint: (5091) Local variable "lIndices" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(465,21) Hint: (5091) Local variable "lCodes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMcbusDataSource.pas(57,30) Hint: (5024) Parameter "AOwner" not used
+(3104) Compiling .\UI\uRecorderMic185SettingsSelfTest.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderMic185SettingsSelfTest.pas(60,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(104,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(326,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(105,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(106,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(112,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(112,53) Hint: (5024) Parameter "aCol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(113,11) Hint: (5024) Parameter "CanSelect" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(110,39) Hint: (5024) Parameter "sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(110,56) Hint: (5024) Parameter "aCol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(107,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(108,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(109,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(340,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(205,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(94,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(92,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(93,39) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(95,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(96,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(102,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(101,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(97,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(98,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(100,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(91,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(103,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(191,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(249,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(251,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(253,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(255,40) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(257,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(229,34) Hint: (5024) Parameter "APage" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(231,33) Hint: (5024) Parameter "APage" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(235,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(237,37) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(282,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(283,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(284,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(2252,30) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(341,38) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(342,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(311,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(336,41) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(337,7) Hint: (5024) Parameter "AOldState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(337,18) Hint: (5024) Parameter "ANewState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(360,3) Hint: (5028) Local const "CDeviceHealthProbeTimeoutMs" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(48,3) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in uMainForm
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(10,33) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(11,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(11,33) Hint: (5023) Unit "uRecorderTrendView" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(12,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(12,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(13,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(14,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(14,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(15,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(15,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(16,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(16,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(16,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(18,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(18,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(19,34) Hint: (5023) Unit "uRecorderMebiusTcpProtocol" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(20,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(21,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(21,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(22,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\resources\mcbus.rc
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe
+(1008) 65183 lines compiled, 3.1 sec, 3748928 bytes code, 156948 bytes data
+(1021) 81 warning(s) issued
+(1022) 566 hint(s) issued
+(1023) 75 note(s) issued
+Info: (lazarus) [TCompiler.Compile] end
+Info: (lazarus) Execute Title="Проект: Выполнить команду после"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\"
+Info: (lazarus) Executable="D:\works\OburecGH\Lazarus\RecorderLnx\Scripts\copy_sdb_res.bat"
+Info: (lazarus) Param[0]="D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\"
+
+D:\works\OburecGH\Lazarus\RecorderLnx>#!/bin/sh
+"#!" ?? ????? ???????? ??? ?????
+????????, ??????? ?????? ??? ?????? ????.
