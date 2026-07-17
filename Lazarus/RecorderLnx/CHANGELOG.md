@@ -1,3 +1,68 @@
+## 2026-07-17 — Digital form: серые ячейки единицы «код»
+
+**Задача (переформулировка):** В таблице Digital form ячейки Unit со значением «код» выделить серым.
+
+**Сделано:**
+- `sgFormularPrepareCanvas`: Unit=`код`/`code` → `clSilver`
+- lazbuild `-B` RecorderLnx — OK
+
+## 2026-07-17 — MC-201: ГХ с диска при пустом имени (галочка по умолчанию)
+
+**Задача (переформулировка):** Почему не подтянулась ГХ sn1465 — у тега была пустая галочка/имя, загрузка пропускалась.
+
+**Сделано:**
+- автозагрузка если имя ГХ пустое и CSV есть → имя + `Enabled=True`; пропуск только при снятой галочке с сохранённым именем
+- разбор `SN=` без `UpperCase` по кириллице; открытие свойств тега тоже пробует load
+- lazbuild `-B` RecorderLnx — OK (exe был занят — пересобран после unlock)
+
+**Документация:** [mc201-hardware-scale.md](Docs/devices/mc/mc201-hardware-scale.md)
+
+## 2026-07-17 — MC-201: автозагрузка аппаратной ГХ с диска
+
+**Задача (переформулировка):** Если для SN модуля и выбранного диапазона уже лежат файлы ГХ в Mera Files, и галочка «использовать аппаратную ГХ» не снята — сразу подгружать её в реестр и на тег.
+
+**Сделано:**
+- `RecorderMc201TryLoadScaleFromCsv` / `Ensure…` / `ApplyHardwareCalibrations` по пути `…\MC-201\snXXXX\<range>\NN.csv`
+- вызов при `BuildChannelMap`; новые MC-201-теги: `HardwareCalibrationEnabled=True` при первом bind
+- lazbuild `-B` RecorderLnx — OK
+
+**Документация:** [mc201-hardware-scale.md](Docs/devices/mc/mc201-hardware-scale.md)
+
+## 2026-07-17 — MC-201: без ГХ по умолчанию коды, не вольты
+
+**Задача (переформулировка):** У аппаратных каналов MC-201 без назначенной ГХ в таблице должны идти сырые коды АЦП (единица «код»), а не «В».
+
+**Сделано:**
+- probe новых каналов: `UnitsName := 'код'` вместо `'В'`
+- `RecorderMc201SyncTagUnitFromHardwareGx` при привязке канала и после калибровки масштаба
+- lazbuild `-B` RecorderLnx — OK
+
+**Документация:** [mc201-hardware-scale.md](Docs/devices/mc/mc201-hardware-scale.md)
+
+## 2026-07-17 — MC-201: калибровка масштаба К сдвигом балансировочного ЦАП
+
+**Задача (переформулировка):** Сервисная калибровка диапазона MC-201: сдвинуть точный балансировочный ЦАП на известное V, вычислить K [В/код], назначить как аппаратную ГХ-коэффициент (`rckScale`, не кусочную), автосохранить в `Mera Files\Calibr\hardware\MTC\MC-201\snXXXX\…`; кнопка в диалоге слота для выбранных каналов.
+
+**Сделано:**
+- `CalibrateScaleByBalanceDacShift`: SEND $8080 → mean A → SEND сдвиг (Lo/Hi=20) → mean B → K=ΔV/Δcode → restore ЦАП
+- `uRecorderMc201Calibration`: пути Mera Files, CSV+`.tid` (`ScaleTransformer.1`), upsert `rckScale`, привязка к тегам слота
+- диалог MC-201: чекбоксы каналов + «Калибровка выбранных»; PublishBlock применяет аппаратную ГХ
+- lazbuild `-B` RecorderLnx — OK
+
+**Файлы:** `Device/MCbus/uRecorderMc201Calibration.pas`, `uRecorderMcbusDevice.pas`, `UI/uRecorderMc201SlotSettingsDialog.*`, `uRecorderMcbusDataSource.pas`
+
+**Документация:** [mc201-hardware-scale.md](Docs/devices/mc/mc201-hardware-scale.md)
+
+## 2026-07-17 — Документ: мультибаланс MC-201 / программирование ЦАП
+
+**Задача:** Зафиксировать в Docs/devices/mc, как добились рабочего программирования ЦАП при мультибалансировке.
+
+**Сделано:**
+- добавлен [Docs/devices/mc/mc201-zero-balance-multi.md](Docs/devices/mc/mc201-zero-balance-multi.md)
+- ссылки из `README.md`, `mc201.md`, `recorderlnx-integration.md` (секция балансировки обновлена)
+
+**Документация:** [mc201-zero-balance-multi.md](Docs/devices/mc/mc201-zero-balance-multi.md)
+
 ## 2026-07-17 — Stop сразу после collect; quiet без ACK
 
 **Задача:** `STOPSCANMAIN ack not seen drained=126 quiet=True` — поток встал, ACK на no-wait нет; требовать ACK было ошибкой. Плюс Stop после compute копил RX.

@@ -28,6 +28,7 @@ uses
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
   uRecorderMic185Calibration,
+  uRecorderMc201Calibration, uRecorderConfiguredDataSources,
   uRecorderCommandImages, uRecorderMc032SettingsDialog,
   uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices,
   uRecorderFrequencyGrids;
@@ -523,6 +524,7 @@ procedure TTagSettingsDialog.UpdateHardwareCurveText;
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
+  lConfigured: TRecorderConfiguredDataSource;
   lFirstEnabled: Boolean;
   lFirstName: string;
   lSameEnabled: Boolean;
@@ -545,7 +547,7 @@ begin
 
   fHardwareCurveCheck.AllowGrayed := fTags.Count > 1;
   if lSameEnabled then
-    fHardwareCurveCheck.Checked := lFirstEnabled and (lFirstName <> '')
+    fHardwareCurveCheck.Checked := lFirstEnabled
   else
     fHardwareCurveCheck.State := cbGrayed;
 
@@ -563,6 +565,24 @@ begin
     RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), False);
     lFirstName := Trim(TagAt(0).HardwareCalibrationName);
     lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
+  end;
+  { MC-201: если на диске уже есть ГХ для SN+диапазона — подтянуть сразу. }
+  if (Pos('MC-032:', TagAt(0).SourceId) = 1) and
+    ((lCalibration = nil) or (lFirstName = '')) then
+  begin
+    lConfigured := RecorderConfiguredDataSourcesFind(fTagRegistry,
+      TagAt(0).SourceId);
+    if lConfigured <> nil then
+    begin
+      if RecorderMc201LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0),
+        lConfigured.SpecificConfigText) then
+      begin
+        lFirstName := Trim(TagAt(0).HardwareCalibrationName);
+        lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
+        fHardwareCurveCheck.Checked := lFirstEnabled;
+        lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
+      end;
+    end;
   end;
   if (Pos('MIC-185:', TagAt(0).SourceId) = 1) and (lCalibration <> nil) then
     fHardwareCurveEdit.Text :=

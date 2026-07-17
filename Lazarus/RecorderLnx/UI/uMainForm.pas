@@ -577,12 +577,26 @@ procedure TMainForm.sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer
   aState: TGridDrawState);
 var
   lTagName: string;
+  lUnit: string;
   lTag: TRecorderTag;
   lColor: LongInt;
   lRowIdx: Integer;
 begin
   if (aRow > 0) and (gdSelected in aState) then Exit;
-  if (aRow > 0) and (fRecorder.TagRegistry <> nil) and (fRecorder.AlarmEngine <> nil) then
+  if aRow <= 0 then
+    Exit;
+
+  { Единица «код» — серый фон ячейки Unit. }
+  lUnit := Trim(sgFormular.Cells[3, aRow]);
+  if (aCol = 3) and
+    (SameText(lUnit, 'код') or SameText(lUnit, 'code')) then
+  begin
+    sgFormular.Canvas.Brush.Color := clSilver;
+    sgFormular.Canvas.Font.Color := clBlack;
+    Exit;
+  end;
+
+  if (fRecorder.TagRegistry <> nil) and (fRecorder.AlarmEngine <> nil) then
   begin
     lRowIdx := aRow;
     while (lRowIdx > 0) and (sgFormular.Cells[0, lRowIdx] = '') do
@@ -2257,7 +2271,7 @@ begin
       if (lConfig <> nil) and (lCaption <> '') and
         ShowRecorderMc201SlotSettingsDialog(Self, lCaption,
           lConfig.SpecificConfigText, ATag.SourceId,
-          fRecorder.DataSources) then
+          fRecorder.DataSources, fRecorder.TagRegistry) then
         AddLog(Format('MC-201 slot %d settings updated.', [lSlot]));
     finally
       lLines.Free;

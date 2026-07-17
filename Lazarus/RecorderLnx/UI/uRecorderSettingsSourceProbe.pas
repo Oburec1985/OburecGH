@@ -506,7 +506,8 @@ begin
         lSignal.DataTypeName := 'R8';
         lSignal.DataType := mvtFloat64;
         lSignal.FrequencyHz := APollFrequencyHz;
-        lSignal.UnitsName := 'В';
+        { Без аппаратной ГХ публикуются сырые коды АЦП (как MIC-140/185). }
+        lSignal.UnitsName := 'код';
         lSignal.Description := Format('MC-201 slot %d channel %d; SN=%s',
           [lSlot, lChannel, lSerial]);
         lSignal.FileName := ASourceId;

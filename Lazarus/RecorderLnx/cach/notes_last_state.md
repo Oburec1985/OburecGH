@@ -1,6 +1,13 @@
 # MIC-140 debug stand — последнее состояние (2026-07-06)
 
 
+## 2026-07-17: MC-201 multi balance — документация
+
+**Prompt:** Записать в Docs/devices/mc, как добились правильного программирования ЦАП при мультибалансировке.
+
+**Done:** Канон — `Docs/devices/mc/mc201-zero-balance-multi.md` (prepare→collect→stop-before-compute→SEND→StartRawScan; Quiet OK без ACK; запреты RESET/ForceDisconnect/SEND-in-stream). Ссылки в README, mc201.md, recorderlnx-integration.md, CHANGELOG.
+
+
 ## 2026-07-17: комментарии uMc032Device
 
 **Prompt:** Подписать методы unit uMc032Device по логике (параметры, когда вызывается), без формальных комментариев; не ломать кодировку.

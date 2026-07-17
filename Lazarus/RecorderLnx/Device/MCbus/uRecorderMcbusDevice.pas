@@ -88,6 +88,9 @@ type
       ASlot1Based: Integer);
     procedure ApplySavedBalanceDac;
     function TryApplySavedBalanceDac(out AErrorText: string): Boolean;
+    { Сервис: сдвиг балансировочного ЦАП на известное V → K [В/код] для ГХ. }
+    function CalibrateScaleByBalanceDacShift(AChannel: Integer;
+      out AScaleVoltPerCode: Double; out AErrorText: string): Boolean;
   end;
 
 function CreateRecorderMcbusDevice: IRecorderDevice;
@@ -112,6 +115,131 @@ begin
   if Assigned(gBalanceTrace) then
     gBalanceTrace(AText);
 end;
+
+function TRecorderMcbusDevice.CalibrateScaleByBalanceDacShift(AChannel: Integer;
+  out AScaleVoltPerCode: Double; out AErrorText: string): Boolean;
+const
+  CLoOff = 20;
+  CHiOff = 20;
+var
+  lOldCode, lCodeB: Word;
+  lMeanA, lMeanB, lVA, lVB, lDMean: Double;
+  lSamples: Integer;
+  lSlot, lChInSlot: Integer;
+  lWasStarted: Boolean;
+begin
+  Result := False;
+  AScaleVoltPerCode := 0;
+  AErrorText := '';
+  if (AChannel < 0) or (AChannel >= fChannelCount) then
+  begin
+    AErrorText := Format('MC-201 calibrate: bad channel %d', [AChannel]);
+    Exit;
+  end;
+  if fState = rdsDisconnected then
+  begin
+    try
+      Connect;
+    except
+      on E: Exception do
+      begin
+        AErrorText := 'MC-201 calibrate Connect: ' + E.Message;
+        Exit;
+      end;
+    end;
+  end;
+  if fState = rdsConnected then
+  begin
+    try
+      ProgramDevice;
+    except
+      on E: Exception do
+      begin
+        AErrorText := 'MC-201 calibrate ProgramDevice: ' + E.Message;
+        Exit;
+      end;
+    end;
+  end;
+
+  lSlot := fProgramInfo[AChannel div CMc201MaxModuleChannels].Slot;
+  lChInSlot := AChannel mod CMc201MaxModuleChannels;
+  lOldCode := GetChannelBalanceDac(AChannel);
+  lCodeB := Word(((CMc201BalanceDacMidCode + CHiOff) shl 8) or
+    (CMc201BalanceDacMidCode + CLoOff));
+  lVA := 0;
+  lVB := RecorderMc201BalanceVoltFromSigned(CLoOff, CHiOff);
+  lSamples := Max(64, Min(2048, Round(ChannelSampleRate(AChannel) * 0.06)));
+  lWasStarted := fState = rdsStarted;
+
+  { SEND только на остановленной шине (см. multi-balance docs). }
+  if fState = rdsStarted then
+    Stop;
+  if not fController.SendBalanceDac(lSlot, lChInSlot, $80, $80, AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate SEND A: ' + AErrorText;
+    Exit;
+  end;
+  if not fController.StartRawScan(AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate Start A: ' + AErrorText;
+    Exit;
+  end;
+  fState := rdsStarted;
+  if not CollectChannelMean(AChannel, lSamples, lMeanA, AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate mean A: ' + AErrorText;
+    Exit;
+  end;
+
+  Stop;
+  if not fController.SendBalanceDac(lSlot, lChInSlot,
+    lCodeB and $ff, lCodeB shr 8, AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate SEND B: ' + AErrorText;
+    Exit;
+  end;
+  if not fController.StartRawScan(AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate Start B: ' + AErrorText;
+    Exit;
+  end;
+  fState := rdsStarted;
+  if not CollectChannelMean(AChannel, lSamples, lMeanB, AErrorText) then
+  begin
+    AErrorText := 'MC-201 calibrate mean B: ' + AErrorText;
+    Exit;
+  end;
+
+  Stop;
+  if not fController.SendBalanceDac(lSlot, lChInSlot,
+    lOldCode and $ff, lOldCode shr 8, AErrorText) then
+    BalanceTrace('calibrate restore DAC: ' + AErrorText);
+  if lWasStarted then
+  begin
+    if fController.StartRawScan(AErrorText) then
+      fState := rdsStarted
+    else
+      BalanceTrace('calibrate restart: ' + AErrorText);
+  end
+  else
+    fState := rdsProgrammed;
+
+  lDMean := lMeanB - lMeanA;
+  if Abs(lDMean) < 1.0 then
+  begin
+    AErrorText := Format(
+      'MC-201 calibrate: Δcode too small (%.3f), meanA=%.3f meanB=%.3f',
+      [lDMean, lMeanA, lMeanB]);
+    Exit;
+  end;
+  { Знак: V>0 при сдвиге ЦАП; берём согласованный знак ΔV/Δcode. }
+  AScaleVoltPerCode := (lVB - lVA) / lDMean;
+  BalanceTrace(Format(
+    'calibrate ch=%d meanA=%.3f meanB=%.3f Vb=%.6g K=%.9g V/code',
+    [AChannel, lMeanA, lMeanB, lVB, AScaleVoltPerCode]));
+  Result := True;
+end;
+
 
 function RecorderMc032HardwareLinkProbe(const ASourceId: string): Boolean;
 const

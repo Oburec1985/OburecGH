@@ -63,7 +63,7 @@ implementation
 
 uses
   uRecorderMcbusDevice, uRecorderDebugLog, uRecorderHardwareLiveDevices,
-  uRecorderConfiguredDataSources;
+  uRecorderConfiguredDataSources, uRecorderMc201Calibration;
 
 procedure TRecorderMcbusDataSource.SetZeroBalanceTrace(
   AHandler: TRecorderZeroBalanceTraceEvent);
@@ -293,6 +293,8 @@ var
   lChannels: TRecorderDeviceChannelArray;
   lTag: TRecorderTag;
 begin
+  { Если на диске уже есть ГХ для SN+диапазона и галочка не снята — в реестр. }
+  RecorderMc201ApplyHardwareCalibrations(Registry, SourceId, fSpecificConfigText);
   lChannels := fDevice.GetChannels;
   SetLength(fChannelTags, Length(lChannels));
   for I := 0 to High(lChannels) do
@@ -306,6 +308,7 @@ begin
       if not AddressSlotChannel(lTag.Address, lTagSlot, lTagChannel) then Continue;
       if (lTagSlot = lSlot) and (lTagChannel = lChannel) then
       begin
+        RecorderMc201SyncTagUnitFromHardwareGx(Registry, lTag);
         fChannelTags[I] := lTag;
         Break;
       end;
@@ -512,7 +515,7 @@ begin
       for J := 0 to lCount - 1 do
         fTimes[J] := lFirstTime + J / lSampleRate;
       Registry.PublishBlock(fChannelTags[I].Name, fTimes, ABlock.Values[I],
-        lCount, True);
+        lCount, False);
     end;
 end;
 

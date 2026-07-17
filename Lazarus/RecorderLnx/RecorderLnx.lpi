@@ -533,6 +533,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Device/MCbus/uRecorderMc201Calibration.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="uRecorderMeraPaths.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>

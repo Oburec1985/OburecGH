@@ -15,6 +15,8 @@ Prepare (`Stop` + SEND `$8080` + `Start`) on a short stream works in ~0.6s.
 - Full `ProgramDevice` / `RESETSCANMAIN` after collect (same timeout)
 - Soft Stop + SEND on “quiet” bus (quiet ≠ command-ready)
 
+См. каноническое описание: [Docs/devices/mc/mc201-zero-balance-multi.md](../Docs/devices/mc/mc201-zero-balance-multi.md).
+
 ## Fix (updated 19:48)
 1. Log `ack not seen … quiet=True`: fire-and-forget STOP often has **no** command-port ACK; quiet is enough — do not fail.
 2. Stop **immediately after collect** (before compute/logging) so CallCommand(STOP) sees a short RX tail like prepare.

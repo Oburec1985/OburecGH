@@ -8,6 +8,8 @@ RecorderLnx protocol/debug work.
 | File | Contents |
 | --- | --- |
 | [mc201.md](mc201.md) | MC-201 module identification, channel settings, frequency grid, and current test-stand assumptions |
+| [mc201-zero-balance-multi.md](mc201-zero-balance-multi.md) | Рабочий сценарий аппаратной балансировки / мультипрограммирования ЦАП (prepare→collect→stop→SEND) |
+| [mc201-hardware-scale.md](mc201-hardware-scale.md) | Калибровка масштаба K [В/код] сдвигом балансировочного ЦАП; `rckScale` + Mera Files `hardware\MTC\MC-201` |
 | [recorderlnx-integration.md](recorderlnx-integration.md) | Рабочая архитектура MCbus в RecorderLnx: конфигурация, дерево, Preview, формат потока, тесты и осциллограмма |
 
 ## Current Test Stand

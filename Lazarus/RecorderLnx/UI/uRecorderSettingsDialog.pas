@@ -693,11 +693,15 @@ procedure TRecorderSettingsDialog.ApplyMeraSignalToTag(ATag: TRecorderTag;
   ASignal: TMeraSignalInfo);
 var
   lSourceId: string;
+  lFirstMc201Bind: Boolean;
 begin
   if (ATag = nil) or (ASignal = nil) then
     Exit;
 
   lSourceId := SignalSourceId(ASignal);
+  { Первый bind MC-201: галочка аппаратной ГХ по умолчанию включена. }
+  lFirstMc201Bind := SameText(ASignal.ModuleName, 'MC-201') and
+    (not SameText(ATag.ModuleType, 'MC-201'));
   ATag.Address := ASignal.Address;
   ATag.UnitName := ASignal.UnitsName;
   ATag.SourceId := lSourceId;
@@ -705,6 +709,8 @@ begin
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
   ATag.SourceValueMode := ASignal.SourceValueMode;
+  if lFirstMc201Bind then
+    ATag.HardwareCalibrationEnabled := True;
   if SameText(ASignal.ModuleName, 'MIC-140') then
     ATag.Description := Format('%s; freq=%s Hz',
       [ASignal.Description, FormatFloat('0.######', ASignal.FrequencyHz)])
@@ -2064,7 +2070,7 @@ begin
         end;
       if (lCaption <> '') and ShowRecorderMc201SlotSettingsDialog(Self,
         lCaption, lConfig.SpecificConfigText, ATag.SourceId,
-        fRecorder.DataSources) then
+        fRecorder.DataSources, fRecorder.TagRegistry) then
       begin
         PopulateHardwareTree;
         PopulateChannelGrids;
@@ -3544,7 +3550,8 @@ begin
     lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, lSourceId);
     if (lConfig <> nil) and SameText(lConfig.ModuleType, 'MC-032') and
       ShowRecorderMc201SlotSettingsDialog(Self, fHardwareTree.Selected.Text,
-        lConfig.SpecificConfigText, lSourceId, fRecorder.DataSources) then
+        lConfig.SpecificConfigText, lSourceId, fRecorder.DataSources,
+        fRecorder.TagRegistry) then
       fHardwareTree.Invalidate;
     Exit;
   end;

@@ -1,11 +1,11 @@
 object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   Left = 420
-  Height = 430
+  Height = 510
   Top = 220
   Width = 920
   BorderStyle = bsDialog
   Caption = 'Аппаратные свойства MC-201'
-  ClientHeight = 430
+  ClientHeight = 510
   ClientWidth = 920
   Position = poOwnerFormCenter
   object fSerialEdit: TEdit
@@ -392,14 +392,66 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
       TabOrder = 1
     end
   end
+  object CalibGroup: TGroupBox
+    Left = 16
+    Height = 70
+    Top = 360
+    Width = 888
+    Caption = 'Аппаратная ГХ (масштаб K, В/код)'
+    TabOrder = 5
+    object fCalCh1: TCheckBox
+      Left = 16
+      Height = 21
+      Top = 28
+      Width = 70
+      Caption = 'Кан. 1'
+      Checked = True
+      TabOrder = 0
+    end
+    object fCalCh2: TCheckBox
+      Left = 100
+      Height = 21
+      Top = 28
+      Width = 70
+      Caption = 'Кан. 2'
+      Checked = True
+      TabOrder = 1
+    end
+    object fCalCh3: TCheckBox
+      Left = 184
+      Height = 21
+      Top = 28
+      Width = 70
+      Caption = 'Кан. 3'
+      Checked = True
+      TabOrder = 2
+    end
+    object fCalCh4: TCheckBox
+      Left = 268
+      Height = 21
+      Top = 28
+      Width = 70
+      Caption = 'Кан. 4'
+      Checked = True
+      TabOrder = 3
+    end
+    object fCalibrateBtn: TButton
+      Left = 360
+      Height = 30
+      Top = 22
+      Width = 280
+      Caption = 'Калибровка выбранных (сдвиг ЦАП)'
+      TabOrder = 4
+    end
+  end
   object fButtonPanel: TButtonPanel
     Left = 0
     Height = 50
-    Top = 380
+    Top = 460
     Width = 920
     Align = alBottom
     AutoSize = True
     ShowButtons = [pbOK, pbCancel]
-    TabOrder = 5
+    TabOrder = 6
   end
 end
