@@ -677,6 +677,7 @@ end;
 procedure TMainForm.PageControlChange(Sender: TObject);
 var
   lPageIndex: Integer;
+  lStarted: QWord;
 begin
   if fSyncingPages or (fPageControl = nil) then
     Exit;
@@ -685,6 +686,7 @@ begin
   if (lPageIndex < 0) or (lPageIndex >= fFormManager.PageCount) then
     Exit;
 
+  lStarted := GetTickCount64;
   fFormManager.SetActivePageById(fFormManager.Pages[lPageIndex].Id);
   if fFormEditor <> nil then
   begin
@@ -692,6 +694,8 @@ begin
     fFormEditor.ClearUndoHistory;
   end;
   RenderActivePage;
+  RecorderDebugLog(Format('[MNEMO-PERF] tab-change page=%s total=%dms',
+    [fFormManager.Pages[lPageIndex].Id, GetTickCount64 - lStarted]));
 end;
 
 procedure TMainForm.btnFormPagesClick(Sender: TObject);

@@ -91,7 +91,7 @@ type
 implementation
 
 uses
-  Math, gl, glext, Graphics, SysUtils;
+  Math, gl, glext, Graphics, SysUtils, IntfGraphics, FPImage;
 
 { cOglFont }
 
@@ -276,7 +276,7 @@ end;
 procedure cOglFont.BuildTextureAtlas;
 var
   lBitmap: TBitmap;
-  lFile: TextFile;
+  lImage: TLazIntfImage;
   lWidth, lHeight: Integer;
   lChar: WideChar;
   lText: string;
@@ -284,12 +284,11 @@ var
   I: Integer;
   lCharWidth: Integer;
   lPixelPtr: PDWord;
-  lColorVal: Cardinal;
+  lPixelColor: TFPColor;
   lAlpha: Byte;
   lRow, lCol: Integer;
   lTexWidth, lTexHeight: Integer;
   lRawData: PByte;
-  lLineStride: Integer;
 begin
   if fTextureId <> 0 then
   begin
@@ -357,16 +356,22 @@ begin
       lX := lX + lCharWidth;
     end;
 
+    { Нормализованный LCL-образ оставляет быстрый доступ в памяти, но скрывает
+      различный порядок байтов pf32bit в Windows и Linux. }
+    lImage := TLazIntfImage.Create(0, 0);
+    lImage.LoadFromBitmap(lBitmap.Handle, lBitmap.MaskHandle);
     lRawData := nil;
     GetMem(lRawData, lTexWidth * lTexHeight * 4);
     try
       lPixelPtr := PDWord(lRawData);
       for lRow := 0 to lTexHeight - 1 do
       begin
+        { Colors здесь читает уже скопированный TLazIntfImage и не обращается
+          к виджетному Canvas для каждого пикселя. }
         for lCol := 0 to lTexWidth - 1 do
         begin
-          lColorVal := lBitmap.Canvas.Pixels[lCol, lRow];
-          lAlpha := Byte(lColorVal); // РџРѕР»СѓС‡Р°РµРј СЏСЂРєРѕСЃС‚СЊ (Red) РґР»СЏ РјР°СЃРєРё С€СЂРёС„С‚Р°
+          lPixelColor := lImage.Colors[lCol, lRow];
+          lAlpha := lPixelColor.Red shr 8;
           lPixelPtr^ := (Cardinal(lAlpha) shl 24) or $00FFFFFF;
           Inc(lPixelPtr);
         end;
@@ -382,27 +387,11 @@ begin
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lTexWidth, lTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, lRawData);
     finally
       FreeMem(lRawData);
+      lImage.Free;
     end;
 
     // РЎРѕС…СЂР°РЅСЏРµРј Р°С‚Р»Р°СЃ РІ С„Р°Р№Р» РґР»СЏ РІРёР·СѓР°Р»СЊРЅРѕР№ РґРёР°РіРЅРѕСЃС‚РёРєРё
-    try
-      lBitmap.SaveToFile('font_atlas_' + fName + '.bmp');
-    except
-    end;
-
     // Р›РѕРіРёСЂРѕРІР°РЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ С€СЂРёС„С‚Р° РІ С„Р°Р№Р»
-    try
-      AssignFile(lFile, 'font_debug.log');
-      if FileExists('font_debug.log') then
-        Append(lFile)
-      else
-        Rewrite(lFile);
-      WriteLn(lFile, Format('Font: %s, Scale: %.2f, Height: %d, TexWidth: %d, TexHeight: %d, SpaceWidth: %d, AWidth: %d',
-        [fName, fScale, lHeight, lTexWidth, lTexHeight, CharPixelWidth(' '), CharPixelWidth('A')]));
-      CloseFile(lFile);
-    except
-    end;
-
     fTextHeight := lHeight;
   finally
     lBitmap.Free;

@@ -1,11 +1,13 @@
 program RecorderLnx;
 
 {$mode objfpc}{$H+}
+{$IFDEF MSWINDOWS}
 {$R Device/MCbus/resources/mcbus.rc}
+{$ENDIF}
 
 uses
   {$IFDEF UNIX}
-  cthreads,
+  cthreads, BaseUnix,
   {$ENDIF}
   Interfaces, Forms, uMainForm, uComponentSettingsDialog,
   uRecorderTrendSettingsDialog, uRecorderTrendView,
@@ -25,6 +27,13 @@ begin
   RequireDerivedFormResource := True;
   Application.Scaled := True;
   Application.Initialize;
+  {$IFDEF UNIX}
+  { LCL и подключенный отладчик могут настроить обработчики сигналов во время
+    Application.Initialize. Поэтому политику TCP задаём после Initialize, но
+    до CreateForm, где начинаются проверки сетевых устройств. Закрытый peer
+    должен дать драйверу EPIPE, а не External exception code 13. }
+  fpSignal(SIGPIPE, SignalHandler(SIG_IGN));
+  {$ENDIF}
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

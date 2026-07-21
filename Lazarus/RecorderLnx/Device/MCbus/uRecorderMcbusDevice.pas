@@ -615,8 +615,8 @@ begin
   if not fController.TryConnect(fLastError) then
     raise ERecorderDeviceError.Create('MC-032 connect: ' + fLastError);
   { Connect только открывает и проверяет транспорт. Состав крейта читается в Init
-    после RESET: предварительный поиск здесь дублировал сетевой обход слотов,
-    а его результат всё равно сбрасывался перед инициализацией. }
+    после RESET: предварительный поиск здесь дублировал тот же обход слотов и
+    замедлял каждый холодный запуск примерно на 1,5 секунды. }
   fState := rdsConnected;
 end;
 
@@ -1276,10 +1276,13 @@ begin
     fLastError := AErrorText;
     Exit(False);
   end;
-  { TEST выполняется в том же TCP-сеансе, который затем использует Connect.
-    Не закрываем успешную проверку: старый контроллер может не принять
-    немедленное повторное соединение после отдельного probe-сеанса. }
+  { TEST — только предикат доступности, а не начало рабочего жизненного цикла.
+    Контроллер может закрыть TCP-сеанс после TEST_LOAD. Если оставить такой
+    сокет внутри TMc032Device, следующий Connect увидит mcsConnected и первая
+    команда Init/Config попадёт в уже закрытое соединение. Поэтому рабочий
+    Connect всегда открывает отдельный свежий сеанс после проверки. }
   Result := fController.TestConnection(AErrorText);
+  fController.ForceDisconnect(False);
   if Result then
     fLastError := ''
   else

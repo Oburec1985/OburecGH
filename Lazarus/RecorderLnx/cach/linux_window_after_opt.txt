@@ -1,0 +1,119 @@
+top=10489237 title='' size=100x94
+top=10489121 title='' size=100x94
+top=10489162 title='' size=100x94
+top=10489262 title='' size=100x94
+top=10489212 title='' size=100x94
+top=10489187 title='' size=100x94
+top=10489146 title='' size=100x94
+top=10489260 title='' size=77x34
+top=10489259 title='' size=48x48
+top=10489263 title='' size=100x94
+top=10489235 title='' size=90x16
+top=10489234 title='' size=48x48
+top=10489238 title='' size=100x94
+top=10489210 title='' size=77x34
+top=10489209 title='' size=48x48
+top=10489213 title='' size=100x94
+top=10489185 title='' size=56x15
+top=10489184 title='' size=48x48
+top=10489188 title='' size=100x94
+top=10489160 title='' size=74x34
+top=10489159 title='' size=48x48
+top=10489163 title='' size=100x94
+top=10489144 title='' size=57x16
+top=10489143 title='' size=48x48
+top=10489147 title='' size=100x94
+top=10489119 title='' size=84x34
+top=10489118 title='' size=48x48
+top=10489122 title='' size=100x94
+top=4194305 title='' size=10x10
+top=8388612 title='Qt Selection Owner for kglobalaccel5' size=3x3
+top=10486617 title='' size=239x58
+top=10486635 title='' size=148x32
+top=10486640 title='' size=209x67
+top=10486652 title='' size=32x32
+top=10486700 title='' size=235x406
+top=10486776 title='' size=12x12
+top=10486814 title='' size=294x232
+top=10486891 title='' size=246x363
+top=10486955 title='' size=190x397
+top=10487058 title='' size=274x519
+top=10487127 title='' size=246x397
+top=10487164 title='' size=170x119
+top=10487177 title='' size=1x1
+top=10487459 title='' size=1x1
+top=12582916 title='Qt Selection Owner for org_kde_powerdevil' size=3x3
+top=14680068 title='Qt Selection Owner for kscreend' size=3x3
+top=10487469 title='' size=1x1
+top=16777220 title='Qt Selection Owner for fly-shutdown-scheduler-service' size=3x3
+top=20971524 title='Qt Selection Owner for fly-touchpadd' size=3x3
+top=25165828 title='Qt Selection Owner for kscreen_backend_launcher' size=3x3
+top=25165829 title='' size=1x1
+top=29360132 title='Qt Selection Owner for polkit-kde-authentication-agent-1' size=3x3
+top=31457284 title='Qt Selection Owner for fly-sound-applet' size=3x3
+top=33554436 title='Qt Selection Owner for kactivitymanagerd' size=3x3
+top=35651588 title='Qt Selection Owner for fly-reflex-service' size=3x3
+top=33554437 title='' size=1x1
+top=41943042 title='' size=1x1
+top=44040196 title='Qt Selection Owner for fly-notify-osd-service' size=3x3
+top=48234500 title='Qt Selection Owner for fly-notifications' size=3x3
+top=50331652 title='Qt Selection Owner for fly-start-menu' size=3x3
+top=29360134 title='' size=160x160
+top=29360136 title='' size=1x1
+top=31457288 title='fly-sound-applet' size=1x1
+top=10487501 title='' size=191x93
+top=35651592 title='fly-reflex-service' size=1x1
+top=50331653 title='' size=1x1
+top=31457294 title='' size=1x1
+top=48234504 title='fly-notifications' size=1x1
+top=23068673 title='' size=10x10
+top=46137345 title='vmware-user' size=10x10
+top=46137346 title='vmware-user' size=10x10
+top=46137349 title='vmware-user' size=10x10
+top=23068679 title='' size=1x1
+top=46137355 title='vmware-user' size=10x10
+top=50331660 title='Qt Clipboard Requestor Window' size=3x3
+top=10489120 title='' size=96x92
+top=10489145 title='' size=82x74
+top=10489161 title='' size=91x92
+top=10489186 title='' size=82x73
+top=10489211 title='' size=92x92
+top=10489236 title='' size=99x74
+top=10489261 title='' size=92x92
+top=44040200 title='fly-notify-osd-service' size=1x1
+top=44040198 title='' size=258x106
+top=37748737 title='lazarus' size=10x10
+top=37748739 title='lazarus' size=200x200
+top=37748761 title='lazarus' size=1x19
+top=37748790 title='' size=1x1
+top=37748803 title='lazarus' size=10x10
+top=10491221 title='' size=1x1
+top=37754678 title='lazarus' size=327x284
+top=37758154 title='lazarus' size=10x10
+top=46137352 title='vmware-user' size=62x62
+top=58720260 title='Qt Selection Owner for spectacle' size=3x3
+top=58720261 title='' size=1x1
+top=58720265 title='Spectacle' size=1x1
+top=58720278 title='Qt Clipboard Requestor Window' size=3x3
+top=48235090 title='' size=384x880
+top=62914561 title='' size=10x10
+top=67108868 title='Qt Selection Owner for kglobalaccel5' size=3x3
+top=10491142 title='' size=1918x880
+top=10494736 title='' size=1074x737
+top=10486649 title='' size=1918x48
+top=10489534 title='' size=139x22
+top=10492359 title='' size=97x22
+top=37813307 title='lazarus' size=422x592
+top=10486291 title='fly-wm' size=1x1
+top=54525956 title='picom' size=1x1
+top=56623105 title='RecorderLnx' size=10x10
+top=56623107 title='RecorderLnx' size=200x200
+top=56623129 title='RecorderLnx' size=1x19
+top=56623138 title='RecorderLnx' size=10x10
+top=56623165 title='' size=1x1
+top=10494801 title='' size=1x1
+candidate=56623107 title='RecorderLnx' area=40000
+candidate=56623138 title='RecorderLnx' area=100
+candidate=56623105 title='RecorderLnx' area=100
+candidate=56623129 title='RecorderLnx' area=19
+window='RecorderLnx' origin=301,22 size=1074x737

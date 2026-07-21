@@ -84,7 +84,7 @@ type
     function WriteModuleReg(ASlot, AReg, AValue: Word;
       out AErrorMessage: string): Boolean;
     function LoadMc201BiosIdma(ASlot: Word; const ABiosPath: string;
-      out AErrorMessage: string; AWaitAfterInit: Boolean = True): Boolean;
+      out AErrorMessage: string): Boolean;
     function CallCommandModuleIdmaNotActivated(ASlot, ACommand: Word;
       const AArgs: TMc201WordArray; ARetWordCount: Integer;
       out ARet: TMc201WordArray; out AErrorMessage: string): Boolean;
@@ -253,6 +253,9 @@ begin
 {$endif}
 
     AStream := TSocketStream.Create(lSocket);
+{$ifdef unix}
+    AStream.WriteFlags := AStream.WriteFlags or MSG_NOSIGNAL;
+{$endif}
     AStream.IOTimeout := Integer(fTimeoutMs);
     lSocket := -1;
     Result := True;
@@ -708,8 +711,7 @@ end;
   команды. Быстрый путь сначала проверяет уже загруженный BIOS по A5A5 и INIT;
   если проверка не прошла, выполняется полная загрузка .bio в память модуля. }
 function TMc201LegacyMdpClient.LoadMc201BiosIdma(ASlot: Word;
-  const ABiosPath: string; out AErrorMessage: string;
-  AWaitAfterInit: Boolean): Boolean;
+  const ABiosPath: string; out AErrorMessage: string): Boolean;
 var
   I: Integer;
   lBiosBytes: TBytes;
@@ -841,8 +843,7 @@ begin
   if not CallCommandModuleIdmaNotActivated(ASlot, CMc201ModuleCmdInit, nil, 2,
     lReply, AErrorMessage) then
     Exit;
-  if AWaitAfterInit then
-    Sleep(350);
+  Sleep(350);
   if ASlot <= 31 then
     Include(fLoadedBiosSlots, ASlot);
   Result := True;

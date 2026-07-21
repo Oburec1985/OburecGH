@@ -13,7 +13,7 @@ unit uRecorderMebiusTcpProtocol;
 interface
 
 uses
-  Classes, SysUtils, ssockets;
+  Classes, SysUtils, sockets, ssockets;
 
 type
   ERecorderMebiusProtocolError = class(Exception);
@@ -254,6 +254,9 @@ procedure TRecorderMebiusTcpClient.Connect;
 begin
   Disconnect;
   fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+{$ifdef unix}
+  fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
+{$endif}
   fSocket.IOTimeout := Integer(fTimeoutMs);
 end;
 

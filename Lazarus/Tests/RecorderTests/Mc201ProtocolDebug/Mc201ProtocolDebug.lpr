@@ -3,7 +3,9 @@ program Mc201ProtocolDebug;
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
+{$IFDEF MSWINDOWS}
 {$R resources/mc201_protocol_debug.rc}
+{$ENDIF}
 
 uses
   Interfaces, Forms, SysUtils, uMc201ProtocolDebugRunner, uMc032DebugForm;

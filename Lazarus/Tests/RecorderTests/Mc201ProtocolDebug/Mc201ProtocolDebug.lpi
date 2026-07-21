@@ -62,7 +62,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="src"/>
+      <OtherUnitFiles Value="src;../../../RecorderLnx;../../../RecorderLnx/Core"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

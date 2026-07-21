@@ -32,7 +32,7 @@ const
   CIconDeviceRoot = 23;
   CIconDeviceController = 24;
   CIconDeviceModule = 25;
-  CIconSaveConfig = 26;
+  CIconSaveConfig = 58;
   CIconAdd = 27;
   CIconRemove = 28;
   CIconEdit = 29;
@@ -44,11 +44,11 @@ const
   CIconLeft = 35;
   CIconRight = 36;
   CIconRunWp = 37;
-  CIconSaveConfigAs = 38;
+  CIconSaveConfigAs = 48;
   CIconTrends = 5;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 39;
+  CRecorderCommandImageCount = 59;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -250,13 +250,10 @@ end;
 function CreateSaveConfigBitmap(ASaveAs: Boolean): TBitmap;
 begin
   Result := TryLoadSaveBitmapFromRecorder(ASaveAs);
-  if Result <> nil then
-    Exit;
-  Result := TBitmap.Create;
-  Result.SetSize(42, 42);
-  Result.TransparentColor := clFuchsia;
-  Result.Transparent := True;
-  DrawSaveConfigGlyph(Result.Canvas, ASaveAs);
+  { В форме уже хранится эталонная кроссплатформенная картинка. Если внешний
+    каталог исходников оригинального Recorder недоступен (обычно в Linux),
+    нельзя заменять её нарисованным fallback: LCL по-разному обрабатывает его
+    маску прозрачности, из-за чего появляется розовый фон. }
 end;
 
 procedure EnsureImageListSize(AImages: TCustomImageList; AMinCount: Integer);
@@ -323,11 +320,14 @@ begin
 
   lBitmap := CreateSaveConfigBitmap(False);
   try
-    lMask := CreateMaskFromTransparentBitmap(lBitmap);
-    try
-      AImages.Replace(CIconSaveConfig, lBitmap, lMask);
-    finally
-      lMask.Free;
+    if lBitmap <> nil then
+    begin
+      lMask := CreateMaskFromTransparentBitmap(lBitmap);
+      try
+        AImages.Replace(CIconSaveConfig, lBitmap, lMask);
+      finally
+        lMask.Free;
+      end;
     end;
   finally
     lBitmap.Free;
@@ -335,11 +335,14 @@ begin
 
   lBitmap := CreateSaveConfigBitmap(True);
   try
-    lMask := CreateMaskFromTransparentBitmap(lBitmap);
-    try
-      AImages.Replace(CIconSaveConfigAs, lBitmap, lMask);
-    finally
-      lMask.Free;
+    if lBitmap <> nil then
+    begin
+      lMask := CreateMaskFromTransparentBitmap(lBitmap);
+      try
+        AImages.Replace(CIconSaveConfigAs, lBitmap, lMask);
+      finally
+        lMask.Free;
+      end;
     end;
   finally
     lBitmap.Free;
@@ -385,7 +388,9 @@ begin
     EnsureImageListSize(AImages, CRecorderCommandImageCount);
   end;
 
-  RefreshSaveConfigIcons(AImages);
+  { Save и Save As берутся непосредственно из встроенного ilCommandButtons
+    (индексы 58 и 48). Внешняя платформенная подмена здесь недопустима: иначе
+    Windows и Linux получают разные изображения и маски прозрачности. }
 end;
 
 end.

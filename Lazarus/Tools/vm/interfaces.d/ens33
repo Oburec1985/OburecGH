@@ -1,0 +1,5 @@
+# Сетевой интерфейс VMware NAT для Astra Linux VM.
+# Автоподъём обязателен: без него RecorderLnx не видит Ethernet-приборы.
+auto ens33
+allow-hotplug ens33
+iface ens33 inet dhcp

@@ -16,7 +16,7 @@ unit uRecorderMic140LegacyProtocol;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, ssockets,
+  Classes, SysUtils, SyncObjs, sockets, ssockets,
   uRecorderMic140v2WireTypes;
 
 type
@@ -206,6 +206,9 @@ begin
   try
     Disconnect;
     fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+{$ifdef unix}
+    fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
+{$endif}
     ApplyTimeoutMs(fTimeoutMs);
   finally
     fLock.Release;

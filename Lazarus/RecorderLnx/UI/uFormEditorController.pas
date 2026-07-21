@@ -62,7 +62,9 @@ interface
 uses
 
   Classes, SysUtils, Types, Math, Controls, ExtCtrls, Graphics, Buttons,
-  LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView, uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart, uOglChartColors;
+  LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView,
+  uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart,
+  uOglChartColors, uRecorderDebugLog;
 
 
 type
@@ -626,6 +628,11 @@ var
   lRebuildNeeded: Boolean;
   lCompPanelCount: Integer;
   lFound: Boolean;
+  lRenderStarted: QWord;
+  lStepStarted: QWord;
+  lCreateMs: QWord;
+  lConfigureMs: QWord;
+  lRefreshMs: QWord;
 
 
   procedure AddHandle(AOperation: TFormEditorOperation; ALeft, ATop: Integer);
@@ -651,6 +658,7 @@ var
 
 begin
   // Удаляем с fCanvas все элементы, кроме панелей страниц
+  lRenderStarted := GetTickCount64;
   I := 0;
   while I < fCanvas.ControlCount do
   begin
@@ -811,7 +819,9 @@ begin
       lControlClass := TRecorderVisualControlRegistry.GetControlClass(TRecorderVisualComponentClass(lComponent.ClassType));
       if lControlClass <> nil then
       begin
+        lStepStarted := GetTickCount64;
         lControl := lControlClass.Create(lPanel);
+        lCreateMs := GetTickCount64 - lStepStarted;
         lControl.Parent := lPanel;
         lControl.Align := alClient;
         lControl.Tag := I;
@@ -823,7 +833,9 @@ begin
 
         if Supports(lControl, IVForm, lVisualCtrl) then
         begin
+          lStepStarted := GetTickCount64;
           lVisualCtrl.Configure(lComponent, fTagRegistry);
+          lConfigureMs := GetTickCount64 - lStepStarted;
           lChart := lVisualCtrl.GetChartControl;
           if lChart <> nil then
           begin
@@ -834,7 +846,14 @@ begin
             lChart.MouseInputEnabled := not fEnabled;
           end;
 
+          lStepStarted := GetTickCount64;
           lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
+          lRefreshMs := GetTickCount64 - lStepStarted;
+          if (lCreateMs + lConfigureMs + lRefreshMs) >= 10 then
+            RecorderDebugLog(Format(
+              '[MNEMO-PERF] component=%s class=%s create=%dms configure=%dms refresh=%dms',
+              [lComponent.Name, lControlClass.ClassName, lCreateMs,
+               lConfigureMs, lRefreshMs]));
         end;
 
         lPanel.Hint := lComponent.Factory.TypeName + ': ' + lComponent.Name;
@@ -904,6 +923,11 @@ begin
   end;
 
 
+
+  RecorderDebugLog(Format(
+    '[MNEMO-PERF] render page=%s components=%d rebuild=%s total=%dms',
+    [lPage.Id, lPage.ComponentCount, BoolToStr(lRebuildNeeded, True),
+     GetTickCount64 - lRenderStarted]));
 
   if not fEnabled then
     Exit;

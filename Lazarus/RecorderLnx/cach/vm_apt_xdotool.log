@@ -1,0 +1,20 @@
+[sudo] пароль для user: Чтение списков пакетов…
+Построение дерева зависимостей…
+Чтение информации о состоянии…
+Следующие пакеты устанавливались автоматически и больше не требуются:
+  libbasicusageenvironment1 libgroupsock8 liblivemedia77 libllvm15
+Для их удаления используйте «sudo apt autoremove».
+Будут установлены следующие дополнительные пакеты:
+  libxdo3
+Следующие НОВЫЕ пакеты будут установлены:
+  libxdo3 xdotool
+Обновлено 0 пакетов, установлено 2 новых пакетов, для удаления отмечено 0 пакетов, и 1670 пакетов не обновлено.
+Необходимо скачать 84,4 kB архивов.
+После данной операции объём занятого дискового пространства возрастёт на 208 kB.
+Ошб:1 https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-extended 1.8_x86-64/main amd64 libxdo3 amd64 1:3.20160805.1-5+b5
+  404  Not Found [IP: 130.193.50.59 443]
+Ошб:2 https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-extended 1.8_x86-64/main amd64 xdotool amd64 1:3.20160805.1-5+b5
+  404  Not Found [IP: 130.193.50.59 443]
+E: Не удалось получить https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-extended/pool/main/x/xdotool/libxdo3_3.20160805.1-5%2bb5_amd64.deb  404  Not Found [IP: 130.193.50.59 443]
+E: Не удалось получить https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-extended/pool/main/x/xdotool/xdotool_3.20160805.1-5%2bb5_amd64.deb  404  Not Found [IP: 130.193.50.59 443]
+E: Не удалось получить некоторые архивы; возможно, нужно запустить apt-get update или попытаться повторить запуск с ключом --fix-missing?

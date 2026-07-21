@@ -540,6 +540,10 @@
         <Filename Value="uRecorderMeraPaths.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderResourcePaths.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -573,6 +577,15 @@
       </Item>
       <Item>
         <Name Value="ERecorderStateError"/>
+      </Item>
+      <Item>
+        <Name Value="EResNotFound"/>
+      </Item>
+      <Item>
+        <Name Value="RunError(5)"/>
+      </Item>
+      <Item>
+        <Name Value="EInOutError"/>
       </Item>
     </Exceptions>
   </Debugging>

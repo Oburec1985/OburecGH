@@ -89,7 +89,7 @@ const
   CMc201DefaultSampleRateHz = 57600;
   CMc201DefaultUpdateMs = 200;
   CMc201DefaultAcceptanceMs = 5000;
-  CMc201DefaultBiosPath = 'D:\works\windev-v3.9\examples\mebius.daq\BIOS\mc_201a.bio';
+  CMc201DefaultBiosPath = 'devices/mc201/mc_201a.bio';
   CMc201Cc81TimerScale = 1;
   CMc201Cc81TimerPeriod = 640;
 

@@ -25,6 +25,14 @@ function LoadDeviceBinaryResource(const AResourceName, AFallbackPath: string;
 
 implementation
 
+uses
+  uRecorderResourcePaths;
+
+const
+  CMc201BiosLogicalPath = 'devices/mc201/mc_201a.bio';
+  CMc201BiosDevelopmentPath =
+    'Device/MCbus/resources/devices/mc201/mc_201a.bio';
+
 function LoadBytesFromStream(AStream: TStream; out ABytes: TBytes): Boolean;
 begin
   SetLength(ABytes, AStream.Size);
@@ -37,6 +45,8 @@ function LoadDeviceBinaryResource(const AResourceName, AFallbackPath: string;
   out ABytes: TBytes; out ASource, AErrorMessage: string): Boolean;
 var
   lResourceError: string;
+  lFallbackPath: string;
+  lSearchedPaths: string;
   lResourceStream: TResourceStream;
   lFileStream: TFileStream;
 begin
@@ -45,6 +55,7 @@ begin
   ASource := '';
   AErrorMessage := '';
   lResourceError := '';
+  lFallbackPath := '';
 
   try
     lResourceStream := TResourceStream.Create(HInstance, AResourceName,
@@ -61,24 +72,19 @@ begin
       lResourceError := E.Message;
   end;
 
-  if AFallbackPath = '' then
+  if not RecorderResolveResourceFile(CMc201BiosLogicalPath, AFallbackPath,
+    CMc201BiosDevelopmentPath, lFallbackPath, lSearchedPaths) then
   begin
-    AErrorMessage := Format('Ресурс %s не найден: %s',
-      [AResourceName, lResourceError]);
-    Exit;
-  end;
-  if not FileExists(AFallbackPath) then
-  begin
-    AErrorMessage := Format('Ресурс %s не найден (%s), fallback-файл не найден: %s',
-      [AResourceName, lResourceError, AFallbackPath]);
+    AErrorMessage := Format('Ресурс %s не найден (%s). Проверены пути:%s%s',
+      [AResourceName, lResourceError, LineEnding, TrimRight(lSearchedPaths)]);
     Exit;
   end;
 
   try
-    lFileStream := TFileStream.Create(AFallbackPath, fmOpenRead or fmShareDenyNone);
+    lFileStream := TFileStream.Create(lFallbackPath, fmOpenRead or fmShareDenyNone);
     try
       Result := LoadBytesFromStream(lFileStream, ABytes);
-      ASource := 'file:' + AFallbackPath;
+      ASource := 'file:' + lFallbackPath;
     finally
       lFileStream.Free;
     end;
@@ -86,7 +92,7 @@ begin
     on E: Exception do
     begin
       AErrorMessage := Format('Не удалось прочитать fallback-файл %s: %s',
-        [AFallbackPath, E.Message]);
+        [lFallbackPath, E.Message]);
       Result := False;
     end;
   end;

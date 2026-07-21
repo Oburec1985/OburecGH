@@ -123,7 +123,9 @@ const
     controller-wide budget shared by every module/channel. }
   CMc201AdspFifoSamplesPerChannel = 256;
   CMc201DefaultAcceptanceMs = 5000;
-  CMc201DefaultBiosPath = 'D:\works\windev-v3.9\examples\mebius.daq\BIOS\mc_201a.bio';
+  { Логическое имя, а не путь машины разработчика. Фактический файл разрешает
+    uRecorderResourcePaths относительно exe, проекта или Mera Files. }
+  CMc201DefaultBiosPath = 'devices/mc201/mc_201a.bio';
   CMc201Cc81TimerScale = 1;
   CMc201Cc81TimerPeriod = 640;
 

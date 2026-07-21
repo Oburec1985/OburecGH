@@ -569,7 +569,7 @@ begin
     fProgramInfo[C].DividerCode := lFreqCode or (lFreqCode shl 4);
     Progress(Format('slot %d LOAD_MC201_BIOS', [lInfo.Slot]));
     if not fClient.LoadMc201BiosIdma(lInfo.Slot, CMc201DefaultBiosPath,
-      AErrorMessage, False) then Exit;
+      AErrorMessage) then Exit;
     if not fClient.GetInternalMemHeap(CMc201DescModuleWords, lPage, lAddr,
       AErrorMessage) then Exit;
     SetLength(lArgs, 6);
@@ -583,10 +583,6 @@ begin
       'CONFIG_MODULE_IDMA') then Exit;
     Inc(C);
   end;
-  { MDP-команды одному контроллеру нельзя выполнять параллельно, но ожидание
-    завершения INIT у разных MC-201 можно перекрыть передачей BIOS следующему
-    слоту. После последнего слота оставляем одну общую аппаратную выдержку. }
-  Sleep(350);
   C := 0;
   for I := 0 to High(fLastModules) do
   begin

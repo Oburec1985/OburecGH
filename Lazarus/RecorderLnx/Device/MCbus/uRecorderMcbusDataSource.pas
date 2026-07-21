@@ -265,6 +265,7 @@ const
   CConnectRetryMs = 1000;
 var
   I, lChannel, lSlot: Integer;
+  lConnected: Boolean;
   lTestError: string;
   lTag: TRecorderTag;
   lNative: TRecorderMcbusDevice;
@@ -303,28 +304,55 @@ begin
   { Контроллер после предыдущего TCP-сеанса не всегда принимает первое SYN.
     Повторяем соединение так же, как проверенный Mc201ProtocolDebug. Важно
     повторять только Connect: программирование модуля выполняется один раз. }
+  lConnected := False;
   for I := 1 to CConnectAttempts do
   begin
     try
       RecorderDebugLog(Format('[MCBUS] connect attempt %d/%d',
         [I, CConnectAttempts]));
       fDevice.Connect;
+      lConnected := True;
       Break;
     except
       on E: Exception do
       begin
         RecorderDebugLog(Format('[MCBUS] connect attempt %d failed: %s',
           [I, E.Message]));
-        if I = CConnectAttempts then
-          raise;
-        Sleep(CConnectRetryMs);
+        if I < CConnectAttempts then
+          Sleep(CConnectRetryMs)
+        else
+          lTestError := E.Message;
       end;
     end;
   end;
+  if not lConnected then
+  begin
+    RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+    RecorderDebugLog('[MCBUS] connect failed, source skipped: ' + lTestError);
+    Exit;
+  end;
   { Lifecycle задаётся явно: Init выполняется один раз после подключения,
     Configure может безопасно повторяться при Apply без перезагрузки BIOS. }
-  fDevice.InitializeDevice;
-  fDevice.ConfigureDevice;
+  try
+    fDevice.InitializeDevice;
+    fDevice.ConfigureDevice;
+  except
+    on E: Exception do
+    begin
+      lTestError := E.Message;
+      RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+      RecorderDebugLog('[MCBUS] prepare failed, source skipped: ' + lTestError);
+      try
+        fDevice.Disconnect;
+      except
+        on EDisconnect: Exception do
+          RecorderDebugLog('[MCBUS] disconnect after prepare failure: ' +
+            EDisconnect.Message);
+      end;
+      Exit;
+    end;
+  end;
+  RecorderHardwareClearSourceOffline(SourceId);
   BuildChannelMap;
   SetLength(fTimes, Round(fPollFrequencyHz * UpdateTimeMs / 1000.0));
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);

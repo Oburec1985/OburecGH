@@ -13,7 +13,7 @@ unit uMic185MebiusTcpProtocol;
 interface
 
 uses
-  Classes, SysUtils, ssockets;
+  Classes, SysUtils, sockets, ssockets;
 
 type
   ERecorderMebiusProtocolError = class(Exception);
@@ -479,6 +479,9 @@ begin
   end;
   try
     fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+{$ifdef unix}
+    fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
+{$endif}
     ApplySocketTimeout;
     RecorderMic185RuntimeRegisterTcpClient(Self, fHost, fPort);
     Result := True;

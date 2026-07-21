@@ -1724,3 +1724,70 @@ MC-032 исчезал при `OK`, потому что `TRecorderSettingsSourceP
 - Формирование/разбор SourceId MC-032 перенесены из UI-диалога в
   `uRecorderMcbusDataSource`, в диалоге оставлены совместимые обёртки.
 - Полная сборка `RecorderLnx.lpi` завершилась успешно.
+
+# 2026-07-21 — RecorderLnx собран в Astra Linux VM
+
+- Виртуальная машина запущена через VMware Tools (`vmrun`), рабочий профиль
+  Lazarus: `/home/user/.lazarus_work`.
+- Установленная связка FPC/fpcres не принимает Windows RC-вход. Включение
+  `mcbus.rc` ограничено `MSWINDOWS`; Linux загружает BIOS MC-201 файловым
+  fallback относительно `lib/x86_64-linux/RecorderLnx`.
+- Сборка Lazarus завершилась с exit code 0. Результат:
+  `RecorderLnx/lib/x86_64-linux/RecorderLnx`, ELF x86-64, 50 704 112 байт;
+  `ldd` не обнаружил отсутствующих библиотек.
+
+# 2026-07-21 — исправлен SIGPIPE при Linux-запуске
+
+- GDB подтвердил `SIGPIPE` в `fpSend` главного потока при стартовой проверке
+  закрытого TCP-сокета; FPC показывал его как `External code 13`.
+- В UNIX-старте установлен `fpSignal(SIGPIPE, SignalHandler(SIG_IGN))`, поэтому
+  драйвер получает обычный `EPIPE` и может пометить только этот источник offline.
+- Реальный запуск в VM с `--preview-seconds=5` прошёл `Stop -> Preview -> Stop`
+  без модального исключения и завершился с кодом 0.
+- MC-201 поток не проверен: гостевая ОС отвечает `Network is unreachable` для
+  `192.169.12.87` и TCP/4000. Это ограничение маршрутизации VM.
+- Для запуска из Lazarus IDE добавлен `MSG_NOSIGNAL` во все TCP-клиенты
+  MCbus/MIC-140/MIC-140v2/MIC-185. Строгий GDB-тест с остановкой на SIGPIPE
+  прошёл без единого сигнала и завершился нормально.
+# 2026-07-21 — восстановлена сеть Astra VM и поток MC-201
+
+## 2026-07-21 — ускорено первое открытие мнемосхем в Linux
+
+- Добавлены тайминги `[MNEMO-PERF]` для переключения вкладки, построения страницы
+  и дорогих визуальных компонентов.
+- Причина была не в GLX/шейдерах: `MakeCurrent=0–1 ms`, initialize renderer
+  `1–4 ms`; первый кадр тратил `1,2–1,8 s` на атласы шрифтов.
+- `cOglFont.BuildTextureAtlas` переведён с `Canvas.Pixels` на нормализованный
+  `TLazIntfImage`; удалены безусловные `font_atlas_*.bmp` и `font_debug.log`.
+- После исправления первый кадр занимает `12–34 ms`; визуальная проверка Linux
+  подтвердила корректные подписи, сетки, линии и легенды.
+- Подробности: `errors/2026-07-21-linux-mnemonic-first-open-slow.md`.
+
+## 2026-07-21 — одинаковые иконки сохранения в Windows и Linux
+
+- Linux больше не заменяет встроенные иконки сохранения нарисованным fallback
+  при отсутствии абсолютного Windows-пути к исходникам Recorder.
+- `RefreshSaveConfigIcons` сохраняет эталонные изображения из LFM и заменяет их
+  только после успешной загрузки внешнего BMP.
+- Полные сборки Windows и Linux завершились с exit code 0.
+- Подробности: `errors/2026-07-21-linux-save-icons-pink-background.md`.
+
+## Кроссплатформенные ресурсы BIOS и калибровок
+
+- Удалён абсолютный Windows-путь к `mc_201a.bio`.
+- Добавлен `Core/uRecorderResourcePaths.pas`: exe/resources, переменная
+  `RECORDERLNX_RESOURCES`, настроенный `Mera Files/Resources`, IDE build-tree.
+- После сборки BIOS копируется рядом с exe в `resources/devices/mc201`.
+- Калибровки MIC-140/MIC-185/MC-201 и SDB подтверждённо используют настроенный
+  `RecorderMeraFilesPath` и `Calibr` через `PathDelim`.
+- Проверки: Windows resource 22040 байт; Linux из `/tmp` file resource 22040
+  байт; полная Linux-сборка RecorderLnx успешна.
+
+- Причина отсутствия связи: `ens33` был `DOWN`, без IP и маршрута.
+- DHCP поднял `192.168.112.128/24`; MC-032 `192.169.12.87:4000` доступен.
+- Автоподъём сохранён в `/etc/network/interfaces.d/ens33`, эталон добавлен в
+  `Lazarus/Tools/vm/interfaces.d/ens33`.
+- `TestLink` MCbus теперь закрывает probe-сессию; рабочий Connect всегда свежий.
+- Ошибки Connect/Init/Config переводят источник offline без исключения в UI.
+- Linux `lazbuild -B` успешен. Preview 5 с: 16 каналов, 11520 отсчётов/блок,
+  период около 200 мс, штатный Stop.

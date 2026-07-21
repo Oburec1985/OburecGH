@@ -132,6 +132,15 @@ D:\works\OburecGH\Lazarus\Tools\install_lzrobrpack_linux.sh
 - `captureScreen` и другие guest operations тоже требуют гостевого логина.
 - В Linux файловая система чувствительна к регистру. В ходе установки была исправлена ошибка `uBaseObjLaz`: uses/UnitName должны совпадать с именем файла `uBaseObjLaz.pas`.
 - Если `lazbuild` сообщает, что системные каталоги `/usr/lib/lazarus/...` не writable, это нормально: Lazarus складывает пользовательские сборочные артефакты в `/home/user/.lazarus/lib/...` и пересобирает IDE в `/home/user/.lazarus/bin/lazarus`.
+- Контрольная сборка проекта выполняется командой
+  `lazbuild --pcp=/home/user/.lazarus_work -B RecorderLnx.lpi` из каталога
+  `/mnt/win_share/OburecGH/Lazarus/RecorderLnx`.
+- Маркер правила: `RLNX_LINUX_FIRMWARE_RESOURCE_FALLBACK_2026_07_21`.
+  Windows RC-ресурсы с firmware нельзя делать обязательными для Linux-сборки:
+  под Windows BIOS MC-201 встраивается из `mcbus.rc`, под Linux загрузчик обязан
+  иметь проверяемый файловый fallback относительно каталога приложения.
+  Проверка: полная Linux-сборка завершается с кодом 0, полученный файл является
+  ELF x86-64, а путь fallback BIOS существует от `lib/x86_64-linux/RecorderLnx`.
 
 ## Relationships
 
@@ -141,3 +150,22 @@ D:\works\OburecGH\Lazarus\Tools\install_lzrobrpack_linux.sh
 
 Bat для восстановления докинга в Linux
 D:\works\OburecGH\Lazarus\Tools\Restore_Lazarus_Docking_VM.bat - запускать из windows
+
+## Сеть VM для Ethernet-приборов
+
+VM использует `ens33` через VMware NAT (`VMnet8`). Постоянная конфигурация
+находится в `/etc/network/interfaces.d/ens33`, эталон хранится в
+`Lazarus/Tools/vm/interfaces.d/ens33`. Интерфейс обязан автоматически получать
+DHCP-адрес; состояние `ens33 DOWN` означает, что RecorderLnx не увидит ни один
+сетевой прибор.
+
+Проверка перед аппаратным тестом:
+
+```bash
+ip -brief address show ens33
+ip route get 192.169.12.87
+timeout 3 bash -c '</dev/tcp/192.169.12.87/4000'
+```
+
+Проверенный профиль: `ens33=192.168.112.128/24`, маршрут к MC-032 идёт через
+`192.168.112.2`; `192.169.12.87:4000` доступен из гостя.
