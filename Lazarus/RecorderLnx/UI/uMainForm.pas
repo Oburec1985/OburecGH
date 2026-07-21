@@ -45,14 +45,10 @@ uses
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
-  uRecorderSpectrumRuntime,   uRecorderMic140DataSource, uRecorderMic140Utils,
-  uRecorderMic185DataSource, uRecorderMic185SettingsDialog,
-  uRecorderMcbusDataSource, uRecorderMc032SettingsDialog,
-  uRecorderMc201SlotSettingsDialog, uRecorderConfiguredDataSources,
-  uRecorderMic185SettingsSelfTest,
-  uRecorderHardwareLiveDevices,
+  uRecorderSpectrumRuntime,
+  uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderHardwareTree,
-  uRecorderMeraPaths, uRecorderTagBalance, uRecorderMic140SettingsDialog;
+  uRecorderMeraPaths;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -300,7 +296,7 @@ type
     { Открывает диалог настройки выбранных тегов }
     procedure OpenSelectedTagSettings;
     { Создает отладочный источник MemTag и подключает его к общему registry. }
-    procedure EnsureDemoDataSources;
+    procedure EnsureRuntimeDataSources;
     { Расширяет кольцевые буферы тегов под отображаемое окно истории. }
     procedure EnsureTagSignalBufferCapacities;
     { Запускает worker-thread источников данных для режимов View/Record. }
@@ -325,11 +321,11 @@ type
     { CLI automation: start preview, stop and quit after N seconds. }
     procedure AutoPreviewTimer(Sender: TObject);
     procedure ParseAutoPreviewCommandLine;
-    procedure ParseMic185SelfTestCommandLine;
-    function Mic185SelfTestDataSourcesRunning: Boolean;
-    procedure Mic185SelfTestStartPreview;
-    procedure Mic185SelfTestLog(const AMessage: string);
-    procedure Mic185SelfTestFinished(Sender: TObject);
+    procedure ScheduleCommandLineDeviceTests;
+    function DeviceTestDataSourcesRunning: Boolean;
+    procedure DeviceTestStartPreview;
+    procedure DeviceTestLog(const AMessage: string);
+    procedure DeviceTestFinished(Sender: TObject);
     { Обработчик события ядра: фиксирует переход состояния в журнале и на форме. }
     procedure StateMachineStateChanged(ASender: TObject;
       AOldState, ANewState: TRecorderState);
@@ -422,9 +418,9 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
-  { Источники создаются сразу при загрузке проекта. Крупные буферы и подготовка
-    MCbus не должны откладываться до первого нажатия Preview. }
-  EnsureDemoDataSources;
+  { Источники создаются сразу при загрузке проекта; подготовка оборудования не
+    должна откладываться до первого нажатия Preview. }
+  EnsureRuntimeDataSources;
   PrepareRuntimeForConfiguration;
   { rstInit — только начальная отметка автомата состояний. Явная нотификация
     отправляется после загрузки проекта, создания форм и источников, а также
@@ -438,7 +434,7 @@ begin
   RenderActivePage;
   AddLog('RecorderLnx started.');
   ParseAutoPreviewCommandLine;
-  ParseMic185SelfTestCommandLine;
+  ScheduleCommandLineDeviceTests;
 
 end;
 
@@ -502,41 +498,31 @@ begin
   Application.Terminate;
 end;
 
-procedure TMainForm.ParseMic185SelfTestCommandLine;
-var
-  I: Integer;
+procedure TMainForm.ScheduleCommandLineDeviceTests;
 begin
-  for I := 1 to ParamCount do
-  begin
-    if SameText(ParamStr(I), '--selftest-mic185-settings') then
-    begin
-      ScheduleRecorderMic185SettingsSelfTest(Self, fRecorder,
-        ilCommandButtons, ilTagDialogButtons, @Mic185SelfTestStartPreview,
-        @Mic185SelfTestDataSourcesRunning, @Mic185SelfTestLog,
-        @Mic185SelfTestFinished);
-      Break;
-    end;
-  end;
+  RecorderScheduleCommandLineDeviceTests(Self, fRecorder, ilCommandButtons,
+    ilTagDialogButtons, @DeviceTestStartPreview, @DeviceTestDataSourcesRunning,
+    @DeviceTestLog, @DeviceTestFinished);
 end;
 
-function TMainForm.Mic185SelfTestDataSourcesRunning: Boolean;
+function TMainForm.DeviceTestDataSourcesRunning: Boolean;
 begin
   Result := (fRecorder <> nil) and fRecorder.DataSources.Running;
 end;
 
-procedure TMainForm.Mic185SelfTestStartPreview;
+procedure TMainForm.DeviceTestStartPreview;
 begin
   btnPreviewClick(nil);
 end;
 
-procedure TMainForm.Mic185SelfTestLog(const AMessage: string);
+procedure TMainForm.DeviceTestLog(const AMessage: string);
 begin
   AddLog(AMessage);
 end;
 
-procedure TMainForm.Mic185SelfTestFinished(Sender: TObject);
+procedure TMainForm.DeviceTestFinished(Sender: TObject);
 begin
-  ReleaseRecorderMic185SelfTestHost(Sender);
+  RecorderReleaseDeviceTest(Sender);
   Application.Terminate;
 end;
 
@@ -851,7 +837,7 @@ begin
       UpdateActiveSourceIds;
       fRecorder.DataSources.Clear;
       fDataSourcesConfigured := False;
-      EnsureDemoDataSources;
+      EnsureRuntimeDataSources;
       PrepareRuntimeForConfiguration;
       AddLog('Project settings applied.');
     end
@@ -1953,7 +1939,7 @@ begin
   LoadProjectPackage;
   fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
-  EnsureDemoDataSources;
+  EnsureRuntimeDataSources;
   PrepareRuntimeForConfiguration;
   RebuildTagList(edTagSearch.Text);
   RenderActivePage;
@@ -2209,7 +2195,7 @@ begin
       fDataSourcesConfigured := False;
 
       { Память источников перевыделяется при изменении конфигурации тегов. }
-      EnsureDemoDataSources;
+      EnsureRuntimeDataSources;
       PrepareRuntimeForConfiguration;
 
       if lWasRunning then
@@ -2230,341 +2216,24 @@ begin
 end;
 
 procedure TMainForm.TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
-var
-  I, lSlot: Integer;
-  lConfig: TRecorderConfiguredDataSource;
-  lConfigs: TStringList;
-  lDialog: TOpenDialog;
-  lHost: string;
-  lNewSourceId: string;
-  lPath: string;
-  lPort: Word;
-  lLines: TStringList;
-  lCaption: string;
-const
-  CMeraSourcePrefix = 'Mera file: ';
 begin
-  if ATag = nil then
-    Exit;
-  if TryParseRecorderMc032SourceId(ATag.SourceId, lHost, lPort) then
-  begin
-    lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
-      ATag.SourceId);
-    if lConfig = nil then
-      Exit;
-    lLines := TStringList.Create;
-    try
-      lLines.StrictDelimiter := True;
-      lLines.Delimiter := '-';
-      lLines.DelimitedText := ATag.Address;
-      if (lLines.Count < 2) or
-        not TryStrToInt(lLines[lLines.Count - 2], lSlot) then
-        Exit;
-      lLines.Text := lConfig.SpecificConfigText;
-      lCaption := '';
-      for I := 0 to lLines.Count - 1 do
-        if Pos('Слот ' + IntToStr(lSlot) + ':', Trim(lLines[I])) = 1 then
-        begin
-          lCaption := Trim(lLines[I]);
-          Break;
-        end;
-      if (lConfig <> nil) and (lCaption <> '') and
-        ShowRecorderMc201SlotSettingsDialog(Self, lCaption,
-          lConfig.SpecificConfigText, ATag.SourceId,
-          fRecorder.DataSources, fRecorder.TagRegistry) then
-        AddLog(Format('MC-201 slot %d settings updated.', [lSlot]));
-    finally
-      lLines.Free;
-    end;
-    Exit;
-  end;
-  if TryParseRecorderMic140SourceId(ATag.SourceId, lHost, lPort) then
-  begin
-    lConfigs := TStringList.Create;
-    try
-      lConfigs.OwnsObjects := True;
-      if ApplyRecorderMic140SourceDialog(Self, fRecorder.TagRegistry, lConfigs, ATag.SourceId,
-        lNewSourceId) then
-        AddLog('MIC-140 hardware settings updated.');
-    finally
-      lConfigs.Free;
-    end;
-    Exit;
-  end;
-  if TryParseRecorderMic185SourceId(ATag.SourceId, lHost, lPort) then
-  begin
-    if ApplyRecorderMic185SourceDialog(Self, fRecorder.TagRegistry, ATag.SourceId,
-      lNewSourceId) then
-      AddLog('MIC183/185 hardware settings updated.');
-    Exit;
-  end;
-  if Pos(CMeraSourcePrefix, ATag.SourceId) = 1 then
-  begin
-    lPath := Trim(Copy(ATag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
-    lDialog := TOpenDialog.Create(Self);
-    try
-      lDialog.Title := 'Файл Mera';
-      lDialog.Filter := 'Mera files (*.mera)|*.mera|All files (*.*)|*.*';
-      lDialog.FileName := lPath;
-      if lDialog.Execute then
-        ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons, ilTagDialogButtons);
-    finally
-      lDialog.Free;
-    end;
-  end;
+  RecorderEditTagDevice(Self, fRecorder, ATag, ilCommandButtons,
+    ilTagDialogButtons, @DeviceTestLog);
 end;
 
 procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
   ATags: TList);
 begin
-  RecorderTryZeroBalanceTags(Self, ARegistry, ATags, fRecorder.DataSources);
+  RecorderBalanceTagDevices(Self, fRecorder, ARegistry, ATags);
 end;
 
 { Инициализация демонстрационных отладочных источников данных (MemTag и Mera-файлы) }
-procedure TMainForm.EnsureDemoDataSources;
-var
-  I: Integer;
-  lChannelCount: Integer;
-  lChannelNumber: Integer;
-  lConfigured: TRecorderConfiguredDataSource;
-  lFileIndex: Integer;
-  lFileName: string;
-  lFiles: TStringList;
-  lMicHost: string;
-  lMicPort: Word;
-  lMicOutputMode: TRecorderMic140OutputMode;
-  lMicSources: TStringList;
-  lMic185Host: string;
-  lMic185Port: Word;
-  lMic185Sources: TStringList;
-  lMcbusHost: string;
-  lMcbusPort: Word;
-  lMcbusSources: TStringList;
-  lPollFrequencyHz: Double;
-  lSource: IRecorderDataSource;
-  lSpecificConfigText: string;
-  lTag: TRecorderTag;
-  lTagNames: TStringList;
-  lDataUpdateMs: Cardinal;
-const
-  CMeraSourcePrefix = 'Mera file: ';
+procedure TMainForm.EnsureRuntimeDataSources;
 begin
   if fDataSourcesConfigured then
     Exit;
-
-  fRecorder.DataSources.Clear;
-
-  lDataUpdateMs := fRecorder.RunSettings.DataUpdateMs;
-  if lDataUpdateMs = 0 then
-    lDataUpdateMs := 300;
-
-  lSource := TRecorderDiagnosticsDataSource.Create('debug.diagnostics', lDataUpdateMs,
-    'MemTag', 'CpuUsage');
-  fRecorder.DataSources.AddSource(lSource);
-
-  lFiles := TStringList.Create;
-  lMicSources := TStringList.Create;
-  lMic185Sources := TStringList.Create;
-  lMcbusSources := TStringList.Create;
-  try
-    lFiles.CaseSensitive := False;
-    lFiles.Sorted := False;
-    lMicSources.CaseSensitive := False;
-    lMicSources.Sorted := False;
-    lMic185Sources.CaseSensitive := False;
-    lMic185Sources.Sorted := False;
-    lMcbusSources.CaseSensitive := False;
-    lMcbusSources.Sorted := False;
-    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-    begin
-      lTag := fRecorder.TagRegistry.Tags[I];
-      { Runtime-источники строятся по сохранённой конфигурации тегов, а не по
-        UI-признаку видимости. ActiveSourceIds заполняется только после создания
-        источников; фильтрация здесь образует цикл и полностью удаляет MCbus. }
-      if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
-      begin
-        lFileName := Trim(Copy(lTag.SourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
-        if lFileName = '' then
-          Continue;
-
-        lFileIndex := lFiles.IndexOf(lFileName);
-        if lFileIndex < 0 then
-        begin
-          lTagNames := TStringList.Create;
-          lTagNames.CaseSensitive := False;
-          lFileIndex := lFiles.AddObject(lFileName, lTagNames);
-        end
-        else
-          lTagNames := TStringList(lFiles.Objects[lFileIndex]);
-
-        if lTagNames.IndexOf(lTag.Address) < 0 then
-          lTagNames.Add(lTag.Address);
-      end
-      else if TryParseRecorderMic140SourceId(lTag.SourceId, lMicHost, lMicPort) then
-      begin
-        lFileIndex := lMicSources.IndexOf(lTag.SourceId);
-        if lFileIndex < 0 then
-        begin
-          lTagNames := TStringList.Create;
-          lTagNames.CaseSensitive := False;
-          lFileIndex := lMicSources.AddObject(lTag.SourceId, lTagNames);
-        end
-        else
-          lTagNames := TStringList(lMicSources.Objects[lFileIndex]);
-
-        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
-          lTagNames.Add(lTag.Address);
-        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
-          lTagNames.Add(lTag.Name);
-      end
-      else if TryParseRecorderMic185SourceId(lTag.SourceId, lMic185Host, lMic185Port) then
-      begin
-        lFileIndex := lMic185Sources.IndexOf(lTag.SourceId);
-        if lFileIndex < 0 then
-        begin
-          lTagNames := TStringList.Create;
-          lTagNames.CaseSensitive := False;
-          lFileIndex := lMic185Sources.AddObject(lTag.SourceId, lTagNames);
-        end
-        else
-          lTagNames := TStringList(lMic185Sources.Objects[lFileIndex]);
-
-        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
-          lTagNames.Add(lTag.Address);
-        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
-          lTagNames.Add(lTag.Name);
-      end
-      { MCbus должен участвовать в той же фабрике runtime-источников, что MERA,
-        MIC-140 и MIC-185. Наличие контроллера только в аппаратном дереве не
-        запускает Preview: здесь выбранные теги группируются по SourceId, после
-        чего ниже создаётся один TRecorderMcbusDataSource на один MC-032. }
-      else if TryParseRecorderMc032SourceId(lTag.SourceId, lMcbusHost,
-        lMcbusPort) then
-      begin
-        lFileIndex := lMcbusSources.IndexOf(lTag.SourceId);
-        if lFileIndex < 0 then
-        begin
-          lTagNames := TStringList.Create;
-          lTagNames.CaseSensitive := False;
-          lFileIndex := lMcbusSources.AddObject(lTag.SourceId, lTagNames);
-        end
-        else
-          lTagNames := TStringList(lMcbusSources.Objects[lFileIndex]);
-        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
-          lTagNames.Add(lTag.Name);
-      end;
-    end;
-
-    for I := 0 to lFiles.Count - 1 do
-    begin
-      lTagNames := TStringList(lFiles.Objects[I]);
-      lSource := TRecorderMeraFileDataSource.Create('mera.file.' + IntToStr(I + 1),
-        lFiles[I], lDataUpdateMs, lTagNames, 0);
-      fRecorder.DataSources.AddSource(lSource);
-      AddLog(Format('MERA playback source configured: %s (%d channels).',
-        [ExtractFileName(lFiles[I]), lTagNames.Count]));
-    end;
-
-    for I := 0 to lMicSources.Count - 1 do
-    begin
-      if not TryParseRecorderMic140SourceId(lMicSources[I], lMicHost, lMicPort) then
-        Continue;
-      lTagNames := TStringList(lMicSources.Objects[I]);
-      lChannelCount := MIC140DefaultChannelCount;
-      lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
-      lMicOutputMode := momMillivolts;
-      for lFileIndex := 0 to lTagNames.Count - 1 do
-        if TryStrToInt(lTagNames[lFileIndex], lChannelNumber) and
-          (lChannelNumber > lChannelCount) then
-          lChannelCount := MIC140MaxChannelCount;
-      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
-      begin
-        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
-        if SameText(lTag.SourceId, lMicSources[I]) and (lTag.PollFrequencyHz > 0) then
-        begin
-          lPollFrequencyHz := lTag.PollFrequencyHz;
-          if Trim(lTag.SourceValueMode) <> '' then
-            lMicOutputMode := RecorderMic140ConfigNameToOutputMode(lTag.SourceValueMode);
-          Break;
-        end;
-      end;
-      lSource := TRecorderMic140DataSource.Create(lMicSources[I], lMicHost, lMicPort,
-        lChannelCount, lPollFrequencyHz, lDataUpdateMs, lTagNames, lMicOutputMode);
-      fRecorder.DataSources.AddSource(lSource);
-      AddLog(Format('MIC-140 source configured: %s:%d (%d channels).',
-        [lMicHost, lMicPort, lChannelCount]));
-    end;
-
-    for I := 0 to lMic185Sources.Count - 1 do
-    begin
-      if not TryParseRecorderMic185SourceId(lMic185Sources[I], lMic185Host,
-        lMic185Port) then
-        Continue;
-      lTagNames := TStringList(lMic185Sources.Objects[I]);
-      lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
-      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
-      begin
-        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
-        if SameText(lTag.SourceId, lMic185Sources[I]) and
-          (lTag.PollFrequencyHz > 0) then
-        begin
-          lPollFrequencyHz := lTag.PollFrequencyHz;
-          Break;
-        end;
-      end;
-      lSource := TRecorderMic185DataSource.Create(lMic185Sources[I],
-        lMic185Host, lMic185Port, lPollFrequencyHz, lDataUpdateMs, lTagNames);
-      fRecorder.DataSources.AddSource(lSource);
-      AddLog(Format('MIC183/185 source configured: %s:%d (%d channels).',
-        [lMic185Host, lMic185Port, lTagNames.Count]));
-    end;
-
-    { Production-путь MC-032/MC-201. Частота берётся из тегов, период блока —
-      из общей настройки Recorder. Источник сам выполняет сетевой жизненный
-      цикл в рабочем потоке и публикует полные блоки по 11 520 отсчётов при
-      57,6 кГц и периоде 200 мс. }
-    for I := 0 to lMcbusSources.Count - 1 do
-    begin
-      if not TryParseRecorderMc032SourceId(lMcbusSources[I], lMcbusHost,
-        lMcbusPort) then Continue;
-      lTagNames := TStringList(lMcbusSources.Objects[I]);
-      lSpecificConfigText := '';
-      lConfigured := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
-        lMcbusSources[I]);
-      if lConfigured <> nil then
-        lSpecificConfigText := lConfigured.SpecificConfigText;
-      lPollFrequencyHz := 57600;
-      for lFileIndex := 0 to fRecorder.TagRegistry.TagCount - 1 do
-      begin
-        lTag := fRecorder.TagRegistry.Tags[lFileIndex];
-        if SameText(lTag.SourceId, lMcbusSources[I]) and
-          (lTag.PollFrequencyHz > 0) then
-        begin
-          lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
-        end;
-      end;
-      lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lMcbusHost,
-        lMcbusPort, lPollFrequencyHz, lDataUpdateMs, lTagNames,
-        lSpecificConfigText);
-      fRecorder.DataSources.AddSource(lSource);
-      AddLog(Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
-        [lMcbusHost, lMcbusPort, lTagNames.Count]));
-    end;
-  finally
-    for I := 0 to lFiles.Count - 1 do
-      lFiles.Objects[I].Free;
-    lFiles.Free;
-    for I := 0 to lMicSources.Count - 1 do
-      lMicSources.Objects[I].Free;
-    lMicSources.Free;
-    for I := 0 to lMic185Sources.Count - 1 do
-      lMic185Sources.Objects[I].Free;
-    lMic185Sources.Free;
-    for I := 0 to lMcbusSources.Count - 1 do
-      lMcbusSources.Objects[I].Free;
-    lMcbusSources.Free;
-  end;
-  fRecorder.DataSources.ConfigureTagsAll(fRecorder.TagRegistry);
+  RecorderBuildRuntimeSources(fRecorder, fRecorder.RunSettings.DataUpdateMs,
+    @DeviceTestLog);
   EnsureTagSignalBufferCapacities;
   fDataSourcesConfigured := True;
   AddLog('Diagnostics data source configured: MemTag, CpuUsage.');
@@ -2611,7 +2280,7 @@ begin
 end;
 procedure TMainForm.StartDataSources;
 begin
-  EnsureDemoDataSources;
+  EnsureRuntimeDataSources;
   if not fRecorder.DataSources.Running then
   begin
     fRecorder.DataSources.StartAll;

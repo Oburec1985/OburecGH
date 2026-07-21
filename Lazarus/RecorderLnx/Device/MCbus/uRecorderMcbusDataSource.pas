@@ -3,7 +3,7 @@ unit uRecorderMcbusDataSource;
 {
   Рабочий источник данных Preview для MC-032/MC-201.
 
-  Создаётся фабрикой главной формы для выбранных MCbus-тегов. В рабочем потоке
+  Создаётся фабрикой runtime-источников для выбранных MCbus-тегов. В рабочем потоке
   выполняет Connect/ProgramDevice/Start/ReadBlock/Stop, сопоставляет нативный
   адрес slot-channel с адресом тега <индекс устройства>-<слот>-<канал> и
   публикует готовые блоки в TRecorderTagRegistry. Сетевой обмен из UI запрещён.
@@ -59,11 +59,51 @@ type
     procedure SetZeroBalanceTrace(AHandler: TRecorderZeroBalanceTraceEvent);
   end;
 
+function RecorderMc032SourceId(const AHost: string; APort: Word): string;
+function TryParseRecorderMc032SourceId(const ASourceId: string;
+  out AHost: string; out APort: Word): Boolean;
+
 implementation
 
 uses
+  StrUtils, uMc201ProtocolTypes,
   uRecorderMcbusDevice, uRecorderDebugLog, uRecorderHardwareLiveDevices,
   uRecorderConfiguredDataSources, uRecorderMc201Calibration;
+
+const
+  CMc032SourcePrefix = 'MC-032: ';
+
+function RecorderMc032SourceId(const AHost: string; APort: Word): string;
+begin
+  Result := CMc032SourcePrefix + Trim(AHost) + ':' + IntToStr(APort);
+end;
+
+function TryParseRecorderMc032SourceId(const ASourceId: string;
+  out AHost: string; out APort: Word): Boolean;
+var
+  lPos: SizeInt;
+  lText: string;
+  lPort: Integer;
+begin
+  Result := False;
+  AHost := '';
+  APort := CMc201DefaultPort;
+  if Pos(CMc032SourcePrefix, ASourceId) <> 1 then
+    Exit;
+  lText := Trim(Copy(ASourceId, Length(CMc032SourcePrefix) + 1, MaxInt));
+  lPos := RPos(':', lText);
+  if lPos > 0 then
+  begin
+    if not TryStrToInt(Copy(lText, lPos + 1, MaxInt), lPort) or
+      (lPort < 1) or (lPort > 65535) then
+      Exit;
+    APort := Word(lPort);
+    AHost := Trim(Copy(lText, 1, lPos - 1));
+  end
+  else
+    AHost := lText;
+  Result := AHost <> '';
+end;
 
 procedure TRecorderMcbusDataSource.SetZeroBalanceTrace(
   AHandler: TRecorderZeroBalanceTraceEvent);

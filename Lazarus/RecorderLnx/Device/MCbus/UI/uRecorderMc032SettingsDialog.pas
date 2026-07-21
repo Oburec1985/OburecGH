@@ -17,7 +17,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Dialogs, Spin,
-  uMc032Device, uMc201ProtocolTypes;
+  uMc032Device, uMc201ProtocolTypes, uRecorderMcbusDataSource;
 
 function RecorderMc032SourceId(const AHost: string; APort: Word): string;
 function TryParseRecorderMc032SourceId(const ASourceId: string;
@@ -31,10 +31,9 @@ function ShowRecorderMc032SettingsDialog(AOwner: TComponent;
 implementation
 
 uses
-  Math, StrUtils;
+  Math;
 
 const
-  CMc032SourcePrefix = 'MC-032: ';
   CMc032DiscoverySubnet = '192.169.13.';
 
 type
@@ -61,34 +60,14 @@ type
 
 function RecorderMc032SourceId(const AHost: string; APort: Word): string;
 begin
-  Result := CMc032SourcePrefix + Trim(AHost) + ':' + IntToStr(APort);
+  Result := uRecorderMcbusDataSource.RecorderMc032SourceId(AHost, APort);
 end;
 
 function TryParseRecorderMc032SourceId(const ASourceId: string;
   out AHost: string; out APort: Word): Boolean;
-var
-  lPos: SizeInt;
-  lText: string;
-  lPort: Integer;
 begin
-  Result := False;
-  AHost := '';
-  APort := CMc201DefaultPort;
-  if Pos(CMc032SourcePrefix, ASourceId) <> 1 then
-    Exit;
-  lText := Trim(Copy(ASourceId, Length(CMc032SourcePrefix) + 1, MaxInt));
-  lPos := RPos(':', lText);
-  if lPos > 0 then
-  begin
-    if not TryStrToInt(Copy(lText, lPos + 1, MaxInt), lPort) or
-      (lPort < 1) or (lPort > 65535) then
-      Exit;
-    APort := Word(lPort);
-    AHost := Trim(Copy(lText, 1, lPos - 1));
-  end
-  else
-    AHost := lText;
-  Result := AHost <> '';
+  Result := uRecorderMcbusDataSource.TryParseRecorderMc032SourceId(ASourceId,
+    AHost, APort);
 end;
 
 procedure RecorderMc032ModuleCaptions(const AModulesText: string;

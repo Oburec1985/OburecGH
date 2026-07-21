@@ -1706,3 +1706,14 @@ MC-032 исчезал при `OK`, потому что `TRecorderSettingsSourceP
   преобразованиями рендерера из сдвинутых пикселей. Поэтому PAN правой кнопкой
   визуально равномерен для `casLinear` и `casLog10`.
 - Пакет `LzrObrPack` и RecorderLnx полностью пересобраны, exit code 0.
+# 2026-07-21 — uMainForm отделён от реализаций устройств
+
+- Создание MIC-140, MIC-185 и MCbus runtime-источников перенесено в
+  `Device/uRecorderRuntimeSourceFactory.pas`.
+- Аппаратные диалоги, балансировка и device-specific CLI self-test скрыты за
+  `Device/uRecorderTagDeviceServices.pas`.
+- `UI/uMainForm.pas` больше не содержит имён MIC/MCbus/MC-032/MC-201 и не
+  импортирует их units; форма вызывает только нейтральные фасады.
+- Формирование/разбор SourceId MC-032 перенесены из UI-диалога в
+  `uRecorderMcbusDataSource`, в диалоге оставлены совместимые обёртки.
+- Полная сборка `RecorderLnx.lpi` завершилась успешно.
