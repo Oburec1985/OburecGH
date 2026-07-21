@@ -797,10 +797,9 @@ var
   lControl: IChartControl;
   lModel: TChartModel;
   lContentRect: TChartPixelRect;
-  lWidth, lHeight: Single;
   dX, dY: Integer;
-  dValX, dValY: Double;
-  lXRange, lYRange: Double;
+  lNewMinX, lNewMaxX: Double;
+  lNewMinY, lNewMaxY: Double;
   lIndex: Integer;
   lAxis: TChartAxis;
   lSelRect: TChartPixelRect;
@@ -828,14 +827,17 @@ begin
     if fIsPanning and Assigned(fActivePage) then
     begin
       lContentRect := lRenderer.GetPageContentRect(fActivePage);
-      lWidth := Max(1.0, lContentRect.Right - lContentRect.Left);
-      lHeight := Max(1.0, lContentRect.Bottom - lContentRect.Top);
       dX := X - fLastX;
       dY := Y - fLastY;
-      lXRange := fActivePage.XMaxValue - fActivePage.XMinValue;
-      dValX := (dX / lWidth) * lXRange;
-      fActivePage.XMinValue := fActivePage.XMinValue - dValX;
-      fActivePage.XMaxValue := fActivePage.XMaxValue - dValX;
+      { PAN рассчитывается в экранных координатах. Обратное преобразование
+        рендерера учитывает тип шкалы, поэтому движение остаётся визуально
+        линейным как для обычной, так и для логарифмической оси X. }
+      lNewMinX := lRenderer.PixelToXValue(fActivePage, nil,
+        lContentRect.Left - dX, lContentRect.Left, lContentRect.Right);
+      lNewMaxX := lRenderer.PixelToXValue(fActivePage, nil,
+        lContentRect.Right - dX, lContentRect.Left, lContentRect.Right);
+      fActivePage.XMinValue := lNewMinX;
+      fActivePage.XMaxValue := lNewMaxX;
       fActivePage.ZoomedX := True;
       
       // Определяем выбранную ось (Y) для изоляции панорамирования
@@ -854,10 +856,29 @@ begin
           lAxis := TChartAxis(fActivePage.Children[lIndex]);
           if (lSelectedAxis = nil) or (lAxis = lSelectedAxis) then
           begin
-            lYRange := lAxis.MaxValue - lAxis.MinValue;
-            dValY := (dY / lHeight) * lYRange;
-            lAxis.MinValue := lAxis.MinValue + dValY;
-            lAxis.MaxValue := lAxis.MaxValue + dValY;
+            if lAxis.UseOwnX then
+            begin
+              lNewMinX := lRenderer.PixelToXValue(fActivePage, lAxis,
+                lContentRect.Left - dX, lContentRect.Left,
+                lContentRect.Right);
+              lNewMaxX := lRenderer.PixelToXValue(fActivePage, lAxis,
+                lContentRect.Right - dX, lContentRect.Left,
+                lContentRect.Right);
+              lAxis.XMinValue := lNewMinX;
+              lAxis.XMaxValue := lNewMaxX;
+            end;
+
+            { Для Y используем прежний диапазон оси и значения пикселей,
+              смещённые на величину движения мыши. На casLog10 это даёт
+              мультипликативное изменение значений и равномерный PAN линий. }
+            lNewMinY := lRenderer.PixelToAxisValue(lAxis,
+              lContentRect.Bottom - dY, lContentRect.Bottom,
+              lContentRect.Top);
+            lNewMaxY := lRenderer.PixelToAxisValue(lAxis,
+              lContentRect.Top - dY, lContentRect.Bottom,
+              lContentRect.Top);
+            lAxis.MinValue := lNewMinY;
+            lAxis.MaxValue := lNewMaxY;
             MarkAxisUserZoomY(lAxis);
           end;
         end;
