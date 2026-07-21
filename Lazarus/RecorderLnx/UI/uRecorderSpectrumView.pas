@@ -618,6 +618,7 @@ procedure TRecorderSpectrumView.RefreshControl(ATagRegistry: TRecorderTagRegistr
   ADisplaySeconds: Double);
 var
   I, J, K: Integer;
+  lBandFrameIndex: Integer;
   lSeries: cBuffTrend1d;
   lNeedsRedraw: Boolean;
   lValues: array of Double;
@@ -658,29 +659,43 @@ begin
           end;
         end;
         
-        // Copy bands from active frame
-        SetLength(fBufferedFrames[I].Bands, Length(fBufferedFrames[I].Bands)); // Ensure allocated
         fBufferedFrames[I].HasNewData := False;
       end;
     end;
 
-    // Synchronize the bands on the page
-    if (fPage <> nil) and (Length(fBufferedFrames) > 0) then
+    { Полосы общие для страницы, но брать их только из канала с индексом 0
+      нельзя: первый настроенный источник может быть недоступен, тогда его
+      пустой кадр скрывал полосы исправно работающих каналов. Выбираем первый
+      реально рассчитанный спектр, предпочитая кадр, содержащий полосы. }
+    lBandFrameIndex := -1;
+    for I := 0 to Length(fBufferedFrames) - 1 do
+      if Length(fBufferedFrames[I].Rms) > 0 then
+      begin
+        if lBandFrameIndex < 0 then
+          lBandFrameIndex := I;
+        if Length(fBufferedFrames[I].Bands) > 0 then
+        begin
+          lBandFrameIndex := I;
+          Break;
+        end;
+      end;
+
+    if (fPage <> nil) and (lBandFrameIndex >= 0) then
     begin
       ClearBandObjects;
-      for K := 0 to Length(fBufferedFrames[0].Bands) - 1 do
+      for K := 0 to Length(fBufferedFrames[lBandFrameIndex].Bands) - 1 do
       begin
         lBand := TChartFrequencyBand.Create;
         lBand.Name := Format('FreqBand_%d', [K]);
         lBand.Caption := CP1251ToUTF8(Format('%s'#13'RMS: %.4f', [
-          fBufferedFrames[0].Bands[K].BandName,
-          fBufferedFrames[0].Bands[K].Rms
+          fBufferedFrames[lBandFrameIndex].Bands[K].BandName,
+          fBufferedFrames[lBandFrameIndex].Bands[K].Rms
         ]));
-        lBand.X1 := fBufferedFrames[0].Bands[K].F1;
-        lBand.X2 := fBufferedFrames[0].Bands[K].F2;
-        lBand.PeakX := fBufferedFrames[0].Bands[K].MaxFrequencyHz;
-        lBand.PeakY := fBufferedFrames[0].Bands[K].MaxRms;
-        lBand.Rms := fBufferedFrames[0].Bands[K].Rms;
+        lBand.X1 := fBufferedFrames[lBandFrameIndex].Bands[K].F1;
+        lBand.X2 := fBufferedFrames[lBandFrameIndex].Bands[K].F2;
+        lBand.PeakX := fBufferedFrames[lBandFrameIndex].Bands[K].MaxFrequencyHz;
+        lBand.PeakY := fBufferedFrames[lBandFrameIndex].Bands[K].MaxRms;
+        lBand.Rms := fBufferedFrames[lBandFrameIndex].Bands[K].Rms;
         lBand.Visible := True;
         lBand.Color := $1E808080; // Gray transparency
         fPage.AddChild(lBand);
