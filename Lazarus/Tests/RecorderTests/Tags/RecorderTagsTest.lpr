@@ -133,6 +133,15 @@ begin
     AssertEquals(lSnapshot.Times[0], 0.1, 'expanded buffer first preserved time');
     AssertEquals(lSnapshot.Values[5], 16.0, 'expanded buffer latest value');
 
+    { Повторный запуск аппаратного источника начинает время снова с нуля.
+      Старая эпоха не должна нарушать сортировку снимка для осциллограмм. }
+    lRegistry.PublishValue('MemTag', 0.0, 20.0);
+    lRegistry.PublishValue('MemTag', 0.1, 21.0);
+    lSnapshot := lMemTag.Snapshot;
+    AssertEquals(lSnapshot.Count, 2, 'time rewind starts a new signal epoch');
+    AssertEquals(lSnapshot.Times[0], 0.0, 'new epoch starts at zero');
+    AssertEquals(lSnapshot.Values[1], 21.0, 'new epoch keeps subsequent samples');
+
     Writeln('RESULT tags registry and signal buffer test passed.');
   finally
     lRegistry.Free;
@@ -196,6 +205,18 @@ begin
     lEstimate := lTag.Estimate(tekPeakToPeakByRmsDeviation);
     AssertEquals(lEstimate.Value, 2.0 * Sqrt(2.0) * Sqrt(7.0 / 3.0),
       'p2p by rmsd estimate');
+
+    lTimes[0] := 0.0;
+    lTimes[1] := 0.1;
+    lTimes[2] := 0.2;
+    lValues[0] := 5.0;
+    lValues[1] := 6.0;
+    lValues[2] := 7.0;
+    lRegistry.PublishBlock('BlockTag', lTimes, lValues, 3);
+    lBlock := lTag.Snapshot;
+    AssertEquals(lBlock.Count, 3, 'block time rewind starts a new signal epoch');
+    AssertEquals(lBlock.Times[0], 0.0, 'rewound block starts at zero');
+    AssertEquals(lBlock.Values[2], 7.0, 'rewound block remains complete');
 
     lRegistry.PublishValue('BlockTag', 11.0, 9.0);
     lBlock := lTag.LastBlockSnapshot;

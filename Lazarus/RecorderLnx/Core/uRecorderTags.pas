@@ -759,9 +759,23 @@ end;
 procedure TRecorderSignalBuffer.AddSample(ATimeSec, AValue: Double);
 var
   lIndex: Integer;
+  lLastIndex: Integer;
 begin
   EnterCriticalSection(fLock);
   try
+    { Источник может начать новую временную эпоху после Stop/Start. Нельзя
+      смешивать новые отсчёты от нуля со старой историей: Snapshot обязан
+      оставаться отсортированным по времени для бинарного поиска в графиках. }
+    if fCount > 0 then
+    begin
+      lLastIndex := (fStart + fCount - 1) mod fCapacity;
+      if ATimeSec < fTimes[lLastIndex] then
+      begin
+        fStart := 0;
+        fCount := 0;
+        fLastBlockCount := 0;
+      end;
+    end;
     if fCount < fCapacity then
     begin
       lIndex := (fStart + fCount) mod fCapacity;
@@ -790,6 +804,7 @@ procedure TRecorderSignalBuffer.AddSamples(const ATimes, AValues: array of Doubl
 var
   I: Integer;
   lIndex: Integer;
+  lLastIndex: Integer;
 begin
   if ACount < 0 then
     raise ERecorderTagError.Create('Sample block count cannot be negative');
@@ -798,6 +813,18 @@ begin
 
   EnterCriticalSection(fLock);
   try
+    { Очистка и добавление первого блока новой временной эпохи выполняются под
+      одной блокировкой. UI поэтому не увидит промежуточный пустой буфер. }
+    if (ACount > 0) and (fCount > 0) then
+    begin
+      lLastIndex := (fStart + fCount - 1) mod fCapacity;
+      if ATimes[0] < fTimes[lLastIndex] then
+      begin
+        fStart := 0;
+        fCount := 0;
+        fLastBlockCount := 0;
+      end;
+    end;
     fLastBlockCount := ACount;
     SetLength(fLastBlockTimes, ACount);
     SetLength(fLastBlockValues, ACount);
