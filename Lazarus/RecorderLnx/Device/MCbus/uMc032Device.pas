@@ -75,6 +75,7 @@ type
     fTimeoutMs: Cardinal;
     fProgramInfo: TMc201ModuleProgramInfoArray;
     fReceivedPacketCount: Int64;
+    fRawPacketCount: Int64;
     { Поднимает TCP+BIOS, если State=Disconnected; иначе бросает исключение.
       Вызывается из API, которому нужна уже живая сессия (SearchModules, Config…). }
     procedure EnsureConnected;
@@ -387,6 +388,8 @@ var
   lOffset: Integer;
   lIsOdd: Integer;
   lModuleCount: Integer;
+  lMessageAddr: Word;
+  lMessagePage: Word;
   lPage: Word;
   lReply: TMc201WordArray;
   lScanAddr: Word;
@@ -447,28 +450,84 @@ var
     end;
   end;
 
+  function ConfigureStartTriggers: Boolean;
+  var
+    K: Integer;
+  begin
+    Result := False;
+    for K := 0 to High(fProgramInfo) do
+    begin
+      SetLength(lArgs, 1);
+      lArgs[0] := fProgramInfo[K].Slot;
+      if not CallCC(CMc201CmdAddListStartAdcModuleIdma, lArgs,
+        'ADD_LISTSTARTADCMODULEIDMA') then Exit;
+    end;
+    for K := High(fProgramInfo) downto 0 do
+    begin
+      SetLength(lArgs, 1);
+      lArgs[0] := ModuleTimeoutCycle((High(fProgramInfo) - K) *
+        ((23 + 11 + 2 + 1) / 32000000.0));
+      if not CallMod(fProgramInfo[K].Slot, CMc201ModuleCmdSetTimeoutStartAdc,
+        lArgs, 0, lReply, 'SET_TIMEOUTSTARTADC_201') then Exit;
+    end;
+    SetLength(fStreamBuffer, 0);
+    SetLength(lArgs, 3);
+    lArgs[0] := 0;
+    lArgs[1] := 0;
+    lArgs[2] := 1;
+    if not CallCC(CMc201CmdConfigSyncStart, lArgs, 'CONFIG_SYNC_START') then Exit;
+    for K := 0 to CMc201CrateMaxStartSlots - Length(fProgramInfo) - 1 do
+    begin
+      SetLength(lArgs, 2);
+      lArgs[0] := 0;
+      lArgs[1] := K;
+      if not CallCC(CMc201CmdAddListStartModuleIdma, lArgs,
+        'ADD_LISTSTARTMODULEIDMA empty') then Exit;
+    end;
+    for K := 0 to High(fProgramInfo) do
+    begin
+      SetLength(lArgs, 2);
+      lArgs[0] := 1;
+      lArgs[1] := fProgramInfo[K].Slot;
+      if not CallCC(CMc201CmdAddListStartModuleIdma, lArgs,
+        'ADD_LISTSTARTMODULEIDMA') then Exit;
+    end;
+    SetLength(lArgs, 1);
+    lArgs[0] := Trunc((((25 + 9 + 2 + 11) / (2.0 * 16384000.0)) -
+      (5 / 32000000.0) - ((2 + 2) / 32000000.0)) * 32000000.0 + 1);
+    if lArgs[0] < 1 then lArgs[0] := 1;
+    if not CallCC(CMc201CmdSetTimeoutStartTimer, lArgs,
+      'SET_TIMEOUTSTARTTIMER') then Exit;
+    for K := High(fProgramInfo) downto 0 do
+    begin
+      SetLength(lArgs, 1);
+      lArgs[0] := ModuleTimeoutCycle((High(fProgramInfo) - K) *
+        ((28 + 11 + 2 + 2) / 32000000.0));
+      if not CallMod(fProgramInfo[K].Slot, CMc201ModuleCmdSetTimeoutStart,
+        lArgs, 0, lReply, 'SET_TIMEOUTSTART_201') then Exit;
+    end;
+    if not CallCC(CMc201CmdStartTriggerStartAdc, nil,
+      'START_TRIGGERSTARTADC') then Exit;
+    Result := True;
+  end;
+
 begin
   Result := False;
   AErrorMessage := '';
   SetLength(fProgramInfo, 0);
-
   if Length(fLastModules) = 0 then
   begin
     Progress('SearchModules');
-    if not SearchModules(AConfig.MaxSlots, fLastModules, AErrorMessage) then
-      Exit;
+    if not SearchModules(AConfig.MaxSlots, fLastModules, AErrorMessage) then Exit;
   end;
-
   lModuleCount := 0;
   for I := 0 to High(fLastModules) do
-    if fLastModules[I].IsMc201 then
-      Inc(lModuleCount);
+    if fLastModules[I].IsMc201 then Inc(lModuleCount);
   if lModuleCount = 0 then
   begin
     AErrorMessage := 'No MC-201 modules are available for scan programming';
     Exit;
   end;
-
   fClient.ResetLocalMemoryHeap;
   Progress('RESETSCANMAIN');
   if not fClient.CallCommand(CMc201CmdResetScanMain, nil, 0, lReply,
@@ -484,8 +543,46 @@ begin
   if not CallCC(CMc201CmdConfigScanMain, lArgs, 'CONFIGSCANMAIN') then
     Exit;
 
+  { Это размер FIFO одного канала. В оригинале ScanMC201::Config передаёт
+    модулю GetFifoSizeWord()/channels.size(), а в данной конфигурации это 256.
+    Деление ещё раз на число каналов создаёт пакеты по 16 отсчётов и резко
+    снижает пропускную способность из-за накладных расходов MDP. }
   lFifoPerChan := CMc201AdspFifoSamplesPerChannel;
   SetLength(fProgramInfo, lModuleCount);
+  { Оригинальный ScanMC201 сначала создаёт дескрипторы IDMA всех модулей и
+    строит общие стартовые триггеры крейта. Только после этого вызывается
+    ModuleMC201::Programming для каждого слота. }
+  C := 0;
+  for I := 0 to High(fLastModules) do
+  begin
+    lInfo := fLastModules[I];
+    if not lInfo.IsMc201 then Continue;
+    lSlotSampleRate := AConfig.Slots[lInfo.Slot].SampleRateHz;
+    if lSlotSampleRate <= 0 then lSlotSampleRate := AConfig.SampleRateHz;
+    fProgramInfo[C].Slot := lInfo.Slot;
+    fProgramInfo[C].SampleRateHz := lSlotSampleRate;
+    fProgramInfo[C].MaskChan := $000F;
+    fProgramInfo[C].FifoSize := lFifoPerChan;
+    fProgramInfo[C].FreqIndex := FreqToIndex(lSlotSampleRate);
+    fProgramInfo[C].GridCode := FreqToGridCode(lSlotSampleRate);
+    lFreqCode := FreqToFreqCode(lSlotSampleRate);
+    fProgramInfo[C].DividerCode := lFreqCode or (lFreqCode shl 4);
+    Progress(Format('slot %d LOAD_MC201_BIOS', [lInfo.Slot]));
+    if not fClient.LoadMc201BiosIdma(lInfo.Slot, CMc201DefaultBiosPath,
+      AErrorMessage) then Exit;
+    if not fClient.GetInternalMemHeap(CMc201DescModuleWords, lPage, lAddr,
+      AErrorMessage) then Exit;
+    SetLength(lArgs, 6);
+    lArgs[0] := lInfo.Slot;
+    lArgs[1] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleDataReg);
+    lArgs[2] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleIdmaReg);
+    lArgs[3] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleIrqReg);
+    lArgs[4] := lAddr;
+    lArgs[5] := lPage;
+    if not CallCC(CMc201CmdConfigModuleIdma, lArgs,
+      'CONFIG_MODULE_IDMA') then Exit;
+    Inc(C);
+  end;
   C := 0;
   for I := 0 to High(fLastModules) do
   begin
@@ -512,34 +609,30 @@ begin
     fProgramInfo[C].GridCode := lGridCode;
     fProgramInfo[C].DividerCode := lFreqCode or (lFreqCode shl 4);
 
-    Progress(Format('slot %d LOAD_MC201_BIOS', [lInfo.Slot]));
-    if not fClient.LoadMc201BiosIdma(lInfo.Slot, CMc201DefaultBiosPath,
-      AErrorMessage) then
-    begin
-      AErrorMessage := Format('LOAD_MC201_BIOS failed slot=%d: %s',
-        [lInfo.Slot, AErrorMessage]);
-      Exit;
-    end;
-
-    if not fClient.GetInternalMemHeap(CMc201DescModuleWords, lPage, lAddr,
-      AErrorMessage) then
-      Exit;
-    SetLength(lArgs, 6);
-    lArgs[0] := lInfo.Slot;
-    lArgs[1] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleDataReg);
-    lArgs[2] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleIdmaReg);
-    lArgs[3] := fClient.GetAddrModuleReg(lInfo.Slot, CMc201ModuleIrqReg);
-    lArgs[4] := lAddr;
-    lArgs[5] := lPage;
-    if not CallCC(CMc201CmdConfigModuleIdma, lArgs, 'CONFIG_MODULE_IDMA') then
-      Exit;
-
     if not CallMod(lInfo.Slot, CMc201ModuleCmdStopScan, nil, 0, lReply,
       'module STOP_SCAN') then
       Exit;
     if not CallMod(lInfo.Slot, CMc201ModuleCmdResetScan, nil, 0, lReply,
       'module RESET_SCAN') then
       Exit;
+
+    { Строгое место из ModuleMC201::Programming оригинального Recorder:
+      балансировочный ЦАП программируется после STOP_SCAN/RESET_SCAN и до
+      CONFIG_RAW/CONFIG_DBL/CONFIG_MIX. Отправка SEND_BALANCE после полной
+      настройки триггеров (непосредственно перед STARTSCANMAIN) оставляла
+      холодный контроллер без потока, хотя START возвращал успешный ACK. }
+    for J := 0 to CMc201MaxModuleChannels - 1 do
+    begin
+      lOffset := EnsureRange(AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex,
+        0, High(AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac));
+      lSubmoduleHandle :=
+        AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac[lOffset];
+      Progress(Format('slot %d SEND_BALANCE ch%d code=$%.4x',
+        [lInfo.Slot, J, lSubmoduleHandle]));
+      if not SendBalanceDac(lInfo.Slot, J, lSubmoduleHandle and $ff,
+        lSubmoduleHandle shr 8, AErrorMessage) then
+        Exit;
+    end;
 
     for J := 0 to CMc201MaxModuleChannels - 1 do
     begin
@@ -652,19 +745,9 @@ begin
     if not CallMod(lInfo.Slot, CMc201ModuleCmdSetFreq, lArgs, 0, lReply,
       'SET_FREQ_CC') then
       Exit;
-    for J := 0 to CMc201MaxModuleChannels - 1 do
-    begin
-      SetLength(lArgs, 3);
-      lArgs[0] := J;
-      lArgs[1] := AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac[
-        EnsureRange(AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex,
-          0, High(AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac))] and $ff;
-      lArgs[2] := AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac[
-        EnsureRange(AConfig.Slots[lInfo.Slot].Channels[J].RangeIndex,
-          0, High(AConfig.Slots[lInfo.Slot].Channels[J].BalanceDac))] shr 8;
-      if not CallMod(lInfo.Slot, CMc201ModuleCmdSendBalance, lArgs, 0,
-        lReply, 'SEND_BALANCE_CC') then Exit;
-    end;
+    { SEND_BALANCE здесь не повторять. Коды уже установлены после RESET_SCAN,
+      как в ModuleMC201::Programming оригинального Recorder. Повторный цикл,
+      ранее стоявший после SET_FREQ_CC, нарушал подготовленное состояние scan. }
     lArgs[0] := $000F;
     if not CallMod(lInfo.Slot, CMc201ModuleCmdSetChanList, lArgs, 0, lReply,
       'SET_CHAN_LIST_CC') then
@@ -722,6 +805,35 @@ begin
   if not CallCC(CMc201CmdScanSetChans, lArgs, 'SCAN_SET_CHANS') then
     Exit;
 
+  { CCWDInterface::Config оригинального Recorder создаёт в памяти КК кольцевой
+    массив BIOS-сообщений. Без CMD_CONFIG_MESSAGE скан получает успешный ACK,
+    но MC-032 не формирует поток сообщений для Ethernet. }
+  if not fClient.GetInternalMemHeap(CMc201BiosMessageArrayWords,
+    lMessagePage, lMessageAddr, AErrorMessage) then
+    Exit;
+  SetLength(lArgs, 3);
+  lArgs[0] := lMessageAddr;
+  lArgs[1] := lMessagePage;
+  lArgs[2] := CMc201BiosMessageArrayWords;
+  Progress('CONFIG_MESSAGE');
+  if not fClient.CallCommand(CMc201CmdConfigMessage, lArgs, 4, lReply,
+    AErrorMessage) then
+  begin
+    AErrorMessage := 'CONFIG_MESSAGE failed: ' + AErrorMessage;
+    Exit;
+  end;
+
+  { Триггеры уже настроены до ModuleMC201::Programming. Старый блок ниже
+    оставлен временно видимым при сверке с оригиналом, но выполняться не должен. }
+  { В оригинальном CCDevice::OnProgramming конфигурация стартовых триггеров
+    и START_TRIGGERSTARTADC выполняются после программирования всех модулей
+    и создания BIOS-скана. Более ранний запуск разрушается последующими
+    STOP_SCAN/RESET_SCAN и на холодном контроллере не создаёт поток. }
+  if not ConfigureStartTriggers then
+    Exit;
+  Sleep(350);
+  if False then
+  begin
   for I := 0 to High(fProgramInfo) do
   begin
     SetLength(lArgs, 1);
@@ -794,6 +906,7 @@ begin
     'START_TRIGGERSTARTADC') then
     Exit;
   Sleep(350);
+  end;
 
   Result := True;
 end;
@@ -1005,6 +1118,13 @@ begin
   try
     EnsureConnected;
     Result := fClient.CallCommand(CMc201CmdReset, nil, 0, lReply, AErrorMessage);
+    if Result then
+    begin
+      { CMD_RESET перезапускает BIOS крейт-контроллера и сбрасывает RAM
+        модулей. Локальный cache загруженных BIOS после этого недействителен. }
+      fClient.InvalidateLoadedBios;
+      SetLength(fProgramInfo, 0);
+    end;
   except
     on E: Exception do
       AErrorMessage := E.Message;
@@ -1026,6 +1146,15 @@ begin
     EnsureConnected;
     fConfig := AConfig;
     fClient.TimeoutMs := AConfig.ReadTimeoutMs;
+    { Холодный запуск должен быть самодостаточным, без предварительного запуска
+      оригинального Recorder. Как CCDevice::Reset оригинала, перезапускаем BIOS
+      контроллера, затем создаём новую TCP-сессию и заново читаем слоты. }
+    if not Reset(AErrorMessage) then
+      Exit;
+    Disconnect;
+    Sleep(1500);
+    Connect;
+    SetLength(fLastModules, 0);
     Result := ProgramMc201Scan(AConfig, AErrorMessage);
     if (not Result) and (fState = mcsConnected) then
     begin
@@ -1101,6 +1230,7 @@ begin
     fOnData := AOnData;
     fPacketIndex := 0;
     fReceivedPacketCount := 0;
+    fRawPacketCount := 0;
     SetLength(fStreamBuffer, 0);
     if fClient.DrainPackets(20, lDrained, AErrorMessage) and
       (lDrained > 0) then
@@ -1144,6 +1274,7 @@ begin
       Exit(True);
     fOnData := nil;
     fPacketIndex := 0;
+    fRawPacketCount := 0;
     if fClient.DrainPackets(20, lDrained, AErrorMessage) and
       (lDrained > 0) then
       Progress(Format('RX drained before STARTSCANMAIN: %d packets',
@@ -1209,6 +1340,18 @@ begin
   repeat
     if not fClient.ReadRawPacket(APort, lPacket) then
       Exit(False);
+    Inc(fRawPacketCount);
+    { Первые пакеты после START позволяют отличить отсутствие потока в TCP
+      от ошибки склейки BIOS-сообщений. Не логируем весь высокочастотный поток. }
+    if fRawPacketCount <= 8 then
+    begin
+      if Length(lPacket) >= 2 then
+        Progress(Format('RX raw #%d port=%d words=%d head=[%u %u]',
+          [fRawPacketCount, APort, Length(lPacket), lPacket[0], lPacket[1]]))
+      else
+        Progress(Format('RX raw #%d port=%d words=%d',
+          [fRawPacketCount, APort, Length(lPacket)]));
+    end;
     if APort = CMc201MdpStreamCommand then
       Continue;
     lOldLength := Length(fStreamBuffer);
@@ -1268,8 +1411,8 @@ begin
   SetLength(fStreamBuffer, 0);
   lOldTimeout := fClient.TimeoutMs;
   try
-    if fClient.TimeoutMs < 15000 then
-      fClient.TimeoutMs := 15000;
+    { Stop — teardown, а не управляющая операция. Не держим UI 15 секунд:
+      штатного command timeout достаточно. }
     Result := fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
       AErrorMessage);
   finally
@@ -1283,12 +1426,25 @@ begin
   { Не ForceDisconnect: обрыв TCP после потока «убивал» контроллер до сброса
     оригиналом. STOP no-wait + drain — сессия для ProgramDevice остаётся. }
   Progress('Stop: reply missed, no-wait + drain (keep TCP): ' + AErrorMessage);
-  fClient.SendCommandNoWait(CMc201CmdStopScanMain, nil, lErr);
+  { Ошибка записи означает закрытый peer. Повторная запись гарантированно
+    создаёт второй EMc201MdpProtocol в отладчике и ничего не останавливает. }
+  if Pos('write failed', LowerCase(AErrorMessage)) > 0 then
+  begin
+    ForceDisconnect(False);
+    AErrorMessage := '';
+    Exit(True);
+  end;
+  if not fClient.SendCommandNoWait(CMc201CmdStopScanMain, nil, lErr) then
+  begin
+    ForceDisconnect(False);
+    AErrorMessage := '';
+    Exit(True);
+  end;
   lOldTimeout := fClient.TimeoutMs;
   lDrained := 0;
   try
     fClient.TimeoutMs := 50;
-    lDeadline := GetTickCount64 + 10000;
+    lDeadline := GetTickCount64 + 1000;
     while GetTickCount64 < lDeadline do
     begin
       if not fClient.ReadRawPacket(lPort, lWords) then

@@ -95,7 +95,9 @@ type
 
     procedure Connect;
     procedure Disconnect;
-  procedure ProgramDevice;
+    procedure InitializeDevice;
+    procedure ConfigureDevice;
+    procedure ProgramDevice;
     procedure Start;
     procedure Stop;
 
@@ -148,6 +150,8 @@ type
     procedure Connect; virtual;
     // отключить устройство
     procedure Disconnect; virtual;
+    procedure InitializeDevice; virtual;
+    procedure ConfigureDevice; virtual;
     // запрограммировать устройство
     procedure ProgramDevice; virtual;
     // запустить сбор данных
@@ -285,6 +289,20 @@ end;
 
 procedure TRecorderDevice.ProgramDevice;
 begin
+  InitializeDevice;
+  ConfigureDevice;
+end;
+
+procedure TRecorderDevice.InitializeDevice;
+begin
+  if fState = rdsDisconnected then
+    Connect;
+end;
+
+procedure TRecorderDevice.ConfigureDevice;
+begin
+  if fState = rdsDisconnected then
+    Connect;
   fState := rdsProgrammed;
 end;
 

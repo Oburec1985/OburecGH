@@ -202,4 +202,11 @@ end;
 3. Один `rdpStateWord` для legacy и Mebius или разные диапазоны?
 
 До решения — синхронные переходы, как в текущем MIC-140.
+# Жизненный цикл
+
+Нормативный шаблон `Connect -> InitializeDevice -> ConfigureDevice ->
+Start/Stop -> Disconnect` описан в
+[`device-lifecycle-template.md`](device-lifecycle-template.md). `ProgramDevice`
+сохраняется только как совместимый фасад одноразовой инициализации и повторяемой
+конфигурации.
 

@@ -71,6 +71,8 @@ type
     function GetNodeNumber: Integer;
     procedure Connect;
     procedure Disconnect;
+    procedure InitializeDevice;
+    procedure ConfigureDevice;
     procedure ProgramDevice;
     procedure Start;
     procedure RequestStopAcquisition;
@@ -478,6 +480,17 @@ begin
   fScanOn := False;
   fStop := False;
   fState := rdsDisconnected;
+end;
+
+procedure TRecorderMic140v2Device.InitializeDevice;
+begin
+  if fState = rdsDisconnected then
+    Connect;
+end;
+
+procedure TRecorderMic140v2Device.ConfigureDevice;
+begin
+  ProgramDevice;
 end;
 
 procedure TRecorderMic140v2Device.ProgramDevice;

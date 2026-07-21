@@ -167,6 +167,7 @@ const
   CMc201CmdResetScanMain = Word(83);
   CMc201CmdConfigScanMain = Word(84);
   CMc201CmdStartTriggerStartAdc = Word(85);
+  CMc201CmdConfigMessage = Word(90);
   CMc201CmdSetTimeoutStartTimer = Word(98);
   CMc201CmdWriteDm = Word(111);
   CMc201CmdReply = Word(113);
@@ -219,6 +220,7 @@ const
   CMc201BiosScanContextWords = Word(6);
   CMc201BiosMessageHeaderWords = 10;
   CMc201BiosMessageMaxWords = CMc201BiosMessageHeaderWords + 1024;
+  CMc201BiosMessageArrayWords = Word(7183);
   CMc201DescModuleWords = Word(4);
   CMc201DescChanWords = Word(5);
   CMc201ScanIdDefault = Word(0);

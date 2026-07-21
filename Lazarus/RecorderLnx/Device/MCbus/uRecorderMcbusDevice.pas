@@ -40,6 +40,10 @@ type
     fBalanceDac: array of Word;
     fSampleIndices: array of Int64;
     fLastError: string;
+    fReceivedSinceStart: Boolean;
+    fHardwareInitialized: Boolean;
+    fConfigurationAppliedByInit: Boolean;
+    procedure ControllerProgress(Sender: TObject; const AText: string);
     procedure ApplySpecificConfigText(const AText: string);
     procedure AllocateBuffers;
     procedure ResetPending;
@@ -69,6 +73,8 @@ type
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
     procedure Connect; override;
     procedure Disconnect; override;
+    procedure InitializeDevice; override;
+    procedure ConfigureDevice; override;
     procedure ProgramDevice; override;
     procedure Start; override;
     procedure Stop; override;
@@ -114,6 +120,12 @@ begin
   RecorderDebugLog('[MCBUS][BALANCE] ' + AText);
   if Assigned(gBalanceTrace) then
     gBalanceTrace(AText);
+end;
+
+procedure TRecorderMcbusDevice.ControllerProgress(Sender: TObject;
+  const AText: string);
+begin
+  RecorderDebugLog('[MCBUS][PROTOCOL] ' + AText);
 end;
 
 function TRecorderMcbusDevice.CalibrateScaleByBalanceDacShift(AChannel: Integer;
@@ -303,6 +315,7 @@ begin
     end;
   end;
   fController := TMc032Device.Create;
+  fController.OnProgress := @ControllerProgress;
 end;
 
 procedure TRecorderMcbusDevice.ApplySpecificConfigText(const AText: string);
@@ -465,6 +478,8 @@ end;
 procedure TRecorderMcbusDevice.SetSpecificConfigText(const AText: string);
 begin
   ApplySpecificConfigText(AText);
+  if fHardwareInitialized then
+    fConfigurationAppliedByInit := False;
 end;
 
 procedure TRecorderMcbusDevice.SetSlotSampleRate(ASlot: Integer;
@@ -474,6 +489,8 @@ begin
     Exit;
   fConfig.Slots[ASlot - 1].SampleRateHz := Word(EnsureRange(
     Round(AFrequencyHz), 1, 65535));
+  if fHardwareInitialized then
+    fConfigurationAppliedByInit := False;
 end;
 
 destructor TRecorderMcbusDevice.Destroy;
@@ -574,6 +591,9 @@ begin
   Result := inherited TrySetDeviceProperty(AProperty, AValue, AIndex);
   if not Result then
     Exit;
+  if fHardwareInitialized and (AProperty in
+    [rdpPollFrequencyHz, rdpUpdateTimeMs]) then
+    fConfigurationAppliedByInit := False;
   case AProperty of
     rdpPollFrequencyHz:
       begin
@@ -611,23 +631,48 @@ begin
   SetLength(fProgramInfo, 0);
   fChannelCount := 0;
   ResetPending;
+  fHardwareInitialized := False;
+  fConfigurationAppliedByInit := False;
   fState := rdsDisconnected;
 end;
 
-procedure TRecorderMcbusDevice.ProgramDevice;
+procedure TRecorderMcbusDevice.InitializeDevice;
 begin
   if fState = rdsDisconnected then
     Connect;
+  if fHardwareInitialized then
+    Exit;
   fConfig.SampleRateHz := Word(EnsureRange(Round(fPollFrequencyHz), 1, 65535));
+  { Первый проход после включения прибора включает RESET, загрузку BIOS MC-201,
+    создание IDMA и начальную конфигурацию. Повторять его при Apply нельзя. }
   if not fController.Config(fConfig, fLastError) then
-    raise ERecorderDeviceError.Create('MC-032 programming: ' + fLastError);
+    raise ERecorderDeviceError.Create('MC-032 initialization: ' + fLastError);
+  fHardwareInitialized := True;
+  fConfigurationAppliedByInit := True;
+  fState := rdsConnected;
+end;
+
+procedure TRecorderMcbusDevice.ConfigureDevice;
+begin
+  InitializeDevice;
+  fConfig.SampleRateHz := Word(EnsureRange(Round(fPollFrequencyHz), 1, 65535));
+  if not fConfigurationAppliedByInit then
+    if not fController.ConfigKeepSession(fConfig, fLastError) then
+      raise ERecorderDeviceError.Create('MC-032 configuration: ' + fLastError);
   fProgramInfo := Copy(fController.ProgramInfo, 0,
     Length(fController.ProgramInfo));
   fChannelCount := Length(fProgramInfo) * CMc201MaxModuleChannels;
   if fChannelCount = 0 then
     raise ERecorderDeviceError.Create('MC-032 programming: no MC-201 channels');
   AllocateBuffers;
+  fConfigurationAppliedByInit := False;
   fState := rdsProgrammed;
+end;
+
+procedure TRecorderMcbusDevice.ProgramDevice;
+begin
+  InitializeDevice;
+  ConfigureDevice;
 end;
 
 procedure TRecorderMcbusDevice.Start;
@@ -640,14 +685,15 @@ begin
     ProgramDevice;
   if fState = rdsStarted then
     Exit;
-  { Модульные команды нельзя вклинивать после STARTSCANMAIN: они конкурируют с
-    потоком измерительных пакетов. Восстанавливаем регистры до запуска потока. }
-  ApplySavedBalanceDac;
+  { Коды ЦАП уже переданы внутри ProgramMc201Scan в том же месте, что и в
+    ModuleMC201::Programming оригинального Recorder: сразу после RESET_SCAN.
+    Здесь модульные команды посылать нельзя — стартовые триггеры уже собраны. }
   if not fController.StartRawScan(fLastError) then
     raise ERecorderDeviceError.Create('MC-032 start: ' + fLastError);
   for I := 0 to High(fSampleIndices) do
     fSampleIndices[I] := 0;
   ResetPending;
+  fReceivedSinceStart := False;
   fState := rdsStarted;
 end;
 
@@ -698,6 +744,16 @@ procedure TRecorderMcbusDevice.Stop;
 begin
   if fState <> rdsStarted then
     Exit;
+  if not fReceivedSinceStart then
+  begin
+    { После START не пришло ни одного корректного сообщения: не пишем STOP в
+      уже сомнительный TCP и не провоцируем EMc201MdpProtocol в отладчике. }
+    RecorderDebugLog('[MCBUS] stop without RX: local disconnect, no STOP write');
+    fController.ForceDisconnect(False);
+    ResetPending;
+    fState := rdsDisconnected;
+    Exit;
+  end;
   if not fController.Stop(fLastError) then
   begin
     { STOPSCANMAIN is best-effort during teardown. Reply may be lost in
@@ -736,6 +792,7 @@ begin
   lChannel := ChannelIndex(AWords[3], AWords[4]);
   if lChannel < 0 then
     Exit;
+  fReceivedSinceStart := True;
   lNeeded := fPendingCount[lChannel] + Length(AWords) -
     CMc201BiosMessageHeaderWords;
   if Length(fPending[lChannel]) < lNeeded then

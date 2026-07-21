@@ -1,289 +1,346 @@
-2026-07-17 20:26:10.451 [DEBUG] [TID:5228|UIThread] 20:26:10.448 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-07-17 20:26:10.452 [DEBUG] [TID:5228|UIThread] 20:26:10.452 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-07-17 20:26:10.495 [DEBUG] [TID:5228|UIThread] 20:26:10.494 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-07-17 20:26:10.499 [DEBUG] [TID:5228|UIThread] 20:26:10.499 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-07-17 20:26:10.504 [DEBUG] [TID:5228|UIThread] 20:26:10.504 MERA playback source configured: signal0005.mera (10 channels).
-2026-07-17 20:26:10.507 [DEBUG] [TID:5228|UIThread] 20:26:10.506 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-07-17 20:26:10.511 [DEBUG] [TID:5228|UIThread] 20:26:10.510 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-17 20:26:10.516 [DEBUG] [TID:5228|UIThread] 20:26:10.515 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-17 20:26:10.556 [DEBUG] [TID:5228|UIThread] 20:26:10.556 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-17 20:26:11.970 [DEBUG] [TID:5228|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-17 20:26:11.991 [DEBUG] [TID:5228|UIThread] [MCBUS] connect attempt 1/5
-2026-07-17 20:26:12.470 [DEBUG] [TID:5228|UIThread] [MCBUS] programmed channels=16
-2026-07-17 20:26:12.487  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 20:26:12.487 [DEBUG] [TID:5228|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-17 20:26:13.506 [WARNING] [TID:5228|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
-2026-07-17 20:26:13.767 [WARNING] [TID:5228|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
-2026-07-17 20:26:13.768 [WARNING] [TID:5228|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
-2026-07-17 20:26:13.808 [DEBUG] [TID:5228|UIThread] 20:26:13.808 RecorderLnx started.
-2026-07-17 20:26:15.126 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=0 slot=1 idx=0 code=$D982
-2026-07-17 20:26:15.128 [DEBUG] [TID:5228|UIThread] 20:26:15.122 Data sources started.
-2026-07-17 20:26:15.140 [DEBUG] [TID:5228|UIThread] 20:26:15.138 State changed: Stop -> Preview
-2026-07-17 20:26:15.146 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=1 slot=1 idx=1 code=$D582
-2026-07-17 20:26:15.178 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=2 slot=1 idx=2 code=$DA82
-2026-07-17 20:26:15.209 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=3 slot=1 idx=3 code=$E282
-2026-07-17 20:26:15.240 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=4 slot=2 idx=0 code=$E182
-2026-07-17 20:26:15.271 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=5 slot=2 idx=1 code=$D782
-2026-07-17 20:26:15.303 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=6 slot=2 idx=2 code=$E782
-2026-07-17 20:26:15.333 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=7 slot=2 idx=3 code=$E582
-2026-07-17 20:26:15.364 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=8 slot=3 idx=0 code=$D082
-2026-07-17 20:26:15.395 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=9 slot=3 idx=1 code=$D382
-2026-07-17 20:26:15.425 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=10 slot=3 idx=2 code=$DE82
-2026-07-17 20:26:15.456 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=11 slot=3 idx=3 code=$CE82
-2026-07-17 20:26:15.486 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=12 slot=4 idx=0 code=$D782
-2026-07-17 20:26:15.517 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=13 slot=4 idx=1 code=$CD82
-2026-07-17 20:26:15.549 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=14 slot=4 idx=2 code=$D882
-2026-07-17 20:26:15.581 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS][BALANCE] ApplySavedBalanceDac ch=15 slot=4 idx=3 code=$D582
-2026-07-17 20:26:15.642 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
-2026-07-17 20:26:15.654 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:15.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:15.876 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:15.910 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 266 ms on Thread 4040
-2026-07-17 20:26:16.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:16.095 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:16.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:16.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:16.310 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:16.317 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:16.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:16.508 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 4040
-2026-07-17 20:26:16.552 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:16.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:16.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:16.774 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:16.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:16.908 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:17.010 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:17.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:17.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:17.231 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:17.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:17.309 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:17.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:17.451 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:17.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:17.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:17.671 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:17.710 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:17.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:17.893 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:17.908 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:18.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:18.110 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:18.115 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:18.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:18.308 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:18.334 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:18.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:18.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:18.559 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:18.646 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:18.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:18.779 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:18.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:18.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:18.998 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:19.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:19.113 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:19.234 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:19.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:19.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 4040
-2026-07-17 20:26:19.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:19.469 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 14316
-2026-07-17 20:26:19.510 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 4040
-2026-07-17 20:26:19.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:19.701 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:19.710 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:19.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:19.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:19.933 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:20.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:20.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:20.154 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:20.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:20.309 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 4040
-2026-07-17 20:26:20.376 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:20.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:20.511 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 4040
-2026-07-17 20:26:20.596 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:20.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:20.709 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:20.828 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:20.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:20.910 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:21.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:21.048 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:21.110 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:21.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:21.282 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:21.310 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:21.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:21.503 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:21.510 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 4040
-2026-07-17 20:26:21.646 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:21.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:21.732 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:21.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:21.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:21.955 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:22.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:22.108 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:22.187 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:22.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:22.309 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 4040
-2026-07-17 20:26:22.408 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:22.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:22.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 157 ms on Thread 4040
-2026-07-17 20:26:22.640 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:22.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:22.710 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:22.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:22.871 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:22.911 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:23.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:23.093 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:23.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:23.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:23.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 4040
-2026-07-17 20:26:23.312 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:23.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:23.510 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:23.546 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:23.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:23.711 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:23.779 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:23.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:23.911 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:24.008 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:24.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:24.108 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:24.242 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:24.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:24.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 4040
-2026-07-17 20:26:24.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:24.475 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:24.508 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:24.646 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:24.694 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:24.711 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:24.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:24.911 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:24.917 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:25.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:25.114 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:25.147 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:25.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:25.310 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:25.368 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:25.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:25.511 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:25.602 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:25.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:25.709 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:25.837 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:25.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:25.908 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:26.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:26.067 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:26.110 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:26.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:26.300 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:26.314 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:26.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:26.515 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:26.520 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:26.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:26.709 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:26.742 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:26.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:26.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:26.977 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:27.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:27.110 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:27.210 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:27.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:27.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:27.431 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:27.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:27.514 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:27.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:27.651 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:27.710 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:27.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:27.882 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:27.910 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:28.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:28.103 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:28.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:28.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:28.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:28.323 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:28.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:28.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:28.556 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:28.646 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:28.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:28.777 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:28.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:28.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:29.010 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:29.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:29.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:29.242 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:29.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:29.310 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:29.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:29.460 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:29.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:29.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:29.680 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:29.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:29.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:29.902 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:29.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:30.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:30.110 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:30.121 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:30.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:30.308 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:30.338 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:30.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:30.509 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:30.559 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:30.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:30.708 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:30.779 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:30.847 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:30.909 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:30.999 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:31.047 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:31.109 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:31.219 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 14316
-2026-07-17 20:26:31.247 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:31.308 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 4040
-2026-07-17 20:26:31.446 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:31.452 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:31.510 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:31.647 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:31.686 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:31.709 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 4040
-2026-07-17 20:26:31.846 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:31.910 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 4040
-2026-07-17 20:26:31.919 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 14316
-2026-07-17 20:26:32.046 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:32.111 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 4040
-2026-07-17 20:26:32.153 [DEBUG] [TID:14316|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 14316
-2026-07-17 20:26:32.246 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:32.311 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 4040
-2026-07-17 20:26:32.356  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 20:26:32.357  RuntimeDetach 192.168.9.142:4000
-2026-07-17 20:26:32.356 [DEBUG] [TID:5228|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 20:26:32.366 [DEBUG] [TID:9564|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-17 20:26:32.371 [WARNING] [TID:19964|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
-2026-07-17 20:26:32.447 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
-2026-07-17 20:26:32.517 [DEBUG] [TID:4040|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
-2026-07-17 20:26:32.527 [DEBUG] [TID:5228|UIThread] 20:26:32.526 Data sources stopped.
-2026-07-17 20:26:32.528 [DEBUG] [TID:5228|UIThread] 20:26:32.527 State changed: Preview -> Stop
-2026-07-17 20:26:41.319  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 20:26:41.320 [DEBUG] [TID:5228|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-17 20:26:41.334 [WARNING] [TID:5228|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-21 10:05:28.212 [DEBUG] [TID:11016|UIThread] 10:05:28.209 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-21 10:05:28.213 [DEBUG] [TID:11016|UIThread] 10:05:28.213 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-21 10:05:28.248 [DEBUG] [TID:11016|UIThread] 10:05:28.247 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-21 10:05:28.252 [DEBUG] [TID:11016|UIThread] 10:05:28.252 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-21 10:05:28.256 [DEBUG] [TID:11016|UIThread] 10:05:28.256 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-21 10:05:28.258 [DEBUG] [TID:11016|UIThread] 10:05:28.258 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-21 10:05:28.262 [DEBUG] [TID:11016|UIThread] 10:05:28.262 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-21 10:05:28.267 [DEBUG] [TID:11016|UIThread] 10:05:28.267 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-21 10:05:28.295 [DEBUG] [TID:11016|UIThread] 10:05:28.295 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-21 10:05:29.699 [DEBUG] [TID:11016|UIThread] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-21 10:05:29.700 [DEBUG] [TID:11016|UIThread] [MCBUS] connect attempt 1/5
+2026-07-21 10:05:31.280 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] SearchModules
+2026-07-21 10:05:31.292 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] RESETSCANMAIN
+2026-07-21 10:05:31.293 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIGSCANMAIN
+2026-07-21 10:05:31.298 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 LOAD_MC201_BIOS
+2026-07-21 10:05:33.075 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
+2026-07-21 10:05:33.075 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 LOAD_MC201_BIOS
+2026-07-21 10:05:34.850 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
+2026-07-21 10:05:34.850 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 LOAD_MC201_BIOS
+2026-07-21 10:05:36.630 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
+2026-07-21 10:05:36.630 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 LOAD_MC201_BIOS
+2026-07-21 10:05:38.408 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
+2026-07-21 10:05:38.408 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 module STOP_SCAN
+2026-07-21 10:05:38.417 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 module RESET_SCAN
+2026-07-21 10:05:38.423 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch0 code=$D982
+2026-07-21 10:05:38.455 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch1 code=$D582
+2026-07-21 10:05:38.487 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch2 code=$DA82
+2026-07-21 10:05:38.518 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch3 code=$E282
+2026-07-21 10:05:38.549 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
+2026-07-21 10:05:38.550 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
+2026-07-21 10:05:38.555 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
+2026-07-21 10:05:38.560 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
+2026-07-21 10:05:38.565 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
+2026-07-21 10:05:38.569 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
+2026-07-21 10:05:38.574 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
+2026-07-21 10:05:38.578 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
+2026-07-21 10:05:38.582 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
+2026-07-21 10:05:38.586 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
+2026-07-21 10:05:38.591 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
+2026-07-21 10:05:38.595 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
+2026-07-21 10:05:38.599 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch0=0
+2026-07-21 10:05:38.604 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch0=0
+2026-07-21 10:05:38.608 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch0=0
+2026-07-21 10:05:38.612 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch1=0
+2026-07-21 10:05:38.617 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch1=0
+2026-07-21 10:05:38.621 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch1=0
+2026-07-21 10:05:38.625 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch2=0
+2026-07-21 10:05:38.630 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch2=0
+2026-07-21 10:05:38.634 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch2=0
+2026-07-21 10:05:38.639 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch3=0
+2026-07-21 10:05:38.644 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch3=0
+2026-07-21 10:05:38.649 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch3=0
+2026-07-21 10:05:38.653 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SEND_2_CONT_REG_CC
+2026-07-21 10:05:38.658 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 GET_OBJECT
+2026-07-21 10:05:38.663 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 MM202 SEND_CONTROL_WORD
+2026-07-21 10:05:38.668 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SET_GRID_CC
+2026-07-21 10:05:38.672 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SET_FREQ_CC
+2026-07-21 10:05:38.677 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SET_CHAN_LIST_CC
+2026-07-21 10:05:38.681 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.686 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.691 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.695 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.700 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 module STOP_SCAN
+2026-07-21 10:05:38.704 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 module RESET_SCAN
+2026-07-21 10:05:38.709 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch0 code=$E182
+2026-07-21 10:05:38.738 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch1 code=$D782
+2026-07-21 10:05:38.771 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch2 code=$E782
+2026-07-21 10:05:38.802 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch3 code=$E582
+2026-07-21 10:05:38.833 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
+2026-07-21 10:05:38.834 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
+2026-07-21 10:05:38.840 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
+2026-07-21 10:05:38.845 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
+2026-07-21 10:05:38.849 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
+2026-07-21 10:05:38.854 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
+2026-07-21 10:05:38.858 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
+2026-07-21 10:05:38.863 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
+2026-07-21 10:05:38.868 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
+2026-07-21 10:05:38.872 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
+2026-07-21 10:05:38.877 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
+2026-07-21 10:05:38.881 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
+2026-07-21 10:05:38.886 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch0=0
+2026-07-21 10:05:38.891 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch0=0
+2026-07-21 10:05:38.895 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch0=0
+2026-07-21 10:05:38.900 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch1=0
+2026-07-21 10:05:38.904 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch1=0
+2026-07-21 10:05:38.909 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch1=0
+2026-07-21 10:05:38.913 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch2=0
+2026-07-21 10:05:38.918 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch2=0
+2026-07-21 10:05:38.923 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch2=0
+2026-07-21 10:05:38.927 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch3=0
+2026-07-21 10:05:38.932 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch3=0
+2026-07-21 10:05:38.936 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch3=0
+2026-07-21 10:05:38.940 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SEND_2_CONT_REG_CC
+2026-07-21 10:05:38.945 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 GET_OBJECT
+2026-07-21 10:05:38.949 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 MM202 SEND_CONTROL_WORD
+2026-07-21 10:05:38.955 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SET_GRID_CC
+2026-07-21 10:05:38.958 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SET_FREQ_CC
+2026-07-21 10:05:38.963 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SET_CHAN_LIST_CC
+2026-07-21 10:05:38.968 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.973 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.977 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.982 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
+2026-07-21 10:05:38.987 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 module STOP_SCAN
+2026-07-21 10:05:38.991 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 module RESET_SCAN
+2026-07-21 10:05:38.996 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch0 code=$D082
+2026-07-21 10:05:39.035 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch1 code=$D382
+2026-07-21 10:05:39.067 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch2 code=$DE82
+2026-07-21 10:05:39.099 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch3 code=$CE82
+2026-07-21 10:05:39.128 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
+2026-07-21 10:05:39.129 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
+2026-07-21 10:05:39.135 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
+2026-07-21 10:05:39.141 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
+2026-07-21 10:05:39.146 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
+2026-07-21 10:05:39.151 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
+2026-07-21 10:05:39.157 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
+2026-07-21 10:05:39.162 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
+2026-07-21 10:05:39.167 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
+2026-07-21 10:05:39.173 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
+2026-07-21 10:05:39.178 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
+2026-07-21 10:05:39.184 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
+2026-07-21 10:05:39.190 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch0=0
+2026-07-21 10:05:39.196 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch0=0
+2026-07-21 10:05:39.202 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch0=0
+2026-07-21 10:05:39.208 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch1=0
+2026-07-21 10:05:39.213 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch1=0
+2026-07-21 10:05:39.218 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch1=0
+2026-07-21 10:05:39.224 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch2=0
+2026-07-21 10:05:39.230 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch2=0
+2026-07-21 10:05:39.235 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch2=0
+2026-07-21 10:05:39.240 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch3=0
+2026-07-21 10:05:39.246 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch3=0
+2026-07-21 10:05:39.251 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch3=0
+2026-07-21 10:05:39.256 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SEND_2_CONT_REG_CC
+2026-07-21 10:05:39.262 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 GET_OBJECT
+2026-07-21 10:05:39.267 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 MM202 SEND_CONTROL_WORD
+2026-07-21 10:05:39.273 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SET_GRID_CC
+2026-07-21 10:05:39.278 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SET_FREQ_CC
+2026-07-21 10:05:39.284 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SET_CHAN_LIST_CC
+2026-07-21 10:05:39.290 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.297 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.302 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.308 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.315 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 module STOP_SCAN
+2026-07-21 10:05:39.320 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 module RESET_SCAN
+2026-07-21 10:05:39.327 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch0 code=$D782
+2026-07-21 10:05:39.365 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch1 code=$CD82
+2026-07-21 10:05:39.396 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch2 code=$D882
+2026-07-21 10:05:39.427 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch3 code=$D582
+2026-07-21 10:05:39.459 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
+2026-07-21 10:05:39.460 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
+2026-07-21 10:05:39.466 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
+2026-07-21 10:05:39.473 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
+2026-07-21 10:05:39.480 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
+2026-07-21 10:05:39.486 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
+2026-07-21 10:05:39.493 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
+2026-07-21 10:05:39.500 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
+2026-07-21 10:05:39.506 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
+2026-07-21 10:05:39.513 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
+2026-07-21 10:05:39.519 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
+2026-07-21 10:05:39.526 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
+2026-07-21 10:05:39.533 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch0=0
+2026-07-21 10:05:39.540 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch0=0
+2026-07-21 10:05:39.547 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch0=0
+2026-07-21 10:05:39.553 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch1=0
+2026-07-21 10:05:39.559 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch1=0
+2026-07-21 10:05:39.565 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch1=0
+2026-07-21 10:05:39.571 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch2=0
+2026-07-21 10:05:39.577 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch2=0
+2026-07-21 10:05:39.582 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch2=0
+2026-07-21 10:05:39.587 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch3=0
+2026-07-21 10:05:39.593 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch3=0
+2026-07-21 10:05:39.598 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch3=0
+2026-07-21 10:05:39.604 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SEND_2_CONT_REG_CC
+2026-07-21 10:05:39.610 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 GET_OBJECT
+2026-07-21 10:05:39.615 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 MM202 SEND_CONTROL_WORD
+2026-07-21 10:05:39.622 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SET_GRID_CC
+2026-07-21 10:05:39.627 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SET_FREQ_CC
+2026-07-21 10:05:39.633 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SET_CHAN_LIST_CC
+2026-07-21 10:05:39.640 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.647 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.652 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.658 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
+2026-07-21 10:05:39.663 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] APPENDSCANMAIN
+2026-07-21 10:05:39.669 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.675 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.681 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.686 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.692 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.699 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.705 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.710 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.716 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.722 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.728 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.735 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.742 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.748 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.754 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.760 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADDCHANNELMODULE
+2026-07-21 10:05:39.766 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] SCAN_SET_CHANS
+2026-07-21 10:05:39.772 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_MESSAGE
+2026-07-21 10:05:39.778 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
+2026-07-21 10:05:39.784 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
+2026-07-21 10:05:39.790 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
+2026-07-21 10:05:39.796 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
+2026-07-21 10:05:39.802 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SET_TIMEOUTSTARTADC_201
+2026-07-21 10:05:39.808 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SET_TIMEOUTSTARTADC_201
+2026-07-21 10:05:39.815 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SET_TIMEOUTSTARTADC_201
+2026-07-21 10:05:39.820 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SET_TIMEOUTSTARTADC_201
+2026-07-21 10:05:39.826 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] CONFIG_SYNC_START
+2026-07-21 10:05:39.832 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.838 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.845 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.851 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.857 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.863 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.870 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.876 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.882 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.889 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.896 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.902 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
+2026-07-21 10:05:39.908 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
+2026-07-21 10:05:39.915 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
+2026-07-21 10:05:39.922 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
+2026-07-21 10:05:39.929 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
+2026-07-21 10:05:39.934 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] SET_TIMEOUTSTARTTIMER
+2026-07-21 10:05:39.940 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 3 SET_TIMEOUTSTART_201
+2026-07-21 10:05:39.946 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 2 SET_TIMEOUTSTART_201
+2026-07-21 10:05:39.951 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 1 SET_TIMEOUTSTART_201
+2026-07-21 10:05:39.956 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] slot 0 SET_TIMEOUTSTART_201
+2026-07-21 10:05:39.962 [DEBUG] [TID:11016|UIThread] [MCBUS][PROTOCOL] START_TRIGGERSTARTADC
+2026-07-21 10:05:40.330 [DEBUG] [TID:11016|UIThread] [MCBUS] programmed channels=16
+2026-07-21 10:05:40.343  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-21 10:05:40.343 [DEBUG] [TID:11016|UIThread] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-21 10:05:41.352 [WARNING] [TID:11016|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-21 10:05:41.604 [WARNING] [TID:11016|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-21 10:05:41.604 [WARNING] [TID:11016|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
+2026-07-21 10:05:41.633 [DEBUG] [TID:11016|UIThread] 10:05:41.633 RecorderLnx started.
+2026-07-21 10:05:41.634 [DEBUG] [TID:11016|UIThread] 10:05:41.634 Auto preview: 5 s then stop/quit (MIC-140 debug).
+2026-07-21 10:05:42.127 [DEBUG] [TID:11016|UIThread] 10:05:42.126 Data sources started.
+2026-07-21 10:05:42.128 [DEBUG] [TID:11016|UIThread] 10:05:42.127 State changed: Stop -> Preview
+2026-07-21 10:05:42.151 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] scan started; live device registered: MC-032: 192.169.12.87:4000
+2026-07-21 10:05:42.157 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #1 port=0 words=532 head=[0 266]
+2026-07-21 10:05:42.158 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #2 port=0 words=798 head=[0 266]
+2026-07-21 10:05:42.165 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #3 port=0 words=798 head=[0 266]
+2026-07-21 10:05:42.171 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #4 port=0 words=798 head=[0 266]
+2026-07-21 10:05:42.178 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #5 port=0 words=266 head=[0 266]
+2026-07-21 10:05:42.184 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #6 port=0 words=532 head=[0 266]
+2026-07-21 10:05:42.189 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #7 port=0 words=798 head=[0 266]
+2026-07-21 10:05:42.196 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS][PROTOCOL] RX raw #8 port=0 words=798 head=[0 266]
+2026-07-21 10:05:42.355 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:42.427 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 281 ms on Thread 5308
+2026-07-21 10:05:42.555 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:42.621 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 5308
+2026-07-21 10:05:42.691 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 250 ms on Thread 17984
+2026-07-21 10:05:42.756 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:42.823 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:42.931 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:42.956 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:43.022 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 5308
+2026-07-21 10:05:43.154 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:43.155 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:43.223 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 5308
+2026-07-21 10:05:43.356 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:43.389 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:43.419 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 5308
+2026-07-21 10:05:43.556 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:43.619 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:43.633 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:43.755 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:43.824 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:43.873 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:43.956 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:44.026 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 5308
+2026-07-21 10:05:44.106 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 17984
+2026-07-21 10:05:44.155 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:44.220 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:44.336 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:44.355 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:44.419 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 5308
+2026-07-21 10:05:44.556 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:44.558 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 17984
+2026-07-21 10:05:44.620 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:44.755 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:44.821 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 250 ms on Thread 17984
+2026-07-21 10:05:44.826 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:44.956 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:45.024 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 5308
+2026-07-21 10:05:45.066 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:45.156 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:45.228 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 156 ms on Thread 5308
+2026-07-21 10:05:45.296 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 17984
+2026-07-21 10:05:45.356 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:45.427 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 5308
+2026-07-21 10:05:45.529 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 17984
+2026-07-21 10:05:45.555 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:45.627 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 5308
+2026-07-21 10:05:45.753 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:45.755 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:45.829 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 5308
+2026-07-21 10:05:45.956 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:46.011 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 17984
+2026-07-21 10:05:46.024 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 5308
+2026-07-21 10:05:46.155 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:46.220 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:46.253 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 235 ms on Thread 17984
+2026-07-21 10:05:46.355 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:46.425 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 5308
+2026-07-21 10:05:46.478 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 17984
+2026-07-21 10:05:46.556 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:46.627 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 188 ms on Thread 5308
+2026-07-21 10:05:46.698 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:46.755 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:46.828 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 203 ms on Thread 5308
+2026-07-21 10:05:46.941 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:46.955 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:47.024 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 187 ms on Thread 5308
+2026-07-21 10:05:47.155 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:47.186 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:47.225 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:47.356 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:47.418 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:47.425 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 171 ms on Thread 5308
+2026-07-21 10:05:47.556 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:47.627 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 204 ms on Thread 5308
+2026-07-21 10:05:47.652 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 17984
+2026-07-21 10:05:47.755 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:47.826 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:47.874 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 17984
+2026-07-21 10:05:47.956 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:48.035 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [DataSource:MC-032: 192.169.12.87:4000] Tick took 172 ms on Thread 5308
+2026-07-21 10:05:48.119 [DEBUG] [TID:17984|Src_mera.file.1] [DataSource:mera.file.1] Tick took 234 ms on Thread 17984
+2026-07-21 10:05:48.131 [DEBUG] [TID:11016|UIThread] 10:05:48.130 Auto preview finished after 5 s, stopping.
+2026-07-21 10:05:48.131  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-21 10:05:48.131 [DEBUG] [TID:11016|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-21 10:05:48.146  RuntimeDetach 192.168.9.142:4000
+2026-07-21 10:05:48.146 [WARNING] [TID:5388|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-21 10:05:48.156 [DEBUG] [TID:20540|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-21 10:05:48.156 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] block channels=16 samples=11520
+2026-07-21 10:05:48.238 [DEBUG] [TID:5308|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped; live state=2 source=MC-032: 192.169.12.87:4000
+2026-07-21 10:05:48.247 [DEBUG] [TID:11016|UIThread] 10:05:48.246 Data sources stopped.
+2026-07-21 10:05:48.248 [DEBUG] [TID:11016|UIThread] 10:05:48.247 State changed: Preview -> Stop
+2026-07-21 10:05:48.261  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-21 10:05:48.261 [DEBUG] [TID:11016|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-21 10:05:48.269 [WARNING] [TID:11016|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped

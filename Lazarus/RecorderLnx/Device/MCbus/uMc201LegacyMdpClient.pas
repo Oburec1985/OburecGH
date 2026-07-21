@@ -54,6 +54,9 @@ type
     procedure Connect;
     function TryConnect(out AErrorMessage: string): Boolean;
     procedure Disconnect;
+    { Сбрасывает только локальное знание о загруженных BIOS модулей.
+      После RESET контроллера RAM модулей нельзя считать сохранённой. }
+    procedure InvalidateLoadedBios;
     function DrainPackets(ATimeoutMs: Cardinal; out APacketCount: Integer;
       out AErrorMessage: string): Boolean;
     function ReadRawPacket(out APort: Word; out AWords: TMc201WordArray): Boolean;
@@ -277,6 +280,11 @@ procedure TMc201LegacyMdpClient.Disconnect;
 begin
   SetLength(fRxBuffer, 0);
   FreeAndNil(fSocket);
+end;
+
+procedure TMc201LegacyMdpClient.InvalidateLoadedBios;
+begin
+  fLoadedBiosSlots := [];
 end;
 
 procedure TMc201LegacyMdpClient.SetTimeoutMs(AValue: Cardinal);

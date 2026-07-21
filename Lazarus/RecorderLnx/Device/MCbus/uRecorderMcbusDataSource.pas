@@ -281,7 +281,10 @@ begin
       end;
     end;
   end;
-  fDevice.ProgramDevice;
+  { Lifecycle задаётся явно: Init выполняется один раз после подключения,
+    Configure может безопасно повторяться при Apply без перезагрузки BIOS. }
+  fDevice.InitializeDevice;
+  fDevice.ConfigureDevice;
   BuildChannelMap;
   SetLength(fTimes, Round(fPollFrequencyHz * UpdateTimeMs / 1000.0));
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);

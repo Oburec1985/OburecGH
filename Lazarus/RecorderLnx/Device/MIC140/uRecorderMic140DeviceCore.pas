@@ -101,6 +101,8 @@ type
 
     procedure Connect;
     procedure Disconnect;
+    procedure InitializeDevice;
+    procedure ConfigureDevice;
     procedure ProgramDevice;
     procedure Start;
     procedure RequestStopAcquisition;
@@ -999,6 +1001,17 @@ begin
   end;
 end;
 
+
+procedure TRecorderMic140DeviceCore.InitializeDevice;
+begin
+  if fState = rdsDisconnected then
+    Connect;
+end;
+
+procedure TRecorderMic140DeviceCore.ConfigureDevice;
+begin
+  ProgramDevice;
+end;
 
 procedure TRecorderMic140DeviceCore.ProgramDevice;
 var
