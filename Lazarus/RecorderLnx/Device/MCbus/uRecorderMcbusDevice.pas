@@ -614,11 +614,9 @@ begin
   fController.TimeoutMs := fConfig.ReadTimeoutMs;
   if not fController.TryConnect(fLastError) then
     raise ERecorderDeviceError.Create('MC-032 connect: ' + fLastError);
-  if not fController.SearchModules(fConfig.MaxSlots, fModules, fLastError) then
-  begin
-    fController.Disconnect;
-    raise ERecorderDeviceError.Create('MC-032 module search: ' + fLastError);
-  end;
+  { Connect только открывает и проверяет транспорт. Состав крейта читается в Init
+    после RESET: предварительный поиск здесь дублировал сетевой обход слотов,
+    а его результат всё равно сбрасывался перед инициализацией. }
   fState := rdsConnected;
 end;
 
@@ -647,6 +645,8 @@ begin
     создание IDMA и начальную конфигурацию. Повторять его при Apply нельзя. }
   if not fController.Config(fConfig, fLastError) then
     raise ERecorderDeviceError.Create('MC-032 initialization: ' + fLastError);
+  fModules := Copy(fController.LastModules, 0,
+    Length(fController.LastModules));
   fHardwareInitialized := True;
   fConfigurationAppliedByInit := True;
   fState := rdsConnected;

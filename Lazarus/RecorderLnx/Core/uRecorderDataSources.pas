@@ -60,7 +60,8 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry);
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
-    { Подготовка железа/транспорта до старта worker-thread (UI / main thread). }
+    { Подготовка железа/транспорта до старта потока сбора. Метод не обращается
+      к UI и может выполняться в отдельном подготовительном потоке. }
     procedure PrepareHardware;
     { Останавливает источник. Вызывается только из worker-thread в конце суперцикла. }
     procedure Stop;
@@ -135,7 +136,7 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry); virtual;
     { Запуск источника }
     procedure Start; virtual;
-    { Подготовка железа/транспорта до старта worker-thread (UI / main thread). }
+    { Подготовка железа/транспорта до старта потока сбора. UI использовать нельзя. }
     procedure PrepareHardware; virtual;
     { Остановка источника (только из worker-thread) }
     procedure Stop; virtual;
@@ -289,6 +290,7 @@ type
     public
       Source: IRecorderDataSource;       { Ссылка на источник }
       Thread: TRecorderDataSourceThread; { Поток-опрашиватель источника }
+      procedure PrepareHardware;
     end;
   private
     fLastErrors: TStringList;           { Ошибки потоков после останова }
@@ -345,7 +347,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF}
-  Math, LazFileUtils, uRecorderConfiguredDataSources;
+  Math, LazFileUtils, uRecorderConfiguredDataSources, uSharedAsync;
 
 {$IFDEF MSWINDOWS}
 type
@@ -1356,6 +1358,11 @@ end;
 
 { TRecorderDataSourceManager }
 
+procedure TRecorderDataSourceManager.TSourceContext.PrepareHardware;
+begin
+  Source.PrepareHardware;
+end;
+
 constructor TRecorderDataSourceManager.Create;
 begin
   inherited Create;
@@ -1440,6 +1447,7 @@ end;
 procedure TRecorderDataSourceManager.PrepareHardwareAll;
 var
   I: Integer;
+  lProcedures: array of TThreadMethod;
 begin
   if fRunning then
     raise ERecorderDataSourceError.Create(
@@ -1447,11 +1455,12 @@ begin
   if fRegistry = nil then
     raise ERecorderDataSourceError.Create(
       'Data source manager tags are not configured');
-  { Подготовка идёт в обратном порядке регистрации. Аппаратные источники
-    добавляются после файловых и диагностических; они должны получить сетевой
-    сеанс до необязательных probe других устройств. }
-  for I := fSources.Count - 1 downto 0 do
-    GetSourceContext(I).Source.PrepareHardware;
+  { Независимые источники имеют отдельные TCP-сеансы и готовятся параллельно.
+    Внутри одного устройства его протокол остаётся строго последовательным. }
+  SetLength(lProcedures, fSources.Count);
+  for I := 0 to fSources.Count - 1 do
+    lProcedures[I] := @GetSourceContext(I).PrepareHardware;
+  SharedRunParallel(lProcedures);
 end;
 
 procedure TRecorderDataSourceManager.StartAll;

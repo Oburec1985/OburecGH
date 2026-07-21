@@ -315,14 +315,17 @@ end;
 
 function SpectrumBenchmarkIterations(AFFTSize: Integer): Integer;
 begin
+  { Бенчмарк выбирает реализацию FFT, но не должен становиться заметной частью
+    загрузки проекта. Для устойчивого сравнения достаточно десятков прогонов:
+    корректность AVX отдельно проверяется по всему выходному массиву. }
   if AFFTSize <= 512 then
-    Result := 4000
+    Result := 400
   else if AFFTSize <= 2048 then
-    Result := 1200
+    Result := 120
   else if AFFTSize <= 8192 then
-    Result := 320
+    Result := 32
   else
-    Result := 96;
+    Result := 12;
 end;
 
 function SpectrumTickMicroseconds: Int64;

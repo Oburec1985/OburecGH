@@ -273,6 +273,11 @@ begin
     Result := lEntry.Reason;
 end;
 
+initialization
+  { Реестры создаются до запуска подготовительных worker-потоков. Ленивое
+    создание из нескольких PrepareHardware одновременно даёт гонку. }
+  RecorderHardwareEnsureRegistry;
+
 finalization
   if gHardwareLiveEntries <> nil then
   begin
