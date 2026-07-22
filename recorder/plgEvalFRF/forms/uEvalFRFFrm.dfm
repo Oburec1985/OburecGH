@@ -754,4 +754,22 @@ object FRFFrm: TFRFFrm
       OnClick = ShowPeaksClick
     end
   end
+  object SpmChart: cChart
+    Left = 0
+    Top = 0
+    Width = 576
+    Height = 666
+    Cursor = crSizeAll
+    Align = alClient
+    Caption = 'SpmChart'
+    TabOrder = 1
+    allowEditPages = False
+    showTV = False
+    showLegend = False
+    selectSize = 5
+    ExplicitLeft = -448
+    ExplicitTop = 216
+    ExplicitWidth = 400
+    ExplicitHeight = 400
+  end
 end

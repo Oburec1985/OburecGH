@@ -1,0 +1,31 @@
+Программа готова к работе. Выберите путь к базе данных или запустите Автотест.
+--- ЗАПУСК АВТОТЕСТОВ ---
+Тестовая БД успешно создана. Сканирование...
+  [OK] Проверка сканирования пройдена
+Очистка тестовой БД...
+Начало очистки базы данных...
+Удаление турбины: Turbine_Delete
+  Каталог турбины удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB\_test_db_
+\Turbine_Delete
+  XML-файл турбины удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB
+\_test_db_\Turbine_Delete.xml
+Удаление турбины: Turbine_Delete_Empty
+  Каталог турбины удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB\_test_db_
+\Turbine_Delete_Empty
+  XML-файл турбины удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB
+\_test_db_\Turbine_Delete_Empty.xml
+  Удаление пустой ступени: Stage_Delete внутри Turbine_Mixed
+    Каталог ступени удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB\_test_db_
+\Turbine_Mixed\Stage_Delete
+    XML-файл ступени удален: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB
+\_test_db_\Turbine_Mixed\Stage_Delete.xml
+Очистка завершена. Удалено турбин: 2, удалено ступеней: 1
+Начало сканирования каталога: d:\works\OburecGH\Lazarus\Tests\ClearBladeDB
+\_test_db_
+Найдена турбина: Turbine_Keep
+  Ступеней: 1, Mera-файлов: 1, Excel-файлов: 0
+Найдена турбина: Turbine_Mixed
+  Ступеней: 1, Mera-файлов: 0, Excel-файлов: 1
+Сканирование завершено. Найдено турбин: 2
+  [OK] Проверка удаления файлов пройдена
+=== АВТОТЕСТЫ УСПЕШНО ПРОЙДЕНЫ! ===

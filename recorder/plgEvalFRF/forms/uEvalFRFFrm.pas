@@ -309,7 +309,6 @@ type
   end;
 
   TFRFFrm = class(TRecFrm)
-    SpmChart: cChart;
     RightGB: TGroupBox;
     ShockCountLabel: TLabel;
     ShockCountE: TEdit;
@@ -353,6 +352,7 @@ type
     WndLab: TLabel;
     useWndCb: TCheckBox;
     LoadBtn: TButton;
+    SpmChart:cchart;
     FilteredSpinButton1: TFilteredSpinButton;
     ShowPeaks: TCheckBox;
     procedure FormCreate(sender: tobject);
@@ -1209,6 +1209,7 @@ begin
   SpmChartDblClick(nil);
   result := true;
 end;
+
 function TFRFFrm.EnsureSelectedBladeSn: boolean;
 var
   bl: cBladeFolder;
@@ -3312,7 +3313,8 @@ begin
     for i := 0 to t.StageCount - 1 do
     begin
       s := t.GetStage(i);
-      StageCB.AddItem(s.name, s);
+      if s<>nil then
+        StageCB.AddItem(s.name, s);
     end;
   end;
   if g_mbase.SelectStage <> nil then

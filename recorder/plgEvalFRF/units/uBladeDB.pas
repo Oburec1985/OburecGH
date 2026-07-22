@@ -185,6 +185,9 @@ type
     procedure doCreateFiles(node:txmlnode);override;
     procedure doLoadDesc(node:txmlnode);override;
   public
+    // поиск папок
+    procedure ScanFolders(deep:integer);override;
+    procedure ScanFiles(deep:integer);override;
     procedure DoLincParent; override;
     function ObjType:string;
     // допуск по отклонению на полосу
@@ -1392,6 +1395,16 @@ end;
 function cBladeFolder.ObjType: string;
 begin
   result:=m_ObjType;
+end;
+
+procedure cBladeFolder.ScanFiles(deep: integer);
+begin
+
+end;
+
+procedure cBladeFolder.ScanFolders(deep: integer);
+begin
+
 end;
 
 function cBladeFolder.Tone(i: integer): point3d;

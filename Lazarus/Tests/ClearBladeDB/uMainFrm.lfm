@@ -1,0 +1,102 @@
+object MainFrm: TMainFrm
+  Left = 350
+  Height = 500
+  Top = 150
+  Width = 800
+  Caption = 'ClearBladeDB Cleaner'
+  ClientHeight = 500
+  ClientWidth = 800
+  OnCreate = FormCreate
+  object pnlTop: TPanel
+    Left = 0
+    Height = 60
+    Top = 0
+    Width = 800
+    Align = alTop
+    ClientHeight = 60
+    ClientWidth = 800
+    TabOrder = 0
+    object lblPath: TLabel
+      Left = 10
+      Height = 15
+      Top = 22
+      Width = 79
+      Caption = 'Database path:'
+      ParentColor = False
+    end
+    object edtPath: TEdit
+      Left = 95
+      Height = 23
+      Top = 18
+      Width = 320
+      TabOrder = 0
+      Text = 'C:\Mera Files\bladeMdb'
+    end
+    object btnSelectDir: TButton
+      Left = 420
+      Height = 25
+      Top = 17
+      Width = 35
+      Caption = '...'
+      TabOrder = 1
+      OnClick = btnSelectDirClick
+    end
+    object btnScan: TButton
+      Left = 465
+      Height = 25
+      Top = 17
+      Width = 90
+      Caption = 'Scan'
+      TabOrder = 2
+      OnClick = btnScanClick
+    end
+    object btnClean: TButton
+      Left = 560
+      Height = 25
+      Top = 17
+      Width = 90
+      Caption = 'Clean'
+      Enabled = False
+      TabOrder = 3
+      OnClick = btnCleanClick
+    end
+    object btnTest: TButton
+      Left = 660
+      Height = 25
+      Top = 17
+      Width = 120
+      Caption = 'Run Self-Test'
+      TabOrder = 4
+      OnClick = btnTestClick
+    end
+  end
+  object lstTurbines: TListBox
+    Left = 0
+    Height = 440
+    Top = 60
+    Width = 300
+    Align = alLeft
+    ItemHeight = 0
+    TabOrder = 1
+  end
+  object splSplit: TSplitter
+    Left = 300
+    Height = 440
+    Top = 60
+    Width = 5
+  end
+  object txtLog: TMemo
+    Left = 305
+    Height = 440
+    Top = 60
+    Width = 495
+    Align = alClient
+    ReadOnly = True
+    ScrollBars = ssBoth
+    TabOrder = 3
+  end
+  object SelectDirectoryDialog1: TSelectDirectoryDialog
+    Left = 350
+    Top = 100
+  end
+end

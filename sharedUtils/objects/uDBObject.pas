@@ -61,8 +61,8 @@ type
     procedure doUpdateFolder(str:string);virtual;
     function CreateDBObj(str:string):cDBobject;virtual;
     // поиск папок
-    procedure ScanFolders(deep:integer);
-    procedure ScanFiles(deep:integer);
+    procedure ScanFolders(deep:integer);virtual;
+    procedure ScanFiles(deep:integer);virtual;
     function TypeString:String;override;
     procedure AddPrefix(str:string);
     procedure setNotifier(str:string);
