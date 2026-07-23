@@ -1,0 +1,1 @@
+﻿index,time_iso,relative_ms,delta_ms,direction,src_ip,src_port,dst_ip,dst_port,wire_len,captured_len,ip_len,seq,ack,flags,tcp_payload_len,payload_hex,section,interface_id

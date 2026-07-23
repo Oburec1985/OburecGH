@@ -13,8 +13,6 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
-      <Target FileName="Tests\Mic140ProtocolDebug\Mic140ProtocolDebug.lpi"/>
-      <Target FileName="Tests\Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpi"/>
       <Target FileName="Tests\mic185\mic185_acquire_test.lpi">
         <BuildModes>
           <Mode Name="Default"/>
@@ -26,6 +24,11 @@
         </BuildModes>
       </Target>
       <Target FileName="..\Tests\RecorderTests\Mc201ProtocolDebug\Mc201ProtocolDebug.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Tests\mic140\Mic140ProtocolDebug_Codex\Mic140ProtocolDebug_Codex.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

@@ -31,6 +31,9 @@
   (`UI/uTagSettingsDialog.lfm`): увеличены нижние группы и добавлены вертикальные зазоры.
 
 - [ ] MIC-140 debug stand (`Tests/Mic140ProtocolDebug`): PASS AIn 1–48 ±50 + TIn 1–3
+  - [x] Добавлен контролируемый `pktmon`-захват по IP/порту: ETL + PCAPNG +
+    CSV/таймлайн с временем, направлением, TCP seq/ack/flags, размерами и hex
+    payload; имена дампов начинаются с IP прибора
   - [x] Исправлено падение при connect в GUI: WSAStartup/WSACleanup вынесены в секцию initialization/finalization в uMic140Registration.pas, оптимизирован поиск CDefaultHost
   - [x] `Tests/Mic140ProtocolDebug_Codex`: added `device\MIC140\uMic140Device.pas`
     as a buildable `IRecorderDevice` MIC-140 skeleton with empty programming/read logic
@@ -400,5 +403,4 @@
 - [x] Описано конфигурирование порций данных (время выдержки Settling Time, размер в сек/отсчетах/по стабильности).
 - [x] Описана многоканальная параллельная/последовательная обработка с авто/ручной коммутацией.
 - [x] Обновлена заметка `cach/notes_calibration_tz.md` со сводкой всех 9 требований.
-
 

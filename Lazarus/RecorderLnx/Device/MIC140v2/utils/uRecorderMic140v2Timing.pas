@@ -43,9 +43,11 @@ function Mic140v2FrequencyCount: Integer;
 function Mic140v2Frequency(AIndex: Integer): Double;
 function Mic140v2NormalizeFrequency(AFrequencyHz: Double): Double;
 function Mic140v2TimingChannelCount(AChannelCount: Integer;
-  AGroundEnabled: Boolean): Word;
+  AGroundEnabled: Boolean;
+  ATemperatureChannelCount: Integer = MIC140TemperatureChannelCount): Word;
 function Mic140v2TimingForFrequency(AFrequencyHz: Double;
-  AChannelCount: Integer; AGroundEnabled: Boolean = False): TRecorderMic140Timing;
+  AChannelCount: Integer; AGroundEnabled: Boolean = False;
+  ATemperatureChannelCount: Integer = MIC140TemperatureChannelCount): TRecorderMic140Timing;
 function Mic140v2UiTimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 
 function Mic140v2PeriodDecayToSport(APeriodSec: Double): Word;
@@ -128,9 +130,10 @@ var
 begin
   lEnv := GetEnvironmentVariable('MIC140_DEBUG_GROUND_DELAY');
   if lEnv <> '' then
-    Result := StrToIntDef(lEnv, 61) / 1000000.0
+    Result := StrToFloatDef(lEnv, 19.6875) / 1000000.0
   else
-    Result := 61.0e-6;
+    Result := Mic140LegacyCodeToPeriod(CMic140LegacyPeriod4ChanCode) +
+      Mic140LegacyMinProgrammingPeriod;
 end;
 
 function Mic140v2PeriodDecayToSport(APeriodSec: Double): Word;
@@ -274,26 +277,30 @@ begin
 end;
 
 function Mic140v2TimingChannelCount(AChannelCount: Integer;
-  AGroundEnabled: Boolean): Word;
+  AGroundEnabled: Boolean; ATemperatureChannelCount: Integer): Word;
 begin
   if AChannelCount <= 0 then
     AChannelCount := MIC140DefaultChannelCount;
   { [ORIG] ModuleMC114::GetCountChansFor(flag_allch_sampl, flag_chan_ground):
     all channels on → GetMaxChanCount() = AIn+TIn; doubled only when ground on. }
+  if ATemperatureChannelCount < 0 then
+    ATemperatureChannelCount := 0;
   if AGroundEnabled then
-    Result := Word((AChannelCount + MIC140TemperatureChannelCount) * 2)
+    Result := Word((AChannelCount + ATemperatureChannelCount) * 2)
   else
-    Result := Word(AChannelCount + MIC140TemperatureChannelCount);
+    Result := Word(AChannelCount + ATemperatureChannelCount);
 end;
 
 function Mic140v2TimingForFrequency(AFrequencyHz: Double;
-  AChannelCount: Integer; AGroundEnabled: Boolean): TRecorderMic140Timing;
+  AChannelCount: Integer; AGroundEnabled: Boolean;
+  ATemperatureChannelCount: Integer): TRecorderMic140Timing;
 var
   lCountChans: Word;
   lPeriodDecaySec: Double;
 begin
   Result.FrequencyHz := Mic140v2NormalizeFrequency(AFrequencyHz);
-  lCountChans := Mic140v2TimingChannelCount(AChannelCount, AGroundEnabled);
+  lCountChans := Mic140v2TimingChannelCount(AChannelCount, AGroundEnabled,
+    ATemperatureChannelCount);
   lPeriodDecaySec := CMic140LegacyInitPeriodDecaySec;
   lPeriodDecaySec := Mic140v2CheckPeriodDecay(lCountChans,
     1.0 / Result.FrequencyHz, lPeriodDecaySec, CMic140LegacyPeriodAdSec, 1,

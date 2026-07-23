@@ -65,7 +65,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="device;device\MIC140"/>
+      <OtherUnitFiles Value="..\..\..\Device;..\..\..\Device\MIC140;..\..\..\Device\MIC140v2;..\..\..\Device\MIC140v2\utils;..\..\..\Core;..\..\..\Algs;..\..\..\UI;..\..\..\..\SharedUtils;device;device\MIC140"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

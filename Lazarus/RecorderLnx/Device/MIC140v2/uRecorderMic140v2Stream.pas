@@ -616,7 +616,7 @@ begin
       idx := j * AStride + i;
       ABlock.Values[i][j] := SmallInt(ARaw.Data[idx]);
     end;
-  SAux.ChannelCount := MIC140TemperatureChannelCount;
+  SAux.ChannelCount := Max(0, AStride - AChCnt);
   SAux.SampleCount := ABlock.SampleCount;
   if AStride <= AChCnt then
   begin

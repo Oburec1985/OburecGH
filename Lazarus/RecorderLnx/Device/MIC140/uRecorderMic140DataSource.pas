@@ -1234,6 +1234,7 @@ begin
   end;
   PublishDiagnostics(CMic140StatusConnected, 'connected', True);
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
+  fDevice.InitializeDevice;
   if fMic <> nil then
   begin
     fDeviceSerial := fMic.GetDeviceSerial;
@@ -1311,7 +1312,7 @@ begin
       fMic.TrySetDeviceProperty(rdpMic140BoardCommutIndex, lConfig.BoardCommutIndex, I);
     end;
   end;
-  fDevice.ProgramDevice;
+  fDevice.ConfigureDevice;
   if fDevice.State = rdsProgrammed then
     PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True)
   else

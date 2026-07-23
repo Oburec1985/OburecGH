@@ -290,6 +290,7 @@ const
     (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1));
 var
   lIdx: Integer;
+  lCode: array[0..15] of Word;
 begin
   if (APhysicalChannel < 0) or (APhysicalChannel > 47) then
   begin
@@ -297,7 +298,12 @@ begin
     Exit;
   end;
   lIdx := APhysicalChannel;
-  Mic140v2PackMe04848(CCodeChanAIn[lIdx], AW0, AW1);
+  lCode := CCodeChanAIn[lIdx];
+  { В оригинальной таблице MIC140_48v2 code_chanAIn[] бит indicator для всех
+    48 AIn равен нулю. Ошибочная единица у физической половины 24..47
+    коммутировала логические каналы 1..24 на служебный источник. }
+  lCode[15] := 0;
+  Mic140v2PackMe04848(lCode, AW0, AW1);
 end;
 
 procedure Mic140v2BuildAInCode48v2(APhysicalChannel: Integer;

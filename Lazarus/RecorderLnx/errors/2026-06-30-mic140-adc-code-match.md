@@ -91,3 +91,17 @@
 - The active 48-word payload is healthy as a transport: latest log shows `header=OK size=106 data=96 samples=2 stride=48`, `read=18`, `published=18`, `readGaps=0`, `publishGaps=0`, `softRestart=0`, normal stop.
 - Acceptance still fails: every published block violates the exact Recorder ADC profile and no real TIn line is present (`tin=no TIn line`).
 - The current network payload is `2 * 48 WORD` per block, not `2 * 51 WORD`; TIn is not present in the live payload under the current scan program.
+
+## 2026-07-23: разделение legacy и MIC-140-48v3
+
+| ID | Гипотеза | Проверка | Результат | Статус |
+| --- | --- | --- | --- | --- |
+| H67 | Расхождение вызвано неверным диапазоном `-20..80 мВ`. | Сопоставлены `ranges_mi118`, `ampl1_mc114v5`, `ampl2_mc114v5`, `SetRangeIndex` оригинала и живой дамп дескриптора RecorderLnx. | Оригинал и порт дают `hard_amplif=100`, `amplif=1`, итоговый `desc=$0100`. Диапазон не является причиной. | rejected |
+| H68 | Один физический MIC-140 допускает два разных штатных профиля программирования, которые нельзя смешивать при сравнении кодов. | Пользователь добавил тот же IP в оригинальном Recorder другим типом/профилем. Legacy дал AIn1..24 около `-6 тыс.`, AIn25..48 около `-14..-18 тыс.`, `count_aver=344`, ground включён. MIC-140-48v3 без ground ранее дал индивидуальные коды каналов и `count_aver=298`. | Подтверждено. Текущий RecorderLnx лог `rev=14.1`, `slots=60`, `stride=55`, `count=298`, `desc0=[0,128,256,...]` соответствует именно v3, а не legacy. | confirmed |
+
+Правило приёмки: эталонные коды сравнивать только внутри одного аппаратного
+профиля. Для текущей задачи эталоном является `MIC-140-48v3`, без заземления,
+с семью видимыми TIn и `count_aver=298`. Набор legacy с `count_aver=344` не
+использовать для оценки правильности v3, хотя он работает с тем же IP.
+
+| H69 | В тестовом приложении профиль и аппаратная ревизия были смешаны условием `DevRev >= 14 => v3`. | Введены отдельные `TMic140ProgrammingProfile` и `TMic140HardwareProtocol`. Тест явно передаёт `mppMic14048v3`; аппаратный формат после `Init` выбирается по считанному `DevRev` (`<12` legacy, `>=12` 48v2), карта — по `DevSubRev`. | Реализовано. Обе сборки успешны. Живая проверка отложена: `192.168.14.48:4000` сейчас не принимает TCP, локальных Recorder/Mic140 процессов нет. | implemented |

@@ -7,3 +7,4 @@ backup/
 *.res
 *.compiled
 *.dbg
+Tests/mic140/Mic140ProtocolDebug_Codex/Mic140ProtocolDebug_Codex.ini

@@ -167,25 +167,12 @@ end;
 
 function Mic140v2RawRowRecorderProfile(const ARaw: TMic140LegacyRawBlock;
   AOffset, AUserCh: Integer): Boolean;
-var
-  i, code, sat, pos: Integer;
 begin
-  Result := False;
-  if (AOffset < 0) or (AUserCh < 48) or
-     (AOffset + 48 > ARaw.DataWordCount) then
-    Exit;
-  sat := 0;
-  pos := 0;
-  for i := 0 to 47 do
-  begin
-    code := SmallInt(ARaw.Data[AOffset + i]);
-    if (code >= 32767) or (code <= -32768) then
-      Inc(sat)
-    else if code > CPosThr then
-      Inc(pos);
-  end;
-  Result := (sat < CMinSat) and (pos < CMinPos) and
-    Mic140v2RawRowHeadNominal(ARaw, AOffset, AUserCh);
+  { Транспортный слой проверяет только наличие полной строки. Значения АЦП,
+    включая насыщение и постоянное смещение, являются допустимыми данными и
+    не должны сравниваться с амплитудным профилем конкретного стенда. }
+  Result := (AOffset >= 0) and (AUserCh >= 48) and
+    (AOffset + 48 <= ARaw.DataWordCount);
 end;
 
 function Mic140v2RawCorrupt(const ARaw: TMic140LegacyRawBlock;

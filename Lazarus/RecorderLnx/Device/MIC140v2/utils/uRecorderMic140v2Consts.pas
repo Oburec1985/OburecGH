@@ -18,6 +18,7 @@ const
   CMic140LegacyTypeMic140 = 12;  { TYPE_MIC140 }
 
   { --- BIOS CallCommand [ORIG: mtc/Ccdevice.h] --- }
+  CMic140LegacyCmdReset = 10;
   CMic140LegacyCmdAppendScanMain = 82;
   CMic140LegacyCmdResetScanMain = 83;
   CMic140LegacyCmdConfigScanMain = 84;
@@ -38,6 +39,9 @@ const
        mic140_96mod.h SIZE_START_DESC_CHAN_BIOS=3; header scan message 10 words] --- }
   CMic140LegacyBiosScanContextWords = 6;
   CMic140LegacyBiosScanBufferDescWords = 10;
+  { [ORIG: mic140_96scn.cpp SIZE_DESC_CHAN] дескриптор модуля скана,
+    который BIOS заполняет по CMD_ADDCHANNELMODULE. }
+  CMic140LegacyModuleScanDescWords = 5;
   CMic140LegacyBiosHeaderWords = 10;
   CMic140LegacyDescChanWords = 5;
   CMic140LegacyStartDescChanWords = 3;

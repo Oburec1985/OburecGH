@@ -74,15 +74,22 @@ const
   { [ORIG] MIC140_48mod / MIC140_48v2mod — физический индекс TIn в var_addr+MAX_AIN+n }
   CMic140TInNum: array[0..11] of Integer =
     (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
-  CMic140TInNumSubRev1: array[0..11] of Integer =
-    (4, 3, 2, 1, 0, 5, 6, 7, 8, 9, 10, 11);
+  { В полной оригинальной таблице SubRev1 есть 12 внутренних позиций
+    (4,3,2,1,0,5..11), однако MIC-140-48v3 экспортирует только семь каналов
+    t6..t12. Индекс RecorderLnx 0..6 поэтому соответствует DM 5..11. }
+  CMic140TInNumSubRev1Visible: array[0..6] of Integer =
+    (5, 6, 7, 8, 9, 10, 11);
 
 function Mic140v2TInDmWordOffset(AVisibleIndex: Integer; ADevSubRev: Word): Integer;
 begin
   if (AVisibleIndex < 0) or (AVisibleIndex > High(CMic140TInNum)) then
     Exit(0);
   if ADevSubRev = 1 then
-    Result := CMic140TInNumSubRev1[AVisibleIndex]
+  begin
+    if AVisibleIndex > High(CMic140TInNumSubRev1Visible) then
+      Exit(0);
+    Result := CMic140TInNumSubRev1Visible[AVisibleIndex];
+  end
   else
     Result := CMic140TInNum[AVisibleIndex];
 end;

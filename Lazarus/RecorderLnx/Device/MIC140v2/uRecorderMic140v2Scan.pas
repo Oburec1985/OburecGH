@@ -17,6 +17,20 @@ uses
   uRecorderMic140v2Timing, uRecorderMic140v2ChanDesc, uRecorderMic140v2Helper;
 
 type
+  { Логический профиль задаётся конфигурацией, а не определяется по версии
+    прошивки. Аппаратный вариант обмена внутри профиля выбирается по DevRev. }
+  TMic140ProgrammingProfile = (
+    mppAutoCompatibility,
+    mppMic14048,
+    mppMic14048v2,
+    mppMic14048v3
+  );
+
+  TMic140HardwareProtocol = (
+    mhpMic140Legacy,
+    mhpMic14048v2
+  );
+
   TMic140v2ScanProgrammer = class
   private
     fCli: TMic140v2Tcp;
@@ -25,6 +39,10 @@ type
     fUpdMs: Cardinal;
     fDevRev: Word;
     fDevSubRev: Word;
+    fProfile: TMic140ProgrammingProfile;
+    fHardwareProtocol: TMic140HardwareProtocol;
+    fTemperatureChannelCount: Integer;
+    fGroundEnabled: Boolean;
     fRangeIndexes: array of Integer;
     fCommutIndexes: array of Integer;
     fBoardCommutIndexes: array of Integer;
@@ -46,7 +64,9 @@ type
       AUpdMs: Cardinal; ADevRev, ADevSubRev: Word;
       const ARangeIndexes: array of Integer;
       const AUserCommutIndexes: array of Integer;
-      const ABoardCommutIndexes: array of Integer);
+      const ABoardCommutIndexes: array of Integer;
+      AProfile: TMic140ProgrammingProfile = mppAutoCompatibility;
+      AGroundEnabled: Boolean = False);
     { Полный цикл: stop → RESET → timer → FIFO → каналы → SCAN_SET_CHANS. }
     function ProgramScan(out AErr: string): Boolean;
     function LastTiming: TRecorderMic140Timing;
@@ -54,6 +74,7 @@ type
     function LastExpectedMessageWords: Word;
     property LastValAddr: Word read fLastValAddr;
     property LastPayloadStride: Integer read fLastPayloadStride;
+    property TemperatureChannelCount: Integer read fTemperatureChannelCount;
   end;
 
 implementation
@@ -97,7 +118,8 @@ constructor TMic140v2ScanProgrammer.Create(ACli: TMic140v2Tcp; AChCnt: Integer;
   AFreq: Double; AUpdMs: Cardinal; ADevRev, ADevSubRev: Word;
   const ARangeIndexes: array of Integer;
   const AUserCommutIndexes: array of Integer;
-  const ABoardCommutIndexes: array of Integer);
+  const ABoardCommutIndexes: array of Integer;
+  AProfile: TMic140ProgrammingProfile; AGroundEnabled: Boolean);
 var
   I: Integer;
 begin
@@ -108,6 +130,22 @@ begin
   fUpdMs := AUpdMs;
   fDevRev := ADevRev;
   fDevSubRev := ADevSubRev;
+  fProfile := AProfile;
+  if fDevRev >= CMic140v2DevRev12 then
+    fHardwareProtocol := mhpMic14048v2
+  else
+    fHardwareProtocol := mhpMic140Legacy;
+  { Только профиль определяет экспортируемый набор каналов. Ревизия определяет
+    формат аппаратных дескрипторов внутри уже выбранного профиля. }
+  if (fProfile = mppMic14048v3) or
+     ((fProfile = mppAutoCompatibility) and (fDevRev >= 14)) then
+    fTemperatureChannelCount := 7
+  else
+    fTemperatureChannelCount := MIC140TemperatureChannelCount;
+  { Режим является частью аппаратной конфигурации. В эталонном дампе
+    MIC-140-48v3 от 23.07.2026 он включён: BIOS получает пары
+    «дескриптор земли → дескриптор канала». }
+  fGroundEnabled := AGroundEnabled;
   fLastFifoReady := 0;
   SetLength(fRangeIndexes, fChCnt);
   SetLength(fCommutIndexes, fChCnt);
@@ -157,13 +195,17 @@ end;
 function TMic140v2ScanProgrammer.BiosScanSlotCount: Integer;
 begin
   { [ORIG] flag_allch_sampl: GetMaxCountChanAIn + GetMaxCountChanTIn (MIC140_48mod) }
-  Result := fChCnt + MIC140TemperatureChannelCount;
+  { В режиме максимального быстродействия flag_allch_sampl=0 оригинал
+    программирует только созданные пользовательские каналы. Для профиля v3
+    это 48 AIn + видимые t6..t12 = 55, а не все 12 внутренних TIn. }
+  Result := fChCnt + fTemperatureChannelCount;
 end;
 
 function TMic140v2ScanProgrammer.PayloadStride: Integer;
 begin
-  { Стабильный FIFO: 48 AIn; TIn — READMEMDM 114 (см. protocol/05_data_stream.md) }
-  Result := fChCnt;
+  { Как в оригинале при flag_allch_sampl=0: m_ChanDump[2]=channels.Size().
+    Для профиля v3 это 48 AIn и семь созданных TIn, всего 55 слов на строку. }
+  Result := fChCnt + fTemperatureChannelCount;
 end;
 
 function TMic140v2ScanProgrammer.FifoReadyWords: Word;
@@ -233,18 +275,20 @@ end;
 
 function TMic140v2ScanProgrammer.LastTiming: TRecorderMic140Timing;
 begin
-  Result := Mic140v2TimingForFrequency(fFreq, fChCnt);
+  Result := Mic140v2TimingForFrequency(fFreq, fChCnt, fGroundEnabled,
+    fTemperatureChannelCount);
 end;
 
 function TMic140v2ScanProgrammer.ProgramScan(out AErr: string): Boolean;
 var
-  i, intCnt, descCnt, ptrCnt, tIdx, lInternalTempIdx: Integer;
+  i, intCnt, descCnt, ptrCnt, tIdx, lInternalTempIdx, lTempValueIdx,
+    lDescBase: Integer;
   args, desc, chanDump, reply: TMic140v2WordBuf;
   pg, fifoAddr, fifoDesc, scanDesc, scanChan, valAddr, descAddr: Word;
-  fifoPg, fifoReady, fifoCapacity, me0, me1, lRegDesc: Word;
+  fifoPg, fifoReady, fifoCapacity, me0, me1, lRegDesc, scanChanPg: Word;
   stopErr: string;
   tim: TRecorderMic140Timing;
-  lRev2: Boolean;
+  lRev2, lHiddenTIn: Boolean;
   lChannelDelaySport: Word;
 begin
   Result := False;
@@ -257,7 +301,8 @@ begin
 
   fBufCur := CMic140LegacyDmBufferBegin;
   fHeapCur := CMic140LegacyDmHeapBegin;
-  tim := Mic140v2TimingForFrequency(fFreq, fChCnt);
+  tim := Mic140v2TimingForFrequency(fFreq, fChCnt, fGroundEnabled,
+    fTemperatureChannelCount);
   intCnt := BiosScanSlotCount;
   fifoReady := FifoReadyWords;
   fifoCapacity := 2 * fifoReady;
@@ -357,7 +402,11 @@ begin
     AErr := 'value area alloc failed';
     Exit;
   end;
-  descCnt := intCnt + 1;
+  if fGroundEnabled then
+    lDescBase := 1
+  else
+    lDescBase := 0;
+  descCnt := intCnt + lDescBase;
   if not AllocHeap(descCnt * CMic140LegacyDescChanWords, pg, descAddr) then
   begin
     AErr := 'channel desc alloc failed';
@@ -365,13 +414,26 @@ begin
   end;
 
   SetLength(desc, descCnt * CMic140LegacyDescChanWords);
-  me0 := Mic140v2Level0Code;
-  me1 := Mic140v2Level0Code;
-  { [ORIG] ground: code_level0mV → code_ME048[1], [0]=0 }
+  if fHardwareProtocol = mhpMic14048v2 then
+    Mic140v2PackLevel0Me04848v2(lRev2, me0, me1)
+  else
+  begin
+    me0 := 0;
+    me1 := Mic140v2Level0Code;
+  end;
+  { [ORIG: MIC140_48v2mod.cpp] для земли используется отдельный
+    code_level0mV, упакованный тем же 24-битным алгоритмом, что и AIn.
+    Для rev14.1 это даёт 0001:C002, что подтверждено сетевым дампом. }
   desc[0] := me0;
   desc[1] := me1;
   desc[2] := CGroundDesc;
-  desc[3] := tim.LegacyGroundDelaySport - 1;
+  { В исходнике в desc записывается PeriodDecayToSport(period)-1.
+    Текущий helper возвращает величину уже с одним дополнительным тиком;
+    эталонный пакет содержит 0008 при вычисленном sport=10. }
+  if tim.LegacyGroundDelaySport > 1 then
+    desc[3] := tim.LegacyGroundDelaySport - 2
+  else
+    desc[3] := 0;
   desc[4] := CMic140LegacyMaskGroundChannel;
 
   for i := 0 to intCnt - 1 do
@@ -379,26 +441,53 @@ begin
     if i < fChCnt then
     begin
       if i <= High(CAInNum48) then
-        Mic140v2Me048ForPhysicalChannelWithUserCommut(CAInNum48[i],
-          fCommutIndexes[i], me0, me1)
+      begin
+        if (fHardwareProtocol = mhpMic14048v2) and
+          (fCommutIndexes[i] = CMic140ChannelCommutIn) then
+          { MIC-140-48v2/v3 использует 24-битный TRegME048. Старый
+            16-битный layout допустим только для базового MIC-140-48. }
+          Mic140v2PackMe04848v2(CAInNum48[i], lRev2, me0, me1)
+        else
+          Mic140v2Me048ForPhysicalChannelWithUserCommut(CAInNum48[i],
+            fCommutIndexes[i], me0, me1);
+      end
       else
       begin
         me0 := 0;
         me1 := 0;
       end;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] :=
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 0] := me0;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 1] := me1;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 2] :=
         Mic140v2AInRegDesc(fRangeIndexes[i], fBoardCommutIndexes[i]);
-      desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 4] := Word(valAddr + i);
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 4] := Word(valAddr + i);
     end
     else
     begin
       tIdx := i - fChCnt;
-      lInternalTempIdx := Mic140v2TInDmWordOffset(tIdx, fDevSubRev);
+      if (fProfile = mppMic14048v3) or
+         ((fProfile = mppAutoCompatibility) and (fDevRev >= 14)) then
+      begin
+        { Профиль v3 экспортирует t6..t12. При flag_allch_sampl=0 скрытые
+          TIn0..4 вообще не входят в циклограмму; код ME048 и DM-адрес значения
+          используют внутренние номера 5..11. Порядок слов FIFO при этом
+          определяется списком 55 дескрипторов, а не промежутками в DM. }
+        lHiddenTIn := False;
+        if fDevSubRev = 1 then
+          lInternalTempIdx := tIdx + 5
+        else
+          lInternalTempIdx := tIdx;
+        lTempValueIdx := lInternalTempIdx;
+      end
+      else
+      begin
+        lHiddenTIn := False;
+        lInternalTempIdx := Mic140v2TInDmWordOffset(tIdx, fDevSubRev);
+        lTempValueIdx := lInternalTempIdx;
+      end;
 
-      if (fDevRev >= CMic140v2DevRev12) or lRev2 then
+      if (fHardwareProtocol = mhpMic14048v2) or lRev2 then
       begin
         if fDevSubRev = 1 then
         begin
@@ -423,12 +512,16 @@ begin
         lRegDesc := Mic140v2TInDesc48(tIdx);
       end;
 
-      desc[(i + 1) * CMic140LegacyDescChanWords + 0] := me0;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 1] := me1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 2] := lRegDesc;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
-      desc[(i + 1) * CMic140LegacyDescChanWords + 4] :=
-        Word(CMaskChanLeft or (valAddr + fChCnt + lInternalTempIdx));
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 0] := me0;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 1] := me1;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 2] := lRegDesc;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 3] := lChannelDelaySport - 1;
+      desc[(i + lDescBase) * CMic140LegacyDescChanWords + 4] :=
+        Word(valAddr + fChCnt + lTempValueIdx);
+      if lHiddenTIn then
+        desc[(i + lDescBase) * CMic140LegacyDescChanWords + 4] :=
+          desc[(i + lDescBase) * CMic140LegacyDescChanWords + 4] or
+          CMaskChanLeft;
     end;
   end;
 
@@ -438,28 +531,49 @@ begin
     Exit;
   end;
 
-  { H45: без ground в ptr list. TIn ptr остаются (MASK → DM), chanDump[2]=48 AIn. }
-  ptrCnt := intCnt;
+  { Как в оригинале при включённом заземлении перед каждым измеряемым
+    каналом в список указателей добавляется дескриптор земли. }
+  if fGroundEnabled then
+    ptrCnt := intCnt * 2
+  else
+    ptrCnt := intCnt;
   SetLength(chanDump, CMic140LegacyStartDescChanWords + ptrCnt);
   chanDump[0] := tim.LegacyAverageDelaySport - 1;
   chanDump[1] := tim.AverageSampleCount;
   { [ORIG] m_ChanDump[2]=channels.Size() — visible user AIn count, not internal slot count. }
-  chanDump[2] := Word(fChCnt);
+  chanDump[2] := Word(PayloadStride);
   { [ORIG] m_ChanDump[2]=channels.Size() — число пользовательских AIn }
   for i := 0 to intCnt - 1 do
-    chanDump[CMic140LegacyStartDescChanWords + i] :=
-      Word(descAddr + (i + 1) * CMic140LegacyDescChanWords);
+    if fGroundEnabled then
+    begin
+      chanDump[CMic140LegacyStartDescChanWords + i * 2] := descAddr;
+      chanDump[CMic140LegacyStartDescChanWords + i * 2 + 1] :=
+        Word(descAddr + (i + lDescBase) * CMic140LegacyDescChanWords);
+    end
+    else
+      chanDump[CMic140LegacyStartDescChanWords + i] :=
+        Word(descAddr + (i + lDescBase) * CMic140LegacyDescChanWords);
 
   RecorderDebugLog(Format(
-    '[MIC140v2 scan] rev=%d.%d rev2=%s slots=%d ptrs=%d val=0x%.4x desc=0x%.4x fifo=0x%.4x ready=%d capacity=%d stride=%d chanDelay=%d timer(scale=%d period=%d div=%d) desc0=[%s] desc1=[%s] desc48=[%s] ptrHead=[%s]',
-    [fDevRev, fDevSubRev, BoolToStr(lRev2, True), intCnt, ptrCnt, valAddr, descAddr, fifoAddr, fifoReady, fifoCapacity, PayloadStride,
+    '[MIC140v2 scan] profile=%d hwProtocol=%d rev=%d.%d rev2=%s slots=%d ptrs=%d val=0x%.4x desc=0x%.4x fifo=0x%.4x ready=%d capacity=%d stride=%d chanDelay=%d timer(scale=%d period=%d div=%d) desc0=[%s] desc1=[%s] desc48=[%s] ptrHead=[%s]',
+    [Ord(fProfile), Ord(fHardwareProtocol), fDevRev, fDevSubRev,
+     BoolToStr(lRev2, True), intCnt, ptrCnt, valAddr, descAddr, fifoAddr, fifoReady, fifoCapacity, PayloadStride,
      lChannelDelaySport, TimerScale, TimerPeriod, ScanDivider,
      Mic140v2WordsPreview(desc, 0, 5),
      Mic140v2WordsPreview(desc, CMic140LegacyDescChanWords, 5),
      Mic140v2WordsPreview(desc, 48 * CMic140LegacyDescChanWords, 10),
      Mic140v2WordsPreview(chanDump, 0, 12)]));
 
-  scanChan := descAddr;
+  { [ORIG: ScanMIC140::ChannelsToBios] после аппаратных дескрипторов отдельно
+    выделяется SIZE_DESC_CHAN=5. CMD_ADDCHANNELMODULE записывает туда описание
+    модуля, а CMD_SCAN_SET_CHANS получает адрес именно этого блока. Нельзя
+    подставлять descAddr: BIOS тогда перезаписывает дескрипторы первых AIn. }
+  scanChanPg := 0;
+  if not AllocHeap(CMic140LegacyModuleScanDescWords, scanChanPg, scanChan) then
+  begin
+    AErr := 'module scan desc alloc failed';
+    Exit;
+  end;
   pg := 0;
   if not AllocHeap(Length(chanDump), pg, scanDesc) then
   begin
@@ -478,7 +592,7 @@ begin
   args[2] := scanDesc;
   args[3] := ptrCnt;
   args[4] := scanChan;
-  args[5] := pg;
+  args[5] := scanChanPg;
   if not fCli.CallCommand(CMic140LegacyCmdAddChannelModule, args, 0, reply, AErr) then
   begin
     { [ORIG] mic140_96scn::ChannelsToBios CMD_ADDCHANNELMODULE, tmp[3]=ptrCount }
@@ -490,7 +604,7 @@ begin
   args[0] := CMic140LegacyScanId;
   args[1] := 1;
   args[2] := scanChan;
-  args[3] := pg;
+  args[3] := scanChanPg;
   if not fCli.CallCommand(CMic140LegacyCmdScanSetChans, args, 0, reply, AErr) then
   begin
     AErr := 'SCAN_SET_CHANS: ' + AErr;

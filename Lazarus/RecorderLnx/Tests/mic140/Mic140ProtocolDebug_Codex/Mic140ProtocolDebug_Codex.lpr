@@ -9,9 +9,8 @@ uses
   cthreads,
   {$ENDIF}
   {$ENDIF}
-  Interfaces, Forms,
-  uMic140DebugForm in 'uMic140DebugForm.pas' {Mic140DebugForm},
-  uMic140Registration in 'device\MIC140\uMic140Registration.pas';
+  Interfaces, Forms, uRecorderAcquisitionTypes, uRecorderDeviceInterfaces,
+  uMic140DebugForm, uRecorderDeviceManager, uMic140Device, uMic140Registration {Mic140DebugForm};
 
 begin
   RequireDerivedFormResource := True;

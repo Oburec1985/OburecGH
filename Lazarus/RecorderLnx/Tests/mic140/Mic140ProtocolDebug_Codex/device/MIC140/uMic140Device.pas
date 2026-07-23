@@ -250,6 +250,8 @@ type
     fScanProgram: TMic140_48;
     fClockMeasure: TMic140ClockMeasureResult;
     fConnection: TMic140MdpConnection;
+    fInitialized: Boolean;
+    fConfigured: Boolean;
   protected
     { Пересчёт count_aver по текущим параметрам скана. }
     procedure EvalAvrCount;
@@ -266,6 +268,11 @@ type
     destructor Destroy; override;
     { Открывает TCP-соединение и читает параметры устройства. }
     procedure Connect; override;
+    { Разовая инициализация в рамках открытой TCP-сессии. }
+    procedure InitializeDevice;
+    { Повторяемое применение изменяемой конфигурации скана. }
+    procedure ConfigureDevice;
+    procedure ProgramDevice; override;
     { Закрывает TCP-соединение. }
     procedure Disconnect; override;
     property ScanProgram: TMic140_48 read fScanProgram write fScanProgram;
@@ -1137,12 +1144,44 @@ begin
   if not fConnection.IsConnected then
     if not fConnection.Open(fHost, fPort) then
       raise ERecorderDeviceError.CreateFmt('MIC140 TCP connect failed %s:%d', [fHost, fPort]);
-  inherited;
+  { На этапе Connect открывается только транспорт. }
+  fState := rdsConnected;
+end;
+
+procedure TRecorderMic140Device.InitializeDevice;
+begin
+  if not fConnection.IsConnected then
+    raise ERecorderDeviceError.Create(
+      'MIC140 InitializeDevice: transport is not connected');
+  if fInitialized then
+    Exit;
+  if not ReadMIC140State then
+    raise ERecorderDeviceError.CreateFmt('MIC140 CMD_REPLY failed %s:%d',
+      [fHost, fPort]);
+  fInitialized := True;
+  fConfigured := False;
+end;
+
+procedure TRecorderMic140Device.ConfigureDevice;
+begin
+  if not fInitialized then
+    raise ERecorderDeviceError.Create(
+      'MIC140 ConfigureDevice: device is not initialized');
+  SyncScanProgramFromDeviceProperties;
+  fConfigured := True;
+  fState := rdsProgrammed;
+end;
+
+procedure TRecorderMic140Device.ProgramDevice;
+begin
+  ConfigureDevice;
 end;
 
 procedure TRecorderMic140Device.Disconnect;
 begin
   fConnection.Close;
+  fInitialized := False;
+  fConfigured := False;
   inherited;
 end;
 
