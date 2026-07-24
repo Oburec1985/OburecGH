@@ -9,7 +9,7 @@ unit uRecorderDeviceInterfaces;
   - список каналов GetChannels.
 
   Блок отсчётов — uRecorderAcquisitionTypes.
-  Особенности MIC-140 (TIn, CJC) — Device/MIC140 и Device/MIC140v2.
+  Особенности MIC-140 (TIn, CJC) — Device/MIC140.
 
   См. Docs/devices/device_abstractio
   n.md
@@ -79,6 +79,7 @@ type
   }
   TRecorderDeviceSampleBlock = TRecorderAcquisitionBlock;
 
+  // Добавить OnStart/ OnStop??? возможно в другом интерфейсе это будет
   IRecorderDevice = interface
     ['{39D2026D-851C-4EE4-97C7-3C86A02962A6}']
     function GetDeviceId: string;
@@ -92,23 +93,25 @@ type
       AIndex: Integer = -1): Variant;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean;
-
+    // подключиться к устройству (разовая операция)
     procedure Connect;
+    // отключение
     procedure Disconnect;
+    // Инициализация (разовая операция после подключения. прогрузка биоса и т.п.)
     procedure InitializeDevice;
+    // настройка. вызывается при переконфигурировании не в состорянии Play
     procedure ConfigureDevice;
+    // Инициализация+ настройка
     procedure ProgramDevice;
+    // переход в Play
     procedure Start;
     procedure Stop;
-
-    {
-      Legacy pull-модель чтения блока. Целевой путь — push через sink в драйвере v2.
-      Вызывать только из потока источника данных, не из GUI.
-    }
+    //  Legacy pull-модель чтения блока. Целевой путь — push через sink в драйвере v2.
+    //  Вызывать только из потока источника данных, не из GUI.
     function ReadBlock(ATimeoutMs: Cardinal;
       out ABlock: TRecorderAcquisitionBlock): Boolean;
 
-    { Проверка связи по уже открытой сессии (без нового TCP). }
+    // Проверка связи по уже открытой сессии (без нового TCP).
     function TestLink(out AErrorText: string): Boolean;
     function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean;
     function ExecuteDeviceAction(AAction: TRecorderDeviceAction;

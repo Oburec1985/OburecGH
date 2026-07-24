@@ -7,8 +7,8 @@ interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Grids, StdCtrls, Dialogs,
   IniFiles, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
-  uRecorderMic140v2Device, uRecorderMic140v2WireTypes,
-  uRecorderMic140v2Diag, uRecorderMic140v2Scan;
+  uRecorderMic140Device, uRecorderMic140WireTypes,
+  uRecorderMic140Diag, uRecorderMic140Scan;
 
 type
   TMic140DebugForm = class(TForm)
@@ -24,7 +24,7 @@ type
     procedure sgTagsPrepareCanvas(Sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
   private
-    fDevice: TRecorderMic140v2Device;
+    fDevice: TRecorderMic140Device;
     fReference: array[0..47] of Integer;
     fReferenceValid: array[0..47] of Boolean;
     fDelta: array[0..47] of Double;
@@ -257,7 +257,7 @@ begin
   end;
   if fDevice = nil then
   begin
-    fDevice := TRecorderMic140v2Device.Create('MIC140-debug',
+    fDevice := TRecorderMic140Device.Create('MIC140-debug',
       Trim(edtHost.Text), Word(lPort), 48, 10.0, 200, mppMic14048v3, True);
     fConfigured := False;
   end;

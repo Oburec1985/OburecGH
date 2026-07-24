@@ -14,7 +14,7 @@ interface
 uses
   Classes, SysUtils, uRecorderTags, uMeraFile, uRecorderHardwareTree,
   uRecorderConfiguredDataSources, uRecorderMic140DeviceConfig,
-  uRecorderMic140DataSource;
+  uRecorderMic140DataSource, uRecorderMic140StreamTypes;
 
 type
   TRecorderSettingsSourceGroup = (
@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  uRecorderMic140Utils, uRecorderMic140LegacyProtocol, uRecorderMic140LegacyTiming,
+  uRecorderMic140Utils, uRecorderMic140LegacyTiming,
   uRecorderMic185DataSource, uMic185Constants, uRecorderMc032SettingsDialog,
   uRecorderMc201SlotSettingsDialog, uMc201ProtocolTypes;
 

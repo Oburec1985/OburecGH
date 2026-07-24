@@ -12,7 +12,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids, Buttons, Dialogs, Menus,
   uRecorderTags, uRecorderDataSources, uRecorderMic140DataSource, uRecorderMic140Utils,
-  uRecorderMic140DeviceConfig;
+  uRecorderMic140DeviceConfig, uRecorderMic140StreamTypes;
 
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
   var AResult: TRecorderMic140DialogResult;

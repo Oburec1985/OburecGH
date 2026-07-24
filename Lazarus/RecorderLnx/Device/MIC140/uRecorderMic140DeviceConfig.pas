@@ -14,7 +14,7 @@ interface
 
 uses
   Classes, SysUtils, fpjson,
-  uRecorderTags, uRecorderMic140DataSource, uRecorderMic140Utils,
+  uRecorderTags, uRecorderMic140Utils, uRecorderMic140StreamTypes,
   uRecorderDeviceInterfaces;
 
 type
@@ -115,6 +115,17 @@ procedure SaveMic140DeviceConfigs(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
 procedure LoadMic140DeviceConfigs(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
+const
+  CMic140Mic140SubRev1 = 1;
+
+procedure RecorderMic140InitChannelSettings(out ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer);
+function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
+  ADevSubRev: Integer): Integer;
+function RecorderMic140RangeComboLabel(ARangeIndex: Integer): string;
+function RecorderMic140ChannelUsesTemperature(const ASettings: TRecorderMic140ChannelSettings): Boolean;
+function RecorderMic140ChannelGradRangeText(const ASettings: TRecorderMic140ChannelSettings): string;
+
 procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
 procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
 
@@ -122,7 +133,47 @@ implementation
 
 uses
   Math, StrUtils, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
-  uRecorderMic140StreamTypes, uRecorderProjectFiles;
+  uRecorderProjectFiles, uRecorderMic140DataSource, uRecorderMic140Thermocouple;
+
+function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
+  ADevSubRev: Integer): Integer;
+begin
+  Result := Mic140DefaultCjcTChannelNumber(AChannelIndex);
+end;
+
+procedure RecorderMic140InitChannelSettings(out ASettings: TRecorderMic140ChannelSettings;
+  AChannelIndex, ADevSubRev: Integer);
+begin
+  ASettings.RangeIndex := CMic140Range100mV;
+  ASettings.CommutIndex := CMic140ChannelCommutIn;
+  ASettings.DefaultCjc := True;
+  ASettings.CjcChannel := RecorderMic140DefaultCjcChannel(AChannelIndex, ADevSubRev);
+  ASettings.ThermocoupleScalePath := '';
+  ASettings.ThermocoupleScaleName := '';
+  ASettings.SoftBalance := 0;
+  ASettings.CjcTemperOffsetC := 0.0;
+end;
+
+function RecorderMic140RangeComboLabel(ARangeIndex: Integer): string;
+begin
+  case ARangeIndex of
+    0: Result := '100 mV';
+    1: Result := '50 mV';
+    2: Result := '25 mV';
+  else
+    Result := '?';
+  end;
+end;
+
+function RecorderMic140ChannelUsesTemperature(const ASettings: TRecorderMic140ChannelSettings): Boolean;
+begin
+  Result := SameText(ASettings.OutputMode, 'degC') or SameText(ASettings.OutputMode, 'C');
+end;
+
+function RecorderMic140ChannelGradRangeText(const ASettings: TRecorderMic140ChannelSettings): string;
+begin
+  Result := ASettings.ThermocoupleScaleName;
+end;
 
 procedure RecorderMic140ProjectTagLoaded(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);

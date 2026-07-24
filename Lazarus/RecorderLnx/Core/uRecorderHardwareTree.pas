@@ -187,13 +187,19 @@ begin
     RecorderHardwareClearSourceOffline(lNorm);
     Exit(True);
   end;
-  if RecorderHardwareIsSourceOffline(lNorm) then
-    Exit(False);
   if RecorderHardwareIsSourceLinkOk(lNorm) then
+  begin
+    RecorderHardwareClearSourceOffline(lNorm);
     Exit(True);
+  end;
+  { Offline не блокирует TCP-probe: иначе одно неудачное Prepare навсегда
+    красит дерево, хотя прибор снова отвечает. }
   for I := 0 to g_HardwareSourceLinkProbeCount - 1 do
     if g_HardwareSourceLinkProbes[I](lNorm) then
+    begin
+      RecorderHardwareClearSourceOffline(lNorm);
       Exit(True);
+    end;
 end;
 
 function RecorderHardwareSourceHasLinkedTags(ARegistry: TRecorderTagRegistry;

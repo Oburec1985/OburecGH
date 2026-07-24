@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic140/protocol/00_full_reproduction_spec.md",
+                "file": "devices/mic140/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00_full_reproduction_spec"
+              "title": "README"
             }
           }
         ]
@@ -185,6 +185,7 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
+    "devices/mic140/protocol/00_full_reproduction_spec.md",
     "calibration_module_tz.md",
     "devices/mic140/6B52DE20",
     "devices/mic140/~$Расчет точек АЦП.xlsx",
@@ -212,7 +213,6 @@
     "devices/mc/recorderlnx-integration.md",
     "eventbus-audit.md",
     "devices/mic185/settings_packet_table.md",
-    "devices/mic185/hardware_calibration_cache.md",
     "devices/mic185/images/recorder_mic185_main.png",
     "devices/mic185/images/recorder_mic185_commutation_combo.png",
     "devices/mic185/images/recorder_mic185_channel.png",

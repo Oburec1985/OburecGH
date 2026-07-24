@@ -1,4 +1,9 @@
-# 2026-07-21 — параллельная подготовка устройств
+# 2026-07-24 — MIC-140 clean rebuild (DataThread + Codex)
+
+**Prompt:** Backup старого MIC-140, одна папка, универсальный DataThread, lifecycle Connect→Init→Config→Play→Stop→Disconnect по Codex; UI/ГХ сохранить.
+
+**Done:** `Device/backup/MIC140_legacy/`; production `Device/MIC140/` с Protocol/Scan/Stream/Device/DataThread/Factory; DataSource тонкий; Codex retarget; сборки RecorderLnx + Codex OK.
+
 
 - Добавлен `SharedUtils/uSharedAsync.pas`: запуск метода в отдельном потоке и ожидание группы задач с агрегацией ошибок.
 - `TRecorderDataSourceManager.PrepareHardwareAll` готовит независимые источники параллельно; методы `PrepareHardware` не должны обращаться к UI.

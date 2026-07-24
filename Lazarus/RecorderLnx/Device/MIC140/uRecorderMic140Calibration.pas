@@ -11,7 +11,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderTags, uRecorderMic140Flash;
+  uRecorderTags, uRecorderMic140Flash, uRecorderMic140Utils, uRecorderMic140StreamTypes;
 
 function RecorderMic140CalibrRootDir: string;
 function RecorderMic140RangeCalibrDirName(ARangeIndex: Integer): string;
@@ -56,11 +56,31 @@ implementation
 
 uses
   Math, StrUtils, LazFileUtils,
-  uRecorderMeraPaths, uRecorderMic140Utils, uRecorderMic140StreamTypes,
+  uRecorderMeraPaths,
   uRecorderMic140LegacyConstants, uRecorderMic140Thermocouple,
-  uRecorderMic140StreamHelpers, uRecorderMic140LegacyProtocol,
-  uRecorderMic140MebiusConstants, uRecorderMic140DataSource,
-  uRecorderMic140DeviceConfig;
+  uRecorderMic140StreamHelpers,
+  uRecorderMic140MebiusConstants, uRecorderMic140DeviceConfig,
+  uRecorderMic140Protocol;
+
+{ TMic140v2Firmware (uRecorderMic140Protocol/WireTypes) and the independently
+  declared uRecorderMic140StreamTypes.TRecorderMic140LegacyFirmware are
+  structurally identical (11 Word fields) but nominally distinct record types
+  kept in separate legacy-era units; copy field-by-field at the boundary. }
+procedure Mic140CopyWireFirmwareToStreamFirmware(const ASrc: TMic140v2Firmware;
+  out ADst: TRecorderMic140LegacyFirmware);
+begin
+  ADst.Signature := ASrc.Signature;
+  ADst.MdpType := ASrc.MdpType;
+  ADst.DevType := ASrc.DevType;
+  ADst.DevRevNo := ASrc.DevRevNo;
+  ADst.DevSerNo := ASrc.DevSerNo;
+  ADst.CCType := ASrc.CCType;
+  ADst.CCSerNo := ASrc.CCSerNo;
+  ADst.EepromManufactId := ASrc.EepromManufactId;
+  ADst.EepromDeviceId := ASrc.EepromDeviceId;
+  ADst.BiosFunction := ASrc.BiosFunction;
+  ADst.BiosVersion := ASrc.BiosVersion;
+end;
 
 const
   CMic140RangeCalibrDirNames: array[0..CMic140RangeCount - 1] of string =
@@ -72,25 +92,72 @@ var
   g_Mic140TInCalibrFailedKeys: TStringList;
   g_Mic140TInCalibrMissLogged: TStringList;
 
+type
+  { Thin IMic140LegacyClient adapter over the clean TMic140v2Tcp transport, used
+    only by the flash-download helpers below (Mic140Find.../Mic140TryRead...
+    still take the narrow legacy-client interface). }
+  TMic140LegacyClientAdapter = class(TInterfacedObject, IMic140LegacyClient)
+  private
+    fCli: TMic140v2Tcp;
+  public
+    constructor Create(ACli: TMic140v2Tcp);
+    function ReadFirmware(out AFirmware: TRecorderMic140LegacyFirmware;
+      out AErrorMessage: string): Boolean;
+    function ReadFlashStorage(AAddress: LongWord; var ABuffer;
+      AByteCount: Integer; out AErrorMessage: string): Boolean;
+    function StopScan(out AErrorMessage: string): Boolean;
+  end;
+
+constructor TMic140LegacyClientAdapter.Create(ACli: TMic140v2Tcp);
+begin
+  inherited Create;
+  fCli := ACli;
+end;
+
+function TMic140LegacyClientAdapter.ReadFirmware(
+  out AFirmware: TRecorderMic140LegacyFirmware; out AErrorMessage: string): Boolean;
+var
+  lWireFirmware: TMic140v2Firmware;
+begin
+  Result := fCli.ReadFirmware(lWireFirmware, AErrorMessage);
+  if Result then
+    Mic140CopyWireFirmwareToStreamFirmware(lWireFirmware, AFirmware);
+end;
+
+function TMic140LegacyClientAdapter.ReadFlashStorage(AAddress: LongWord;
+  var ABuffer; AByteCount: Integer; out AErrorMessage: string): Boolean;
+begin
+  Result := fCli.ReadFlashStorage(AAddress, ABuffer, AByteCount, AErrorMessage);
+end;
+
+function TMic140LegacyClientAdapter.StopScan(out AErrorMessage: string): Boolean;
+begin
+  Result := fCli.StopScan(AErrorMessage);
+end;
+
 function RecorderMic140QueryHardwareCalibrSerial(const AHost: string; APort: Word;
   out ACalibrSerial: Integer): Boolean;
 var
-  lClient: TRecorderMic140LegacyClient;
+  lCli: TMic140v2Tcp;
   lErrorMessage: string;
-  lFirmware: TRecorderMic140LegacyFirmware;
+  lFirmware: TMic140v2Firmware;
 begin
   Result := False;
   ACalibrSerial := 0;
-  lClient := TRecorderMic140LegacyClient.Create(AHost, APort, 5000);
+  lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
   try
-    lClient.Connect;
-    if lClient.ReadFirmware(lFirmware, lErrorMessage) then
+    try
+      lCli.Connect;
+    except
+      Exit;
+    end;
+    if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin
-      ACalibrSerial := RecorderMic140HardwareCalibrSerialFromFirmware(lFirmware);
+      ACalibrSerial := Mic140v2HardwareCalibrSerial(lFirmware);
       Result := ACalibrSerial > 0;
     end;
   finally
-    lClient.Free;
+    lCli.Free;
   end;
 end;
 
@@ -537,11 +604,12 @@ function RecorderMic140DownloadHardwareCalibrationFromDevice(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   out AErrorMessage: string): Boolean;
 var
+  lCli: TMic140v2Tcp;
   lCalibration: TRecorderCalibration;
   lCandidateAinCounts: array[0..1] of Integer;
   lChanIndex: Integer;
   lChannelNumber: Integer;
-  lClient: TRecorderMic140LegacyClient;
+  lClient: IMic140LegacyClient;
   lCsvPath: string;
   lFirmware: TRecorderMic140LegacyFirmware;
   lHost: string;
@@ -625,9 +693,19 @@ begin
 
   FillChar(lTare, SizeOf(lTare), 0);
   FillChar(lTare2, SizeOf(lTare2), 0);
-  lClient := TRecorderMic140LegacyClient.Create(lHost, lPort, 10000);
+  lCli := TMic140v2Tcp.Create(lHost, lPort, 5000);
+  lClient := TMic140LegacyClientAdapter.Create(lCli);
   try
-    lClient.Connect;
+    try
+      lCli.Connect;
+    except
+      on E: Exception do
+      begin
+        AErrorMessage := 'Connect failed: ' + E.Message;
+        Mic140LogFlash(lLogPrefix + AErrorMessage);
+        Exit;
+      end;
+    end;
     if not lClient.ReadFirmware(lFirmware, AErrorMessage) then
     begin
       Mic140LogFlash(lLogPrefix + 'ReadFirmware failed: ' + AErrorMessage);
@@ -642,7 +720,6 @@ begin
       Mic140LogFlash(lLogPrefix + 'StopScan before flash read failed: ' + lStopError)
     else
       Mic140LogFlash(lLogPrefix + 'StopScan before flash read: ok');
-    lClient.ClearBufferedPackets;
 
     lSerial := RecorderMic140HardwareCalibrSerialFromFirmware(lFirmware);
     Mic140LogFlash(lLogPrefix + Format(
@@ -783,7 +860,8 @@ begin
       lCalibration.Free;
     end;
   finally
-    lClient.Free;
+    lClient := nil;
+    lCli.Free;
   end;
 end;
 

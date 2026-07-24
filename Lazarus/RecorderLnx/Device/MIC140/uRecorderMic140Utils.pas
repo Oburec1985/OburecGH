@@ -14,7 +14,7 @@ unit uRecorderMic140Utils;
 interface
 
 uses
-  SysUtils, uRecorderTags;
+  SysUtils, uRecorderTags, uRecorderMic140StreamTypes;
 
 const
   CMic140SourcePrefix = 'MIC-140:';
@@ -45,11 +45,15 @@ function TryParseRecorderMic140SourceId(const ASourceId: string;
   out AHost: string; out APort: Word): Boolean;
 function RecorderMic140TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
+function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+function RecorderMic140HardwareCalibrSerialFromFirmware(const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+function Mic140FirmwareWordLooksLikeDeviceIdentity(AValue: Word): Boolean;
+function Mic140FirmwareWordIsPlausibleDeviceSerial(AValue: Word): Boolean;
 
 implementation
 
 uses
-  StrUtils
+  StrUtils, uRecorderMic140LegacyConstants
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 function ParseMic140ChannelNumber(const AAddress: string;
@@ -351,5 +355,47 @@ begin
   end;
 end;
 {$ENDIF}
+
+function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+var
+  lDotPos: Integer;
+  lPart: string;
+begin
+  Result := False;
+  AOctet := 0;
+  lDotPos := Length(AHost);
+  while (lDotPos > 0) and (AHost[lDotPos] <> '.') do
+    Dec(lDotPos);
+  if lDotPos <= 0 then
+    Exit;
+  lPart := Trim(Copy(AHost, lDotPos + 1, MaxInt));
+  if lPart = '' then
+    Exit;
+  Result := TryStrToInt(lPart, AOctet);
+end;
+
+function Mic140FirmwareWordLooksLikeDeviceIdentity(AValue: Word): Boolean;
+begin
+  Result := AValue >= CMic140FirmwareDeviceIdentityMin;
+end;
+
+function Mic140FirmwareWordIsPlausibleDeviceSerial(AValue: Word): Boolean;
+begin
+  Result := (AValue > 0) and (AValue <= CMic140MaxPlausibleDeviceSerial) and
+    not Mic140FirmwareWordLooksLikeDeviceIdentity(AValue);
+end;
+
+function RecorderMic140HardwareCalibrSerialFromFirmware(
+  const AFirmware: TRecorderMic140LegacyFirmware): Integer;
+begin
+  Result := 0;
+  if (AFirmware.CCType <> 0) and
+     (AFirmware.CCType <> CMic140LegacyCrateTypeUnknown) and
+     (AFirmware.CCSerNo > 0) and
+     not Mic140FirmwareWordLooksLikeDeviceIdentity(AFirmware.CCSerNo) then
+    Exit(AFirmware.CCSerNo);
+  if Mic140FirmwareWordIsPlausibleDeviceSerial(AFirmware.CCSerNo) then
+    Exit(AFirmware.CCSerNo);
+end;
 
 end.

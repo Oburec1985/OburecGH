@@ -1,3 +1,41 @@
+## 2026-07-24 — MIC-140: backup + чистый протокол + DataThread
+
+**Задача:** Вынести старый MIC-140 в backup, собрать одну папку `Device/MIC140` по Codex (Connect→Init→Config→Play→Stop→Disconnect), универсальный DataThread на уровне Device.
+
+**Сделано:**
+- Снимок в `Device/backup/MIC140_legacy/` (+ `protocol_v2_snapshot`).
+- Acquire из git-эталона Codex: Protocol/Scan/Stream/Device/Factory без суффикса v2; Factory defaults `mppMic14048v3`+Ground.
+- `TRecorderMic140DataThread` + Play через кольцо; `TestLink` без ProbeScan.
+- DataSource/UI/ГХ на новом Device; Codex-стенд переведён на `TRecorderMic140Device`.
+- `lazbuild -B` RecorderLnx и Mic140ProtocolDebug_Codex — OK.
+
+**Документация:** [lifecycle-codex.md](Docs/devices/mic140/lifecycle-codex.md), [MIC140/README.md](Device/MIC140/README.md)
+
+## 2026-07-24 — MIC-140: одна папка + TestLink как MIC-185
+
+**Задача:** Убрать путаницу MIC140/MIC140v2 (оставить одну папку) и исправить диагностику «не подключён» в дереве устройств.
+
+**Сделано:**
+- Весь acquire перенесён в `Device/MIC140/` (+ `utils/`); папка `MIC140v2` удалена; backup-мусор убран.
+- `TestLink`: Connected/Started → OK (без `ProbeScan`, как MIC-185).
+- `RecorderMic140IsSourceLinkOk` + probe 1000 ms; offline больше не блокирует повторный TCP-probe в дереве.
+- Docs/README обновлены; `lazbuild -B` OK.
+
+**Документация:** [lifecycle-codex.md](Docs/devices/mic140/lifecycle-codex.md), [MIC140/README.md](Device/MIC140/README.md)
+
+## 2026-07-24 — MIC-140: тонкий lifecycle по Codex + чистка Legacy
+
+**Задача:** Убрать мёртвый acquisition из MIC140/MIC140v2, сохранить UI и чтение ГХ, повторить Connect→Configure once→Start→Stop→Disconnect из рабочего Codex-стенда.
+
+**Сделано:**
+- `CreateMic140Device` defaults: `mppMic14048v3` + `GroundEnabled=True` (как Codex GUI).
+- DataSource: Prepare=Connect/Init/Configure once; Start=device.Start; Stop=Stop+Disconnect+сброс Configure.
+- Удалены Legacy DeviceCore/Scan/StreamFsm/DoubleBuffer/ProtocolDriver/MebiusTcp и др. мёртвые units; UI/Calibration/Flash сохранены.
+- Docs: `Docs/devices/mic140/lifecycle-codex.md`; обновлён `MIC140v2/README.md`.
+- Сборка `lazbuild -B` RecorderLnx — OK.
+
+**Документация:** [lifecycle-codex.md](Docs/devices/mic140/lifecycle-codex.md)
+
 ## 2026-07-24 — Аудит MIC-185 RunTime + skill runtime-programming
 
 **Задача:** По комментариям в hot path MIC-185 проверить сбор данных в RunTime и оформить skill, чтобы не повторять аллокации/поиск/разворот оси X в тике.

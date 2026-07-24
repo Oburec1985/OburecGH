@@ -1722,8 +1722,7 @@ begin
   inherited Stop;
 end;
 
-procedure TRecorderMic185DataSource.PublishMeasurementBlock(
-  const ABlock: TRecorderAcquisitionBlock);
+procedure TRecorderMic185DataSource.PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
 var
   I, J: Integer;
   lChannelSettings: TMic185ChannelProgramSettingsArray;

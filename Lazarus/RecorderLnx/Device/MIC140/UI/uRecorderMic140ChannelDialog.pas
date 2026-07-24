@@ -12,7 +12,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
   uRecorderMic140DataSource, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
-  uRecorderSdbSelectDialog;
+  uRecorderSdbSelectDialog, uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig;
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;

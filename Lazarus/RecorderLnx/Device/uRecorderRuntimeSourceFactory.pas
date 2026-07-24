@@ -27,7 +27,8 @@ implementation
 uses
   SysUtils, Math, uRecorderTags, uRecorderDataSources,
   uRecorderConfiguredDataSources, uRecorderMic140DataSource,
-  uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource;
+  uRecorderMic140StreamTypes, uRecorderMic140Utils, uRecorderMic185DataSource,
+  uRecorderMcbusDataSource;
 
 const
   CMeraSourcePrefix = 'Mera file: ';

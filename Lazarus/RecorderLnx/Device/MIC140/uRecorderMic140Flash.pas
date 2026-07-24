@@ -10,7 +10,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderTags, uRecorderMic140LegacyProtocol,
+  uRecorderTags, uRecorderMic140StreamTypes,
   uRecorderMic140FlashConstants, uRecorderMic140MebiusConstants,
   uRecorderMic140StreamHelpers;
 
@@ -55,7 +55,7 @@ function Mic140ParseFlashDirEntries(const AData: array of Byte;
   out AEntries: array of TMic140FlashDirEntry): Integer;
 function Mic140Mic118TarFileSize(AMaxAinChannels, AMaxTinChannels: Integer): LongWord;
 function Mic140ResolveMaxAinChannels(AChannelCountHint: Integer): Integer;
-function Mic140FindMi118TarBaseAddress(AClient: TRecorderMic140LegacyClient;
+function Mic140FindMi118TarBaseAddress(AClient: IMic140LegacyClient;
   AMaxAinChannels, AMaxTinChannels: Integer; out ABaseAddress: LongWord;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
 function Mic140CalcBaseCalibrAddress(AMi118TarBase, AChanIndex, ARangeIndex,
@@ -74,11 +74,11 @@ function Mic140DescribeTare2Record(const ATare: TMic140TareType2): string;
 function Mic140DescribeTare2RejectReason(const ATare: TMic140TareType2): string;
 function Mic140ResolveMaxAinChannelsFromFirmware(
   const AFirmware: TRecorderMic140LegacyFirmware): Integer;
-function Mic140TryReadHardwareTareFromFlash(AClient: TRecorderMic140LegacyClient;
+function Mic140TryReadHardwareTareFromFlash(AClient: IMic140LegacyClient;
   AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
   APreferredRangeIndex: Integer; out ATare: TMic140TareType1; out ARangeIndex: Integer;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
-function Mic140TryReadHardwareTare2FromFlash(AClient: TRecorderMic140LegacyClient;
+function Mic140TryReadHardwareTare2FromFlash(AClient: IMic140LegacyClient;
   AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
   APreferredRangeIndex: Integer; out ATare: TMic140TareType2; out ARangeIndex: Integer;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
@@ -172,7 +172,7 @@ begin
     Result := CMic140MaxAinChannels96;
 end;
 
-function Mic140FindMi118TarBaseAddress(AClient: TRecorderMic140LegacyClient;
+function Mic140FindMi118TarBaseAddress(AClient: IMic140LegacyClient;
   AMaxAinChannels, AMaxTinChannels: Integer; out ABaseAddress: LongWord;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
 var
@@ -408,7 +408,7 @@ begin
     Result := CMic140MaxAinChannels96;
 end;
 
-function Mic140TryReadHardwareTareFromFlash(AClient: TRecorderMic140LegacyClient;
+function Mic140TryReadHardwareTareFromFlash(AClient: IMic140LegacyClient;
   AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
   APreferredRangeIndex: Integer; out ATare: TMic140TareType1; out ARangeIndex: Integer;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;
@@ -484,7 +484,7 @@ begin
   Mic140LogFlash(lPrefix + AErrorMessage);
 end;
 
-function Mic140TryReadHardwareTare2FromFlash(AClient: TRecorderMic140LegacyClient;
+function Mic140TryReadHardwareTare2FromFlash(AClient: IMic140LegacyClient;
   AMi118Base, AChanIndex, AMaxAinChannels, AMaxTinChannels,
   APreferredRangeIndex: Integer; out ATare: TMic140TareType2; out ARangeIndex: Integer;
   out AErrorMessage: string; const ALogPrefix: string = ''): Boolean;

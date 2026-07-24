@@ -48,7 +48,9 @@ const
   CMic140LegacyDrainMaxPacketsPerTick = 2;
   CMic140ConnectAttempts = 3;
   CMic140StopReadTimeoutMs = 50;
-  CMic140NoDataFailThreshold = 10;
+  CMic140MaxPlausibleDeviceSerial = 9999;
+  CMic140FirmwareDeviceIdentityMin = $4000;
+  CMic140LegacyCrateTypeUnknown = 0;
 
 implementation
 

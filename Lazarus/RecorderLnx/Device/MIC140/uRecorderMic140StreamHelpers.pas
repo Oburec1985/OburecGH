@@ -11,8 +11,7 @@ interface
 
 uses
   SysUtils, Math,
-  uRecorderDeviceInterfaces, uRecorderMic140StreamTypes,
-  uRecorderMic140LegacyProtocol;
+  uRecorderDeviceInterfaces, uRecorderMic140StreamTypes;
 
 const
   CMic140RawBufferDropLogIntervalMs = 1000;

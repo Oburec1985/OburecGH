@@ -291,7 +291,7 @@ uses
   StrUtils,
   uRecorderConfiguredDataSources, uRecorderConfiguredSourceEditor,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig,
-  uRecorderMic140LegacyProtocol,
+  uRecorderMic140StreamTypes,
   uRecorderMic140LegacyTiming, uRecorderMic140Utils,
   uRecorderMic185DataSource, uMic185Constants,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog;

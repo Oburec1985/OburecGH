@@ -24,7 +24,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
-  uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderMic140StreamTypes, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
   uRecorderMic185Calibration,
