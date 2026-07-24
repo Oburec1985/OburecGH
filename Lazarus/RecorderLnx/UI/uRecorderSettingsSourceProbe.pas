@@ -307,7 +307,8 @@ end;
 function TRecorderSettingsSourceProbe.Mic140PollFrequencyForChannel(const ASourceId: string;
   AChannelNumber: Integer): Double;
 begin
-  Result := Mic140TagPollFrequency(ASourceId, Format('2-%2.2d', [AChannelNumber]));
+  Result := Mic140TagPollFrequency(ASourceId,
+    Format('%d-%2.2d', [MIC140DefaultNodeNumber, AChannelNumber]));
 end;
 
 function TRecorderSettingsSourceProbe.Mic140TagOutputModeForChannel(const ASourceId: string;
@@ -370,7 +371,7 @@ begin
 
   for I := 1 to AChannelCount do
   begin
-    lAddress := Format('2-%2.2d', [I]);
+    lAddress := Format('%d-%2.2d', [MIC140DefaultNodeNumber, I]);
     if not IsChannelEnabled(AEnabledChannels, lAddress) then
       Continue;
 
@@ -403,15 +404,15 @@ begin
     fMic140Signals.Add(lSignal);
   end;
 
-  for I := 1 to MIC140TemperatureChannelCount do
+  for I := 1 to RecorderMic140VisibleTemperatureCount(1) do
   begin
-    lAddress := RecorderMic140TemperatureAddressText(lDeviceSerial, I);
+    lAddress := RecorderMic140TemperatureAddressText(MIC140DefaultNodeNumber, I);
     lFreqHz := Mic140TagPollFrequency(ASourceId, lAddress);
     if lFreqHz <= 0 then
       lFreqHz := Mic140PollFrequencyForChannel(ASourceId, 1);
 
     lSignal := TMeraSignalInfo.Create;
-    lSignal.Name := RecorderMic140TemperatureDisplayName(lDeviceSerial, I);
+    lSignal.Name := RecorderMic140TemperatureDisplayName(MIC140DefaultNodeNumber, I);
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';

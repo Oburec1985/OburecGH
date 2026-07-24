@@ -35,6 +35,8 @@ function RecorderSignalConfiguredSourceId(ASignal: TMeraSignalInfo;
 
 function RecorderHardwareTreeNodeCaption(ARegistry: TRecorderTagRegistry; const ASourceId: string): string;
 function RecorderHardwareSourceLinkOk(const ASourceId: string): Boolean;
+function RecorderHardwareSourceLinkOk(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
 procedure RecorderRegisterHardwareSourceLinkProbe(
   AProbe: TRecorderHardwareSourceLinkProbe);
 function RecorderHardwareSourceHasLinkedTags(ARegistry: TRecorderTagRegistry;
@@ -175,13 +177,7 @@ begin
     Exit;
   if RecorderIsVirtualTagSource(lNorm) then
     Exit(RecorderMeraFilePathExists(lNorm));
-  { Запущенная живая сессия и поступающий поток новее сохранённой offline-метки.
-    Не допускаем, чтобы старая ошибка оставляла реально работающее устройство
-    красным в дереве. }
   lDevice := RecorderHardwareFindLiveDevice(lNorm);
-  { Любая сохраненная рабочая MCbus-сессия (connected/programmed/started)
-    надежнее отдельного probe: старый контроллер допускает один TCP-клиент.
-    Общий контракт TestLink сам решает, нужна ли команда протокола. }
   if (lDevice <> nil) and RecorderHardwareIsSourceLinkOk(lNorm) then
   begin
     RecorderHardwareClearSourceOffline(lNorm);
@@ -192,14 +188,35 @@ begin
     RecorderHardwareClearSourceOffline(lNorm);
     Exit(True);
   end;
-  { Offline не блокирует TCP-probe: иначе одно неудачное Prepare навсегда
-    красит дерево, хотя прибор снова отвечает. }
   for I := 0 to g_HardwareSourceLinkProbeCount - 1 do
     if g_HardwareSourceLinkProbes[I](lNorm) then
     begin
       RecorderHardwareClearSourceOffline(lNorm);
       Exit(True);
     end;
+end;
+
+function RecorderHardwareSourceLinkOk(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
+var
+  lHost: string;
+  lPort: Word;
+begin
+  { MIC-140: probe по mic140.host, не по IP внутри SourceId. }
+  if RecorderIsHardwareMic140TagSource(ASourceId) and
+    RecorderMic140ResolveEndpoint(ARegistry, ASourceId, lHost, lPort) then
+  begin
+    if RecorderHardwareIsSourceLinkOk(RecorderNormalizeTagSourceId(ASourceId)) then
+    begin
+      RecorderHardwareClearSourceOffline(ASourceId);
+      Exit(True);
+    end;
+    Result := RecorderMic140TcpProbe(lHost, lPort, 1000);
+    if Result then
+      RecorderHardwareClearSourceOffline(ASourceId);
+    Exit;
+  end;
+  Result := RecorderHardwareSourceLinkOk(ASourceId);
 end;
 
 function RecorderHardwareSourceHasLinkedTags(ARegistry: TRecorderTagRegistry;
@@ -246,7 +263,7 @@ begin
     begin
       lEntry.SourceId := lIds[I];
       lEntry.NodeCaption := RecorderHardwareTreeNodeCaption(ATagRegistry, lEntry.SourceId);
-      lEntry.LinkOk := RecorderHardwareSourceLinkOk(lEntry.SourceId);
+      lEntry.LinkOk := RecorderHardwareSourceLinkOk(ATagRegistry, lEntry.SourceId);
       lEntry.HasLinkedTags := RecorderHardwareSourceHasLinkedTags(ATagRegistry,
         lEntry.SourceId);
       AEntries[I] := lEntry;

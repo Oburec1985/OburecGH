@@ -15,12 +15,24 @@ uses
   Classes, SysUtils, Contnrs, fpjson, uRecorderTags;
 
 type
+  { Каноническая запись источника в dataSources. SourceId — свойство
+    (не «застывшая» константа в коде): потомок может переопределить GetSourceId. }
   TRecorderConfiguredDataSource = class(TPersistent)
+  private
+    fSourceId: string;
+    fModuleType: string;
+    fDefaultPollFrequencyHz: Double;
+    fSpecificConfigText: string;
+  protected
+    function GetSourceId: string; virtual;
+    procedure SetSourceId(const AValue: string); virtual;
   public
-    SourceId: string;
-    ModuleType: string;
-    DefaultPollFrequencyHz: Double;
-    SpecificConfigText: string;
+    property SourceId: string read GetSourceId write SetSourceId;
+    property ModuleType: string read fModuleType write fModuleType;
+    property DefaultPollFrequencyHz: Double
+      read fDefaultPollFrequencyHz write fDefaultPollFrequencyHz;
+    property SpecificConfigText: string
+      read fSpecificConfigText write fSpecificConfigText;
   end;
 
 function RecorderConfiguredDataSourceList(
@@ -47,6 +59,16 @@ procedure SaveRecorderConfiguredDataSources(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
 
 implementation
+
+function TRecorderConfiguredDataSource.GetSourceId: string;
+begin
+  Result := fSourceId;
+end;
+
+procedure TRecorderConfiguredDataSource.SetSourceId(const AValue: string);
+begin
+  fSourceId := RecorderNormalizeTagSourceId(AValue);
+end;
 
 function RecorderConfiguredDataSourceList(
   ARegistry: TRecorderTagRegistry): TObjectList;

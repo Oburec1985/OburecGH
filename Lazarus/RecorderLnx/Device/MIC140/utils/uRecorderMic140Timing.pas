@@ -331,8 +331,9 @@ end;
 
 function Mic140v2UiTimingForFrequency(AFrequencyHz: Double): TRecorderMic140Timing;
 begin
+  { UI по умолчанию — профиль v3: ground on, 48+7 → count_aver=294 @10Гц. }
   Result := Mic140v2TimingForFrequency(AFrequencyHz,
-    MIC140DefaultChannelCount);
+    MIC140DefaultChannelCount, True, MIC140v3VisibleTemperatureChannelCount);
 end;
 
 end.

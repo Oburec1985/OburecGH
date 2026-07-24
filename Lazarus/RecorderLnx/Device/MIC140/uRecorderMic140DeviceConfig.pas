@@ -30,6 +30,8 @@ type
   end;
 
   TRecorderMic140SourceConfig = class(TPersistent)
+  private
+    function GetSourceId: string;
   public
     Host: string;
     Port: Word;
@@ -52,6 +54,8 @@ type
       const AAddress: string; const ASettings: TRecorderMic140ChannelSettings);
     procedure LoadFromResult(const AResult: TRecorderMic140DialogResult);
     procedure SaveToResult(var AResult: TRecorderMic140DialogResult);
+    { SourceId = "MIC-140: host:port" из Host/Port, не отдельная константа. }
+    property SourceId: string read GetSourceId;
   end;
 
   TRecorderMic140LegacyTagFields = record
@@ -71,6 +75,8 @@ function RecorderMic140DeviceConfigList(
   ARegistry: TRecorderTagRegistry): TStringList;
 function FindRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderMic140SourceConfig;
+function RecorderMic140ResolveEndpoint(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out AHost: string; out APort: Word): Boolean;
 
 function EnsureRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderMic140SourceConfig;
@@ -78,6 +84,12 @@ function FindRecorderMic140SourceConfig(AList: TStrings;
   const ASourceId: string): TRecorderMic140SourceConfig;
 function EnsureRecorderMic140SourceConfig(AList: TStrings;
   const ASourceId: string): TRecorderMic140SourceConfig;
+{ Переименовывает ключ SourceId (теги, dataSources, SourceSpecificConfigs)
+  под канонический MIC-140: host:port. }
+procedure RecorderMic140RekeySourceId(ARegistry: TRecorderTagRegistry;
+  const AOldSourceId, ANewSourceId: string);
+{ После load: SourceId = Host:Port для всех MIC-140 в registry. }
+procedure RecorderMic140CanonicalizeSourceIds(ARegistry: TRecorderTagRegistry);
 
 function RecorderMic140TryGetChannelSettings(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; out AChannelNumber: Integer;
@@ -133,7 +145,8 @@ implementation
 
 uses
   Math, StrUtils, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
-  uRecorderProjectFiles, uRecorderMic140DataSource, uRecorderMic140Thermocouple;
+  uRecorderProjectFiles, uRecorderMic140DataSource, uRecorderMic140Thermocouple,
+  uRecorderConfiguredDataSources;
 
 function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
   ADevSubRev: Integer): Integer;
@@ -300,6 +313,16 @@ begin
     AResult.ChannelSettings[I] := ChannelSettings[I];
 end;
 
+function TRecorderMic140SourceConfig.GetSourceId: string;
+var
+  lPort: Word;
+begin
+  lPort := Port;
+  if lPort = 0 then
+    lPort := MIC140DefaultPort;
+  Result := RecorderMic140SourceId(Host, lPort);
+end;
+
 function RecorderMic140DeviceConfigList(
   ARegistry: TRecorderTagRegistry): TStringList;
 begin
@@ -342,11 +365,143 @@ begin
     ASourceId);
 end;
 
+function RecorderMic140ResolveEndpoint(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out AHost: string; out APort: Word): Boolean;
+var
+  lConfig: TRecorderMic140SourceConfig;
+begin
+  { SourceId канонически = MIC-140: host:port (BuildSourceId). Host в mic140
+    — источник истины при рассинхроне старых конфигов. }
+  Result := False;
+  AHost := '';
+  APort := 0;
+  if ARegistry <> nil then
+  begin
+    lConfig := FindRecorderMic140DeviceConfig(ARegistry, ASourceId);
+    if (lConfig <> nil) and (Trim(lConfig.Host) <> '') then
+    begin
+      AHost := Trim(lConfig.Host);
+      if lConfig.Port <> 0 then
+        APort := Word(lConfig.Port)
+      else
+        APort := MIC140DefaultPort;
+      Exit(True);
+    end;
+  end;
+  Result := TryParseRecorderMic140SourceId(ASourceId, AHost, APort);
+end;
+
 function EnsureRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderMic140SourceConfig;
 begin
   Result := EnsureRecorderMic140SourceConfig(RecorderMic140DeviceConfigList(ARegistry),
     ASourceId);
+end;
+
+procedure RecorderMic140RekeySourceId(ARegistry: TRecorderTagRegistry;
+  const AOldSourceId, ANewSourceId: string);
+var
+  I, lOldIndex, lNewIndex: Integer;
+  lList: TStringList;
+  lConfig: TRecorderMic140SourceConfig;
+  lDup: TRecorderMic140SourceConfig;
+  lEntry: TRecorderConfiguredDataSource;
+  lTag: TRecorderTag;
+  lWasActive: Boolean;
+  lOldNorm, lNewNorm: string;
+begin
+  if ARegistry = nil then
+    Exit;
+  lOldNorm := RecorderNormalizeTagSourceId(AOldSourceId);
+  lNewNorm := RecorderNormalizeTagSourceId(ANewSourceId);
+  if (lOldNorm = '') or (lNewNorm = '') or SameText(lOldNorm, lNewNorm) then
+    Exit;
+
+  lList := RecorderMic140DeviceConfigList(ARegistry);
+  if lList <> nil then
+  begin
+    lOldIndex := lList.IndexOf(lOldNorm);
+    if lOldIndex >= 0 then
+    begin
+      lNewIndex := lList.IndexOf(lNewNorm);
+      if lNewIndex >= 0 then
+      begin
+        { Новый ключ уже есть — оставляем его, удаляем старую запись. }
+        lList.OwnsObjects := False;
+        try
+          lDup := TRecorderMic140SourceConfig(lList.Objects[lOldIndex]);
+          lList.Delete(lOldIndex);
+          lDup.Free;
+        finally
+          lList.OwnsObjects := True;
+        end;
+      end
+      else
+        lList[lOldIndex] := lNewNorm;
+    end;
+  end;
+
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, lOldNorm);
+  if lEntry <> nil then
+    lEntry.SourceId := lNewNorm
+  else
+    RecorderConfiguredDataSourcesEnsure(ARegistry, lNewNorm, 'MIC-140', 0);
+
+  lWasActive := ARegistry.IsSourceActive(lOldNorm);
+  if lWasActive then
+    ARegistry.UnregisterActiveSource(lOldNorm);
+
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lOldNorm) then
+      lTag.SourceId := lNewNorm;
+  end;
+
+  if lWasActive then
+    ARegistry.RegisterActiveSource(lNewNorm);
+
+  lConfig := FindRecorderMic140DeviceConfig(ARegistry, lNewNorm);
+  if (lConfig <> nil) and (Trim(lConfig.Host) = '') then
+    TryParseRecorderMic140SourceId(lNewNorm, lConfig.Host, lConfig.Port);
+end;
+
+procedure RecorderMic140CanonicalizeSourceIds(ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lList: TStringList;
+  lConfig: TRecorderMic140SourceConfig;
+  lOldId, lCanon: string;
+  lKeys: TStringList;
+begin
+  if ARegistry = nil then
+    Exit;
+  lList := RecorderMic140DeviceConfigList(ARegistry);
+  if (lList = nil) or (lList.Count = 0) then
+    Exit;
+  { Копия ключей: Rekey меняет сам список. }
+  lKeys := TStringList.Create;
+  try
+    lKeys.Assign(lList);
+    for I := 0 to lKeys.Count - 1 do
+    begin
+      lOldId := lKeys[I];
+      lConfig := FindRecorderMic140SourceConfig(lList, lOldId);
+      if lConfig = nil then
+        Continue;
+      if Trim(lConfig.Host) = '' then
+        TryParseRecorderMic140SourceId(lOldId, lConfig.Host, lConfig.Port);
+      if Trim(lConfig.Host) = '' then
+        Continue;
+      if lConfig.Port = 0 then
+        lConfig.Port := MIC140DefaultPort;
+      lCanon := lConfig.SourceId;
+      if not SameText(lOldId, lCanon) then
+        RecorderMic140RekeySourceId(ARegistry, lOldId, lCanon);
+    end;
+  finally
+    lKeys.Free;
+  end;
 end;
 
 function RecorderMic140TryGetChannelSettings(ARegistry: TRecorderTagRegistry;
@@ -459,7 +614,7 @@ begin
   ASettings.SoftBalance := ALegacy.SoftBalance;
   ASettings.DefaultCjc := ALegacy.CjcDefault;
   if (ALegacy.CjcChannel >= 1) and
-    (ALegacy.CjcChannel <= MIC140TemperatureChannelCount) then
+    (ALegacy.CjcChannel <= MIC140v3VisibleTemperatureChannelCount) then
     ASettings.CjcChannel := ALegacy.CjcChannel;
   if Trim(ALegacy.ThermocoupleScaleName) <> '' then
   begin
@@ -800,16 +955,22 @@ begin
       lConfig := FindRecorderMic140SourceConfig(lList, lSourceId);
       if lConfig = nil then
         Continue;
+      lSourceId := lConfig.SourceId;
+      if lItem.IndexOfName('sourceId') >= 0 then
+        lItem.Delete(lItem.IndexOfName('sourceId'));
+      lItem.Add('sourceId', lSourceId);
+      if lItem.IndexOfName('mic140') >= 0 then
+        lItem.Delete(lItem.IndexOfName('mic140'));
       SaveMic140DeviceConfigJson(lItem, lConfig);
       lKnown.Add(lSourceId);
     end;
     for I := 0 to lList.Count - 1 do
     begin
-      lSourceId := lList[I];
-      if lKnown.IndexOf(lSourceId) >= 0 then
-        Continue;
-      lConfig := FindRecorderMic140SourceConfig(lList, lSourceId);
+      lConfig := FindRecorderMic140SourceConfig(lList, lList[I]);
       if lConfig = nil then
+        Continue;
+      lSourceId := lConfig.SourceId;
+      if lKnown.IndexOf(lSourceId) >= 0 then
         Continue;
       lItem := TJSONObject.Create;
       lArray.Add(lItem);
@@ -852,6 +1013,8 @@ begin
       Continue;
     LoadMic140DeviceConfigJson(lItem, lConfig);
   end;
+  { Host из mic140 — источник истины; SourceId пересчитывается. }
+  RecorderMic140CanonicalizeSourceIds(ARegistry);
 end;
 
 procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);
@@ -877,8 +1040,15 @@ begin
   SetLength(AResult.ChannelSettings, 0);
 end;
 
+procedure Mic140BeforeSaveProjectConfig(AJson: TJSONObject;
+  ARegistry: TRecorderTagRegistry);
+begin
+  RecorderMic140CanonicalizeSourceIds(ARegistry);
+end;
+
 initialization
   RecorderRegisterProjectConfigExtension(@SaveMic140DeviceConfigs,
-    @LoadMic140DeviceConfigs, @RecorderMic140ProjectTagLoaded);
+    @LoadMic140DeviceConfigs, @RecorderMic140ProjectTagLoaded,
+    @Mic140BeforeSaveProjectConfig);
 
 end.

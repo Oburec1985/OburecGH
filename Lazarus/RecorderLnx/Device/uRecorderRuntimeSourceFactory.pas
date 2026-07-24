@@ -27,8 +27,8 @@ implementation
 uses
   SysUtils, Math, uRecorderTags, uRecorderDataSources,
   uRecorderConfiguredDataSources, uRecorderMic140DataSource,
-  uRecorderMic140StreamTypes, uRecorderMic140Utils, uRecorderMic185DataSource,
-  uRecorderMcbusDataSource;
+  uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
+  uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource;
 
 const
   CMeraSourcePrefix = 'Mera file: ';
@@ -157,7 +157,8 @@ begin
 
     for I := 0 to lMicSources.Count - 1 do
     begin
-      if not TryParseRecorderMic140SourceId(lMicSources[I], lHost, lPort) then
+      if not RecorderMic140ResolveEndpoint(ARecorder.TagRegistry, lMicSources[I],
+        lHost, lPort) then
         Continue;
       lTagNames := TStringList(lMicSources.Objects[I]);
       lChannelCount := MIC140DefaultChannelCount;
@@ -180,7 +181,8 @@ begin
           Break;
         end;
       end;
-      lSource := TRecorderMic140DataSource.Create(lMicSources[I], lHost, lPort,
+      lSource := TRecorderMic140DataSource.Create(
+        RecorderMic140SourceId(lHost, lPort), lHost, lPort,
         lChannelCount, lPollFrequencyHz, ADataUpdateMs, lTagNames,
         lMicOutputMode);
       ARecorder.DataSources.AddSource(lSource);

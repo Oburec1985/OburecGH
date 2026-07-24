@@ -12,7 +12,8 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
   uRecorderMic140DataSource, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
-  uRecorderSdbSelectDialog, uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig;
+  uRecorderSdbSelectDialog, uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
+  uRecorderMic140Utils;
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;
@@ -110,7 +111,7 @@ begin
   end;
 
   fCjcCombo.Items.Clear;
-  for I := 1 to MIC140TemperatureChannelCount do
+  for I := 1 to RecorderMic140VisibleTemperatureCount(fDevSubRev) do
     fCjcCombo.Items.Add('T' + IntToStr(I));
 end;
 
@@ -141,7 +142,8 @@ begin
 
   fDefaultCjcCheck.Checked := fSettings.DefaultCjc;
   fSoftBalanceEdit.Text := FormatFloat('0.000', fSettings.SoftBalance);
-  if (fSettings.CjcChannel >= 1) and (fSettings.CjcChannel <= MIC140TemperatureChannelCount) then
+  if (fSettings.CjcChannel >= 1) and
+    (fSettings.CjcChannel <= RecorderMic140VisibleTemperatureCount(fDevSubRev)) then
     fCjcCombo.ItemIndex := fSettings.CjcChannel - 1
   else
     fCjcCombo.ItemIndex := 0;
@@ -279,11 +281,9 @@ begin
     Caption := Format('Свойства каналов (%d шт.)', [fBulkChannelCount]);
     lbThermocouple.Caption := 'ГХ термопары (для всех)';
   end
-  else if fDeviceSerial > 0 then
-    Caption := Format('Свойства канала MIC140-%4.4d-%d',
-      [fDeviceSerial, AChannelNumber])
   else
-    Caption := Format('Свойства канала MIC140-%4.4d-%d', [0, AChannelNumber]);
+    Caption := Format('Свойства канала MIC140 %d-%2.2d',
+      [MIC140DefaultNodeNumber, AChannelNumber]);
   LoadFromSettings;
   Result := ShowModal = mrOk;
   if Result then

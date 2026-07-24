@@ -59,7 +59,8 @@ procedure LoadRecorderProjectConfig(const AFileName: string;
 
 procedure RecorderRegisterProjectConfigExtension(
   ASaveProc, ALoadProc: TRecorderProjectConfigExtensionProc;
-  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc = nil);
+  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc = nil;
+  ABeforeSaveProc: TRecorderProjectConfigExtensionProc = nil);
 
 { Сохраняет структуру страниц формуляров и их компонентов в INI-файл }
 procedure SaveRecorderGuiConfig(const AFileName: string;
@@ -82,6 +83,7 @@ type
     SaveProc: TRecorderProjectConfigExtensionProc;
     LoadProc: TRecorderProjectConfigExtensionProc;
     TagLoadedProc: TRecorderProjectTagLoadedExtensionProc;
+    BeforeSaveProc: TRecorderProjectConfigExtensionProc;
   end;
 
 var
@@ -91,13 +93,15 @@ var
 
 procedure RecorderRegisterProjectConfigExtension(
   ASaveProc, ALoadProc: TRecorderProjectConfigExtensionProc;
-  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc);
+  ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc;
+  ABeforeSaveProc: TRecorderProjectConfigExtensionProc);
 begin
   if g_ProjectConfigExtensionCount >= CRecorderProjectConfigExtensionMax then
     raise Exception.Create('Too many project config extensions');
   g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].SaveProc := ASaveProc;
   g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].LoadProc := ALoadProc;
   g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].TagLoadedProc := ATagLoadedProc;
+  g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].BeforeSaveProc := ABeforeSaveProc;
   Inc(g_ProjectConfigExtensionCount);
 end;
 
@@ -607,6 +611,9 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
+    for J := 0 to g_ProjectConfigExtensionCount - 1 do
+      if Assigned(g_ProjectConfigExtensions[J].BeforeSaveProc) then
+        g_ProjectConfigExtensions[J].BeforeSaveProc(lRoot, ATags);
     SaveDataSources(lRoot, ATags);
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].SaveProc) then

@@ -659,7 +659,7 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
-      if RecorderHardwareSourceLinkOk(lSourceId) then
+      if RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
         fRecorder.TagRegistry.RegisterActiveSource(lSourceId)
       else
         fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);

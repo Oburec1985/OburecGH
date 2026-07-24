@@ -41,7 +41,7 @@ type
 
   { IRecorderDataSource
     Минимальный интерфейс источника данных.
-    SourceId     - стабильный идентификатор источника в конфигурации проекта.
+    SourceId     - идентификатор источника (свойство; у MIC-140 из host:port).
     Name         - человекочитаемое имя для логов и UI.
     UpdateTimeMs - период опроса/генерации данных в миллисекундах.
     State        - текущее состояние источника. }
@@ -97,17 +97,21 @@ type
 
   { TRecorderDataSourceBase
     Базовый класс источника данных. Потомки реализуют создание тегов и один
-    шаг генерации/опроса данных в DoCreateTags/DoTick. }
+    шаг генерации/опроса данных в DoCreateTags/DoTick.
+    SourceId — свойство: по умолчанию из fSourceId, потомок может переопределить
+    BuildSourceId (например MIC-140 из host:port). }
   TRecorderDataSourceBase = class(TInterfacedObject, IRecorderDataSource)
   private
     fName: string;                          { Имя источника }
     fRegistry: TRecorderTagRegistry;        { Ссылка на реестр тегов }
-    fSourceId: string;                      { Идентификатор источника }
+    fSourceId: string;                      { Базовый/сохранённый идентификатор }
     fState: TRecorderDataSourceState;       { Состояние источника }
     fTryStop: Boolean;                      { Запрос остановки из внешнего потока }
     fUpdateTimeMs: Cardinal;                { Период опроса в мс }
   protected
-    function GetSourceId: string;
+    { Вычисляет SourceId. База — fSourceId; MIC-140 и др. — из endpoint. }
+    function BuildSourceId: string; virtual;
+    function GetSourceId: string; virtual;
     function GetName: string;
     function GetUpdateTimeMs: Cardinal;
     function GetState: TRecorderDataSourceState;
@@ -400,9 +404,14 @@ begin
   fState := dssStopped;
 end;
 
-function TRecorderDataSourceBase.GetSourceId: string;
+function TRecorderDataSourceBase.BuildSourceId: string;
 begin
   Result := fSourceId;
+end;
+
+function TRecorderDataSourceBase.GetSourceId: string;
+begin
+  Result := BuildSourceId;
 end;
 
 function TRecorderDataSourceBase.GetName: string;

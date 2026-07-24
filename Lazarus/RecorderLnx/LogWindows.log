@@ -1,24 +1,500 @@
-2026-07-24 19:51:08.217 [DEBUG] [TID:15116|UIThread] 19:51:08.214 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-07-24 19:51:08.230 [DEBUG] [TID:15116|UIThread] 19:51:08.230 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-07-24 19:51:08.268 [DEBUG] [TID:15116|UIThread] 19:51:08.268 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-07-24 19:51:08.273 [DEBUG] [TID:15116|UIThread] 19:51:08.273 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-07-24 19:51:08.279 [DEBUG] [TID:15116|UIThread] 19:51:08.278 MERA playback source configured: signal0005.mera (10 channels).
-2026-07-24 19:51:08.280 [DEBUG] [TID:15116|UIThread] 19:51:08.280 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-07-24 19:51:08.284 [DEBUG] [TID:15116|UIThread] 19:51:08.283 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-24 19:51:08.288 [DEBUG] [TID:15116|UIThread] 19:51:08.288 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-24 19:51:08.329 [DEBUG] [TID:15116|UIThread] 19:51:08.329 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-24 19:51:10.660 [WARNING] [TID:5012] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
-2026-07-24 19:51:10.661 [DEBUG] [TID:11136] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-24 19:51:10.677  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-24 19:51:10.677 [DEBUG] [TID:11972] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-24 19:51:11.675 [WARNING] [TID:5012] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
-2026-07-24 19:51:11.676 [WARNING] [TID:5012] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
-2026-07-24 19:51:11.893 [DEBUG] [TID:11136] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
-2026-07-24 19:51:14.255 [DEBUG] [TID:15116|UIThread] 19:51:14.255 RecorderLnx started.
-2026-07-24 19:51:22.856 [DEBUG] [TID:15116|UIThread] 19:51:22.851 Configuration mode: settings dialog opened.
-2026-07-24 19:51:53.121 [DEBUG] [TID:15116|UIThread] 19:51:53.120 Configuration mode: settings dialog closed without applying OK.
-2026-07-24 19:52:46.378  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-24 19:52:46.378 [DEBUG] [TID:15116|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-24 19:52:46.383  RuntimeDetach 192.168.9.142:4000
-2026-07-24 19:52:46.383 [DEBUG] [TID:15116|UIThread] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-24 19:52:46.392 [WARNING] [TID:15116|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-24 20:26:57.595 [DEBUG] [TID:15392|UIThread] 20:26:57.592 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-24 20:26:57.595 [DEBUG] [TID:15392|UIThread] 20:26:57.595 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-24 20:26:57.637 [DEBUG] [TID:15392|UIThread] 20:26:57.637 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-24 20:26:57.642 [DEBUG] [TID:15392|UIThread] 20:26:57.642 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-24 20:26:57.647 [DEBUG] [TID:15392|UIThread] 20:26:57.647 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-24 20:26:57.648 [DEBUG] [TID:15392|UIThread] 20:26:57.648 MIC-140 source configured: 192.168.14.48:4000 (48 channels).
+2026-07-24 20:26:57.652 [DEBUG] [TID:15392|UIThread] 20:26:57.652 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-24 20:26:57.657 [DEBUG] [TID:15392|UIThread] 20:26:57.657 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-24 20:26:57.695 [DEBUG] [TID:15392|UIThread] 20:26:57.695 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-24 20:26:59.020 [WARNING] [TID:8012] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 connecting
+2026-07-24 20:26:59.021 [DEBUG] [TID:12020] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-24 20:26:59.038  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 20:26:59.039 [DEBUG] [TID:12744] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 20:26:59.584 [WARNING] [TID:8012] [MIC140v2:192.168.14.48:4000] transport connected
+2026-07-24 20:26:59.585 [WARNING] [TID:8012] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=1 connected
+2026-07-24 20:27:00.236 [DEBUG] [TID:12020] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
+2026-07-24 20:27:00.376 [WARNING] [TID:8012] [MIC140v2:192.168.14.48:4000] initialized devType=16705 ser=4582 rev=14.1 BIOS=8.1 hwCal=329
+2026-07-24 20:27:00.377 [WARNING] [TID:8012] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 firmware devSerNo=4582 ccSerNo=329 ccType=16704 -> hardware calibr serial=329
+2026-07-24 20:27:00.390 [WARNING] [TID:8012] [MIC-140] loaded hardware calibration from C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\01.csv
+2026-07-24 20:27:00.397 [WARNING] [TID:8012] [MIC-140] loaded hardware calibration from C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\02.csv
+2026-07-24 20:27:00.403 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\03.csv
+2026-07-24 20:27:00.408 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\04.csv
+2026-07-24 20:27:00.412 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\05.csv
+2026-07-24 20:27:00.416 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
+2026-07-24 20:27:00.420 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
+2026-07-24 20:27:00.424 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
+2026-07-24 20:27:00.428 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
+2026-07-24 20:27:00.432 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
+2026-07-24 20:27:00.437 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
+2026-07-24 20:27:00.441 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
+2026-07-24 20:27:00.445 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
+2026-07-24 20:27:00.449 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
+2026-07-24 20:27:00.453 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
+2026-07-24 20:27:00.457 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
+2026-07-24 20:27:00.461 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
+2026-07-24 20:27:00.465 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
+2026-07-24 20:27:00.469 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
+2026-07-24 20:27:00.474 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
+2026-07-24 20:27:00.478 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
+2026-07-24 20:27:00.482 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
+2026-07-24 20:27:00.487 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
+2026-07-24 20:27:00.491 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\24.csv
+2026-07-24 20:27:00.495 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
+2026-07-24 20:27:00.499 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
+2026-07-24 20:27:00.504 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
+2026-07-24 20:27:00.508 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
+2026-07-24 20:27:00.512 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
+2026-07-24 20:27:00.516 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
+2026-07-24 20:27:00.521 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
+2026-07-24 20:27:00.525 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
+2026-07-24 20:27:00.529 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
+2026-07-24 20:27:00.533 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
+2026-07-24 20:27:00.537 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
+2026-07-24 20:27:00.541 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
+2026-07-24 20:27:00.545 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
+2026-07-24 20:27:00.549 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
+2026-07-24 20:27:00.554 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
+2026-07-24 20:27:00.558 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
+2026-07-24 20:27:00.562 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
+2026-07-24 20:27:00.567 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
+2026-07-24 20:27:00.571 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
+2026-07-24 20:27:00.575 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
+2026-07-24 20:27:00.579 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
+2026-07-24 20:27:00.584 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
+2026-07-24 20:27:00.588 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
+2026-07-24 20:27:00.592 [WARNING] [TID:8012] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
+2026-07-24 20:27:00.596 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\01.csv
+2026-07-24 20:27:00.601 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\02.csv
+2026-07-24 20:27:00.605 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\03.csv
+2026-07-24 20:27:00.609 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\04.csv
+2026-07-24 20:27:00.614 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\05.csv
+2026-07-24 20:27:00.618 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\06.csv
+2026-07-24 20:27:00.622 [WARNING] [TID:8012] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\07.csv
+2026-07-24 20:27:00.741 [DEBUG] [TID:8012] [MIC140v2 scan] profile=3 hwProtocol=1 rev=14.1 rev2=False slots=55 ptrs=110 val=0x0810 desc=0x084C fifo=0x0522 ready=110 capacity=220 stride=55 chanDelay=607 timer(scale=1 period=640 div=5000) desc0=[1,49154,272,8,16384] desc1=[0,128,256,606,2064] desc48=[0,8192,256,606,2111,0,32770,256,606,2117] ptrHead=[48,294,55,2124,2129,2124,2134,2124,2139,2124,2144,2124]
+2026-07-24 20:27:00.745 [WARNING] [TID:8012] [MIC140v2] scan OK slots=55 ptrs=110 payloadStride=55 fifoReady=110 msgWords=120 val=0x0810
+2026-07-24 20:27:00.755 [WARNING] [TID:8012] [MIC140v2:192.168.14.48:4000] scan programmed ch=48 fifoStride=55 tin=7 val=0x0810 freq=10,000 Hz fifoReady=110 msgWords=120
+2026-07-24 20:27:00.761 [WARNING] [TID:8012] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 programmed
+2026-07-24 20:27:02.067 [DEBUG] [TID:15392|UIThread] 20:27:02.067 RecorderLnx started.
+2026-07-24 20:27:04.919 [DEBUG] [TID:15392|UIThread] 20:27:04.916 Configuration mode: settings dialog opened.
+2026-07-24 20:27:55.956 [DEBUG] [TID:15392|UIThread] 20:27:55.955 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-24 20:27:57.243  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:27:57.243 [DEBUG] [TID:15392|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:27:57.258  RuntimeDetach 192.168.9.142:4000
+2026-07-24 20:27:57.258 [DEBUG] [TID:15392|UIThread] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-24 20:27:57.279 [DEBUG] [TID:15392|UIThread] 20:27:57.278 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-24 20:27:57.280 [DEBUG] [TID:15392|UIThread] 20:27:57.279 MIC-140 source configured: 192.168.14.48:4000 (48 channels).
+2026-07-24 20:27:57.284 [DEBUG] [TID:15392|UIThread] 20:27:57.284 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-24 20:27:57.291 [DEBUG] [TID:15392|UIThread] 20:27:57.290 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-24 20:27:57.313 [DEBUG] [TID:15392|UIThread] 20:27:57.312 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-24 20:27:58.640 [WARNING] [TID:7648] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 connecting
+2026-07-24 20:27:58.640 [DEBUG] [TID:15472] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-24 20:27:58.660  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 20:27:58.660 [DEBUG] [TID:5800] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 20:27:58.672 [WARNING] [TID:7648] [MIC140v2:192.168.14.48:4000] transport connected
+2026-07-24 20:27:58.672 [WARNING] [TID:7648] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=1 connected
+2026-07-24 20:27:59.463 [WARNING] [TID:7648] [MIC140v2:192.168.14.48:4000] initialized devType=16705 ser=4582 rev=14.1 BIOS=8.1 hwCal=329
+2026-07-24 20:27:59.464 [WARNING] [TID:7648] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 firmware devSerNo=4582 ccSerNo=329 ccType=16704 -> hardware calibr serial=329
+2026-07-24 20:27:59.476 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\03.csv
+2026-07-24 20:27:59.484 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\04.csv
+2026-07-24 20:27:59.491 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\05.csv
+2026-07-24 20:27:59.496 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
+2026-07-24 20:27:59.501 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
+2026-07-24 20:27:59.505 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
+2026-07-24 20:27:59.509 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
+2026-07-24 20:27:59.514 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
+2026-07-24 20:27:59.519 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
+2026-07-24 20:27:59.523 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
+2026-07-24 20:27:59.527 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
+2026-07-24 20:27:59.532 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
+2026-07-24 20:27:59.536 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
+2026-07-24 20:27:59.540 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
+2026-07-24 20:27:59.545 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
+2026-07-24 20:27:59.549 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
+2026-07-24 20:27:59.553 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
+2026-07-24 20:27:59.558 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
+2026-07-24 20:27:59.563 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
+2026-07-24 20:27:59.567 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
+2026-07-24 20:27:59.571 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
+2026-07-24 20:27:59.576 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\24.csv
+2026-07-24 20:27:59.580 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
+2026-07-24 20:27:59.585 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
+2026-07-24 20:27:59.590 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
+2026-07-24 20:27:59.594 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
+2026-07-24 20:27:59.599 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
+2026-07-24 20:27:59.603 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
+2026-07-24 20:27:59.608 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
+2026-07-24 20:27:59.612 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
+2026-07-24 20:27:59.617 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
+2026-07-24 20:27:59.622 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
+2026-07-24 20:27:59.626 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
+2026-07-24 20:27:59.631 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
+2026-07-24 20:27:59.635 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
+2026-07-24 20:27:59.640 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
+2026-07-24 20:27:59.644 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
+2026-07-24 20:27:59.649 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
+2026-07-24 20:27:59.653 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
+2026-07-24 20:27:59.658 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
+2026-07-24 20:27:59.662 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
+2026-07-24 20:27:59.666 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
+2026-07-24 20:27:59.671 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
+2026-07-24 20:27:59.675 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
+2026-07-24 20:27:59.679 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
+2026-07-24 20:27:59.683 [WARNING] [TID:7648] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
+2026-07-24 20:27:59.797 [DEBUG] [TID:7648] [MIC140v2 scan] profile=3 hwProtocol=1 rev=14.1 rev2=False slots=55 ptrs=110 val=0x0810 desc=0x084C fifo=0x0522 ready=110 capacity=220 stride=55 chanDelay=607 timer(scale=1 period=640 div=5000) desc0=[1,49154,272,8,16384] desc1=[0,128,256,606,2064] desc48=[0,8192,256,606,2111,0,32770,256,606,2117] ptrHead=[48,294,55,2124,2129,2124,2134,2124,2139,2124,2144,2124]
+2026-07-24 20:27:59.801 [WARNING] [TID:7648] [MIC140v2] scan OK slots=55 ptrs=110 payloadStride=55 fifoReady=110 msgWords=120 val=0x0810
+2026-07-24 20:27:59.811 [WARNING] [TID:7648] [MIC140v2:192.168.14.48:4000] scan programmed ch=48 fifoStride=55 tin=7 val=0x0810 freq=10,000 Hz fifoReady=110 msgWords=120
+2026-07-24 20:27:59.818 [WARNING] [TID:7648] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 programmed
+2026-07-24 20:27:59.852 [DEBUG] [TID:15472] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
+2026-07-24 20:27:59.857 [DEBUG] [TID:15392|UIThread] 20:27:59.854 Project settings applied.
+2026-07-24 20:27:59.884 [DEBUG] [TID:15392|UIThread] 20:27:59.884 Data sources started.
+2026-07-24 20:27:59.886 [DEBUG] [TID:15392|UIThread] 20:27:59.885 State changed: Stop -> Preview
+2026-07-24 20:27:59.994 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] scan started att=1 probe=False
+2026-07-24 20:27:59.995 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=3 started
+2026-07-24 20:28:00.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:00.196 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=1 rs=1 nb=1 ms=0 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:00.208 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] raw1 first60=[3840,-19719,-20999,-14227,-24073,-21620,-22355,-15580,-24129,-21171,-21526,-15419,-24107,-21126,-21944,-15386,-23613,-20039,-21375,-14777,-23211,-21015,-21221,-19859,-22560,-21557,-20642,-23571,-24220,-20679,-20246,-22911,-23264,-19948,-19474,-22547,-23028,-19172,-19146,-21409,-21978,-19079,-18622,-21229,-21620,-18305,-17186,-20353,7649,7602,7579,7614,7569,-12316,19109,4044,-19719,-21052,-14263,-24102] second60=[-21641,-22360,-15600,-24152,-21197,-21574,-15423,-24136,-21153,-21969,-15381,-23627,-20074,-21393,-14791,-23234,-21031,-21257,-19859,-22635,-21574,-20666,-23587,-24216,-20723,-20275,-22943,-23278,-19988,-19504,-22571,-23037,-19195,-19152,-21426,-21975,-19099,-18625,-21257,-21631,-18302,-17221,-20370,7649,7607,7580,7610,7567,-12311,19109]
+2026-07-24 20:28:00.215 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=1 nb=1 ms=0 corrupt=False
+2026-07-24 20:28:00.226 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=1 bad=96 first=ch1 sample=0 raw=3840 expected=-7176 +/-20
+2026-07-24 20:28:00.226 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block=1 samples=2 stride=48 rate=10,000 Hz
+2026-07-24 20:28:00.231 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block1 channels: T_01 raw=3840 mV=3840,0; MIC140_02 raw=-19719 mV=-19719,0; MIC140_03 raw=-20999 mV=-20999,0; MIC140_04 raw=-14227 mV=-14227,0; MIC140_05 raw=-24073 mV=-24073,0; MIC140_06 raw=-21620 mV=-21620,0; MIC140_07 raw=-22355 mV=-22355,0; MIC140_08 raw=-15580 mV=-15580,0; MIC140_12 raw=-15419 mV=-15419,0; MIC140_24 raw=-19859 mV=-19859,0
+2026-07-24 20:28:00.235 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block1 sample0 all48 good=0/48 raw=[3840,-19719,-20999,-14227,-24073,-21620,-22355,-15580,-24129,-21171,-21526,-15419,-24107,-21126,-21944,-15386,-23613,-20039,-21375,-14777,-23211,-21015,-21221,-19859,-22560,-21557,-20642,-23571,-24220,-20679,-20246,-22911,-23264,-19948,-19474,-22547,-23028,-19172,-19146,-21409,-21978,-19079,-18622,-21229,-21620,-18305,-17186,-20353]
+2026-07-24 20:28:00.240 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block1 sample1 all48 good=0/48 raw=[4044,-19719,-21052,-14263,-24102,-21641,-22360,-15600,-24152,-21197,-21574,-15423,-24136,-21153,-21969,-15381,-23627,-20074,-21393,-14791,-23234,-21031,-21257,-19859,-22635,-21574,-20666,-23587,-24216,-20723,-20275,-22943,-23278,-19988,-19504,-22571,-23037,-19195,-19152,-21426,-21975,-19099,-18625,-21257,-21631,-18302,-17221,-20370]
+2026-07-24 20:28:00.245 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block1 TIn raw=[T1=7649,T2=7602,T3=7579,T4=7614,T5=7569,T6=-12316,T7=19109]
+2026-07-24 20:28:00.250 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 250 ms on Thread 4120
+2026-07-24 20:28:00.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:00.395 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=2 rs=2 nb=2 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:00.400 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] raw2 first60=[4058,-19719,-21104,-14314,-24136,-21660,-22375,-15603,-24177,-21226,-21620,-15414,-24170,-21179,-21996,-15381,-23647,-20108,-21416,-14804,-23265,-21047,-21295,-19859,-22693,-21595,-20693,-23609,-24213,-20762,-20304,-22977,-23300,-20019,-19539,-22597,-23046,-19208,-19158,-21444,-21973,-19115,-18631,-21283,-21643,-18300,-17252,-20388,7650,7603,7580,7612,7568,-12322,19109,4114,-19718,-21151,-14353,-24173] second60=[-21676,-22391,-15616,-24205,-21252,-21661,-15410,-24199,-21203,-22024,-15381,-23669,-20138,-21439,-14809,-23292,-21062,-21331,-19859,-22736,-21613,-20718,-23631,-24207,-20790,-20332,-23012,-23318,-20046,-19570,-22623,-23043,-19227,-19164,-21463,-21972,-19128,-18636,-21307,-21651,-18298,-17281,-20407,7654,7605,7585,7616,7570,-12319,19109]
+2026-07-24 20:28:00.405 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=2 nb=2 ms=203 corrupt=False
+2026-07-24 20:28:00.412 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:00.415 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=2 bad=96 first=ch1 sample=0 raw=4058 expected=-7176 +/-20
+2026-07-24 20:28:00.419 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block2 published d0=[4058,-19719,-21104,-14314]
+2026-07-24 20:28:00.423 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 172 ms on Thread 4120
+2026-07-24 20:28:00.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:00.594 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=3 rs=3 nb=3 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:00.600 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] raw3 first60=[4188,-19718,-21197,-14377,-24206,-21690,-22409,-15618,-24229,-21276,-21703,-15411,-24229,-21222,-22048,-15374,-23691,-20169,-21460,-14820,-23320,-21076,-21364,-19859,-22796,-21634,-20743,-23653,-24209,-20812,-20358,-23045,-23339,-20071,-19600,-22648,-23054,-19237,-19171,-21483,-21972,-19135,-18646,-21329,-21670,-18290,-17311,-20424,7649,7603,7579,7620,7569,-12332,19110,4315,-19719,-21241,-14405,-24238] second60=[-21703,-22432,-15632,-24257,-21300,-21740,-15411,-24257,-21245,-22073,-15369,-23711,-20198,-21482,-14834,-23352,-21091,-21397,-19859,-22858,-21652,-20765,-23674,-24206,-20836,-20386,-23078,-23360,-20096,-19630,-22672,-23065,-19248,-19175,-21501,-21973,-19140,-18656,-21348,-21685,-18293,-17339,-20443,7648,7606,7582,7613,7565,-12338,19109]
+2026-07-24 20:28:00.604 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=3 nb=3 ms=203 corrupt=False
+2026-07-24 20:28:00.619 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=3 bad=96 first=ch1 sample=0 raw=4188 expected=-7176 +/-20
+2026-07-24 20:28:00.619 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block3 published d0=[4188,-19718,-21197,-14377]
+2026-07-24 20:28:00.624 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 156 ms on Thread 4120
+2026-07-24 20:28:00.641 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:00.795 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:00.795 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=4 rs=4 nb=4 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:00.801 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] raw4 first60=[4424,-19718,-21288,-14442,-24271,-21716,-22455,-15639,-24285,-21325,-21778,-15431,-24288,-21265,-22099,-15366,-23728,-20226,-21508,-14839,-23383,-21105,-21428,-19859,-22902,-21671,-20786,-23694,-24205,-20857,-20412,-23110,-23377,-20119,-19660,-22698,-23077,-19261,-19183,-21522,-21978,-19147,-18669,-21369,-21703,-18301,-17368,-20463,7655,7606,7579,7617,7568,-12337,19109,4491,-19718,-21330,-14462,-24303] second60=[-21730,-22478,-15647,-24312,-21349,-21811,-15438,-24317,-21285,-22123,-15368,-23748,-20254,-21532,-14849,-23414,-21119,-21459,-19859,-22939,-21689,-20808,-23716,-24207,-20876,-20442,-23144,-23397,-20140,-19692,-22725,-23091,-19278,-19191,-21543,-21984,-19153,-18678,-21390,-21689,-18309,-17397,-20482,7652,7608,7581,7614,7566,-12346,19109]
+2026-07-24 20:28:00.806 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=4 nb=4 ms=203 corrupt=False
+2026-07-24 20:28:00.823 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=4 bad=96 first=ch1 sample=0 raw=4424 expected=-7176 +/-20
+2026-07-24 20:28:00.823 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block4 published d0=[4424,-19718,-21288,-14442]
+2026-07-24 20:28:00.828 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 157 ms on Thread 4120
+2026-07-24 20:28:00.862 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:00.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:00.994 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=5 rs=5 nb=5 ms=188 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.000 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=5 nb=5 ms=188 corrupt=False
+2026-07-24 20:28:01.011 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=5 bad=96 first=ch1 sample=0 raw=4550 expected=-7176 +/-20
+2026-07-24 20:28:01.011 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block5 published d0=[4550,-19718,-21373,-14492]
+2026-07-24 20:28:01.016 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:01.080 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:01.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:01.194 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=6 rs=6 nb=6 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.199 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=6 nb=6 ms=203 corrupt=False
+2026-07-24 20:28:01.216 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=6 bad=96 first=ch1 sample=0 raw=4743 expected=-7176 +/-20
+2026-07-24 20:28:01.216 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block6 published d0=[4743,-19718,-21457,-14538]
+2026-07-24 20:28:01.221 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 140 ms on Thread 4120
+2026-07-24 20:28:01.301 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:01.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:01.395 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=7 rs=7 nb=7 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.400 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=7 nb=7 ms=203 corrupt=False
+2026-07-24 20:28:01.407 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=7 bad=96 first=ch1 sample=0 raw=4911 expected=-7176 +/-20
+2026-07-24 20:28:01.410 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block7 published d0=[4911,-19718,-21540,-14598]
+2026-07-24 20:28:01.416 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:01.523 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:01.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:01.594 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=8 rs=8 nb=8 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.599 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=8 nb=8 ms=203 corrupt=False
+2026-07-24 20:28:01.614 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=8 bad=96 first=ch1 sample=0 raw=5097 expected=-7176 +/-20
+2026-07-24 20:28:01.614 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block8 published d0=[5097,-19718,-21613,-14658]
+2026-07-24 20:28:01.619 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:01.749 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:01.795 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:01.795 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=9 rs=9 nb=9 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.800 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=9 nb=9 ms=203 corrupt=False
+2026-07-24 20:28:01.818 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=9 bad=96 first=ch1 sample=0 raw=5319 expected=-7176 +/-20
+2026-07-24 20:28:01.818 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block9 published d0=[5319,-19718,-21687,-14680]
+2026-07-24 20:28:01.823 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:01.972 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:01.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:01.994 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=10 rs=10 nb=10 ms=188 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:01.999 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=10 nb=10 ms=188 corrupt=False
+2026-07-24 20:28:02.008 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=10 bad=96 first=ch1 sample=0 raw=5423 expected=-7176 +/-20
+2026-07-24 20:28:02.008 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block10 published d0=[5423,-19718,-21759,-14740]
+2026-07-24 20:28:02.014 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:02.188 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:02.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:02.195 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=11 rs=11 nb=11 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:02.200 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=11 nb=11 ms=203 corrupt=False
+2026-07-24 20:28:02.215 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=11 bad=96 first=ch1 sample=0 raw=5589 expected=-7176 +/-20
+2026-07-24 20:28:02.215 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block11 published d0=[5589,-19718,-21820,-14776]
+2026-07-24 20:28:02.220 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 140 ms on Thread 4120
+2026-07-24 20:28:02.395 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:02.395 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=12 rs=12 nb=12 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:02.400 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=12 nb=12 ms=203 corrupt=False
+2026-07-24 20:28:02.414 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:02.420 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=12 bad=96 first=ch1 sample=0 raw=5664 expected=-7176 +/-20
+2026-07-24 20:28:02.420 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block12 published d0=[5664,-19718,-21885,-14829]
+2026-07-24 20:28:02.425 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:02.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:02.595 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=13 rs=13 nb=13 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:02.600 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=13 nb=13 ms=203 corrupt=False
+2026-07-24 20:28:02.610 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=13 bad=96 first=ch1 sample=0 raw=5803 expected=-7176 +/-20
+2026-07-24 20:28:02.610 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block13 published d0=[5803,-19719,-21938,-14855]
+2026-07-24 20:28:02.615 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:02.632 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:02.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:02.795 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=14 rs=14 nb=14 ms=203 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:02.800 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=14 nb=14 ms=203 corrupt=False
+2026-07-24 20:28:02.816 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=14 bad=96 first=ch1 sample=0 raw=5941 expected=-7176 +/-20
+2026-07-24 20:28:02.816 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block14 published d0=[5941,-19718,-21992,-14863]
+2026-07-24 20:28:02.821 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:02.854 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:02.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:02.995 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] header=OK size=120 scan_id=0 state=0 data=110 num_buff=15 rs=15 nb=15 ms=188 words=110 samples=2 stride=55 q=0 resync=0
+2026-07-24 20:28:03.000 [WARNING] [TID:16920] [MIC140v2:192.168.14.48:4000] scan rs=15 nb=15 ms=188 corrupt=False
+2026-07-24 20:28:03.019 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=15 bad=96 first=ch1 sample=0 raw=6054 expected=-7176 +/-20
+2026-07-24 20:28:03.019 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block15 published d0=[6054,-19718,-22044,-14908]
+2026-07-24 20:28:03.024 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:03.076 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:03.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:03.207 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=16 bad=96 first=ch1 sample=0 raw=6130 expected=-7176 +/-20
+2026-07-24 20:28:03.208 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:03.294 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:03.395 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:03.411 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=17 bad=96 first=ch1 sample=0 raw=6218 expected=-7176 +/-20
+2026-07-24 20:28:03.412 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:03.512 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:03.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:03.599 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=18 bad=96 first=ch1 sample=0 raw=6329 expected=-7176 +/-20
+2026-07-24 20:28:03.601 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:03.733 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:03.795 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:03.804 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=19 bad=96 first=ch1 sample=0 raw=6435 expected=-7176 +/-20
+2026-07-24 20:28:03.805 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 93 ms on Thread 4120
+2026-07-24 20:28:03.952 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:03.995 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:04.009 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=20 bad=96 first=ch1 sample=0 raw=6534 expected=-7176 +/-20
+2026-07-24 20:28:04.009 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block=20 samples=2 stride=48 rate=10,000 Hz
+2026-07-24 20:28:04.014 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:04.172 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:04.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:04.200 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:04.395 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:04.397 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:04.405 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:04.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:04.609 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:04.617 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:04.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:04.800 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:04.834 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 8456
+2026-07-24 20:28:04.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:05.005 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:05.057 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:05.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:05.211 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:05.284 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:05.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:05.402 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:05.502 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:05.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:05.606 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:05.723 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:05.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:05.798 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:05.946 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:05.995 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:06.004 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:06.167 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:06.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:06.210 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:06.387 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:06.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:06.400 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:06.595 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:06.607 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:06.611 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:06.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:06.798 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:06.833 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:06.995 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.004 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:07.057 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:07.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.209 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:07.277 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:07.395 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.399 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:07.500 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:07.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.604 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:07.729 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:07.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.808 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:07.955 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:07.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:07.998 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=40 bad=96 first=ch1 sample=0 raw=8191 expected=-7176 +/-20
+2026-07-24 20:28:08.003 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block=40 samples=2 stride=48 rate=10,000 Hz
+2026-07-24 20:28:08.010 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:08.177 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:08.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:08.205 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:08.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:08.399 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:08.409 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:08.595 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:08.600 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:08.619 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:08.795 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:08.804 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:08.841 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 8456
+2026-07-24 20:28:08.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:09.010 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:09.064 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:09.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:09.198 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:09.283 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:09.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:09.404 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:09.504 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:09.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:09.606 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:09.724 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:09.795 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:09.797 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:09.943 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:09.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:10.000 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 93 ms on Thread 4120
+2026-07-24 20:28:10.167 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:10.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:10.205 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:10.385 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:10.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:10.408 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:10.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:10.599 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:10.606 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:10.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:10.803 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:10.829 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:10.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.006 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:11.048 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:11.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.197 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:11.265 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:11.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.402 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:11.485 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:11.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.604 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:11.708 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:11.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.808 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:11.925 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:11.995 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:11.997 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=60 bad=96 first=ch1 sample=0 raw=9024 expected=-7176 +/-20
+2026-07-24 20:28:11.999 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block=60 samples=2 stride=48 rate=10,000 Hz
+2026-07-24 20:28:12.004 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:12.143 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:12.195 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:12.202 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:12.365 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:12.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:12.409 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:12.588 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 8456
+2026-07-24 20:28:12.595 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:12.598 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:12.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:12.802 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:12.810 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:12.995 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:13.009 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:13.031 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:13.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:13.198 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:13.249 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:13.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:13.403 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:13.470 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:13.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:13.609 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:13.691 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:13.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:13.798 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:13.911 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:13.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:14.004 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:14.135 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:14.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:14.210 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:14.356 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:14.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:14.400 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:14.579 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:14.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:14.603 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:14.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:14.798 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:14.810 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:14.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.000 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 140 ms on Thread 4120
+2026-07-24 20:28:15.021 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:15.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.207 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 110 ms on Thread 4120
+2026-07-24 20:28:15.241 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:15.395 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.397 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:15.466 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 8456
+2026-07-24 20:28:15.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.600 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:15.683 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:15.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.806 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:15.905 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:15.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:15.996 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 code quality violation: publish=80 bad=96 first=ch1 sample=0 raw=9244 expected=-7176 +/-20
+2026-07-24 20:28:16.000 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 block=80 samples=2 stride=48 rate=10,000 Hz
+2026-07-24 20:28:16.006 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:16.128 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 218 ms on Thread 8456
+2026-07-24 20:28:16.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:16.204 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:16.351 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:16.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:16.408 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 125 ms on Thread 4120
+2026-07-24 20:28:16.571 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:16.594 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:16.597 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:16.794 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:16.794 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 8456
+2026-07-24 20:28:16.804 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:16.994 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:17.010 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 109 ms on Thread 4120
+2026-07-24 20:28:17.015 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:17.194 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:17.200 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 94 ms on Thread 4120
+2026-07-24 20:28:17.236 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 8456
+2026-07-24 20:28:17.394 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:17.405 [DEBUG] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 141 ms on Thread 4120
+2026-07-24 20:28:17.459 [DEBUG] [TID:8456|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 8456
+2026-07-24 20:28:17.584  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:28:17.584 [DEBUG] [TID:15392|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:28:17.591  RuntimeDetach 192.168.9.142:4000
+2026-07-24 20:28:17.591 [DEBUG] [TID:13344|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped (source was offline)
+2026-07-24 20:28:17.598 [DEBUG] [TID:10564|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-24 20:28:17.602 [DEBUG] [TID:16920] [MIC140v2:192.168.14.48:4000] scan pump stream0 words=120 q=0
+2026-07-24 20:28:17.607 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 stream stop: published=88 read=88 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=88 mdpResync=0
+2026-07-24 20:28:17.638 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] stopped blocks=88 gaps=0 dup=0 corrupt=0 resync=0
+2026-07-24 20:28:17.747 [WARNING] [TID:4120|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 stopped
+2026-07-24 20:28:17.768 [DEBUG] [TID:15392|UIThread] 20:28:17.767 Data sources stopped.
+2026-07-24 20:28:17.769 [DEBUG] [TID:15392|UIThread] 20:28:17.769 State changed: Preview -> Stop
+2026-07-24 20:28:19.529  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:28:19.529 [DEBUG] [TID:15392|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 20:28:19.541 [WARNING] [TID:15392|UIThread] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 stream stop: published=88 read=88 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=88 mdpResync=0
+2026-07-24 20:28:19.547 [WARNING] [TID:15392|UIThread] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 stopped

@@ -1981,6 +1981,8 @@ begin
 
   if TryParseRecorderMic140SourceId(ANewSourceId, lHost, lPort) then
   begin
+    if (AOldSourceId <> '') and (not SameText(AOldSourceId, ANewSourceId)) then
+      RecorderMic140RekeySourceId(fRecorder.TagRegistry, AOldSourceId, ANewSourceId);
     lConfig := FindRecorderMic140DeviceConfig(fRecorder.TagRegistry, ANewSourceId);
     if lConfig <> nil then
       fSourceProbe.BuildMic140(ANewSourceId, lConfig.ChannelCount,
@@ -2041,6 +2043,7 @@ var
   I, lSlot: Integer;
   lCaption: string;
   lConfig: TRecorderConfiguredDataSource;
+  lConfigText: string;
   lLines: TStringList;
   lPath: string;
 begin
@@ -2068,12 +2071,17 @@ begin
           lCaption := Trim(lLines[I]);
           Break;
         end;
-      if (lCaption <> '') and ShowRecorderMc201SlotSettingsDialog(Self,
-        lCaption, lConfig.SpecificConfigText, ATag.SourceId,
-        fRecorder.DataSources, fRecorder.TagRegistry) then
+      if lCaption <> '' then
       begin
-        PopulateHardwareTree;
-        PopulateChannelGrids;
+        lConfigText := lConfig.SpecificConfigText;
+        if ShowRecorderMc201SlotSettingsDialog(Self,
+          lCaption, lConfigText, ATag.SourceId,
+          fRecorder.DataSources, fRecorder.TagRegistry) then
+        begin
+          lConfig.SpecificConfigText := lConfigText;
+          PopulateHardwareTree;
+          PopulateChannelGrids;
+        end;
       end;
     finally
       lLines.Free;
@@ -2188,7 +2196,7 @@ begin
     устройство через TEST и только после успеха снимаем offline-метку. }
   RecorderHardwareClearSourceOffline(lSourceId);
   if RecorderHardwareTestSourceLink(lSourceId, lErrorText) or
-    RecorderHardwareSourceLinkOk(lSourceId) then
+    RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
     RecorderHardwareClearSourceOffline(lSourceId)
   else
   begin
@@ -3534,6 +3542,7 @@ end;
 procedure TRecorderSettingsDialog.fHardwareTreeDblClick(Sender: TObject);
 var
   lConfig: TRecorderConfiguredDataSource;
+  lConfigText: string;
   lSerial: string;
   lSlot: Integer;
   lSourceId: string;
@@ -3548,11 +3557,17 @@ begin
       lSerial, lVersion) then
   begin
     lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, lSourceId);
-    if (lConfig <> nil) and SameText(lConfig.ModuleType, 'MC-032') and
-      ShowRecorderMc201SlotSettingsDialog(Self, fHardwareTree.Selected.Text,
-        lConfig.SpecificConfigText, lSourceId, fRecorder.DataSources,
+    if (lConfig <> nil) and SameText(lConfig.ModuleType, 'MC-032') then
+    begin
+      lConfigText := lConfig.SpecificConfigText;
+      if ShowRecorderMc201SlotSettingsDialog(Self, fHardwareTree.Selected.Text,
+        lConfigText, lSourceId, fRecorder.DataSources,
         fRecorder.TagRegistry) then
-      fHardwareTree.Invalidate;
+      begin
+        lConfig.SpecificConfigText := lConfigText;
+        fHardwareTree.Invalidate;
+      end;
+    end;
     Exit;
   end;
   EditHardwareSource(lSourceId);

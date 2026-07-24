@@ -396,7 +396,6 @@
         <Filename Value="Core/uRecorderResourcePaths.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/uRecorderDeviceDataThread.pas"/>
         <IsPartOfProject Value="True"/>
@@ -453,68 +452,54 @@
         <Filename Value="Device/MIC140/utils/uRecorderMic140Types.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140DataThread.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140Device.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140Calibration.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140Utils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140Thermocouple.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140Flash.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140FlashConstants.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140MebiusConstants.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140LegacyConstants.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140DeviceConfig.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140LegacyTiming.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140StreamTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-    
       <Unit>
         <Filename Value="Device/MIC140/uRecorderMic140StreamHelpers.pas"/>
         <IsPartOfProject Value="True"/>

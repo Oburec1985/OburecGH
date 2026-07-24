@@ -1,3 +1,39 @@
+## 2026-07-24 — MIC-140 v3: 7 TIn, адрес {node}-tN
+
+**Задача:** Согласовать число температурных каналов и адреса с оригиналом/Codex (не 3 и не серийник).
+
+**Сделано:**
+- Подтверждено: v3 экспортирует 7 TIn (t6..t12), `visible_count=55`, при ground `count_aver=294` @10 Гц (скан уже так считал).
+- UI/теги/probe: 7 каналов T1..T7, адрес `{node}-t1`…`{node}-t7` (не `0329-t N`).
+- Аналоговые адреса в диалоге — по номеру узла (`2-01`), не по s/n.
+- `lazbuild -B` RecorderLnx — OK.
+
+**Документация:** [programming_profiles.md](Docs/devices/mic140/programming_profiles.md)
+
+## 2026-07-24 — SourceId: свойство + BuildSourceId (MIC-140 из host)
+
+**Задача:** Убрать расхождение `sourceId` и `mic140.host` — SourceId должен вычисляться, а не быть застывшей строкой в JSON.
+
+**Сделано:**
+- `TRecorderDataSourceBase.BuildSourceId` (virtual); MIC-140 → `MIC-140: host:port`.
+- `TRecorderConfiguredDataSource.SourceId` — property; у `TRecorderMic140SourceConfig` — SourceId из Host/Port.
+- Load/save: canonicalize/rekey тегов и dataSources; диалог больше не принудительно держит старый SourceId.
+- `lazbuild -B` RecorderLnx — OK.
+
+**Документация:** —
+
+## 2026-07-24 — MIC-140: TCP на mic140.host, не на IP из SourceId
+
+**Задача:** По логам понять, почему Recorder не видит MIC-140, а Codex-стенд работает.
+
+**Сделано:**
+- Причина: `SourceId=…14.155…`, а `mic140.host=192.168.14.48` (как Codex); probe/Connect шли на 155 → `TCP TEST failed`.
+- `RecorderMic140ResolveEndpoint` + Factory/Prepare/дерево берут Host/Port из конфига устройства.
+- MainForm / SettingsDialog: проверка связи через overload с registry (тот же endpoint).
+- `lazbuild -B` RecorderLnx — OK.
+
+**Документация:** —
+
 ## 2026-07-24 — MIC-140: backup + чистый протокол + DataThread
 
 **Задача:** Вынести старый MIC-140 в backup, собрать одну папку `Device/MIC140` по Codex (Connect→Init→Config→Play→Stop→Disconnect), универсальный DataThread на уровне Device.

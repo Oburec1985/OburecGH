@@ -14,6 +14,7 @@ const
   MIC140DefaultChannelCount = 48;
   MIC140MaxChannelCount = 96;
   MIC140TemperatureChannelCount = 3;
+  MIC140v3VisibleTemperatureChannelCount = 7;
   MIC140DefaultPollFrequencyHz = 10.0;
 
 type

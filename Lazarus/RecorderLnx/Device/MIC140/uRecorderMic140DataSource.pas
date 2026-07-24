@@ -30,6 +30,7 @@ const
   MIC140DefaultChannelCount = 48;
   MIC140MaxChannelCount = 96;
   MIC140TemperatureChannelCount = 3;
+  MIC140v3VisibleTemperatureChannelCount = 7;
   MIC140DefaultPollFrequencyHz = 100.0;
   CMic140Range100mV = 0;
   CMic140RangeCount = 3;
@@ -46,6 +47,8 @@ type
     fDevice: IRecorderDevice;
     fMic: IMic140Device;
     fGoodBlockCount: Int64;
+    fHost: string;
+    fPort: Word;
     fLastStatusCode: Integer;
     fOutputMode: TRecorderMic140OutputMode;
     fPollFrequencyHz: Double;
@@ -77,6 +80,7 @@ type
     procedure CheckPublishedRecorderCodes(const ABlock: TRecorderDeviceSampleBlock);
     procedure ProcessAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
   protected
+    function BuildSourceId: string; override;
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
     procedure PrepareHardware; override;
@@ -90,9 +94,13 @@ type
     procedure RequestStop; override;
     function ZeroBalanceTags(AOwner: TComponent; ATags: TList;
       AMessages: TStrings): Boolean;
+    property Host: string read fHost;
+    property Port: Word read fPort;
   end;
 
 function RecorderMic140IsSourceLinkOk(const ASourceId: string): Boolean;
+function RecorderMic140IsSourceLinkOk(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
 function RecorderMic140ZeroBalanceTags(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATags: TList;
   ADataSources: TRecorderDataSourceManager; AMessages: TStrings): Boolean;
@@ -156,15 +164,21 @@ const
   CMic140NoDataFailThreshold = 10;
 
 function RecorderMic140IsSourceLinkOk(const ASourceId: string): Boolean;
+begin
+  Result := RecorderMic140IsSourceLinkOk(nil, ASourceId);
+end;
+
+function RecorderMic140IsSourceLinkOk(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
 var
   lHost: string;
   lPort: Word;
 begin
   { Live session first (no new TCP), TCP probe only as a fallback - mirrors
-    RecorderMic185IsSourceLinkOk. }
+    RecorderMic185IsSourceLinkOk. Endpoint = mic140.host, не IP из SourceId. }
   if RecorderHardwareIsSourceLinkOk(ASourceId) then
     Exit(True);
-  if TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+  if RecorderMic140ResolveEndpoint(ARegistry, ASourceId, lHost, lPort) then
     Result := RecorderMic140TcpProbe(lHost, lPort, 1000)
   else
     Result := False;
@@ -172,7 +186,9 @@ end;
 
 function RecorderMic140HardwareLinkProbe(const ASourceId: string): Boolean;
 begin
-  Result := RecorderMic140IsSourceLinkOk(ASourceId);
+  { Probe без registry — только SourceId; для дерева/Prepare используйте
+    RecorderMic140IsSourceLinkOk(Registry, ...). }
+  Result := RecorderMic140IsSourceLinkOk(nil, ASourceId);
 end;
 
 procedure RecorderMic140ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
@@ -718,8 +734,16 @@ constructor TRecorderMic140DataSource.Create(const ASourceId, AHost: string; APo
   ATagNames: TStrings; AOutputMode: TRecorderMic140OutputMode);
 var
   lNodeNumber: Integer;
+  lSourceId: string;
 begin
-  inherited Create(ASourceId, 'MIC-140', AUpdateTimeMs);
+  fHost := Trim(AHost);
+  fPort := APort;
+  if fPort = 0 then
+    fPort := MIC140DefaultPort;
+  if fHost = '' then
+    TryParseRecorderMic140SourceId(ASourceId, fHost, fPort);
+  lSourceId := RecorderMic140SourceId(fHost, fPort);
+  inherited Create(lSourceId, 'MIC-140', AUpdateTimeMs);
   fLastStatusCode := Low(Integer);
   fOutputMode := AOutputMode;
   fPollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
@@ -740,7 +764,7 @@ begin
   fTagNames.Sorted := False;
   if ATagNames <> nil then
     fTagNames.Assign(ATagNames);
-  fMic := CreateMic140Device(ASourceId, AHost, APort,
+  fMic := CreateMic140Device(lSourceId, fHost, fPort,
     AChannelCount, APollFrequencyHz, AUpdateTimeMs);
   fDevice := fMic;
   lNodeNumber := fMic.GetNodeNumber;
@@ -750,6 +774,11 @@ begin
   fHardwarePrepared := False;
   fHardwarePrepareAttempted := False;
   fConfigured := False;
+end;
+
+function TRecorderMic140DataSource.BuildSourceId: string;
+begin
+  Result := RecorderMic140SourceId(fHost, fPort);
 end;
 
 procedure TRecorderMic140DataSource.PublishDiagnostics(AStatusCode: Integer;
@@ -848,6 +877,7 @@ function TRecorderMic140DataSource.TemperatureChannelSelected(
   AIndex: Integer): Boolean;
 var
   lDisplayName: string;
+  lNode: Integer;
 begin
   Result := fTagNames.Count = 0;
   if Result then
@@ -857,20 +887,24 @@ begin
   Result := fTagNames.IndexOf(fTemperatureTagNames[AIndex - 1]) >= 0;
   if Result then
     Exit;
-  if fDeviceSerial > 0 then
-  begin
-    lDisplayName := RecorderMic140TemperatureDisplayName(fDeviceSerial, AIndex);
-    Result := fTagNames.IndexOf(lDisplayName) >= 0;
-  end;
+  lNode := MIC140DefaultNodeNumber;
+  if fMic <> nil then
+    lNode := fMic.GetNodeNumber;
+  lDisplayName := RecorderMic140TemperatureDisplayName(lNode, AIndex);
+  Result := fTagNames.IndexOf(lDisplayName) >= 0;
 end;
 
 procedure TRecorderMic140DataSource.RebuildTemperatureTagNames;
 var
-  I: Integer;
+  I, lCount, lNode: Integer;
 begin
   fTemperatureTagNames.Clear;
-  for I := 1 to MIC140TemperatureChannelCount do
-    fTemperatureTagNames.Add(RecorderMic140TemperatureAddressText(fDeviceSerial, I));
+  lNode := MIC140DefaultNodeNumber;
+  if fMic <> nil then
+    lNode := fMic.GetNodeNumber;
+  lCount := RecorderMic140VisibleTemperatureCount(CMic140Mic140SubRev1);
+  for I := 1 to lCount do
+    fTemperatureTagNames.Add(RecorderMic140TemperatureAddressText(lNode, I));
 end;
 
 function TRecorderMic140DataSource.ChannelIndexForTag(ATag: TRecorderTag): Integer;
@@ -1043,6 +1077,7 @@ var
   I: Integer;
   lChannel: TRecorderDeviceChannel;
   lChannels: TRecorderDeviceChannelArray;
+  lNode: Integer;
   lTag: TRecorderTag;
   lTagName: string;
 begin
@@ -1068,6 +1103,9 @@ begin
   lTag.Description := 'MIC-140 successfully received scan blocks';
   lTag.TextValue := '0';
 
+  lNode := MIC140DefaultNodeNumber;
+  if fMic <> nil then
+    lNode := fMic.GetNodeNumber;
   for I := 0 to fTemperatureTagNames.Count - 1 do
   begin
     if not TemperatureChannelSelected(I + 1) then
@@ -1076,9 +1114,9 @@ begin
     lTag := FindTagBySourceAddress(ARegistry, fTemperatureTagNames[I]);
     if lTag = nil then
       lTag := ARegistry.FindByName(fTemperatureTagNames[I]);
-    if (lTag = nil) and (fDeviceSerial > 0) then
+    if lTag = nil then
       lTag := ARegistry.FindByName(
-        RecorderMic140TemperatureDisplayName(fDeviceSerial, I + 1));
+        RecorderMic140TemperatureDisplayName(lNode, I + 1));
     if lTag = nil then
       lTag := ARegistry.CreateTag(fTemperatureTagNames[I], 4096);
     lTag.Address := fTemperatureTagNames[I];
@@ -1138,18 +1176,20 @@ var
   lConfig: TRecorderMic140SourceConfig;
   lTag: TRecorderTag;
   lTestError: string;
+  lHost: string;
+  lPort: Word;
 begin
   if fHardwarePrepared or fHardwarePrepareAttempted then
     Exit;
   fHardwarePrepareAttempted := True;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
-  { Неудостпное сетевое устройство является штатной конфигурацией проекта.
-    Сначала используем небросающий TestLink/TCP-проверку и только после успеха
-    вызываем Connect/InitializeDevice/ConfigureDevice. Это не останавливает
-    Lazarus debugger на ожидаемо отключённом приборе. }
-  if not RecorderMic140HardwareLinkProbe(SourceId) then
+  { Недоступное сетевое устройство — штатная конфигурация проекта.
+    Endpoint: mic140.host/port (SourceId может содержать устаревший IP). }
+  if not RecorderMic140IsSourceLinkOk(Registry, SourceId) then
   begin
     lTestError := 'TCP TEST failed';
+    if RecorderMic140ResolveEndpoint(Registry, SourceId, lHost, lPort) then
+      lTestError := Format('TCP TEST failed for %s:%d', [lHost, lPort]);
     RecorderHardwareMarkSourceOffline(SourceId, lTestError);
     PublishDiagnostics(CMic140StatusError, 'connection test failed', True);
     Mic140LogWarning(Format('[DataSource:%s] MIC-140 link test failed: %s',
@@ -1461,7 +1501,8 @@ begin
   if (fGoodBlockCount = 1) and (AAux.ChannelCount > 0) then
   begin
     lPreview := '';
-    for lChannel := 0 to Min(AAux.ChannelCount, MIC140TemperatureChannelCount) - 1 do
+    for lChannel := 0 to Min(AAux.ChannelCount,
+      MIC140v3VisibleTemperatureChannelCount) - 1 do
     begin
       if lChannel >= Length(AAux.Values) then
         Break;

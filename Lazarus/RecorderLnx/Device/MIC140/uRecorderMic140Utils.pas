@@ -33,10 +33,13 @@ function RecorderTagUsesMic140Settings(const ATag: TRecorderTag): Boolean;
 procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 function RecorderMic140NodeTagPrefix(ANodeNumber: Integer): string;
 function RecorderMic140ChannelTagName(ANodeNumber, AChannelNumber: Integer): string;
-function RecorderMic140TemperatureAddressText(ADeviceSerial,
+{ Адрес TIn: {node}-t{n}, например 2-t1 (не серийный номер). }
+function RecorderMic140TemperatureAddressText(ANodeNumber,
   ATemperatureIndex: Integer): string;
-function RecorderMic140TemperatureDisplayName(ADeviceSerial,
+function RecorderMic140TemperatureDisplayName(ANodeNumber,
   ATemperatureIndex: Integer): string;
+{ Число видимых TIn: 7 для SubRev1/v3, иначе 3. }
+function RecorderMic140VisibleTemperatureCount(ADevSubRev: Integer): Integer;
 function ParseMic140TemperatureChannelIndex(const AAddress: string;
   out ATemperatureIndex: Integer): Boolean;
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;
@@ -99,21 +102,30 @@ begin
     AChannelNumber]);
 end;
 
-function RecorderMic140TemperatureAddressText(ADeviceSerial,
+function RecorderMic140TemperatureAddressText(ANodeNumber,
   ATemperatureIndex: Integer): string;
 begin
   if ATemperatureIndex <= 0 then
     ATemperatureIndex := 1;
-  if ADeviceSerial < 0 then
-    ADeviceSerial := 0;
-  Result := Format('%4.4d-t%2d', [ADeviceSerial, ATemperatureIndex]);
+  if ANodeNumber <= 0 then
+    ANodeNumber := MIC140DefaultNodeNumber;
+  Result := Format('%d-t%d', [ANodeNumber, ATemperatureIndex]);
 end;
 
-function RecorderMic140TemperatureDisplayName(ADeviceSerial,
+function RecorderMic140TemperatureDisplayName(ANodeNumber,
   ATemperatureIndex: Integer): string;
 begin
   Result := Format('MIC140-{%s}',
-    [RecorderMic140TemperatureAddressText(ADeviceSerial, ATemperatureIndex)]);
+    [RecorderMic140TemperatureAddressText(ANodeNumber, ATemperatureIndex)]);
+end;
+
+function RecorderMic140VisibleTemperatureCount(ADevSubRev: Integer): Integer;
+begin
+  { SubRev1 = MIC-140-48v3: 7 экспортируемых TIn (в железе t6..t12). }
+  if ADevSubRev = 1 then
+    Result := MIC140v3VisibleTemperatureChannelCount
+  else
+    Result := MIC140TemperatureChannelCount;
 end;
 
 function ParseMic140TemperatureChannelIndex(const AAddress: string;

@@ -165,7 +165,8 @@ function Mic140TInCalibrFileNumber(ATInListIndex: Integer): Integer;
 begin
   { CChannelTInMIC140::GetTransFileName uses GetChanN() -> TIn\01..03.csv.
     TInNum/TInGetChanN tables map ME048 slots only, not calibration file names. }
-  if (ATInListIndex >= 0) and (ATInListIndex < MIC140TemperatureChannelCount) then
+  if (ATInListIndex >= 0) and
+    (ATInListIndex < MIC140v3VisibleTemperatureChannelCount) then
     Result := ATInListIndex + 1
   else
     Result := 0;
@@ -646,7 +647,8 @@ begin
   lIsTemperature := ParseMic140TemperatureChannelIndex(ATag.Address, lTempIndex);
   if lIsTemperature then
   begin
-    if (lTempIndex < 1) or (lTempIndex > MIC140TemperatureChannelCount) then
+    if (lTempIndex < 1) or
+      (lTempIndex > MIC140v3VisibleTemperatureChannelCount) then
     begin
       AErrorMessage := 'Invalid MIC-140 temperature channel index';
       Exit;

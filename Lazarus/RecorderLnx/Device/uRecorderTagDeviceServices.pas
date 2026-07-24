@@ -52,6 +52,7 @@ function RecorderEditTagDevice(AOwner: TComponent; ARecorder: TRecorder;
 var
   I, lSlot: Integer;
   lConfig: TRecorderConfiguredDataSource;
+  lConfigText: string;
   lConfigs: TStringList;
   lDialog: TOpenDialog;
   lHost: string;
@@ -88,11 +89,17 @@ begin
           lCaption := Trim(lLines[I]);
           Break;
         end;
-      Result := (lCaption <> '') and ShowRecorderMc201SlotSettingsDialog(
-        AOwner, lCaption, lConfig.SpecificConfigText, ATag.SourceId,
+      if lCaption = '' then
+        Exit;
+      lConfigText := lConfig.SpecificConfigText;
+      Result := ShowRecorderMc201SlotSettingsDialog(
+        AOwner, lCaption, lConfigText, ATag.SourceId,
         ARecorder.DataSources, ARecorder.TagRegistry);
       if Result then
+      begin
+        lConfig.SpecificConfigText := lConfigText;
         Log(ALog, Format('MC-201 slot %d settings updated.', [lSlot]));
+      end;
     finally
       lLines.Free;
     end;

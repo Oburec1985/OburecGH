@@ -222,10 +222,8 @@ end;
 function TRecorderMic140SettingsDialog.ChannelAddressText(
   AChannelNumber: Integer): string;
 begin
-  if fDeviceSerial > 0 then
-    Result := Format('%4.4d-%d', [fDeviceSerial, AChannelNumber])
-  else
-    Result := Format('%4.4d-%2.2d', [0, AChannelNumber]);
+  { Адрес = номер узла + канал, не серийный номер прибора. }
+  Result := Format('%d-%2.2d', [MIC140DefaultNodeNumber, AChannelNumber]);
 end;
 
 function TRecorderMic140SettingsDialog.CollectSelectedChannels: TStringList;
@@ -707,19 +705,38 @@ begin
     lConfig := FindRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
     if lConfig = nil then
       lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
-      
+    if lConfig = nil then
+      lConfig := FindRecorderMic140DeviceConfig(ATagRegistry, ANewSourceId);
+    if lConfig = nil then
+      lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ANewSourceId);
+
     if lConfig = nil then
     begin
-      lConfig := EnsureRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
+      lConfig := EnsureRecorderMic140DeviceConfig(ATagRegistry, ANewSourceId);
       if AMic140Configs <> nil then
-        EnsureRecorderMic140SourceConfig(AMic140Configs, ASourceId);
+        EnsureRecorderMic140SourceConfig(AMic140Configs, ANewSourceId);
     end;
-    
+
     lConfig.LoadFromResult(lResult);
-    ANewSourceId := ASourceId;
     if (ASourceId <> '') and (not SameText(ASourceId, ANewSourceId)) then
-      ATagRegistry.UnregisterActiveSource(ASourceId);
-    ATagRegistry.RegisterActiveSource(ANewSourceId);
+    begin
+      RecorderMic140RekeySourceId(ATagRegistry, ASourceId, ANewSourceId);
+      if (AMic140Configs <> nil) and (AMic140Configs <>
+        RecorderMic140DeviceConfigList(ATagRegistry)) then
+      begin
+        { Локальный список диалога — синхронизировать ключ отдельно. }
+        I := AMic140Configs.IndexOf(ASourceId);
+        if I >= 0 then
+        begin
+          if AMic140Configs.IndexOf(ANewSourceId) < 0 then
+            AMic140Configs[I] := ANewSourceId
+          else
+            AMic140Configs.Delete(I);
+        end;
+      end;
+    end
+    else
+      ATagRegistry.RegisterActiveSource(ANewSourceId);
 
     lCapacity := 4096;
     for I := 0 to ATagRegistry.TagCount - 1 do

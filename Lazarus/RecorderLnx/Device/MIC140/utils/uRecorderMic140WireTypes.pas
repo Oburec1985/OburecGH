@@ -16,7 +16,10 @@ const
   CMic140LegacyMaxScanDataWords = 512;  { LNX: room for MIC140v2 60-slot half-FIFO frames }
   MIC140DefaultChannelCount = 48;       { ORIG: MIC140_48mod MAX_COUNT_CHAN_AIN_48 }
   MIC140MaxChannelCount = 96;
-  MIC140TemperatureChannelCount = 3;      { ORIG: MAX_COUNT_CHAN_TIN_48 }
+  MIC140TemperatureChannelCount = 3;      { ORIG: MAX_COUNT_CHAN_TIN_48 (legacy visible) }
+  { MIC-140-48v3: в поток уходят t6..t12 = 7 каналов (visible_count=55=48+7).
+    В UI/тегах нумеруются логически как T1..T7 / адрес {node}-t1..t7. }
+  MIC140v3VisibleTemperatureChannelCount = 7;
   MIC140v2InternalTemperatureChannelCount = 12; { ORIG: MIC140_48v2mod MAX_COUNT_CHAN_TIN_48V2 }
   MIC140DefaultPollFrequencyHz = 100.0;
   CMic140LegacyBiosNumBuffIdx = 8;      { ORIG: num_buff ╨▓ header BIOS scan message }
