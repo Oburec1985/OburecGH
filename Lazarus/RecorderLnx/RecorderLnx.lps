@@ -187,8 +187,9 @@
       <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="9"/>
-        <TopLine Value="367"/>
+        <TopLine Value="369"/>
         <CursorPos X="83" Y="371"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
@@ -285,9 +286,8 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="91"/>
-        <CursorPos X="83" Y="101"/>
+        <CursorPos X="55" Y="105"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
