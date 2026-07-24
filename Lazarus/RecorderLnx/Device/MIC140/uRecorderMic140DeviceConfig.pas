@@ -71,6 +71,7 @@ function RecorderMic140DeviceConfigList(
   ARegistry: TRecorderTagRegistry): TStringList;
 function FindRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderMic140SourceConfig;
+
 function EnsureRecorderMic140DeviceConfig(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderMic140SourceConfig;
 function FindRecorderMic140SourceConfig(AList: TStrings;

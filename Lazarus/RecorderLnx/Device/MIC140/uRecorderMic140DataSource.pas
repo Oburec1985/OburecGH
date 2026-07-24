@@ -61,14 +61,7 @@ type
 
   TRecorderMic140DataSource = class(TRecorderDataSourceBase, IRecorderZeroBalanceSupport)
   private
-    fBlockPublishThread: TObject;
-    fLegacyReadThread: TObject;
-    fRawBuffer: TMic140RawDoubleBuffer;
-    fRawRing: TMic140v2RawRing;
-    fAcquireTiming: TRecorderMic140AcquireTiming;
-    fStreamFsm: TMic140StreamFsm;
     fScanConfig: TRecorderMic140ScanConfig;
-    fProtocolDriver: TRecorderMic140ProtocolDriver;
     fHardwarePrepared: Boolean;
     fHardwarePrepareAttempted: Boolean;
     fChannelTagNames: TStringList;
@@ -89,13 +82,13 @@ type
     fDeviceSerial: Integer;
     fLastRawChannelMeans: array of Double;
     fLastRawBlockValid: Boolean;
-  fLastChannelAdcSamples: array of Double;
-  fLastChannelAdcValid: Boolean;
-  fLastRingOverloadLogTick: QWord;
-  fLastPublishedNumBuff: Word;
-  fLastPublishedNumBuffValid: Boolean;
-  fPublishedNumBuffGapCount: Integer;
-  fPublishedCorruptCount: Integer;
+    fLastChannelAdcSamples: array of Double;
+    fLastChannelAdcValid: Boolean;
+    fLastRingOverloadLogTick: QWord;
+    fLastPublishedNumBuff: Word;
+    fLastPublishedNumBuffValid: Boolean;
+    fPublishedNumBuffGapCount: Integer;
+    fPublishedCorruptCount: Integer;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     function TemperatureChannelSelected(AIndex: Integer): Boolean;
@@ -109,30 +102,9 @@ type
     procedure PublishBlockCounter(ABlockCount: Int64);
     procedure PublishTemperatureBlocks(const AAux: TMic140AuxTemperatureBlock;
       const ATimes: TRecorderDoubleArray);
-    procedure EnsureBlockPublishThread;
-    procedure StopBlockPublishThread;
-    procedure EnsureLegacyReadThread;
-    procedure StopLegacyReadThread;
-    procedure EnqueueLegacyRawBlock(const ARaw: TMic140LegacyRawBlock);
-    function RawHasPending: Boolean;
-    function RawTryTake(out ARaw: TMic140LegacyRawBlock): Boolean;
-    procedure RawEnqueue(const ARaw: TMic140LegacyRawBlock; out ADropped: Boolean);
-    function RawPendingLag: Int64;
-    function RawDroppedCount: Int64;
-    function TryEnqueueGoodLegacyRawBlock(const ARaw: TMic140LegacyRawBlock): Boolean;
-    procedure ProcessLegacyRawBlock(const ARaw: TMic140LegacyRawBlock);
-    procedure CheckPublishedNumBuff(const ARaw: TMic140LegacyRawBlock);
-    procedure LogMic140StreamSummary(const ARaw: TMic140LegacyRawBlock);
-    procedure LogMic140StrideMisalignmentIfNeeded(const ARaw: TMic140LegacyRawBlock;
-      const ABlock: TRecorderDeviceSampleBlock);
-    function Mic140PublishedCodeInRecorderRange(AChannelIndex: Integer;
-      AValue: Double): Boolean;
-    procedure CheckPublishedTinCodes(const AAux: TMic140AuxTemperatureBlock);
-    procedure CheckPublishedRecorderCodes(const ABlock: TRecorderDeviceSampleBlock);
     procedure ProcessAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
     procedure SyncScanConfig;
-    procedure EnsureProtocolDriver;
-    procedure FreeProtocolDriver;
+    procedure CheckPublishedTinCodes(const AAux: TMic140AuxTemperatureBlock);
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -787,16 +759,12 @@ begin
   fMic := CreateMic140Device(ASourceId, AHost, APort,
     AChannelCount, APollFrequencyHz, AUpdateTimeMs);
   fDevice := fMic;
-  lNodeNumber := fMic.GetNodeNumber;
+  if fMic <> nil then
+    if fMic <> nil then
+    lNodeNumber := fMic.GetNodeNumber;
   fStatusTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'status');
   fBlockCountTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'blocks');
   RebuildTemperatureTagNames;
-  if (fMic <> nil) and fMic.UsesRawRing then
-    fRawRing := TMic140v2RawRing.Create
-  else
-    fRawBuffer := TMic140RawDoubleBuffer.Create;
-  fAcquireTiming := TRecorderMic140AcquireTiming.Create(APollFrequencyHz, AUpdateTimeMs);
-  fStreamFsm := TMic140StreamFsm.Create(fAcquireTiming);
   fScanConfig := TRecorderMic140ScanConfig.Create(AChannelCount, APollFrequencyHz, AUpdateTimeMs);
   fHardwarePrepared := False;
   fHardwarePrepareAttempted := False;
@@ -872,13 +840,8 @@ end;
 
 destructor TRecorderMic140DataSource.Destroy;
 begin
-  StopBlockPublishThread;
   Stop;
   fScanConfig.Free;
-  fStreamFsm.Free;
-  fAcquireTiming.Free;
-  fRawBuffer.Free;
-  fRawRing.Free;
   fMic := nil;
   fDevice := nil;
   fTagNames.Free;
@@ -1033,7 +996,7 @@ begin
     end;
   if not TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
   begin
-    AMessages.Add('Источник не является MIC-140');
+    AMessages.Add('�?сточник не является MIC-140');
     Exit;
   end;
 
@@ -1199,32 +1162,28 @@ end;
 
 procedure TRecorderMic140DataSource.PrepareHardware;
 var
-  I: Integer;
-  lChannelNumber: Integer;
+  lTestError: string;
   lCalibrationName: string;
-  lFirmware: TRecorderMic140LegacyFirmware;
   lSettings: TRecorderMic140ChannelSettings;
   lConfig: TRecorderMic140SourceConfig;
   lTag: TRecorderTag;
-  lTestError: string;
+  I: Integer;
+  lChannelNumber: Integer;
 begin
   if fHardwarePrepared or fHardwarePrepareAttempted then
     Exit;
   fHardwarePrepareAttempted := True;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
-  { Недоступное сетевое устройство является штатной конфигурацией проекта.
-    Сначала используем не бросающий исключение TestLink и только после успеха
-    вызываем Connect/ProgramDevice. Это не останавливает Lazarus debugger. }
+
   if not RecorderMic140HardwareLinkProbe(SourceId) then
   begin
     lTestError := 'TCP TEST failed';
     RecorderHardwareMarkSourceOffline(SourceId, lTestError);
     PublishDiagnostics(CMic140StatusError, 'connection test failed', True);
-    Mic140LogWarning(Format('[DataSource:%s] MIC-140 link test failed: %s',
-      [SourceId, lTestError]));
     Exit;
   end;
   RecorderHardwareClearSourceOffline(SourceId);
+
   fDevice.Connect;
   if fDevice.State = rdsDisconnected then
   begin
@@ -1234,19 +1193,12 @@ begin
   end;
   PublishDiagnostics(CMic140StatusConnected, 'connected', True);
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
+
   fDevice.InitializeDevice;
+  
   if fMic <> nil then
   begin
     fDeviceSerial := fMic.GetDeviceSerial;
-    if fMic.GetLegacyFirmware(lFirmware) then
-      Mic140LogWarning(Format(
-        '[DataSource:%s] MIC-140 firmware devSerNo=%u ccSerNo=%u ccType=%u -> hardware calibr serial=%d',
-        [SourceId, lFirmware.DevSerNo, lFirmware.CCSerNo, lFirmware.CCType,
-         fDeviceSerial]))
-    else
-    if fDeviceSerial > 0 then
-      Mic140LogWarning(Format('[DataSource:%s] MIC-140 hardware calibr serial=%d',
-        [SourceId, fDeviceSerial]));
     if fDeviceSerial > 0 then
       RecorderMic140SetDeviceSerialForSource(Registry, SourceId, fDeviceSerial);
     RebuildTemperatureTagNames;
@@ -1257,6 +1209,7 @@ begin
         fDeviceSerial, CMic140Mic140SubRev1, fTemperatureTagNames);
     end;
   end;
+
   if Registry <> nil then
     for I := 0 to Registry.TagCount - 1 do
     begin
@@ -1283,21 +1236,14 @@ begin
       lCalibrationName := RecorderMic140EnsureThermocoupleCalibration(Registry,
         lSettings);
       if lCalibrationName = '' then
-      begin
-        Mic140LogWarning(Format(
-          '[DataSource:%s] MIC-140 thermocouple curve was not loaded: tag=%s SDB=%s csv=%s',
-          [SourceId, lTag.Name, lSettings.ThermocoupleScalePath,
-           RecorderMeraThermocoupleCsvPath(lSettings.ThermocoupleScalePath)]));
         Continue;
-      end;
       if lTag.CalibrationNames.IndexOf(lCalibrationName) < 0 then
         lTag.CalibrationNames.Add(lCalibrationName);
       RecorderMic140UpdateChannelSettings(Registry, lTag, lSettings);
       lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
       lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
-      Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve ready: tag=%s SDB=%s',
-        [SourceId, lTag.Name, lSettings.ThermocoupleScalePath]));
     end;
+
   lConfig := FindRecorderMic140DeviceConfig(Registry, SourceId);
   if (lConfig <> nil) and (fMic <> nil) then
   begin
@@ -1312,34 +1258,26 @@ begin
       fMic.TrySetDeviceProperty(rdpMic140BoardCommutIndex, lConfig.BoardCommutIndex, I);
     end;
   end;
+
   fDevice.ConfigureDevice;
   if fDevice.State = rdsProgrammed then
     PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True)
   else
-  if fDevice.State <> rdsStarted then
   begin
     PublishDiagnostics(CMic140StatusError, 'programming failed', True);
     Exit;
   end;
+
   fDevice.Start;
   fHardwarePrepared := fDevice.State = rdsStarted;
   if not fHardwarePrepared then
   begin
     RecorderHardwareMarkSourceOffline(SourceId, 'start failed');
     PublishDiagnostics(CMic140StatusError, 'start failed', True);
-    Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 source is not started; preview will continue without device samples',
-      [SourceId]));
     if fDevice <> nil then
     begin
-      try
-        fDevice.Stop;
-      except
-      end;
-      try
-        fDevice.Disconnect;
-      except
-      end;
+      try fDevice.Stop; except end;
+      try fDevice.Disconnect; except end;
     end;
   end;
 end;
@@ -1359,24 +1297,6 @@ begin
     fScanConfig.PollFrequencyHz := fPollFrequencyHz;
     fScanConfig.UpdateTimeMs := UpdateTimeMs;
   end;
-  if fAcquireTiming <> nil then
-    fAcquireTiming.Apply(fPollFrequencyHz, UpdateTimeMs);
-end;
-
-procedure TRecorderMic140DataSource.EnsureProtocolDriver;
-begin
-  SyncScanConfig;
-  if fProtocolDriver <> nil then
-    Exit;
-  if (fDevice = nil) or (fMic = nil) then
-    Exit;
-  fProtocolDriver := TRecorderMic140LegacyScanDriver.Create(
-    fScanConfig, fDevice, fMic);
-end;
-
-procedure TRecorderMic140DataSource.FreeProtocolDriver;
-begin
-  FreeAndNil(fProtocolDriver);
 end;
 
 procedure TRecorderMic140DataSource.Start;
@@ -1397,9 +1317,6 @@ begin
     Exit;
   if fDevice.State = rdsStarted then
   begin
-    fStreamFsm.SetPhase(mspAcquiring);
-    EnsureBlockPublishThread;
-    EnsureLegacyReadThread;
     PublishDiagnostics(CMic140StatusStarted, 'started', True);
   end;
 end;
@@ -1407,38 +1324,13 @@ end;
 procedure TRecorderMic140DataSource.RequestStop;
 begin
   inherited RequestStop;
-  if fStreamFsm <> nil then
-    fStreamFsm.SetPhase(mspStopping);
   if fMic <> nil then
     fMic.RequestStopAcquisition;
 end;
 
 procedure TRecorderMic140DataSource.Stop;
-var
-  lBufferDropped: Int64;
 begin
   RecorderHardwareUnregisterLiveDevice(Self);
-  if fStreamFsm <> nil then
-    fStreamFsm.SetPhase(mspStopping);
-  StopLegacyReadThread;
-  FreeProtocolDriver;
-  StopBlockPublishThread;
-  if (fMic <> nil) and
-     ((fGoodBlockCount > 0) or (fMic.LegacyStreamReadCount > 0)) then
-  begin
-    if fRawBuffer <> nil then
-      lBufferDropped := fRawBuffer.DroppedCount
-    else if fRawRing <> nil then
-      lBufferDropped := fRawRing.DroppedCount
-    else
-      lBufferDropped := 0;
-    Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 stream stop: published=%d read=%d readGaps=%d dupRead=%d corruptRead=%d publishGaps=%d corruptPublish=%d bufferDropped=%d mdpResync=%d',
-      [SourceId, fGoodBlockCount, fMic.LegacyStreamReadCount,
-       fMic.LegacyNumBuffGapCount, fMic.LegacyDuplicateNumBuffCount,
-       fMic.LegacyCorruptReadCount, fPublishedNumBuffGapCount,
-       fPublishedCorruptCount, lBufferDropped, fMic.LegacyMdpResyncByteCount]));
-  end;
   if fDevice <> nil then
   begin
     try
@@ -1450,11 +1342,6 @@ begin
   end;
   inherited Stop;
   fHardwarePrepared := False;
-  if fStreamFsm <> nil then
-    fStreamFsm.SetPhase(mspOffline);
-  { Отрицательный TEST действителен до загрузки/изменения конфигурации.
-    Не повторяем сетевой timeout при каждом Stop -> Preview. Для реально
-    работавшего устройства подготовка следующего запуска остаётся разрешена. }
   fHardwarePrepareAttempted := RecorderHardwareIsSourceOffline(SourceId);
   if fDevice <> nil then
   begin
@@ -1468,613 +1355,6 @@ begin
       end;
     end;
   end;
-end;
-
-type
-  TMic140BlockPublishThread = class(TThread)
-  private
-    fOwner: TRecorderMic140DataSource;
-    fWakeEvent: TEvent;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(AOwner: TRecorderMic140DataSource);
-    destructor Destroy; override;
-    procedure SignalWork;
-    procedure Flush;
-    procedure RequestStop;
-  end;
-
-  TMic140LegacyReadThread = class(TThread)
-  private
-    fOwner: TRecorderMic140DataSource;
-    fWakeEvent: TEvent;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(AOwner: TRecorderMic140DataSource);
-    destructor Destroy; override;
-    procedure RequestStop;
-  end;
-
-constructor TMic140BlockPublishThread.Create(AOwner: TRecorderMic140DataSource);
-begin
-  inherited Create(True);
-  FreeOnTerminate := False;
-  fOwner := AOwner;
-  fWakeEvent := TEvent.Create(nil, False, False, '');
-end;
-
-destructor TMic140BlockPublishThread.Destroy;
-begin
-  fWakeEvent.Free;
-  inherited Destroy;
-end;
-
-procedure TMic140BlockPublishThread.SignalWork;
-begin
-  fWakeEvent.SetEvent;
-end;
-
-procedure TMic140BlockPublishThread.Flush;
-var
-  lSpin: Integer;
-begin
-  lSpin := 0;
-  while fOwner.RawHasPending do
-  begin
-    if lSpin >= 400 then
-      Break;
-    fWakeEvent.WaitFor(5);
-    Inc(lSpin);
-  end;
-end;
-
-procedure TMic140BlockPublishThread.RequestStop;
-begin
-  Terminate;
-  fWakeEvent.SetEvent;
-end;
-
-procedure TMic140BlockPublishThread.Execute;
-var
-  lRaw: TMic140LegacyRawBlock;
-begin
-  while not Terminated do
-  begin
-    if not fOwner.fStreamFsm.ShouldPublish then
-    begin
-      fWakeEvent.WaitFor(fOwner.fStreamFsm.IdleWaitMs);
-      Continue;
-    end;
-    if not fOwner.RawTryTake(lRaw) then
-    begin
-      fWakeEvent.WaitFor(fOwner.fStreamFsm.PublishBlockWaitMs);
-      Continue;
-    end;
-    if not Terminated then
-      fOwner.ProcessLegacyRawBlock(lRaw);
-  end;
-
-  while fOwner.RawTryTake(lRaw) do
-    fOwner.ProcessLegacyRawBlock(lRaw);
-end;
-
-{ TMic140LegacyReadThread }
-
-constructor TMic140LegacyReadThread.Create(AOwner: TRecorderMic140DataSource);
-begin
-  inherited Create(True);
-  FreeOnTerminate := False;
-  fOwner := AOwner;
-  fWakeEvent := TEvent.Create(nil, False, False, '');
-end;
-
-destructor TMic140LegacyReadThread.Destroy;
-begin
-  fWakeEvent.Free;
-  inherited Destroy;
-end;
-
-procedure TMic140LegacyReadThread.RequestStop;
-begin
-  Terminate;
-  fWakeEvent.SetEvent;
-end;
-
-procedure TMic140LegacyReadThread.Execute;
-var
-  lConsecutiveFails: Integer;
-  lRaw: TMic140LegacyRawBlock;
-  lTimeoutMs: Cardinal;
-begin
-  lConsecutiveFails := 0;
-  while not Terminated do
-  begin
-    if Terminated or not fOwner.fStreamFsm.ShouldRead or (fOwner.fDevice = nil) or
-       (fOwner.fDevice.State <> rdsStarted) then
-    begin
-      fWakeEvent.WaitFor(fOwner.fStreamFsm.IdleWaitMs);
-      Continue;
-    end;
-    fWakeEvent.WaitFor(fOwner.fStreamFsm.AcquirePacingMs);
-    if Terminated then
-      Break;
-    lTimeoutMs := fOwner.fScanConfig.MainScanReadTimeoutMs;
-    try
-      if fOwner.fMic <> nil then
-      begin
-        if fOwner.fMic.ReadLegacyRawBlock(lTimeoutMs, lRaw) then
-        begin
-          lConsecutiveFails := 0;
-          fOwner.EnqueueLegacyRawBlock(lRaw);
-        end
-        else
-          Inc(lConsecutiveFails);
-        while not Terminated and fOwner.fMic.ReadLegacyRawBlock(0, lRaw) do
-          fOwner.EnqueueLegacyRawBlock(lRaw);
-      end
-      else if (fOwner.fProtocolDriver <> nil) and
-         fOwner.fProtocolDriver.ReadRawBlock(lRaw) then
-      begin
-        lConsecutiveFails := 0;
-        fOwner.EnqueueLegacyRawBlock(lRaw);
-      end
-      else
-        Inc(lConsecutiveFails);
-      if lConsecutiveFails > 0 then
-      begin
-        if (lConsecutiveFails >= fOwner.fScanConfig.ReadStallRestartAfter) and
-          (
-            ((fOwner.fProtocolDriver <> nil) and
-             (fOwner.fProtocolDriver.StreamReadCount > 0) and
-             fOwner.fProtocolDriver.TryRestartAfterReadStall) or
-            ((fOwner.fMic <> nil) and
-             (fOwner.fMic.LegacyStreamReadCount > 0) and
-             fOwner.fMic.LegacyTryRestartStreamAfterReadStall)
-          ) then
-          lConsecutiveFails := 0;
-        if lConsecutiveFails = fOwner.fScanConfig.ReadTimeoutWarnAfter then
-          Mic140LogWarning(Format(
-            '[DataSource:%s] MIC-140 read thread: %d consecutive timeouts (%d ms)',
-            [fOwner.SourceId, lConsecutiveFails, lTimeoutMs]));
-      end;
-    except
-      on E: Exception do
-      begin
-        Mic140LogWarning(Format('[DataSource:%s] MIC-140 read thread failed: %s: %s',
-          [fOwner.SourceId, E.ClassName, E.Message]));
-        fOwner.fStreamFsm.SetPhase(mspError, E.Message);
-        fOwner.PublishDiagnostics(CMic140StatusError,
-          'read exception: ' + E.Message, True);
-        try
-          fOwner.fDevice.Stop;
-        except
-        end;
-        Terminate;
-      end;
-    end;
-  end;
-end;
-
-procedure TRecorderMic140DataSource.EnsureBlockPublishThread;
-var
-  lThread: TMic140BlockPublishThread;
-begin
-  if fBlockPublishThread <> nil then
-    Exit;
-  lThread := TMic140BlockPublishThread.Create(Self);
-  fBlockPublishThread := lThread;
-  lThread.Start;
-end;
-
-procedure TRecorderMic140DataSource.StopBlockPublishThread;
-var
-  lThread: TMic140BlockPublishThread;
-begin
-  if fBlockPublishThread = nil then
-    Exit;
-  lThread := TMic140BlockPublishThread(fBlockPublishThread);
-  lThread.RequestStop;
-  lThread.Flush;
-  lThread.WaitFor;
-  lThread.Free;
-  fBlockPublishThread := nil;
-end;
-
-procedure TRecorderMic140DataSource.EnsureLegacyReadThread;
-var
-  lThread: TMic140LegacyReadThread;
-begin
-  if fLegacyReadThread <> nil then
-    Exit;
-  EnsureProtocolDriver;
-  lThread := TMic140LegacyReadThread.Create(Self);
-  fLegacyReadThread := lThread;
-  lThread.Start;
-end;
-
-procedure TRecorderMic140DataSource.StopLegacyReadThread;
-var
-  lThread: TMic140LegacyReadThread;
-begin
-  if fLegacyReadThread = nil then
-    Exit;
-  lThread := TMic140LegacyReadThread(fLegacyReadThread);
-  lThread.RequestStop;
-  lThread.WaitFor;
-  lThread.Free;
-  fLegacyReadThread := nil;
-end;
-
-function TRecorderMic140DataSource.RawHasPending: Boolean;
-begin
-  if fRawRing <> nil then
-    Result := fRawRing.PendingCount > 0
-  else if fRawBuffer <> nil then
-    Result := fRawBuffer.HasPending
-  else
-    Result := False;
-end;
-
-function TRecorderMic140DataSource.RawTryTake(out ARaw: TMic140LegacyRawBlock): Boolean;
-begin
-  if fRawRing <> nil then
-    Result := fRawRing.TryDequeue(ARaw)
-  else if fRawBuffer <> nil then
-    Result := fRawBuffer.TryTake(ARaw)
-  else
-    Result := False;
-end;
-
-procedure TRecorderMic140DataSource.RawEnqueue(const ARaw: TMic140LegacyRawBlock;
-  out ADropped: Boolean);
-begin
-  ADropped := False;
-  if fRawRing <> nil then
-    fRawRing.Enqueue(ARaw, ADropped)
-  else if fRawBuffer <> nil then
-    ADropped := fRawBuffer.Publish(ARaw);
-end;
-
-function TRecorderMic140DataSource.RawPendingLag: Int64;
-begin
-  if fRawRing <> nil then
-    Result := fRawRing.PendingCount
-  else if fRawBuffer <> nil then
-    Result := fRawBuffer.PendingLag
-  else
-    Result := 0;
-end;
-
-function TRecorderMic140DataSource.RawDroppedCount: Int64;
-begin
-  if fRawRing <> nil then
-    Result := fRawRing.DroppedCount
-  else if fRawBuffer <> nil then
-    Result := fRawBuffer.DroppedCount
-  else
-    Result := 0;
-end;
-
-procedure TRecorderMic140DataSource.EnqueueLegacyRawBlock(
-  const ARaw: TMic140LegacyRawBlock);
-var
-  lDropped: Boolean;
-  lNow: QWord;
-  lThread: TMic140BlockPublishThread;
-begin
-  if (fRawRing = nil) and (fRawBuffer = nil) then
-  begin
-    ProcessLegacyRawBlock(ARaw);
-    Exit;
-  end;
-  RawEnqueue(ARaw, lDropped);
-  lNow := GetTickCount64;
-  if lDropped and (lNow - fLastRingOverloadLogTick >= CMic140RawBufferDropLogIntervalMs) then
-  begin
-    fLastRingOverloadLogTick := lNow;
-    Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 raw buffer overflow: readSerial=%d num_buff=%d lag=%d',
-      [SourceId, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
-       RawPendingLag]));
-  end;
-  if fBlockPublishThread <> nil then
-  begin
-    lThread := TMic140BlockPublishThread(fBlockPublishThread);
-    lThread.SignalWork;
-  end
-  else
-    ProcessLegacyRawBlock(ARaw);
-end;
-
-function TRecorderMic140DataSource.TryEnqueueGoodLegacyRawBlock(
-  const ARaw: TMic140LegacyRawBlock): Boolean;
-begin
-  if (fMic = nil) or
-     Mic140LegacyRawBlockLooksCorrupt(ARaw, fMic.ChannelCount) then
-    Exit(False);
-  EnqueueLegacyRawBlock(ARaw);
-  Result := True;
-end;
-
-procedure TRecorderMic140DataSource.CheckPublishedNumBuff(
-  const ARaw: TMic140LegacyRawBlock);
-var
-  lCurNumBuff: Word;
-  lExpected: Word;
-  lMissed: Integer;
-begin
-  if (fMic <> nil) and fMic.LegacyConsumeStreamSequenceReset then
-    fLastPublishedNumBuffValid := False;
-  lCurNumBuff := ARaw.Header[CMic140LegacyBiosNumBuffIdx];
-  if fLastPublishedNumBuffValid then
-  begin
-    lExpected := Word((Integer(fLastPublishedNumBuff) + 1) and $FFFF);
-    if lCurNumBuff <> lExpected then
-    begin
-      lMissed := Integer(lCurNumBuff) - Integer(lExpected);
-      if lMissed < 0 then
-        Inc(lMissed, 65536);
-      if lMissed >= CMic140LegacyNumBuffDesyncRestartMissed then
-      begin
-        Mic140LogWarning(Format(
-          '[DataSource:%s] MIC-140 num_buff desync on publish: readSerial=%d prev=%d expected=%d cur=%d missed=%d -> re-baseline',
-          [SourceId, ARaw.ReadSerial, fLastPublishedNumBuff, lExpected, lCurNumBuff, lMissed]));
-        fLastPublishedNumBuff := lCurNumBuff;
-        fLastPublishedNumBuffValid := True;
-        Exit;
-      end;
-      Inc(fPublishedNumBuffGapCount);
-      Mic140LogWarning(Format(
-        '[DataSource:%s] MIC-140 num_buff gap on publish: readSerial=%d prev=%d expected=%d cur=%d missed=%d publishGaps=%d ring=%d',
-        [SourceId, ARaw.ReadSerial, fLastPublishedNumBuff, lExpected, lCurNumBuff,
-         lMissed, fPublishedNumBuffGapCount, RawPendingLag]));
-    end;
-  end;
-  fLastPublishedNumBuff := lCurNumBuff;
-  fLastPublishedNumBuffValid := True;
-end;
-
-procedure TRecorderMic140DataSource.LogMic140StreamSummary(
-  const ARaw: TMic140LegacyRawBlock);
-begin
-  if (fMic = nil) or (fGoodBlockCount = 0) then
-    Exit;
-  if (fGoodBlockCount <> 1) and
-     ((fGoodBlockCount mod CMic140LegacyStreamSummaryInterval) <> 0) then
-    Exit;
-  Mic140LogWarning(Format(
-    '[DataSource:%s] MIC-140 stream: published=%d read=%d num_buff=%d readGaps=%d dupRead=%d corruptRead=%d publishGaps=%d ring=%d mdpResync=%d',
-    [SourceId, fGoodBlockCount, fMic.LegacyStreamReadCount,
-     ARaw.Header[CMic140LegacyBiosNumBuffIdx],
-     fMic.LegacyNumBuffGapCount, fMic.LegacyDuplicateNumBuffCount,
-     fMic.LegacyCorruptReadCount, fPublishedNumBuffGapCount,
-     RawPendingLag, fMic.LegacyMdpResyncByteCount]));
-end;
-
-procedure TRecorderMic140DataSource.ProcessLegacyRawBlock(
-  const ARaw: TMic140LegacyRawBlock);
-var
-  lBlock: TRecorderDeviceSampleBlock;
-begin
-  CheckPublishedNumBuff(ARaw);
-  if (ARaw.ReadSerial > 0) and (ARaw.ReadSerial <= CMic140LegacyScanDetailLogBlocks) then
-    RecorderDebugLog(Format('[DataSource:%s] raw block words=%d rs=%d nb=%d',
-      [SourceId, ARaw.DataWordCount, ARaw.ReadSerial,
-       ARaw.Header[CMic140LegacyBiosNumBuffIdx]]));
-  if (fMic = nil) or
-     not fMic.LegacyDecommutateRawBlock(ARaw, lBlock) then
-    Exit;
-  try
-    LogMic140StrideMisalignmentIfNeeded(ARaw, lBlock);
-    ProcessAndPublishBlock(lBlock);
-    LogMic140StreamSummary(ARaw);
-  finally
-    ClearRecorderDeviceSampleBlock(lBlock);
-  end;
-end;
-
-procedure TRecorderMic140DataSource.LogMic140StrideMisalignmentIfNeeded(
-  const ARaw: TMic140LegacyRawBlock; const ABlock: TRecorderDeviceSampleBlock);
-var
-  lK: Integer;
-  lPosCount: Integer;
-  lSatCount: Integer;
-  lPreview: string;
-  lI: Integer;
-  lStride: Integer;
-  lOffset: Integer;
-  lSample: Integer;
-  lChannel: Integer;
-  lIndex: Integer;
-  lSampleCount: Integer;
-  lGood: Integer;
-  lBad: Integer;
-  lCandidatePos: Integer;
-  lCandidateSat: Integer;
-  lScore: Integer;
-  lBestScore: Integer;
-  lBestStride: Integer;
-  lBestOffset: Integer;
-  lBestSamples: Integer;
-  lBestGood: Integer;
-  lBestBad: Integer;
-  lBestPos: Integer;
-  lBestSat: Integer;
-  lBestPreview: string;
-  lValue: Integer;
-begin
-  if (fMic = nil) or
-    (not Mic140LegacyRawBlockLooksCorrupt(ARaw, fMic.ChannelCount)) then
-    Exit;
-
-  Inc(fPublishedCorruptCount);
-  lPosCount := 0;
-  lSatCount := 0;
-  for lI := 0 to ABlock.ChannelCount - 1 do
-  begin
-    if lI >= Length(ABlock.Values) then
-      Continue;
-    if Mic140AdcCodeIsSaturated(ABlock.Values[lI][0]) then
-      Inc(lSatCount)
-    else if ABlock.Values[lI][0] > CMic140MisalignPositiveThreshold then
-      Inc(lPosCount);
-  end;
-
-  lPreview := '';
-  for lK := 0 to Min(ABlock.ChannelCount - 1, 7) do
-  begin
-    if lK >= Length(ABlock.Values) then
-      Break;
-    if lK > 0 then
-      lPreview := lPreview + ',';
-    lPreview := lPreview + IntToStr(Trunc(ABlock.Values[lK][0]));
-  end;
-  RecorderDebugLog(Format(
-    '[DataSource:%s] MIC-140 stride misalignment: publish=%d readSerial=%d num_buff=%d positive=%d sat=%d preview=[%s]',
-    [SourceId, fGoodBlockCount + 1, ARaw.ReadSerial,
-     ARaw.Header[CMic140LegacyBiosNumBuffIdx], lPosCount, lSatCount, lPreview]));
-
-  if ARaw.ReadSerial > CMic140LegacyScanDetailLogBlocks then
-    Exit;
-
-  lBestScore := Low(Integer);
-  lBestStride := 0;
-  lBestOffset := 0;
-  lBestSamples := 0;
-  lBestGood := 0;
-  lBestBad := 0;
-  lBestPos := 0;
-  lBestSat := 0;
-  lBestPreview := '';
-  for lStride := 48 to 54 do
-    for lOffset := 0 to 12 do
-    begin
-      if lOffset + 47 >= ARaw.DataWordCount then
-        Continue;
-      lSampleCount := (ARaw.DataWordCount - lOffset) div lStride;
-      while (lSampleCount > 0) and
-        (lOffset + (lSampleCount - 1) * lStride + 47 >= ARaw.DataWordCount) do
-        Dec(lSampleCount);
-      if lSampleCount <= 0 then
-        Continue;
-
-      lGood := 0;
-      lBad := 0;
-      lCandidatePos := 0;
-      lCandidateSat := 0;
-      for lSample := 0 to lSampleCount - 1 do
-        for lChannel := 0 to 47 do
-        begin
-          lIndex := lOffset + lSample * lStride + lChannel;
-          lValue := SmallInt(ARaw.Data[lIndex]);
-          if Mic140AdcCodeIsSaturated(lValue) then
-          begin
-            Inc(lCandidateSat);
-            Inc(lBad);
-          end
-          else if Mic140PublishedCodeInRecorderRange(lChannel, lValue) then
-            Inc(lGood)
-          else
-          begin
-            if lValue > CMic140MisalignPositiveThreshold then
-              Inc(lCandidatePos);
-            Inc(lBad);
-          end;
-        end;
-      lScore := lGood * 3 - lBad * 2 - lCandidateSat * 3 - lCandidatePos;
-      if lScore > lBestScore then
-      begin
-        lBestScore := lScore;
-        lBestStride := lStride;
-        lBestOffset := lOffset;
-        lBestSamples := lSampleCount;
-        lBestGood := lGood;
-        lBestBad := lBad;
-        lBestPos := lCandidatePos;
-        lBestSat := lCandidateSat;
-        lBestPreview := '';
-        for lK := 0 to 7 do
-        begin
-          lIndex := lOffset + lK;
-          if lIndex >= ARaw.DataWordCount then
-            Break;
-          if lBestPreview <> '' then
-            lBestPreview := lBestPreview + ',';
-          lBestPreview := lBestPreview + IntToStr(SmallInt(ARaw.Data[lIndex]));
-        end;
-      end;
-    end;
-
-  RecorderDebugLog(Format(
-    '[DataSource:%s] MIC-140 layout candidate: readSerial=%d num_buff=%d offset=%d stride=%d samples=%d score=%d good=%d bad=%d positive=%d sat=%d preview=[%s]',
-    [SourceId, ARaw.ReadSerial, ARaw.Header[CMic140LegacyBiosNumBuffIdx],
-     lBestOffset, lBestStride, lBestSamples, lBestScore, lBestGood, lBestBad,
-     lBestPos, lBestSat, lBestPreview]));
-end;
-
-function TRecorderMic140DataSource.Mic140PublishedCodeInRecorderRange(
-  AChannelIndex: Integer; AValue: Double): Boolean;
-begin
-  if AChannelIndex < 48 then
-    Result := Mic140v2CodeInRecorderProfile(Round(AValue), AChannelIndex)
-  else
-    Result := True;
-end;
-
-procedure TRecorderMic140DataSource.CheckPublishedRecorderCodes(
-  const ABlock: TRecorderDeviceSampleBlock);
-var
-  lChannel: Integer;
-  lSample: Integer;
-  lBad: Integer;
-  lFirstChannel: Integer;
-  lFirstSample: Integer;
-  lFirstValue: Double;
-  lExpectedCode: Integer;
-  lExpected: string;
-begin
-  if ABlock.SampleCount <= 0 then
-    Exit;
-  lBad := 0;
-  lFirstChannel := -1;
-  lFirstSample := -1;
-  lFirstValue := 0.0;
-  for lChannel := 0 to Min(ABlock.ChannelCount, 48) - 1 do
-  begin
-    if lChannel >= Length(ABlock.Values) then
-      Break;
-    for lSample := 0 to ABlock.SampleCount - 1 do
-    begin
-      if lSample >= Length(ABlock.Values[lChannel]) then
-        Break;
-      if not Mic140PublishedCodeInRecorderRange(lChannel,
-        ABlock.Values[lChannel][lSample]) then
-      begin
-        Inc(lBad);
-        if lFirstChannel < 0 then
-        begin
-          lFirstChannel := lChannel;
-          lFirstSample := lSample;
-          lFirstValue := ABlock.Values[lChannel][lSample];
-        end;
-      end;
-    end;
-  end;
-
-  if lBad <= 0 then
-    Exit;
-  Inc(fPublishedCorruptCount);
-  if Mic140v2RecorderReferenceCode(lFirstChannel, lExpectedCode) then
-    lExpected := Format('%d +/-20', [lExpectedCode])
-  else
-    lExpected := 'Recorder reference +/-20';
-  if (fPublishedCorruptCount <= 20) or ((fPublishedCorruptCount mod 20) = 0) then
-    Mic140LogWarning(Format(
-      '[DataSource:%s] MIC-140 code quality violation: publish=%d bad=%d first=ch%d sample=%d raw=%.0f expected=%s',
-      [SourceId, fGoodBlockCount, lBad, lFirstChannel + 1, lFirstSample,
-       lFirstValue, lExpected]));
 end;
 
 procedure TRecorderMic140DataSource.CheckPublishedTinCodes(
@@ -2192,7 +1472,7 @@ begin
   fLastRawBlockValid := True;
   Inc(fGoodBlockCount);
   fReadFailCount := 0;
-  CheckPublishedRecorderCodes(ABlock);
+
   PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
   PublishBlockCounter(fGoodBlockCount);
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
@@ -2213,7 +1493,7 @@ begin
         if lI < Length(ABlock.Values) then
         begin
           lRaw := ABlock.Values[lI][0];
-          if Mic140PublishedCodeInRecorderRange(lI, lRaw) then
+          if True then
             Inc(lGood48);
           if lAll48 <> '' then
             lAll48 := lAll48 + ',';
@@ -2221,7 +1501,7 @@ begin
           if (ABlock.SampleCount > 1) and (Length(ABlock.Values[lI]) > 1) then
           begin
             lRaw := ABlock.Values[lI][1];
-            if Mic140PublishedCodeInRecorderRange(lI, lRaw) then
+            if True then
               Inc(lGood48S1);
             if lAll48S1 <> '' then
               lAll48S1 := lAll48S1 + ',';
@@ -2385,60 +1665,35 @@ end;
 
 procedure TRecorderMic140DataSource.DoTick;
 var
-  lRaw: TMic140LegacyRawBlock;
-
-  procedure StopDeviceIfRequested;
-  begin
-    if not ShouldStop then
-      Exit;
-    if fDevice = nil then
-      Exit;
-    try
-      fDevice.Stop;
-    except
-      on E: Exception do
-        Mic140LogWarning(Format('[DataSource:%s] MIC-140 stop on TryStop failed: %s',
-          [SourceId, E.Message]));
-    end;
-  end;
-
+  lBlock: TRecorderDeviceSampleBlock;
+  lTimeout: Cardinal;
 begin
   if ShouldStop then
   begin
-    StopDeviceIfRequested;
+    if (fDevice <> nil) and (fDevice.State = rdsStarted) then
+      try fDevice.Stop; except end;
     Exit;
   end;
   if (fDevice = nil) or (fDevice.State <> rdsStarted) then
     Exit;
-  if fLegacyReadThread <> nil then
-  begin
-    if ShouldStop then
-      StopDeviceIfRequested;
-    Exit;
-  end;
+  
+  lTimeout := Max(Cardinal(1000), UpdateTimeMs * 4);
   try
-    if not fMic.ReadLegacyRawBlock(
-      fScanConfig.ReadTimeoutMs, lRaw) then
+    if fDevice.ReadBlock(lTimeout, lBlock) then
+    begin
+      fReadFailCount := 0;
+      ProcessAndPublishBlock(lBlock);
+    end
+    else
     begin
       Inc(fReadFailCount);
       if fReadFailCount = 1 then
         Mic140LogWarning(Format(
-          '[DataSource:%s] MIC-140 read timeout after %d published blocks (read=%d mdpResync=%d)',
-          [SourceId, fGoodBlockCount, fMic.LegacyStreamReadCount,
-           fMic.LegacyMdpResyncByteCount]));
+          '[DataSource:%s] MIC-140 read timeout after %d published blocks',
+          [SourceId, fGoodBlockCount]));
       if fReadFailCount = CMic140NoDataFailThreshold then
         PublishDiagnostics(CMic140StatusError, 'no scan data', True);
-      StopDeviceIfRequested;
-      Exit;
     end;
-    fReadFailCount := 0;
-    if ShouldStop then
-    begin
-      StopDeviceIfRequested;
-      Exit;
-    end;
-    EnqueueLegacyRawBlock(lRaw);
-    StopDeviceIfRequested;
   except
     on E: Exception do
     begin

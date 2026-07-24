@@ -1737,17 +1737,28 @@ var
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
-
+  // перепроверить!!! зачем в RunTime SetLength
   SetLength(lTimes, ABlock.SampleCount);
   SetLength(lValues, ABlock.SampleCount);
+  // нельзя формировать для каждой точки времена X - это задача для линий в чарте
+  // там есть x0 для одномерных сигналов и dx - шейдер сам разворачивает X для каждой точки
   for J := 0 to ABlock.SampleCount - 1 do
     lTimes[J] := ABlock.FirstTimeSec + (J / ABlock.SampleRateHz);
 
-  RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
-    lChannelSettings);
+  // собирает полный снимок настроек всех 64 измерительных каналов одного MIC-185 источника
+  // из конфигурации проекта (registry / configuredDataSources), в виде массива
+  // TMic185ChannelProgramSettingsArray
+  // Этой функции не место в RunTime
+  RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz, lChannelSettings);
   lCount := Min(ABlock.ChannelCount, fChannelTagNames.Count);
   for I := 0 to lCount - 1 do
   begin
+    // лучше хранить массив ссылок на теги. Поиск тега по имени каждый раз плохая операция!
+    // у каждого канала может быть по нескольку ГХ в стеке, но если они все линейные то можно вычислить
+    // итоговую линейную ГХ и делать однократное умножение в цикле.
+    // Для плат которые меряют быстропеременные процессы и имеют десятки кГц
+    // отсчетов за блок данных это критично. Еще применение линейной ГХ можно делать не поточечно а аппаратно ускоренными
+    // функциями где сразу перемножается весь массив с константой (повод для модернизации в дальнейшем)
     lTag := Registry.FindByName(fChannelTagNames[I]);
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
@@ -1758,6 +1769,8 @@ begin
       RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
       lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
     end;
+
+    // досчет по току каналов надо делать только если мы измеряем не в кодах и не мВ
     lPowerMa := 0.0;
     if I <= High(lChannelSettings) then
     begin
@@ -1780,16 +1793,22 @@ begin
     Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
   end;
 
+  // вызов нотификаций по списку тегов??? кажется в архитектуре лучше сделать одну общую
+  // нотификацию которая будет говорить об обновлении данных и там потребитель нотификации
+  // будет по времени или номеру данных понимать обновились ли интересующие данные и будет
+  // принимать решение об обновлении
   for I := 0 to lCount - 1 do
   begin
+    // опять поиск тега по имени!!! это не оптимально, ссылки на теги храни!
     lTag := Registry.FindByName(fChannelTagNames[I]);
     if (lTag <> nil) and SameText(lTag.SourceId, SourceId) then
       Registry.PublishBlockNotifications(lTag.Name);
   end;
-
+  // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
   PublishAuxChannels(lTimes[ABlock.SampleCount - 1]);
 end;
 
+// не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
 procedure TRecorderMic185DataSource.PublishAuxChannels(ATimeSec: Double);
 var
   I: Integer;
@@ -1804,8 +1823,10 @@ begin
   if lDevice.HasTempData then
     for I := 0 to lDevice.TempChannelCount - 1 do
     begin
-      lTag := FindTagBySourceAddress(Registry,
-        Format('MIC183_185-{%d-t%d}', [3, I + 1]));
+      // поиск тега по строке в цикле на каждой итерации - не корректно!
+      // надо хранить ссылки на теги
+      lTag := FindTagBySourceAddress(Registry, Format('MIC183_185-{%d-t%d}', [3, I + 1]));
+      // не надо каждому отсчету время сопоставлять!
       if lTag <> nil then
         Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastTempValue(I));
     end;

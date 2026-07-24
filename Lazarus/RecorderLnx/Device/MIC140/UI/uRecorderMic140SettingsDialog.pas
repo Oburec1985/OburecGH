@@ -704,18 +704,19 @@ begin
     if lCalibrSerial > 0 then
       lResult.DeviceSerial := lCalibrSerial;
 
-    lConfig := EnsureRecorderMic140DeviceConfig(ATagRegistry, ANewSourceId);
-    lConfig.LoadFromResult(lResult);
-    if AMic140Configs <> nil then
+    lConfig := FindRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
+    if lConfig = nil then
+      lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
+      
+    if lConfig = nil then
     begin
-      EnsureRecorderMic140SourceConfig(AMic140Configs, ANewSourceId).LoadFromResult(lResult);
-      if (ASourceId <> '') and (not SameText(ASourceId, ANewSourceId)) then
-      begin
-        lConfig := FindRecorderMic140SourceConfig(AMic140Configs, ASourceId);
-        if lConfig <> nil then
-          AMic140Configs.Delete(AMic140Configs.IndexOf(ASourceId));
-      end;
+      lConfig := EnsureRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
+      if AMic140Configs <> nil then
+        EnsureRecorderMic140SourceConfig(AMic140Configs, ASourceId);
     end;
+    
+    lConfig.LoadFromResult(lResult);
+    ANewSourceId := ASourceId;
     if (ASourceId <> '') and (not SameText(ASourceId, ANewSourceId)) then
       ATagRegistry.UnregisterActiveSource(ASourceId);
     ATagRegistry.RegisterActiveSource(ANewSourceId);

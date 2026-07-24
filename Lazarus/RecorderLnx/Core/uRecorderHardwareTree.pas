@@ -33,7 +33,7 @@ function RecorderMeraSourceIdsEquivalent(const ASourceIdA,
 function RecorderSignalConfiguredSourceId(ASignal: TMeraSignalInfo;
   const AMeraDescriptorSourceId: string): string;
 
-function RecorderHardwareTreeNodeCaption(const ASourceId: string): string;
+function RecorderHardwareTreeNodeCaption(ARegistry: TRecorderTagRegistry; const ASourceId: string): string;
 function RecorderHardwareSourceLinkOk(const ASourceId: string): Boolean;
 procedure RecorderRegisterHardwareSourceLinkProbe(
   AProbe: TRecorderHardwareSourceLinkProbe);
@@ -53,7 +53,7 @@ implementation
 
 uses
   uRecorderHardwareLiveDevices, uRecorderConfiguredDataSources,
-  uRecorderDeviceInterfaces;
+  uRecorderDeviceInterfaces, uRecorderMic140DeviceConfig, uRecorderMic140Utils;
 
 const
   CRecorderHardwareSourceLinkProbeMax = 32;
@@ -137,10 +137,12 @@ begin
     Exit(AMeraDescriptorSourceId);
 end;
 
-function RecorderHardwareTreeNodeCaption(const ASourceId: string): string;
+function RecorderHardwareTreeNodeCaption(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
 var
   lNorm: string;
   lPath: string;
+  lConfig: TRecorderMic140SourceConfig;
 begin
   lNorm := RecorderNormalizeTagSourceId(ASourceId);
   if RecorderIsVirtualTagSource(lNorm) then
@@ -150,6 +152,14 @@ begin
       Exit('Mera File - ' + ExtractFileName(lPath));
     Exit('Mera File');
   end;
+  
+  if RecorderIsHardwareMic140TagSource(lNorm) then
+  begin
+    lConfig := FindRecorderMic140DeviceConfig(ARegistry, lNorm);
+    if lConfig <> nil then
+      Exit(Format('MIC-140 (%s:%d)', [lConfig.Host, lConfig.Port]));
+  end;
+  
   Result := lNorm;
 end;
 
@@ -229,7 +239,7 @@ begin
     for I := 0 to lIds.Count - 1 do
     begin
       lEntry.SourceId := lIds[I];
-      lEntry.NodeCaption := RecorderHardwareTreeNodeCaption(lEntry.SourceId);
+      lEntry.NodeCaption := RecorderHardwareTreeNodeCaption(ATagRegistry, lEntry.SourceId);
       lEntry.LinkOk := RecorderHardwareSourceLinkOk(lEntry.SourceId);
       lEntry.HasLinkedTags := RecorderHardwareSourceHasLinkedTags(ATagRegistry,
         lEntry.SourceId);

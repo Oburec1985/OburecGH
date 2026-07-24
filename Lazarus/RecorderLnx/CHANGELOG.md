@@ -1,3 +1,14 @@
+## 2026-07-24 — Аудит MIC-185 RunTime + skill runtime-programming
+
+**Задача:** По комментариям в hot path MIC-185 проверить сбор данных в RunTime и оформить skill, чтобы не повторять аллокации/поиск/разворот оси X в тике.
+
+**Сделано:**
+- Аудит цепочки `DoTick → ReadBlock → PublishMeasurementBlock` с вердиктами по каждому комментарию.
+- Skill `runtime-programming` (Cursor + зеркало AGrav).
+- Ссылки в AGrav `Скиллы_ИИ.md`, `Потоки_и_Память.md`, история изменений.
+
+**Документация:** [mic185-runtime-audit-2026-07-24.md](Docs/mic185-runtime-audit-2026-07-24.md)
+
 ## 2026-07-17 — Digital form: серые ячейки единицы «код»
 
 **Задача (переформулировка):** В таблице Digital form ячейки Unit со значением «код» выделить серым.

@@ -1,244 +1,64 @@
-2026-07-21 18:31:34.331 [DEBUG] [TID:12584|UIThread] 18:31:34.327 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-07-21 18:31:34.332 [DEBUG] [TID:12584|UIThread] 18:31:34.331 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-07-21 18:31:34.381 [DEBUG] [TID:12584|UIThread] 18:31:34.380 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-07-21 18:31:34.388 [DEBUG] [TID:12584|UIThread] 18:31:34.388 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-07-21 18:31:34.394 [DEBUG] [TID:12584|UIThread] 18:31:34.394 MERA playback source configured: signal0005.mera (10 channels).
-2026-07-21 18:31:34.397 [DEBUG] [TID:12584|UIThread] 18:31:34.396 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
-2026-07-21 18:31:34.402 [DEBUG] [TID:12584|UIThread] 18:31:34.402 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-21 18:31:34.408 [DEBUG] [TID:12584|UIThread] 18:31:34.408 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-21 18:31:34.458 [DEBUG] [TID:12584|UIThread] 18:31:34.458 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-21 18:31:35.756 [WARNING] [TID:15128] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
-2026-07-21 18:31:35.757 [DEBUG] [TID:3588] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-21 18:31:35.764 [DEBUG] [TID:3588] [MCBUS] connect attempt 1/5
-2026-07-21 18:31:35.773  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-21 18:31:35.773 [DEBUG] [TID:2804] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-21 18:31:36.012 [WARNING] [TID:15128] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
-2026-07-21 18:31:36.012 [WARNING] [TID:15128] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 link test failed: TCP TEST failed
-2026-07-21 18:31:37.351 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] SearchModules
-2026-07-21 18:31:37.363 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] RESETSCANMAIN
-2026-07-21 18:31:37.364 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIGSCANMAIN
-2026-07-21 18:31:37.368 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 LOAD_MC201_BIOS
-2026-07-21 18:31:39.137 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
-2026-07-21 18:31:39.137 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 LOAD_MC201_BIOS
-2026-07-21 18:31:40.907 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
-2026-07-21 18:31:40.907 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 LOAD_MC201_BIOS
-2026-07-21 18:31:42.677 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
-2026-07-21 18:31:42.678 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 LOAD_MC201_BIOS
-2026-07-21 18:31:44.463 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_MODULE_IDMA
-2026-07-21 18:31:44.464 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 module STOP_SCAN
-2026-07-21 18:31:44.470 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 module RESET_SCAN
-2026-07-21 18:31:44.474 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch0 code=$D982
-2026-07-21 18:31:44.510 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch1 code=$D582
-2026-07-21 18:31:44.541 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch2 code=$DA82
-2026-07-21 18:31:44.572 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SEND_BALANCE ch3 code=$E282
-2026-07-21 18:31:44.602 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
-2026-07-21 18:31:44.603 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
-2026-07-21 18:31:44.608 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
-2026-07-21 18:31:44.613 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
-2026-07-21 18:31:44.617 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
-2026-07-21 18:31:44.621 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
-2026-07-21 18:31:44.625 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
-2026-07-21 18:31:44.629 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
-2026-07-21 18:31:44.634 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
-2026-07-21 18:31:44.638 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_RAW_CC
-2026-07-21 18:31:44.642 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_DBL_CC
-2026-07-21 18:31:44.646 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 CONFIG_MIX_CC
-2026-07-21 18:31:44.650 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch0=0
-2026-07-21 18:31:44.655 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch0=0
-2026-07-21 18:31:44.659 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch0=0
-2026-07-21 18:31:44.662 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch1=0
-2026-07-21 18:31:44.667 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch1=0
-2026-07-21 18:31:44.671 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch1=0
-2026-07-21 18:31:44.676 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch2=0
-2026-07-21 18:31:44.680 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch2=0
-2026-07-21 18:31:44.684 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch2=0
-2026-07-21 18:31:44.688 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4124 ch3=0
-2026-07-21 18:31:44.693 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4125 ch3=0
-2026-07-21 18:31:44.697 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SET_PROPERTY 4126 ch3=0
-2026-07-21 18:31:44.701 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SEND_2_CONT_REG_CC
-2026-07-21 18:31:44.705 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 GET_OBJECT
-2026-07-21 18:31:44.709 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 MM202 SEND_CONTROL_WORD
-2026-07-21 18:31:44.714 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SET_GRID_CC
-2026-07-21 18:31:44.717 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SET_FREQ_CC
-2026-07-21 18:31:44.722 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SET_CHAN_LIST_CC
-2026-07-21 18:31:44.726 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
-2026-07-21 18:31:44.731 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
-2026-07-21 18:31:44.735 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
-2026-07-21 18:31:44.739 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 GET_FINAL_FLAG_CC
-2026-07-21 18:31:44.743 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 module STOP_SCAN
-2026-07-21 18:31:44.748 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 module RESET_SCAN
-2026-07-21 18:31:44.752 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch0 code=$E182
-2026-07-21 18:31:44.787 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch1 code=$D782
-2026-07-21 18:31:44.818 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch2 code=$E782
-2026-07-21 18:31:44.849 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SEND_BALANCE ch3 code=$E582
-2026-07-21 18:31:44.880 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
-2026-07-21 18:31:44.881 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
-2026-07-21 18:31:44.886 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
-2026-07-21 18:31:44.890 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
-2026-07-21 18:31:44.895 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
-2026-07-21 18:31:44.899 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
-2026-07-21 18:31:44.903 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
-2026-07-21 18:31:44.908 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
-2026-07-21 18:31:44.912 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
-2026-07-21 18:31:44.917 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_RAW_CC
-2026-07-21 18:31:44.921 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_DBL_CC
-2026-07-21 18:31:44.925 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 CONFIG_MIX_CC
-2026-07-21 18:31:44.930 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch0=0
-2026-07-21 18:31:44.935 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch0=0
-2026-07-21 18:31:44.939 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch0=0
-2026-07-21 18:31:44.944 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch1=0
-2026-07-21 18:31:44.948 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch1=0
-2026-07-21 18:31:44.952 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch1=0
-2026-07-21 18:31:44.957 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch2=0
-2026-07-21 18:31:44.961 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch2=0
-2026-07-21 18:31:44.965 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch2=0
-2026-07-21 18:31:44.970 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4124 ch3=0
-2026-07-21 18:31:44.974 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4125 ch3=0
-2026-07-21 18:31:44.979 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SET_PROPERTY 4126 ch3=0
-2026-07-21 18:31:44.983 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SEND_2_CONT_REG_CC
-2026-07-21 18:31:44.987 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 GET_OBJECT
-2026-07-21 18:31:44.991 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 MM202 SEND_CONTROL_WORD
-2026-07-21 18:31:44.997 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SET_GRID_CC
-2026-07-21 18:31:45.000 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SET_FREQ_CC
-2026-07-21 18:31:45.004 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SET_CHAN_LIST_CC
-2026-07-21 18:31:45.008 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.013 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.018 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.022 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.027 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 module STOP_SCAN
-2026-07-21 18:31:45.031 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 module RESET_SCAN
-2026-07-21 18:31:45.035 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch0 code=$D082
-2026-07-21 18:31:45.064 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch1 code=$D382
-2026-07-21 18:31:45.095 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch2 code=$DE82
-2026-07-21 18:31:45.126 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SEND_BALANCE ch3 code=$CE82
-2026-07-21 18:31:45.157 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
-2026-07-21 18:31:45.158 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
-2026-07-21 18:31:45.162 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
-2026-07-21 18:31:45.167 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
-2026-07-21 18:31:45.172 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
-2026-07-21 18:31:45.176 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
-2026-07-21 18:31:45.181 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
-2026-07-21 18:31:45.185 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
-2026-07-21 18:31:45.189 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
-2026-07-21 18:31:45.194 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_RAW_CC
-2026-07-21 18:31:45.199 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_DBL_CC
-2026-07-21 18:31:45.204 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 CONFIG_MIX_CC
-2026-07-21 18:31:45.208 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch0=0
-2026-07-21 18:31:45.213 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch0=0
-2026-07-21 18:31:45.219 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch0=0
-2026-07-21 18:31:45.223 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch1=0
-2026-07-21 18:31:45.228 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch1=0
-2026-07-21 18:31:45.233 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch1=0
-2026-07-21 18:31:45.238 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch2=0
-2026-07-21 18:31:45.243 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch2=0
-2026-07-21 18:31:45.247 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch2=0
-2026-07-21 18:31:45.252 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4124 ch3=0
-2026-07-21 18:31:45.255 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4125 ch3=0
-2026-07-21 18:31:45.260 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SET_PROPERTY 4126 ch3=0
-2026-07-21 18:31:45.264 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SEND_2_CONT_REG_CC
-2026-07-21 18:31:45.269 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 GET_OBJECT
-2026-07-21 18:31:45.273 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 MM202 SEND_CONTROL_WORD
-2026-07-21 18:31:45.278 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SET_GRID_CC
-2026-07-21 18:31:45.282 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SET_FREQ_CC
-2026-07-21 18:31:45.288 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SET_CHAN_LIST_CC
-2026-07-21 18:31:45.299 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.306 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.312 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.320 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.325 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 module STOP_SCAN
-2026-07-21 18:31:45.330 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 module RESET_SCAN
-2026-07-21 18:31:45.335 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch0 code=$D782
-2026-07-21 18:31:45.372 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch1 code=$CD82
-2026-07-21 18:31:45.403 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch2 code=$D882
-2026-07-21 18:31:45.434 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SEND_BALANCE ch3 code=$D582
-2026-07-21 18:31:45.465 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
-2026-07-21 18:31:45.465 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
-2026-07-21 18:31:45.473 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
-2026-07-21 18:31:45.478 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
-2026-07-21 18:31:45.484 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
-2026-07-21 18:31:45.490 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
-2026-07-21 18:31:45.497 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
-2026-07-21 18:31:45.503 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
-2026-07-21 18:31:45.510 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
-2026-07-21 18:31:45.516 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_RAW_CC
-2026-07-21 18:31:45.522 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_DBL_CC
-2026-07-21 18:31:45.528 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 CONFIG_MIX_CC
-2026-07-21 18:31:45.534 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch0=0
-2026-07-21 18:31:45.541 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch0=0
-2026-07-21 18:31:45.548 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch0=0
-2026-07-21 18:31:45.554 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch1=0
-2026-07-21 18:31:45.563 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch1=0
-2026-07-21 18:31:45.569 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch1=0
-2026-07-21 18:31:45.575 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch2=0
-2026-07-21 18:31:45.581 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch2=0
-2026-07-21 18:31:45.588 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch2=0
-2026-07-21 18:31:45.596 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4124 ch3=0
-2026-07-21 18:31:45.603 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4125 ch3=0
-2026-07-21 18:31:45.611 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SET_PROPERTY 4126 ch3=0
-2026-07-21 18:31:45.618 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SEND_2_CONT_REG_CC
-2026-07-21 18:31:45.624 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 GET_OBJECT
-2026-07-21 18:31:45.629 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 MM202 SEND_CONTROL_WORD
-2026-07-21 18:31:45.636 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SET_GRID_CC
-2026-07-21 18:31:45.642 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SET_FREQ_CC
-2026-07-21 18:31:45.648 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SET_CHAN_LIST_CC
-2026-07-21 18:31:45.654 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.660 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.666 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.671 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 GET_FINAL_FLAG_CC
-2026-07-21 18:31:45.676 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] APPENDSCANMAIN
-2026-07-21 18:31:45.680 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.685 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.689 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.693 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.698 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.702 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.706 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.710 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.714 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.719 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.723 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.728 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.733 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.737 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.742 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.746 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADDCHANNELMODULE
-2026-07-21 18:31:45.752 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] SCAN_SET_CHANS
-2026-07-21 18:31:45.757 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_MESSAGE
-2026-07-21 18:31:45.762 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
-2026-07-21 18:31:45.767 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
-2026-07-21 18:31:45.772 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
-2026-07-21 18:31:45.776 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTADCMODULEIDMA
-2026-07-21 18:31:45.782 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SET_TIMEOUTSTARTADC_201
-2026-07-21 18:31:45.788 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SET_TIMEOUTSTARTADC_201
-2026-07-21 18:31:45.794 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SET_TIMEOUTSTARTADC_201
-2026-07-21 18:31:45.800 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SET_TIMEOUTSTARTADC_201
-2026-07-21 18:31:45.805 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] CONFIG_SYNC_START
-2026-07-21 18:31:45.811 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.816 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.822 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.828 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.839 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.845 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.855 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.862 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.868 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.875 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.882 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.889 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA empty
-2026-07-21 18:31:45.896 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
-2026-07-21 18:31:45.903 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
-2026-07-21 18:31:45.908 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
-2026-07-21 18:31:45.918 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] ADD_LISTSTARTMODULEIDMA
-2026-07-21 18:31:45.924 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] SET_TIMEOUTSTARTTIMER
-2026-07-21 18:31:45.930 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 3 SET_TIMEOUTSTART_201
-2026-07-21 18:31:45.937 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 2 SET_TIMEOUTSTART_201
-2026-07-21 18:31:45.943 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 1 SET_TIMEOUTSTART_201
-2026-07-21 18:31:45.949 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] slot 0 SET_TIMEOUTSTART_201
-2026-07-21 18:31:45.955 [DEBUG] [TID:3588] [MCBUS][PROTOCOL] START_TRIGGERSTARTADC
-2026-07-21 18:31:46.332 [DEBUG] [TID:3588] [MCBUS] programmed channels=16
-2026-07-21 18:31:46.357 [DEBUG] [TID:12584|UIThread] 18:31:46.357 RecorderLnx started.
-2026-07-21 18:31:49.092  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-21 18:31:49.092 [DEBUG] [TID:12584|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-21 18:31:49.100  RuntimeDetach 192.168.9.142:4000
-2026-07-21 18:31:49.100 [DEBUG] [TID:12584|UIThread] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-21 18:31:49.113 [WARNING] [TID:12584|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-24 14:57:49.349 [DEBUG] [TID:14700|UIThread] 14:57:49.346 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-24 14:57:49.349 [DEBUG] [TID:14700|UIThread] 14:57:49.349 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-24 14:57:49.388 [DEBUG] [TID:14700|UIThread] 14:57:49.387 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-24 14:57:49.393 [DEBUG] [TID:14700|UIThread] 14:57:49.393 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-24 14:57:49.398 [DEBUG] [TID:14700|UIThread] 14:57:49.398 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-24 14:57:49.401 [DEBUG] [TID:14700|UIThread] 14:57:49.400 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-24 14:57:49.401 [DEBUG] [TID:14700|UIThread] 14:57:49.401 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-24 14:57:49.402 [DEBUG] [TID:14700|UIThread] 14:57:49.402 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-24 14:57:49.439 [DEBUG] [TID:14700|UIThread] 14:57:49.439 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-24 14:57:50.996 [DEBUG] [TID:7544] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-24 14:57:50.998 [WARNING] [TID:7164] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-24 14:57:51.011  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 14:57:51.011 [DEBUG] [TID:1036] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 14:57:51.260 [WARNING] [TID:7164] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-24 14:57:52.223 [DEBUG] [TID:7544] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
+2026-07-24 14:57:52.240 [DEBUG] [TID:14700|UIThread] 14:57:52.240 RecorderLnx started.
+2026-07-24 14:57:57.461 [DEBUG] [TID:14700|UIThread] 14:57:57.458 Configuration mode: settings dialog opened.
+2026-07-24 14:58:12.079 [DEBUG] [TID:14700|UIThread] 14:58:12.078 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-24 14:58:12.080  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:12.080 [DEBUG] [TID:14700|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:12.080  RuntimeDetach 192.168.9.142:4000
+2026-07-24 14:58:12.080 [DEBUG] [TID:14700|UIThread] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-24 14:58:12.086 [DEBUG] [TID:14700|UIThread] 14:58:12.085 MERA playback source configured: signal0005.mera (10 channels).
+2026-07-24 14:58:12.087 [DEBUG] [TID:14700|UIThread] 14:58:12.086 MIC-140 source configured: 192.168.14.155:4000 (48 channels).
+2026-07-24 14:58:12.087 [DEBUG] [TID:14700|UIThread] 14:58:12.087 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-24 14:58:12.089 [DEBUG] [TID:14700|UIThread] 14:58:12.089 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-24 14:58:12.105 [DEBUG] [TID:14700|UIThread] 14:58:12.104 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-24 14:58:12.112 [WARNING] [TID:3068] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 connecting
+2026-07-24 14:58:12.113 [DEBUG] [TID:468] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-24 14:58:12.127  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 14:58:12.127 [DEBUG] [TID:11952] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-24 14:58:12.368 [WARNING] [TID:3068] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=-1 connection test failed
+2026-07-24 14:58:13.317 [DEBUG] [TID:468] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
+2026-07-24 14:58:13.329 [DEBUG] [TID:14700|UIThread] 14:58:13.320 Project settings applied.
+2026-07-24 14:58:13.439 [DEBUG] [TID:14700|UIThread] 14:58:13.435 Data sources started.
+2026-07-24 14:58:13.440 [DEBUG] [TID:14700|UIThread] 14:58:13.439 State changed: Stop -> Preview
+2026-07-24 14:58:13.966 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1336
+2026-07-24 14:58:14.181 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:14.402 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:14.614 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:14.832 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 204 ms on Thread 1336
+2026-07-24 14:58:15.051 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:15.257 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:15.475 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:15.684 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 219 ms on Thread 1336
+2026-07-24 14:58:15.902 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:16.108 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:16.315 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:16.520 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:16.727 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:16.931 [DEBUG] [TID:1336|Src_mera.file.1] [DataSource:mera.file.1] Tick took 203 ms on Thread 1336
+2026-07-24 14:58:17.073  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:17.073 [DEBUG] [TID:14700|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:17.080  RuntimeDetach 192.168.9.142:4000
+2026-07-24 14:58:17.080 [DEBUG] [TID:9248|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped (source was offline)
+2026-07-24 14:58:17.080 [DEBUG] [TID:7752|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-24 14:58:17.080 [WARNING] [TID:8172|Src_MIC-140: 192.168.14.155:4000] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
+2026-07-24 14:58:17.089 [DEBUG] [TID:14700|UIThread] 14:58:17.088 Data sources stopped.
+2026-07-24 14:58:17.090 [DEBUG] [TID:14700|UIThread] 14:58:17.089 State changed: Preview -> Stop
+2026-07-24 14:58:17.823 [DEBUG] [TID:14700|UIThread] 14:58:17.819 Configuration mode: settings dialog opened.
+2026-07-24 14:58:21.700 [DEBUG] [TID:14700|UIThread] 14:58:21.698 Configuration mode: settings dialog closed without applying OK.
+2026-07-24 14:58:22.721  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:22.722 [DEBUG] [TID:14700|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-24 14:58:22.722 [WARNING] [TID:14700|UIThread] [DataSource:MIC-140: 192.168.14.155:4000] MIC-140 status=0 stopped
