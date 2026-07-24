@@ -1,0 +1,416 @@
+# MIC-140-48: полная спецификация воспроизведения протокола
+
+Статус: рабочая спецификация, сверенная 23.07.2026 с исходниками Recorder 3.9,
+сетевым дампом MIC-140-48v3 `192.168.14.48:4000` и реализацией
+`Device/MIC140v2`.
+
+Цель документа — позволить повторно реализовать клиент MIC-140 без изучения
+истории отладки. Подробные таблицы коммутации и вывод формул вынесены в соседние
+разделы, ссылки приведены в конце.
+
+## 1. Подтверждённый стенд
+
+| Параметр | Значение |
+|---|---|
+| Прибор | MIC-140-48v3 |
+| IP и TCP-порт | `192.168.14.48:4000` |
+| Серийный номер аппаратной конфигурации | `329` |
+| Строка версии | `14.1.8.1` |
+| Аппаратная ревизия | `DevRev=14`, `DevSubRev=1` |
+| BIOS | `BiosVersion=8`, `BiosFunction=1` |
+| Частота результата | `10 Гц` |
+| Порция сетевых данных | `200 мс`, 5 пакетов/с |
+| Каналы | 48 AIn + T6…T12 = 55 значений в строке |
+| Строк в порции | 2 |
+| FIFO ready/capacity | 110/220 слов |
+| Размер BIOS-сообщения | 120 слов: 10 заголовок + 110 данных |
+| TCP payload полного MDP-пакета | 250 байт |
+| Коммутация через землю | включена: `ground, channel, ...` |
+| Число указателей | 110 |
+| Управляющая тройка | `0030 0126 0037`: delay=48, average=294, stride=55 |
+
+Эталон:
+`Tests/mic140/Mic140ProtocolDebug_Codex/data/captures/192.168.14.48_original_recorder_20260723_122408.pcapng`.
+
+## 2. Транспорт MDP поверх TCP
+
+Все числа — беззнаковые 16-битные слова little-endian.
+
+| Смещение, байт | Поле | Формат | Правило |
+|---:|---|---|---|
+| 0 | SYNC | WORD | всегда `0x12B8` |
+| 2 | PORT | WORD | `0` — поток скана; `1` — команды и ответы |
+| 4 | SIZE | WORD | число слов payload, без DCS |
+| 6 | HCS | WORD | `(SYNC + PORT + SIZE) mod 65536` |
+| 8 | PAYLOAD | `WORD[SIZE]` | команда, ответ либо BIOS-сообщение |
+| `8+2*SIZE` | DCS | WORD | сумма слов payload modulo 65536 |
+
+Полный размер пакета: `8 + 2*SIZE + 2` байт.
+
+TCP является потоком, а не транспортом сообщений. Клиент обязан:
+
+1. накапливать байты до полного заголовка;
+2. проверить SYNC, HCS и допустимый SIZE;
+3. дождаться всего кадра и проверить DCS;
+4. при ошибочном кандидате удалить ровно один байт и снова искать SYNC;
+5. не очищать сокет посередине рабочего пакета;
+6. во время ожидания ответа на PORT=1 складывать встреченные PORT=0 пакеты
+   в очередь данных.
+
+## 3. Формат вызова команды
+
+Запрос команды передаётся MDP-пакетом `PORT=1`:
+
+```text
+payload[0] = command
+payload[1] = argument_count
+payload[2] = expected_reply_word_count
+payload[3..] = arguments
+```
+
+Ответ приходит отдельным MDP-пакетом `PORT=1`; его payload содержит возвращаемые
+слова без повторения номера команды. Между запросом и ответом могут прийти пакеты
+скана `PORT=0`.
+
+## 4. Определение исполнения и ветвление по ревизии
+
+Команда `REPLY=113` без аргументов, ожидаемый ответ — 11 слов
+`TBiosInfoMC031`:
+
+| Индекс | Поле |
+|---:|---|
+| 0 | Signature |
+| 1 | MdpType |
+| 2 | DevType |
+| 3 | DevRevNo: младший байт DevRev, старший DevSubRev |
+| 4 | DevSerNo — идентификатор Ethernet, не номер калибровки |
+| 5 | CCType |
+| 6 | CCSerNo — серийный номер аппаратной конфигурации |
+| 7 | EepromManufactId |
+| 8 | EepromDeviceId |
+| 9 | BiosFunction |
+| 10 | BiosVersion |
+
+Строка версии строится как
+`DevRev.DevSubRev.BiosVersion.BiosFunction`.
+
+| Условие | Аппаратная ветка |
+|---|---|
+| `DevRev < 12` | legacy ME048 |
+| `DevRev >= 12` | ME048 48v2, 24-битная упаковка |
+| `DevRev >= 14`, профиль Auto | профиль каналов v3 |
+| `DevSubRev = 1` | T6…T12 используют внутренние индексы/DM offsets 5…11 |
+
+Важно: версия BIOS не выбирает пользовательский класс прибора. Профиль
+`MIC-140-48`, `MIC-140-48v2` или `MIC-140-48v3` является сохраняемой настройкой.
+Ревизия, считанная из прибора, выбирает только внутреннюю упаковку ME048 и
+раскладку TIn внутри выбранного профиля. Для стенда `.48` тип v3 подтверждён
+независимым обнаружением и считается фактом.
+
+## 5. Жизненный цикл
+
+`Connect → Init → Config → Play → Stop → Disconnect`
+
+| Стадия | Допустимая кратность | Действия | Результат |
+|---|---:|---|---|
+| Connect | один раз на TCP-сеанс | TCP probe; открыть один сокет к `host:4000`; создать RX-буфер и очередь | транспорт Connected, аппаратура ещё не программируется |
+| Init | один раз после Connect | `REPLY(113)`; сохранить ревизию/BIOS/серийный номер; `RESET(10)`; очистить локальные пакеты; подождать завершение reset; повторить `REPLY`; остановить оставшийся от прежнего клиента scan | BIOS отвечает, `Initialized=True` |
+| Config | многократно, только в Stop | остановить orphan scan; полностью построить таймер, FIFO, DM-дескрипторы и список указателей; записать их; зарегистрировать модуль и каналы | состояние Programmed |
+| Play | многократно после Config/Stop | `SETSTATESCAN(scan_id,0)`; очистить только целые старые пакеты/очередь до старта; `STARTSCANMAIN(80)`; начать принимать PORT=0 | состояние Started |
+| Stop | после каждого Play | сначала остановить read-loop; `STOPSCANMAIN(81)`; дочитать/очистить очередь только после завершения команды; сохранить рассчитанную конфигурацию | состояние снова Programmed, повторный Play не требует Init |
+| Disconnect | один раз в конце сеанса | если Started — Stop; закрыть сокет; сбросить признаки Initialized/Programmed и сведения сеанса | Disconnected |
+
+Запрещено:
+
+- загружать/сбрасывать BIOS на каждом Config или Play;
+- смешивать Config с Play;
+- программировать DM во время активного потока;
+- считать `Stop` эквивалентом `Disconnect`;
+- повторять Init при обычном Start/Stop;
+- после Stop терять Programmed, если TCP-сеанс и конфигурация сохранились.
+
+При обрыве TCP начинается новый сеанс: Connect → Init → Config.
+
+## 6. Команды жизненного цикла
+
+| Код | Имя | Аргументы | Стадия | Назначение |
+|---:|---|---|---|---|
+| 7 | TESTLOAD | по дампу — большой нулевой массив | Init/диагностика | очистка автомата и проверка готовности; есть в Original, обязательность для рабочего стенда не доказана |
+| 10 | RESET | нет | Init | разовый reset интерфейса/BIOS за TCP-сеанс |
+| 113 | REPLY | нет, reply=11 | Init/TestLink | чтение `TBiosInfoMC031` |
+| 81 | STOPSCANMAIN | нет | Init/Config/Stop | остановка главного скана |
+| 83 | RESETSCANMAIN | нет | Config | удалить прежнюю конфигурацию главного скана |
+| 84 | CONFIGSCANMAIN | `[scale-1, period-1]` | Config | таймер скана |
+| 82 | APPENDSCANMAIN | `[type=12, scan_id, divider, context_addr, context_page]` | Config | создать scan context |
+| 87 | SETSTATESCAN | `[scan_id, state=0]` | Config/Play | подготовить/переармить циклограмму |
+| 111 | WRITEDM | `[0x4000|addr, data...]`, до 31 слова data | Config | запись ADSP DM |
+| 114 | READMEMDM | `[0x4000|addr]`, reply=count, до 28 слов | Read/TIn | чтение ADSP DM |
+| 133 | SCAN_SET_BUFF | `[scan_id, fifo_desc_addr, page=0]` | Config | назначить FIFO |
+| 152 | ADDCHANNELMODULE | `[scan_id,0,ptr_addr,ptr_count,module_desc_addr,module_desc_page]` | Config | зарегистрировать дескрипторы модуля |
+| 132 | SCAN_SET_CHANS | `[scan_id,1,module_desc_addr,module_desc_page]` | Config | закончить список каналов |
+| 80 | STARTSCANMAIN | нет | Play | запустить поток PORT=0 |
+| 126 | READ_EEPROM | `[addr_lo,addr_hi,byte_count]` | Init/service | чтение flash, ответ — packed bytes в WORD |
+
+В эталонном Recorder также встречаются `CONFIG_SYNC_START=79`,
+`START_TRIGGERSTARTADC=85`, `CONFIG_MESSAGE=90` и
+`SET_TIMEOUTSTARTTIMER=98`. Они принадлежат общей инфраструктуре синхронизации
+и триггеров. Их форматы должны добавляться только после отдельной расшифровки;
+для воспроизведения подтверждённого свободного 10-Гц скана они не потребовались.
+
+## 7. Последовательность Config
+
+```text
+STOPSCANMAIN
+RESETSCANMAIN
+CONFIGSCANMAIN
+APPENDSCANMAIN
+SETSTATESCAN
+WRITEDM(FIFO descriptor)
+SCAN_SET_BUFF
+WRITEDM(channel descriptors)
+WRITEDM(channel pointer table)
+ADDCHANNELMODULE
+SCAN_SET_CHANS
+```
+
+### 7.1. Карта DM
+
+| Область | Адреса | Назначение |
+|---|---|---|
+| Buffer | `0x0522..0x07FF` | FIFO данных |
+| Heap | `0x0800..0x2BFF` | scan context, FIFO desc, значения, channel desc, pointer list, module desc |
+
+Аллокатор линейный и начинается заново при каждом полном Config.
+
+### 7.2. FIFO descriptor — 10 слов
+
+```text
+[0]  0
+[1]  scan_id
+[2]  begin_addr
+[3]  read_addr = begin_addr
+[4]  write_addr = begin_addr
+[5]  page
+[6]  capacity_words = 2 * ready_words
+[7]  ready_words
+[8]  0
+[9]  0
+```
+
+Для 10 Гц, 200 мс, stride=55:
+`ready=2*55=110`, `capacity=220`, `begin=0x0522`.
+
+## 8. Дескрипторы каналов
+
+Каждый дескриптор занимает пять слов:
+
+```text
+[0] ME048 low / first packed word
+[1] ME048 high / second packed word
+[2] MIC140 register descriptor
+[3] channel SPORT delay - 1
+[4] DM address of result; bit 0x4000 используется маской специальных каналов
+```
+
+Для AIn регистр MIC140:
+
+| Бит | Поле |
+|---:|---|
+| 1 | AMP4 |
+| 2 | AMP2 |
+| 3 | AMP16 |
+| 4 | MUX_IN1 |
+| 5 | MUX_IN2 |
+| 6 | BREAK_TEST |
+| 8 | K1 |
+| 10 | K2 |
+
+Диапазоны текущей реализации:
+
+| RangeIndex | Диапазон | Усиление |
+|---:|---|---|
+| 0 | `-20..80 мВ` | базовое |
+| 1 | `-10..40 мВ` | AMP2 |
+| 2 | `-5..20 мВ` | AMP4 |
+
+Полные 48 таблиц ME048 находятся в
+`uRecorderMic140v2ChanDesc.pas` и должны рассматриваться как часть протокола,
+а не вычисляться перестановкой номера канала.
+
+### 8.1. Коммутация через землю для v3 rev14.1
+
+Отдельный ground descriptor:
+
+```text
+0001 C002 0110 0008 4000
+```
+
+Затем идут 55 измерительных дескрипторов. Первый AIn:
+
+```text
+0000 0080 0100 025E 0810
+```
+
+Pointer list содержит 110 адресов:
+
+```text
+ground_desc, channel_1_desc,
+ground_desc, channel_2_desc,
+...
+ground_desc, T12_desc
+```
+
+Нельзя просто удвоить измерительные дескрипторы: ground имеет собственную
+упаковку ME048, регистр и задержку.
+
+### 8.2. Управляющий массив каналов
+
+```text
+[0] average SPORT delay - 1
+[1] count_aver
+[2] payload stride
+[3..] addresses of descriptors
+```
+
+Для подтверждённого стенда:
+
+```text
+0030 0126 0037 ...
+```
+
+то есть `49-1=48`, `294`, `55`.
+
+## 9. Тайминги
+
+Аппаратная сетка MIC-140:
+
+| Fs, Гц | scale | timer period | divider |
+|---:|---:|---:|---:|
+| 1 | 2 | 640 | 25000 |
+| 2 | 1 | 640 | 25000 |
+| 5 | 1 | 640 | 10000 |
+| 10 | 1 | 640 | 5000 |
+| 20 | 1 | 640 | 2500 |
+| 25 | 1 | 640 | 2000 |
+| 50 | 1 | 640 | 1000 |
+| 100 | 1 | 640 | 500 |
+
+`CONFIGSCANMAIN` получает `scale-1` и `period-1`, то есть для 10 Гц `[0,639]`.
+
+Константы:
+
+| Имя | Значение |
+|---|---:|
+| Fclk | 16 MHz |
+| TIMER_PERIOD | 640 |
+| timer tick | 20 мкс |
+| timer frequency | 50 kHz |
+| PERIOD_TIMER_WORK | 112 half-clock ticks |
+| ISR cost | 3.5 мкс |
+| timer overhead factor | `112/640 = 0.175` |
+| ADC averaging period | 5 мкс |
+| default channel settling | 57 мкс |
+| ground settling | 19.6875 мкс |
+| PERIOD_2_CHAN_CODE | 27 |
+| processing overhead | `27/(2*16MHz)=0.84375 мкс` |
+
+Эффективное время кадра:
+
+```text
+Teff = Tframe / (1 + 112/640)
+```
+
+Без земли:
+
+```text
+count_aver =
+  floor((Teff/N - Tproc - Tdecay) / Taver) + 1
+```
+
+С землёй, где `N2=2*N`:
+
+```text
+count_aver =
+  floor((((Teff - N*Tground) / N) - Tproc - Tdecay) / Taver) + 1
+```
+
+Для v3 на 10 Гц:
+
+```text
+N=55
+Tframe=0.1 s
+Teff=0.085106383 s
+ground enabled
+count_aver=294 (0x0126)
+```
+
+При отключённой земле та же конфигурация даёт `count_aver=298`. Поэтому число
+усреднений является хорошим индикатором режима коммутации, но не заменяет
+проверку таблицы указателей.
+
+SPORT-поля записываются уже после аппаратного квантования. Формулы преобразования
+и все поправки `PERIOD_1/2/3/4`, `DELTA_SPORT` приведены в
+[08_timing_and_count_aver.md](08_timing_and_count_aver.md).
+
+## 10. Формат потока данных
+
+После `STARTSCANMAIN` прибор посылает MDP `PORT=0`.
+Payload начинается с BIOS-заголовка из 10 слов:
+
+| Индекс | Значение/назначение |
+|---:|---|
+| 0 | type, для текущего потока `0` |
+| 1 | полный размер BIOS message в словах |
+| 2 | scan_id |
+| 3 | slot, ожидается `0` |
+| 4 | channel, ожидается `0` |
+| 5..7 | служебные поля BIOS |
+| 8 | `num_buff`, счётчик пакетов modulo 65536 |
+| 9 | state, ожидается `0` |
+
+За заголовком находятся signed 16-bit коды, row-major:
+
+```text
+row0: AIn1..AIn48,T6..T12
+row1: AIn1..AIn48,T6..T12
+```
+
+Для стенда: `message_size=120`, data=110, stride=55, samples=2.
+`num_buff` обязан увеличиваться на единицу. Разрыв, дубликат, неверная сумма,
+размер, scan_id или state должны учитываться раздельными счётчиками.
+
+В текущем драйвере T6…T12 дополнительно читаются согласованным снимком из DM.
+Для `DevSubRev=1` это непрерывный диапазон внутренних offsets 5…11; один
+групповой READMEMDM предпочтительнее семи отдельных запросов.
+
+## 11. Критерий воспроизведения
+
+Реализация считается совместимой, когда после холодного состояния прибора:
+
+1. проходит полный цикл Connect → Init → Config → Play;
+2. за 10 секунд при порции 200 мс принято 50 блоков;
+3. `gap=0`, `duplicate=0`, `corrupt=0`, `resync=0`;
+4. второй Stop → Play в том же TCP-сеансе не повторяет Init и сразу даёт поток;
+5. 48 AIn и T6…T12 совпадают с Original по порядку и находятся в пределах
+   естественного дрейфа незадействованных входов;
+6. исходящие конфигурационные массивы совпадают по значениям, а не только по
+   длинам пакетов.
+
+Подтверждённый прогон после исправления ground descriptor дал 50 блоков/10 с,
+нулевые счётчики ошибок и значения каналов, совпавшие с последним снимком
+Original с расхождением преимущественно в десятки кодов.
+
+## 12. Первичные источники
+
+- `Device/MIC140v2/uRecorderMic140v2Protocol.pas` — TCP/MDP и команды;
+- `Device/MIC140v2/uRecorderMic140v2Device.pas` — жизненный цикл;
+- `Device/MIC140v2/uRecorderMic140v2Scan.pas` — Config и DM;
+- `Device/MIC140v2/utils/uRecorderMic140v2Timing.pas` — формулы времени;
+- `Device/MIC140v2/utils/uRecorderMic140v2ChanDesc.pas` — ME048 и регистры;
+- [01_mdp_transport.md](01_mdp_transport.md);
+- [03_scan_programming.md](03_scan_programming.md);
+- [04_channel_descriptors.md](04_channel_descriptors.md);
+- [05_data_stream.md](05_data_stream.md);
+- [08_timing_and_count_aver.md](08_timing_and_count_aver.md);
+- `data/captures/192.168.14.48_original_vs_test_200ms_decoded.md` тестового проекта.
+
