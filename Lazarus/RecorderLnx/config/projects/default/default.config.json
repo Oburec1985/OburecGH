@@ -15,10 +15,10 @@
 						"specificConfigText" : ""
 				},
 				{
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
 						"moduleType" : "MIC-140",
 						"defaultPollFrequencyHz" : 1.0000000000000000E+001,
 						"specificConfigText" : "",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"mic140" : {
 								"host" : "192.168.14.48",
 								"port" : 4000,
@@ -12090,6 +12090,52 @@
 										"y" : 9.9843598499999997E-001
 								}
 						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC140 sn0329 06_100mV ch01",
+						"description" : "",
+						"unitIn" : "",
+						"unitOut" : "",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : -3.2065207030000001E+004,
+										"y" : -2.0000000000000000E+001
+								},
+								{
+										"x" : -1.9715646479999999E+004,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 2.9683687500000000E+004,
+										"y" : 8.0000000000000000E+001
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC140 sn0329 06_100mV ch02",
+						"description" : "",
+						"unitIn" : "",
+						"unitOut" : "",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : -3.2065660159999999E+004,
+										"y" : -2.0000000000000000E+001
+								},
+								{
+										"x" : -1.9715806639999999E+004,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 2.9683505860000001E+004,
+										"y" : 8.0000000000000000E+001
+								}
+						]
 				}
 		],
 		"spectrumConfigs" : [
@@ -12985,12 +13031,12 @@
 						"name" : "T_01",
 						"address" : "2-01",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-01; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-01; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13005,7 +13051,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13050,12 +13097,12 @@
 						"name" : "MIC140_02",
 						"address" : "2-02",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-02; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-02; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13070,7 +13117,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13115,12 +13163,12 @@
 						"name" : "MIC140_03",
 						"address" : "2-03",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-03; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-03; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13135,7 +13183,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13180,12 +13229,12 @@
 						"name" : "MIC140_04",
 						"address" : "2-04",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-04; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-04; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13200,7 +13249,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13245,12 +13295,12 @@
 						"name" : "MIC140_05",
 						"address" : "2-05",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-05; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-05; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13265,7 +13315,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13310,12 +13361,12 @@
 						"name" : "MIC140_06",
 						"address" : "2-06",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-06; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-06; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13330,7 +13381,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13375,12 +13427,12 @@
 						"name" : "MIC140_07",
 						"address" : "2-07",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-07; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-07; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13395,7 +13447,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13440,12 +13493,12 @@
 						"name" : "MIC140_08",
 						"address" : "2-08",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-08; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-08; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13460,7 +13513,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13505,12 +13559,12 @@
 						"name" : "MIC140_09",
 						"address" : "2-09",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-09; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-09; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13525,7 +13579,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13570,12 +13625,12 @@
 						"name" : "MIC140_10",
 						"address" : "2-10",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-10; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-10; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13590,7 +13645,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13635,12 +13691,12 @@
 						"name" : "MIC140_11",
 						"address" : "2-11",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-11; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-11; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13655,7 +13711,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13700,12 +13757,12 @@
 						"name" : "MIC140_12",
 						"address" : "2-12",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-12; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-12; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13720,7 +13777,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13765,12 +13823,12 @@
 						"name" : "MIC140_13",
 						"address" : "2-13",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-13; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-13; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13785,7 +13843,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13830,12 +13889,12 @@
 						"name" : "MIC140_14",
 						"address" : "2-14",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-14; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-14; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13850,7 +13909,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13895,12 +13955,12 @@
 						"name" : "MIC140_15",
 						"address" : "2-15",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-15; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-15; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13915,7 +13975,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -13960,12 +14021,12 @@
 						"name" : "MIC140_16",
 						"address" : "2-16",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-16; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-16; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -13980,7 +14041,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14025,12 +14087,12 @@
 						"name" : "MIC140_17",
 						"address" : "2-17",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-17; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-17; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14045,7 +14107,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14090,12 +14153,12 @@
 						"name" : "MIC140_18",
 						"address" : "2-18",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-18; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-18; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14110,7 +14173,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14155,12 +14219,12 @@
 						"name" : "MIC140_19",
 						"address" : "2-19",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-19; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-19; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14175,7 +14239,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14220,12 +14285,12 @@
 						"name" : "MIC140_20",
 						"address" : "2-20",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-20; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-20; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14240,7 +14305,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14285,12 +14351,12 @@
 						"name" : "MIC140_21",
 						"address" : "2-21",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-21; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-21; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14305,7 +14371,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14350,12 +14417,12 @@
 						"name" : "MIC140_22",
 						"address" : "2-22",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-22; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-22; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14370,7 +14437,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14415,12 +14483,12 @@
 						"name" : "MIC140_23",
 						"address" : "2-23",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-23; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-23; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14435,7 +14503,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14480,12 +14549,12 @@
 						"name" : "MIC140_24",
 						"address" : "2-24",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-24; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-24; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14500,7 +14569,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14545,12 +14615,12 @@
 						"name" : "MIC140_25",
 						"address" : "2-25",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-25; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-25; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14565,7 +14635,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14610,12 +14681,12 @@
 						"name" : "MIC140_26",
 						"address" : "2-26",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-26; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-26; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14630,7 +14701,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14675,12 +14747,12 @@
 						"name" : "MIC140_27",
 						"address" : "2-27",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-27; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-27; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14695,7 +14767,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14740,12 +14813,12 @@
 						"name" : "MIC140_28",
 						"address" : "2-28",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-28; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-28; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14760,7 +14833,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14805,12 +14879,12 @@
 						"name" : "MIC140_29",
 						"address" : "2-29",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-29; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-29; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14825,7 +14899,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14870,12 +14945,12 @@
 						"name" : "MIC140_30",
 						"address" : "2-30",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-30; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-30; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14890,7 +14965,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -14935,12 +15011,12 @@
 						"name" : "MIC140_31",
 						"address" : "2-31",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-31; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-31; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -14955,7 +15031,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15000,12 +15077,12 @@
 						"name" : "MIC140_32",
 						"address" : "2-32",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-32; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-32; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15020,7 +15097,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15065,12 +15143,12 @@
 						"name" : "MIC140_33",
 						"address" : "2-33",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-33; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-33; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15085,7 +15163,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15130,12 +15209,12 @@
 						"name" : "MIC140_34",
 						"address" : "2-34",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-34; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-34; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15150,7 +15229,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15195,12 +15275,12 @@
 						"name" : "MIC140_35",
 						"address" : "2-35",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-35; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-35; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15215,7 +15295,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15260,12 +15341,12 @@
 						"name" : "MIC140_36",
 						"address" : "2-36",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-36; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-36; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15280,7 +15361,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15325,12 +15407,12 @@
 						"name" : "MIC140_37",
 						"address" : "2-37",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-37; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-37; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15345,7 +15427,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15390,12 +15473,12 @@
 						"name" : "MIC140_38",
 						"address" : "2-38",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-38; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-38; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15410,7 +15493,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15455,12 +15539,12 @@
 						"name" : "MIC140_39",
 						"address" : "2-39",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-39; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-39; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15475,7 +15559,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15520,12 +15605,12 @@
 						"name" : "MIC140_40",
 						"address" : "2-40",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-40; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-40; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15540,7 +15625,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15585,12 +15671,12 @@
 						"name" : "MIC140_41",
 						"address" : "2-41",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-41; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-41; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15605,7 +15691,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15650,12 +15737,12 @@
 						"name" : "MIC140_42",
 						"address" : "2-42",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-42; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-42; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15670,7 +15757,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15715,12 +15803,12 @@
 						"name" : "MIC140_43",
 						"address" : "2-43",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-43; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-43; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15735,7 +15823,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15780,12 +15869,12 @@
 						"name" : "MIC140_44",
 						"address" : "2-44",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-44; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-44; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15800,7 +15889,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15845,12 +15935,12 @@
 						"name" : "MIC140_45",
 						"address" : "2-45",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-45; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-45; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15865,7 +15955,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15910,12 +16001,12 @@
 						"name" : "MIC140_46",
 						"address" : "2-46",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-46; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-46; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15930,7 +16021,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -15975,12 +16067,12 @@
 						"name" : "MIC140_47",
 						"address" : "2-47",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-47; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-47; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -15995,7 +16087,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -16040,12 +16133,12 @@
 						"name" : "MIC140_48",
 						"address" : "2-48",
 						"unit" : "mV",
-						"description" : "MIC-140 channel 2-48; freq=10 Hz; mode=mV",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 channel 2-48; freq=100 Hz; mode=mV",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "mV",
 						"moduleType" : "MIC-140",
-						"pollFrequencyHz" : 1.0000000000000000E+001,
+						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
@@ -16060,7 +16153,8 @@
 								"smoothingK" : 1.0000000000000000E+000,
 								"scadaEnabled" : false,
 								"enabled" : [
-										"MO"
+										"MO",
+										"Peak"
 								]
 						},
 						"setpoints" : {
@@ -26762,12 +26856,12 @@
 						]
 				},
 				{
-						"id" : 606,
+						"id" : 609,
 						"name" : "MIC140-2-status",
 						"address" : "diagnostics.status",
 						"unit" : "",
-						"description" : "MIC-140 connection status: connection test failed",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"description" : "MIC-140 connection status: programmed",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "",
 						"moduleType" : "MIC-140 diagnostics",
@@ -26827,12 +26921,12 @@
 						]
 				},
 				{
-						"id" : 608,
+						"id" : 611,
 						"name" : "MIC140-2-blocks",
 						"address" : "diagnostics.blocks",
 						"unit" : "blocks",
 						"description" : "MIC-140 successfully received scan blocks",
-						"sourceId" : "MIC-140: 192.168.14.155:4000",
+						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "",
 						"moduleType" : "MIC-140 diagnostics",

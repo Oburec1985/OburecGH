@@ -1582,6 +1582,8 @@ procedure TRecorderTagRegistry.PublishBlockNotifications(const ATagName: string)
 var
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
+  lEvent: TRecorderEvent;
+  lEventData: TRecorderTagUpdateEventData;
 begin
   lTag := FindByName(ATagName);
   if lTag = nil then
@@ -1592,17 +1594,27 @@ begin
   if Assigned(fOnBlockPublished) then
     fOnBlockPublished(fBlockPublishedTarget, ATagName, lSnapshot.Times,
       lSnapshot.Values, lSnapshot.Count);
-  NotifyBlockTail(ATagName, lSnapshot.Times[lSnapshot.Count - 1],
-    lSnapshot.Values[lSnapshot.Count - 1]);
+  if Assigned(fOnAlarmValuePublished) then
+    fOnAlarmValuePublished(fAlarmValuePublishedTarget, lTag,
+      lSnapshot.Times[lSnapshot.Count - 1],
+      lSnapshot.Values[lSnapshot.Count - 1]);
+  { Полный блок копируется в событие здесь (поток источника). UI/запись
+    не должны снова читать LastBlockSnapshot — он уже может быть перезаписан. }
+  if fEventBus = nil then
+    Exit;
+  lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, lSnapshot.Times,
+    lSnapshot.Values, lSnapshot.Count);
+  try
+    lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
+      lTag.TextValue, lEventData.SampleCount, lEventData);
+    fEventBus.Publish(lEvent);
+  finally
+    lEventData.Free;
+  end;
 end;
 
 procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
   AValues: array of Double; ACount: Integer; AValuesAlreadyTransformed: Boolean);
-var
-  lEvent: TRecorderEvent;
-  lTag: TRecorderTag;
-  lEventData: TRecorderTagUpdateEventData;
-  lSnapshot: TRecorderSignalSnapshot;
 begin
   if ACount <= 0 then
     Exit;
@@ -1611,26 +1623,7 @@ begin
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay
   // the next device read. Device-level diagnostics log block summaries.
-
-  lTag := FindByName(ATagName);
-  if lTag = nil then
-    Exit;
-
-  if Assigned(fOnBlockPublished) or Assigned(fOnAlarmValuePublished) then
-    PublishBlockNotifications(ATagName)
-  else if fEventBus <> nil then
-  begin
-    lSnapshot := lTag.LastBlockSnapshot;
-    lEventData := TRecorderTagUpdateEventData.CreateBlock(lTag, lSnapshot.Times,
-      lSnapshot.Values, lSnapshot.Count);
-    try
-      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
-        lTag.TextValue, lEventData.SampleCount, lEventData);
-      fEventBus.Publish(lEvent);
-    finally
-      lEventData.Free;
-    end;
-  end;
+  PublishBlockNotifications(ATagName);
 end;
 
 procedure TRecorderTagRegistry.RemoveTag(ATag: TRecorderTag);

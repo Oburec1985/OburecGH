@@ -49,7 +49,7 @@ type
     fScanPayloadStride: Integer;
     fLastTinDmWords: TMic140v2WordBuf;
     fLastTinDmReadTick: QWord;
-    { Play: ˜˜˜˜˜ ˜˜˜˜˜˜ MDP ? ˜˜˜˜˜˜; ˜˜˜˜˜˜˜˜˜ ReadBlock ˜˜˜˜ ˜˜ ˜˜˜˜˜˜. }
+    { Play: consume DataThread ring. }
     fDataThread: TRecorderMic140DataThread;
     procedure BuildChannels;
     procedure RefreshAuxFromDm(ASampleCount: Integer);
@@ -184,10 +184,26 @@ end;
 procedure TRecorderMic140Device.EnsureDataThread;
 var
   lSamples: Integer;
+  lMaxPerCh: Integer;
+  lStride: Integer;
 begin
   if fDataThread = nil then
     fDataThread := TRecorderMic140DataThread.Create(@PumpOneBlock, 500);
+  { ˜˜˜˜ BIOS-˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ half-FIFO (~7 ˜˜˜˜˜˜˜˜/˜˜˜˜˜ ˜˜˜ 48ch).
+    ˜˜ 100 ˜˜ ˜ DataUpdateMs=300 ˜˜˜˜ = 30, ˜˜ FIFO ˜˜˜ ?6-7 ˜ Config
+    ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜; ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ DoTick. }
+  lStride := ScanStride;
+  if lStride <= 0 then
+    lStride := Max(1, fChCnt);
+  lMaxPerCh := ((CMic140LegacyDmBufferEnd - CMic140LegacyDmBufferBegin + 1) div 2)
+    div lStride;
+  if lMaxPerCh < 1 then
+    lMaxPerCh := 1;
   lSamples := Max(1, Round(fFreq * Max(1, Integer(fUpdMs)) / 1000.0));
+  if lSamples > lMaxPerCh then
+    lSamples := lMaxPerCh;
+  if (fExpDataWords > 0) and (lStride > 0) then
+    lSamples := Max(1, Integer(fExpDataWords) div lStride);
   fDataThread.Config(fChCnt, lSamples, fFreq);
 end;
 
@@ -629,10 +645,12 @@ begin
       fValAddr := prog.LastValAddr;
       fTinSlots := prog.TemperatureChannelCount;
       Mic140v2StreamSetExpectedPacket(fStr, fExpDataWords, fExpMsgWords);
+      EnsureDataThread;
       Mic140v2Log(Format(
-        '[MIC140v2:%s:%d] scan programmed ch=%d fifoStride=%d tin=%d val=0x%.4x freq=%.3f Hz fifoReady=%d msgWords=%d',
+        '[MIC140v2:%s:%d] scan programmed ch=%d fifoStride=%d tin=%d val=0x%.4x freq=%.3f Hz fifoReady=%d msgWords=%d countAver=%d decayUs=%.3f',
         [fHost, fPort, fChCnt, fScanPayloadStride, fTinSlots, fValAddr, fFreq,
-         fExpDataWords, fExpMsgWords]));
+         fExpDataWords, fExpMsgWords, tim.AverageSampleCount,
+         tim.ChannelCommutationUs]));
     end
     else
       Mic140v2Log(Format('[MIC140v2:%s:%d] program failed: %s', [fHost, fPort, err]));
@@ -897,12 +915,22 @@ var
   lRing: TRecorderAcquisitionBlock;
 begin
   ClearRecorderDeviceSampleBlock(ABlock);
-  { Play: ˜˜˜˜˜ ˜˜˜˜˜ DataThread; consumer (DataSource/Codex) ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜. }
+  { Play: äàííûå èç DataThread; consumer (DataSource) òîëüêî ÷èòàåò êîëüöî. }
   if (fState = rdsStarted) and (fDataThread <> nil) and
     (fDataThread.State = dtsPlaying) then
   begin
     Result := False;
-    lDeadline := GetTickCount64 + Max(1, ATimeoutMs);
+    { timeout=0: non-blocking ring poll (DoTick drain). }
+    if ATimeoutMs = 0 then
+    begin
+      if fDataThread.ReadBlock(lRing) then
+      begin
+        CopyRecorderAcquisitionBlock(lRing, ABlock);
+        Exit(True);
+      end;
+      Exit(False);
+    end;
+    lDeadline := GetTickCount64 + ATimeoutMs;
     repeat
       if fDataThread.ReadBlock(lRing) then
       begin

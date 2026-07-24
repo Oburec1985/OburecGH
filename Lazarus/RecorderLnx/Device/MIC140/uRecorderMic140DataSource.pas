@@ -1758,26 +1758,62 @@ procedure TRecorderMic140DataSource.DoTick;
 var
   lBlock: TRecorderDeviceSampleBlock;
   lTimeoutMs: Cardinal;
+  lExpectedSamples: Integer;
+  lGotSamples: Integer;
+  lReads: Integer;
 begin
   if ShouldStop then
     Exit;
   if (fDevice = nil) or (fMic = nil) or (fDevice.State <> rdsStarted) then
     Exit;
-  lTimeoutMs := Max(Cardinal(CMic140ReadTimeoutMinMs), UpdateTimeMs * 4);
+  { Период опроса = UpdateTimeMs источника (0.1 / 0.2 / … с) — без фиксации.
+    Ожидаемо ≈ freq×dt точек; FIFO отдаёт меньшими порциями → после первого
+    ReadBlock осушаем кольцо (timeout 0), ничего не обрезаем и не теряем. }
+  lExpectedSamples := Max(1, Round(fPollFrequencyHz * Max(1, Integer(UpdateTimeMs)) /
+    1000.0));
+  lGotSamples := 0;
+  lReads := 0;
   try
+    lTimeoutMs := Max(Cardinal(1), UpdateTimeMs);
+    if fGoodBlockCount = 0 then
+      lTimeoutMs := Max(lTimeoutMs, Cardinal(CMic140ReadTimeoutMinMs));
+
     if fMic.ReadBlock(lTimeoutMs, lBlock) then
     begin
       fReadFailCount := 0;
+      Inc(lReads);
       ProcessAndPublishBlock(lBlock);
+      if lBlock.SampleCount > 0 then
+        Inc(lGotSamples, lBlock.SampleCount)
+      else
+        Inc(lGotSamples);
+
+      while (not ShouldStop) and (lReads < 256) and
+        fMic.ReadBlock(0, lBlock) do
+      begin
+        Inc(lReads);
+        ProcessAndPublishBlock(lBlock);
+        if lBlock.SampleCount > 0 then
+          Inc(lGotSamples, lBlock.SampleCount)
+        else
+          Inc(lGotSamples);
+      end;
+
+      if (lGotSamples > 0) and (lGotSamples < lExpectedSamples) and
+        (fGoodBlockCount <= 5) then
+        Mic140LogWarning(Format(
+          '[DataSource:%s] MIC-140 tick short: got %d of ~%d samples (freq=%.3f Hz upd=%d ms reads=%d)',
+          [SourceId, lGotSamples, lExpectedSamples, fPollFrequencyHz,
+           UpdateTimeMs, lReads]));
     end
     else
     begin
       Inc(fReadFailCount);
       if fReadFailCount = 1 then
         Mic140LogWarning(Format(
-          '[DataSource:%s] MIC-140 read timeout after %d published blocks (read=%d mdpResync=%d)',
+          '[DataSource:%s] MIC-140 read timeout after %d published blocks (read=%d mdpResync=%d expected~%d)',
           [SourceId, fGoodBlockCount, fMic.LegacyStreamReadCount,
-           fMic.LegacyMdpResyncByteCount]));
+           fMic.LegacyMdpResyncByteCount, lExpectedSamples]));
       if fReadFailCount = CMic140NoDataFailThreshold then
         PublishDiagnostics(CMic140StatusError, 'no scan data', True);
     end;

@@ -2381,7 +2381,6 @@ end;
 
 procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
 var
-  lBlock: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
 begin
   if ASnapshot = nil then
@@ -2407,21 +2406,15 @@ begin
     (fMeraWriter <> nil) and fMeraWriter.FileOpen then
   begin
     lTag := fRecorder.TagRegistry.FindByName(ASnapshot.TagName);
-    if lTag <> nil then
-    begin
-      lBlock := lTag.LastBlockSnapshot;
-      if lBlock.Count > 0 then
-        fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
-          lTag.Description, lTag.SensorCalibrationName,
-          lTag.AmplifierCalibrationName, lBlock.Times, lBlock.Values,
-          lBlock.Count, lTag.PollFrequencyHz)
-      else
-        fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
-          lTag.Description, lTag.SensorCalibrationName,
-          lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
-          ASnapshot.SampleCount, lTag.PollFrequencyHz);
-    end
-    else
+    { Пишем времена/значения из снимка события (уже скопированы в очереди).
+      LastBlockSnapshot здесь читать нельзя — гонка с потоком источника
+      даёт дубликаты блоков и ложные .prt. }
+    if (lTag <> nil) and (ASnapshot.SampleCount > 0) then
+      fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
+        lTag.Description, lTag.SensorCalibrationName,
+        lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
+        ASnapshot.SampleCount, lTag.PollFrequencyHz)
+    else if ASnapshot.SampleCount > 0 then
       fMeraWriter.WriteBlock(ASnapshot.TagName, '', '', '', '',
         ASnapshot.Times, ASnapshot.Values, ASnapshot.SampleCount, 0);
   end;

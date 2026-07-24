@@ -166,6 +166,9 @@ type
     SampleCount: Int64;
     LastTimeSec: Double;
     HasLastTime: Boolean;
+    LastBlockBeginTimeSec: Double;
+    LastBlockDurationSec: Double;
+    HasLastBlockBegin: Boolean;
     HasPortions: Boolean;
     DataStream: TFileStream;
     TimeStream: TFileStream;
@@ -846,8 +849,8 @@ procedure TRecorderMeraTagWriter.WriteBlock(const ATagName, AUnitName,
   ADescription, ASensorCalibration, AAmplifierCalibration: string; const ATimes,
   AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
 var
-  lExpectedTime: Double;
-  lGapLimit: Double;
+  lBlockDuration: Double;
+  lDt: Double;
   lLine: AnsiString;
   lOffset: Int64;
   lSignalObject: TObject;
@@ -909,11 +912,18 @@ begin
       (Trim(AAmplifierCalibration) <> '') then
       lSignal.AmplifierCalibrationName := AAmplifierCalibration;
 
-    if lSignal.HasLastTime and (lSignal.FrequencyHz > 0) then
+    if lSignal.HasLastBlockBegin and (not lSignal.ExplicitXRequired) and
+      (lSignal.FrequencyHz > 0) then
     begin
-      lExpectedTime := lSignal.LastTimeSec + (1.0 / lSignal.FrequencyHz);
-      lGapLimit := 0.5 / lSignal.FrequencyHz;
-      if Abs(ATimes[0] - lExpectedTime) > lGapLimit then
+      { [ORIG] MeasurementTag: dT = begin - lastBegin - blockDuration;
+        порция (.prt), если dT > blockDuration/2. Не half sample period. }
+      lBlockDuration := lSignal.LastBlockDurationSec;
+      if lBlockDuration <= 0 then
+        lBlockDuration := ACount / lSignal.FrequencyHz;
+      if lBlockDuration <= 0 then
+        lBlockDuration := 1.0 / lSignal.FrequencyHz;
+      lDt := ATimes[0] - lSignal.LastBlockBeginTimeSec - lBlockDuration;
+      if lDt > (lBlockDuration / 2.0) then
       begin
         lSignal.HasPortions := True;
         lOffset := lSignal.SampleCount;
@@ -936,6 +946,14 @@ begin
     Inc(lSignal.SampleCount, ACount);
     lSignal.LastTimeSec := ATimes[ACount - 1];
     lSignal.HasLastTime := True;
+    lSignal.LastBlockBeginTimeSec := ATimes[0];
+    if lSignal.FrequencyHz > 0 then
+      lSignal.LastBlockDurationSec := ACount / lSignal.FrequencyHz
+    else if ACount > 1 then
+      lSignal.LastBlockDurationSec := ATimes[ACount - 1] - ATimes[0]
+    else
+      lSignal.LastBlockDurationSec := 0;
+    lSignal.HasLastBlockBegin := True;
   finally
     LeaveCriticalSection(fLock);
   end;
