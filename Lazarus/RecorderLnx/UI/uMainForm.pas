@@ -2248,6 +2248,7 @@ procedure TMainForm.EnsureTagSignalBufferCapacities;
 var
   I: Integer;
   lBlockSamples: Integer;
+  lBlockCount: Integer;
   lCapacity: Integer;
   lDisplaySeconds: Double;
   lPortionLength: Integer;
@@ -2264,6 +2265,7 @@ begin
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
     lTag := fRecorder.TagRegistry.Tags[I];
+    lBlockSamples := 0;
     lPortionLength := lTag.EstimateSettings.PortionLength;
     if lPortionLength < 1 then
       lPortionLength := 1;
@@ -2280,6 +2282,12 @@ begin
     if lPortionLength + 1 > lCapacity then
       lCapacity := lPortionLength + 1;
     lTag.EnsureBufferCapacity(lCapacity);
+    if (lTag.PollFrequencyHz > 0) and (lBlockSamples > 1) then
+    begin
+      lBlockCount := Ceil(fRecorder.RunSettings.DisplayBufferMs /
+        Max(1, fRecorder.RunSettings.DataUpdateMs)) + 1;
+      lTag.ConfigureBlockBuffer(lBlockSamples, lBlockCount);
+    end;
   end;
 end;
 procedure TMainForm.StartDataSources;

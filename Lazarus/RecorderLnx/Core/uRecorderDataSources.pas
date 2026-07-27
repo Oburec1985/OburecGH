@@ -738,9 +738,14 @@ type
     fTagName: string;                   { Имя целевого тега }
     fTimeStream: TFileStream;           { Файловый поток времени (X) для неравномерных сигналов }
     
+    fBlockTimes: TRecorderDoubleArray;
+    fBlockValues: TRecorderDoubleArray;
+    fReadSingles: array of Single;
+
     function GetDataSize: Integer;
     function IsScalar: Boolean;
     function ReadRawValue(out AValue: Double): Boolean;
+    function ReadRawBlock(AMaxCount: Integer): Integer;
     function ReadSample(out ATimeSec, AValue: Double): Boolean;
     function EnsureCachedSample: Boolean;
   public
@@ -754,6 +759,8 @@ type
     procedure Close;
     { Перемотка в начало }
     procedure Rewind;
+    procedure PrepareVectorBuffers(AUpdateTimeMs: Cardinal;
+      ABlockLength: Cardinal);
     { Публикует следующий отсчет }
     function PublishNext(ARegistry: TRecorderTagRegistry): Boolean;
     { Публикует скалярные отсчеты, время которых подошло к текущему }
@@ -828,6 +835,31 @@ begin
   fHasCachedSample := False;
 end;
 
+procedure TMeraPlaybackSignal.PrepareVectorBuffers(AUpdateTimeMs: Cardinal;
+  ABlockLength: Cardinal);
+var
+  lCapacity: Integer;
+begin
+  if IsScalar then
+    Exit;
+  if ABlockLength > 0 then
+    lCapacity := ABlockLength
+  else
+  begin
+    if AUpdateTimeMs = 0 then
+      AUpdateTimeMs := 1;
+    lCapacity := Round(fInfo.FrequencyHz * AUpdateTimeMs / 1000.0);
+  end;
+  if lCapacity < 1 then
+    lCapacity := 1;
+  SetLength(fBlockTimes, lCapacity);
+  SetLength(fBlockValues, lCapacity);
+  if fInfo.DataType = mvtFloat32 then
+    SetLength(fReadSingles, lCapacity)
+  else
+    SetLength(fReadSingles, 0);
+end;
+
 function TMeraPlaybackSignal.ReadRawValue(out AValue: Double): Boolean;
 var
   lDouble: Double;
@@ -875,6 +907,47 @@ begin
       end;
   end;
   Result := True;
+end;
+
+function TMeraPlaybackSignal.ReadRawBlock(AMaxCount: Integer): Integer;
+var
+  I: Integer;
+  lAvailable: Int64;
+  lValue: Double;
+begin
+  Result := 0;
+  if (AMaxCount <= 0) or (fDataStream = nil) then
+    Exit;
+  if AMaxCount > Length(fBlockValues) then
+    raise ERecorderDataSourceError.Create(
+      'MERA vector buffer is smaller than configured block');
+
+  lAvailable := (fDataStream.Size - fDataStream.Position) div GetDataSize;
+  if lAvailable <= 0 then
+    Exit;
+  if lAvailable < AMaxCount then
+    AMaxCount := Integer(lAvailable);
+
+  { Высокочастотные MERA-сигналы R4 читаем одной порцией. Файловый вызов на
+    каждый отсчёт при Fs=57600 превращал периодический worker в busy-loop. }
+  if fInfo.DataType = mvtFloat32 then
+  begin
+    if AMaxCount > Length(fReadSingles) then
+      raise ERecorderDataSourceError.Create(
+        'MERA R4 read buffer is smaller than configured block');
+    fDataStream.ReadBuffer(fReadSingles[0], AMaxCount * SizeOf(Single));
+    for I := 0 to AMaxCount - 1 do
+      fBlockValues[I] := fReadSingles[I];
+    Exit(AMaxCount);
+  end;
+
+  { Редкие legacy-типы сохраняют прежнее преобразование. Основной R4-путь
+    выше не выполняет поточечных файловых операций. }
+  while (Result < AMaxCount) and ReadRawValue(lValue) do
+  begin
+    fBlockValues[Result] := lValue;
+    Inc(Result);
+  end;
 end;
 
 function TMeraPlaybackSignal.ReadSample(out ATimeSec, AValue: Double): Boolean;
@@ -956,9 +1029,6 @@ var
   lBlocks: Integer;
   lCount: Integer;
   lTimeSec: Double;
-  lTimes: TRecorderDoubleArray;
-  lValue: Double;
-  lValues: TRecorderDoubleArray;
 begin
   Result := False;
   if (ARegistry = nil) or IsScalar or (fInfo.FrequencyHz <= 0) then
@@ -975,8 +1045,10 @@ begin
   end;
 
   lBlocks := 0;
-  SetLength(lTimes, ABlockLength);
-  SetLength(lValues, ABlockLength);
+  if (ABlockLength > Cardinal(Length(fBlockValues))) or
+    (ABlockLength > Cardinal(Length(fBlockTimes))) then
+    raise ERecorderDataSourceError.Create(
+      'MERA vector buffers were not prepared for configured block');
   while (lBlocks < AMaxBlocks) and
     (((not lAutoBlockLength) and
       (fInfo.StartSec + (fSampleIndex / fInfo.FrequencyHz) <= APlayTimeSec)) or
@@ -984,23 +1056,18 @@ begin
       (fInfo.StartSec + ((fSampleIndex + ABlockLength - 1) / fInfo.FrequencyHz) <=
       APlayTimeSec))) do
   begin
-    lCount := 0;
-    for I := 0 to ABlockLength - 1 do
+    lCount := ReadRawBlock(ABlockLength);
+    for I := 0 to lCount - 1 do
     begin
-      if not ReadRawValue(lValue) then
-        Break;
-
-      lTimeSec := fInfo.StartSec + (fSampleIndex / fInfo.FrequencyHz);
-      lTimes[lCount] := lTimeSec;
-      lValues[lCount] := lValue;
-      Inc(lCount);
-      Inc(fSampleIndex);
+      lTimeSec := fInfo.StartSec + ((fSampleIndex + I) / fInfo.FrequencyHz);
+      fBlockTimes[I] := lTimeSec;
     end;
+    Inc(fSampleIndex, lCount);
 
     if lCount = 0 then
       Break;
 
-    ARegistry.PublishBlock(fTagName, lTimes, lValues, lCount);
+    ARegistry.PublishBlock(fTagName, fBlockTimes, fBlockValues, lCount);
     { Streaming debug: MERA block log suppressed.
     RecorderDebugLog(Format('MERA block: tag=%s count=%d first=%.6f last=%.6f blockLength=%d update=%dms',
       [fTagName, lCount, lTimes[0], lTimes[lCount - 1], ABlockLength,
@@ -1162,6 +1229,7 @@ var
       lPlaybackSignal := TMeraPlaybackSignal.Create(lSignalCopy);
       lSignalCopy := nil;
       try
+        lPlaybackSignal.PrepareVectorBuffers(UpdateTimeMs, fBlockLength);
         lPlaybackSignal.Open;
         fPlaybackSignals.Add(lPlaybackSignal);
         lPlaybackSignal := nil;

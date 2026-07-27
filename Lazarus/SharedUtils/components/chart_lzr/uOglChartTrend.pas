@@ -135,6 +135,8 @@ type
     procedure AddValue(AY: Double);
     // Пакетное добавление массива Y-значений
     procedure AddValues(const AValues: array of Double);
+    { Полностью заменяет линию диапазоном массива одним блочным копированием. }
+    procedure ReplaceValues(const AValues: array of Double; AStart, ACount: Integer);
 
     property X0: Double read fX0 write fX0;
     property DX: Double read fDX write fDX;
@@ -557,6 +559,17 @@ begin
   SetLength(fValues, lNewLen);
   for i := 0 to High(AValues) do
     fValues[lOldLen + i] := AValues[i];
+  GLListID := 0;
+end;
+
+procedure cBuffTrend1d.ReplaceValues(const AValues: array of Double; AStart,
+  ACount: Integer);
+begin
+  if (AStart < 0) or (ACount < 0) or (AStart + ACount > Length(AValues)) then
+    raise ERangeError.Create('cBuffTrend1d.ReplaceValues: invalid range');
+  SetLength(fValues, ACount);
+  if ACount > 0 then
+    Move(AValues[AStart], fValues[0], ACount * SizeOf(Double));
   GLListID := 0;
 end;
 

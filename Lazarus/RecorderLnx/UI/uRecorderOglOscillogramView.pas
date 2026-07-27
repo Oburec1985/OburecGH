@@ -37,6 +37,9 @@ type
     fFpsWindowFrames: Integer;
     fFpsWindowLastFrameMs: QWord;
     fFrameNo: Integer;
+    fHasDataSignature: Boolean;
+    fLastDataSignature: QWord;
+    fLastSignatureDisplaySeconds: Double;
     fInfoPanel: TPanel;
     fInfoNextLeft: Integer;
     fTagOffset: Integer;
@@ -113,6 +116,9 @@ type
     fFpsWindowFrames: Integer;
     fFpsWindowLastFrameMs: QWord;
     fFrameNo: Integer;
+    fHasDataRevision: Boolean;
+    fLastDataRevisions: array of QWord;
+    fLastRevisionDisplaySeconds: Double;
     fModel: TChartModel;
     function GetFpsText: string;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -288,6 +294,7 @@ destructor TRecorderOglOscillogram.Destroy;
 var
   I: Integer;
 begin
+  fHasDataSignature := False;
   for I := fExtraLines.Count - 1 downto 0 do
     TObject(fExtraLines[I]).Free;
   fExtraLines.Free;
@@ -708,6 +715,7 @@ var
   I: Integer;
   lFirst: Boolean;
   lStartIdx: Integer;
+  lValueCount: Integer;
 begin
   APointCount := 0;
   AMinValue := 0;
@@ -722,6 +730,7 @@ begin
   lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(ASnapshot.Times,
     ASnapshot.Count, ADisplayStart);
   lFirst := True;
+  lValueCount := ASnapshot.Count - lStartIdx;
   for I := lStartIdx to ASnapshot.Count - 1 do
   begin
     if lFirst then
@@ -743,9 +752,9 @@ begin
       if ASnapshot.Values[I] > AMaxValue then
         AMaxValue := ASnapshot.Values[I];
     end;
-    ATrend.AddValue(ASnapshot.Values[I]);
     Inc(APointCount);
   end;
+  ATrend.ReplaceValues(ASnapshot.Values, lStartIdx, lValueCount);
 end;
 
 function TRecorderOglOscillogram.ResolveTagByName(
@@ -771,12 +780,39 @@ var
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
   lTrend: cBuffTrend1d;
+  lDataSignature: QWord;
+  lSignatureTag: TRecorderTag;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
   if fFpsMeasureEnabled <> AMeasureFps then
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
+  { GLListID у OglChart уже является штатным needRecompile. Не сбрасываем его
+    вызовом ReplaceValues, пока данные всех линий и окно отображения прежние. }
+  lDataSignature := QWord($CBF29CE484222325);
+  lSignatureTag := ResolveTag(ATagRegistry);
+  if lSignatureTag <> nil then
+    lDataSignature := (lDataSignature xor QWord(lSignatureTag.Id)) +
+      (lSignatureTag.SignalBuffer.Revision shl 1);
+  for I := 0 to fExtraLines.Count - 1 do
+  begin
+    lLine := TRecorderTrendLine(fExtraLines[I]);
+    if not lLine.Visible then
+      Continue;
+    lSignatureTag := RecorderResolveTag(ATagRegistry, lLine.TagId,
+      lLine.TagName);
+    if lSignatureTag <> nil then
+      lDataSignature := ((lDataSignature shl 5) or
+        (lDataSignature shr 59)) xor
+        (QWord(lSignatureTag.Id) + lSignatureTag.SignalBuffer.Revision);
+  end;
+  if fHasDataSignature and (fLastDataSignature = lDataSignature) and
+    (Abs(fLastSignatureDisplaySeconds - ADisplaySeconds) <= 1E-12) then
+    Exit;
+  fHasDataSignature := True;
+  fLastDataSignature := lDataSignature;
+  fLastSignatureDisplaySeconds := ADisplaySeconds;
   Inc(fFrameNo);
   if not TChartPage(fPage).ZoomedX then
   begin
@@ -1194,6 +1230,8 @@ var
   lAxis: TChartAxis;
   lValueIndex: Integer;
   lStartIdx: Integer;
+  lDataChanged: Boolean;
+  lRevision: QWord;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -1201,6 +1239,26 @@ begin
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
   fDisplaySeconds := ADisplaySeconds;
+  lDataChanged := (not fHasDataRevision) or
+    (Abs(fLastRevisionDisplaySeconds - ADisplaySeconds) > 1E-12) or
+    (Length(fLastDataRevisions) <> fCount);
+  if Length(fLastDataRevisions) <> fCount then
+    SetLength(fLastDataRevisions, fCount);
+  for I := 0 to fCount - 1 do
+  begin
+    lTag := ResolveTag(ATagRegistry, I);
+    if lTag <> nil then
+      lRevision := lTag.SignalBuffer.Revision
+    else
+      lRevision := 0;
+    if fLastDataRevisions[I] <> lRevision then
+      lDataChanged := True;
+    fLastDataRevisions[I] := lRevision;
+  end;
+  fHasDataRevision := True;
+  fLastRevisionDisplaySeconds := ADisplaySeconds;
+  if not lDataChanged then
+    Exit;
   Inc(fFrameNo);
   for I := 0 to fCount - 1 do
   begin
@@ -1262,9 +1320,10 @@ begin
           lMaxValue := lSnapshot.Values[lValueIndex];
       end;
 
-      lTrend.AddValue(lSnapshot.Values[lValueIndex]);
       Inc(lPointCount);
     end;
+    lTrend.ReplaceValues(lSnapshot.Values, lStartIdx,
+      lSnapshot.Count - lStartIdx);
 
     if lPointCount = 0 then
       SetAxisRange(lAxis, -1, 1)

@@ -107,6 +107,12 @@ type
     Values: TRecorderDoubleArray;
   end;
 
+  TRecorderSignalBlock = record
+    Count: Integer;
+    Times: TRecorderDoubleArray;
+    Values: TRecorderDoubleArray;
+  end;
+
   { Исключение при ошибках работы с тегами }
   ERecorderTagError = class(Exception);
 
@@ -123,8 +129,15 @@ type
     fLastBlockCount: Integer;                 { Размер последнего добавленного блока }
     fLastBlockTimes: TRecorderDoubleArray;    { Времена последнего блока }
     fLastBlockValues: TRecorderDoubleArray;   { Значения последнего блока }
+    fBlocks: array of TRecorderSignalBlock;   { Кольцо готовых порций данных }
+    fBlockWriteIndex: Integer;
+    fBlockCount: Integer;
+    fBlockSampleCapacity: Integer;
+    fRevision: QWord;                         { Версия содержимого для UI }
     fTimes: array of Double;                  { Массив времен }
     fValues: array of Double;                 { Массив значений }
+    function GetCount: Integer;
+    function GetRevision: QWord;
     function GetLatestTime: Double;
     function GetLatestValue: Double;
   public
@@ -142,6 +155,8 @@ type
     procedure AddSample(ATimeSec, AValue: Double);
     { Добавляет массив точек в буфер. }
     procedure AddSamples(const ATimes, AValues: array of Double; ACount: Integer);
+    { Выделяет кольцо порций до запуска сбора. В RunTime память не меняется. }
+    procedure ConfigureBlockRing(ABlockSamples, ABlockCount: Integer);
     { Меняет емкость буфера, сохраняя последние доступные точки. }
     procedure SetCapacity(ACapacity: Integer);
     { Возвращает снимок от старой точки к новой. }
@@ -149,7 +164,8 @@ type
     { Возвращает снимок последнего добавленного блока точек. }
     function LastBlockSnapshot: TRecorderSignalSnapshot;
     property Capacity: Integer read fCapacity;
-    property Count: Integer read fCount;
+    property Count: Integer read GetCount;
+    property Revision: QWord read GetRevision;
     property LatestTime: Double read GetLatestTime;
     property LatestValue: Double read GetLatestValue;
   end;
@@ -207,6 +223,7 @@ type
     procedure AddSamples(const ATimes, AValues: array of Double; ACount: Integer);
     { Расширяет кольцевой буфер тега без потери последних точек. }
     procedure EnsureBufferCapacity(ACapacity: Integer);
+    procedure ConfigureBlockBuffer(ABlockSamples, ABlockCount: Integer);
     { Очищает историю сигнала после смены режима/ГХ канала. }
     procedure ClearSignalHistory;
 
@@ -714,12 +731,51 @@ begin
   inherited Destroy;
 end;
 
-function TRecorderSignalBuffer.GetLatestTime: Double;
+function TRecorderSignalBuffer.GetCount: Integer;
 var
-  lIndex: Integer;
+  I: Integer;
+  lBlockIndex: Integer;
 begin
   EnterCriticalSection(fLock);
   try
+    if fBlockCount = 0 then
+      Exit(fCount);
+    Result := 0;
+    lBlockIndex := (fBlockWriteIndex - fBlockCount + Length(fBlocks)) mod
+      Length(fBlocks);
+    for I := 0 to fBlockCount - 1 do
+    begin
+      Inc(Result, fBlocks[lBlockIndex].Count);
+      lBlockIndex := (lBlockIndex + 1) mod Length(fBlocks);
+    end;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderSignalBuffer.GetRevision: QWord;
+begin
+  EnterCriticalSection(fLock);
+  try
+    Result := fRevision;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderSignalBuffer.GetLatestTime: Double;
+var
+  lIndex: Integer;
+  lBlockIndex: Integer;
+begin
+  EnterCriticalSection(fLock);
+  try
+    if fBlockCount > 0 then
+    begin
+      lBlockIndex := (fBlockWriteIndex - 1 + Length(fBlocks)) mod Length(fBlocks);
+      if fBlocks[lBlockIndex].Count > 0 then
+        Exit(fBlocks[lBlockIndex].Times[fBlocks[lBlockIndex].Count - 1]);
+    end;
     if fCount = 0 then
       Exit(0);
     lIndex := (fStart + fCount - 1) mod fCapacity;
@@ -732,9 +788,16 @@ end;
 function TRecorderSignalBuffer.GetLatestValue: Double;
 var
   lIndex: Integer;
+  lBlockIndex: Integer;
 begin
   EnterCriticalSection(fLock);
   try
+    if fBlockCount > 0 then
+    begin
+      lBlockIndex := (fBlockWriteIndex - 1 + Length(fBlocks)) mod Length(fBlocks);
+      if fBlocks[lBlockIndex].Count > 0 then
+        Exit(fBlocks[lBlockIndex].Values[fBlocks[lBlockIndex].Count - 1]);
+    end;
     if fCount = 0 then
       Exit(0);
     lIndex := (fStart + fCount - 1) mod fCapacity;
@@ -751,6 +814,9 @@ begin
     fStart := 0;
     fCount := 0;
     fLastBlockCount := 0;
+    fBlockWriteIndex := 0;
+    fBlockCount := 0;
+    Inc(fRevision);
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -794,6 +860,7 @@ begin
     SetLength(fLastBlockValues, 1);
     fLastBlockTimes[0] := ATimeSec;
     fLastBlockValues[0] := AValue;
+    Inc(fRevision);
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -813,6 +880,37 @@ begin
 
   EnterCriticalSection(fLock);
   try
+    if (Length(fBlocks) > 0) and (ACount <= fBlockSampleCapacity) then
+    begin
+      if (ACount > 0) and (fBlockCount > 0) then
+      begin
+        lLastIndex := (fBlockWriteIndex - 1 + Length(fBlocks)) mod
+          Length(fBlocks);
+        if (fBlocks[lLastIndex].Count > 0) and
+          (ATimes[0] <
+          fBlocks[lLastIndex].Times[fBlocks[lLastIndex].Count - 1]) then
+        begin
+          fBlockWriteIndex := 0;
+          fBlockCount := 0;
+        end;
+      end;
+      { Высокочастотный путь: сохраняем готовую порцию двумя блочными
+        копированиями. Кадр осциллограммы затем собирается из этих порций. }
+      fBlocks[fBlockWriteIndex].Count := ACount;
+      if ACount > 0 then
+      begin
+        Move(ATimes[0], fBlocks[fBlockWriteIndex].Times[0],
+          ACount * SizeOf(Double));
+        Move(AValues[0], fBlocks[fBlockWriteIndex].Values[0],
+          ACount * SizeOf(Double));
+      end;
+      fBlockWriteIndex := (fBlockWriteIndex + 1) mod Length(fBlocks);
+      if fBlockCount < Length(fBlocks) then
+        Inc(fBlockCount);
+      fLastBlockCount := ACount;
+      Inc(fRevision);
+      Exit;
+    end;
     { Очистка и добавление первого блока новой временной эпохи выполняются под
       одной блокировкой. UI поэтому не увидит промежуточный пустой буфер. }
     if (ACount > 0) and (fCount > 0) then
@@ -849,6 +947,32 @@ begin
       fTimes[lIndex] := ATimes[I];
       fValues[lIndex] := AValues[I];
     end;
+    Inc(fRevision);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+procedure TRecorderSignalBuffer.ConfigureBlockRing(ABlockSamples,
+  ABlockCount: Integer);
+var
+  I: Integer;
+begin
+  if (ABlockSamples < 1) or (ABlockCount < 1) then
+    Exit;
+  EnterCriticalSection(fLock);
+  try
+    SetLength(fBlocks, ABlockCount);
+    for I := 0 to ABlockCount - 1 do
+    begin
+      SetLength(fBlocks[I].Times, ABlockSamples);
+      SetLength(fBlocks[I].Values, ABlockSamples);
+      fBlocks[I].Count := 0;
+    end;
+    fBlockSampleCapacity := ABlockSamples;
+    fBlockWriteIndex := 0;
+    fBlockCount := 0;
+    Inc(fRevision);
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -888,6 +1012,7 @@ begin
     fCapacity := ACapacity;
     fCount := lKeepCount;
     fStart := 0;
+    Inc(fRevision);
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -896,9 +1021,40 @@ function TRecorderSignalBuffer.Snapshot: TRecorderSignalSnapshot;
 var
   I: Integer;
   lIndex: Integer;
+  lBlockIndex: Integer;
+  lOffset: Integer;
 begin
   EnterCriticalSection(fLock);
   try
+    if fBlockCount > 0 then
+    begin
+      Result.Count := 0;
+      lBlockIndex := (fBlockWriteIndex - fBlockCount + Length(fBlocks)) mod
+        Length(fBlocks);
+      for I := 0 to fBlockCount - 1 do
+      begin
+        Inc(Result.Count, fBlocks[lBlockIndex].Count);
+        lBlockIndex := (lBlockIndex + 1) mod Length(fBlocks);
+      end;
+      SetLength(Result.Times, Result.Count);
+      SetLength(Result.Values, Result.Count);
+      lOffset := 0;
+      lBlockIndex := (fBlockWriteIndex - fBlockCount + Length(fBlocks)) mod
+        Length(fBlocks);
+      for I := 0 to fBlockCount - 1 do
+      begin
+        if fBlocks[lBlockIndex].Count > 0 then
+        begin
+          Move(fBlocks[lBlockIndex].Times[0], Result.Times[lOffset],
+            fBlocks[lBlockIndex].Count * SizeOf(Double));
+          Move(fBlocks[lBlockIndex].Values[0], Result.Values[lOffset],
+            fBlocks[lBlockIndex].Count * SizeOf(Double));
+          Inc(lOffset, fBlocks[lBlockIndex].Count);
+        end;
+        lBlockIndex := (lBlockIndex + 1) mod Length(fBlocks);
+      end;
+      Exit;
+    end;
     Result.Count := fCount;
     SetLength(Result.Times, fCount);
     SetLength(Result.Values, fCount);
@@ -917,9 +1073,25 @@ end;
 function TRecorderSignalBuffer.LastBlockSnapshot: TRecorderSignalSnapshot;
 var
   I: Integer;
+  lBlockIndex: Integer;
 begin
   EnterCriticalSection(fLock);
   try
+    if fBlockCount > 0 then
+    begin
+      lBlockIndex := (fBlockWriteIndex - 1 + Length(fBlocks)) mod Length(fBlocks);
+      Result.Count := fBlocks[lBlockIndex].Count;
+      SetLength(Result.Times, Result.Count);
+      SetLength(Result.Values, Result.Count);
+      if Result.Count > 0 then
+      begin
+        Move(fBlocks[lBlockIndex].Times[0], Result.Times[0],
+          Result.Count * SizeOf(Double));
+        Move(fBlocks[lBlockIndex].Values[0], Result.Values[0],
+          Result.Count * SizeOf(Double));
+      end;
+      Exit;
+    end;
     Result.Count := fLastBlockCount;
     SetLength(Result.Times, fLastBlockCount);
     SetLength(Result.Values, fLastBlockCount);
@@ -999,6 +1171,11 @@ procedure TRecorderTag.EnsureBufferCapacity(ACapacity: Integer);
 begin
   if ACapacity > fSignalBuffer.Capacity then
     fSignalBuffer.SetCapacity(ACapacity);
+end;
+
+procedure TRecorderTag.ConfigureBlockBuffer(ABlockSamples, ABlockCount: Integer);
+begin
+  fSignalBuffer.ConfigureBlockRing(ABlockSamples, ABlockCount);
 end;
 
 procedure TRecorderTag.ClearSignalHistory;
