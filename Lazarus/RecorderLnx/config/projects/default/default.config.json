@@ -16,7 +16,7 @@
 				},
 				{
 						"moduleType" : "MIC-140",
-						"defaultPollFrequencyHz" : 1.0000000000000000E+001,
+						"defaultPollFrequencyHz" : 1.0000000000000000E+002,
 						"specificConfigText" : "",
 						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"mic140" : {
@@ -89,8 +89,8 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : false,
-												"hardwareCalibrationName" : ""
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch01"
 										},
 										{
 												"address" : "2-02",
@@ -103,8 +103,8 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : false,
-												"hardwareCalibrationName" : ""
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch02"
 										},
 										{
 												"address" : "2-03",
@@ -117,8 +117,8 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : false,
-												"hardwareCalibrationName" : ""
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch03"
 										},
 										{
 												"address" : "2-04",
@@ -131,8 +131,8 @@
 												"thermocoupleScalePath" : "",
 												"outputMode" : "mV",
 												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : false,
-												"hardwareCalibrationName" : ""
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch04"
 										},
 										{
 												"address" : "2-05",
@@ -12101,11 +12101,11 @@
 						"scale" : 1.0000000000000000E+000,
 						"points" : [
 								{
-										"x" : -3.2065207030000001E+004,
+										"x" : -3.2065207031250000E+004,
 										"y" : -2.0000000000000000E+001
 								},
 								{
-										"x" : -1.9715646479999999E+004,
+										"x" : -1.9715646484375000E+004,
 										"y" : 0.0000000000000000E+000
 								},
 								{
@@ -12124,15 +12124,61 @@
 						"scale" : 1.0000000000000000E+000,
 						"points" : [
 								{
-										"x" : -3.2065660159999999E+004,
+										"x" : -3.2065660156250000E+004,
 										"y" : -2.0000000000000000E+001
 								},
 								{
-										"x" : -1.9715806639999999E+004,
+										"x" : -1.9715806640625000E+004,
 										"y" : 0.0000000000000000E+000
 								},
 								{
-										"x" : 2.9683505860000001E+004,
+										"x" : 2.9683505859375000E+004,
+										"y" : 8.0000000000000000E+001
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC140 sn0329 06_100mV ch03",
+						"description" : "",
+						"unitIn" : "",
+						"unitOut" : "",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : -3.2065925781000002E+004,
+										"y" : -2.0000000000000000E+001
+								},
+								{
+										"x" : -1.9714994140999999E+004,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 2.9683253906000002E+004,
+										"y" : 8.0000000000000000E+001
+								}
+						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC140 sn0329 06_100mV ch04",
+						"description" : "",
+						"unitIn" : "",
+						"unitOut" : "",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : -3.2066494140999999E+004,
+										"y" : -2.0000000000000000E+001
+								},
+								{
+										"x" : -1.9714539063000000E+004,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 2.9683107422000001E+004,
 										"y" : 8.0000000000000000E+001
 								}
 						]
@@ -13041,8 +13087,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
-						"hardwareCalibrationEnabled" : false,
-						"hardwareCalibrationName" : "",
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch01",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -13107,8 +13153,8 @@
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
-						"hardwareCalibrationEnabled" : false,
-						"hardwareCalibrationName" : "",
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch02",
 						"channelCalibrationEnabled" : false,
 						"estimates" : {
 								"default" : "MO",
@@ -26856,7 +26902,7 @@
 						]
 				},
 				{
-						"id" : 609,
+						"id" : 612,
 						"name" : "MIC140-2-status",
 						"address" : "diagnostics.status",
 						"unit" : "",
@@ -26921,7 +26967,7 @@
 						]
 				},
 				{
-						"id" : 611,
+						"id" : 614,
 						"name" : "MIC140-2-blocks",
 						"address" : "diagnostics.blocks",
 						"unit" : "blocks",

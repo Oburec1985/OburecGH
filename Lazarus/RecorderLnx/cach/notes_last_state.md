@@ -3816,3 +3816,26 @@ Tadc=5 мкс и штатном `PERIOD_TIMER_WORK=112` формула даёт 
 
   `data/captures/README.md`.
 
+# 2026-07-27 — MIC-140: чтение ГХ через live-сессию
+
+**Prompt:** кнопка «зачитать ГХ» в `TagSettingsDialog` выдаёт ошибку; рабочий
+сбор MIC-140 нельзя повредить.
+
+**Причина:** загрузчик ГХ открывал второй TCP, пока `TRecorderMic140DataSource`
+уже владел подключением. В логе подтверждён timeout второго `Connect`.
+
+**Исправление:** `IMic140ServiceMemory`; EEPROM/firmware читаются через
+зарегистрированный `TRecorderMic140Device`. Автономный TCP оставлен fallback.
+В `Play` операция запрещена; после сервисного StopScan очищаются MDP-буферы.
+
+**Проверка:** RecorderLnx и MIC140 debug project собираются. Существующий
+DataSources executable проходит все тесты. Подробности:
+`errors/2026-07-27-mic140-gx-second-tcp-timeout.md`.
+# 2026-07-27 — MIC-140: восстановление аппаратной ГХ
+
+Исправлен round-trip флага и имени аппаратной ГХ: миграция MIC-140 больше не
+очищает поля тега, а TagSettingsDialog синхронно обновляет device config.
+При загрузке проекта CSV автоматически ищется по
+`Calibr/hardware/MIC140/snNNNN/<range>/NN.csv` и загружается в реестр без
+сетевого обращения. На default.config.json подтверждена автозагрузка каналов
+01–04 для SN0329. Сборка RecorderLnx OK.

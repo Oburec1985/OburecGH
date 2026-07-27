@@ -19,7 +19,8 @@ uses
   uRecorderMic140Diag, uRecorderMic140DataThread;
 
 type
-  TRecorderMic140Device = class(TInterfacedObject, IMic140Device)
+  TRecorderMic140Device = class(TInterfacedObject, IMic140Device,
+    IMic140ServiceMemory)
   private
     fId, fHost: string;
     fPort: Word;
@@ -114,6 +115,12 @@ type
     function ExecuteDeviceAction(AAction: TRecorderDeviceAction;
       const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
       out AErrorText: string): Boolean;
+    function ReadServiceFirmware(
+      out AFirmware: TRecorderMic140LegacyFirmware;
+      out AErrorMessage: string): Boolean;
+    function StopServiceScan(out AErrorMessage: string): Boolean;
+    function ReadServiceFlash(AAddress: LongWord; var ABuffer;
+      AByteCount: Integer; out AErrorMessage: string): Boolean;
   end;
 
 implementation
@@ -140,6 +147,58 @@ begin
   SetLength(AValues, 0);
   AErrorText := '?˜?????˜?˜?????? ???˜?????????˜???˜?˜?˜ ?˜?????˜?????????????˜???????????˜?? API MIC-140';
   Result := False;
+end;
+
+
+function TRecorderMic140Device.ReadServiceFirmware(
+  out AFirmware: TRecorderMic140LegacyFirmware;
+  out AErrorMessage: string): Boolean;
+begin
+  FillChar(AFirmware, SizeOf(AFirmware), 0);
+  if fState = rdsStarted then
+  begin
+    AErrorMessage := 'MIC-140: stop acquisition before reading calibration';
+    Exit(False);
+  end;
+  if fCli = nil then
+  begin
+    AErrorMessage := 'MIC-140: device connection is not open';
+    Exit(False);
+  end;
+  Result := fCli.ReadFirmware(AFirmware, AErrorMessage);
+end;
+
+function TRecorderMic140Device.StopServiceScan(
+  out AErrorMessage: string): Boolean;
+begin
+  if fState = rdsStarted then
+  begin
+    AErrorMessage := 'MIC-140: stop acquisition before reading calibration';
+    Exit(False);
+  end;
+  if fCli = nil then
+  begin
+    AErrorMessage := 'MIC-140: device connection is not open';
+    Exit(False);
+  end;
+  Result := fCli.StopScan(AErrorMessage);
+  fCli.ClearBufferedPackets;
+end;
+
+function TRecorderMic140Device.ReadServiceFlash(AAddress: LongWord;
+  var ABuffer; AByteCount: Integer; out AErrorMessage: string): Boolean;
+begin
+  if fState = rdsStarted then
+  begin
+    AErrorMessage := 'MIC-140: stop acquisition before reading calibration';
+    Exit(False);
+  end;
+  if fCli = nil then
+  begin
+    AErrorMessage := 'MIC-140: device connection is not open';
+    Exit(False);
+  end;
+  Result := fCli.ReadFlashStorage(AAddress, ABuffer, AByteCount, AErrorMessage);
 end;
 
 constructor TRecorderMic140Device.Create(const ADeviceId, AHost: string;

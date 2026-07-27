@@ -1578,7 +1578,22 @@ begin
     if fAutoRangeCheck.State <> cbGrayed then
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
+    begin
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
+      if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+      begin
+        lSettings.ChannelAddress := '';
+        if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,
+          lChannelNumber, lSettings) then
+        begin
+          lSettings.HardwareCalibrationEnabled :=
+            lTag.HardwareCalibrationEnabled;
+          lSettings.HardwareCalibrationName :=
+            lTag.HardwareCalibrationName;
+          RecorderMic140UpdateChannelSettings(fTagRegistry, lTag, lSettings);
+        end;
+      end;
+    end;
     { Hardware curve edit may show MIC-185 k,b details; calibration assignment
       itself is changed only by explicit read/select actions. }
     if fChannelCurveCheck.State <> cbGrayed then

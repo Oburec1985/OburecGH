@@ -240,14 +240,15 @@ begin
   else
     Mic140LogFlash(lPrefix + 'mi118tar not found in flash dir, using fallback placement');
 
-  if (lFoundIndex < 0) or (lSize <> lTareSize) then
+  { Для чтения существующей ГХ адрес найденного файла всегда является его
+    началом. Оригинальный драйвер при несовпадении размера пересоздаёт файл и
+    затем повторно получает Address из каталога. Здесь операция только чтения:
+    сдвиг найденного Address на расчётный размер попадал внутрь файла. }
+  if lFoundIndex < 0 then
   begin
-    if lFoundIndex < 0 then
-    begin
-      lAddress := lEntries[lFileCount - 1].Addr;
-      lSize := lEntries[lFileCount - 1].Size;
-      Inc(lAddress, lSize);
-    end;
+    lAddress := lEntries[lFileCount - 1].Addr;
+    lSize := lEntries[lFileCount - 1].Size;
+    Inc(lAddress, lSize);
     Inc(lAddress, lTareSize);
     Mic140LogFlash(lPrefix + Format('mi118tar fallback base=0x%.8x', [lAddress]));
   end;

@@ -688,8 +688,10 @@ begin
   lConfig.TryGetChannelSettings(ATag.Address, lChannelNumber, lSettings);
   RecorderMic140ApplyLegacyFieldsToChannelSettings(ARegistry, ATag, ALegacy, lSettings);
   lConfig.SetChannelSettings(lChannelNumber, ATag.Address, lSettings);
-  ATag.HardwareCalibrationEnabled := False;
-  ATag.HardwareCalibrationName := '';
+  { Поля тега остаются синхронной проекцией настроек канала. Они нужны
+    универсальному диалогу тега и сохраняются в общей секции tags. }
+  ATag.HardwareCalibrationEnabled := lSettings.HardwareCalibrationEnabled;
+  ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
 end;
 
 procedure RecorderMic140SetChannelSoftBalance(ARegistry: TRecorderTagRegistry;

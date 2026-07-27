@@ -19,6 +19,19 @@ type
   TMic140LegacyRawBlock = uRecorderMic140WireTypes.TMic140LegacyRawBlock;
   TMic140AuxTemperatureBlock = uRecorderMic140WireTypes.TMic140AuxTemperatureBlock;
 
+  { Сервисный доступ к памяти MIC-140 через уже открытую сессию устройства.
+    Нужен диалогам настройки, чтобы не открывать второе TCP-соединение и не
+    вмешиваться в штатный жизненный цикл сбора данных. }
+  IMic140ServiceMemory = interface
+    ['{EDAF6ED5-B44E-49FC-BD09-AB8B88E78D8D}']
+    function ReadServiceFirmware(
+      out AFirmware: TRecorderMic140LegacyFirmware;
+      out AErrorMessage: string): Boolean;
+    function StopServiceScan(out AErrorMessage: string): Boolean;
+    function ReadServiceFlash(AAddress: LongWord; var ABuffer;
+      AByteCount: Integer; out AErrorMessage: string): Boolean;
+  end;
+
   IMic140Device = interface(IRecorderDevice)
     ['{A8E4F1C2-3B5D-4E9A-9F0C-1D2E3F4A5B6C}']
     function GetDeviceSerial: Integer;

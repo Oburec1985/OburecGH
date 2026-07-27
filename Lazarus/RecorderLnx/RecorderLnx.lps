@@ -77,7 +77,7 @@
       <Unit>
         <Filename Value="Algs\uRecorderFrequencyBands.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Algs\uRecorderAlgorithmManager.pas"/>
@@ -85,7 +85,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="575"/>
         <CursorPos X="56" Y="602"/>
-        <UsageCount Value="80"/>
+        <UsageCount Value="83"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderMeraSdbThermocouples.pas"/>
@@ -98,12 +98,12 @@
       <Unit>
         <Filename Value="Core\uRecorderHardwareLiveDevices.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="137"/>
+        <UsageCount Value="140"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderConfiguredDataSources.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="137"/>
+        <UsageCount Value="140"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderHardwareTree.pas"/>
@@ -111,7 +111,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="17"/>
         <CursorPos X="11" Y="36"/>
-        <UsageCount Value="137"/>
+        <UsageCount Value="140"/>
       </Unit>
       <Unit>
         <Filename Value="SDB\uRecorderSdbStore.pas"/>
@@ -169,12 +169,12 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="13"/>
         <CursorPos X="64" Y="27"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Algs\uRecorderSpectrumRuntime.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="80"/>
+        <UsageCount Value="83"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderStateMachine.pas"/>
@@ -187,10 +187,9 @@
       <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="9"/>
-        <TopLine Value="369"/>
-        <CursorPos X="83" Y="371"/>
+        <TopLine Value="360"/>
+        <CursorPos X="83" Y="376"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
@@ -211,7 +210,7 @@
       <Unit>
         <Filename Value="Device\uRecorderAcquirePhase.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="184"/>
+        <UsageCount Value="187"/>
       </Unit>
       <Unit>
         <Filename Value="Device\uRecorderAcquisitionTypes.pas"/>
@@ -219,7 +218,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="5"/>
         <CursorPos X="11" Y="24"/>
-        <UsageCount Value="184"/>
+        <UsageCount Value="187"/>
       </Unit>
       <Unit>
         <Filename Value="Device\uRecorderDeviceInterfaces.pas"/>
@@ -503,7 +502,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="705"/>
         <CursorPos Y="726"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uMic185Device.pas"/>
@@ -511,7 +510,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="84"/>
         <CursorPos X="61" Y="97"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uRecorderMic185Runtime.pas"/>
@@ -519,7 +518,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="306"/>
         <CursorPos X="28" Y="391"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uMic185Constants.pas"/>
@@ -528,7 +527,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uMic185DebugLog.pas"/>
@@ -536,7 +535,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="59"/>
         <CursorPos X="75" Y="86"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uMic185MebiusTypes.pas"/>
@@ -544,7 +543,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="141"/>
         <CursorPos X="69" Y="174"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uRecorderMic185DataSource.pas"/>
@@ -552,7 +551,7 @@
         <EditorIndex Value="4"/>
         <TopLine Value="25"/>
         <CursorPos X="32" Y="15"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -561,7 +560,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="91"/>
         <CursorPos X="41" Y="7"/>
-        <UsageCount Value="132"/>
+        <UsageCount Value="135"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\UI\uRecorderMic185AdditionalDialog.pas"/>
@@ -571,7 +570,7 @@
         <ResourceBaseClass Value="Form"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="89" Y="9"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\UI\uRecorderMic185ChannelDialog.pas"/>
@@ -582,7 +581,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="70"/>
         <CursorPos X="26" Y="96"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\UI\uRecorderMic185SettingsDialog.pas"/>
@@ -593,17 +592,17 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="73"/>
         <CursorPos X="75" Y="97"/>
-        <UsageCount Value="139"/>
+        <UsageCount Value="142"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uMc201ProtocolTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uMc201FirmwareResources.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uMc201LegacyMdpClient.pas"/>
@@ -611,7 +610,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="311"/>
         <CursorPos X="75" Y="332"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uMc032Device.pas"/>
@@ -619,7 +618,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="451"/>
         <CursorPos X="57" Y="474"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uRecorderMcbusDevice.pas"/>
@@ -627,7 +626,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="634"/>
         <CursorPos X="69" Y="655"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uRecorderMc201Calibration.pas"/>
@@ -635,7 +634,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="41"/>
         <CursorPos X="47" Y="65"/>
-        <UsageCount Value="54"/>
+        <UsageCount Value="57"/>
       </Unit>
       <Unit>
         <Filename Value="uRecorderMeraPaths.pas"/>
@@ -644,103 +643,107 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="90"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderResourcePaths.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="35"/>
+        <UsageCount Value="38"/>
       </Unit>
       <Unit>
         <Filename Value="Device\uRecorderDeviceDataThread.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="11"/>
         <TopLine Value="46"/>
         <CursorPos X="59" Y="33"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140DeviceApi.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Factory.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Protocol.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="206"/>
+        <CursorPos X="72" Y="224"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Scan.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Stream.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140RawRing.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140WireTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140Consts.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140Timing.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140ChanDesc.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140Diag.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140Helper.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\utils\uRecorderMic140Types.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="26"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140DataThread.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="27"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Device.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="27"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Calibration.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="8"/>
-        <CursorPos X="54" Y="20"/>
-        <UsageCount Value="184"/>
+        <CursorPos X="67" Y="30"/>
+        <UsageCount Value="187"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -759,10 +762,11 @@
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140Flash.pas"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="6"/>
-        <TopLine Value="525"/>
-        <CursorPos Y="102"/>
-        <UsageCount Value="184"/>
+        <TopLine Value="519"/>
+        <CursorPos X="88" Y="533"/>
+        <UsageCount Value="187"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -1262,10 +1266,6 @@
     <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="Device\mic185\uRecorderMic185DataSource.pas"/>
-        <Caret Line="1749" Column="62" TopLine="1723"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\mic185\uRecorderMic185DataSource.pas"/>
         <Caret Line="1736" Column="47" TopLine="1723"/>
       </Position>
       <Position>
@@ -1376,6 +1376,10 @@
       </Position>
       <Position>
         <Filename Value="Device\MIC140\uRecorderMic140DataSource.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderTags.pas"/>
+        <Caret Line="376" Column="83" TopLine="360"/>
       </Position>
     </JumpHistory>
     <RunParams>
