@@ -13,7 +13,7 @@ uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
   uRecorderMic140DataSource, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderSdbSelectDialog, uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
-  uRecorderMic140Utils;
+  uRecorderMic140Utils, uRecorderMic140Thermocouple;
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;
@@ -112,7 +112,7 @@ begin
 
   fCjcCombo.Items.Clear;
   for I := 1 to RecorderMic140VisibleTemperatureCount(fDevSubRev) do
-    fCjcCombo.Items.Add('T' + IntToStr(I));
+    fCjcCombo.Items.Add(RecorderMic140TemperatureDisplayText(I, fDevSubRev));
 end;
 
 procedure TRecorderMic140ChannelDialog.LoadFromSettings;

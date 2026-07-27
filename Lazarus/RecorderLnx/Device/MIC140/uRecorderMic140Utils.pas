@@ -38,6 +38,10 @@ function RecorderMic140TemperatureAddressText(ANodeNumber,
   ATemperatureIndex: Integer): string;
 function RecorderMic140TemperatureDisplayName(ANodeNumber,
   ATemperatureIndex: Integer): string;
+function RecorderMic140TemperaturePhysicalNumber(ATemperatureIndex,
+  ADevSubRev: Integer): Integer;
+function RecorderMic140TemperatureDisplayText(ATemperatureIndex,
+  ADevSubRev: Integer): string;
 { Число видимых TIn: 7 для SubRev1/v3, иначе 3. }
 function RecorderMic140VisibleTemperatureCount(ADevSubRev: Integer): Integer;
 function ParseMic140TemperatureChannelIndex(const AAddress: string;
@@ -104,12 +108,16 @@ end;
 
 function RecorderMic140TemperatureAddressText(ANodeNumber,
   ATemperatureIndex: Integer): string;
+var
+  lPhysicalNumber: Integer;
 begin
   if ATemperatureIndex <= 0 then
     ATemperatureIndex := 1;
   if ANodeNumber <= 0 then
     ANodeNumber := MIC140DefaultNodeNumber;
-  Result := Format('%d-t%d', [ANodeNumber, ATemperatureIndex]);
+  lPhysicalNumber := RecorderMic140TemperaturePhysicalNumber(
+    ATemperatureIndex, 1);
+  Result := Format('%d-t%d', [ANodeNumber, lPhysicalNumber]);
 end;
 
 function RecorderMic140TemperatureDisplayName(ANodeNumber,
@@ -117,6 +125,22 @@ function RecorderMic140TemperatureDisplayName(ANodeNumber,
 begin
   Result := Format('MIC140-{%s}',
     [RecorderMic140TemperatureAddressText(ANodeNumber, ATemperatureIndex)]);
+end;
+
+function RecorderMic140TemperaturePhysicalNumber(ATemperatureIndex,
+  ADevSubRev: Integer): Integer;
+begin
+  Result := ATemperatureIndex;
+  if (ADevSubRev = 1) and (ATemperatureIndex >= 1) and
+    (ATemperatureIndex <= MIC140v3VisibleTemperatureChannelCount) then
+    Result := ATemperatureIndex + MIC140v3FirstVisibleTemperatureNumber - 1;
+end;
+
+function RecorderMic140TemperatureDisplayText(ATemperatureIndex,
+  ADevSubRev: Integer): string;
+begin
+  Result := 'T' + IntToStr(RecorderMic140TemperaturePhysicalNumber(
+    ATemperatureIndex, ADevSubRev));
 end;
 
 function RecorderMic140VisibleTemperatureCount(ADevSubRev: Integer): Integer;
@@ -132,6 +156,7 @@ function ParseMic140TemperatureChannelIndex(const AAddress: string;
   out ATemperatureIndex: Integer): Boolean;
 var
   lPos: Integer;
+  lPhysicalNumber: Integer;
   lTail: string;
 begin
   Result := False;
@@ -139,7 +164,18 @@ begin
   if lPos <= 0 then
     Exit;
   lTail := Trim(Copy(AAddress, lPos + 2, MaxInt));
-  Result := TryStrToInt(lTail, ATemperatureIndex) and (ATemperatureIndex > 0);
+  Result := TryStrToInt(lTail, lPhysicalNumber) and (lPhysicalNumber > 0);
+  if not Result then
+    Exit;
+  { Канонический адрес v3 содержит физический номер T6..T12. Старые адреса
+    t1..t5 принимаются как прежние внутренние индексы для загрузки проектов. }
+  if (lPhysicalNumber >= MIC140v3FirstVisibleTemperatureNumber) and
+    (lPhysicalNumber < MIC140v3FirstVisibleTemperatureNumber +
+      MIC140v3VisibleTemperatureChannelCount) then
+    ATemperatureIndex := lPhysicalNumber -
+      MIC140v3FirstVisibleTemperatureNumber + 1
+  else
+    ATemperatureIndex := lPhysicalNumber;
 end;
 
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;

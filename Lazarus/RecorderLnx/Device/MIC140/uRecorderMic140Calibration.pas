@@ -212,13 +212,18 @@ begin
   end;
 end;
 
-function Mic140TInCalibrFileNumber(ATInListIndex: Integer): Integer;
+function Mic140TInCalibrFileNumber(ATInListIndex, ADevSubRev: Integer): Integer;
 begin
-  { CChannelTInMIC140::GetTransFileName uses GetChanN() -> TIn\01..03.csv.
-    TInNum/TInGetChanN tables map ME048 slots only, not calibration file names. }
+  { CChannelTInMIC140::GetTransFileName использует физический GetChanN().
+    Для 48v3 видимый список 0..6 соответствует физическим TIn6..TIn12. }
   if (ATInListIndex >= 0) and
     (ATInListIndex < MIC140v3VisibleTemperatureChannelCount) then
-    Result := ATInListIndex + 1
+  begin
+    if ADevSubRev = CMic140Mic140SubRev1 then
+      Result := ATInListIndex + CMic140V3FirstVisibleTInNumber
+    else
+      Result := ATInListIndex + 1;
+  end
   else
     Result := 0;
 end;
@@ -234,6 +239,22 @@ begin
   for I := 0 to ARegistry.TagCount - 1 do
     if SameText(ARegistry.Tags[I].SourceId, ASourceId) and
       SameMic140Address(ARegistry.Tags[I].Address, AAddress) then
+      Exit(ARegistry.Tags[I]);
+end;
+
+function Mic140FindTemperatureTag(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; ATemperatureListIndex: Integer): TRecorderTag;
+var
+  I: Integer;
+  lIndex: Integer;
+begin
+  Result := nil;
+  if (ARegistry = nil) or (ATemperatureListIndex < 1) then
+    Exit;
+  for I := 0 to ARegistry.TagCount - 1 do
+    if SameText(ARegistry.Tags[I].SourceId, ASourceId) and
+      ParseMic140TemperatureChannelIndex(ARegistry.Tags[I].Address, lIndex) and
+      (lIndex = ATemperatureListIndex) then
       Exit(ARegistry.Tags[I]);
 end;
 function RecorderMic140CalibrRootDir: string;
@@ -369,7 +390,7 @@ begin
   Result := '';
   if ADeviceSerial <= 0 then
     Exit;
-  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex);
+  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex, ADevSubRev);
   if lTInFileNumber <= 0 then
     Exit;
   Result := IncludeTrailingPathDelimiter(RecorderMic140CalibrRootDir) +
@@ -391,7 +412,7 @@ begin
   ACalibrationName := '';
   if (ARegistry = nil) or (ADeviceSerial <= 0) or (ATInListIndex < 0) then
     Exit;
-  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex);
+  lTInFileNumber := Mic140TInCalibrFileNumber(ATInListIndex, ADevSubRev);
   if lTInFileNumber <= 0 then
     Exit;
   lName := RecorderMic140MakeTInHardwareCalibrationName(ADeviceSerial,
@@ -663,6 +684,9 @@ var
   lChanIndex: Integer;
   lChannelNumber: Integer;
   lClient: IMic140LegacyClient;
+  lCjcChannel: Integer;
+  lCjcError: string;
+  lCjcTag: TRecorderTag;
   lDevice: IRecorderDevice;
   lCsvPath: string;
   lFirmware: uRecorderMic140StreamTypes.TRecorderMic140LegacyFirmware;
@@ -707,7 +731,8 @@ begin
       AErrorMessage := 'Invalid MIC-140 temperature channel index';
       Exit;
     end;
-    lTinFileNumber := lTempIndex;
+    lTinFileNumber := Mic140TInCalibrFileNumber(lTempIndex - 1,
+      CMic140Mic140SubRev1);
     lChannelNumber := 0;
   end
   else
@@ -823,7 +848,9 @@ begin
 
       if lIsTemperature then
       begin
-        lChanIndex := lMaxAinChannels + (lTempIndex - 1);
+        { В v3 видимый T1 списка означает физический T6 во flash-дескрипторе. }
+        lChanIndex := lMaxAinChannels +
+          (lTinFileNumber - 1);
         if Mic140TryReadHardwareTare2FromFlash(lClient, lMi118Base, lChanIndex,
           lMaxAinChannels, CMic140MaxTinChannels96, lRangeIndex, lTare2, lRangeIndex,
           lTryError, lLogPrefix + Format('layout%d', [lLayoutIndex])) then
@@ -933,6 +960,30 @@ begin
   finally
     lClient := nil;
     lCli.Free;
+  end;
+
+  { В оригинальном Recorder калибровка корректирующего TIn является частью
+    готовности термопарного канала. Поэтому после ручного чтения ГХ AIn сразу
+    читаем один связанный TIn, а не ждём отдельной операции над служебным тегом. }
+  if Result and (not lIsTemperature) and
+    RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
+      lSettings) and RecorderMic140ChannelUsesTemperature(lSettings) then
+  begin
+    if lSettings.DefaultCjc then
+      lCjcChannel := RecorderMic140DefaultCjcChannel(lChannelNumber - 1,
+        CMic140Mic140SubRev1)
+    else
+      lCjcChannel := lSettings.CjcChannel;
+    lCjcTag := Mic140FindTemperatureTag(ARegistry, ATag.SourceId, lCjcChannel);
+    if (lCjcTag <> nil) and
+      (not RecorderMic140LoadHardwareCalibrationForTag(ARegistry, lCjcTag,
+        lSerial, True)) then
+      if not RecorderMic140DownloadHardwareCalibrationFromDevice(ARegistry,
+        lCjcTag, lCjcError) then
+        Mic140LogWarning(Format(
+          '[MIC-140] CJC T%d calibration download failed after AIn %d: %s',
+          [lCjcChannel + CMic140V3FirstVisibleTInNumber - 1,
+           lChannelNumber, lCjcError]));
   end;
 end;
 

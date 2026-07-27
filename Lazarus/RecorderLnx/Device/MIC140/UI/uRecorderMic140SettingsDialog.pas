@@ -316,7 +316,9 @@ begin
       else
         lGrad := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
       fGrid.Cells[3, I] := lGrad;
-      fGrid.Cells[4, I] := IntToStr(RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev));
+      fGrid.Cells[4, I] := RecorderMic140TemperatureDisplayText(
+        RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev),
+        fDevSubRev);
       fGrid.Cells[5, I] := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
       fGrid.Cells[6, I] := lSettings.ThermocoupleScaleName;
       fGrid.Cells[7, I] := FormatFloat('0.000', lSettings.SoftBalance);

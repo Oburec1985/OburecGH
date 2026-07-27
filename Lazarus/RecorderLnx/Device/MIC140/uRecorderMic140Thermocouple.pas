@@ -19,8 +19,9 @@ const
   CMic140InverseCalibrationMinMv = -20.0;
   CMic140InverseCalibrationMaxMv = 100.0;
   CMic140InverseCalibrationIterations = 48;
-  { Разделение AIn на две группы CJC (TIn1/TIn2) для 48ch subrev1. }
-  CMic140DefaultCjcSplitChannel = 24;
+  { У MIC-140-48v3 наружу выведены физические TIn6..TIn12. Первые пять
+    из них (T6..T10) являются датчиками холодного спая входных групп. }
+  CMic140V3FirstVisibleTInNumber = MIC140v3FirstVisibleTemperatureNumber;
 
 function Mic140JunctionTemperatureLooksValid(AValue: Double): Boolean;
 function Mic140DefaultCjcTChannelNumber(AChannelIndex: Integer): Integer;
@@ -35,14 +36,18 @@ begin
 end;
 
 function Mic140DefaultCjcTChannelNumber(AChannelIndex: Integer): Integer;
+const
+  { Точная таблица CModuleMIC140_48v3::TINCOR_AIN_INDEX_48V3.
+    Значения здесь — внутренние индексы видимого списка T6..T12 (1..7). }
+  CV3CorrectorByAIn: array[0..MIC140DefaultChannelCount - 1] of Byte = (
+    5,5,5,5,5, 4,4,4,4,4, 3,3,3,3,3, 2,2,2,2,2,
+    1,1,1,1,1,1,1,1,1, 2,2,2,2,2, 3,3,3,3,3,
+    4,4,4,4,4, 5,5,5,5
+  );
 begin
-  if (AChannelIndex >= 0) and (AChannelIndex < CMic140DefaultCjcSplitChannel) then
-    Result := 1
-  else if (AChannelIndex >= CMic140DefaultCjcSplitChannel) and
-    (AChannelIndex < MIC140DefaultChannelCount) then
-    Result := 2
-  else
-    Result := 0;
+  if (AChannelIndex < 0) or (AChannelIndex >= MIC140DefaultChannelCount) then
+    Exit(0);
+  Result := CV3CorrectorByAIn[AChannelIndex];
 end;
 
 function Mic140DefaultCjcIndex(AChannelIndex: Integer): Integer;

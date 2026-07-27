@@ -1124,7 +1124,8 @@ begin
     lTag.ModuleType := 'MIC-140';
     lTag.PollFrequencyHz := fPollFrequencyHz;
     lTag.SourceId := SourceId;
-    lTag.Description := Format('MIC-140 temperature channel T%d', [I + 1]);
+    lTag.Description := Format('MIC-140 temperature channel %s',
+      [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
     lTag.TextValue := '-';
   end;
 

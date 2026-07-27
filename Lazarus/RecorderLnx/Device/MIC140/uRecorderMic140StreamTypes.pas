@@ -1,8 +1,8 @@
 unit uRecorderMic140StreamTypes;
 
 {
-  Базовые типы потока данных MIC-140 (Lazarus/RecorderLnx).
-  Сделан полностью независимым от legacy-модулей.
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ MIC-140 (Lazarus/RecorderLnx).
+  пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ legacy-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 }
 
 {$mode objfpc}{$H+}
@@ -15,6 +15,7 @@ const
   MIC140MaxChannelCount = 96;
   MIC140TemperatureChannelCount = 3;
   MIC140v3VisibleTemperatureChannelCount = 7;
+  MIC140v3FirstVisibleTemperatureNumber = 6;
   MIC140DefaultPollFrequencyHz = 10.0;
 
 type

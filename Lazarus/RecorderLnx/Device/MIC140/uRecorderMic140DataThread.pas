@@ -1,12 +1,12 @@
 unit uRecorderMic140DataThread;
 
 {
-  Поток сбора MIC-140: наследник TRecorderDeviceDataThread.
+  пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ MIC-140: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TRecorderDeviceDataThread.
 
-  ReadBlockFromDevice вызывает callback владельца (Device), который делает
-  один ReadBlock по уже открытому MDP-stream (без Connect/Config в потоке).
-  Кольцо и prealloc — в базовом классе.
-  См. Docs/devices/mic140/protocol/ и Device/uRecorderDeviceDataThread.pas.
+  ReadBlockFromDevice пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ callback пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (Device), пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+  пїЅпїЅпїЅпїЅ ReadBlock пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ MDP-stream (пїЅпїЅпїЅ Connect/Config пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ).
+  пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ prealloc пїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
+  пїЅпїЅ. Docs/devices/mic140/protocol/ пїЅ Device/uRecorderDeviceDataThread.pas.
 }
 
 {$mode objfpc}{$H+}
@@ -18,7 +18,7 @@ uses
   uRecorderAcquisitionTypes, uRecorderDeviceDataThread;
 
 type
-  { Один блок из прибора; True = блок готов. Вызов только из DataThread. }
+  { пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ; True = пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ DataThread. }
   TMic140DataThreadReadFunc = function(ATimeoutMs: Cardinal;
     out ABlock: TRecorderAcquisitionBlock): Boolean of object;
 
@@ -56,12 +56,12 @@ end;
 
 procedure TRecorderMic140DataThread.OnStart;
 begin
-  { Скан уже стартован Device.Start до StartPlay. }
+  { пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Device.Start пїЅпїЅ StartPlay. }
 end;
 
 procedure TRecorderMic140DataThread.OnStop;
 begin
-  { Останов скана делает Device.Stop после StopPlay. }
+  { пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Device.Stop пїЅпїЅпїЅпїЅпїЅ StopPlay. }
 end;
 
 function TRecorderMic140DataThread.ReadBlockFromDevice(

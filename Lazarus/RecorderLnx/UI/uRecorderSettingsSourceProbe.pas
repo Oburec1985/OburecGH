@@ -420,7 +420,8 @@ begin
     lSignal.FrequencyHz := lFreqHz;
     lSignal.UnitsName := 'code';
     lSignal.SourceValueMode := '';
-    lSignal.Description := Format('MIC-140 temperature channel T%d code', [I]);
+    lSignal.Description := Format('MIC-140 temperature channel %s code',
+      [RecorderMic140TemperatureDisplayText(I, 1)]);
     lSignal.FileName := ASourceId;
     lSignal.Enabled := True;
     lSignal.Selected := SignalHasLinkedTag(lSignal);
