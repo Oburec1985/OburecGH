@@ -149,12 +149,14 @@ type
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
+    fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
     fConfigPopupMenu: TPopupMenu;                 // Меню операций сохранения/загрузки конфигурации
     fRecordFrameManager: TRecorderRecordFrameManager; // Менеджер каталогов кадров записи
     fMeraWriter: TRecorderMeraTagWriter;          // Writer MERA files of current record
+    fRecordTagCursors: array of QWord;            // Независимые позиции writer-а в кольцах тегов
     fDiagLastLogTickMs: QWord;                    // Время последнего диагностического лога
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
@@ -305,6 +307,9 @@ type
     procedure StopDataSources;
     { Вычитывает очередь снимков событий в UI thread и обновляет отображение. }
     procedure DrainUiEventQueue(Sender: TObject);
+    { По периоду DataUpdateMs читает только новые данные тегов; EventBus массивы не переносит. }
+    procedure ConsumeTagDataCycle(Sender: TObject);
+    procedure ResetRecordTagCursors;
     { Пишет агрегированную диагностику частот UI/data/render. }
     procedure LogUpdateDiagnostics;
     { Применяет один снимок события обновления тега к UI-модели значений. }
@@ -382,6 +387,10 @@ begin
   fUiUpdateTimer.Enabled := False;
   fUiUpdateTimer.Interval := fRecorder.TimeSystem.DisplayUpdateMs;
   fUiUpdateTimer.OnTimer := @DrainUiEventQueue;
+  fDataConsumeTimer := TTimer.Create(Self);
+  fDataConsumeTimer.Enabled := False;
+  fDataConsumeTimer.Interval := fRecorder.RunSettings.DataUpdateMs;
+  fDataConsumeTimer.OnTimer := @ConsumeTagDataCycle;
 
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
@@ -528,6 +537,8 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  if fDataConsumeTimer <> nil then
+    fDataConsumeTimer.Enabled := False;
   if fUiUpdateTimer <> nil then
     fUiUpdateTimer.Enabled := False;
   StopDataSources;
@@ -1806,6 +1817,8 @@ begin
   fRecorder.TimeSystem.DisplayUpdateMs := fRecorder.RunSettings.ScreenUpdateMs;
   if fUiUpdateTimer <> nil then
     fUiUpdateTimer.Interval := fRecorder.TimeSystem.DisplayUpdateMs;
+  if fDataConsumeTimer <> nil then
+    fDataConsumeTimer.Interval := fRecorder.RunSettings.DataUpdateMs;
   AddLog(Format('Update settings applied: screenUpdate=%d ms dataUpdate=%d ms historyWindow=%d ms',
     [fRecorder.RunSettings.ScreenUpdateMs, fRecorder.RunSettings.DataUpdateMs,
     fRecorder.RunSettings.DisplayBufferMs]));
@@ -1964,8 +1977,24 @@ begin
   lFrameDir := fRecordFrameManager.OpenNextFrame;
   fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
   fMeraWriter.Open(lFrameDir);
+  ResetRecordTagCursors;
   UpdateMainCaption;
   AddLog('MERA recording opened: ' + lFrameDir);
+end;
+
+procedure TMainForm.ResetRecordTagCursors;
+var
+  I: Integer;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+  begin
+    SetLength(fRecordTagCursors, 0);
+    Exit;
+  end;
+  SetLength(fRecordTagCursors, fRecorder.TagRegistry.TagCount);
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    fRecordTagCursors[I] :=
+      fRecorder.TagRegistry.Tags[I].SignalBuffer.CurrentBlockCursor;
 end;
 
 procedure TMainForm.CloseRecordFrame;
@@ -2270,12 +2299,14 @@ begin
     if lPortionLength < 1 then
       lPortionLength := 1;
 
-    lCapacity := 4096;
+    lCapacity := lPortionLength + 1;
     if lTag.PollFrequencyHz > 0 then
     begin
-      lRequired := Ceil(lTag.PollFrequencyHz * lDisplaySeconds) + 1;
-      lBlockSamples := Ceil(lTag.PollFrequencyHz * fRecorder.RunSettings.DataUpdateMs / 1000.0) + 1;
-      lRequired := lRequired + lBlockSamples;
+      lBlockSamples := Max(1, Round(lTag.PollFrequencyHz *
+        fRecorder.RunSettings.DataUpdateMs / 1000.0));
+      lBlockCount := Max(1, Ceil(fRecorder.RunSettings.DisplayBufferMs /
+        Max(1, fRecorder.RunSettings.DataUpdateMs)));
+      lRequired := lBlockSamples * lBlockCount;
       if lRequired > lCapacity then
         lCapacity := lRequired;
     end;
@@ -2284,8 +2315,6 @@ begin
     lTag.EnsureBufferCapacity(lCapacity);
     if (lTag.PollFrequencyHz > 0) and (lBlockSamples > 1) then
     begin
-      lBlockCount := Ceil(fRecorder.RunSettings.DisplayBufferMs /
-        Max(1, fRecorder.RunSettings.DataUpdateMs)) + 1;
       lTag.ConfigureBlockBuffer(lBlockSamples, lBlockCount);
     end;
   end;
@@ -2296,6 +2325,7 @@ begin
   if not fRecorder.DataSources.Running then
   begin
     fRecorder.DataSources.StartAll;
+    fDataConsumeTimer.Enabled := True;
     fUiUpdateTimer.Enabled := True;
     AddLog('Data sources started.');
   end;
@@ -2303,18 +2333,52 @@ end;
 
 procedure TMainForm.StopDataSources;
 begin
+  if fDataConsumeTimer <> nil then
+    fDataConsumeTimer.Enabled := False;
   if fUiUpdateTimer <> nil then
     fUiUpdateTimer.Enabled := False;
 
   if (fRecorder.DataSources <> nil) and fRecorder.DataSources.Running then
   begin
     fRecorder.DataSources.StopAll;
+    ConsumeTagDataCycle(nil);
     DrainUiEventQueue(nil);
     AddLog('Data sources stopped.');
   end;
 end;
 
 { Разбор приходящей из worker-thread очереди снимков значений тегов в UI-поток }
+procedure TMainForm.ConsumeTagDataCycle(Sender: TObject);
+var
+  I: Integer;
+  lLatestTime: Double;
+  lSnapshot: TRecorderSignalSnapshot;
+  lTag: TRecorderTag;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  lLatestTime := 0;
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+  begin
+    lTag := fRecorder.TagRegistry.Tags[I];
+    if lTag.SignalBuffer.LatestTime > lLatestTime then
+      lLatestTime := lTag.SignalBuffer.LatestTime;
+
+    if (fMeraWriter = nil) or not fMeraWriter.FileOpen or
+      (I >= Length(fRecordTagCursors)) then
+      Continue;
+    while lTag.SignalBuffer.SnapshotNextBlock(fRecordTagCursors[I],
+      lSnapshot) do
+      fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
+        lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
+        lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
+        lTag.PollFrequencyHz);
+  end;
+  if lLatestTime > 0 then
+    fRecorder.TimeSystem.UpdateFromTagSample(lLatestTime);
+end;
+
 procedure TMainForm.DrainUiEventQueue(Sender: TObject);
 var
   lSnapshot: TRecorderEventSnapshot;
@@ -2388,8 +2452,6 @@ begin
 end;
 
 procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
-var
-  lTag: TRecorderTag;
 begin
   if ASnapshot = nil then
     Exit;
@@ -2409,23 +2471,6 @@ begin
   fLatestTagValues.Values[ASnapshot.TagName] :=
     FormatFloat('0.000', ASnapshot.Value);
   fRecorder.TimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
-
-  if (fRecorder.StateMachine <> nil) and (fRecorder.StateMachine.State = rsRecord) and
-    (fMeraWriter <> nil) and fMeraWriter.FileOpen then
-  begin
-    lTag := fRecorder.TagRegistry.FindByName(ASnapshot.TagName);
-    { Пишем времена/значения из снимка события (уже скопированы в очереди).
-      LastBlockSnapshot здесь читать нельзя — гонка с потоком источника
-      даёт дубликаты блоков и ложные .prt. }
-    if (lTag <> nil) and (ASnapshot.SampleCount > 0) then
-      fMeraWriter.WriteBlock(ASnapshot.TagName, lTag.UnitName,
-        lTag.Description, lTag.SensorCalibrationName,
-        lTag.AmplifierCalibrationName, ASnapshot.Times, ASnapshot.Values,
-        ASnapshot.SampleCount, lTag.PollFrequencyHz)
-    else if ASnapshot.SampleCount > 0 then
-      fMeraWriter.WriteBlock(ASnapshot.TagName, '', '', '', '',
-        ASnapshot.Times, ASnapshot.Values, ASnapshot.SampleCount, 0);
-  end;
 end;
 
 { Настройка шрифтов баннера состояния/времени под высоту pnRightStatus }

@@ -984,7 +984,8 @@ begin
     begin
       if fDataThread.ReadBlock(lRing) then
       begin
-        CopyRecorderAcquisitionBlock(lRing, ABlock);
+        { ReadBlock уже вернул независимый снимок кольца. }
+        ABlock := lRing;
         Exit(True);
       end;
       Exit(False);
@@ -993,7 +994,7 @@ begin
     repeat
       if fDataThread.ReadBlock(lRing) then
       begin
-        CopyRecorderAcquisitionBlock(lRing, ABlock);
+        ABlock := lRing;
         Exit(True);
       end;
       Sleep(1);

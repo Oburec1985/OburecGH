@@ -1790,18 +1790,10 @@ begin
       else
         lValues[J] := ABlock.Values[I][J];
     Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
-  end;
-
-  // вызов нотификаций по списку тегов??? кажется в архитектуре лучше сделать одну общую
-  // нотификацию которая будет говорить об обновлении данных и там потребитель нотификации
-  // будет по времени или номеру данных понимать обновились ли интересующие данные и будет
-  // принимать решение об обновлении
-  for I := 0 to lCount - 1 do
-  begin
-    // опять поиск тега по имени!!! это не оптимально, ссылки на теги храни!
-    lTag := Registry.FindByName(fChannelTagNames[I]);
-    if (lTag <> nil) and SameText(lTag.SourceId, SourceId) then
-      Registry.PublishBlockNotifications(lTag.Name);
+    { Значения уже пересчитаны: передаём тот же блок без повторного
+      LastBlockSnapshot и второго поиска тега по имени. }
+    Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+      ABlock.SampleCount);
   end;
   // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
   PublishAuxChannels(lTimes[ABlock.SampleCount - 1]);

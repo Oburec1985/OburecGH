@@ -152,12 +152,15 @@ end;
 
 procedure TestTagBlockEstimates;
 var
+  J: Integer;
   lBus: TRecorderEventBus;
   lProbe: TTagEventProbe;
   lRegistry: TRecorderTagRegistry;
   lTag: TRecorderTag;
   lBlock: TRecorderSignalSnapshot;
   lEstimate: TRecorderTagEstimate;
+  lBlockCursor: QWord;
+  lCursor: QWord;
   lTimes: array[0..2] of Double;
   lValues: array[0..2] of Double;
 begin
@@ -169,6 +172,7 @@ begin
   try
     lBus.Subscribe(@lProbe.HandleEvent);
     lTag := lRegistry.CreateTag('BlockTag', 8);
+    lTag.ConfigureBlockBuffer(3, 3);
 
     lTimes[0] := 10.0;
     lTimes[1] := 10.1;
@@ -182,10 +186,21 @@ begin
     lBlock := lTag.LastBlockSnapshot;
     PrintSnapshot('SNAPSHOT BlockTag last block', lBlock);
 
-    AssertEquals(lProbe.Count, 1, 'block publishes one event');
+    AssertEquals(lProbe.Count, 0, 'measurement blocks are not copied through EventBus');
     AssertEquals(lBlock.Count, 3, 'last block count');
     AssertEquals(lBlock.Times[0], 10.0, 'last block first time');
     AssertEquals(lBlock.Values[2], 4.0, 'last block last value');
+    lCursor := 0;
+    lBlock := lTag.SignalBuffer.SnapshotSince(lCursor);
+    AssertEquals(lBlock.Count, 3, 'cursor consumer receives unread block');
+    lBlock := lTag.SignalBuffer.SnapshotSince(lCursor);
+    AssertEquals(lBlock.Count, 0, 'cursor consumer does not receive duplicates');
+    lBlockCursor := 0;
+    AssertTrue(lTag.SignalBuffer.SnapshotNextBlock(lBlockCursor, lBlock),
+      'block cursor receives unread block');
+    AssertEquals(lBlock.Count, 3, 'block cursor returns configured logical block');
+    AssertTrue(not lTag.SignalBuffer.SnapshotNextBlock(lBlockCursor, lBlock),
+      'block cursor does not receive duplicates');
 
     lEstimate := lTag.Estimate(tekMean);
     AssertTrue(lEstimate.Valid, 'mean estimate valid');
@@ -217,6 +232,19 @@ begin
     AssertEquals(lBlock.Count, 3, 'block time rewind starts a new signal epoch');
     AssertEquals(lBlock.Times[0], 0.0, 'rewound block starts at zero');
     AssertEquals(lBlock.Values[2], 7.0, 'rewound block remains complete');
+
+    lTag.ConfigureBlockBuffer(3, 3);
+    for J := 0 to 3 do
+    begin
+      lTimes[0] := 1.0 + J * 0.2;
+      lTimes[1] := lTimes[0] + 0.1;
+      lValues[0] := J * 2;
+      lValues[1] := J * 2 + 1;
+      lRegistry.PublishBlock('BlockTag', lTimes, lValues, 2);
+    end;
+    lBlock := lTag.Snapshot;
+    AssertEquals(lBlock.Count, 8,
+      'several small transport blocks fill sample-capacity ring');
 
     lRegistry.PublishValue('BlockTag', 11.0, 9.0);
     lBlock := lTag.LastBlockSnapshot;

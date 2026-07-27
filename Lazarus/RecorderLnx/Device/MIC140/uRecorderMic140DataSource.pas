@@ -62,6 +62,16 @@ type
     fTemperatureTagNames: TStringList;
     fDeviceSerial: Integer;
     fPublishedCorruptCount: Integer;
+    { RunTime-кэш строится после Configure и исключает строковые поиски,
+      копирование описаний каналов и чтение конфигурации на каждом отсчёте. }
+    fRuntimeChannels: TRecorderDeviceChannelArray;
+    fRuntimeChannelTags: array of TRecorderTag;
+    fRuntimeChannelSettings: array of TRecorderMic140ChannelSettings;
+    fRuntimeChannelSettingsValid: array of Boolean;
+    fRuntimeTemperatureTags: array of TRecorderTag;
+    fRuntimeTemperatureSelected: array of Boolean;
+    fRuntimeThermoCompensation: Boolean;
+    procedure BuildRuntimeCache;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     function TemperatureChannelSelected(AIndex: Integer): Boolean;
@@ -827,11 +837,13 @@ begin
   SetLength(lValues, AAux.SampleCount);
   for I := 0 to Min(AAux.ChannelCount, fTemperatureTagNames.Count) - 1 do
   begin
-    if not TemperatureChannelSelected(I + 1) then
+    if (I >= Length(fRuntimeTemperatureSelected)) or
+      (not fRuntimeTemperatureSelected[I]) then
       Continue;
-    lTag := Registry.FindByName(fTemperatureTagNames[I]);
-    if lTag = nil then
-      lTag := FindTagBySourceAddress(Registry, fTemperatureTagNames[I]);
+    if I < Length(fRuntimeTemperatureTags) then
+      lTag := fRuntimeTemperatureTags[I]
+    else
+      lTag := nil;
     if lTag = nil then
       Continue;
     for lJ := 0 to AAux.SampleCount - 1 do
@@ -844,8 +856,49 @@ begin
         lValues[lJ] := 0;
     end;
     lTag.TextValue := FormatFloat('0.###', lValues[AAux.SampleCount - 1]);
-    Registry.PublishBlock(lTag.Name, ATimes, lValues, AAux.SampleCount);
+    { TIn поступает в кодах АЦП: аппаратная ГХ температурного входа должна
+      быть применена до использования значения как температуры холодного спая. }
+    Registry.AddBlockSamples(lTag, ATimes, lValues, AAux.SampleCount, False);
+    Registry.PublishBlockNotifications(lTag);
   end;
+end;
+
+procedure TRecorderMic140DataSource.BuildRuntimeCache;
+var
+  I: Integer;
+  lChannelNumber: Integer;
+begin
+  if fDevice <> nil then
+    fRuntimeChannels := fDevice.GetChannels
+  else
+    SetLength(fRuntimeChannels, 0);
+
+  SetLength(fRuntimeChannelTags, fChannelTagNames.Count);
+  SetLength(fRuntimeChannelSettings, fChannelTagNames.Count);
+  SetLength(fRuntimeChannelSettingsValid, fChannelTagNames.Count);
+  for I := 0 to fChannelTagNames.Count - 1 do
+  begin
+    fRuntimeChannelTags[I] := Registry.FindByName(fChannelTagNames[I]);
+    fRuntimeChannelSettingsValid[I] :=
+      RecorderMic140TryGetChannelSettings(Registry, fRuntimeChannelTags[I],
+        lChannelNumber, fRuntimeChannelSettings[I]);
+    if not fRuntimeChannelSettingsValid[I] then
+      RecorderMic140InitChannelSettings(fRuntimeChannelSettings[I], I,
+        CMic140Mic140SubRev1);
+  end;
+
+  SetLength(fRuntimeTemperatureTags, fTemperatureTagNames.Count);
+  SetLength(fRuntimeTemperatureSelected, fTemperatureTagNames.Count);
+  for I := 0 to fTemperatureTagNames.Count - 1 do
+  begin
+    fRuntimeTemperatureTags[I] := Registry.FindByName(fTemperatureTagNames[I]);
+    if fRuntimeTemperatureTags[I] = nil then
+      fRuntimeTemperatureTags[I] :=
+        FindTagBySourceAddress(Registry, fTemperatureTagNames[I]);
+    fRuntimeTemperatureSelected[I] := TemperatureChannelSelected(I + 1);
+  end;
+  fRuntimeThermoCompensation :=
+    RecorderMic140ThermoCompensationForSource(Registry, SourceId);
 end;
 
 destructor TRecorderMic140DataSource.Destroy;
@@ -922,14 +975,12 @@ end;
 function TRecorderMic140DataSource.Mic140RawSample(
   const ABlock: TRecorderDeviceSampleBlock; AChannelIndex, ASampleIndex: Integer;
   ATag: TRecorderTag): Double;
-var
-  lSettings: TRecorderMic140ChannelSettings;
-  lChannelNumber: Integer;
 begin
   Result := ABlock.Values[AChannelIndex][ASampleIndex];
-  if (ATag <> nil) and RecorderMic140TryGetChannelSettings(Registry, ATag,
-    lChannelNumber, lSettings) and (lSettings.SoftBalance <> 0) then
-    Result := Result - lSettings.SoftBalance;
+  if (AChannelIndex >= 0) and
+    (AChannelIndex < Length(fRuntimeChannelSettings)) and
+    (fRuntimeChannelSettings[AChannelIndex].SoftBalance <> 0) then
+    Result := Result - fRuntimeChannelSettings[AChannelIndex].SoftBalance;
 end;
 
 function TRecorderMic140DataSource.ZeroBalanceTags(AOwner: TComponent; ATags: TList;
@@ -1302,6 +1353,7 @@ begin
     Exit;
   end;
   PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True);
+  BuildRuntimeCache;
   fHardwarePrepared := True;
 end;
 
@@ -1554,13 +1606,16 @@ var
   lGood48: Integer;
   lGood48S1: Integer;
 begin
-  lChannels := fDevice.GetChannels;
+  lChannels := fRuntimeChannels;
   lCount := Min(ABlock.ChannelCount, Length(lChannels));
   if lCount <= 0 then
     Exit;
   Inc(fGoodBlockCount);
   fReadFailCount := 0;
-  CheckPublishedRecorderCodes(ABlock);
+  { Полный просмотр каждого кода — диагностика протокола, а не штатная
+    обработка. После первых блоков выполняем его редко. }
+  if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
+    CheckPublishedRecorderCodes(ABlock);
   PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
   PublishBlockCounter(fGoodBlockCount);
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
@@ -1601,7 +1656,10 @@ begin
         Continue;
       if lI >= fChannelTagNames.Count then
         Break;
-      lTag := Registry.FindByName(fChannelTagNames[lI]);
+      if lI < Length(fRuntimeChannelTags) then
+        lTag := fRuntimeChannelTags[lI]
+      else
+        lTag := nil;
       if lTag = nil then
         Continue;
       lRaw := Mic140RawSample(ABlock, lI, 0, lTag);
@@ -1655,7 +1713,8 @@ begin
     SetLength(lAuxTemperature.Values, 0);
     SetLength(lAuxTemperature.Valid, 0);
   end;
-  CheckPublishedTinCodes(lAuxTemperature);
+  if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
+    CheckPublishedTinCodes(lAuxTemperature);
   PublishTemperatureBlocks(lAuxTemperature, lTimes);
 
   SetLength(lValues, ABlock.SampleCount);
@@ -1665,7 +1724,10 @@ begin
       Exit;
     if lI >= fChannelTagNames.Count then
       Continue;
-    lTag := Registry.FindByName(fChannelTagNames[lI]);
+    if lI < Length(fRuntimeChannelTags) then
+      lTag := fRuntimeChannelTags[lI]
+    else
+      lTag := nil;
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
 
@@ -1673,7 +1735,9 @@ begin
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
         lValues[lJ] := Mic140RawSample(ABlock, lI, lJ, lTag);
-      Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
+      Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount, True);
+      Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+        ABlock.SampleCount);
       Continue;
     end;
 
@@ -1684,7 +1748,9 @@ begin
         lRaw := Mic140RawSample(ABlock, lI, lJ, lTag);
         lValues[lJ] := Registry.TransformTagHardwareValue(lTag, lRaw);
       end;
-      Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
+      Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount, True);
+      Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+        ABlock.SampleCount);
       Continue;
     end;
 
@@ -1693,10 +1759,8 @@ begin
     lTTag := nil;
     if (lCjcChannel >= 1) and (lCjcChannel <= fTemperatureTagNames.Count) then
     begin
-      lTTag := FindTagBySourceAddress(Registry,
-        fTemperatureTagNames[lCjcChannel - 1]);
-      if lTTag = nil then
-        lTTag := Registry.FindByName(fTemperatureTagNames[lCjcChannel - 1]);
+      if lCjcChannel - 1 < Length(fRuntimeTemperatureTags) then
+        lTTag := fRuntimeTemperatureTags[lCjcChannel - 1];
     end;
     lUseCjc := RecorderMic140TagUsesThermoCompensation(Registry, lTag) and
       SameText(lTag.SourceValueMode,
@@ -1739,21 +1803,15 @@ begin
         [SourceId, lTag.Name]));
       fCjcCorrectLogWritten := True;
     end;
-    Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount,
+    Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount,
       lCjcPipelineActive);
+    if lCjcPipelineActive then
+      Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+        ABlock.SampleCount)
+    else
+      Registry.PublishBlockNotifications(lTag);
   end;
 
-  if Registry = nil then
-    Exit;
-  for lI := 0 to lCount - 1 do
-  begin
-    if lI >= fChannelTagNames.Count then
-      Continue;
-    lTag := Registry.FindByName(fChannelTagNames[lI]);
-    if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
-      Continue;
-    Registry.PublishBlockNotifications(lTag.Name);
-  end;
 end;
 
 procedure TRecorderMic140DataSource.DoTick;
