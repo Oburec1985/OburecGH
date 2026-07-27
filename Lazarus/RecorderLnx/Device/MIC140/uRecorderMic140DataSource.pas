@@ -1247,6 +1247,7 @@ begin
         lChannelNumber - 1);
       fDevice.TrySetDeviceProperty(rdpMic140CommutIndex, lSettings.CommutIndex,
         lChannelNumber - 1);
+      RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
       if not RecorderMic140ChannelUsesTemperature(lSettings) then
         Continue;
       if not lTag.ChannelCalibrationEnabled then

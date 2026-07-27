@@ -172,6 +172,8 @@ begin
   begin
     fSettings.ThermocoupleScaleName := '';
     fSettings.ThermocoupleScalePath := '';
+    fSettings.OutputMode := 'mV';
+    fSettings.ChannelCalibrationEnabled := False;
   end
   else
   begin
@@ -184,6 +186,8 @@ begin
       lPath := RecorderMeraThermocoupleRelativePath(lName);
     lPath := RecorderMeraResolveThermocoupleScaleKey(lPath, lName);
     fSettings.ThermocoupleScalePath := lPath;
+    fSettings.OutputMode := 'degC';
+    fSettings.ChannelCalibrationEnabled := True;
   end;
 
   fSettings.DefaultCjc := fDefaultCjcCheck.Checked;

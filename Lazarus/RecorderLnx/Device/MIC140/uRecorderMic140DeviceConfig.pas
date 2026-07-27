@@ -119,6 +119,10 @@ procedure RecorderMic140UpdateChannelSettings(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const ASettings: TRecorderMic140ChannelSettings);
 function RecorderMic140TagUsesThermoCompensation(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): Boolean;
+{ Синхронизирует отображаемый выход тега с реальным конвейером MIC-140:
+  коды АЦП -> аппаратная ГХ -> мВ -> КТХС/ГХ термопары -> °C. }
+procedure RecorderMic140ApplyTagOutputPresentation(ATag: TRecorderTag;
+  const ASettings: TRecorderMic140ChannelSettings);
 
 procedure RecorderMic140MigrateTagHardwareToDeviceConfig(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
@@ -164,6 +168,10 @@ begin
   ASettings.ThermocoupleScalePath := '';
   ASettings.ThermocoupleScaleName := '';
   ASettings.SoftBalance := 0;
+  ASettings.OutputMode := 'mV';
+  ASettings.ChannelCalibrationEnabled := False;
+  ASettings.HardwareCalibrationEnabled := False;
+  ASettings.HardwareCalibrationName := '';
   ASettings.CjcTemperOffsetC := 0.0;
 end;
 
@@ -180,7 +188,41 @@ end;
 
 function RecorderMic140ChannelUsesTemperature(const ASettings: TRecorderMic140ChannelSettings): Boolean;
 begin
-  Result := SameText(ASettings.OutputMode, 'degC') or SameText(ASettings.OutputMode, 'C');
+  Result := (Trim(ASettings.ThermocoupleScaleName) <> '') or
+    SameText(ASettings.OutputMode, 'degC') or SameText(ASettings.OutputMode, 'C');
+end;
+
+procedure RecorderMic140ApplyTagOutputPresentation(ATag: TRecorderTag;
+  const ASettings: TRecorderMic140ChannelSettings);
+var
+  lMode: string;
+  lUnit: string;
+begin
+  if ATag = nil then
+    Exit;
+
+  if not ASettings.HardwareCalibrationEnabled then
+  begin
+    lMode := 'code';
+    lUnit := 'code';
+  end
+  else if ASettings.ChannelCalibrationEnabled and
+    RecorderMic140ChannelUsesTemperature(ASettings) then
+  begin
+    lMode := 'degC';
+    lUnit := 'degC';
+  end
+  else
+  begin
+    lMode := 'mV';
+    lUnit := 'mV';
+  end;
+
+  if (not SameText(ATag.SourceValueMode, lMode)) or
+    (not SameText(ATag.UnitName, lUnit)) then
+    ATag.ClearSignalHistory;
+  ATag.SourceValueMode := lMode;
+  ATag.UnitName := lUnit;
 end;
 
 function RecorderMic140ChannelGradRangeText(const ASettings: TRecorderMic140ChannelSettings): string;
@@ -692,6 +734,7 @@ begin
     универсальному диалогу тега и сохраняются в общей секции tags. }
   ATag.HardwareCalibrationEnabled := lSettings.HardwareCalibrationEnabled;
   ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
+  RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
 end;
 
 procedure RecorderMic140SetChannelSoftBalance(ARegistry: TRecorderTagRegistry;

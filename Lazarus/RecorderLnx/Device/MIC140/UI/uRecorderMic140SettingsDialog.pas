@@ -403,6 +403,9 @@ begin
       fChannelSettings[lRow - 1].RangeIndex := lSettings.RangeIndex;
       fChannelSettings[lRow - 1].ThermocoupleScaleName := lSettings.ThermocoupleScaleName;
       fChannelSettings[lRow - 1].ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
+      fChannelSettings[lRow - 1].OutputMode := lSettings.OutputMode;
+      fChannelSettings[lRow - 1].ChannelCalibrationEnabled :=
+        lSettings.ChannelCalibrationEnabled;
       fChannelSettings[lRow - 1].DefaultCjc := lSettings.DefaultCjc;
       fChannelSettings[lRow - 1].CjcChannel := lSettings.CjcChannel;
       fChannelSettings[lRow - 1].SoftBalance := lSettings.SoftBalance;
@@ -598,9 +601,9 @@ begin
     fChannelSettings[I] := AResult.ChannelSettings[I];
   FillGrid(ReadChannelCount, AResult.SelectedChannels);
   UpdateDeviceCaption;
-  if (Trim(AResult.VersionText) = '') and (Trim(AResult.Host) <> '') and
-    (AResult.DeviceSerial <= 0) then
-    QueryDeviceInfo;
+  { Открытие настроечного диалога не должно создавать второй TCP-сеанс к
+    работающему MIC-140. Версию и серийный номер читаем только по явной
+    команде пользователя "Проверить". }
 end;
 
 procedure TRecorderMic140SettingsDialog.StoreToResult(
@@ -633,7 +636,6 @@ function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
   const ASourceId: string; out ANewSourceId: string): Boolean;
 var
   I: Integer;
-  lCalibrSerial: Integer;
   lCalName: string;
   lCapacity: Integer;
   lChannelNumber: Integer;
@@ -674,9 +676,6 @@ begin
         end
         else
           lResult.SelectedChannels.Add(lTag.Address);
-        if (lResult.DeviceSerial <= 0) and
-          TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
-          RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lResult.DeviceSerial);
       end;
     end;
 
@@ -695,12 +694,9 @@ begin
         end;
 
     ANewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
-    lCalibrSerial := 0;
-    if TryParseRecorderMic140SourceId(ANewSourceId, lHost, lPort) then
-      RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lCalibrSerial);
-
-    if lCalibrSerial > 0 then
-      lResult.DeviceSerial := lCalibrSerial;
+    { Обычный OK только сохраняет уже полученные настройки. Автоматический
+      опрос здесь открывал отдельный TMic140v2Tcp поверх рабочего сеанса
+      источника и приводил к исключению при возврате в диалог тега. }
 
     lConfig := FindRecorderMic140DeviceConfig(ATagRegistry, ASourceId);
     if lConfig = nil then
@@ -793,6 +789,20 @@ begin
         end;
       end;
       RecorderTagClearMic140Settings(lTag);
+      if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
+        (lChannelNumber > 0) and
+        (lChannelNumber <= Length(lResult.ChannelSettings)) then
+      begin
+        { Универсальные поля тега являются проекцией настроек канала.
+          После аппаратного диалога сохраняем проекцию, чтобы внешний
+          TagSettingsDialog не сбрасывал выбранную аппаратную ГХ. }
+        lTag.HardwareCalibrationEnabled :=
+          lResult.ChannelSettings[lChannelNumber - 1].HardwareCalibrationEnabled;
+        lTag.HardwareCalibrationName :=
+          lResult.ChannelSettings[lChannelNumber - 1].HardwareCalibrationName;
+        RecorderMic140ApplyTagOutputPresentation(lTag,
+          lResult.ChannelSettings[lChannelNumber - 1]);
+      end;
       lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
         [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
          lTag.SourceValueMode]);

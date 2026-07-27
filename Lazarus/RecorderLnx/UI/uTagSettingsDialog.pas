@@ -182,6 +182,7 @@ type
     procedure UpdateChannelCurveText;
     procedure UpdateHardwareCurveText;
     procedure UpdateHardwareCurveButtons;
+    procedure HardwareCurveCheckClick(Sender: TObject);
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
     procedure UpdateHardwareSourceSetupButton;
     procedure UpdateTagDeviceActionButtons;
@@ -415,6 +416,7 @@ begin
   fHardwareCurveSelectBtn.OnClick := @SelectHardwareCalibrationButtonClick;
   fHardwareCurveSetupBtn.OnClick := @EditHardwareCalibrationButtonClick;
   fHardwareCurveDownloadBtn.OnClick := @DownloadHardwareCalibrationFromDeviceClick;
+  fHardwareCurveCheck.OnClick := @HardwareCurveCheckClick;
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
 
@@ -589,6 +591,28 @@ begin
       RecorderMic185HardwareCalibrationDisplayText(lCalibration)
   else
     fHardwareCurveEdit.Text := lFirstName;
+end;
+
+procedure TTagSettingsDialog.HardwareCurveCheckClick(Sender: TObject);
+var
+  lChannelNumber: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
+begin
+  if (fTags.Count <> 1) or
+    (Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1) then
+    Exit;
+  lSettings.ChannelAddress := '';
+  if not RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
+    lChannelNumber, lSettings) then
+    Exit;
+
+  if not fHardwareCurveCheck.Checked then
+    fUnitCombo.Text := 'code'
+  else if lSettings.ChannelCalibrationEnabled and
+    RecorderMic140ChannelUsesTemperature(lSettings) then
+    fUnitCombo.Text := RecorderMic140OutputModeUnitName(momTemperatureC)
+  else
+    fUnitCombo.Text := RecorderMic140OutputModeUnitName(momMillivolts);
 end;
 
 function TTagSettingsDialog.TagAt(AIndex: Integer): TRecorderTag;
@@ -1627,6 +1651,29 @@ begin
             RecorderMic140OutputModeToConfigName(momMillivolts);
           lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
         end;
+      end;
+    end;
+    if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+    begin
+      lSettings.ChannelAddress := '';
+      if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,
+        lChannelNumber, lSettings) then
+      begin
+        lSettings.ChannelCalibrationEnabled :=
+          lTag.ChannelCalibrationEnabled;
+        if lSettings.ChannelCalibrationEnabled and
+          RecorderMic140ChannelUsesTemperature(lSettings) then
+          lSettings.OutputMode :=
+            RecorderMic140OutputModeToConfigName(momTemperatureC)
+        else
+          lSettings.OutputMode :=
+            RecorderMic140OutputModeToConfigName(momMillivolts);
+        lSettings.HardwareCalibrationEnabled :=
+          lTag.HardwareCalibrationEnabled;
+        lSettings.HardwareCalibrationName :=
+          lTag.HardwareCalibrationName;
+        RecorderMic140UpdateChannelSettings(fTagRegistry, lTag, lSettings);
+        RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
       end;
     end;
 

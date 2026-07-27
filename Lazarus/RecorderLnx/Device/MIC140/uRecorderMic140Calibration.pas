@@ -559,6 +559,7 @@ begin
   ATag.HardwareCalibrationName := lName;
   if AEnableOnTag then
     ATag.HardwareCalibrationEnabled := True;
+  RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
   Result := True;
   Mic140LogWarning(Format('[MIC-140] assigned hardware calibration %s to tag %s',
     [lName, ATag.Name]));
@@ -914,6 +915,9 @@ begin
       end;
       ATag.HardwareCalibrationName := lName;
       ATag.HardwareCalibrationEnabled := True;
+      if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
+        lSettings) then
+        RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
       if lIsTemperature then
         Mic140LogWarning(Format('[MIC-140] downloaded TIn hardware calibration for tag %s to %s',
           [ATag.Name, lCsvPath]))
@@ -951,6 +955,7 @@ begin
     ATag.HardwareCalibrationEnabled :=
       lSettings.HardwareCalibrationEnabled;
     ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
+    RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
   end;
   RecorderMic140LoadHardwareCalibrationForTag(ARegistry, ATag, 0, False);
 end;
