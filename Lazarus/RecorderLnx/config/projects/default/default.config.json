@@ -407,12 +407,12 @@
 												"softBalance" : 0.0000000000000000E+000,
 												"defaultCjc" : true,
 												"cjcChannel" : 1,
-												"thermocoupleScaleName" : "",
-												"thermocoupleScalePath" : "",
-												"outputMode" : "mV",
-												"channelCalibrationEnabled" : false,
-												"hardwareCalibrationEnabled" : false,
-												"hardwareCalibrationName" : ""
+												"thermocoupleScaleName" : "K_ГОСТ Р 8",
+												"thermocoupleScalePath" : "ГОСТ\\Термопары\\K_ГОСТ Р 8.585-2001",
+												"outputMode" : "degC",
+												"channelCalibrationEnabled" : true,
+												"hardwareCalibrationEnabled" : true,
+												"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch24"
 										},
 										{
 												"address" : "2-25",
@@ -15315,6 +15315,29 @@
 										"y" : 1.2500000000000000E+002
 								}
 						]
+				},
+				{
+						"type" : "piecewiseLinear",
+						"name" : "MIC140 sn0329 06_100mV ch24",
+						"description" : "",
+						"unitIn" : "",
+						"unitOut" : "",
+						"extrapolation" : true,
+						"scale" : 1.0000000000000000E+000,
+						"points" : [
+								{
+										"x" : -3.2067400390625000E+004,
+										"y" : -2.0000000000000000E+001
+								},
+								{
+										"x" : -1.9717480468750000E+004,
+										"y" : 0.0000000000000000E+000
+								},
+								{
+										"x" : 2.9686013671875000E+004,
+										"y" : 8.0000000000000000E+001
+								}
+						]
 				}
 		],
 		"spectrumConfigs" : [
@@ -17661,20 +17684,20 @@
 						"id" : 198,
 						"name" : "MIC140_24",
 						"address" : "2-24",
-						"unit" : "code",
-						"description" : "MIC-140 channel 2-24; freq=100 Hz; mode=code",
+						"unit" : "degC",
+						"description" : "MIC-140 channel 2-24; freq=100 Hz; mode=degC",
 						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
-						"sourceValueMode" : "code",
+						"sourceValueMode" : "degC",
 						"moduleType" : "MIC-140",
 						"pollFrequencyHz" : 1.0000000000000000E+002,
 						"rangeMin" : -3.2000000000000000E+004,
 						"rangeMax" : 3.2000000000000000E+004,
 						"autoRange" : true,
 						"autoUnit" : true,
-						"hardwareCalibrationEnabled" : false,
-						"hardwareCalibrationName" : "",
-						"channelCalibrationEnabled" : false,
+						"hardwareCalibrationEnabled" : true,
+						"hardwareCalibrationName" : "MIC140 sn0329 06_100mV ch24",
+						"channelCalibrationEnabled" : true,
 						"estimates" : {
 								"default" : "MO",
 								"portionLength" : 1,
@@ -17721,6 +17744,7 @@
 								}
 						},
 						"calibrationPipeline" : [
+								"TC K_ГОСТ Р 8"
 						]
 				},
 				{
@@ -30428,7 +30452,7 @@
 						"name" : "MIC140-2-status",
 						"address" : "diagnostics.status",
 						"unit" : "",
-						"description" : "MIC-140 connection status: stopped",
+						"description" : "MIC-140 connection status: programmed",
 						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "",

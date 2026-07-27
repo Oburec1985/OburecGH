@@ -755,6 +755,42 @@ begin
   end;
 end;
 
+function StoreGuiResourceFileName(const AGuiFileName,
+  AResourceFileName: string): string;
+var
+  lBaseDirectory: string;
+begin
+  if Trim(AResourceFileName) = '' then
+    Exit('');
+
+  { Ресурс хранится относительно GUI-конфигурации, поэтому каталог проекта
+    можно переносить между Windows и Linux без изменения настройки. }
+  lBaseDirectory := IncludeTrailingPathDelimiter(
+    ExpandFileName(ExtractFileDir(AGuiFileName)));
+  Result := ExtractRelativePath(lBaseDirectory,
+    ExpandFileName(AResourceFileName));
+  Result := StringReplace(Result, '\', '/', [rfReplaceAll]);
+end;
+
+function LoadGuiResourceFileName(const AGuiFileName,
+  AStoredFileName: string): string;
+var
+  lFileName: string;
+begin
+  if Trim(AStoredFileName) = '' then
+    Exit('');
+
+  lFileName := StringReplace(AStoredFileName, '\', PathDelim,
+    [rfReplaceAll]);
+  lFileName := StringReplace(lFileName, '/', PathDelim, [rfReplaceAll]);
+  if (ExtractFileDrive(lFileName) <> '') or
+    ((lFileName <> '') and (lFileName[1] = PathDelim)) then
+    Result := ExpandFileName(lFileName)
+  else
+    Result := ExpandFileName(IncludeTrailingPathDelimiter(
+      ExtractFileDir(AGuiFileName)) + lFileName);
+end;
+
 procedure SaveRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager);
 var
@@ -790,6 +826,8 @@ begin
       lIni.WriteString(lSection, 'Id', lPage.Id);
       lIni.WriteString(lSection, 'Name', lPage.Name);
       lIni.WriteString(lSection, 'Title', lPage.Title);
+      lIni.WriteString(lSection, 'BackgroundImage',
+        StoreGuiResourceFileName(AFileName, lPage.BackgroundImageFileName));
       lIni.WriteInteger(lSection, 'Mode', Ord(lPage.Mode));
       lIni.WriteInteger(lSection, 'BaseOscillogramCount',
         lPage.BaseOscillogramCount);
@@ -936,6 +974,8 @@ begin
         lIni.ReadString(lSection, 'Name', 'Page' + IntToStr(I + 1)),
         lIni.ReadString(lSection, 'Title', 'Page ' + IntToStr(I + 1)));
       try
+        lPage.BackgroundImageFileName := LoadGuiResourceFileName(AFileName,
+          lIni.ReadString(lSection, 'BackgroundImage', ''));
         lPage.Mode := TRecorderFormPageMode(lIni.ReadInteger(lSection, 'Mode',
           Ord(fpmView)));
         lPage.BaseOscillogramCount := lIni.ReadInteger(lSection,

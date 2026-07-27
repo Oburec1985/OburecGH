@@ -30,6 +30,9 @@ type
   private
     fActivating: Boolean;                  { Флаг процесса активации страницы }
     fFactory: TRecorderFormFactory;        { Фабрика создания форм }
+    fBackgroundEdit: TEdit;                { Путь к фоновому изображению страницы }
+    fChooseBackgroundButton: TButton;
+    fClearBackgroundButton: TButton;
     fGrid: TStringGrid;                    { Таблица со списком страниц }
     fManager: TRecorderFormManager;        { Менеджер форм }
     fNameEdit: TEdit;                      { Поле редактирования имени выбранной страницы }
@@ -39,11 +42,14 @@ type
     procedure ActivateSelectedPage;
     procedure AddMnemonicClick(Sender: TObject);
     procedure ActivateClick(Sender: TObject);
+    procedure ChooseBackgroundClick(Sender: TObject);
+    procedure ClearBackgroundClick(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
     procedure MoveDownClick(Sender: TObject);
     procedure MoveUpClick(Sender: TObject);
     procedure NameEditChange(Sender: TObject);
     procedure RefreshGrid;
+    procedure UpdatePageEditors(APage: TRecorderFormPage);
     procedure SelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
     function GetSelectedPage: TRecorderFormPage;
@@ -64,13 +70,14 @@ implementation
 
 const
   CDialogWidth = 568;
-  CDialogHeight = 338;
+  CDialogHeight = 386;
 
 constructor TFormPagesDialog.CreateDialog(AOwner: TComponent;
   AManager: TRecorderFormManager; AFactory: TRecorderFormFactory;
   ANextPageNo: Integer);
 var
   lNameLabel: TLabel;
+  lBackgroundLabel: TLabel;
   lAddMnemonic: TButton;
   lActivate: TButton;
   lOk: TButton;
@@ -169,16 +176,47 @@ begin
   lAddMnemonic := TButton.Create(Self);
   lAddMnemonic.Parent := Self;
   lAddMnemonic.Left := 10;
-  lAddMnemonic.Top := 252;
+  lAddMnemonic.Top := 290;
   lAddMnemonic.Width := 142;
   lAddMnemonic.Height := 24;
   lAddMnemonic.Caption := 'Add mnemonic';
   lAddMnemonic.OnClick := @AddMnemonicClick;
 
+  lBackgroundLabel := TLabel.Create(Self);
+  lBackgroundLabel.Parent := Self;
+  lBackgroundLabel.Left := 10;
+  lBackgroundLabel.Top := 256;
+  lBackgroundLabel.Caption := 'Фон:';
+
+  fBackgroundEdit := TEdit.Create(Self);
+  fBackgroundEdit.Parent := Self;
+  fBackgroundEdit.Left := 52;
+  fBackgroundEdit.Top := 252;
+  fBackgroundEdit.Width := 320;
+  fBackgroundEdit.ReadOnly := True;
+
+  fChooseBackgroundButton := TButton.Create(Self);
+  fChooseBackgroundButton.Parent := Self;
+  fChooseBackgroundButton.Left := 378;
+  fChooseBackgroundButton.Top := 250;
+  fChooseBackgroundButton.Width := 94;
+  fChooseBackgroundButton.Height := 26;
+  fChooseBackgroundButton.Caption := 'Выбрать...';
+  fChooseBackgroundButton.OnClick := @ChooseBackgroundClick;
+
+  fClearBackgroundButton := TButton.Create(Self);
+  fClearBackgroundButton.Parent := Self;
+  fClearBackgroundButton.Left := 482;
+  fClearBackgroundButton.Top := 250;
+  fClearBackgroundButton.Width := 76;
+  fClearBackgroundButton.Height := 26;
+  fClearBackgroundButton.Caption := 'Очистить';
+  fClearBackgroundButton.OnClick := @ClearBackgroundClick;
+
   lActivate := TButton.Create(Self);
   lActivate.Parent := Self;
   lActivate.Left := 268;
-  lActivate.Top := 296;
+  lActivate.Top := 344;
   lActivate.Width := 86;
   lActivate.Height := 26;
   lActivate.Caption := 'Activate';
@@ -187,7 +225,7 @@ begin
   lOk := TButton.Create(Self);
   lOk.Parent := Self;
   lOk.Left := 360;
-  lOk.Top := 296;
+  lOk.Top := 344;
   lOk.Width := 86;
   lOk.Height := 26;
   lOk.Caption := 'OK';
@@ -197,7 +235,7 @@ begin
   lCancel := TButton.Create(Self);
   lCancel.Parent := Self;
   lCancel.Left := 452;
-  lCancel.Top := 296;
+  lCancel.Top := 344;
   lCancel.Width := 86;
   lCancel.Height := 26;
   lCancel.Caption := 'Cancel';
@@ -221,6 +259,28 @@ begin
     Result := 'Built-in page'
   else
     Result := 'Mnemonic page';
+end;
+
+procedure TFormPagesDialog.UpdatePageEditors(APage: TRecorderFormPage);
+var
+  lEnabled: Boolean;
+begin
+  lEnabled := (APage <> nil) and
+    (PageDescription(APage) = 'Mnemonic page');
+  if APage <> nil then
+  begin
+    fNameEdit.Text := APage.Title;
+    fBackgroundEdit.Text := APage.BackgroundImageFileName;
+  end
+  else
+  begin
+    fNameEdit.Text := '';
+    fBackgroundEdit.Text := '';
+  end;
+  fBackgroundEdit.Enabled := lEnabled;
+  fChooseBackgroundButton.Enabled := lEnabled;
+  fClearBackgroundButton.Enabled := lEnabled and
+    (fBackgroundEdit.Text <> '');
 end;
 
 function TFormPagesDialog.GetSelectedPageIndex: Integer;
@@ -268,10 +328,7 @@ begin
     else if fManager.PageCount > 0 then
       fGrid.Row := 1;
 
-    if GetSelectedPage <> nil then
-      fNameEdit.Text := GetSelectedPage.Title
-    else
-      fNameEdit.Text := '';
+    UpdatePageEditors(GetSelectedPage);
   finally
     fUpdating := False;
   end;
@@ -279,16 +336,22 @@ end;
 
 procedure TFormPagesDialog.SelectCell(Sender: TObject; aCol, aRow: Integer;
   var CanSelect: Boolean);
+var
+  lPage: TRecorderFormPage;
 begin
   if fUpdating then
     Exit;
 
+  { OnSelectCell вызывается до изменения TStringGrid.Row, поэтому выбранную
+    модель берём из aRow, а не через GetSelectedPage. }
+  if (aRow > 0) and (aRow <= fManager.PageCount) then
+    lPage := fManager.Pages[aRow - 1]
+  else
+    lPage := nil;
+
   fUpdating := True;
   try
-    if GetSelectedPage <> nil then
-      fNameEdit.Text := GetSelectedPage.Title
-    else
-      fNameEdit.Text := '';
+    UpdatePageEditors(lPage);
   finally
     fUpdating := False;
   end;
@@ -307,6 +370,58 @@ begin
 
   lPage.Title := fNameEdit.Text;
   fGrid.Cells[0, fGrid.Row] := lPage.Title;
+end;
+
+procedure TFormPagesDialog.ChooseBackgroundClick(Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lPage: TRecorderFormPage;
+  lPicture: TPicture;
+begin
+  lPage := GetSelectedPage;
+  if (lPage = nil) or (PageDescription(lPage) <> 'Mnemonic page') then
+    Exit;
+
+  lDialog := TOpenDialog.Create(Self);
+  try
+    try
+      lDialog.Title := 'Выбор фонового изображения';
+      lDialog.Filter :=
+        'Изображения|*.png;*.jpg;*.jpeg;*.bmp|Все файлы|*.*';
+      if lPage.BackgroundImageFileName <> '' then
+        lDialog.FileName := lPage.BackgroundImageFileName;
+      if not lDialog.Execute then
+        Exit;
+
+      lPicture := TPicture.Create;
+      try
+        lPicture.LoadFromFile(lDialog.FileName);
+      finally
+        lPicture.Free;
+      end;
+      lPage.BackgroundImageFileName := ExpandFileName(lDialog.FileName);
+      fBackgroundEdit.Text := lPage.BackgroundImageFileName;
+      fClearBackgroundButton.Enabled := True;
+    except
+      on E: Exception do
+        MessageDlg('Фоновое изображение',
+          'Не удалось загрузить изображение: ' + E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+procedure TFormPagesDialog.ClearBackgroundClick(Sender: TObject);
+var
+  lPage: TRecorderFormPage;
+begin
+  lPage := GetSelectedPage;
+  if lPage = nil then
+    Exit;
+  lPage.BackgroundImageFileName := '';
+  fBackgroundEdit.Text := '';
+  fClearBackgroundButton.Enabled := False;
 end;
 
 procedure TFormPagesDialog.AddMnemonicClick(Sender: TObject);

@@ -393,6 +393,7 @@ type
   TRecorderFormPage = class
   private
     fComponents: TList;                            { список компонентов на странице (TRecorderVisualComponent) }
+    fBackgroundImageFileName: string;              { файл фонового изображения пользовательской страницы }
     fBaseOscillogramCount: Integer;                { количество осциллограмм для встроенной BasePage }
     fId: string;                                   { уникальный ID страницы }
     fMode: TRecorderFormPageMode;                  { текущий режим (просмотр/редактирование) }
@@ -428,6 +429,8 @@ type
     property Id: string read fId write fId;
     property Name: string read fName write fName;
     property Title: string read fTitle write fTitle;
+    property BackgroundImageFileName: string read fBackgroundImageFileName
+      write fBackgroundImageFileName;
     property Mode: TRecorderFormPageMode read fMode write fMode;
     property BaseOscillogramCount: Integer read fBaseOscillogramCount
       write fBaseOscillogramCount;
@@ -1160,6 +1163,7 @@ begin
   fId := AId;
   fName := AName;
   fTitle := ATitle;
+  fBackgroundImageFileName := '';
   fMode := fpmView;
   fBaseOscillogramCount := 2;
 end;

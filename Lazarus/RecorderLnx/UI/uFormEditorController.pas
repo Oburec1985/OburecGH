@@ -279,6 +279,22 @@ type
 
 
 
+  { Панель страницы хранит уже загруженное изображение. В Paint нет файлового
+    ввода-вывода и выделения графического объекта. }
+  TRecorderPagePanel = class(TPanel)
+  private
+    fBackgroundFileName: string;
+    fBackgroundPicture: TPicture;
+    procedure SetBackgroundFileName(const AValue: string);
+  protected
+    procedure Paint; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    property BackgroundFileName: string read fBackgroundFileName
+      write SetBackgroundFileName;
+  end;
+
   TControlAccess = class(TControl);
 
 
@@ -292,6 +308,43 @@ const
   CResizeHandleSize = 8;
   CResizeHotZone = 5;
   CUndoDepth = 5;
+
+constructor TRecorderPagePanel.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  fBackgroundPicture := TPicture.Create;
+end;
+
+destructor TRecorderPagePanel.Destroy;
+begin
+  fBackgroundPicture.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderPagePanel.SetBackgroundFileName(const AValue: string);
+begin
+  if SameFileName(fBackgroundFileName, AValue) then
+    Exit;
+
+  fBackgroundFileName := AValue;
+  fBackgroundPicture.Clear;
+  if (fBackgroundFileName <> '') and FileExists(fBackgroundFileName) then
+    try
+      fBackgroundPicture.LoadFromFile(fBackgroundFileName);
+    except
+      { Повреждённый или неподдерживаемый файл не должен ломать страницу. }
+      fBackgroundPicture.Clear;
+    end;
+  Invalidate;
+end;
+
+procedure TRecorderPagePanel.Paint;
+begin
+  inherited Paint;
+  if (fBackgroundPicture.Graphic <> nil) and
+    not fBackgroundPicture.Graphic.Empty then
+    Canvas.StretchDraw(ClientRect, fBackgroundPicture.Graphic);
+end;
 
 procedure OscillogramLinesToStrings(AOsc: TRecorderOscillogramComponent;
   ALines: TStringList);
@@ -688,7 +741,7 @@ begin
   lPagePanelIdx := fPagePanels.IndexOf(lPage.Id);
   if lPagePanelIdx < 0 then
   begin
-    lPagePanel := TPanel.Create(fCanvas);
+    lPagePanel := TRecorderPagePanel.Create(fCanvas);
     lPagePanel.Parent := fCanvas;
     lPagePanel.Align := alClient;
     lPagePanel.BevelOuter := bvNone;
@@ -703,6 +756,8 @@ begin
   else
     lPagePanel := TPanel(fPagePanels.Objects[lPagePanelIdx]);
 
+  TRecorderPagePanel(lPagePanel).BackgroundFileName :=
+    lPage.BackgroundImageFileName;
   lPagePanel.OnMouseDown := @CanvasMouseDown;
   lPagePanel.OnMouseMove := @CanvasMouseMove;
   lPagePanel.OnMouseUp := @CanvasMouseUp;
