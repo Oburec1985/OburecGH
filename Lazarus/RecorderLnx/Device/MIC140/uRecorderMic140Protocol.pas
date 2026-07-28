@@ -83,6 +83,7 @@ type
       out AErrorMessage: string): Boolean;
     function ReadDmWords(AAddress: Word; ACount: Integer;
       out AWords: TMic140v2WordBuf; out AErrorMessage: string): Boolean;
+    function TestLoad(out AErrorMessage: string): Boolean;
     function ReadFirmware(out AFirmware: TMic140v2Firmware;
       out AErrorMessage: string): Boolean;
     function StartScan(out AErrorMessage: string): Boolean;
@@ -166,7 +167,7 @@ function Mic140LegacyBiosHeaderVerdictText(
 implementation
 
 uses
-  uRecorderDebugLog;
+  uRecorderDebugLog, uRecorderMic140Consts;
 
 const
   CLegacySyncWord = Word($12B8);
@@ -374,7 +375,8 @@ begin
     LogRejectedScanWords('header ' + lBiosReason, AWords);
     Exit;
   end;
-  if (ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx] <> 0) or
+  if (ABlock.HeaderWords[CMic140LegacyBiosScanIdIdx] <>
+      CMic140LegacyScanId) or
      (ABlock.HeaderWords[CMic140LegacyBiosStateIdx] <> 0) or
      (ABlock.HeaderWords[CMic140LegacyBiosSlotIdx] <> 0) or
      (ABlock.HeaderWords[CMic140LegacyBiosChanIdx] <> 0) then
@@ -517,7 +519,10 @@ begin
   else
     AVerdict.SizeOk := (AHeaderWords[1] >= CLegacyScanHeaderWords + 1) and
       (AHeaderWords[1] <= CLegacyMaxPacketWords);
-  AVerdict.ScanIdOk := AHeaderWords[CMic140LegacyBiosScanIdIdx] = 0;
+  { Идентификатор должен совпадать с циклограммой, созданной в Config.
+    Жёсткая проверка на 0 отбрасывала корректный поток Recorder scan_id=1. }
+  AVerdict.ScanIdOk :=
+    AHeaderWords[CMic140LegacyBiosScanIdIdx] = CMic140LegacyScanId;
   AVerdict.SlotOk := AHeaderWords[CMic140LegacyBiosSlotIdx] = 0;
   AVerdict.ChanOk := AHeaderWords[CMic140LegacyBiosChanIdx] = 0;
   AVerdict.StateOk := AHeaderWords[CMic140LegacyBiosStateIdx] = 0;
@@ -542,11 +547,13 @@ begin
   if AVerdict.Ok then
   begin
     if AVerdict.NumBuffOk then
-      AVerdict.Detail := Format('OK size=%d scan_id=0 state=0 data=%d num_buff=%d',
-        [AVerdict.ActualMessageSize, AActualDataWords, lNumBuff])
+      AVerdict.Detail := Format('OK size=%d scan_id=%d state=0 data=%d num_buff=%d',
+        [AVerdict.ActualMessageSize, CMic140LegacyScanId,
+         AActualDataWords, lNumBuff])
     else
-      AVerdict.Detail := Format('OK size=%d scan_id=0 state=0 data=%d num_buff=%d seq=gap',
-        [AVerdict.ActualMessageSize, AActualDataWords, lNumBuff]);
+      AVerdict.Detail := Format('OK size=%d scan_id=%d state=0 data=%d num_buff=%d seq=gap',
+        [AVerdict.ActualMessageSize, CMic140LegacyScanId,
+         AActualDataWords, lNumBuff]);
   end
   else
   begin
@@ -873,6 +880,7 @@ var
   lCount: Integer;
   lOffset: Integer;
   lReply: TMic140v2WordBuf;
+  lFirstError: string;
 begin
   // This is ADSP DM write used by CC BIOS commands, not the low-level MDP
   // resource write from VTBL.H. Original path: Mc031ethernetifc.cpp
@@ -891,9 +899,34 @@ begin
     for I := 0 to lCount - 1 do
       lArgs[I + 1] := AWords[lOffset + I];
 
+    RecorderDebugLog(Format(
+      '[MIC140v2:%s:%d] WRITE_DM address=0x%.4x offset=%d count=%d',
+      [fHost, fPort, AAddress + lOffset, lOffset, lCount]));
     if not CallCommand(MIC140v2_CMD_WRITE_DM, lArgs, 0, lReply,
       AErrorMessage) then
-      Exit;
+    begin
+      { WRITE_DM-фрагмент идемпотентен. После холодного reset контроллер иногда
+        закрывает TCP на последнем фрагменте; повторяем только этот фрагмент. }
+      lFirstError := AErrorMessage;
+      RecorderDebugLog(Format(
+        '[MIC140v2:%s:%d] WRITE_DM retry after reconnect address=0x%.4x: %s',
+        [fHost, fPort, AAddress + lOffset, lFirstError]));
+      try
+        Connect;
+      except
+        on E: Exception do
+        begin
+          AErrorMessage := lFirstError + '; reconnect: ' + E.Message;
+          Exit;
+        end;
+      end;
+      if not CallCommand(MIC140v2_CMD_WRITE_DM, lArgs, 0, lReply,
+        AErrorMessage) then
+      begin
+        AErrorMessage := lFirstError + '; retry: ' + AErrorMessage;
+        Exit;
+      end;
+    end;
     Inc(lOffset, lCount);
   end;
   Result := True;
@@ -935,6 +968,29 @@ begin
     Inc(lOffset, lChunk);
   end;
   Result := True;
+end;
+
+function TMic140v2Tcp.TestLoad(out AErrorMessage: string): Boolean;
+var
+  lArgs, lReply: TMic140v2WordBuf;
+  lReadyWord: Word;
+begin
+  { [ORIG] mdpEthernet81::CheckInitialized. Первая команда после открытия
+    транспорта намеренно имеет максимальный размер аргументов: это приводит
+    командный автомат контроллера в известное состояние после перезагрузки. }
+  SetLength(lArgs, CMic140LegacyTestLoadArgWords);
+  FillWord(lArgs[0], Length(lArgs), 0);
+  Result := CallCommand(CMic140LegacyCmdTestLoad, lArgs,
+    CMic140LegacyTestLoadReplyWords, lReply, AErrorMessage);
+  if not Result then
+    Exit;
+  lReadyWord := 0;
+  if Length(lReply) > 0 then
+    lReadyWord := lReply[0];
+  Result := (Length(lReply) >= 1) and (lReadyWord = 1);
+  if not Result then
+    AErrorMessage := Format('TEST_LOAD bad reply: words=%d ready=%d',
+      [Length(lReply), lReadyWord]);
 end;
 
 function TMic140v2Tcp.ReadFirmware(

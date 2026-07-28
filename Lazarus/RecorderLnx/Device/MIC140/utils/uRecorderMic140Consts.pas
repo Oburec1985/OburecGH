@@ -14,15 +14,23 @@ interface
 
 const
   { --- scan_id / type [ORIG: mtc/Ccdevice.h TYPE_MIC140, scan_id=0 ╨▓ Modscn] --- }
-  CMic140LegacyScanId = 0;
+  { RecorderLnx и автономный тест используют единственную главную
+    циклограмму scan_id=0. scan_id=1 из дампа оригинального Recorder
+    принадлежит его многоскановому диспетчеру и без него неприменим. }
+  CMic140LegacyScanId = 1;
   CMic140LegacyTypeMic140 = 12;  { TYPE_MIC140 }
 
   { --- BIOS CallCommand [ORIG: mtc/Ccdevice.h] --- }
+  CMic140LegacyCmdTestLoad = 7;
   CMic140LegacyCmdReset = 10;
+  CMic140LegacyCmdConfigSyncStart = 79;
   CMic140LegacyCmdAppendScanMain = 82;
   CMic140LegacyCmdResetScanMain = 83;
   CMic140LegacyCmdConfigScanMain = 84;
+  CMic140LegacyCmdStartTriggerAdc = 85;
   CMic140LegacyCmdSetStateScan = 87;
+  CMic140LegacyCmdConfigMessage = 90;
+  CMic140LegacyCmdSetTimeoutStartTimer = 98;
   CMic140LegacyCmdScanSetChans = 132;
   CMic140LegacyCmdScanSetBuff = 133;
   CMic140LegacyCmdAddChannelModule = 152;
@@ -54,7 +62,20 @@ const
   CMic140ChannelCommutGround = 1;
 
   { --- ╤В╨░╨╣╨╝╨░╤Г╤В╤Л ╨╕ ╨┐╨╛╨▓╤В╨╛╤А╤Л [LNX: ╨┐╤А╤П╨╝╨╛╨╣ TCP/MDP ╨▒╨╡╨╖ MFC; ╨╜╨╡ ╨▓ Ccdevice] --- }
-  CMic140LegacyCommandTimeoutMs = 5000;
+  CMic140LegacyCommandTimeoutMs = 1500;
+  { mdpEthernet81::CheckInitialized перед первой штатной командой передаёт
+    максимальный массив из 32 нулевых WORD. Это прочищает командный автомат
+    контроллера после холодного запуска. }
+  CMic140LegacyTestLoadArgWords = 32;
+  CMic140LegacyTestLoadReplyWords = 2;
+  { После аппаратного CMD_RESET оригинальный Recorder дважды сбрасывает scan:
+    второй RESETSCANMAIN идёт примерно через пять секунд, когда BIOS готов. }
+  CMic140LegacyBiosResetFirstDelayMs = 50;
+  CMic140LegacyBiosResetSettleMs = 5000;
+  CMic140LegacyAdcStartSettleMs = 4200;
+  CMic140LegacyMessageBufferWords = 7183;
+  CMic140LegacyInitialStartTimer = 1;
+  CMic140LegacyRunStartTimer = $4801;
   CMic140LegacyStartCommandTimeoutMs = 12000;
   CMic140LegacyStartProbeTimeoutMs = 3000;
   CMic140LegacyStartAttempts = 2;

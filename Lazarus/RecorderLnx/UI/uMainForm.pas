@@ -162,6 +162,8 @@ type
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
     fDiagRenderCount: Integer;                    // Количество отрисовок активной страницы
     fAutoPreviewSeconds: Integer;                 // CLI: --preview-seconds=N headless preview run
+    fAutoPreviewCycles: Integer;                  // CLI: --preview-cycles=N lifecycle acceptance
+    fAutoPreviewCompletedCycles: Integer;
     fAutoPreviewExtraTicks: Integer;              // extra 500 ms ticks for MIC-140 warmup
     fAutoPreviewTicks: Integer;
     fAutoPreviewTimer: TTimer;
@@ -455,6 +457,8 @@ var
   lSeconds: Integer;
 begin
   fAutoPreviewSeconds := 0;
+  fAutoPreviewCycles := 1;
+  fAutoPreviewCompletedCycles := 0;
   for I := 1 to ParamCount do
   begin
     lArg := ParamStr(I);
@@ -462,14 +466,18 @@ begin
     begin
       if I < ParamCount then
         TryStrToInt(ParamStr(I + 1), fAutoPreviewSeconds);
-      Break;
     end;
     if Pos('--preview-seconds=', LowerCase(lArg)) = 1 then
     begin
       lValue := Copy(lArg, Length('--preview-seconds=') + 1, MaxInt);
       if TryStrToInt(lValue, lSeconds) then
         fAutoPreviewSeconds := lSeconds;
-      Break;
+    end;
+    if Pos('--preview-cycles=', LowerCase(lArg)) = 1 then
+    begin
+      lValue := Copy(lArg, Length('--preview-cycles=') + 1, MaxInt);
+      if TryStrToInt(lValue, lSeconds) and (lSeconds > 0) then
+        fAutoPreviewCycles := lSeconds;
     end;
   end;
   if fAutoPreviewSeconds <= 0 then
@@ -483,8 +491,8 @@ begin
   fAutoPreviewTimer.Interval := 500;
   fAutoPreviewTimer.OnTimer := @AutoPreviewTimer;
   fAutoPreviewTimer.Enabled := True;
-  AddLog(Format('Auto preview: %d s then stop/quit (MIC-140 debug).',
-    [fAutoPreviewSeconds]));
+  AddLog(Format('Auto preview: %d s, cycles=%d (MIC-140 lifecycle test).',
+    [fAutoPreviewSeconds, fAutoPreviewCycles]));
 end;
 
 procedure TMainForm.AutoPreviewTimer(Sender: TObject);
@@ -501,9 +509,17 @@ begin
   Inc(fAutoPreviewTicks);
   if fAutoPreviewTicks < fAutoPreviewSeconds * 2 + fAutoPreviewExtraTicks then
     Exit;
-  fAutoPreviewTimer.Enabled := False;
   AddLog(Format('Auto preview finished after %d s, stopping.', [fAutoPreviewSeconds]));
   btnStopClick(nil);
+  Inc(fAutoPreviewCompletedCycles);
+  if fAutoPreviewCompletedCycles < fAutoPreviewCycles then
+  begin
+    fAutoPreviewTicks := 0;
+    AddLog(Format('Auto preview: starting cycle %d/%d.',
+      [fAutoPreviewCompletedCycles + 1, fAutoPreviewCycles]));
+    Exit;
+  end;
+  fAutoPreviewTimer.Enabled := False;
   Application.Terminate;
 end;
 
@@ -836,6 +852,8 @@ begin
 end;
 
 procedure TMainForm.btnSettingsClick(Sender: TObject);
+var
+  lDataSourcesChanged: Boolean;
 begin
   try
     if fRecorder.StateMachine.State = rsRecord then
@@ -845,15 +863,25 @@ begin
     end;
 
     AddLog('Configuration mode: settings dialog opened.');
-    if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons, ilTagDialogButtons) then
+    lDataSourcesChanged := False;
+    if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
+      ilTagDialogButtons, lDataSourcesChanged) then
     begin
       ApplyDisplayTimingSettings;
       UpdateRecordFrameManager;
       UpdateActiveSourceIds;
-      fRecorder.DataSources.Clear;
-      fDataSourcesConfigured := False;
-      EnsureRuntimeDataSources;
-      PrepareRuntimeForConfiguration;
+      if lDataSourcesChanged then
+      begin
+        { Тяжёлая реконфигурация выполняется только после реального изменения
+          источников/каналов. Простое OK сохраняет уже проинициализированные приборы. }
+        fRecorder.DataSources.Clear;
+        fDataSourcesConfigured := False;
+        EnsureRuntimeDataSources;
+        PrepareRuntimeForConfiguration;
+        AddLog('Hardware configuration changed: data sources rebuilt.');
+      end
+      else
+        AddLog('Hardware configuration unchanged: initialized devices retained.');
       AddLog('Project settings applied.');
     end
     else

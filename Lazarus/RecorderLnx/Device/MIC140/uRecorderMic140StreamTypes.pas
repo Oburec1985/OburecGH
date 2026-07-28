@@ -62,6 +62,7 @@ type
   end;
 
   TMic140AuxTemperatureBlock = record
+    Revision: QWord;
     ChannelCount: Integer;
     SampleCount: Integer;
     Values: array of array of Double;
@@ -95,6 +96,7 @@ implementation
 
 procedure ClearMic140AuxTemperatureBlock(var ABlock: TMic140AuxTemperatureBlock);
 begin
+  ABlock.Revision := 0;
   ABlock.ChannelCount := 0;
   ABlock.SampleCount := 0;
   SetLength(ABlock.Values, 0);

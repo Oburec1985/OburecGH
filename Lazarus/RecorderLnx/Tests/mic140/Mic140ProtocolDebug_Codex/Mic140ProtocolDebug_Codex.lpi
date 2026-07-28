@@ -55,6 +55,10 @@
         <Filename Value="device\MIC140\uMic140Registration.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="device\MIC140\v2\uRecorderMic140v2Device.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -65,8 +69,8 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\..\Device;..\..\..\Device\MIC140;..\..\..\Device\MIC140;..\..\..\Device\MIC140\utils;..\..\..\Core;..\..\..\Algs;..\..\..\UI;..\..\..\..\SharedUtils;device;device\MIC140"/>
-      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      <OtherUnitFiles Value="device;device\MIC140;device\MIC140v2;device\MIC140v2\utils"/>
+      <UnitOutputDirectory Value="lib_standalone\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>

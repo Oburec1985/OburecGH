@@ -9,7 +9,10 @@
 Эталон: `Tests/mic140/Mic140ProtocolDebug_Codex`  
 Docs: `Docs/devices/mic140/lifecycle-codex.md`, `Docs/devices/mic140/protocol/`
 
-Create defaults (Factory): `mppMic14048v3`, `GroundEnabled=True`.
+Create defaults (Factory): `mppMic14048v3`, `GroundEnabled=False`.
+Заземление при коммутации — пользовательская аппаратная настройка. Если
+признак отсутствует в конфигурации, включать его не следует: режим удваивает
+таблицу указателей каналов BIOS и меняет расчёт времени циклограммы.
 
 ## Слои
 

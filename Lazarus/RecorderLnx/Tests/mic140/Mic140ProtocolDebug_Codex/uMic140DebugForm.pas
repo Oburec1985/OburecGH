@@ -7,8 +7,8 @@ interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Grids, StdCtrls, Dialogs,
   IniFiles, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
-  uRecorderMic140Device, uRecorderMic140WireTypes,
-  uRecorderMic140Diag, uRecorderMic140Scan;
+  uRecorderMic140v2Device, uRecorderMic140v2WireTypes,
+  uRecorderMic140v2Diag, uRecorderMic140v2Scan;
 
 type
   TMic140DebugForm = class(TForm)
@@ -24,7 +24,7 @@ type
     procedure sgTagsPrepareCanvas(Sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
   private
-    fDevice: TRecorderMic140Device;
+    fDevice: TRecorderMic140v2Device;
     fReference: array[0..47] of Integer;
     fReferenceValid: array[0..47] of Boolean;
     fDelta: array[0..47] of Double;
@@ -257,7 +257,7 @@ begin
   end;
   if fDevice = nil then
   begin
-    fDevice := TRecorderMic140Device.Create('MIC140-debug',
+    fDevice := TRecorderMic140v2Device.Create('MIC140-debug',
       Trim(edtHost.Text), Word(lPort), 48, 10.0, 200, mppMic14048v3, True);
     fConfigured := False;
   end;
@@ -334,10 +334,20 @@ begin
     fStopRequested := True;
     Exit;
   end;
-  if not FindAndConnect then Exit;
+  lblTitle.Caption := 'MIC-140: подключение и инициализация...';
+  btnStart3.Caption := 'Инициализация...';
+  btnStart3.Enabled := False;
+  Application.ProcessMessages;
+  if not FindAndConnect then
+  begin
+    btnStart3.Caption := 'Start';
+    btnStart3.Enabled := True;
+    Exit;
+  end;
   fRunning := True;
   fStopRequested := False;
   btnStart3.Caption := 'Stop';
+  btnStart3.Enabled := True;
   lBlockCount := 0;
   FillChar(fTinSum, SizeOf(fTinSum), 0);
   FillChar(fTinCount, SizeOf(fTinCount), 0);

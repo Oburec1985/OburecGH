@@ -16,7 +16,7 @@ uses
 function CreateMic140Device(const ADeviceId, AHost: string; APort: Word;
   AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
   AProgrammingProfile: TMic140ProgrammingProfile = mppMic14048v3;
-  AGroundEnabled: Boolean = True): IMic140Device;
+  AGroundEnabled: Boolean = False): IMic140Device;
 
 implementation
 

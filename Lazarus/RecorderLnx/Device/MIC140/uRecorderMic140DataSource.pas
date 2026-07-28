@@ -68,10 +68,27 @@ type
     fRuntimeChannelTags: array of TRecorderTag;
     fRuntimeChannelSettings: array of TRecorderMic140ChannelSettings;
     fRuntimeChannelSettingsValid: array of Boolean;
+    fRuntimeHardwareCalibrations: array of TRecorderCalibration;
+    fRuntimeThermocoupleCalibrations: array of TRecorderCalibration;
+    fRuntimeTemperatureMode: array of Boolean;
+    fRuntimeCjcChannels: array of Integer;
     fRuntimeTemperatureTags: array of TRecorderTag;
     fRuntimeTemperatureSelected: array of Boolean;
+    fRuntimeCjcTemperatures: array of Double;
+    fRuntimeCjcTemperatureValid: array of Boolean;
     fRuntimeThermoCompensation: Boolean;
+    { Сетевой FIFO MIC-140 отдаёт несколько малых пакетов за один период
+      обновления Recorder. В RunTime они собираются в одну логическую порцию,
+      чтобы калибровка, оценки тегов и уведомления выполнялись один раз за
+      DataUpdateMs, а не для каждого транспортного пакета. }
+    fRuntimeLogicalBlock: TRecorderDeviceSampleBlock;
+    fRuntimeLogicalSampleCount: Integer;
+    fRuntimeLogicalTargetSamples: Integer;
+    fLastAuxRevision: QWord;
+    fLastPublishedBlockEndTimeSec: Double;
     procedure BuildRuntimeCache;
+    procedure ResetLogicalBlock;
+    procedure AppendAndPublishBlock(const ABlock: TRecorderDeviceSampleBlock);
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     function TemperatureChannelSelected(AIndex: Integer): Boolean;
@@ -342,6 +359,13 @@ begin
     ARegistry.InvertTagThermocoupleValue(ATag, ATemperatureC, AMillivolts);
 end;
 
+function Mic140InvertCalibration(ACalibration: TRecorderCalibration;
+  ATemperatureC: Double; out AMillivolts: Double): Boolean;
+begin
+  Result := (ACalibration <> nil) and
+    ACalibration.InverseTransform(ATemperatureC, AMillivolts);
+end;
+
 function Mic140TryTransformTInSampleToJunctionC(ARegistry: TRecorderTagRegistry;
   ATemperatureTag: TRecorderTag; ADeviceSerial, ATInListIndex, ADevSubRev: Integer;
   ARawValue: Double; out AJunctionC: Double): Boolean;
@@ -422,45 +446,25 @@ begin
   Result := ARegistry.TransformTagThermocoupleValue(ATag, lCorrectedMv);
 end;
 
-function Mic140TryGetColdJunctionTemperature(ARegistry: TRecorderTagRegistry;
-  ATemperatureTag: TRecorderTag; const AAux: TMic140AuxTemperatureBlock;
-  ACjcChannel, ADeviceSerial, ADevSubRev: Integer;
+function Mic140TryGetColdJunctionTemperature(ATemperatureTag: TRecorderTag;
   out ATemperatureC: Double): Boolean;
 var
-  I: Integer;
-  lCjcIndex: Integer;
-  lCount: Integer;
-  lSampleJunctionC: Double;
-  lSum: Double;
+  lEstimate: TRecorderTagEstimate;
 begin
   Result := False;
   ATemperatureC := CMic140CjcNotAvailable;
-  lCjcIndex := ACjcChannel - 1;
-  if (ARegistry = nil) or (lCjcIndex < 0) or
-    (lCjcIndex >= AAux.ChannelCount) or
-    (lCjcIndex >= Length(AAux.Values)) then
+  if ATemperatureTag = nil then
     Exit;
 
-  lSum := 0;
-  lCount := 0;
-  for I := 0 to AAux.SampleCount - 1 do
-    if (lCjcIndex < Length(AAux.Valid)) and
-      (I < Length(AAux.Valid[lCjcIndex])) and
-      AAux.Valid[lCjcIndex][I] and
-      (I < Length(AAux.Values[lCjcIndex])) then
-    begin
-      if Mic140TryTransformTInSampleToJunctionC(ARegistry, ATemperatureTag,
-        ADeviceSerial, lCjcIndex, ADevSubRev,
-        AAux.Values[lCjcIndex][I], lSampleJunctionC) then
-      begin
-        lSum := lSum + lSampleJunctionC;
-        Inc(lCount);
-      end;
-    end;
-  if lCount <= 0 then
+  { Универсальный язык обмена между расчётами Recorder — оценки тегов.
+    Температурный тег уже применил свою аппаратную ГХ и одним проходом
+    посчитал МО блока. Компенсируемый канал читает готовую текущую оценку,
+    а не повторяет преобразование каждого отсчёта TIn. }
+  lEstimate := ATemperatureTag.Estimate(tekMean);
+  if not lEstimate.Valid then
     Exit;
-  ATemperatureC := lSum / lCount;
-  Result := True;
+  ATemperatureC := lEstimate.Value;
+  Result := Mic140JunctionTemperatureLooksValid(ATemperatureC);
 end;
 
 function RecorderMic140QueryDeviceSerial(const AHost: string; APort: Word;
@@ -876,6 +880,10 @@ begin
   SetLength(fRuntimeChannelTags, fChannelTagNames.Count);
   SetLength(fRuntimeChannelSettings, fChannelTagNames.Count);
   SetLength(fRuntimeChannelSettingsValid, fChannelTagNames.Count);
+  SetLength(fRuntimeHardwareCalibrations, fChannelTagNames.Count);
+  SetLength(fRuntimeThermocoupleCalibrations, fChannelTagNames.Count);
+  SetLength(fRuntimeTemperatureMode, fChannelTagNames.Count);
+  SetLength(fRuntimeCjcChannels, fChannelTagNames.Count);
   for I := 0 to fChannelTagNames.Count - 1 do
   begin
     fRuntimeChannelTags[I] := Registry.FindByName(fChannelTagNames[I]);
@@ -885,10 +893,21 @@ begin
     if not fRuntimeChannelSettingsValid[I] then
       RecorderMic140InitChannelSettings(fRuntimeChannelSettings[I], I,
         CMic140Mic140SubRev1);
+    fRuntimeHardwareCalibrations[I] :=
+      Registry.FindTagHardwareCalibration(fRuntimeChannelTags[I]);
+    fRuntimeThermocoupleCalibrations[I] :=
+      Registry.FindTagThermocoupleCalibration(fRuntimeChannelTags[I]);
+    fRuntimeTemperatureMode[I] :=
+      SameText(fRuntimeChannelSettings[I].OutputMode,
+        RecorderMic140OutputModeToConfigName(momTemperatureC));
+    fRuntimeCjcChannels[I] := RecorderMic140ChannelCjcNumber(
+      fRuntimeChannelSettings[I], I, CMic140Mic140SubRev1);
   end;
 
   SetLength(fRuntimeTemperatureTags, fTemperatureTagNames.Count);
   SetLength(fRuntimeTemperatureSelected, fTemperatureTagNames.Count);
+  SetLength(fRuntimeCjcTemperatures, fTemperatureTagNames.Count);
+  SetLength(fRuntimeCjcTemperatureValid, fTemperatureTagNames.Count);
   for I := 0 to fTemperatureTagNames.Count - 1 do
   begin
     fRuntimeTemperatureTags[I] := Registry.FindByName(fTemperatureTagNames[I]);
@@ -899,11 +918,87 @@ begin
   end;
   fRuntimeThermoCompensation :=
     RecorderMic140ThermoCompensationForSource(Registry, SourceId);
+  fRuntimeLogicalTargetSamples := Max(1, Round(fPollFrequencyHz *
+    Max(1, Integer(UpdateTimeMs)) / 1000.0));
+  SetLength(fRuntimeLogicalBlock.Values,
+    MIC140MaxChannelCount + MIC140v3VisibleTemperatureChannelCount);
+  for I := 0 to High(fRuntimeLogicalBlock.Values) do
+    SetLength(fRuntimeLogicalBlock.Values[I], fRuntimeLogicalTargetSamples);
+  ResetLogicalBlock;
+end;
+
+procedure TRecorderMic140DataSource.ResetLogicalBlock;
+begin
+  fRuntimeLogicalSampleCount := 0;
+  fRuntimeLogicalBlock.ChannelCount := 0;
+  fRuntimeLogicalBlock.SampleCount := 0;
+  fRuntimeLogicalBlock.FirstTimeSec := 0.0;
+  fRuntimeLogicalBlock.SampleRateHz := fPollFrequencyHz;
+end;
+
+procedure TRecorderMic140DataSource.AppendAndPublishBlock(
+  const ABlock: TRecorderDeviceSampleBlock);
+var
+  lChannel: Integer;
+  lCopyCount: Integer;
+  lSourceOffset: Integer;
+begin
+  if (ABlock.SampleCount <= 0) or (ABlock.ChannelCount <= 0) or
+    (fRuntimeLogicalTargetSamples <= 0) then
+    Exit;
+
+  lSourceOffset := 0;
+  while lSourceOffset < ABlock.SampleCount do
+  begin
+    if fRuntimeLogicalSampleCount = 0 then
+    begin
+      fRuntimeLogicalBlock.ChannelCount := Min(ABlock.ChannelCount,
+        Length(fRuntimeLogicalBlock.Values));
+      fRuntimeLogicalBlock.FirstTimeSec := ABlock.FirstTimeSec +
+        lSourceOffset / Max(1.0, ABlock.SampleRateHz);
+      fRuntimeLogicalBlock.SampleRateHz := ABlock.SampleRateHz;
+    end;
+
+    { Изменение раскладки или частоты означает новую транспортную эпоху.
+      Неполную старую порцию нельзя склеивать с ней. }
+    if (fRuntimeLogicalBlock.ChannelCount <> Min(ABlock.ChannelCount,
+      Length(fRuntimeLogicalBlock.Values))) or
+      (Abs(fRuntimeLogicalBlock.SampleRateHz - ABlock.SampleRateHz) > 1E-9) then
+    begin
+      ResetLogicalBlock;
+      Continue;
+    end;
+
+    lCopyCount := Min(fRuntimeLogicalTargetSamples -
+      fRuntimeLogicalSampleCount, ABlock.SampleCount - lSourceOffset);
+    for lChannel := 0 to fRuntimeLogicalBlock.ChannelCount - 1 do
+      if (lChannel < Length(ABlock.Values)) and
+        (lSourceOffset + lCopyCount <= Length(ABlock.Values[lChannel])) then
+        Move(ABlock.Values[lChannel][lSourceOffset],
+          fRuntimeLogicalBlock.Values[lChannel][fRuntimeLogicalSampleCount],
+          lCopyCount * SizeOf(Double));
+    Inc(fRuntimeLogicalSampleCount, lCopyCount);
+    Inc(lSourceOffset, lCopyCount);
+
+    if fRuntimeLogicalSampleCount = fRuntimeLogicalTargetSamples then
+    begin
+      fRuntimeLogicalBlock.SampleCount := fRuntimeLogicalSampleCount;
+      ProcessAndPublishBlock(fRuntimeLogicalBlock);
+      ResetLogicalBlock;
+    end;
+  end;
 end;
 
 destructor TRecorderMic140DataSource.Destroy;
 begin
   Stop;
+  RecorderHardwareUnregisterLiveDevice(Self);
+  if fDevice <> nil then
+    try
+      fDevice.Disconnect;
+    except
+      { Деструктор не должен выбрасывать исключение при закрытии приложения. }
+    end;
   fMic := nil;
   fDevice := nil;
   fTagNames.Free;
@@ -1231,7 +1326,30 @@ var
   lHost: string;
   lPort: Word;
 begin
-  if fHardwarePrepared or fHardwarePrepareAttempted then
+  if RecorderHardwareConsumeSourceResetRequest(SourceId) then
+  begin
+    fHardwarePrepared := False;
+    fHardwarePrepareAttempted := False;
+    fConfigured := False;
+  end;
+  if fHardwarePrepared then
+  begin
+    if fDevice.TestLink(lTestError) then
+    begin
+      RecorderHardwareClearSourceOffline(SourceId);
+      Exit;
+    end;
+    { Потерянная сессия не должна участвовать в опросе. Повторная тяжёлая
+      инициализация разрешена только после явного сброса устройства. }
+    fHardwarePrepared := False;
+    fConfigured := False;
+    fHardwarePrepareAttempted := True;
+    RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+    PublishDiagnostics(CMic140StatusError, 'connection test failed: ' +
+      lTestError, True);
+    Exit;
+  end;
+  if fHardwarePrepareAttempted then
     Exit;
   fHardwarePrepareAttempted := True;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
@@ -1366,6 +1484,9 @@ begin
   fCjcCorrectLogWritten := False;
   fTemperatureModeWarningLogged := False;
   fPublishedCorruptCount := 0;
+  fLastAuxRevision := 0;
+  fLastPublishedBlockEndTimeSec := -1.0;
+  ResetLogicalBlock;
   if (not fHardwarePrepared) or (fDevice = nil) then
   begin
     if fHardwarePrepareAttempted then
@@ -1407,7 +1528,6 @@ end;
 
 procedure TRecorderMic140DataSource.Stop;
 begin
-  RecorderHardwareUnregisterLiveDevice(Self);
   if (fMic <> nil) and (fGoodBlockCount > 0) then
     Mic140LogWarning(Format(
       '[DataSource:%s] MIC-140 stream stop: published=%d read=%d readGaps=%d dupRead=%d corruptRead=%d corruptPublish=%d mdpResync=%d',
@@ -1425,22 +1545,11 @@ begin
     end;
   end;
   inherited Stop;
-  fHardwarePrepared := False;
-  fConfigured := False;
-  { Ретест TEST после каждого Preview добавляет лишний сетевой timeout для
-    уже помеченных offline приборов - новая конфигурация выполнит проверку
-    заново. }
-  fHardwarePrepareAttempted := RecorderHardwareIsSourceOffline(SourceId);
-  if fDevice <> nil then
-  begin
-    try
-      fDevice.Disconnect;
-      PublishDiagnostics(CMic140StatusDisconnected, 'stopped', True);
-    except
-      on E: Exception do
-        PublishDiagnostics(CMic140StatusError, 'stop failed: ' + E.Message, True);
-    end;
-  end;
+  { Stop завершает только сбор. TCP-сессия, Init и применённая конфигурация
+    сохраняются для следующего Preview. Disconnect выполняется в Destroy либо
+    при явном сбросе устройства. }
+  if (fDevice <> nil) and (fDevice.State = rdsProgrammed) then
+    PublishDiagnostics(CMic140StatusProgrammed, 'stopped; programmed', True);
 end;
 
 function TRecorderMic140DataSource.Mic140PublishedCodeInRecorderRange(
@@ -1593,7 +1702,10 @@ var
   lCjcChannel: Integer;
   lCjcTemperatureC: Double;
   lCjcPipelineActive: Boolean;
-  lTTag: TRecorderTag;
+  lCjcMillivolts: Double;
+  lCjcOffsetC: Double;
+  lHardwareCalibration: TRecorderCalibration;
+  lThermocoupleCalibration: TRecorderCalibration;
   lUseCjc: Boolean;
   lAuxTemperature: TMic140AuxTemperatureBlock;
   lTimes: TRecorderDoubleArray;
@@ -1606,6 +1718,23 @@ var
   lGood48: Integer;
   lGood48S1: Integer;
 begin
+  { Защита общего тракта от повторной либо переставленной порции. Кольцо
+    устройства обязано отдавать FIFO; перекрывающий блок нельзя второй раз
+    добавлять в теги под новыми границами логической порции. }
+  if (fLastPublishedBlockEndTimeSec >= 0.0) and
+    (ABlock.FirstTimeSec < fLastPublishedBlockEndTimeSec -
+      0.25 / Max(1.0, ABlock.SampleRateHz)) then
+  begin
+    Mic140LogWarning(Format(
+      '[DataSource:%s] MIC-140 out-of-order block skipped: first=%.9f previousEnd=%.9f samples=%d',
+      [SourceId, ABlock.FirstTimeSec, fLastPublishedBlockEndTimeSec,
+       ABlock.SampleCount]));
+    Exit;
+  end;
+  if ABlock.SampleCount > 0 then
+    fLastPublishedBlockEndTimeSec := ABlock.FirstTimeSec +
+      ABlock.SampleCount / Max(1.0, ABlock.SampleRateHz);
+
   lChannels := fRuntimeChannels;
   lCount := Min(ABlock.ChannelCount, Length(lChannels));
   if lCount <= 0 then
@@ -1704,8 +1833,26 @@ begin
   for lJ := 0 to ABlock.SampleCount - 1 do
     lTimes[lJ] := ABlock.FirstTimeSec + (lJ / ABlock.SampleRateHz);
 
-  if fMic <> nil then
-    lAuxTemperature := fMic.LastAuxTemperatureBlock
+  { TIn находятся в том же атомарном FIFO-блоке после основных AIn.
+    Общий LastAuxTemperatureBlock использовать здесь нельзя: при асинхронном
+    чтении он уже может принадлежать следующему сетевому пакету. }
+  lAuxTemperature.Revision := fGoodBlockCount;
+  lAuxTemperature.ChannelCount := Max(0, ABlock.ChannelCount - lCount);
+  lAuxTemperature.SampleCount := ABlock.SampleCount;
+  if lAuxTemperature.ChannelCount > 0 then
+  begin
+    SetLength(lAuxTemperature.Values, lAuxTemperature.ChannelCount);
+    SetLength(lAuxTemperature.Valid, lAuxTemperature.ChannelCount);
+    for lI := 0 to lAuxTemperature.ChannelCount - 1 do
+    begin
+      lAuxTemperature.Values[lI] := ABlock.Values[lCount + lI];
+      SetLength(lAuxTemperature.Valid[lI], ABlock.SampleCount);
+      for lJ := 0 to ABlock.SampleCount - 1 do
+        lAuxTemperature.Valid[lI][lJ] :=
+          (lCount + lI < Length(ABlock.Values)) and
+          (lJ < Length(ABlock.Values[lCount + lI]));
+    end;
+  end
   else
   begin
     lAuxTemperature.ChannelCount := 0;
@@ -1715,7 +1862,18 @@ begin
   end;
   if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
     CheckPublishedTinCodes(lAuxTemperature);
-  PublishTemperatureBlocks(lAuxTemperature, lTimes);
+  if lAuxTemperature.SampleCount > 0 then
+  begin
+    PublishTemperatureBlocks(lAuxTemperature, lTimes);
+    fLastAuxRevision := lAuxTemperature.Revision;
+  end;
+
+  { МО каждого канала холодного спая читается один раз на принятый блок.
+    Все основные каналы одной группы используют этот общий снимок. }
+  for lI := 0 to High(fRuntimeCjcTemperatures) do
+    fRuntimeCjcTemperatureValid[lI] :=
+      Mic140TryGetColdJunctionTemperature(fRuntimeTemperatureTags[lI],
+        fRuntimeCjcTemperatures[lI]);
 
   SetLength(lValues, ABlock.SampleCount);
   for lI := 0 to lCount - 1 do
@@ -1731,7 +1889,16 @@ begin
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
 
-    if not RecorderMic140TagHardwareCalibrationEnabled(Registry, lTag) then
+    if lI < Length(fRuntimeHardwareCalibrations) then
+      lHardwareCalibration := fRuntimeHardwareCalibrations[lI]
+    else
+      lHardwareCalibration := nil;
+    if lI < Length(fRuntimeThermocoupleCalibrations) then
+      lThermocoupleCalibration := fRuntimeThermocoupleCalibrations[lI]
+    else
+      lThermocoupleCalibration := nil;
+
+    if lHardwareCalibration = nil then
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
         lValues[lJ] := Mic140RawSample(ABlock, lI, lJ, lTag);
@@ -1741,12 +1908,12 @@ begin
       Continue;
     end;
 
-    if not lTag.ChannelCalibrationEnabled then
+    if lThermocoupleCalibration = nil then
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
       begin
         lRaw := Mic140RawSample(ABlock, lI, lJ, lTag);
-        lValues[lJ] := Registry.TransformTagHardwareValue(lTag, lRaw);
+        lValues[lJ] := lHardwareCalibration.Transform(lRaw);
       end;
       Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount, True);
       Registry.PublishBlockNotifications(lTag, lTimes, lValues,
@@ -1754,30 +1921,29 @@ begin
       Continue;
     end;
 
-    lCjcChannel := RecorderMic140TagEffectiveCjcChannel(Registry, lTag, lI,
-      CMic140Mic140SubRev1);
-    lTTag := nil;
-    if (lCjcChannel >= 1) and (lCjcChannel <= fTemperatureTagNames.Count) then
+    if lI < Length(fRuntimeCjcChannels) then
+      lCjcChannel := fRuntimeCjcChannels[lI]
+    else
+      lCjcChannel := RecorderMic140DefaultCjcChannel(lI,
+        CMic140Mic140SubRev1);
+    lUseCjc := fRuntimeThermoCompensation and
+      (lI < Length(fRuntimeTemperatureMode)) and fRuntimeTemperatureMode[lI];
+    if lUseCjc and (lCjcChannel >= 1) and
+      (lCjcChannel <= Length(fRuntimeCjcTemperatures)) then
     begin
-      if lCjcChannel - 1 < Length(fRuntimeTemperatureTags) then
-        lTTag := fRuntimeTemperatureTags[lCjcChannel - 1];
-    end;
-    lUseCjc := RecorderMic140TagUsesThermoCompensation(Registry, lTag) and
-      SameText(lTag.SourceValueMode,
-        RecorderMic140OutputModeToConfigName(momTemperatureC));
-    if lUseCjc then
-      lUseCjc := Mic140TryGetColdJunctionTemperature(Registry, lTTag,
-        lAuxTemperature, lCjcChannel, fDeviceSerial, CMic140Mic140SubRev1,
-        lCjcTemperatureC);
+      lCjcTemperatureC := fRuntimeCjcTemperatures[lCjcChannel - 1];
+      lUseCjc := fRuntimeCjcTemperatureValid[lCjcChannel - 1];
+    end
+    else
+      lUseCjc := False;
     if lUseCjc and (not fCjcActiveLogWritten) then
     begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC active: tag=%s T%d=%.3f degC',
         [SourceId, lTag.Name, lCjcChannel, lCjcTemperatureC]));
       fCjcActiveLogWritten := True;
     end;
-    if (not lUseCjc) and RecorderMic140TagUsesThermoCompensation(Registry, lTag) and
-      SameText(lTag.SourceValueMode,
-        RecorderMic140OutputModeToConfigName(momTemperatureC)) and
+    if (not lUseCjc) and fRuntimeThermoCompensation and
+      (lI < Length(fRuntimeTemperatureMode)) and fRuntimeTemperatureMode[lI] and
       (not fTemperatureModeWarningLogged) then
     begin
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 CJC T%d unavailable (TIn cal missing or junction temp invalid, block tin=%d); channel will use thermocouple curve without compensation',
@@ -1785,16 +1951,21 @@ begin
       fTemperatureModeWarningLogged := True;
     end;
 
-    lCjcPipelineActive := lUseCjc and
-      Mic140TagHasThermocoupleCalibration(Registry, lTag);
+    lCjcOffsetC := 0.0;
+    if lI < Length(fRuntimeChannelSettings) then
+      lCjcOffsetC := fRuntimeChannelSettings[lI].CjcTemperOffsetC;
+    lCjcPipelineActive := lUseCjc and Mic140InvertCalibration(
+      lThermocoupleCalibration, lCjcTemperatureC + lCjcOffsetC,
+      lCjcMillivolts);
     for lJ := 0 to ABlock.SampleCount - 1 do
     begin
       lRaw := Mic140RawSample(ABlock, lI, lJ, lTag);
       if lCjcPipelineActive then
-        lValues[lJ] := Mic140TransformThermocoupleChannelSample(Registry, lTag,
-          lI, lRaw, lCjcTemperatureC)
+        lValues[lJ] := lThermocoupleCalibration.Transform(
+          lHardwareCalibration.Transform(lRaw) + lCjcMillivolts)
       else
-        lValues[lJ] := lRaw;
+        lValues[lJ] := lThermocoupleCalibration.Transform(
+          lHardwareCalibration.Transform(lRaw));
     end;
     if lUseCjc and (not lCjcPipelineActive) and (not fCjcCorrectLogWritten) then
     begin
@@ -1803,13 +1974,11 @@ begin
         [SourceId, lTag.Name]));
       fCjcCorrectLogWritten := True;
     end;
-    Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount,
-      lCjcPipelineActive);
-    if lCjcPipelineActive then
-      Registry.PublishBlockNotifications(lTag, lTimes, lValues,
-        ABlock.SampleCount)
-    else
-      Registry.PublishBlockNotifications(lTag);
+    { Оба преобразования уже выполнены над блоком. Не отдавать значения в
+      универсальный поточечный тракт повторно: он снова ищет ГХ по строкам. }
+    Registry.AddBlockSamples(lTag, lTimes, lValues, ABlock.SampleCount, True);
+    Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+      ABlock.SampleCount);
   end;
 
 end;
@@ -1842,7 +2011,7 @@ begin
     begin
       fReadFailCount := 0;
       Inc(lReads);
-      ProcessAndPublishBlock(lBlock);
+      AppendAndPublishBlock(lBlock);
       if lBlock.SampleCount > 0 then
         Inc(lGotSamples, lBlock.SampleCount)
       else
@@ -1852,7 +2021,7 @@ begin
         fMic.ReadBlock(0, lBlock) do
       begin
         Inc(lReads);
-        ProcessAndPublishBlock(lBlock);
+        AppendAndPublishBlock(lBlock);
         if lBlock.SampleCount > 0 then
           Inc(lGotSamples, lBlock.SampleCount)
         else

@@ -343,6 +343,7 @@ type
     procedure Assign(ASource: TRecorderCalibration);
     function Clone: TRecorderCalibration;
     function Transform(AValue: Double): Double;
+    function InverseTransform(AValue: Double; out AInputValue: Double): Boolean;
     procedure ClearPoints;
     function PointAt(AIndex: Integer): TRecorderCalibrationPoint;
     property Name: string read fName write fName;
@@ -2172,6 +2173,89 @@ begin
       end;
   end;
 end;
+
+function TRecorderCalibration.InverseTransform(AValue: Double;
+  out AInputValue: Double): Boolean;
+var
+  lAscending: Boolean;
+  lA: TRecorderCalibrationPoint;
+  lB: TRecorderCalibrationPoint;
+  lFirst: TRecorderCalibrationPoint;
+  lLast: TRecorderCalibrationPoint;
+  lLeft: Integer;
+  lMid: Integer;
+  lRight: Integer;
+begin
+  Result := False;
+  AInputValue := 0.0;
+  case fKind of
+    rckScale:
+      begin
+        if SameValue(fScale, 0.0) then
+          Exit;
+        AInputValue := AValue / fScale;
+        Exit(True);
+      end;
+    rckPiecewiseLinear:
+      begin
+        if fPoints.Count < 2 then
+          Exit;
+        lFirst := PointAt(0);
+        lLast := PointAt(fPoints.Count - 1);
+        if (lFirst = nil) or (lLast = nil) then
+          Exit;
+        lAscending := lFirst.Y <= lLast.Y;
+        lLeft := 0;
+        lRight := fPoints.Count - 1;
+        while lRight - lLeft > 1 do
+        begin
+          lMid := (lLeft + lRight) div 2;
+          lA := PointAt(lMid);
+          if lA = nil then
+            Exit;
+          if (lA.Y < AValue) = lAscending then
+            lLeft := lMid
+          else
+            lRight := lMid;
+        end;
+
+        if (AValue < Min(lFirst.Y, lLast.Y)) or
+          (AValue > Max(lFirst.Y, lLast.Y)) then
+        begin
+          if not fExtrapolation then
+          begin
+            if Abs(AValue - lFirst.Y) <= Abs(AValue - lLast.Y) then
+              AInputValue := lFirst.X
+            else
+              AInputValue := lLast.X;
+            Exit(True);
+          end;
+          if ((AValue < lFirst.Y) = lAscending) then
+          begin
+            lLeft := 0;
+            lRight := 1;
+          end
+          else
+          begin
+            lLeft := fPoints.Count - 2;
+            lRight := fPoints.Count - 1;
+          end;
+        end;
+
+        lA := PointAt(lLeft);
+        lB := PointAt(lRight);
+        if (lA = nil) or (lB = nil) then
+          Exit;
+        if SameValue(lA.Y, lB.Y) then
+          AInputValue := lA.X
+        else
+          AInputValue := lA.X + (AValue - lA.Y) *
+            (lB.X - lA.X) / (lB.Y - lA.Y);
+        Result := True;
+      end;
+  end;
+end;
+
 procedure TRecorderCalibration.ClearPoints;
 var
   I: Integer;

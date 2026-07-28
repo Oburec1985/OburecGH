@@ -599,7 +599,11 @@ begin
   Result := False;
   if (AStride <= 0) and (ARaw.PayloadStrideWords > 0) then
     AStride := ARaw.PayloadStrideWords;
-  ABlock.ChannelCount := AChCnt;
+  { В кольцо передаётся вся строка FIFO целиком: сначала AIn, затем TIn.
+    Нельзя хранить TIn отдельно как "последний снимок": поток чтения успевает
+    принять следующий пакет раньше потребителя, и температуры получают время
+    от другого блока. }
+  ABlock.ChannelCount := AStride;
   if AChCnt <= 0 then
     Exit;
   ABlock.SampleCount := ARaw.DataWordCount div AStride;
@@ -607,11 +611,11 @@ begin
     Exit;
   ABlock.SampleRateHz := AFreq;
   ABlock.FirstTimeSec := ARaw.FirstSampleIndex / AFreq;
-  SetLength(ABlock.Values, AChCnt);
-  for i := 0 to AChCnt - 1 do
+  SetLength(ABlock.Values, AStride);
+  for i := 0 to AStride - 1 do
     SetLength(ABlock.Values[i], ABlock.SampleCount);
   for j := 0 to ABlock.SampleCount - 1 do
-    for i := 0 to AChCnt - 1 do
+    for i := 0 to AStride - 1 do
     begin
       idx := j * AStride + i;
       ABlock.Values[i][j] := SmallInt(ARaw.Data[idx]);

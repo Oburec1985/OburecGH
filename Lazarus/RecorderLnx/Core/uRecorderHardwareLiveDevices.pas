@@ -21,6 +21,10 @@ function RecorderHardwareFindLiveDevice(const ASourceId: string): IRecorderDevic
 function RecorderHardwareIsSourceLinkOk(const ASourceId: string): Boolean;
 function RecorderHardwareTestSourceLink(const ASourceId: string;
   out AErrorText: string): Boolean;
+procedure RecorderHardwareTestAllLiveSources;
+procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
+function RecorderHardwareConsumeSourceResetRequest(
+  const ASourceId: string): Boolean;
 procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);
 procedure RecorderHardwareClearSourceOffline(const ASourceId: string);
 procedure RecorderHardwareClearAllOfflineSources;
@@ -38,6 +42,7 @@ type
     SourceId: string;
     Device: IRecorderDevice;
     Owner: TObject;
+    ResetRequested: Boolean;
   end;
 
   TRecorderHardwareOfflineEntry = class
@@ -127,6 +132,7 @@ begin
   lEntry.SourceId := Trim(ASourceId);
   lEntry.Device := ADevice;
   lEntry.Owner := AOwner;
+  lEntry.ResetRequested := False;
   lList := gHardwareLiveEntries.LockList;
   try
     lList.Add(lEntry);
@@ -189,6 +195,82 @@ var
   lErrorText: string;
 begin
   Result := RecorderHardwareTestSourceLink(ASourceId, lErrorText);
+end;
+
+procedure RecorderHardwareTestAllLiveSources;
+var
+  I: Integer;
+  lDevices: array of IRecorderDevice;
+  lErrorText: string;
+  lList: TList;
+  lSourceIds: array of string;
+begin
+  if gHardwareLiveEntries = nil then
+    Exit;
+  lList := gHardwareLiveEntries.LockList;
+  try
+    SetLength(lDevices, lList.Count);
+    SetLength(lSourceIds, lList.Count);
+    for I := 0 to lList.Count - 1 do
+    begin
+      lDevices[I] := TRecorderHardwareLiveEntry(lList[I]).Device;
+      lSourceIds[I] := TRecorderHardwareLiveEntry(lList[I]).SourceId;
+    end;
+  finally
+    gHardwareLiveEntries.UnlockList;
+  end;
+
+  { Сетевой вызов выполняется без блокировки реестра живых устройств. }
+  for I := 0 to High(lDevices) do
+  begin
+    lErrorText := '';
+    if (lDevices[I] <> nil) and lDevices[I].TestLink(lErrorText) then
+      RecorderHardwareClearSourceOffline(lSourceIds[I])
+    else
+    begin
+      if Trim(lErrorText) = '' then
+        lErrorText := 'TEST устройства не выполнен';
+      RecorderHardwareMarkSourceOffline(lSourceIds[I], lErrorText);
+    end;
+  end;
+end;
+
+procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
+var
+  lDevice: IRecorderDevice;
+  lEntry: TRecorderHardwareLiveEntry;
+begin
+  lDevice := nil;
+  if not RecorderHardwareFindEntry(ASourceId, lEntry) then
+    Exit;
+  lEntry.ResetRequested := True;
+  lDevice := lEntry.Device;
+  { Сброс инвалидирует аппаратную сессию. Тяжёлая инициализация и
+    программирование выполнятся источником при следующем PrepareHardware. }
+  if lDevice <> nil then
+  begin
+    try
+      lDevice.Stop;
+    except
+      { Разрыв сессии всё равно должен быть выполнен. }
+    end;
+    try
+      lDevice.Disconnect;
+    except
+      { Ошибка будет отражена последующим TestLink/PrepareHardware. }
+    end;
+  end;
+end;
+
+function RecorderHardwareConsumeSourceResetRequest(
+  const ASourceId: string): Boolean;
+var
+  lEntry: TRecorderHardwareLiveEntry;
+begin
+  Result := RecorderHardwareFindEntry(ASourceId, lEntry) and
+    lEntry.ResetRequested;
+  if Result then
+    lEntry.ResetRequested := False;
 end;
 
 procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);

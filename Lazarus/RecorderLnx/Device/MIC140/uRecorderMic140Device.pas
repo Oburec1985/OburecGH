@@ -32,6 +32,7 @@ type
     fStop: Boolean;
     fScanOn: Boolean;
     fInitialized: Boolean;
+    fConfiguredInSession: Boolean;
     fCli: TMic140v2Tcp;
     fFw: TMic140v2Firmware;
     fProgrammingProfile: TMic140ProgrammingProfile;
@@ -45,6 +46,7 @@ type
     fBoardCommutIndexes: array of Integer;
     fStr: TMic140v2StreamState;
     fAux: TMic140AuxTemperatureBlock;
+    fAuxRevision: QWord;
     fValAddr: Word;
     fTinSlots: Integer;
     fScanPayloadStride: Integer;
@@ -226,6 +228,7 @@ begin
   fNode := MIC140v2DefaultNode;
   fState := rdsDisconnected;
   fInitialized := False;
+  fConfiguredInSession := False;
   fDataThread := nil;
   Mic140v2StreamClear(fStr);
   BuildChannels;
@@ -263,7 +266,10 @@ begin
     lSamples := lMaxPerCh;
   if (fExpDataWords > 0) and (lStride > 0) then
     lSamples := Max(1, Integer(fExpDataWords) div lStride);
-  fDataThread.Config(fChCnt, lSamples, fFreq);
+  { FIFO MIC-140 содержит в одной строке и измерительные, и температурные
+    каналы. Кольцо обязано хранить строку целиком, иначе TIn теряет связь со
+    временем и номером исходного сетевого пакета. }
+  fDataThread.Config(lStride, lSamples, fFreq);
 end;
 
 procedure TRecorderMic140Device.StopDataThread;
@@ -466,10 +472,12 @@ var
   lNow: QWord;
   lUseCache: Boolean;
   lSubRev: Word;
+  lNewValues: Boolean;
 begin
   if (fCli = nil) or (fValAddr = 0) or (fTinSlots <= 0) or (ASampleCount <= 0) then
     Exit;
   lNow := GetTickCount64;
+  lNewValues := False;
   lSubRev := Mic140v2DevSubRevFromFirmware(fFw);
   lUseCache := (fLastTinDmReadTick <> 0) and (lNow - fLastTinDmReadTick < fUpdMs) and
     (Length(fLastTinDmWords) >= fTinSlots);
@@ -487,6 +495,7 @@ begin
       for i := 0 to fTinSlots - 1 do
         fLastTinDmWords[i] := lWords[i];
       fLastTinDmReadTick := lNow;
+      lNewValues := True;
       lUseCache := True;
     end
     else if Length(fLastTinDmWords) < fTinSlots then
@@ -520,8 +529,12 @@ begin
       for i := 0 to fTinSlots - 1 do
         fLastTinDmWords[i] := lWords[i];
       fLastTinDmReadTick := lNow;
+      lNewValues := True;
     end;
   end;
+  if lNewValues then
+    Inc(fAuxRevision);
+  fAux.Revision := fAuxRevision;
   fAux.ChannelCount := fTinSlots;
   { TIn ?�???�?????�?�?� ???�???????�???�?? ?�???????????? ???? DM, ?? ???? ???�???????� ?? ?????�?�???????�?????�?? FIFO AIn. }
   fAux.SampleCount := 1;
@@ -621,13 +634,21 @@ end;
 
 procedure TRecorderMic140Device.InitializeDevice;
 var
-  err: string;
+  err, lResetScanErr: string;
   lReply: TMic140v2WordBuf;
 begin
   if fState = rdsDisconnected then
     Connect;
   if (fState = rdsDisconnected) or (fCli = nil) or fInitialized then
     Exit;
+  if not fCli.TestLoad(err) then
+  begin
+    Mic140v2Log(Format('[MIC140v2:%s:%d] init TEST_LOAD: %s',
+      [fHost, fPort, err]));
+    Exit;
+  end;
+  Mic140v2Log(Format('[MIC140v2:%s:%d] init TEST_LOAD: ready',
+    [fHost, fPort]));
   if not fCli.ReadFirmware(fFw, err) then
   begin
     Mic140v2Log(Format('[MIC140v2:%s:%d] init firmware: %s',
@@ -648,7 +669,11 @@ begin
   { Reset ?????�???�?�?????�?? ?????????�?�?????�?�?� ???�?????�?�????????. ?� ???�?????????????? ?????�???? ???????�???????�??????
     ?????????????????? ?�?�?? ?????�?�?? ???????�?�???????� CheckState(BIOS_LOADED_STATE). ?�?? ?????�?�????????
     Stop/ResetScanMain, ???????? BIOS ?�???????? ???? ???�?????�?????� ???? ???????�???� ???????�?????�?�???�????. }
-  Sleep(500);
+  { [ORIG] После CMD_RESET первый RESETSCANMAIN выполняется почти сразу,
+    второй — после загрузки BIOS примерно через пять секунд. Config не должен
+    начинаться раньше: на холодном контроллере прежний код успевал получить
+    один FIFO-блок, после чего scan останавливался. }
+  Sleep(CMic140LegacyBiosResetFirstDelayMs);
   if not fCli.ReadFirmware(fFw, err) then
   begin
     Mic140v2Log(Format('[MIC140v2:%s:%d] firmware after CMD_RESET: %s',
@@ -656,6 +681,21 @@ begin
     Exit;
   end;
   fHwSer := Mic140v2HardwareCalibrSerial(fFw);
+  if not fCli.CallCommand(CMic140LegacyCmdResetScanMain, nil, 0, lReply,
+    lResetScanErr) then
+  begin
+    Mic140v2Log(Format('[MIC140v2:%s:%d] init first RESETSCANMAIN: %s',
+      [fHost, fPort, lResetScanErr]));
+    Exit;
+  end;
+  Sleep(CMic140LegacyBiosResetSettleMs);
+  if not fCli.CallCommand(CMic140LegacyCmdResetScanMain, nil, 0, lReply,
+    lResetScanErr) then
+  begin
+    Mic140v2Log(Format('[MIC140v2:%s:%d] init second RESETSCANMAIN: %s',
+      [fHost, fPort, lResetScanErr]));
+    Exit;
+  end;
   if not Mic140v2StopScan(fCli, err) then
     Mic140v2Log(Format('[MIC140v2:%s:%d] init orphan stop: %s',
       [fHost, fPort, err]));
@@ -670,8 +710,27 @@ begin
 end;
 
 procedure TRecorderMic140Device.ConfigureDevice;
+var
+  lError: string;
+  lReply: TMic140v2WordBuf;
 begin
+  if not fInitialized then
+    InitializeDevice;
+  if not fInitialized then
+    Exit;
+  if fConfiguredInSession then
+  begin
+    if not fCli.CallCommand(CMic140LegacyCmdResetScanMain, nil, 0, lReply,
+      lError) then
+      raise ERecorderDeviceError.Create(
+        'MIC-140 reconfigure RESETSCANMAIN: ' + lError);
+    if not Mic140v2StopScan(fCli, lError) then
+      raise ERecorderDeviceError.Create(
+        'MIC-140 reconfigure STOPSCANMAIN: ' + lError);
+    fCli.ClearBufferedPackets;
+  end;
   ProgramDevice;
+  fConfiguredInSession := fState = rdsProgrammed;
 end;
 
 procedure TRecorderMic140Device.ProgramDevice;
@@ -846,6 +905,8 @@ begin
     ?�?�???�???�?? Config ???�???????�?? ???� Play, ???? ?�?????� ?????�???????? ?�???????????�???????� ???�?� ?�???????? ????????
     ?????�?????�?????�?�: ???????�?? MIC-140 ???�???????????????� ?????????�?�???�???� ?� ?????�???????????? ?????????�???? ?? ???????�
     ?????????????? ???????�?�?�?�?� ?????????� Start. }
+  { Автономный рабочий протокол перед STARTSCANMAIN явно переводит
+    единственную циклограмму scan_id=0 в рабочее состояние. }
   SetLength(lArgs, 2);
   lArgs[0] := CMic140LegacyScanId;
   lArgs[1] := 0;

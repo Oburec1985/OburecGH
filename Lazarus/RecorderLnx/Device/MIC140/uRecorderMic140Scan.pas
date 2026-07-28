@@ -286,7 +286,6 @@ var
   args, desc, chanDump, reply: TMic140v2WordBuf;
   pg, fifoAddr, fifoDesc, scanDesc, scanChan, valAddr, descAddr: Word;
   fifoPg, fifoReady, fifoCapacity, me0, me1, lRegDesc, scanChanPg: Word;
-  stopErr: string;
   tim: TRecorderMic140Timing;
   lRev2, lHiddenTIn: Boolean;
   lChannelDelaySport: Word;
@@ -312,17 +311,6 @@ begin
 
   fCli.TimeoutMs := CMic140LegacyCommandTimeoutMs;
   { [LNX] ╤П╨▓╨╜╤Л╨╣ StopScan ╨┐╨╡╤А╨╡╨┤ ╨┐╤А╨╛╨│╤А╨░╨╝╨╝╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨╝ тАФ ╤Б╨╕╤А╨╛╤В╤Б╨║╨╕╨╣ scan ╨┐╨╛╤Б╨╗╨╡ ╨╛╨▒╤А╤Л╨▓╨░ TCP }
-  if not Mic140v2StopScan(fCli, stopErr) then
-    Mic140v2Log(Format('[MIC140v2] pre-program stop: %s', [stopErr]));
-  fCli.ClearBufferedPackets;
-
-  if not fCli.CallCommand(CMic140LegacyCmdResetScanMain, nil, 0, reply, AErr) then
-  begin
-    { [ORIG] Ccdevice::OnResetScanMain / CMD_RESETSCANMAIN }
-    AErr := 'RESETSCANMAIN: ' + AErr;
-    Exit;
-  end;
-
   SetLength(args, 2);
   args[0] := TimerScale - 1;
   args[1] := TimerPeriod - 1;
@@ -611,9 +599,61 @@ begin
     Exit;
   end;
 
+  { Обязательная для холодного MIC-140-48v3 arm-последовательность:
+    настройка сообщения BIOS, синхронизации и явный запуск АЦП. }
+  SetLength(args, 3);
+  args[0] := fHeapCur;
+  args[1] := 0;
+  args[2] := CMic140LegacyMessageBufferWords;
+  if not fCli.CallCommand(CMic140LegacyCmdConfigMessage, args, 4, reply,
+    AErr) then
+  begin
+    AErr := 'CONFIG_MESSAGE: ' + AErr;
+    Exit;
+  end;
+
+  SetLength(args, 3);
+  args[0] := 0;
+  args[1] := 0;
+  args[2] := 1;
+  if not fCli.CallCommand(CMic140LegacyCmdConfigSyncStart, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'CONFIG_SYNC_START: ' + AErr;
+    Exit;
+  end;
+
+  SetLength(args, 1);
+  args[0] := CMic140LegacyInitialStartTimer;
+  if not fCli.CallCommand(CMic140LegacyCmdSetTimeoutStartTimer, args, 0,
+    reply, AErr) then
+  begin
+    AErr := 'SET_TIMEOUTSTARTTIMER initial: ' + AErr;
+    Exit;
+  end;
+
+  SetLength(args, 0);
+  if not fCli.CallCommand(CMic140LegacyCmdStartTriggerAdc, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'START_TRIGGERSTARTADC: ' + AErr;
+    Exit;
+  end;
+
+  SetLength(args, 1);
+  args[0] := CMic140LegacyRunStartTimer;
+  if not fCli.CallCommand(CMic140LegacyCmdSetTimeoutStartTimer, args, 0,
+    reply, AErr) then
+  begin
+    AErr := 'SET_TIMEOUTSTARTTIMER run: ' + AErr;
+    Exit;
+  end;
+  Sleep(CMic140LegacyAdcStartSettleMs);
+
   Mic140v2Log(Format(
-    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d val=0x%.4x',
-    [intCnt, ptrCnt, PayloadStride, fifoReady, LastExpectedMessageWords, valAddr]));
+    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d val=0x%.4x message=0x%.4x',
+    [intCnt, ptrCnt, PayloadStride, fifoReady, LastExpectedMessageWords,
+     valAddr, fHeapCur]));
   fLastValAddr := valAddr;
   fLastPayloadStride := PayloadStride;
   Result := True;

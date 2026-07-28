@@ -169,6 +169,7 @@ type
     fDragSelectEnd: TPoint;
     fSelectingGrid: TStringGrid;
     fSavedSelection: TGridRect;
+    fDataSourcesChanged: Boolean;
     procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SelectedChannelsFilterChanged(Sender: TObject);
@@ -268,6 +269,7 @@ type
     property DeviceImageList: TCustomImageList read fDeviceImageList write SetDeviceImageList;
     property TagDialogImageList: TCustomImageList read fTagDialogImageList
       write SetTagDialogImageList;
+    property DataSourcesChanged: Boolean read fDataSourcesChanged;
 
     { Self-test / debug: same path as dblClick on MIC185 in hardware tree. }
     procedure DebugEditMic185Source(const ASourceId: string);
@@ -278,6 +280,11 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARecorder: TRecorder;
   ADeviceImageList: TCustomImageList = nil;
   ATagDialogImageList: TCustomImageList = nil): Boolean;
+function ShowRecorderSettingsDialog(AOwner: TComponent;
+  ARecorder: TRecorder;
+  ADeviceImageList: TCustomImageList;
+  ATagDialogImageList: TCustomImageList;
+  out ADataSourcesChanged: Boolean): Boolean;
 
 { Opens settings dialog internals and invokes MIC185 edit (no full settings modal). }
 function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
@@ -329,14 +336,32 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ADeviceImageList: TCustomImageList;
   ATagDialogImageList: TCustomImageList): Boolean;
 var
+  lDataSourcesChanged: Boolean;
+begin
+  Result := ShowRecorderSettingsDialog(AOwner, ARecorder, ADeviceImageList,
+    ATagDialogImageList, lDataSourcesChanged);
+end;
+
+function ShowRecorderSettingsDialog(AOwner: TComponent;
+  ARecorder: TRecorder;
+  ADeviceImageList: TCustomImageList;
+  ATagDialogImageList: TCustomImageList;
+  out ADataSourcesChanged: Boolean): Boolean;
+var
   lDialog: TRecorderSettingsDialog;
 begin
+  ADataSourcesChanged := False;
   lDialog := TRecorderSettingsDialog.Create(AOwner);
   try
     lDialog.DeviceImageList := ADeviceImageList;
     lDialog.TagDialogImageList := ATagDialogImageList;
     lDialog.Recorder := ARecorder;
+    { Вход в конфигурацию проверяет существующие сессии, но не программирует приборы. }
+    RecorderHardwareTestAllLiveSources;
     Result := lDialog.ShowModal = mrOk;
+    { Выход из конфигурации повторно фиксирует доступность каналов. }
+    RecorderHardwareTestAllLiveSources;
+    ADataSourcesChanged := lDialog.DataSourcesChanged;
   finally
     lDialog.Free;
   end;
@@ -488,6 +513,7 @@ const
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  fDataSourcesChanged := False;
   fSelectedChannelTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -895,6 +921,8 @@ begin
       fDeviceImageList);
     if lDialogOk then
     begin
+      { Настройка тега может изменить частоту/аппаратные параметры канала. }
+      fDataSourcesChanged := True;
       MarkSignalsFromRegistry;
       PopulateHardwareTree;
       PopulateChannelGrids;
@@ -1680,6 +1708,7 @@ begin
   if fRecorder = nil then
     Exit;
   fSourceProbe.LoadMeraFile(AFileName);
+  fDataSourcesChanged := True;
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -1715,6 +1744,7 @@ begin
   fSourceProbe.MeraFilePath := '';
   fSourceProbe.MeraFolder := '';
   fSourceProbe.ClearGroup(rsgMeraFile);
+  fDataSourcesChanged := True;
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -1734,6 +1764,7 @@ begin
   end;
 
   fSourceProbe.ReloadMeraFile;
+  fDataSourcesChanged := True;
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -1958,6 +1989,7 @@ begin
       fSourceProbe.LoadMeraFile(fSourceProbe.MeraFilePath)
     else
       fSourceProbe.ClearGroup(rsgMeraFile);
+    fDataSourcesChanged := True;
 
     PopulateHardwareTree;
     PopulateChannelGrids;
@@ -1978,6 +2010,7 @@ var
 begin
   if fRecorder.TagRegistry = nil then
     Exit;
+  fDataSourcesChanged := True;
 
   if TryParseRecorderMic140SourceId(ANewSourceId, lHost, lPort) then
   begin
@@ -2079,6 +2112,7 @@ begin
           fRecorder.DataSources, fRecorder.TagRegistry) then
         begin
           lConfig.SpecificConfigText := lConfigText;
+          fDataSourcesChanged := True;
           PopulateHardwareTree;
           PopulateChannelGrids;
         end;
@@ -2120,6 +2154,7 @@ begin
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
   RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, ASourceId);
+  fDataSourcesChanged := True;
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
@@ -2145,6 +2180,7 @@ begin
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
   RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, ASourceId);
+  fDataSourcesChanged := True;
   lIdx := fRecorder.TagRegistry.SourceSpecificConfigs.IndexOf(ASourceId);
   if lIdx >= 0 then
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
@@ -2192,11 +2228,12 @@ begin
   lSourceId := SelectedHardwareSourceId;
   if lSourceId = '' then
     Exit;
-  { Сброс статуса сам по себе не означает исправность. Сразу подтверждаем
-    устройство через TEST и только после успеха снимаем offline-метку. }
+  lErrorText := '';
+  { Явный сброс инвалидирует текущую аппаратную конфигурацию. При следующем
+    запуске источник заново выполнит Init/Configure; обычный Stop этого не делает. }
+  RecorderHardwareRequestSourceReset(lSourceId);
   RecorderHardwareClearSourceOffline(lSourceId);
-  if RecorderHardwareTestSourceLink(lSourceId, lErrorText) or
-    RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
+  if RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
     RecorderHardwareClearSourceOffline(lSourceId)
   else
   begin
@@ -3146,6 +3183,7 @@ begin
       lSignal.Selected := True;
   end;
   CreateSelectedMeraTags;
+  fDataSourcesChanged := True;
   MarkSignalsFromRegistry;
   PopulateChannelGrids;
 end;
@@ -3178,6 +3216,7 @@ begin
       fRecorder.TagRegistry.RemoveTag(lTag);
   end;
   MarkSignalsFromRegistry;
+  fDataSourcesChanged := True;
   PopulateHardwareTree;
   PopulateChannelGrids;
 end;
@@ -3195,6 +3234,7 @@ begin
 
   lSignal.Selected := True;
   CreateSelectedMeraTags;
+  fDataSourcesChanged := True;
   MarkSignalsFromRegistry;
   PopulateChannelGrids;
 end;

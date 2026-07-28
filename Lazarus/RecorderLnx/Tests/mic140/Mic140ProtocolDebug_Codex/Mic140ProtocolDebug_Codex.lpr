@@ -10,7 +10,8 @@ uses
   {$ENDIF}
   {$ENDIF}
   Interfaces, Forms, uRecorderAcquisitionTypes, uRecorderDeviceInterfaces,
-  uMic140DebugForm, uRecorderDeviceManager, uMic140Device, uMic140Registration {Mic140DebugForm};
+  uMic140DebugForm, uRecorderDeviceManager, uMic140Device, uMic140Registration,
+  uRecorderMic140v2Device {Mic140DebugForm};
 
 begin
   RequireDerivedFormResource := True;
