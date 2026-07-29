@@ -294,6 +294,7 @@ type
     public
       Source: IRecorderDataSource;       { Ссылка на источник }
       Thread: TRecorderDataSourceThread; { Поток-опрашиватель источника }
+      Enabled: Boolean;                  { Разрешён ли сбор с источника }
       procedure PrepareHardware;
     end;
   private
@@ -314,7 +315,12 @@ type
 
     { Добавляет источник в manager.
       ASource - источник данных. Manager хранит interface-ссылку. }
-    procedure AddSource(const ASource: IRecorderDataSource);
+    procedure AddSource(const ASource: IRecorderDataSource;
+      AEnabled: Boolean = True);
+    procedure SetSourceEnabled(const ASourceId: string; AEnabled: Boolean);
+    procedure ReplaceSource(const ASource: IRecorderDataSource;
+      AEnabled: Boolean = True);
+    procedure RemoveSource(const ASourceId: string);
 
     { Ищет источник по SourceId без учета регистра. }
     function FindSource(const ASourceId: string): IRecorderDataSource;
@@ -1482,7 +1488,8 @@ begin
   Result := fLastErrors.Count;
 end;
 
-procedure TRecorderDataSourceManager.AddSource(const ASource: IRecorderDataSource);
+procedure TRecorderDataSourceManager.AddSource(const ASource: IRecorderDataSource;
+  AEnabled: Boolean);
 var
   lContext: TSourceContext;
 begin
@@ -1496,7 +1503,100 @@ begin
 
   lContext := TSourceContext.Create;
   lContext.Source := ASource;
+  lContext.Enabled := AEnabled;
   fSources.Add(lContext);
+end;
+
+procedure TRecorderDataSourceManager.SetSourceEnabled(const ASourceId: string;
+  AEnabled: Boolean);
+var
+  I: Integer;
+  lContext: TSourceContext;
+begin
+  for I := 0 to fSources.Count - 1 do
+  begin
+    lContext := GetSourceContext(I);
+    if not SameText(lContext.Source.SourceId, ASourceId) then
+      Continue;
+    if lContext.Enabled = AEnabled then
+      Exit;
+
+    if not AEnabled then
+    begin
+      if lContext.Thread <> nil then
+      begin
+        lContext.Thread.Terminate;
+        lContext.Source.RequestStop;
+        lContext.Thread.WaitFor;
+        if lContext.Thread.LastErrorMessage <> '' then
+          fLastErrors.Add(lContext.Source.SourceId + ': ' +
+            lContext.Thread.LastErrorMessage);
+        FreeAndNil(lContext.Thread);
+      end;
+      lContext.Enabled := False;
+    end
+    else
+    begin
+      lContext.Enabled := True;
+      if fRunning then
+      begin
+        lContext.Source.PrepareHardware;
+        lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);
+        lContext.Thread.Start;
+        RegisterThreadName(lContext.Thread.ThreadID,
+          'Src_' + lContext.Source.SourceId);
+      end;
+    end;
+    Exit;
+  end;
+end;
+
+procedure TRecorderDataSourceManager.RemoveSource(const ASourceId: string);
+var
+  I: Integer;
+  lContext: TSourceContext;
+begin
+  for I := fSources.Count - 1 downto 0 do
+  begin
+    lContext := GetSourceContext(I);
+    if not SameText(lContext.Source.SourceId, ASourceId) then
+      Continue;
+    if lContext.Thread <> nil then
+    begin
+      lContext.Thread.Terminate;
+      lContext.Source.RequestStop;
+      lContext.Thread.WaitFor;
+      FreeAndNil(lContext.Thread);
+    end;
+    lContext.Free;
+    fSources.Delete(I);
+    Exit;
+  end;
+end;
+
+procedure TRecorderDataSourceManager.ReplaceSource(
+  const ASource: IRecorderDataSource; AEnabled: Boolean);
+var
+  lWasRunning: Boolean;
+begin
+  if ASource = nil then
+    raise ERecorderDataSourceError.Create('Replacement data source cannot be nil');
+  lWasRunning := fRunning;
+  RemoveSource(ASource.SourceId);
+  AddSource(ASource, AEnabled);
+  ASource.ConfigureTags(fRegistry);
+  if AEnabled then
+  begin
+    ASource.PrepareHardware;
+    if lWasRunning then
+    begin
+      GetSourceContext(fSources.Count - 1).Thread :=
+        TRecorderDataSourceThread.Create(ASource);
+      GetSourceContext(fSources.Count - 1).Thread.Start;
+      RegisterThreadName(GetSourceContext(fSources.Count - 1).Thread.ThreadID,
+        'Src_' + ASource.SourceId);
+    end;
+  end;
 end;
 
 function TRecorderDataSourceManager.FindSource(const ASourceId: string): IRecorderDataSource;
@@ -1536,9 +1636,13 @@ begin
       'Data source manager tags are not configured');
   { Независимые источники имеют отдельные TCP-сеансы и готовятся параллельно.
     Внутри одного устройства его протокол остаётся строго последовательным. }
-  SetLength(lProcedures, fSources.Count);
+  SetLength(lProcedures, 0);
   for I := 0 to fSources.Count - 1 do
-    lProcedures[I] := @GetSourceContext(I).PrepareHardware;
+    if GetSourceContext(I).Enabled then
+    begin
+      SetLength(lProcedures, Length(lProcedures) + 1);
+      lProcedures[High(lProcedures)] := @GetSourceContext(I).PrepareHardware;
+    end;
   SharedRunParallel(lProcedures);
 end;
 
@@ -1555,10 +1659,13 @@ begin
   fLastErrors.Clear;
   try
     for I := 0 to fSources.Count - 1 do
-      GetSourceContext(I).Source.PrepareHardware;
+      if GetSourceContext(I).Enabled then
+        GetSourceContext(I).Source.PrepareHardware;
     for I := 0 to fSources.Count - 1 do
     begin
       lContext := GetSourceContext(I);
+      if not lContext.Enabled then
+        Continue;
       lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);
       lContext.Thread.Start;
       RegisterThreadName(lContext.Thread.ThreadID, 'Src_' + lContext.Source.SourceId);

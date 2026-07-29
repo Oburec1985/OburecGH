@@ -23,12 +23,15 @@ type
     fModuleType: string;
     fDefaultPollFrequencyHz: Double;
     fSpecificConfigText: string;
+    fEnabled: Boolean;
   protected
     function GetSourceId: string; virtual;
     procedure SetSourceId(const AValue: string); virtual;
   public
+    constructor Create;
     property SourceId: string read GetSourceId write SetSourceId;
     property ModuleType: string read fModuleType write fModuleType;
+    property Enabled: Boolean read fEnabled write fEnabled;
     property DefaultPollFrequencyHz: Double
       read fDefaultPollFrequencyHz write fDefaultPollFrequencyHz;
     property SpecificConfigText: string
@@ -40,6 +43,8 @@ function RecorderConfiguredDataSourceList(
 procedure RecorderConfiguredDataSourcesClear(ARegistry: TRecorderTagRegistry);
 function RecorderConfiguredDataSourcesFind(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): TRecorderConfiguredDataSource;
+function RecorderConfiguredDataSourceEnabled(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
 function RecorderConfiguredDataSourcesEnsure(ARegistry: TRecorderTagRegistry;
   const ASourceId, AModuleType: string;
   ADefaultPollFrequencyHz: Double = 0): TRecorderConfiguredDataSource;
@@ -59,6 +64,13 @@ procedure SaveRecorderConfiguredDataSources(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
 
 implementation
+
+constructor TRecorderConfiguredDataSource.Create;
+begin
+  inherited Create;
+  { Старые проекты не содержат enabled и должны продолжать собирать данные. }
+  fEnabled := True;
+end;
 
 function TRecorderConfiguredDataSource.GetSourceId: string;
 begin
@@ -105,6 +117,15 @@ begin
     if SameText(RecorderNormalizeTagSourceId(lEntry.SourceId), lNorm) then
       Exit(lEntry);
   end;
+end;
+
+function RecorderConfiguredDataSourceEnabled(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Boolean;
+var
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  Result := (lEntry = nil) or lEntry.Enabled;
 end;
 
 function RecorderConfiguredDataSourcesEnsure(ARegistry: TRecorderTagRegistry;
@@ -248,6 +269,7 @@ begin
     lEntry := TRecorderConfiguredDataSource.Create;
     lEntry.SourceId := RecorderNormalizeTagSourceId(lItem.Get('sourceId', ''));
     lEntry.ModuleType := lItem.Get('moduleType', '');
+    lEntry.Enabled := lItem.Get('enabled', True);
     lEntry.DefaultPollFrequencyHz := lItem.Get('defaultPollFrequencyHz', 0.0);
     lEntry.SpecificConfigText := lItem.Get('specificConfigText', '');
     RecorderConfiguredDataSourceList(ARegistry).Add(lEntry);
@@ -287,6 +309,7 @@ begin
     lArray.Add(lItem);
     lItem.Add('sourceId', lEntry.SourceId);
     lItem.Add('moduleType', lEntry.ModuleType);
+    lItem.Add('enabled', lEntry.Enabled);
     lItem.Add('defaultPollFrequencyHz', lEntry.DefaultPollFrequencyHz);
     lItem.Add('specificConfigText', lEntry.SpecificConfigText);
   end;

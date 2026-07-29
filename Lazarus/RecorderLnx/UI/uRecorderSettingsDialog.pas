@@ -144,6 +144,8 @@ type
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
+    procedure fHardwareTreeMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
@@ -226,6 +228,7 @@ type
     procedure HardwareReloadSourceClick(Sender: TObject);
     procedure HardwareResetSourceClick(Sender: TObject);
     procedure HardwareResetAllSourcesClick(Sender: TObject);
+    procedure HardwareToggleSourceClick(Sender: TObject);
     procedure HardwareEditSourceClick(Sender: TObject);
     
     // Методы инициализации и обновления интерфейса
@@ -2368,6 +2371,23 @@ begin
   PopulateChannelGrids;
 end;
 
+procedure TRecorderSettingsDialog.HardwareToggleSourceClick(Sender: TObject);
+var
+  lConfig: TRecorderConfiguredDataSource;
+  lSourceId: string;
+begin
+  lSourceId := SelectedHardwareSourceId;
+  if lSourceId = '' then
+    Exit;
+  lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, lSourceId);
+  if lConfig = nil then
+    Exit;
+  lConfig.Enabled := not lConfig.Enabled;
+  { Это изменение состава сбора, а не аппаратной конфигурации. }
+  PopulateHardwareTree;
+  PopulateChannelGrids;
+end;
+
 procedure TRecorderSettingsDialog.HardwareEditSourceClick(Sender: TObject);
 var
   lSourceId: string;
@@ -2402,7 +2422,10 @@ begin
     Exit;
   end;
   lReason := RecorderHardwareSourceOfflineReason(lSourceId);
-  if lReason <> '' then
+  if not RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,
+    lSourceId) then
+    fHardwareTree.Hint := 'Источник отключён пользователем'
+  else if lReason <> '' then
     fHardwareTree.Hint := 'Ошибка устройства: ' + lReason
   else if (lNode <> nil) and (lNode.ImageIndex = CDeviceControllerImageIndex) then
     fHardwareTree.Hint := 'Устройство доступно'
@@ -2444,14 +2467,19 @@ begin
       for I := 0 to High(lEntries) do
       begin
         lEntry := lEntries[I];
-        lSourceNode := fHardwareTree.Items.AddChild(lRootNode, lEntry.NodeCaption);
+        if lEntry.Enabled then
+          lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
+            lEntry.NodeCaption)
+        else
+          lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
+            '[ВЫКЛ] ' + lEntry.NodeCaption);
         RecorderHardwareTreeBindSourceId(lSourceNode, lEntry.SourceId);
       if fRecorder.TagRegistry <> nil then
-        if lEntry.HasLinkedTags and lEntry.LinkOk then
+        if lEntry.Enabled and lEntry.HasLinkedTags and lEntry.LinkOk then
           fRecorder.TagRegistry.RegisterActiveSource(lEntry.SourceId)
         else
           fRecorder.TagRegistry.UnregisterActiveSource(lEntry.SourceId);
-      if lEntry.LinkOk then
+      if lEntry.Enabled and lEntry.LinkOk then
       begin
         lSourceNode.ImageIndex := CDeviceControllerImageIndex;
         lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
@@ -2691,11 +2719,17 @@ begin
   fHardwareTree.OnDblClick := @fHardwareTreeDblClick;
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
   fHardwareTree.OnMouseMove := @fHardwareTreeMouseMove;
+  fHardwareTree.OnMouseDown := @fHardwareTreeMouseDown;
   fHardwareTree.ShowHint := True;
   fHardwareTree.ParentShowHint := False;
   if fHardwareTree.PopupMenu = nil then
   begin
     lPopup := TPopupMenu.Create(Self);
+
+    lItem := TMenuItem.Create(lPopup);
+    lItem.Caption := 'Включить / выключить источник';
+    lItem.OnClick := @HardwareToggleSourceClick;
+    lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
     lItem.Caption := 'Перечитать теги источника';
@@ -2733,6 +2767,18 @@ begin
   finally
     fHardwareTree.Items.EndUpdate;
   end;
+end;
+
+procedure TRecorderSettingsDialog.fHardwareTreeMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
+begin
+  if (Button <> mbRight) or (fHardwareTree = nil) then
+    Exit;
+  lNode := fHardwareTree.GetNodeAt(X, Y);
+  if lNode <> nil then
+    fHardwareTree.Selected := lNode;
 end;
 
 { Динамическое создание пользовательского интерфейса }

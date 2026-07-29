@@ -16,6 +16,8 @@ uses
 
 function RecorderSourceProgrammingSignature(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): string;
+function RecorderSourceProgrammingSignatureById(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
 function RecorderProgrammingSignatureDifference(const ABefore,
   AAfter: string): string;
 
@@ -76,6 +78,14 @@ end;
 
 function RecorderSourceProgrammingSignature(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): string;
+begin
+  if ATag = nil then
+    Exit('');
+  Result := RecorderSourceProgrammingSignatureById(ARegistry, ATag.SourceId);
+end;
+
+function RecorderSourceProgrammingSignatureById(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
 var
   I: Integer;
   lConfig: TRecorderMic140SourceConfig;
@@ -89,10 +99,10 @@ var
   lTag: TRecorderTag;
 begin
   Result := '';
-  if (ARegistry = nil) or (ATag = nil) then
+  if (ARegistry = nil) or (Trim(ASourceId) = '') then
     Exit;
 
-  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  lSourceId := RecorderNormalizeTagSourceId(ASourceId);
   lLines := TStringList.Create;
   lSourceTags := TStringList.Create;
   try

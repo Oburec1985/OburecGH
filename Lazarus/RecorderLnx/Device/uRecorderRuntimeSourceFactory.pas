@@ -21,6 +21,9 @@ type
 
 procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
   ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent = nil);
+procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
+  const ASourceId: string; ADataUpdateMs: Cardinal;
+  ALog: TRecorderRuntimeSourceLogEvent = nil);
 
 implementation
 
@@ -148,9 +151,11 @@ begin
     for I := 0 to lFiles.Count - 1 do
     begin
       lTagNames := TStringList(lFiles.Objects[I]);
-      lSource := TRecorderMeraFileDataSource.Create('mera.file.' +
-        IntToStr(I + 1), lFiles[I], ADataUpdateMs, lTagNames, 0);
-      ARecorder.DataSources.AddSource(lSource);
+      lSource := TRecorderMeraFileDataSource.Create(CMeraSourcePrefix +
+        lFiles[I], lFiles[I], ADataUpdateMs, lTagNames, 0);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          CMeraSourcePrefix + lFiles[I]));
       Log(ALog, Format('MERA playback source configured: %s (%d channels).',
         [ExtractFileName(lFiles[I]), lTagNames.Count]));
     end;
@@ -185,7 +190,9 @@ begin
         RecorderMic140SourceId(lHost, lPort), lHost, lPort,
         lChannelCount, lPollFrequencyHz, ADataUpdateMs, lTagNames,
         lMicOutputMode);
-      ARecorder.DataSources.AddSource(lSource);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMicSources[I]));
       Log(ALog, Format('MIC-140 source configured: %s:%d (%d channels).',
         [lHost, lPort, lChannelCount]));
     end;
@@ -208,7 +215,9 @@ begin
       end;
       lSource := TRecorderMic185DataSource.Create(lMic185Sources[I], lHost,
         lPort, lPollFrequencyHz, ADataUpdateMs, lTagNames);
-      ARecorder.DataSources.AddSource(lSource);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMic185Sources[I]));
       Log(ALog, Format('MIC183/185 source configured: %s:%d (%d channels).',
         [lHost, lPort, lTagNames.Count]));
     end;
@@ -234,7 +243,9 @@ begin
       lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lHost,
         lPort, lPollFrequencyHz, ADataUpdateMs, lTagNames,
         lSpecificConfigText);
-      ARecorder.DataSources.AddSource(lSource);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMcbusSources[I]));
       Log(ALog, Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
         [lHost, lPort, lTagNames.Count]));
     end;
@@ -246,6 +257,123 @@ begin
   end;
 
   ARecorder.DataSources.ConfigureTagsAll(ARecorder.TagRegistry);
+end;
+
+procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
+  const ASourceId: string; ADataUpdateMs: Cardinal;
+  ALog: TRecorderRuntimeSourceLogEvent);
+var
+  I: Integer;
+  lChannelCount: Integer;
+  lChannelNumber: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
+  lFileName: string;
+  lHost: string;
+  lMicOutputMode: TRecorderMic140OutputMode;
+  lPollFrequencyHz: Double;
+  lPort: Word;
+  lSource: IRecorderDataSource;
+  lSpecificConfigText: string;
+  lTag: TRecorderTag;
+  lTagNames: TStringList;
+begin
+  if (ARecorder = nil) or (ARecorder.DataSources = nil) or
+    (ARecorder.TagRegistry = nil) or (Trim(ASourceId) = '') then
+    Exit;
+  if ADataUpdateMs = 0 then
+    ADataUpdateMs := 300;
+
+  lConfigured := RecorderConfiguredDataSourcesFind(ARecorder.TagRegistry,
+    ASourceId);
+  if lConfigured = nil then
+  begin
+    ARecorder.DataSources.RemoveSource(ASourceId);
+    Exit;
+  end;
+
+  lTagNames := TStringList.Create;
+  try
+    lTagNames.CaseSensitive := False;
+    for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := ARecorder.TagRegistry.Tags[I];
+      if not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+        RecorderNormalizeTagSourceId(ASourceId)) then
+        Continue;
+      if Pos(CMeraSourcePrefix, ASourceId) = 1 then
+      begin
+        if lTagNames.IndexOf(lTag.Address) < 0 then
+          lTagNames.Add(lTag.Address);
+      end
+      else
+      begin
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end;
+    end;
+
+    if Pos(CMeraSourcePrefix, ASourceId) = 1 then
+    begin
+      lFileName := Trim(Copy(ASourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+      lSource := TRecorderMeraFileDataSource.Create(ASourceId, lFileName,
+        ADataUpdateMs, lTagNames, 0);
+    end
+    else if RecorderMic140ResolveEndpoint(ARecorder.TagRegistry, ASourceId,
+      lHost, lPort) then
+    begin
+      lChannelCount := MIC140DefaultChannelCount;
+      lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
+      lMicOutputMode := momMillivolts;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if not SameText(lTag.SourceId, ASourceId) then
+          Continue;
+        if TryStrToInt(lTag.Address, lChannelNumber) and
+          (lChannelNumber > lChannelCount) then
+          lChannelCount := MIC140MaxChannelCount;
+        if lTag.PollFrequencyHz > 0 then
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+        if Trim(lTag.SourceValueMode) <> '' then
+          lMicOutputMode := RecorderMic140ConfigNameToOutputMode(
+            lTag.SourceValueMode);
+      end;
+      lSource := TRecorderMic140DataSource.Create(
+        RecorderMic140SourceId(lHost, lPort), lHost, lPort, lChannelCount,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames, lMicOutputMode);
+    end
+    else if TryParseRecorderMic185SourceId(ASourceId, lHost, lPort) then
+    begin
+      lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
+      if lConfigured.DefaultPollFrequencyHz > 0 then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      lSource := TRecorderMic185DataSource.Create(ASourceId, lHost, lPort,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames);
+    end
+    else if TryParseRecorderMc032SourceId(ASourceId, lHost, lPort) then
+    begin
+      lPollFrequencyHz := 57600;
+      lSpecificConfigText := lConfigured.SpecificConfigText;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if SameText(lTag.SourceId, ASourceId) and
+          (lTag.PollFrequencyHz > lPollFrequencyHz) then
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+      end;
+      lSource := TRecorderMcbusDataSource.Create(ASourceId, lHost, lPort,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames, lSpecificConfigText);
+    end
+    else
+      Exit;
+
+    ARecorder.DataSources.ReplaceSource(lSource, lConfigured.Enabled);
+    Log(ALog, 'Runtime source reconfigured: ' + ASourceId);
+  finally
+    lTagNames.Free;
+  end;
 end;
 
 end.

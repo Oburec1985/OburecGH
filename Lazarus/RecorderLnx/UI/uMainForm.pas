@@ -36,7 +36,7 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Classes, SysUtils, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
@@ -47,7 +47,7 @@ uses
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderSpectrumRuntime,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
-  uRecorderDeviceConfigSignature,
+  uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree,
   uRecorderMeraPaths, uOglChart;
 
@@ -871,9 +871,46 @@ end;
 
 procedure TMainForm.btnSettingsClick(Sender: TObject);
 var
+  I: Integer;
+  lAfterSignatures: TStringList;
+  lBeforeSignatures: TStringList;
+  lConfigured: TRecorderConfiguredDataSource;
   lDataSourcesChanged: Boolean;
+  lSourceId: string;
+  lSourceIds: TStringList;
+
+  procedure CaptureProgrammingSignatures(AList: TStringList);
+  var
+    J: Integer;
+    lEntry: TRecorderConfiguredDataSource;
+    lEntries: TObjectList;
+    lSignature: string;
+  begin
+    AList.Clear;
+    lEntries := RecorderConfiguredDataSourceList(fRecorder.TagRegistry);
+    if lEntries = nil then
+      Exit;
+    for J := 0 to lEntries.Count - 1 do
+    begin
+      lEntry := TRecorderConfiguredDataSource(lEntries[J]);
+      lSignature := RecorderSourceProgrammingSignatureById(
+        fRecorder.TagRegistry, lEntry.SourceId);
+      lSignature := StringReplace(lSignature, LineEnding, #1, [rfReplaceAll]);
+      AList.Values[lEntry.SourceId] := lSignature;
+    end;
+  end;
 begin
+  lBeforeSignatures := TStringList.Create;
+  lAfterSignatures := TStringList.Create;
+  lSourceIds := TStringList.Create;
   try
+    try
+    lBeforeSignatures.CaseSensitive := False;
+    lAfterSignatures.CaseSensitive := False;
+    lSourceIds.CaseSensitive := False;
+    lSourceIds.Sorted := True;
+    lSourceIds.Duplicates := dupIgnore;
+    CaptureProgrammingSignatures(lBeforeSignatures);
     if fRecorder.StateMachine.State = rsRecord then
     begin
       fRecorder.StateMachine.Stop;
@@ -890,16 +927,37 @@ begin
       UpdateActiveSourceIds;
       if lDataSourcesChanged then
       begin
-        { Тяжёлая реконфигурация выполняется только после реального изменения
-          источников/каналов. Простое OK сохраняет уже проинициализированные приборы. }
-        fRecorder.DataSources.Clear;
-        fDataSourcesConfigured := False;
-        EnsureRuntimeDataSources;
-        PrepareRuntimeForConfiguration;
-        AddLog('Hardware configuration changed: data sources rebuilt.');
+        CaptureProgrammingSignatures(lAfterSignatures);
+        for I := 0 to lBeforeSignatures.Count - 1 do
+          lSourceIds.Add(lBeforeSignatures.Names[I]);
+        for I := 0 to lAfterSignatures.Count - 1 do
+          lSourceIds.Add(lAfterSignatures.Names[I]);
+        for I := 0 to lSourceIds.Count - 1 do
+        begin
+          lSourceId := lSourceIds[I];
+          if lBeforeSignatures.Values[lSourceId] =
+            lAfterSignatures.Values[lSourceId] then
+            Continue;
+          RecorderReplaceRuntimeSource(fRecorder, lSourceId,
+            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog);
+        end;
+        if fRecorder.AlgorithmManager <> nil then
+          fRecorder.AlgorithmManager.PrepareConfiguration;
+        AddLog('Changed data sources reconfigured individually.');
       end
       else
         AddLog('Hardware configuration unchanged: initialized devices retained.');
+      { Enabled управляет только участием готового контекста в сборе. Не
+        очищаем manager и не программируем остальные устройства повторно. }
+      for I := 0 to fRecorder.DataSources.SourceCount - 1 do
+      begin
+        lConfigured := RecorderConfiguredDataSourcesFind(
+          fRecorder.TagRegistry, fRecorder.DataSources.Sources[I].SourceId);
+        if lConfigured <> nil then
+          fRecorder.DataSources.SetSourceEnabled(
+            fRecorder.DataSources.Sources[I].SourceId, lConfigured.Enabled);
+      end;
+      UpdateActiveSourceIds;
       AddLog('Project settings applied.');
     end
     else
@@ -910,9 +968,14 @@ begin
       только после OK. При чистой отмене это безопасное обновление представления. }
     RebuildTagList(edTagSearch.Text);
     RenderActivePage;
-  except
-    on E: Exception do
-      LogCommandError('Settings', E);
+    except
+      on E: Exception do
+        LogCommandError('Settings', E);
+    end;
+  finally
+    lSourceIds.Free;
+    lAfterSignatures.Free;
+    lBeforeSignatures.Free;
   end;
 end;
 

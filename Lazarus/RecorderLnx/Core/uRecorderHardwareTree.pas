@@ -19,6 +19,7 @@ type
   TRecorderHardwareTreeEntry = record
     SourceId: string;
     NodeCaption: string;
+    Enabled: Boolean;
     LinkOk: Boolean;
     HasLinkedTags: Boolean;
   end;
@@ -263,7 +264,13 @@ begin
     begin
       lEntry.SourceId := lIds[I];
       lEntry.NodeCaption := RecorderHardwareTreeNodeCaption(ATagRegistry, lEntry.SourceId);
-      lEntry.LinkOk := RecorderHardwareSourceLinkOk(ATagRegistry, lEntry.SourceId);
+      lEntry.Enabled := RecorderConfiguredDataSourceEnabled(ATagRegistry,
+        lEntry.SourceId);
+      if lEntry.Enabled then
+        lEntry.LinkOk := RecorderHardwareSourceLinkOk(ATagRegistry,
+          lEntry.SourceId)
+      else
+        lEntry.LinkOk := False;
       lEntry.HasLinkedTags := RecorderHardwareSourceHasLinkedTags(ATagRegistry,
         lEntry.SourceId);
       AEntries[I] := lEntry;
