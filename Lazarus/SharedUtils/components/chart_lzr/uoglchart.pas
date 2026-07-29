@@ -113,9 +113,11 @@ procedure TakeOglChartPaintStats(out AFrameCount: QWord;
   out ATotalPaintTimeMs: Double);
 
 implementation
+uses uOglChartLog
 {$IFDEF WINDOWS}
-uses Windows;
+  , Windows
 {$ENDIF}
+  ;
 
 var
   gPaintFrameCount: QWord = 0;
@@ -140,7 +142,10 @@ var
   F: TextFile;
   lLogPath: string;
 begin
-  lLogPath := ExtractFilePath(ParamStr(0)) + 'chart_events.log';
+  if not ChartLogEnabled then
+    Exit;
+  {$I-}
+  lLogPath := ChangeFileExt(ChartLogFileName, '.events.log');
   AssignFile(F, lLogPath);
   try
     if FileExists(lLogPath) then
@@ -151,6 +156,8 @@ begin
   finally
     CloseFile(F);
   end;
+  IOResult;
+  {$I+}
 
 end;
 

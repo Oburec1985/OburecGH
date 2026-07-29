@@ -42,12 +42,18 @@ procedure LogToFile(const AMsg: string);
 
 implementation
 
+uses
+  uOglChartLog;
+
 procedure LogToFile(const AMsg: string);
 var
   F: TextFile;
   lLogPath: string;
 begin
-  lLogPath := ExtractFilePath(ParamStr(0)) + 'chart_events.log';
+  if not ChartLogEnabled then
+    Exit;
+  {$I-}
+  lLogPath := ChangeFileExt(ChartLogFileName, '.events.log');
   AssignFile(F, lLogPath);
   try
     if FileExists(lLogPath) then
@@ -58,6 +64,8 @@ begin
   finally
     CloseFile(F);
   end;
+  IOResult;
+  {$I+}
 end;
 
 { TChartFrameListener }

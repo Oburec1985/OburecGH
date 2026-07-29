@@ -23,6 +23,8 @@ function RecorderConfigPath: string;
 function RecorderPluginsPath: string;
 function RecorderBiosPath: string;
 function RecorderSysComPath: string;
+function RecorderServicePath: string;
+function RecorderServiceFileName(const AFileName: string): string;
 function RecorderMeraCalibrRootDir: string;
 procedure RecorderMeraResetThermocoupleCache;
 procedure RecorderMeraGetThermocoupleCache(out ADiskDir, AFolderKey: string);
@@ -205,6 +207,17 @@ function RecorderSysComPath: string;
 begin
   EnsureRecorderSystemPathsLoaded;
   Result := g_SysComPath;
+end;
+
+function RecorderServicePath: string;
+begin
+  Result := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'RecorderLnx';
+  ForceDirectories(Result);
+end;
+
+function RecorderServiceFileName(const AFileName: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(RecorderServicePath) + AFileName;
 end;
 
 procedure RecorderMeraResetThermocoupleCache;

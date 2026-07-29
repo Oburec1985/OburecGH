@@ -20,6 +20,7 @@ uses
   uRecorderMic185AdditionalDialog, uRecorderMic185ChannelDialog,
   uRecorderMic185SettingsDialog, uRecorderMebiusTcpProtocol,
   uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
+  uRecorderMeraPaths, uOglChartLog,
   uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
   uMc032Device, uRecorderMcbusDevice;
 
@@ -34,6 +35,7 @@ begin
     должен дать драйверу EPIPE, а не External exception code 13. }
   fpSignal(SIGPIPE, SignalHandler(SIG_IGN));
   {$ENDIF}
+  ChartLogSetFileName(RecorderServiceFileName('oglchart_debug.log'));
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

@@ -57,7 +57,8 @@ procedure RecorderMic185RuntimeNoteProbeTcpOpen;
 implementation
 
 uses
-  SyncObjs, uMic185DebugLog, uMic185MebiusTypes, uSharedFileLogger;
+  SyncObjs, uMic185DebugLog, uMic185MebiusTypes, uSharedFileLogger,
+  uRecorderMeraPaths;
 
 type
   TRecorderMic185Endpoint = class
@@ -87,14 +88,9 @@ var
 function Mic185ProjectLogPath: string;
 begin
   {$IFDEF MSWINDOWS}
-  Result := ExtractFilePath(ParamStr(0)) + 'LogWindows.log';
-  if DirectoryExists(ExtractFilePath(ParamStr(0)) + '..\..') then
-    Result := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\LogWindows.log');
+  Result := RecorderServiceFileName('LogWindows.log');
   {$ELSE}
-  if DirectoryExists('/mnt/win_share/OburecGH/Lazarus/RecorderLnx') then
-    Result := '/mnt/win_share/OburecGH/Lazarus/RecorderLnx/LogLinux.log'
-  else
-    Result := ExtractFilePath(ParamStr(0)) + 'LogLinux.log';
+  Result := RecorderServiceFileName('LogLinux.log');
   {$ENDIF}
 end;
 

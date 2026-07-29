@@ -301,6 +301,7 @@ uses
   uRecorderMic140StreamTypes,
   uRecorderMic140LegacyTiming, uRecorderMic140Utils,
   uRecorderMic185DataSource, uMic185Constants,
+  uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
   uRecorderDeviceSearchDialog, uMc032Device;
 
@@ -906,6 +907,7 @@ end;
 
 procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
 var
+  lBeforeProgramming: string;
   lDialogOk: Boolean;
   lTag: TRecorderTag;
   lTags: TList;
@@ -917,13 +919,18 @@ begin
   lTags := TList.Create;
   try
     lTags.Add(lTag);
+    lBeforeProgramming := RecorderSourceProgrammingSignature(
+      fRecorder.TagRegistry, lTag);
     lDialogOk := ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, fTagDialogImageList,
       ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
       fDeviceImageList);
     if lDialogOk then
     begin
-      { Настройка тега может изменить частоту/аппаратные параметры канала. }
-      fDataSourcesChanged := True;
+      { Имя, единицы, ГХ и оценки не требуют пересоздания источника.
+        Dirty выставляется только по изменению программируемой конфигурации. }
+      if lBeforeProgramming <> RecorderSourceProgrammingSignature(
+        fRecorder.TagRegistry, lTag) then
+        fDataSourcesChanged := True;
       MarkSignalsFromRegistry;
       PopulateHardwareTree;
       PopulateChannelGrids;

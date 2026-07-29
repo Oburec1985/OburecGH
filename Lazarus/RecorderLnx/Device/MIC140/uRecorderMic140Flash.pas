@@ -87,13 +87,17 @@ implementation
 
 uses
   Math, StrUtils,
-  uSharedFileLogger;
+  uSharedFileLogger, uRecorderMeraPaths;
 
 function Mic140FlashLogFilePath: string;
 begin
   Result := SharedLogger.FileName;
   if Result = '' then
-    Result := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\LogWindows.log');
+    {$IFDEF MSWINDOWS}
+    Result := RecorderServiceFileName('LogWindows.log')
+    {$ELSE}
+    Result := RecorderServiceFileName('LogLinux.log')
+    {$ENDIF};
 end;
 
 function Mic140BytesToHex(const AData; ASize, AMaxBytes: Integer): string;

@@ -22,7 +22,7 @@ unit uTagSettingsDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
+  Classes, SysUtils, Math, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderMic140StreamTypes, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
@@ -1578,7 +1578,13 @@ begin
       if not ReadFloat(fFrequencyCombo.Text, lFloat) then
         raise ERecorderTagError.Create('Invalid poll frequency');
       if Pos('MIC-140:', lTag.SourceId) = 1 then
-        RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat)
+      begin
+        { Частота у MIC-140 общая для прибора. Не запускаем обход всех тегов
+          и изменение их буферов, если пользователь просто нажал OK. }
+        if not SameValue(lTag.PollFrequencyHz,
+          RecorderMic140NormalizeFrequency(lFloat), 1E-9) then
+          RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat);
+      end
       else if Pos('MC-032:', lTag.SourceId) = 1 then
         RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
           lTag.Address, lFloat)

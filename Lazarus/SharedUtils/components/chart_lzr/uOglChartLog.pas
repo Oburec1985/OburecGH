@@ -16,6 +16,8 @@ uses
 
 // Задает имя файла для сохранения лога
 procedure ChartLogSetFileName(const AFileName: string);
+procedure ChartLogSetEnabled(AEnabled: Boolean);
+function ChartLogEnabled: Boolean;
 // Возвращает текущее имя файла лога
 function ChartLogFileName: string;
 // Выводит отладочное сообщение
@@ -34,6 +36,7 @@ function ChartPtr(AObject: TObject): string;
 implementation
 
 var
+  gLogEnabled: Boolean = False;
   gLogLock: TCriticalSection = nil;      // Критическая секция для защиты файла лога при многопоточном доступе
   gLogFileName: string = '';             // Путь к файлу лога
 
@@ -73,6 +76,16 @@ begin
   end;
 end;
 
+procedure ChartLogSetEnabled(AEnabled: Boolean);
+begin
+  gLogEnabled := AEnabled;
+end;
+
+function ChartLogEnabled: Boolean;
+begin
+  Result := gLogEnabled;
+end;
+
 /// <summary>
 /// Записывает сообщение в лог-файл.
 /// Добавляет временную метку, приоритет, ID текущего потока и переданный текст.
@@ -82,6 +95,9 @@ var
   F: TextFile;
   LFileName: string;
 begin
+  if not gLogEnabled then
+    Exit;
+  {$I-}
   EnsureLogLock;
   gLogLock.Enter;
   try
@@ -105,6 +121,8 @@ begin
   finally
     gLogLock.Leave;
   end;
+  IOResult;
+  {$I+}
 end;
 
 procedure ChartLogDebug(const AMessage: string);

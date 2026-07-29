@@ -47,6 +47,7 @@ uses
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderSpectrumRuntime,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
+  uRecorderDeviceConfigSignature,
   uRecorderHardwareTree,
   uRecorderMeraPaths, uOglChart;
 
@@ -2319,7 +2320,10 @@ begin
 end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
+  lBeforeProgramming: string;
+  lHardwareProgrammingChanged: Boolean;
   lTags: TList;
+  lTag: TRecorderTag;
   lWasRunning: Boolean;
 begin
   lTags := TList.Create;
@@ -2328,6 +2332,9 @@ begin
     if lTags.Count = 0 then
       Exit;
 
+    lTag := TRecorderTag(lTags[0]);
+    lBeforeProgramming := RecorderSourceProgrammingSignature(
+      fRecorder.TagRegistry, lTag);
     if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, ilTagDialogButtons,
       fRecorder.RunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
       ilCommandButtons) then
@@ -2335,19 +2342,31 @@ begin
       if fRecorder.AlarmEngine <> nil then
         fRecorder.AlarmEngine.Reset;
 
-      lWasRunning := (fRecorder.DataSources <> nil) and fRecorder.DataSources.Running;
-      if lWasRunning then
-        StopDataSources;
+      lHardwareProgrammingChanged := lBeforeProgramming <>
+        RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag);
+      if lHardwareProgrammingChanged then
+      begin
+        AddLog('Source programming required: ' +
+          RecorderProgrammingSignatureDifference(lBeforeProgramming,
+            RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag)));
+        lWasRunning := (fRecorder.DataSources <> nil) and
+          fRecorder.DataSources.Running;
+        if lWasRunning then
+          StopDataSources;
 
-      fRecorder.DataSources.Clear;
-      fDataSourcesConfigured := False;
+        fRecorder.DataSources.Clear;
+        fDataSourcesConfigured := False;
 
-      { Память источников перевыделяется при изменении конфигурации тегов. }
-      EnsureRuntimeDataSources;
-      PrepareRuntimeForConfiguration;
+        { Тяжёлая реконфигурация нужна только после изменения аппаратной
+          сигнатуры узла источника. }
+        EnsureRuntimeDataSources;
+        PrepareRuntimeForConfiguration;
 
-      if lWasRunning then
-        StartDataSources;
+        if lWasRunning then
+          StartDataSources;
+      end
+      else
+        AddLog('Source programming skipped: hardware settings unchanged.');
 
       RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
       RebuildTagList(edTagSearch.Text);
