@@ -41,7 +41,7 @@ uses
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
-  uFormEditorController, uRecorderSettingsDialog, uTagSettingsDialog,
+  uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
@@ -113,6 +113,7 @@ type
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
     fFormFactory: TRecorderFormFactory;           // Фабрика создания шаблонов страниц
     fFormManager: TRecorderFormManager;           // Менеджер набора страниц/формуляров проекта
+    fDetachedForms: TStringList;                  // Отдельные окна пользовательских формуляров
     fNextComponentNo: Integer;                    // Автоинкрементный счетчик для уникальных имен компонентов
     fNextPageNo: Integer;                         // Автоинкрементный счетчик для уникальных имен страниц
     
@@ -213,6 +214,12 @@ type
     procedure PageControlChange(Sender: TObject);
     { Отображает активную страницу: встроенную таблицу или пользовательскую мнемосхему. }
     procedure RenderActivePage;
+    procedure SyncDetachedForms;
+    procedure ClearDetachedForms;
+    function FindDetachedForm(const APageId: string): TDetachedMnemonicForm;
+    procedure DetachedFormAttach(Sender: TObject);
+    procedure DetachedFormChanged(Sender: TObject);
+    procedure SaveDetachedFormPlacements;
     { Создает раннюю область редактора мнемосхемы с тулбаром и пустым полотном. }
     procedure EnsureEditorSurface;
     { Создает тулбар базовой страницы с количеством осциллограмм. }
@@ -412,6 +419,9 @@ begin
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
+  fDetachedForms := TStringList.Create;
+  fDetachedForms.Sorted := True;
+  fDetachedForms.Duplicates := dupError;
   lConfigRoot := RecorderConfigPath;
   if lConfigRoot <> '' then
     SetProjectConfigDir(IncludeTrailingPathDelimiter(lConfigRoot) +
@@ -447,6 +457,7 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
     должна откладываться до первого нажатия Preview. }
   EnsureRuntimeDataSources;
@@ -576,6 +587,9 @@ begin
   if fUiUpdateTimer <> nil then
     fUiUpdateTimer.Enabled := False;
   StopDataSources;
+  SaveDetachedFormPlacements;
+  ClearDetachedForms;
+  FreeAndNil(fDetachedForms);
   FreeAndNil(fFormEditor);
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
@@ -727,7 +741,9 @@ begin
   if fSyncingPages or (fPageControl = nil) then
     Exit;
 
-  lPageIndex := fPageControl.ActivePageIndex;
+  if fPageControl.ActivePage = nil then
+    Exit;
+  lPageIndex := fPageControl.ActivePage.Tag;
   if (lPageIndex < 0) or (lPageIndex >= fFormManager.PageCount) then
     Exit;
 
@@ -760,6 +776,7 @@ begin
           fFormEditor.ClearUndoHistory;
         end;
         RefreshPageButtons;
+        SyncDetachedForms;
         RenderActivePage;
         AddLog('Form pages dialog closed.');
       end;
@@ -1201,6 +1218,8 @@ end;
 procedure TMainForm.RefreshPageButtons;
 var
   I: Integer;
+  lTabIndex: Integer;
+  lVisiblePageCount: Integer;
   lPage: TRecorderFormPage;
   lTab: TTabSheet;
   lActiveIndex: Integer;
@@ -1209,24 +1228,33 @@ begin
 
   fSyncingPages := True;
   try
-    while fPageControl.PageCount < fFormManager.PageCount do
+    lVisiblePageCount := 0;
+    for I := 0 to fFormManager.PageCount - 1 do
+      if not fFormManager.Pages[I].Detached then
+        Inc(lVisiblePageCount);
+
+    while fPageControl.PageCount < lVisiblePageCount do
     begin
       lTab := TTabSheet.Create(fPageControl);
       lTab.PageControl := fPageControl;
     end;
 
-    while fPageControl.PageCount > fFormManager.PageCount do
+    while fPageControl.PageCount > lVisiblePageCount do
       fPageControl.Pages[fPageControl.PageCount - 1].Free;
 
     lActiveIndex := -1;
+    lTabIndex := 0;
     for I := 0 to fFormManager.PageCount - 1 do
     begin
       lPage := fFormManager.Pages[I];
-      fPageControl.Pages[I].Caption := lPage.Title;
-      fPageControl.Pages[I].Tag := I;
+      if lPage.Detached then
+        Continue;
+      fPageControl.Pages[lTabIndex].Caption := lPage.Title;
+      fPageControl.Pages[lTabIndex].Tag := I;
 
       if lPage = fFormManager.ActivePage then
-        lActiveIndex := I;
+        lActiveIndex := lTabIndex;
+      Inc(lTabIndex);
     end;
 
     if lActiveIndex >= 0 then
@@ -1241,6 +1269,7 @@ end;
 procedure TMainForm.RenderActivePage;
 var
   lPage: TRecorderFormPage;
+  lDetachedForm: TDetachedMnemonicForm;
 begin
   lPage := fFormManager.ActivePage;
 
@@ -1261,11 +1290,121 @@ begin
   else if lPage.Id = 'BasePage' then
     RenderBasePage
   else if IsUserMnemonicPage(lPage) then
-    RenderMnemonicPage(lPage)
+  begin
+    if lPage.Detached then
+    begin
+      SyncDetachedForms;
+      lDetachedForm := FindDetachedForm(lPage.Id);
+      if lDetachedForm <> nil then
+      begin
+        lDetachedForm.Show;
+        lDetachedForm.BringToFront;
+      end;
+      ShowBaseToolbar(False);
+      ShowEditorSurface(False);
+      sgFormular.Visible := False;
+    end
+    else
+      RenderMnemonicPage(lPage);
+  end
   else
     RenderBuiltInPage(lPage);
 
   RefreshPageButtons;
+end;
+
+function TMainForm.FindDetachedForm(
+  const APageId: string): TDetachedMnemonicForm;
+var
+  lIndex: Integer;
+begin
+  Result := nil;
+  if fDetachedForms = nil then
+    Exit;
+  lIndex := fDetachedForms.IndexOf(APageId);
+  if lIndex >= 0 then
+    Result := TDetachedMnemonicForm(fDetachedForms.Objects[lIndex]);
+end;
+
+procedure TMainForm.SyncDetachedForms;
+var
+  I: Integer;
+  lForm: TDetachedMnemonicForm;
+  lPage: TRecorderFormPage;
+begin
+  if (fDetachedForms = nil) or (fFormManager = nil) then
+    Exit;
+
+  { Сначала скрываем окна страниц, которые вернули во вкладку или удалили. }
+  for I := fDetachedForms.Count - 1 downto 0 do
+  begin
+    lForm := TDetachedMnemonicForm(fDetachedForms.Objects[I]);
+    lPage := fFormManager.FindPageById(fDetachedForms[I]);
+    if lPage = nil then
+    begin
+      lForm.DiscardDeletedPage;
+      lForm.Free;
+      fDetachedForms.Delete(I);
+    end
+    else if not lPage.Detached then
+      lForm.Hide;
+  end;
+
+  for I := 0 to fFormManager.PageCount - 1 do
+  begin
+    lPage := fFormManager.Pages[I];
+    if (not IsUserMnemonicPage(lPage)) or (not lPage.Detached) then
+      Continue;
+    lForm := FindDetachedForm(lPage.Id);
+    if lForm = nil then
+    begin
+      lForm := TDetachedMnemonicForm.CreateForPage(Self, lPage,
+        fComponentFactory, fRecorder.TagRegistry, fRecorder.AlarmEngine,
+        fRecorder.RunSettings.DisplayBufferMs / 1000,
+        ilCommandButtons,
+        @DetachedFormAttach, @DetachedFormChanged);
+      fDetachedForms.AddObject(lPage.Id, lForm);
+    end;
+    lForm.Caption := lPage.Title;
+    lForm.Show;
+  end;
+end;
+
+procedure TMainForm.ClearDetachedForms;
+var
+  I: Integer;
+  lForm: TDetachedMnemonicForm;
+begin
+  if fDetachedForms = nil then
+    Exit;
+  for I := fDetachedForms.Count - 1 downto 0 do
+  begin
+    lForm := TDetachedMnemonicForm(fDetachedForms.Objects[I]);
+    lForm.CloseForApplication;
+    lForm.Free;
+  end;
+  fDetachedForms.Clear;
+end;
+
+procedure TMainForm.DetachedFormAttach(Sender: TObject);
+begin
+  RefreshPageButtons;
+  RenderActivePage;
+end;
+
+procedure TMainForm.DetachedFormChanged(Sender: TObject);
+begin
+  FormEditorChanged;
+end;
+
+procedure TMainForm.SaveDetachedFormPlacements;
+var
+  I: Integer;
+begin
+  if fDetachedForms = nil then
+    Exit;
+  for I := 0 to fDetachedForms.Count - 1 do
+    TDetachedMnemonicForm(fDetachedForms.Objects[I]).SavePlacement;
 end;
 
 procedure TMainForm.AddStaticTextComponentToActivePage;
@@ -2010,6 +2149,7 @@ var
 begin
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
 
+  ClearDetachedForms;
   LoadRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
   if fRecorder.AlarmEngine <> nil then
     fRecorder.AlarmEngine.Reset;
@@ -2028,6 +2168,7 @@ begin
       fFormEditor.ClearUndoHistory;
     end;
     RefreshPageButtons;
+    SyncDetachedForms;
     RenderActivePage;
     AddLog('Project GUI config loaded: ' + lFiles.GuiFileName);
   end;
@@ -2041,6 +2182,7 @@ begin
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
   ForceDirectories(lFiles.DirectoryName);
 
+  SaveDetachedFormPlacements;
   SaveRunSettings;
   SaveRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
   SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
@@ -2589,6 +2731,8 @@ end;
 
 function TMainForm.DoRepaintVisiblePage: Boolean;
 var
+  I: Integer;
+  lDetachedForm: TDetachedMnemonicForm;
   lPage: TRecorderFormPage;
   lStartMs: QWord;
 begin
@@ -2597,13 +2741,35 @@ begin
     Здесь выполняется только подготовка изображения действительно видимой
     страницы. Скрытые страницы не получают RefreshLive и не перестраивают
     геометрию графиков. }
-  if (not Visible) or (WindowState = wsMinimized) or
-    (fFormManager = nil) then
+  if fFormManager = nil then
     Exit;
+  lStartMs := GetTickCount64;
+
+  { Каждое видимое отдельное окно является самостоятельной видимой страницей.
+    Оно обновляется даже если главное окно свёрнуто на другом мониторе. }
+  if fDetachedForms <> nil then
+    for I := 0 to fDetachedForms.Count - 1 do
+    begin
+      lDetachedForm := TDetachedMnemonicForm(fDetachedForms.Objects[I]);
+      if lDetachedForm.Visible and (lDetachedForm.WindowState <> wsMinimized) then
+      begin
+        lDetachedForm.RefreshLive;
+        Result := True;
+      end;
+    end;
+
+  if (not Visible) or (WindowState = wsMinimized) then
+  begin
+    if Result then
+    begin
+      Inc(fDiagRenderCount);
+      Inc(fDiagRenderMs, GetTickCount64 - lStartMs);
+    end;
+    Exit;
+  end;
   lPage := fFormManager.ActivePage;
   if lPage = nil then
     Exit;
-  lStartMs := GetTickCount64;
 
   if (lPage.Id = 'DigitalForm') and (sgFormular <> nil) and
     sgFormular.Visible then
@@ -2612,10 +2778,17 @@ begin
     fBaseChartsPanel.Visible then
     RefreshBaseOscillograms
   else if IsUserMnemonicPage(lPage) and (fEditorShell <> nil) and
-    fEditorShell.Visible and (fFormEditor <> nil) then
+    (not lPage.Detached) and fEditorShell.Visible and (fFormEditor <> nil) then
     fFormEditor.RefreshLive
   else
+  begin
+    if Result then
+    begin
+      Inc(fDiagRenderCount);
+      Inc(fDiagRenderMs, GetTickCount64 - lStartMs);
+    end;
     Exit;
+  end;
 
   Inc(fDiagRenderCount);
   Inc(fDiagRenderMs, GetTickCount64 - lStartMs);

@@ -415,6 +415,13 @@ type
     fComponents: TList;                            { список компонентов на странице (TRecorderVisualComponent) }
     fBackgroundImageFileName: string;              { файл фонового изображения пользовательской страницы }
     fBaseOscillogramCount: Integer;                { количество осциллограмм для встроенной BasePage }
+    fDetached: Boolean;                            { страница открыта отдельным окном }
+    fDetachedLeft: Integer;                        { экранная координата отдельного окна }
+    fDetachedTop: Integer;
+    fDetachedWidth: Integer;
+    fDetachedHeight: Integer;
+    fDetachedMonitor: Integer;                     { индекс монитора для восстановления окна }
+    fDetachedMaximized: Boolean;                   { отдельное окно было развёрнуто }
     fId: string;                                   { уникальный ID страницы }
     fMode: TRecorderFormPageMode;                  { текущий режим (просмотр/редактирование) }
     fName: string;                                 { внутреннее имя страницы }
@@ -454,6 +461,14 @@ type
     property Mode: TRecorderFormPageMode read fMode write fMode;
     property BaseOscillogramCount: Integer read fBaseOscillogramCount
       write fBaseOscillogramCount;
+    property Detached: Boolean read fDetached write fDetached;
+    property DetachedLeft: Integer read fDetachedLeft write fDetachedLeft;
+    property DetachedTop: Integer read fDetachedTop write fDetachedTop;
+    property DetachedWidth: Integer read fDetachedWidth write fDetachedWidth;
+    property DetachedHeight: Integer read fDetachedHeight write fDetachedHeight;
+    property DetachedMonitor: Integer read fDetachedMonitor write fDetachedMonitor;
+    property DetachedMaximized: Boolean read fDetachedMaximized
+      write fDetachedMaximized;
     property ComponentCount: Integer read GetComponentCount;
     property Components[AIndex: Integer]: TRecorderVisualComponent read GetComponent;
   end;
@@ -1223,6 +1238,13 @@ begin
   fBackgroundImageFileName := '';
   fMode := fpmView;
   fBaseOscillogramCount := 2;
+  fDetached := False;
+  fDetachedLeft := 100;
+  fDetachedTop := 100;
+  fDetachedWidth := 900;
+  fDetachedHeight := 650;
+  fDetachedMonitor := 0;
+  fDetachedMaximized := False;
 end;
 
 destructor TRecorderFormPage.Destroy;

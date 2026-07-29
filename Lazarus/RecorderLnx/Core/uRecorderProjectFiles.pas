@@ -834,6 +834,13 @@ begin
       lIni.WriteInteger(lSection, 'Mode', Ord(lPage.Mode));
       lIni.WriteInteger(lSection, 'BaseOscillogramCount',
         lPage.BaseOscillogramCount);
+      lIni.WriteBool(lSection, 'Detached', lPage.Detached);
+      lIni.WriteInteger(lSection, 'DetachedLeft', lPage.DetachedLeft);
+      lIni.WriteInteger(lSection, 'DetachedTop', lPage.DetachedTop);
+      lIni.WriteInteger(lSection, 'DetachedWidth', lPage.DetachedWidth);
+      lIni.WriteInteger(lSection, 'DetachedHeight', lPage.DetachedHeight);
+      lIni.WriteInteger(lSection, 'DetachedMonitor', lPage.DetachedMonitor);
+      lIni.WriteBool(lSection, 'DetachedMaximized', lPage.DetachedMaximized);
       lIni.WriteInteger(lSection, 'ComponentCount', lPage.ComponentCount);
 
       for J := 0 to lPage.ComponentCount - 1 do
@@ -997,6 +1004,19 @@ begin
           Ord(fpmView)));
         lPage.BaseOscillogramCount := lIni.ReadInteger(lSection,
           'BaseOscillogramCount', lPage.BaseOscillogramCount);
+        lPage.Detached := lIni.ReadBool(lSection, 'Detached', False);
+        lPage.DetachedLeft := lIni.ReadInteger(lSection, 'DetachedLeft',
+          lPage.DetachedLeft);
+        lPage.DetachedTop := lIni.ReadInteger(lSection, 'DetachedTop',
+          lPage.DetachedTop);
+        lPage.DetachedWidth := lIni.ReadInteger(lSection, 'DetachedWidth',
+          lPage.DetachedWidth);
+        lPage.DetachedHeight := lIni.ReadInteger(lSection, 'DetachedHeight',
+          lPage.DetachedHeight);
+        lPage.DetachedMonitor := lIni.ReadInteger(lSection, 'DetachedMonitor',
+          lPage.DetachedMonitor);
+        lPage.DetachedMaximized := lIni.ReadBool(lSection,
+          'DetachedMaximized', False);
         AForms.AddPage(lPage);
         lPage := nil;
       finally

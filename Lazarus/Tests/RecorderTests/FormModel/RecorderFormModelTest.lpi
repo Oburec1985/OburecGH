@@ -26,11 +26,16 @@
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPackages>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../SharedUtils"/>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../SharedUtils;../../../SharedUtils/components/chart_lzr"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

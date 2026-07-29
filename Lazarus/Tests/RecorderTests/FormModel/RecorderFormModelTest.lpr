@@ -133,6 +133,13 @@ begin
     lComponentFactory.RegisterDefaultComponents;
     lPage := TRecorderFormPage.Create('BasePage', 'BasePage', 'Base page');
     lPage.BaseOscillogramCount := 5;
+    lPage.Detached := True;
+    lPage.DetachedLeft := 1920;
+    lPage.DetachedTop := 80;
+    lPage.DetachedWidth := 1200;
+    lPage.DetachedHeight := 800;
+    lPage.DetachedMonitor := 1;
+    lPage.DetachedMaximized := True;
     lManager.AddPage(lPage);
 
     SaveRecorderGuiConfig(lFileName, lManager);
@@ -141,6 +148,14 @@ begin
     AssertEquals(lLoaded.PageCount, 1, 'loaded gui page count');
     AssertEquals(lLoaded.Pages[0].BaseOscillogramCount, 5,
       'loaded base oscillogram count');
+    AssertTrue(lLoaded.Pages[0].Detached, 'loaded detached state');
+    AssertEquals(lLoaded.Pages[0].DetachedLeft, 1920, 'loaded detached left');
+    AssertEquals(lLoaded.Pages[0].DetachedTop, 80, 'loaded detached top');
+    AssertEquals(lLoaded.Pages[0].DetachedWidth, 1200, 'loaded detached width');
+    AssertEquals(lLoaded.Pages[0].DetachedHeight, 800, 'loaded detached height');
+    AssertEquals(lLoaded.Pages[0].DetachedMonitor, 1, 'loaded detached monitor');
+    AssertTrue(lLoaded.Pages[0].DetachedMaximized,
+      'loaded detached maximized state');
     Writeln('GUI config base oscillogram count test passed.');
   finally
     lManager.Free;

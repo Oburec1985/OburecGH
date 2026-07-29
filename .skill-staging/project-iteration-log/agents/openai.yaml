@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Iteration Log"
+  short_description: "Краткий журнал запросов и выполненной работы рядом с проектом"
+  default_prompt: "Веди краткий журнал каждой итерации работы над проектом."

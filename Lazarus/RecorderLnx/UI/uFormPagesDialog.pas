@@ -33,6 +33,7 @@ type
     fBackgroundEdit: TEdit;                { Путь к фоновому изображению страницы }
     fChooseBackgroundButton: TButton;
     fClearBackgroundButton: TButton;
+    fDetachButton: TButton;                        { Открепить/вернуть пользовательский формуляр }
     fGrid: TStringGrid;                    { Таблица со списком страниц }
     fManager: TRecorderFormManager;        { Менеджер форм }
     fNameEdit: TEdit;                      { Поле редактирования имени выбранной страницы }
@@ -45,6 +46,7 @@ type
     procedure ChooseBackgroundClick(Sender: TObject);
     procedure ClearBackgroundClick(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
+    procedure DetachClick(Sender: TObject);
     procedure MoveDownClick(Sender: TObject);
     procedure MoveUpClick(Sender: TObject);
     procedure NameEditChange(Sender: TObject);
@@ -213,6 +215,15 @@ begin
   fClearBackgroundButton.Caption := 'Очистить';
   fClearBackgroundButton.OnClick := @ClearBackgroundClick;
 
+  fDetachButton := TButton.Create(Self);
+  fDetachButton.Parent := Self;
+  fDetachButton.Left := 162;
+  fDetachButton.Top := 290;
+  fDetachButton.Width := 142;
+  fDetachButton.Height := 24;
+  fDetachButton.Caption := 'Открепить окно';
+  fDetachButton.OnClick := @DetachClick;
+
   lActivate := TButton.Create(Self);
   lActivate.Parent := Self;
   lActivate.Left := 268;
@@ -281,6 +292,11 @@ begin
   fChooseBackgroundButton.Enabled := lEnabled;
   fClearBackgroundButton.Enabled := lEnabled and
     (fBackgroundEdit.Text <> '');
+  fDetachButton.Enabled := lEnabled;
+  if lEnabled and APage.Detached then
+    fDetachButton.Caption := 'Вернуть во вкладку'
+  else
+    fDetachButton.Caption := 'Открепить окно';
 end;
 
 function TFormPagesDialog.GetSelectedPageIndex: Integer;
@@ -422,6 +438,18 @@ begin
   lPage.BackgroundImageFileName := '';
   fBackgroundEdit.Text := '';
   fClearBackgroundButton.Enabled := False;
+end;
+
+procedure TFormPagesDialog.DetachClick(Sender: TObject);
+var
+  lPage: TRecorderFormPage;
+begin
+  lPage := GetSelectedPage;
+  if (lPage = nil) or (PageDescription(lPage) <> 'Mnemonic page') then
+    Exit;
+  lPage.Detached := not lPage.Detached;
+  UpdatePageEditors(lPage);
+  RefreshGrid;
 end;
 
 procedure TFormPagesDialog.AddMnemonicClick(Sender: TObject);
