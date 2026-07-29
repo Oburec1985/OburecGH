@@ -59,13 +59,16 @@ implementation
 
 uses
   uRecorderTrendSettingsDialog, uRecorderSpectrumSettingsDialog,
-  uRecorderOscillogramSettingsDialog;
+  uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog;
 
 function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderImageComponent then
+    Exit(ShowRecorderImageSettingsDialog(AOwner,
+      TRecorderImageComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderTrendComponent then
     Exit(ShowRecorderTrendSettingsDialog(AOwner,
       TRecorderTrendComponent(AComponent), ATagRegistry));

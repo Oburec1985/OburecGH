@@ -69,7 +69,9 @@ begin
   fDataSourceManager := TRecorderDataSourceManager.Create;
   fStateMachine := TRecorderStateMachine.Create;
   fRunSettings := TRecorderRunControlSettings.Create;
-  fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus);
+  { UI проверяет ревизии кольцевых буферов по своему периоду обновления.
+    Частые события тегов здесь только дублировали данные и копировали массивы. }
+  fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus, False, True);
   fTimeSystem := TRecorderTimeSystem.Create;
   fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
   fAlgorithmManager := TRecorderAlgorithmManager.Create(fTagRegistry, fSpectrumManager);

@@ -1392,9 +1392,11 @@ begin
       if fSource.TryStop then
         Break;
       lElapsed := GetTickCount64 - lStart;
+      {$IFDEF RECORDER_RUNTIME_DIAGNOSTICS}
       if lElapsed > 10 then
         RecorderDebugLog(Format('[DataSource:%s] Tick took %d ms on Thread %d',
           [fSource.SourceId, lElapsed, PtrUInt(GetThreadID)]));
+      {$ENDIF}
 
       Inc(lNextTickMs, fSource.UpdateTimeMs);
       lNow := GetTickCount64;

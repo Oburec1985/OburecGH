@@ -26,6 +26,7 @@ type
   private type
     TTrendSeries = record
       LastProcessedTime: Double;
+      LastBlockCounter: QWord;
       Times: array of Double;
       Values: array of Double;
       Count: Integer;
@@ -479,6 +480,12 @@ begin
       RecorderBindTrendLineTag(lLine, lTag);
     if lTag = nil then
       Continue;
+
+    { Счётчик принадлежит клиенту линии, как m_readyBlock в cTag.
+      Не блокируем кольцо и не копируем массив, пока этот тег не обновился. }
+    if fSeries[I].LastBlockCounter = lTag.BlockCounter then
+      Continue;
+    fSeries[I].LastBlockCounter := lTag.BlockCounter;
 
     lLastBlock := lTag.LastBlockSnapshot;
     if lLastBlock.Count = 0 then

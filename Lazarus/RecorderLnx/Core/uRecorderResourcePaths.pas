@@ -102,6 +102,8 @@ begin
       'resources' + PathDelim + lLogical);
     AddCandidate(lCandidates, IncludeTrailingPathDelimiter(lAppDir) + lLogical);
     AddCandidate(lCandidates, IncludeTrailingPathDelimiter(
+      RecorderBiosPath) + lLogical);
+    AddCandidate(lCandidates, IncludeTrailingPathDelimiter(
       RecorderMeraFilesPath) + 'Resources' + PathDelim + lLogical);
 
     { IDE и build-tree: поднимаемся от каталога ELF/exe, не от CurrentDir. }

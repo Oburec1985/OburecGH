@@ -30452,7 +30452,7 @@
 						"name" : "MIC140-2-status",
 						"address" : "diagnostics.status",
 						"unit" : "",
-						"description" : "MIC-140 connection status: stopped",
+						"description" : "MIC-140 connection status: programmed",
 						"sourceId" : "MIC-140: 192.168.14.48:4000",
 						"isVirtual" : false,
 						"sourceValueMode" : "",

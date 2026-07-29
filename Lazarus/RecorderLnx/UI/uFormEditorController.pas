@@ -168,6 +168,9 @@ type
     fOperationUndoSaved: Boolean;
     fOperationChanged: Boolean;
     fLastOperationRenderTickMs: QWord;
+    fLastCanvasClick: TPoint;
+    fHasCanvasClick: Boolean;
+    fPendingPlacementComponent: TRecorderVisualComponent;
     fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
     fPagePanels: TStringList;                      { Панели отдельных страниц мнемосхем }
 
@@ -228,6 +231,7 @@ type
     function NormalizeRect(X1, Y1, X2, Y2: Integer): TRect;
     function RecorderRectToRect(const ABounds: TRecorderRect): TRect;
     function RectsIntersectPartial(const A, B: TRect): Boolean;
+    function PlacePendingComponentAt(const APoint: TPoint): Boolean;
 
   public
     { Создает контроллер для полотна.
@@ -246,6 +250,10 @@ type
     { Полностью перестраивает визуальное представление активной страницы. }
     procedure Render;
     procedure RefreshLive;
+    { Размещает новый компонент около последней точки клика по полотну. }
+    procedure PositionNewComponent(AComponent: TRecorderVisualComponent);
+    { Включает размещение компонента следующим щелчком по странице. }
+    procedure ArmNewComponentPlacement(AComponent: TRecorderVisualComponent);
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
     { Фиксирует текущую точку отката в Undo }
@@ -461,6 +469,8 @@ begin
   fDragStartBounds := TList.Create;
   fUndoStack := TList.Create;
   fDisplaySeconds := 1.0;
+  fHasCanvasClick := False;
+  fPendingPlacementComponent := nil;
   fPagePanels := TStringList.Create;
   fPagePanels.Sorted := True;
   fPagePanels.Duplicates := dupIgnore;
@@ -619,6 +629,10 @@ begin
     lDstTagValue.EstimateKind := lSrcTagValue.EstimateKind;
     lDstTagValue.UseDefaultEstimate := lSrcTagValue.UseDefaultEstimate;
   end
+  else if (ASource is TRecorderImageComponent) and
+    (ADest is TRecorderImageComponent) then
+    TRecorderImageComponent(ADest).AssignImage(
+      TRecorderImageComponent(ASource))
   else if (ASource is TRecorderOscillogramComponent) and
     (ADest is TRecorderOscillogramComponent) then
     TRecorderOscillogramComponent(ADest).AssignOscillogram(
@@ -686,6 +700,7 @@ var
   lCreateMs: QWord;
   lConfigureMs: QWord;
   lRefreshMs: QWord;
+  lSelectionContainsImage: Boolean;
 
 
   procedure AddHandle(AOperation: TFormEditorOperation; ALeft, ATop: Integer);
@@ -879,6 +894,9 @@ begin
         lCreateMs := GetTickCount64 - lStepStarted;
         lControl.Parent := lPanel;
         lControl.Align := alClient;
+        lControl.Visible := True;
+        if lControl is TRecorderImageView then
+          TRecorderImageView(lControl).EditMode := fEnabled;
         lControl.Tag := I;
         TControlAccess(lControl).OnMouseDown := @ComponentMouseDown;
         TControlAccess(lControl).OnMouseMove := @ChildMouseMove;
@@ -953,11 +971,29 @@ begin
         begin
           lCtrl := lPanel.Controls[0];
           lCtrl.Enabled := True;
+          lCtrl.Visible := True;
+          if not fEnabled then
+          begin
+            lPanel.Cursor := crDefault;
+            lCtrl.Cursor := crDefault;
+          end;
+          if lCtrl is TRecorderImageView then
+          begin
+            TRecorderImageView(lCtrl).EditMode := fEnabled;
+            { При изменении Bounds имя файла не меняется, поэтому SelectFile
+              не вызывает Invalidate. Явно перерисовываем растянутую картинку. }
+            lCtrl.SetBounds(0, 0, lPanel.ClientWidth, lPanel.ClientHeight);
+            lCtrl.Invalidate;
+          end;
           if Supports(lCtrl, IVForm, lVisualCtrl) then
           begin
             lChart := lVisualCtrl.GetChartControl;
             if lChart <> nil then
+            begin
               lChart.MouseInputEnabled := not fEnabled;
+              if not fEnabled then
+                lChart.Cursor := crDefault;
+            end;
             if fEnabled then
               lVisualCtrl.Configure(lComponent, fTagRegistry);
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
@@ -988,36 +1024,11 @@ begin
     Exit;
 
 
-  for I := 0 to fSelected.Count - 1 do
-  begin
-    lComponent := lPage.Components[Integer(PtrUInt(fSelected[I]))];
-    lBounds := lComponent.Bounds;
-    lShape := TShape.Create(lPagePanel);
-    lShape.Parent := lPagePanel;
-    lShape.SetBounds(lBounds.Left - 2, lBounds.Top - 2,
-      lBounds.Width + 4, lBounds.Height + 4);
-    lShape.Brush.Style := bsClear;
-    lShape.Pen.Color := clFuchsia;
-    lShape.Pen.Width := 2;
-    lShape.Enabled := False;
-    lShape.BringToFront;
-  end;
-
-
-
   if GetGroupBounds(lGroupBounds) then
   begin
-    lShape := TShape.Create(lPagePanel);
-    lShape.Parent := lPagePanel;
-    lShape.SetBounds(lGroupBounds.Left - 4, lGroupBounds.Top - 4,
-      lGroupBounds.Width + 8, lGroupBounds.Height + 8);
-    lShape.Brush.Style := bsClear;
-    lShape.Pen.Color := clRed;
-    lShape.Pen.Width := 2;
-    lShape.Enabled := False;
-    lShape.BringToFront;
-
-
+    { Выделение показывают BevelOuter контейнера и отдельные ручки.
+      TShape здесь не используется: Win32-widgetset закрашивает им дочерние
+      контролы, несмотря на Brush.Style = bsClear. }
     AddHandle(feoResizeTopLeft, lGroupBounds.Left - 8, lGroupBounds.Top - 8);
     AddHandle(feoResizeTop, lGroupBounds.Left + lGroupBounds.Width div 2 - 4,
       lGroupBounds.Top - 8);
@@ -1214,10 +1225,28 @@ end;
 procedure TFormEditorController.CanvasMouseDown(Sender: TObject;
 
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lPagePanel: TPanel;
+  lPoint: TPoint;
 begin
   if (not fEnabled) or (Button <> mbLeft) then
     Exit;
 
+  lPagePanel := GetActivePagePanel;
+  if (lPagePanel <> nil) and (Sender is TControl) then
+  begin
+    lPoint := lPagePanel.ScreenToClient(
+      TControl(Sender).ClientToScreen(Point(X, Y)));
+    fLastCanvasClick := lPoint;
+    fHasCanvasClick := True;
+  end;
+
+  if PlacePendingComponentAt(fLastCanvasClick) then
+  begin
+    NotifyChanged;
+    Render;
+    Exit;
+  end;
 
   if not (ssCtrl in Shift) then
     ClearSelection;
@@ -1283,6 +1312,18 @@ begin
   if (not fEnabled) or (Button <> mbLeft) or (not (Sender is TControl)) then
     Exit;
 
+  if GetActivePagePanel <> nil then
+  begin
+    fLastCanvasClick := GetActivePagePanel.ScreenToClient(
+      TControl(Sender).ClientToScreen(Point(X, Y)));
+    fHasCanvasClick := True;
+    if PlacePendingComponentAt(fLastCanvasClick) then
+    begin
+      NotifyChanged;
+      Render;
+      Exit;
+    end;
+  end;
 
   lIndex := TControl(Sender).Tag;
   if ssCtrl in Shift then
@@ -1582,6 +1623,74 @@ begin
   RenderLiveDuringOperation(False);
 end;
 
+procedure TFormEditorController.PositionNewComponent(
+  AComponent: TRecorderVisualComponent);
+var
+  lBounds: TRecorderRect;
+  lPanel: TPanel;
+  lMaxLeft, lMaxTop: Integer;
+begin
+  if AComponent = nil then
+    Exit;
+  lBounds := AComponent.Bounds;
+  if fHasCanvasClick then
+  begin
+    lBounds.Left := fLastCanvasClick.X - lBounds.Width div 2;
+    lBounds.Top := fLastCanvasClick.Y - lBounds.Height div 2;
+  end
+  else
+  begin
+    lBounds.Left := 16;
+    lBounds.Top := 16;
+  end;
+  lPanel := GetActivePagePanel;
+  if lPanel <> nil then
+  begin
+    lMaxLeft := Max(0, lPanel.ClientWidth - lBounds.Width);
+    lMaxTop := Max(0, lPanel.ClientHeight - lBounds.Height);
+    lBounds.Left := EnsureRange(lBounds.Left, 0, lMaxLeft);
+    lBounds.Top := EnsureRange(lBounds.Top, 0, lMaxTop);
+  end
+  else
+  begin
+    lBounds.Left := Max(0, lBounds.Left);
+    lBounds.Top := Max(0, lBounds.Top);
+  end;
+  AComponent.Bounds := lBounds;
+end;
+
+procedure TFormEditorController.ArmNewComponentPlacement(
+  AComponent: TRecorderVisualComponent);
+begin
+  fPendingPlacementComponent := AComponent;
+end;
+
+function TFormEditorController.PlacePendingComponentAt(
+  const APoint: TPoint): Boolean;
+var
+  lBounds: TRecorderRect;
+  lPanel: TPanel;
+  lMaxLeft, lMaxTop: Integer;
+begin
+  Result := fPendingPlacementComponent <> nil;
+  if not Result then
+    Exit;
+
+  lBounds := fPendingPlacementComponent.Bounds;
+  lBounds.Left := APoint.X - lBounds.Width div 2;
+  lBounds.Top := APoint.Y - lBounds.Height div 2;
+  lPanel := GetActivePagePanel;
+  if lPanel <> nil then
+  begin
+    lMaxLeft := Max(0, lPanel.ClientWidth - lBounds.Width);
+    lMaxTop := Max(0, lPanel.ClientHeight - lBounds.Height);
+    lBounds.Left := EnsureRange(lBounds.Left, 0, lMaxLeft);
+    lBounds.Top := EnsureRange(lBounds.Top, 0, lMaxTop);
+  end;
+  fPendingPlacementComponent.Bounds := lBounds;
+  fPendingPlacementComponent := nil;
+end;
+
 
 
 procedure TFormEditorController.EndOperation;
@@ -1830,7 +1939,9 @@ procedure TFormEditorController.RefreshLive;
 
 var
 
-  I, J: Integer;
+  J: Integer;
+  lPage: TRecorderFormPage;
+  lPagePanelIndex: Integer;
   lPagePanel: TPanel;
   lCompPanel: TControl;
   lChild: TControl;
@@ -1838,29 +1949,32 @@ var
 begin
   if fPagePanels = nil then
     Exit;
-    
 
-  for I := 0 to fPagePanels.Count - 1 do
+  { Расчёты тегов и алгоритмов выполняются независимо от UI, но подготовка
+    геометрии и repaint принадлежат циклу отображения. Скрытые мнемосхемы
+    обновлять запрещено: один DoRepaint обслуживает только активную видимую
+    страницу. }
+  lPage := GetActivePage;
+  if lPage = nil then
+    Exit;
+  lPagePanelIndex := fPagePanels.IndexOf(lPage.Id);
+  if lPagePanelIndex < 0 then
+    Exit;
+  lPagePanel := TPanel(fPagePanels.Objects[lPagePanelIndex]);
+  if (lPagePanel = nil) or (not lPagePanel.Visible) then
+    Exit;
+
+  for J := 0 to lPagePanel.ControlCount - 1 do
   begin
-    lPagePanel := TPanel(fPagePanels.Objects[I]);
-    for J := 0 to lPagePanel.ControlCount - 1 do
+    lCompPanel := lPagePanel.Controls[J];
+    if (lCompPanel is TPanel) and lCompPanel.Visible and
+      (TPanel(lCompPanel).ControlCount > 0) then
     begin
-      lCompPanel := lPagePanel.Controls[J];
-      if lCompPanel is TPanel then
-      begin
-        if TPanel(lCompPanel).ControlCount > 0 then
-        begin
-          lChild := TPanel(lCompPanel).Controls[0];
-          if Supports(lChild, IVForm, lVisualCtrl) then
-            lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
-        end;
-
-      end;
-
+      lChild := TPanel(lCompPanel).Controls[0];
+      if lChild.Visible and Supports(lChild, IVForm, lVisualCtrl) then
+        lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
     end;
-
   end;
-
 end;
 
 
@@ -1895,10 +2009,25 @@ begin
     for I := 0 to lPagePanel.ControlCount - 1 do
     begin
       lControl := lPagePanel.Controls[I];
-      if (lControl is TPanel) and (lControl.Tag >= 0) and (lControl.Tag < lPage.ComponentCount) then
+      { Ручки изменения размера тоже являются TPanel и хранят в Tag номер
+        операции (3..10). Нельзя принимать их за панели компонентов с такими
+        же индексами: иначе ручка растягивается поверх чужого компонента. }
+      if (lControl is TPanel) and
+        (lControl.Hint <> 'Resize selection') and
+        (lControl.Tag >= 0) and (lControl.Tag < lPage.ComponentCount) then
       begin
         lBounds := lPage.Components[lControl.Tag].Bounds;
         lControl.SetBounds(lBounds.Left, lBounds.Top, lBounds.Width, lBounds.Height);
+        if (TPanel(lControl).ControlCount > 0) and
+          (TPanel(lControl).Controls[0] is TRecorderImageView) then
+        begin
+          { RenderLive не пересоздаёт контрол во время drag/resize. Обновляем
+            только геометрию картинки и просим LCL перерисовать новый размер. }
+          TPanel(lControl).Controls[0].SetBounds(0, 0,
+            TPanel(lControl).ClientWidth, TPanel(lControl).ClientHeight);
+          TRecorderImageView(TPanel(lControl).Controls[0]).EditMode := True;
+          TPanel(lControl).Controls[0].Invalidate;
+        end;
       end;
 
     end;

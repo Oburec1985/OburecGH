@@ -301,7 +301,8 @@ uses
   uRecorderMic140StreamTypes,
   uRecorderMic140LegacyTiming, uRecorderMic140Utils,
   uRecorderMic185DataSource, uMic185Constants,
-  uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog;
+  uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
+  uRecorderDeviceSearchDialog, uMc032Device;
 
 {$R *.lfm}
 
@@ -1832,26 +1833,134 @@ end;
 
 procedure TRecorderSettingsDialog.HardwareSearchClick(Sender: TObject);
 var
-  lFound: TStringList;
+  lFoundHosts: TStringList;
+  lConfiguredIds: TStringList;
+  lSeenIds: TStringList;
+  lDialog: TRecorderDeviceSearchDialog;
+  lDevice: TRecorderDiscoveredDevice;
+  lMc032: TMc032Device;
+  lSourceId: string;
+  lHost: string;
+  lVersion: string;
+  lError: string;
+  lDisplay: string;
+  lSerial: LongWord;
+  lPort: Word;
+  I: Integer;
+
+  function IsConfigured(const ASourceId: string): Boolean;
+  begin
+    Result := (fRecorder <> nil) and
+      (RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, ASourceId) <> nil);
+  end;
+
+  procedure AddFound(const ADeviceType, ASourceId, ADisplayText: string);
+  var
+    lConfigured: Boolean;
+  begin
+    if (Trim(ASourceId) = '') or (lSeenIds.IndexOf(ASourceId) >= 0) then
+      Exit;
+    lSeenIds.Add(ASourceId);
+    lConfigured := IsConfigured(ASourceId);
+    lDisplay := ADisplayText;
+    if lConfigured then
+      lDisplay := lDisplay + '  (уже добавлено)';
+    lDialog.AddDevice(ADeviceType, ASourceId, lDisplay, lConfigured);
+  end;
+
+  procedure ProbeMic185(const AHost: string; APort: Word);
+  begin
+    if not RecorderMic185ReadDeviceInfo(AHost, APort, lSerial, lVersion,
+      lError, 180) then
+      Exit;
+    lSourceId := RecorderMic185SourceId(AHost, APort);
+    lDisplay := Format('MIC183/185 — %s:%d', [AHost, APort]);
+    if lSerial <> 0 then
+      lDisplay := lDisplay + Format(', SN=%d', [lSerial]);
+    if lVersion <> '' then
+      lDisplay := lDisplay + ', ' + lVersion;
+    AddFound('MIC183/185', lSourceId, lDisplay);
+  end;
+
+  procedure ProbeMc032(const AHost: string; APort: Word; ATimeoutMs: Cardinal);
+  begin
+    lMc032.Host := AHost;
+    lMc032.Port := APort;
+    lMc032.TimeoutMs := ATimeoutMs;
+    if lMc032.TestConnection(lError) then
+      AddFound('MC-032', RecorderMc032SourceId(AHost, APort),
+        Format('MC-032 — %s:%d', [AHost, APort]));
+  end;
 begin
-  lFound := TStringList.Create;
+  lFoundHosts := TStringList.Create;
+  lConfiguredIds := TStringList.Create;
+  lSeenIds := TStringList.Create;
+  lDialog := TRecorderDeviceSearchDialog.Create(Self);
+  lMc032 := TMc032Device.Create;
   try
+    lSeenIds.CaseSensitive := False;
+    lSeenIds.Sorted := True;
+    lSeenIds.Duplicates := dupIgnore;
+    if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
+      RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry,
+        lConfiguredIds, True);
+
     Screen.Cursor := crHourGlass;
     try
-      RecorderMic140Discover(lFound, MIC140DefaultDiscoverySubnet,
+      { Сначала быстрый параллельный поиск MIC-140. }
+      RecorderMic140Discover(lFoundHosts, MIC140DefaultDiscoverySubnet,
         MIC140DefaultPort, 180);
+      for I := 0 to lFoundHosts.Count - 1 do
+      begin
+        lSourceId := RecorderMic140SourceId(lFoundHosts[I], MIC140DefaultPort);
+        AddFound('MIC-140', lSourceId,
+          Format('MIC-140 — %s:%d', [lFoundHosts[I], MIC140DefaultPort]));
+      end;
+
+      { MIC183/185: штатный адрес и адреса уже известных источников. }
+      ProbeMic185(MIC185DefaultHost, MIC185DefaultPort);
+      for I := 0 to lConfiguredIds.Count - 1 do
+        if TryParseRecorderMic185SourceId(lConfiguredIds[I], lHost, lPort) then
+          ProbeMic185(lHost, lPort);
+
+      { MC-032: сначала известные адреса, затем полная приборная подсеть. }
+      for I := 0 to lConfiguredIds.Count - 1 do
+        if TryParseRecorderMc032SourceId(lConfiguredIds[I], lHost, lPort) then
+          ProbeMc032(lHost, lPort, 180);
+      for I := 1 to 254 do
+      begin
+        ProbeMc032('192.169.13.' + IntToStr(I), 4000, 35);
+        Application.ProcessMessages;
+      end;
     finally
       Screen.Cursor := crDefault;
     end;
-    if lFound.Count = 0 then
+
+    if lDialog.DeviceCount = 0 then
     begin
-      MessageDlg('MIC-140', 'Device not found in 192.168.14.0/24',
+      MessageDlg('Автопоиск', 'Поддерживаемые устройства не найдены.',
         mtWarning, [mbOK], 0);
       Exit;
     end;
-    AddMic140Source(lFound[0]);
+
+    if lDialog.ShowModal <> mrOk then
+      Exit;
+    for I := 0 to lDialog.DeviceCount - 1 do
+    begin
+      if not lDialog.DeviceChecked(I) then
+        Continue;
+      lDevice := lDialog.DeviceAt(I);
+      if SameText(lDevice.DeviceType, 'MC-032') then
+        EditMc032Source(lDevice.SourceId)
+      else
+        EditHardwareSource(lDevice.SourceId, lDevice.DeviceType);
+    end;
   finally
-    lFound.Free;
+    lMc032.Free;
+    lDialog.Free;
+    lSeenIds.Free;
+    lConfiguredIds.Free;
+    lFoundHosts.Free;
   end;
 end;
 

@@ -97,6 +97,8 @@ type
   TRecorderEventSnapshotQueue = class
   private
     fEventBus: TRecorderEventBus;      { Ссылка на шину событий }
+    fIncludeTagUpdates: Boolean;       { Нужно ли помещать частые обновления тегов в очередь }
+    fAlarmEventsOnly: Boolean;         { Нужны ли этой очереди только события тревог }
     fItems: TList;                     { Список накопленных снимков (TRecorderEventSnapshot) }
     fLock: TRTLCriticalSection;        { Критическая секция защиты очереди }
     fToken: Integer;                   { Токен подписки на события }
@@ -105,7 +107,8 @@ type
   public
     { AEventBus - необязательная шина событий для автоматической подписки.
       Владение шиной не передается. }
-    constructor Create(AEventBus: TRecorderEventBus = nil);
+    constructor Create(AEventBus: TRecorderEventBus = nil;
+      AIncludeTagUpdates: Boolean = True; AAlarmEventsOnly: Boolean = False);
     { Деструктор отписывается от шины и очищает список }
     destructor Destroy; override;
 
@@ -188,9 +191,12 @@ end;
 
 { TRecorderEventSnapshotQueue }
 
-constructor TRecorderEventSnapshotQueue.Create(AEventBus: TRecorderEventBus);
+constructor TRecorderEventSnapshotQueue.Create(AEventBus: TRecorderEventBus;
+  AIncludeTagUpdates: Boolean; AAlarmEventsOnly: Boolean);
 begin
   inherited Create;
+  fIncludeTagUpdates := AIncludeTagUpdates;
+  fAlarmEventsOnly := AAlarmEventsOnly;
   fItems := TList.Create;
   InitCriticalSection(fLock);
   if AEventBus <> nil then
@@ -254,6 +260,16 @@ procedure TRecorderEventSnapshotQueue.HandleEvent(ASender: TObject;
 var
   lSnapshot: TRecorderEventSnapshot;
 begin
+  if fAlarmEventsOnly and
+    (not (AEvent.Data is TRecorderAlarmEventData)) then
+    Exit;
+
+  { UI RecorderLnx получает данные тегов напрямую из кольцевых буферов по их
+    ревизиям. Копировать каждый блок в промежуточный объект очереди не нужно. }
+  if (not fIncludeTagUpdates) and
+    (AEvent.Data is TRecorderTagUpdateEventData) then
+    Exit;
+
   lSnapshot := TRecorderEventSnapshot.CreateFromEvent(AEvent);
   EnterCriticalSection(fLock);
   try

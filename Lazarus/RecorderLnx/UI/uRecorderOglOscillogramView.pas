@@ -1248,7 +1248,7 @@ begin
   begin
     lTag := ResolveTag(ATagRegistry, I);
     if lTag <> nil then
-      lRevision := lTag.SignalBuffer.Revision
+      lRevision := lTag.BlockCounter
     else
       lRevision := 0;
     if fLastDataRevisions[I] <> lRevision then

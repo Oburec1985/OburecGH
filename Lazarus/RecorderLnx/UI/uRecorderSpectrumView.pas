@@ -680,7 +680,10 @@ begin
         end;
       end;
 
-    if (fPage <> nil) and (lBandFrameIndex >= 0) then
+    { Полосы зависят только от нового спектрального кадра. Не удаляем и не
+      создаём графические объекты на каждом общем UI-такте, когда данные
+      этого спектра не менялись. }
+    if lNeedsRedraw and (fPage <> nil) and (lBandFrameIndex >= 0) then
     begin
       ClearBandObjects;
       for K := 0 to Length(fBufferedFrames[lBandFrameIndex].Bands) - 1 do
@@ -707,10 +710,9 @@ begin
 
   if lNeedsRedraw and (fChart <> nil) then
   begin
-    fChart.Invalidate;
     fChart.Redraw;
+    UpdateHeader(True);
   end;
-  UpdateHeader(True);
 end;
 
 function TRecorderSpectrumView.GetChartControl: TOglChart;

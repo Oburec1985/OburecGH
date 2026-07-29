@@ -402,8 +402,7 @@ begin
   end
   else
     S.CorruptStreak := 0;
-  if (not S.PktLogged) or ACorrupt or
-     (ARaw.ReadSerial <= CMic140v2ScanDetailLogBlocks) then
+  if ACorrupt then
   begin
     Mic140v2Log(Format(
       '[MIC140v2:%s:%d] scan rs=%d nb=%d ms=%d corrupt=%s',
@@ -562,6 +561,7 @@ begin
   ARaw.ReadSerial := S.ReadCnt;
   S.StallRestartCnt := 0;
   since := Mic140v2StreamSincePrevMs(S);
+  {$IFDEF RECORDER_RUNTIME_DIAGNOSTICS}
   if (not S.PktLogged) or (ARaw.ReadSerial <= CMic140v2ScanDetailLogBlocks) then
   begin
     Mic140v2Log(Format(
@@ -577,6 +577,7 @@ begin
          Mic140v2SignedPreview(ARaw, 60, 60)]));
     S.PktLogged := True;
   end;
+  {$ENDIF}
   Mic140v2StreamCheckNumBuff(S, ARaw, since, AHost, APort, desync);
   if desync then
     S.SeqReset := True;

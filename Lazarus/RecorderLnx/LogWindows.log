@@ -1,285 +1,211 @@
-2026-07-29 10:41:50.369 [DEBUG] [TID:14860|UIThread] 10:41:50.366 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
-2026-07-29 10:41:50.370 [DEBUG] [TID:14860|UIThread] 10:41:50.369 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
-2026-07-29 10:41:50.417 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch01 to tag T_01
-2026-07-29 10:41:50.417 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch02 to tag MIC140_02
-2026-07-29 10:41:50.422 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch03 to tag MIC140_03
-2026-07-29 10:41:50.428 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch04 to tag MIC140_04
-2026-07-29 10:41:50.433 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch05 to tag MIC140_05
-2026-07-29 10:41:50.436 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
-2026-07-29 10:41:50.441 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
-2026-07-29 10:41:50.445 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
-2026-07-29 10:41:50.450 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
-2026-07-29 10:41:50.455 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
-2026-07-29 10:41:50.458 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
-2026-07-29 10:41:50.463 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
-2026-07-29 10:41:50.468 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
-2026-07-29 10:41:50.472 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
-2026-07-29 10:41:50.476 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
-2026-07-29 10:41:50.481 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
-2026-07-29 10:41:50.485 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
-2026-07-29 10:41:50.489 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
-2026-07-29 10:41:50.493 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
-2026-07-29 10:41:50.497 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
-2026-07-29 10:41:50.501 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
-2026-07-29 10:41:50.507 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
-2026-07-29 10:41:50.511 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
-2026-07-29 10:41:50.516 [WARNING] [TID:14860|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch24 to tag MIC140_24
-2026-07-29 10:41:50.520 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
-2026-07-29 10:41:50.524 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
-2026-07-29 10:41:50.528 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
-2026-07-29 10:41:50.533 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
-2026-07-29 10:41:50.537 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
-2026-07-29 10:41:50.541 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
-2026-07-29 10:41:50.545 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
-2026-07-29 10:41:50.549 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
-2026-07-29 10:41:50.554 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
-2026-07-29 10:41:50.559 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
-2026-07-29 10:41:50.563 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
-2026-07-29 10:41:50.567 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
-2026-07-29 10:41:50.572 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
-2026-07-29 10:41:50.576 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
-2026-07-29 10:41:50.581 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
-2026-07-29 10:41:50.585 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
-2026-07-29 10:41:50.589 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
-2026-07-29 10:41:50.594 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
-2026-07-29 10:41:50.598 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
-2026-07-29 10:41:50.602 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
-2026-07-29 10:41:50.607 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
-2026-07-29 10:41:50.611 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
-2026-07-29 10:41:50.615 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
-2026-07-29 10:41:50.620 [WARNING] [TID:14860|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
-2026-07-29 10:41:50.644 [DEBUG] [TID:14860|UIThread] 10:41:50.643 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
-2026-07-29 10:41:50.694 [DEBUG] [TID:14860|UIThread] [MNEMO-PERF] component=Oscillogram15 class=TRecorderOglOscillogram create=31ms configure=0ms refresh=0ms
-2026-07-29 10:41:51.521 [DEBUG] [TID:14860|UIThread] [MNEMO-PERF] component=Spectrum17 class=TRecorderSpectrumView create=0ms configure=829ms refresh=0ms
-2026-07-29 10:41:51.522 [DEBUG] [TID:14860|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=22 rebuild=True total=875ms
-2026-07-29 10:41:51.527 [DEBUG] [TID:14860|UIThread] 10:41:51.527 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
-2026-07-29 10:41:51.537 [DEBUG] [TID:14860|UIThread] 10:41:51.537 MERA playback source configured: signal0005.mera (9 channels).
-2026-07-29 10:41:51.538 [DEBUG] [TID:14860|UIThread] 10:41:51.538 MIC-140 source configured: 192.168.14.48:4000 (48 channels).
-2026-07-29 10:41:51.542 [DEBUG] [TID:14860|UIThread] 10:41:51.542 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
-2026-07-29 10:41:51.548 [DEBUG] [TID:14860|UIThread] 10:41:51.548 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
-2026-07-29 10:41:51.634 [DEBUG] [TID:14860|UIThread] 10:41:51.634 Diagnostics data source configured: MemTag, CpuUsage.
-2026-07-29 10:41:52.924 [DEBUG] [TID:12240] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
-2026-07-29 10:41:52.925 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 connecting
-2026-07-29 10:41:52.940  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-29 10:41:52.940 [DEBUG] [TID:14304] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
-2026-07-29 10:41:53.489 [WARNING] [TID:16900] [MIC140v2:192.168.14.48:4000] transport connected
-2026-07-29 10:41:53.489 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=1 connected
-2026-07-29 10:41:53.495 [WARNING] [TID:16900] [MIC140v2:192.168.14.48:4000] init TEST_LOAD: ready
-2026-07-29 10:41:54.150 [DEBUG] [TID:12240] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
-2026-07-29 10:41:58.844 [WARNING] [TID:16900] [MIC140v2:192.168.14.48:4000] initialized devType=16705 ser=4582 rev=14.1 BIOS=8.1 hwCal=329
-2026-07-29 10:41:58.844 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 firmware devSerNo=4582 ccSerNo=329 ccType=16704 -> hardware calibr serial=329
-2026-07-29 10:41:58.855 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
-2026-07-29 10:41:58.860 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
-2026-07-29 10:41:58.866 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
-2026-07-29 10:41:58.870 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
-2026-07-29 10:41:58.876 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
-2026-07-29 10:41:58.880 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
-2026-07-29 10:41:58.884 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
-2026-07-29 10:41:58.892 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
-2026-07-29 10:41:58.897 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
-2026-07-29 10:41:58.904 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
-2026-07-29 10:41:58.913 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
-2026-07-29 10:41:58.917 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
-2026-07-29 10:41:58.922 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
-2026-07-29 10:41:58.926 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
-2026-07-29 10:41:58.930 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
-2026-07-29 10:41:58.936 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
-2026-07-29 10:41:58.940 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
-2026-07-29 10:41:58.945 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
-2026-07-29 10:41:58.950 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
-2026-07-29 10:41:58.955 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
-2026-07-29 10:41:58.959 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
-2026-07-29 10:41:58.964 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
-2026-07-29 10:41:58.968 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
-2026-07-29 10:41:58.973 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
-2026-07-29 10:41:58.978 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
-2026-07-29 10:41:58.983 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
-2026-07-29 10:41:58.988 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
-2026-07-29 10:41:58.992 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
-2026-07-29 10:41:58.997 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
-2026-07-29 10:41:59.002 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
-2026-07-29 10:41:59.007 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
-2026-07-29 10:41:59.012 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
-2026-07-29 10:41:59.016 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
-2026-07-29 10:41:59.020 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
-2026-07-29 10:41:59.026 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
-2026-07-29 10:41:59.030 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
-2026-07-29 10:41:59.035 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
-2026-07-29 10:41:59.040 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
-2026-07-29 10:41:59.044 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
-2026-07-29 10:41:59.049 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
-2026-07-29 10:41:59.053 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
-2026-07-29 10:41:59.058 [WARNING] [TID:16900] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
-2026-07-29 10:41:59.063 [WARNING] [TID:16900] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\12.csv
-2026-07-29 10:41:59.079 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 thermocouple curve ready: tag=T_01 SDB=ГОСТ\Термопары\K_ГОСТ Р 8.585-2001
-2026-07-29 10:41:59.083 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 thermocouple curve ready: tag=MIC140_24 SDB=ГОСТ\Термопары\K_ГОСТ Р 8.585-2001
-2026-07-29 10:41:59.084 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0806 offset=0 count=10
-2026-07-29 10:41:59.090 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x084C offset=0 count=31
-2026-07-29 10:41:59.094 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x086B offset=31 count=31
-2026-07-29 10:41:59.099 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x088A offset=62 count=31
-2026-07-29 10:41:59.104 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08A9 offset=93 count=31
-2026-07-29 10:41:59.109 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08C8 offset=124 count=31
-2026-07-29 10:41:59.113 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08E7 offset=155 count=31
-2026-07-29 10:41:59.118 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0906 offset=186 count=31
-2026-07-29 10:41:59.122 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0925 offset=217 count=31
-2026-07-29 10:41:59.128 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0944 offset=248 count=27
-2026-07-29 10:41:59.134 [DEBUG] [TID:16900] [MIC140v2 scan] profile=3 hwProtocol=1 rev=14.1 rev2=False slots=55 ptrs=55 val=0x0810 desc=0x084C fifo=0x0522 ready=330 capacity=660 stride=55 chanDelay=607 timer(scale=1 period=640 div=500) desc0=[0,128,256,606,2064] desc1=[0,32896,256,606,2065] desc48=[0,32770,256,606,2117,0,16386,256,606,2118] ptrHead=[48,20,55,2124,2129,2134,2139,2144,2149,2154,2159,2164]
-2026-07-29 10:41:59.138 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0964 offset=0 count=31
-2026-07-29 10:41:59.143 [DEBUG] [TID:16900] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0983 offset=31 count=27
-2026-07-29 10:42:03.364 [WARNING] [TID:16900] [MIC140v2] scan OK slots=55 ptrs=55 payloadStride=55 fifoReady=330 msgWords=340 val=0x0810 message=0x099E
-2026-07-29 10:42:03.364 [WARNING] [TID:16900] [MIC140v2:192.168.14.48:4000] scan programmed ch=48 fifoStride=55 tin=7 val=0x0810 freq=100,000 Hz fifoReady=330 msgWords=340 countAver=20 decayUs=57,000
-2026-07-29 10:42:03.370 [WARNING] [TID:16900] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 programmed
-2026-07-29 10:42:04.680 [DEBUG] [TID:14860|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=22 rebuild=False total=0ms
-2026-07-29 10:42:04.680 [DEBUG] [TID:14860|UIThread] 10:42:04.680 RecorderLnx started.
-2026-07-29 10:42:09.256 [DEBUG] [TID:14860|UIThread] 10:42:09.249 Data sources started.
-2026-07-29 10:42:09.262 [DEBUG] [TID:14860|UIThread] 10:42:09.259 State changed: Stop -> Preview
-2026-07-29 10:42:09.360 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] scan started att=1 probe=False
-2026-07-29 10:42:09.362 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=3 started
-2026-07-29 10:42:09.421 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=1 rs=1 nb=1 ms=0 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.422 [DEBUG] [TID:9736] [MIC140v2:192.168.14.48:4000] raw1 first60=[-19744,-19712,-26325,-25269,-26524,-26532,-26526,-26324,-26210,-25567,-25456,-26642,-25861,-26568,-25936,-26314,-25832,-25082,-26150,-25956,-25437,-27310,-24899,-19809,-26433,-26014,-25619,-25666,-26658,-25680,-25619,-25199,-25875,-25385,-25586,-25809,-25918,-25561,-25315,-25142,-27331,-25701,-25637,-26059,-26154,-25128,-25553,-25509,7209,7194,7152,7183,7153,6246,19004,-19643,-19723,-26327,-25122,-26552] second60=[-26494,-26577,-26124,-26242,-25529,-25502,-26424,-25932,-26504,-25997,-26110,-25874,-25054,-26196,-25761,-25492,-27232,-24982,-19799,-26263,-25936,-25484,-25748,-26595,-25598,-25481,-25313,-25833,-25295,-25443,-25926,-25889,-25464,-25177,-25256,-27266,-25637,-25498,-26152,-26099,-25042,-25405,-25469,7162,7141,7160,7185,7141,6285,19003,-19749,-19707,-26271,-24902,-26583,-26473,-26650,-25905,-26300,-25523]
-2026-07-29 10:42:09.432 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=1 nb=1 ms=0 corrupt=False
-2026-07-29 10:42:09.452 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 6 of ~20 samples (freq=100,000 Hz upd=200 ms reads=1)
-2026-07-29 10:42:09.452 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 78 ms on Thread 8340
-2026-07-29 10:42:09.481 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=2 rs=2 nb=2 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.481 [DEBUG] [TID:9736] [MIC140v2:192.168.14.48:4000] raw2 first60=[-19762,-19705,-26213,-24183,-26805,-26513,-27042,-25159,-26563,-25598,-25943,-25407,-26398,-26449,-26497,-25157,-26221,-25123,-26588,-24878,-25913,-27144,-25601,-19809,-25679,-25687,-25003,-26420,-26577,-25368,-24976,-26109,-25871,-25037,-24926,-26717,-25999,-25196,-24680,-26026,-27183,-25497,-25001,-26864,-26097,-24828,-24889,-25572,7181,7163,7150,7184,7112,6289,19003,-19655,-19720,-26248,-24039,-26879] second60=[-26549,-27160,-25006,-26636,-25639,-26056,-25240,-26502,-26471,-26618,-25006,-26301,-25163,-26684,-24728,-25995,-27134,-25726,-19799,-25566,-25645,-24915,-26554,-26589,-25329,-24881,-26263,-25893,-24992,-24827,-26870,-26033,-25148,-24581,-26170,-27177,-25466,-24899,-26993,-26098,-24780,-24771,-25549,7131,7181,7153,7187,7136,6310,19003,-19760,-19706,-26153,-23804,-26875,-26530,-27233,-24813,-26669,-25641]
-2026-07-29 10:42:09.488 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=2 nb=2 ms=63 corrupt=False
-2026-07-29 10:42:09.541 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=3 rs=3 nb=3 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.542 [DEBUG] [TID:9736] [MIC140v2:192.168.14.48:4000] raw3 first60=[-19765,-19707,-26040,-23038,-26921,-26549,-27595,-24175,-26839,-25733,-26492,-24363,-26827,-26470,-27089,-24194,-26526,-25257,-27056,-23965,-26294,-27087,-26300,-19808,-25038,-25350,-24423,-27129,-26654,-25121,-24393,-26951,-26021,-24762,-24317,-27556,-26224,-24920,-24094,-26832,-27181,-25331,-24426,-27618,-26175,-24600,-24265,-25592,7172,7168,7142,7203,7140,6274,19005,-19657,-19721,-26077,-22894,-26952] second60=[-26579,-27700,-24045,-26894,-25778,-26601,-24226,-26906,-26497,-27201,-24068,-26585,-25298,-27146,-23839,-26355,-27083,-26414,-19799,-24936,-25303,-24334,-27240,-26679,-25090,-24305,-27083,-26058,-24726,-24225,-27684,-26272,-24883,-24000,-26951,-27187,-25303,-24330,-27724,-26191,-24559,-24151,-25556,7149,7173,7152,7173,7116,6305,19003,-19765,-19707,-25994,-22663,-26907,-26551,-27758,-23874,-26905,-25780]
-2026-07-29 10:42:09.553 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=3 nb=3 ms=62 corrupt=False
-2026-07-29 10:42:09.601 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=4 rs=4 nb=4 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.601 [DEBUG] [TID:9736] [MIC140v2:192.168.14.48:4000] raw4 first60=[-19765,-19707,-25932,-21956,-26828,-26537,-28059,-23313,-26997,-25871,-27011,-23479,-27126,-26519,-27628,-23377,-26718,-25393,-27490,-23187,-26561,-27063,-26934,-19808,-24467,-24988,-23846,-27706,-26787,-24917,-23850,-27661,-26233,-24542,-23748,-28255,-26509,-24703,-23539,-27501,-27247,-25190,-23892,-28239,-26321,-24407,-23677,-25545,7164,7169,7151,7194,7142,6294,19005,-19660,-19722,-25984,-21832,-26836] second60=[-26557,-28150,-23199,-27032,-25912,-27114,-23364,-27187,-26551,-27731,-23276,-26761,-25435,-27577,-23082,-26606,-27063,-27038,-19798,-24375,-24941,-23760,-27796,-26816,-24891,-23765,-27773,-26278,-24515,-23661,-28363,-26561,-24676,-23450,-27602,-27262,-25167,-23803,-28328,-26342,-24370,-23571,-25499,7178,7161,7157,7207,7115,6294,19005,-19768,-19707,-25912,-21624,-26773,-26525,-28193,-23046,-27024,-25914]
-2026-07-29 10:42:09.608 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=4 nb=4 ms=63 corrupt=False
-2026-07-29 10:42:09.638 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 CJC active: tag=T_01 T5=29,766 degC
-2026-07-29 10:42:09.639 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 18 of ~20 samples (freq=100,000 Hz upd=200 ms reads=3)
-2026-07-29 10:42:09.660 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=5 rs=5 nb=5 ms=47 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.660 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=5 nb=5 ms=47 corrupt=False
-2026-07-29 10:42:09.721 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=6 rs=6 nb=6 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.721 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=6 nb=6 ms=62 corrupt=False
-2026-07-29 10:42:09.781 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=7 rs=7 nb=7 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.782 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=7 nb=7 ms=63 corrupt=False
-2026-07-29 10:42:09.841 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=8 rs=8 nb=8 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.841 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=8 nb=8 ms=62 corrupt=False
-2026-07-29 10:42:09.901 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=9 rs=9 nb=9 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.901 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=9 nb=9 ms=63 corrupt=False
-2026-07-29 10:42:09.960 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=10 rs=10 nb=10 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:09.961 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=10 nb=10 ms=62 corrupt=False
-2026-07-29 10:42:10.021 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=11 rs=11 nb=11 ms=47 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:10.021 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=11 nb=11 ms=47 corrupt=False
-2026-07-29 10:42:10.031 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 12 of ~20 samples (freq=100,000 Hz upd=200 ms reads=2)
-2026-07-29 10:42:10.037 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:42:10.080 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=12 rs=12 nb=12 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:10.081 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=12 nb=12 ms=62 corrupt=False
-2026-07-29 10:42:10.141 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=13 rs=13 nb=13 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:10.141 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=13 nb=13 ms=63 corrupt=False
-2026-07-29 10:42:10.201 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=14 rs=14 nb=14 ms=62 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:10.201 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=14 nb=14 ms=62 corrupt=False
-2026-07-29 10:42:10.260 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] header=OK size=340 scan_id=1 state=0 data=330 num_buff=15 rs=15 nb=15 ms=63 words=330 samples=6 stride=55 q=0 resync=0
-2026-07-29 10:42:10.261 [WARNING] [TID:9736] [MIC140v2:192.168.14.48:4000] scan rs=15 nb=15 ms=63 corrupt=False
-2026-07-29 10:42:10.371 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 15 ms on Thread 1092
-2026-07-29 10:42:10.662 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:42:12.960 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:16.777 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:16.977 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:17.179 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:20.178 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:20.350 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:22.584 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:25.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:25.975 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:26.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:28.178 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:28.992 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 15 ms on Thread 1092
-2026-07-29 10:42:29.146 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:32.366 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 15 ms on Thread 1092
-2026-07-29 10:42:32.443 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:42:32.788 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 15 ms on Thread 1092
-2026-07-29 10:42:32.960 [DEBUG] [TID:1092|Src_mera.file.1] [DataSource:mera.file.1] Tick took 16 ms on Thread 1092
-2026-07-29 10:42:34.662 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:42:34.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:46.055 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:48.256 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:51.662 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:42:58.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:42:59.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:03.241 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:43:07.445 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:43:11.445 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:43:11.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:14.052 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:21.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:24.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:27.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:35.054 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:35.257 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:38.054 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:38.241 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:43:41.241 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:43:47.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:43:53.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:00.663 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:04.647 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:04.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:08.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:12.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:16.242 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:16.445 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:16.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:16.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:19.850 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:20.662 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:24.241 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:24.662 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:30.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:39.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:42.663 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:42.833 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:50.243 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:44:52.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:56.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:44:58.851 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:02.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:06.243 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:45:06.459 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:12.866 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:45:15.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:21.242 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:45:25.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:30.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:30.241 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:45:33.647 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:36.647 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:43.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:46.647 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:49.037 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:45:56.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:45:59.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:02.038 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:46:09.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:12.663 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:46:22.256 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:25.242 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:46:29.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:34.648 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:34.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:35.052 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:38.054 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:40.070 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:46:40.226 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:46.836 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:48.663 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 15 ms on Thread 8340
-2026-07-29 10:46:51.834 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:46:58.646 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:47:01.835 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:47:11.053 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:47:18.054 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:47:19.052 [DEBUG] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] Tick took 16 ms on Thread 8340
-2026-07-29 10:47:19.626  RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-29 10:47:19.626 [DEBUG] [TID:14860|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
-2026-07-29 10:47:19.637  RuntimeDetach 192.168.9.142:4000
-2026-07-29 10:47:19.638 [DEBUG] [TID:17528|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped (source was offline)
-2026-07-29 10:47:19.644 [DEBUG] [TID:2780|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
-2026-07-29 10:47:19.676 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 stream stop: published=1550 read=5171 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=0 mdpResync=0
-2026-07-29 10:47:19.683 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] stopped blocks=5172 gaps=0 dup=0 corrupt=0 resync=0
-2026-07-29 10:47:19.792 [WARNING] [TID:8340|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 stopped; programmed
-2026-07-29 10:47:19.796 [DEBUG] [TID:14860|UIThread] 10:47:19.794 Data sources stopped.
-2026-07-29 10:47:19.806 [DEBUG] [TID:14860|UIThread] 10:47:19.804 State changed: Preview -> Stop
+2026-07-29 18:15:25.395 [DEBUG] [TID:13392|UIThread] 18:15:25.392 Project run-control config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-29 18:15:25.396 [DEBUG] [TID:13392|UIThread] 18:15:25.395 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-07-29 18:15:25.445 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch01 to tag T_01
+2026-07-29 18:15:25.445 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch02 to tag MIC140_02
+2026-07-29 18:15:25.451 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch03 to tag MIC140_03
+2026-07-29 18:15:25.457 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch04 to tag MIC140_04
+2026-07-29 18:15:25.461 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch05 to tag MIC140_05
+2026-07-29 18:15:25.465 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
+2026-07-29 18:15:25.470 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
+2026-07-29 18:15:25.473 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
+2026-07-29 18:15:25.478 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
+2026-07-29 18:15:25.483 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
+2026-07-29 18:15:25.487 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
+2026-07-29 18:15:25.491 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
+2026-07-29 18:15:25.498 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
+2026-07-29 18:15:25.502 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
+2026-07-29 18:15:25.505 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
+2026-07-29 18:15:25.510 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
+2026-07-29 18:15:25.514 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
+2026-07-29 18:15:25.519 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
+2026-07-29 18:15:25.523 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
+2026-07-29 18:15:25.527 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
+2026-07-29 18:15:25.532 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
+2026-07-29 18:15:25.536 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
+2026-07-29 18:15:25.539 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
+2026-07-29 18:15:25.545 [WARNING] [TID:13392|UIThread] [MIC-140] assigned hardware calibration MIC140 sn0329 06_100mV ch24 to tag MIC140_24
+2026-07-29 18:15:25.548 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
+2026-07-29 18:15:25.552 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
+2026-07-29 18:15:25.557 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
+2026-07-29 18:15:25.561 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
+2026-07-29 18:15:25.566 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
+2026-07-29 18:15:25.570 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
+2026-07-29 18:15:25.574 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
+2026-07-29 18:15:25.579 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
+2026-07-29 18:15:25.582 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
+2026-07-29 18:15:25.588 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
+2026-07-29 18:15:25.592 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
+2026-07-29 18:15:25.596 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
+2026-07-29 18:15:25.601 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
+2026-07-29 18:15:25.604 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
+2026-07-29 18:15:25.608 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
+2026-07-29 18:15:25.614 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
+2026-07-29 18:15:25.618 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
+2026-07-29 18:15:25.622 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
+2026-07-29 18:15:25.627 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
+2026-07-29 18:15:25.631 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
+2026-07-29 18:15:25.636 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
+2026-07-29 18:15:25.640 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
+2026-07-29 18:15:25.644 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
+2026-07-29 18:15:25.649 [WARNING] [TID:13392|UIThread] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
+2026-07-29 18:15:25.672 [DEBUG] [TID:13392|UIThread] 18:15:25.672 Project main config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.config.json
+2026-07-29 18:15:26.527 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Spectrum17 class=TRecorderSpectrumView create=0ms configure=829ms refresh=0ms
+2026-07-29 18:15:26.568 [DEBUG] [TID:13392|UIThread] [IMAGE] select file="C:\Mera Files\Recorder\configs\screens\1 — копия.png" exists=True loaded=True
+2026-07-29 18:15:26.568 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Image22 class=TRecorderImageView create=0ms configure=46ms refresh=0ms
+2026-07-29 18:15:26.574 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=True total=906ms
+2026-07-29 18:15:26.579 [DEBUG] [TID:13392|UIThread] 18:15:26.578 Project GUI config loaded: D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default\default.gui.ini
+2026-07-29 18:15:26.588 [DEBUG] [TID:13392|UIThread] 18:15:26.588 MERA playback source configured: signal0005.mera (9 channels).
+2026-07-29 18:15:26.589 [DEBUG] [TID:13392|UIThread] 18:15:26.589 MIC-140 source configured: 192.168.14.48:4000 (48 channels).
+2026-07-29 18:15:26.594 [DEBUG] [TID:13392|UIThread] 18:15:26.593 MIC183/185 source configured: 192.168.9.142:4000 (140 channels).
+2026-07-29 18:15:26.599 [DEBUG] [TID:13392|UIThread] 18:15:26.599 MC-032/MC-201 source configured: 192.169.12.87:4000 (16 channels).
+2026-07-29 18:15:26.659 [DEBUG] [TID:13392|UIThread] 18:15:26.659 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-29 18:15:27.953 [DEBUG] [TID:17948] [MCBUS] connect 192.169.12.87:4000 fs=57600 tags=16
+2026-07-29 18:15:27.954 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=0 connecting
+2026-07-29 18:15:27.960 [WARNING] [TID:7516] [MIC140v2:192.168.14.48:4000] transport connected
+2026-07-29 18:15:27.969  ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-29 18:15:27.965 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=1 connected
+2026-07-29 18:15:27.973 [DEBUG] [TID:13348] [MIC185] ApplyChannelProgramSettings MIC-185: 192.168.9.142:4000 power=10813 tkc=True groupAddition=[0,4,4,4]: ch1 range=0 commut=0 block=1; ch2 range=0 commut=0 block=1; ch3 range=0 commut=0 block=1; ch4 range=0 commut=0 block=1; ch5 range=0 commut=0 block=1; ch6 range=0 commut=0 block=1; ch7 range=0 commut=0 block=1; ch8 range=0 commut=0 block=1; ch9 range=0 commut=0 block=1; ch10 range=0 commut=0 block=1; ch11 range=0 commut=0 block=1; ch12 range=0 commut=0 block=1; ch13 range=0 commut=0 block=1; ch14 range=0 commut=0 block=1; ch15 range=0 commut=0 block=1; ch16 range=0 commut=0 block=1; ch17 range=0 commut=0 block=1; ch18 range=0 commut=0 block=1; ch19 range=0 commut=0 block=1; ch20 range=0 commut=0 block=1; ch21 range=0 commut=0 block=1; ch22 range=0 commut=0 block=1; ch23 range=0 commut=0 block=1; ch24 range=0 commut=0 block=1; ch25 range=0 commut=0 block=1; ch26 range=0 commut=0 block=1; ch27 range=0 commut=0 block=1; ch28 range=0 commut=0 block=1; ch29 range=0 commut=0 block=1; ch30 range=0 commut=0 block=1; ch31 range=0 commut=0 block=1; ch32 range=0 commut=0 block=1; ch33 range=0 commut=0 block=1; ch34 range=0 commut=0 block=1; ch35 range=0 commut=0 block=1; ch36 range=0 commut=0 block=1; ch37 range=0 commut=0 block=1; ch38 range=0 commut=0 block=1; ch39 range=0 commut=0 block=1; ch40 range=0 commut=0 block=1; ch41 range=0 commut=0 block=1; ch42 range=0 commut=0 block=1; ch43 range=0 commut=0 block=1; ch44 range=0 commut=0 block=1; ch45 range=0 commut=0 block=1; ch46 range=0 commut=0 block=1; ch47 range=0 commut=0 block=1; ch48 range=0 commut=0 block=1; ch49 range=0 commut=0 block=1; ch50 range=0 commut=0 block=1; ch51 range=0 commut=0 block=1; ch52 range=0 commut=0 block=1; ch53 range=0 commut=0 block=1; ch54 range=0 commut=0 block=1; ch55 range=0 commut=0 block=1; ch56 range=0 commut=0 block=1; ch57 range=0 commut=0 block=1; ch58 range=0 commut=0 block=1; ch59 range=0 commut=0 block=1; ch60 range=0 commut=0 block=1; ch61 range=0 commut=0 block=1; ch62 range=0 commut=0 block=1; ch63 range=0 commut=0 block=1; ch64 range=0 commut=0 block=1
+2026-07-29 18:15:27.978 [WARNING] [TID:7516] [MIC140v2:192.168.14.48:4000] init TEST_LOAD: ready
+2026-07-29 18:15:29.157 [DEBUG] [TID:17948] [MCBUS] link test failed, source skipped: CMD_REPLY failed: MDP command timeout
+2026-07-29 18:15:33.323 [WARNING] [TID:7516] [MIC140v2:192.168.14.48:4000] initialized devType=16705 ser=4582 rev=14.1 BIOS=8.1 hwCal=329
+2026-07-29 18:15:33.323 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 firmware devSerNo=4582 ccSerNo=329 ccType=16704 -> hardware calibr serial=329
+2026-07-29 18:15:33.331 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\06.csv
+2026-07-29 18:15:33.339 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\07.csv
+2026-07-29 18:15:33.346 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\08.csv
+2026-07-29 18:15:33.352 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\09.csv
+2026-07-29 18:15:33.357 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\10.csv
+2026-07-29 18:15:33.362 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\11.csv
+2026-07-29 18:15:33.367 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\12.csv
+2026-07-29 18:15:33.373 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\13.csv
+2026-07-29 18:15:33.377 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\14.csv
+2026-07-29 18:15:33.382 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\15.csv
+2026-07-29 18:15:33.387 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\16.csv
+2026-07-29 18:15:33.392 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\17.csv
+2026-07-29 18:15:33.397 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\18.csv
+2026-07-29 18:15:33.402 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\19.csv
+2026-07-29 18:15:33.406 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\20.csv
+2026-07-29 18:15:33.411 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\21.csv
+2026-07-29 18:15:33.416 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\22.csv
+2026-07-29 18:15:33.420 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\23.csv
+2026-07-29 18:15:33.426 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\25.csv
+2026-07-29 18:15:33.431 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\26.csv
+2026-07-29 18:15:33.435 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\27.csv
+2026-07-29 18:15:33.441 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\28.csv
+2026-07-29 18:15:33.445 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\29.csv
+2026-07-29 18:15:33.450 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\30.csv
+2026-07-29 18:15:33.455 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\31.csv
+2026-07-29 18:15:33.459 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\32.csv
+2026-07-29 18:15:33.464 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\33.csv
+2026-07-29 18:15:33.468 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\34.csv
+2026-07-29 18:15:33.472 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\35.csv
+2026-07-29 18:15:33.477 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\36.csv
+2026-07-29 18:15:33.481 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\37.csv
+2026-07-29 18:15:33.485 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\38.csv
+2026-07-29 18:15:33.489 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\39.csv
+2026-07-29 18:15:33.494 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\40.csv
+2026-07-29 18:15:33.498 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\41.csv
+2026-07-29 18:15:33.502 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\42.csv
+2026-07-29 18:15:33.507 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\43.csv
+2026-07-29 18:15:33.511 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\44.csv
+2026-07-29 18:15:33.515 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\45.csv
+2026-07-29 18:15:33.520 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\46.csv
+2026-07-29 18:15:33.524 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\47.csv
+2026-07-29 18:15:33.528 [WARNING] [TID:7516] [MIC-140] hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\06_100mV\48.csv
+2026-07-29 18:15:33.533 [WARNING] [TID:7516] [MIC-140] TIn hardware calibration not found: C:\Mera Files\Calibr\hardware\MIC140\sn0329\TIn\12.csv
+2026-07-29 18:15:33.541 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 thermocouple curve ready: tag=T_01 SDB=ГОСТ\Термопары\K_ГОСТ Р 8.585-2001
+2026-07-29 18:15:33.546 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 thermocouple curve ready: tag=MIC140_24 SDB=ГОСТ\Термопары\K_ГОСТ Р 8.585-2001
+2026-07-29 18:15:33.548 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0806 offset=0 count=10
+2026-07-29 18:15:33.551 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x084C offset=0 count=31
+2026-07-29 18:15:33.556 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x086B offset=31 count=31
+2026-07-29 18:15:33.560 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x088A offset=62 count=31
+2026-07-29 18:15:33.564 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08A9 offset=93 count=31
+2026-07-29 18:15:33.570 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08C8 offset=124 count=31
+2026-07-29 18:15:33.574 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x08E7 offset=155 count=31
+2026-07-29 18:15:33.578 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0906 offset=186 count=31
+2026-07-29 18:15:33.583 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0925 offset=217 count=31
+2026-07-29 18:15:33.587 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0944 offset=248 count=27
+2026-07-29 18:15:33.591 [DEBUG] [TID:7516] [MIC140v2 scan] profile=3 hwProtocol=1 rev=14.1 rev2=False slots=55 ptrs=55 val=0x0810 desc=0x084C fifo=0x0522 ready=330 capacity=660 stride=55 chanDelay=607 timer(scale=1 period=640 div=500) desc0=[0,128,256,606,2064] desc1=[0,32896,256,606,2065] desc48=[0,32770,256,606,2117,0,16386,256,606,2118] ptrHead=[48,20,55,2124,2129,2134,2139,2144,2149,2154,2159,2164]
+2026-07-29 18:15:33.595 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0964 offset=0 count=31
+2026-07-29 18:15:33.600 [DEBUG] [TID:7516] [MIC140v2:192.168.14.48:4000] WRITE_DM address=0x0983 offset=31 count=27
+2026-07-29 18:15:37.814 [WARNING] [TID:7516] [MIC140v2] scan OK slots=55 ptrs=55 payloadStride=55 fifoReady=330 msgWords=340 val=0x0810 message=0x099E
+2026-07-29 18:15:37.816 [WARNING] [TID:7516] [MIC140v2:192.168.14.48:4000] scan programmed ch=48 fifoStride=55 tin=7 val=0x0810 freq=100,000 Hz fifoReady=330 msgWords=340 countAver=20 decayUs=57,000
+2026-07-29 18:15:37.829 [WARNING] [TID:7516] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 programmed
+2026-07-29 18:15:39.154 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=0ms
+2026-07-29 18:15:39.154 [DEBUG] [TID:13392|UIThread] 18:15:39.154 RecorderLnx started.
+2026-07-29 18:15:41.026 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=False size=254x117 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:15:42.736 [DEBUG] [TID:13392|UIThread] 18:15:42.733 Data sources started.
+2026-07-29 18:15:42.738 [DEBUG] [TID:13392|UIThread] 18:15:42.737 State changed: Stop -> Preview
+2026-07-29 18:15:42.847 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] scan started att=1 probe=False
+2026-07-29 18:15:42.847 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=3 started
+2026-07-29 18:15:42.909 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 6 of ~20 samples (freq=100,000 Hz upd=200 ms reads=1)
+2026-07-29 18:15:43.157 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 CJC active: tag=T_01 T5=32,275 degC
+2026-07-29 18:15:43.331 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 18 of ~20 samples (freq=100,000 Hz upd=200 ms reads=3)
+2026-07-29 18:15:43.550 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 18 of ~20 samples (freq=100,000 Hz upd=200 ms reads=3)
+2026-07-29 18:15:43.738 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 tick short: got 18 of ~20 samples (freq=100,000 Hz upd=200 ms reads=3)
+2026-07-29 18:15:47.953 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] tab-change page=BasePage total=125ms
+2026-07-29 18:15:52.109 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:15:52.109 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] tab-change page=Mnemonic3 total=32ms
+2026-07-29 18:15:59.048 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=True file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:15:59.048 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:15:59.055 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=True size=254x117 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:15:59.740 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=31ms
+2026-07-29 18:16:04.026 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=47ms
+2026-07-29 18:16:04.804 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=31ms
+2026-07-29 18:16:07.745 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:08.376 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:13.465 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:16:13.863 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:16:16.170 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:16.323 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:17.148 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=32ms
+2026-07-29 18:16:17.433 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:16:17.575 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:18.629 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=False file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:16:18.630 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:16:18.637 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=False size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:33.989 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=True file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:33.989 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:17:33.994 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=True size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:34.374 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:17:36.125 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Spectrum17 class=TRecorderSpectrumView create=0ms configure=187ms refresh=0ms
+2026-07-29 18:17:36.367 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=True file=""
+2026-07-29 18:17:36.406 [DEBUG] [TID:13392|UIThread] [IMAGE] select file="C:\Mera Files\Recorder\configs\screens\1 — копия.png" exists=True loaded=True
+2026-07-29 18:17:36.406 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Image22 class=TRecorderImageView create=0ms configure=32ms refresh=0ms
+2026-07-29 18:17:36.412 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=22 rebuild=True total=765ms
+2026-07-29 18:17:36.423 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=True size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:37.373 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Oscillogram14 class=TRecorderOglOscillogram create=16ms configure=0ms refresh=0ms
+2026-07-29 18:17:37.608 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Trend16 class=TRecorderTrendView create=0ms configure=157ms refresh=0ms
+2026-07-29 18:17:37.878 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Spectrum17 class=TRecorderSpectrumView create=0ms configure=265ms refresh=0ms
+2026-07-29 18:17:37.984 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=True file=""
+2026-07-29 18:17:38.027 [DEBUG] [TID:13392|UIThread] [IMAGE] select file="C:\Mera Files\Recorder\configs\screens\1 — копия.png" exists=True loaded=True
+2026-07-29 18:17:38.027 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] component=Image22 class=TRecorderImageView create=0ms configure=47ms refresh=0ms
+2026-07-29 18:17:38.035 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=True total=829ms
+2026-07-29 18:17:38.055 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=True size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:41.108  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-29 18:17:41.117  RuntimeDetach 192.168.9.142:4000
+2026-07-29 18:17:41.109 [DEBUG] [TID:13392|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-29 18:17:41.125 [DEBUG] [TID:2116|Src_MC-032: 192.169.12.87:4000] [MCBUS] stopped (source was offline)
+2026-07-29 18:17:41.125 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 stream stop: published=590 read=1971 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=0 mdpResync=0
+2026-07-29 18:17:41.135 [DEBUG] [TID:5296|Src_MIC-185: 192.168.9.142:4000] [MIC185] RuntimeDetach 192.168.9.142:4000
+2026-07-29 18:17:41.193 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [MIC140:192.168.14.48:4000] stopped blocks=1972 gaps=0 dup=0 corrupt=0 resync=0
+2026-07-29 18:17:41.302 [WARNING] [TID:3772|Src_MIC-140: 192.168.14.48:4000] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 stopped; programmed
+2026-07-29 18:17:41.323 [DEBUG] [TID:13392|UIThread] 18:17:41.321 Data sources stopped.
+2026-07-29 18:17:41.326 [DEBUG] [TID:13392|UIThread] 18:17:41.324 State changed: Preview -> Stop
+2026-07-29 18:17:43.217 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=False file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:43.218 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:17:43.229 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=False size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:54.449 [DEBUG] [TID:13392|UIThread] [IMAGE] edit mode=True file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:54.449 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:17:54.461 [DEBUG] [TID:13392|UIThread] [IMAGE] paint mode=IMAGE edit=True size=211x122 file="C:\Mera Files\Recorder\configs\screens\1 — копия.png"
+2026-07-29 18:17:56.489 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=0ms
+2026-07-29 18:17:57.926 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:18:00.286 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=0ms
+2026-07-29 18:18:05.542 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:18:07.649 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=16ms
+2026-07-29 18:18:08.192 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=0ms
+2026-07-29 18:18:11.545 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=15ms
+2026-07-29 18:18:12.053 [DEBUG] [TID:13392|UIThread] [MNEMO-PERF] render page=Mnemonic3 components=23 rebuild=False total=31ms
+2026-07-29 18:20:46.683  RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-29 18:20:46.683 [DEBUG] [TID:13392|UIThread] [MIC185] RuntimeHoldBusy 192.168.9.142:4000 hold=1
+2026-07-29 18:20:46.690 [WARNING] [TID:13392|UIThread] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 stream stop: published=590 read=1972 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=0 mdpResync=0
+2026-07-29 18:20:46.695 [WARNING] [TID:13392|UIThread] [DataSource:MIC-140: 192.168.14.48:4000] MIC-140 status=2 stopped; programmed

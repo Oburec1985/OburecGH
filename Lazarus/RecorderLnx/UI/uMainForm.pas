@@ -48,7 +48,7 @@ uses
   uRecorderSpectrumRuntime,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderHardwareTree,
-  uRecorderMeraPaths;
+  uRecorderMeraPaths, uOglChart;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -126,6 +126,7 @@ type
     fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
     fAddSpectrumButton: TSpeedButton;             // Кнопка добавления графика спектра
     fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
+    fAddImageButton: TSpeedButton;                // Кнопка добавления картинки
     fAddTagTableButton: TSpeedButton;             // Кнопка добавления таблицы тегов
     fAddButtonButton: TSpeedButton;               // Кнопка добавления управляющей кнопки
     fAddComboBoxButton: TSpeedButton;             // Кнопка добавления выпадающего списка
@@ -163,6 +164,10 @@ type
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
     fDiagRenderCount: Integer;                    // Количество отрисовок активной страницы
+    fDiagDataConsumeMs: QWord;                    // Время общего цикла чтения ревизий/записи
+    fDiagEventQueueMs: QWord;                     // Время обработки общей очереди событий
+    fDiagRenderMs: QWord;                         // Время подготовки видимой страницы
+    fDiagServiceUiMs: QWord;                      // Время служебного обновления UI
     fAutoPreviewSeconds: Integer;                 // CLI: --preview-seconds=N headless preview run
     fAutoPreviewCycles: Integer;                  // CLI: --preview-cycles=N lifecycle acceptance
     fAutoPreviewCompletedCycles: Integer;
@@ -241,6 +246,7 @@ type
     procedure AddStaticTextComponentToActivePage;
     { Добавляет на активную страницу тестовый цифровой индикатор TagValue. }
     procedure AddTagValueComponentToActivePage;
+    procedure AddImageComponentToActivePage;
     { Добавляет на активную страницу осциллограмму OpenGL. }
     procedure AddOscillogramComponentToActivePage;
     { Добавляет на активную страницу компонент тренда. }
@@ -255,6 +261,7 @@ type
     procedure AddSpectrumClick(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
     procedure AddDigitalIndicatorClick(Sender: TObject);
+    procedure AddImageClick(Sender: TObject);
     { Переключает режим редактирования мнемосхемы. }
     procedure EditModeClick(Sender: TObject);
     { Создает dev-структуру config/projects/default и дефолтный run-control.ini. }
@@ -313,6 +320,8 @@ type
     procedure DrainUiEventQueue(Sender: TObject);
     { По периоду DataUpdateMs читает только новые данные тегов; EventBus массивы не переносит. }
     procedure ConsumeTagDataCycle(Sender: TObject);
+    { Выполняет визуальную часть display-цикла только для видимой страницы. }
+    function DoRepaintVisiblePage: Boolean;
     procedure ResetRecordTagCursors;
     { Пишет агрегированную диагностику частот UI/data/render. }
     procedure LogUpdateDiagnostics;
@@ -370,6 +379,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   lPopupMenu: TPopupMenu;
   lMenuItem: TMenuItem;
+  lConfigRoot: string;
 begin
   RegisterThreadName(GetThreadID, 'UIThread');
   Caption := 'RecorderLnx';
@@ -401,8 +411,13 @@ begin
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
-  SetProjectConfigDir(IncludeTrailingPathDelimiter(GetDevProjectDir) +
-    CDefaultProjectConfigDir);
+  lConfigRoot := RecorderConfigPath;
+  if lConfigRoot <> '' then
+    SetProjectConfigDir(IncludeTrailingPathDelimiter(lConfigRoot) +
+      'projects' + DirectorySeparator + 'default')
+  else
+    SetProjectConfigDir(IncludeTrailingPathDelimiter(GetDevProjectDir) +
+      CDefaultProjectConfigDir);
 
   LoadRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
@@ -1211,7 +1226,11 @@ begin
     lComponent.Name := Format('TextLabel%d', [fNextComponentNo]);
     lComponent.Text := 'Text label';
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 28);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1256,7 +1275,11 @@ begin
     lComponent.BindingMode := rtbmRelativeSelectedTag;
     lComponent.TagOffset := 0;
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 360, 220);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1300,6 +1323,8 @@ begin
     lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
     lComponent.Name := Format('Trend%d', [fNextComponentNo]);
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
 
     lTag := nil;
     if fRecorder.TagRegistry <> nil then
@@ -1331,6 +1356,8 @@ begin
     end;
 
     lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1372,6 +1399,8 @@ begin
     lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
     lComponent.Name := Format('Spectrum%d', [fNextComponentNo]);
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
 
     lTag := nil;
     if fRecorder.TagRegistry <> nil then
@@ -1385,6 +1414,8 @@ begin
       lComponent.SetTagRefAt(lComponent.TagNames.Count, lTag);
 
     lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1402,6 +1433,50 @@ begin
     on E: Exception do
       LogCommandError('Add digital indicator', E);
   end;
+end;
+
+procedure TMainForm.AddImageClick(Sender: TObject);
+begin
+  try
+    AddImageComponentToActivePage;
+    RenderActivePage;
+  except
+    on E: Exception do
+      LogCommandError('Add image', E);
+  end;
+end;
+
+procedure TMainForm.AddImageComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderImageComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    raise ERecorderFormError.Create('Cannot add component without active page');
+  if not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create(
+      'Components can be added only to user mnemonic pages');
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderImageComponent(
+    fComponentFactory.CreateComponent(TRecorderImageComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('Image%d', [fNextComponentNo]);
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 200, 140);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
+    lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+  AddLog('Form component added: ' + lComponent.Id);
 end;
 
 procedure TMainForm.AddTagValueComponentToActivePage;
@@ -1427,7 +1502,11 @@ begin
     lComponent.TagName := 'MemTag';
     lComponent.DisplayFormat := '0.0';
     lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 32);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
+    if fFormEditor <> nil then
+      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1498,10 +1577,12 @@ begin
   fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick);
   fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
   fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick);
-  fAddTagTableButton := AddEditMnemoToolBarButton(208, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  fAddButtonButton := AddEditMnemoToolBarButton(242, CIconButton, 'Add button', nil, 0, False, False);
-  fAddComboBoxButton := AddEditMnemoToolBarButton(276, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteComponentButton := AddEditMnemoToolBarButton(316, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+  fAddImageButton := AddEditMnemoToolBarButton(208, -1, 'Добавить картинку',
+    @AddImageClick, 0, False, True, 'Img');
+  fAddTagTableButton := AddEditMnemoToolBarButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
+  fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', nil, 0, False, False);
+  fAddComboBoxButton := AddEditMnemoToolBarButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
+  fDeleteComponentButton := AddEditMnemoToolBarButton(356, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -1714,6 +1795,8 @@ begin
     fAddSpectrumButton.Visible := lCanEdit;
   if fAddDigitalButton <> nil then
     fAddDigitalButton.Visible := lCanEdit;
+  if fAddImageButton <> nil then
+    fAddImageButton.Visible := lCanEdit;
   if fAddTagTableButton <> nil then
     fAddTagTableButton.Visible := lCanEdit;
   if fAddButtonButton <> nil then
@@ -1758,7 +1841,9 @@ var
 begin
   ForceDirectories(fProjectConfigDir);
 
-  lAppConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) + 'config';
+  lAppConfigDir := RecorderConfigPath;
+  if lAppConfigDir = '' then
+    lAppConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) + 'config';
   ForceDirectories(lAppConfigDir);
   lAppConfigFileName := IncludeTrailingPathDelimiter(lAppConfigDir) + 'app.ini';
 
@@ -2384,46 +2469,87 @@ var
   lLatestTime: Double;
   lRevisionSignature: QWord;
   lSnapshot: TRecorderSignalSnapshot;
+  lStartMs: QWord;
   lTag: TRecorderTag;
 begin
+  lStartMs := GetTickCount64;
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
     Exit;
 
-  lLatestTime := 0;
-  lRevisionSignature := 0;
-  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-  begin
-    lTag := fRecorder.TagRegistry.Tags[I];
-    Inc(lRevisionSignature, lTag.SignalBuffer.Revision * QWord(I + 1));
-    if lTag.SignalBuffer.LatestTime > lLatestTime then
-      lLatestTime := lTag.SignalBuffer.LatestTime;
-
-    if (fMeraWriter = nil) or not fMeraWriter.FileOpen or
-      (I >= Length(fRecordTagCursors)) then
-      Continue;
-    while lTag.SignalBuffer.SnapshotNextBlock(fRecordTagCursors[I],
-      lSnapshot) do
-      fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
-        lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
-        lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
-        lTag.PollFrequencyHz);
-  end;
+  fRecorder.TagRegistry.GetRuntimeDataState(lRevisionSignature, lLatestTime);
   if lRevisionSignature <> fLastUiDataRevisionSignature then
   begin
     fLastUiDataRevisionSignature := lRevisionSignature;
     fRuntimeViewDirty := True;
   end;
+
+  { Полный обход колец нужен только при открытой записи. В Preview UI читает
+    один сводный счётчик реестра и не блокирует каждый тег каждые 200 мс. }
+  if (fMeraWriter <> nil) and fMeraWriter.FileOpen then
+  begin
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := fRecorder.TagRegistry.Tags[I];
+      if I >= Length(fRecordTagCursors) then
+        Continue;
+      while lTag.SignalBuffer.SnapshotNextBlock(fRecordTagCursors[I],
+        lSnapshot) do
+        fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
+          lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
+          lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
+          lTag.PollFrequencyHz);
+    end;
+  end;
   if lLatestTime > 0 then
     fRecorder.TimeSystem.UpdateFromTagSample(lLatestTime);
+  Inc(fDiagDataConsumeMs, GetTickCount64 - lStartMs);
+end;
+
+function TMainForm.DoRepaintVisiblePage: Boolean;
+var
+  lPage: TRecorderFormPage;
+  lStartMs: QWord;
+begin
+  Result := False;
+  { Расчёты алгоритмов и обновление тегов не зависят от видимости UI.
+    Здесь выполняется только подготовка изображения действительно видимой
+    страницы. Скрытые страницы не получают RefreshLive и не перестраивают
+    геометрию графиков. }
+  if (not Visible) or (WindowState = wsMinimized) or
+    (fFormManager = nil) then
+    Exit;
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    Exit;
+  lStartMs := GetTickCount64;
+
+  if (lPage.Id = 'DigitalForm') and (sgFormular <> nil) and
+    sgFormular.Visible then
+    RenderDigitalPage
+  else if (lPage.Id = 'BasePage') and (fBaseChartsPanel <> nil) and
+    fBaseChartsPanel.Visible then
+    RefreshBaseOscillograms
+  else if IsUserMnemonicPage(lPage) and (fEditorShell <> nil) and
+    fEditorShell.Visible and (fFormEditor <> nil) then
+    fFormEditor.RefreshLive
+  else
+    Exit;
+
+  Inc(fDiagRenderCount);
+  Inc(fDiagRenderMs, GetTickCount64 - lStartMs);
+  Result := True;
 end;
 
 procedure TMainForm.DrainUiEventQueue(Sender: TObject);
 var
   lSnapshot: TRecorderEventSnapshot;
+  lEventStartMs: QWord;
+  lServiceStartMs: QWord;
   lStart: QWord;
   lCount: Integer;
 begin
   lStart := GetTickCount64;
+  lEventStartMs := lStart;
   lCount := 0;
   Inc(fDiagUiTicks);
   repeat
@@ -2438,34 +2564,19 @@ begin
       lSnapshot.Free;
     end;
   until False;
+  Inc(fDiagEventQueueMs, GetTickCount64 - lEventStartMs);
 
   { Таймер доставки событий может срабатывать чаще периода данных. Полная
     перерисовка таблицы, мнемосхемы или OpenGL-страницы разрешена только после
     изменения ревизии хотя бы одного кольца. Смена страницы вызывает Render
     явно и в этом флаге не нуждается. }
-  if fRuntimeViewDirty and (fFormManager <> nil) and
-    (fFormManager.ActivePage <> nil) then
-  begin
-    fRuntimeViewDirty := False;
-    if fFormManager.ActivePage.Id = 'DigitalForm' then
-    begin
-      RenderDigitalPage;
-      Inc(fDiagRenderCount);
-    end
-    else if fFormManager.ActivePage.Id = 'BasePage' then
-    begin
-      RefreshBaseOscillograms;
-      Inc(fDiagRenderCount);
-    end
-    else if IsUserMnemonicPage(fFormManager.ActivePage) then
-    begin
-      if fFormEditor <> nil then
-        fFormEditor.RefreshLive;
-      Inc(fDiagRenderCount);
-    end;
-  end;
+  if fRuntimeViewDirty then
+    if DoRepaintVisiblePage then
+      fRuntimeViewDirty := False;
 
+  lServiceStartMs := GetTickCount64;
   UpdateTimeView;
+  Inc(fDiagServiceUiMs, GetTickCount64 - lServiceStartMs);
   LogUpdateDiagnostics;
   if GetTickCount64 - lStart > 10 then
     { MIC-140 stream debug: UI queue drain timing suppressed.
@@ -2477,22 +2588,32 @@ procedure TMainForm.LogUpdateDiagnostics;
 var
   lElapsedMs: QWord;
   lNowMs: QWord;
+  lOglFrames: QWord;
+  lOglPaintMs: Double;
 begin
   lNowMs := GetTickCount64;
   if fDiagLastLogTickMs = 0 then
     fDiagLastLogTickMs := lNowMs;
   lElapsedMs := lNowMs - fDiagLastLogTickMs;
-  if lElapsedMs < 1000 then
+  if lElapsedMs < 5000 then
     Exit;
 
-  { MIC-140 stream debug: periodic UI update diag suppressed.
-  AddLog(Format('Update diag: elapsed=%d ms uiTicks=%d dataEvents=%d renders=%d screenTimer=%d ms dataUpdate=%d ms',
+  TakeOglChartPaintStats(lOglFrames, lOglPaintMs);
+  {$IFDEF RECORDER_RUNTIME_DIAGNOSTICS}
+  RecorderDebugLog(Format(
+    '[RUNTIME-STAGE] elapsed=%d ticks=%d events=%d prepares=%d consume=%dms queue=%dms prepare=%dms serviceUI=%dms oglFrames=%d oglPaint=%.1fms',
     [lElapsedMs, fDiagUiTicks, fDiagDataEvents, fDiagRenderCount,
-    fUiUpdateTimer.Interval, fRecorder.RunSettings.DataUpdateMs]), rlkData); }
+     fDiagDataConsumeMs, fDiagEventQueueMs, fDiagRenderMs, fDiagServiceUiMs,
+     lOglFrames, lOglPaintMs]));
+  {$ENDIF}
   fDiagLastLogTickMs := lNowMs;
   fDiagUiTicks := 0;
   fDiagDataEvents := 0;
   fDiagRenderCount := 0;
+  fDiagDataConsumeMs := 0;
+  fDiagEventQueueMs := 0;
+  fDiagRenderMs := 0;
+  fDiagServiceUiMs := 0;
 end;
 
 procedure TMainForm.ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);

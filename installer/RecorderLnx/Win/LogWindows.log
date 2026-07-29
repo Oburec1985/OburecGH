@@ -1,0 +1,4 @@
+2026-07-29 17:57:34.453 [DEBUG] [TID:19512|UIThread] 17:57:34.451 Project run-control config loaded: C:\Mera Files\RecorderLnx\config\projects\default\default.run-control.ini
+2026-07-29 17:57:34.454 [DEBUG] [TID:19512|UIThread] 17:57:34.454 Update settings applied: screenUpdate=500 ms dataUpdate=300 ms historyWindow=1000 ms
+2026-07-29 17:57:34.459 [DEBUG] [TID:19512|UIThread] 17:57:34.459 Diagnostics data source configured: MemTag, CpuUsage.
+2026-07-29 17:57:34.464 [DEBUG] [TID:19512|UIThread] 17:57:34.464 RecorderLnx started.

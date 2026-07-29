@@ -150,6 +150,21 @@ type
     property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
   end;
 
+  { Картинка на мнемосхеме. Каждая строка Images хранится как
+    "значение тега=имя файла". Если тег не задан, всегда используется
+    первая строка списка. }
+  TRecorderImageComponent = class(TRecorderVisualComponent)
+  private
+    fImages: TStringList;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure AssignImage(ASource: TRecorderImageComponent);
+    property Images: TStringList read fImages;
+  end;
+
   TRecorderTrendLine = class
   private
     fAxisIndex: Integer;
@@ -369,6 +384,11 @@ type
   TRecorderTagValueFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
+  end;
+
+  TRecorderImageFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create;
   end;
 
   { Фабрика компонента осциллограммы }
@@ -628,6 +648,35 @@ begin
   fShowNameMode := tvnmTop;
   fEstimateKind := tekMean;
   fUseDefaultEstimate := True;
+end;
+
+{ TRecorderImageComponent }
+
+class function TRecorderImageComponent.GetTypeId: string;
+begin
+  Result := 'Image';
+end;
+
+constructor TRecorderImageComponent.Create;
+begin
+  inherited Create;
+  fImages := TStringList.Create;
+  fImages.NameValueSeparator := '=';
+end;
+
+destructor TRecorderImageComponent.Destroy;
+begin
+  fImages.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderImageComponent.AssignImage(ASource: TRecorderImageComponent);
+begin
+  if ASource = nil then
+    Exit;
+  TagId := ASource.TagId;
+  TagName := ASource.TagName;
+  fImages.Assign(ASource.Images);
 end;
 
 { TRecorderOscillogramComponent }
@@ -1137,6 +1186,14 @@ begin
     TRecorderTagValueComponent, 160, 24, True);
 end;
 
+{ TRecorderImageFactory }
+
+constructor TRecorderImageFactory.Create;
+begin
+  inherited Create(TRecorderImageComponent.TypeId, 'Картинка',
+    TRecorderImageComponent, 200, 140, True);
+end;
+
 { TRecorderOscillogramFactory }
 
 constructor TRecorderOscillogramFactory.Create;
@@ -1483,6 +1540,7 @@ procedure TRecorderComponentFactory.RegisterDefaultComponents;
 begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
+  RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);
   RegisterFactory(TRecorderTrendFactory.Create);
   RegisterFactory(TRecorderSpectrumFactory.Create);

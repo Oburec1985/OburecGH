@@ -213,6 +213,7 @@ type
 
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
+    function GetBlockCounter: QWord;
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
     procedure UpdateEstimateCache(const ATimes, AValues: array of Double;
       ACount: Integer);
@@ -243,6 +244,7 @@ type
     function Snapshot: TRecorderSignalSnapshot;
     { Возвращает снимок последнего записанного блока тега. }
     function LastBlockSnapshot: TRecorderSignalSnapshot;
+    property BlockCounter: QWord read GetBlockCounter;
     { Расчитывает указанную оценку по текущим данным }
     function Estimate(AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
 
@@ -388,6 +390,9 @@ type
     fAlarmValuePublishedTarget: TObject;
     fOnAlarmValuePublished: TRecorderTagValuePublishedEvent;
     fFullBlockEventsEnabled: Boolean;                   { Полные UI-снимки нужны только при записи }
+    fRuntimeDataLock: TRTLCriticalSection;
+    fRuntimeDataRevision: QWord;
+    fRuntimeLatestTime: Double;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
@@ -404,6 +409,7 @@ type
     function GetSelectedTag: TRecorderTag;
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
+    procedure MarkRuntimeDataUpdated(ATimeSec: Double);
   public
     { AEventBus - шина событий. Владение не передается, может быть nil. }
     constructor Create(AEventBus: TRecorderEventBus = nil);
@@ -455,6 +461,8 @@ type
     procedure PublishBlock(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
       AValuesAlreadyTransformed: Boolean = False);
+    { Возвращает сводное состояние данных без обхода и блокировки всех тегов. }
+    procedure GetRuntimeDataState(out ARevision: QWord; out ALatestTime: Double);
     { Явный получатель полного блока до публикации легковесного динамического
       UI/extension-события. Назначается менеджером алгоритмов. }
     procedure SetBlockPublishedHandler(ATarget: TObject;
@@ -1303,6 +1311,11 @@ begin
   Result := fSignalBuffer.LastBlockSnapshot;
 end;
 
+function TRecorderTag.GetBlockCounter: QWord;
+begin
+  Result := fSignalBuffer.CurrentBlockCursor;
+end;
+
 function TRecorderTag.Estimate(
   AKind: TRecorderTagEstimateKind): TRecorderTagEstimate;
 begin
@@ -1478,6 +1491,7 @@ end;
 constructor TRecorderTagRegistry.Create(AEventBus: TRecorderEventBus);
 begin
   inherited Create;
+  InitCriticalSection(fRuntimeDataLock);
   fEventBus := AEventBus;
   fActiveSourceIds := TStringList.Create;
   fActiveSourceIds.CaseSensitive := False;
@@ -1503,7 +1517,32 @@ begin
   fCalibrations.Free;
   fActiveSourceIds.Free;
   fTags.Free;
+  DoneCriticalSection(fRuntimeDataLock);
   inherited Destroy;
+end;
+
+procedure TRecorderTagRegistry.MarkRuntimeDataUpdated(ATimeSec: Double);
+begin
+  EnterCriticalSection(fRuntimeDataLock);
+  try
+    Inc(fRuntimeDataRevision);
+    if ATimeSec > fRuntimeLatestTime then
+      fRuntimeLatestTime := ATimeSec;
+  finally
+    LeaveCriticalSection(fRuntimeDataLock);
+  end;
+end;
+
+procedure TRecorderTagRegistry.GetRuntimeDataState(out ARevision: QWord;
+  out ALatestTime: Double);
+begin
+  EnterCriticalSection(fRuntimeDataLock);
+  try
+    ARevision := fRuntimeDataRevision;
+    ALatestTime := fRuntimeLatestTime;
+  finally
+    LeaveCriticalSection(fRuntimeDataLock);
+  end;
 end;
 
 function TRecorderTagRegistry.GetActiveSourceCount: Integer;
@@ -1862,6 +1901,7 @@ begin
 
   lValue := TransformTagValue(lTag, AValue);
   lTag.AddSample(ATimeSec, lValue);
+  MarkRuntimeDataUpdated(ATimeSec);
 
   if Assigned(fOnValuePublished) then
     fOnValuePublished(fValuePublishedTarget, lTag, ATimeSec, lValue);
@@ -1938,6 +1978,7 @@ begin
       lValues[I] := TransformTagValue(ATag, AValues[I]);
     ATag.AddSamples(ATimes, lValues, ACount);
   end;
+  MarkRuntimeDataUpdated(ATimes[ACount - 1]);
 end;
 
 procedure TRecorderTagRegistry.NotifyBlockTail(const ATagName: string;
@@ -2008,6 +2049,7 @@ begin
       lValues[I] := TransformTagValue(lTag, AValues[I]);
     lTag.AddSamples(ATimes, lValues, ACount);
   end;
+  MarkRuntimeDataUpdated(ATimes[ACount - 1]);
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay
   // the next device read. Device-level diagnostics log block summaries.

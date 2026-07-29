@@ -106,10 +106,30 @@ type
 
 procedure Register;
 
+{ Возвращает и обнуляет общую статистику фактических кадров TOglChart.
+  Счётчик находится в общей точке Paint, поэтому учитывает все осциллограммы
+  и спектры, а не только подготовку данных отдельной страницы. }
+procedure TakeOglChartPaintStats(out AFrameCount: QWord;
+  out ATotalPaintTimeMs: Double);
+
 implementation
 {$IFDEF WINDOWS}
 uses Windows;
 {$ENDIF}
+
+var
+  gPaintFrameCount: QWord = 0;
+  gPaintTotalTimeMs: Double = 0;
+
+procedure TakeOglChartPaintStats(out AFrameCount: QWord;
+  out ATotalPaintTimeMs: Double);
+begin
+  { Paint и чтение статистики выполняются главным UI-потоком LCL. }
+  AFrameCount := gPaintFrameCount;
+  ATotalPaintTimeMs := gPaintTotalTimeMs;
+  gPaintFrameCount := 0;
+  gPaintTotalTimeMs := 0;
+end;
 /// <summary>
 /// Записывает отладочные сообщения событий ввода/вывода в локальный текстовый файл.
 /// </summary>
@@ -379,8 +399,19 @@ procedure TOglChart.Paint;
 var
   I: Integer;
   lStart, lEnd, lFreq: Int64;
+  lPaintStart, lPaintEnd: Int64;
+  lPaintTimeMs: Double;
   lRenderTimeMs: Double;
 begin
+  lFreq := 0;
+  lPaintStart := 0;
+  lPaintEnd := 0;
+  {$IFDEF WINDOWS}
+  QueryPerformanceFrequency(lFreq);
+  QueryPerformanceCounter(lPaintStart);
+  {$ELSE}
+  lPaintStart := GetTickCount64;
+  {$ENDIF}
   inherited MakeCurrent;
   for I := 0 to fListeners.Count - 1 do
     if TChartFrameListener(fListeners[I]).Enabled then
@@ -422,6 +453,19 @@ begin
     if TChartFrameListener(fListeners[I]).Enabled then
       TChartFrameListener(fListeners[I]).FrameEnded(Self);
   inherited SwapBuffers;
+
+  {$IFDEF WINDOWS}
+  QueryPerformanceCounter(lPaintEnd);
+  if lFreq > 0 then
+    lPaintTimeMs := (lPaintEnd - lPaintStart) * 1000.0 / lFreq
+  else
+    lPaintTimeMs := 0;
+  {$ELSE}
+  lPaintEnd := GetTickCount64;
+  lPaintTimeMs := lPaintEnd - lPaintStart;
+  {$ENDIF}
+  Inc(gPaintFrameCount);
+  gPaintTotalTimeMs := gPaintTotalTimeMs + lPaintTimeMs;
 end;
 
 procedure TOglChart.Redraw;

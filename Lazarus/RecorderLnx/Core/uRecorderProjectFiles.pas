@@ -164,6 +164,8 @@ begin
     Result := TRecorderStaticTextComponent.TypeId
   else if AComponent is TRecorderTagValueComponent then
     Result := TRecorderTagValueComponent.TypeId
+  else if AComponent is TRecorderImageComponent then
+    Result := TRecorderImageComponent.TypeId
   else if AComponent is TRecorderOscillogramComponent then
     Result := TRecorderOscillogramComponent.TypeId
   else if AComponent is TRecorderTrendComponent then
@@ -805,6 +807,7 @@ var
   lSection: string;
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
+  lImage: TRecorderImageComponent;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -856,6 +859,19 @@ begin
             TRecorderTagValueComponent(lComponent).DisplayFormat);
           lIni.WriteInteger(lSection, 'ShowNameMode',
             Ord(TRecorderTagValueComponent(lComponent).ShowNameMode));
+        end;
+        if lComponent is TRecorderImageComponent then
+        begin
+          lImage := TRecorderImageComponent(lComponent);
+          lIni.WriteInteger(lSection, 'ImageCount', lImage.Images.Count);
+          for K := 0 to lImage.Images.Count - 1 do
+          begin
+            lIni.WriteString(lSection, Format('Image%dValue', [K]),
+              lImage.Images.Names[K]);
+            lIni.WriteString(lSection, Format('Image%dFile', [K]),
+              StoreGuiResourceFileName(AFileName,
+                lImage.Images.ValueFromIndex[K]));
+          end;
         end;
         if lComponent is TRecorderOscillogramComponent then
         begin
@@ -954,6 +970,7 @@ var
   lSection: string;
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
+  lImage: TRecorderImageComponent;
   lTypeId: string;
   lIni: TIniFile;
 begin
@@ -1018,6 +1035,17 @@ begin
               lItemCount := Ord(tvnmTop);
             TRecorderTagValueComponent(lComponent).ShowNameMode :=
               TRecorderTagValueNameMode(lItemCount);
+          end;
+          if lComponent is TRecorderImageComponent then
+          begin
+            lImage := TRecorderImageComponent(lComponent);
+            lImage.Images.Clear;
+            lItemCount := lIni.ReadInteger(lSection, 'ImageCount', 0);
+            for K := 0 to lItemCount - 1 do
+              lImage.Images.Add(
+                lIni.ReadString(lSection, Format('Image%dValue', [K]), '') +
+                '=' + LoadGuiResourceFileName(AFileName,
+                  lIni.ReadString(lSection, Format('Image%dFile', [K]), '')));
           end;
           if lComponent is TRecorderOscillogramComponent then
           begin
