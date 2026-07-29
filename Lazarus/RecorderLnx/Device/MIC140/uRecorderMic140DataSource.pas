@@ -1741,12 +1741,15 @@ begin
     Exit;
   Inc(fGoodBlockCount);
   fReadFailCount := 0;
+  {$IFDEF MIC140_RUNTIME_DIAGNOSTICS}
   { Полный просмотр каждого кода — диагностика протокола, а не штатная
-    обработка. После первых блоков выполняем его редко. }
+    обработка. Он включается только специальной диагностической сборкой. }
   if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
     CheckPublishedRecorderCodes(ABlock);
+  {$ENDIF}
   PublishDiagnostics(CMic140StatusStarted, 'started; data ok', False);
   PublishBlockCounter(fGoodBlockCount);
+  {$IFDEF MIC140_RUNTIME_DIAGNOSTICS}
   if (fGoodBlockCount = 1) or ((fGoodBlockCount mod 20) = 0) then
     Mic140LogWarning(Format('[DataSource:%s] MIC-140 block=%d samples=%d stride=%d rate=%.3f Hz',
       [SourceId, fGoodBlockCount, ABlock.SampleCount, ABlock.ChannelCount,
@@ -1828,6 +1831,7 @@ begin
       '[DataSource:%s] MIC-140 block%d published d0=[%s]',
       [SourceId, fGoodBlockCount, lPreview]));
   end;
+  {$ENDIF}
 
   SetLength(lTimes, ABlock.SampleCount);
   for lJ := 0 to ABlock.SampleCount - 1 do
@@ -1860,8 +1864,10 @@ begin
     SetLength(lAuxTemperature.Values, 0);
     SetLength(lAuxTemperature.Valid, 0);
   end;
+  {$IFDEF MIC140_RUNTIME_DIAGNOSTICS}
   if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
     CheckPublishedTinCodes(lAuxTemperature);
+  {$ENDIF}
   if lAuxTemperature.SampleCount > 0 then
   begin
     PublishTemperatureBlocks(lAuxTemperature, lTimes);

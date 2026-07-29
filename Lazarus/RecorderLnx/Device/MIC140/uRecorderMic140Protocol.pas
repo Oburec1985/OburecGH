@@ -449,10 +449,10 @@ begin
       end;
       if lPort = CLegacyStreamScan then
       begin
-        if fScanRejectLogCount < 12 then
-          RecorderDebugLog(Format(
-            '[MIC140v2:%s:%d] scan pump stream0 words=%d q=%d',
-            [fHost, fPort, Length(lWords), fScanQueueCount]));
+        { Успешный сетевой пакет является штатным RunTime-событием.
+          Не форматировать и не писать лог для каждого пакета: при MIC-140v3
+          это десятки синхронных файловых операций в секунду. Подробный дамп
+          транспорта выполняется автономным протокольным стендом. }
         AbsorbScanWords(lWords);
         Inc(lPumped);
       end;

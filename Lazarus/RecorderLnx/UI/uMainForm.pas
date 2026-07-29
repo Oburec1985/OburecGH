@@ -150,6 +150,8 @@ type
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
+    fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
+    fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
@@ -2380,6 +2382,7 @@ procedure TMainForm.ConsumeTagDataCycle(Sender: TObject);
 var
   I: Integer;
   lLatestTime: Double;
+  lRevisionSignature: QWord;
   lSnapshot: TRecorderSignalSnapshot;
   lTag: TRecorderTag;
 begin
@@ -2387,9 +2390,11 @@ begin
     Exit;
 
   lLatestTime := 0;
+  lRevisionSignature := 0;
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
     lTag := fRecorder.TagRegistry.Tags[I];
+    Inc(lRevisionSignature, lTag.SignalBuffer.Revision * QWord(I + 1));
     if lTag.SignalBuffer.LatestTime > lLatestTime then
       lLatestTime := lTag.SignalBuffer.LatestTime;
 
@@ -2402,6 +2407,11 @@ begin
         lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
         lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
         lTag.PollFrequencyHz);
+  end;
+  if lRevisionSignature <> fLastUiDataRevisionSignature then
+  begin
+    fLastUiDataRevisionSignature := lRevisionSignature;
+    fRuntimeViewDirty := True;
   end;
   if lLatestTime > 0 then
     fRecorder.TimeSystem.UpdateFromTagSample(lLatestTime);
@@ -2429,8 +2439,14 @@ begin
     end;
   until False;
 
-  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) then
+  { Таймер доставки событий может срабатывать чаще периода данных. Полная
+    перерисовка таблицы, мнемосхемы или OpenGL-страницы разрешена только после
+    изменения ревизии хотя бы одного кольца. Смена страницы вызывает Render
+    явно и в этом флаге не нуждается. }
+  if fRuntimeViewDirty and (fFormManager <> nil) and
+    (fFormManager.ActivePage <> nil) then
   begin
+    fRuntimeViewDirty := False;
     if fFormManager.ActivePage.Id = 'DigitalForm' then
     begin
       RenderDigitalPage;
