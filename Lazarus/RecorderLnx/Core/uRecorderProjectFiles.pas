@@ -73,7 +73,7 @@ implementation
 
 uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors, uRecorderConfiguredDataSources;
+  uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -162,12 +162,16 @@ function ComponentTypeOf(AComponent: TRecorderVisualComponent): string;
 begin
   if AComponent is TRecorderStaticTextComponent then
     Result := TRecorderStaticTextComponent.TypeId
+  else if AComponent is TRecorderButtonComponent then
+    Result := TRecorderButtonComponent.TypeId
   else if AComponent is TRecorderTagValueComponent then
     Result := TRecorderTagValueComponent.TypeId
   else if AComponent is TRecorderImageComponent then
     Result := TRecorderImageComponent.TypeId
   else if AComponent is TRecorderOscillogramComponent then
     Result := TRecorderOscillogramComponent.TypeId
+  else if AComponent is TRecorderSqlTrendComponent then
+    Result := TRecorderSqlTrendComponent.TypeId
   else if AComponent is TRecorderTrendComponent then
     Result := TRecorderTrendComponent.TypeId
   else if AComponent is TRecorderSpectrumComponent then
@@ -860,6 +864,16 @@ begin
         if lComponent is TRecorderStaticTextComponent then
           lIni.WriteString(lSection, 'Text',
             TRecorderStaticTextComponent(lComponent).Text);
+        if lComponent is TRecorderButtonComponent then
+        begin
+          lIni.WriteString(lSection, 'Caption', TRecorderButtonComponent(lComponent).Caption);
+          lIni.WriteInteger(lSection, 'Behavior', Ord(TRecorderButtonComponent(lComponent).Behavior));
+          lIni.WriteFloat(lSection, 'PressedValue', TRecorderButtonComponent(lComponent).PressedValue);
+          lIni.WriteFloat(lSection, 'ReleasedValue', TRecorderButtonComponent(lComponent).ReleasedValue);
+          lIni.WriteInteger(lSection, 'PulseDurationMs', TRecorderButtonComponent(lComponent).PulseDurationMs);
+          lIni.WriteString(lSection, 'PressedImage', TRecorderButtonComponent(lComponent).PressedImageFileName);
+          lIni.WriteString(lSection, 'ReleasedImage', TRecorderButtonComponent(lComponent).ReleasedImageFileName);
+        end;
         if lComponent is TRecorderTagValueComponent then
         begin
           lIni.WriteString(lSection, 'DisplayFormat',
@@ -953,6 +967,20 @@ begin
             lIni.WriteInteger(lSection, Format('Line%dWidth', [K]), lLine.Width);
             lIni.WriteBool(lSection, Format('Line%dVisible', [K]), lLine.Visible);
           end;
+          if lComponent is TRecorderSqlTrendComponent then
+          begin
+            lIni.WriteString(lSection, 'SqlConfigFile',
+              StoreGuiResourceFileName(AFileName,
+                TRecorderSqlTrendComponent(lComponent).ConfigFileName));
+            lIni.WriteInteger(lSection, 'SqlTimeMode',
+              Ord(TRecorderSqlTrendComponent(lComponent).TimeMode));
+            lIni.WriteFloat(lSection, 'SqlFromUtc',
+              TRecorderSqlTrendComponent(lComponent).FromUtc);
+            lIni.WriteFloat(lSection, 'SqlToUtc',
+              TRecorderSqlTrendComponent(lComponent).ToUtc);
+            lIni.WriteInteger(lSection, 'SqlMaxPoints',
+              TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
+          end;
         end;      end;
     end;
   finally
@@ -1045,6 +1073,20 @@ begin
           if lComponent is TRecorderStaticTextComponent then
             TRecorderStaticTextComponent(lComponent).Text :=
               lIni.ReadString(lSection, 'Text', '');
+          if lComponent is TRecorderButtonComponent then
+          begin
+            TRecorderButtonComponent(lComponent).Caption := lIni.ReadString(lSection, 'Caption', 'Button');
+            lItemCount := lIni.ReadInteger(lSection, 'Behavior', Ord(rbbToggle));
+            if (lItemCount < Ord(Low(TRecorderButtonBehavior))) or
+              (lItemCount > Ord(High(TRecorderButtonBehavior))) then
+              lItemCount := Ord(rbbToggle);
+            TRecorderButtonComponent(lComponent).Behavior := TRecorderButtonBehavior(lItemCount);
+            TRecorderButtonComponent(lComponent).PressedValue := lIni.ReadFloat(lSection, 'PressedValue', 1.0);
+            TRecorderButtonComponent(lComponent).ReleasedValue := lIni.ReadFloat(lSection, 'ReleasedValue', 0.0);
+            TRecorderButtonComponent(lComponent).PulseDurationMs := lIni.ReadInteger(lSection, 'PulseDurationMs', 250);
+            TRecorderButtonComponent(lComponent).PressedImageFileName := lIni.ReadString(lSection, 'PressedImage', '');
+            TRecorderButtonComponent(lComponent).ReleasedImageFileName := lIni.ReadString(lSection, 'ReleasedImage', '');
+          end;
           if lComponent is TRecorderTagValueComponent then
           begin
             TRecorderTagValueComponent(lComponent).DisplayFormat :=
@@ -1162,6 +1204,21 @@ begin
               end;
               lLine.Width := lIni.ReadInteger(lSection, Format('Line%dWidth', [K]), lLine.Width);
               lLine.Visible := lIni.ReadBool(lSection, Format('Line%dVisible', [K]), lLine.Visible);
+            end;
+            if lComponent is TRecorderSqlTrendComponent then
+            begin
+              TRecorderSqlTrendComponent(lComponent).ConfigFileName :=
+                LoadGuiResourceFileName(AFileName,
+                  lIni.ReadString(lSection, 'SqlConfigFile', 'sql-db.ini'));
+              TRecorderSqlTrendComponent(lComponent).TimeMode :=
+                TRecorderSqlTrendTimeMode(lIni.ReadInteger(lSection,
+                  'SqlTimeMode', Ord(sttmLatestWindow)));
+              TRecorderSqlTrendComponent(lComponent).FromUtc :=
+                lIni.ReadFloat(lSection, 'SqlFromUtc', Now - 1);
+              TRecorderSqlTrendComponent(lComponent).ToUtc :=
+                lIni.ReadFloat(lSection, 'SqlToUtc', Now);
+              TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine :=
+                lIni.ReadInteger(lSection, 'SqlMaxPoints', 4000);
             end;
           end;          lPage.AddComponent(lComponent);
           lComponent := nil;

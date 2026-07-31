@@ -76,10 +76,11 @@ begin
     Частые события тегов здесь только дублировали данные и копировали массивы. }
   fEventQueue := TRecorderEventSnapshotQueue.Create(fEventBus, False, True);
   fTimeSystem := TRecorderTimeSystem.Create;
+  fTagRegistry.TimeSystem := fTimeSystem;
   fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
   fAlgorithmManager := TRecorderAlgorithmManager.Create(fTagRegistry, fSpectrumManager);
   fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
-  fSqlDbManager := TRecorderSqlDbManager.Create(fEventBus);
+  fSqlDbManager := TRecorderSqlDbManager.Create(fEventBus, fTimeSystem);
   fTagRegistry.SetAlarmValuePublishedHandler(Self, @HandleTagAlarmValue);
 end;
 
@@ -108,6 +109,7 @@ begin
   FreeAndNil(fSpectrumManager);
   FreeAndNil(fEventQueue);
   FreeAndNil(fDataSourceManager);
+  fTagRegistry.TimeSystem := nil;
   FreeAndNil(fTimeSystem);
   FreeAndNil(fTagRegistry);
   FreeAndNil(fRunSettings);

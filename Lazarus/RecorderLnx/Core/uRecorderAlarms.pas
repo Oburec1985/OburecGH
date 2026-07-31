@@ -81,6 +81,7 @@ type
   private
     fEventBus: TRecorderEventBus;
     fLastEventData: TRecorderAlarmEventData;
+    fLock: TRTLCriticalSection;
     fStates: TList;
     function AcquireState(ATag: TRecorderTag): TTagAlarmState;
     function EvaluateSetpoint(ATag: TRecorderTag; AKind: TRecorderTagSetpointKind;
@@ -202,6 +203,7 @@ end;
 constructor TRecorderAlarmEngine.Create(AEventBus: TRecorderEventBus);
 begin
   inherited Create;
+  InitCriticalSection(fLock);
   fStates := TList.Create;
   fEventBus := AEventBus;
 end;
@@ -219,6 +221,7 @@ begin
   Reset;
   fStates.Free;
   fLastEventData.Free;
+  DoneCriticalSection(fLock);
   inherited Destroy;
 end;
 
@@ -337,14 +340,19 @@ var
   lState: TTagAlarmState;
 begin
   Result := ralNone;
-  lState := AcquireState(ATag);
-  if lState = nil then
-    Exit;
+  EnterCriticalSection(fLock);
+  try
+    lState := AcquireState(ATag);
+    if lState = nil then
+      Exit;
 
-  if lState.Active[tskHighAlarm] or lState.Active[tskLowAlarm] then
-    Result := ralAlarm
-  else if lState.Active[tskHighWarning] or lState.Active[tskLowWarning] then
-    Result := ralWarning;
+    if lState.Active[tskHighAlarm] or lState.Active[tskLowAlarm] then
+      Result := ralAlarm
+    else if lState.Active[tskHighWarning] or lState.Active[tskLowWarning] then
+      Result := ralWarning;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
 end;
 
 { TRecorderAlarmEngine.GetTagAlarmText
@@ -371,18 +379,23 @@ var
   lState: TTagAlarmState;
 begin
   Result := 0;
-  lState := AcquireState(ATag);
-  if lState = nil then
-    Exit;
+  EnterCriticalSection(fLock);
+  try
+    lState := AcquireState(ATag);
+    if lState = nil then
+      Exit;
 
-  if lState.Active[tskHighAlarm] then
-    Result := ATag.Setpoints[tskHighAlarm].Color
-  else if lState.Active[tskLowAlarm] then
-    Result := ATag.Setpoints[tskLowAlarm].Color
-  else if lState.Active[tskHighWarning] then
-    Result := ATag.Setpoints[tskHighWarning].Color
-  else if lState.Active[tskLowWarning] then
-    Result := ATag.Setpoints[tskLowWarning].Color;
+    if lState.Active[tskHighAlarm] then
+      Result := ATag.Setpoints[tskHighAlarm].Color
+    else if lState.Active[tskLowAlarm] then
+      Result := ATag.Setpoints[tskLowAlarm].Color
+    else if lState.Active[tskHighWarning] then
+      Result := ATag.Setpoints[tskHighWarning].Color
+    else if lState.Active[tskLowWarning] then
+      Result := ATag.Setpoints[tskLowWarning].Color;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
 end;
 
 { TRecorderAlarmEngine.ProcessTagValue
@@ -401,22 +414,27 @@ var
   lSetpoint: TRecorderTagSetpoint;
   lState: TTagAlarmState;
 begin
-  lState := AcquireState(ATag);
-  if lState = nil then
-    Exit;
+  EnterCriticalSection(fLock);
+  try
+    lState := AcquireState(ATag);
+    if lState = nil then
+      Exit;
 
-  for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
-  begin
-    lSetpoint := ATag.Setpoints[lKind];
-    lActive := EvaluateSetpoint(ATag, lKind, lSetpoint,
-      lState.Active[lKind], AValue);
-    if lActive = lState.Active[lKind] then
-      Continue;
+    for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
+    begin
+      lSetpoint := ATag.Setpoints[lKind];
+      lActive := EvaluateSetpoint(ATag, lKind, lSetpoint,
+        lState.Active[lKind], AValue);
+      if lActive = lState.Active[lKind] then
+        Continue;
 
-    lState.Active[lKind] := lActive;
-    lLevel := RecorderSetpointKindToAlarmLevel(lKind);
-    PublishAlarmChange(ATag, lKind, lLevel, lActive, ATimeSec, AValue,
-      lSetpoint.Threshold);
+      lState.Active[lKind] := lActive;
+      lLevel := RecorderSetpointKindToAlarmLevel(lKind);
+      PublishAlarmChange(ATag, lKind, lLevel, lActive, ATimeSec, AValue,
+        lSetpoint.Threshold);
+    end;
+  finally
+    LeaveCriticalSection(fLock);
   end;
 end;
 
@@ -431,9 +449,14 @@ procedure TRecorderAlarmEngine.Reset;
 var
   I: Integer;
 begin
-  for I := 0 to fStates.Count - 1 do
-    TObject(fStates[I]).Free;
-  fStates.Clear;
+  EnterCriticalSection(fLock);
+  try
+    for I := 0 to fStates.Count - 1 do
+      TObject(fStates[I]).Free;
+    fStates.Clear;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
 end;
 
 end.

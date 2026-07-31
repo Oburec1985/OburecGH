@@ -22,6 +22,7 @@ type
     function ScalarInt(const ASql: string): Int64;
     function FindId(const ASql, AParamName, AParamValue: string): string;
     procedure Commit;
+    procedure CommitAndRestart;
   public
     constructor Create(AConfig: TRecorderSqlDbConfig);
     destructor Destroy; override;
@@ -49,6 +50,11 @@ type
       ASize: Int64; const AChecksum, AState, ARegistrationId, ASignalId,
       AEventId: string; AAnchorUtc, AFromUtc, AToUtc: Double);
     procedure ListAttachments(AFromUtc, AToUtc: Double; AItems: TList);
+    procedure ListSignalNames(AItems: TStrings);
+    function GetTrendTimeRange(out AFromUtc, AToUtc: Double;
+      out APointCount: Int64): Boolean;
+    procedure ReadTrendPoints(ASignalNames: TStrings; AFromUtc, AToUtc: Double;
+      AMaxPointsPerSignal: Integer; out APoints: TRecorderSqlTrendPoints);
     function CountRows(const ATableName: string): Int64;
     property Connection: TSQLConnection read fConnection;
   end;
@@ -168,9 +174,124 @@ begin
   end;
 end;
 
+procedure TRecorderSqlDbRepository.ListSignalNames(AItems: TStrings);
+var
+  lQuery: TSQLQuery;
+begin
+  if AItems = nil then Exit;
+  AItems.Clear;
+  Open;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text := 'select distinct name from signals order by name';
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      AItems.Add(lQuery.Fields[0].AsString);
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.GetTrendTimeRange(out AFromUtc,
+  AToUtc: Double; out APointCount: Int64): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  AFromUtc := 0;
+  AToUtc := 0;
+  APointCount := 0;
+  Open;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select count(*), min(timestamp_utc), max(timestamp_utc) '+
+      'from signal_values';
+    lQuery.Open;
+    APointCount := lQuery.Fields[0].AsLargeInt;
+    Result := (APointCount > 0) and (not lQuery.Fields[1].IsNull) and
+      (not lQuery.Fields[2].IsNull);
+    if Result then
+    begin
+      AFromUtc := lQuery.Fields[1].AsFloat;
+      AToUtc := lQuery.Fields[2].AsFloat;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ReadTrendPoints(ASignalNames: TStrings;
+  AFromUtc, AToUtc: Double; AMaxPointsPerSignal: Integer;
+  out APoints: TRecorderSqlTrendPoints);
+var
+  I, lCount, lStep, lSourceIndex: Integer;
+  lQuery: TSQLQuery;
+  lName: string;
+begin
+  SetLength(APoints, 0);
+  if (ASignalNames = nil) or (ASignalNames.Count = 0) or
+    (AToUtc <= AFromUtc) then Exit;
+  if AMaxPointsPerSignal < 32 then AMaxPointsPerSignal := 32;
+  Open;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select s.name, v.timestamp_utc, v.measured_value '+
+      'from signal_values v join signals s on s.id=v.signal_id '+
+      'where s.name=:signal_name and v.timestamp_utc>=:time_from '+
+      'and v.timestamp_utc<=:time_to order by v.timestamp_utc';
+    for I := 0 to ASignalNames.Count - 1 do
+    begin
+      lName := ASignalNames[I];
+      lQuery.Close;
+      lQuery.ParamByName('signal_name').AsString := lName;
+      lQuery.ParamByName('time_from').AsFloat := AFromUtc;
+      lQuery.ParamByName('time_to').AsFloat := AToUtc;
+      lQuery.Open;
+      lCount := 0;
+      while not lQuery.EOF do begin Inc(lCount); lQuery.Next; end;
+      lStep := 1;
+      if lCount > AMaxPointsPerSignal then
+        lStep := (lCount + AMaxPointsPerSignal - 1) div AMaxPointsPerSignal;
+      lQuery.First;
+      lSourceIndex := 0;
+      while not lQuery.EOF do
+      begin
+        if (lSourceIndex mod lStep = 0) or (lSourceIndex = lCount - 1) then
+        begin
+          SetLength(APoints, Length(APoints) + 1);
+          APoints[High(APoints)].SignalName := lQuery.Fields[0].AsString;
+          APoints[High(APoints)].TimestampUtc := lQuery.Fields[1].AsFloat;
+          APoints[High(APoints)].Value := lQuery.Fields[2].AsFloat;
+        end;
+        Inc(lSourceIndex);
+        lQuery.Next;
+      end;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
 procedure TRecorderSqlDbRepository.Commit;
 begin
   if fTransaction.Active then fTransaction.CommitRetaining;
+end;
+
+procedure TRecorderSqlDbRepository.CommitAndRestart;
+begin
+  if fTransaction.Active then
+    fTransaction.Commit;
+  fTransaction.StartTransaction;
 end;
 
 procedure TRecorderSqlDbRepository.Flush;
@@ -232,9 +353,13 @@ begin
   CreateTableIfMissing('events',
     'create table events (id varchar(36) primary key, registration_id varchar(36), object_id varchar(36), signal_id varchar(36), timestamp_utc double precision not null, event_type varchar(80) not null, severity varchar(32), measured_value double precision, event_text varchar(2048), payload_json varchar(8191))');
   CreateTableIfMissing('data_files',
-    'create table data_files (id varchar(36) primary key, storage_key varchar(1024) not null unique, data_type varchar(80), data_format varchar(80), file_size bigint not null, checksum varchar(128), file_state varchar(32) not null, created_at double precision not null)');
+    'create table data_files (id varchar(36) primary key, storage_key varchar(500) not null unique, data_type varchar(80), data_format varchar(80), file_size bigint not null, checksum varchar(128), file_state varchar(32) not null, created_at double precision not null)');
   CreateTableIfMissing('data_file_links',
     'create table data_file_links (id varchar(36) primary key, file_id varchar(36) not null, registration_id varchar(36), signal_id varchar(36), event_id varchar(36), anchor_time_utc double precision, time_from_utc double precision, time_to_utc double precision)');
+  { Firebird publishes newly created metadata at a transaction boundary.
+    Preparing a query for SCHEMA_INFO in the DDL transaction can otherwise
+    fail with SQL error -204 / table unknown on a newly created database. }
+  CommitAndRestart;
   if ScalarInt('select count(*) from schema_info') = 0 then
   begin
     lQuery := TSQLQuery.Create(nil);

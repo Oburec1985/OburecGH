@@ -2,11 +2,11 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
   Left = 360
   Height = 610
   Top = 140
-  Width = 920
+  Width = 1120
   BorderStyle = bsDialog
   Caption = 'SQL БД RecorderLnx'
   ClientHeight = 610
-  ClientWidth = 920
+  ClientWidth = 1120
   Position = poScreenCenter
   LCLVersion = '4.2.0.0'
   object cbEnabled: TCheckBox
@@ -66,39 +66,105 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
     Left = 650
     Height = 500
     Top = 42
-    Width = 258
+    Width = 458
     Caption = 'Каналы для записи'
     ClientHeight = 480
-    ClientWidth = 254
+    ClientWidth = 454
     TabOrder = 3
-    object clbSignals: TCheckListBox
+    object lblControlTag: TLabel
       Left = 8
-      Height = 430
-      Top = 8
-      Width = 238
-      Align = alTop
-      ItemHeight = 17
+      Height = 17
+      Top = 12
+      Width = 102
+      Caption = 'Управляющий тег:'
+    end
+    object cbControlTag: TComboBox
+      Left = 8
+      Height = 29
+      Top = 31
+      Width = 438
+      Style = csDropDownList
       TabOrder = 0
+    end
+    object lblSignalSearch: TLabel
+      Left = 8
+      Height = 17
+      Top = 68
+      Width = 45
+      Caption = 'Поиск:'
+    end
+    object edSignalSearch: TEdit
+      Left = 58
+      Height = 27
+      Top = 63
+      Width = 388
+      OnChange = edSignalSearchChange
+      TabOrder = 1
+    end
+    object lvSignals: TListView
+      Left = 8
+      Height = 284
+      Top = 98
+      Width = 438
+      Checkboxes = True
+      Columns = <
+        item
+          Caption = 'Тег / канал'
+          Width = 270
+        end
+        item
+          Caption = 'Оценка (пишем в SQL)'
+          Width = 150
+        end>
+      MultiSelect = True
+      ReadOnly = True
+      RowSelect = True
+      ViewStyle = vsReport
+      TabOrder = 2
+    end
+    object lblSignalEstimate: TLabel
+      Left = 8
+      Height = 17
+      Top = 392
+      Width = 62
+      Caption = 'Оценка:'
+    end
+    object cbSignalEstimate: TComboBox
+      Left = 76
+      Height = 29
+      Top = 386
+      Width = 230
+      Style = csDropDownList
+      TabOrder = 3
+    end
+    object btnAssignEstimate: TButton
+      Left = 314
+      Height = 30
+      Top = 386
+      Width = 132
+      Caption = 'Назначить'
+      OnClick = btnAssignEstimateClick
+      TabOrder = 4
     end
     object btnSelectAll: TButton
       Left = 8
       Height = 30
       Top = 444
-      Width = 112
+      Width = 210
       Caption = 'Выбрать все'
       OnClick = btnSelectAllClick
-      TabOrder = 1
+      TabOrder = 5
     end
     object btnSelectNone: TButton
-      Left = 134
+      Left = 236
       Height = 30
       Top = 444
-      Width = 112
+      Width = 210
       Caption = 'Снять все'
       OnClick = btnSelectNoneClick
-      TabOrder = 2
+      TabOrder = 6
     end
   end
-  object btnOk: TButton Left = 716 Height = 34 Top = 560 Width = 90 Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end
-  object btnCancel: TButton Left = 816 Height = 34 Top = 560 Width = 90 Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end
+  object btnOk: TButton Left = 916 Height = 34 Top = 560 Width = 90 Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end
+  object btnCancel: TButton Left = 1016 Height = 34 Top = 560 Width = 90 Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end
 end

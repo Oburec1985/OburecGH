@@ -49,10 +49,14 @@ uses
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree,
-  uRecorderMeraPaths, uOglChart, uRecorderSqlDbSettingsDialog;
+  uRecorderMeraPaths, uOglChart, uRecorderSqlDbSettingsDialog,
+  uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
+  TRecorderAddTool = (ratNone, ratText, ratValue, ratOscillogram, ratTrend,
+    ratSqlTrend,
+    ratSpectrum, ratImage, ratButton);
 
   { TMainForm }
 
@@ -65,6 +69,7 @@ type
     btnRunWinpos: TSpeedButton;                  // Кнопка запуска Winpos для последнего MERA-файла
     btnSaveConfig: TSpeedButton;
     btnSqlDb: TSpeedButton;
+    cbSqlDbRecording: TCheckBox;
     btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
@@ -97,6 +102,7 @@ type
     procedure btnSaveConfigAsClick(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
     procedure btnSqlDbClick(Sender: TObject);
+    procedure cbSqlDbRecordingChange(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure btnTriggerClick(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
@@ -127,6 +133,7 @@ type
     fEditModeButton: TSpeedButton;                // Кнопка включения режима конструктора
     fAddOscillogramButton: TSpeedButton;          // Кнопка добавления осциллограммы
     fAddTrendButton: TSpeedButton;                // Кнопка добавления тренда
+    fAddSqlTrendButton: TSpeedButton;
     fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
     fAddSpectrumButton: TSpeedButton;             // Кнопка добавления графика спектра
     fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
@@ -135,6 +142,7 @@ type
     fAddButtonButton: TSpeedButton;               // Кнопка добавления управляющей кнопки
     fAddComboBoxButton: TSpeedButton;             // Кнопка добавления выпадающего списка
     fDeleteComponentButton: TSpeedButton;         // Кнопка удаления выбранного компонента мнемосхемы
+    fPendingAddTool: TRecorderAddTool;
     
     // Элементы базового формуляра графиков (Base Page)
     fBaseToolbar: TPanel;                         // Тулбар управления графиками
@@ -157,6 +165,7 @@ type
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
+    fUpdatingSqlDbRecording: Boolean;
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
@@ -257,16 +266,23 @@ type
     { Добавляет на активную страницу тестовый цифровой индикатор TagValue. }
     procedure AddTagValueComponentToActivePage;
     procedure AddImageComponentToActivePage;
+    procedure AddButtonComponentToActivePage;
+    procedure AddButtonClick(Sender: TObject);
+    procedure SelectAddTool(Sender: TObject; ATool: TRecorderAddTool);
+    procedure PlaceSelectedTool(const APoint: TPoint);
+    procedure ReleaseAddTool;
     { Добавляет на активную страницу осциллограмму OpenGL. }
     procedure AddOscillogramComponentToActivePage;
     { Добавляет на активную страницу компонент тренда. }
     procedure AddTrendComponentToActivePage;
+    procedure AddSqlTrendComponentToActivePage;
     { Добавляет на активную страницу спектр. }
     procedure AddSpectrumComponentToActivePage;
     { Обработчик кнопки добавления осциллограммы на полотне. }
     procedure AddOscillogramClick(Sender: TObject);
     { Обработчик кнопки добавления тренда на полотне. }
     procedure AddTrendClick(Sender: TObject);
+    procedure AddSqlTrendClick(Sender: TObject);
     { Обработчик кнопки добавления спектра на полотне. }
     procedure AddSpectrumClick(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
@@ -322,6 +338,8 @@ type
     procedure EnsureRuntimeDataSources;
     { Расширяет кольцевые буферы тегов под отображаемое окно истории. }
     procedure EnsureTagSignalBufferCapacities;
+    procedure EnsureSqlDbControlTag;
+    procedure PublishSqlDbControlState(AEnabled: Boolean);
     { Запускает worker-thread источников данных для режимов View/Record. }
     procedure StartDataSources;
     { Останавливает worker-thread источников данных и дочитывает очередь. }
@@ -419,6 +437,7 @@ begin
 
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
+  RegisterRecorderSqlTrendFactory(fComponentFactory);
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
@@ -443,6 +462,7 @@ begin
   fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
     fComponentFactory);
   fFormEditor.OnChanged := @FormEditorChanged;
+  fFormEditor.OnPlaceComponent := @PlaceSelectedTool;
   fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine, fRecorder.RunSettings.DisplayBufferMs / 1000);
   lbTags.OnClick := @lbTagsClick;
   UpdateActiveSourceIds;
@@ -462,6 +482,7 @@ begin
     fProjectConfigDir) + 'sql-db.ini');
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  EnsureSqlDbControlTag;
   SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
     должна откладываться до первого нажатия Preview. }
@@ -796,13 +817,7 @@ end;
 
 procedure TMainForm.btnAddComponentClick(Sender: TObject);
 begin
-  try
-    AddStaticTextComponentToActivePage;
-    RenderActivePage;
-  except
-    on E: Exception do
-      LogCommandError('Add text label', E);
-  end;
+  SelectAddTool(Sender, ratText);
 end;
 
 procedure TMainForm.btnDeleteComponentClick(Sender: TObject);
@@ -1005,22 +1020,54 @@ procedure TMainForm.btnSqlDbClick(Sender: TObject);
 var
   lFileName: string;
 begin
-  if fRecorder.StateMachine.State = rsRecord then
-  begin
-    MessageDlg('SQL БД', 'Остановите запись перед изменением настроек SQL БД.',
-      mtWarning, [mbOK], 0);
-    Exit;
-  end;
   lFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
   try
     if ShowRecorderSqlDbSettings(Self, lFileName, fRecorder.TagRegistry) then
     begin
       fRecorder.SqlDbManager.Configure(lFileName);
+      fUpdatingSqlDbRecording := True;
+      try
+        cbSqlDbRecording.Checked := fRecorder.SqlDbManager.RecordingEnabled;
+      finally
+        fUpdatingSqlDbRecording := False;
+      end;
       AddLog('SQL database settings applied.');
     end;
   except
     on E: Exception do LogCommandError('SQL database settings', E);
   end;
+end;
+
+procedure TMainForm.cbSqlDbRecordingChange(Sender: TObject);
+begin
+  if fUpdatingSqlDbRecording or (fRecorder = nil) then Exit;
+  try
+    fRecorder.SqlDbManager.SetRecordingEnabled(cbSqlDbRecording.Checked);
+    PublishSqlDbControlState(fRecorder.SqlDbManager.RecordingEnabled);
+  except
+    on E: Exception do
+    begin
+      fUpdatingSqlDbRecording := True;
+      try
+        cbSqlDbRecording.Checked := fRecorder.SqlDbManager.RecordingEnabled;
+      finally
+        fUpdatingSqlDbRecording := False;
+      end;
+      LogCommandError('SQL database switch', E);
+    end;
+  end;
+end;
+
+procedure TMainForm.PublishSqlDbControlState(AEnabled: Boolean);
+var
+  lTime: TRecorderTimeSnapshot;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
+    (fRecorder.TimeSystem = nil) then Exit;
+  if fRecorder.TagRegistry.FindByName(CRecorderSqlDbControlTagName) = nil then Exit;
+  lTime := fRecorder.TimeSystem.Snapshot;
+  fRecorder.TagRegistry.PublishValue(CRecorderSqlDbControlTagName,
+    lTime.ElapsedSec, Ord(AEnabled));
 end;
 
 procedure TMainForm.btnClearSearchClick(Sender: TObject);
@@ -1459,8 +1506,6 @@ begin
     if fFormEditor <> nil then
       fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1471,13 +1516,7 @@ end;
 
 procedure TMainForm.AddOscillogramClick(Sender: TObject);
 begin
-  try
-    AddOscillogramComponentToActivePage;
-    RenderActivePage;
-  except
-    on E: Exception do
-      LogCommandError('Add oscillogram', E);
-  end;
+  SelectAddTool(Sender, ratOscillogram);
 end;
 
 procedure TMainForm.AddOscillogramComponentToActivePage;
@@ -1508,8 +1547,6 @@ begin
     if fFormEditor <> nil then
       fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1520,13 +1557,40 @@ end;
 
 procedure TMainForm.AddTrendClick(Sender: TObject);
 begin
+  SelectAddTool(Sender, ratTrend);
+end;
+
+procedure TMainForm.AddSqlTrendClick(Sender: TObject);
+begin
+  SelectAddTool(Sender, ratSqlTrend);
+end;
+
+procedure TMainForm.AddSqlTrendComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderSqlTrendComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if (lPage = nil) or (not IsUserMnemonicPage(lPage)) then
+    raise ERecorderFormError.Create(
+      'SQL trend can be added only to a user mnemonic page');
+  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
+  Inc(fNextComponentNo);
+  lComponent := TRecorderSqlTrendComponent(
+    fComponentFactory.CreateComponent(TRecorderSqlTrendComponent.TypeId));
   try
-    AddTrendComponentToActivePage;
-    RenderActivePage;
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('SqlTrend%d', [fNextComponentNo]);
+    lComponent.ConfigFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) +
+      'sql-db.ini';
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 520, 320);
+    if fFormEditor <> nil then fFormEditor.PositionNewComponent(lComponent);
+    lPage.AddComponent(lComponent);
   except
-    on E: Exception do
-      LogCommandError('Add trend', E);
+    lComponent.Free;
+    raise;
   end;
+  AddLog('SQL trend component added: ' + lComponent.Id);
 end;
 
 procedure TMainForm.AddTrendComponentToActivePage;
@@ -1586,8 +1650,6 @@ begin
     end;
 
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1598,13 +1660,7 @@ end;
 
 procedure TMainForm.AddSpectrumClick(Sender: TObject);
 begin
-  try
-    AddSpectrumComponentToActivePage;
-    RenderActivePage;
-  except
-    on E: Exception do
-      LogCommandError('Add spectrum', E);
-  end;
+  SelectAddTool(Sender, ratSpectrum);
 end;
 
 procedure TMainForm.AddSpectrumComponentToActivePage;
@@ -1644,8 +1700,6 @@ begin
       lComponent.SetTagRefAt(lComponent.TagNames.Count, lTag);
 
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1656,24 +1710,37 @@ end;
 
 procedure TMainForm.AddDigitalIndicatorClick(Sender: TObject);
 begin
+  SelectAddTool(Sender, ratValue);
+end;
+
+procedure TMainForm.AddButtonComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderButtonComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if (lPage = nil) or not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create('Button can be added only to a user mnemonic page');
+  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
+  Inc(fNextComponentNo);
+  lComponent := TRecorderButtonComponent(
+    fComponentFactory.CreateComponent(TRecorderButtonComponent.TypeId));
   try
-    AddTagValueComponentToActivePage;
-    RenderActivePage;
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('Button%d', [fNextComponentNo]);
+    lComponent.Caption := 'Button';
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 120, 32);
+    lPage.AddComponent(lComponent);
   except
-    on E: Exception do
-      LogCommandError('Add digital indicator', E);
+    lComponent.Free;
+    raise;
   end;
+  AddLog('Form component added: ' + lComponent.Id);
 end;
 
 procedure TMainForm.AddImageClick(Sender: TObject);
 begin
-  try
-    AddImageComponentToActivePage;
-    RenderActivePage;
-  except
-    on E: Exception do
-      LogCommandError('Add image', E);
-  end;
+  SelectAddTool(Sender, ratImage);
 end;
 
 procedure TMainForm.AddImageComponentToActivePage;
@@ -1700,8 +1767,6 @@ begin
     if fFormEditor <> nil then
       fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1735,8 +1800,6 @@ begin
     if fFormEditor <> nil then
       fFormEditor.PositionNewComponent(lComponent);
     lPage.AddComponent(lComponent);
-    if fFormEditor <> nil then
-      fFormEditor.ArmNewComponentPlacement(lComponent);
   except
     lComponent.Free;
     raise;
@@ -1802,15 +1865,17 @@ begin
   fEditorToolbar.BevelOuter := bvLowered;
 
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
-  fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick);
-  fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick);
-  fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick);
-  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
-  fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick);
+  fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick, 2, True);
+  fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick, 2, True);
+  fAddSqlTrendButton := AddEditMnemoToolBarButton(390, CIconTrends,
+    'Add SQL database trend', @AddSqlTrendClick, 2, True, True, 'SQL');
+  fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
+  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick, 2, True);
+  fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick, 2, True);
   fAddImageButton := AddEditMnemoToolBarButton(208, -1, 'Добавить картинку',
-    @AddImageClick, 0, False, True, 'Img');
+    @AddImageClick, 2, True, True, 'Img');
   fAddTagTableButton := AddEditMnemoToolBarButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', nil, 0, False, False);
+  fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
   fAddComboBoxButton := AddEditMnemoToolBarButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
   fDeleteComponentButton := AddEditMnemoToolBarButton(356, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
@@ -2019,6 +2084,8 @@ begin
     fAddOscillogramButton.Visible := lCanEdit;
   if fAddTrendButton <> nil then
     fAddTrendButton.Visible := lCanEdit;
+  if fAddSqlTrendButton <> nil then
+    fAddSqlTrendButton.Visible := lCanEdit;
   if fAddTextButton <> nil then
     fAddTextButton.Visible := lCanEdit;
   if fAddSpectrumButton <> nil then
@@ -2962,7 +3029,8 @@ begin
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
   btnTrigger.SetBounds(16, 108, 142, 32);
-  btnSqlDb.SetBounds(16, 146, 142, 32);
+  cbSqlDbRecording.SetBounds(12, 151, 72, 23);
+  btnSqlDb.SetBounds(86, 146, 72, 32);
 
   btnSettings.Caption := '';
   btnSettings.Images := ilCommandButtons;
@@ -3027,6 +3095,16 @@ procedure TMainForm.UpdateStateView;
 begin
   lbState.Caption := TRecorderStateMachine.StateToString(fRecorder.StateMachine.State);
   UpdateTimeView;
+  if (fRecorder.SqlDbManager <> nil) and
+     (cbSqlDbRecording.Checked <> fRecorder.SqlDbManager.RecordingEnabled) then
+  begin
+    fUpdatingSqlDbRecording := True;
+    try
+      cbSqlDbRecording.Checked := fRecorder.SqlDbManager.RecordingEnabled;
+    finally
+      fUpdatingSqlDbRecording := False;
+    end;
+  end;
 
   case fRecorder.StateMachine.State of
     rsStop:
@@ -3084,6 +3162,95 @@ begin
       Self, 'ConfigurationPrepared'));
 end;
 
+procedure TMainForm.EnsureSqlDbControlTag;
+var
+  lConfigFileName: string;
+  lTag: TRecorderTag;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then Exit;
+  lTag := fRecorder.TagRegistry.FindByName(CRecorderSqlDbControlTagName);
+  if lTag = nil then
+    lTag := fRecorder.TagRegistry.CreateTag(CRecorderSqlDbControlTagName, 256, True);
+  lTag.IsVirtual := True;
+  lTag.SourceId := 'system:sql-db';
+  lTag.ModuleType := 'SQLdb';
+  lTag.Description := 'Служебное управление записью SQL DB (>0.5 вкл., <0.5 выкл.)';
+  lTag.UnitName := '';
+  lTag.RangeMin := 0;
+  lTag.RangeMax := 1;
+
+  if not SameText(fRecorder.SqlDbManager.Config.ControlTagName,
+    CRecorderSqlDbControlTagName) then
+  begin
+    fRecorder.SqlDbManager.Config.ControlTagName := CRecorderSqlDbControlTagName;
+    lConfigFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
+    fRecorder.SqlDbManager.Config.SaveToFile(lConfigFileName);
+  end;
+
+  PublishSqlDbControlState(fRecorder.SqlDbManager.RecordingEnabled);
+end;
+
+procedure TMainForm.SelectAddTool(Sender: TObject; ATool: TRecorderAddTool);
+begin
+  if not (Sender is TSpeedButton) then Exit;
+  if not TSpeedButton(Sender).Down then begin ReleaseAddTool; Exit; end;
+  fPendingAddTool := ATool;
+  if fEditModeButton <> nil then fEditModeButton.Down := True;
+  if fFormEditor <> nil then
+  begin
+    fFormEditor.Enabled := True;
+    fFormEditor.ArmComponentPlacement;
+  end;
+end;
+
+procedure TMainForm.ReleaseAddTool;
+begin
+  fPendingAddTool := ratNone;
+  if fFormEditor <> nil then fFormEditor.CancelComponentPlacement;
+  if fAddTextButton <> nil then fAddTextButton.Down := False;
+  if fAddDigitalButton <> nil then fAddDigitalButton.Down := False;
+  if fAddOscillogramButton <> nil then fAddOscillogramButton.Down := False;
+  if fAddTrendButton <> nil then fAddTrendButton.Down := False;
+  if fAddSqlTrendButton <> nil then fAddSqlTrendButton.Down := False;
+  if fAddSpectrumButton <> nil then fAddSpectrumButton.Down := False;
+  if fAddImageButton <> nil then fAddImageButton.Down := False;
+  if fAddButtonButton <> nil then fAddButtonButton.Down := False;
+end;
+
+procedure TMainForm.PlaceSelectedTool(const APoint: TPoint);
+var
+  lPage: TRecorderFormPage;
+  lOldCount: Integer;
+begin
+  lPage := GetActiveEditorPage;
+  if (lPage = nil) or (fPendingAddTool = ratNone) then begin ReleaseAddTool; Exit; end;
+  lOldCount := lPage.ComponentCount;
+  try
+    case fPendingAddTool of
+      ratText: AddStaticTextComponentToActivePage;
+      ratValue: AddTagValueComponentToActivePage;
+      ratOscillogram: AddOscillogramComponentToActivePage;
+      ratTrend: AddTrendComponentToActivePage;
+      ratSqlTrend: AddSqlTrendComponentToActivePage;
+      ratSpectrum: AddSpectrumComponentToActivePage;
+      ratImage: AddImageComponentToActivePage;
+      ratButton: AddButtonComponentToActivePage;
+    end;
+    if (lPage.ComponentCount > lOldCount) and (fFormEditor <> nil) then
+      fFormEditor.PositionComponentAt(lPage.Components[lOldCount], APoint);
+    RenderActivePage;
+    FormEditorChanged;
+  except
+    on E: Exception do LogCommandError('Add mnemonic component', E);
+  end;
+  ReleaseAddTool;
+end;
+
+procedure TMainForm.AddButtonClick(Sender: TObject);
+begin
+  SelectAddTool(Sender, ratButton);
+end;
+
 procedure TMainForm.DeferredPrepareRuntime(Data: PtrInt);
 begin
   if csDestroying in ComponentState then Exit;
@@ -3120,7 +3287,6 @@ begin
   if (ANewState = rsRecord) and (AOldState <> rsRecord) then
   begin
     OpenRecordFrame;
-    fRecorder.SqlDbManager.StartRegistration('RecorderLnx record mode');
   end;
 
   case ANewState of
@@ -3139,7 +3305,6 @@ begin
         if lTransition in [rstViewToStop, rstRecordToStop] then
         begin
           StopDataSources;
-          fRecorder.SqlDbManager.StopRegistration;
           CloseRecordFrame;
           fRecorder.TimeSystem.Stop;
           if fRecorder.AlgorithmManager <> nil then
@@ -3150,7 +3315,6 @@ begin
 
   if (AOldState = rsRecord) and (ANewState <> rsRecord) and (ANewState <> rsStop) then
   begin
-    fRecorder.SqlDbManager.StopRegistration;
     CloseRecordFrame;
   end;
 

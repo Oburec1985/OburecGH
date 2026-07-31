@@ -64,7 +64,7 @@ uses
   Classes, SysUtils, Types, Math, Controls, ExtCtrls, Graphics, Buttons,
   LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView,
   uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart,
-  uOglChartColors, uRecorderDebugLog;
+  uOglChartColors, uRecorderDebugLog, uRecorderSqlTrendModel;
 
 
 type
@@ -100,6 +100,7 @@ type
   TGetEditorPageEvent = function: TRecorderFormPage of object;
   { Событийный колбэк уведомления об изменении в редакторе }
   TEditorNotifyEvent = procedure of object;
+  TEditorPlaceComponentEvent = procedure(const APoint: TPoint) of object;
 
 
   { TFormEditorClipboardItem
@@ -155,6 +156,7 @@ type
     fComponentFactory: TRecorderComponentFactory;  { Фабрика создания компонентов }
     fDisplaySeconds: Double;                       { Длина окна данных для embedded-графиков }
     fEnabled: Boolean;                             { Флаг активности режима редактирования }
+    fForceRebuild: Boolean;
     fGetPage: TGetEditorPageEvent;                 { Колбэк получения текущей страницы }
     fOnChanged: TEditorNotifyEvent;                { Событие изменения данных в редакторе }
     fOperation: TFormEditorOperation;              { Текущая активная операция }
@@ -170,7 +172,8 @@ type
     fLastOperationRenderTickMs: QWord;
     fLastCanvasClick: TPoint;
     fHasCanvasClick: Boolean;
-    fPendingPlacementComponent: TRecorderVisualComponent;
+    fComponentPlacementArmed: Boolean;
+    fOnPlaceComponent: TEditorPlaceComponentEvent;
     fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
     fPagePanels: TStringList;                      { Панели отдельных страниц мнемосхем }
 
@@ -253,7 +256,10 @@ type
     { Размещает новый компонент около последней точки клика по полотну. }
     procedure PositionNewComponent(AComponent: TRecorderVisualComponent);
     { Включает размещение компонента следующим щелчком по странице. }
-    procedure ArmNewComponentPlacement(AComponent: TRecorderVisualComponent);
+    procedure PositionComponentAt(AComponent: TRecorderVisualComponent;
+      const APoint: TPoint);
+    procedure ArmComponentPlacement;
+    procedure CancelComponentPlacement;
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
     { Фиксирует текущую точку отката в Undo }
@@ -273,6 +279,8 @@ type
     procedure HandleKeyDown(var Key: Word; Shift: TShiftState);
     property Enabled: Boolean read fEnabled write SetEnabled;
     property OnChanged: TEditorNotifyEvent read fOnChanged write fOnChanged;
+    property OnPlaceComponent: TEditorPlaceComponentEvent read fOnPlaceComponent
+      write fOnPlaceComponent;
   end;
 
 
@@ -470,7 +478,7 @@ begin
   fUndoStack := TList.Create;
   fDisplaySeconds := 1.0;
   fHasCanvasClick := False;
-  fPendingPlacementComponent := nil;
+  fComponentPlacementArmed := False;
   fPagePanels := TStringList.Create;
   fPagePanels.Sorted := True;
   fPagePanels.Duplicates := dupIgnore;
@@ -522,6 +530,7 @@ begin
 
 
   fEnabled := AValue;
+  fForceRebuild := True;
   if not fEnabled then
   begin
     ClearSelection;
@@ -592,6 +601,8 @@ var
   lDstStatic: TRecorderStaticTextComponent;
   lSrcTagValue: TRecorderTagValueComponent;
   lDstTagValue: TRecorderTagValueComponent;
+  lSrcButton: TRecorderButtonComponent;
+  lDstButton: TRecorderButtonComponent;
 begin
   if (ASource = nil) or (ADest = nil) then
     Exit;
@@ -629,6 +640,19 @@ begin
     lDstTagValue.EstimateKind := lSrcTagValue.EstimateKind;
     lDstTagValue.UseDefaultEstimate := lSrcTagValue.UseDefaultEstimate;
   end
+  else if (ASource is TRecorderButtonComponent) and
+    (ADest is TRecorderButtonComponent) then
+  begin
+    lSrcButton := TRecorderButtonComponent(ASource);
+    lDstButton := TRecorderButtonComponent(ADest);
+    lDstButton.Caption := lSrcButton.Caption;
+    lDstButton.Behavior := lSrcButton.Behavior;
+    lDstButton.PressedValue := lSrcButton.PressedValue;
+    lDstButton.ReleasedValue := lSrcButton.ReleasedValue;
+    lDstButton.PulseDurationMs := lSrcButton.PulseDurationMs;
+    lDstButton.PressedImageFileName := lSrcButton.PressedImageFileName;
+    lDstButton.ReleasedImageFileName := lSrcButton.ReleasedImageFileName;
+  end
   else if (ASource is TRecorderImageComponent) and
     (ADest is TRecorderImageComponent) then
     TRecorderImageComponent(ADest).AssignImage(
@@ -637,6 +661,10 @@ begin
     (ADest is TRecorderOscillogramComponent) then
     TRecorderOscillogramComponent(ADest).AssignOscillogram(
       TRecorderOscillogramComponent(ASource))
+  else if (ASource is TRecorderSqlTrendComponent) and
+    (ADest is TRecorderSqlTrendComponent) then
+    TRecorderSqlTrendComponent(ADest).AssignSqlTrend(
+      TRecorderSqlTrendComponent(ASource))
   else if (ASource is TRecorderTrendComponent) and
     (ADest is TRecorderTrendComponent) then
     TRecorderTrendComponent(ADest).AssignTrend(TRecorderTrendComponent(ASource))
@@ -803,7 +831,8 @@ begin
 
 
   // Проверяем, нужно ли перестраивать дочерние элементы панели страницы
-  lRebuildNeeded := False;
+  lRebuildNeeded := fForceRebuild;
+  fForceRebuild := False;
   lCompPanelCount := 0;
   for I := 0 to lPagePanel.ControlCount - 1 do
     if lPagePanel.Controls[I] is TPanel then
@@ -897,6 +926,8 @@ begin
         lControl.Visible := True;
         if lControl is TRecorderImageView then
           TRecorderImageView(lControl).EditMode := fEnabled;
+        if lControl is TRecorderButtonView then
+          TRecorderButtonView(lControl).EditMode := fEnabled;
         lControl.Tag := I;
         TControlAccess(lControl).OnMouseDown := @ComponentMouseDown;
         TControlAccess(lControl).OnMouseMove := @ChildMouseMove;
@@ -985,6 +1016,8 @@ begin
             lCtrl.SetBounds(0, 0, lPanel.ClientWidth, lPanel.ClientHeight);
             lCtrl.Invalidate;
           end;
+          if lCtrl is TRecorderButtonView then
+            TRecorderButtonView(lCtrl).EditMode := fEnabled;
           if Supports(lCtrl, IVForm, lVisualCtrl) then
           begin
             lChart := lVisualCtrl.GetChartControl;
@@ -1659,24 +1692,36 @@ begin
   AComponent.Bounds := lBounds;
 end;
 
-procedure TFormEditorController.ArmNewComponentPlacement(
-  AComponent: TRecorderVisualComponent);
+procedure TFormEditorController.ArmComponentPlacement;
 begin
-  fPendingPlacementComponent := AComponent;
+  fComponentPlacementArmed := True;
+end;
+
+procedure TFormEditorController.CancelComponentPlacement;
+begin
+  fComponentPlacementArmed := False;
 end;
 
 function TFormEditorController.PlacePendingComponentAt(
   const APoint: TPoint): Boolean;
+begin
+  Result := fComponentPlacementArmed and Assigned(fOnPlaceComponent);
+  if not Result then
+    Exit;
+
+  fComponentPlacementArmed := False;
+  fOnPlaceComponent(APoint);
+end;
+
+procedure TFormEditorController.PositionComponentAt(
+  AComponent: TRecorderVisualComponent; const APoint: TPoint);
 var
   lBounds: TRecorderRect;
   lPanel: TPanel;
   lMaxLeft, lMaxTop: Integer;
 begin
-  Result := fPendingPlacementComponent <> nil;
-  if not Result then
-    Exit;
-
-  lBounds := fPendingPlacementComponent.Bounds;
+  if AComponent = nil then Exit;
+  lBounds := AComponent.Bounds;
   lBounds.Left := APoint.X - lBounds.Width div 2;
   lBounds.Top := APoint.Y - lBounds.Height div 2;
   lPanel := GetActivePagePanel;
@@ -1687,8 +1732,7 @@ begin
     lBounds.Left := EnsureRange(lBounds.Left, 0, lMaxLeft);
     lBounds.Top := EnsureRange(lBounds.Top, 0, lMaxTop);
   end;
-  fPendingPlacementComponent.Bounds := lBounds;
-  fPendingPlacementComponent := nil;
+  AComponent.Bounds := lBounds;
 end;
 
 

@@ -184,6 +184,7 @@ type
       APhaseRad     - начальная фаза в радианах. }
     constructor Create(const ASourceId, ATagName: string; AUpdateTimeMs: Cardinal;
       AAmplitude, AFrequencyHz: Double; APhaseRad: Double = 0);
+    procedure Start; override;
 
     property TagName: string read GetTagName;
     property Amplitude: Double read fAmplitude write fAmplitude;
@@ -212,6 +213,7 @@ type
   public
     constructor Create(const ASourceId: string; AUpdateTimeMs: Cardinal;
       const AMemoryTagName: string = 'MemTag'; const ACpuTagName: string = 'CpuUsage');
+    procedure Start; override;
 
     property MemoryTagName: string read GetMemoryTagName;
     property CpuTagName: string read GetCpuTagName;
@@ -515,6 +517,13 @@ begin
   fPhaseRad := APhaseRad;
 end;
 
+procedure TMockSineDataSource.Start;
+begin
+  fSampleIndex := 0;
+  fTimeSec := 0;
+  inherited Start;
+end;
+
 function TMockSineDataSource.GetTagName: string;
 begin
   if fTag <> nil then
@@ -581,6 +590,14 @@ begin
   fLastCpuTime100Ns := 0;
   fLastWallTickMs := 0;
   fTimeSec := 0;
+end;
+
+procedure TRecorderDiagnosticsDataSource.Start;
+begin
+  fLastCpuTime100Ns := 0;
+  fLastWallTickMs := 0;
+  fTimeSec := 0;
+  inherited Start;
 end;
 
 function TRecorderDiagnosticsDataSource.GetMemoryTagName: string;

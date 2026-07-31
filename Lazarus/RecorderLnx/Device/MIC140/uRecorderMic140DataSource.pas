@@ -810,7 +810,8 @@ begin
   if (not AForce) and (fLastStatusCode = AStatusCode) then
     Exit;
   fLastStatusCode := AStatusCode;
-  Registry.PublishValue(fStatusTagName, GetTickCount64 / 1000.0, AStatusCode);
+  Registry.PublishValue(fStatusTagName,
+    Max(0.0, fLastPublishedBlockEndTimeSec), AStatusCode);
   Mic140LogWarning(Format('[DataSource:%s] MIC-140 status=%d %s',
     [SourceId, AStatusCode, AStatusText]));
 end;
@@ -825,7 +826,8 @@ begin
   if lTag = nil then
     Exit;
   lTag.TextValue := IntToStr(ABlockCount);
-  Registry.PublishValue(fBlockCountTagName, GetTickCount64 / 1000.0, ABlockCount);
+  Registry.PublishValue(fBlockCountTagName,
+    Max(0.0, fLastPublishedBlockEndTimeSec), ABlockCount);
 end;
 
 procedure TRecorderMic140DataSource.PublishTemperatureBlocks(

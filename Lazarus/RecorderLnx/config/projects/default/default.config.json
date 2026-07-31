@@ -30581,6 +30581,71 @@
 						},
 						"calibrationPipeline" : [
 						]
+				},
+				{
+						"id" : 653,
+						"name" : "SqlDbRecordEnabled",
+						"address" : "",
+						"unit" : "",
+						"description" : "Служебное управление записью SQL DB (>0.5 вкл., <0.5 выкл.)",
+						"sourceId" : "system:sql-db",
+						"isVirtual" : true,
+						"sourceValueMode" : "",
+						"moduleType" : "SQLdb",
+						"pollFrequencyHz" : 0.0000000000000000E+000,
+						"rangeMin" : 0.0000000000000000E+000,
+						"rangeMax" : 1.0000000000000000E+000,
+						"autoRange" : true,
+						"autoUnit" : true,
+						"hardwareCalibrationEnabled" : false,
+						"hardwareCalibrationName" : "",
+						"channelCalibrationEnabled" : true,
+						"estimates" : {
+								"default" : "MO",
+								"portionLength" : 17280,
+								"smoothingEnabled" : false,
+								"smoothingK" : 1.0000000000000000E+000,
+								"scadaEnabled" : false,
+								"enabled" : [
+										"MO"
+								]
+						},
+						"setpoints" : {
+								"hysteresisEnabled" : false,
+								"soundUntilEnd" : true,
+								"statusChannelEnabled" : false,
+								"statusChannelName" : "",
+								"HighAlarm" : {
+										"enabled" : false,
+										"threshold" : 1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"HighWarning" : {
+										"enabled" : false,
+										"threshold" : 5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowWarning" : {
+										"enabled" : false,
+										"threshold" : -5.0000000000000000E+000,
+										"color" : 65535,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								},
+								"LowAlarm" : {
+										"enabled" : false,
+										"threshold" : -1.0000000000000000E+001,
+										"color" : 255,
+										"outputEnabled" : false,
+										"hysteresisPercent" : 0.0000000000000000E+000
+								}
+						},
+						"calibrationPipeline" : [
+						]
 				}
 		]
 }

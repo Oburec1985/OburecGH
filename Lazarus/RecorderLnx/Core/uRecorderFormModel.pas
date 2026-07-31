@@ -103,6 +103,7 @@ type
   end;
 
   TRecorderTagValueNameMode = (tvnmNone, tvnmTop, tvnmLeft);
+  TRecorderButtonBehavior = (rbbToggle, rbbHold, rbbPulse);
 
   TRecorderStaticTextComponent = class(TRecorderVisualComponent)
   private
@@ -148,6 +149,28 @@ type
     property ShowNameMode: TRecorderTagValueNameMode read fShowNameMode write fShowNameMode;
     property EstimateKind: TRecorderTagEstimateKind read fEstimateKind write fEstimateKind;
     property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
+  end;
+
+  TRecorderButtonComponent = class(TRecorderVisualComponent)
+  private
+    fCaption: string;
+    fBehavior: TRecorderButtonBehavior;
+    fPressedValue: Double;
+    fReleasedValue: Double;
+    fPulseDurationMs: Integer;
+    fPressedImageFileName: string;
+    fReleasedImageFileName: string;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    property Caption: string read fCaption write fCaption;
+    property Behavior: TRecorderButtonBehavior read fBehavior write fBehavior;
+    property PressedValue: Double read fPressedValue write fPressedValue;
+    property ReleasedValue: Double read fReleasedValue write fReleasedValue;
+    property PulseDurationMs: Integer read fPulseDurationMs write fPulseDurationMs;
+    property PressedImageFileName: string read fPressedImageFileName write fPressedImageFileName;
+    property ReleasedImageFileName: string read fReleasedImageFileName write fReleasedImageFileName;
   end;
 
   { Картинка на мнемосхеме. Каждая строка Images хранится как
@@ -382,6 +405,11 @@ type
 
   { Фабрика компонента значения тега }
   TRecorderTagValueFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create; reintroduce;
+  end;
+
+  TRecorderButtonFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
   end;
@@ -663,6 +691,25 @@ begin
   fShowNameMode := tvnmTop;
   fEstimateKind := tekMean;
   fUseDefaultEstimate := True;
+end;
+
+{ TRecorderButtonComponent }
+
+class function TRecorderButtonComponent.GetTypeId: string;
+begin
+  Result := 'Button';
+end;
+
+constructor TRecorderButtonComponent.Create;
+begin
+  inherited Create;
+  fCaption := 'Button';
+  fBehavior := rbbToggle;
+  fPressedValue := 1.0;
+  fReleasedValue := 0.0;
+  fPulseDurationMs := 250;
+  fPressedImageFileName := '';
+  fReleasedImageFileName := '';
 end;
 
 { TRecorderImageComponent }
@@ -1195,6 +1242,12 @@ end;
 
 { TRecorderTagValueFactory }
 
+constructor TRecorderButtonFactory.Create;
+begin
+  inherited Create(TRecorderButtonComponent.TypeId, 'Button',
+    TRecorderButtonComponent, 120, 32, False);
+end;
+
 constructor TRecorderTagValueFactory.Create;
 begin
   inherited Create(TRecorderTagValueComponent.TypeId, 'Tag value',
@@ -1561,6 +1614,7 @@ end;
 procedure TRecorderComponentFactory.RegisterDefaultComponents;
 begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
+  RegisterFactory(TRecorderButtonFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
   RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);

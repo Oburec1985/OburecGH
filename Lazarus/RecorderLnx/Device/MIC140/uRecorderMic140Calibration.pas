@@ -1012,6 +1012,7 @@ procedure RecorderMic140CalibrationProjectTagLoaded(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
 var
   lChannelNumber: Integer;
+  lDeviceSerial: Integer;
   lSettings: TRecorderMic140ChannelSettings;
 begin
   if (ARegistry = nil) or (ATag = nil) or
@@ -1029,7 +1030,14 @@ begin
     ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
     RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
   end;
-  RecorderMic140LoadHardwareCalibrationForTag(ARegistry, ATag, 0, False);
+  { Project loading is a UI-startup path and must not probe the same device
+    once per tag. Use only the serial already stored in the device config;
+    PrepareHardware resolves the live serial once after the form is shown. }
+  lDeviceSerial := RecorderMic140DeviceSerialForSource(ARegistry,
+    ATag.SourceId);
+  if lDeviceSerial > 0 then
+    RecorderMic140LoadHardwareCalibrationForTag(ARegistry, ATag,
+      lDeviceSerial, False);
 end;
 
 initialization

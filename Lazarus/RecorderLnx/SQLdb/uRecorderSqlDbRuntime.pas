@@ -50,8 +50,8 @@ type
     destructor Destroy; override;
     procedure Start;
     procedure Stop;
-    procedure BeginRegistration(const AReason: string);
-    procedure EndRegistration;
+    procedure BeginRegistration(const AReason: string; AStartUtc: TDateTime);
+    procedure EndRegistration(AStopUtc: TDateTime);
     function SubmitValue(const ATagName: string; ATimeUtc, AValue: Double;
       AQuality: Integer = 0): Boolean;
     function SubmitEvent(const AEventType, AText: string; ATimeUtc: Double;
@@ -174,17 +174,18 @@ begin
   try Result := L.Count > 0; finally fJobs.UnlockList; end;
 end;
 
-procedure TRecorderSqlDbRuntime.BeginRegistration(const AReason: string);
+procedure TRecorderSqlDbRuntime.BeginRegistration(const AReason: string;
+  AStartUtc: TDateTime);
 var J: TJob;
 begin
-  J := TJob.Create; J.Kind := jkStart; J.Text := AReason; J.TimeUtc := Now;
+  J := TJob.Create; J.Kind := jkStart; J.Text := AReason; J.TimeUtc := AStartUtc;
   Enqueue(J);
 end;
 
-procedure TRecorderSqlDbRuntime.EndRegistration;
+procedure TRecorderSqlDbRuntime.EndRegistration(AStopUtc: TDateTime);
 var J: TJob;
 begin
-  J := TJob.Create; J.Kind := jkStop; J.TimeUtc := Now; Enqueue(J);
+  J := TJob.Create; J.Kind := jkStop; J.TimeUtc := AStopUtc; Enqueue(J);
 end;
 
 function TRecorderSqlDbRuntime.SubmitValue(const ATagName: string; ATimeUtc,

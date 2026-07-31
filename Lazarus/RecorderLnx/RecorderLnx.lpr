@@ -10,7 +10,10 @@ uses
   cthreads, BaseUnix,
   {$ENDIF}
   Interfaces, Forms, uMainForm, uComponentSettingsDialog,
+  uRecorderButtonSettingsDialog,
   uRecorderTrendSettingsDialog, uRecorderTrendView,
+  uRecorderSqlTrendModel, uRecorderSqlTrendView,
+  uRecorderSqlTrendSettingsDialog,
   uRecorderCalibrationAddDialog, uRecorderCalibrationListDialog,
   uRecorderCalibrationPropertiesDialog, uRecorderMic140SettingsDialog,
   uRecorderSpectrumSettingsDialog, uRecorderSpectrumView,

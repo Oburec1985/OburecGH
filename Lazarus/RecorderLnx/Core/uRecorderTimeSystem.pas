@@ -23,7 +23,7 @@ unit uRecorderTimeSystem;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, DateUtils;
 
 type
   { TRecorderTimeSourceKind
@@ -69,6 +69,7 @@ type
     fRunning: Boolean;               { Флаг активности записи }
     fSourceKind: TRecorderTimeSourceKind; { Текущий выбранный источник времени }
     fStartLocalTime: TDateTime;      { Системное время старта }
+    fStartUtcTime: TDateTime;        { Астрономическое UTC-время старта }
     fStartTickMs: QWord;             { Монотонное время старта в миллисекундах }
     
     function GetDisplayUpdateMs: Integer;
@@ -102,6 +103,13 @@ type
 
     { Возвращает потокобезопасную копию состояния, отформатированную для строки статуса. }
     function Snapshot: TRecorderTimeSnapshot;
+
+    { Переводит время канала в секундах от старта текущего сеанса в
+      абсолютное астрономическое время UTC (TDateTime). }
+    function ChannelTimeToUtc(AChannelTimeSec: Double): TDateTime;
+
+    { Возвращает текущее UTC-время на монотонной шкале текущего сеанса. }
+    function CurrentUtc: TDateTime;
 
     { Статический метод для форматирования секунд в строку вида ЧЧ:ММ:СС }
     class function FormatDuration(ASeconds: Double): string; static;
@@ -278,11 +286,15 @@ end;
   Аналог в оригинальном Recorder:
     Синхронизировано с переходом ядра в активное состояние. }
 procedure TRecorderTimeSystem.Start;
+var
+  lLocalNow: TDateTime;
 begin
+  lLocalNow := Now;
   EnterCriticalSection(fLock);
   try
     fRunning := True;
-    fStartLocalTime := Now;
+    fStartLocalTime := lLocalNow;
+    fStartUtcTime := LocalTimeToUniversal(lLocalNow);
     fStartTickMs := GetTickCount64;
     if fResetAtStart then
     begin
@@ -324,9 +336,39 @@ begin
   try
     fRunning := False;
     fStartLocalTime := Now;
+    fStartUtcTime := LocalTimeToUniversal(fStartLocalTime);
     fStartTickMs := 0;
     fLastTagTimeSec := 0;
     fLastUtsTimeSec := 0;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderTimeSystem.ChannelTimeToUtc(
+  AChannelTimeSec: Double): TDateTime;
+begin
+  if AChannelTimeSec < 0 then
+    AChannelTimeSec := 0;
+  EnterCriticalSection(fLock);
+  try
+    Result := fStartUtcTime + (AChannelTimeSec / SecsPerDay);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderTimeSystem.CurrentUtc: TDateTime;
+var
+  lNowTickMs: QWord;
+begin
+  lNowTickMs := GetTickCount64;
+  EnterCriticalSection(fLock);
+  try
+    if fRunning then
+      Result := fStartUtcTime + (InternalElapsedSec(lNowTickMs) / SecsPerDay)
+    else
+      Result := LocalTimeToUniversal(Now);
   finally
     LeaveCriticalSection(fLock);
   end;

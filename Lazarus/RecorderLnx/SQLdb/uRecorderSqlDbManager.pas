@@ -6,8 +6,8 @@ unit uRecorderSqlDbManager;
 interface
 
 uses
-  Classes, SysUtils, uRecorderCoreServices, uRecorderSqlDbTypes,
-  uRecorderSqlDbRuntime;
+  Classes, SysUtils, DateUtils, uRecorderCoreServices, uRecorderSqlDbTypes,
+  uRecorderSqlDbRuntime, uRecorderTimeSystem;
 
 type
   TRecorderSqlDbManager = class
@@ -17,30 +17,44 @@ type
     fConfig: TRecorderSqlDbConfig;
     fRuntime: TRecorderSqlDbRuntime;
     fLastSamples: TStringList;
+    fSampleLock: TRTLCriticalSection;
+    fStateLock: TRTLCriticalSection;
     fConfigFileName: string;
+    fTimeSystem: TRecorderTimeSystem;
+    fRecordingEnabled: Boolean;
+    procedure EnsureRuntime;
+    procedure SetRecordingActive(AValue: Boolean; const AReason: string);
+    function GetRecordingEnabled: Boolean;
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
   public
-    constructor Create(AEventBus: TRecorderEventBus);
+    constructor Create(AEventBus: TRecorderEventBus;
+      ATimeSystem: TRecorderTimeSystem);
     destructor Destroy; override;
     procedure Configure(const AFileName: string);
     procedure Reload;
     procedure StartRegistration(const AReason: string = 'manual');
     procedure StopRegistration;
+    procedure SetRecordingEnabled(AValue: Boolean);
     function StoreDataFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
     property Config: TRecorderSqlDbConfig read fConfig;
     property Runtime: TRecorderSqlDbRuntime read fRuntime;
+    property RecordingEnabled: Boolean read GetRecordingEnabled;
   end;
 
 implementation
 
 uses
-  uRecorderTags;
+  uRecorderTags, uRecorderAlarms;
 
-constructor TRecorderSqlDbManager.Create(AEventBus: TRecorderEventBus);
+constructor TRecorderSqlDbManager.Create(AEventBus: TRecorderEventBus;
+  ATimeSystem: TRecorderTimeSystem);
 begin
   inherited Create;
   fEventBus := AEventBus;
+  fTimeSystem := ATimeSystem;
+  InitCriticalSection(fSampleLock);
+  InitCriticalSection(fStateLock);
   fConfig := TRecorderSqlDbConfig.Create;
   fLastSamples := TStringList.Create;
   fLastSamples.CaseSensitive := False;
@@ -54,6 +68,8 @@ begin
     fEventBus.Unsubscribe(fSubscription);
   FreeAndNil(fRuntime);
   fLastSamples.Free;
+  DoneCriticalSection(fSampleLock);
+  DoneCriticalSection(fStateLock);
   fConfig.Free;
   inherited Destroy;
 end;
@@ -66,20 +82,99 @@ end;
 
 procedure TRecorderSqlDbManager.Reload;
 begin
+  SetRecordingActive(False, 'SQLdb settings reload');
   FreeAndNil(fRuntime);
   fConfig.LoadFromFile(fConfigFileName);
-  fRuntime := TRecorderSqlDbRuntime.Create(fConfig);
-  fRuntime.Start;
+  if fConfig.Enabled then
+    SetRecordingActive(True, 'SQLdb enabled');
+end;
+
+procedure TRecorderSqlDbManager.EnsureRuntime;
+var
+  lRuntimeConfig: TRecorderSqlDbConfig;
+begin
+  if fRuntime <> nil then Exit;
+  lRuntimeConfig := TRecorderSqlDbConfig.Create;
+  try
+    lRuntimeConfig.Assign(fConfig);
+    lRuntimeConfig.Enabled := True;
+    lRuntimeConfig.RequireValid;
+    fRuntime := TRecorderSqlDbRuntime.Create(lRuntimeConfig);
+    fRuntime.Start;
+  finally
+    lRuntimeConfig.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbManager.SetRecordingActive(AValue: Boolean;
+  const AReason: string);
+begin
+  EnterCriticalSection(fStateLock);
+  try
+    if fRecordingEnabled = AValue then Exit;
+    if AValue then
+    begin
+      EnsureRuntime;
+      EnterCriticalSection(fSampleLock);
+      try
+        fLastSamples.Clear;
+      finally
+        LeaveCriticalSection(fSampleLock);
+      end;
+      StartRegistration(AReason);
+      fRecordingEnabled := True;
+    end
+    else
+    begin
+      StopRegistration;
+      fRecordingEnabled := False;
+    end;
+  finally
+    LeaveCriticalSection(fStateLock);
+  end;
+end;
+
+function TRecorderSqlDbManager.GetRecordingEnabled: Boolean;
+begin
+  EnterCriticalSection(fStateLock);
+  try
+    Result := fRecordingEnabled;
+  finally
+    LeaveCriticalSection(fStateLock);
+  end;
+end;
+
+procedure TRecorderSqlDbManager.SetRecordingEnabled(AValue: Boolean);
+var
+  lOldValue: Boolean;
+begin
+  lOldValue := fConfig.Enabled;
+  fConfig.Enabled := AValue;
+  try
+    fConfig.SaveToFile(fConfigFileName);
+    SetRecordingActive(AValue, 'SQLdb main switch');
+  except
+    fConfig.Enabled := lOldValue;
+    raise;
+  end;
 end;
 
 procedure TRecorderSqlDbManager.StartRegistration(const AReason: string);
 begin
-  if fRuntime <> nil then fRuntime.BeginRegistration(AReason);
+  if fRuntime = nil then Exit;
+  if fTimeSystem <> nil then
+    fRuntime.BeginRegistration(AReason, fTimeSystem.CurrentUtc)
+  else
+    fRuntime.BeginRegistration(AReason, LocalTimeToUniversal(Now));
 end;
 
 procedure TRecorderSqlDbManager.StopRegistration;
 begin
-  if fRuntime <> nil then fRuntime.EndRegistration;
+  if fRuntime = nil then Exit;
+  if fTimeSystem <> nil then
+    fRuntime.EndRegistration(fTimeSystem.CurrentUtc)
+  else
+    fRuntime.EndRegistration(LocalTimeToUniversal(Now));
 end;
 
 function TRecorderSqlDbManager.StoreDataFile(const AFileName, ADataType: string;
@@ -93,23 +188,69 @@ procedure TRecorderSqlDbManager.HandleEvent(ASender: TObject;
   const AEvent: TRecorderEvent);
 var
   D: TRecorderTagUpdateEventData;
+  lAlarmData: TRecorderAlarmEventData;
   lNowMs, lLastMs: Int64;
+  lTimeUtc: TDateTime;
+  lEstimate: TRecorderTagEstimate;
+  lEstimateKind: TRecorderTagEstimateKind;
+  lTimeSec, lValue: Double;
 begin
-  if (fRuntime = nil) or not fConfig.Enabled then Exit;
   if (AEvent.Kind = rceDataUpdated) and
      (AEvent.Data is TRecorderTagUpdateEventData) then
   begin
     D := TRecorderTagUpdateEventData(AEvent.Data);
     if (D.Tag = nil) or (D.SampleCount <> 1) then Exit;
+    if (Trim(fConfig.ControlTagName) <> '') and
+       SameText(D.Tag.Name, fConfig.ControlTagName) then
+    begin
+      if D.Value > 0.5 then
+        SetRecordingActive(True, 'SQLdb control tag: ' + D.Tag.Name)
+      else if D.Value < 0.5 then
+        SetRecordingActive(False, 'SQLdb control tag: ' + D.Tag.Name);
+    end;
+    if not GetRecordingEnabled or (fRuntime = nil) then Exit;
     if not fConfig.SignalEnabled(D.Tag.Name) then Exit;
+    lTimeSec := D.TimeSec;
+    lValue := D.Value;
+    if D.BlockTailNotify then
+    begin
+      lEstimateKind := fConfig.SignalEstimate(D.Tag.Name);
+      lEstimate := D.Tag.Estimate(lEstimateKind);
+      if not lEstimate.Valid then Exit;
+      lTimeSec := lEstimate.EndTimeSec;
+      lValue := lEstimate.Value;
+    end;
     lNowMs := GetTickCount64;
-    lLastMs := StrToInt64Def(fLastSamples.Values[D.Tag.Name], 0);
-    if (lLastMs <> 0) and (lNowMs - lLastMs < fConfig.RecordPeriodMs) then Exit;
-    fLastSamples.Values[D.Tag.Name] := IntToStr(lNowMs);
-    fRuntime.SubmitValue(D.Tag.Name, Now, D.Value, 0);
+    EnterCriticalSection(fSampleLock);
+    try
+      lLastMs := StrToInt64Def(fLastSamples.Values[D.Tag.Name], 0);
+      if (lLastMs <> 0) and
+         (lNowMs - lLastMs < fConfig.RecordPeriodMs) then
+        Exit;
+      fLastSamples.Values[D.Tag.Name] := IntToStr(lNowMs);
+    finally
+      LeaveCriticalSection(fSampleLock);
+    end;
+    if fTimeSystem <> nil then
+      lTimeUtc := fTimeSystem.ChannelTimeToUtc(lTimeSec)
+    else
+      lTimeUtc := LocalTimeToUniversal(Now);
+    fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0);
   end
   else if AEvent.Kind = rceAlarmChanged then
-    fRuntime.SubmitEvent('alarm', AEvent.Text, Now, AEvent.IntValue);
+  begin
+    if not GetRecordingEnabled or (fRuntime = nil) then Exit;
+    if (AEvent.Data is TRecorderAlarmEventData) and (fTimeSystem <> nil) then
+    begin
+      lAlarmData := TRecorderAlarmEventData(AEvent.Data);
+      lTimeUtc := fTimeSystem.ChannelTimeToUtc(lAlarmData.TimeSec);
+    end
+    else if fTimeSystem <> nil then
+      lTimeUtc := fTimeSystem.CurrentUtc
+    else
+      lTimeUtc := LocalTimeToUniversal(Now);
+    fRuntime.SubmitEvent('alarm', AEvent.Text, lTimeUtc, AEvent.IntValue);
+  end;
 end;
 
 end.

@@ -105,15 +105,27 @@ object MainForm: TMainForm
         OnClick = btnSettingsClick
       end
       object btnSqlDb: TSpeedButton
-        Left = 16
+        Left = 86
         Height = 32
         Top = 146
-        Width = 142
+        Width = 72
         Caption = 'SQL DB'
         Hint = 'Настройка SQL БД'
         ShowHint = True
         ParentShowHint = False
         OnClick = btnSqlDbClick
+      end
+      object cbSqlDbRecording: TCheckBox
+        Left = 12
+        Height = 23
+        Top = 151
+        Width = 72
+        Caption = 'Запись'
+        Hint = 'Независимая запись выбранных каналов в SQL БД'
+        ShowHint = True
+        ParentShowHint = False
+        OnChange = cbSqlDbRecordingChange
+        TabOrder = 0
       end
       object btnSaveConfig: TSpeedButton
         Left = 54

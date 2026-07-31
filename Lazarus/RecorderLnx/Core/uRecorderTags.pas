@@ -25,7 +25,8 @@ interface
 
 uses
   Classes, SysUtils, Math, Contnrs,
-  uRecorderCoreServices, uRecorderSpectrumEngine, uRecorderFrequencyBands;
+  uRecorderCoreServices, uRecorderSpectrumEngine, uRecorderFrequencyBands,
+  uRecorderTimeSystem;
 
 type
   { Идентификатор тега }
@@ -393,6 +394,8 @@ type
     fRuntimeDataLock: TRTLCriticalSection;
     fRuntimeDataRevision: QWord;
     fRuntimeLatestTime: Double;
+    fFallbackStartTickMs: QWord;
+    fTimeSystem: TRecorderTimeSystem;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
@@ -410,6 +413,7 @@ type
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
     procedure MarkRuntimeDataUpdated(ATimeSec: Double);
+    function ResolvePublishTime(ATimeSec: Double): Double;
   public
     { AEventBus - шина событий. Владение не передается, может быть nil. }
     constructor Create(AEventBus: TRecorderEventBus = nil);
@@ -447,7 +451,8 @@ type
     function IsSourceActive(const ASourceId: string): Boolean;
 
     { Публикует новое значение тега и отправляет событие rceDataUpdated. }
-    procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double);
+    procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double); overload;
+    procedure PublishValue(const ATagName: string; AValue: Double); overload;
     { Добавляет блок в кольцевой буфер тега без публикации события. }
     procedure AddBlockSamples(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
@@ -488,6 +493,8 @@ type
     property EventBus: TRecorderEventBus read fEventBus write fEventBus;
     property FullBlockEventsEnabled: Boolean read fFullBlockEventsEnabled
       write fFullBlockEventsEnabled;
+    { Не владеющая ссылка на общую систему времени Recorder. }
+    property TimeSystem: TRecorderTimeSystem read fTimeSystem write fTimeSystem;
     property SelectedTag: TRecorderTag read GetSelectedTag;
     property SelectedTagName: string read fSelectedTagName write fSelectedTagName;
     property TagCount: Integer read GetTagCount;
@@ -1505,6 +1512,7 @@ begin
   fSourceSpecificConfigs.OwnsObjects := True;
   fSourceSpecificConfigs.CaseSensitive := False;
   fConfiguredDataSources := TObjectList.Create(True);
+  fFallbackStartTickMs := GetTickCount64;
 end;
 
 destructor TRecorderTagRegistry.Destroy;
@@ -1895,6 +1903,7 @@ var
   lEventData: TRecorderTagUpdateEventData;
   lValue: Double;
 begin
+  ATimeSec := ResolvePublishTime(ATimeSec);
   lTag := FindByName(ATagName);
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
@@ -1981,6 +1990,21 @@ begin
   MarkRuntimeDataUpdated(ATimes[ACount - 1]);
 end;
 
+procedure TRecorderTagRegistry.PublishValue(const ATagName: string;
+  AValue: Double);
+begin
+  PublishValue(ATagName, 0.0, AValue);
+end;
+
+function TRecorderTagRegistry.ResolvePublishTime(ATimeSec: Double): Double;
+begin
+  if ATimeSec > 0 then Exit(ATimeSec);
+  if fTimeSystem <> nil then
+    Result := fTimeSystem.Snapshot.ElapsedSec
+  else
+    Result := (GetTickCount64 - fFallbackStartTickMs) / 1000.0;
+end;
+
 procedure TRecorderTagRegistry.NotifyBlockTail(const ATagName: string;
   ATimeSec, AValue: Double);
 var
@@ -2014,6 +2038,9 @@ end;
 
 procedure TRecorderTagRegistry.PublishBlockNotifications(ATag: TRecorderTag;
   const ATimes, AValues: array of Double; ACount: Integer);
+var
+  lEvent: TRecorderEvent;
+  lEventData: TRecorderTagUpdateEventData;
 begin
   if (ATag = nil) or (ACount <= 0) or (ACount > Length(ATimes)) or
     (ACount > Length(AValues)) then
@@ -2023,6 +2050,20 @@ begin
   if Assigned(fOnAlarmValuePublished) then
     fOnAlarmValuePublished(fAlarmValuePublishedTarget, ATag,
       ATimes[ACount - 1], AValues[ACount - 1]);
+  { Для медленных потребителей публикуется только хвост блока. Сами массивы
+    остаются в буфере тега, поэтому acquisition-путь не получает лишнего копирования. }
+  if fEventBus <> nil then
+  begin
+    lEventData := TRecorderTagUpdateEventData.CreateBlockTailNotify(ATag,
+      ATimes[ACount - 1], AValues[ACount - 1]);
+    try
+      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, ATag.Name,
+        ATag.TextValue, 1, lEventData);
+      fEventBus.Publish(lEvent);
+    finally
+      lEventData.Free;
+    end;
+  end;
   { Массивы измерений через EventBus не передаются. Потребители по своему
     настраиваемому периоду читают непрочитанный хвост кольца по курсору. }
 end;

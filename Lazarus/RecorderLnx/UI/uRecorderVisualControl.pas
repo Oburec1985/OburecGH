@@ -13,7 +13,7 @@ unit uRecorderVisualControl;
 interface
 
 uses
-  Classes, SysUtils, Math, Controls, ExtCtrls, Graphics,
+  Classes, SysUtils, Math, Controls, ExtCtrls, Graphics, StdCtrls, Buttons,
   uOglChart, uRecorderFormModel, uRecorderTags;
 
 type
@@ -57,6 +57,37 @@ type
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
     procedure RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
     function GetChartControl: TOglChart;
+  end;
+
+  TRecorderButtonView = class(TSpeedButton, IVForm)
+  private
+    fComponent: TRecorderButtonComponent;
+    fTagRegistry: TRecorderTagRegistry;
+    fPulseTimer: TTimer;
+    fEditMode: Boolean;
+    fPressedGlyph: TBitmap;
+    fReleasedGlyph: TBitmap;
+    fVisualPressed: Boolean;
+    function CurrentStateGlyph: TBitmap;
+    procedure LoadStateGlyph(const AFileName: string; ABitmap: TBitmap);
+    procedure SetVisualPressed(AValue: Boolean);
+    function TagIsPressed: Boolean;
+    procedure ButtonClick(Sender: TObject);
+    procedure ButtonMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ButtonMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure PulseTimerTimer(Sender: TObject);
+    procedure Publish(AValue: Double);
+  protected
+    procedure Paint; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+    procedure RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
+    function GetChartControl: TOglChart;
+    property EditMode: Boolean read fEditMode write fEditMode;
   end;
 
   { TRecorderTagValueView
@@ -147,6 +178,192 @@ end;
 class procedure TRecorderVisualControlRegistry.ClearRegistry;
 begin
   FreeAndNil(fRegistryList);
+end;
+
+{ TRecorderButtonView }
+
+constructor TRecorderButtonView.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  fPressedGlyph := TBitmap.Create;
+  fReleasedGlyph := TBitmap.Create;
+  GroupIndex := 1;
+  AllowAllUp := True;
+end;
+
+procedure TRecorderButtonView.LoadStateGlyph(const AFileName: string;
+  ABitmap: TBitmap);
+var
+  lPicture: TPicture;
+  lWidth, lHeight: Integer;
+begin
+  ABitmap.Clear;
+  if (Trim(AFileName) = '') or not FileExists(AFileName) then Exit;
+  lPicture := TPicture.Create;
+  try
+    try
+      lPicture.LoadFromFile(AFileName);
+      if (lPicture.Graphic = nil) or lPicture.Graphic.Empty then Exit;
+      lWidth := Max(1, Width - 8);
+      lHeight := Max(1, Height - 8);
+      ABitmap.SetSize(lWidth, lHeight);
+      ABitmap.Canvas.Brush.Color := clBtnFace;
+      ABitmap.Canvas.FillRect(Rect(0, 0, lWidth, lHeight));
+      ABitmap.Canvas.StretchDraw(Rect(0, 0, lWidth, lHeight), lPicture.Graphic);
+    except
+      ABitmap.Clear;
+    end;
+  finally
+    lPicture.Free;
+  end;
+end;
+
+function TRecorderButtonView.CurrentStateGlyph: TBitmap;
+begin
+  if fVisualPressed then
+    Result := fPressedGlyph
+  else
+    Result := fReleasedGlyph;
+end;
+
+procedure TRecorderButtonView.Paint;
+var
+  lBitmap: TBitmap;
+begin
+  lBitmap := CurrentStateGlyph;
+  if (lBitmap = nil) or lBitmap.Empty then
+  begin
+    inherited Paint;
+    Exit;
+  end;
+
+  { Изображение состояния занимает весь компонент. Вызов inherited здесь
+    намеренно пропущен: он добавляет поля Glyph и рисует Caption. }
+  Canvas.StretchDraw(ClientRect, lBitmap);
+end;
+
+function TRecorderButtonView.TagIsPressed: Boolean;
+var
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if (fComponent = nil) or (fTagRegistry = nil) then Exit;
+  lTag := fTagRegistry.FindByName(fComponent.TagName);
+  Result := (lTag <> nil) and (lTag.SignalBuffer.Count > 0) and
+    SameValue(lTag.SignalBuffer.LatestValue, fComponent.PressedValue);
+end;
+
+procedure TRecorderButtonView.SetVisualPressed(AValue: Boolean);
+begin
+  fVisualPressed := AValue;
+  Down := AValue;
+  Glyph.Clear;
+  Invalidate;
+end;
+
+procedure TRecorderButtonView.Configure(AComponent: TRecorderVisualComponent;
+  ATagRegistry: TRecorderTagRegistry);
+begin
+  fComponent := TRecorderButtonComponent(AComponent);
+  fTagRegistry := ATagRegistry;
+  Caption := fComponent.Caption;
+  LoadStateGlyph(fComponent.PressedImageFileName, fPressedGlyph);
+  LoadStateGlyph(fComponent.ReleasedImageFileName, fReleasedGlyph);
+  SetVisualPressed(TagIsPressed);
+  if not fEditMode then
+  begin
+    OnClick := @ButtonClick;
+    OnMouseDown := @ButtonMouseDown;
+    OnMouseUp := @ButtonMouseUp;
+  end;
+end;
+
+destructor TRecorderButtonView.Destroy;
+begin
+  FreeAndNil(fPulseTimer);
+  FreeAndNil(fPressedGlyph);
+  FreeAndNil(fReleasedGlyph);
+  inherited Destroy;
+end;
+
+procedure TRecorderButtonView.Publish(AValue: Double);
+begin
+  if fEditMode or (fComponent = nil) or (fTagRegistry = nil) or
+    (Trim(fComponent.TagName) = '') then Exit;
+  fTagRegistry.PublishValue(fComponent.TagName, AValue);
+end;
+
+procedure TRecorderButtonView.ButtonClick(Sender: TObject);
+var
+  lTag: TRecorderTag;
+begin
+  if fEditMode or (fComponent = nil) or (fComponent.Behavior <> rbbToggle) then Exit;
+  lTag := nil;
+  if fTagRegistry <> nil then lTag := fTagRegistry.FindByName(fComponent.TagName);
+  if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) and
+    SameValue(lTag.SignalBuffer.LatestValue, fComponent.PressedValue) then
+  begin
+    SetVisualPressed(False);
+    Publish(fComponent.ReleasedValue)
+  end
+  else
+  begin
+    SetVisualPressed(True);
+    Publish(fComponent.PressedValue);
+  end;
+end;
+
+procedure TRecorderButtonView.ButtonMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if fEditMode or (Button <> mbLeft) or (fComponent = nil) then Exit;
+  if fComponent.Behavior = rbbHold then
+  begin
+    SetVisualPressed(True);
+    Publish(fComponent.PressedValue);
+  end
+  else if fComponent.Behavior = rbbPulse then
+  begin
+    SetVisualPressed(True);
+    Publish(fComponent.PressedValue);
+    if fPulseTimer = nil then
+    begin
+      fPulseTimer := TTimer.Create(Self);
+      fPulseTimer.OnTimer := @PulseTimerTimer;
+    end;
+    fPulseTimer.Interval := Max(1, fComponent.PulseDurationMs);
+    fPulseTimer.Enabled := True;
+  end;
+end;
+
+procedure TRecorderButtonView.ButtonMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if (not fEditMode) and (Button = mbLeft) and (fComponent <> nil) and
+    (fComponent.Behavior = rbbHold) then
+  begin
+    SetVisualPressed(False);
+    Publish(fComponent.ReleasedValue);
+  end;
+end;
+
+procedure TRecorderButtonView.PulseTimerTimer(Sender: TObject);
+begin
+  fPulseTimer.Enabled := False;
+  SetVisualPressed(False);
+  if fComponent <> nil then Publish(fComponent.ReleasedValue);
+end;
+
+procedure TRecorderButtonView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
+  ADisplaySeconds: Double);
+begin
+  if ATagRegistry <> nil then fTagRegistry := ATagRegistry;
+  SetVisualPressed(TagIsPressed);
+end;
+
+function TRecorderButtonView.GetChartControl: TOglChart;
+begin
+  Result := nil;
 end;
 
 { TRecorderStaticTextView }
@@ -380,6 +597,7 @@ begin
     lPaintMode := 3;
     lPaintModeName := 'EMPTY';
   end;
+
   if lPaintMode <> fLastPaintLogMode then
   begin
     RecorderDebugLog(Format(
@@ -527,6 +745,7 @@ end;
 initialization
   // Регистрация визуальных контролов мнемосхем
   TRecorderVisualControlRegistry.RegisterControl(TRecorderStaticTextComponent, TRecorderStaticTextView);
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderButtonComponent, TRecorderButtonView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTagValueComponent, TRecorderTagValueView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderImageComponent, TRecorderImageView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTrendComponent, TRecorderTrendView);

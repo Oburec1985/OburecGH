@@ -192,7 +192,6 @@ begin
     lComponent.SetBounds(16, 16, AWidth, AHeight);
     fEditor.PositionNewComponent(lComponent);
     fPage.AddComponent(lComponent);
-    fEditor.ArmNewComponentPlacement(lComponent);
     lComponent := nil;
   finally
     lComponent.Free;

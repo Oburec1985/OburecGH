@@ -6,12 +6,13 @@ unit uRecorderSqlDbTypes;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderTags;
 
 const
   CRecorderSqlDbSchemaVersion = 1;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
+  CRecorderSqlDbControlTagName = 'SqlDbRecordEnabled';
 
 type
   ERecorderSqlDbError = class(Exception);
@@ -20,16 +21,25 @@ type
   TRecorderSqlDbRuntimeState = (rsrsDisabled, rsrsReady, rsrsRecording,
     rsrsDegraded, rsrsError);
 
+  TRecorderSqlTrendPoint = record
+    SignalName: string;
+    TimestampUtc: Double;
+    Value: Double;
+  end;
+  TRecorderSqlTrendPoints = array of TRecorderSqlTrendPoint;
+
   TRecorderSqlDbConfig = class
   private
     fBackend: TRecorderSqlDbBackend;
     fDatabase: string;
+    fControlTagName: string;
     fEnabled: Boolean;
     fHost: string;
     fObjectName: string;
     fObjectType: string;
     fSerialNumber: string;
     fSignalNames: TStringList;
+    fSignalEstimates: TStringList;
     fSignalSelectionConfigured: Boolean;
     fPasswordEnvironment: string;
     fPort: Word;
@@ -52,14 +62,19 @@ type
     function DataDirectory: string;
     function Password: string;
     function SignalEnabled(const ATagName: string): Boolean;
+    function SignalEstimate(const ATagName: string): TRecorderTagEstimateKind;
+    procedure SetSignalEstimate(const ATagName: string;
+      AKind: TRecorderTagEstimateKind);
     property Backend: TRecorderSqlDbBackend read fBackend write fBackend;
     property Database: string read fDatabase write fDatabase;
+    property ControlTagName: string read fControlTagName write fControlTagName;
     property Enabled: Boolean read fEnabled write fEnabled;
     property Host: string read fHost write fHost;
     property ObjectName: string read fObjectName write fObjectName;
     property ObjectType: string read fObjectType write fObjectType;
     property SerialNumber: string read fSerialNumber write fSerialNumber;
     property SignalNames: TStringList read fSignalNames;
+    property SignalEstimates: TStringList read fSignalEstimates;
     property SignalSelectionConfigured: Boolean read fSignalSelectionConfigured
       write fSignalSelectionConfigured;
     property PasswordEnvironment: string read fPasswordEnvironment write fPasswordEnvironment;
@@ -130,11 +145,15 @@ begin
   fSignalNames.CaseSensitive := False;
   fSignalNames.Sorted := True;
   fSignalNames.Duplicates := dupIgnore;
+  fSignalEstimates := TStringList.Create;
+  fSignalEstimates.CaseSensitive := False;
+  fSignalEstimates.NameValueSeparator := '=';
   ResetDefaults;
 end;
 
 destructor TRecorderSqlDbConfig.Destroy;
 begin
+  fSignalEstimates.Free;
   fSignalNames.Free;
   inherited Destroy;
 end;
@@ -144,12 +163,14 @@ begin
   if ASource = nil then Exit;
   fBackend := ASource.fBackend;
   fDatabase := ASource.fDatabase;
+  fControlTagName := ASource.fControlTagName;
   fEnabled := ASource.fEnabled;
   fHost := ASource.fHost;
   fObjectName := ASource.fObjectName;
   fObjectType := ASource.fObjectType;
   fSerialNumber := ASource.fSerialNumber;
   fSignalNames.Assign(ASource.fSignalNames);
+  fSignalEstimates.Assign(ASource.fSignalEstimates);
   fSignalSelectionConfigured := ASource.fSignalSelectionConfigured;
   fPasswordEnvironment := ASource.fPasswordEnvironment;
   fPort := ASource.fPort;
@@ -164,12 +185,14 @@ procedure TRecorderSqlDbConfig.ResetDefaults;
 begin
   fBackend := rsbFirebird;
   fDatabase := CRecorderFirebirdDefaultFileName;
+  fControlTagName := '';
   fEnabled := False;
   fHost := '';
   fObjectName := 'Объект мониторинга';
   fObjectType := '';
   fSerialNumber := '';
   fSignalNames.Clear;
+  fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
   fPasswordEnvironment := 'RECORDERLNX_SQLDB_PASSWORD';
   fPort := 3050;
@@ -265,6 +288,26 @@ begin
     (fSignalNames.IndexOf(ATagName) >= 0);
 end;
 
+function TRecorderSqlDbConfig.SignalEstimate(
+  const ATagName: string): TRecorderTagEstimateKind;
+var
+  lKind: TRecorderTagEstimateKind;
+  lValue: string;
+begin
+  lValue := fSignalEstimates.Values[ATagName];
+  for lKind := Low(TRecorderTagEstimateKind) to High(TRecorderTagEstimateKind) do
+    if SameText(lValue, RecorderTagEstimateKindToName(lKind)) then
+      Exit(lKind);
+  Result := tekMean;
+end;
+
+procedure TRecorderSqlDbConfig.SetSignalEstimate(const ATagName: string;
+  AKind: TRecorderTagEstimateKind);
+begin
+  if Trim(ATagName) = '' then Exit;
+  fSignalEstimates.Values[ATagName] := RecorderTagEstimateKindToName(AKind);
+end;
+
 procedure TRecorderSqlDbConfig.LoadFromFile(const AFileName: string);
 var
   lIni: TIniFile;
@@ -277,6 +320,7 @@ begin
     fBackend := RecorderSqlDbStringToBackend(lIni.ReadString('SQLdb', 'Backend', 'firebird'));
     fRootDirectory := lIni.ReadString('SQLdb', 'RootDirectory', fRootDirectory);
     fDatabase := lIni.ReadString('SQLdb', 'Database', fDatabase);
+    fControlTagName := lIni.ReadString('SQLdb', 'ControlTag', fControlTagName);
     fHost := lIni.ReadString('SQLdb', 'Host', fHost);
     fObjectName := lIni.ReadString('SQLdb', 'ObjectName', fObjectName);
     fObjectType := lIni.ReadString('SQLdb', 'ObjectType', fObjectType);
@@ -290,6 +334,7 @@ begin
     fSignalSelectionConfigured := lIni.ReadBool('SQLdb',
       'SignalSelectionConfigured', fSignalSelectionConfigured);
     lIni.ReadSection('SQLdbSignals', fSignalNames);
+    lIni.ReadSectionValues('SQLdbSignalEstimates', fSignalEstimates);
   finally
     lIni.Free;
   end;
@@ -310,6 +355,7 @@ begin
     lIni.WriteString('SQLdb', 'Backend', RecorderSqlDbBackendToString(fBackend));
     lIni.WriteString('SQLdb', 'RootDirectory', fRootDirectory);
     lIni.WriteString('SQLdb', 'Database', fDatabase);
+    lIni.WriteString('SQLdb', 'ControlTag', fControlTagName);
     lIni.WriteString('SQLdb', 'Host', fHost);
     lIni.WriteString('SQLdb', 'ObjectName', fObjectName);
     lIni.WriteString('SQLdb', 'ObjectType', fObjectType);
@@ -325,6 +371,10 @@ begin
     lIni.EraseSection('SQLdbSignals');
     for lIndex := 0 to fSignalNames.Count - 1 do
       lIni.WriteBool('SQLdbSignals', fSignalNames[lIndex], True);
+    lIni.EraseSection('SQLdbSignalEstimates');
+    for lIndex := 0 to fSignalEstimates.Count - 1 do
+      lIni.WriteString('SQLdbSignalEstimates',
+        fSignalEstimates.Names[lIndex], fSignalEstimates.ValueFromIndex[lIndex]);
     lIni.UpdateFile;
   finally
     lIni.Free;
