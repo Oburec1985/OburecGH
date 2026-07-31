@@ -21,6 +21,8 @@ function RecorderHardwareFindLiveDevice(const ASourceId: string): IRecorderDevic
 function RecorderHardwareIsSourceLinkOk(const ASourceId: string): Boolean;
 function RecorderHardwareTestSourceLink(const ASourceId: string;
   out AErrorText: string): Boolean;
+function RecorderHardwareSafeTestDeviceLink(ADevice: IRecorderDevice;
+  out AErrorText: string): Boolean;
 procedure RecorderHardwareTestAllLiveSources;
 procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
 function RecorderHardwareConsumeSourceResetRequest(
@@ -187,7 +189,30 @@ begin
     AErrorText := 'No live device session for ' + ASourceId;
     Exit;
   end;
-  Result := lDevice.TestLink(AErrorText);
+  Result := RecorderHardwareSafeTestDeviceLink(lDevice, AErrorText);
+end;
+
+function RecorderHardwareSafeTestDeviceLink(ADevice: IRecorderDevice;
+  out AErrorText: string): Boolean;
+begin
+  Result := False;
+  AErrorText := '';
+  if ADevice = nil then
+  begin
+    AErrorText := 'Device session is not available';
+    Exit;
+  end;
+  try
+    Result := ADevice.TestLink(AErrorText);
+  except
+    on E: Exception do
+    begin
+      AErrorText := E.ClassName + ': ' + E.Message;
+      Result := False;
+    end;
+  end;
+  if (not Result) and (Trim(AErrorText) = '') then
+    AErrorText := 'Device connection test failed';
 end;
 
 function RecorderHardwareIsSourceLinkOk(const ASourceId: string): Boolean;
@@ -224,7 +249,7 @@ begin
   for I := 0 to High(lDevices) do
   begin
     lErrorText := '';
-    if (lDevices[I] <> nil) and lDevices[I].TestLink(lErrorText) then
+    if RecorderHardwareSafeTestDeviceLink(lDevices[I], lErrorText) then
       RecorderHardwareClearSourceOffline(lSourceIds[I])
     else
     begin

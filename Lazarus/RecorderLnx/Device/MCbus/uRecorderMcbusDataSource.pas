@@ -294,7 +294,7 @@ begin
     [fHost, fPort, fPollFrequencyHz, fTagNames.Count]));
   { TEST не бросает исключение. Если контроллер недоступен, не вызываем
     Connect/ProgramDevice, которые предназначены уже для подтверждённой связи. }
-  if not fDevice.TestLink(lTestError) then
+  if not RecorderHardwareSafeTestDeviceLink(fDevice, lTestError) then
   begin
     RecorderHardwareMarkSourceOffline(SourceId, lTestError);
     RecorderDebugLog('[MCBUS] link test failed, source skipped: ' + lTestError);

@@ -295,6 +295,7 @@ type
       Source: IRecorderDataSource;       { Ссылка на источник }
       Thread: TRecorderDataSourceThread; { Поток-опрашиватель источника }
       Enabled: Boolean;                  { Разрешён ли сбор с источника }
+      PrepareError: string;              { Ошибка подготовки без исключения в UI }
       procedure PrepareHardware;
     end;
   private
@@ -357,7 +358,8 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF}
-  Math, LazFileUtils, uRecorderConfiguredDataSources, uSharedAsync;
+  Math, LazFileUtils, uRecorderConfiguredDataSources, uSharedAsync,
+  uRecorderHardwareLiveDevices;
 
 {$IFDEF MSWINDOWS}
 type
@@ -1445,7 +1447,18 @@ end;
 
 procedure TRecorderDataSourceManager.TSourceContext.PrepareHardware;
 begin
-  Source.PrepareHardware;
+  PrepareError := '';
+  try
+    Source.PrepareHardware;
+  except
+    on E: Exception do
+    begin
+      PrepareError := E.ClassName + ': ' + E.Message;
+      RecorderHardwareMarkSourceOffline(Source.SourceId, PrepareError);
+      RecorderDebugLog(Format('[DataSource:%s] connection/preparation failed: %s',
+        [Source.SourceId, PrepareError]));
+    end;
+  end;
 end;
 
 constructor TRecorderDataSourceManager.Create;
@@ -1540,7 +1553,13 @@ begin
       lContext.Enabled := True;
       if fRunning then
       begin
-        lContext.Source.PrepareHardware;
+        lContext.PrepareHardware;
+        if lContext.PrepareError <> '' then
+        begin
+          fLastErrors.Add(lContext.Source.SourceId + ': ' +
+            lContext.PrepareError);
+          Exit;
+        end;
         lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);
         lContext.Thread.Start;
         RegisterThreadName(lContext.Thread.ThreadID,
@@ -1587,7 +1606,13 @@ begin
   ASource.ConfigureTags(fRegistry);
   if AEnabled then
   begin
-    ASource.PrepareHardware;
+    GetSourceContext(fSources.Count - 1).PrepareHardware;
+    if GetSourceContext(fSources.Count - 1).PrepareError <> '' then
+    begin
+      fLastErrors.Add(ASource.SourceId + ': ' +
+        GetSourceContext(fSources.Count - 1).PrepareError);
+      Exit;
+    end;
     if lWasRunning then
     begin
       GetSourceContext(fSources.Count - 1).Thread :=
@@ -1636,6 +1661,7 @@ begin
       'Data source manager tags are not configured');
   { Независимые источники имеют отдельные TCP-сеансы и готовятся параллельно.
     Внутри одного устройства его протокол остаётся строго последовательным. }
+  fLastErrors.Clear;
   SetLength(lProcedures, 0);
   for I := 0 to fSources.Count - 1 do
     if GetSourceContext(I).Enabled then
@@ -1644,6 +1670,10 @@ begin
       lProcedures[High(lProcedures)] := @GetSourceContext(I).PrepareHardware;
     end;
   SharedRunParallel(lProcedures);
+  for I := 0 to fSources.Count - 1 do
+    if GetSourceContext(I).PrepareError <> '' then
+      fLastErrors.Add(GetSourceContext(I).Source.SourceId + ': ' +
+        GetSourceContext(I).PrepareError);
 end;
 
 procedure TRecorderDataSourceManager.StartAll;
@@ -1660,11 +1690,17 @@ begin
   try
     for I := 0 to fSources.Count - 1 do
       if GetSourceContext(I).Enabled then
-        GetSourceContext(I).Source.PrepareHardware;
+      begin
+        GetSourceContext(I).PrepareHardware;
+        if GetSourceContext(I).PrepareError <> '' then
+          fLastErrors.Add(GetSourceContext(I).Source.SourceId + ': ' +
+            GetSourceContext(I).PrepareError);
+      end;
     for I := 0 to fSources.Count - 1 do
     begin
       lContext := GetSourceContext(I);
-      if not lContext.Enabled then
+      if (not lContext.Enabled) or
+        RecorderHardwareIsSourceOffline(lContext.Source.SourceId) then
         Continue;
       lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);
       lContext.Thread.Start;

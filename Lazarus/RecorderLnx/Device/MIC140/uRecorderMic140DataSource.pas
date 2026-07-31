@@ -1334,7 +1334,7 @@ begin
   end;
   if fHardwarePrepared then
   begin
-    if fDevice.TestLink(lTestError) then
+    if RecorderHardwareSafeTestDeviceLink(fDevice, lTestError) then
     begin
       RecorderHardwareClearSourceOffline(SourceId);
       Exit;

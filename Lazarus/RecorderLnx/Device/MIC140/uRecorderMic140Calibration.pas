@@ -192,15 +192,36 @@ var
   lCli: TMic140v2Tcp;
   lErrorMessage: string;
   lFirmware: TMic140v2Firmware;
+  lSourceId: string;
 begin
   Result := False;
   ACalibrSerial := 0;
+  lSourceId := RecorderMic140SourceId(AHost, APort);
+  { При загрузке проекта не открываем протокольный сокет до успешного TEST.
+    Так отсутствие прибора остаётся штатным offline-состоянием, а не
+    исключением, которое перехватывает отладчик. }
+  if not RecorderMic140TcpProbe(AHost, APort, 1000) then
+  begin
+    lErrorMessage := Format('connection test failed for %s:%d', [AHost, APort]);
+    RecorderHardwareMarkSourceOffline(lSourceId, lErrorMessage);
+    Mic140LogWarning(Format('[DataSource:%s] MIC-140 %s',
+      [lSourceId, lErrorMessage]));
+    Exit;
+  end;
   lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
   try
     try
       lCli.Connect;
+      RecorderHardwareClearSourceOffline(lSourceId);
     except
-      Exit;
+      on E: Exception do
+      begin
+        lErrorMessage := E.ClassName + ': ' + E.Message;
+        RecorderHardwareMarkSourceOffline(lSourceId, lErrorMessage);
+        Mic140LogWarning(Format('[DataSource:%s] MIC-140 connection failed: %s',
+          [lSourceId, lErrorMessage]));
+        Exit;
+      end;
     end;
     if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin

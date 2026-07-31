@@ -1381,7 +1381,7 @@ begin
   lDevice := RecorderMic185FindLiveDevice(AHost, APort);
   if lDevice = nil then
     Exit;
-  if not lDevice.TestLink(lErrorText) then
+  if not RecorderHardwareSafeTestDeviceLink(lDevice, lErrorText) then
     Exit;
   ASerialNumber := lDevice.DeviceSerial;
   if lDevice.SoftVersion <> 0 then

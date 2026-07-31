@@ -3030,6 +3030,8 @@ end;
 
 { Реакция на смену состояний сбора данных }
 procedure TMainForm.PrepareRuntimeForConfiguration;
+var
+  I: Integer;
 begin
   if fRecorder.AlgorithmManager <> nil then
     fRecorder.AlgorithmManager.PrepareConfiguration;
@@ -3039,6 +3041,9 @@ begin
   if (fRecorder.DataSources <> nil) and fDataSourcesConfigured then
     try
       fRecorder.DataSources.PrepareHardwareAll;
+      for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
+        AddLog('Device connection error: ' +
+          fRecorder.DataSources.LastErrors[I]);
     except
       on E: Exception do
         { Проект можно открыть без подключённого стенда. StartAll повторит
