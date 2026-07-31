@@ -1,0 +1,104 @@
+object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
+  Left = 360
+  Height = 610
+  Top = 140
+  Width = 920
+  BorderStyle = bsDialog
+  Caption = 'SQL БД RecorderLnx'
+  ClientHeight = 610
+  ClientWidth = 920
+  Position = poScreenCenter
+  LCLVersion = '4.2.0.0'
+  object cbEnabled: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 12
+    Width = 205
+    Caption = 'Включить запись в SQL БД'
+    TabOrder = 0
+  end
+  object gbConnection: TGroupBox
+    Left = 12
+    Height = 350
+    Top = 42
+    Width = 626
+    Caption = 'Подключение и хранилище'
+    ClientHeight = 330
+    ClientWidth = 622
+    TabOrder = 1
+    object lblBackend: TLabel Left = 12 Height = 17 Top = 14 Width = 80 Caption = 'Сервер БД' end
+    object cbBackend: TComboBox
+      Left = 180 Height = 29 Top = 10 Width = 250 ItemHeight = 0 ItemIndex = 2
+      Items.Strings = ('SQLite (автономный)' 'PostgreSQL' 'Firebird 5')
+      Style = csDropDownList TabOrder = 0 Text = 'Firebird 5' OnChange = cbBackendChange
+    end
+    object lblRoot: TLabel Left = 12 Height = 17 Top = 52 Width = 130 Caption = 'Каталог проекта БД' end
+    object edRoot: TEdit Left = 180 Height = 27 Top = 47 Width = 346 TabOrder = 1 end
+    object btnBrowse: TButton Left = 534 Height = 29 Top = 46 Width = 75 Caption = 'Обзор...' OnClick = btnBrowseClick TabOrder = 2 end
+    object lblDatabase: TLabel Left = 12 Height = 17 Top = 88 Width = 120 Caption = 'Файл / имя базы' end
+    object edDatabase: TEdit Left = 180 Height = 27 Top = 83 Width = 429 TabOrder = 3 end
+    object lblHost: TLabel Left = 12 Height = 17 Top = 124 Width = 100 Caption = 'Сервер (host)' end
+    object edHost: TEdit Left = 180 Height = 27 Top = 119 Width = 250 TabOrder = 4 OnChange = cbBackendChange end
+    object lblPort: TLabel Left = 444 Height = 17 Top = 124 Width = 35 Caption = 'Порт' end
+    object sePort: TSpinEdit Left = 500 Height = 27 Top = 119 Width = 109 MaxValue = 65535 MinValue = 0 TabOrder = 5 Value = 3050 end
+    object lblUser: TLabel Left = 12 Height = 17 Top = 160 Width = 100 Caption = 'Пользователь' end
+    object edUser: TEdit Left = 180 Height = 27 Top = 155 Width = 250 TabOrder = 6 end
+    object lblPasswordEnvironment: TLabel Left = 12 Height = 34 Top = 194 Width = 155 Caption = 'Переменная окружения\nс паролем' end
+    object edPasswordEnvironment: TEdit Left = 180 Height = 27 Top = 195 Width = 429 TabOrder = 7 end
+    object cbTls: TCheckBox Left = 180 Height = 23 Top = 230 Width = 270 Caption = 'Требовать защищённый канал (TLS/VPN)' TabOrder = 8 end
+    object lblPeriod: TLabel Left = 12 Height = 17 Top = 268 Width = 145 Caption = 'Период медленной записи, мс' end
+    object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 263 Width = 120 MaxValue = 3600000 MinValue = 10 TabOrder = 9 Value = 1000 end
+    object lblQueue: TLabel Left = 320 Height = 17 Top = 268 Width = 110 Caption = 'Ёмкость очереди' end
+    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 MaxValue = 1000000 MinValue = 128 TabOrder = 10 Value = 8192 end
+    object btnTest: TButton Left = 180 Height = 31 Top = 299 Width = 170 Caption = 'Проверить и создать БД' OnClick = btnTestClick TabOrder = 11 end
+  end
+  object gbObject: TGroupBox
+    Left = 12 Height = 142 Top = 400 Width = 626 Caption = 'Объект мониторинга'
+    ClientHeight = 122 ClientWidth = 622 TabOrder = 2
+    object lblObjectName: TLabel Left = 12 Height = 17 Top = 15 Width = 90 Caption = 'Наименование' end
+    object edObjectName: TEdit Left = 180 Height = 27 Top = 10 Width = 429 TabOrder = 0 end
+    object lblObjectType: TLabel Left = 12 Height = 17 Top = 51 Width = 70 Caption = 'Тип объекта' end
+    object edObjectType: TEdit Left = 180 Height = 27 Top = 46 Width = 429 TabOrder = 1 end
+    object lblSerial: TLabel Left = 12 Height = 17 Top = 87 Width = 110 Caption = 'Серийный номер' end
+    object edSerial: TEdit Left = 180 Height = 27 Top = 82 Width = 429 TabOrder = 2 end
+  end
+  object gbSignals: TGroupBox
+    Left = 650
+    Height = 500
+    Top = 42
+    Width = 258
+    Caption = 'Каналы для записи'
+    ClientHeight = 480
+    ClientWidth = 254
+    TabOrder = 3
+    object clbSignals: TCheckListBox
+      Left = 8
+      Height = 430
+      Top = 8
+      Width = 238
+      Align = alTop
+      ItemHeight = 17
+      TabOrder = 0
+    end
+    object btnSelectAll: TButton
+      Left = 8
+      Height = 30
+      Top = 444
+      Width = 112
+      Caption = 'Выбрать все'
+      OnClick = btnSelectAllClick
+      TabOrder = 1
+    end
+    object btnSelectNone: TButton
+      Left = 134
+      Height = 30
+      Top = 444
+      Width = 112
+      Caption = 'Снять все'
+      OnClick = btnSelectNoneClick
+      TabOrder = 2
+    end
+  end
+  object btnOk: TButton Left = 716 Height = 34 Top = 560 Width = 90 Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end
+  object btnCancel: TButton Left = 816 Height = 34 Top = 560 Width = 90 Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end
+end

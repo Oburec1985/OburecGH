@@ -49,7 +49,7 @@ uses
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree,
-  uRecorderMeraPaths, uOglChart;
+  uRecorderMeraPaths, uOglChart, uRecorderSqlDbSettingsDialog;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -64,6 +64,7 @@ type
     btnRecord: TSpeedButton;                     // Кнопка запуска записи данных
     btnRunWinpos: TSpeedButton;                  // Кнопка запуска Winpos для последнего MERA-файла
     btnSaveConfig: TSpeedButton;
+    btnSqlDb: TSpeedButton;
     btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
@@ -95,6 +96,7 @@ type
     procedure btnSaveConfigClick(Sender: TObject);
     procedure btnSaveConfigAsClick(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
+    procedure btnSqlDbClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure btnTriggerClick(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
@@ -359,6 +361,7 @@ type
       AOldState, ANewState: TRecorderState;
       ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
+    procedure DeferredPrepareRuntime(Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
@@ -455,13 +458,14 @@ begin
   EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
+  fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
+    fProjectConfigDir) + 'sql-db.ini');
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
   SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
     должна откладываться до первого нажатия Preview. }
   EnsureRuntimeDataSources;
-  PrepareRuntimeForConfiguration;
   { rstInit — только начальная отметка автомата состояний. Явная нотификация
     отправляется после загрузки проекта, создания форм и источников, а также
     конфигурирования доступного оборудования. }
@@ -473,6 +477,7 @@ begin
   UpdateStateView;
   RenderActivePage;
   AddLog('RecorderLnx started.');
+  Application.QueueAsyncCall(@DeferredPrepareRuntime, 0);
   ParseAutoPreviewCommandLine;
   ScheduleCommandLineDeviceTests;
 
@@ -993,6 +998,28 @@ begin
     lSourceIds.Free;
     lAfterSignatures.Free;
     lBeforeSignatures.Free;
+  end;
+end;
+
+procedure TMainForm.btnSqlDbClick(Sender: TObject);
+var
+  lFileName: string;
+begin
+  if fRecorder.StateMachine.State = rsRecord then
+  begin
+    MessageDlg('SQL БД', 'Остановите запись перед изменением настроек SQL БД.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
+  try
+    if ShowRecorderSqlDbSettings(Self, lFileName, fRecorder.TagRegistry) then
+    begin
+      fRecorder.SqlDbManager.Configure(lFileName);
+      AddLog('SQL database settings applied.');
+    end;
+  except
+    on E: Exception do LogCommandError('SQL database settings', E);
   end;
 end;
 
@@ -2935,6 +2962,7 @@ begin
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
   btnTrigger.SetBounds(16, 108, 142, 32);
+  btnSqlDb.SetBounds(16, 146, 142, 32);
 
   btnSettings.Caption := '';
   btnSettings.Images := ilCommandButtons;
@@ -3056,6 +3084,14 @@ begin
       Self, 'ConfigurationPrepared'));
 end;
 
+procedure TMainForm.DeferredPrepareRuntime(Data: PtrInt);
+begin
+  if csDestroying in ComponentState then Exit;
+  AddLog('Deferred hardware preparation started.');
+  PrepareRuntimeForConfiguration;
+  AddLog('Deferred hardware preparation finished.');
+end;
+
 procedure TMainForm.StateMachineStateChanging(ASender: TObject;
   AOldState, ANewState: TRecorderState;
   ATransition: TRecorderStateTransition);
@@ -3082,7 +3118,10 @@ begin
   lTransition := TRecorderStateMachine(ASender).LastTransition;
 
   if (ANewState = rsRecord) and (AOldState <> rsRecord) then
+  begin
     OpenRecordFrame;
+    fRecorder.SqlDbManager.StartRegistration('RecorderLnx record mode');
+  end;
 
   case ANewState of
     rsPreview, rsRecord:
@@ -3100,6 +3139,7 @@ begin
         if lTransition in [rstViewToStop, rstRecordToStop] then
         begin
           StopDataSources;
+          fRecorder.SqlDbManager.StopRegistration;
           CloseRecordFrame;
           fRecorder.TimeSystem.Stop;
           if fRecorder.AlgorithmManager <> nil then
@@ -3109,7 +3149,10 @@ begin
   end;
 
   if (AOldState = rsRecord) and (ANewState <> rsRecord) and (ANewState <> rsStop) then
+  begin
+    fRecorder.SqlDbManager.StopRegistration;
     CloseRecordFrame;
+  end;
 
   UpdateStateView;
   if (lTransition <> rstNone) and (fRecorder.EventBus <> nil) then

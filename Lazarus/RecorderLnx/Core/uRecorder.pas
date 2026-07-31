@@ -14,7 +14,8 @@ uses
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
   uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderEventQueue, uRecorderTimeSystem,
-  uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderAlarms;
+  uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderAlarms,
+  uRecorderSqlDbManager;
 
 type
 
@@ -30,6 +31,7 @@ type
     fSpectrumManager: TRecorderSpectrumRuntimeManager;
     fAlgorithmManager: TRecorderAlgorithmManager;
     fAlarmEngine: IRecorderAlarmEngine;
+    fSqlDbManager: TRecorderSqlDbManager;
     procedure HandleTagAlarmValue(Sender: TObject; ATag: TRecorderTag;
       ATimeSec, AValue: Double);
   public
@@ -46,6 +48,7 @@ type
     property SpectrumManager: TRecorderSpectrumRuntimeManager read fSpectrumManager;
     property AlgorithmManager: TRecorderAlgorithmManager read fAlgorithmManager;
     property AlarmEngine: IRecorderAlarmEngine read fAlarmEngine;
+    property SqlDbManager: TRecorderSqlDbManager read fSqlDbManager;
   end;
 
 
@@ -76,6 +79,7 @@ begin
   fSpectrumManager := TRecorderSpectrumRuntimeManager.Create(fEventBus, fTagRegistry);
   fAlgorithmManager := TRecorderAlgorithmManager.Create(fTagRegistry, fSpectrumManager);
   fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
+  fSqlDbManager := TRecorderSqlDbManager.Create(fEventBus);
   fTagRegistry.SetAlarmValuePublishedHandler(Self, @HandleTagAlarmValue);
 end;
 
@@ -98,6 +102,7 @@ end;
 destructor TRecorder.Destroy;
 begin
   fTagRegistry.SetAlarmValuePublishedHandler(nil, nil);
+  FreeAndNil(fSqlDbManager);
   fAlarmEngine := nil;
   FreeAndNil(fAlgorithmManager);
   FreeAndNil(fSpectrumManager);
