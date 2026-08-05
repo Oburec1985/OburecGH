@@ -75,6 +75,7 @@ type
     m_FontSize, m_digits:integer;
     // Знач. цифр/ Кол-о цифр
     m_Format:boolean;
+    m_AutoWidth:boolean;
     colNames:TNamedObjList;
     glist:TNamedObjList;
   protected
@@ -88,6 +89,8 @@ type
     property colCount:integer read getColCount Write setColCount;
     constructor create(Aowner: tcomponent); override;
     destructor destroy; override;
+    function getWidthToStr:string;
+    procedure WidthFromStr(s:string);
     procedure SaveSettings(a_pIni: TIniFile; str: LPCSTR); override;
     procedure LoadSettings(a_pIni: TIniFile; str: LPCSTR); override;
   end;
@@ -430,6 +433,35 @@ begin
   result:=colNames.Count;
 end;
 
+function TDigsFrm.getWidthToStr: string;
+var
+  I: Integer;
+begin
+  result:='';
+  for I := 0 to SignalsSG.ColCount - 1 do
+  begin
+    result:=result+inttostr(SignalsSG.ColWidths[i])+';';
+  end;
+end;
+
+procedure TDigsFrm.WidthFromStr(s:string);
+var
+  I, j: Integer;
+  s1:string;
+begin
+  for I := 0 to SignalsSG.ColCount - 1 do
+  begin
+    s1:=getSubStrByIndex(s,';',1,i);
+    if s1<>'' then
+    begin
+      SignalsSG.ColWidths[i]:=strtoint(s1);
+    end
+    else
+      exit;
+  end;
+end;
+
+
 procedure TDigsFrm.LoadSettings(a_pIni: TIniFile; str: LPCSTR);
 var
   i, j, k: integer;
@@ -439,6 +471,20 @@ var
   t:ctag;
 begin
   inherited;
+  m_AutoWidth:=a_pIni.ReadBool(str, 'AutoWidth', true);
+  if m_AutoWidth then
+  begin
+    SignalsSG.Options:=SignalsSG.Options - [goColSizing];
+  end
+  else
+  begin
+    SignalsSG.Options:=SignalsSG.Options + [goColSizing];
+  end;
+  s:=a_pIni.ReadString(str, 'ColWidth', '');
+  if s<>'' then
+  begin
+    WidthFromStr(s);
+  end;
   m_Format:=a_pIni.ReadBool(str, 'DigFormat', False);
   m_FontSize:=a_pIni.ReadInteger(str, 'FSize', 0);
   m_Digits:=a_pIni.ReadInteger(str, 'Digits', 4);
@@ -465,7 +511,6 @@ begin
     col.estimate:=a_pIni.ReadInteger(str, 'CEst_'+inttostr(i), 0);
     if col.estimate<0 then
       col.estimate:=0;
-
     col.useThreshold:=a_pIni.ReadBool(str, 'CUseThresh_'+inttostr(i), false);
     col.color:=a_pIni.ReadInteger(str, 'CColor_'+inttostr(i), clpink);
     if col.color=0 then
@@ -485,6 +530,9 @@ var
   t:ctag;
 begin
   inherited;
+  a_pIni.WriteBool(str, 'AutoWidth', m_AutoWidth);
+  a_pIni.WriteString(str, 'ColWidth', getWidthToStr);
+
   a_pIni.WriteBool(str, 'DigFormat', m_Format);
   a_pIni.WriteInteger(str, 'FSize', m_FontSize);
   a_pIni.WriteInteger(str, 'Digits', m_Digits);
@@ -584,7 +632,8 @@ begin
     g:=tgroup(gList.Get(i));
     SignalsSG.Cells[0,i+1]:=g.name;
   end;
-  SGChange(SignalsSG);
+  if m_AutoWidth then
+    SGChange(SignalsSG);
 end;
 
 procedure TDigsFrm.ShowTagVals;
@@ -726,7 +775,6 @@ end;
 procedure TDigsFrm.UpdateView;
 begin
   ShowTagVals;
-  //SGChange(SignalsSG);
 end;
 
 { TDigColumn }

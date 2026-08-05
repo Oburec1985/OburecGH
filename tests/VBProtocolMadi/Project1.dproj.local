@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject>
-	<Transactions>
-    <Transaction>2026.04.22 12:59:06.387.pas,C:\Users\SkripnikAA\Documents\RAD Studio\Projects\Unit1.pas=E:\Oburec\delphi\2011\OburecGH\tests\VBProtocolMadi\Unit1.pas</Transaction>
-    <Transaction>2026.04.22 12:59:06.388.dfm,C:\Users\SkripnikAA\Documents\RAD Studio\Projects\Unit1.dfm=E:\Oburec\delphi\2011\OburecGH\tests\VBProtocolMadi\Unit1.dfm</Transaction>
-    <Transaction>2026.04.22 12:59:10.276.dproj,C:\Users\SkripnikAA\Documents\RAD Studio\Projects\Project1.dproj=E:\Oburec\delphi\2011\OburecGH\tests\VBProtocolMadi\Project1.dproj</Transaction>
-  </Transactions>
-</BorlandProject>

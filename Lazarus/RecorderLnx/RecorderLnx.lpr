@@ -6,9 +6,13 @@ uses
   {$IFDEF UNIX}
   cthreads,
   {$ENDIF}
-  Interfaces,
-  Forms,
-  uMainForm;
+  Interfaces, Forms, uMainForm, uComponentSettingsDialog,
+  uRecorderTrendSettingsDialog, uRecorderTrendView,
+  uRecorderCalibrationAddDialog, uRecorderCalibrationListDialog,
+  uRecorderCalibrationPropertiesDialog, uRecorderMic140SettingsDialog,
+  uRecorderSpectrumSettingsDialog, uRecorderSpectrumView,
+  uRecorderVisualControl, uRecorderDeviceInterfaces, uRecorderMebiusTcpProtocol,
+  uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger;
 
 begin
   RequireDerivedFormResource := True;

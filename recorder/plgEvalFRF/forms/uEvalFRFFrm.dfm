@@ -25,27 +25,6 @@ object FRFFrm: TFRFFrm
     ParentColor = False
     ExplicitLeft = 512
   end
-  object SpmChart: cChart
-    Left = 0
-    Top = 0
-    Width = 576
-    Height = 666
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    Align = alClient
-    Caption = 'cChart1'
-    TabOrder = 0
-    OnDblClick = SpmChartDblClick
-    OnMouseZoom = SpmChartMouseZoom
-    OnCursorMove = SpmChartCursorMove
-    allowEditPages = False
-    showTV = False
-    showLegend = False
-    selectSize = 5
-    ExplicitLeft = 3
-  end
   object RightGB: TGroupBox
     Left = 582
     Top = 0
@@ -55,7 +34,7 @@ object FRFFrm: TFRFFrm
     Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080
     ParentShowHint = False
     ShowHint = False
-    TabOrder = 1
+    TabOrder = 0
     object ShockCountLabel: TLabel
       Left = 6
       Top = 21

@@ -13,7 +13,8 @@ program RecorderFormModelTest;
 
 uses
   SysUtils,
-  uRecorderFormModel;
+  uRecorderFormModel,
+  uRecorderProjectFiles;
 
 procedure AssertEquals(AActual, AExpected: Integer; const AStep: string);
 begin
@@ -53,6 +54,8 @@ begin
 
     AssertTrue(lFactory.IsComponentRegistered(TRecorderTagValueComponent.TypeId),
       'tag value component is registered');
+    AssertTrue(lFactory.IsComponentRegistered(TRecorderOscillogramComponent.TypeId),
+      'oscillogram component is registered');
     AssertTrue(not lFactory.IsComponentRegistered('UnknownType'),
       'unknown component type is not registered');
 
@@ -110,7 +113,102 @@ begin
   end;
 end;
 
+procedure TestGuiConfigSavesBaseOscillogramCount;
+var
+  lComponentFactory: TRecorderComponentFactory;
+  lFileName: string;
+  lLoaded: TRecorderFormManager;
+  lManager: TRecorderFormManager;
+  lPage: TRecorderFormPage;
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderFormModelTest.gui.ini';
+  if FileExists(lFileName) then
+    DeleteFile(lFileName);
+
+  lComponentFactory := TRecorderComponentFactory.Create;
+  lLoaded := TRecorderFormManager.Create;
+  lManager := TRecorderFormManager.Create;
+  try
+    lComponentFactory.RegisterDefaultComponents;
+    lPage := TRecorderFormPage.Create('BasePage', 'BasePage', 'Base page');
+    lPage.BaseOscillogramCount := 5;
+    lManager.AddPage(lPage);
+
+    SaveRecorderGuiConfig(lFileName, lManager);
+    LoadRecorderGuiConfig(lFileName, lLoaded, lComponentFactory);
+
+    AssertEquals(lLoaded.PageCount, 1, 'loaded gui page count');
+    AssertEquals(lLoaded.Pages[0].BaseOscillogramCount, 5,
+      'loaded base oscillogram count');
+    Writeln('GUI config base oscillogram count test passed.');
+  finally
+    lManager.Free;
+    lLoaded.Free;
+    lComponentFactory.Free;
+    if FileExists(lFileName) then
+      DeleteFile(lFileName);
+  end;
+end;
+
+procedure TestGuiConfigSavesOscillogramBinding;
+var
+  lComponentFactory: TRecorderComponentFactory;
+  lFileName: string;
+  lLoaded: TRecorderFormManager;
+  lLoadedOsc: TRecorderOscillogramComponent;
+  lManager: TRecorderFormManager;
+  lOsc: TRecorderOscillogramComponent;
+  lPage: TRecorderFormPage;
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderFormModelOscTest.gui.ini';
+  if FileExists(lFileName) then
+    DeleteFile(lFileName);
+
+  lComponentFactory := TRecorderComponentFactory.Create;
+  lLoaded := TRecorderFormManager.Create;
+  lManager := TRecorderFormManager.Create;
+  try
+    lComponentFactory.RegisterDefaultComponents;
+    lPage := TRecorderFormPage.Create('Page1', 'Page1', 'Mnemonic');
+    lManager.AddPage(lPage);
+
+    lOsc := TRecorderOscillogramComponent(
+      lComponentFactory.CreateComponent(TRecorderOscillogramComponent.TypeId));
+    lOsc.Id := 'Page1.osc1';
+    lOsc.Name := 'Osc1';
+    lOsc.TagName := 'AbsTag';
+    lOsc.BindingMode := rtbmAbsoluteTag;
+    lOsc.TagOffset := 3;
+    lOsc.SetBounds(10, 20, 300, 180);
+    lPage.AddComponent(lOsc);
+
+    SaveRecorderGuiConfig(lFileName, lManager);
+    LoadRecorderGuiConfig(lFileName, lLoaded, lComponentFactory);
+
+    AssertEquals(lLoaded.PageCount, 1, 'loaded osc page count');
+    AssertEquals(lLoaded.Pages[0].ComponentCount, 1, 'loaded osc component count');
+    AssertTrue(lLoaded.Pages[0].Components[0] is TRecorderOscillogramComponent,
+      'loaded component is oscillogram');
+    lLoadedOsc := TRecorderOscillogramComponent(lLoaded.Pages[0].Components[0]);
+    AssertEquals(lLoadedOsc.TagName, 'AbsTag', 'loaded osc absolute tag');
+    AssertEquals(Ord(lLoadedOsc.BindingMode), Ord(rtbmAbsoluteTag),
+      'loaded osc binding mode');
+    AssertEquals(lLoadedOsc.TagOffset, 3, 'loaded osc tag offset');
+    Writeln('GUI config oscillogram binding test passed.');
+  finally
+    lManager.Free;
+    lLoaded.Free;
+    lComponentFactory.Free;
+    if FileExists(lFileName) then
+      DeleteFile(lFileName);
+  end;
+end;
+
 begin
   TestComponentFactory;
   TestFormPages;
+  TestGuiConfigSavesBaseOscillogramCount;
+  TestGuiConfigSavesOscillogramBinding;
 end.

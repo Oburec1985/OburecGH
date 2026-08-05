@@ -4,158 +4,350 @@ unit uRecorderFormModel;
   Модуль uRecorderFormModel
 
   Назначение:
-    Доменная модель экранных формуляров RecorderLnx. Модуль описывает страницы,
-    модельные визуальные компоненты и фабрики создания страниц/компонентов.
+    Доменная модель экранных компонентов RecorderLnx. Здесь описаны страницы,
+    визуальные компоненты мнемосхем и связанная логика создания/редактирования.
 
-  Место в архитектуре:
-    Core/domain. Модуль не зависит от LCL и не создает реальные TControl. UI-слой
-    позже будет читать эту модель и строить LCL/Canvas/OpenGL-представление.
+  Роль в архитектуре:
+    Core/domain. Модуль не зависит от LCL и не создаёт экземпляры TControl. UI-слой
+    берёт отсюда метаданные для связи с оболочкой LCL/Canvas/OpenGL-компонентами.
 
-  Ограничения первой версии:
-    Здесь нет сохранения/загрузки, редактирования мышью, layout engine и подписки на
-    теги. Эти задачи добавляются следующими слоями после проверки базовой модели.
+  Сохранение между сессиями:
+    Модель для сохранения/загрузки, зарегистрированные типы, layout engine и фабрики
+    на этом уровне. При старте восстанавливаем состояние экрана по файлам проекта.
+
+  Кодировка (2026-06): файл в UTF-8. См. Docs/source-encoding.md.
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderTags, uOglChartColors;
 
 type
-  { Прямоугольник компонента на формуляре в логических пикселях страницы.
+  { TRecorderRect
+    Описывает положение на странице в координатах пикселей.
 
     Left   - координата левого края.
     Top    - координата верхнего края.
-    Width  - ширина компонента.
-    Height - высота компонента.
-  }
+    Width  - ширина прямоугольника.
+    Height - высота прямоугольника. }
   TRecorderRect = record
     Left: Integer;
     Top: Integer;
     Width: Integer;
     Height: Integer;
   end;
+{ TRecorderFormPageMode
+    Режим страницы мнемосхемы.
 
-  { Режим страницы формуляра.
-
-    fpmView - страница отображает данные и не меняет состав компонентов.
-    fpmEdit - страница находится в режиме настройки состава/положения компонентов.
-  }
+    fpmView - обычный просмотр данных; по двойному щелчку — редактирование.
+    fpmEdit - редактирование мнемосхемы в режиме перетаскивания/изменения компонентов. }
   TRecorderFormPageMode = (
     fpmView,
     fpmEdit
   );
 
+  { Исключение для ошибок работы формы }
   ERecorderFormError = class(Exception);
 
   TRecorderComponentFactoryBase = class;
   TRecorderVisualComponent = class;
   TRecorderVisualComponentClass = class of TRecorderVisualComponent;
 
-  { TRecorderVisualComponent
+  { TRecorderTagBindingMode
+    Режим привязки тега для компонента, который может опираться на выбранный
+    в списке тег в стиле Recorder. }
+  TRecorderTagBindingMode = (
+    rtbmRelativeSelectedTag,
+    rtbmAbsoluteTag
+  );
 
-    Базовый модельный компонент формуляра. Компонент хранит только идентичность,
-    геометрию и привязку к тегу; отрисовка выполняется отдельным UI-адаптером.
-  }
+  { TRecorderVisualComponent
+    Базовый визуальный компонент мнемосхемы. Содержит общие атрибуты расположения,
+    привязку к тегу и имя; конкретные наследники расширяют UI-поведение. }
   TRecorderVisualComponent = class
   private
-    fBounds: TRecorderRect;
-    fFactory: TRecorderComponentFactoryBase;
-    fId: string;
-    fName: string;
+    fBounds: TRecorderRect;                        { размер и позиция компонента }
+    fFactory: TRecorderComponentFactoryBase;       { фабрика, создавшая этот компонент }
+    fId: string;                                   { уникальный ID компонента на странице }
+    fName: string;                                 { имя компонента }
     fTagName: string;
+    fTagId: TRecorderTagId;                        { Id привязанного тега }
   protected
-    { Возвращает стабильный строковый тип компонента для фабрики и будущей
-      сериализации. Потом этот id будет писаться в конфигурацию формуляра. }
+    { Возвращает строковый идентификатор типа для сериализации и палитры
+      редактора. }
     class function GetTypeId: string; virtual;
   public
-    { Создает компонент с пустой геометрией и без привязки к тегу. }
+    { Создаёт компонент с нулевыми размерами и пустым именем. }
     constructor Create; virtual;
+    { Освобождает ресурсы базового компонента }
     destructor Destroy; override;
 
-    { Устанавливает прямоугольник компонента.
-
-      ALeft, ATop - позиция компонента на странице.
-      AWidth, AHeight - размер компонента; отрицательные значения запрещены.
-    }
+    { Устанавливает геопрямоугольник компонента.
+      ALeft, ATop - координаты левого верхнего угла.
+      AWidth, AHeight - размеры прямоугольника; отрицательные значения запрещены. }
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 
-    { Возвращает стабильный строковый тип компонента. }
+    { Возвращает идентификатор типа для фабрики. }
     class function TypeId: string;
 
     property Id: string read fId write fId;
     property Name: string read fName write fName;
     property TagName: string read fTagName write fTagName;
+    property TagId: TRecorderTagId read fTagId write fTagId;
     property Bounds: TRecorderRect read fBounds write fBounds;
     property Factory: TRecorderComponentFactoryBase read fFactory;
   end;
 
-  { TRecorderStaticTextComponent
+  TRecorderTagValueNameMode = (tvnmNone, tvnmTop, tvnmLeft);
 
-    Текстовая подпись без привязки к тегу. Нужна для заголовков, обозначений,
-    статических пояснений и проверки механики размещения компонентов. }
   TRecorderStaticTextComponent = class(TRecorderVisualComponent)
   private
     fText: string;
+    fFontName: string;
+    fFontSize: Integer;
+    fFontColor: LongInt;
+    fFontStyleBold: Boolean;
+    fFontStyleItalic: Boolean;
   protected
     class function GetTypeId: string; override;
   public
+    constructor Create; override;
     property Text: string read fText write fText;
+    property FontName: string read fFontName write fFontName;
+    property FontSize: Integer read fFontSize write fFontSize;
+    property FontColor: LongInt read fFontColor write fFontColor;
+    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
   end;
 
-  { TRecorderTagValueComponent
-
-    Модельный компонент значения тега. В первой версии хранит только имя тега и
-    формат вывода; фактические значения придут из tag registry/notify позже. }
   TRecorderTagValueComponent = class(TRecorderVisualComponent)
   private
     fDisplayFormat: string;
+    fFontName: string;
+    fFontSize: Integer;
+    fFontColor: LongInt;
+    fFontStyleBold: Boolean;
+    fFontStyleItalic: Boolean;
+    fShowNameMode: TRecorderTagValueNameMode;
+    fEstimateKind: TRecorderTagEstimateKind;
+    fUseDefaultEstimate: Boolean;
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
     property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
+    property FontName: string read fFontName write fFontName;
+    property FontSize: Integer read fFontSize write fFontSize;
+    property FontColor: LongInt read fFontColor write fFontColor;
+    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
+    property ShowNameMode: TRecorderTagValueNameMode read fShowNameMode write fShowNameMode;
+    property EstimateKind: TRecorderTagEstimateKind read fEstimateKind write fEstimateKind;
+    property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
+  end;
+
+  TRecorderTrendLine = class
+  private
+    fAxisIndex: Integer;
+    fColor: LongInt;
+    fEstimateKind: TRecorderTagEstimateKind;
+    fName: string;
+    fTagName: string;
+    fTagId: TRecorderTagId;
+    fVisible: Boolean;
+    fWidth: Integer;
+  public
+    constructor Create;
+    procedure Assign(ASource: TRecorderTrendLine);
+    property Name: string read fName write fName;
+    property TagName: string read fTagName write fTagName;
+    property TagId: TRecorderTagId read fTagId write fTagId;
+    property EstimateKind: TRecorderTagEstimateKind read fEstimateKind
+      write fEstimateKind;
+    property AxisIndex: Integer read fAxisIndex write fAxisIndex;
+    property Color: LongInt read fColor write fColor;
+    property Width: Integer read fWidth write fWidth;
+    property Visible: Boolean read fVisible write fVisible;
+  end;
+
+  { TRecorderOscillogramComponent
+    Компонент осциллограммы на пользовательской мнемосхеме. По умолчанию поддерживает
+    синхронизацию: основной привязанный тег и набор дополнительных линий. }
+  TRecorderOscillogramComponent = class(TRecorderVisualComponent)
+  private
+    fBindingMode: TRecorderTagBindingMode;
+    fLines: TList;
+    fTagOffset: Integer;
+    function GetLine(AIndex: Integer): TRecorderTrendLine;
+    function GetLineCount: Integer;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function AddLine: TRecorderTrendLine;
+    procedure AssignOscillogram(ASource: TRecorderOscillogramComponent);
+    procedure ClearLines;
+    procedure DeleteLine(AIndex: Integer);
+    property BindingMode: TRecorderTagBindingMode read fBindingMode
+      write fBindingMode;
+    property LineCount: Integer read GetLineCount;
+    property Lines[AIndex: Integer]: TRecorderTrendLine read GetLine;
+    property TagOffset: Integer read fTagOffset write fTagOffset;
+  end;
+
+
+  TRecorderTrendAxis = class
+  private
+    fColor: LongInt;
+    fName: string;
+    fRangeMax: Double;
+    fRangeMin: Double;
+  public
+    constructor Create;
+    procedure Assign(ASource: TRecorderTrendAxis);
+    property Name: string read fName write fName;
+    property Color: LongInt read fColor write fColor;
+    property RangeMin: Double read fRangeMin write fRangeMin;
+    property RangeMax: Double read fRangeMax write fRangeMax;
+  end;
+
+  TRecorderTrendYAxisMode = (
+    tyamSimple,
+    tyamRow,
+    tyamColumn,
+    tyamFree
+  );
+
+  TRecorderTrendComponent = class(TRecorderVisualComponent)
+  private
+    fAxes: TList;
+    fDurationSec: Double;
+    fLegendVisible: Boolean;
+    fLines: TList;
+    fShowCurrentValues: Boolean;
+    fUpdatePeriodSec: Double;
+    fYAxisMode: TRecorderTrendYAxisMode;
+    function GetAxis(AIndex: Integer): TRecorderTrendAxis;
+    function GetAxisCount: Integer;
+    function GetLine(AIndex: Integer): TRecorderTrendLine;
+    function GetLineCount: Integer;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    function AddAxis: TRecorderTrendAxis;
+    function AddLine: TRecorderTrendLine;
+    procedure AssignTrend(ASource: TRecorderTrendComponent);
+    procedure ClearAxes;
+    procedure ClearLines;
+    procedure DeleteAxis(AIndex: Integer);
+    procedure DeleteLine(AIndex: Integer);
+    property AxisCount: Integer read GetAxisCount;
+    property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
+    property LineCount: Integer read GetLineCount;
+    property Lines[AIndex: Integer]: TRecorderTrendLine read GetLine;
+    property DurationSec: Double read fDurationSec write fDurationSec;
+    property UpdatePeriodSec: Double read fUpdatePeriodSec
+      write fUpdatePeriodSec;
+    property YAxisMode: TRecorderTrendYAxisMode read fYAxisMode
+      write fYAxisMode;
+    property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
+    property ShowCurrentValues: Boolean read fShowCurrentValues
+      write fShowCurrentValues;
+  end;
+
+  TRecorderSpectrumComponent = class(TRecorderVisualComponent)
+  private
+    fRangeMinX, fRangeMaxX: Double;
+    fRangeMinY, fRangeMaxY: Double;
+    fLgX, fLgY: Boolean;
+    fShowAlarms, fShowWarnings, fShowProfile: Boolean;
+    fShowLabels: Boolean;
+    fLegendVisible: Boolean;
+    fZeroY0: Boolean;
+    fResultType: Integer;
+    fTagNames: TStringList;
+    fTagIds: array of TRecorderTagId;
+    fTahoTagName: string;
+    fTahoTagId: TRecorderTagId;
+    fProfileName: string;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Assign(ASource: TRecorderSpectrumComponent);
+    procedure EnsureTagIdsCount;
+    procedure ClearTagRefs;
+    procedure SetTagRefAt(AIndex: Integer; ATag: TRecorderTag);
+    function ResolveTagAt(ARegistry: TRecorderTagRegistry; AIndex: Integer): TRecorderTag;
+    function ResolveTahoTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+    procedure ResolveTagIdsFromNames(ARegistry: TRecorderTagRegistry);
+    function TagIdAt(AIndex: Integer): TRecorderTagId;
+    procedure SetTagIdAt(AIndex: Integer; ATagId: TRecorderTagId);
+    property RangeMinX: Double read fRangeMinX write fRangeMinX;
+    property RangeMaxX: Double read fRangeMaxX write fRangeMaxX;
+    property RangeMinY: Double read fRangeMinY write fRangeMinY;
+    property RangeMaxY: Double read fRangeMaxY write fRangeMaxY;
+    property LgX: Boolean read fLgX write fLgX;
+    property LgY: Boolean read fLgY write fLgY;
+    property ShowAlarms: Boolean read fShowAlarms write fShowAlarms;
+    property ShowWarnings: Boolean read fShowWarnings write fShowWarnings;
+    property ShowProfile: Boolean read fShowProfile write fShowProfile;
+    property ShowLabels: Boolean read fShowLabels write fShowLabels;
+    property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
+    property ZeroY0: Boolean read fZeroY0 write fZeroY0;
+    property ResultType: Integer read fResultType write fResultType;
+    property TagNames: TStringList read fTagNames;
+    property TahoTagName: string read fTahoTagName write fTahoTagName;
+    property TahoTagId: TRecorderTagId read fTahoTagId write fTahoTagId;
+    property ProfileName: string read fProfileName write fProfileName;
   end;
 
   { TRecorderComponentFactoryBase
-
-    Фабрика одного типа модельных компонентов. Она создает компоненты и ведет
-    реестр своих дочерних экземпляров, чтобы удаление формы/компонента не
-    оставляло у фабрики устаревшие ссылки. }
+    Базовый класс фабрики визуальных компонентов. Для каждого экземпляра и типа
+    фабрика хранит ссылки компонентов, чтобы при удалении палитры/редактора не
+    оставались в памяти висячие ссылки. }
   TRecorderComponentFactoryBase = class
   private
-    fChildren: TList;
-    fComponentClass: TRecorderVisualComponentClass;
-    fDefaultHeight: Integer;
-    fDefaultWidth: Integer;
-    fSingleTag: Boolean;
-    fTypeId: string;
-    fTypeName: string;
+    fChildren: TList;                              { список созданных компонентов (TRecorderVisualComponent) }
+    fComponentClass: TRecorderVisualComponentClass;{ класс по типу компонента }
+    fDefaultHeight: Integer;                       { высота компонента по умолчанию }
+    fDefaultWidth: Integer;                        { ширина компонента по умолчанию }
+    fSingleTag: Boolean;                           { true — компонент с одним тегом }
+    fTypeId: string;                               { машинный ID типа }
+    fTypeName: string;                             { человекочитаемое имя типа }
     function GetChild(AIndex: Integer): TRecorderVisualComponent;
     function GetChildCount: Integer;
   protected
-    { Убирает компонент из реестра детей без освобождения памяти. }
+    { Убирает компонент из списка детей при уничтожении объекта. }
     procedure ExcludeComponent(AComponent: TRecorderVisualComponent);
   public
-    { ATypeId - стабильный id типа для конфигов.
+    { Конструктор базовой фабрики.
+      ATypeId - машинный id типа для сериализации.
       ATypeName - человекочитаемое название для UI.
-      AComponentClass - класс модельного компонента.
+      AComponentClass - класс создаваемого компонента.
       ADefaultWidth/ADefaultHeight - размер нового компонента по умолчанию.
-      ASingleTag - признак, что компонент обычно привязан к одному тегу. }
+      ASingleTag - признак, что компонент работает с одним тегом. }
     constructor Create(const ATypeId, ATypeName: string;
       AComponentClass: TRecorderVisualComponentClass;
       ADefaultWidth, ADefaultHeight: Integer; ASingleTag: Boolean); virtual;
+    { Освобождает компоненты при уничтожении фабрики }
     destructor Destroy; override;
 
-    { Создает компонент и добавляет его в реестр детей фабрики. }
+    { Создаёт компонент с размерами и типом по умолчанию. }
     function CreateComponent: TRecorderVisualComponent; virtual;
 
-    { Удаляет компонент, ранее созданный этой фабрикой. }
+    { Удаляет компонент, когда уничтожает сам объект. }
     procedure ReleaseComponent(AComponent: TRecorderVisualComponent); virtual;
 
-    { Проверяет, что компонент все еще числится дочерним экземпляром фабрики. }
+    { Проверяет, что компонент всё ещё числится среди созданных фабрикой. }
     function ContainsComponent(AComponent: TRecorderVisualComponent): Boolean;
 
     property TypeId: string read fTypeId;
@@ -167,128 +359,126 @@ type
     property Children[AIndex: Integer]: TRecorderVisualComponent read GetChild;
   end;
 
+  { Фабрика статического текста компонентов }
   TRecorderStaticTextFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
   end;
 
+  { Фабрика компонента значения тега }
   TRecorderTagValueFactory = class(TRecorderComponentFactoryBase)
   public
     constructor Create; reintroduce;
   end;
 
-  { TRecorderFormPage
+  { Фабрика компонента осциллограммы }
+  TRecorderOscillogramFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create; reintroduce;
+  end;
 
-    Одна экранная страница Recorder: имя, заголовок, режим и список модельных
-    компонентов. Страница владеет добавленными компонентами. }
+  TRecorderTrendFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create; reintroduce;
+  end;
+
+  TRecorderSpectrumFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create;
+  end;
+
+  { TRecorderFormPage
+    Одна страница мнемосхемы Recorder: имя, заголовок, режим и набор визуальных
+    компонентов. Компоненты принадлежат странице. }
   TRecorderFormPage = class
   private
-    fComponents: TList;
-    fId: string;
-    fMode: TRecorderFormPageMode;
-    fName: string;
-    fTitle: string;
+    fComponents: TList;                            { список компонентов на странице (TRecorderVisualComponent) }
+    fBaseOscillogramCount: Integer;                { количество осциллограмм для встроенной BasePage }
+    fId: string;                                   { уникальный ID страницы }
+    fMode: TRecorderFormPageMode;                  { текущий режим (просмотр/редактирование) }
+    fName: string;                                 { внутреннее имя страницы }
+    fTitle: string;                                { заголовок страницы }
     procedure ReleaseComponent(AComponent: TRecorderVisualComponent);
     function GetComponent(AIndex: Integer): TRecorderVisualComponent;
     function GetComponentCount: Integer;
   public
-    { Создает пустую страницу.
-
-      AId - стабильный идентификатор страницы.
+    { Создаёт новую страницу.
+      AId - уникальный идентификатор страницы.
       AName - внутреннее имя страницы.
-      ATitle - заголовок для UI.
-    }
+      ATitle - заголовок для UI. }
     constructor Create(const AId, AName, ATitle: string);
+    { Освобождает ресурсы при уничтожении страницы }
     destructor Destroy; override;
 
-    { Добавляет компонент на страницу и передает владение странице.
-
-      AComponent - компонент, созданный фабрикой или кодом настройки.
-      Возвращает тот же экземпляр для удобного заполнения свойств.
-    }
+    { Добавляет компонент на страницу и возвращает тот же экземпляр.
+      AComponent - компонент, который становится дочерним для страницы. }
     function AddComponent(AComponent: TRecorderVisualComponent): TRecorderVisualComponent;
 
-    { Находит компонент по Id. Возвращает nil, если компонент не найден. }
+    { Ищет компонент по Id. Возвращает nil, если компонент не найден. }
     function FindComponentById(const AId: string): TRecorderVisualComponent;
 
     { Удаляет компонент по Id.
-
-      AId - идентификатор компонента.
-      Возвращает True, если компонент найден и удален; False, если такого
-      компонента на странице нет.
-    }
+      AId - идентификатор компонента. }
     function RemoveComponentById(const AId: string): Boolean;
 
     { Удаляет компонент по индексу в списке страницы.
-
-      AIndex - индекс компонента от 0 до ComponentCount - 1.
-      Если индекс вне диапазона, выбрасывается ERecorderFormError.
-    }
+      AIndex - номер компонента от 0 до ComponentCount - 1. }
     procedure DeleteComponent(AIndex: Integer);
 
     property Id: string read fId write fId;
     property Name: string read fName write fName;
     property Title: string read fTitle write fTitle;
     property Mode: TRecorderFormPageMode read fMode write fMode;
+    property BaseOscillogramCount: Integer read fBaseOscillogramCount
+      write fBaseOscillogramCount;
     property ComponentCount: Integer read GetComponentCount;
     property Components[AIndex: Integer]: TRecorderVisualComponent read GetComponent;
   end;
 
   { TRecorderFormManager
-
-    Реестр страниц формуляров. Менеджер владеет страницами и хранит активную
-    страницу, которую должен отображать UI. }
+    Менеджер страниц мнемосхемы. Держит коллекцию страниц и выбор активной
+    страницы, которую отображает UI. }
   TRecorderFormManager = class
   private
-    fActivePage: TRecorderFormPage;
-    fPages: TList;
+    fActivePage: TRecorderFormPage;                { текущая активная страница }
+    fPages: TList;                                 { список страниц (TRecorderFormPage) }
     function GetPage(AIndex: Integer): TRecorderFormPage;
     function GetPageCount: Integer;
   public
+    { Конструктор менеджера форм }
     constructor Create;
+    { Освобождает страницы и список при уничтожении }
     destructor Destroy; override;
 
-    { Добавляет страницу и передает владение менеджеру. Первая добавленная
-      страница автоматически становится активной. }
+    { Добавляет страницу и делает её активной страницей. После добавления
+      страница принадлежит менеджеру формы. }
     function AddPage(APage: TRecorderFormPage): TRecorderFormPage;
 
-    { Находит страницу по Id. Возвращает nil, если страница не найдена. }
+    { Ищет страницу по Id. Возвращает nil, если страница не найдена. }
     function FindPageById(const AId: string): TRecorderFormPage;
 
     { Возвращает индекс страницы по Id или -1, если страница не найдена. }
     function IndexOfPageId(const AId: string): Integer;
 
     { Удаляет страницу по Id.
-
-      AId - идентификатор страницы.
-      Возвращает True, если страница найдена и удалена; False, если такой
-      страницы нет. Если удалялась активная страница, активной становится первая
-      оставшаяся страница или nil.
-    }
+      AId - идентификатор страницы. }
     function RemovePageById(const AId: string): Boolean;
 
     { Перемещает страницу внутри списка.
-
-      AFromIndex - текущий индекс страницы.
-      AToIndex - новый индекс страницы.
-      Если индекс вне диапазона, выбрасывается ERecorderFormError.
-    }
+      AFromIndex - исходный индекс страницы.
+      AToIndex - новый индекс страницы. }
     procedure MovePage(AFromIndex, AToIndex: Integer);
 
     { Делает страницу с заданным Id активной.
-
-      AId - идентификатор страницы. Если страница не найдена, выбрасывается
-      ERecorderFormError.
-    }
+      AId - идентификатор страницы. }
     procedure SetActivePageById(const AId: string);
 
-    { Пробует сделать страницу с заданным Id активной без исключения.
-
-      AId - идентификатор страницы.
-      Возвращает True, если страница найдена и стала активной; False, если
-      страницы с таким Id нет.
-    }
+    { Пытается сделать страницу с заданным Id активной без исключения.
+      AId - идентификатор страницы. }
     function TrySetActivePageById(const AId: string): Boolean;
+
+    { Очищает все страницы и освобождает коллекцию. }
+    procedure Clear;
 
     property ActivePage: TRecorderFormPage read fActivePage;
     property PageCount: Integer read GetPageCount;
@@ -296,46 +486,40 @@ type
   end;
 
   { TRecorderComponentFactory
-
-    Фабрика модельных компонентов. Хранит соответствие TypeId -> class и создает
-    компоненты без знания конкретного класса вызывающим кодом. }
+    Реестр фабрик компонентов. Хранит соответствие TypeId -> class и отдельные
+    экземпляры для каждого зарегистрированного типа компонента формы. }
   TRecorderComponentFactory = class
   private
-    fRegistry: TStringList;
+    fRegistry: TStringList;                        { строка зарегистрированных типов }
     function GetFactory(AIndex: Integer): TRecorderComponentFactoryBase;
     function GetFactoryCount: Integer;
   public
+    { Конструктор реестра компонентов формы }
     constructor Create;
+    { Освобождает зарегистрированные фабрики }
     destructor Destroy; override;
 
     { Регистрирует класс компонента.
-
-      ATypeId - стабильное имя типа, например StaticText или TagValue.
-      AComponentClass - класс, наследник TRecorderVisualComponent.
-    }
+      ATypeId - машинное имя типа, например StaticText или TagValue.
+      AComponentClass - класс, наследник TRecorderVisualComponent. }
     procedure RegisterComponent(const ATypeId: string;
       AComponentClass: TRecorderVisualComponentClass);
 
-    { Регистрирует фабрику компонентов одного типа.
-
-      AFactory - экземпляр фабрики; менеджер принимает владение. }
+    { Регистрирует готовую фабрику одного типа.
+      AFactory - экземпляр фабрики; владение переходит реестру. }
     procedure RegisterFactory(AFactory: TRecorderComponentFactoryBase);
 
-    { Создает компонент зарегистрированного типа.
-
-      ATypeId - строковый тип компонента. Если тип неизвестен, выбрасывается
-      ERecorderFormError.
-    }
+    { Создаёт компонент зарегистрированного типа.
+      ATypeId - машинное имя компонента. }
     function CreateComponent(const ATypeId: string): TRecorderVisualComponent;
 
-    { Проверяет, зарегистрирован ли тип компонента, не создавая экземпляр и не
-      выбрасывая исключение. Удобно для UI настройки и тестов-примеров. }
+    { Проверяет, зарегистрирован ли тип компонента. }
     function IsComponentRegistered(const ATypeId: string): Boolean;
 
-    { Находит фабрику по TypeId. Возвращает nil, если тип не зарегистрирован. }
+    { Ищет фабрику по TypeId. Возвращает nil, если тип не зарегистрирован. }
     function FindFactory(const ATypeId: string): TRecorderComponentFactoryBase;
 
-    { Регистрирует базовый набор компонентов первой версии. }
+    { Регистрирует стандартный набор компонентов формы. }
     procedure RegisterDefaultComponents;
 
     property FactoryCount: Integer read GetFactoryCount;
@@ -343,21 +527,19 @@ type
   end;
 
   { TRecorderFormFactory
-
-    Фабрика страниц. Отделена от менеджера, чтобы позже здесь появились шаблоны,
-    загрузка из конфигурации и создание страниц плагинами. }
+    Фабрика форм. Создаёт по шаблонам, когда нужны готовые наборы страниц,
+    например при отладке и начальной загрузке проекта. }
   TRecorderFormFactory = class
   private
-    fComponentFactory: TRecorderComponentFactory;
+    fComponentFactory: TRecorderComponentFactory;  { ссылка на реестр компонентов }
   public
-    { AComponentFactory - фабрика компонентов; объект не передается во владение. }
+    { AComponentFactory - реестр компонентов; фабрика не владеет им. }
     constructor Create(AComponentFactory: TRecorderComponentFactory);
 
-    { Создает пустую страницу формуляра. }
+    { Создать пустую страницу мнемосхемы. }
     function CreateBlankPage(const AId, AName, ATitle: string): TRecorderFormPage;
 
-    { Создает демонстрационную страницу с подписью и компонентом значения тега.
-      Метод нужен только как ранний пример настройки, не как финальный шаблон UI. }
+    { Создать отладочную страницу с одним привязанным тегом. }
     function CreateDebugTagPage(const AId, AName, ATitle,
       ATagName: string): TRecorderFormPage;
   end;
@@ -378,6 +560,8 @@ begin
   fBounds.Top := 0;
   fBounds.Width := 0;
   fBounds.Height := 0;
+  fTagName := '';
+  fTagId := 0;
 end;
 
 destructor TRecorderVisualComponent.Destroy;
@@ -418,13 +602,441 @@ begin
   Result := 'TagValue';
 end;
 
+constructor TRecorderStaticTextComponent.Create;
+begin
+  inherited Create;
+  fText := 'Text';
+  fFontName := 'Tahoma';
+  fFontSize := 10;
+  fFontColor := 0;
+  fFontStyleBold := False;
+  fFontStyleItalic := False;
+end;
+
 constructor TRecorderTagValueComponent.Create;
 begin
   inherited Create;
   fDisplayFormat := '0.###';
+  fFontName := 'Tahoma';
+  fFontSize := 10;
+  fFontColor := 0;
+  fFontStyleBold := True;
+  fFontStyleItalic := False;
+  fShowNameMode := tvnmTop;
+  fEstimateKind := tekMean;
+  fUseDefaultEstimate := True;
 end;
 
-{ TRecorderComponentFactoryBase }
+{ TRecorderOscillogramComponent }
+
+class function TRecorderOscillogramComponent.GetTypeId: string;
+begin
+  Result := 'Oscillogram';
+end;
+
+constructor TRecorderOscillogramComponent.Create;
+begin
+  inherited Create;
+  fBindingMode := rtbmRelativeSelectedTag;
+  fTagOffset := 0;
+  fLines := TList.Create;
+end;
+
+destructor TRecorderOscillogramComponent.Destroy;
+begin
+  ClearLines;
+  fLines.Free;
+  inherited Destroy;
+end;
+
+function TRecorderOscillogramComponent.GetLine(AIndex: Integer): TRecorderTrendLine;
+begin
+  Result := TRecorderTrendLine(fLines[AIndex]);
+end;
+
+function TRecorderOscillogramComponent.GetLineCount: Integer;
+begin
+  Result := fLines.Count;
+end;
+
+function TRecorderOscillogramComponent.AddLine: TRecorderTrendLine;
+var
+  lName: string;
+  lColor: LongInt;
+begin
+  Result := TRecorderTrendLine.Create;
+  lName := Result.Name;
+  lColor := Result.Color;
+  OglChartLineAppearance(fLines.Count + 1, lName, lColor);
+  Result.Name := lName;
+  Result.Color := lColor;
+  fLines.Add(Result);
+end;
+
+procedure TRecorderOscillogramComponent.ClearLines;
+var
+  I: Integer;
+begin
+  for I := fLines.Count - 1 downto 0 do
+    TObject(fLines[I]).Free;
+  fLines.Clear;
+end;
+
+procedure TRecorderOscillogramComponent.DeleteLine(AIndex: Integer);
+begin
+  if (AIndex < 0) or (AIndex >= fLines.Count) then
+    Exit;
+  TObject(fLines[AIndex]).Free;
+  fLines.Delete(AIndex);
+end;
+
+procedure TRecorderOscillogramComponent.AssignOscillogram(
+  ASource: TRecorderOscillogramComponent);
+var
+  I: Integer;
+  lLine: TRecorderTrendLine;
+begin
+  if ASource = nil then
+    Exit;
+  fBindingMode := ASource.BindingMode;
+  fTagOffset := ASource.TagOffset;
+  fTagName := ASource.TagName;
+  fTagId := ASource.TagId;
+  ClearLines;
+  for I := 0 to ASource.LineCount - 1 do
+  begin
+    lLine := AddLine;
+    lLine.Assign(ASource.Lines[I]);
+  end;
+end;
+
+
+{ TRecorderTrendAxis }
+
+constructor TRecorderTrendAxis.Create;
+begin
+  inherited Create;
+  fName := 'Y';
+  fColor := $00808080;
+  fRangeMin := 0;
+  fRangeMax := 1;
+end;
+
+procedure TRecorderTrendAxis.Assign(ASource: TRecorderTrendAxis);
+begin
+  if ASource = nil then
+    Exit;
+  fName := ASource.Name;
+  fColor := ASource.Color;
+  fRangeMin := ASource.RangeMin;
+  fRangeMax := ASource.RangeMax;
+end;
+
+{ TRecorderTrendLine }
+
+constructor TRecorderTrendLine.Create;
+begin
+  inherited Create;
+  fName := 'Line';
+  fTagName := '';
+  fTagId := 0;
+  fEstimateKind := tekMean;
+  fAxisIndex := 0;
+  fColor := LongInt(OglChartLinePaletteColor(0));
+  fWidth := 1;
+  fVisible := True;
+end;
+
+procedure TRecorderTrendLine.Assign(ASource: TRecorderTrendLine);
+begin
+  if ASource = nil then
+    Exit;
+  fName := ASource.Name;
+  fTagName := ASource.TagName;
+  fTagId := ASource.TagId;
+  fEstimateKind := ASource.EstimateKind;
+  fAxisIndex := ASource.AxisIndex;
+  fColor := ASource.Color;
+  fWidth := ASource.Width;
+  fVisible := ASource.Visible;
+end;
+
+{ TRecorderTrendComponent }
+
+class function TRecorderTrendComponent.GetTypeId: string;
+begin
+  Result := 'Trend';
+end;
+
+constructor TRecorderTrendComponent.Create;
+begin
+  inherited Create;
+  fAxes := TList.Create;
+  fLines := TList.Create;
+  fDurationSec := 100.0;
+  fUpdatePeriodSec := 1.0;
+  fYAxisMode := tyamRow;
+  fLegendVisible := True;
+  fShowCurrentValues := False;
+  AddAxis;
+end;
+
+destructor TRecorderTrendComponent.Destroy;
+begin
+  ClearLines;
+  ClearAxes;
+  fLines.Free;
+  fAxes.Free;
+  inherited Destroy;
+end;
+
+function TRecorderTrendComponent.GetAxis(AIndex: Integer): TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis(fAxes[AIndex]);
+end;
+
+function TRecorderTrendComponent.GetAxisCount: Integer;
+begin
+  Result := fAxes.Count;
+end;
+
+function TRecorderTrendComponent.GetLine(AIndex: Integer): TRecorderTrendLine;
+begin
+  Result := TRecorderTrendLine(fLines[AIndex]);
+end;
+
+function TRecorderTrendComponent.GetLineCount: Integer;
+begin
+  Result := fLines.Count;
+end;
+
+function TRecorderTrendComponent.AddAxis: TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis.Create;
+  fAxes.Add(Result);
+end;
+
+function TRecorderTrendComponent.AddLine: TRecorderTrendLine;
+var
+  lName: string;
+  lColor: LongInt;
+begin
+  Result := TRecorderTrendLine.Create;
+  lName := Result.Name;
+  lColor := Result.Color;
+  OglChartLineAppearance(fLines.Count, lName, lColor);
+  Result.Name := lName;
+  Result.Color := lColor;
+  fLines.Add(Result);
+end;
+
+procedure TRecorderTrendComponent.AssignTrend(ASource: TRecorderTrendComponent);
+var
+  I: Integer;
+begin
+  if ASource = nil then
+    Exit;
+  fDurationSec := ASource.DurationSec;
+  fUpdatePeriodSec := ASource.UpdatePeriodSec;
+  fYAxisMode := ASource.YAxisMode;
+  fLegendVisible := ASource.LegendVisible;
+  fShowCurrentValues := ASource.ShowCurrentValues;
+  ClearAxes;
+  for I := 0 to ASource.AxisCount - 1 do
+    AddAxis.Assign(ASource.Axes[I]);
+  if fAxes.Count = 0 then
+    AddAxis;
+  ClearLines;
+  for I := 0 to ASource.LineCount - 1 do
+    AddLine.Assign(ASource.Lines[I]);
+end;
+
+procedure TRecorderTrendComponent.ClearAxes;
+begin
+  while fAxes.Count > 0 do
+  begin
+    TObject(fAxes[0]).Free;
+    fAxes.Delete(0);
+  end;
+end;
+
+procedure TRecorderTrendComponent.ClearLines;
+begin
+  while fLines.Count > 0 do
+  begin
+    TObject(fLines[0]).Free;
+    fLines.Delete(0);
+  end;
+end;
+
+{ TRecorderSpectrumComponent }
+
+class function TRecorderSpectrumComponent.GetTypeId: string;
+begin
+  Result := 'Spectrum';
+end;
+
+constructor TRecorderSpectrumComponent.Create;
+begin
+  inherited Create;
+  fTagNames := TStringList.Create;
+  fTagNames.CaseSensitive := False;
+  
+  fRangeMinX := 0.0;
+  fRangeMaxX := 1000.0;
+  fRangeMinY := 0.0;
+  fRangeMaxY := 10.0;
+  fLgX := False;
+  fLgY := False;
+  fShowAlarms := True;
+  fShowWarnings := True;
+  fShowProfile := True;
+  fShowLabels := True;
+  fLegendVisible := True;
+  fZeroY0 := True;
+  fResultType := 0;
+  fTahoTagId := 0;
+  SetLength(fTagIds, 0);
+end;
+
+destructor TRecorderSpectrumComponent.Destroy;
+begin
+  fTagNames.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderSpectrumComponent.Assign(ASource: TRecorderSpectrumComponent);
+begin
+  if ASource = nil then Exit;
+  fRangeMinX := ASource.RangeMinX;
+  fRangeMaxX := ASource.RangeMaxX;
+  fRangeMinY := ASource.RangeMinY;
+  fRangeMaxY := ASource.RangeMaxY;
+  fLgX := ASource.LgX;
+  fLgY := ASource.LgY;
+  fShowAlarms := ASource.ShowAlarms;
+  fShowWarnings := ASource.ShowWarnings;
+  fShowProfile := ASource.ShowProfile;
+  fShowLabels := ASource.ShowLabels;
+  fLegendVisible := ASource.LegendVisible;
+  fZeroY0 := ASource.ZeroY0;
+  fResultType := ASource.ResultType;
+  fTahoTagName := ASource.TahoTagName;
+  fTahoTagId := ASource.TahoTagId;
+  fProfileName := ASource.ProfileName;
+  fTagNames.Assign(ASource.TagNames);
+  fTagIds := ASource.fTagIds;
+end;
+
+procedure TRecorderSpectrumComponent.EnsureTagIdsCount;
+begin
+  if Length(fTagIds) <> fTagNames.Count then
+    SetLength(fTagIds, fTagNames.Count);
+end;
+
+function TRecorderSpectrumComponent.TagIdAt(AIndex: Integer): TRecorderTagId;
+begin
+  EnsureTagIdsCount;
+  if (AIndex < 0) or (AIndex >= Length(fTagIds)) then
+    Exit(0);
+  Result := fTagIds[AIndex];
+end;
+
+procedure TRecorderSpectrumComponent.SetTagIdAt(AIndex: Integer;
+  ATagId: TRecorderTagId);
+begin
+  EnsureTagIdsCount;
+  if (AIndex < 0) or (AIndex >= Length(fTagIds)) then
+    Exit;
+  fTagIds[AIndex] := ATagId;
+end;
+
+procedure TRecorderSpectrumComponent.ClearTagRefs;
+begin
+  SetLength(fTagIds, 0);
+  fTahoTagId := 0;
+end;
+
+procedure TRecorderSpectrumComponent.SetTagRefAt(AIndex: Integer; ATag: TRecorderTag);
+begin
+  if ATag = nil then
+    Exit;
+  if AIndex = fTagNames.Count then
+    fTagNames.Add(ATag.Name)
+  else if (AIndex < 0) or (AIndex >= fTagNames.Count) then
+    Exit;
+  EnsureTagIdsCount;
+  fTagIds[AIndex] := ATag.Id;
+  if not SameText(fTagNames[AIndex], ATag.Name) then
+    fTagNames[AIndex] := ATag.Name;
+end;
+
+function TRecorderSpectrumComponent.ResolveTagAt(ARegistry: TRecorderTagRegistry;
+  AIndex: Integer): TRecorderTag;
+begin
+  Result := nil;
+  if (ARegistry = nil) or (AIndex < 0) or (AIndex >= fTagNames.Count) then
+    Exit;
+  EnsureTagIdsCount;
+  if fTagIds[AIndex] <> 0 then
+    Result := ARegistry.FindById(fTagIds[AIndex]);
+  if Result = nil then
+    Result := ARegistry.FindByName(fTagNames[AIndex]);
+  if Result <> nil then
+    SetTagRefAt(AIndex, Result);
+end;
+
+function TRecorderSpectrumComponent.ResolveTahoTag(
+  ARegistry: TRecorderTagRegistry): TRecorderTag;
+begin
+  Result := nil;
+  if ARegistry = nil then
+    Exit;
+  if fTahoTagId <> 0 then
+    Result := ARegistry.FindById(fTahoTagId);
+  if Result = nil then
+    Result := ARegistry.FindByName(fTahoTagName);
+  if Result <> nil then
+  begin
+    fTahoTagId := Result.Id;
+    fTahoTagName := Result.Name;
+  end;
+end;
+
+procedure TRecorderSpectrumComponent.ResolveTagIdsFromNames(
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+begin
+  if ARegistry = nil then
+    Exit;
+  EnsureTagIdsCount;
+  for I := 0 to fTagNames.Count - 1 do
+    ResolveTagAt(ARegistry, I);
+  ResolveTahoTag(ARegistry);
+end;
+
+{ TRecorderSpectrumFactory }
+
+constructor TRecorderSpectrumFactory.Create;
+begin
+  inherited Create(TRecorderSpectrumComponent.TypeId, 'Spectrum',
+    TRecorderSpectrumComponent, 400, 300, False);
+end;
+
+procedure TRecorderTrendComponent.DeleteAxis(AIndex: Integer);
+begin
+  TObject(fAxes[AIndex]).Free;
+  fAxes.Delete(AIndex);
+  if fAxes.Count = 0 then
+    AddAxis;
+end;
+
+procedure TRecorderTrendComponent.DeleteLine(AIndex: Integer);
+begin
+  TObject(fLines[AIndex]).Free;
+  fLines.Delete(AIndex);
+end;{ TRecorderComponentFactoryBase }
 
 constructor TRecorderComponentFactoryBase.Create(const ATypeId,
   ATypeName: string; AComponentClass: TRecorderVisualComponentClass;
@@ -522,6 +1134,23 @@ begin
     TRecorderTagValueComponent, 160, 24, True);
 end;
 
+{ TRecorderOscillogramFactory }
+
+constructor TRecorderOscillogramFactory.Create;
+begin
+  inherited Create(TRecorderOscillogramComponent.TypeId, 'Oscillogram',
+    TRecorderOscillogramComponent, 360, 220, True);
+end;
+
+
+{ TRecorderTrendFactory }
+
+constructor TRecorderTrendFactory.Create;
+begin
+  inherited Create(TRecorderTrendComponent.TypeId, 'Trend',
+    TRecorderTrendComponent, 400, 300, False);
+end;
+
 { TRecorderFormPage }
 
 constructor TRecorderFormPage.Create(const AId, AName, ATitle: string);
@@ -532,6 +1161,7 @@ begin
   fName := AName;
   fTitle := ATitle;
   fMode := fpmView;
+  fBaseOscillogramCount := 2;
 end;
 
 destructor TRecorderFormPage.Destroy;
@@ -753,6 +1383,16 @@ begin
     fActivePage := lPage;
 end;
 
+procedure TRecorderFormManager.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to fPages.Count - 1 do
+    TObject(fPages[I]).Free;
+  fPages.Clear;
+  fActivePage := nil;
+end;
+
 { TRecorderComponentFactory }
 
 constructor TRecorderComponentFactory.Create;
@@ -839,6 +1479,9 @@ procedure TRecorderComponentFactory.RegisterDefaultComponents;
 begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
+  RegisterFactory(TRecorderOscillogramFactory.Create);
+  RegisterFactory(TRecorderTrendFactory.Create);
+  RegisterFactory(TRecorderSpectrumFactory.Create);
 end;
 
 { TRecorderFormFactory }

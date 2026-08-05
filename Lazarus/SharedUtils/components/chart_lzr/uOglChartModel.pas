@@ -1,19 +1,22 @@
 unit uOglChartModel;
 
-{ Фасад объектной модели чарта.
-  Реальные классы разнесены по модулям рядом с этим файлом:
-  - uOglChartBaseObj: дерево и сериализационные точки расширения;
-  - uOglChartDrawObj: координаты и базовое визуальное состояние;
-  - uOglChartPage: страницы и их отступы/align;
-  - uOglChartAxis: оси и масштабы;
-  - uOglChartTrend: графики и буферные тренды;
-  - uOglChartChart/uOglChartMng: корень модели и менеджер.
-
-  Этот unit оставлен для совместимости старого кода: `uses uOglChartModel`
-  продолжает открывать всю модель, но новая разработка должна подключать
-  конкретные модули. }
-
 {$mode objfpc}{$H+}
+{$codepage UTF8}
+
+{
+  Модуль uOglChartModel
+  Описание: Фасад объектной модели чарта. Объединяет все составные модули объектной модели:
+            - uOglChartBaseObj: базовое дерево объектов и сериализация;
+            - uOglChartDrawObj: координаты и визуальные свойства;
+            - uOglChartPage: страницы разметки и выравнивание;
+            - uOglChartAxis: оси и масштабирование;
+            - uOglChartTrend: графики и буферы данных;
+            - uOglChartTextLabel: текстовые метки и выноски;
+            - uOglChartChart/uOglChartMng: корень модели и менеджер.
+
+  Этот модуль оставлен для обратной совместимости со старыми вызовами 'uses uOglChartModel',
+  но новые модули рекомендуется подключать индивидуально.
+}
 
 interface
 
@@ -23,6 +26,7 @@ uses
   uOglChartPage,
   uOglChartAxis,
   uOglChartTrend,
+  uOglChartTextLabel,
   uOglChartChart,
   uOglChartMng;
 

@@ -66,26 +66,6 @@ object Form1: TForm1
     TabOrder = 3
     OnClick = MultArraySSEClick
   end
-  object cChart1: cChart
-    Left = 0
-    Top = 90
-    Width = 834
-    Height = 540
-    Cursor = crSizeAll
-    Margins.Left = 2
-    Margins.Top = 2
-    Margins.Right = 2
-    Margins.Bottom = 2
-    Align = alBottom
-    Caption = 'cChart1'
-    Color = clBlack
-    ParentBackground = False
-    TabOrder = 4
-    allowEditPages = False
-    showTV = False
-    showLegend = False
-    selectSize = 5
-  end
   object IterCountIE: TIntEdit
     Left = 580
     Top = 6
@@ -95,7 +75,7 @@ object Form1: TForm1
     Margins.Top = 2
     Margins.Right = 2
     Margins.Bottom = 2
-    TabOrder = 5
+    TabOrder = 4
     Text = '1'
   end
   object LgyCb: TCheckBox
@@ -104,7 +84,7 @@ object Form1: TForm1
     Width = 54
     Height = 17
     Caption = 'LgyCb'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = LgyCbClick
   end
   object UseShaders: TCheckBox
@@ -113,7 +93,7 @@ object Form1: TForm1
     Width = 66
     Height = 17
     Caption = 'UseShaders'
-    TabOrder = 7
+    TabOrder = 6
     OnClick = UseShadersClick
   end
   object CheckBox1: TCheckBox
@@ -130,7 +110,7 @@ object Form1: TForm1
     Top = 31
     Width = 91
     Height = 20
-    TabOrder = 9
+    TabOrder = 7
     Text = '0.0'
   end
 end

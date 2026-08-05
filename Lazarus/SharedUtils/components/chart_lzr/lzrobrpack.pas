@@ -9,9 +9,12 @@ interface
 
 uses
   uOglChart, uOglChartBaseObj, uOglChartDrawObj, uOglChartPage, uOglChartAxis, 
-  uOglChartTrend, uOglChartChart, uOglChartMng, uOglChartModel, 
-  uOglChartRenderer, uOglChartFontMng, uOglChartLog, uOglChartSerializer, 
-  uOglChartTypes, LazarusPackageIntf;
+  uOglChartTrend, uOglChartTextLabel, uOglChartTextLabelTests, uOglChartChart, 
+  uOglChartMng, uOglChartModel, uOglChartRenderer, uOglChartFontMng, 
+  uOglChartLog, uOglChartSerializer, uOglChartTypes, uOglChartColors, 
+  uOglChartFrameListener, uOglChartSelectListener, uOglChartPanZoomListener, 
+  uOglChartPageGeometryListener, uOglChartVertexEditListener, 
+  uOglChartLabelEditListener, LazarusPackageIntf;
 
 implementation
 

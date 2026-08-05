@@ -14,7 +14,8 @@ program RecorderTagsTest;
 uses
   SysUtils,
   uRecorderCoreServices,
-  uRecorderTags;
+  uRecorderTags,
+  uRecorderAlarms;
 
 type
   TTagEventProbe = class
@@ -123,6 +124,15 @@ begin
     AssertEquals(lSnapshot.Values[0], 11.0, 'oldest sample value after ring overwrite');
     AssertEquals(lSnapshot.Values[2], 13.0, 'latest sample value');
 
+    lMemTag.EnsureBufferCapacity(6);
+    lRegistry.PublishValue('MemTag', 0.4, 14.0);
+    lRegistry.PublishValue('MemTag', 0.5, 15.0);
+    lRegistry.PublishValue('MemTag', 0.6, 16.0);
+    lSnapshot := lMemTag.Snapshot;
+    AssertEquals(lSnapshot.Count, 6, 'expanded buffer keeps older samples');
+    AssertEquals(lSnapshot.Times[0], 0.1, 'expanded buffer first preserved time');
+    AssertEquals(lSnapshot.Values[5], 16.0, 'expanded buffer latest value');
+
     Writeln('RESULT tags registry and signal buffer test passed.');
   finally
     lRegistry.Free;
@@ -131,6 +141,122 @@ begin
   end;
 end;
 
+procedure TestTagBlockEstimates;
+var
+  lBus: TRecorderEventBus;
+  lProbe: TTagEventProbe;
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+  lBlock: TRecorderSignalSnapshot;
+  lEstimate: TRecorderTagEstimate;
+  lTimes: array[0..2] of Double;
+  lValues: array[0..2] of Double;
+begin
+  Writeln('--- Recorder tag block estimates test ---');
+
+  lBus := TRecorderEventBus.Create;
+  lProbe := TTagEventProbe.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  try
+    lBus.Subscribe(@lProbe.HandleEvent);
+    lTag := lRegistry.CreateTag('BlockTag', 8);
+
+    lTimes[0] := 10.0;
+    lTimes[1] := 10.1;
+    lTimes[2] := 10.2;
+    lValues[0] := 1.0;
+    lValues[1] := 2.0;
+    lValues[2] := 4.0;
+
+    lRegistry.PublishBlock('BlockTag', lTimes, lValues, 3);
+
+    lBlock := lTag.LastBlockSnapshot;
+    PrintSnapshot('SNAPSHOT BlockTag last block', lBlock);
+
+    AssertEquals(lProbe.Count, 1, 'block publishes one event');
+    AssertEquals(lBlock.Count, 3, 'last block count');
+    AssertEquals(lBlock.Times[0], 10.0, 'last block first time');
+    AssertEquals(lBlock.Values[2], 4.0, 'last block last value');
+
+    lEstimate := lTag.Estimate(tekMean);
+    AssertTrue(lEstimate.Valid, 'mean estimate valid');
+    AssertEquals(lEstimate.Value, 7.0 / 3.0, 'mean estimate');
+    lEstimate := lTag.Estimate(tekRmsValue);
+    AssertEquals(lEstimate.Value, Sqrt(7.0), 'rms value estimate');
+    lEstimate := lTag.Estimate(tekRmsDeviation);
+    AssertEquals(lEstimate.Value, Sqrt(7.0 / 3.0), 'rms deviation estimate');
+    lEstimate := lTag.Estimate(tekPeak);
+    AssertEquals(lEstimate.Value, 1.5, 'peak estimate');
+    lEstimate := lTag.Estimate(tekPeakToPeak);
+    AssertEquals(lEstimate.Value, 3.0, 'peak-to-peak estimate');
+    lEstimate := lTag.Estimate(tekMinimum);
+    AssertEquals(lEstimate.Value, 1.0, 'minimum estimate');
+    lEstimate := lTag.Estimate(tekMaximum);
+    AssertEquals(lEstimate.Value, 4.0, 'maximum estimate');
+    lEstimate := lTag.Estimate(tekPeakToPeakByRmsDeviation);
+    AssertEquals(lEstimate.Value, 2.0 * Sqrt(2.0) * Sqrt(7.0 / 3.0),
+      'p2p by rmsd estimate');
+
+    lRegistry.PublishValue('BlockTag', 11.0, 9.0);
+    lBlock := lTag.LastBlockSnapshot;
+    AssertEquals(lBlock.Count, 1, 'single value updates last block');
+    lEstimate := lTag.Estimate(tekMean);
+    AssertEquals(lEstimate.Value, 9.0, 'single value estimate');
+
+    Writeln('RESULT tag block estimates test passed.');
+  finally
+    lRegistry.Free;
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestTagAlarmEngine;
+var
+  lEngine: IRecorderAlarmEngine;
+  lHighAlarm: TRecorderTagSetpoint;
+  lHighWarning: TRecorderTagSetpoint;
+  lTag: TRecorderTag;
+begin
+  Writeln('--- Recorder tag alarm engine test ---');
+
+  lTag := TRecorderTag.Create(1, 'AlarmTag', 8);
+  try
+    lHighWarning := lTag.Setpoints[tskHighWarning];
+    lHighWarning.Enabled := True;
+    lHighWarning.Threshold := 5.0;
+    lTag.Setpoints[tskHighWarning] := lHighWarning;
+
+    lHighAlarm := lTag.Setpoints[tskHighAlarm];
+    lHighAlarm.Enabled := True;
+    lHighAlarm.Threshold := 10.0;
+    lTag.Setpoints[tskHighAlarm] := lHighAlarm;
+
+    lEngine := TRecorderAlarmEngine.Create as IRecorderAlarmEngine;
+    lEngine.ProcessTagValue(lTag, 0.0, 0.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralNone),
+      'alarm level starts as OK');
+
+    lEngine.ProcessTagValue(lTag, 0.1, 6.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralWarning),
+      'warning level after high warning threshold');
+
+    lEngine.ProcessTagValue(lTag, 0.2, 12.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralAlarm),
+      'alarm level after high alarm threshold');
+
+    lEngine.ProcessTagValue(lTag, 0.3, 0.0);
+    AssertEquals(Ord(lEngine.GetTagAlarmLevel(lTag)), Ord(ralNone),
+      'alarm level resets after value returns to normal');
+
+    Writeln('RESULT tag alarm engine test passed.');
+  finally
+    lTag.Free;
+  end;
+end;
+
 begin
   TestTagRegistryAndSignalBuffer;
+  TestTagBlockEstimates;
+  TestTagAlarmEngine;
 end.

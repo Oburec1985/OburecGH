@@ -1,0 +1,659 @@
+Started at 2026-06-03T14:41:26+03:00
+WORKS_ROOT=/mnt/win_share
+Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
+Hint: (lazarus) normal output directory of package freetypelaz 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCLBase 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/units/x86_64-linux/gtk2
+Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/LazOpenGLContext.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
+Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling lzrObrPack.pas
+(3104) Compiling uoglchart.pas
+(3104) Compiling uOglChartTypes.pas
+(3104) Compiling uOglChartChart.pas
+(3104) Compiling uOglChartLog.pas
+(3104) Compiling uOglChartBaseObj.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(62,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(64,34) Hint: (5024) Parameter "AJson" not used
+(3104) Compiling uOglChartDrawObj.pas
+(3104) Compiling uOglChartPage.pas
+(3104) Compiling uOglChartAxis.pas
+(3104) Compiling uOglChartMng.pas
+(3104) Compiling uOglChartRenderer.pas
+(3104) Compiling uOglChartTrend.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+(3104) Compiling uOglChartFontMng.pas
+(3104) Compiling uOglChartLineHelper.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,24) Hint: (5023) Unit "Math" not used in uOglChartLineHelper
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,46) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartLineHelper
+(3104) Compiling uOglChartTextLabel.pas
+(3104) Compiling uOglChartCursor.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas(9,48) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartCursor
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(366,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(395,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(147,79) Hint: (5024) Parameter "ARect" not used
+(3104) Compiling uOglChartFrameListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(22,28) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(23,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,43) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,63) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,66) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,64) Hint: (5024) Parameter "WheelDelta" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,45) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,80) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,24) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,46) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,61) Hint: (5024) Parameter "Handled" not used
+(3104) Compiling uOglChartSelectListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(45,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(9,32) Hint: (5023) Unit "Math" not used in uOglChartSelectListener
+(3104) Compiling uOglChartPanZoomListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(300,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(347,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(402,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(445,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(40,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(50,44) Hint: (5024) Parameter "Shift" not used
+(3104) Compiling uOglChartPageGeometryListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
+(3104) Compiling uOglChartVertexEditListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(66,3) Note: (5025) Local variable "lInnerIndex" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(37,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(38,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(40,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(5,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(8,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
+(3104) Compiling uOglChartLabelEditListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(59,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(63,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(13,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
+(3104) Compiling uOglChartCursorListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(107,3) Note: (5025) Local variable "lAxis" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(61,61) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,19) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,37) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,59) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,79) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,82) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(725,17) Note: (5027) Local variable "lFreq" is assigned but never used
+(3104) Compiling uOglChartTextLabelTests.pas
+(3104) Compiling uOglChartSerializer.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSerializer.pas(277,41) Warning: (5066) Symbol "Create" is deprecated: "use options form instead"
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(87,3) Note: (5025) Local variable "lJsonStr" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(9,3) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTextLabelTests
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(9,55) Hint: (5023) Unit "uOglChartPage" not used in uOglChartTextLabelTests
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabelTests.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTextLabelTests
+(3104) Compiling uOglChartModel.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(23,3) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(24,3) Hint: (5023) Unit "uOglChartDrawObj" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(25,3) Hint: (5023) Unit "uOglChartPage" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(26,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(27,3) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(28,3) Hint: (5023) Unit "uOglChartTextLabel" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(29,3) Hint: (5023) Unit "uOglChartChart" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartModel.pas(30,3) Hint: (5023) Unit "uOglChartMng" not used in uOglChartModel
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,14) Hint: (5023) Unit "uOglChartBaseObj" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,32) Hint: (5023) Unit "uOglChartDrawObj" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,50) Hint: (5023) Unit "uOglChartPage" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(11,65) Hint: (5023) Unit "uOglChartAxis" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(12,3) Hint: (5023) Unit "uOglChartTrend" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(12,19) Hint: (5023) Unit "uOglChartTextLabel" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(12,64) Hint: (5023) Unit "uOglChartChart" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(13,3) Hint: (5023) Unit "uOglChartMng" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(13,17) Hint: (5023) Unit "uOglChartModel" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(13,33) Hint: (5023) Unit "uOglChartRenderer" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(13,52) Hint: (5023) Unit "uOglChartFontMng" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,17) Hint: (5023) Unit "uOglChartSerializer" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,38) Hint: (5023) Unit "uOglChartTypes" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(14,54) Hint: (5023) Unit "uOglChartFrameListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,3) Hint: (5023) Unit "uOglChartSelectListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(15,28) Hint: (5023) Unit "uOglChartPanZoomListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(16,3) Hint: (5023) Unit "uOglChartPageGeometryListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(16,34) Hint: (5023) Unit "uOglChartVertexEditListener" not used in LzrObrPack
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.pas(17,3) Hint: (5023) Unit "uOglChartLabelEditListener" not used in LzrObrPack
+(1008) 10640 lines compiled, 0.5 sec
+(1021) 1 warning(s) issued
+(1022) 111 hint(s) issued
+(1023) 8 note(s) issued
+Hint: (lazarus) [RunTool] "/usr/bin/fpc" "-iWTOTP" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg"
+Hint: (lazarus) [RunTool] "/usr/bin/fpc" "-va" "compilertest.pas" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg" "-Fr/usr/lib/lazarus/2.2.6/components/codetools/fpc.errore.msg"
+Hint: (lazarus) Missing state file of BuildIntf 1.0: /usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/BuildIntf.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux" of package "BuildIntf 1.0"
+Hint: (lazarus) normal output directory of package BuildIntf 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux
+Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
+Hint: (lazarus) normal output directory of package freetypelaz 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCLBase 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for DebuggerIntf 0.1
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/debuggerintf"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/debuggerintf"
+  State file="/usr/lib/lazarus/2.2.6/components/debuggerintf/lib/x86_64-linux/DebuggerIntf.compiled"
+Hint: (lazarus) normal output directory of package DebuggerIntf 0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/debuggerintf/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/DebuggerIntf/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for LazControls 1.0.1
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols"
+  State file="/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2/LazControls.compiled"
+Hint: (lazarus) normal output directory of package LazControls 1.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2
+Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/LazOpenGLContext.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
+Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for SynEdit 1.0
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/synedit"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/synedit"
+  State file="/usr/lib/lazarus/2.2.6/components/synedit/units/x86_64-linux/gtk2/SynEdit.compiled"
+Hint: (lazarus) normal output directory of package SynEdit 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/synedit/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/SynEdit/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for IDEIntf 1.0
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf"
+  State file="/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2/IDEIntf.compiled"
+Hint: (lazarus) normal output directory of package IDEIntf 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for LazControlDsgn 0.0
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/design"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/design"
+  State file="/usr/lib/lazarus/2.2.6/components/lazcontrols/design/lib/x86_64-linux/gtk2/LazControlDsgn.compiled"
+Hint: (lazarus) normal output directory of package LazControlDsgn 0.0 is not writable: "/usr/lib/lazarus/2.2.6/components/lazcontrols/design/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazControlDsgn/lib/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for LazDebuggerGdbmi 0.1
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/debuggerintf/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazdebuggergdbmi"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/DebuggerIntf/lib/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazdebuggergdbmi"
+  State file="/usr/lib/lazarus/2.2.6/components/lazdebuggergdbmi/units/x86_64-linux/gtk2/LazDebuggerGdbmi.compiled"
+Hint: (lazarus) normal output directory of package LazDebuggerGdbmi 0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/lazdebuggergdbmi/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazDebuggerGdbmi/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for SynEditDsgn 1.0
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/synedit/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/synedit/design"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/home/user/.lazarus/lib/SynEdit/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/synedit/design"
+  State file="/usr/lib/lazarus/2.2.6/components/synedit/design/units/x86_64-linux/gtk2/SynEditDsgn.compiled"
+Hint: (lazarus) normal output directory of package SynEditDsgn 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/synedit/design/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/SynEditDsgn/units/x86_64-linux/gtk2
+Hint: (lazarus) [CalcTargets] Lazarus directory is readonly, using fallback target directory: /home/user/.lazarus/bin
+Note: (lazarus) deleted backup "/home/user/.lazarus/bin/lazarus.old"
+Note: (lazarus) renamed file "/home/user/.lazarus/bin/lazarus" to "/home/user/.lazarus/bin/lazarus.old"
+SpecialIdeConfig MAKE MakeIDECfgFilename=/home/user/.lazarus/idemake.cfg True
+Hint: (lazarus) [CalcTargets] Lazarus directory is readonly, using fallback target directory: /home/user/.lazarus/bin
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+make: Entering directory '/usr/lib/lazarus/2.2.6'
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+/usr/bin/make -C ide idepkg
+make[1]: Entering directory '/usr/lib/lazarus/2.2.6/ide'
+/usr/bin/make --assume-new=lazarus.pp lazarus OPT=' @/home/user/.lazarus/idemake.cfg'
+make[2]: Entering directory '/usr/lib/lazarus/2.2.6/ide'
+/usr/bin/fpc -gl -vbqewnhi -Sci -dlclgtk2 -Fu../designer -Fu../debugger -Fu../debugger/frames -Fu../converter -Fu../packager -Fu../packager/frames -Fu../components/custom -Fuframes -Fu. -Fu/usr/lib/x86_64-linux-gnu/fpc/3.2.2/units/x86_64-linux/rtl -Fiinclude -Fiinclude/linux -Fi../images -FE.. -FU../units/x86_64-linux/gtk2 -Cg -Fl/usr/lib/gcc/x86_64-linux-gnu/12 -Flinclude -Fl/etc/ld.so.conf.d/*.conf @/home/user/.lazarus/idemake.cfg -dx86_64 lazarus.pp
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Hint: (11030) Start of reading config file /home/user/.lazarus/idemake.cfg
+Hint: (11031) End of reading config file /home/user/.lazarus/idemake.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling lazarus.pp
+(9022) Compiling resource /home/user/.lazarus/units/x86_64-linux/gtk2/lazarus.or
+(9015) Linking /home/user/.lazarus/bin/lazarus
+(1008) 239 lines compiled, 3.8 sec
+(1022) 4 hint(s) issued
+make[2]: Leaving directory '/usr/lib/lazarus/2.2.6/ide'
+make[1]: Leaving directory '/usr/lib/lazarus/2.2.6/ide'
+make: Leaving directory '/usr/lib/lazarus/2.2.6'
+Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
+Hint: (lazarus) normal output directory of package freetypelaz 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCLBase 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/units/x86_64-linux/gtk2
+Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/LazOpenGLContext.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
+Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
+Hint: (lazarus) Build Project: nothing to do.
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling project1.lpr
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTypes.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLog.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(62,34) Hint: (5024) Parameter "AJson" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartBaseObj.pas(64,34) Hint: (5024) Parameter "AJson" not used
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartDrawObj.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPage.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartAxis.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,22) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTrend.pas(16,56) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,24) Hint: (5023) Unit "Math" not used in uOglChartLineHelper
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLineHelper.pas(12,46) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartLineHelper
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(22,28) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(23,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,43) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(25,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,25) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,63) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,66) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(26,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(27,102) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,26) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,44) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,64) Hint: (5024) Parameter "WheelDelta" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,85) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,88) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(28,104) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,45) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(30,80) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,24) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,46) Hint: (5024) Parameter "Key" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFrameListener.pas(31,61) Hint: (5024) Parameter "Handled" not used
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartChart.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartFontMng.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartTextLabel.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursor.pas(9,48) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartCursor
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(366,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(395,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(1433,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartRenderer.pas(147,79) Hint: (5024) Parameter "ARect" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(95,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(59,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(63,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(67,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartLabelEditListener.pas(13,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,41) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(29,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPageGeometryListener.pas(10,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(300,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(347,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(402,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(445,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(40,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartPanZoomListener.pas(50,44) Hint: (5024) Parameter "Shift" not used
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(45,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(53,82) Hint: (5024) Parameter "Handled" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartSelectListener.pas(9,32) Hint: (5023) Unit "Math" not used in uOglChartSelectListener
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(66,3) Note: (5025) Local variable "lInnerIndex" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(37,65) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(38,43) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,23) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,63) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,83) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(39,86) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(40,56) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(5,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartVertexEditListener.pas(8,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
+(3104) Compiling unit1.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartMng.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(107,3) Note: (5025) Local variable "lAxis" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(61,61) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,19) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,37) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,59) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,79) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorListener.pas(69,82) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uoglchart.pas(725,17) Note: (5027) Local variable "lFreq" is assigned but never used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(46,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(447,23) Hint: (5091) Local variable "lArrValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(466,23) Hint: (5091) Local variable "lArrPoints" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(35,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(34,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(36,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(36,51) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(37,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(38,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(39,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(40,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/unit1.pas(11,38) Hint: (5023) Unit "uOglChartTypes" not used in Unit1
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/components/chart_lzr/uOglChartCursorTest.pas
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(13,20) Hint: (5023) Unit "uOglChartLineHelper" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(13,41) Hint: (5023) Unit "uOglChartFrameListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(14,3) Hint: (5023) Unit "uOglChartLabelEditListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(14,31) Hint: (5023) Unit "uOglChartPageGeometryListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(15,3) Hint: (5023) Unit "uOglChartPanZoomListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(15,29) Hint: (5023) Unit "uOglChartSelectListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(16,3) Hint: (5023) Unit "uOglChartVertexEditListener" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(16,60) Hint: (5023) Unit "uOglChartCursor" not used in project1
+/mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1.lpr(17,3) Hint: (5023) Unit "uOglChartCursorListener" not used in project1
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/lib/x86_64-linux/project1.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/OGlChartLaz/Test_component/project1_test
+(1008) 11075 lines compiled, 3.1 sec
+(1022) 102 hint(s) issued
+(1023) 7 note(s) issued
+Hint: (lazarus) Missing state file of BuildIntf 1.0: /usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/BuildIntf.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux" of package "BuildIntf 1.0"
+Hint: (lazarus) normal output directory of package BuildIntf 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux
+Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
+Hint: (lazarus) normal output directory of package freetypelaz 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCLBase 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for LazControls 1.0.1
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols"
+  State file="/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2/LazControls.compiled"
+Hint: (lazarus) normal output directory of package LazControls 1.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2
+Hint: (lazarus) Missing state file of LazOpenGLContext 0.0.1: /usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/LazOpenGLContext.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2" of package "LazOpenGLContext 0.0.1"
+Hint: (lazarus) normal output directory of package LazOpenGLContext 0.0.1 is not writable: "/usr/lib/lazarus/2.2.6/components/opengl/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/LazOpenGLContext/lib/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for IDEIntf 1.0
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf"
+  State file="/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2/IDEIntf.compiled"
+Hint: (lazarus) normal output directory of package IDEIntf 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for TAChartLazarusPkg 1.0
+  Old="/usr/lib/lazarus/2.2.6/components/tachart/numlib_fix;/usr/lib/lazarus/2.2.6/components/tachart/editors;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/buildintf/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/lazcontrols/lib/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/ideintf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/tachart"
+  Now="/usr/lib/lazarus/2.2.6/components/tachart/numlib_fix;/usr/lib/lazarus/2.2.6/components/tachart/editors;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus/lib/BuildIntf/units/x86_64-linux;/home/user/.lazarus/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus/lib/LCLBase/units/x86_64-linux;/home/user/.lazarus/lib/units/x86_64-linux/gtk2;/home/user/.lazarus/lib/LazControls/lib/x86_64-linux/gtk2;/home/user/.lazarus/lib/IDEIntf/units/x86_64-linux/gtk2;/usr/lib/lazarus/2.2.6/components/tachart"
+  State file="/usr/lib/lazarus/2.2.6/components/tachart/lib/x86_64-linux/gtk2/TAChartLazarusPkg.compiled"
+Hint: (lazarus) normal output directory of package TAChartLazarusPkg 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/tachart/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus/lib/TAChartLazarusPkg/lib/x86_64-linux/gtk2
+Hint: (lazarus) State file of LzrObrPack 0.0 is newer than state file of Проект: RecorderLnx
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling RecorderLnx.lpr
+(3104) Compiling ./UI/uMainForm.pas
+(3104) Compiling ./Core/uRecorderStateMachine.pas
+(3104) Compiling ./Core/uRecorderRunControlSettings.pas
+(3104) Compiling ./Core/uRecorderFormModel.pas
+(3104) Compiling ./Core/uRecorderCoreServices.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderCoreServices.pas(254,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling ./Core/uRecorderTags.pas
+(3104) Compiling ./Core/uRecorderDebugLog.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/uSharedFileLogger.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(358,18) Hint: (5060) Function result variable does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(579,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTags.pas(580,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+(3104) Compiling ./Core/uRecorderDataSources.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/SharedUtils/mera/uMeraFile.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(709,39) Hint: (5057) Local variable "lDouble" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(714,39) Hint: (5057) Local variable "lSingle" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(719,38) Hint: (5057) Local variable "lInt32" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(724,39) Hint: (5057) Local variable "lUInt32" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(729,38) Hint: (5057) Local variable "lInt16" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(734,39) Hint: (5057) Local variable "lUInt16" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(839,19) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(840,20) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(309,3) Hint: (5023) Unit "Math" not used in uRecorderDataSources
+(3104) Compiling ./Core/uRecorderEventQueue.pas
+(3104) Compiling ./Core/uRecorderAlarms.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderAlarms.pas(90,27) Hint: (5024) Parameter "ASender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderEventQueue.pas(96,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling ./Core/uRecorderTimeSystem.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/Tests/RecorderTests/UITestData/uRecorderUiTestData.pas
+(3104) Compiling ./UI/uFormPagesDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,43) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(46,49) Hint: (5024) Parameter "aRow" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(47,11) Hint: (5024) Parameter "CanSelect" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(44,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(39,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(41,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(43,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(42,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormPagesDialog.pas(40,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uFormEditorController.pas
+(3104) Compiling ./UI/uRecorderOglOscillogramView.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(51,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderOglOscillogramView.pas(105,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(453,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(515,18) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(517,10) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(519,22) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(616,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(140,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(142,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(142,48) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(143,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(144,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(147,47) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(149,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(151,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(765,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(822,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(868,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(936,25) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1017,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1088,45) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1116,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1158,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1234,31) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1249,19) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1256,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1275,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1375,39) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uFormEditorController.pas(1383,41) Hint: (4055) Conversion between ordinals and pointers is not portable
+(3104) Compiling ./UI/uRecorderSettingsDialog.pas
+(3104) Compiling ./UI/uRecorderCommandImages.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(83,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(84,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(85,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(86,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(87,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(88,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(89,46) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(90,47) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(90,64) Hint: (5024) Parameter "Button" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,7) Hint: (5024) Parameter "Shift" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,27) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(91,30) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,70) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(92,73) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,70) Hint: (5024) Parameter "X" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(93,73) Hint: (5024) Parameter "Y" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(94,7) Hint: (5024) Parameter "State" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderSettingsDialog.pas(95,37) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uTagSettingsDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(821,61) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(821,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(64,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uTagSettingsDialog.pas(65,29) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./Core/uRecorderProjectFiles.pas
+(3104) Compiling ./UI/uRecorderDigitalPageView.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(89,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(90,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(91,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(94,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(94,53) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(95,11) Hint: (5024) Parameter "CanSelect" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(92,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(93,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(176,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(81,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(79,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(80,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(82,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(83,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(87,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(86,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(84,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(85,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(78,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(88,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(162,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(216,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(218,40) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(220,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(200,34) Hint: (5024) Parameter "APage" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(202,33) Hint: (5024) Parameter "APage" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(206,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(208,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(257,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(271,40) Hint: (5024) Parameter "ASender" not used
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+(1008) 13699 lines compiled, 3.9 sec
+(1021) 2 warning(s) issued
+(1022) 108 hint(s) issued
+LzrObrPack installed and RecorderLnx build checked.

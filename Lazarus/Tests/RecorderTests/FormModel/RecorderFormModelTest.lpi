@@ -30,7 +30,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/Core"/>
+      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../SharedUtils"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

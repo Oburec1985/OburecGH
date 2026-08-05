@@ -20,7 +20,7 @@ type
      Chan       : Word;
      Amplifier  : byte;         // Усиление МФПИ
                                 // при чтении здесь бит определяющий длину имени канала!!!
-     ChanName   : ANSIString;   // Имя канала    //!!!???
+     ChanName   : ANSIString;   // Имя канала    // (формат уточняется)
      ChanType   : Word;         // Тип датчика
    end;
 
@@ -28,7 +28,7 @@ type
   TBLDHeader = record
     SignRec    : array [0 .. 5] of ANSIChar; // сигнатура  cBLDSign = 'RecBld';
     HeaderSize : LongWord;                   // размер заголовка
-                                             // Pasport !!!??? 4 байта у Олега Борисовича!!!
+                                             // Pasport — 4 байта у Олега Борисовича (формат уточняется)
     TypeCard   : Word;                       // тип карты   Cодержит тип платы 2070 или 2081.
     ChanAmount : Word;                       // кол-во записывемых каналов.
     ArrSensors : array of TBLDSensor;        // Массив структур описывающих датчики

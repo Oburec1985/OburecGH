@@ -142,3 +142,11 @@
 2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartObjectManager.UnregisterObject manager=$000000000158CEC0 object=$0000000001575C50
 2026-05-25 19:28:09.559 [DEBUG] thread=9288 TChartBaseObject.Destroy leave self=$0000000001575C50
 2026-05-25 19:28:09.559 [INFO] thread=9288 TChartObjectManager.Destroy leave self=$000000000158CEC0
+2026-06-06 01:17:43.172 [INFO] thread=28376 TMainFrm.FormCreate enter form=$000000000148FCA0
+2026-06-06 01:17:43.172 [INFO] thread=28376 cChartMng.Create self=$000000000147F370
+2026-06-06 01:17:43.172 [DEBUG] thread=28376 cBaseObj.Create self=$00000000014E76D0 class=cChart name="ChartModel"
+2026-06-06 01:17:43.172 [INFO] thread=28376 TMainFrm.FormCreate chart=$0000000001491660 manager=$000000000147F370 model=$00000000014E76D0
+2026-06-06 01:17:43.172 [INFO] thread=28376 TMainFrm.FormCreate renderer assigned
+2026-06-06 01:17:43.172 [INFO] thread=28376 TMainFrm.FormCreate leave title="Skeleton Test" background=FF333333
+2026-06-06 01:17:47.982 [INFO] thread=28376 cChartMng.Destroy self=$000000000147F370 root=$00000000014E76D0 count=1
+2026-06-06 01:17:47.982 [DEBUG] thread=28376 cBaseObj.Destroy enter self=$00000000014E76D0 class=cChart name="ChartModel" children=0 parent=nil manager=$000000000147F370

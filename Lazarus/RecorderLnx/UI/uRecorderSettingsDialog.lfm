@@ -1,44 +1,44 @@
 object RecorderSettingsDialog: TRecorderSettingsDialog
-  Left = 320
-  Height = 561
-  Top = 120
-  Width = 890
+  Left = 322
+  Height = 631
+  Top = 122
+  Width = 1002
   Caption = 'Настройка'
-  ClientHeight = 561
-  ClientWidth = 890
-  Constraints.MinHeight = 520
+  ClientHeight = 631
+  ClientWidth = 1002
+  Constraints.MinHeight = 590
   Constraints.MinWidth = 760
   Position = poOwnerFormCenter
   object fPageControl: TPageControl
     Left = 0
-    Height = 519
+    Height = 589
     Top = 0
-    Width = 890
-    ActivePage = tsHardware
+    Width = 1002
+    ActivePage = tsChannels
     Align = alClient
-    TabIndex = 1
+    TabIndex = 2
     TabOrder = 0
     object tsRecorder: TTabSheet
       Caption = 'Рекордер'
-      ClientHeight = 491
-      ClientWidth = 882
+      ClientHeight = 561
+      ClientWidth = 994
       object pnRecorderLeft: TPanel
         Left = 0
-        Height = 491
+        Height = 561
         Top = 0
-        Width = 644
+        Width = 756
         Align = alClient
         BevelOuter = bvNone
         ClientHeight = 491
-        ClientWidth = 644
+        ClientWidth = 756
         TabOrder = 0
         object gbDisplay: TGroupBox
           Left = 8
-          Height = 58
+          Height = 82
           Top = 8
           Width = 210
           Caption = 'Отображение'
-          ClientHeight = 38
+          ClientHeight = 62
           ClientWidth = 206
           TabOrder = 0
           object lbScreenUpdate: TLabel
@@ -47,6 +47,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 22
             Width = 112
             Caption = 'Период обновления'
+            ParentColor = False
           end
           object lbScreenUpdateSec: TLabel
             Left = 186
@@ -54,6 +55,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 22
             Width = 6
             Caption = 'с'
+            ParentColor = False
           end
           object fScreenUpdateEdit: TEdit
             Left = 126
@@ -66,11 +68,11 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         end
         object gbSignals: TGroupBox
           Left = 238
-          Height = 58
+          Height = 82
           Top = 8
           Width = 390
           Caption = 'Сигналы'
-          ClientHeight = 38
+          ClientHeight = 62
           ClientWidth = 386
           TabOrder = 1
           object lbBufferSeconds: TLabel
@@ -79,6 +81,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 18
             Width = 166
             Caption = 'Длина отображаемых данных'
+            ParentColor = False
           end
           object lbBufferSecondsSec: TLabel
             Left = 260
@@ -86,6 +89,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 18
             Width = 6
             Caption = 'с'
+            ParentColor = False
           end
           object lbDataUpdate: TLabel
             Left = 10
@@ -93,6 +97,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 40
             Width = 156
             Caption = 'Период обновления данных'
+            ParentColor = False
           end
           object lbDataUpdateSec: TLabel
             Left = 260
@@ -100,6 +105,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 40
             Width = 6
             Caption = 'с'
+            ParentColor = False
           end
           object fBufferSecondsEdit: TEdit
             Left = 190
@@ -121,7 +127,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         object gbTestInfo: TGroupBox
           Left = 8
           Height = 78
-          Top = 78
+          Top = 102
           Width = 620
           ClientHeight = 58
           ClientWidth = 616
@@ -132,6 +138,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 18
             Width = 62
             Caption = 'Испытание'
+            ParentColor = False
           end
           object lbProductName: TLabel
             Left = 10
@@ -139,6 +146,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 42
             Width = 46
             Caption = 'Изделие'
+            ParentColor = False
           end
           object fTestNameEdit: TEdit
             Left = 130
@@ -160,7 +168,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         object gbRecord: TGroupBox
           Left = 8
           Height = 284
-          Top = 166
+          Top = 190
           Width = 620
           Caption = 'Запись'
           ClientHeight = 264
@@ -172,6 +180,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 48
             Width = 18
             Caption = 'сек'
+            ParentColor = False
           end
           object lbWorkDir: TLabel
             Left = 10
@@ -179,6 +188,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 154
             Width = 93
             Caption = 'Рабочий каталог'
+            ParentColor = False
           end
           object fModifyNameCheck: TCheckBox
             Left = 12
@@ -273,10 +283,43 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Text = 'C:\USML\signal0000'
           end
         end
+        object gbMeraSdb: TGroupBox
+          Left = 8
+          Height = 66
+          Top = 482
+          Width = 620
+          Caption = 'База градуировочных характеристик'
+          ClientHeight = 46
+          ClientWidth = 616
+          TabOrder = 4
+          object lbMeraFilesPath: TLabel
+            Left = 10
+            Height = 15
+            Top = 18
+            Width = 104
+            Caption = 'Каталог Mera Files'
+            ParentColor = False
+          end
+          object fMeraFilesPathEdit: TEdit
+            Left = 10
+            Height = 23
+            Top = 36
+            Width = 526
+            TabOrder = 0
+          end
+          object btnMeraFilesPathBrowse: TButton
+            Left = 548
+            Height = 26
+            Top = 34
+            Width = 54
+            Caption = '...'
+            TabOrder = 1
+          end
+        end
       end
       object pnRecorderRight: TPanel
-        Left = 644
-        Height = 491
+        Left = 756
+        Height = 561
         Top = 0
         Width = 238
         Align = alRight
@@ -299,6 +342,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 76
             Width = 33
             Caption = 'Канал'
+            ParentColor = False
           end
           object fStartManualRadio: TRadioButton
             Left = 10
@@ -387,6 +431,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 46
             Width = 18
             Caption = 'сек'
+            ParentColor = False
           end
           object lbStopChannel: TLabel
             Left = 10
@@ -394,6 +439,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 76
             Width = 33
             Caption = 'Канал'
+            ParentColor = False
           end
           object fStopManualRadio: TRadioButton
             Left = 10
@@ -489,28 +535,28 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsHardware: TTabSheet
       Caption = 'Аппаратные свойства'
       ClientHeight = 491
-      ClientWidth = 882
+      ClientWidth = 994
       object gbHardware: TGroupBox
         Left = 8
         Height = 461
         Top = 8
-        Width = 858
+        Width = 970
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'Устройства'
         ClientHeight = 441
-        ClientWidth = 854
+        ClientWidth = 966
         TabOrder = 0
         object pnHardwareButtons: TPanel
           Left = 0
           Height = 52
           Top = 389
-          Width = 854
+          Width = 966
           Align = alBottom
           BevelOuter = bvNone
           ClientHeight = 52
-          ClientWidth = 854
+          ClientWidth = 966
           TabOrder = 0
-          object btnDeviceAdd: TButton
+          object btnDeviceAdd: TBitBtn
             Left = 8
             Height = 36
             Hint = 'Добавить устройство вручную'
@@ -522,7 +568,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             TabOrder = 0
             OnClick = btnDeviceAddClick
           end
-          object btnDeviceDelete: TButton
+          object btnDeviceDelete: TBitBtn
             Left = 62
             Height = 36
             Hint = 'Удалить устройство вручную'
@@ -533,7 +579,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             ShowHint = True
             TabOrder = 1
           end
-          object btnDeviceSetup: TButton
+          object btnDeviceSetup: TBitBtn
             Left = 116
             Height = 36
             Hint = 'Настроить выбранное устройство'
@@ -544,7 +590,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             ShowHint = True
             TabOrder = 2
           end
-          object btnDeviceSearch: TButton
+          object btnDeviceSearch: TBitBtn
             Left = 170
             Height = 36
             Hint = 'Автопоиск подключенных устройств'
@@ -560,7 +606,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Left = 0
           Height = 389
           Top = 0
-          Width = 854
+          Width = 966
           Align = alClient
           ImagesWidth = 16
           ReadOnly = True
@@ -573,7 +619,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     object tsChannels: TTabSheet
       Caption = 'Каналы'
       ClientHeight = 491
-      ClientWidth = 882
+      ClientWidth = 994
       object gbAvailableChannels: TGroupBox
         Left = 0
         Height = 491
@@ -604,8 +650,6 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         Height = 491
         Top = 0
         Width = 5
-        Align = alLeft
-        ResizeAnchor = akLeft
       end
       object pnChannelMoveButtons: TPanel
         Left = 185
@@ -614,11 +658,13 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         Width = 42
         Align = alLeft
         BevelOuter = bvNone
+        ClientHeight = 491
+        ClientWidth = 42
         TabOrder = 1
-        object btnChannelAdd: TButton
+        object btnChannelAdd: TBitBtn
           Left = 6
           Height = 30
-          Top = 322
+          Top = 200
           Width = 30
           Caption = '>'
           Font.Color = clBlue
@@ -626,10 +672,10 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           TabOrder = 0
           OnClick = btnChannelAddClick
         end
-        object btnChannelRemove: TButton
+        object btnChannelRemove: TBitBtn
           Left = 6
           Height = 30
-          Top = 358
+          Top = 238
           Width = 30
           Caption = '<'
           Font.Color = clBlue
@@ -642,56 +688,349 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         Left = 227
         Height = 491
         Top = 0
-        Width = 655
+        Width = 384
         Align = alClient
         Caption = 'Выбранные каналы'
         ClientHeight = 471
-        ClientWidth = 651
+        ClientWidth = 380
         TabOrder = 2
-        object edSelectedChannelsFilter: TEdit
-          Left = 24
-          Height = 23
-          Top = 18
-          Width = 646
-          Anchors = [akTop, akLeft, akRight]
+        object pnFilter: TPanel
+          Left = 0
+          Height = 36
+          Top = 0
+          Width = 380
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 36
+          ClientWidth = 380
           TabOrder = 0
-          Text = 'Filter'
-        end
-        object btnSelectedChannelsClear: TButton
-          Left = 621
-          Height = 24
-          Top = 18
-          Width = 24
-          Anchors = [akTop, akRight]
-          Caption = 'X'
-          TabOrder = 1
+          object edSelectedChannelsFilter: TEdit
+            Left = 8
+            Height = 23
+            Top = 6
+            Width = 329
+            Anchors = [akTop, akLeft, akRight]
+            TabOrder = 0
+            Text = 'Filter'
+          end
+          object btnSelectedChannelsClear: TButton
+            Left = 346
+            Height = 24
+            Top = 6
+            Width = 24
+            Anchors = [akTop, akRight]
+            Caption = 'X'
+            TabOrder = 1
+          end
         end
         object fSelectedChannelsGrid: TStringGrid
           Left = 0
-          Height = 428
-          Top = 43
-          Width = 651
-          Align = alBottom
+          Height = 435
+          Top = 36
+          Width = 380
+          Align = alClient
           ColCount = 7
+          DragMode = dmAutomatic
           FixedCols = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
           RowCount = 2
-          TabOrder = 2
+          TabOrder = 1
           OnDragDrop = fSelectedChannelsGridDragDrop
           OnDragOver = fSelectedChannelsGridDragOver
+        end
+      end
+      object spChannelAlgorithms: TSplitter
+        Left = 611
+        Height = 491
+        Top = 0
+        Width = 5
+        Align = alRight
+        ResizeAnchor = akRight
+      end
+      object gbChannelAlgorithms: TGroupBox
+        Left = 616
+        Height = 491
+        Top = 0
+        Width = 378
+        Align = alRight
+        Caption = 'Алгоритмы'
+        ClientHeight = 471
+        ClientWidth = 374
+        TabOrder = 3
+        object pnAlgorithmTop: TPanel
+          Left = 0
+          Height = 38
+          Top = 0
+          Width = 374
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 38
+          ClientWidth = 374
+          TabOrder = 0
+          object fAlgorithmKindCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 8
+            Width = 184
+            ItemHeight = 15
+            Items.Strings = (
+              'Спектр'
+            )
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object btnAlgorithmAdd: TBitBtn
+            Left = 200
+            Height = 26
+            Hint = 'Создать алгоритм для выбранных каналов'
+            Top = 6
+            Width = 30
+            Caption = '+'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+            OnClick = btnAlgorithmAddClick
+          end
+          object btnAlgorithmRemove: TBitBtn
+            Left = 236
+            Height = 26
+            Hint = 'Удалить выбранный алгоритм'
+            Top = 6
+            Width = 30
+            Caption = '-'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 2
+            OnClick = btnAlgorithmRemoveClick
+          end
+          object btnFrequencyBands: TBitBtn
+            Left = 272
+            Height = 26
+            Hint = 'Настроить частотные полосы'
+            Top = 6
+            Width = 30
+            Caption = '...'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+            OnClick = btnFrequencyBandsClick
+          end
+        end
+        object pnAlgorithmSettings: TPanel
+          Left = 0
+          Height = 239
+          Top = 232
+          Width = 374
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 239
+          ClientWidth = 374
+          TabOrder = 1
+          object lbAlgorithmFftSize: TLabel
+            Left = 8
+            Height = 15
+            Top = 39
+            Width = 18
+            Caption = 'FFT'
+            ParentColor = False
+          end
+          object lbAlgorithmSampleRate: TLabel
+            Left = 123
+            Height = 15
+            Top = 39
+            Width = 86
+            Caption = 'Частота опроса'
+            ParentColor = False
+          end
+          object fAlgorithmPortionLabel: TLabel
+            Left = 225
+            Height = 15
+            Top = 39
+            Width = 61
+            Caption = 'порция: - с'
+            ParentColor = False
+          end
+          object lbAlgorithmOverlap: TLabel
+            Left = 123
+            Height = 15
+            Top = 79
+            Width = 68
+            Caption = 'Перекрытие'
+            ParentColor = False
+          end
+          object lbAlgorithmWindow: TLabel
+            Left = 8
+            Height = 15
+            Top = 119
+            Width = 29
+            Caption = 'Окно'
+            ParentColor = False
+          end
+          object lbAlgorithmAverage: TLabel
+            Left = 8
+            Height = 15
+            Top = 79
+            Width = 107
+            Caption = 'Блоков усреднения'
+            ParentColor = False
+          end
+          object fAlgorithmFftSizeEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 53
+            Width = 92
+            TabOrder = 0
+            Text = '8192'
+          end
+          object fAlgorithmFftSizeUpDown: TUpDown
+            Left = 100
+            Height = 22
+            Top = 53
+            Width = 15
+            Max = 1000
+            Min = 0
+            Position = 0
+            TabOrder = 11
+            OnClick = fAlgorithmFftSizeUpDownClick
+          end
+          object fAlgorithmSampleRateEdit: TEdit
+            Left = 123
+            Height = 23
+            Top = 53
+            Width = 84
+            TabOrder = 1
+            Text = '0'
+          end
+          object fAlgorithmAverageBlocksEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 93
+            Width = 92
+            TabOrder = 2
+            Text = '1'
+          end
+          object fAlgorithmOverlapCombo: TComboBox
+            Left = 123
+            Height = 23
+            Top = 93
+            Width = 92
+            ItemHeight = 15
+            Items.Strings = (
+              'без перекрытия'
+              '1/2'
+              '1/4'
+            )
+            Style = csDropDownList
+            TabOrder = 3
+          end
+          object fAlgorithmOverlapEdit: TEdit
+            Left = 224
+            Height = 23
+            Top = 93
+            Width = 62
+            TabOrder = 4
+            Text = '0'
+          end
+          object fAlgorithmWindowCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 133
+            Width = 92
+            ItemHeight = 15
+            Items.Strings = (
+              'Rect'
+              'Hann'
+              'Hamming'
+              'Blackman'
+              'FlatTop'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+          end
+          object fAlgorithmZeroPadCheck: TCheckBox
+            Left = 112
+            Height = 19
+            Top = 135
+            Width = 123
+            Caption = 'Дополнять нулями'
+            TabOrder = 6
+          end
+          object fAlgorithmAhCorrectionCheck: TCheckBox
+            Left = 112
+            Height = 19
+            Top = 159
+            Width = 104
+            Caption = 'Коррекция АЧХ'
+            TabOrder = 7
+          end
+          object fAlgorithmIntegrationGroup: TRadioGroup
+            Left = 8
+            Height = 58
+            Top = 177
+            Width = 188
+            AutoFill = True
+            Caption = 'Интегрирование'
+            ChildSizing.LeftRightSpacing = 6
+            ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+            ChildSizing.EnlargeVertical = crsHomogenousChildResize
+            ChildSizing.ShrinkHorizontal = crsScaleChilds
+            ChildSizing.ShrinkVertical = crsScaleChilds
+            ChildSizing.Layout = cclLeftToRightThenTopToBottom
+            ChildSizing.ControlsPerLine = 3
+            ClientHeight = 38
+            ClientWidth = 184
+            Columns = 3
+            Items.Strings = (
+              'без'
+              'x1'
+              'x2'
+            )
+            TabOrder = 8
+          end
+          object btnAlgorithmConfig: TBitBtn
+            Left = 206
+            Height = 28
+            Top = 207
+            Width = 88
+            Caption = 'Применить'
+            TabOrder = 9
+            OnClick = btnAlgorithmConfigClick
+          end
+          object Cfg: TEdit
+            Left = 10
+            Height = 23
+            Top = 8
+            Width = 335
+            TabOrder = 10
+          end
+        end
+        object fAlgorithmsTree: TTreeView
+          Left = 0
+          Height = 194
+          Top = 38
+          Width = 374
+          Align = alClient
+          DragMode = dmAutomatic
+          ReadOnly = True
+          TabOrder = 2
+          Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          OnChange = fAlgorithmsTreeChange
+          OnDragDrop = fAlgorithmsTreeDragDrop
+          OnDragOver = fAlgorithmsTreeDragOver
         end
       end
     end
     object tsPlugins: TTabSheet
       Caption = 'Плагины'
       ClientHeight = 491
-      ClientWidth = 882
+      ClientWidth = 994
       object lbPluginsPlaceholder: TLabel
         Left = 16
         Height = 15
         Top = 16
         Width = 373
         Caption = 'Раздел будет заполнен после появления соответствующей модели.'
+        ParentColor = False
       end
     end
   end
@@ -699,14 +1038,14 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
     Left = 0
     Height = 42
     Top = 519
-    Width = 890
+    Width = 1002
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 890
+    ClientWidth = 1002
     TabOrder = 1
     object btnOk: TButton
-      Left = 620
+      Left = 732
       Height = 28
       Top = 7
       Width = 82
@@ -717,7 +1056,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
       OnClick = OkButtonClick
     end
     object btnClose: TButton
-      Left = 708
+      Left = 820
       Height = 28
       Top = 7
       Width = 82
@@ -728,7 +1067,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
       TabOrder = 1
     end
     object fApplyButton: TButton
-      Left = 796
+      Left = 908
       Height = 28
       Top = 7
       Width = 82

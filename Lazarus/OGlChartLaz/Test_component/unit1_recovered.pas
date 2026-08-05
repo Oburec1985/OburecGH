@@ -1,0 +1,1 @@
+Обновим скрипт [recover_unit1.py](file:///d:/works/OburecGH/Lazarus/OGlChartLaz/cach/recover_unit1.py) для извлечения полного содержимого `unit1.pas` из выводов инструмента `view_file` в логах:

@@ -67,6 +67,9 @@ type
     SaveToExcelBtn: TSpeedButton;
     SaveDialog2: TSaveDialog;
     OpenDialog2: TOpenDialog;
+    SelectModeColorPan: TPanel;
+    SelectModeColorLabel: TLabel;
+    BackGroundColorDialog: TColorDialog;
     procedure AddControlBtnClick(Sender: TObject);
     procedure UpdateBtnClick(Sender: TObject);
     procedure ControlsLVSelectItem(Sender: TObject; Item: TListItem;
@@ -100,6 +103,7 @@ type
     procedure LoadFromExcelBtnClick(Sender: TObject);
     procedure ControlsLVCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure SelectModeColorPanClick(Sender: TObject);
   private
     m_conmng: cControlMng;
     m_fileMng: cfilemng;
@@ -368,7 +372,7 @@ end;
 procedure TControlCyclogramEditFrm.ShowProperties;
 begin
   AllowUserModeSelectCB.Checked:=g_conmng.AllowUserModeSelect;
-
+  SelectModeColorPan.color:=g_conmng.m_selectModeColor;
   ShowChannels;
   ShowControls;
   ShowStopTrig;
@@ -1445,6 +1449,15 @@ begin
   end;
   ProgramTV.Refresh;
   g_conmng.configChanged := true;
+end;
+
+procedure TControlCyclogramEditFrm.SelectModeColorPanClick(Sender: TObject);
+begin
+  if BackGroundColorDialog.Execute then
+  begin
+    tpanel(sender).color:=BackGroundColorDialog.Color;
+    g_conmng.m_selectModeColor:=BackGroundColorDialog.Color;
+  end;
 end;
 
 procedure TControlCyclogramEditFrm.ShowChannels;

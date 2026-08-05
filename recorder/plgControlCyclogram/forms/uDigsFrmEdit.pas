@@ -44,6 +44,7 @@ type
     UseThreshold: TCheckBox;
     HHEdit: TFloatEdit;
     DigitFormatCB: TCheckBox;
+    AutoWidthCB: TCheckBox;
     procedure ColOkBtnClick(Sender: TObject);
     procedure AddGroupBtnClick(Sender: TObject);
     procedure ColumnSEChange(Sender: TObject);
@@ -228,6 +229,15 @@ begin
     curFrm.m_FontSize := FontSizeIE.IntNum;
     curFrm.m_digits := DigitsIE.IntNum;
     curFrm.m_Format := DigitFormatCB.Checked;
+    curFrm.m_AutoWidth:=AutoWidthCB.Checked;
+    if curFrm.m_AutoWidth then
+    begin
+      curFrm.SignalsSG.Options:=curFrm.SignalsSG.Options - [goColSizing];
+    end
+    else
+    begin
+      curFrm.SignalsSG.Options:=curFrm.SignalsSG.Options + [goColSizing];
+    end;
     curFrm.ShowCfg;
   end;
 end;
@@ -240,6 +250,7 @@ var
   t: ctag;
 begin
   HHColor.color := clpink;
+  AutoWidthCB.Checked:=curFrm.m_AutoWidth;
 
   DigitsIE.IntNum := curFrm.m_digits;
   DigitFormatCB.Checked := curFrm.m_Format;

@@ -1,0 +1,136 @@
+[MERA]
+Format=RecorderLnx.MERA
+Version=1
+
+[MemTag]
+Name=MemTag
+Address=MemTag
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=MB
+Freq=5
+Start=0
+Comment=Recorder process memory usage
+
+[CpuUsage]
+Name=CpuUsage
+Address=CpuUsage
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=%
+Freq=5
+Start=0
+Comment=Recorder process CPU usage
+
+[1_X]
+Name=1_датчик_X
+Address=1_датчик_X
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=1 датчик X; type=R4; freq=57600; file=1 датчик X.dat
+
+[1_Y]
+Name=1_датчик_Y
+Address=1_датчик_Y
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=1 датчик Y; type=R4; freq=57600; file=1 датчик Y.dat
+
+[1_Z]
+Name=1_датчик_Z
+Address=1_датчик_Z
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=1 датчик Z; type=R4; freq=57600; file=1 датчик Z.dat
+
+[2_X]
+Name=2_датчик_X
+Address=2_датчик_X
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=2 датчик X; type=R4; freq=57600; file=2 датчик X.dat
+
+[2_Y]
+Name=2_датчик_Y
+Address=2_датчик_Y
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=2 датчик Y; type=R4; freq=57600; file=2 датчик Y.dat
+
+[2_Z]
+Name=2_датчик_Z
+Address=2_датчик_Z
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=2 датчик Z; type=R4; freq=57600; file=2 датчик Z.dat
+
+[3_X]
+Name=3_датчик_X
+Address=3_датчик_X
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=3 датчик X; type=R4; freq=57600; file=3 датчик X.dat
+
+[3_Y]
+Name=3_датчик_Y
+Address=3_датчик_Y
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=3 датчик Y; type=R4; freq=57600; file=3 датчик Y.dat
+
+[3_Z]
+Name=3_датчик_Z
+Address=3_датчик_Z
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=3 датчик Z; type=R4; freq=57600; file=3 датчик Z.dat
+
+[Signal]
+Name=молоток
+Address=молоток
+ModName=RecorderLnx
+YFormat=R8
+XFormat=R8
+YUnits=В
+Freq=57600
+Start=0
+Comment=молоток; type=R4; freq=57600; file=молоток.dat
+

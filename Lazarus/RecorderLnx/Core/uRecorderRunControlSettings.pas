@@ -21,54 +21,61 @@ unit uRecorderRunControlSettings;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 uses
   Classes, SysUtils, IniFiles,
-  uRecorderStateMachine;
+  uRecorderStateMachine, uRecorderMeraPaths;
 
 type
-  { Направление прохождения порога сигнала. }
+  { TRecorderSignalEdge
+    Направление прохождения порога сигнала. }
   TRecorderSignalEdge = (
-    rseRising,
-    rseFalling
+    rseRising,   { По нарастающему фронту (снизу вверх) }
+    rseFalling   { По спадающему фронту (сверху вниз) }
   );
 
-  { Условие остановки записи.
-
-    rstopManual      - остановка по команде пользователя.
+  { TRecorderStopCondition
+    Условие автоматической остановки записи.
+    
+    rstopManual      - остановка по команде пользователя (вручную).
     rstopSignalLevel - остановка по прохождению уровня сигнала.
-    rstopDuration    - остановка через заданную длительность.
-  }
+    rstopDuration    - остановка через заданную длительность. }
   TRecorderStopCondition = (
     rstopManual,
     rstopSignalLevel,
     rstopDuration
   );
 
+  { Исключение при некорректных настройках запуска/останова }
   ERecorderRunControlSettingsError = class(Exception);
 
   { TRecorderRunControlSettings
-
     Один объект хранит настройки старта и остановки. Это упрощает дальнейшую
-    сериализацию конфигурации и передачу параметров в сервис запуска сеанса.
-  }
+    сериализацию конфигурации и передачу параметров в сервис запуска сеанса. }
   TRecorderRunControlSettings = class
   private
-    fStartCondition: TRecorderStartCondition;
-    fStartChannelName: string;
-    fStartLevel: Double;
-    fStartEdge: TRecorderSignalEdge;
-    fStartDelayMs: Cardinal;
-    fStopCondition: TRecorderStopCondition;
-    fStopChannelName: string;
-    fStopLevel: Double;
-    fStopEdge: TRecorderSignalEdge;
-    fStopDelayMs: Cardinal;
+    fStartCondition: TRecorderStartCondition;      { Условие старта }
+    fStartChannelName: string;                     { Имя канала для условия старта }
+    fStartLevel: Double;                           { Пороговый уровень для старта }
+    fStartEdge: TRecorderSignalEdge;               { Фронт сигнала для старта }
+    fStartDelayMs: Cardinal;                       { Задержка старта в мс }
+    fStopCondition: TRecorderStopCondition;        { Условие останова }
+    fStopChannelName: string;                      { Имя канала для условия останова }
+    fStopLevel: Double;                            { Пороговый уровень для останова }
+    fStopEdge: TRecorderSignalEdge;                { Фронт сигнала для останова }
+    fStopDelayMs: Cardinal;                        { Задержка останова (длительность) в мс }
+    fScreenUpdateMs: Cardinal;                     { Период обновления экрана в мс }
+    fDisplayBufferMs: Cardinal;                    { Длина отображаемого окна данных в мс }
+    fDataUpdateMs: Cardinal;                       { Период обновления источников данных в мс }
+    fRecordRootDir: string;                        { Корневой каталог записи MERA-кадров }
+    fMeraFilesPath: string;                        { Корень Mera Files: SDB и calibr }
 
     function ValidateStart(out AMessage: string): Boolean;
     function ValidateStop(out AMessage: string): Boolean;
+    function ValidateTiming(out AMessage: string): Boolean;
     function ReadStartCondition(AIni: TCustomIniFile;
       const ASection, AName: string; ADefault: TRecorderStartCondition): TRecorderStartCondition;
     function ReadStopCondition(AIni: TCustomIniFile;
@@ -85,10 +92,8 @@ type
     procedure ResetDefaults;
 
     { Проверяет полноту настроек старта и остановки.
-
       AMessage - текст первой найденной ошибки. Если ошибок нет, возвращается
-        пустая строка.
-    }
+        пустая строка. }
     function Validate(out AMessage: string): Boolean;
 
     { То же, что Validate, но при ошибке выбрасывает
@@ -96,18 +101,14 @@ type
     procedure RequireValid;
 
     { Сохраняет настройки в INI-файл.
-
       AFileName - полный путь к файлу конфигурации. Каталог должен существовать.
       Метод сначала проверяет настройки через RequireValid, чтобы не сохранить
-      неполную конфигурацию.
-    }
+      неполную конфигурацию. }
     procedure SaveToFile(const AFileName: string);
 
     { Загружает настройки из INI-файла.
-
       AFileName - полный путь к файлу конфигурации. Отсутствующие поля получают
-      значения по умолчанию. После чтения выполняется RequireValid.
-    }
+      значения по умолчанию. После чтения выполняется RequireValid. }
     procedure LoadFromFile(const AFileName: string);
 
     { Возвращает True, если старт должен перейти в Armed-состояние. }
@@ -137,6 +138,12 @@ type
     property StopLevel: Double read fStopLevel write fStopLevel;
     property StopEdge: TRecorderSignalEdge read fStopEdge write fStopEdge;
     property StopDelayMs: Cardinal read fStopDelayMs write fStopDelayMs;
+
+    property ScreenUpdateMs: Cardinal read fScreenUpdateMs write fScreenUpdateMs;
+    property DisplayBufferMs: Cardinal read fDisplayBufferMs write fDisplayBufferMs;
+    property DataUpdateMs: Cardinal read fDataUpdateMs write fDataUpdateMs;
+    property RecordRootDir: string read fRecordRootDir write fRecordRootDir;
+    property MeraFilesPath: string read fMeraFilesPath write fMeraFilesPath;
   end;
 
 implementation
@@ -162,6 +169,12 @@ begin
   fStopLevel := 0.0;
   fStopEdge := rseRising;
   fStopDelayMs := 0;
+
+  fScreenUpdateMs := 500;
+  fDisplayBufferMs := 1000;
+  fDataUpdateMs := 300;
+  fRecordRootDir := 'C:\USML\';
+  fMeraFilesPath := RecorderMeraFilesPath;
 end;
 
 function TRecorderRunControlSettings.ValidateStart(out AMessage: string): Boolean;
@@ -238,6 +251,36 @@ begin
     Exit;
 
   Result := ValidateStop(AMessage);
+  if not Result then
+    Exit;
+
+  Result := ValidateTiming(AMessage);
+end;
+
+function TRecorderRunControlSettings.ValidateTiming(out AMessage: string): Boolean;
+begin
+  Result := False;
+  AMessage := '';
+
+  if fScreenUpdateMs = 0 then
+  begin
+    AMessage := 'ScreenUpdateMs must be positive';
+    Exit;
+  end;
+
+  if fDisplayBufferMs = 0 then
+  begin
+    AMessage := 'DisplayBufferMs must be positive';
+    Exit;
+  end;
+
+  if fDataUpdateMs = 0 then
+  begin
+    AMessage := 'DataUpdateMs must be positive';
+    Exit;
+  end;
+
+  Result := True;
 end;
 
 function TRecorderRunControlSettings.ReadStartCondition(AIni: TCustomIniFile;
@@ -292,6 +335,12 @@ begin
     lIni.WriteFloat('Stop', 'Level', fStopLevel);
     lIni.WriteString('Stop', 'Edge', SignalEdgeToString(fStopEdge));
     lIni.WriteInteger('Stop', 'DelayMs', fStopDelayMs);
+
+    lIni.WriteInteger('Display', 'ScreenUpdateMs', fScreenUpdateMs);
+    lIni.WriteInteger('Display', 'DisplayBufferMs', fDisplayBufferMs);
+    lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
+    lIni.WriteString('Record', 'RootDir', fRecordRootDir);
+    lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
   finally
     lIni.Free;
   end;
@@ -316,6 +365,15 @@ begin
     fStopLevel := lIni.ReadFloat('Stop', 'Level', fStopLevel);
     fStopEdge := ReadSignalEdge(lIni, 'Stop', 'Edge', fStopEdge);
     fStopDelayMs := lIni.ReadInteger('Stop', 'DelayMs', fStopDelayMs);
+
+    fScreenUpdateMs := lIni.ReadInteger('Display', 'ScreenUpdateMs',
+      fScreenUpdateMs);
+    fDisplayBufferMs := lIni.ReadInteger('Display', 'DisplayBufferMs',
+      fDisplayBufferMs);
+    fDataUpdateMs := lIni.ReadInteger('Display', 'DataUpdateMs',
+      fDataUpdateMs);
+    fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
+    fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
   finally
     lIni.Free;
   end;

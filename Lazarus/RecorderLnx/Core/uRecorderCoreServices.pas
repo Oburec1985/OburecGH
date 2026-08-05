@@ -19,43 +19,47 @@ unit uRecorderCoreServices;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderStateMachine;
 
 type
   { Тип события RecorderLnx.
-
     Имена намеренно близки к PN_* из Recorder, но события типизированы и не
     требуют передачи указателей через DWORD. }
   TRecorderEventKind = (
-    rceBeforeStart,
-    rceStarted,
-    rceRecordModeEntered,
-    rceStopped,
-    rceAfterStop,
-    rceDataUpdated,
-    rceSaveConfig,
-    rceLoadConfig,
-    rceImportSettings,
-    rceExportSettings,
-    rceDataPlacementChanged,
-    rceActionExecute,
-    rceFormsChanged,
-    rceUser
+    rceBeforeStart,          { Перед запуском процесса записи }
+    rceStarted,              { Запись успешно запущена }
+    rceRecordModeEntered,    { Вход в режим записи }
+    rceStopped,              { Запись остановлена }
+    rceAfterStop,            { После останова записи }
+    rceDataUpdated,          { Обновление данных/семплов }
+    rceAlarmChanged,         { Изменение состояния тревоги/уставки тега }
+    rceSaveConfig,           { Событие сохранения конфигурации }
+    rceLoadConfig,           { Событие загрузки конфигурации }
+    rceImportSettings,       { Импорт настроек }
+    rceExportSettings,       { Экспорт настроек }
+    rceDataPlacementChanged, { Изменение расположения данных }
+    rceActionExecute,        { Выполнение действия }
+    rceFormsChanged,         { Изменение форм или экранов отображения }
+        rceSpectrumFrame,        { Получен новый кадр спектра }
+    rceUser                  { Пользовательское событие }
+    , rceConfigurationPrepared,
+    rceRunTransitionBefore,
+    rceRunTransitionAfter
   );
 
   { Данные одного события core-шины.
-
+    
     Kind      - тип события.
     Source    - объект-источник, если он есть.
     Name      - уточняющее имя события или user-event id.
     Text      - короткие текстовые данные для логов/простых команд.
     IntValue  - числовой параметр для счетчиков и кодов.
-    Data      - объектная полезная нагрузка. Владение не передается.
-  }
+    Data      - объектная полезная нагрузка. Владение не передается. }
   TRecorderEvent = record
     Kind: TRecorderEventKind;
     Source: TObject;
@@ -63,59 +67,63 @@ type
     Text: string;
     IntValue: Int64;
     Data: TObject;
+    Transition: TRecorderStateTransition;
   end;
 
   { Обработчик события.
-
+    
     ASender - экземпляр TRecorderEventBus.
     AEvent  - данные события. Обработчик не должен освобождать AEvent.Data. }
   TRecorderEventHandler = procedure(ASender: TObject;
     const AEvent: TRecorderEvent) of object;
 
+  { Класс исключения для сервисов ядра }
   ERecorderCoreServiceError = class(Exception);
 
   { TRecorderEventBus
-
     Простая синхронная событийная шина. Подписчики вызываются в том же потоке,
     который публикует событие. Для событий из worker-thread позже будет отдельный
     UI dispatcher/queue, чтобы не трогать LCL напрямую. }
   TRecorderEventBus = class
   private type
+    { Внутренний класс подписки }
     TSubscription = class
     public
-      Token: Integer;
-      Handler: TRecorderEventHandler;
+      Token: Integer;                 { Уникальный токен подписки }
+      Handler: TRecorderEventHandler; { Обработчик события }
     end;
   private
-    fNextToken: Integer;
-    fSubscriptions: TList;
+    fNextToken: Integer;              { Счетчик для генерации следующего токена }
+    fSubscriptions: TList;            { Список активных подписок (TSubscription) }
+    fLock: TRTLCriticalSection;
     function GetSubscription(AIndex: Integer): TSubscription;
   public
-    { Создает пустую шину событий. }
+    { Создает пустую шину событий }
     constructor Create;
+    { Уничтожает шину и очищает все подписки }
     destructor Destroy; override;
 
-    { Подписывает обработчик и возвращает token для будущей отписки. }
+    { Подписывает обработчик и возвращает token для будущей отписки }
     function Subscribe(AHandler: TRecorderEventHandler): Integer;
 
-    { Удаляет подписку по token. Возвращает True, если подписка была найдена. }
+    { Удаляет подписку по token. Возвращает True, если подписка была найдена }
     function Unsubscribe(AToken: Integer): Boolean;
 
     { Синхронно рассылает событие всем текущим подписчикам.
-
       Если обработчик отписывает себя или других подписчиков во время обработки,
       текущая рассылка продолжает идти по снимку списка, чтобы не пропускать
       соседние обработчики из-за сдвига индексов. }
     procedure Publish(const AEvent: TRecorderEvent);
 
-    { Удобный конструктор события без объектной нагрузки. }
+    { Удобный конструктор события без объектной нагрузки }
     class function MakeEvent(AKind: TRecorderEventKind; ASource: TObject = nil;
       const AName: string = ''; const AText: string = '';
-      AIntValue: Int64 = 0; AData: TObject = nil): TRecorderEvent; static;
+      AIntValue: Int64 = 0; AData: TObject = nil;
+      ATransition: TRecorderStateTransition = rstNone): TRecorderEvent; static;
   end;
 
   { Контекст выполнения action.
-
+    
     Sender   - UI/control/plugin, который вызвал команду.
     Text     - строковый параметр команды.
     IntValue - числовой параметр команды.
@@ -127,23 +135,22 @@ type
     Data: TObject;
   end;
 
+  { Событийный обработчик выполнения действия }
   TRecorderActionExecuteEvent = procedure(ASender: TObject;
     const AContext: TRecorderActionContext) of object;
 
   { TRecorderAction
-
     Описание команды, которую может показать toolbar/menu/hotkey слой. }
   TRecorderAction = class
   private
-    fCaption: string;
-    fEnabled: Boolean;
-    fHint: string;
-    fId: string;
-    fOnExecute: TRecorderActionExecuteEvent;
-    fOwner: TObject;
+    fCaption: string;                          { Заголовок действия для интерфейса }
+    fEnabled: Boolean;                         { Флаг доступности действия }
+    fHint: string;                             { Подсказка / всплывающее описание }
+    fId: string;                               { Уникальный текстовый идентификатор }
+    fOnExecute: TRecorderActionExecuteEvent;   { Обработчик выполнения }
+    fOwner: TObject;                           { Владелец команды (например, плагин) }
   public
     { Создает action.
-
       AId        - стабильный id команды.
       ACaption   - человекочитаемая подпись для UI.
       AHint      - подсказка/описание.
@@ -165,84 +172,93 @@ type
   end;
 
   { TRecorderActionRegistry
-
     Реестр команд core-уровня. UI позже сможет построить toolbar на основании
     записей этого реестра, а плагины смогут регистрировать свои команды. }
   TRecorderActionRegistry = class
   private
-    fActions: TStringList;
+    fActions: TStringList;                    { Список зарегистрированных действий, сортированный по Id }
     function GetAction(AIndex: Integer): TRecorderAction;
     function GetActionCount: Integer;
   public
+    { Инициализирует реестр }
     constructor Create;
+    { Очищает реестр, уничтожая все зарегистрированные действия }
     destructor Destroy; override;
 
-    { Регистрирует action и принимает владение объектом. }
+    { Регистрирует action и принимает владение объектом }
     procedure RegisterAction(AAction: TRecorderAction);
 
-    { Создает и регистрирует action одной командой. }
+    { Создает и регистрирует action одной командой }
     function AddAction(const AId, ACaption, AHint: string; AOwner: TObject;
       AOnExecute: TRecorderActionExecuteEvent): TRecorderAction;
 
-    { Удаляет action по id. Возвращает True, если команда была найдена. }
+    { Удаляет action по id. Возвращает True, если команда была найдена }
     function UnregisterAction(const AId: string): Boolean;
 
-    { Ищет action по id. Возвращает nil, если команда не зарегистрирована. }
+    { Ищет action по id. Возвращает nil, если команда не зарегистрирована }
     function FindAction(const AId: string): TRecorderAction;
 
-    { Выполняет зарегистрированную команду. }
+    { Выполняет зарегистрированную команду }
     procedure ExecuteAction(const AId: string; const AContext: TRecorderActionContext);
 
     property ActionCount: Integer read GetActionCount;
     property Actions[AIndex: Integer]: TRecorderAction read GetAction;
   end;
 
-  { Состояние расширения в менеджере. }
+  { Состояние расширения в менеджере }
   TRecorderExtensionState = (
-    resCreated,
-    resInitialized,
-    resRegistered,
-    resStarted,
-    resStopped,
-    resClosed
+    resCreated,       { Расширение создано }
+    resInitialized,   { Пройдена инициализация }
+    resRegistered,    { Сервисы и команды зарегистрированы }
+    resStarted,       { Расширение запущено }
+    resStopped,       { Расширение остановлено }
+    resClosed         { Расширение закрыто и освобождено }
   );
 
   { Интерфейс статического расширения RecorderLnx.
-
     Это Object Pascal-аналог полезной части IRecorderPlugin: init/register/start/
     stop/notify/close. Внешние .dll/.so позже будут адаптироваться к этому
     интерфейсу через C ABI слой. }
   IRecorderExtension = interface
     ['{D1594B1B-E8BD-4F97-A15B-B53C63A1986B}']
+    { Возвращает уникальный идентификатор расширения }
     function GetId: string;
+    { Возвращает отображаемое имя расширения }
     function GetName: string;
+    { Инициализация расширения с передачей главного хоста приложения }
     procedure Initialize(AHost: TObject);
+    { Регистрация собственных событий и команд в реестрах ядра }
     procedure RegisterServices(AEventBus: TRecorderEventBus;
       AActionRegistry: TRecorderActionRegistry);
+    { Запуск работы расширения }
     procedure Start;
+    { Остановка работы расширения }
     procedure Stop;
+    { Проверка возможности закрытия расширения }
     function CanClose: Boolean;
+    { Освобождение ресурсов и закрытие расширения }
     procedure Close;
+    { Метод обратного вызова при возникновении событий в шине ядра }
     procedure Notify(const AEvent: TRecorderEvent);
   end;
 
   { TRecorderExtensionManager
-
     Менеджер статических расширений. Хранит интерфейсы, вызывает общий lifecycle
     и подписывает расширения на события шины через метод Notify. }
   TRecorderExtensionManager = class
   private type
+    { Контекст расширения для отслеживания его состояния }
     TExtensionContext = class
     public
-      Extension: IRecorderExtension;
-      State: TRecorderExtensionState;
-      EventToken: Integer;
+      Extension: IRecorderExtension;   { Ссылка на интерфейс расширения }
+      State: TRecorderExtensionState;   { Текущее состояние в жизненном цикле }
+      EventToken: Integer;              { Токен подписки на события }
     end;
   private
-    fActionRegistry: TRecorderActionRegistry;
-    fEventBus: TRecorderEventBus;
-    fExtensions: TList;
-    fHost: TObject;
+    fActionRegistry: TRecorderActionRegistry; { Ссылка на реестр команд }
+    fEventBus: TRecorderEventBus;            { Ссылка на шину событий }
+    fExtensions: TList;                      { Список контекстов расширений TExtensionContext }
+    fHost: TObject;                          { Ссылка на объект хоста }
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     function GetContext(AIndex: Integer): TExtensionContext;
     function GetExtension(AIndex: Integer): IRecorderExtension;
@@ -251,6 +267,7 @@ type
     { AEventBus/AActionRegistry - общие сервисы core. Владение не передается. }
     constructor Create(AEventBus: TRecorderEventBus;
       AActionRegistry: TRecorderActionRegistry);
+    { Деструктор закрывает и освобождает все расширения }
     destructor Destroy; override;
 
     { Добавляет extension в менеджер. Менеджер хранит interface reference. }
@@ -279,6 +296,8 @@ type
   end;
 
 implementation
+uses
+  uRecorderDebugLog;
 
 { TRecorderEventBus }
 
@@ -287,6 +306,7 @@ begin
   inherited Create;
   fSubscriptions := TList.Create;
   fNextToken := 1;
+  InitCriticalSection(fLock);
 end;
 
 destructor TRecorderEventBus.Destroy;
@@ -296,6 +316,7 @@ begin
   for I := 0 to fSubscriptions.Count - 1 do
     TObject(fSubscriptions[I]).Free;
   fSubscriptions.Free;
+  DoneCriticalSection(fLock);
   inherited Destroy;
 end;
 
@@ -315,7 +336,12 @@ begin
   lSubscription.Token := fNextToken;
   lSubscription.Handler := AHandler;
   Inc(fNextToken);
-  fSubscriptions.Add(lSubscription);
+  EnterCriticalSection(fLock);
+  try
+    fSubscriptions.Add(lSubscription);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
   Result := lSubscription.Token;
 end;
 
@@ -325,15 +351,20 @@ var
   lSubscription: TSubscription;
 begin
   Result := False;
-  for I := 0 to fSubscriptions.Count - 1 do
-  begin
-    lSubscription := GetSubscription(I);
-    if lSubscription.Token = AToken then
+  EnterCriticalSection(fLock);
+  try
+    for I := 0 to fSubscriptions.Count - 1 do
     begin
-      fSubscriptions.Delete(I);
-      lSubscription.Free;
-      Exit(True);
+      lSubscription := GetSubscription(I);
+      if lSubscription.Token = AToken then
+      begin
+        fSubscriptions.Delete(I);
+        lSubscription.Free;
+        Exit(True);
+      end;
     end;
+  finally
+    LeaveCriticalSection(fLock);
   end;
 end;
 
@@ -342,26 +373,46 @@ var
   I: Integer;
   lSnapshot: TList;
   lSubscription: TSubscription;
+  lStart: QWord;
 begin
+  lStart := GetTickCount64;
   lSnapshot := TList.Create;
   try
-    for I := 0 to fSubscriptions.Count - 1 do
-      lSnapshot.Add(fSubscriptions[I]);
+    EnterCriticalSection(fLock);
+    try
+      for I := 0 to fSubscriptions.Count - 1 do
+        lSnapshot.Add(fSubscriptions[I]);
+    finally
+      LeaveCriticalSection(fLock);
+    end;
 
     for I := 0 to lSnapshot.Count - 1 do
     begin
       lSubscription := TSubscription(lSnapshot[I]);
-      if fSubscriptions.IndexOf(lSubscription) >= 0 then
+      EnterCriticalSection(fLock);
+      try
+        if fSubscriptions.IndexOf(lSubscription) < 0 then
+          lSubscription := nil;
+      finally
+        LeaveCriticalSection(fLock);
+      end;
+
+      if lSubscription <> nil then
         lSubscription.Handler(Self, AEvent);
     end;
   finally
     lSnapshot.Free;
   end;
+  if GetTickCount64 - lStart > 5 then
+    { MIC-140 stream debug: EventBus timing suppressed.
+    RecorderDebugLog(Format('[EventBus] Publish: Kind=%d, Time=%d ms, ThreadID=%d',
+      [Ord(AEvent.Kind), GetTickCount64 - lStart, PtrUInt(GetThreadID)])); }
 end;
 
 class function TRecorderEventBus.MakeEvent(AKind: TRecorderEventKind;
   ASource: TObject; const AName: string; const AText: string;
-  AIntValue: Int64; AData: TObject): TRecorderEvent;
+  AIntValue: Int64; AData: TObject;
+  ATransition: TRecorderStateTransition): TRecorderEvent;
 begin
   Result.Kind := AKind;
   Result.Source := ASource;
@@ -369,6 +420,7 @@ begin
   Result.Text := AText;
   Result.IntValue := AIntValue;
   Result.Data := AData;
+  Result.Transition := ATransition;
 end;
 
 { TRecorderAction }
@@ -597,9 +649,6 @@ begin
     end;
   end;
 
-  { Менеджер подписывается на шину один раз и сам распределяет события по
-    расширениям. Это дешевле, чем отдельная подписка на каждый extension, и
-    упрощает будущую фильтрацию событий. }
   if (fExtensions.Count > 0) and (GetContext(0).EventToken = 0) then
   begin
     for I := 0 to fExtensions.Count - 1 do

@@ -22,21 +22,23 @@ unit uRecorderEventQueue;
 }
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
 uses
   Classes, SysUtils,
   uRecorderCoreServices,
-  uRecorderTags;
+  uRecorderTags,
+  uRecorderAlarms;
 
 type
+  { Класс исключения для очереди событий }
   ERecorderEventQueueError = class(Exception);
 
   { TRecorderEventSnapshot
-
     Самостоятельный снимок события core-шины.
-
+    
     Kind      - тип исходного события.
     Name      - имя события или имя тега для rceDataUpdated.
     Text      - текстовое поле события.
@@ -48,17 +50,24 @@ type
       TRecorderTagUpdateEventData. }
   TRecorderEventSnapshot = class
   private
-    fHasTagData: Boolean;
-    fIntValue: Int64;
-    fKind: TRecorderEventKind;
-    fName: string;
-    fTagName: string;
-    fText: string;
-    fTimeSec: Double;
-    fValue: Double;
+    fHasTagData: Boolean;          { Флаг наличия данных тега }
+    fAlarmActive: Boolean;         { Флаг входа в тревогу; False - выход }
+    fAlarmKind: TRecorderTagSetpointKind; { Тип сработавшей уставки }
+    fAlarmLevel: TRecorderAlarmLevel;     { Уровень тревоги }
+    fAlarmThreshold: Double;       { Порог сработавшей уставки }
+    fHasAlarmData: Boolean;        { Флаг наличия данных тревоги }
+    fIntValue: Int64;              { Числовой параметр }
+    fKind: TRecorderEventKind;     { Тип события }
+    fName: string;                 { Имя события }
+    fTagName: string;              { Имя тега }
+    fText: string;                 { Текстовый параметр }
+    fTimeSec: Double;              { Время измерения }
+    fValue: Double;                { Значение измерения }
+    fSampleCount: Integer;         { Число точек в блоке }
+    fTimes: TRecorderDoubleArray;  { Времена блока }
+    fValues: TRecorderDoubleArray; { Значения блока }
   public
     { Создает снимок на основе события core-шины.
-
       AEvent - исходное событие. Объект AEvent.Data не сохраняется, из него
         копируются только безопасные значения. }
     constructor CreateFromEvent(const AEvent: TRecorderEvent);
@@ -68,32 +77,39 @@ type
     property Text: string read fText;
     property IntValue: Int64 read fIntValue;
     property HasTagData: Boolean read fHasTagData;
+    property AlarmActive: Boolean read fAlarmActive;
+    property AlarmKind: TRecorderTagSetpointKind read fAlarmKind;
+    property AlarmLevel: TRecorderAlarmLevel read fAlarmLevel;
+    property AlarmThreshold: Double read fAlarmThreshold;
+    property HasAlarmData: Boolean read fHasAlarmData;
     property TagName: string read fTagName;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
+    property SampleCount: Integer read fSampleCount;
+    property Times: TRecorderDoubleArray read fTimes;
+    property Values: TRecorderDoubleArray read fValues;
   end;
 
   { TRecorderEventSnapshotQueue
-
     Очередь снимков событий. Подписывается на TRecorderEventBus, копирует
     входящие события в собственный список и позволяет вызывающему коду забирать
     их по одному. Возвращенный Pop объект принадлежит вызывающему коду. }
   TRecorderEventSnapshotQueue = class
   private
-    fEventBus: TRecorderEventBus;
-    fItems: TList;
-    fLock: TRTLCriticalSection;
-    fToken: Integer;
+    fEventBus: TRecorderEventBus;      { Ссылка на шину событий }
+    fItems: TList;                     { Список накопленных снимков (TRecorderEventSnapshot) }
+    fLock: TRTLCriticalSection;        { Критическая секция защиты очереди }
+    fToken: Integer;                   { Токен подписки на события }
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     function GetCount: Integer;
   public
     { AEventBus - необязательная шина событий для автоматической подписки.
       Владение шиной не передается. }
     constructor Create(AEventBus: TRecorderEventBus = nil);
+    { Деструктор отписывается от шины и очищает список }
     destructor Destroy; override;
 
     { Подписывает очередь на шину событий.
-
       AEventBus - шина событий. Владение не передается. Очередь может быть
         подключена только к одной шине одновременно. }
     procedure Attach(AEventBus: TRecorderEventBus);
@@ -118,6 +134,8 @@ implementation
 
 constructor TRecorderEventSnapshot.CreateFromEvent(const AEvent: TRecorderEvent);
 var
+  I: Integer;
+  lAlarmData: TRecorderAlarmEventData;
   lTagData: TRecorderTagUpdateEventData;
 begin
   inherited Create;
@@ -127,8 +145,6 @@ begin
   fText := AEvent.Text;
   fIntValue := AEvent.IntValue;
 
-  { Объект Data принадлежит издателю события и может быть переиспользован.
-    Поэтому здесь только копируем значения, не сохраняя ссылку. }
   if AEvent.Data is TRecorderTagUpdateEventData then
   begin
     lTagData := TRecorderTagUpdateEventData(AEvent.Data);
@@ -139,6 +155,34 @@ begin
       fTagName := AEvent.Name;
     fTimeSec := lTagData.TimeSec;
     fValue := lTagData.Value;
+    fSampleCount := lTagData.SampleCount;
+    SetLength(fTimes, fSampleCount);
+    SetLength(fValues, fSampleCount);
+    if fSampleCount > 0 then
+    begin
+      Move(lTagData.Times[0], fTimes[0], fSampleCount * SizeOf(Double));
+      Move(lTagData.Values[0], fValues[0], fSampleCount * SizeOf(Double));
+    end;
+  end
+  else if AEvent.Data is TRecorderAlarmEventData then
+  begin
+    lAlarmData := TRecorderAlarmEventData(AEvent.Data);
+    fHasAlarmData := True;
+    fAlarmActive := lAlarmData.Active;
+    fAlarmKind := lAlarmData.Kind;
+    fAlarmLevel := lAlarmData.Level;
+    fAlarmThreshold := lAlarmData.Threshold;
+    if lAlarmData.Tag <> nil then
+      fTagName := lAlarmData.Tag.Name
+    else
+      fTagName := AEvent.Name;
+    fTimeSec := lAlarmData.TimeSec;
+    fValue := lAlarmData.Value;
+    fSampleCount := 1;
+    SetLength(fTimes, 1);
+    SetLength(fValues, 1);
+    fTimes[0] := fTimeSec;
+    fValues[0] := fValue;
   end;
 end;
 

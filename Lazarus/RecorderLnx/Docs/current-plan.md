@@ -2,9 +2,14 @@
 
 Date: 2026-05-26
 
-This note fixes the current working boundary: the original Recorder sources are
-not available locally, so local work should avoid Recorder core behavior and any
-change that needs comparison with the original implementation.
+This note fixes the current working boundary. The original Recorder sources are
+available locally and must be checked before changing Recorder-compatible
+behavior.
+
+Original Recorder location:
+
+- root/search area: `D:\works\windev-v3.9\..`
+- priority source directories: `rc_*` and `mr`
 
 ## Current local structure
 
@@ -32,10 +37,13 @@ change that needs comparison with the original implementation.
 - Build hygiene:
   Lazarus project metadata, output folders, ignored generated files, and warning
   cleanup when the behavior is mechanically obvious.
+- Source/resource encoding hygiene:
+  follow `RecorderLnx/Docs/development-rules.md` before editing Lazarus UI
+  units with Russian captions or `{$codepage ...}` directives.
 - Mock/demo data used only for UI scaffolding, clearly separated from real
   Recorder devices, notify events, plugins, and acquisition logic.
 
-## Defer until original Recorder source is available
+## Work That Requires Original Recorder Check
 
 - Recording/playback semantics, start/stop/trigger behavior, and state-machine
   changes that must match the original Recorder.
@@ -45,12 +53,16 @@ change that needs comparison with the original implementation.
 - Any migration logic or compatibility layer that depends on original Recorder
   naming, file layout, event order, or side effects.
 
+For these tasks, inspect `D:\works\windev-v3.9\..\rc_*` and
+`D:\works\windev-v3.9\..\mr` first instead of asking where the original Recorder
+is located.
+
 ## Suggested next tasks
 
 1. Review `RecorderLnx/UI/uMainForm.pas` for UI-only rough edges:
    disabled/enabled command states, empty tag-list states, captions, and dialog
    flow.
-2. Keep a separate compatibility backlog for items that need the original
+2. Keep a separate compatibility backlog for items verified against the original
    Recorder source.
 
 ## Done in this pass
