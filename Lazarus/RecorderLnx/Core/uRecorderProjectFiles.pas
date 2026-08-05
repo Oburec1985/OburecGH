@@ -803,6 +803,7 @@ var
   I: Integer;
   J: Integer;
   K: Integer;
+  L: Integer;
   lAxis: TRecorderTrendAxis;
   lComponent: TRecorderVisualComponent;
   lIni: TIniFile;
@@ -812,6 +813,7 @@ var
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
   lImage: TRecorderImageComponent;
+  lSqlDisplay: TRecorderSqlTrendDisplay;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -980,6 +982,37 @@ begin
               TRecorderSqlTrendComponent(lComponent).ToUtc);
             lIni.WriteInteger(lSection, 'SqlMaxPoints',
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
+            lIni.WriteInteger(lSection, 'SqlDisplayCount',
+              TRecorderSqlTrendComponent(lComponent).DisplayCount);
+            lIni.WriteInteger(lSection, 'SqlActiveDisplay',
+              TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex);
+            for K := 0 to TRecorderSqlTrendComponent(lComponent).DisplayCount - 1 do
+            begin
+              lSqlDisplay := TRecorderSqlTrendComponent(lComponent).Displays[K];
+              lIni.WriteString(lSection, Format('SqlDisplay%dName', [K]), lSqlDisplay.Name);
+              lIni.WriteInteger(lSection, Format('SqlDisplay%dAxisCount', [K]), lSqlDisplay.AxisCount);
+              for L := 0 to lSqlDisplay.AxisCount - 1 do
+              begin
+                lAxis := lSqlDisplay.Axes[L];
+                lIni.WriteString(lSection, Format('SqlDisplay%dAxis%dName', [K, L]), lAxis.Name);
+                lIni.WriteInteger(lSection, Format('SqlDisplay%dAxis%dColor', [K, L]), lAxis.Color);
+                lIni.WriteFloat(lSection, Format('SqlDisplay%dAxis%dRangeMin', [K, L]), lAxis.RangeMin);
+                lIni.WriteFloat(lSection, Format('SqlDisplay%dAxis%dRangeMax', [K, L]), lAxis.RangeMax);
+              end;
+              lIni.WriteInteger(lSection, Format('SqlDisplay%dLineCount', [K]), lSqlDisplay.LineCount);
+              for L := 0 to lSqlDisplay.LineCount - 1 do
+              begin
+                lLine := lSqlDisplay.Lines[L];
+                lIni.WriteString(lSection, Format('SqlDisplay%dLine%dName', [K, L]), lLine.Name);
+                lIni.WriteString(lSection, Format('SqlDisplay%dLine%dTagName', [K, L]), lLine.TagName);
+                lIni.WriteInt64(lSection, Format('SqlDisplay%dLine%dTagId', [K, L]), lLine.TagId);
+                lIni.WriteInteger(lSection, Format('SqlDisplay%dLine%dEstimateKind', [K, L]), Ord(lLine.EstimateKind));
+                lIni.WriteInteger(lSection, Format('SqlDisplay%dLine%dAxisIndex', [K, L]), lLine.AxisIndex);
+                lIni.WriteInteger(lSection, Format('SqlDisplay%dLine%dColor', [K, L]), lLine.Color);
+                lIni.WriteInteger(lSection, Format('SqlDisplay%dLine%dWidth', [K, L]), lLine.Width);
+                lIni.WriteBool(lSection, Format('SqlDisplay%dLine%dVisible', [K, L]), lLine.Visible);
+              end;
+            end;
           end;
         end;      end;
     end;
@@ -994,6 +1027,7 @@ var
   I: Integer;
   J: Integer;
   K: Integer;
+  L: Integer;
   lAxis: TRecorderTrendAxis;
   lComponent: TRecorderVisualComponent;
   lCount: Integer;
@@ -1006,6 +1040,7 @@ var
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
   lImage: TRecorderImageComponent;
+  lSqlDisplay: TRecorderSqlTrendDisplay;
   lTypeId: string;
   lIni: TIniFile;
 begin
@@ -1219,6 +1254,46 @@ begin
                 lIni.ReadFloat(lSection, 'SqlToUtc', Now);
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine :=
                 lIni.ReadInteger(lSection, 'SqlMaxPoints', 4000);
+              lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
+              if lItemCount < 0 then
+                TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend
+              else
+              begin
+                TRecorderSqlTrendComponent(lComponent).ClearDisplays;
+                for K := 0 to lItemCount - 1 do
+                begin
+                  lSqlDisplay := TRecorderSqlTrendComponent(lComponent).AddDisplay(
+                    lIni.ReadString(lSection, Format('SqlDisplay%dName', [K]),
+                      'Отображение ' + IntToStr(K + 1)));
+                  lSqlDisplay.ClearAxes;
+                  for L := 0 to lIni.ReadInteger(lSection,
+                    Format('SqlDisplay%dAxisCount', [K]), 1) - 1 do
+                  begin
+                    lAxis := lSqlDisplay.AddAxis;
+                    lAxis.Name := lIni.ReadString(lSection, Format('SqlDisplay%dAxis%dName', [K, L]), lAxis.Name);
+                    lAxis.Color := lIni.ReadInteger(lSection, Format('SqlDisplay%dAxis%dColor', [K, L]), lAxis.Color);
+                    lAxis.RangeMin := lIni.ReadFloat(lSection, Format('SqlDisplay%dAxis%dRangeMin', [K, L]), lAxis.RangeMin);
+                    lAxis.RangeMax := lIni.ReadFloat(lSection, Format('SqlDisplay%dAxis%dRangeMax', [K, L]), lAxis.RangeMax);
+                  end;
+                  for L := 0 to lIni.ReadInteger(lSection,
+                    Format('SqlDisplay%dLineCount', [K]), 0) - 1 do
+                  begin
+                    lLine := lSqlDisplay.AddLine;
+                    lLine.Name := lIni.ReadString(lSection, Format('SqlDisplay%dLine%dName', [K, L]), lLine.Name);
+                    lLine.TagName := lIni.ReadString(lSection, Format('SqlDisplay%dLine%dTagName', [K, L]), '');
+                    lLine.TagId := lIni.ReadInt64(lSection, Format('SqlDisplay%dLine%dTagId', [K, L]), 0);
+                    lLine.EstimateKind := TRecorderTagEstimateKind(lIni.ReadInteger(lSection, Format('SqlDisplay%dLine%dEstimateKind', [K, L]), Ord(lLine.EstimateKind)));
+                    lLine.AxisIndex := lIni.ReadInteger(lSection, Format('SqlDisplay%dLine%dAxisIndex', [K, L]), 0);
+                    lLine.Color := lIni.ReadInteger(lSection, Format('SqlDisplay%dLine%dColor', [K, L]), lLine.Color);
+                    lLine.Width := lIni.ReadInteger(lSection, Format('SqlDisplay%dLine%dWidth', [K, L]), lLine.Width);
+                    lLine.Visible := lIni.ReadBool(lSection, Format('SqlDisplay%dLine%dVisible', [K, L]), True);
+                  end;
+                end;
+                if TRecorderSqlTrendComponent(lComponent).DisplayCount = 0 then
+                  TRecorderSqlTrendComponent(lComponent).AddDisplay('Отображение 1');
+                TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex :=
+                  lIni.ReadInteger(lSection, 'SqlActiveDisplay', 0);
+              end;
             end;
           end;          lPage.AddComponent(lComponent);
           lComponent := nil;
