@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, sockets, ssockets,
-  uRecorderMic140WireTypes;
+  uRecorderMic140WireTypes, uRecorderNetworkBinding;
 
 type
   TMic140v2Firmware = uRecorderMic140WireTypes.TRecorderMic140LegacyFirmware;
@@ -41,7 +41,7 @@ type
     fHost: string;
     fPort: Word;
     fRxBuffer: TMic140v2ByteBuf;
-    fSocket: TInetSocket;
+    fSocket: TSocketStream;
     fTimeoutMs: Cardinal;
     fLock: TCriticalSection;
     fMdpResyncBytes: Int64;
@@ -231,11 +231,16 @@ begin
 end;
 
 procedure TMic140v2Tcp.Connect;
+var
+  lErrorText: string;
 begin
   fLock.Acquire;
   try
     Disconnect;
-    fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+    if not RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, fSocket,
+      lErrorText) then
+      raise ESocketError.CreateFmt('MIC-140 %s:%d: %s',
+        [fHost, fPort, lErrorText]);
 {$ifdef unix}
     fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}

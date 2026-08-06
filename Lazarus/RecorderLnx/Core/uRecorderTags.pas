@@ -190,6 +190,7 @@ type
     fCalibrationNames: TStringList;                          { Цепочка имен канальных ГХ }
     fId: TRecorderTagId;                                       { Уникальный ID тега }
     fIsVirtual: Boolean;                                      { Тег создан программным, а не аппаратным источником }
+    fIsVector: Boolean;                                       { Тег принимает блоки отсчётов с заданной частотой }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fEstimateCache: array[TRecorderTagEstimateKind] of TRecorderTagEstimate;
     fEstimateLock: TRTLCriticalSection;                        { Кэш оценок читается UI-потоком }
@@ -206,6 +207,7 @@ type
     fSetpointSoundUntilEnd: Boolean;                           { Звук до сброса предупреждения }
     fSetpointStatusChannelEnabled: Boolean;                    { Формировать канал состояния }
     fSetpointStatusChannelName: string;                        { Имя формируемого канала состояния }
+    fSetpointRangeControlEnabled: Boolean;                     { Контроль допустимого диапазона }
     fSetpoints: array[TRecorderTagSetpointKind] of TRecorderTagSetpoint; { Уставки тега }
     fSourceValueMode: string;                                  { Режим значения, заданный источником }
     fHardwareCalibrationEnabled: Boolean;                      { Включена аппаратная ГХ с устройства }
@@ -251,6 +253,7 @@ type
 
     property Id: TRecorderTagId read fId;
     property IsVirtual: Boolean read fIsVirtual write fIsVirtual;
+    property IsVector: Boolean read fIsVector write fIsVector;
     property Name: string read fName write fName;
     property Address: string read fAddress write fAddress;
     property UnitName: string read fUnitName write fUnitName;
@@ -276,6 +279,8 @@ type
       write fSetpointStatusChannelEnabled;
     property SetpointStatusChannelName: string read fSetpointStatusChannelName
       write fSetpointStatusChannelName;
+    property SetpointRangeControlEnabled: Boolean
+      read fSetpointRangeControlEnabled write fSetpointRangeControlEnabled;
     property SourceId: string read fSourceId write fSourceId;
     property SourceValueMode: string read fSourceValueMode write fSourceValueMode;
     property HardwareCalibrationEnabled: Boolean read fHardwareCalibrationEnabled
@@ -318,7 +323,7 @@ type
     Реестр тегов RecorderLnx. Владеет тегами, обеспечивает уникальность id/name и
     публикует rceDataUpdated при записи значения. }
 
-  TRecorderCalibrationKind = (rckScale, rckPiecewiseLinear);
+  TRecorderCalibrationKind = (rckScale, rckPiecewiseLinear, rckStrain);
 
   TRecorderCalibrationPoint = class
   public
@@ -336,6 +341,10 @@ type
     fExtrapolation: Boolean;
     fKind: TRecorderCalibrationKind;
     fScale: Double;
+    fOffset: Double;
+    fK1: Double;
+    fK2: Double;
+    fModuleData: string;
     fPoints: TList; // List of TRecorderCalibrationPoint
     function GetPoint(AIndex: Integer): TRecorderCalibrationPoint;
     function GetPointCount: Integer;
@@ -356,6 +365,10 @@ type
     property Extrapolation: Boolean read fExtrapolation write fExtrapolation;
     property Kind: TRecorderCalibrationKind read fKind write fKind;
     property Scale: Double read fScale write fScale;
+    property Offset: Double read fOffset write fOffset;
+    property K1: Double read fK1 write fK1;
+    property K2: Double read fK2 write fK2;
+    property ModuleData: string read fModuleData write fModuleData;
     property PointCount: Integer read GetPointCount;
   end;
 
@@ -1230,6 +1243,7 @@ begin
   fId := AId;
   fName := AName;
   fIsVirtual := AIsVirtual;
+  fIsVector := False;
   fAutoRange := True;
   fAutoUnit := True;
   fPollFrequencyHz := 0;
@@ -1251,6 +1265,7 @@ begin
   fSetpoints[tskLowAlarm].Threshold := -10.0;
   fSetpoints[tskLowAlarm].Color := $0000FF;
   fSetpointSoundUntilEnd := True;
+  fSetpointRangeControlEnabled := True;
   fChannelCalibrationEnabled := True;
   fCalibrationNames := TStringList.Create;
   fCalibrationNames.CaseSensitive := False;
@@ -2141,6 +2156,9 @@ begin
   fKind := AKind;
   fPoints := TList.Create;
   fScale := 1.0;
+  fOffset := 0.0;
+  fK1 := 1.0;
+  fK2 := 0.0;
   fExtrapolation := True;
 end;
 
@@ -2171,6 +2189,10 @@ begin
   fExtrapolation := ASource.Extrapolation;
   fKind := ASource.Kind;
   fScale := ASource.Scale;
+  fOffset := ASource.Offset;
+  fK1 := ASource.K1;
+  fK2 := ASource.K2;
+  fModuleData := ASource.ModuleData;
   ClearPoints;
   for I := 0 to ASource.PointCount - 1 do
   begin
@@ -2198,6 +2220,8 @@ begin
   case fKind of
     rckScale:
       Result := AValue * fScale;
+    rckStrain:
+      Result := fOffset + fK1 * AValue + fK2 * AValue * AValue;
     rckPiecewiseLinear:
       begin
         if fPoints.Count = 0 then
@@ -2268,6 +2292,10 @@ var
   lLeft: Integer;
   lMid: Integer;
   lRight: Integer;
+  lDiscriminant: Double;
+  lLinearEstimate: Double;
+  lRoot1: Double;
+  lRoot2: Double;
 begin
   Result := False;
   AInputValue := 0.0;
@@ -2278,6 +2306,29 @@ begin
           Exit;
         AInputValue := AValue / fScale;
         Exit(True);
+      end;
+    rckStrain:
+      begin
+        if SameValue(fK2, 0.0) then
+        begin
+          if SameValue(fK1, 0.0) then Exit;
+          AInputValue := (AValue - fOffset) / fK1;
+          Exit(True);
+        end;
+        { Выбираем корень, ближайший к линейной оценке. }
+        lDiscriminant := Sqr(fK1) - 4 * fK2 * (fOffset - AValue);
+        if lDiscriminant < 0 then Exit;
+        lRoot1 := (-fK1 + Sqrt(lDiscriminant)) / (2 * fK2);
+        lRoot2 := (-fK1 - Sqrt(lDiscriminant)) / (2 * fK2);
+        if not SameValue(fK1, 0.0) then
+          lLinearEstimate := (AValue - fOffset) / fK1
+        else
+          lLinearEstimate := 0.0;
+        if Abs(lRoot1 - lLinearEstimate) <= Abs(lRoot2 - lLinearEstimate) then
+          AInputValue := lRoot1
+        else
+          AInputValue := lRoot2;
+        Result := True;
       end;
     rckPiecewiseLinear:
       begin

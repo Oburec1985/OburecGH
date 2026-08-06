@@ -13,7 +13,7 @@ unit uMic185MebiusTcpProtocol;
 interface
 
 uses
-  Classes, SysUtils, sockets, ssockets;
+  Classes, SysUtils, sockets, ssockets, uRecorderNetworkBinding;
 
 type
   ERecorderMebiusProtocolError = class(Exception);
@@ -42,7 +42,7 @@ type
   private
     fHost: string;
     fPort: Word;
-    fSocket: TInetSocket;
+    fSocket: TSocketStream;
     fTimeoutMs: Cardinal;
     fClientTaskId: LongWord;
     fRxDataPacketCount: Int64;
@@ -478,7 +478,9 @@ begin
     Exit;
   end;
   try
-    fSocket := TInetSocket.Create(fHost, fPort, Integer(fTimeoutMs));
+    if not RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, fSocket,
+      AErrorText) then
+      Exit;
 {$ifdef unix}
     fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}

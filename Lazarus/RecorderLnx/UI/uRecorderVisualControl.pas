@@ -14,7 +14,7 @@ interface
 
 uses
   Classes, SysUtils, Math, Controls, ExtCtrls, Graphics, StdCtrls, Buttons,
-  uOglChart, uRecorderFormModel, uRecorderTags;
+  uOglChart, uRecorderFormModel, uRecorderTags, uRecorderAlarms;
 
 type
   { IVForm
@@ -95,6 +95,7 @@ type
   TRecorderTagValueView = class(TPanel, IVForm)
   private
     fComponent: TRecorderTagValueComponent;
+    fAlarmEngine: IRecorderAlarmEngine;
     fLastTag: TRecorderTag;
     fLastRevision: QWord;
     fHasRevision: Boolean;
@@ -103,6 +104,7 @@ type
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
     procedure RefreshControl(ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
     function GetChartControl: TOglChart;
+    property AlarmEngine: IRecorderAlarmEngine read fAlarmEngine write fAlarmEngine;
   end;
 
   { Оконный контрол обязателен: TGraphicControl рисует на Canvas родителя,
@@ -449,6 +451,7 @@ var
   lValue: Double;
   lValueStr: string;
   lSingleLine: string;
+  lAlarmColor: LongInt;
 begin
   if not IsVisible then
     Exit;
@@ -468,6 +471,15 @@ begin
   else
     fLastRevision := 0;
   fHasRevision := True;
+  lAlarmColor := 0;
+  if (lTag = nil) or (lTag.SignalBuffer.Count = 0) then
+    lAlarmColor := $808080
+  else if fAlarmEngine <> nil then
+    lAlarmColor := fAlarmEngine.GetTagAlarmColor(lTag);
+  if lAlarmColor <> 0 then
+    Color := TColor(lAlarmColor)
+  else
+    Color := $00F2F8FF;
   if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) then
   begin
     lValue := lTag.SignalBuffer.LatestValue;

@@ -678,7 +678,10 @@ begin
       lTag := fRecorder.TagRegistry.FindByName(lTagName);
       if lTag <> nil then
       begin
-        lColor := fRecorder.AlarmEngine.GetTagAlarmColor(lTag);
+        if lTag.SignalBuffer.Count = 0 then
+          lColor := $808080
+        else
+          lColor := fRecorder.AlarmEngine.GetTagAlarmColor(lTag);
         if lColor <> 0 then
         begin
           sgFormular.Canvas.Brush.Color := TColor(lColor);

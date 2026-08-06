@@ -240,7 +240,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     end
     object lblMaxPoints: TLabel Left = 614 Top = 18 Caption = 'Макс. точек на линию' end
     object edMaxPoints: TEdit Left = 614 Height = 25 Top = 40 Width = 112 end
-    object lblWindowHours: TLabel Left = 742 Top = 18 Caption = 'Окно, часов' end
+    object lblWindowHours: TLabel Left = 742 Top = 18 Caption = 'Окно, дней' end
     object edWindowHours: TEdit Left = 742 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
   end
   object btnOk: TButton

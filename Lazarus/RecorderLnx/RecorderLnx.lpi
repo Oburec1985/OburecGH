@@ -40,6 +40,17 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Calibrations/Strains/uRecorderStrainCalibration.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Calibrations/Strains/uRecorderStrainCalibrationDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderStrainCalibrationDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uMeraFile.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -249,6 +260,17 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderVirtualTagDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderVirtualTagDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderNetworkBinding.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderDeviceSearchDialog.pas"/>
@@ -569,7 +591,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Device;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;../SharedUtils;../Tests/RecorderTests/UITestData"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;../SharedUtils;../Tests/RecorderTests/UITestData"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

@@ -105,8 +105,10 @@ function RecorderMic185ConvertValue(AValueCode: Double;
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 { Текст схемы включения датчика для таблицы настройки. }
 function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
-{ Преобразует адрес MIC183_185-{3-N} в индекс канала 0..63. }
+{ Преобразует новый адрес 185-{3-N} и старый MIC183_185-{3-N}. }
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+function RecorderMic185SourceDeviceIndex(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Integer;
 { Создает или возвращает конфигурацию источника MIC-185. }
 function RecorderMic185EnsureConfiguredSource(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; APollFrequencyHz: Double): TRecorderConfiguredDataSource;
@@ -175,6 +177,41 @@ const
   { Fallback scale when no real hardware characteristic is loaded:
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
+
+function Mic185CanonicalAddress(const AAddress: string): string;
+begin
+  Result := Trim(AAddress);
+  if Pos('MIC183_185-', UpperCase(Result)) = 1 then
+    Result := '185-' + Copy(Result, Length('MIC183_185-') + 1, MaxInt);
+end;
+
+function SameMic185Address(const ALeft, ARight: string): Boolean;
+begin
+  Result := SameText(Mic185CanonicalAddress(ALeft),
+    Mic185CanonicalAddress(ARight));
+end;
+
+function RecorderMic185SourceDeviceIndex(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): Integer;
+var
+  I: Integer;
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  Result := 3;
+  if ARegistry = nil then
+    Exit;
+  for I := 0 to RecorderConfiguredDataSourceList(ARegistry).Count - 1 do
+  begin
+    lEntry := TRecorderConfiguredDataSource(
+      RecorderConfiguredDataSourceList(ARegistry)[I]);
+    if not SameText(lEntry.ModuleType, CMic185ModuleName) then
+      Continue;
+    if SameText(RecorderNormalizeTagSourceId(lEntry.SourceId),
+      RecorderNormalizeTagSourceId(ASourceId)) then
+      Exit;
+    Inc(Result);
+  end;
+end;
 
 function RecorderIsHardwareMic185TagSource(const ASourceId: string): Boolean;
 begin
@@ -389,7 +426,7 @@ begin
       if not (lChannels.Items[I] is TJSONObject) then
         Continue;
       lItem := TJSONObject(lChannels.Items[I]);
-      if not SameText(lItem.Get('address', ''), AAddress) then
+      if not SameMic185Address(lItem.Get('address', ''), AAddress) then
         Continue;
       lMode := lItem.Get('sourceValueMode', '');
       RecorderMic185ReadChannelMode(lMode, AFrequencyHz, ASettings);
@@ -420,7 +457,8 @@ begin
     lItem := nil;
     for I := 0 to lChannels.Count - 1 do
       if (lChannels.Items[I] is TJSONObject) and
-        SameText(TJSONObject(lChannels.Items[I]).Get('address', ''), AAddress) then
+        SameMic185Address(TJSONObject(lChannels.Items[I]).Get('address', ''),
+          AAddress) then
       begin
         lItem := TJSONObject(lChannels.Items[I]);
         Break;
@@ -686,13 +724,15 @@ procedure RecorderMic185BuildSourceProgramSettings(ARegistry: TRecorderTagRegist
 var
   I: Integer;
   lAddress: string;
+  lDeviceIndex: Integer;
   lPowerMaCode: LongWord;
 begin
   Mic185DefaultChannelProgramSettingsArray(AFrequencyHz, ASettings);
   lPowerMaCode := RecorderMic185GetSourcePowerMaCode(ARegistry, ASourceId);
+  lDeviceIndex := RecorderMic185SourceDeviceIndex(ARegistry, ASourceId);
   for I := 0 to CMic185ChannelCountMax - 1 do
   begin
-    lAddress := Format('MIC183_185-{%d-%d}', [3, I + 1]);
+    lAddress := Format('185-{%d-%d}', [lDeviceIndex, I + 1]);
     RecorderMic185GetSourceChannelMode(ARegistry, ASourceId, lAddress,
       AFrequencyHz, ASettings[I]);
     if ASettings[I].FrequencyHz <= 0 then
@@ -1126,7 +1166,8 @@ begin
       begin
         lLink := TJSONObject.Create;
         lChannels.Add(lLink);
-        lLink.Add('address', Format('MIC183_185-{%d-%d}', [3, J + 1]));
+        lLink.Add('address', Format('185-{%d-%d}',
+          [RecorderMic185SourceDeviceIndex(ARegistry, lSourceId), J + 1]));
         lLink.Add('sourceValueMode',
           RecorderMic185FormatChannelMode(lSettings[J]));
         lLink.Add('pollFrequencyHz', lPollHz);
@@ -1237,7 +1278,7 @@ begin
       if not (lLinks.Items[J] is TJSONObject) then
         Continue;
       lLink := TJSONObject(lLinks.Items[J]);
-      lAddress := Trim(lLink.Get('address', ''));
+      lAddress := Mic185CanonicalAddress(lLink.Get('address', ''));
       if lAddress = '' then
         Continue;
       lTagName := Trim(lLink.Get('tagName', lAddress));
@@ -1516,8 +1557,14 @@ begin
 end;
 
 procedure TRecorderMic185DataSource.ConfigureDevice;
+var
+  lNative: TObject;
 begin
   fDevice := CreateRecorderMic185Device;
+  lNative := fDevice.GetNativeObject;
+  if lNative is TRecorderMic185Device then
+    TRecorderMic185Device(lNative).RecorderDeviceIndex :=
+      RecorderMic185SourceDeviceIndex(Registry, SourceId);
   fDevice.TrySetDeviceProperty(rdpHost, fHost);
   fDevice.TrySetDeviceProperty(rdpPort, Integer(fPort));
   fDevice.TrySetDeviceProperty(rdpPollFrequencyHz, fPollFrequencyHz);
@@ -1628,6 +1675,7 @@ end;
 procedure TRecorderMic185DataSource.PrepareHardware;
 var
   lTestError: string;
+  lNativeDevice: TRecorderMic185Device;
 begin
   if fHardwarePrepared or fHardwarePrepareAttempted then
     Exit;
@@ -1650,7 +1698,19 @@ begin
       Exit;
     end;
     RecorderHardwareClearSourceOffline(SourceId);
-    fDevice.Connect;
+    if not (fDevice.GetNativeObject is TRecorderMic185Device) then
+    begin
+      RecorderHardwareMarkSourceOffline(SourceId,
+        'MIC183/185 native device is unavailable');
+      Exit;
+    end;
+    lNativeDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+    if not lNativeDevice.TryConnect(lTestError) then
+    begin
+      RecorderHardwareMarkSourceOffline(SourceId, lTestError);
+      RecorderHardwareUnregisterLiveDevice(Self);
+      Exit;
+    end;
     fDevice.ProgramDevice;
     RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
     fHardwarePrepared := True;
@@ -1816,7 +1876,8 @@ begin
     begin
       // поиск тега по строке в цикле на каждой итерации - не корректно!
       // надо хранить ссылки на теги
-      lTag := FindTagBySourceAddress(Registry, Format('MIC183_185-{%d-t%d}', [3, I + 1]));
+      lTag := FindTagBySourceAddress(Registry, Format('185-{%d-t%d}',
+        [RecorderMic185SourceDeviceIndex(Registry, SourceId), I + 1]));
       // не надо каждому отсчету время сопоставлять!
       if lTag <> nil then
         Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastTempValue(I));
@@ -1824,7 +1885,8 @@ begin
 
   if lDevice.HasUtsData then
   begin
-    lTag := FindTagBySourceAddress(Registry, Format('MIC183_185-{%d-uts}', [3]));
+    lTag := FindTagBySourceAddress(Registry, Format('185-{%d-uts}',
+      [RecorderMic185SourceDeviceIndex(Registry, SourceId)]));
     if lTag <> nil then
       Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastUts);
   end;

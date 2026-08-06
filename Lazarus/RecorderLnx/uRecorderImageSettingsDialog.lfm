@@ -1,0 +1,115 @@
+object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
+  Left = 420
+  Height = 440
+  Top = 220
+  Width = 760
+  BorderStyle = bsDialog
+  Caption = 'Настройка картинки'
+  ClientHeight = 440
+  ClientWidth = 760
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6.0.0'
+  object TagLabel: TLabel
+    Left = 12
+    Height = 17
+    Top = 17
+    Width = 91
+    Caption = 'Тег-переключатель:'
+  end
+  object HintLabel: TLabel
+    Left = 12
+    Height = 34
+    Top = 50
+    Width = 736
+    AutoSize = False
+    Caption = 'Для каждого значения тега задайте файл. Если тег не выбран, всегда отображается первая картинка.'
+    WordWrap = True
+  end
+  object TagCombo: TComboBox
+    Left = 144
+    Height = 25
+    Top = 12
+    Width = 604
+    ItemHeight = 0
+    Style = csDropDownList
+    TabOrder = 0
+  end
+  object ImagesGrid: TStringGrid
+    Left = 12
+    Height = 274
+    Top = 84
+    Width = 620
+    ColCount = 3
+    Columns = <
+      item
+        Title.Caption = 'Значение тега'
+        Width = 110
+      end
+      item
+        Title.Caption = 'Файл картинки'
+        Width = 350
+      end
+      item
+        Title.Caption = 'Предпросмотр'
+        Width = 130
+      end>
+    DefaultRowHeight = 64
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 1
+    OnDblClick = ImagesGridDblClick
+    OnDrawCell = ImagesGridDrawCell
+  end
+  object AddButton: TButton
+    Left = 644
+    Height = 27
+    Top = 84
+    Width = 104
+    Caption = 'Добавить'
+    OnClick = AddButtonClick
+    TabOrder = 2
+  end
+  object DeleteButton: TButton
+    Left = 644
+    Height = 27
+    Top = 119
+    Width = 104
+    Caption = 'Удалить'
+    OnClick = DeleteButtonClick
+    TabOrder = 3
+  end
+  object BrowseButton: TButton
+    Left = 644
+    Height = 27
+    Top = 154
+    Width = 104
+    Caption = 'Выбрать файл...'
+    OnClick = BrowseButtonClick
+    TabOrder = 4
+  end
+  object OkButton: TButton
+    Left = 552
+    Height = 27
+    Top = 397
+    Width = 94
+    Caption = 'OK'
+    Default = True
+    OnClick = OkButtonClick
+    TabOrder = 5
+  end
+  object CancelButton: TButton
+    Left = 654
+    Height = 27
+    Top = 397
+    Width = 94
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 6
+  end
+  object ImageDialog: TOpenPictureDialog
+    Filter = 'Изображения|*.png;*.bmp;*.jpg;*.jpeg;*.gif|Все файлы|*.*'
+    left = 680
+    top = 224
+  end
+end

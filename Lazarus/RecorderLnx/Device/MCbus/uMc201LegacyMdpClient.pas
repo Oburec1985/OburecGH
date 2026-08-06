@@ -21,7 +21,7 @@ uses
 {$ifdef unix}
   BaseUnix, Unix,
 {$endif}
-  uMc201ProtocolTypes;
+  uMc201ProtocolTypes, uRecorderNetworkBinding;
 
 type
   EMc201MdpProtocol = class(Exception);
@@ -153,6 +153,12 @@ var
   lSocket: cint;
   lTime: TTimeVal;
 begin
+  if RecorderNetworkBindAddress <> '' then
+  begin
+    Result := RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, AStream,
+      AErrorMessage);
+    Exit;
+  end;
   Result := False;
   AStream := nil;
   AErrorMessage := '';

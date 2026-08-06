@@ -156,19 +156,21 @@ end;
 procedure TRecorderMic185SettingsForm.FillGrid;
 var
   I: Integer;
+  lDeviceIndex: Integer;
   lName: string;
   lSourceId: string;
   lTag: TRecorderTag;
 begin
   lSourceId := BuildSourceId;
+  lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, lSourceId);
   for I := 1 to 70 do
   begin
     if I <= 64 then
-      lName := Format('MIC183_185-{%d-%d}', [3, I])
+      lName := Format('185-{%d-%d}', [lDeviceIndex, I])
     else if I <= 69 then
-      lName := Format('MIC183_185-{%d-t%d}', [3, I - 64])
+      lName := Format('185-{%d-t%d}', [lDeviceIndex, I - 64])
     else
-      lName := 'MIC183_185-{3-uts}';
+      lName := Format('185-{%d-uts}', [lDeviceIndex]);
     gridChannels.Cells[0, I] := IntToStr(I);
     gridChannels.Cells[1, I] := lName;
     gridChannels.Cells[2, I] := '±5.000';
@@ -271,15 +273,17 @@ procedure TRecorderMic185SettingsForm.LoadChannelSettingsFromSource;
 var
   I: Integer;
   lAddress: string;
+  lDeviceIndex: Integer;
   lSourceId: string;
 begin
   Mic185DefaultChannelProgramSettingsArray(MIC185DefaultPollFrequencyHz,
     fChannelSettings);
   lSourceId := BuildSourceId;
+  lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, lSourceId);
   fPowerMaCode := RecorderMic185GetSourcePowerMaCode(fRegistry, lSourceId);
   for I := 0 to CMic185ChannelCountMax - 1 do
   begin
-    lAddress := Format('MIC183_185-{%d-%d}', [3, I + 1]);
+    lAddress := Format('185-{%d-%d}', [lDeviceIndex, I + 1]);
     RecorderMic185GetSourceChannelMode(fRegistry, lSourceId, lAddress,
       MIC185DefaultPollFrequencyHz, fChannelSettings[I]);
     fChannelSettings[I].PowerMaCode := fPowerMaCode;
@@ -304,12 +308,14 @@ procedure TRecorderMic185SettingsForm.StoreChannelSettingsConfig;
 var
   I: Integer;
   lAddress: string;
+  lDeviceIndex: Integer;
   lSourceId: string;
   lStored: TMic185ChannelProgramSettings;
 begin
   if fRegistry = nil then
     Exit;
   lSourceId := BuildSourceId;
+  lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, lSourceId);
   RecorderMic185EnsureConfiguredSource(fRegistry, lSourceId,
     MIC185DefaultPollFrequencyHz);
   RecorderMic185SetSourcePowerMaCode(fRegistry, lSourceId,
@@ -317,12 +323,13 @@ begin
   for I := 0 to CMic185ChannelCountMax - 1 do
   begin
     fChannelSettings[I].PowerMaCode := fPowerMaCode;
-    lAddress := Format('MIC183_185-{%d-%d}', [3, I + 1]);
+    lAddress := Format('185-{%d-%d}', [lDeviceIndex, I + 1]);
     RecorderMic185SetSourceChannelMode(fRegistry, lSourceId, lAddress,
       MIC185DefaultPollFrequencyHz, fChannelSettings[I]);
   end;
   if RecorderMic185GetSourceChannelMode(fRegistry, lSourceId,
-    'MIC183_185-{3-4}', MIC185DefaultPollFrequencyHz, lStored) then
+    Format('185-{%d-4}', [lDeviceIndex]),
+    MIC185DefaultPollFrequencyHz, lStored) then
     RecorderMic185Log(Format('SettingsDialog stored %s ch4 range=%d commut=%d scheme=%d power=%d',
       [lSourceId, lStored.MeasRangeIndex, lStored.CommutIndex,
        lStored.SensorScheme, fPowerMaCode]));

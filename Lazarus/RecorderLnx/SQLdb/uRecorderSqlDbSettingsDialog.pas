@@ -334,7 +334,8 @@ end;
 
 function TRecorderSqlDbSettingsDialog.TagIsScalar(ATag: TRecorderTag): Boolean;
 begin
-  Result := (ATag = nil) or ATag.IsVirtual or (ATag.PollFrequencyHz <= 0);
+  Result := (ATag = nil) or (ATag.PollFrequencyHz <= 0) or
+    (ATag.IsVirtual and (not ATag.IsVector));
 end;
 
 function TRecorderSqlDbSettingsDialog.EstimateText(ATag: TRecorderTag;

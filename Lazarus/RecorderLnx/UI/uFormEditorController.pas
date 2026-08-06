@@ -938,6 +938,8 @@ begin
         if Supports(lControl, IVForm, lVisualCtrl) then
         begin
           lStepStarted := GetTickCount64;
+          if lControl is TRecorderTagValueView then
+            TRecorderTagValueView(lControl).AlarmEngine := fAlarmEngine;
           lVisualCtrl.Configure(lComponent, fTagRegistry);
           lConfigureMs := GetTickCount64 - lStepStarted;
           lChart := lVisualCtrl.GetChartControl;
@@ -1029,6 +1031,8 @@ begin
             end;
             if fEnabled then
               lVisualCtrl.Configure(lComponent, fTagRegistry);
+            if lCtrl is TRecorderTagValueView then
+              TRecorderTagValueView(lCtrl).AlarmEngine := fAlarmEngine;
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
           end;
 

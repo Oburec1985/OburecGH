@@ -139,7 +139,7 @@ begin
   end;
   SetTimeEdits(fDraft.FromUtc, fDraft.ToUtc);
   edMaxPoints.Text := IntToStr(fDraft.MaxPointsPerLine);
-  edWindowHours.Text := FloatToStr(fDraft.DurationSec / 3600.0);
+  edWindowHours.Text := FloatToStr(fDraft.DurationSec / SecsPerDay);
   FillAxes;
   FillLines;
   FillDisplays;
@@ -260,7 +260,7 @@ begin
     dtpFromTime.Time := Frac(AFromUtc);
     dtpToDate.Date := Trunc(AToUtc);
     dtpToTime.Time := Frac(AToUtc);
-    edWindowHours.Text := FloatToStrF(fDraft.DurationSec / 3600.0,
+    edWindowHours.Text := FloatToStrF(fDraft.DurationSec / SecsPerDay,
       ffFixed, 12, 6);
   finally
     fUpdatingTime := False;
@@ -297,15 +297,15 @@ begin
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeWindowEditingDone(Sender: TObject);
-var lHours: Double; lToUtc: TDateTime;
+var lDays: Double; lToUtc: TDateTime;
 begin
   if fUpdatingTime then Exit;
-  if TryStrToFloat(Trim(edWindowHours.Text), lHours) and (lHours > 0) then
+  if TryStrToFloat(Trim(edWindowHours.Text), lDays) and (lDays > 0) then
   begin
     lToUtc := ToUtcValue;
     fDraft.TimeMode := sttmFixedUtc;
     cbTimeMode.ItemIndex := Ord(sttmFixedUtc);
-    SetTimeEdits(lToUtc - lHours / 24.0, lToUtc);
+    SetTimeEdits(lToUtc - lDays, lToUtc);
   end
   else
     edWindowHours.Color := $00D0D0FF;

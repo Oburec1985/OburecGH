@@ -5,9 +5,10 @@
 interface
 
 uses
-  Classes, SysUtils, Math, Forms, Controls, StdCtrls, Grids,
+  Classes, SysUtils, Math, Forms, Controls, StdCtrls, Grids, Dialogs,
   uRecorderTags, uRecorderCalibrationAddDialog,
   uRecorderCalibrationPropertiesDialog, uRecorderSdbStore,
+  uRecorderStrainCalibrationDialog,
   uRecorderSdbSelectDialog;
 
 type
@@ -194,7 +195,10 @@ begin
       lCalibration.AddPoint(0, 0);
       lCalibration.AddPoint(1, 1);
     end;
-    if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+    if (((lKind = rckStrain) and
+      ShowRecorderStrainCalibrationDialog(Self, lCalibration)) or
+      ((lKind <> rckStrain) and
+      ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
     begin
       fList.Add(lCalibration);
       lCalibration := nil;
@@ -222,6 +226,7 @@ end;
 procedure TRecorderCalibrationListDialog.btnPropertiesClick(Sender: TObject);
 var
   lIndex: Integer;
+  lCalibration: TRecorderCalibration;
 begin
   lIndex := CurrentIndex;
   if lIndex < 0 then
@@ -230,13 +235,26 @@ begin
   begin
     if fPipelineNames = nil then
       Exit;
-    if ShowRecorderCalibrationPropertiesDialog(Self,
-      CalibrationByName(fPipelineNames[lIndex])) then
+    lCalibration := CalibrationByName(fPipelineNames[lIndex]);
+    if lCalibration = nil then
+    begin
+      MessageDlg('Канальная ГХ',
+        'Градуировка «' + fPipelineNames[lIndex] +
+        '» не найдена в реестре.', mtInformation, [mbOK], 0);
+      Exit;
+    end;
+    if (((lCalibration.Kind = rckStrain) and
+      ShowRecorderStrainCalibrationDialog(Self, lCalibration)) or
+      ((lCalibration.Kind <> rckStrain) and
+      ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
       RefreshGrid;
     Exit;
   end;
 
-  if ShowRecorderCalibrationPropertiesDialog(Self, fList[lIndex]) then
+  if (((fList[lIndex].Kind = rckStrain) and
+    ShowRecorderStrainCalibrationDialog(Self, fList[lIndex])) or
+    ((fList[lIndex].Kind <> rckStrain) and
+    ShowRecorderCalibrationPropertiesDialog(Self, fList[lIndex]))) then
     RefreshGrid;
 end;
 
@@ -304,13 +322,20 @@ function ShowRecorderCalibrationPipelineDialog(AOwner: TComponent;
   AList: TRecorderCalibrationList; APipelineNames: TStrings): Boolean;
 var
   lDialog: TRecorderCalibrationListDialog;
+  lWorkingNames: TStringList;
 begin
+  lWorkingNames := TStringList.Create;
   lDialog := TRecorderCalibrationListDialog.Create(AOwner);
   try
-    lDialog.EditPipeline(AList, APipelineNames);
+    if APipelineNames <> nil then
+      lWorkingNames.Assign(APipelineNames);
+    lDialog.EditPipeline(AList, lWorkingNames);
     Result := lDialog.ShowModal = mrOk;
+    if Result and (APipelineNames <> nil) then
+      APipelineNames.Assign(lWorkingNames);
   finally
     lDialog.Free;
+    lWorkingNames.Free;
   end;
 end;
 

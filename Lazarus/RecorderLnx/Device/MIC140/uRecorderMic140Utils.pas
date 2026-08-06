@@ -60,7 +60,7 @@ function Mic140FirmwareWordIsPlausibleDeviceSerial(AValue: Word): Boolean;
 implementation
 
 uses
-  StrUtils, uRecorderMic140LegacyConstants
+  StrUtils, ssockets, uRecorderMic140LegacyConstants, uRecorderNetworkBinding
   {$IFDEF MSWINDOWS}, WinSock2{$ELSE}, BaseUnix, CTypes, Sockets{$ENDIF};
 
 function ParseMic140ChannelNumber(const AAddress: string;
@@ -261,6 +261,8 @@ function RecorderMic140TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
 {$IFDEF MSWINDOWS}
 var
+  lBoundStream: TSocketStream;
+  lBoundError: string;
   lAddr: TSockAddrIn;
   lBlockMode: u_long;
   lError: LongInt;
@@ -272,6 +274,13 @@ var
   lWriteSet: TFDSet;
   lWsaData: TWSAData;
 begin
+  if RecorderNetworkBindAddress <> '' then
+  begin
+    Result := RecorderOpenBoundTcpStream(AHost, APort, ATimeoutMs,
+      lBoundStream, lBoundError);
+    lBoundStream.Free;
+    Exit;
+  end;
   Result := False;
   lHost := Trim(AHost);
   if lHost = '' then

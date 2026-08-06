@@ -9,13 +9,16 @@ uses
   {$IFDEF UNIX}
   cthreads, BaseUnix,
   {$ENDIF}
-  Interfaces, Forms, uMainForm, uComponentSettingsDialog,
+  Interfaces, Forms, uMainForm, uRecorderNetworkBinding,
+  uComponentSettingsDialog,
+  uRecorderVirtualTagDialog,
   uRecorderButtonSettingsDialog,
   uRecorderTrendSettingsDialog, uRecorderTrendView,
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlTrendSettingsDialog,
   uRecorderCalibrationAddDialog, uRecorderCalibrationListDialog,
-  uRecorderCalibrationPropertiesDialog, uRecorderMic140SettingsDialog,
+  uRecorderCalibrationPropertiesDialog, uRecorderStrainCalibration,
+  uRecorderStrainCalibrationDialog, uRecorderMic140SettingsDialog,
   uRecorderSpectrumSettingsDialog, uRecorderSpectrumView,
   uRecorderVisualControl, uRecorderDeviceInterfaces, uMic185Constants,
   uMic185DebugLog, uMic185Device, uMic185MebiusTcpProtocol, uMic185MebiusTypes,

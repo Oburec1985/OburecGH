@@ -27,7 +27,8 @@ uses
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
-  uRecorderHardwareLiveDevices;
+  uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
+  uRecorderNetworkBinding;
 
 type
   { TRecorderSettingsDialog }
@@ -38,6 +39,11 @@ type
     fPageControl: TPageControl;                 // Контейнер вкладок настроек
     fApplyButton: TButton;                     // Кнопка "Применить"
     fHardwareTree: TTreeView;                   // Дерево аппаратной конфигурации/устройств
+    cbNetworkInterface: TComboBox;
+    edNetworkTestHost: TEdit;
+    edNetworkTestPort: TEdit;
+    btnNetworkTest: TButton;
+    lblNetworkTestResult: TLabel;
     btnDeviceAdd: TBitBtn;                      // Кнопка добавления устройства (Mera-файла)
     btnChannelAdd: TBitBtn;                     // Кнопка добавления выбранного канала в список активных
     btnChannelRemove: TBitBtn;                  // Кнопка удаления канала из списка активных
@@ -50,6 +56,8 @@ type
     btnSelectedChannelsClear: TButton;
     cbHideInactiveSelectedChannels: TCheckBox;
     cbOnlyVirtualSelectedChannels: TCheckBox;
+    pnCreateVirtualTag: TPanel;
+    btnCreateVirtualTag: TBitBtn;
     spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
     fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
     fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
@@ -120,6 +128,7 @@ type
     procedure btnChannelAddClick(Sender: TObject);
     procedure btnChannelRemoveClick(Sender: TObject);
     procedure btnChannelEditClick(Sender: TObject);
+    procedure btnCreateVirtualTagClick(Sender: TObject);
     procedure fAvailableChannelsGridDblClick(Sender: TObject);
     procedure fAvailableChannelsGridMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -154,12 +163,14 @@ type
     procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
     procedure MeraFilesPathBrowseClick(Sender: TObject);
+    procedure NetworkTestClick(Sender: TObject);
   private
     fRecorder: TRecorder;
     fSourceProbe: TRecorderSettingsSourceProbe;
     fDeviceImageList: TCustomImageList;
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
+    fAvailableChannelSignals: TList;            // Row-map доступных каналов
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
@@ -217,7 +228,8 @@ type
     procedure EditHardwareSource(const ASourceId: string;
       const AModuleTypeHint: string = '');
     procedure EditMeraFileSource(const ASourceId: string);
-    procedure ApplyConfiguredSourceChange(const AOldSourceId, ANewSourceId: string);
+    procedure ApplyConfiguredSourceChange(const AOldSourceId, ANewSourceId: string;
+      ARefreshUi: Boolean = True);
     procedure DeleteMic185Source(const ASourceId: string);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
@@ -260,6 +272,7 @@ type
     procedure LoadFromSettings;
     procedure StoreToSettings;
     procedure ApplySpectrumConfiguration;
+    procedure RemoveOrphanSpectrumEstimateTags;
     procedure UpdateConditionControls;
     function ReadFloatEdit(AEdit: TEdit; ADefault: Double): Double;
     function ReadSecondsAsMs(AEdit: TEdit; ADefaultMs: Cardinal): Cardinal;
@@ -298,7 +311,7 @@ function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
 implementation
 
 uses
-  StrUtils,
+  StrUtils, ssockets,
   uRecorderConfiguredDataSources, uRecorderConfiguredSourceEditor,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig,
   uRecorderMic140StreamTypes,
@@ -306,12 +319,84 @@ uses
   uRecorderMic185DataSource, uMic185Constants,
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
-  uRecorderDeviceSearchDialog, uMc032Device;
+  uRecorderDeviceSearchDialog, uMc032Device, uRecorderDebugLog;
 
 {$R *.lfm}
 
 const
   CMeraSourcePrefix = 'Mera file: ';
+
+type
+  TRecorderTcpProbeThread = class(TThread)
+  private
+    fHost: string;
+    fPort: Word;
+    fTimeoutMs: Cardinal;
+    fOpen: Boolean;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const AHost: string; APort: Word;
+      ATimeoutMs: Cardinal);
+    property Host: string read fHost;
+    property IsOpen: Boolean read fOpen;
+  end;
+
+constructor TRecorderTcpProbeThread.Create(const AHost: string; APort: Word;
+  ATimeoutMs: Cardinal);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fHost := AHost;
+  fPort := APort;
+  fTimeoutMs := ATimeoutMs;
+  Start;
+end;
+
+procedure TRecorderTcpProbeThread.Execute;
+begin
+  fOpen := RecorderMic140TcpProbe(fHost, fPort, fTimeoutMs);
+end;
+
+procedure RecorderFindOpenTcpHosts(ACandidates, AFound: TStrings;
+  APort: Word; ATimeoutMs: Cardinal);
+const
+  CBatchSize = 48;
+var
+  lThreads: TList;
+  lThread: TRecorderTcpProbeThread;
+  lFirst, lLast, I: Integer;
+begin
+  if (ACandidates = nil) or (AFound = nil) then Exit;
+  AFound.Clear;
+  lThreads := TList.Create;
+  try
+    lFirst := 0;
+    while lFirst < ACandidates.Count do
+    begin
+      lLast := lFirst + CBatchSize - 1;
+      if lLast >= ACandidates.Count then lLast := ACandidates.Count - 1;
+      for I := lFirst to lLast do
+        lThreads.Add(TRecorderTcpProbeThread.Create(ACandidates[I], APort,
+          ATimeoutMs));
+      for I := 0 to lThreads.Count - 1 do
+      begin
+        lThread := TRecorderTcpProbeThread(lThreads[I]);
+        lThread.WaitFor;
+        if lThread.IsOpen and (AFound.IndexOf(lThread.Host) < 0) then
+          AFound.Add(lThread.Host);
+        lThread.Free;
+      end;
+      lThreads.Clear;
+      lFirst := lLast + 1;
+      Application.ProcessMessages;
+    end;
+  finally
+    for I := 0 to lThreads.Count - 1 do
+      TObject(lThreads[I]).Free;
+    lThreads.Free;
+  end;
+end;
 
 function IsChannelEnabled(AEnabledChannels: TStrings; const AAddress: string): Boolean;
 var
@@ -520,6 +605,7 @@ begin
   inherited Create(AOwner);
   fDataSourcesChanged := False;
   fSelectedChannelTags := TList.Create;
+  fAvailableChannelSignals := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
   fSelectedSortColumn := 2;
@@ -627,6 +713,7 @@ begin
   fFrequencyBands.Free;
   fSpectrumConfigTree.Free;
   fSelectedChannelTags.Free;
+  fAvailableChannelSignals.Free;
   FreeAndNil(fSourceProbe);
   inherited Destroy;
 end;
@@ -679,6 +766,8 @@ begin
   AssignButtonImage(btnChannelAdd, fDeviceImageList, CIconRight);
   AssignButtonImage(btnChannelRemove, fDeviceImageList, CIconLeft);
   AssignButtonImage(btnChannelEdit, fDeviceImageList, CIconProperty);
+  AssignButtonImage(btnCreateVirtualTag, fDeviceImageList,
+    CDeviceVirtualTagImageIndex);
 
   lButton := FindComponent('btnDeviceDelete');
   if lButton is TBitBtn then
@@ -804,7 +893,7 @@ begin
   if (fRecorder.TagRegistry = nil) or (ATag = nil) then
     Exit;
   if RecorderIsDetachedTagSource(ATag.SourceId) then
-    Exit;
+    Exit(True);
 
   lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
   if lSourceId = '' then
@@ -1243,7 +1332,8 @@ end;
 
 procedure TRecorderSettingsDialog.DeleteSelectedAlgorithms;
 var
-  lNodeList: TList;
+  lBindings: TList;
+  lConfigNodes: TList;
   lSelectedNode: TTreeNode;
   lObj: TObject;
   lBinding: TRecorderSpectrumTagBinding;
@@ -1253,61 +1343,49 @@ begin
   if (fAlgorithmsTree = nil) or (fAlgorithmsTree.SelectionCount = 0) then
     Exit;
 
-  lNodeList := TList.Create;
+  { Snapshot model objects before changing the model. DeleteBinding/DeleteNode
+    free those objects, therefore TTreeNode.Data must not be read afterwards. }
+  lBindings := TList.Create;
+  lConfigNodes := TList.Create;
   try
     for I := 0 to fAlgorithmsTree.SelectionCount - 1 do
-      lNodeList.Add(fAlgorithmsTree.Selections[I]);
+    begin
+      lSelectedNode := fAlgorithmsTree.Selections[I];
+      if lSelectedNode.Data = nil then
+        Continue;
+      lObj := TObject(lSelectedNode.Data);
+      if lObj is TRecorderSpectrumConfigNode then
+        lConfigNodes.Add(lObj)
+      else if lObj is TRecorderSpectrumTagBinding then
+        lBindings.Add(lObj);
+    end;
 
     fAlgorithmsTree.Items.BeginUpdate;
     try
-      // First delete channel bindings (TRecorderSpectrumTagBinding)
-      for I := 0 to lNodeList.Count - 1 do
+      { Delete explicitly selected bindings only from algorithms which are not
+        selected themselves. Deleting a parent already deletes all children. }
+      for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
       begin
-        lSelectedNode := TTreeNode(lNodeList[I]);
-        if lSelectedNode.Data = nil then
+        lParentNode := fSpectrumConfigTree.Nodes[I];
+        if lConfigNodes.IndexOf(lParentNode) >= 0 then
           Continue;
-        lObj := TObject(lSelectedNode.Data);
-        if lObj is TRecorderSpectrumTagBinding then
+        for J := lParentNode.BindingCount - 1 downto 0 do
         begin
-          lBinding := TRecorderSpectrumTagBinding(lObj);
-          lParentNode := nil;
-          if (lSelectedNode.Parent <> nil) and (TObject(lSelectedNode.Parent.Data) is TRecorderSpectrumConfigNode) then
-            lParentNode := TRecorderSpectrumConfigNode(lSelectedNode.Parent.Data);
-
-          if lParentNode <> nil then
-          begin
-            for J := lParentNode.BindingCount - 1 downto 0 do
-              if lParentNode.Bindings[J] = lBinding then
-              begin
-                lParentNode.DeleteBinding(J);
-                Break;
-              end;
-          end;
+          lBinding := lParentNode.Bindings[J];
+          if lBindings.IndexOf(lBinding) >= 0 then
+            lParentNode.DeleteBinding(J);
         end;
       end;
 
-      // Then delete algorithms themselves (TRecorderSpectrumConfigNode)
-      for I := 0 to lNodeList.Count - 1 do
-      begin
-        lSelectedNode := TTreeNode(lNodeList[I]);
-        if lSelectedNode.Data = nil then
-          Continue;
-        lObj := TObject(lSelectedNode.Data);
-        if lObj is TRecorderSpectrumConfigNode then
-        begin
-          for J := fSpectrumConfigTree.NodeCount - 1 downto 0 do
-            if fSpectrumConfigTree.Nodes[J] = lObj then
-            begin
-              fSpectrumConfigTree.DeleteNode(J);
-              Break;
-            end;
-        end;
-      end;
+      for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
+        if lConfigNodes.IndexOf(fSpectrumConfigTree.Nodes[I]) >= 0 then
+          fSpectrumConfigTree.DeleteNode(I);
     finally
       fAlgorithmsTree.Items.EndUpdate;
     end;
   finally
-    lNodeList.Free;
+    lConfigNodes.Free;
+    lBindings.Free;
   end;
 
   PopulateAlgorithmsTree;
@@ -1548,6 +1626,8 @@ var
       begin
         lTagName := MeraSignalToRecorderTagName(lSignal);
         lTag := fRecorder.TagRegistry.FindByName(lTagName);
+        if (lTag <> nil) and (not SameText(lTag.SourceId, lSourceId)) then
+          lTag := nil;
         if lTag = nil then
           lTag := fRecorder.TagRegistry.CreateTag(lTagName,
             Ceil(Max(4096, lSignal.FrequencyHz)), AGroup = rsgMeraFile);
@@ -1633,61 +1713,12 @@ end;
 
 { Возвращает Mera-сигнал по строке таблицы доступных каналов }
 function TRecorderSettingsDialog.AvailableSignalByGridRow(ARow: Integer): TMeraSignalInfo;
-var
-  I: Integer;
-  lRow: Integer;
-  lSignal: TMeraSignalInfo;
 begin
   Result := nil;
-  if ARow < 1 then
+  if (fAvailableChannelSignals = nil) or (ARow < 1) or
+    (ARow > fAvailableChannelSignals.Count) then
     Exit;
-
-  lRow := 0;
-  if fRecorder <> nil then
-  begin
-    for I := 0 to fSourceProbe.GroupSignalCount(rsgMeraFile) - 1 do
-    begin
-      lSignal := fSourceProbe.GroupSignal(rsgMeraFile, I);
-      if SignalHasLinkedTag(lSignal) then
-        Continue;
-      Inc(lRow);
-      if lRow = ARow then
-        Exit(lSignal);
-    end;
-  end;
-
-  if fRecorder <> nil then
-    for I := 0 to fSourceProbe.GroupSignalCount(rsgMic140) - 1 do
-    begin
-      lSignal := fSourceProbe.GroupSignal(rsgMic140, I);
-      if SignalHasLinkedTag(lSignal) then
-        Continue;
-      Inc(lRow);
-      if lRow = ARow then
-        Exit(lSignal);
-    end;
-
-  if fRecorder <> nil then
-    for I := 0 to fSourceProbe.GroupSignalCount(rsgMic185) - 1 do
-    begin
-      lSignal := fSourceProbe.GroupSignal(rsgMic185, I);
-      if SignalHasLinkedTag(lSignal) then
-        Continue;
-      Inc(lRow);
-      if lRow = ARow then
-        Exit(lSignal);
-    end;
-
-  if fRecorder <> nil then
-    for I := 0 to fSourceProbe.GroupSignalCount(rsgMcbus) - 1 do
-    begin
-      lSignal := fSourceProbe.GroupSignal(rsgMcbus, I);
-      if SignalHasLinkedTag(lSignal) then
-        Continue;
-      Inc(lRow);
-      if lRow = ARow then
-        Exit(lSignal);
-    end;
+  Result := TMeraSignalInfo(fAvailableChannelSignals[ARow - 1]);
 end;
 
 { Возвращает Mera-сигнал по строке таблицы доступных каналов }
@@ -1841,9 +1872,53 @@ begin
   end;
 end;
 
+procedure TRecorderSettingsDialog.NetworkTestClick(Sender: TObject);
+var
+  lElapsedMs: QWord;
+  lErrorText: string;
+  lPortValue: Integer;
+  lStartedAt: QWord;
+  lStream: TSocketStream;
+begin
+  if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
+    SetRecorderNetworkBindAddress(RecorderNetworkAddressFromDisplay(
+      cbNetworkInterface.Text));
+  if not TryStrToInt(Trim(edNetworkTestPort.Text), lPortValue) or
+     (lPortValue < 1) or (lPortValue > 65535) then
+  begin
+    lblNetworkTestResult.Caption := 'Некорректный порт';
+    lblNetworkTestResult.Font.Color := clRed;
+    Exit;
+  end;
+  Screen.Cursor := crHourGlass;
+  lStartedAt := GetTickCount64;
+  lStream := nil;
+  try
+    if RecorderOpenBoundTcpStream(Trim(edNetworkTestHost.Text),
+      Word(lPortValue), 1500, lStream, lErrorText) then
+    begin
+      lElapsedMs := GetTickCount64 - lStartedAt;
+      lblNetworkTestResult.Caption := Format('Связь есть, %d мс', [lElapsedMs]);
+      lblNetworkTestResult.Font.Color := clGreen;
+    end
+    else
+    begin
+      lblNetworkTestResult.Caption := 'Нет связи: ' + lErrorText;
+      lblNetworkTestResult.Font.Color := clRed;
+    end;
+  finally
+    lStream.Free;
+    Screen.Cursor := crDefault;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.HardwareSearchClick(Sender: TObject);
 var
   lFoundHosts: TStringList;
+  lBroadcastHosts: TStringList;
+  lBroadcastIps: TStringList;
+  lCandidateHosts: TStringList;
+  lOpenHosts: TStringList;
   lConfiguredIds: TStringList;
   lSeenIds: TStringList;
   lDialog: TRecorderDeviceSearchDialog;
@@ -1854,9 +1929,13 @@ var
   lVersion: string;
   lError: string;
   lDisplay: string;
+  lBroadcastValue: string;
+  lBroadcastKind: string;
+  lBroadcastSerial: string;
   lSerial: LongWord;
   lPort: Word;
-  I: Integer;
+  I, lIndex: Integer;
+  lSearchStartedAt, lStageStartedAt: QWord;
 
   function IsConfigured(const ASourceId: string): Boolean;
   begin
@@ -1878,11 +1957,28 @@ var
     lDialog.AddDevice(ADeviceType, ASourceId, lDisplay, lConfigured);
   end;
 
-  procedure ProbeMic185(const AHost: string; APort: Word);
+  function ProbeMic140(const AHost: string; APort: Word): Boolean;
+  var
+    lMic140Serial, lDevSubRev: Integer;
+    lMic140Version, lMic140Display: string;
   begin
-    if not RecorderMic185ReadDeviceInfo(AHost, APort, lSerial, lVersion,
-      lError, 180) then
-      Exit;
+    Result := RecorderMic140QueryDeviceInfo(AHost, APort, lMic140Serial,
+      lMic140Version, lDevSubRev);
+    if not Result then Exit;
+    lMic140Display := Format('MIC-140 - %s:%d', [AHost, APort]);
+    if lMic140Serial <> 0 then
+      lMic140Display := lMic140Display + Format(', SN=%d', [lMic140Serial]);
+    if lMic140Version <> '' then
+      lMic140Display := lMic140Display + ', ' + lMic140Version;
+    AddFound('MIC-140', RecorderMic140SourceId(AHost, APort),
+      lMic140Display);
+  end;
+
+  function ProbeMic185(const AHost: string; APort: Word): Boolean;
+  begin
+    Result := RecorderMic185ReadDeviceInfo(AHost, APort, lSerial, lVersion,
+      lError, 1000);
+    if not Result then Exit;
     lSourceId := RecorderMic185SourceId(AHost, APort);
     lDisplay := Format('MIC183/185 — %s:%d', [AHost, APort]);
     if lSerial <> 0 then
@@ -1892,17 +1988,29 @@ var
     AddFound('MIC183/185', lSourceId, lDisplay);
   end;
 
-  procedure ProbeMc032(const AHost: string; APort: Word; ATimeoutMs: Cardinal);
+  function ProbeMc032(const AHost: string; APort: Word;
+    ATimeoutMs: Cardinal): Boolean;
   begin
     lMc032.Host := AHost;
     lMc032.Port := APort;
     lMc032.TimeoutMs := ATimeoutMs;
-    if lMc032.TestConnection(lError) then
+    Result := lMc032.TestConnection(lError);
+    if Result then
       AddFound('MC-032', RecorderMc032SourceId(AHost, APort),
         Format('MC-032 — %s:%d', [AHost, APort]));
   end;
 begin
+  lSearchStartedAt := GetTickCount64;
+  { Автопоиск должен использовать текущее значение списка, даже если
+    пользователь ещё не нажал «Применить». }
+  if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
+    SetRecorderNetworkBindAddress(RecorderNetworkAddressFromDisplay(
+      cbNetworkInterface.Text));
   lFoundHosts := TStringList.Create;
+  lBroadcastHosts := TStringList.Create;
+  lBroadcastIps := TStringList.Create;
+  lCandidateHosts := TStringList.Create;
+  lOpenHosts := TStringList.Create;
   lConfiguredIds := TStringList.Create;
   lSeenIds := TStringList.Create;
   lDialog := TRecorderDeviceSearchDialog.Create(Self);
@@ -1911,37 +2019,78 @@ begin
     lSeenIds.CaseSensitive := False;
     lSeenIds.Sorted := True;
     lSeenIds.Duplicates := dupIgnore;
+    lCandidateHosts.CaseSensitive := False;
+    lCandidateHosts.Sorted := True;
+    lCandidateHosts.Duplicates := dupIgnore;
     if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
       RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry,
         lConfiguredIds, True);
 
     Screen.Cursor := crHourGlass;
     try
-      { Сначала быстрый параллельный поиск MIC-140. }
-      RecorderMic140Discover(lFoundHosts, MIC140DefaultDiscoverySubnet,
-        MIC140DefaultPort, 180);
-      for I := 0 to lFoundHosts.Count - 1 do
+      { Штатные broadcast-ответы уже содержат тип прибора. Такие устройства
+        добавляем сразу и повторный TestLink для них не выполняем. }
+      { Оригинальный MebiusDAQ EthernetBus ждёт ответы 5000 мс. MIC185 на
+        стенде не успевает ответить за прежние 1400 мс. }
+      lStageStartedAt := GetTickCount64;
+      RecorderDiscoverMeraBroadcast(lBroadcastHosts, 5200);
+      RecorderDebugLog(Format('[HardwareSearch] broadcast: %d device(s), %d ms',
+        [lBroadcastHosts.Count, GetTickCount64 - lStageStartedAt]));
+      for I := 0 to lBroadcastHosts.Count - 1 do
       begin
-        lSourceId := RecorderMic140SourceId(lFoundHosts[I], MIC140DefaultPort);
-        AddFound('MIC-140', lSourceId,
-          Format('MIC-140 — %s:%d', [lFoundHosts[I], MIC140DefaultPort]));
+        lHost := lBroadcastHosts.Names[I];
+        lBroadcastValue := lBroadcastHosts.ValueFromIndex[I];
+        lBroadcastKind := Copy2SymbDel(lBroadcastValue, '|');
+        lBroadcastSerial := lBroadcastValue;
+        lBroadcastIps.Add(lHost);
+        lDisplay := Format('%s - %s:%d', [lBroadcastKind, lHost, 4000]);
+        if lBroadcastSerial <> '' then
+          lDisplay := lDisplay + ', SN=' + lBroadcastSerial;
+        if SameText(lBroadcastKind, 'MIC-140') then
+          AddFound('MIC-140', RecorderMic140SourceId(lHost, 4000), lDisplay)
+        else if SameText(lBroadcastKind, 'MIC183/185') then
+          AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay);
       end;
 
-      { MIC183/185: штатный адрес и адреса уже известных источников. }
-      ProbeMic185(MIC185DefaultHost, MIC185DefaultPort);
       for I := 0 to lConfiguredIds.Count - 1 do
         if TryParseRecorderMic185SourceId(lConfiguredIds[I], lHost, lPort) then
-          ProbeMic185(lHost, lPort);
-
-      { MC-032: сначала известные адреса, затем полная приборная подсеть. }
+          lCandidateHosts.Add(lHost);
+      for I := 0 to lConfiguredIds.Count - 1 do
+        if TryParseRecorderMic140SourceId(lConfiguredIds[I], lHost, lPort) then
+          lCandidateHosts.Add(lHost);
       for I := 0 to lConfiguredIds.Count - 1 do
         if TryParseRecorderMc032SourceId(lConfiguredIds[I], lHost, lPort) then
-          ProbeMc032(lHost, lPort, 180);
-      for I := 1 to 254 do
+          lCandidateHosts.Add(lHost);
+
+      { Резервный поиск использует настоящую маску выбранного адаптера.
+        TCP-порт проверяется пакетами потоков; тяжелый протокольный TestLink
+        выполняется только для узлов, у которых порт 4000 действительно открыт. }
+      RecorderEnumerateDiscoveryIPv4(lFoundHosts, 65534);
+      lCandidateHosts.AddStrings(lFoundHosts);
+      for I := 0 to lBroadcastIps.Count - 1 do
       begin
-        ProbeMc032('192.169.13.' + IntToStr(I), 4000, 35);
+        lIndex := lCandidateHosts.IndexOf(lBroadcastIps[I]);
+        if lIndex >= 0 then lCandidateHosts.Delete(lIndex);
+      end;
+      lStageStartedAt := GetTickCount64;
+      RecorderFindOpenTcpHosts(lCandidateHosts, lOpenHosts,
+        MIC140DefaultPort, 90);
+      RecorderDebugLog(Format('[HardwareSearch] TCP scan: %d candidate(s), '+
+        '%d open, %d ms', [lCandidateHosts.Count, lOpenHosts.Count,
+        GetTickCount64 - lStageStartedAt]));
+
+      lStageStartedAt := GetTickCount64;
+      for I := 0 to lOpenHosts.Count - 1 do
+      begin
+        lHost := lOpenHosts[I];
+        if ProbeMic185(lHost, MIC185DefaultPort) then Continue;
+        if ProbeMic140(lHost, MIC140DefaultPort) then Continue;
+        ProbeMc032(lHost, 4000, 700);
         Application.ProcessMessages;
       end;
+      RecorderDebugLog(Format('[HardwareSearch] fallback identification: '+
+        '%d host(s), %d ms', [lOpenHosts.Count,
+        GetTickCount64 - lStageStartedAt]));
     finally
       Screen.Cursor := crDefault;
     end;
@@ -1955,21 +2104,47 @@ begin
 
     if lDialog.ShowModal <> mrOk then
       Exit;
+    lStageStartedAt := GetTickCount64;
     for I := 0 to lDialog.DeviceCount - 1 do
     begin
       if not lDialog.DeviceChecked(I) then
         Continue;
       lDevice := lDialog.DeviceAt(I);
-      if SameText(lDevice.DeviceType, 'MC-032') then
-        EditMc032Source(lDevice.SourceId)
+      { Подтверждение общего списка означает добавление выбранных источников.
+        Настроечные диалоги здесь не открываем: их пользователь вызывает позже
+        кнопкой свойств или двойным щелчком по конкретному устройству. }
+      if SameText(lDevice.DeviceType, 'MIC-140') then
+        RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
+          lDevice.SourceId, 'MIC-140', MIC140DefaultPollFrequencyHz)
+      else if SameText(lDevice.DeviceType, 'MIC183/185') then
+        RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
+          lDevice.SourceId, 'MIC183/185', MIC185DefaultPollFrequencyHz)
+      else if SameText(lDevice.DeviceType, 'MC-032') then
+        RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
+          lDevice.SourceId, 'MC-032', 0)
       else
-        EditHardwareSource(lDevice.SourceId, lDevice.DeviceType);
+        Continue;
+      { Broadcast/protocol discovery already proved that this endpoint is alive.
+        Do not immediately repeat TestLink while merely adding its config. }
+      RecorderHardwareClearSourceOffline(lDevice.SourceId);
+      ApplyConfiguredSourceChange('', lDevice.SourceId, False);
     end;
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+    if fSelectedChannelsGrid <> nil then
+      fSelectedChannelsGrid.Invalidate;
+    RecorderDebugLog(Format('[HardwareSearch] batch add/UI refresh: %d ms; '+
+      'total search dialog cycle: %d ms', [GetTickCount64 - lStageStartedAt,
+      GetTickCount64 - lSearchStartedAt]));
   finally
     lMc032.Free;
     lDialog.Free;
     lSeenIds.Free;
     lConfiguredIds.Free;
+    lOpenHosts.Free;
+    lCandidateHosts.Free;
+    lBroadcastIps.Free;
+    lBroadcastHosts.Free;
     lFoundHosts.Free;
   end;
 end;
@@ -2118,7 +2293,7 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.ApplyConfiguredSourceChange(
-  const AOldSourceId, ANewSourceId: string);
+  const AOldSourceId, ANewSourceId: string; ARefreshUi: Boolean);
 var
   I: Integer;
   lConfig: TRecorderMic140SourceConfig;
@@ -2183,10 +2358,13 @@ begin
         lSourceConfig.DefaultPollFrequencyHz);
   end;
 
-  PopulateHardwareTree;
-  PopulateChannelGrids;
-  if fSelectedChannelsGrid <> nil then
-    fSelectedChannelsGrid.Invalidate;
+  if ARefreshUi then
+  begin
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+    if fSelectedChannelsGrid <> nil then
+      fSelectedChannelsGrid.Invalidate;
+  end;
 end;
 
 procedure TRecorderSettingsDialog.TagHardwareSourceSetup(Sender: TObject;
@@ -2618,6 +2796,7 @@ var
       fAvailableChannelsGrid.Cells[0, lRow] := lSignal.Address;
       fAvailableChannelsGrid.Cells[1, lRow] := lSignal.ModuleName;
       fAvailableChannelsGrid.Cells[2, lRow] := lSignal.Name;
+      fAvailableChannelSignals.Add(lSignal);
       Inc(lRow);
     end;
   end;
@@ -2637,6 +2816,7 @@ begin
 
   if fAvailableChannelsGrid <> nil then
   begin
+    fAvailableChannelSignals.Clear;
     lEnabledCount := 0;
     CountAvailableSignals(rsgMeraFile);
     CountAvailableSignals(rsgMic140);
@@ -2668,6 +2848,10 @@ begin
         end;
 
       SortSelectedTags(lSelectedTags);
+
+      if FindComponent('gbSelectedChannels') is TGroupBox then
+        TGroupBox(FindComponent('gbSelectedChannels')).Caption :=
+          Format('Выбранные каналы (%d)', [fRecorder.TagRegistry.TagCount]);
 
       if lSelectedTags.Count = 0 then
         fSelectedChannelsGrid.RowCount := 2
@@ -3101,6 +3285,9 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.LoadFromSettings;
+var
+  I: Integer;
+  lBindAddress: string;
 begin
   if fRecorder.RunSettings = nil then
     Exit;
@@ -3139,6 +3326,29 @@ begin
   SyncMeraFilesPathFromUi;
   fFrameDirEdit.Text := IncludeTrailingPathDelimiter(fRecorder.RunSettings.RecordRootDir) + '0001';
   fResetTimeCheck.Checked := True;
+  if cbNetworkInterface <> nil then
+  begin
+    RecorderEnumerateLocalIPv4(cbNetworkInterface.Items);
+    lBindAddress := RecorderNetworkBindAddress;
+    if lBindAddress = '' then
+      cbNetworkInterface.ItemIndex := 0
+    else
+    begin
+      cbNetworkInterface.ItemIndex := -1;
+      for I := 1 to cbNetworkInterface.Items.Count - 1 do
+        if SameText(RecorderNetworkAddressFromDisplay(
+          cbNetworkInterface.Items[I]), lBindAddress) then
+        begin
+          cbNetworkInterface.ItemIndex := I;
+          Break;
+        end;
+      if cbNetworkInterface.ItemIndex < 0 then
+      begin
+        cbNetworkInterface.Items.Add(lBindAddress);
+        cbNetworkInterface.ItemIndex := cbNetworkInterface.Items.Count - 1;
+      end;
+    end;
+  end;
 
   UpdateConditionControls;
   if fRecorder.TagRegistry <> nil then
@@ -3155,6 +3365,13 @@ begin
     алгоритма, даже если внутренняя кнопка спектра не была нажата. }
   if SelectedSpectrumConfigNode <> nil then
     StoreSelectedAlgorithmSettings;
+
+  if cbNetworkInterface <> nil then
+    if cbNetworkInterface.ItemIndex <= 0 then
+      SetRecorderNetworkBindAddress('')
+    else
+      SetRecorderNetworkBindAddress(
+        RecorderNetworkAddressFromDisplay(cbNetworkInterface.Text));
 
   if fStartLevelRadio.Checked then
     fRecorder.RunSettings.StartCondition := rscSignalLevel
@@ -3280,6 +3497,7 @@ end;
 procedure TRecorderSettingsDialog.OkButtonClick(Sender: TObject);
 begin
   StoreToSettings;
+  RemoveOrphanSpectrumEstimateTags;
   if fSourceProbe <> nil then
     fSourceProbe.SyncToRegistry;
   CreateSelectedMeraTags;
@@ -3404,6 +3622,51 @@ end;
 procedure TRecorderSettingsDialog.btnChannelEditClick(Sender: TObject);
 begin
   OpenSelectedChannelTagSettings;
+end;
+
+procedure TRecorderSettingsDialog.btnCreateVirtualTagClick(Sender: TObject);
+var
+  lName: string;
+  lTag: TRecorderTag;
+  lIsVector: Boolean;
+  lFrequencyHz: Double;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+  if not ShowRecorderVirtualTagDialog(Self, lName, lIsVector,
+    lFrequencyHz) then
+    Exit;
+  lName := Trim(lName);
+  if lName = '' then
+  begin
+    MessageDlg('Создание виртуального тега', 'Имя тега не может быть пустым.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if fRecorder.TagRegistry.FindByName(lName) <> nil then
+  begin
+    MessageDlg('Создание виртуального тега',
+      'Тег с именем "' + lName + '" уже существует.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lTag := fRecorder.TagRegistry.CreateTag(lName, 4096, True);
+  lTag.IsVector := lIsVector;
+  lTag.PollFrequencyHz := lFrequencyHz;
+  lTag.SourceId := 'manual';
+  if lIsVector then
+    lTag.SourceValueMode := 'vector'
+  else
+    lTag.SourceValueMode := 'scalar';
+  lTag.Address := 'virtual.' + lName;
+  lTag.ModuleType := 'Virtual';
+  if lIsVector then
+    lTag.Description := 'Пользовательский виртуальный векторный тег'
+  else
+    lTag.Description := 'Пользовательский виртуальный скалярный тег';
+  lTag.UnitName := '-';
+  lTag.AutoUnit := False;
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
 end;
 
 procedure TRecorderSettingsDialog.fSelectedChannelsGridDblClick(Sender: TObject);
@@ -3779,10 +4042,49 @@ procedure TRecorderSettingsDialog.ApplySpectrumConfiguration;
 begin
   if (fRecorder = nil) or (fRecorder.AlgorithmManager = nil) then
     Exit;
+  RemoveOrphanSpectrumEstimateTags;
   { Производные теги являются частью применённой конфигурации. Создаём их
     сразу, чтобы результат «Создать теги» был виден в этом же диалоге. }
   fRecorder.AlgorithmManager.PrepareConfiguration;
   PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.RemoveOrphanSpectrumEstimateTags;
+var
+  I, J, K: Integer;
+  lTag: TRecorderTag;
+  lSourceTagName: string;
+  lReferenced: Boolean;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  { Estimate tag names are user-editable. SourceId is the stable ownership key
+    used by the spectrum runtime: "spectrum:<source tag>". }
+  for I := fRecorder.TagRegistry.TagCount - 1 downto 0 do
+  begin
+    lTag := fRecorder.TagRegistry.Tags[I];
+    if not SameText(lTag.ModuleType, 'Spectrum estimate') then
+      Continue;
+    if Pos('spectrum:', LowerCase(lTag.SourceId)) <> 1 then
+      Continue;
+    lSourceTagName := Copy(lTag.SourceId, Length('spectrum:') + 1, MaxInt);
+    lReferenced := False;
+    for J := 0 to fRecorder.TagRegistry.SpectrumConfigs.NodeCount - 1 do
+    begin
+      for K := 0 to fRecorder.TagRegistry.SpectrumConfigs.Nodes[J].BindingCount - 1 do
+        if SameText(fRecorder.TagRegistry.SpectrumConfigs.Nodes[J].Bindings[K].SourceTagName,
+          lSourceTagName) then
+        begin
+          lReferenced := True;
+          Break;
+        end;
+      if lReferenced then
+        Break;
+    end;
+    if not lReferenced then
+      fRecorder.TagRegistry.RemoveTag(lTag);
+  end;
 end;
 
 procedure TRecorderSettingsDialog.SelectedChannelsFilterChanged(Sender: TObject);

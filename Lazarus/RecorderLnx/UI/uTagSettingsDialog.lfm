@@ -875,6 +875,16 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'Вкл. гистерезис'
           TabOrder = 0
         end
+        object fSetpointRangeControlCheck: TCheckBox
+          Left = 320
+          Height = 19
+          Top = 8
+          Width = 230
+          Caption = 'Контроль допустимого диапазона'
+          Checked = True
+          State = cbChecked
+          TabOrder = 3
+        end
         object fSetpointStatusChannelCheck: TCheckBox
           Left = 12
           Height = 19

@@ -22,7 +22,7 @@ interface
 
 uses
   Classes, SysUtils, fpjson,
-  uRecorderFormModel, uRecorderTags;
+  uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding;
 
 type
   TRecorderProjectConfigExtensionProc = procedure(AJson: TJSONObject;
@@ -221,6 +221,7 @@ function CalibrationKindToConfigName(AKind: TRecorderCalibrationKind): string;
 begin
   case AKind of
     rckScale: Result := 'scale';
+    rckStrain: Result := 'strain';
   else
     Result := 'piecewiseLinear';
   end;
@@ -230,6 +231,8 @@ function ConfigNameToCalibrationKind(const AName: string): TRecorderCalibrationK
 begin
   if SameText(AName, 'scale') then
     Result := rckScale
+  else if SameText(AName, 'strain') then
+    Result := rckStrain
   else
     Result := rckPiecewiseLinear;
 end;
@@ -260,6 +263,10 @@ begin
     lItem.Add('unitOut', lCalibration.UnitOut);
     lItem.Add('extrapolation', lCalibration.Extrapolation);
     lItem.Add('scale', lCalibration.Scale);
+    lItem.Add('offset', lCalibration.Offset);
+    lItem.Add('k1', lCalibration.K1);
+    lItem.Add('k2', lCalibration.K2);
+    lItem.Add('moduleData', lCalibration.ModuleData);
     lPoints := JsonArray(lItem, 'points');
     for J := 0 to lCalibration.PointCount - 1 do
     begin
@@ -303,6 +310,10 @@ begin
       lCalibration.UnitOut := lItem.Get('unitOut', '');
       lCalibration.Extrapolation := lItem.Get('extrapolation', True);
       lCalibration.Scale := lItem.Get('scale', 1.0);
+      lCalibration.Offset := lItem.Get('offset', 0.0);
+      lCalibration.K1 := lItem.Get('k1', 1.0);
+      lCalibration.K2 := lItem.Get('k2', 0.0);
+      lCalibration.ModuleData := lItem.Get('moduleData', '');
       lPoints := FindArray(lItem, 'points');
       if lPoints <> nil then
         for J := 0 to lPoints.Count - 1 do
@@ -398,6 +409,7 @@ begin
   AJson.Add('soundUntilEnd', ATag.SetpointSoundUntilEnd);
   AJson.Add('statusChannelEnabled', ATag.SetpointStatusChannelEnabled);
   AJson.Add('statusChannelName', ATag.SetpointStatusChannelName);
+  AJson.Add('rangeControlEnabled', ATag.SetpointRangeControlEnabled);
 
   for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
   begin
@@ -428,6 +440,8 @@ begin
     ATag.SetpointStatusChannelEnabled);
   ATag.SetpointStatusChannelName := AJson.Get('statusChannelName',
     ATag.SetpointStatusChannelName);
+  ATag.SetpointRangeControlEnabled := AJson.Get('rangeControlEnabled',
+    ATag.SetpointRangeControlEnabled);
 
   for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
   begin
@@ -617,6 +631,7 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
+    lRoot.Add('networkBindAddress', RecorderNetworkBindAddress);
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].BeforeSaveProc) then
         g_ProjectConfigExtensions[J].BeforeSaveProc(lRoot, ATags);
@@ -642,6 +657,7 @@ begin
       lTagJson.Add('description', lTag.Description);
       lTagJson.Add('sourceId', lTag.SourceId);
       lTagJson.Add('isVirtual', lTag.IsVirtual);
+      lTagJson.Add('isVector', lTag.IsVector);
       lTagJson.Add('sourceValueMode', lTag.SourceValueMode);
       lTagJson.Add('moduleType', lTag.ModuleType);
       lTagJson.Add('pollFrequencyHz', lTag.PollFrequencyHz);
@@ -699,6 +715,7 @@ begin
       raise ERecorderTagError.Create('Project config root must be a JSON object');
 
     lRoot := TJSONObject(lData);
+    SetRecorderNetworkBindAddress(lRoot.Get('networkBindAddress', ''));
     lTags := FindArray(lRoot, 'tags');
     if lTags = nil then
       Exit;
@@ -731,6 +748,8 @@ begin
         lTag.ModuleType := lTagJson.Get('moduleType', lTag.ModuleType);
         lTag.PollFrequencyHz := lTagJson.Get('pollFrequencyHz',
           lTag.PollFrequencyHz);
+        lTag.IsVector := lTagJson.Get('isVector',
+          (not lTag.IsVirtual) and (lTag.PollFrequencyHz > 0));
         lTag.RangeMin := lTagJson.Get('rangeMin', lTag.RangeMin);
         lTag.RangeMax := lTagJson.Get('rangeMax', lTag.RangeMax);
         lTag.AutoRange := lTagJson.Get('autoRange', lTag.AutoRange);

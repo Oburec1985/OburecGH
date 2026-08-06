@@ -76,6 +76,7 @@ type
     TTagAlarmState = class
     public
       Active: array[TRecorderTagSetpointKind] of Boolean;
+      OutOfRange: Boolean;
       Tag: TRecorderTag;
     end;
   private
@@ -378,12 +379,17 @@ function TRecorderAlarmEngine.GetTagAlarmColor(ATag: TRecorderTag): LongInt;
 var
   lState: TTagAlarmState;
 begin
+  // Zero is the neutral sentinel used by the UI for a tag without an active
+  // alarm. Gray is reserved for an explicitly detected range violation.
   Result := 0;
   EnterCriticalSection(fLock);
   try
     lState := AcquireState(ATag);
     if lState = nil then
       Exit;
+
+    if lState.OutOfRange then
+      Exit($808080);
 
     if lState.Active[tskHighAlarm] then
       Result := ATag.Setpoints[tskHighAlarm].Color
@@ -419,6 +425,10 @@ begin
     lState := AcquireState(ATag);
     if lState = nil then
       Exit;
+
+    lState.OutOfRange := ATag.SetpointRangeControlEnabled and
+      (ATag.RangeMax > ATag.RangeMin) and
+      ((AValue < ATag.RangeMin) or (AValue > ATag.RangeMax));
 
     for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
     begin

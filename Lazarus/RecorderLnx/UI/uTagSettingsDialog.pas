@@ -26,6 +26,7 @@ uses
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderMic140StreamTypes, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
+  uRecorderStrainCalibrationDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
   uRecorderMic185Calibration,
   uRecorderMc201Calibration, uRecorderConfiguredDataSources,
@@ -141,6 +142,7 @@ type
     fSetpointHysteresisCheck: TCheckBox;
     fSetpointStatusChannelCheck: TCheckBox;
     fSetpointSoundCheck: TCheckBox;
+    fSetpointRangeControlCheck: TCheckBox;
     pnBottom: TPanel;
     btnOk: TButton;
     btnCancel: TButton;
@@ -183,10 +185,14 @@ type
     procedure UpdateHardwareCurveText;
     procedure UpdateHardwareCurveButtons;
     procedure HardwareCurveCheckClick(Sender: TObject);
+    procedure AutoUnitCheckClick(Sender: TObject);
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
     procedure UpdateHardwareSourceSetupButton;
     procedure UpdateTagDeviceActionButtons;
     procedure UpdateVirtualChannelInfo;
+    function TryGetChannelCalibrationOutputUnit(ATag: TRecorderTag;
+      out AUnitName: string): Boolean;
+    procedure ApplyAutoUnitFromChannelCalibration;
     function CanConfigureHardwareSource: Boolean;
     function CanZeroBalance: Boolean;
     
@@ -417,6 +423,7 @@ begin
   fHardwareCurveSetupBtn.OnClick := @EditHardwareCalibrationButtonClick;
   fHardwareCurveDownloadBtn.OnClick := @DownloadHardwareCalibrationFromDeviceClick;
   fHardwareCurveCheck.OnClick := @HardwareCurveCheckClick;
+  fAutoUnitCheck.OnClick := @AutoUnitCheckClick;
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
 
@@ -711,17 +718,21 @@ begin
   if fTags.Count = 0 then
     Exit;
 
-  if AGetter = 0 then
-    lFirst := TagAt(0).AutoUnit
+  case AGetter of
+    0: lFirst := TagAt(0).AutoUnit;
+    1: lFirst := TagAt(0).AutoRange;
   else
-    lFirst := TagAt(0).AutoRange;
+    lFirst := TagAt(0).SetpointRangeControlEnabled;
+  end;
 
   for I := 1 to fTags.Count - 1 do
   begin
-    if AGetter = 0 then
-      lValue := TagAt(I).AutoUnit
+    case AGetter of
+      0: lValue := TagAt(I).AutoUnit;
+      1: lValue := TagAt(I).AutoRange;
     else
-      lValue := TagAt(I).AutoRange;
+      lValue := TagAt(I).SetpointRangeControlEnabled;
+    end;
     if lFirst <> lValue then
       Exit;
   end;
@@ -1522,6 +1533,13 @@ begin
     fSetpointStatusChannelCheck.Checked := lChecked
   else
     fSetpointStatusChannelCheck.State := cbGrayed;
+
+  lBool := AllBool(2);
+  fSetpointRangeControlCheck.AllowGrayed := fTags.Count > 1;
+  if lBool < 0 then
+    fSetpointRangeControlCheck.State := cbGrayed
+  else
+    fSetpointRangeControlCheck.Checked := lBool > 0;
 end;
 
 { Безопасное чтение вещественных чисел с заменой точек/запятых }
@@ -1549,6 +1567,7 @@ var
   lSetpointKind: TRecorderTagSetpointKind;
   lChannelNumber: Integer;
   lSettings: TRecorderMic140ChannelSettings;
+  lAutoUnitName: string;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
@@ -1730,9 +1749,14 @@ begin
       lTag.SetpointSoundUntilEnd := fSetpointSoundCheck.Checked;
     if fSetpointStatusChannelCheck.State <> cbGrayed then
       lTag.SetpointStatusChannelEnabled := fSetpointStatusChannelCheck.Checked;
+    if fSetpointRangeControlCheck.State <> cbGrayed then
+      lTag.SetpointRangeControlEnabled := fSetpointRangeControlCheck.Checked;
     if (not RecorderTagUsesMic140Settings(lTag)) and
       (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
+    if lTag.AutoUnit and
+      TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
+      lTag.UnitName := lAutoUnitName;
   end;
 end;
 
@@ -1750,8 +1774,6 @@ end;
 
 
 procedure TTagSettingsDialog.SelectCalibrationButtonClick(Sender: TObject);
-var
-  lSelected: TRecorderCalibration;
 begin
   if fTags.Count <> 1 then
   begin
@@ -1770,18 +1792,54 @@ begin
     Exit;
   end;
 
-  lSelected := nil;
-  if ShowRecorderCalibrationListDialog(Self, fTagRegistry.Calibrations, lSelected) and
-    (lSelected <> nil) then
+  if ShowRecorderCalibrationPipelineDialog(Self, fTagRegistry.Calibrations,
+    TagAt(0).CalibrationNames) then
   begin
-    if TagAt(0).CalibrationNames.Count = 0 then
-      TagAt(0).CalibrationNames.Add(lSelected.Name)
-    else
-      TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1] :=
-        lSelected.Name;
-    TagAt(0).ChannelCalibrationEnabled := True;
+    TagAt(0).ChannelCalibrationEnabled :=
+      TagAt(0).CalibrationNames.Count > 0;
+    ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
   end;
+end;
+
+function TTagSettingsDialog.TryGetChannelCalibrationOutputUnit(
+  ATag: TRecorderTag; out AUnitName: string): Boolean;
+var
+  lCalibration: TRecorderCalibration;
+  lLastIndex: Integer;
+begin
+  AUnitName := '';
+  Result := False;
+  if (ATag = nil) or (ATag.CalibrationNames = nil) or
+    (ATag.CalibrationNames.Count = 0) then
+    Exit;
+  lLastIndex := ATag.CalibrationNames.Count - 1;
+  lCalibration := fTagRegistry.FindCalibrationByName(
+    ATag.CalibrationNames[lLastIndex]);
+  if lCalibration = nil then
+    Exit;
+  AUnitName := Trim(lCalibration.UnitOut);
+  Result := AUnitName <> '';
+end;
+
+procedure TTagSettingsDialog.ApplyAutoUnitFromChannelCalibration;
+var
+  I: Integer;
+  lUnitName: string;
+begin
+  if fAutoUnitCheck.State <> cbChecked then
+    Exit;
+  for I := 0 to fTags.Count - 1 do
+    if TryGetChannelCalibrationOutputUnit(TagAt(I), lUnitName) then
+      TagAt(I).UnitName := lUnitName;
+  if (fTags.Count = 1) and
+    TryGetChannelCalibrationOutputUnit(TagAt(0), lUnitName) then
+    fUnitCombo.Text := lUnitName;
+end;
+
+procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
+begin
+  ApplyAutoUnitFromChannelCalibration;
 end;
 
 procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);
@@ -1811,6 +1869,7 @@ begin
           lCalibrationName;
       TagAt(I).ChannelCalibrationEnabled := True;
     end;
+    ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
     Exit;
   end;
@@ -1824,7 +1883,11 @@ begin
       lCalibration.AddPoint(1, 1);
     end;
 
-    if not ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+    if lKind = rckStrain then
+    begin
+      if not ShowRecorderStrainCalibrationDialog(Self, lCalibration) then Exit;
+    end
+    else if not ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
       Exit;
 
   fTagRegistry.Calibrations.Add(lCalibration);
@@ -1838,6 +1901,7 @@ begin
     TagAt(I).ChannelCalibrationEnabled := True;
   end;
     lCalibration := nil;
+    ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
   finally
     lCalibration.Free;
@@ -1881,8 +1945,19 @@ begin
     Exit;
   end;
 
+  if TagAt(0).CalibrationNames.Count > 1 then
+  begin
+    if ShowRecorderCalibrationPipelineDialog(Self, fTagRegistry.Calibrations,
+      TagAt(0).CalibrationNames) then
+    begin
+      ApplyAutoUnitFromChannelCalibration;
+      UpdateChannelCurveText;
+    end;
+    Exit;
+  end;
+
   lCalibration := fTagRegistry.FindCalibrationByName(
-    TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]);
+    TagAt(0).CalibrationNames[0]);
   if lCalibration = nil then
   begin
     MessageDlg('Канальная ГХ',   'Градуировка ГХ не найдена в списке калибровок.',
@@ -1890,8 +1965,14 @@ begin
     Exit;
   end;
 
-  if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+  if (((lCalibration.Kind = rckStrain) and
+    ShowRecorderStrainCalibrationDialog(Self, lCalibration)) or
+    ((lCalibration.Kind <> rckStrain) and
+    ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
+  begin
+    ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
+  end;
 end;
 
 procedure TTagSettingsDialog.SelectHardwareCalibrationButtonClick(Sender: TObject);

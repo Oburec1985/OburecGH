@@ -10,6 +10,9 @@ Original Recorder location:
 
 - root/search area: `D:\works\windev-v3.9\..`
 - priority source directories: `rc_*` and `mr`
+- semantic lookup: see `Docs/original-recorder-semantic-search.md`; use
+  `search_original_recorder_sources` first, then verify the returned lines in
+  the immutable primary source.
 
 ## Current local structure
 

@@ -38,6 +38,8 @@ begin
   lbTypes.Items.AddObject('Масштабный множитель (чувствительность)', TObject(PtrInt(Ord(rckScale))));
   lbTypes.Items.AddObject('Таблица линейной интерполяции первого порядка', TObject(PtrInt(Ord(rckPiecewiseLinear))));
   lbTypes.Items.AddObject('A(x-B)', TObject(PtrInt(-1)));
+  lbTypes.Items.AddObject('Тензометрическая ГХ (встроенный калькулятор)',
+    TObject(PtrInt(Ord(rckStrain))));
   lbTypes.Items.AddObject('Полином', TObject(PtrInt(-1)));
   lbTypes.ItemIndex := 3;
 end;
@@ -61,8 +63,9 @@ begin
   if lbTypes.ItemIndex < 0 then
     Exit;
   lValue := PtrInt(lbTypes.Items.Objects[lbTypes.ItemIndex]);
-  if lValue = Ord(rckScale) then
-    Result := rckScale;
+  if (lValue >= Ord(Low(TRecorderCalibrationKind))) and
+    (lValue <= Ord(High(TRecorderCalibrationKind))) then
+    Result := TRecorderCalibrationKind(lValue);
 end;
 
 function TRecorderCalibrationAddDialog.SelectedAction: TRecorderCalibrationAddAction;

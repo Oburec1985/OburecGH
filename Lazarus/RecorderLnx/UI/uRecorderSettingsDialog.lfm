@@ -603,6 +603,71 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             TabOrder = 3
           end
         end
+        object pnNetworkInterface: TPanel
+          Left = 0
+          Height = 76
+          Top = 383
+          Width = 889
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 76
+          ClientWidth = 889
+          TabOrder = 1
+          object lblNetworkInterface: TLabel
+            Left = 8
+            Height = 15
+            Top = 14
+            Width = 151
+            Caption = 'Сетевой интерфейс:'
+          end
+          object cbNetworkInterface: TComboBox
+            Left = 170
+            Height = 27
+            Top = 8
+            Width = 360
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object lblNetworkInterfaceHint: TLabel
+            Left = 542
+            Height = 15
+            Top = 14
+            Width = 314
+            Caption = 'Применяется при следующем подключении приборов'
+          end
+          object edNetworkTestHost: TEdit
+            Left = 170
+            Height = 27
+            Top = 41
+            Width = 160
+            Text = '192.168.9.142'
+            TabOrder = 1
+          end
+          object edNetworkTestPort: TEdit
+            Left = 338
+            Height = 27
+            Top = 41
+            Width = 60
+            Text = '4000'
+            TabOrder = 2
+          end
+          object btnNetworkTest: TButton
+            Left = 406
+            Height = 27
+            Top = 41
+            Width = 124
+            Caption = 'TCP-пинг'
+            OnClick = NetworkTestClick
+            TabOrder = 3
+          end
+          object lblNetworkTestResult: TLabel
+            Left = 542
+            Height = 15
+            Top = 47
+            Width = 0
+            Caption = ''
+          end
+        end
         object fHardwareTree: TTreeView
           Left = 0
           Height = 459
@@ -611,8 +676,8 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Align = alClient
           ImagesWidth = 16
           ReadOnly = True
-          TabOrder = 1
-          Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          TabOrder = 2
+          Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
           OnDblClick = fHardwareTreeDblClick
         end
       end
@@ -766,6 +831,27 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           TabOrder = 1
           OnDragDrop = fSelectedChannelsGridDragDrop
           OnDragOver = fSelectedChannelsGridDragOver
+        end
+        object pnCreateVirtualTag: TPanel
+          Left = 0
+          Height = 34
+          Top = 507
+          Width = 303
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 34
+          ClientWidth = 303
+          TabOrder = 2
+          object btnCreateVirtualTag: TBitBtn
+            Left = 4
+            Height = 30
+            Top = 2
+            Width = 34
+            Hint = 'Создать виртуальный тег'
+            ShowHint = True
+            TabOrder = 0
+            OnClick = btnCreateVirtualTagClick
+          end
         end
       end
       object spChannelAlgorithms: TSplitter

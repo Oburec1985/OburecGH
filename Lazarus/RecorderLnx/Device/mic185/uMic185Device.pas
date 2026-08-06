@@ -44,7 +44,7 @@ type
     procedure QueryDeviceInfo;
     { Возвращает количество каналов, видимых RecorderLnx: AIn + TIn + UTS. }
     function TotalLogicalChannelCount: Integer;
-    { Формирует имя канала в стиле original Recorder: MIC183_185-{3-1}. }
+    { Формирует короткое имя и адрес канала: 185-{3-1}. }
     function BuildLogicalChannelName(AIndex: Integer): string;
     { Адрес канала сейчас совпадает с именем, чтобы теги однозначно связывались
       с аппаратным слотом. }
@@ -68,6 +68,7 @@ type
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
     { Открывает TCP-клиент и читает идентификацию прибора. }
+    function TryConnect(out AErrorText: string): Boolean;
     procedure Connect; override;
     { Закрывает TCP-клиент и снимает runtime-занятость endpoint. }
     procedure Disconnect; override;
@@ -92,6 +93,8 @@ type
     property MeasChannelCount: Integer read fMeasChannelCount;
     property TempChannelCount: Integer read fTempChannelCount;
     property UtsEnabled: Boolean read fUtsEnabled;
+    property RecorderDeviceIndex: Integer read fRecorderDeviceIndex
+      write fRecorderDeviceIndex;
     { Последнее кэшированное значение температурного канала. }
     function LastTempValue(AIndex: Integer): Double;
     { Последнее кэшированное значение UTS/SEV. }
@@ -157,12 +160,12 @@ end;
 function TRecorderMic185Device.BuildLogicalChannelName(AIndex: Integer): string;
 begin
   if AIndex < fMeasChannelCount then
-    Result := Format('MIC183_185-{%d-%d}', [fRecorderDeviceIndex, AIndex + 1])
+    Result := Format('185-{%d-%d}', [fRecorderDeviceIndex, AIndex + 1])
   else if AIndex < fMeasChannelCount + fTempChannelCount then
-    Result := Format('MIC183_185-{%d-t%d}', [fRecorderDeviceIndex,
+    Result := Format('185-{%d-t%d}', [fRecorderDeviceIndex,
       AIndex - fMeasChannelCount + 1])
   else
-    Result := Format('MIC183_185-{%d-uts}', [fRecorderDeviceIndex]);
+    Result := Format('185-{%d-uts}', [fRecorderDeviceIndex]);
 end;
 
 function TRecorderMic185Device.BuildLogicalChannelAddress(AIndex: Integer): string;
@@ -272,35 +275,43 @@ begin
   end;
 end;
 
-procedure TRecorderMic185Device.Connect;
+function TRecorderMic185Device.TryConnect(out AErrorText: string): Boolean;
 var
   lAttempt: Integer;
 begin
+  Result := False;
+  AErrorText := '';
   if fState <> rdsDisconnected then
-    Exit;
+    Exit(True);
   if Trim(fHost) = '' then
-    raise ERecorderDeviceError.Create('MIC183/185 host is not set');
+  begin
+    AErrorText := 'MIC183/185 host is not set';
+    Exit;
+  end;
 
   for lAttempt := 1 to CMic185ConnectAttempts do
   begin
     FreeAndNil(fClient);
     fClient := TRecorderMebiusTcpClient.Create(fHost, Word(fPort), CMic185ConnectTimeoutMs);
-    try
-      fClient.Connect;
+    if fClient.TryConnect(AErrorText) then
+    begin
       QueryDeviceInfo;
       fState := rdsConnected;
       RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial, fSoftVersion,
         False);
-      Exit;
-    except
-      on E: Exception do
-      begin
-        FreeAndNil(fClient);
-        if lAttempt = CMic185ConnectAttempts then
-          raise ERecorderDeviceError.CreateFmt('MIC183/185 connect failed: %s', [E.Message]);
-      end;
+      Exit(True);
     end;
+    FreeAndNil(fClient);
   end;
+end;
+
+procedure TRecorderMic185Device.Connect;
+var
+  lErrorText: string;
+begin
+  if not TryConnect(lErrorText) then
+    raise ERecorderDeviceError.CreateFmt('MIC183/185 connect failed: %s',
+      [lErrorText]);
 end;
 
 procedure TRecorderMic185Device.Disconnect;

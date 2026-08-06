@@ -238,8 +238,17 @@ begin
   for I := 0 to fRegistry.TagCount - 1 do
   begin
     lTag := fRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) and SameText(lTag.Address, AAddress) then
-      Exit(lTag);
+    if SameText(lTag.SourceId, ASourceId) then
+    begin
+      { MIC-140 historically stores channel addresses both as 2-1 and 2-01.
+        Treat both spellings as the same channel, otherwise a just-added tag
+        remains visible in the available-channel grid. }
+      if (Pos('MIC-140:', ASourceId) = 1) and
+        SameMic140Address(lTag.Address, AAddress) then
+        Exit(lTag);
+      if SameText(lTag.Address, AAddress) then
+        Exit(lTag);
+    end;
   end;
 end;
 
@@ -432,27 +441,30 @@ end;
 procedure TRecorderSettingsSourceProbe.BuildMic185(const ASourceId: string);
 var
   I: Integer;
+  lDeviceIndex: Integer;
   lAddress: string;
   lFreqHz: Double;
   lSignal: TMeraSignalInfo;
 begin
   RemoveSourceSignals(ASourceId);
+  lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, ASourceId);
 
   for I := 1 to CMic185TotalLogicalChannelCount do
   begin
     if I <= CMic185ChannelCountMax then
     begin
-      lAddress := Format('MIC183_185-{%d-%d}', [3, I]);
+      lAddress := Format('185-{%d-%d}', [lDeviceIndex, I]);
       lFreqHz := CMic185DefaultMeasFrequencyHz;
     end
     else if I <= CMic185ChannelCountMax + CMic185TempChannelCount then
     begin
-      lAddress := Format('MIC183_185-{%d-t%d}', [3, I - CMic185ChannelCountMax]);
+      lAddress := Format('185-{%d-t%d}', [lDeviceIndex,
+        I - CMic185ChannelCountMax]);
       lFreqHz := CMic185DefaultTempFrequencyHz;
     end
     else
     begin
-      lAddress := 'MIC183_185-{3-uts}';
+      lAddress := Format('185-{%d-uts}', [lDeviceIndex]);
       lFreqHz := CMic185DefaultTempFrequencyHz;
     end;
 

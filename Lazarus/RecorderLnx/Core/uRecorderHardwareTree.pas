@@ -266,11 +266,16 @@ begin
       lEntry.NodeCaption := RecorderHardwareTreeNodeCaption(ATagRegistry, lEntry.SourceId);
       lEntry.Enabled := RecorderConfiguredDataSourceEnabled(ATagRegistry,
         lEntry.SourceId);
-      if lEntry.Enabled then
-        lEntry.LinkOk := RecorderHardwareSourceLinkOk(ATagRegistry,
-          lEntry.SourceId)
+      { Tree rebuilding is a GUI operation and must not synchronously probe
+        every configured endpoint. Runtime/probe actions maintain the offline
+        cache; a newly discovered source is considered available until an
+        actual connection attempt reports otherwise. }
+      if not lEntry.Enabled then
+        lEntry.LinkOk := False
+      else if RecorderIsVirtualTagSource(lEntry.SourceId) then
+        lEntry.LinkOk := RecorderMeraFilePathExists(lEntry.SourceId)
       else
-        lEntry.LinkOk := False;
+        lEntry.LinkOk := not RecorderHardwareIsSourceOffline(lEntry.SourceId);
       lEntry.HasLinkedTags := RecorderHardwareSourceHasLinkedTags(ATagRegistry,
         lEntry.SourceId);
       AEntries[I] := lEntry;
