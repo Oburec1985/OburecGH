@@ -764,6 +764,16 @@ begin
     AErrorText := 'Invalid MIC183/185 source id';
     Exit;
   end;
+  { The running data source owns the only TCP session for this endpoint.
+    Do not open a second client from the settings dialog: the enclosing
+    Recorder settings apply will reconfigure the source with the values just
+    stored in the registry. }
+  if RecorderMic185IsLiveDeviceConnected(lHost, lPort) then
+  begin
+    RecorderMic185Log(Format(
+      'ProgramConfiguredSource deferred for active runtime %s', [ASourceId]));
+    Exit(True);
+  end;
   lPollHz := MIC185DefaultPollFrequencyHz;
   if RecorderConfiguredDataSourcesFind(ARegistry, ASourceId) <> nil then
     if RecorderConfiguredDataSourcesFind(ARegistry, ASourceId).DefaultPollFrequencyHz > 0 then
@@ -1413,16 +1423,21 @@ function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
   out AAcquiring: Boolean): Boolean;
 var
   lDevice: TRecorderMic185Device;
-  lErrorText: string;
 begin
   Result := False;
   ASerialNumber := 0;
   AVersionText := '';
   AAcquiring := False;
+  if RecorderMic185RuntimeTryGetInfo(AHost, APort, ASerialNumber,
+    AVersionText) then
+  begin
+    lDevice := RecorderMic185FindLiveDevice(AHost, APort);
+    if lDevice <> nil then
+      AAcquiring := lDevice.State = rdsStarted;
+    Exit(True);
+  end;
   lDevice := RecorderMic185FindLiveDevice(AHost, APort);
   if lDevice = nil then
-    Exit;
-  if not RecorderHardwareSafeTestDeviceLink(lDevice, lErrorText) then
     Exit;
   ASerialNumber := lDevice.DeviceSerial;
   if lDevice.SoftVersion <> 0 then

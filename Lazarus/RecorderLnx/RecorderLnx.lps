@@ -387,6 +387,7 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="6"/>
         <TopLine Value="1336"/>
         <CursorPos X="47" Y="1353"/>
@@ -570,10 +571,9 @@
       <Unit>
         <Filename Value="Device\mic185\uMic185Device.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="5"/>
-        <TopLine Value="286"/>
-        <CursorPos X="96" Y="298"/>
+        <TopLine Value="499"/>
+        <CursorPos X="55" Y="522"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
@@ -1373,14 +1373,6 @@
     <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="2628" Column="57" TopLine="2604"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uMainForm.pas"/>
-        <Caret Line="2613" Column="59" TopLine="2596"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uMainForm.pas"/>
         <Caret Line="1523" Column="30" TopLine="1484"/>
       </Position>
       <Position>
@@ -1489,6 +1481,14 @@
       <Position>
         <Filename Value="Device\mic185\uMic185Device.pas"/>
         <Caret Line="490" Column="50" TopLine="463"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\mic185\uMic185Device.pas"/>
+        <Caret Line="334" Column="47" TopLine="306"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\mic185\uMic185Device.pas"/>
+        <Caret Line="327" Column="16" TopLine="306"/>
       </Position>
     </JumpHistory>
     <RunParams>

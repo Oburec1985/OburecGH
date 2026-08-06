@@ -2621,6 +2621,12 @@ var
   lModuleCaptions: TStringList;
   lEntries: TRecorderHardwareTreeEntries;
   lEntry: TRecorderHardwareTreeEntry;
+  lAcquiring: Boolean;
+  lHost: string;
+  lNodeCaption: string;
+  lSerialNumber: LongWord;
+  lVersionText: string;
+  lPort: Word;
 begin
   if fHardwareTree = nil then
     Exit;
@@ -2645,12 +2651,17 @@ begin
       for I := 0 to High(lEntries) do
       begin
         lEntry := lEntries[I];
+        lNodeCaption := lEntry.NodeCaption;
+        if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) and
+          RecorderMic185TryGetLiveDeviceInfo(lHost, lPort, lSerialNumber,
+            lVersionText, lAcquiring) and (lSerialNumber <> 0) then
+          lNodeCaption := Format('%s, SN=%d', [lNodeCaption, lSerialNumber]);
         if lEntry.Enabled then
           lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
-            lEntry.NodeCaption)
+            lNodeCaption)
         else
           lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
-            '[ВЫКЛ] ' + lEntry.NodeCaption);
+            '[ВЫКЛ] ' + lNodeCaption);
         RecorderHardwareTreeBindSourceId(lSourceNode, lEntry.SourceId);
       if fRecorder.TagRegistry <> nil then
         if lEntry.Enabled and lEntry.HasLinkedTags and lEntry.LinkOk then
