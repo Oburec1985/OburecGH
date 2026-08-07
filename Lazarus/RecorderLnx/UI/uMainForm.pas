@@ -38,6 +38,7 @@ interface
 uses
   Classes, SysUtils, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
+  StrUtils,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
@@ -2819,7 +2820,9 @@ begin
         fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
           lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
           lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
-          lTag.PollFrequencyHz);
+          lTag.PollFrequencyHz,
+          StartsText('MIC-185:', Trim(lTag.SourceId)) and
+          EndsText('-uts', Trim(lTag.Address)));
     end;
   end;
   if lLatestTime > 0 then

@@ -141,7 +141,8 @@ type
       ATimeSec, AValue: Double; APollFrequencyHz: Double);
     procedure WriteBlock(const ATagName, AUnitName, ADescription,
       ASensorCalibration, AAmplifierCalibration: string; const ATimes,
-      AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
+      AValues: array of Double; ACount: Integer; APollFrequencyHz: Double;
+      AForceExplicitX: Boolean = False);
     procedure Flush;
     procedure Close;
     property FileOpen: Boolean read fFileOpen;
@@ -783,9 +784,12 @@ begin
         lText.Add('PrtFile=' + lSignal.SectionName + '.prt');
       end;
       lText.Add('YUnits=' + lSignal.SignalUnitName);
+      { Original Recorder keeps the nominal channel frequency in the MERA
+        descriptor even for VT_UTS/VT_PAIR signals that also have XFile. }
+      if lSignal.FrequencyHz > 0 then
+        lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
       if not lSignal.ExplicitXRequired then
       begin
-        lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
         lText.Add('Start=' + FloatToMera(lSignal.StartTimeSec));
       end;
       if Trim(lSignal.SensorCalibrationName) <> '' then
@@ -835,7 +839,7 @@ begin
   lTimes[0] := ATimeSec;
   lValues[0] := AValue;
   WriteBlock(ATagName, AUnitName, ADescription, '', '', lTimes, lValues, 1,
-    APollFrequencyHz);
+    APollFrequencyHz, False);
 end;
 
 { TRecorderMeraTagWriter.WriteBlock
@@ -847,7 +851,8 @@ end;
     Блочная запись MERA в оригинальном Recorder. }
 procedure TRecorderMeraTagWriter.WriteBlock(const ATagName, AUnitName,
   ADescription, ASensorCalibration, AAmplifierCalibration: string; const ATimes,
-  AValues: array of Double; ACount: Integer; APollFrequencyHz: Double);
+  AValues: array of Double; ACount: Integer; APollFrequencyHz: Double;
+  AForceExplicitX: Boolean);
 var
   lBlockDuration: Double;
   lDt: Double;
@@ -878,8 +883,8 @@ begin
         lSignal.FrequencyHz := APollFrequencyHz;
         lSignal.ValueFormatName := ExtractMeraValueFormat(ADescription);
         lSignal.StartTimeSec := ATimes[0];
-        lSignal.ExplicitXRequired := MeraBlockHasExplicitX(ATimes, ACount,
-          APollFrequencyHz);
+        lSignal.ExplicitXRequired := AForceExplicitX or
+          MeraBlockHasExplicitX(ATimes, ACount, APollFrequencyHz);
         lSignal.SensorCalibrationName := ASensorCalibration;
         lSignal.AmplifierCalibrationName := AAmplifierCalibration;
         lSignal.DataStream := TFileStream.Create(MeraFileSystemName(fFrameDir + lSignal.SectionName + '.dat'), fmCreate);
@@ -903,7 +908,8 @@ begin
       lSignal.FrequencyHz := APollFrequencyHz;
     if (Trim(lSignal.ValueFormatName) = '') or SameText(lSignal.ValueFormatName, 'R8') then
       lSignal.ValueFormatName := ExtractMeraValueFormat(ADescription);
-    if MeraBlockHasExplicitX(ATimes, ACount, lSignal.FrequencyHz) then
+    if AForceExplicitX or
+      MeraBlockHasExplicitX(ATimes, ACount, lSignal.FrequencyHz) then
       lSignal.ExplicitXRequired := True;
     if (Trim(lSignal.SensorCalibrationName) = '') and
       (Trim(ASensorCalibration) <> '') then

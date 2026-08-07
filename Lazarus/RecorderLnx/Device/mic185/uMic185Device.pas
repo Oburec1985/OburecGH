@@ -39,6 +39,7 @@ type
     fLastTempValues: array of Double;
     fLastUtsValue: Double;
     fLastUtsDeviceTimeSec: Double;
+    fUtsGeneration: QWord;
     fHasLastTemp: Boolean;
     fHasLastUts: Boolean;
     { Читает серийный номер и версию прошивки короткой Mebius-командой. }
@@ -106,6 +107,7 @@ type
     { Последнее кэшированное значение UTS/SEV. }
     function LastUts: Double;
     function LastUtsDeviceTimeSec: Double;
+    function UtsGeneration: QWord;
     { Признак, что хотя бы один температурный пакет уже получен. }
     function HasTempData: Boolean;
     { Признак, что UTS/SEV пакет уже получен. }
@@ -563,6 +565,11 @@ begin
   Result := fLastUtsDeviceTimeSec;
 end;
 
+function TRecorderMic185Device.UtsGeneration: QWord;
+begin
+  Result := fUtsGeneration;
+end;
+
 function TRecorderMic185Device.HasTempData: Boolean;
 begin
   Result := fHasLastTemp;
@@ -639,6 +646,7 @@ begin
     fLastUtsDeviceTimeSec := lUtsDeviceTime;
     fLastUtsValue := lUts;
     fHasLastUts := True;
+    Inc(fUtsGeneration);
   end;
 
   ABlock.ChannelCount := lRaw.ChannelCount;

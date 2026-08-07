@@ -153,6 +153,7 @@ type
     fHardwarePrepareAttempted: Boolean;
     fPort: Word;
     fPollFrequencyHz: Double;
+    fLastPublishedUtsGeneration: QWord;
     fSelectedNames: TStringList;
     function ChannelSelected(const AChannel: TRecorderDeviceChannel): Boolean;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
@@ -2006,6 +2007,9 @@ begin
       end;
     end;
   end;
+  { A new acquisition session must publish its first UTS packet even if the
+    datasource object is reused after Stop/Start. }
+  fLastPublishedUtsGeneration := 0;
 end;
 
 procedure TRecorderMic185DataSource.RequestStop;
@@ -2138,7 +2142,8 @@ begin
         Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastTempValue(I));
     end;
 
-  if lDevice.HasUtsData then
+  if lDevice.HasUtsData and
+    (lDevice.UtsGeneration <> fLastPublishedUtsGeneration) then
   begin
     lTag := FindTagBySourceAddress(Registry, Format('%d-uts',
       [RecorderMic185SourceDeviceIndex(Registry, SourceId)]));
@@ -2152,6 +2157,7 @@ begin
         Registry.TimeSystem.UpdateFromTagSample(lDevice.LastUtsDeviceTimeSec,
           lDevice.LastUts);
     end;
+    fLastPublishedUtsGeneration := lDevice.UtsGeneration;
   end;
 end;
 
