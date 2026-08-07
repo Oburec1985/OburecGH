@@ -349,6 +349,7 @@ type
     procedure DrainUiEventQueue(Sender: TObject);
     { По периоду DataUpdateMs читает только новые данные тегов; EventBus массивы не переносит. }
     procedure ConsumeTagDataCycle(Sender: TObject);
+    function FindUtsChannelNameForTag(ATag: TRecorderTag): string;
     { Выполняет визуальную часть display-цикла только для видимой страницы. }
     function DoRepaintVisiblePage: Boolean;
     procedure ResetRecordTagCursors;
@@ -2822,7 +2823,8 @@ begin
           lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
           lTag.PollFrequencyHz,
           StartsText('MIC-185:', Trim(lTag.SourceId)) and
-          EndsText('-uts', Trim(lTag.Address)));
+          EndsText('-uts', Trim(lTag.Address)),
+          FindUtsChannelNameForTag(lTag));
     end;
   end;
   if lLatestTime > 0 then
@@ -3170,6 +3172,33 @@ begin
       Self, 'ConfigurationPrepared'));
 end;
 
+function TMainForm.FindUtsChannelNameForTag(ATag: TRecorderTag): string;
+var
+  I: Integer;
+  lCandidate: TRecorderTag;
+begin
+  Result := '';
+  if (ATag = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  if not StartsText('MIC-185:', Trim(ATag.SourceId)) then
+    Exit;
+  if EndsText('-uts', Trim(ATag.Address)) then
+    Exit;
+
+  { TagRegistry contains only channels added to the project (the right-hand
+    "Selected channels" table). Discovered/available channels live in the
+    settings SourceProbe and must not produce a UTS_Channel reference. }
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+  begin
+    lCandidate := fRecorder.TagRegistry.Tags[I];
+    if (lCandidate <> nil) and
+      SameText(Trim(lCandidate.SourceId), Trim(ATag.SourceId)) and
+      EndsText('-uts', Trim(lCandidate.Address)) then
+      Exit(lCandidate.Name);
+  end;
+end;
+
 procedure TMainForm.WarmupHardwareNetwork;
 const
   CNetworkWarmupTimeoutMs = 1800;
@@ -3287,6 +3316,14 @@ begin
   if csDestroying in ComponentState then Exit;
   AddLog('Deferred hardware preparation started.');
   PrepareRuntimeForConfiguration;
+  { One offline source must not keep the successfully prepared devices hidden
+    until opening the settings dialog rebuilds the views. }
+  UpdateActiveSourceIds;
+  RebuildTagList(edTagSearch.Text);
+  { Rebuild the currently visible page as well. In Stop mode the periodic
+    display cycle is not guaranteed to repaint the digital table after the
+    asynchronous device preparation has changed active source visibility. }
+  RenderActivePage;
   AddLog('Deferred hardware preparation finished.');
 end;
 

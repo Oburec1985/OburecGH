@@ -142,7 +142,7 @@ type
     procedure WriteBlock(const ATagName, AUnitName, ADescription,
       ASensorCalibration, AAmplifierCalibration: string; const ATimes,
       AValues: array of Double; ACount: Integer; APollFrequencyHz: Double;
-      AForceExplicitX: Boolean = False);
+      AForceExplicitX: Boolean = False; const AUtsChannelName: string = '');
     procedure Flush;
     procedure Close;
     property FileOpen: Boolean read fFileOpen;
@@ -164,6 +164,7 @@ type
     ExplicitXRequired: Boolean;
     SensorCalibrationName: string;
     AmplifierCalibrationName: string;
+    UtsChannelName: string;
     SampleCount: Int64;
     LastTimeSec: Double;
     HasLastTime: Boolean;
@@ -784,6 +785,8 @@ begin
         lText.Add('PrtFile=' + lSignal.SectionName + '.prt');
       end;
       lText.Add('YUnits=' + lSignal.SignalUnitName);
+      if Trim(lSignal.UtsChannelName) <> '' then
+        lText.Add('UTS_Channel=' + lSignal.UtsChannelName);
       { Original Recorder keeps the nominal channel frequency in the MERA
         descriptor even for VT_UTS/VT_PAIR signals that also have XFile. }
       if lSignal.FrequencyHz > 0 then
@@ -839,7 +842,7 @@ begin
   lTimes[0] := ATimeSec;
   lValues[0] := AValue;
   WriteBlock(ATagName, AUnitName, ADescription, '', '', lTimes, lValues, 1,
-    APollFrequencyHz, False);
+    APollFrequencyHz, False, '');
 end;
 
 { TRecorderMeraTagWriter.WriteBlock
@@ -852,7 +855,7 @@ end;
 procedure TRecorderMeraTagWriter.WriteBlock(const ATagName, AUnitName,
   ADescription, ASensorCalibration, AAmplifierCalibration: string; const ATimes,
   AValues: array of Double; ACount: Integer; APollFrequencyHz: Double;
-  AForceExplicitX: Boolean);
+  AForceExplicitX: Boolean; const AUtsChannelName: string);
 var
   lBlockDuration: Double;
   lDt: Double;
@@ -887,6 +890,7 @@ begin
           MeraBlockHasExplicitX(ATimes, ACount, APollFrequencyHz);
         lSignal.SensorCalibrationName := ASensorCalibration;
         lSignal.AmplifierCalibrationName := AAmplifierCalibration;
+        lSignal.UtsChannelName := Trim(AUtsChannelName);
         lSignal.DataStream := TFileStream.Create(MeraFileSystemName(fFrameDir + lSignal.SectionName + '.dat'), fmCreate);
         if lSignal.ExplicitXRequired then
           EnsureMeraTimeStream(lSignal, fFrameDir);
@@ -917,6 +921,9 @@ begin
     if (Trim(lSignal.AmplifierCalibrationName) = '') and
       (Trim(AAmplifierCalibration) <> '') then
       lSignal.AmplifierCalibrationName := AAmplifierCalibration;
+    if (Trim(lSignal.UtsChannelName) = '') and
+      (Trim(AUtsChannelName) <> '') then
+      lSignal.UtsChannelName := Trim(AUtsChannelName);
 
     if lSignal.HasLastBlockBegin and (not lSignal.ExplicitXRequired) and
       (lSignal.FrequencyHz > 0) then
