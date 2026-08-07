@@ -193,6 +193,13 @@ const
   CMic185NominalAdcFullScale = 32768.0;
   CMic185ParallelStartSlotMs = 150;
 
+var
+  { The endpoint transports are independent, but the legacy Mebius IoControl
+    initialization path uses shared driver state. Concurrent GetSoftVersion/SN
+    calls randomly time out on otherwise live devices. Serialize only this
+    short session-initialization stage; Connect and Configure stay parallel. }
+  gMic185SessionInitializeLock: TRTLCriticalSection;
+
 function Mic185EndpointStartDelayMs(const AHost: string): Cardinal;
 var
   lLastDot: Integer;
@@ -790,6 +797,7 @@ var
   lNative: TRecorderMic185Device;
   lModuleSettings: TMic185ModuleProgramSettings;
   lKnownSerial, lKnownVersion: LongWord;
+  lInitializeOk: Boolean;
   lPollHz: Double;
   lPort: Word;
   lSettings: TMic185ChannelProgramSettingsArray;
@@ -883,7 +891,13 @@ begin
       lStageStartedAt := GetTickCount64;
       RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'BEGIN',
         'GetSoftVersion/read SN');
-      if not lNative.TryInitializeSession(AErrorText) then
+      EnterCriticalSection(gMic185SessionInitializeLock);
+      try
+        lInitializeOk := lNative.TryInitializeSession(AErrorText);
+      finally
+        LeaveCriticalSection(gMic185SessionInitializeLock);
+      end;
+      if not lInitializeOk then
       begin
         RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'FAIL',
           AErrorText, GetTickCount64 - lStageStartedAt);
@@ -1878,6 +1892,7 @@ var
   lStartDelayMs: Cardinal;
   lTestError: string;
   lNativeDevice: TRecorderMic185Device;
+  lInitializeOk: Boolean;
   lStageStartedAt: QWord;
   lTraceId: string;
 begin
@@ -1937,7 +1952,13 @@ begin
     lStageStartedAt := GetTickCount64;
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'BEGIN',
       'GetSoftVersion/read SN');
-    if not lNativeDevice.TryInitializeSession(lTestError) then
+    EnterCriticalSection(gMic185SessionInitializeLock);
+    try
+      lInitializeOk := lNativeDevice.TryInitializeSession(lTestError);
+    finally
+      LeaveCriticalSection(gMic185SessionInitializeLock);
+    end;
+    if not lInitializeOk then
     begin
       RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'FAIL',
         lTestError, GetTickCount64 - lStageStartedAt);
@@ -2188,8 +2209,12 @@ begin
 end;
 
 initialization
+  InitCriticalSection(gMic185SessionInitializeLock);
   RecorderRegisterProjectConfigExtension(@SaveMic185DataSourceConfigs,
     @LoadMic185DataSourceConfigs);
   RecorderRegisterHardwareSourceLinkProbe(@RecorderMic185HardwareLinkProbe);
+
+finalization
+  DoneCriticalSection(gMic185SessionInitializeLock);
 
 end.

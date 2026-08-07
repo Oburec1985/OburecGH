@@ -50,7 +50,7 @@ uses
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
-  uRecorderMic185DataSource,
+  uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView;
 
@@ -383,7 +383,7 @@ type
       AOldState, ANewState: TRecorderState;
       ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
-    procedure RecoverReachableOfflineSourcesOnce;
+    procedure RecoverOfflineSourcesAfterLoadOnce;
     procedure WarmupHardwareNetwork;
     procedure DeferredPrepareRuntime(Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
@@ -3151,10 +3151,12 @@ begin
   AddLog(ACommand + ' failed: ' + E.Message);
 end;
 
-procedure TMainForm.RecoverReachableOfflineSourcesOnce;
+procedure TMainForm.RecoverOfflineSourcesAfterLoadOnce;
 const
-  CStartupRecoveryProbeTimeoutMs = 500;
+  CStartupRecoveryAttemptCount = 2;
+  CStartupRecoveryReleaseDelayMs = 500;
 var
+  lAttempt: Integer;
   I: Integer;
   lHost: string;
   lPort: Word;
@@ -3175,32 +3177,32 @@ begin
     lSourceIds.Duplicates := dupIgnore;
     RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lSourceIds,
       True);
-    lRetryCount := 0;
-    for I := 0 to lSourceIds.Count - 1 do
+    for lAttempt := 1 to CStartupRecoveryAttemptCount do
     begin
-      lSourceId := lSourceIds[I];
-      if (not RecorderHardwareIsSourceOffline(lSourceId)) or
-        (not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort)) then
-        Continue;
-      if not RecorderMic185TcpProbe(lHost, lPort,
-        CStartupRecoveryProbeTimeoutMs) then
+      lRetryCount := 0;
+      for I := 0 to lSourceIds.Count - 1 do
       begin
-        AddLog('Startup session recovery skipped (endpoint unavailable): ' +
-          lSourceId);
-        Continue;
+        lSourceId := lSourceIds[I];
+        if (not RecorderHardwareIsSourceOffline(lSourceId)) or
+          (not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort)) then
+          Continue;
+
+        { Do not open a separate TCP probe immediately before Connect: MIC-185
+          is a single-client device and the probe can keep the only session
+          busy. Release every stale local endpoint exactly as manual Reset does,
+          then retry the real lifecycle instead of guessing readiness by ping. }
+        RecorderMic185RuntimeDetach(lHost, lPort);
+        RecorderHardwareRequestSourceReset(lSourceId);
+        Inc(lRetryCount);
+        AddLog(Format(
+          'Startup session recovery requested: %s (attempt %d/%d)',
+          [lSourceId, lAttempt, CStartupRecoveryAttemptCount]));
       end;
 
-      { The first failed preparation has already disconnected its local
-        client. Mark the source for one fresh Connect/Initialize/Configure
-        session. PrepareHardware consumes this request and never loops. }
-      RecorderHardwareRequestSourceReset(lSourceId);
-      Inc(lRetryCount);
-      AddLog('Startup session recovery requested: ' + lSourceId);
-    end;
-
-    if lRetryCount > 0 then
-    begin
-      AddLog(Format('Startup session recovery: retrying %d reachable source(s).',
+      if lRetryCount = 0 then
+        Break;
+      Sleep(CStartupRecoveryReleaseDelayMs * lAttempt);
+      AddLog(Format('Startup session recovery: retrying %d offline source(s).',
         [lRetryCount]));
       fRecorder.DataSources.PrepareHardwareAll;
     end;
@@ -3223,7 +3225,7 @@ begin
     try
       WarmupHardwareNetwork;
       fRecorder.DataSources.PrepareHardwareAll;
-      RecoverReachableOfflineSourcesOnce;
+      RecoverOfflineSourcesAfterLoadOnce;
       for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
         AddLog('Device connection error: ' +
           fRecorder.DataSources.LastErrors[I]);

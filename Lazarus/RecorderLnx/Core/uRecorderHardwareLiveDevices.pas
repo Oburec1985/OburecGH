@@ -44,7 +44,6 @@ type
     SourceId: string;
     Device: IRecorderDevice;
     Owner: TObject;
-    ResetRequested: Boolean;
   end;
 
   TRecorderHardwareOfflineEntry = class
@@ -53,9 +52,15 @@ type
     Reason: string;
   end;
 
+  TRecorderHardwareResetEntry = class
+  public
+    SourceId: string;
+  end;
+
 var
   gHardwareLiveEntries: TThreadList;
   gHardwareOfflineEntries: TThreadList;
+  gHardwareResetEntries: TThreadList;
 
 procedure RecorderHardwareEnsureRegistry;
 begin
@@ -63,6 +68,8 @@ begin
     gHardwareLiveEntries := TThreadList.Create;
   if gHardwareOfflineEntries = nil then
     gHardwareOfflineEntries := TThreadList.Create;
+  if gHardwareResetEntries = nil then
+    gHardwareResetEntries := TThreadList.Create;
 end;
 
 function RecorderHardwareFindEntry(const ASourceId: string;
@@ -134,7 +141,6 @@ begin
   lEntry.SourceId := Trim(ASourceId);
   lEntry.Device := ADevice;
   lEntry.Owner := AOwner;
-  lEntry.ResetRequested := False;
   lList := gHardwareLiveEntries.LockList;
   try
     lList.Add(lEntry);
@@ -262,13 +268,38 @@ end;
 
 procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
 var
+  I: Integer;
   lDevice: IRecorderDevice;
   lEntry: TRecorderHardwareLiveEntry;
+  lList: TList;
+  lResetEntry: TRecorderHardwareResetEntry;
 begin
+  if Trim(ASourceId) = '' then
+    Exit;
+  RecorderHardwareEnsureRegistry;
+  lList := gHardwareResetEntries.LockList;
+  try
+    lResetEntry := nil;
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareResetEntry(lList[I]).SourceId,
+        ASourceId) then
+      begin
+        lResetEntry := TRecorderHardwareResetEntry(lList[I]);
+        Break;
+      end;
+    if lResetEntry = nil then
+    begin
+      lResetEntry := TRecorderHardwareResetEntry.Create;
+      lResetEntry.SourceId := Trim(ASourceId);
+      lList.Add(lResetEntry);
+    end;
+  finally
+    gHardwareResetEntries.UnlockList;
+  end;
+
   lDevice := nil;
   if not RecorderHardwareFindEntry(ASourceId, lEntry) then
     Exit;
-  lEntry.ResetRequested := True;
   lDevice := lEntry.Device;
   { Сброс инвалидирует аппаратную сессию. Тяжёлая инициализация и
     программирование выполнятся источником при следующем PrepareHardware. }
@@ -290,12 +321,25 @@ end;
 function RecorderHardwareConsumeSourceResetRequest(
   const ASourceId: string): Boolean;
 var
-  lEntry: TRecorderHardwareLiveEntry;
+  I: Integer;
+  lList: TList;
 begin
-  Result := RecorderHardwareFindEntry(ASourceId, lEntry) and
-    lEntry.ResetRequested;
-  if Result then
-    lEntry.ResetRequested := False;
+  Result := False;
+  if (Trim(ASourceId) = '') or (gHardwareResetEntries = nil) then
+    Exit;
+  lList := gHardwareResetEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareResetEntry(lList[I]).SourceId,
+        ASourceId) then
+      begin
+        TRecorderHardwareResetEntry(lList[I]).Free;
+        lList.Delete(I);
+        Exit(True);
+      end;
+  finally
+    gHardwareResetEntries.UnlockList;
+  end;
 end;
 
 procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);
@@ -413,6 +457,20 @@ finalization
       gHardwareOfflineEntries.UnlockList;
     end;
     FreeAndNil(gHardwareOfflineEntries);
+  end;
+  if gHardwareResetEntries <> nil then
+  begin
+    with gHardwareResetEntries.LockList do
+    try
+      while Count > 0 do
+      begin
+        TRecorderHardwareResetEntry(Items[0]).Free;
+        Delete(0);
+      end;
+    finally
+      gHardwareResetEntries.UnlockList;
+    end;
+    FreeAndNil(gHardwareResetEntries);
   end;
 
 end.
