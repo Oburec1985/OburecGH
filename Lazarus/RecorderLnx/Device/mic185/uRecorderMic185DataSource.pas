@@ -1660,6 +1660,13 @@ end;
 destructor TRecorderMic185DataSource.Destroy;
 begin
   Stop;
+  { Destroy closes the device session. A normal Preview/Record -> Stop
+    transition deliberately keeps it connected and programmed so that the
+    next run only starts acquisition. }
+  RecorderHardwareUnregisterLiveDevice(Self);
+  fDevice := nil;
+  fHardwarePrepared := False;
+  fHardwarePrepareAttempted := False;
   fSelectedNames.Free;
   fChannelTagNames.Free;
   inherited Destroy;
@@ -2024,20 +2031,16 @@ begin
   begin
     try
       fDevice.Stop;
-      fDevice.Disconnect;
     except
       on E: Exception do
         ;
     end;
-    fDevice := nil;
   end;
-  RecorderHardwareUnregisterLiveDevice(Self);
   RecorderMic185RuntimeHoldBusy(Trim(fHost), fPort, False);
-  fHardwarePrepared := False;
-  { Offline-прибор уже проверен при загрузке конфигурации. Повторный TEST на
-    каждом Preview только добавляет сетевой timeout; новая конфигурация создаст
-    новый источник и выполнит проверку заново. }
-  fHardwarePrepareAttempted := RecorderHardwareIsSourceOffline(SourceId);
+  { Stop is an acquisition-stage operation, not Disconnect. Preserve the
+    initialized/programmed session for a fast subsequent Preview or Record.
+    A requested reset clears these flags at the next PrepareHardware call;
+    destruction releases fDevice and closes the TCP session. }
   inherited Stop;
 end;
 

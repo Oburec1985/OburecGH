@@ -49,7 +49,8 @@ uses
   uRecorderSpectrumRuntime,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
-  uRecorderHardwareTree,
+  uRecorderHardwareTree, uRecorderHardwareLiveDevices,
+  uRecorderMic185DataSource,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView;
 
@@ -168,6 +169,7 @@ type
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fUpdatingSqlDbRecording: Boolean;
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
+    fStartupOfflineRecoveryDone: Boolean;
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
     fConfigPopupMenu: TPopupMenu;                 // Меню операций сохранения/загрузки конфигурации
@@ -381,6 +383,7 @@ type
       AOldState, ANewState: TRecorderState;
       ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
+    procedure RecoverReachableOfflineSourcesOnce;
     procedure WarmupHardwareNetwork;
     procedure DeferredPrepareRuntime(Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
@@ -2377,6 +2380,7 @@ begin
   LoadProjectPackage;
   fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
+  fStartupOfflineRecoveryDone := False;
   EnsureRuntimeDataSources;
   PrepareRuntimeForConfiguration;
   RebuildTagList(edTagSearch.Text);
@@ -2759,14 +2763,18 @@ begin
   end;
 end;
 procedure TMainForm.StartDataSources;
+var
+  lStartedAt: QWord;
 begin
+  lStartedAt := GetTickCount64;
   EnsureRuntimeDataSources;
   if not fRecorder.DataSources.Running then
   begin
     fRecorder.DataSources.StartAll;
     fDataConsumeTimer.Enabled := True;
     fUiUpdateTimer.Enabled := True;
-    AddLog('Data sources started.');
+    AddLog(Format('Data sources started in %d ms.',
+      [GetTickCount64 - lStartedAt]));
   end;
 end;
 
@@ -3143,6 +3151,64 @@ begin
   AddLog(ACommand + ' failed: ' + E.Message);
 end;
 
+procedure TMainForm.RecoverReachableOfflineSourcesOnce;
+const
+  CStartupRecoveryProbeTimeoutMs = 500;
+var
+  I: Integer;
+  lHost: string;
+  lPort: Word;
+  lRetryCount: Integer;
+  lSourceId: string;
+  lSourceIds: TStringList;
+begin
+  if fStartupOfflineRecoveryDone then
+    Exit;
+  fStartupOfflineRecoveryDone := True;
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
+    (fRecorder.DataSources = nil) then
+    Exit;
+
+  lSourceIds := TStringList.Create;
+  try
+    lSourceIds.Sorted := True;
+    lSourceIds.Duplicates := dupIgnore;
+    RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lSourceIds,
+      True);
+    lRetryCount := 0;
+    for I := 0 to lSourceIds.Count - 1 do
+    begin
+      lSourceId := lSourceIds[I];
+      if (not RecorderHardwareIsSourceOffline(lSourceId)) or
+        (not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort)) then
+        Continue;
+      if not RecorderMic185TcpProbe(lHost, lPort,
+        CStartupRecoveryProbeTimeoutMs) then
+      begin
+        AddLog('Startup session recovery skipped (endpoint unavailable): ' +
+          lSourceId);
+        Continue;
+      end;
+
+      { The first failed preparation has already disconnected its local
+        client. Mark the source for one fresh Connect/Initialize/Configure
+        session. PrepareHardware consumes this request and never loops. }
+      RecorderHardwareRequestSourceReset(lSourceId);
+      Inc(lRetryCount);
+      AddLog('Startup session recovery requested: ' + lSourceId);
+    end;
+
+    if lRetryCount > 0 then
+    begin
+      AddLog(Format('Startup session recovery: retrying %d reachable source(s).',
+        [lRetryCount]));
+      fRecorder.DataSources.PrepareHardwareAll;
+    end;
+  finally
+    lSourceIds.Free;
+  end;
+end;
+
 { Реакция на смену состояний сбора данных }
 procedure TMainForm.PrepareRuntimeForConfiguration;
 var
@@ -3157,6 +3223,7 @@ begin
     try
       WarmupHardwareNetwork;
       fRecorder.DataSources.PrepareHardwareAll;
+      RecoverReachableOfflineSourcesOnce;
       for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
         AddLog('Device connection error: ' +
           fRecorder.DataSources.LastErrors[I]);
