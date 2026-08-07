@@ -3182,8 +3182,9 @@ begin
     lStartedAt := GetTickCount64;
     RecorderDiscoverMeraBroadcast(lFoundDevices, CNetworkWarmupTimeoutMs);
     RecorderDebugLog(Format('[HardwarePrepare] network warmup bind=%s '+
-      'responses=%d elapsed=%dms', [RecorderNetworkBindAddress,
-      lFoundDevices.Count, GetTickCount64 - lStartedAt]));
+      'responses=%d elapsed=%dms devices="%s"', [RecorderNetworkBindAddress,
+      lFoundDevices.Count, GetTickCount64 - lStartedAt,
+      StringReplace(lFoundDevices.CommaText, '"', '''', [rfReplaceAll])]));
   finally
     lFoundDevices.Free;
   end;

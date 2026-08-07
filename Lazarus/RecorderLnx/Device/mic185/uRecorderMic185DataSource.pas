@@ -82,7 +82,8 @@ procedure RecorderMic185SetSourceTemperatureCompensation(
   APollFrequencyHz: Double; ATemperatureCompensation: Boolean);
 { Программирует уже настроенный MIC-185 source без открытия общего диалога. }
 function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
-  const ASourceId: string; out AErrorText: string): Boolean;
+  const ASourceId: string; out AErrorText: string;
+  const ATraceId: string = ''): Boolean;
 { Текст номинального входного диапазона для UI. }
 function RecorderMic185RangeText(ARangeIndex: LongWord): string;
 { Единица по умолчанию для выбранного диапазона. }
@@ -108,6 +109,10 @@ function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
 { Возвращает индекс измерительного канала из адресов 155-3,
   185-{155-3} и старых MIC183_185-{3-3}. }
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+{ Сравнивает разные допустимые записи одного канала MIC-185, например
+  155-3, 185-{155-3} и старую MIC183_185-{3-3}. Источник данных должен
+  сравниваться вызывающим кодом отдельно. }
+function RecorderMic185SameChannelAddress(const ALeft, ARight: string): Boolean;
 function RecorderMic185SourceDeviceIndex(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): Integer;
 { Создает или возвращает конфигурацию источника MIC-185. }
@@ -134,6 +139,9 @@ procedure RecorderMic185RegisterLiveDevice(AOwner: TObject; const AHost: string;
 procedure RecorderMic185UnregisterLiveDevice(AOwner: TObject);
 { Пишет строку в MIC-185 runtime/debug log. }
 procedure RecorderMic185Log(const AMessage: string);
+function RecorderMic185NewLifecycleTraceId(const AOperation: string): string;
+procedure RecorderMic185LifecycleLog(const ATraceId, ASourceId, APhase,
+  AState, ADetails: string; AElapsedMs: QWord = 0);
 
 type
   TRecorderMic185DataSource = class(TRecorderDataSourceBase)
@@ -173,7 +181,7 @@ uses
   Math, StrUtils, Variants,
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
   uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration,
-  uRecorderProjectFiles, uRecorderHardwareTree;
+  uRecorderProjectFiles, uRecorderHardwareTree, uRecorderNetworkBinding;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -182,6 +190,19 @@ const
   { Fallback scale when no real hardware characteristic is loaded:
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
+  CMic185ParallelStartSlotMs = 150;
+
+function Mic185EndpointStartDelayMs(const AHost: string): Cardinal;
+var
+  lLastDot: Integer;
+  lOctet: Integer;
+begin
+  Result := 0;
+  lLastDot := RPos('.', Trim(AHost));
+  if (lLastDot > 0) and TryStrToInt(Copy(Trim(AHost), lLastDot + 1,
+    MaxInt), lOctet) then
+    Result := Cardinal((lOctet mod 10) * CMic185ParallelStartSlotMs);
+end;
 
 function Mic185CanonicalAddress(const AAddress: string): string;
 var
@@ -758,7 +779,8 @@ begin
 end;
 
 function RecorderMic185ProgramConfiguredSource(ARegistry: TRecorderTagRegistry;
-  const ASourceId: string; out AErrorText: string): Boolean;
+  const ASourceId: string; out AErrorText: string;
+  const ATraceId: string): Boolean;
 var
   I: Integer;
   lDevice: IRecorderDevice;
@@ -772,6 +794,8 @@ var
   lSettings: TMic185ChannelProgramSettingsArray;
   lSummary: string;
   lTemperatureCompensation: Boolean;
+  lTraceId: string;
+  lStageStartedAt: QWord;
 begin
   Result := False;
   AErrorText := '';
@@ -780,6 +804,12 @@ begin
     AErrorText := 'Invalid MIC183/185 source id';
     Exit;
   end;
+  lTraceId := Trim(ATraceId);
+  if lTraceId = '' then
+    lTraceId := RecorderMic185NewLifecycleTraceId('configure');
+  RecorderMic185LifecycleLog(lTraceId, ASourceId, 'operation', 'BEGIN',
+    Format('endpoint=%s:%d bind=%s', [lHost, lPort,
+      RecorderNetworkBindAddress]));
   { The running data source owns the only TCP session for this endpoint.
     Do not open a second client from the settings dialog: the enclosing
     Recorder settings apply will reconfigure the source with the values just
@@ -788,6 +818,8 @@ begin
   begin
     RecorderMic185Log(Format(
       'ProgramConfiguredSource deferred for active runtime %s', [ASourceId]));
+    RecorderMic185LifecycleLog(lTraceId, ASourceId, 'operation', 'DEFERRED',
+      'active runtime owns the TCP session');
     Exit(True);
   end;
   lPollHz := MIC185DefaultPollFrequencyHz;
@@ -801,15 +833,13 @@ begin
   RecorderMic185GetSourceModuleSettings(ARegistry, ASourceId, lModuleSettings);
   lTemperatureCompensation :=
     RecorderMic185GetSourceTemperatureCompensation(ARegistry, ASourceId);
-  lSummary := '';
-  for I := 0 to High(lSettings) do
-  begin
-    if lSummary <> '' then
-      lSummary := lSummary + '; ';
-    lSummary := lSummary + Format('ch%d range=%d commut=%d scheme=%d shunt=%d block=%d',
-      [I + 1, lSettings[I].MeasRangeIndex, lSettings[I].CommutIndex,
-       lSettings[I].SensorScheme, lSettings[I].ShuntOn, lSettings[I].BlockSize]);
-  end;
+  lSummary := Format('channels=%d first(range=%d commut=%d block=%d) '
+    + 'last(range=%d commut=%d block=%d)',
+    [Length(lSettings), lSettings[0].MeasRangeIndex,
+     lSettings[0].CommutIndex, lSettings[0].BlockSize,
+     lSettings[High(lSettings)].MeasRangeIndex,
+     lSettings[High(lSettings)].CommutIndex,
+     lSettings[High(lSettings)].BlockSize]);
   RecorderMic185Log(Format(
     'ProgramConfiguredSource %s power=%d tkc=%s avg=%d/%d max=%.3fHz groupAddition=%s: %s',
     [ASourceId, lSettings[0].PowerMaCode,
@@ -836,30 +866,52 @@ begin
     lNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
       lTemperatureCompensation, lModuleSettings);
     try
+      lStageStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'connect', 'BEGIN', '');
       if not lNative.TryConnect(AErrorText) then
       begin
+        RecorderMic185LifecycleLog(lTraceId, ASourceId, 'connect', 'FAIL',
+          AErrorText, GetTickCount64 - lStageStartedAt);
         AErrorText := 'MIC183/185 connect failed: ' + AErrorText;
         RecorderMic185Log(Format('ProgramConfiguredSource failed %s: %s',
           [ASourceId, AErrorText]));
         Exit;
       end;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'connect', 'OK', '',
+        GetTickCount64 - lStageStartedAt);
+      lStageStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'BEGIN',
+        'GetSoftVersion/read SN');
       if not lNative.TryInitializeSession(AErrorText) then
       begin
+        RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'FAIL',
+          AErrorText, GetTickCount64 - lStageStartedAt);
         AErrorText := 'MIC183/185 initialization failed: ' + AErrorText;
         RecorderMic185Log(Format('ProgramConfi  guredSource failed %s: %s',
           [ASourceId, AErrorText]));
         Exit;
       end;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'OK',
+        Format('sn=%d version=%s', [lNative.DeviceSerial,
+          Mic185FormatSoftVersion(lNative.SoftVersion)]),
+        GetTickCount64 - lStageStartedAt);
       RecorderMic185SetKnownIdentity(ARegistry, ASourceId,
         lNative.DeviceSerial, lNative.SoftVersion);
+      lStageStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure', 'BEGIN', '');
       if not lNative.TryProgramDevice(AErrorText) then
       begin
+        RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure', 'FAIL',
+          AErrorText, GetTickCount64 - lStageStartedAt);
         AErrorText := 'MIC183/185 programming failed: ' + AErrorText;
         RecorderMic185Log(Format('ProgramConfiguredSource failed %s: %s',
           [ASourceId, AErrorText]));
         Exit;
       end;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure', 'OK', '',
+        GetTickCount64 - lStageStartedAt);
       Result := True;
+      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'operation', 'OK', '');
     except
       on E: Exception do
       begin
@@ -869,10 +921,14 @@ begin
       end;
     end;
   finally
+    lStageStartedAt := GetTickCount64;
+    RecorderMic185LifecycleLog(lTraceId, ASourceId, 'disconnect', 'BEGIN', '');
     try
       lDevice.Disconnect;
     except
     end;
+    RecorderMic185LifecycleLog(lTraceId, ASourceId, 'disconnect', 'OK', '',
+      GetTickCount64 - lStageStartedAt);
   end;
 end;
 
@@ -1501,6 +1557,27 @@ begin
   RecorderMic185RuntimeLog(AMessage);
 end;
 
+function RecorderMic185NewLifecycleTraceId(const AOperation: string): string;
+begin
+  Result := Format('%s-%d-T%d', [Trim(AOperation), GetTickCount64,
+    PtrUInt(GetThreadID)]);
+end;
+
+procedure RecorderMic185LifecycleLog(const ATraceId, ASourceId, APhase,
+  AState, ADetails: string; AElapsedMs: QWord);
+var
+  lDetails: string;
+begin
+  lDetails := Trim(ADetails);
+  if lDetails <> '' then
+    lDetails := ' detail="' + StringReplace(lDetails, '"', '''',
+      [rfReplaceAll]) + '"';
+  RecorderMic185Log(Format(
+    '[MIC185-LC] trace=%s source="%s" thread=%d phase=%s state=%s elapsed_ms=%d%s',
+    [ATraceId, ASourceId, PtrUInt(GetThreadID), APhase, AState, AElapsedMs,
+     lDetails]));
+end;
+
 function RecorderMic185SourceId(const AHost: string; APort: Word): string;
 begin
   Result := CMic185SourcePrefix + Trim(AHost) + ':' + IntToStr(APort);
@@ -1790,8 +1867,11 @@ end;
 
 procedure TRecorderMic185DataSource.PrepareHardware;
 var
+  lStartDelayMs: Cardinal;
   lTestError: string;
   lNativeDevice: TRecorderMic185Device;
+  lStageStartedAt: QWord;
+  lTraceId: string;
 begin
   if RecorderHardwareConsumeSourceResetRequest(SourceId) then
   begin
@@ -1805,6 +1885,19 @@ begin
     выполняется заново. }
   RecorderHardwareClearSourceOffline(SourceId);
   fHardwarePrepareAttempted := True;
+  lTraceId := RecorderMic185NewLifecycleTraceId('startup');
+  RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'BEGIN',
+    Format('endpoint=%s:%d bind=%s', [fHost, fPort,
+      RecorderNetworkBindAddress]));
+  lStartDelayMs := Mic185EndpointStartDelayMs(fHost);
+  if lStartDelayMs > 0 then
+  begin
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'startup-stagger', 'BEGIN',
+      Format('delay_ms=%d', [lStartDelayMs]));
+    Sleep(lStartDelayMs);
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'startup-stagger', 'OK', '',
+      lStartDelayMs);
+  end;
   inherited PrepareHardware;
   try
     if fDevice = nil then
@@ -1819,35 +1912,66 @@ begin
       Exit;
     end;
     lNativeDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+    lStageStartedAt := GetTickCount64;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'connect', 'BEGIN', '');
     if not lNativeDevice.TryConnect(lTestError) then
     begin
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'connect', 'FAIL',
+        lTestError, GetTickCount64 - lStageStartedAt);
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
+        'connect: ' + lTestError);
       RecorderHardwareMarkSourceOffline(SourceId, lTestError);
       RecorderHardwareUnregisterLiveDevice(Self);
       Exit;
     end;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'connect', 'OK', '',
+      GetTickCount64 - lStageStartedAt);
+    lStageStartedAt := GetTickCount64;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'BEGIN',
+      'GetSoftVersion/read SN');
     if not lNativeDevice.TryInitializeSession(lTestError) then
     begin
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'FAIL',
+        lTestError, GetTickCount64 - lStageStartedAt);
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
+        'initialize: ' + lTestError);
       RecorderHardwareMarkSourceOffline(SourceId,
         'MIC183/185 initialization failed: ' + lTestError);
       RecorderHardwareUnregisterLiveDevice(Self);
       fDevice.Disconnect;
       Exit;
     end;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'OK',
+      Format('sn=%d version=%s', [lNativeDevice.DeviceSerial,
+        Mic185FormatSoftVersion(lNativeDevice.SoftVersion)]),
+      GetTickCount64 - lStageStartedAt);
     RecorderMic185SetKnownIdentity(Registry, SourceId,
       lNativeDevice.DeviceSerial, lNativeDevice.SoftVersion);
+    lStageStartedAt := GetTickCount64;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'BEGIN', '');
     if not lNativeDevice.TryProgramDevice(lTestError) then
     begin
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'FAIL',
+        lTestError, GetTickCount64 - lStageStartedAt);
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
+        'configure: ' + lTestError);
       RecorderHardwareMarkSourceOffline(SourceId,
         'MIC183/185 programming failed: ' + lTestError);
       RecorderHardwareUnregisterLiveDevice(Self);
       fDevice.Disconnect;
       Exit;
     end;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'OK', '',
+      GetTickCount64 - lStageStartedAt);
     RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
     fHardwarePrepared := True;
+    RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'OK',
+      Format('sn=%d', [lNativeDevice.DeviceSerial]));
   except
     on E: Exception do
     begin
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'EXCEPTION',
+        E.ClassName + ': ' + E.Message);
       RecorderHardwareMarkSourceOffline(SourceId, E.Message);
       RecorderHardwareUnregisterLiveDevice(Self);
       if fDevice <> nil then
@@ -2019,8 +2143,22 @@ begin
     lTag := FindTagBySourceAddress(Registry, Format('%d-uts',
       [RecorderMic185SourceDeviceIndex(Registry, SourceId)]));
     if lTag <> nil then
-      Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastUts);
+    begin
+      { Original Recorder stores UTS as an XY pair: device-relative X and
+        absolute UTS seconds Y. PublishValue preserves the same .x/.dat split. }
+      Registry.PublishValue(lTag.Name, lDevice.LastUtsDeviceTimeSec,
+        lDevice.LastUts);
+      if Registry.TimeSystem <> nil then
+        Registry.TimeSystem.UpdateFromTagSample(lDevice.LastUtsDeviceTimeSec,
+          lDevice.LastUts);
+    end;
   end;
+end;
+
+function RecorderMic185SameChannelAddress(const ALeft,
+  ARight: string): Boolean;
+begin
+  Result := SameMic185Address(ALeft, ARight);
 end;
 
 procedure TRecorderMic185DataSource.DoTick;

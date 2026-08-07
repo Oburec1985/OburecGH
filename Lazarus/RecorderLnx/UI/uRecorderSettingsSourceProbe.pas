@@ -246,6 +246,9 @@ begin
       if (Pos('MIC-140:', ASourceId) = 1) and
         SameMic140Address(lTag.Address, AAddress) then
         Exit(lTag);
+      if (Pos('MIC-185:', ASourceId) = 1) and
+        RecorderMic185SameChannelAddress(lTag.Address, AAddress) then
+        Exit(lTag);
       if SameText(lTag.Address, AAddress) then
         Exit(lTag);
     end;

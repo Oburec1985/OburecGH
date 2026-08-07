@@ -38,6 +38,7 @@ type
     fRecorderDeviceIndex: Integer;
     fLastTempValues: array of Double;
     fLastUtsValue: Double;
+    fLastUtsDeviceTimeSec: Double;
     fHasLastTemp: Boolean;
     fHasLastUts: Boolean;
     { Читает серийный номер и версию прошивки короткой Mebius-командой. }
@@ -104,6 +105,7 @@ type
     function LastTempValue(AIndex: Integer): Double;
     { Последнее кэшированное значение UTS/SEV. }
     function LastUts: Double;
+    function LastUtsDeviceTimeSec: Double;
     { Признак, что хотя бы один температурный пакет уже получен. }
     function HasTempData: Boolean;
     { Признак, что UTS/SEV пакет уже получен. }
@@ -126,8 +128,20 @@ uses
 
 const
   CMic185ConnectAttempts = 1;
-  CMic185ConnectTimeoutMs = 1200;
+  { Cold ARP/interface activation and the single-client firmware service can
+    take longer than one TCP retransmission.  Device workers run in parallel,
+    so this is a per-device deadline rather than a cumulative startup delay. }
+  CMic185ConnectTimeoutMs = 4000;
   CMic185IdentityTimeoutMs = 3000;
+  CMic185InitializeAttempts = 2;
+  { A successful TCP handshake is earlier than the Mebius transport-ready
+    event used by the original driver's WaitConnecting().  Give the device
+    service time to attach the new settings client before the first
+    IoControl.  This delay is local to each device, so devices still prepare
+    in parallel. }
+  CMic185TransportReadyDelayMs = 500;
+  { MIC185 firmware releases the previous settings client asynchronously. }
+  CMic185InitializeReconnectDelayMs = 1500;
 
 constructor TRecorderMic185Device.Create(const ADeviceId, AName: string);
 begin
@@ -347,17 +361,54 @@ end;
 
 function TRecorderMic185Device.TryInitializeSession(
   out AErrorText: string): Boolean;
+var
+  lAttempt: Integer;
+  lAttemptError: string;
+  lConnectError: string;
 begin
+  Result := False;
   AErrorText := '';
   if fState = rdsDisconnected then
   begin
     AErrorText := 'MIC183/185 session is not connected';
     Exit(False);
   end;
-  Result := TryQueryDeviceInfo(AErrorText);
-  if Result then
-    RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial,
-      fSoftVersion, False);
+
+  for lAttempt := 1 to CMic185InitializeAttempts do
+  begin
+    RecorderMic185RuntimeLog(Format(
+      'Initialize transport-ready wait %s:%d attempt=%d delay=%dms',
+      [fHost, fPort, lAttempt, CMic185TransportReadyDelayMs]));
+    Sleep(CMic185TransportReadyDelayMs);
+    if TryQueryDeviceInfo(lAttemptError) then
+    begin
+      RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial,
+        fSoftVersion, False);
+      Exit(True);
+    end;
+
+    if AErrorText = '' then
+      AErrorText := lAttemptError
+    else
+      AErrorText := AErrorText + '; retry: ' + lAttemptError;
+
+    if lAttempt >= CMic185InitializeAttempts then
+      Break;
+
+    // A failed IoControl can leave the firmware-side settings connection in
+    // an indeterminate state.  End it exactly as the original CTCPLink does,
+    // give the device a short time to process disconnect, then create a new
+    // transport session.  This belongs to one-shot initialization, not to
+    // repeatable device configuration.
+    FreeAndNil(fClient);
+    fState := rdsDisconnected;
+    Sleep(CMic185InitializeReconnectDelayMs);
+    if not TryConnect(lConnectError) then
+    begin
+      AErrorText := AErrorText + '; reconnect: ' + lConnectError;
+      Break;
+    end;
+  end;
 end;
 
 procedure TRecorderMic185Device.Connect;
@@ -507,6 +558,11 @@ begin
   Result := fLastUtsValue;
 end;
 
+function TRecorderMic185Device.LastUtsDeviceTimeSec: Double;
+begin
+  Result := fLastUtsDeviceTimeSec;
+end;
+
 function TRecorderMic185Device.HasTempData: Boolean;
 begin
   Result := fHasLastTemp;
@@ -559,7 +615,7 @@ var
   lRaw: TRecorderMebiusFloatBlock;
   lTemp: TRecorderSingleArray;
   lHasTemp, lHasUts: Boolean;
-  lUts: Single;
+  lUtsDeviceTime, lUts: Double;
 begin
   ClearRecorderAcquisitionBlock(ABlock);
   Result := False;
@@ -568,7 +624,7 @@ begin
 
   fClient.TimeoutMs := ATimeoutMs;
   if not fClient.ReadMeasDataBlock(fMeasChannelCount, lRaw, lTemp, lHasTemp,
-    lUts, lHasUts) then
+    lUtsDeviceTime, lUts, lHasUts) then
     Exit;
 
   if lHasTemp then
@@ -580,6 +636,7 @@ begin
   end;
   if lHasUts then
   begin
+    fLastUtsDeviceTimeSec := lUtsDeviceTime;
     fLastUtsValue := lUts;
     fHasLastUts := True;
   end;

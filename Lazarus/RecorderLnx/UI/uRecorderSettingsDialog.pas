@@ -336,11 +336,13 @@ type
   private
     fRegistry: TRecorderTagRegistry;
     fSourceId: string;
+    fTraceId: string;
+    fStartDelayMs: Cardinal;
     fErrorText: string;
     fSucceeded: Boolean;
   public
     constructor Create(ARegistry: TRecorderTagRegistry;
-      const ASourceId: string);
+      const ASourceId, ATraceId: string; AStartDelayMs: Cardinal);
     procedure Execute;
     property SourceId: string read fSourceId;
     property ErrorText: string read fErrorText;
@@ -348,11 +350,13 @@ type
   end;
 
 constructor TRecorderHardwareResetTask.Create(ARegistry: TRecorderTagRegistry;
-  const ASourceId: string);
+  const ASourceId, ATraceId: string; AStartDelayMs: Cardinal);
 begin
   inherited Create;
   fRegistry := ARegistry;
   fSourceId := Trim(ASourceId);
+  fTraceId := Trim(ATraceId);
+  fStartDelayMs := AStartDelayMs;
 end;
 
 procedure TRecorderHardwareResetTask.Execute;
@@ -360,27 +364,60 @@ const
   CResetReleaseDelayMs = 250;
   CResetRetryDelayMs = 500;
 var
+  lHost: string;
+  lPort: Word;
   lAttempt: Integer;
+  lAttemptStartedAt: QWord;
 begin
   fSucceeded := False;
   fErrorText := '';
+  RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset', 'BEGIN', '');
   try
+    if fStartDelayMs > 0 then
+    begin
+      RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-stagger',
+        'BEGIN', Format('delay_ms=%d', [fStartDelayMs]));
+      Sleep(fStartDelayMs);
+      RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-stagger', 'OK',
+        '', fStartDelayMs);
+    end;
     RecorderHardwareRequestSourceReset(fSourceId);
     if RecorderIsHardwareMic185TagSource(fSourceId) then
     begin
+      { RequestStop marks every endpoint as HoldBusy before source workers
+        finish.  A source whose initialization failed has no registered live
+        device, so RecorderHardwareRequestSourceReset cannot call Disconnect
+        for it and the flag otherwise survives forever.  Reset owns this
+        endpoint now: clear both session and hold state even when no live
+        device exists. }
+      if TryParseRecorderMic185SourceId(fSourceId, lHost, lPort) then
+      begin
+        RecorderMic185RuntimeDetach(lHost, lPort);
+        RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-release', 'OK',
+          Format('endpoint=%s:%d', [lHost, lPort]));
+      end;
       { Let a single-client device release the old socket before reconnect. }
       Sleep(CResetReleaseDelayMs);
       { Some single-client MIC-185 firmware revisions release the previous TCP
         session with a small delay. Retry the whole atomic reset once. }
       for lAttempt := 1 to 2 do
       begin
+        lAttemptStartedAt := GetTickCount64;
         fErrorText := '';
+        RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
+          'BEGIN', Format('attempt=%d', [lAttempt]));
         if RecorderMic185ProgramConfiguredSource(fRegistry, fSourceId,
-          fErrorText) then
+          fErrorText, fTraceId) then
         begin
           fSucceeded := True;
+          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
+            'OK', Format('attempt=%d', [lAttempt]),
+            GetTickCount64 - lAttemptStartedAt);
           Break;
         end;
+        RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
+          'FAIL', Format('attempt=%d error=%s', [lAttempt, fErrorText]),
+          GetTickCount64 - lAttemptStartedAt);
         { Repeating a completed TCP connection whose Mebius IoControl timed
           out only doubles the visible freeze. Retry only transport/session
           release failures; an application-protocol timeout is final. }
@@ -400,6 +437,11 @@ begin
     on E: Exception do
       fErrorText := E.ClassName + ': ' + E.Message;
   end;
+  if fSucceeded then
+    RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset', 'OK', '')
+  else
+    RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset', 'FAIL',
+      fErrorText);
 end;
 
 type
@@ -1659,7 +1701,7 @@ var
       begin
         lSig := fSourceProbe.GroupSignal(rsgMic185, K);
         if (lSig <> nil) and SameText(lSig.FileName, ATag.SourceId) and
-          SameText(lSig.Address, ATag.Address) then
+          RecorderMic185SameChannelAddress(lSig.Address, ATag.Address) then
         begin
           Result := lSig.Selected;
           Exit;
@@ -1955,6 +1997,8 @@ var
   lPortValue: Integer;
   lStartedAt: QWord;
   lStream: TSocketStream;
+  lTraceId: string;
+  lSourceId: string;
 begin
   if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
     SetRecorderNetworkBindAddress(RecorderNetworkAddressFromDisplay(
@@ -1968,6 +2012,13 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   lStartedAt := GetTickCount64;
+  lSourceId := SelectedHardwareSourceId;
+  if lSourceId = '' then
+    lSourceId := Trim(edNetworkTestHost.Text) + ':' + IntToStr(lPortValue);
+  lTraceId := RecorderMic185NewLifecycleTraceId('tcp-ping');
+  RecorderMic185LifecycleLog(lTraceId, lSourceId, 'tcp-ping', 'BEGIN',
+    Format('endpoint=%s:%d bind=%s timeout_ms=1500',
+      [Trim(edNetworkTestHost.Text), lPortValue, RecorderNetworkBindAddress]));
   lStream := nil;
   try
     if RecorderOpenBoundTcpStream(Trim(edNetworkTestHost.Text),
@@ -1976,11 +2027,15 @@ begin
       lElapsedMs := GetTickCount64 - lStartedAt;
       lblNetworkTestResult.Caption := Format('Связь есть, %d мс', [lElapsedMs]);
       lblNetworkTestResult.Font.Color := clGreen;
+      RecorderMic185LifecycleLog(lTraceId, lSourceId, 'tcp-ping', 'OK', '',
+        lElapsedMs);
     end
     else
     begin
       lblNetworkTestResult.Caption := 'Нет связи: ' + lErrorText;
       lblNetworkTestResult.Font.Color := clRed;
+      RecorderMic185LifecycleLog(lTraceId, lSourceId, 'tcp-ping', 'FAIL',
+        lErrorText, GetTickCount64 - lStartedAt);
     end;
   finally
     lStream.Free;
@@ -2710,6 +2765,7 @@ var
   lSourceId: string;
   lSourceIds: TStringList;
   lTasks: array of TRecorderHardwareResetTask;
+  lBatchTraceId: string;
 begin
   if (fHardwareTree = nil) or (fRecorder = nil) or
     (fRecorder.TagRegistry = nil) then
@@ -2719,7 +2775,19 @@ begin
   try
     lSourceIds.Sorted := True;
     lSourceIds.Duplicates := dupIgnore;
-    if fHardwareTree.SelectionCount > 0 then
+    { Sender=nil is the context-menu command "reset all devices".  Enumerate
+      the model-backed tree instead of merely clearing offline markers: the
+      original Recorder starts reset for every host device, waits for all
+      resets, and only then leaves the configuration cycle. }
+    if Sender = nil then
+      for I := 0 to fHardwareTree.Items.Count - 1 do
+      begin
+        lNode := fHardwareTree.Items[I];
+        lSourceId := RecorderHardwareTreeSourceId(lNode);
+        if (lSourceId <> '') and RecorderIsHardwareTagSource(lSourceId) then
+          lSourceIds.Add(lSourceId);
+      end
+    else if fHardwareTree.SelectionCount > 0 then
       for I := 0 to fHardwareTree.SelectionCount - 1 do
       begin
         lNode := fHardwareTree.Selections[I];
@@ -2736,12 +2804,18 @@ begin
     if lSourceIds.Count = 0 then
       Exit;
 
+    lBatchTraceId := RecorderMic185NewLifecycleTraceId('reset-batch');
+    RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'BEGIN',
+      Format('device_count=%d bind=%s', [lSourceIds.Count,
+        RecorderNetworkBindAddress]));
+
     SetLength(lTasks, lSourceIds.Count);
     SetLength(lProcedures, lSourceIds.Count);
     for I := 0 to lSourceIds.Count - 1 do
     begin
       lTasks[I] := TRecorderHardwareResetTask.Create(
-        fRecorder.TagRegistry, lSourceIds[I]);
+        fRecorder.TagRegistry, lSourceIds[I],
+        lBatchTraceId + '/' + IntToStr(I + 1), I * 150);
       lProcedures[I] := @lTasks[I].Execute;
     end;
 
@@ -2760,6 +2834,13 @@ begin
         lErrors.Add(lTasks[I].SourceId + ': ' + lTasks[I].ErrorText);
       end;
 
+    if lErrors.Count = 0 then
+      RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'OK',
+        Format('device_count=%d', [lSourceIds.Count]))
+    else
+      RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'FAIL',
+        Format('failed=%d of %d', [lErrors.Count, lSourceIds.Count]));
+
     PopulateHardwareTree;
     PopulateChannelGrids;
     if lErrors.Count > 0 then
@@ -2776,9 +2857,7 @@ end;
 
 procedure TRecorderSettingsDialog.HardwareResetAllSourcesClick(Sender: TObject);
 begin
-  RecorderHardwareClearAllOfflineSources;
-  PopulateHardwareTree;
-  PopulateChannelGrids;
+  HardwareResetSourceClick(nil);
 end;
 
 procedure TRecorderSettingsDialog.HardwareToggleSourceClick(Sender: TObject);

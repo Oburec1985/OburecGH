@@ -82,7 +82,8 @@ type
     function ReadMeasDataBlock(AChannelCount: Integer;
       out ABlock: TRecorderMebiusFloatBlock;
       out ATempValues: TRecorderSingleArray; out AHasTemp: Boolean;
-      out AUtsValue: Single; out AHasUts: Boolean): Boolean;
+      out AUtsDeviceTimeSec, AUtsValueSec: Double;
+      out AHasUts: Boolean): Boolean;
     function SniffPackets(APacketCount: Integer; ATimeoutMs: Cardinal): Integer;
 
     property Host: string read fHost;
@@ -111,7 +112,7 @@ function Mic185ParseTempValues(const AData: TRecorderByteArray;
   AChannelCount: Integer; out AValues: TRecorderSingleArray): Boolean;
 { Разбирает UTS/SEV значение времени из отдельного DATA_TRANSMIT payload. }
 function Mic185ParseUtsValue(const AData: TRecorderByteArray;
-  out AValue: Single): Boolean;
+  out ADeviceTimeSec, AUtsValueSec: Double): Boolean;
 
 const
   { Заголовок сетевого пакета Mebius Ethernet. }
@@ -151,7 +152,7 @@ const
 implementation
 
 uses
-  uMic185Constants, uMic185DebugLog, uRecorderMic185Runtime;
+  DateUtils, uMic185Constants, uMic185DebugLog, uRecorderMic185Runtime;
 
 type
   TMebeHeader = packed record
@@ -256,6 +257,12 @@ var
 begin
   lRaw := GetLongLE(AData, AOffset);
   Move(lRaw, Result, SizeOf(Result));
+end;
+
+function QWordFromLE(const AData: TRecorderByteArray; AOffset: Integer): QWord;
+begin
+  Result := QWord(GetLongLE(AData, AOffset)) or
+    (QWord(GetLongLE(AData, AOffset + SizeOf(LongWord))) shl 32);
 end;
 
 function RecorderMebiusParseFloatBlock(const AData: TRecorderByteArray;
@@ -407,16 +414,93 @@ begin
 end;
 
 function Mic185ParseUtsValue(const AData: TRecorderByteArray;
-  out AValue: Single): Boolean;
+  out ADeviceTimeSec, AUtsValueSec: Double): Boolean;
 var
-  lOffset: Integer;
+  lData: array[0..9] of Word;
+  lSeconds, lMinutes, lHours, lDays, lYears: Word;
+  I: Integer;
+  lPacketOffset: Integer;
+  lFrameOffset: Integer;
+  lType: LongWord;
+  lStartClk: QWord;
+  lSevClk: QWord;
+  lSevSec: LongWord;
+  lClkHz: LongWord;
 begin
-  AValue := 0;
+  ADeviceTimeSec := 0;
+  AUtsValueSec := 0;
   Result := False;
-  lOffset := SizeOf(LongWord) + SizeOf(TUniversalDataSampleHeader);
-  if Length(AData) < lOffset + SizeOf(Single) then
+
+  { UTS is not UNIVERSAL_DATA_SAMPLE<float>. The device sends
+    UTS_TRANSPORT_PACKET: marker, SEV_PACKET(type, sample counter), TUtsFrame.
+    PcUTSImpl.cpp converts its clocks to X and publishes m_Sev_Sec as Y. }
+  lPacketOffset := SizeOf(LongWord);
+  if Length(AData) < lPacketOffset + 2 * SizeOf(LongWord) then
     Exit;
-  AValue := SingleFromLE(AData, lOffset);
+  lType := GetLongLE(AData, lPacketOffset);
+  { Some MSVC builds align the nested SEV_PACKET to 8 bytes. }
+  if (lType <> 1) and (lType <> 2) and
+    (Length(AData) >= 2 * SizeOf(LongWord) + 2 * SizeOf(LongWord)) then
+  begin
+    lPacketOffset := 2 * SizeOf(LongWord);
+    lType := GetLongLE(AData, lPacketOffset);
+  end;
+  lFrameOffset := lPacketOffset + 2 * SizeOf(LongWord);
+  if lType = 2 then
+  begin
+    if Length(AData) < lFrameOffset + 2 * SizeOf(QWord) +
+      2 * SizeOf(LongWord) then Exit;
+    lStartClk := QWordFromLE(AData, lFrameOffset);
+    lSevClk := QWordFromLE(AData, lFrameOffset + SizeOf(QWord));
+    lSevSec := GetLongLE(AData, lFrameOffset + 2 * SizeOf(QWord));
+    lClkHz := GetLongLE(AData, lFrameOffset + 2 * SizeOf(QWord) +
+      SizeOf(LongWord));
+  end
+  else if lType = 1 then
+  begin
+    { IRIG-B: ten 16-bit BCD words, then start/edge clocks and clock rate. }
+    if Length(AData) < lFrameOffset + 10 * SizeOf(Word) +
+      2 * SizeOf(QWord) + SizeOf(LongWord) then Exit;
+    for I := 0 to 9 do
+      lData[I] := GetWordLE(AData, lFrameOffset + I * SizeOf(Word));
+    lStartClk := QWordFromLE(AData, lFrameOffset + 10 * SizeOf(Word));
+    lSevClk := QWordFromLE(AData, lFrameOffset + 10 * SizeOf(Word) +
+      SizeOf(QWord));
+    lClkHz := GetLongLE(AData, lFrameOffset + 10 * SizeOf(Word) +
+      2 * SizeOf(QWord));
+    lSeconds := ((lData[0] shr 0) and 1) + ((lData[0] shr 1) and 1) * 2 +
+      ((lData[0] shr 2) and 1) * 4 + ((lData[0] shr 3) and 1) * 8 +
+      ((lData[0] shr 5) and 1) * 10 + ((lData[0] shr 6) and 1) * 20 +
+      ((lData[0] shr 7) and 1) * 40;
+    lMinutes := ((lData[1] shr 0) and 1) + ((lData[1] shr 1) and 1) * 2 +
+      ((lData[1] shr 2) and 1) * 4 + ((lData[1] shr 3) and 1) * 8 +
+      ((lData[1] shr 5) and 1) * 10 + ((lData[1] shr 6) and 1) * 20 +
+      ((lData[1] shr 7) and 1) * 40;
+    lHours := ((lData[2] shr 0) and 1) + ((lData[2] shr 1) and 1) * 2 +
+      ((lData[2] shr 2) and 1) * 4 + ((lData[2] shr 3) and 1) * 8 +
+      ((lData[2] shr 5) and 1) * 10 + ((lData[2] shr 6) and 1) * 20;
+    lDays := ((lData[3] shr 0) and 1) + ((lData[3] shr 1) and 1) * 2 +
+      ((lData[3] shr 2) and 1) * 4 + ((lData[3] shr 3) and 1) * 8 +
+      ((lData[3] shr 5) and 1) * 10 + ((lData[3] shr 6) and 1) * 20 +
+      ((lData[3] shr 7) and 1) * 40 + ((lData[3] shr 8) and 1) * 80 +
+      ((lData[4] shr 0) and 1) * 100 + ((lData[4] shr 1) and 1) * 200;
+    lYears := ((lData[5] shr 0) and 1) + ((lData[5] shr 1) and 1) * 2 +
+      ((lData[5] shr 2) and 1) * 4 + ((lData[5] shr 3) and 1) * 8 +
+      ((lData[5] shr 5) and 1) * 10 + ((lData[5] shr 6) and 1) * 20 +
+      ((lData[5] shr 7) and 1) * 40 + ((lData[5] shr 8) and 1) * 80;
+    if (lDays < 1) or (lHours > 23) or (lMinutes > 59) or
+      (lSeconds > 60) then Exit;
+    AUtsValueSec := (EncodeDate(2000 + lYears, 1, 1) + lDays - 1) *
+      SecsPerDay + lHours * 3600 + lMinutes * 60 + lSeconds;
+  end
+  else
+    Exit;
+  if (lStartClk = 0) or (lClkHz = 0) or (lSevClk < lStartClk) then
+    Exit;
+  ADeviceTimeSec := (lSevClk - lStartClk) / Double(lClkHz);
+  if lType = 2 then AUtsValueSec := lSevSec;
+  Mic185Log(Format('UTS parsed type=%d x=%.6f y=%.0f clk=%d',
+    [lType, ADeviceTimeSec, AUtsValueSec, lClkHz]));
   Result := True;
 end;
 
@@ -439,7 +523,14 @@ begin
   fHost := AHost;
   fPort := APort;
   fTimeoutMs := ATimeoutMs;
-  fClientTaskId := REC_HOST_SETTINGS_PORT_ID;
+  { Original CTCPLink::IoControlEx uses `(TASKID)this` as MEBE_PACKET.id_from,
+    not the shared SETTINGS_PORT_ID constant.  The device echoes this value
+    in replies, so every simultaneous settings connection needs its own ID.
+    TASKID is 32-bit in the wire protocol; truncate the object address exactly
+    as the original 32-bit cast does. }
+  fClientTaskId := LongWord(PtrUInt(Pointer(Self)) and $FFFFFFFF);
+  if fClientTaskId = 0 then
+    fClientTaskId := REC_HOST_SETTINGS_PORT_ID;
   fRxDataPacketCount := 0;
 end;
 
@@ -504,6 +595,19 @@ end;
 
 procedure TRecorderMebiusTcpClient.Disconnect;
 begin
+  // The original Recorder CTCPLink performs shutdown(SD_BOTH) before
+  // closesocket.  This is important for MIC-183/185 firmware: without the
+  // orderly TCP shutdown the device can keep the settings client/session
+  // occupied and accept the next TCP connection without servicing IoControl.
+  if fSocket <> nil then
+  begin
+    try
+      fpShutdown(fSocket.Handle, SHUT_RDWR);
+    except
+      // Disconnect must remain idempotent and must not mask the original
+      // protocol error which caused the reconnect.
+    end;
+  end;
   FreeAndNil(fSocket);
   RecorderMic185RuntimeUnregisterTcpClient(Self);
 end;
@@ -791,9 +895,10 @@ function TRecorderMebiusTcpClient.ReadDataBlock(AChannelCount: Integer;
 var
   lTemp: TRecorderSingleArray;
   lHasTemp, lHasUts: Boolean;
-  lUts: Single;
+  lUtsDeviceTime, lUts: Double;
 begin
-  Result := ReadMeasDataBlock(AChannelCount, ABlock, lTemp, lHasTemp, lUts, lHasUts);
+  Result := ReadMeasDataBlock(AChannelCount, ABlock, lTemp, lHasTemp,
+    lUtsDeviceTime, lUts, lHasUts);
 end;
 
 function TRecorderMebiusTcpClient.SniffPackets(APacketCount: Integer;
@@ -826,7 +931,8 @@ end;
 function TRecorderMebiusTcpClient.ReadMeasDataBlock(AChannelCount: Integer;
   out ABlock: TRecorderMebiusFloatBlock;
   out ATempValues: TRecorderSingleArray; out AHasTemp: Boolean;
-  out AUtsValue: Single; out AHasUts: Boolean): Boolean;
+  out AUtsDeviceTimeSec, AUtsValueSec: Double;
+  out AHasUts: Boolean): Boolean;
 const
   MAX_DRAIN_PACKETS = 32;
   DRAIN_TIMEOUT_MS = 2;
@@ -842,7 +948,8 @@ begin
   SetLength(ATempValues, 0);
   AHasTemp := False;
   AHasUts := False;
-  AUtsValue := 0;
+  AUtsDeviceTimeSec := 0;
+  AUtsValueSec := 0;
   lGotMeas := False;
   Result := False;
   lSavedTimeout := fTimeoutMs;
@@ -874,7 +981,8 @@ begin
         AHasTemp := Mic185ParseTempValues(lPacket.Data, CMic185TempChannelCount,
           ATempValues);
       if lDevId = CMic185DevIdUts then
-        AHasUts := Mic185ParseUtsValue(lPacket.Data, AUtsValue);
+        AHasUts := Mic185ParseUtsValue(lPacket.Data, AUtsDeviceTimeSec,
+          AUtsValueSec);
     end;
   finally
     SetTimeoutMs(lSavedTimeout);
