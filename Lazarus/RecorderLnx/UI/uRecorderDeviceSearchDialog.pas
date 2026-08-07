@@ -13,6 +13,7 @@ type
   public
     DeviceType: string;
     SourceId: string;
+    SerialNumber: LongWord;
     AlreadyConfigured: Boolean;
   end;
 
@@ -28,7 +29,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure AddDevice(const ADeviceType, ASourceId, ADisplayText: string;
-      AAlreadyConfigured: Boolean);
+      AAlreadyConfigured: Boolean; ASerialNumber: LongWord = 0);
     function DeviceCount: Integer;
     function DeviceAt(AIndex: Integer): TRecorderDiscoveredDevice;
     function DeviceChecked(AIndex: Integer): Boolean;
@@ -55,7 +56,7 @@ begin
 end;
 
 procedure TRecorderDeviceSearchDialog.AddDevice(const ADeviceType, ASourceId,
-  ADisplayText: string; AAlreadyConfigured: Boolean);
+  ADisplayText: string; AAlreadyConfigured: Boolean; ASerialNumber: LongWord);
 var
   lDevice: TRecorderDiscoveredDevice;
   lIndex: Integer;
@@ -63,6 +64,7 @@ begin
   lDevice := TRecorderDiscoveredDevice.Create;
   lDevice.DeviceType := ADeviceType;
   lDevice.SourceId := ASourceId;
+  lDevice.SerialNumber := ASerialNumber;
   lDevice.AlreadyConfigured := AAlreadyConfigured;
   fDevices.Add(lDevice);
 

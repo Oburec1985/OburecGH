@@ -151,6 +151,7 @@ type
     procedure fAlgorithmFftParamChange(Sender: TObject);
     procedure fAlgorithmOverlapComboChange(Sender: TObject);
     procedure fHardwareTreeDblClick(Sender: TObject);
+    procedure fHardwareTreeChange(Sender: TObject; Node: TTreeNode);
     procedure fHardwareTreeMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
     procedure fHardwareTreeMouseDown(Sender: TObject; Button: TMouseButton;
@@ -236,6 +237,8 @@ type
       ATags: TList);
 
     procedure DeleteMic140Source(const ASourceId: string);
+    procedure DeleteSelectedHardwareSources;
+    procedure DeleteHardwareSourceNoRefresh(const ASourceId: string);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
     procedure HardwareResetSourceClick(Sender: TObject);
@@ -312,11 +315,12 @@ implementation
 
 uses
   StrUtils, ssockets,
+  uSharedAsync,
   uRecorderConfiguredDataSources, uRecorderConfiguredSourceEditor,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig,
   uRecorderMic140StreamTypes,
   uRecorderMic140LegacyTiming, uRecorderMic140Utils,
-  uRecorderMic185DataSource, uMic185Constants,
+  uRecorderMic185DataSource, uRecorderMic185Runtime, uMic185Constants,
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
   uRecorderDeviceSearchDialog, uMc032Device, uRecorderDebugLog;
@@ -325,6 +329,78 @@ uses
 
 const
   CMeraSourcePrefix = 'Mera file: ';
+
+type
+  { One independent device reset. The worker never touches LCL controls. }
+  TRecorderHardwareResetTask = class
+  private
+    fRegistry: TRecorderTagRegistry;
+    fSourceId: string;
+    fErrorText: string;
+    fSucceeded: Boolean;
+  public
+    constructor Create(ARegistry: TRecorderTagRegistry;
+      const ASourceId: string);
+    procedure Execute;
+    property SourceId: string read fSourceId;
+    property ErrorText: string read fErrorText;
+    property Succeeded: Boolean read fSucceeded;
+  end;
+
+constructor TRecorderHardwareResetTask.Create(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
+begin
+  inherited Create;
+  fRegistry := ARegistry;
+  fSourceId := Trim(ASourceId);
+end;
+
+procedure TRecorderHardwareResetTask.Execute;
+const
+  CResetReleaseDelayMs = 250;
+  CResetRetryDelayMs = 500;
+var
+  lAttempt: Integer;
+begin
+  fSucceeded := False;
+  fErrorText := '';
+  try
+    RecorderHardwareRequestSourceReset(fSourceId);
+    if RecorderIsHardwareMic185TagSource(fSourceId) then
+    begin
+      { Let a single-client device release the old socket before reconnect. }
+      Sleep(CResetReleaseDelayMs);
+      { Some single-client MIC-185 firmware revisions release the previous TCP
+        session with a small delay. Retry the whole atomic reset once. }
+      for lAttempt := 1 to 2 do
+      begin
+        fErrorText := '';
+        if RecorderMic185ProgramConfiguredSource(fRegistry, fSourceId,
+          fErrorText) then
+        begin
+          fSucceeded := True;
+          Break;
+        end;
+        { Repeating a completed TCP connection whose Mebius IoControl timed
+          out only doubles the visible freeze. Retry only transport/session
+          release failures; an application-protocol timeout is final. }
+        if Pos('IoControl timeout', fErrorText) > 0 then
+          Break;
+        if lAttempt = 1 then
+          Sleep(CResetRetryDelayMs);
+      end;
+    end
+    else
+    begin
+      fSucceeded := RecorderHardwareSourceLinkOk(fRegistry, fSourceId);
+      if not fSucceeded then
+        fErrorText := 'TEST устройства не выполнен';
+    end;
+  except
+    on E: Exception do
+      fErrorText := E.ClassName + ': ' + E.Message;
+  end;
+end;
 
 type
   TRecorderTcpProbeThread = class(TThread)
@@ -1943,7 +2019,8 @@ var
       (RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, ASourceId) <> nil);
   end;
 
-  procedure AddFound(const ADeviceType, ASourceId, ADisplayText: string);
+  procedure AddFound(const ADeviceType, ASourceId, ADisplayText: string;
+    ASerialNumber: LongWord = 0);
   var
     lConfigured: Boolean;
   begin
@@ -1954,7 +2031,8 @@ var
     lDisplay := ADisplayText;
     if lConfigured then
       lDisplay := lDisplay + '  (уже добавлено)';
-    lDialog.AddDevice(ADeviceType, ASourceId, lDisplay, lConfigured);
+    lDialog.AddDevice(ADeviceType, ASourceId, lDisplay, lConfigured,
+      ASerialNumber);
   end;
 
   function ProbeMic140(const AHost: string; APort: Word): Boolean;
@@ -1985,7 +2063,7 @@ var
       lDisplay := lDisplay + Format(', SN=%d', [lSerial]);
     if lVersion <> '' then
       lDisplay := lDisplay + ', ' + lVersion;
-    AddFound('MIC183/185', lSourceId, lDisplay);
+    AddFound('MIC183/185', lSourceId, lDisplay, lSerial);
   end;
 
   function ProbeMc032(const AHost: string; APort: Word;
@@ -2043,13 +2121,17 @@ begin
         lBroadcastKind := Copy2SymbDel(lBroadcastValue, '|');
         lBroadcastSerial := lBroadcastValue;
         lBroadcastIps.Add(lHost);
+        if SameText(lBroadcastKind, 'MIC183/185') and
+          TryStrToInt(lBroadcastSerial, lIndex) and (lIndex > 0) then
+          RecorderMic185RuntimeUpdateInfo(lHost, 4000, LongWord(lIndex), 0);
         lDisplay := Format('%s - %s:%d', [lBroadcastKind, lHost, 4000]);
         if lBroadcastSerial <> '' then
           lDisplay := lDisplay + ', SN=' + lBroadcastSerial;
         if SameText(lBroadcastKind, 'MIC-140') then
           AddFound('MIC-140', RecorderMic140SourceId(lHost, 4000), lDisplay)
         else if SameText(lBroadcastKind, 'MIC183/185') then
-          AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay);
+          AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay,
+            LongWord(StrToIntDef(lBroadcastSerial, 0)));
       end;
 
       for I := 0 to lConfiguredIds.Count - 1 do
@@ -2117,8 +2199,12 @@ begin
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
           lDevice.SourceId, 'MIC-140', MIC140DefaultPollFrequencyHz)
       else if SameText(lDevice.DeviceType, 'MIC183/185') then
+      begin
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
-          lDevice.SourceId, 'MIC183/185', MIC185DefaultPollFrequencyHz)
+          lDevice.SourceId, 'MIC183/185', MIC185DefaultPollFrequencyHz);
+        RecorderMic185SetKnownIdentity(fRecorder.TagRegistry, lDevice.SourceId,
+          lDevice.SerialNumber, 0);
+      end
       else if SameText(lDevice.DeviceType, 'MC-032') then
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
           lDevice.SourceId, 'MC-032', 0)
@@ -2367,6 +2453,33 @@ begin
   end;
 end;
 
+procedure TRecorderSettingsDialog.fHardwareTreeChange(Sender: TObject;
+  Node: TTreeNode);
+var
+  lHost: string;
+  lPort: Word;
+  lSourceId: string;
+begin
+  if (Node = nil) or (edNetworkTestHost = nil) or
+    (edNetworkTestPort = nil) then
+    Exit;
+  lSourceId := RecorderHardwareTreeSourceId(Node);
+  while (lSourceId = '') and (Node.Parent <> nil) do
+  begin
+    Node := Node.Parent;
+    lSourceId := RecorderHardwareTreeSourceId(Node);
+  end;
+  if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) or
+     TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) or
+     TryParseRecorderMc032SourceId(lSourceId, lHost, lPort) then
+  begin
+    edNetworkTestHost.Text := lHost;
+    edNetworkTestPort.Text := IntToStr(lPort);
+    if lblNetworkTestResult <> nil then
+      lblNetworkTestResult.Caption := '';
+  end;
+end;
+
 procedure TRecorderSettingsDialog.TagHardwareSourceSetup(Sender: TObject;
   ATag: TRecorderTag);
 var
@@ -2494,22 +2607,93 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.HardwareDeleteSourceClick(Sender: TObject);
-var
-  lHost: string;
-  lPort: Word;
-  lSourceId: string;
 begin
-  lSourceId := SelectedHardwareSourceId;
-  if lSourceId = '' then
+  DeleteSelectedHardwareSources;
+end;
+
+procedure TRecorderSettingsDialog.DeleteHardwareSourceNoRefresh(
+  const ASourceId: string);
+var
+  I: Integer;
+  lIdx: Integer;
+  lTag: TRecorderTag;
+  lMeraPath: string;
+begin
+  if (Trim(ASourceId) = '') or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
     Exit;
-  if TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) then
-    DeleteMic140Source(lSourceId)
-  else if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
-    DeleteMic185Source(lSourceId)
-  else if TryParseRecorderMc032SourceId(lSourceId, lHost, lPort) then
-    DeleteMic185Source(lSourceId)
-  else if RecorderIsVirtualTagSource(lSourceId) then
-    DeleteCurrentMeraSource;
+
+  RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, ASourceId);
+  lIdx := fRecorder.TagRegistry.SourceSpecificConfigs.IndexOf(ASourceId);
+  if lIdx >= 0 then
+    fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
+  fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
+  RecorderHardwareClearSourceOffline(ASourceId);
+
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+  begin
+    lTag := fRecorder.TagRegistry.Tags[I];
+    if SameText(lTag.SourceId, ASourceId) then
+      lTag.SourceId := 'Detached: ' + ASourceId;
+  end;
+  fSourceProbe.RemoveSourceSignals(ASourceId);
+
+  if RecorderIsVirtualTagSource(ASourceId) then
+  begin
+    lMeraPath := RecorderMeraFileTagSourcePath(ASourceId);
+    if (lMeraPath <> '') and SameText(ExpandFileName(lMeraPath),
+      ExpandFileName(fSourceProbe.MeraFilePath)) then
+    begin
+      fSourceProbe.MeraFilePath := '';
+      fSourceProbe.MeraFolder := '';
+      fSourceProbe.ClearGroup(rsgMeraFile);
+    end;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.DeleteSelectedHardwareSources;
+var
+  I: Integer;
+  lNode: TTreeNode;
+  lSourceId: string;
+  lSourceIds: TStringList;
+begin
+  if (fHardwareTree = nil) or (fRecorder = nil) then
+    Exit;
+  lSourceIds := TStringList.Create;
+  try
+    lSourceIds.Sorted := True;
+    lSourceIds.Duplicates := dupIgnore;
+    if fHardwareTree.SelectionCount > 0 then
+      for I := 0 to fHardwareTree.SelectionCount - 1 do
+      begin
+        lNode := fHardwareTree.Selections[I];
+        lSourceId := RecorderHardwareTreeSourceId(lNode);
+        if lSourceId <> '' then
+          lSourceIds.Add(lSourceId);
+      end
+    else if fHardwareTree.Selected <> nil then
+    begin
+      lSourceId := RecorderHardwareTreeSourceId(fHardwareTree.Selected);
+      if lSourceId <> '' then
+        lSourceIds.Add(lSourceId);
+    end;
+
+    if lSourceIds.Count = 0 then
+      Exit;
+    if MessageDlg('Удаление устройств', Format(
+      'Удалить выбранные источники данных: %d?', [lSourceIds.Count]),
+      mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+
+    for I := 0 to lSourceIds.Count - 1 do
+      DeleteHardwareSourceNoRefresh(lSourceIds[I]);
+    fDataSourcesChanged := True;
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+  finally
+    lSourceIds.Free;
+  end;
 end;
 
 procedure TRecorderSettingsDialog.HardwareReloadSourceClick(Sender: TObject);
@@ -2519,27 +2703,75 @@ end;
 
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
-  lErrorText: string;
+  I: Integer;
+  lErrors: TStringList;
+  lNode: TTreeNode;
+  lProcedures: array of TThreadMethod;
   lSourceId: string;
+  lSourceIds: TStringList;
+  lTasks: array of TRecorderHardwareResetTask;
 begin
-  lSourceId := SelectedHardwareSourceId;
-  if lSourceId = '' then
+  if (fHardwareTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
     Exit;
-  lErrorText := '';
-  { Явный сброс инвалидирует текущую аппаратную конфигурацию. При следующем
-    запуске источник заново выполнит Init/Configure; обычный Stop этого не делает. }
-  RecorderHardwareRequestSourceReset(lSourceId);
-  RecorderHardwareClearSourceOffline(lSourceId);
-  if RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
-    RecorderHardwareClearSourceOffline(lSourceId)
-  else
-  begin
-    if Trim(lErrorText) = '' then
-      lErrorText := 'TEST устройства не выполнен';
-    RecorderHardwareMarkSourceOffline(lSourceId, lErrorText);
+  lSourceIds := TStringList.Create;
+  lErrors := TStringList.Create;
+  try
+    lSourceIds.Sorted := True;
+    lSourceIds.Duplicates := dupIgnore;
+    if fHardwareTree.SelectionCount > 0 then
+      for I := 0 to fHardwareTree.SelectionCount - 1 do
+      begin
+        lNode := fHardwareTree.Selections[I];
+        lSourceId := RecorderHardwareTreeSourceId(lNode);
+        if lSourceId <> '' then
+          lSourceIds.Add(lSourceId);
+      end;
+    if lSourceIds.Count = 0 then
+    begin
+      lSourceId := SelectedHardwareSourceId;
+      if lSourceId <> '' then
+        lSourceIds.Add(lSourceId);
+    end;
+    if lSourceIds.Count = 0 then
+      Exit;
+
+    SetLength(lTasks, lSourceIds.Count);
+    SetLength(lProcedures, lSourceIds.Count);
+    for I := 0 to lSourceIds.Count - 1 do
+    begin
+      lTasks[I] := TRecorderHardwareResetTask.Create(
+        fRecorder.TagRegistry, lSourceIds[I]);
+      lProcedures[I] := @lTasks[I].Execute;
+    end;
+
+    { Independent endpoints reset concurrently; only result publication and
+      LCL refresh happen in the main thread after all workers have finished. }
+    SharedRunParallel(lProcedures);
+    for I := 0 to High(lTasks) do
+      if lTasks[I].Succeeded then
+        RecorderHardwareClearSourceOffline(lTasks[I].SourceId)
+      else
+      begin
+        if Trim(lTasks[I].ErrorText) = '' then
+          lTasks[I].fErrorText := 'Сброс устройства не выполнен';
+        RecorderHardwareMarkSourceOffline(lTasks[I].SourceId,
+          lTasks[I].ErrorText);
+        lErrors.Add(lTasks[I].SourceId + ': ' + lTasks[I].ErrorText);
+      end;
+
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+    if lErrors.Count > 0 then
+      MessageDlg('Сброс устройств',
+        'Не удалось сбросить:' + LineEnding + lErrors.Text,
+        mtWarning, [mbOK], 0);
+  finally
+    for I := 0 to High(lTasks) do
+      lTasks[I].Free;
+    lErrors.Free;
+    lSourceIds.Free;
   end;
-  PopulateHardwareTree;
-  PopulateChannelGrids;
 end;
 
 procedure TRecorderSettingsDialog.HardwareResetAllSourcesClick(Sender: TObject);
@@ -2626,6 +2858,7 @@ var
   lNodeCaption: string;
   lSerialNumber: LongWord;
   lVersionText: string;
+  lKnownVersion: LongWord;
   lPort: Word;
 begin
   if fHardwareTree = nil then
@@ -2652,10 +2885,16 @@ begin
       begin
         lEntry := lEntries[I];
         lNodeCaption := lEntry.NodeCaption;
-        if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) and
-          RecorderMic185TryGetLiveDeviceInfo(lHost, lPort, lSerialNumber,
-            lVersionText, lAcquiring) and (lSerialNumber <> 0) then
-          lNodeCaption := Format('%s, SN=%d', [lNodeCaption, lSerialNumber]);
+        if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) then
+        begin
+          if not (RecorderMic185TryGetLiveDeviceInfo(lHost, lPort,
+            lSerialNumber, lVersionText, lAcquiring) and
+            (lSerialNumber <> 0)) then
+            RecorderMic185GetKnownIdentity(fRecorder.TagRegistry,
+              lEntry.SourceId, lSerialNumber, lKnownVersion);
+          if lSerialNumber <> 0 then
+            lNodeCaption := Format('%s, SN=%d', [lNodeCaption, lSerialNumber]);
+        end;
         if lEntry.Enabled then
           lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
             lNodeCaption)
@@ -2912,7 +3151,9 @@ begin
     Exit;
 
   fHardwareTree.OnDblClick := @fHardwareTreeDblClick;
+  fHardwareTree.OnChange := @fHardwareTreeChange;
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
+  fHardwareTree.OnChange := @fHardwareTreeChange;
   fHardwareTree.OnMouseMove := @fHardwareTreeMouseMove;
   fHardwareTree.OnMouseDown := @fHardwareTreeMouseDown;
   fHardwareTree.ShowHint := True;
@@ -2957,7 +3198,8 @@ begin
   fHardwareTree.Items.BeginUpdate;
   try
     fHardwareTree.ReadOnly := True;
-    fHardwareTree.Options := fHardwareTree.Options + [tvoShowButtons, tvoShowLines, tvoShowRoot];
+    fHardwareTree.Options := fHardwareTree.Options + [tvoAllowMultiselect,
+      tvoShowButtons, tvoShowLines, tvoShowRoot];
     fHardwareTree.ImagesWidth := 16;
   finally
     fHardwareTree.Items.EndUpdate;
@@ -2972,7 +3214,8 @@ begin
   if (Button <> mbRight) or (fHardwareTree = nil) then
     Exit;
   lNode := fHardwareTree.GetNodeAt(X, Y);
-  if lNode <> nil then
+  { Keep a Ctrl/Shift multi-selection when its context menu is opened. }
+  if (lNode <> nil) and (not lNode.Selected) then
     fHardwareTree.Selected := lNode;
 end;
 
@@ -3205,7 +3448,8 @@ begin
   fHardwareTree.ReadOnly := True;
   fHardwareTree.Images := fDeviceImageList;
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
-  fHardwareTree.Options := fHardwareTree.Options + [tvoShowButtons, tvoShowLines, tvoShowRoot];
+  fHardwareTree.Options := fHardwareTree.Options + [tvoAllowMultiselect,
+    tvoShowButtons, tvoShowLines, tvoShowRoot];
 
   lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
   lRootNode.ImageIndex := CDeviceRootImageIndex;
@@ -4115,7 +4359,7 @@ begin
   if Key <> VK_DELETE then
     Exit;
 
-  DeleteCurrentMeraSource;
+  DeleteSelectedHardwareSources;
   Key := 0;
 end;
 

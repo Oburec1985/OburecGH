@@ -82,6 +82,7 @@ type
 var
   gMic185Endpoints: TThreadList;
   gMic185TcpClients: TThreadList;
+  gMic185InitLock: TRTLCriticalSection;
   gMic185LogReady: Boolean = False;
   gMic185ProbeTcpOpenCount: Integer = 0;
 
@@ -98,12 +99,21 @@ procedure RecorderMic185RuntimeInit;
 begin
   if gMic185LogReady then
     Exit;
-  Mic185LogInit(Mic185ProjectLogPath);
-  gMic185LogReady := True;
-  if gMic185Endpoints = nil then
-    gMic185Endpoints := TThreadList.Create;
-  if gMic185TcpClients = nil then
-    gMic185TcpClients := TThreadList.Create;
+  EnterCriticalSection(gMic185InitLock);
+  try
+    if gMic185LogReady then
+      Exit;
+    { Publish the ready flag only after every shared object exists. During
+      parallel cold start another device thread may enter immediately. }
+    if gMic185Endpoints = nil then
+      gMic185Endpoints := TThreadList.Create;
+    if gMic185TcpClients = nil then
+      gMic185TcpClients := TThreadList.Create;
+    Mic185LogInit(Mic185ProjectLogPath);
+    gMic185LogReady := True;
+  finally
+    LeaveCriticalSection(gMic185InitLock);
+  end;
 end;
 
 procedure RecorderMic185RuntimeLog(const AMessage: string);
@@ -114,51 +124,56 @@ begin
     SharedLogger.Debug('[MIC185] ' + AMessage);
 end;
 
-function RecorderMic185RuntimeFind(const AHost: string; APort: Word;
-  ACreate: Boolean): TRecorderMic185Endpoint;
+function RecorderMic185RuntimeFindLocked(AList: TList; const AHost: string;
+  APort: Word; ACreate: Boolean): TRecorderMic185Endpoint;
 var
   I: Integer;
   lEndpoint: TRecorderMic185Endpoint;
   lHost: string;
-  lList: TList;
 begin
   Result := nil;
-  RecorderMic185RuntimeInit;
   lHost := Trim(AHost);
   if lHost = '' then
     Exit;
-  lList := gMic185Endpoints.LockList;
-  try
-    for I := 0 to lList.Count - 1 do
-    begin
-      lEndpoint := TRecorderMic185Endpoint(lList[I]);
-      if SameText(lEndpoint.Host, lHost) and (lEndpoint.Port = APort) then
-        Exit(lEndpoint);
-    end;
-    if not ACreate then
-      Exit;
-    Result := TRecorderMic185Endpoint.Create;
-    Result.Host := lHost;
-    Result.Port := APort;
-    lList.Add(Result);
-  finally
-    gMic185Endpoints.UnlockList;
+  for I := 0 to AList.Count - 1 do
+  begin
+    lEndpoint := TRecorderMic185Endpoint(AList[I]);
+    if SameText(lEndpoint.Host, lHost) and (lEndpoint.Port = APort) then
+      Exit(lEndpoint);
   end;
+  if not ACreate then
+    Exit;
+  Result := TRecorderMic185Endpoint.Create;
+  Result.Host := lHost;
+  Result.Port := APort;
+  AList.Add(Result);
 end;
 
 procedure RecorderMic185RuntimeAttach(const AHost: string; APort: Word;
   ASerialNumber, ASoftVersion: LongWord; AAcquiring: Boolean);
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
+  lLogHost: string;
+  lLogPort: Word;
 begin
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, True);
-  lEndpoint.SocketBusy := True;
-  lEndpoint.Acquiring := AAcquiring;
-  lEndpoint.SerialNumber := ASerialNumber;
-  lEndpoint.SoftVersion := ASoftVersion;
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, True);
+    if lEndpoint = nil then Exit;
+    lEndpoint.SocketBusy := True;
+    lEndpoint.Acquiring := AAcquiring;
+    lEndpoint.SerialNumber := ASerialNumber;
+    lEndpoint.SoftVersion := ASoftVersion;
+    lLogHost := lEndpoint.Host;
+    lLogPort := lEndpoint.Port;
+  finally
+    gMic185Endpoints.UnlockList;
+  end;
   RecorderMic185RuntimeLog(Format(
     'RuntimeAttach %s:%d busy=1 acquiring=%s sn=%d',
-    [lEndpoint.Host, lEndpoint.Port, BoolToStr(AAcquiring, True),
+    [lLogHost, lLogPort, BoolToStr(AAcquiring, True),
      ASerialNumber]));
 end;
 
@@ -166,72 +181,80 @@ procedure RecorderMic185RuntimeSetAcquiring(const AHost: string; APort: Word;
   AAcquiring: Boolean);
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
 begin
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, False);
-  if lEndpoint = nil then
-    Exit;
-  lEndpoint.Acquiring := AAcquiring;
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, False);
+    if lEndpoint = nil then Exit;
+    lEndpoint.Acquiring := AAcquiring;
+  finally
+    gMic185Endpoints.UnlockList;
+  end;
   RecorderMic185RuntimeLog(Format('RuntimeAcquire %s:%d acquiring=%s',
-    [lEndpoint.Host, lEndpoint.Port, BoolToStr(AAcquiring, True)]));
+    [Trim(AHost), APort, BoolToStr(AAcquiring, True)]));
 end;
 
 procedure RecorderMic185RuntimeUpdateInfo(const AHost: string; APort: Word;
   ASerialNumber, ASoftVersion: LongWord);
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
 begin
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, False);
-  if lEndpoint = nil then
-    Exit;
-  lEndpoint.SerialNumber := ASerialNumber;
-  lEndpoint.SoftVersion := ASoftVersion;
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, True);
+    if lEndpoint = nil then Exit;
+    if ASerialNumber <> 0 then lEndpoint.SerialNumber := ASerialNumber;
+    if ASoftVersion <> 0 then lEndpoint.SoftVersion := ASoftVersion;
+  finally
+    gMic185Endpoints.UnlockList;
+  end;
 end;
 
 procedure RecorderMic185RuntimeHoldBusy(const AHost: string; APort: Word;
   AHold: Boolean);
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
 begin
-  if not AHold then
-  begin
-    lEndpoint := RecorderMic185RuntimeFind(AHost, APort, False);
-    if lEndpoint <> nil then
-      lEndpoint.HoldBusy := False;
-    Exit;
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, AHold);
+    if lEndpoint = nil then Exit;
+    lEndpoint.HoldBusy := AHold;
+  finally
+    gMic185Endpoints.UnlockList;
   end;
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, True);
-  lEndpoint.HoldBusy := True;
+  if not AHold then Exit;
   RecorderMic185RuntimeLog(Format('RuntimeHoldBusy %s:%d hold=1',
-    [lEndpoint.Host, lEndpoint.Port]));
+    [Trim(AHost), APort]));
 end;
 
 procedure RecorderMic185RuntimeDetach(const AHost: string; APort: Word);
 var
-  I: Integer;
   lEndpoint: TRecorderMic185Endpoint;
-  lHost: string;
   lList: TList;
+  lSerialNumber: LongWord;
 begin
-  lHost := Trim(AHost);
-  if lHost = '' then
-    Exit;
   RecorderMic185RuntimeInit;
   lList := gMic185Endpoints.LockList;
   try
-    for I := lList.Count - 1 downto 0 do
-    begin
-      lEndpoint := TRecorderMic185Endpoint(lList[I]);
-      if SameText(lEndpoint.Host, lHost) and (lEndpoint.Port = APort) then
-      begin
-        RecorderMic185RuntimeLog(Format('RuntimeDetach %s:%d', [lHost, APort]));
-        lEndpoint.Free;
-        lList.Delete(I);
-        Break;
-      end;
-    end;
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, False);
+    if lEndpoint = nil then Exit;
+    { Disconnect releases only the session. Keep the last confirmed identity. }
+    lEndpoint.SocketBusy := False;
+    lEndpoint.Acquiring := False;
+    lEndpoint.HoldBusy := False;
+    lSerialNumber := lEndpoint.SerialNumber;
   finally
     gMic185Endpoints.UnlockList;
   end;
+  RecorderMic185RuntimeLog(Format('RuntimeDetach %s:%d keep sn=%d',
+    [Trim(AHost), APort, lSerialNumber]));
 end;
 
 function RecorderMic185RuntimeHasForeignTcpClient(const AHost: string; APort: Word;
@@ -337,11 +360,18 @@ end;
 function RecorderMic185RuntimeIsBusy(const AHost: string; APort: Word): Boolean;
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
 begin
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, False);
-  Result := (RecorderMic185RuntimeTcpClientCount(AHost, APort) > 0) or
-    ((lEndpoint <> nil) and
-    (lEndpoint.SocketBusy or lEndpoint.Acquiring or lEndpoint.HoldBusy));
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, False);
+    Result := (lEndpoint <> nil) and
+      (lEndpoint.SocketBusy or lEndpoint.Acquiring or lEndpoint.HoldBusy);
+  finally
+    gMic185Endpoints.UnlockList;
+  end;
+  Result := Result or (RecorderMic185RuntimeTcpClientCount(AHost, APort) > 0);
 end;
 
 function RecorderMic185SelfTestProbeTcpOpenCount: Integer;
@@ -363,21 +393,27 @@ function RecorderMic185RuntimeTryGetInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string): Boolean;
 var
   lEndpoint: TRecorderMic185Endpoint;
+  lList: TList;
 begin
   Result := False;
   ASerialNumber := 0;
   AVersionText := '';
-  lEndpoint := RecorderMic185RuntimeFind(AHost, APort, False);
-  if (lEndpoint = nil) and (RecorderMic185RuntimeTcpClientCount(AHost, APort) = 0) then
-    Exit;
-  if lEndpoint <> nil then
-  begin
+  RecorderMic185RuntimeInit;
+  lList := gMic185Endpoints.LockList;
+  try
+    lEndpoint := RecorderMic185RuntimeFindLocked(lList, AHost, APort, False);
+    if lEndpoint = nil then Exit;
     ASerialNumber := lEndpoint.SerialNumber;
     if lEndpoint.SoftVersion <> 0 then
       AVersionText := Mic185FormatSoftVersion(lEndpoint.SoftVersion);
+    Result := True;
+  finally
+    gMic185Endpoints.UnlockList;
   end;
-  Result := True;
 end;
+
+initialization
+  InitCriticalSection(gMic185InitLock);
 
 finalization
   if gMic185TcpClients <> nil then
@@ -408,5 +444,6 @@ finalization
     end;
     FreeAndNil(gMic185Endpoints);
   end;
+  DoneCriticalSection(gMic185InitLock);
 
 end.

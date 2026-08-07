@@ -41,7 +41,7 @@ type
     fHasLastTemp: Boolean;
     fHasLastUts: Boolean;
     { Читает серийный номер и версию прошивки короткой Mebius-командой. }
-    procedure QueryDeviceInfo;
+    function TryQueryDeviceInfo(out AErrorText: string): Boolean;
     { Возвращает количество каналов, видимых RecorderLnx: AIn + TIn + UTS. }
     function TotalLogicalChannelCount: Integer;
     { Формирует короткое имя и адрес канала: 185-{3-1}. }
@@ -67,12 +67,14 @@ type
     { Меняет свойства прибора, которые задаются из источника данных/диалога. }
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
-    { Открывает TCP-клиент и читает идентификацию прибора. }
+    { Открывает только транспортную TCP-сессию. }
     function TryConnect(out AErrorText: string): Boolean;
     procedure Connect; override;
+    function TryInitializeSession(out AErrorText: string): Boolean;
     { Закрывает TCP-клиент и снимает runtime-занятость endpoint. }
     procedure Disconnect; override;
     { Отправляет ProgramDeviceBin, session_id и команду PROGRAM. }
+    function TryProgramDevice(out AErrorText: string): Boolean;
     procedure ProgramDevice; override;
     { Принимает настройки каналов от RecorderLnx без изменения базового
       интерфейса TRecorderDevice. }
@@ -81,6 +83,9 @@ type
       const AGroupAddition: TMic185GroupAdditionArray;
       ATemperatureCompensation: Boolean;
       const AModuleSettings: TMic185ModuleProgramSettings);
+    { Seeds identity loaded from project/broadcast cache. A failed refresh must
+      not erase the last confirmed serial shown by the hardware tree. }
+    procedure ApplyKnownIdentity(ASerialNumber, ASoftVersion: LongWord);
     { Запускает измерительную задачу MIC185V2. }
     procedure Start; override;
     { Останавливает измерительную задачу MIC185V2. }
@@ -122,6 +127,7 @@ uses
 const
   CMic185ConnectAttempts = 1;
   CMic185ConnectTimeoutMs = 1200;
+  CMic185IdentityTimeoutMs = 3000;
 
 constructor TRecorderMic185Device.Create(const ADeviceId, AName: string);
 begin
@@ -170,7 +176,13 @@ end;
 
 function TRecorderMic185Device.BuildLogicalChannelAddress(AIndex: Integer): string;
 begin
-  Result := BuildLogicalChannelName(AIndex);
+  if AIndex < fMeasChannelCount then
+    Result := Format('%d-%d', [fRecorderDeviceIndex, AIndex + 1])
+  else if AIndex < fMeasChannelCount + fTempChannelCount then
+    Result := Format('%d-t%d', [fRecorderDeviceIndex,
+      AIndex - fMeasChannelCount + 1])
+  else
+    Result := Format('%d-uts', [fRecorderDeviceIndex]);
 end;
 
 function TRecorderMic185Device.BuildLogicalChannelUnit(AIndex: Integer): string;
@@ -254,25 +266,56 @@ begin
   end;
 end;
 
-procedure TRecorderMic185Device.QueryDeviceInfo;
+function TRecorderMic185Device.TryQueryDeviceInfo(
+  out AErrorText: string): Boolean;
 var
   lOut: TRecorderByteArray;
   lInfo: TMic185HardDeviceInfo;
   lError: string;
+  lSavedTimeoutMs: Cardinal;
 begin
-  fDeviceSerial := 0;
-  fSoftVersion := 0;
+  Result := False;
+  AErrorText := '';
   if fClient = nil then
-    Exit;
-  if fClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
-    CMic185HardDeviceInfoSize, lOut, lError) and
-    (Length(lOut) >= CMic185HardDeviceInfoSize) then
   begin
-    Move(lOut[0], lInfo, SizeOf(lInfo));
-    fDeviceSerial := lInfo.SerialNumber;
-    fSoftVersion := lInfo.SoftVersion;
-    RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial, fSoftVersion);
+    AErrorText := 'MIC183/185 TCP session is not connected';
+    Exit;
   end;
+  lSavedTimeoutMs := fClient.TimeoutMs;
+  try
+    if fClient.TimeoutMs < CMic185IdentityTimeoutMs then
+      fClient.TimeoutMs := CMic185IdentityTimeoutMs;
+    if fClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
+      CMic185HardDeviceInfoSize, lOut, lError) and
+      (Length(lOut) >= CMic185HardDeviceInfoSize) then
+    begin
+      Move(lOut[0], lInfo, SizeOf(lInfo));
+      fDeviceSerial := lInfo.SerialNumber;
+      fSoftVersion := lInfo.SoftVersion;
+      RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial,
+        fSoftVersion);
+      Result := True;
+      Exit;
+    end;
+    if Trim(lError) <> '' then
+      AErrorText := lError
+    else
+      AErrorText := 'MIC183/185 returned incomplete device information';
+  finally
+    fClient.TimeoutMs := lSavedTimeoutMs;
+  end;
+end;
+
+procedure TRecorderMic185Device.ApplyKnownIdentity(ASerialNumber,
+  ASoftVersion: LongWord);
+begin
+  if ASerialNumber <> 0 then
+    fDeviceSerial := ASerialNumber;
+  if ASoftVersion <> 0 then
+    fSoftVersion := ASoftVersion;
+  if (fDeviceSerial <> 0) or (fSoftVersion <> 0) then
+    RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial,
+      fSoftVersion);
 end;
 
 function TRecorderMic185Device.TryConnect(out AErrorText: string): Boolean;
@@ -295,14 +338,26 @@ begin
     fClient := TRecorderMebiusTcpClient.Create(fHost, Word(fPort), CMic185ConnectTimeoutMs);
     if fClient.TryConnect(AErrorText) then
     begin
-      QueryDeviceInfo;
       fState := rdsConnected;
-      RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial, fSoftVersion,
-        False);
       Exit(True);
     end;
     FreeAndNil(fClient);
   end;
+end;
+
+function TRecorderMic185Device.TryInitializeSession(
+  out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  if fState = rdsDisconnected then
+  begin
+    AErrorText := 'MIC183/185 session is not connected';
+    Exit(False);
+  end;
+  Result := TryQueryDeviceInfo(AErrorText);
+  if Result then
+    RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial,
+      fSoftVersion, False);
 end;
 
 procedure TRecorderMic185Device.Connect;
@@ -338,7 +393,8 @@ begin
   fHasChannelProgramSettings := True;
 end;
 
-procedure TRecorderMic185Device.ProgramDevice;
+function TRecorderMic185Device.TryProgramDevice(
+  out AErrorText: string): Boolean;
 var
   lCommandIn: TRecorderByteArray;
   lCommandOut: TRecorderByteArray;
@@ -346,10 +402,13 @@ var
   lSettings: TRecorderByteArray;
   lStatusFlags: LongWord;
 begin
-  if fState = rdsDisconnected then
-    Connect;
+  Result := False;
+  AErrorText := '';
   if (fState = rdsDisconnected) or (fClient = nil) then
+  begin
+    AErrorText := 'MIC183/185 session is not connected';
     Exit;
+  end;
 
   lStatusFlags := 0;
   if fUtsEnabled then
@@ -358,7 +417,10 @@ begin
   Move(lStatusFlags, lCommandIn[0], SizeOf(lStatusFlags));
   if not fClient.TryCallCommand(CMic185IoCtlCmdSetControllerParams, lCommandIn,
     0, lCommandOut, lErrorMessage) then
-    raise ERecorderDeviceError.CreateFmt('SetControllerParams: %s', [lErrorMessage]);
+  begin
+    AErrorText := 'SetControllerParams: ' + lErrorMessage;
+    Exit;
+  end;
 
   if not fHasChannelProgramSettings then
     Mic185DefaultChannelProgramSettingsArray(fMeasFrequencyHz,
@@ -368,16 +430,37 @@ begin
     fGroupAddition, fTemperatureCompensation, fModuleProgramSettings,
     fPowerMaCode);
   if not fClient.TryProgramDeviceBin(lSettings, lErrorMessage) then
-    raise ERecorderDeviceError.CreateFmt('ProgramDeviceBin: %s', [lErrorMessage]);
+  begin
+    AErrorText := 'ProgramDeviceBin: ' + lErrorMessage;
+    Exit;
+  end;
 
   fSessionId := Mic185GenerateSessionId(fDeviceSerial);
   if not fClient.TrySetSessionId(fSessionId, lErrorMessage) then
-    raise ERecorderDeviceError.CreateFmt('SetSessionId: %s', [lErrorMessage]);
+  begin
+    AErrorText := 'SetSessionId: ' + lErrorMessage;
+    Exit;
+  end;
 
   if not fClient.TryProgramMeasurement(lErrorMessage) then
-    raise ERecorderDeviceError.CreateFmt('ProgramMeasurement: %s', [lErrorMessage]);
+  begin
+    AErrorText := 'ProgramMeasurement: ' + lErrorMessage;
+    Exit;
+  end;
 
   fState := rdsProgrammed;
+  Result := True;
+end;
+
+procedure TRecorderMic185Device.ProgramDevice;
+var
+  lErrorText: string;
+begin
+  if fState = rdsDisconnected then
+    Connect;
+  if not TryProgramDevice(lErrorText) then
+    raise ERecorderDeviceError.CreateFmt('MIC183/185 programming failed: %s',
+      [lErrorText]);
 end;
 
 procedure TRecorderMic185Device.Start;
@@ -450,35 +533,23 @@ begin
 end;
 
 function TRecorderMic185Device.TestLink(out AErrorText: string): Boolean;
-var
-  lInfo: TMic185HardDeviceInfo;
-  lOut: TRecorderByteArray;
 begin
-  Result := False;
   AErrorText := '';
   if (fState = rdsDisconnected) or (fClient = nil) then
   begin
     AErrorText := 'MIC183/185 is not connected';
-    Exit;
+    Exit(False);
   end;
   if fState = rdsStarted then
-    Exit(True);
-  if fState >= rdsConnected then
-    Exit(True);
-  if not fClient.TryCallCommand(CMic185IoCtlCmdGetSoftVersion, nil,
-    CMic185HardDeviceInfoSize, lOut, AErrorText) then
-    Exit;
-  if Length(lOut) < CMic185HardDeviceInfoSize then
   begin
-    AErrorText := Format('MIC183/185 info response is too short: %d bytes',
-      [Length(lOut)]);
-    Exit;
+    if fDeviceSerial <> 0 then
+      Exit(True);
+    AErrorText := 'MIC183/185 serial number is unavailable while acquiring';
+    Exit(False);
   end;
-  Move(lOut[0], lInfo, SizeOf(lInfo));
-  fDeviceSerial := lInfo.SerialNumber;
-  fSoftVersion := lInfo.SoftVersion;
-  RecorderMic185RuntimeUpdateInfo(fHost, Word(fPort), fDeviceSerial, fSoftVersion);
-  Result := True;
+  { A connected socket alone is not a successful TEST. Every non-running
+    TestLink reads the current identity and refreshes SN/version. }
+  Result := TryQueryDeviceInfo(AErrorText);
 end;
 
 function TRecorderMic185Device.ReadBlock(ATimeoutMs: Cardinal;

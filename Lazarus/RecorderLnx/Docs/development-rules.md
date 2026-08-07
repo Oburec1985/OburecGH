@@ -1001,3 +1001,29 @@ MC-201 с немедленным `OK` должно дать сообщение `
 - Диалог настройки не должен создавать второе соединение, если endpoint уже принадлежит runtime. Он сохраняет конфигурацию, а её применение выполняется штатной переинициализацией соответствующего источника.
 - Данные для подписей UI (серийный номер, версия, состояние) сначала читать из runtime-кэша или live-device, не выполняя дополнительный `Connect` и не отправляя диагностический запрос при каждом перестроении дерева.
 - Приёмочная проверка: открыть подключённый MIC-185, изменить настройку и нажать OK — исключения `already has an active TCP client` быть не должно; в дереве остаётся один узел с подписью `SN=<номер>`.
+## Expected device failures in debugger-safe paths
+
+Reset, reconnect and background hardware preparation must represent expected
+transport, initialization and configuration failures as `Boolean + error text`.
+Do not deliberately raise and catch an exception inside these safe paths:
+Lazarus may stop the debugger at the raise before the local handler runs.
+Verify every reset stage (`Connect`, `Initialize`, `Configure`) with an
+unavailable device and confirm that the source becomes offline without a
+debugger exception.
+
+## Пакетный сброс независимых сетевых устройств
+
+- Сначала снять неизменяемый список `SourceId` из выделения UI.
+- Для разных endpoint выполнять `Disconnect -> Connect -> ReadProperties -> Configure`
+  параллельно, но стадии одного прибора оставлять последовательными.
+- Worker-потоки не обращаются к LCL. Offline-состояние и дерево обновляются в
+  главном потоке после завершения всех задач.
+- Контекстное меню на уже выделенном узле не должно разрушать Ctrl/Shift
+  multi-selection.
+- Для single-client прибора допустим один ограниченный повтор после небольшой
+  задержки освобождения TCP; бесконечные повторы запрещены.
+## Публикация process-wide runtime при параллельной подготовке приборов
+
+Лениво создаваемый общий реестр, которым пользуются параллельные worker-потоки, инициализировать под отдельной блокировкой. Флаг `Ready` публиковать последним — только после создания всех списков, логов и блокировок. Поиск объекта в общем списке и чтение/изменение его полей выполнять в одной критической секции; не возвращать наружу указатель для последующей несинхронизированной записи.
+
+Если выбран конкретный LAN-интерфейс, предварительная сетевая операция обязана использовать тот же bind-address. Для прогрева маршрута/ARP перед параллельным подключением single-client приборов допустим штатный UDP broadcast; отдельные TCP probe-сессии запрещены.

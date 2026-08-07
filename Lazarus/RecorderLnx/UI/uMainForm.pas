@@ -49,7 +49,7 @@ uses
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree,
-  uRecorderMeraPaths, uOglChart, uRecorderSqlDbSettingsDialog,
+  uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView;
 
 type
@@ -379,6 +379,7 @@ type
       AOldState, ANewState: TRecorderState;
       ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
+    procedure WarmupHardwareNetwork;
     procedure DeferredPrepareRuntime(Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
@@ -3149,6 +3150,7 @@ begin
     модулей и выделение аппаратных буферов выполняются здесь, а не при Preview. }
   if (fRecorder.DataSources <> nil) and fDataSourcesConfigured then
     try
+      WarmupHardwareNetwork;
       fRecorder.DataSources.PrepareHardwareAll;
       for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
         AddLog('Device connection error: ' +
@@ -3163,6 +3165,28 @@ begin
   if fRecorder.EventBus <> nil then
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
       Self, 'ConfigurationPrepared'));
+end;
+
+procedure TMainForm.WarmupHardwareNetwork;
+const
+  CNetworkWarmupTimeoutMs = 1800;
+var
+  lFoundDevices: TStringList;
+  lStartedAt: QWord;
+begin
+  { A single UDP discovery pass activates the selected adapter and resolves
+    the local route before several device workers open TCP simultaneously.
+    It does not occupy the single-client TCP service of MIC devices. }
+  lFoundDevices := TStringList.Create;
+  try
+    lStartedAt := GetTickCount64;
+    RecorderDiscoverMeraBroadcast(lFoundDevices, CNetworkWarmupTimeoutMs);
+    RecorderDebugLog(Format('[HardwarePrepare] network warmup bind=%s '+
+      'responses=%d elapsed=%dms', [RecorderNetworkBindAddress,
+      lFoundDevices.Count, GetTickCount64 - lStartedAt]));
+  finally
+    lFoundDevices.Free;
+  end;
 end;
 
 procedure TMainForm.EnsureSqlDbControlTag;

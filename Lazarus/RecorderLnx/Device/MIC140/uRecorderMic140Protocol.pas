@@ -74,6 +74,7 @@ type
       ATimeoutMs: Cardinal = 5000);
     destructor Destroy; override;
 
+    function TryConnect(out AErrorText: string): Boolean;
     procedure Connect;
     procedure Disconnect;
     function CallCommand(ACommand: Word; const AArgs: TMic140v2WordBuf;
@@ -234,17 +235,34 @@ procedure TMic140v2Tcp.Connect;
 var
   lErrorText: string;
 begin
+  if not TryConnect(lErrorText) then
+    raise ESocketError.CreateFmt('MIC-140 %s:%d: %s',
+      [fHost, fPort, lErrorText]);
+end;
+
+function TMic140v2Tcp.TryConnect(out AErrorText: string): Boolean;
+begin
+  Result := False;
+  AErrorText := '';
   fLock.Acquire;
   try
-    Disconnect;
-    if not RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, fSocket,
-      lErrorText) then
-      raise ESocketError.CreateFmt('MIC-140 %s:%d: %s',
-        [fHost, fPort, lErrorText]);
+    try
+      Disconnect;
+      if not RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, fSocket,
+        AErrorText) then
+        Exit;
 {$ifdef unix}
-    fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
+      fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}
-    ApplyTimeoutMs(fTimeoutMs);
+      ApplyTimeoutMs(fTimeoutMs);
+      Result := True;
+    except
+      on E: Exception do
+      begin
+        AErrorText := E.Message;
+        Disconnect;
+      end;
+    end;
   finally
     fLock.Release;
   end;

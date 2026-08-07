@@ -478,11 +478,8 @@ begin
   ADeviceSerial := 0;
   lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
   try
-    try
-      lCli.Connect;
-    except
+    if not lCli.TryConnect(lErrorMessage) then
       Exit;
-    end;
     if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin
       ADeviceSerial := Mic140v2DeviceSerialFromFirmware(lFirmware);
@@ -504,11 +501,8 @@ begin
   ACalibrSerial := 0;
   lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
   try
-    try
-      lCli.Connect;
-    except
+    if not lCli.TryConnect(lErrorMessage) then
       Exit;
-    end;
     if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin
       ACalibrSerial := Mic140v2HardwareCalibrSerial(lFirmware);
@@ -533,11 +527,8 @@ begin
   ADevSubRev := 0;
   lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
   try
-    try
-      lCli.Connect;
-    except
+    if not lCli.TryConnect(lErrorMessage) then
       Exit;
-    end;
     if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin
       ADeviceSerial := Mic140v2DisplaySerialFromFirmware(lFirmware, AHost);
