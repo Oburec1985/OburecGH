@@ -248,7 +248,7 @@ type
     { Возвращает True для пользовательских мнемосхем. }
     function IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
     { Рисует встроенный цифровой формуляр. }
-    procedure RenderDigitalPage;
+    procedure RenderDigitalPage(ARebuild: Boolean = True);
     { Рисует встроенную базовую страницу с осциллограммами. }
     procedure RenderBasePage;
     { Перестраивает набор осциллограмм на базовой странице. }
@@ -2017,13 +2017,18 @@ begin
 end;
 
 { Отрисовка цифрового формуляра со списком рассчитанных оценок }
-procedure TMainForm.RenderDigitalPage;
+procedure TMainForm.RenderDigitalPage(ARebuild: Boolean);
 begin
   ShowBaseToolbar(False);
   ShowEditorSurface(False);
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry, fRecorder.AlarmEngine);
+  if ARebuild then
+    RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
+      fRecorder.AlarmEngine)
+  else
+    UpdateRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
+      fRecorder.AlarmEngine);
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -2907,7 +2912,7 @@ begin
 
   if (lPage.Id = 'DigitalForm') and (sgFormular <> nil) and
     sgFormular.Visible then
-    RenderDigitalPage
+    RenderDigitalPage(False)
   else if (lPage.Id = 'BasePage') and (fBaseChartsPanel <> nil) and
     fBaseChartsPanel.Visible then
     RefreshBaseOscillograms

@@ -305,8 +305,9 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="608"/>
-        <CursorPos X="54" Y="633"/>
+        <CursorPos X="58" Y="637"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -562,7 +563,6 @@
       <Unit>
         <Filename Value="Device\mic185\uMic185MebiusTcpProtocol.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="7"/>
         <TopLine Value="531"/>
         <CursorPos X="54" Y="558"/>
