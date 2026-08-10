@@ -50,9 +50,11 @@ type
     fClientTaskId: LongWord;
     fRxDataPacketCount: Int64;
     fConnectionLost: Boolean;
+    fLastReadError: string;
     fRxPacket: TRecorderByteArray;
     fRxPacketCount: Integer;
     procedure ApplySocketTimeout;
+    procedure ConfigureTransport;
     procedure SetTimeoutMs(AValue: Cardinal);
     function SocketHasData: Boolean;
     function FillRxPacket(ACount: Integer; AWait: Boolean = True): Boolean;
@@ -99,6 +101,7 @@ type
     property TimeoutMs: Cardinal read fTimeoutMs write SetTimeoutMs;
     property RxDataPacketCount: Int64 read fRxDataPacketCount;
     property ConnectionLost: Boolean read fConnectionLost;
+    property LastReadError: string read fLastReadError;
     procedure ResetRxCounters;
   end;
 
@@ -161,7 +164,8 @@ const
 implementation
 
 uses
-  DateUtils, uMic185Constants, uMic185DebugLog, uRecorderMic185Runtime;
+  DateUtils, uMic185Constants, uMic185DebugLog, uRecorderMic185Runtime,
+  uRecorderDebugLog;
 
 type
   TMebeHeader = packed record
@@ -177,6 +181,11 @@ type
     _AlignPad: Word;  { MSVC выравнивает ULONG sampl_count_ на 4 }
     SampleCount: LongWord;
   end;
+
+const
+  { Размер SO_RCVBUF из CTCPLink оригинального Recorder. }
+  CMebiusReceiveBufferSize = 4 * 1024 * 1024;
+  CMebiusMaxPacketSize = 4 * 1024 * 1024;
 
 function RecorderMebiusCtlCode(AType, AFunction, AMethod, AAccess: LongWord): LongWord;
 begin
@@ -508,8 +517,9 @@ begin
     Exit;
   ADeviceTimeSec := (lSevClk - lStartClk) / Double(lClkHz);
   if lType = 2 then AUtsValueSec := lSevSec;
-  Mic185Log(Format('UTS parsed type=%d x=%.6f y=%.0f clk=%d',
-    [lType, ADeviceTimeSec, AUtsValueSec, lClkHz]));
+  if DeviceLogEnabled then
+    Mic185Log(Format('UTS parsed type=%d x=%.6f y=%.0f clk=%d',
+      [lType, ADeviceTimeSec, AUtsValueSec, lClkHz]));
   Result := True;
 end;
 
@@ -525,6 +535,20 @@ begin
     Exit;
   fTimeoutMs := AValue;
   ApplySocketTimeout;
+end;
+
+procedure TRecorderMebiusTcpClient.ConfigureTransport;
+var
+  lEnabled: LongInt;
+  lSize: LongInt;
+begin
+  if fSocket = nil then
+    Exit;
+  lSize := CMebiusReceiveBufferSize;
+  fpSetSockOpt(fSocket.Handle, SOL_SOCKET, SO_RCVBUF, @lSize, SizeOf(lSize));
+  lEnabled := 1;
+  fpSetSockOpt(fSocket.Handle, SOL_SOCKET, SO_KEEPALIVE, @lEnabled,
+    SizeOf(lEnabled));
 end;
 
 function TRecorderMebiusTcpClient.SocketHasData: Boolean;
@@ -566,6 +590,7 @@ begin
     fClientTaskId := REC_HOST_SETTINGS_PORT_ID;
   fRxDataPacketCount := 0;
   fConnectionLost := False;
+  fLastReadError := '';
   fRxPacketCount := 0;
 end;
 
@@ -610,8 +635,10 @@ begin
 {$ifdef unix}
     fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}
+    ConfigureTransport;
     ApplySocketTimeout;
     fConnectionLost := False;
+    fLastReadError := '';
     RecorderMic185RuntimeRegisterTcpClient(Self, fHost, fPort);
     Result := True;
   except
@@ -668,17 +695,33 @@ begin
     try
       lRead := fSocket.Read(fRxPacket[fRxPacketCount], ACount - fRxPacketCount);
     except
+      on E: Exception do
+      begin
+        if not AWait then
+        begin
+          fConnectionLost := True;
+          fLastReadError := E.Message;
+          Mic185Log(Format('TCP read failed %s:%d: %s',
+            [fHost, fPort, fLastReadError]));
+        end;
       { Timeout не уничтожает уже принятую часть пакета. Следующий вызов
         продолжит заполнение того же заголовка/тела. }
-      Exit(False);
+        Exit(False);
+      end;
     end;
     if lRead = 0 then
     begin
       fConnectionLost := True;
+      fLastReadError := 'TCP connection closed by device';
+      Mic185Log(Format('TCP EOF %s:%d', [fHost, fPort]));
       Exit(False);
     end;
     if lRead < 0 then
+    begin
+      fConnectionLost := True;
+      fLastReadError := 'TCP read returned a negative byte count';
       Exit(False);
+    end;
     Inc(fRxPacketCount, lRead);
   end;
   Result := True;
@@ -733,23 +776,47 @@ function TRecorderMebiusTcpClient.ReadPacket(out APacket: TRecorderMebiusPacket;
 var
   lBodySize: Integer;
   lHeader: TMebeHeader;
+  lLegacyHeader: TMebeHeader;
   lPacketSize: Integer;
+  lHeaderValid: Boolean;
 begin
   FillChar(APacket, SizeOf(APacket), 0);
   Result := False;
-  if not FillRxPacket(SizeOf(lHeader), AWait) then
-    Exit;
-  Move(fRxPacket[0], lHeader, SizeOf(lHeader));
-  if (lHeader.Signature <> REC_MEBE_PACKET_SIGNATURE) and
-    (lHeader.Signature <> REC_MEBE_PACKET_SIGNATURE_SIZE_BIG) then
-    raise ERecorderMebiusProtocolError.CreateFmt(
-      'Unexpected Mebius packet signature: %.8x', [lHeader.Signature]);
-  if lHeader.Crc <> MebiusHeaderCrc(lHeader) then
-    raise ERecorderMebiusProtocolError.Create('Mebius packet header CRC mismatch');
-  if lHeader.Size < REC_MEBE_PACKET_HEADER_SIZE then
-    raise ERecorderMebiusProtocolError.Create('Mebius packet size is invalid');
+  repeat
+    if not FillRxPacket(SizeOf(lHeader), AWait) then
+      Exit;
+    Move(fRxPacket[0], lHeader, SizeOf(lHeader));
+    lHeaderValid :=
+      ((lHeader.Signature = REC_MEBE_PACKET_SIGNATURE) or
+       (lHeader.Signature = REC_MEBE_PACKET_SIGNATURE_SIZE_BIG)) and
+      (lHeader.Crc = MebiusHeaderCrc(lHeader));
 
-  lPacketSize := lHeader.Size;
+    { Старые реализации Mebius оставляли мусор в старших 16 битах Size.
+      Оригинальный CPacketCollector повторяет CRC с маской $FFFF. }
+    if (not lHeaderValid) and
+      (lHeader.Signature = REC_MEBE_PACKET_SIGNATURE) then
+    begin
+      lLegacyHeader := lHeader;
+      lLegacyHeader.Size := lLegacyHeader.Size and $FFFF;
+      if lHeader.Crc = MebiusHeaderCrc(lLegacyHeader) then
+      begin
+        lHeader.Size := lLegacyHeader.Size;
+        lHeaderValid := True;
+      end;
+    end;
+
+    lPacketSize := lHeader.Size;
+    if lHeaderValid and
+      (lPacketSize >= REC_MEBE_PACKET_HEADER_SIZE) and
+      (lPacketSize <= CMebiusMaxPacketSize) then
+      Break;
+
+    { Как CPacketCollector оригинального Recorder: неверный заголовок не
+      обрывает поток, а сдвигает поиск сигнатуры на один байт. }
+    Move(fRxPacket[1], fRxPacket[0], fRxPacketCount - 1);
+    Dec(fRxPacketCount);
+  until False;
+
   if not FillRxPacket(lPacketSize, AWait) then
     Exit;
   lBodySize := lPacketSize - REC_MEBE_PACKET_HEADER_SIZE;
@@ -789,6 +856,7 @@ var
   lPacket: TRecorderByteArray;
   lReply: TRecorderMebiusPacket;
   lReplyCode: LongWord;
+  lSkipped: Integer;
 begin
   Result := False;
   AErrorMessage := '';
@@ -804,6 +872,7 @@ begin
     if not TryWriteBytes(lPacket[0], Length(lPacket), AErrorMessage) then
       Exit;
 
+    lSkipped := 0;
     while True do
     begin
       if not ReadPacket(lReply) then
@@ -813,25 +882,19 @@ begin
       end;
       if lReply.Kind = mpkData then
         Continue;
-      Break;
-    end;
-
-    if Length(lReply.Data) < REC_MEB_IOCTL_COMMAND_HEADER_SIZE then
-    begin
-      AErrorMessage := 'Mebius IoControl reply is too short';
-      Exit;
-    end;
-    lReplyCode := GetLongLE(lReply.Data, 4);
-    if lReplyCode = REC_IOCTL_MEASTASK_NULL then
-    begin
-      AErrorMessage := 'Mebius device returned IOCTL_MEASTASK_NULL';
-      Exit;
-    end;
-    if lReplyCode <> AIoCode then
-    begin
-      AErrorMessage := Format(
-        'Unexpected Mebius IoControl reply %.8x for %.8x', [lReplyCode, AIoCode]);
-      Exit;
+      if Length(lReply.Data) < REC_MEB_IOCTL_COMMAND_HEADER_SIZE then
+        Continue;
+      lReplyCode := GetLongLE(lReply.Data, 4);
+      if lReplyCode = AIoCode then
+        Break;
+      Inc(lSkipped);
+      if lSkipped >= 64 then
+      begin
+        AErrorMessage := Format(
+          'Mebius IoControl reply %.8x does not match %.8x',
+          [lReplyCode, AIoCode]);
+        Exit;
+      end;
     end;
 
     SetLength(AOutData, Length(lReply.Data) - REC_MEB_IOCTL_COMMAND_HEADER_SIZE);
@@ -1040,7 +1103,7 @@ begin
       begin
         AHasTemp := Mic185ParseTempValues(lPacket.Data, CMic185TempChannelCount,
           ATempValues);
-        if AHasTemp then
+        if AHasTemp and DeviceLogEnabled then
           Mic185Log(Format('TEMP parsed count=%d first=%.3f',
             [Length(ATempValues), ATempValues[0]]));
       end
@@ -1048,7 +1111,7 @@ begin
         AHasUts := Mic185ParseUtsValue(lPacket.Data, AUtsDeviceTimeSec,
           AUtsValueSec);
   end;
-  if lPacketsRead = MAX_DRAIN_PACKETS then
+  if (lPacketsRead = MAX_DRAIN_PACKETS) and DeviceLogEnabled then
     Mic185Log(Format('Receive drain limit reached: %d packets',
       [lPacketsRead]));
   Result := lGotMeas;

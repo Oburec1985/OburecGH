@@ -2215,6 +2215,8 @@ end;
 procedure TRecorderMic185DataSource.DoTick;
 var
   lBlock: TRecorderAcquisitionBlock;
+  lDevice: TRecorderMic185Device;
+  lError: string;
   lTimeout: Cardinal;
 begin
   if fDevice = nil then
@@ -2231,6 +2233,17 @@ begin
   lTimeout := Max(Cardinal(1000), UpdateTimeMs * 4);
   if fDevice.ReadBlock(lTimeout, lBlock) then
     PublishMeasurementBlock(lBlock);
+
+  if not (fDevice.GetNativeObject is TRecorderMic185Device) then
+    Exit;
+  lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+  if not lDevice.ConnectionLost then
+    Exit;
+  lError := Trim(lDevice.LastReadError);
+  if lError = '' then
+    lError := 'MIC183/185 TCP connection lost';
+  RecorderMic185Log(Format('%s acquisition stopped: %s', [SourceId, lError]));
+  RecorderHardwareMarkSourceOffline(SourceId, lError);
 end;
 
 initialization

@@ -11,7 +11,7 @@ unit uMic185DebugLog;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderDebugLog;
 
 { Инициализирует файл и кольцевой буфер лога MIC-185. }
 procedure Mic185LogInit(const ALogPath: string = '');
@@ -111,6 +111,8 @@ var
   lLine: string;
   lFs: TFormatSettings;
 begin
+  if not DeviceLogEnabled then
+    Exit;
   if not gLogLockReady then
     Mic185LogInit('');
   lFs := DefaultFormatSettings;

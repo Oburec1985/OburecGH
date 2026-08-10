@@ -155,6 +155,7 @@ type
     fLogShowSystemCheck: TCheckBox;               // Показывать системные события
     fLogShowDataCheck: TCheckBox;                 // Показывать диагностические/data события
     fLogShowAlarmsCheck: TCheckBox;               // Показывать события тревог
+    fDeviceLogCheck: TCheckBox;                   // Подробный журнал обмена с устройствами
     fPageControl: TPageControl;                   // Визуальный контейнер вкладок формуляров
     fSelectedComponentRow: Integer;               // Номер выбранной строки в таблице формуляра
     fSyncingPages: Boolean;                       // Флаг предотвращения рекурсивного вызова при обновлении вкладок
@@ -1222,10 +1223,19 @@ begin
   fLogShowAlarmsCheck.Caption := #$D0#$A2#$D1#$80#$D0#$B5#$D0#$B2#$D0#$BE#$D0#$B3#$D0#$B8;
   fLogShowAlarmsCheck.Checked := True;
   fLogShowAlarmsCheck.OnChange := @LogFilterChanged;
+
+  fDeviceLogCheck := TCheckBox.Create(Self);
+  fDeviceLogCheck.Parent := fLogFilterPanel;
+  fDeviceLogCheck.SetBounds(274, 3, 190, 20);
+  fDeviceLogCheck.Caption := 'Подробный лог устройств';
+  fDeviceLogCheck.Checked := DeviceLogEnabled;
+  fDeviceLogCheck.OnChange := @LogFilterChanged;
 end;
 
 procedure TMainForm.LogFilterChanged(Sender: TObject);
 begin
+  if fDeviceLogCheck <> nil then
+    SetDeviceLogEnabled(fDeviceLogCheck.Checked);
   RefreshLogView;
 end;
 

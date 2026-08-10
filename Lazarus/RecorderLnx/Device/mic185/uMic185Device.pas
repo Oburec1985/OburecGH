@@ -118,6 +118,8 @@ type
     function SniffPackets(APacketCount: Integer; ATimeoutMs: Cardinal): Integer;
     { Счетчик принятых DATA_TRANSMIT пакетов для диагностики. }
     function RxDataPacketCount: Int64;
+    function ConnectionLost: Boolean;
+    function LastReadError: string;
   end;
 
 { Фабрика для регистрации MIC183/185 в общем менеджере устройств. }
@@ -593,6 +595,18 @@ begin
   Result := 0;
   if fClient <> nil then
     Result := fClient.RxDataPacketCount;
+end;
+
+function TRecorderMic185Device.ConnectionLost: Boolean;
+begin
+  Result := (fClient <> nil) and fClient.ConnectionLost;
+end;
+
+function TRecorderMic185Device.LastReadError: string;
+begin
+  Result := '';
+  if fClient <> nil then
+    Result := fClient.LastReadError;
 end;
 
 function TRecorderMic185Device.TestLink(out AErrorText: string): Boolean;
