@@ -361,7 +361,9 @@ end;
 
 procedure TRecorderHardwareResetTask.Execute;
 const
-  CResetReleaseDelayMs = 250;
+  { Firmware MIC-185 освобождает единственную settings-сессию асинхронно.
+    250 мс недостаточно: TCP уже принимается, но IoControl ещё не обслуживается. }
+  CResetReleaseDelayMs = 1500;
   CResetRetryDelayMs = 500;
 var
   lHost: string;

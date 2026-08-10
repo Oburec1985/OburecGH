@@ -3165,63 +3165,12 @@ begin
 end;
 
 procedure TMainForm.RecoverOfflineSourcesAfterLoadOnce;
-const
-  CStartupRecoveryAttemptCount = 2;
-  CStartupRecoveryReleaseDelayMs = 500;
-var
-  lAttempt: Integer;
-  I: Integer;
-  lHost: string;
-  lPort: Word;
-  lRetryCount: Integer;
-  lSourceId: string;
-  lSourceIds: TStringList;
 begin
   if fStartupOfflineRecoveryDone then
     Exit;
   fStartupOfflineRecoveryDone := True;
-  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
-    (fRecorder.DataSources = nil) then
-    Exit;
-
-  lSourceIds := TStringList.Create;
-  try
-    lSourceIds.Sorted := True;
-    lSourceIds.Duplicates := dupIgnore;
-    RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lSourceIds,
-      True);
-    for lAttempt := 1 to CStartupRecoveryAttemptCount do
-    begin
-      lRetryCount := 0;
-      for I := 0 to lSourceIds.Count - 1 do
-      begin
-        lSourceId := lSourceIds[I];
-        if (not RecorderHardwareIsSourceOffline(lSourceId)) or
-          (not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort)) then
-          Continue;
-
-        { Do not open a separate TCP probe immediately before Connect: MIC-185
-          is a single-client device and the probe can keep the only session
-          busy. Release every stale local endpoint exactly as manual Reset does,
-          then retry the real lifecycle instead of guessing readiness by ping. }
-        RecorderMic185RuntimeDetach(lHost, lPort);
-        RecorderHardwareRequestSourceReset(lSourceId);
-        Inc(lRetryCount);
-        AddLog(Format(
-          'Startup session recovery requested: %s (attempt %d/%d)',
-          [lSourceId, lAttempt, CStartupRecoveryAttemptCount]));
-      end;
-
-      if lRetryCount = 0 then
-        Break;
-      Sleep(CStartupRecoveryReleaseDelayMs * lAttempt);
-      AddLog(Format('Startup session recovery: retrying %d offline source(s).',
-        [lRetryCount]));
-      fRecorder.DataSources.PrepareHardwareAll;
-    end;
-  finally
-    lSourceIds.Free;
-  end;
+  { Ошибка одного прибора не должна запускать общий reset/reconnect. Источник
+    остаётся offline до адресного сброса из дерева устройств. }
 end;
 
 { Реакция на смену состояний сбора данных }

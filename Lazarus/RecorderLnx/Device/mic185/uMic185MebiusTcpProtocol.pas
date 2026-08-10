@@ -46,6 +46,7 @@ type
     fTimeoutMs: Cardinal;
     fClientTaskId: LongWord;
     fRxDataPacketCount: Int64;
+    fConnectionLost: Boolean;
     procedure ApplySocketTimeout;
     procedure SetTimeoutMs(AValue: Cardinal);
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
@@ -90,6 +91,7 @@ type
     property Port: Word read fPort;
     property TimeoutMs: Cardinal read fTimeoutMs write SetTimeoutMs;
     property RxDataPacketCount: Int64 read fRxDataPacketCount;
+    property ConnectionLost: Boolean read fConnectionLost;
     procedure ResetRxCounters;
   end;
 
@@ -532,6 +534,7 @@ begin
   if fClientTaskId = 0 then
     fClientTaskId := REC_HOST_SETTINGS_PORT_ID;
   fRxDataPacketCount := 0;
+  fConnectionLost := False;
 end;
 
 procedure TRecorderMebiusTcpClient.ResetRxCounters;
@@ -576,6 +579,7 @@ begin
     fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}
     ApplySocketTimeout;
+    fConnectionLost := False;
     RecorderMic185RuntimeRegisterTcpClient(Self, fHost, fPort);
     Result := True;
   except
@@ -623,8 +627,18 @@ begin
   lDone := 0;
   while lDone < ACount do
   begin
-    lRead := fSocket.Read((PByte(@ABuffer) + lDone)^, ACount - lDone);
-    if lRead <= 0 then
+    try
+      lRead := fSocket.Read((PByte(@ABuffer) + lDone)^, ACount - lDone);
+    except
+      fConnectionLost := True;
+      Exit(False);
+    end;
+    if lRead = 0 then
+    begin
+      fConnectionLost := True;
+      Exit(False);
+    end;
+    if lRead < 0 then
       Exit(False);
     Inc(lDone, lRead);
   end;
@@ -659,6 +673,7 @@ begin
       lWritten := fSocket.Write((PByte(@ABuffer) + lDone)^, ACount - lDone);
       if lWritten <= 0 then
       begin
+        fConnectionLost := True;
         AErrorText := 'Mebius TCP write failed';
         Exit;
       end;
@@ -667,7 +682,10 @@ begin
     Result := True;
   except
     on E: Exception do
+    begin
+      fConnectionLost := True;
       AErrorText := E.Message;
+    end;
   end;
 end;
 

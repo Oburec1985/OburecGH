@@ -147,6 +147,13 @@ type
   TRecorderMic185DataSource = class(TRecorderDataSourceBase)
   private
     fChannelTagNames: TStringList;
+    fChannelTags: array of TRecorderTag;
+    fHardwareCalibrations: array of TRecorderCalibration;
+    fPowerMa: array of Double;
+    fTempTags: array of TRecorderTag;
+    fTimes: TRecorderDoubleArray;
+    fUtsTag: TRecorderTag;
+    fValues: TRecorderDoubleArray;
     fDevice: IRecorderDevice;
     fHost: string;
     fHardwarePrepared: Boolean;
@@ -160,6 +167,7 @@ type
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     procedure ApplyChannelProgramSettings;
+    procedure CacheRuntimeChannels;
     procedure ConfigureDevice;
     procedure PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
     procedure PublishAuxChannels(ATimeSec: Double);
@@ -1815,6 +1823,46 @@ begin
        RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
   lDevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
     lTemperatureCompensation, lModuleSettings);
+  CacheRuntimeChannels;
+end;
+
+procedure TRecorderMic185DataSource.CacheRuntimeChannels;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lSettings: TMic185ChannelProgramSettings;
+  lTag: TRecorderTag;
+  lUnit: string;
+begin
+  SetLength(fHardwareCalibrations, Length(fChannelTags));
+  SetLength(fPowerMa, Length(fChannelTags));
+  for I := 0 to High(fChannelTags) do
+  begin
+    lTag := fChannelTags[I];
+    fHardwareCalibrations[I] := nil;
+    fPowerMa[I] := 0.0;
+    if lTag = nil then
+      Continue;
+
+    lCalibration := Registry.FindTagHardwareCalibration(lTag);
+    if lTag.HardwareCalibrationEnabled and (lCalibration = nil) and
+      (Trim(lTag.HardwareCalibrationName) <> '') then
+    begin
+      RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
+      lCalibration := Registry.FindTagHardwareCalibration(lTag);
+    end;
+    fHardwareCalibrations[I] := lCalibration;
+
+    if I > High(fRuntimeChannelSettings) then
+      Continue;
+    lSettings := fRuntimeChannelSettings[I];
+    fPowerMa[I] := Mic185EffectivePowerMa(lSettings);
+    lUnit := Mic185NormalizeUnitName(lTag.UnitName, lSettings.MeasRangeIndex);
+    if lTag.HardwareCalibrationEnabled and
+      (SameText(lUnit, 'Ом') or SameText(lUnit, 'мкм/м')) then
+      fPowerMa[I] := RecorderMic185ApplyCurrentCalibration(Registry, lTag,
+        fPowerMa[I]);
+  end;
 end;
 
 procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
@@ -1831,6 +1879,9 @@ begin
   ARegistry.RegisterActiveSource(SourceId);
   fChannelTagNames.Clear;
   lChannels := fDevice.GetChannels;
+  SetLength(fChannelTags, Min(Length(lChannels), CMic185ChannelCountMax));
+  SetLength(fTempTags, CMic185TempChannelCount);
+  fUtsTag := nil;
   for I := 0 to High(lChannels) do
   begin
     if not ChannelSelected(lChannels[I]) then
@@ -1874,6 +1925,12 @@ begin
     lTag.Description := Format('%s channel %s', [CMic185ModuleName, lChannels[I].Address]);
     lTag.EnsureBufferCapacity(Ceil(Max(4096, lChannels[I].PollFrequencyHz * 4)));
     fChannelTagNames.Add(lTag.Name);
+    if I < Length(fChannelTags) then
+      fChannelTags[I] := lTag
+    else if I < CMic185ChannelCountMax + Length(fTempTags) then
+      fTempTags[I - CMic185ChannelCountMax] := lTag
+    else
+      fUtsTag := lTag;
   end;
 end;
 
@@ -2053,31 +2110,27 @@ end;
 procedure TRecorderMic185DataSource.PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
 var
   I, J: Integer;
-  lChannelSettings: TMic185ChannelProgramSettingsArray;
   lCount: Integer;
   lTag: TRecorderTag;
-  lTimes: TRecorderDoubleArray;
-  lValues: TRecorderDoubleArray;
   lHardwareCalibration: TRecorderCalibration;
-  lPowerMa: Double;
-  lUnit: string;
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
   // перепроверить!!! зачем в RunTime SetLength
-  SetLength(lTimes, ABlock.SampleCount);
-  SetLength(lValues, ABlock.SampleCount);
+  if Length(fTimes) < ABlock.SampleCount then
+    SetLength(fTimes, ABlock.SampleCount);
+  if Length(fValues) < ABlock.SampleCount then
+    SetLength(fValues, ABlock.SampleCount);
   // нельзя формировать для каждой точки времена X - это задача для линий в чарте
   // там есть x0 для одномерных сигналов и dx - шейдер сам разворачивает X для каждой точки
   for J := 0 to ABlock.SampleCount - 1 do
-    lTimes[J] := ABlock.FirstTimeSec + (J / ABlock.SampleRateHz);
+    fTimes[J] := ABlock.FirstTimeSec + (J / ABlock.SampleRateHz);
 
   // собирает полный снимок настроек всех 64 измерительных каналов одного MIC-185 источника
   // из конфигурации проекта (registry / configuredDataSources), в виде массива
   // TMic185ChannelProgramSettingsArray
   // Этой функции не место в RunTime
-  lChannelSettings := fRuntimeChannelSettings;
-  lCount := Min(ABlock.ChannelCount, fChannelTagNames.Count);
+  lCount := Min(ABlock.ChannelCount, Length(fChannelTags));
   for I := 0 to lCount - 1 do
   begin
     // лучше хранить массив ссылок на теги. Поиск тега по имени каждый раз плохая операция!
@@ -2086,45 +2139,27 @@ begin
     // Для плат которые меряют быстропеременные процессы и имеют десятки кГц
     // отсчетов за блок данных это критично. Еще применение линейной ГХ можно делать не поточечно а аппаратно ускоренными
     // функциями где сразу перемножается весь массив с константой (повод для модернизации в дальнейшем)
-    lTag := Registry.FindByName(fChannelTagNames[I]);
+    lTag := fChannelTags[I];
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
-    lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
-    if lTag.HardwareCalibrationEnabled and (lHardwareCalibration = nil) and
-      (Trim(lTag.HardwareCalibrationName) <> '') then
-    begin
-      RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
-      lHardwareCalibration := Registry.FindTagHardwareCalibration(lTag);
-    end;
-
-    // досчет по току каналов надо делать только если мы измеряем не в кодах и не мВ
-    lPowerMa := 0.0;
-    if I <= High(lChannelSettings) then
-    begin
-      lPowerMa := Mic185EffectivePowerMa(lChannelSettings[I]);
-      lUnit := Mic185NormalizeUnitName(lTag.UnitName,
-        lChannelSettings[I].MeasRangeIndex);
-      if lTag.HardwareCalibrationEnabled and
-        (SameText(lUnit, 'Ом') or SameText(lUnit, 'мкм/м')) then
-        lPowerMa := RecorderMic185ApplyCurrentCalibration(Registry, lTag,
-          lPowerMa);
-    end;
+    lHardwareCalibration := fHardwareCalibrations[I];
     for J := 0 to ABlock.SampleCount - 1 do
       if not lTag.HardwareCalibrationEnabled then
-        lValues[J] := ABlock.Values[I][J]
-      else if I <= High(lChannelSettings) then
-        lValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
-          lChannelSettings[I], lTag.UnitName, lHardwareCalibration, lPowerMa)
+        fValues[J] := ABlock.Values[I][J]
+      else if I <= High(fRuntimeChannelSettings) then
+        fValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
+          fRuntimeChannelSettings[I], lTag.UnitName, lHardwareCalibration,
+          fPowerMa[I])
       else
-        lValues[J] := ABlock.Values[I][J];
-    Registry.AddBlockSamples(lTag.Name, lTimes, lValues, ABlock.SampleCount, True);
+        fValues[J] := ABlock.Values[I][J];
+    Registry.AddBlockSamples(lTag, fTimes, fValues, ABlock.SampleCount, True);
     { Значения уже пересчитаны: передаём тот же блок без повторного
       LastBlockSnapshot и второго поиска тега по имени. }
-    Registry.PublishBlockNotifications(lTag, lTimes, lValues,
+    Registry.PublishBlockNotifications(lTag, fTimes, fValues,
       ABlock.SampleCount);
   end;
   // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
-  PublishAuxChannels(lTimes[ABlock.SampleCount - 1]);
+  PublishAuxChannels(fTimes[ABlock.SampleCount - 1]);
 end;
 
 // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
@@ -2140,12 +2175,11 @@ begin
   lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
 
   if lDevice.HasTempData then
-    for I := 0 to lDevice.TempChannelCount - 1 do
+    for I := 0 to Min(lDevice.TempChannelCount, Length(fTempTags)) - 1 do
     begin
       // поиск тега по строке в цикле на каждой итерации - не корректно!
       // надо хранить ссылки на теги
-      lTag := FindTagBySourceAddress(Registry, Format('%d-t%d',
-        [RecorderMic185SourceDeviceIndex(Registry, SourceId), I + 1]));
+      lTag := fTempTags[I];
       // не надо каждому отсчету время сопоставлять!
       if lTag <> nil then
         Registry.PublishValue(lTag.Name, ATimeSec, lDevice.LastTempValue(I));
@@ -2154,8 +2188,7 @@ begin
   if lDevice.HasUtsData and
     (lDevice.UtsGeneration <> fLastPublishedUtsGeneration) then
   begin
-    lTag := FindTagBySourceAddress(Registry, Format('%d-uts',
-      [RecorderMic185SourceDeviceIndex(Registry, SourceId)]));
+    lTag := fUtsTag;
     if lTag <> nil then
     begin
       { Original Recorder stores UTS as an XY pair: device-relative X and
