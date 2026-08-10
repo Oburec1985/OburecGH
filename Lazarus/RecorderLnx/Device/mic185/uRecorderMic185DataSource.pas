@@ -1951,9 +1951,11 @@ begin
   end;
   if fHardwarePrepared or fHardwarePrepareAttempted then
     Exit;
-  { Offline — результат предыдущего запуска, перед новой подготовкой TEST
-    выполняется заново. }
-  RecorderHardwareClearSourceOffline(SourceId);
+  { До завершения протокольной проверки источник не считается исправным.
+    Иначе дерево показывало зелёный статус сразу после загрузки конфигурации,
+    хотя Connect/Initialize/Configure ещё не выполнялись. }
+  RecorderHardwareMarkSourceOffline(SourceId,
+    'Проверка связи и инициализация ещё не завершены');
   fHardwarePrepareAttempted := True;
   lTraceId := RecorderMic185NewLifecycleTraceId('startup');
   RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'BEGIN',
@@ -2036,6 +2038,7 @@ begin
       GetTickCount64 - lStageStartedAt);
     RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
     fHardwarePrepared := True;
+    RecorderHardwareClearSourceOffline(SourceId);
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'OK',
       Format('sn=%d', [lNativeDevice.DeviceSerial]));
   except
@@ -2219,7 +2222,11 @@ begin
   if RecorderHardwareIsSourceOffline(SourceId) then
     Exit;
   if fDevice.State <> rdsStarted then
-    fDevice.Start;
+  begin
+    RecorderHardwareMarkSourceOffline(SourceId,
+      'MIC183/185 acquisition was not started');
+    Exit;
+  end;
 
   lTimeout := Max(Cardinal(1000), UpdateTimeMs * 4);
   if fDevice.ReadBlock(lTimeout, lBlock) then
