@@ -415,6 +415,7 @@ var
   lPopupMenu: TPopupMenu;
   lMenuItem: TMenuItem;
   lConfigRoot: string;
+  lStageStartedAt: QWord;
 begin
   RegisterThreadName(GetThreadID, 'UIThread');
   Caption := 'RecorderLnx';
@@ -487,12 +488,18 @@ begin
   fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
     fProjectConfigDir) + 'sql-db.ini');
   ApplyDisplayTimingSettings;
+  lStageStartedAt := GetTickCount64;
   LoadProjectPackage;
+  RecorderDebugLog(Format('[Startup] LoadProjectPackage elapsed=%dms',
+    [GetTickCount64 - lStageStartedAt]));
   EnsureSqlDbControlTag;
   SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
     должна откладываться до первого нажатия Preview. }
+  lStageStartedAt := GetTickCount64;
   EnsureRuntimeDataSources;
+  RecorderDebugLog(Format('[Startup] EnsureRuntimeDataSources elapsed=%dms',
+    [GetTickCount64 - lStageStartedAt]));
   { rstInit — только начальная отметка автомата состояний. Явная нотификация
     отправляется после загрузки проекта, создания форм и источников, а также
     конфигурирования доступного оборудования. }
@@ -500,9 +507,15 @@ begin
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceInitialized,
       Self, 'Initialized'));
   UpdateActiveSourceIds;
+  lStageStartedAt := GetTickCount64;
   RebuildTagList('');
+  RecorderDebugLog(Format('[Startup] RebuildTagList elapsed=%dms',
+    [GetTickCount64 - lStageStartedAt]));
   UpdateStateView;
+  lStageStartedAt := GetTickCount64;
   RenderActivePage;
+  RecorderDebugLog(Format('[Startup] RenderActivePage elapsed=%dms',
+    [GetTickCount64 - lStageStartedAt]));
   AddLog('RecorderLnx started.');
   Application.QueueAsyncCall(@DeferredPrepareRuntime, 0);
   ParseAutoPreviewCommandLine;

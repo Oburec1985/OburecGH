@@ -154,6 +154,7 @@ type
     fPort: Word;
     fPollFrequencyHz: Double;
     fLastPublishedUtsGeneration: QWord;
+    fRuntimeChannelSettings: TMic185ChannelProgramSettingsArray;
     fSelectedNames: TStringList;
     function ChannelSelected(const AChannel: TRecorderDeviceChannel): Boolean;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
@@ -192,13 +193,6 @@ const
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
   CMic185ParallelStartSlotMs = 150;
-
-var
-  { The endpoint transports are independent, but the legacy Mebius IoControl
-    initialization path uses shared driver state. Concurrent GetSoftVersion/SN
-    calls randomly time out on otherwise live devices. Serialize only this
-    short session-initialization stage; Connect and Configure stay parallel. }
-  gMic185SessionInitializeLock: TRTLCriticalSection;
 
 function Mic185EndpointStartDelayMs(const AHost: string): Cardinal;
 var
@@ -891,12 +885,7 @@ begin
       lStageStartedAt := GetTickCount64;
       RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'BEGIN',
         'GetSoftVersion/read SN');
-      EnterCriticalSection(gMic185SessionInitializeLock);
-      try
-        lInitializeOk := lNative.TryInitializeSession(AErrorText);
-      finally
-        LeaveCriticalSection(gMic185SessionInitializeLock);
-      end;
+      lInitializeOk := lNative.TryInitializeSession(AErrorText);
       if not lInitializeOk then
       begin
         RecorderMic185LifecycleLog(lTraceId, ASourceId, 'initialize', 'FAIL',
@@ -1802,6 +1791,7 @@ begin
 
   RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
     lSettings);
+  fRuntimeChannelSettings := lSettings;
   RecorderMic185GetSourceGroupAddition(Registry, SourceId, lGroupAddition);
   RecorderMic185GetSourceModuleSettings(Registry, SourceId, lModuleSettings);
   lTemperatureCompensation :=
@@ -1952,12 +1942,7 @@ begin
     lStageStartedAt := GetTickCount64;
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'BEGIN',
       'GetSoftVersion/read SN');
-    EnterCriticalSection(gMic185SessionInitializeLock);
-    try
-      lInitializeOk := lNativeDevice.TryInitializeSession(lTestError);
-    finally
-      LeaveCriticalSection(gMic185SessionInitializeLock);
-    end;
+    lInitializeOk := lNativeDevice.TryInitializeSession(lTestError);
     if not lInitializeOk then
     begin
       RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'FAIL',
@@ -2091,7 +2076,7 @@ begin
   // из конфигурации проекта (registry / configuredDataSources), в виде массива
   // TMic185ChannelProgramSettingsArray
   // Этой функции не место в RunTime
-  RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz, lChannelSettings);
+  lChannelSettings := fRuntimeChannelSettings;
   lCount := Min(ABlock.ChannelCount, fChannelTagNames.Count);
   for I := 0 to lCount - 1 do
   begin
@@ -2209,12 +2194,8 @@ begin
 end;
 
 initialization
-  InitCriticalSection(gMic185SessionInitializeLock);
   RecorderRegisterProjectConfigExtension(@SaveMic185DataSourceConfigs,
     @LoadMic185DataSourceConfigs);
   RecorderRegisterHardwareSourceLinkProbe(@RecorderMic185HardwareLinkProbe);
-
-finalization
-  DoneCriticalSection(gMic185SessionInitializeLock);
 
 end.
