@@ -169,6 +169,7 @@ type
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fUpdatingSqlDbRecording: Boolean;
+    fLastSqlDbError: string;                      // Последняя уже показанная ошибка необязательной SQLdb
     fDataSourcesConfigured: Boolean;              // Флаг готовности источников данных
     fStartupOfflineRecoveryDone: Boolean;
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
@@ -199,6 +200,7 @@ type
       const ACaption: string = ''; AImageWidth: Integer = 25): TSpeedButton;
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
+    procedure ReportSqlDbError;
     { Возвращает текущий корневой каталог MERA-записи. }
     function CurrentRecordRootDir: string;
     { Обновляет менеджер каталогов записи из текущих настроек. }
@@ -365,6 +367,7 @@ type
     procedure SetupStatusBanner;
     { Обновляет текстовый индикатор состояния из fRecorder.StateMachine.State. }
     procedure UpdateStateView;
+    procedure UpdateHardwareErrorView;
     { Обновляет текстовый индикатор времени из подсистемы. }
     procedure UpdateTimeView;
     { Единая обработка ошибок команд UI. }
@@ -3140,6 +3143,7 @@ procedure TMainForm.UpdateStateView;
 begin
   lbState.Caption := TRecorderStateMachine.StateToString(fRecorder.StateMachine.State);
   UpdateTimeView;
+  ReportSqlDbError;
   if (fRecorder.SqlDbManager <> nil) and
      (cbSqlDbRecording.Checked <> fRecorder.SqlDbManager.RecordingEnabled) then
   begin
@@ -3164,6 +3168,77 @@ begin
   lbState.ParentColor := True;
   lbTime.Font.Color := clBlack;
   lbTime.ParentColor := True;
+  UpdateHardwareErrorView;
+end;
+
+procedure TMainForm.UpdateHardwareErrorView;
+var
+  I: Integer;
+  lCount: Integer;
+  lIds: TStringList;
+  lReason: string;
+  lSourceId: string;
+  lStateText: string;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+  lIds := TStringList.Create;
+  try
+    RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lIds, True);
+    lCount := 0;
+    lbState.Hint := '';
+    for I := 0 to lIds.Count - 1 do
+    begin
+      lSourceId := lIds[I];
+      if not RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,
+        lSourceId) then
+        Continue;
+      if not RecorderHardwareIsSourceOffline(lSourceId) then
+        Continue;
+      Inc(lCount);
+      lReason := RecorderHardwareSourceOfflineReason(lSourceId);
+      if lbState.Hint <> '' then
+        lbState.Hint := lbState.Hint + LineEnding;
+      lbState.Hint := lbState.Hint + lSourceId + ': ' + lReason;
+    end;
+    lStateText := TRecorderStateMachine.StateToString(
+      fRecorder.StateMachine.State);
+    if lCount = 0 then
+    begin
+      lbState.Caption := lStateText;
+      lbState.ShowHint := False;
+      case fRecorder.StateMachine.State of
+        rsStop: pnRightStatus.Color := clSilver;
+        rsPreviewArmed, rsPreview, rsRecordArmed:
+          pnRightStatus.Color := clYellow;
+        rsRecord: pnRightStatus.Color := clLime;
+      end;
+      lbState.Font.Color := clBlack;
+      lbTime.Font.Color := clBlack;
+      Exit;
+    end;
+    lbState.Caption := Format('%s  ! %d', [lStateText, lCount]);
+    lbState.ShowHint := True;
+    pnRightStatus.Color := clRed;
+    lbState.Font.Color := clWhite;
+    lbTime.Font.Color := clWhite;
+  finally
+    lIds.Free;
+  end;
+end;
+
+procedure TMainForm.ReportSqlDbError;
+var
+  lError: string;
+begin
+  lError := '';
+  if (fRecorder.SqlDbManager <> nil) and
+     (fRecorder.SqlDbManager.Runtime <> nil) then
+    lError := fRecorder.SqlDbManager.Runtime.LastError;
+  if (lError = '') or (lError = fLastSqlDbError) then
+    Exit;
+  fLastSqlDbError := lError;
+  AddLog('SQL database unavailable: ' + lError);
 end;
 
 procedure TMainForm.UpdateTimeView;
@@ -3172,6 +3247,7 @@ begin
     lbTime.Caption := fRecorder.TimeSystem.Snapshot.DisplayText
   else
     lbTime.Caption := '00:00:00';
+  UpdateHardwareErrorView;
 end;
 
 procedure TMainForm.LogCommandError(const ACommand: string; E: Exception);

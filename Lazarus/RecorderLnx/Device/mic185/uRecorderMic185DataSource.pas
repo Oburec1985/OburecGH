@@ -160,6 +160,8 @@ type
     fHardwarePrepareAttempted: Boolean;
     fPort: Word;
     fPollFrequencyHz: Double;
+    fDiagTick: QWord;
+    fDiagBlocks: QWord;
     fLastPublishedUtsGeneration: QWord;
     fRuntimeChannelSettings: TMic185ChannelProgramSettingsArray;
     fSelectedNames: TStringList;
@@ -2083,6 +2085,8 @@ begin
   { A new acquisition session must publish its first UTS packet even if the
     datasource object is reused after Stop/Start. }
   fLastPublishedUtsGeneration := 0;
+  fDiagTick := GetTickCount64;
+  fDiagBlocks := 0;
 end;
 
 procedure TRecorderMic185DataSource.RequestStop;
@@ -2217,6 +2221,7 @@ var
   lBlock: TRecorderAcquisitionBlock;
   lDevice: TRecorderMic185Device;
   lError: string;
+  lNow: QWord;
   lTimeout: Cardinal;
 begin
   if fDevice = nil then
@@ -2232,17 +2237,39 @@ begin
 
   lTimeout := Max(Cardinal(1000), UpdateTimeMs * 4);
   if fDevice.ReadBlock(lTimeout, lBlock) then
+  begin
+    Inc(fDiagBlocks);
     PublishMeasurementBlock(lBlock);
+  end;
 
   if not (fDevice.GetNativeObject is TRecorderMic185Device) then
     Exit;
   lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+  lNow := GetTickCount64;
+  if lNow - fDiagTick >= 10000 then
+  begin
+    RecorderMic185Log(Format(
+      '%s RX heartbeat: packets=%d blocks=%d lost=%s state=%d',
+      [SourceId, lDevice.RxDataPacketCount, fDiagBlocks,
+       BoolToStr(lDevice.ConnectionLost, True), Ord(fDevice.State)]));
+    fDiagTick := lNow;
+  end;
+  { Неполный TCP-пакет штатно остаётся в накопителе до следующего такта.
+    Отсутствие готового блока не означает разрыв соединения. }
   if not lDevice.ConnectionLost then
     Exit;
   lError := Trim(lDevice.LastReadError);
   if lError = '' then
     lError := 'MIC183/185 TCP connection lost';
   RecorderMic185Log(Format('%s acquisition stopped: %s', [SourceId, lError]));
+  { Не оставляем прибор владельцем зависшей Mebius-сессии. Иначе следующий
+    клиент откроет TCP-порт, но прибор не будет отвечать на IoControl. }
+  try
+    fDevice.Disconnect;
+  except
+  end;
+  RecorderHardwareUnregisterLiveDevice(Self);
+  fHardwarePrepared := False;
   RecorderHardwareMarkSourceOffline(SourceId, lError);
 end;
 

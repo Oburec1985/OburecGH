@@ -66,7 +66,21 @@ type
 implementation
 
 uses
-  uRecorderSqlDbRepository, uRecorderSqlDbFileStore;
+  ssockets, uRecorderSqlDbRepository, uRecorderSqlDbFileStore,
+  uRecorderNetworkBinding, uRecorderDebugLog;
+
+function SqlServerAvailable(AConfig: TRecorderSqlDbConfig;
+  out AError: string): Boolean;
+var
+  lStream: TSocketStream;
+begin
+  AError := '';
+  if AConfig.Backend = rsbSQLite then
+    Exit(True);
+  Result := RecorderOpenBoundTcpStream(AConfig.Host, AConfig.Port, 700,
+    lStream, AError, False);
+  lStream.Free;
+end;
 
 constructor TRecorderSqlDbWriterThread.Create(AOwner: TRecorderSqlDbRuntime);
 begin
@@ -227,6 +241,14 @@ begin
   lSequence := 0;
   lSignals.NameValueSeparator := '=';
   try
+    if not SqlServerAvailable(fConfig, fLastError) then
+    begin
+      fLastError := 'SQL server not found: ' + fConfig.Host + ':' +
+        IntToStr(fConfig.Port) + ' (' + fLastError + ')';
+      fState := rsrsError;
+      RecorderDebugLog(fLastError);
+      Exit;
+    end;
     R := TRecorderSqlDbRepository.Create(fConfig);
     R.EnsureDatabase;
     S := TRecorderSqlDbFileStore.Create(fConfig.DataDirectory);
@@ -281,7 +303,12 @@ begin
     if lRegistrationId <> '' then
       R.FinishRegistration(lRegistrationId, 'interrupted', Now);
   except
-    on E: Exception do begin fLastError := E.Message; fState := rsrsError; end;
+    on E: Exception do
+    begin
+      fLastError := E.Message;
+      fState := rsrsError;
+      RecorderDebugLog('SQL database disabled: ' + fLastError);
+    end;
   end;
   lSignals.Free; S.Free; R.Free;
 end;

@@ -1,0 +1,23 @@
+2026-08-11 10:59:39.524 [INFO] [TID:132316020642880] RecorderLnx log initialized: /home/user/Mera Files/RecorderLnx/LogLinux.log
+2026-08-11 10:59:39.570 [DEBUG] [TID:132316020642880|UIThread] 10:59:39.570 Project run-control config loaded: /mnt/win_share/OburecGH/Lazarus/RecorderLnx/config/projects/default/default.run-control.ini
+2026-08-11 10:59:39.572 [DEBUG] [TID:132316020642880|UIThread] 10:59:39.571 Update settings applied: screenUpdate=200 ms dataUpdate=200 ms historyWindow=1000 ms
+2026-08-11 10:59:48.511 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.511 Project main config loaded: /mnt/win_share/OburecGH/Lazarus/RecorderLnx/config/projects/default/default.config.json
+2026-08-11 10:59:48.513 [DEBUG] [TID:132316020642880|UIThread] [MNEMO-PERF] render page=Mnemonic4 components=3 rebuild=True total=1ms
+2026-08-11 10:59:48.513 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.513 Project GUI config loaded: /mnt/win_share/OburecGH/Lazarus/RecorderLnx/config/projects/default/default.gui.ini
+2026-08-11 10:59:48.513 [DEBUG] [TID:132316020642880|UIThread] [Startup] LoadProjectPackage elapsed=8942ms
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MERA playback source configured: signal0005.mera (10 channels).
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MIC183/185 source configured: 192.168.9.155:4000 (140 channels).
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MIC183/185 source configured: 192.168.9.147:4000 (140 channels).
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MIC183/185 source configured: 192.168.9.151:4000 (140 channels).
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MIC183/185 source configured: 192.168.9.152:4000 (140 channels).
+2026-08-11 10:59:48.523 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.523 MIC183/185 source configured: 192.168.9.148:4000 (140 channels).
+2026-08-11 10:59:48.637 [DEBUG] [TID:132316020642880|UIThread] 10:59:48.637 Diagnostics data source configured: MemTag, CpuUsage.
+2026-08-11 10:59:48.647 [DEBUG] [TID:132316020642880|UIThread] [Startup] EnsureRuntimeDataSources elapsed=133ms
+2026-08-11 10:59:53.658 [DEBUG] [TID:132316020642880|UIThread] [Startup] RebuildTagList elapsed=1ms
+2026-08-11 10:59:53.661 [DEBUG] [TID:132316020642880|UIThread] [MNEMO-PERF] render page=Mnemonic4 components=3 rebuild=False total=0ms
+2026-08-11 10:59:53.661 [DEBUG] [TID:132316020642880|UIThread] [Startup] RenderActivePage elapsed=2ms
+2026-08-11 10:59:53.661 [DEBUG] [TID:132316020642880|UIThread] 10:59:53.661 RecorderLnx started.
+2026-08-11 10:59:57.770 [DEBUG] [TID:132316020642880|UIThread] 10:59:57.770 Deferred hardware preparation started.
+2026-08-11 10:59:57.787 [DEBUG] [TID:132316020642880|UIThread] [HardwarePrepare] network warmup bind=192.168.5.100 responses=0 elapsed=0ms devices=""
+2026-08-11 10:59:58.852 [DEBUG] [TID:132315546908352] [MIC185] [MIC185-LC] trace=startup-23668851-T132315546908352 source="MIC-185: 192.168.9.147:4000" thread=132315546908352 phase=operation state=BEGIN elapsed_ms=0 detail="endpoint=192.168.9.147:4000 bind=192.168.5.100"
+2026-08-11 10:59:59.360 [DEBUG] [TID:132315451221696] [MIC185] [MIC185-LC] trace=startup-23668851-T132315451221696 source="MIC-185: 192.168.9.151:4000" thread=132315451221696 phase=operation state=BEGIN elapsed_ms=0 detail="endpoint=192.168.9.151:4000 bind=192.168.5.100"

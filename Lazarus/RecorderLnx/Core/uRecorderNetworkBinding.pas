@@ -21,7 +21,7 @@ procedure RecorderDiscoverMeraBroadcast(AFoundHosts: TStrings;
   ATimeoutMs: Cardinal = 1200);
 function RecorderOpenBoundTcpStream(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal; out AStream: TSocketStream;
-  out AErrorText: string): Boolean;
+  out AErrorText: string; AUseConfiguredBind: Boolean = True): Boolean;
 
 implementation
 
@@ -39,6 +39,26 @@ begin
   Result := g_RecorderNetworkBindAddress;
 end;
 
+{$ifdef unix}
+function IsLocalIPv4(const AValue: string): Boolean;
+var
+  lAddress: TInetSockAddr;
+  lSocket: cint;
+begin
+  Result := False;
+  lSocket := fpSocket(AF_INET, SOCK_STREAM, 0);
+  if lSocket < 0 then Exit;
+  try
+    FillChar(lAddress, SizeOf(lAddress), 0);
+    lAddress.sin_family := AF_INET;
+    lAddress.sin_addr := StrToHostAddr(AValue);
+    Result := fpBind(lSocket, @lAddress, SizeOf(lAddress)) = 0;
+  finally
+    fpClose(lSocket);
+  end;
+end;
+{$endif}
+
 procedure SetRecorderNetworkBindAddress(const AValue: string);
 var
   lAddress: THostAddr;
@@ -52,6 +72,15 @@ begin
   if lAddress.s_addr = 0 then
     raise ESocketError.CreateFmt('Некорректный локальный IPv4-адрес: %s',
       [AValue]);
+  {$ifdef unix}
+  { Проект может быть общим с Windows. Чужой адрес интерфейса нельзя явно
+    привязывать в Linux: в этом случае маршрут выбирает ОС. }
+  if not IsLocalIPv4(HostAddrToStr(lAddress)) then
+  begin
+    g_RecorderNetworkBindAddress := '';
+    Exit;
+  end;
+  {$endif}
   g_RecorderNetworkBindAddress := HostAddrToStr(lAddress);
 end;
 
@@ -543,7 +572,7 @@ end;
 
 function RecorderOpenBoundTcpStream(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal; out AStream: TSocketStream;
-  out AErrorText: string): Boolean;
+  out AErrorText: string; AUseConfiguredBind: Boolean): Boolean;
 var
   lRemote, lLocal: TInetSockAddr;
   lRemoteHost, lLocalHost: THostAddr;
@@ -574,7 +603,7 @@ begin
       AErrorText := 'Не удалось создать TCP-сокет: ' + IntToStr(SocketError);
       Exit;
     end;
-    if g_RecorderNetworkBindAddress <> '' then
+    if AUseConfiguredBind and (g_RecorderNetworkBindAddress <> '') then
     begin
       lLocalHost := StrToHostAddr(g_RecorderNetworkBindAddress);
       FillChar(lLocal, SizeOf(lLocal), 0);

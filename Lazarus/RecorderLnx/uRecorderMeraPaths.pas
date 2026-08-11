@@ -49,17 +49,34 @@ var
   g_MeraThermocoupleFolderKey: string;
   g_MeraThermocoupleLastMeraPath: string;
 
+function IsForeignSystemPath(const AValue: string): Boolean;
+var
+  lValue: string;
+begin
+  lValue := Trim(AValue);
+  {$ifdef unix}
+  Result := ((Length(lValue) >= 2) and (lValue[2] = ':')) or
+    (Pos('\\', lValue) > 0);
+  {$else}
+  Result := (lValue <> '') and (lValue[1] = '/');
+  {$endif}
+end;
+
 function RecorderSystemPathsFileName: string;
 begin
   Result := IncludeTrailingPathDelimiter(ExpandFileName(
     ExtractFilePath(ParamStr(0)))) + 'RecorderLnx.paths.ini';
 end;
 
+function DefaultRecorderMeraFilesPath: string; forward;
+
 function ResolveSystemPath(const AValue, ADefaultRelativePath: string): string;
 var
   lValue: string;
 begin
   lValue := Trim(AValue);
+  if IsForeignSystemPath(lValue) then
+    lValue := ADefaultRelativePath;
   if lValue = '' then
     lValue := ADefaultRelativePath;
   if (lValue <> '') and not ((Length(lValue) >= 2) and (lValue[2] = ':')) and
@@ -68,6 +85,13 @@ begin
     lValue := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
       lValue;
   Result := ExcludeTrailingPathDelimiter(ExpandFileName(lValue));
+end;
+
+function ResolveMeraFilesPath(const AValue: string): string;
+begin
+  if (Trim(AValue) = '') or IsForeignSystemPath(AValue) then
+    Exit(ExcludeTrailingPathDelimiter(DefaultRecorderMeraFilesPath));
+  Result := ResolveSystemPath(AValue, '');
 end;
 
 function DefaultRecorderMeraFilesPath: string;
@@ -157,8 +181,8 @@ begin
 
   lIni := TIniFile.Create(lFileName);
   try
-    g_MeraFilesPath := ResolveSystemPath(
-      lIni.ReadString('Paths', 'MeraFiles', g_MeraFilesPath), '');
+    g_MeraFilesPath := ResolveMeraFilesPath(
+      lIni.ReadString('Paths', 'MeraFiles', g_MeraFilesPath));
     g_ConfigPath := ResolveSystemPath(
       lIni.ReadString('Paths', 'Config', ''), '');
     g_PluginsPath := ResolveSystemPath(
@@ -181,7 +205,7 @@ end;
 procedure SetRecorderMeraFilesPath(const APath: string);
 begin
   EnsureRecorderSystemPathsLoaded;
-  g_MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(APath));
+  g_MeraFilesPath := ResolveMeraFilesPath(APath);
   RecorderMeraResetThermocoupleCache;
 end;
 

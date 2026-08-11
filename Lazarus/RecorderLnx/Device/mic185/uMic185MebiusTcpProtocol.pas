@@ -186,6 +186,7 @@ const
   { Размер SO_RCVBUF из CTCPLink оригинального Recorder. }
   CMebiusReceiveBufferSize = 4 * 1024 * 1024;
   CMebiusMaxPacketSize = 4 * 1024 * 1024;
+  CMebiusDisconnectSettleMs = 200;
 
 function RecorderMebiusCtlCode(AType, AFunction, AMethod, AAccess: LongWord): LongWord;
 begin
@@ -657,12 +658,15 @@ begin
 end;
 
 procedure TRecorderMebiusTcpClient.Disconnect;
+var
+  lHadSocket: Boolean;
 begin
   // The original Recorder CTCPLink performs shutdown(SD_BOTH) before
   // closesocket.  This is important for MIC-183/185 firmware: without the
   // orderly TCP shutdown the device can keep the settings client/session
   // occupied and accept the next TCP connection without servicing IoControl.
-  if fSocket <> nil then
+  lHadSocket := fSocket <> nil;
+  if lHadSocket then
   begin
     try
       fpShutdown(fSocket.Handle, SHUT_RDWR);
@@ -674,6 +678,11 @@ begin
   FreeAndNil(fSocket);
   fRxPacketCount := 0;
   RecorderMic185RuntimeUnregisterTcpClient(Self);
+  { BIOS освобождает задачу Mebius не одновременно с closesocket. Без
+    короткой выдержки немедленное переподключение может открыть TCP, но
+    первая команда IoControl останется без ответа. }
+  if lHadSocket then
+    Sleep(CMebiusDisconnectSettleMs);
 end;
 
 function TRecorderMebiusTcpClient.FillRxPacket(ACount: Integer;

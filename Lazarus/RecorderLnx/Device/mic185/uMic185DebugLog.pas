@@ -11,7 +11,7 @@ unit uMic185DebugLog;
 interface
 
 uses
-  Classes, SysUtils, uRecorderDebugLog;
+  Classes, SysUtils, uRecorderDebugLog, uSharedFileLogger;
 
 { Инициализирует файл и кольцевой буфер лога MIC-185. }
 procedure Mic185LogInit(const ALogPath: string = '');
@@ -92,17 +92,22 @@ end;
 
 procedure Mic185AppendLineToFile(const ALine: string);
 var
-  lF: TextFile;
+  lHandle: THandle;
+  lText: UTF8String;
 begin
-  AssignFile(lF, gLogPath);
   if FileExists(gLogPath) then
-    Append(lF)
+    lHandle := FileOpen(gLogPath, fmOpenWrite or fmShareDenyNone)
   else
-    Rewrite(lF);
+    lHandle := FileCreate(gLogPath);
+  if lHandle = THandle(-1) then
+    Exit;
   try
-    WriteLn(lF, ALine);
+    FileSeek(lHandle, 0, fsFromEnd);
+    lText := UTF8String(ALine + LineEnding);
+    if lText <> '' then
+      FileWrite(lHandle, lText[1], Length(lText));
   finally
-    CloseFile(lF);
+    FileClose(lHandle);
   end;
 end;
 
@@ -124,7 +129,10 @@ begin
       gLogBuffer.Delete(0);
     if gLogPumpPos > gLogBuffer.Count then
       gLogPumpPos := gLogBuffer.Count;
-    if gLogPath <> '' then
+    { Общий runtime уже пишет эту строку через SharedLogger. Два независимых
+      writer-а одного файла приводили к AppendFileLine и повреждению строк. }
+    if (gLogPath <> '') and
+       (not SameFileName(gLogPath, SharedLogger.FileName)) then
     begin
       try
         Mic185AppendLineToFile(lLine);

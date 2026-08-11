@@ -48,6 +48,7 @@ type
     fRootDirectory: string;
     fTlsRequired: Boolean;
     fUserName: string;
+    function EffectiveRootDirectory: string;
     procedure SetQueueCapacity(AValue: Integer);
   public
     constructor Create;
@@ -106,7 +107,7 @@ function RecorderSqlDbStringToBackend(const AValue: string): TRecorderSqlDbBacke
 implementation
 
 uses
-  IniFiles
+  IniFiles, uRecorderMeraPaths
   {$ifdef windows}, Registry, Windows{$endif};
 
 function RecorderSqlDbNewId: string;
@@ -210,13 +211,32 @@ begin
   fQueueCapacity := AValue;
 end;
 
+function TRecorderSqlDbConfig.EffectiveRootDirectory: string;
+var
+  lRoot: string;
+begin
+  lRoot := Trim(fRootDirectory);
+  {$ifdef unix}
+  { Общий конфиг может содержать абсолютный путь Windows. На Linux такой путь
+    нельзя превращать в подкаталог рядом с exe. }
+  if (lRoot = '') or
+     ((Length(lRoot) >= 2) and (lRoot[2] = ':')) or
+     (Pos('\\', lRoot) > 0) then
+    lRoot := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
+  {$else}
+  if (lRoot = '') or ((lRoot <> '') and (lRoot[1] = '/')) then
+    lRoot := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
+  {$endif}
+  Result := ExcludeTrailingPathDelimiter(ExpandFileName(lRoot));
+end;
+
 procedure TRecorderSqlDbConfig.RequireValid;
 begin
   if not fEnabled then Exit;
   if (fBackend = rsbSQLite) or
      ((fBackend = rsbFirebird) and (Trim(fHost) = '')) then
   begin
-    if Trim(fRootDirectory) = '' then
+    if EffectiveRootDirectory = '' then
       raise ERecorderSqlDbError.Create('SQLdb root directory is empty');
   end
   else
@@ -242,8 +262,16 @@ begin
       lName := CRecorderFirebirdDefaultFileName
     else
       lName := CRecorderSqlDbDefaultFileName;
+  {$ifdef unix}
+  if ((Length(lName) >= 2) and (lName[2] = ':')) or
+     (Pos('\\', lName) > 0) then
+    lName := ExtractFileName(StringReplace(lName, '\\', '/', [rfReplaceAll]));
+  {$else}
+  if (lName <> '') and (lName[1] = '/') then
+    lName := ExtractFileName(lName);
+  {$endif}
   if ExtractFileDrive(lName) <> '' then Exit(ExpandFileName(lName));
-  Result := IncludeTrailingPathDelimiter(ExpandFileName(fRootDirectory)) + lName;
+  Result := IncludeTrailingPathDelimiter(EffectiveRootDirectory) + lName;
 end;
 
 function TRecorderSqlDbConfig.IsLocalFileDatabase: Boolean;
@@ -256,7 +284,7 @@ end;
 
 function TRecorderSqlDbConfig.DataDirectory: string;
 begin
-  Result := IncludeTrailingPathDelimiter(ExpandFileName(fRootDirectory)) + 'data';
+  Result := IncludeTrailingPathDelimiter(EffectiveRootDirectory) + 'data';
 end;
 
 function TRecorderSqlDbConfig.Password: string;

@@ -24,7 +24,7 @@ uses
   uMic185DebugLog, uMic185Device, uMic185MebiusTcpProtocol, uMic185MebiusTypes,
   uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMic185AdditionalDialog, uRecorderMic185ChannelDialog,
-  uRecorderMic185SettingsDialog, uRecorderMebiusTcpProtocol,
+  uRecorderMic185SettingsDialog,
   uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
   uRecorderMeraPaths, uOglChartLog,
   uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
