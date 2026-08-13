@@ -334,6 +334,8 @@ procedure SaveTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
 var
   I: Integer;
 begin
+  if (ATag = nil) or (ATag.CalibrationNames = nil) then
+    Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
     AJson.Add(ATag.CalibrationNames[I]);
 end;
@@ -342,6 +344,8 @@ procedure LoadTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
 var
   I: Integer;
 begin
+  if (ATag = nil) or (ATag.CalibrationNames = nil) then
+    Exit;
   ATag.CalibrationNames.Clear;
   if AJson = nil then
     Exit;

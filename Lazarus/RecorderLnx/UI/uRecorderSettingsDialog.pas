@@ -331,6 +331,8 @@ uses
 const
   CMeraSourcePrefix = 'Mera file: ';
 
+function AddMic185PowerCycleHint(const ASourceId, AErrorText: string): string; forward;
+
 type
   { One independent device reset. The worker never touches LCL controls. }
   TRecorderHardwareResetTask = class
@@ -363,6 +365,16 @@ type
     property ErrorText: string read fErrorText;
   end;
 
+function AddMic185PowerCycleHint(const ASourceId, AErrorText: string): string;
+begin
+  Result := AErrorText;
+  if RecorderIsHardwareMic185TagSource(ASourceId) and
+    (Pos('IoControl timeout', AErrorText) > 0) then
+    Result := Result + LineEnding +
+      'TCP-порт отвечает, но Mebius-задача прибора не отвечает на команды. ' +
+      'Нужна перезагрузка питания MIC-183/185.';
+end;
+
 constructor TRecorderHardwareResetTask.Create(const ASourceId, ATraceId: string;
   AStartDelayMs: Cardinal);
 begin
@@ -375,6 +387,7 @@ end;
 procedure TRecorderHardwareResetTask.Execute;
 var
   lHost: string;
+  lCleanupError: string;
   lPort: Word;
 begin
   fSucceeded := False;
@@ -403,6 +416,12 @@ begin
         RecorderMic185RuntimeDetach(lHost, lPort);
         RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-release', 'OK',
           Format('endpoint=%s:%d', [lHost, lPort]));
+        if RecorderMic185CleanupEndpoint(lHost, lPort, lCleanupError) then
+          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'cleanup', 'OK',
+            '')
+        else
+          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'cleanup', 'FAIL',
+            lCleanupError);
       end;
     end;
     { Переподключение выполняет штатный источник данных. Временный клиент
@@ -2900,6 +2919,7 @@ end;
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
   I: Integer;
+  lCleanupError: string;
   lHost: string;
   lPort: Word;
   lRetryCount: Integer;
@@ -2979,7 +2999,10 @@ begin
         begin
           RecorderHardwareRequestSourceReset(lTasks[I].SourceId);
           if TryParseRecorderMic185SourceId(lTasks[I].SourceId, lHost, lPort) then
+          begin
             RecorderMic185RuntimeDetach(lHost, lPort);
+            RecorderMic185CleanupEndpoint(lHost, lPort, lCleanupError);
+          end;
           Inc(lRetryCount);
         end;
       if lRetryCount > 0 then
@@ -3001,6 +3024,8 @@ begin
           lTasks[I].SourceId);
         if Trim(lTasks[I].ErrorText) = '' then
           lTasks[I].fErrorText := 'Сброс устройства не выполнен';
+        lTasks[I].fErrorText := AddMic185PowerCycleHint(lTasks[I].SourceId,
+          lTasks[I].ErrorText);
         RecorderHardwareMarkSourceOffline(lTasks[I].SourceId,
           lTasks[I].ErrorText);
         lErrors.Add(lTasks[I].SourceId + ': ' + lTasks[I].ErrorText);

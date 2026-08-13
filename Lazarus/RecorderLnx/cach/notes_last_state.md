@@ -5873,3 +5873,13 @@ TCP-соединение, а обычный захват остаётся пас
 **Verification:** `rg` confirms MIC-140 `FindByName` remains only in setup/cache creation and no `TextValue` assignments remain in the MIC-140 data source. `RecorderLnx.lpi` rebuild exit code `0`; `RecorderDataSourcesTest.exe` exit code `0`.
 
 **Details:** runtime investigation notes are in `errors/2026-08-13-mic140-runtime-diagnostic-tags.md`.
+
+## 2026-08-13 23:35 - MIC-185 reset handles TCP-open/Mebius-timeout state
+
+**Request:** user reported MIC-185 devices ping/TCP-ping successfully, but the hardware tree still shows errors; "reset all" did not help. User noted this did not happen before MIC-140 work, so common network/lifecycle changes needed checking.
+
+**Done:** logs show broadcast discovery and TCP connect are OK through `Ethernet 2 [192.168.3.65]`, but first MIC-185 Mebius `GetSoftVersion/read SN` fails on every device with `Mebius IoControl timeout`. Added `REC_IOCTL_MEASTASK_DO_CLEANUP` / `TryCleanupMeasurementTask`, and MIC-185 manual reset now tries a soft Mebius task cleanup before `PrepareHardwareAll`. If reset still leaves a MIC-185 source offline with `IoControl timeout`, the reset dialog adds a direct power-cycle hint: TCP port is open, but the device Mebius task is not answering commands.
+
+**Verification:** first `RecorderLnx.lpi` rebuild reached link but failed because running `RecorderLnx.exe` PID `7016` locked the output. After stopping it, rebuild completed with exit code `0`. Existing Windows post-build `#!/bin/sh` message remains non-blocking.
+
+**Status:** fresh hardware check needed. If reset log shows `cleanup OK` and then `initialize OK`, power cycling was avoided. If it still shows `Mebius IoControl timeout`, reboot/power-cycle MIC-183/185 hardware.

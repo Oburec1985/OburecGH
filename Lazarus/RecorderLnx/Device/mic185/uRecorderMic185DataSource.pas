@@ -44,6 +44,8 @@ function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;
 { Быстрая TCP/Mebius проба для дерева оборудования. }
 function RecorderMic185TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
+function RecorderMic185CleanupEndpoint(const AHost: string; APort: Word;
+  out AErrorText: string; ATimeoutMs: Cardinal = 1500): Boolean;
 { Текст режима канала по умолчанию для хранения в старых проектах. }
 function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
 { Сериализует настройки канала MIC-185 в компактную строку. }
@@ -1513,6 +1515,44 @@ begin
   if RecorderMic185RuntimeIsBusy(AHost, APort) then
     Exit(True);
   Result := RecorderMic140TcpProbe(AHost, APort, ATimeoutMs);
+end;
+
+function RecorderMic185CleanupEndpoint(const AHost: string; APort: Word;
+  out AErrorText: string; ATimeoutMs: Cardinal): Boolean;
+var
+  lClient: TRecorderMebiusTcpClient;
+  lError: string;
+begin
+  Result := False;
+  AErrorText := '';
+  if Trim(AHost) = '' then
+  begin
+    AErrorText := 'MIC183/185 host is not set';
+    Exit;
+  end;
+  if RecorderMic185RuntimeIsBusy(AHost, APort) then
+  begin
+    AErrorText := 'MIC183/185 endpoint is busy by active RecorderLnx session';
+    Exit;
+  end;
+
+  lClient := TRecorderMebiusTcpClient.Create(AHost, APort, ATimeoutMs);
+  try
+    if not lClient.TryConnect(lError) then
+    begin
+      AErrorText := lError;
+      Exit;
+    end;
+    if not lClient.TryCleanupMeasurementTask(lError) then
+    begin
+      AErrorText := lError;
+      Exit;
+    end;
+    RecorderMic185Log(Format('CleanupEndpoint OK %s:%d', [AHost, APort]));
+    Result := True;
+  finally
+    lClient.Free;
+  end;
 end;
 
 function RecorderMic185IsSourceLinkOk(const ASourceId: string): Boolean;

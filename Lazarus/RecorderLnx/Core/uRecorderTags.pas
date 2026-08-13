@@ -1770,7 +1770,8 @@ var
   lCalibration: TRecorderCalibration;
 begin
   Result := TransformTagHardwareValue(ATag, AValue);
-  if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) then
+  if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
+    (ATag.CalibrationNames = nil) then
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin

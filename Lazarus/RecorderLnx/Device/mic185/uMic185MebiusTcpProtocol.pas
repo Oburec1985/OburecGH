@@ -92,6 +92,7 @@ type
       out AErrorMessage: string): Boolean;
     function TryProgramDeviceBin(const ASettings: TRecorderByteArray;
       out AErrorMessage: string): Boolean;
+    function TryCleanupMeasurementTask(out AErrorMessage: string): Boolean;
     function TryProgramMeasurement(out AErrorMessage: string): Boolean;
     function TryStartMeasurement(out AErrorMessage: string): Boolean;
     function TryStopMeasurement(out AErrorMessage: string): Boolean;
@@ -167,6 +168,8 @@ const
   REC_IOCTL_MEASTASK_NULL = (REC_TYPEIO_MEAS_TASK shl 16);
   REC_IOCTL_MEASTASK_QUERY_SESSION_STATE =
     (REC_TYPEIO_MEAS_TASK shl 16) or ($0001 shl 2);
+  REC_IOCTL_MEASTASK_DO_CLEANUP =
+    (REC_TYPEIO_MEAS_TASK shl 16) or ($0002 shl 2);
   REC_IOCTL_MEASTASK_SET_SESSION_ID = (REC_TYPEIO_MEAS_TASK shl 16) or ($0009 shl 2);
   REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN = (REC_TYPEIO_MEAS_TASK shl 16) or ($000A shl 2);
   REC_IOCTL_MEASTASK_START = (REC_TYPEIO_MEAS_TASK shl 16) or ($000B shl 2);
@@ -1128,6 +1131,15 @@ begin
     Move(ASettings[0], lBlock[SizeOf(LongWord) * 2], Length(ASettings));
 
   Result := TryIoControl(REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN, lBlock,
+    SizeOf(LongInt), lOut, AErrorMessage) and CheckResult(lOut, AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.TryCleanupMeasurementTask(
+  out AErrorMessage: string): Boolean;
+var
+  lOut: TRecorderByteArray;
+begin
+  Result := TryIoControl(REC_IOCTL_MEASTASK_DO_CLEANUP, nil,
     SizeOf(LongInt), lOut, AErrorMessage) and CheckResult(lOut, AErrorMessage);
 end;
 
