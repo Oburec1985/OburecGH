@@ -160,7 +160,12 @@ begin
   begin
     lConfig := FindRecorderMic140DeviceConfig(ARegistry, lNorm);
     if lConfig <> nil then
+    begin
+      if lConfig.DeviceSerial > 0 then
+        Exit(Format('MIC-140 (%s:%d, SN=%d)', [lConfig.Host, lConfig.Port,
+          lConfig.DeviceSerial]));
       Exit(Format('MIC-140 (%s:%d)', [lConfig.Host, lConfig.Port]));
+    end;
   end;
   
   Result := lNorm;

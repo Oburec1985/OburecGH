@@ -77,6 +77,8 @@ type
     fRuntimeCjcTemperatures: array of Double;
     fRuntimeCjcTemperatureValid: array of Boolean;
     fRuntimeThermoCompensation: Boolean;
+    fRuntimeStatusTag: TRecorderTag;
+    fRuntimeBlockCountTag: TRecorderTag;
     { Сетевой FIFO MIC-140 отдаёт несколько малых пакетов за один период
       обновления Recorder. В RunTime они собираются в одну логическую порцию,
       чтобы калибровка, оценки тегов и уведомления выполнялись один раз за
@@ -148,6 +150,9 @@ function RecorderMic140QueryHardwareCalibrSerial(const AHost: string; APort: Wor
 function RecorderMic140QueryDeviceInfo(const AHost: string; APort: Word;
   out ADeviceSerial: Integer; out AVersionText: string;
   out ADevSubRev: Integer): Boolean;
+function RecorderMic140QueryDeviceInfoWithTimeout(const AHost: string;
+  APort: Word; out ADeviceSerial: Integer; out AVersionText: string;
+  out ADevSubRev: Integer; ATimeoutMs: Cardinal): Boolean;
 function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
   ADevSubRev: Integer): Integer;
 function RecorderMic140FormatAdcRangeMv(ARangeIndex: Integer): string;
@@ -179,7 +184,7 @@ uses
   uRecorderMic140Thermocouple, uRecorderMic140StreamHelpers,
   uRecorderMic140DeviceConfig, uRecorderMic140Calibration,
   uRecorderMic140Protocol, uRecorderMic140Factory, uRecorderMic140Diag,
-  uRecorderHardwareLiveDevices, uRecorderHardwareTree;
+  uRecorderHardwareLiveDevices, uRecorderHardwareTree, uRecorderDebugLog;
 
 const
   CMic140StatusDisconnected = 0;
@@ -513,9 +518,20 @@ begin
   end;
 end;
 
-function RecorderMic140QueryDeviceInfo(const AHost: string; APort: Word;
-  out ADeviceSerial: Integer; out AVersionText: string;
-  out ADevSubRev: Integer): Boolean;
+function RecorderMic140FirmwareDevTypeIsSupported(ADevType: Word): Boolean;
+begin
+  case ADevType of
+    12, $412D, $413C, $413D, $413E, $413F, $4140, $4141, $4142, $4143,
+    $4144, $440C, $4417, $442F:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function RecorderMic140QueryDeviceInfoWithTimeout(const AHost: string;
+  APort: Word; out ADeviceSerial: Integer; out AVersionText: string;
+  out ADevSubRev: Integer; ATimeoutMs: Cardinal): Boolean;
 var
   lCli: TMic140v2Tcp;
   lErrorMessage: string;
@@ -525,13 +541,19 @@ begin
   ADeviceSerial := 0;
   AVersionText := '';
   ADevSubRev := 0;
-  lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
+  lCli := TMic140v2Tcp.Create(AHost, APort, ATimeoutMs);
   try
     if not lCli.TryConnect(lErrorMessage) then
       Exit;
     if lCli.ReadFirmware(lFirmware, lErrorMessage) then
     begin
-      ADeviceSerial := Mic140v2DisplaySerialFromFirmware(lFirmware, AHost);
+      if not RecorderMic140FirmwareDevTypeIsSupported(lFirmware.DevType) then
+      begin
+        RecorderDebugLog(Format('[MIC140] QueryDeviceInfo %s:%d rejected DevType=$%.4x',
+          [AHost, APort, lFirmware.DevType]));
+        Exit;
+      end;
+      ADeviceSerial := Mic140v2HardwareCalibrSerial(lFirmware);
       AVersionText := Mic140v2FirmwareVersionText(lFirmware);
       ADevSubRev := Mic140v2DevSubRevFromFirmware(lFirmware);
       Result := (ADeviceSerial > 0) or (AVersionText <> '');
@@ -539,6 +561,14 @@ begin
   finally
     lCli.Free;
   end;
+end;
+
+function RecorderMic140QueryDeviceInfo(const AHost: string; APort: Word;
+  out ADeviceSerial: Integer; out AVersionText: string;
+  out ADevSubRev: Integer): Boolean;
+begin
+  Result := RecorderMic140QueryDeviceInfoWithTimeout(AHost, APort,
+    ADeviceSerial, AVersionText, ADevSubRev, 5000);
 end;
 
 function RecorderMic140DefaultCjcChannel(AChannelIndex: Integer;
@@ -788,36 +818,27 @@ end;
 
 procedure TRecorderMic140DataSource.PublishDiagnostics(AStatusCode: Integer;
   const AStatusText: string; AForce: Boolean);
-var
-  lTag: TRecorderTag;
 begin
   if Registry = nil then
     Exit;
-  lTag := Registry.FindByName(fStatusTagName);
-  if lTag = nil then
+  if fRuntimeStatusTag = nil then
     Exit;
-  lTag.TextValue := AStatusText;
-  lTag.Description := Format('MIC-140 connection status: %s', [AStatusText]);
   if (not AForce) and (fLastStatusCode = AStatusCode) then
     Exit;
   fLastStatusCode := AStatusCode;
-  Registry.PublishValue(fStatusTagName,
+  Registry.PublishValue(fRuntimeStatusTag,
     Max(0.0, fLastPublishedBlockEndTimeSec), AStatusCode);
   Mic140LogWarning(Format('[DataSource:%s] MIC-140 status=%d %s',
     [SourceId, AStatusCode, AStatusText]));
 end;
 
 procedure TRecorderMic140DataSource.PublishBlockCounter(ABlockCount: Int64);
-var
-  lTag: TRecorderTag;
 begin
   if Registry = nil then
     Exit;
-  lTag := Registry.FindByName(fBlockCountTagName);
-  if lTag = nil then
+  if fRuntimeBlockCountTag = nil then
     Exit;
-  lTag.TextValue := IntToStr(ABlockCount);
-  Registry.PublishValue(fBlockCountTagName,
+  Registry.PublishValue(fRuntimeBlockCountTag,
     Max(0.0, fLastPublishedBlockEndTimeSec), ABlockCount);
 end;
 
@@ -852,7 +873,6 @@ begin
       else
         lValues[lJ] := 0;
     end;
-    lTag.TextValue := FormatFloat('0.###', lValues[AAux.SampleCount - 1]);
     { TIn поступает в кодах АЦП: аппаратная ГХ температурного входа должна
       быть применена до использования значения как температуры холодного спая. }
     Registry.AddBlockSamples(lTag, ATimes, lValues, AAux.SampleCount, False);
@@ -896,6 +916,9 @@ begin
     fRuntimeCjcChannels[I] := RecorderMic140ChannelCjcNumber(
       fRuntimeChannelSettings[I], I, CMic140Mic140SubRev1);
   end;
+
+  fRuntimeStatusTag := Registry.FindByName(fStatusTagName);
+  fRuntimeBlockCountTag := Registry.FindByName(fBlockCountTagName);
 
   SetLength(fRuntimeTemperatureTags, fTemperatureTagNames.Count);
   SetLength(fRuntimeTemperatureSelected, fTemperatureTagNames.Count);
@@ -1229,7 +1252,7 @@ begin
   lTag.PollFrequencyHz := 1.0;
   lTag.SourceId := SourceId;
   lTag.Description := 'MIC-140 connection status: not checked';
-  lTag.TextValue := 'not checked';
+  fRuntimeStatusTag := lTag;
 
   lTag := ARegistry.FindByName(fBlockCountTagName);
   if lTag = nil then
@@ -1240,7 +1263,7 @@ begin
   lTag.PollFrequencyHz := 1.0;
   lTag.SourceId := SourceId;
   lTag.Description := 'MIC-140 successfully received scan blocks';
-  lTag.TextValue := '0';
+  fRuntimeBlockCountTag := lTag;
 
   lNode := MIC140DefaultNodeNumber;
   if fMic <> nil then
@@ -1265,7 +1288,6 @@ begin
     lTag.SourceId := SourceId;
     lTag.Description := Format('MIC-140 temperature channel %s',
       [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
-    lTag.TextValue := '-';
   end;
 
   lChannels := fDevice.GetChannels;

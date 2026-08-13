@@ -24,3 +24,13 @@
 **/lib/x86_64-linux/
 **/lib/i386-win32/
 **/lib/i386-linux/
+
+# Local diagnostics and packet captures
+/cach/
+/errors/
+Lazarus/RecorderLnx/Tools/Mic185TrafficCapture/captures/
+Lazarus/RecorderLnx/Tools/Mic185TrafficCapture/captures.zip
+*.etl
+*.pcapng
+*_pktmon.txt
+*_packets.csv

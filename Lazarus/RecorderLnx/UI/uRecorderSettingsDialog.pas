@@ -176,6 +176,7 @@ type
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
+    fHardwareSearchPingCheck: TCheckBox;
     fCanDrag: Boolean;
     fDragStartPt: TPoint;
     fDragSelectActive: Boolean;
@@ -348,6 +349,20 @@ type
     property Succeeded: Boolean read fSucceeded;
   end;
 
+  TRecorderHardwareBroadcastSearchThread = class(TThread)
+  private
+    fFoundHosts: TStringList;
+    fTimeoutMs: Cardinal;
+    fErrorText: string;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(ATimeoutMs: Cardinal);
+    destructor Destroy; override;
+    property FoundHosts: TStringList read fFoundHosts;
+    property ErrorText: string read fErrorText;
+  end;
+
 constructor TRecorderHardwareResetTask.Create(const ASourceId, ATraceId: string;
   AStartDelayMs: Cardinal);
 begin
@@ -404,75 +419,27 @@ begin
       fErrorText);
 end;
 
-type
-  TRecorderTcpProbeThread = class(TThread)
-  private
-    fHost: string;
-    fPort: Word;
-    fTimeoutMs: Cardinal;
-    fOpen: Boolean;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(const AHost: string; APort: Word;
-      ATimeoutMs: Cardinal);
-    property Host: string read fHost;
-    property IsOpen: Boolean read fOpen;
-  end;
-
-constructor TRecorderTcpProbeThread.Create(const AHost: string; APort: Word;
-  ATimeoutMs: Cardinal);
+constructor TRecorderHardwareBroadcastSearchThread.Create(ATimeoutMs: Cardinal);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
-  fHost := AHost;
-  fPort := APort;
   fTimeoutMs := ATimeoutMs;
-  Start;
+  fFoundHosts := TStringList.Create;
 end;
 
-procedure TRecorderTcpProbeThread.Execute;
+destructor TRecorderHardwareBroadcastSearchThread.Destroy;
 begin
-  fOpen := RecorderMic140TcpProbe(fHost, fPort, fTimeoutMs);
+  fFoundHosts.Free;
+  inherited Destroy;
 end;
 
-procedure RecorderFindOpenTcpHosts(ACandidates, AFound: TStrings;
-  APort: Word; ATimeoutMs: Cardinal);
-const
-  CBatchSize = 48;
-var
-  lThreads: TList;
-  lThread: TRecorderTcpProbeThread;
-  lFirst, lLast, I: Integer;
+procedure TRecorderHardwareBroadcastSearchThread.Execute;
 begin
-  if (ACandidates = nil) or (AFound = nil) then Exit;
-  AFound.Clear;
-  lThreads := TList.Create;
   try
-    lFirst := 0;
-    while lFirst < ACandidates.Count do
-    begin
-      lLast := lFirst + CBatchSize - 1;
-      if lLast >= ACandidates.Count then lLast := ACandidates.Count - 1;
-      for I := lFirst to lLast do
-        lThreads.Add(TRecorderTcpProbeThread.Create(ACandidates[I], APort,
-          ATimeoutMs));
-      for I := 0 to lThreads.Count - 1 do
-      begin
-        lThread := TRecorderTcpProbeThread(lThreads[I]);
-        lThread.WaitFor;
-        if lThread.IsOpen and (AFound.IndexOf(lThread.Host) < 0) then
-          AFound.Add(lThread.Host);
-        lThread.Free;
-      end;
-      lThreads.Clear;
-      lFirst := lLast + 1;
-      Application.ProcessMessages;
-    end;
-  finally
-    for I := 0 to lThreads.Count - 1 do
-      TObject(lThreads[I]).Free;
-    lThreads.Free;
+    RecorderDiscoverMeraBroadcast(fFoundHosts, fTimeoutMs);
+  except
+    on E: Exception do
+      fErrorText := E.ClassName + ': ' + E.Message;
   end;
 end;
 
@@ -677,6 +644,8 @@ const
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
+var
+  lSearchButton: TBitBtn;
 begin
   inherited Create(AOwner);
   fDataSourcesChanged := False;
@@ -712,7 +681,25 @@ begin
   if FindComponent('btnDeviceSetup') is TBitBtn then
     TBitBtn(FindComponent('btnDeviceSetup')).OnClick := @HardwareEditSourceClick;
   if FindComponent('btnDeviceSearch') is TBitBtn then
-    TBitBtn(FindComponent('btnDeviceSearch')).OnClick := @HardwareSearchClick;
+  begin
+    lSearchButton := TBitBtn(FindComponent('btnDeviceSearch'));
+    lSearchButton.OnClick := @HardwareSearchClick;
+    if fHardwareSearchPingCheck = nil then
+    begin
+      fHardwareSearchPingCheck := TCheckBox.Create(Self);
+      fHardwareSearchPingCheck.Parent := lSearchButton.Parent;
+      fHardwareSearchPingCheck.Left := lSearchButton.Left + lSearchButton.Width + 8;
+      fHardwareSearchPingCheck.Top := lSearchButton.Top + 8;
+      fHardwareSearchPingCheck.Width := 64;
+      fHardwareSearchPingCheck.Height := 22;
+      fHardwareSearchPingCheck.Caption := 'Ping';
+      fHardwareSearchPingCheck.Hint := 'Enable slow TCP scan for MC-032';
+      fHardwareSearchPingCheck.ParentShowHint := False;
+      fHardwareSearchPingCheck.ShowHint := True;
+      fHardwareSearchPingCheck.Checked := False;
+      fHardwareSearchPingCheck.TabOrder := lSearchButton.TabOrder + 1;
+    end;
+  end;
 
   if fSelectedChannelsGrid <> nil then
   begin
@@ -1681,6 +1668,24 @@ var
       end;
     end;
   end;
+
+  function UniqueTagName(const ABaseName: string): string;
+  var
+    lBase: string;
+    lIndex: Integer;
+  begin
+    lBase := Trim(ABaseName);
+    if lBase = '' then
+      lBase := 'Tag';
+    Result := lBase;
+    lIndex := 2;
+    while fRecorder.TagRegistry.FindByName(Result) <> nil do
+    begin
+      Result := Format('%s_%d', [lBase, lIndex]);
+      Inc(lIndex);
+    end;
+  end;
+
   procedure CreateTagsFromGroup(AGroup: TRecorderSettingsSourceGroup);
   var
     J: Integer;
@@ -1703,7 +1708,10 @@ var
         lTagName := MeraSignalToRecorderTagName(lSignal);
         lTag := fRecorder.TagRegistry.FindByName(lTagName);
         if (lTag <> nil) and (not SameText(lTag.SourceId, lSourceId)) then
+        begin
           lTag := nil;
+          lTagName := UniqueTagName(lTagName);
+        end;
         if lTag = nil then
           lTag := fRecorder.TagRegistry.CreateTag(lTagName,
             Ceil(Max(4096, lSignal.FrequencyHz)), AGroup = rsgMeraFile);
@@ -1713,6 +1721,7 @@ var
       lTag.EnsureBufferCapacity(Ceil(Max(4096, lSignal.FrequencyHz)));
     end;
   end;
+
 begin
   if fRecorder.TagRegistry = nil then
     Exit;
@@ -2021,15 +2030,139 @@ var
   lBroadcastValue: string;
   lBroadcastKind: string;
   lBroadcastSerial: string;
+  lBroadcastThread: TRecorderHardwareBroadcastSearchThread;
   lSerial: LongWord;
   lPort: Word;
+  lUsePingSearch: Boolean;
+  lUseTcpRecovery: Boolean;
   I, lIndex: Integer;
   lSearchStartedAt, lStageStartedAt: QWord;
 
-  function IsConfigured(const ASourceId: string): Boolean;
+  function TrySourceHost(const ASourceId: string; out AHost: string): Boolean;
+  var
+    lHost: string;
+    lSourcePort: Word;
   begin
-    Result := (fRecorder <> nil) and
-      (RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, ASourceId) <> nil);
+    Result := TryParseRecorderMic140SourceId(ASourceId, lHost, lSourcePort) or
+      TryParseRecorderMic185SourceId(ASourceId, lHost, lSourcePort) or
+      TryParseRecorderMc032SourceId(ASourceId, lHost, lSourcePort);
+    if Result then
+      AHost := Trim(lHost)
+    else
+      AHost := '';
+  end;
+
+  function TryConfiguredSourceHost(const ASourceId: string;
+    out AHost: string): Boolean;
+  var
+    lHost: string;
+    lSourcePort: Word;
+  begin
+    Result := (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) and
+      RecorderMic140ResolveEndpoint(fRecorder.TagRegistry, ASourceId, lHost,
+        lSourcePort);
+    if not Result then
+      Result := TrySourceHost(ASourceId, lHost);
+    if Result then
+      AHost := Trim(lHost)
+    else
+      AHost := '';
+  end;
+
+  function TryExtractIPv4Host(const AText: string; out AHost: string): Boolean;
+  var
+    I, lStart, lEnd, lDotCount: Integer;
+    lToken: string;
+    lParts: TStringList;
+    lOctet: Integer;
+  begin
+    Result := False;
+    AHost := '';
+    I := 1;
+    while I <= Length(AText) do
+    begin
+      while (I <= Length(AText)) and
+        (not CharInSet(AText[I], ['0'..'9'])) do
+        Inc(I);
+      lStart := I;
+      while (I <= Length(AText)) and
+        CharInSet(AText[I], ['0'..'9', '.']) do
+        Inc(I);
+      lEnd := I - 1;
+      if lEnd < lStart then
+        Continue;
+      lToken := Copy(AText, lStart, lEnd - lStart + 1);
+      lDotCount := 0;
+      for lStart := 1 to Length(lToken) do
+        if lToken[lStart] = '.' then
+          Inc(lDotCount);
+      if lDotCount <> 3 then
+        Continue;
+      lParts := TStringList.Create;
+      try
+        lParts.StrictDelimiter := True;
+        lParts.Delimiter := '.';
+        lParts.DelimitedText := lToken;
+        if lParts.Count <> 4 then
+          Continue;
+        for lStart := 0 to lParts.Count - 1 do
+          if (Trim(lParts[lStart]) = '') or
+            (not TryStrToInt(Trim(lParts[lStart]), lOctet)) or
+            (lOctet < 0) or (lOctet > 255) then
+            Exit(False);
+        AHost := lToken;
+        Exit(True);
+      finally
+        lParts.Free;
+      end;
+    end;
+  end;
+
+  function SourceHostMatches(const ASourceId, AHost: string): Boolean;
+  var
+    lConfiguredHost: string;
+  begin
+    Result := TryConfiguredSourceHost(ASourceId, lConfiguredHost) and
+      SameText(lConfiguredHost, AHost);
+  end;
+
+  function HardwareTreeContainsHost(const AHost: string): Boolean;
+  var
+    I: Integer;
+    lNodeHost: string;
+    lNodeSourceId: string;
+  begin
+    Result := False;
+    if fHardwareTree = nil then
+      Exit;
+    for I := 0 to fHardwareTree.Items.Count - 1 do
+    begin
+      lNodeSourceId := RecorderHardwareTreeSourceId(fHardwareTree.Items[I]);
+      if SourceHostMatches(lNodeSourceId, AHost) then
+        Exit(True);
+      if TryExtractIPv4Host(fHardwareTree.Items[I].Text, lNodeHost) and
+        SameText(lNodeHost, AHost) then
+        Exit(True);
+    end;
+  end;
+
+  function IsConfigured(const ASourceId: string): Boolean;
+  var
+    lFoundHost: string;
+    J: Integer;
+  begin
+    Result := False;
+    if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
+      (Trim(ASourceId) = '') then
+      Exit;
+    if RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry, ASourceId) <> nil then
+      Exit(True);
+    if not TrySourceHost(ASourceId, lFoundHost) then
+      Exit;
+    for J := 0 to lConfiguredIds.Count - 1 do
+      if SourceHostMatches(lConfiguredIds[J], lFoundHost) then
+        Exit(True);
+    Result := HardwareTreeContainsHost(lFoundHost);
   end;
 
   procedure AddFound(const ADeviceType, ASourceId, ADisplayText: string;
@@ -2048,27 +2181,11 @@ var
       ASerialNumber);
   end;
 
-  function ProbeMic140(const AHost: string; APort: Word): Boolean;
-  var
-    lMic140Serial, lDevSubRev: Integer;
-    lMic140Version, lMic140Display: string;
-  begin
-    Result := RecorderMic140QueryDeviceInfo(AHost, APort, lMic140Serial,
-      lMic140Version, lDevSubRev);
-    if not Result then Exit;
-    lMic140Display := Format('MIC-140 - %s:%d', [AHost, APort]);
-    if lMic140Serial <> 0 then
-      lMic140Display := lMic140Display + Format(', SN=%d', [lMic140Serial]);
-    if lMic140Version <> '' then
-      lMic140Display := lMic140Display + ', ' + lMic140Version;
-    AddFound('MIC-140', RecorderMic140SourceId(AHost, APort),
-      lMic140Display);
-  end;
-
-  function ProbeMic185(const AHost: string; APort: Word): Boolean;
+  function ProbeMic185(const AHost: string; APort: Word;
+    ATimeoutMs: Cardinal): Boolean;
   begin
     Result := RecorderMic185ReadDeviceInfo(AHost, APort, lSerial, lVersion,
-      lError, 1000);
+      lError, ATimeoutMs);
     if not Result then Exit;
     lSourceId := RecorderMic185SourceId(AHost, APort);
     lDisplay := Format('MIC183/185 — %s:%d', [AHost, APort]);
@@ -2077,6 +2194,27 @@ var
     if lVersion <> '' then
       lDisplay := lDisplay + ', ' + lVersion;
     AddFound('MIC183/185', lSourceId, lDisplay, lSerial);
+  end;
+
+  function ProbeMic140(const AHost: string; APort: Word;
+    ATimeoutMs: Cardinal): Boolean;
+  var
+    lMic140Serial: Integer;
+    lDevSubRev: Integer;
+    lMic140Version: string;
+  begin
+    Result := RecorderMic140QueryDeviceInfoWithTimeout(AHost, APort,
+      lMic140Serial, lMic140Version, lDevSubRev, ATimeoutMs);
+    if not Result then
+      Exit;
+
+    lDisplay := Format('MIC-140 - %s:%d', [AHost, APort]);
+    if lMic140Serial <> 0 then
+      lDisplay := lDisplay + Format(', SN=%d', [lMic140Serial]);
+    if lMic140Version <> '' then
+      lDisplay := lDisplay + ', ' + lMic140Version;
+    AddFound('MIC-140', RecorderMic140SourceId(AHost, APort), lDisplay,
+      LongWord(lMic140Serial));
   end;
 
   function ProbeMc032(const AHost: string; APort: Word;
@@ -2092,6 +2230,10 @@ var
   end;
 begin
   lSearchStartedAt := GetTickCount64;
+  RecorderSetNetworkDebugLogFile(ExtractFilePath(ParamStr(0)) +
+    'hardware-search-ui.log');
+  lUsePingSearch := (fHardwareSearchPingCheck <> nil) and
+    fHardwareSearchPingCheck.Checked;
   { Автопоиск должен использовать текущее значение списка, даже если
     пользователь ещё не нажал «Применить». }
   if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
@@ -2121,12 +2263,24 @@ begin
     try
       { Штатные broadcast-ответы уже содержат тип прибора. Такие устройства
         добавляем сразу и повторный TestLink для них не выполняем. }
-      { Оригинальный MebiusDAQ EthernetBus ждёт ответы 5000 мс. MIC185 на
-        стенде не успевает ответить за прежние 1400 мс. }
+      { Обычная кнопка должна оставаться быстрой: ищем MIC по broadcast.
+        Медленный ARP/TCP-проход включается только галочкой Ping. }
       lStageStartedAt := GetTickCount64;
-      RecorderDiscoverMeraBroadcast(lBroadcastHosts, 5200);
+      lBroadcastThread := TRecorderHardwareBroadcastSearchThread.Create(1800);
+      try
+        lBroadcastThread.Start;
+        lBroadcastThread.WaitFor;
+        lBroadcastHosts.Assign(lBroadcastThread.FoundHosts);
+        if lBroadcastThread.ErrorText <> '' then
+          RecorderDebugLog('[HardwareSearch] broadcast thread error: ' +
+            lBroadcastThread.ErrorText);
+      finally
+        lBroadcastThread.Free;
+      end;
       RecorderDebugLog(Format('[HardwareSearch] broadcast: %d device(s), %d ms',
         [lBroadcastHosts.Count, GetTickCount64 - lStageStartedAt]));
+      if lBroadcastHosts.Count = 0 then
+        RecorderDebugLog('[HardwareSearch] broadcast found no MIC devices; external helper is not used by UI');
       for I := 0 to lBroadcastHosts.Count - 1 do
       begin
         lHost := lBroadcastHosts.Names[I];
@@ -2141,26 +2295,32 @@ begin
         if lBroadcastSerial <> '' then
           lDisplay := lDisplay + ', SN=' + lBroadcastSerial;
         if SameText(lBroadcastKind, 'MIC-140') then
-          AddFound('MIC-140', RecorderMic140SourceId(lHost, 4000), lDisplay)
+          AddFound('MIC-140', RecorderMic140SourceId(lHost, 4000), lDisplay,
+            LongWord(StrToIntDef(lBroadcastSerial, 0)))
         else if SameText(lBroadcastKind, 'MIC183/185') then
           AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay,
             LongWord(StrToIntDef(lBroadcastSerial, 0)));
       end;
 
-      for I := 0 to lConfiguredIds.Count - 1 do
-        if TryParseRecorderMic185SourceId(lConfiguredIds[I], lHost, lPort) then
-          lCandidateHosts.Add(lHost);
-      for I := 0 to lConfiguredIds.Count - 1 do
-        if TryParseRecorderMic140SourceId(lConfiguredIds[I], lHost, lPort) then
-          lCandidateHosts.Add(lHost);
-      for I := 0 to lConfiguredIds.Count - 1 do
-        if TryParseRecorderMc032SourceId(lConfiguredIds[I], lHost, lPort) then
-          lCandidateHosts.Add(lHost);
+      lUseTcpRecovery := lUsePingSearch;
+      if lUsePingSearch then
+        RecorderDebugLog('[HardwareSearch] Ping scan enabled; ARP/TCP probes will run')
+      else
+        RecorderDebugLog('[HardwareSearch] ARP/TCP scan skipped: Ping is off');
+
+      lCandidateHosts.Clear;
+      lOpenHosts.Clear;
+      if lUsePingSearch then
+        for I := 0 to lConfiguredIds.Count - 1 do
+          if TryParseRecorderMc032SourceId(lConfiguredIds[I], lHost, lPort) then
+            lCandidateHosts.Add(lHost);
 
       { Резервный поиск использует настоящую маску выбранного адаптера.
         TCP-порт проверяется пакетами потоков; тяжелый протокольный TestLink
         выполняется только для узлов, у которых порт 4000 действительно открыт. }
-      RecorderEnumerateDiscoveryIPv4(lFoundHosts, 65534);
+      if lUseTcpRecovery then
+      begin
+      RecorderEnumerateArpIPv4(lFoundHosts);
       lCandidateHosts.AddStrings(lFoundHosts);
       for I := 0 to lBroadcastIps.Count - 1 do
       begin
@@ -2168,9 +2328,8 @@ begin
         if lIndex >= 0 then lCandidateHosts.Delete(lIndex);
       end;
       lStageStartedAt := GetTickCount64;
-      RecorderFindOpenTcpHosts(lCandidateHosts, lOpenHosts,
-        MIC140DefaultPort, 90);
-      RecorderDebugLog(Format('[HardwareSearch] TCP scan: %d candidate(s), '+
+      RecorderFindOpenTcpHosts(lCandidateHosts, lOpenHosts, 4000, 90);
+      RecorderDebugLog(Format('[HardwareSearch] TCP/MC-032 scan: %d candidate(s), '+
         '%d open, %d ms', [lCandidateHosts.Count, lOpenHosts.Count,
         GetTickCount64 - lStageStartedAt]));
 
@@ -2178,14 +2337,26 @@ begin
       for I := 0 to lOpenHosts.Count - 1 do
       begin
         lHost := lOpenHosts[I];
-        if ProbeMic185(lHost, MIC185DefaultPort) then Continue;
-        if ProbeMic140(lHost, MIC140DefaultPort) then Continue;
-        ProbeMc032(lHost, 4000, 700);
+        if ProbeMic185(lHost, MIC185DefaultPort, 500) then
+        begin
+          Application.ProcessMessages;
+          Continue;
+        end;
+        if ProbeMic140(lHost, MIC140DefaultPort, 500) then
+        begin
+          Application.ProcessMessages;
+          Continue;
+        end;
+        if lUsePingSearch then
+          ProbeMc032(lHost, 4000, 700);
         Application.ProcessMessages;
       end;
-      RecorderDebugLog(Format('[HardwareSearch] fallback identification: '+
+      RecorderDebugLog(Format('[HardwareSearch] TCP/Ping identification: '+
         '%d host(s), %d ms', [lOpenHosts.Count,
         GetTickCount64 - lStageStartedAt]));
+      end
+      else
+        RecorderDebugLog('[HardwareSearch] ARP/TCP recovery skipped');
     finally
       Screen.Cursor := crDefault;
     end;
@@ -2225,6 +2396,10 @@ begin
         Continue;
       { Broadcast/protocol discovery already proved that this endpoint is alive.
         Do not immediately repeat TestLink while merely adding its config. }
+      if SameText(lDevice.DeviceType, 'MIC-140') and
+        (lDevice.SerialNumber <> 0) then
+        RecorderMic140SetDeviceSerialForSource(fRecorder.TagRegistry,
+          lDevice.SourceId, Integer(lDevice.SerialNumber));
       RecorderHardwareClearSourceOffline(lDevice.SourceId);
       ApplyConfiguredSourceChange('', lDevice.SourceId, False);
     end;
@@ -2411,8 +2586,16 @@ begin
       RecorderMic140RekeySourceId(fRecorder.TagRegistry, AOldSourceId, ANewSourceId);
     lConfig := FindRecorderMic140DeviceConfig(fRecorder.TagRegistry, ANewSourceId);
     if lConfig <> nil then
+    begin
+      if Trim(lConfig.Host) = '' then
+        lConfig.Host := lHost;
+      if lConfig.Port = 0 then
+        lConfig.Port := lPort;
       fSourceProbe.BuildMic140(ANewSourceId, lConfig.ChannelCount,
         lConfig.SelectedChannels, lConfig.ChannelSettings, lConfig.DeviceSerial);
+    end
+    else
+      fSourceProbe.BuildMic140(ANewSourceId, MIC140DefaultChannelCount, nil, []);
     RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry, ANewSourceId,
       'MIC-140', 0);
   end

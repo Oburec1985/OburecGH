@@ -3343,7 +3343,7 @@ end;
 
 procedure TMainForm.WarmupHardwareNetwork;
 const
-  CNetworkWarmupTimeoutMs = 1800;
+  CNetworkWarmupTimeoutMs = 3000;
 var
   lFoundDevices: TStringList;
   lStartedAt: QWord;

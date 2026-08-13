@@ -1,0 +1,1278 @@
+2026-08-13 13:31:41.678 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:31:41.678 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:31:41.678 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:31:41.679 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:31:41.679 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:31:46.879 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 13:38:51.394 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:38:51.398 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:38:51.402 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:38:51.408 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:38:51.412 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:38:51.416 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:38:51.420 [HardwareSearch] ignored modern broadcast: host=192.168.9.151 type=$20A0000 bytes=104
+2026-08-13 13:38:51.424 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:38:51.429 [HardwareSearch] ignored modern broadcast: host=192.168.9.155 type=$20A0000 bytes=104
+2026-08-13 13:38:51.432 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:38:51.437 [HardwareSearch] ignored modern broadcast: host=192.168.9.148 type=$20A0000 bytes=104
+2026-08-13 13:38:51.441 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:38:51.445 [HardwareSearch] ignored modern broadcast: host=192.168.9.152 type=$20A0000 bytes=104
+2026-08-13 13:38:51.449 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:38:51.453 [HardwareSearch] ignored modern broadcast: host=192.168.9.149 type=$20A0000 bytes=104
+2026-08-13 13:38:51.457 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:38:51.461 [HardwareSearch] ignored modern broadcast: host=192.168.9.164 type=$20A0000 bytes=104
+2026-08-13 13:38:51.465 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:38:51.470 [HardwareSearch] ignored modern broadcast: host=192.168.9.147 type=$20A0000 bytes=104
+2026-08-13 13:38:51.474 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:38:51.478 [HardwareSearch] ignored modern broadcast: host=192.168.9.161 type=$20A0000 bytes=104
+2026-08-13 13:38:51.482 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:38:51.486 [HardwareSearch] ignored modern broadcast: host=192.168.9.156 type=$20A0000 bytes=104
+2026-08-13 13:38:51.491 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:38:51.496 [HardwareSearch] ignored modern broadcast: host=192.168.9.158 type=$20A0000 bytes=104
+2026-08-13 13:38:51.499 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:38:51.505 [HardwareSearch] ignored modern broadcast: host=192.168.9.159 type=$20A0000 bytes=104
+2026-08-13 13:38:51.509 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:38:51.513 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:38:51.517 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:38:51.522 [HardwareSearch] ignored modern broadcast: host=192.168.9.155 type=$20A0000 bytes=104
+2026-08-13 13:38:51.526 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:38:51.530 [HardwareSearch] ignored modern broadcast: host=192.168.9.151 type=$20A0000 bytes=104
+2026-08-13 13:38:51.535 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:38:51.540 [HardwareSearch] ignored modern broadcast: host=192.168.9.148 type=$20A0000 bytes=104
+2026-08-13 13:38:51.543 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:38:51.547 [HardwareSearch] ignored modern broadcast: host=192.168.9.152 type=$20A0000 bytes=104
+2026-08-13 13:38:51.552 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:38:51.557 [HardwareSearch] ignored modern broadcast: host=192.168.9.147 type=$20A0000 bytes=104
+2026-08-13 13:38:51.561 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:38:51.565 [HardwareSearch] ignored modern broadcast: host=192.168.9.158 type=$20A0000 bytes=104
+2026-08-13 13:38:51.569 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:38:51.574 [HardwareSearch] ignored modern broadcast: host=192.168.9.161 type=$20A0000 bytes=104
+2026-08-13 13:38:51.578 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:38:51.582 [HardwareSearch] ignored modern broadcast: host=192.168.9.159 type=$20A0000 bytes=104
+2026-08-13 13:38:51.587 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:38:51.591 [HardwareSearch] ignored modern broadcast: host=192.168.9.164 type=$20A0000 bytes=104
+2026-08-13 13:38:51.595 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:38:51.599 [HardwareSearch] ignored modern broadcast: host=192.168.9.149 type=$20A0000 bytes=104
+2026-08-13 13:38:51.604 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:38:51.608 [HardwareSearch] ignored modern broadcast: host=192.168.9.156 type=$20A0000 bytes=104
+2026-08-13 13:38:51.612 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:38:51.617 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:38:51.621 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:38:51.626 [HardwareSearch] ignored legacy broadcast: host=192.168.14.42 type=$4141 bytes=28
+2026-08-13 13:38:51.630 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:38:51.634 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:38:51.638 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:38:51.643 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:38:51.647 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:38:51.651 [HardwareSearch] ignored legacy broadcast: host=192.168.14.41 type=$4141 bytes=28
+2026-08-13 13:38:51.656 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:38:51.660 [HardwareSearch] ignored legacy broadcast: host=192.168.14.30 type=$4141 bytes=28
+2026-08-13 13:38:51.664 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:38:51.670 [HardwareSearch] ignored legacy broadcast: host=192.168.14.40 type=$4141 bytes=28
+2026-08-13 13:38:51.674 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:38:51.678 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:38:51.682 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:38:51.686 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:38:51.691 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:38:51.695 [HardwareSearch] ignored legacy broadcast: host=192.168.14.42 type=$4141 bytes=28
+2026-08-13 13:38:51.699 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:38:51.703 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:38:51.707 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:38:51.712 [HardwareSearch] ignored legacy broadcast: host=192.168.14.40 type=$4141 bytes=28
+2026-08-13 13:38:51.716 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:38:51.720 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:38:51.725 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:38:51.728 [HardwareSearch] ignored legacy broadcast: host=192.168.14.41 type=$4141 bytes=28
+2026-08-13 13:38:51.733 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:38:51.737 [HardwareSearch] ignored legacy broadcast: host=192.168.14.30 type=$4141 bytes=28
+2026-08-13 13:38:51.741 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:38:51.746 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:38:51.750 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:38:51.756 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:38:52.229 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:38:52.235 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:38:56.616 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 13:38:56.624 [HardwareSearch] ARP candidates: 42 bind="192.168.3.65"
+2026-08-13 13:42:23.467 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:42:23.471 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:42:23.475 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:42:23.479 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:42:23.484 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:42:23.487 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:42:23.491 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:42:23.495 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:42:23.498 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:42:23.503 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:42:23.507 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:42:23.510 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:42:23.515 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:42:23.518 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:42:23.522 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:42:23.527 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:42:23.530 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:42:23.534 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:42:23.538 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:42:23.542 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:42:23.547 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:42:23.550 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:42:23.554 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:42:23.559 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:42:23.563 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:42:23.568 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:42:23.571 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:42:23.576 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:42:23.580 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:42:23.583 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:42:23.588 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:42:23.592 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:42:23.595 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:42:23.600 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:42:23.604 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:42:23.608 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:42:23.612 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:42:23.616 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:42:23.620 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:42:23.624 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:42:23.628 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:42:23.632 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:42:23.636 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:42:23.640 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:42:23.644 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:42:23.648 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:42:23.652 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:42:23.656 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:42:23.660 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:42:23.664 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:42:23.668 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:42:23.672 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:42:23.675 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:42:23.680 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:42:23.684 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:42:24.292 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:42:24.303 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:42:25.179 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 13:42:25.186 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 13:42:33.420 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:42:33.421 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:42:33.421 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:42:33.421 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:42:33.421 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:42:34.632 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 13:42:34.638 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 13:44:04.285 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:44:04.291 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:44:04.295 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:44:04.300 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:44:04.303 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:44:04.307 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:44:04.310 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:44:04.315 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:44:04.320 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:44:04.323 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:44:04.328 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:44:04.331 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:44:04.335 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:44:04.340 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:44:04.344 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:44:04.348 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:44:04.351 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:44:04.356 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:44:04.360 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:44:04.364 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:44:04.368 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:44:04.372 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:44:04.376 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:44:04.380 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:44:04.384 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:44:04.388 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:44:04.394 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:44:04.397 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:44:04.402 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:44:04.406 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:44:04.410 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:44:04.414 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:44:04.418 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:44:04.421 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:44:04.425 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:44:04.429 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:44:04.434 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:44:04.438 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:44:04.442 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:44:04.446 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:44:04.450 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:44:04.455 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:44:04.459 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:44:04.462 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:44:04.467 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:44:04.471 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:44:04.475 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:44:04.479 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:44:04.484 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:44:04.488 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:44:04.492 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:44:04.495 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:44:04.500 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:44:04.504 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:44:04.508 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:44:05.307 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:44:05.318 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:44:05.335 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:44:05.338 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:44:05.502 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 13:44:05.514 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 13:45:35.432 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:45:35.432 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:45:35.432 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:45:35.432 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:45:35.432 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:45:40.626 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 13:45:40.636 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 13:45:59.049 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:45:59.054 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:45:59.058 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:45:59.065 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:45:59.069 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:45:59.073 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:45:59.077 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:45:59.080 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:45:59.084 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:45:59.089 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:45:59.093 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:45:59.097 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:45:59.100 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:45:59.104 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:45:59.108 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:45:59.112 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:45:59.116 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:45:59.120 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:45:59.123 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:45:59.128 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:45:59.131 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:45:59.135 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:45:59.139 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:45:59.143 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:45:59.147 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:45:59.151 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:45:59.155 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:45:59.159 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:45:59.163 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:45:59.167 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:45:59.171 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:45:59.175 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:45:59.179 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:45:59.183 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:45:59.187 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:45:59.191 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:45:59.195 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:45:59.200 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:45:59.204 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:45:59.208 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:45:59.212 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:45:59.215 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:45:59.220 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:45:59.224 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:45:59.227 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:45:59.232 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:45:59.235 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:45:59.240 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:45:59.244 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:45:59.247 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:45:59.250 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:45:59.255 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:45:59.259 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:45:59.263 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:45:59.266 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:45:59.478 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:45:59.492 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:45:59.515 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:45:59.522 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:46:00.721 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 13:46:00.727 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 13:50:21.673 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 13:50:21.678 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 13:50:21.682 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 13:50:21.687 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 13:50:21.691 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 13:50:21.695 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:50:21.699 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:50:21.702 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:50:21.706 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:50:21.710 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:50:21.714 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:50:21.719 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:50:21.722 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:50:21.727 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:50:21.731 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:50:21.735 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:50:21.738 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:50:21.744 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:50:21.747 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 13:50:21.752 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 13:50:21.755 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 13:50:21.759 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 13:50:21.763 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 13:50:21.767 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 13:50:21.771 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 13:50:21.775 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 13:50:21.779 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 13:50:21.784 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 13:50:21.788 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 13:50:21.792 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 13:50:21.797 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 13:50:21.800 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:50:21.805 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:50:21.808 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:50:21.812 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:50:21.817 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:50:21.821 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:50:21.824 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:50:21.829 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:50:21.833 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:50:21.837 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:50:21.841 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:50:21.846 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:50:21.849 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 13:50:21.853 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 13:50:21.858 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 13:50:21.862 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 13:50:21.865 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 13:50:21.871 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 13:50:21.874 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 13:50:21.878 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 13:50:21.882 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 13:50:21.886 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 13:50:21.890 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 13:50:21.894 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 13:50:22.293 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 13:50:22.306 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 13:50:22.889 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 13:50:22.894 [HardwareSearch] ARP candidates: 40 bind="192.168.3.65"
+2026-08-13 14:12:55.237 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 14:12:55.242 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 14:12:55.247 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 14:12:55.251 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 14:12:55.256 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 14:12:55.260 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 14:12:55.264 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 14:12:55.268 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 14:12:55.272 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 14:12:55.277 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 14:12:55.281 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 14:12:55.285 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 14:12:55.289 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 14:12:55.294 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 14:12:55.299 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 14:12:55.303 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 14:12:55.307 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 14:12:55.311 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 14:12:55.315 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 14:12:55.319 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 14:12:55.323 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 14:12:55.327 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 14:12:55.331 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 14:12:55.336 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 14:12:55.341 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 14:12:55.345 [HardwareSearch] received 28 byte(s) from 192.168.13.221
+2026-08-13 14:12:55.350 [HardwareSearch] ignored legacy broadcast: host=192.168.13.221 type=$412C bytes=28
+2026-08-13 14:12:55.354 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 14:12:55.358 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 14:12:55.362 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 14:12:55.367 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 14:12:55.370 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 14:12:55.375 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 14:12:55.378 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 14:12:55.383 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 14:12:55.389 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 14:12:55.393 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 14:12:55.398 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 14:12:55.402 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 14:12:55.406 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 14:12:55.410 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 14:12:55.415 [HardwareSearch] received 28 byte(s) from 192.168.13.221
+2026-08-13 14:12:55.419 [HardwareSearch] ignored legacy broadcast: host=192.168.13.221 type=$412C bytes=28
+2026-08-13 14:12:55.423 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 14:12:55.427 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 14:12:55.432 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 14:12:55.437 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 14:12:55.748 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 14:12:55.759 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$21F0000 bytes=104
+2026-08-13 14:12:56.460 [HardwareSearch] discovery finished: 7 device(s)
+2026-08-13 14:12:56.469 [HardwareSearch] ARP candidates: 45 bind="192.168.3.65"
+2026-08-13 14:13:34.103 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 14:13:34.103 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 14:13:34.103 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 14:13:34.103 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 14:13:34.103 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 14:13:35.298 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 14:13:35.306 [HardwareSearch] ARP candidates: 45 bind="192.168.3.65"
+2026-08-13 15:45:51.871 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 15:45:51.875 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 15:45:51.880 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 15:45:51.885 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 15:45:51.889 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 15:45:51.893 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 15:45:51.896 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:45:51.901 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 15:45:51.905 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:45:51.909 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 15:45:51.913 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:45:51.917 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 15:45:51.921 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:45:51.925 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:45:51.929 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 15:45:51.934 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:45:51.938 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 15:45:51.942 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:45:51.946 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:45:51.950 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:45:51.955 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:45:51.959 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:45:51.964 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:45:51.969 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:45:51.973 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:45:51.977 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:45:51.981 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:45:51.985 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:45:51.990 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:45:51.994 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:45:51.998 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:45:52.002 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:45:52.006 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:45:52.011 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:45:52.015 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:45:52.019 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:45:52.023 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:45:52.028 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:45:52.031 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:45:52.036 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:45:52.040 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:45:52.044 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:45:52.049 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:45:52.053 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:45:52.057 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:45:53.574 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 15:45:53.580 [HardwareSearch] ARP candidates: 102 bind="192.168.3.65"
+2026-08-13 15:48:54.045 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5200 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 15:48:54.050 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 15:48:54.053 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 15:48:54.059 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 15:48:54.062 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 15:48:54.067 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 15:48:54.070 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 15:48:54.074 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 15:48:54.078 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 15:48:54.082 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 15:48:54.087 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 15:48:54.091 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:48:54.094 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 15:48:54.099 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 15:48:54.103 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:48:54.107 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:48:54.111 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 15:48:54.114 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 15:48:54.119 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 15:48:54.123 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 15:48:54.126 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 15:48:54.131 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 15:48:54.134 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 15:48:54.139 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:48:54.143 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:48:54.147 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 15:48:54.151 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:48:54.156 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:48:54.160 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:48:54.164 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:48:54.168 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:48:54.172 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:48:54.177 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:48:54.180 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:48:54.185 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:48:54.189 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:48:54.193 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:48:54.197 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:48:54.202 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:48:54.205 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:48:54.210 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:48:54.214 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:48:54.218 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:48:54.222 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:48:54.226 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:48:54.230 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:48:54.234 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:48:54.238 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:48:54.243 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:48:54.247 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:48:54.251 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:48:54.255 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:48:54.259 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:48:54.264 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:48:54.267 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:48:55.685 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 15:48:55.691 [HardwareSearch] ARP candidates: 99 bind="192.168.3.65"
+2026-08-13 15:56:31.641 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1800 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 15:56:31.645 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 15:56:31.650 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 15:56:31.654 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 15:56:31.658 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 15:56:31.661 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 15:56:31.666 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 15:56:31.670 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 15:56:31.673 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 15:56:31.678 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 15:56:31.682 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:56:31.686 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:56:31.690 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:56:31.694 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 15:56:31.697 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 15:56:31.703 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 15:56:31.707 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 15:56:31.710 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 15:56:31.715 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 15:56:31.719 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 15:56:31.724 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 15:56:31.728 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 15:56:31.732 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 15:56:31.737 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 15:56:31.740 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 15:56:31.745 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:56:31.749 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:56:31.753 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:56:31.757 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:56:31.761 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:56:31.765 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:56:31.771 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:56:31.775 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:56:31.780 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:56:31.784 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:56:31.789 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:56:31.794 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:56:31.797 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:56:31.801 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:56:31.806 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 15:56:31.810 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 15:56:31.815 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 15:56:31.819 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 15:56:31.824 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 15:56:31.828 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 15:56:31.832 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 15:56:31.837 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 15:56:31.841 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 15:56:31.846 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 15:56:31.850 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 15:56:31.853 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 15:56:31.857 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 15:56:31.862 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 15:56:33.268 [HardwareSearch] discovery finished: 12 device(s)
+2026-08-13 15:56:33.274 [HardwareSearch] ARP candidates: 99 bind="192.168.3.65"
+2026-08-13 16:02:28.101 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1800 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:02:28.105 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:02:28.111 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:02:28.119 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:02:28.123 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:02:28.127 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:02:28.131 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:02:28.134 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 16:02:28.139 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 16:02:28.142 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:02:28.146 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:02:28.150 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:02:28.156 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:02:28.160 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:02:28.165 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:02:28.169 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:02:28.174 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:02:28.178 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:02:28.182 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:02:28.188 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:02:28.192 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:02:28.197 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:02:28.201 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:02:28.205 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:02:28.209 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:02:29.721 [HardwareSearch] discovery finished: 12 device(s)
+2026-08-13 16:02:29.726 [HardwareSearch] ARP candidates: 100 bind="192.168.3.65"
+2026-08-13 16:07:34.506 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1800 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:07:34.506 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:07:34.507 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:07:36.316 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:07:36.321 [HardwareSearch] ARP candidates: 101 bind="192.168.3.65"
+2026-08-13 16:10:10.701 [HardwareSearch] discovery start bind="" directed=255.255.255.255 timeout=1800 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:10:10.705 [HardwareSearch] original-style sent 37 byte(s) from 127.0.0.1:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.705 [HardwareSearch] original-style sent 14 byte(s) from 127.0.0.1:4001 to 255.255.255.255:4001
+2026-08-13 16:10:10.705 [HardwareSearch] original-style sent 37 byte(s) from 172.16.0.1:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.705 [HardwareSearch] original-style sent 14 byte(s) from 172.16.0.1:4001 to 255.255.255.255:4001
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 37 byte(s) from 192.168.101.244:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 14 byte(s) from 192.168.101.244:4001 to 255.255.255.255:4001
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 37 byte(s) from 192.168.112.1:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 14 byte(s) from 192.168.112.1:4001 to 255.255.255.255:4001
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 37 byte(s) from 192.168.183.1:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 14 byte(s) from 192.168.183.1:4001 to 255.255.255.255:4001
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:10:10.706 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:10:12.525 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:10:12.530 [HardwareSearch] ARP candidates: 104 bind=""
+2026-08-13 16:10:28.241 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=1800 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:10:28.246 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:10:28.250 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:10:28.256 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:10:28.260 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 16:10:28.263 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:10:28.268 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 16:10:28.272 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:10:28.276 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:10:28.279 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:10:28.284 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:10:28.288 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:10:28.292 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:10:28.296 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:10:28.301 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:10:28.304 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:10:28.309 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:10:28.312 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:10:28.317 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:10:28.321 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:10:28.324 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:10:28.329 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:10:28.332 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:10:28.337 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:10:28.341 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:10:28.346 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:10:28.350 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:10:29.864 [HardwareSearch] discovery finished: 12 device(s)
+2026-08-13 16:10:29.872 [HardwareSearch] ARP candidates: 102 bind="192.168.3.65"
+2026-08-13 16:19:45.326 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:19:45.330 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:19:45.335 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:19:45.343 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:19:45.346 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:19:45.350 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:19:45.354 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:19:45.357 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 16:19:45.362 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:19:45.365 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:19:45.369 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 16:19:45.373 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:19:45.377 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:19:45.382 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:19:45.386 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:19:45.390 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:19:45.394 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:19:45.397 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:19:45.401 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:19:45.406 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:19:45.409 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:19:45.414 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:19:45.417 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:19:45.421 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:19:45.427 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:19:45.430 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:19:45.435 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:19:46.954 [HardwareSearch] discovery finished: 12 device(s)
+2026-08-13 16:19:46.961 [HardwareSearch] ARP candidates: 103 bind="192.168.3.65"
+2026-08-13 16:24:24.336 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 modernSend=0 legacySend=0
+2026-08-13 16:24:24.340 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:24:24.344 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:24:24.349 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:24:24.354 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:24:24.358 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:24:24.361 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:24:24.366 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:24:24.370 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:24:24.375 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:24:24.378 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:24:24.382 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:24:24.386 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:24:24.390 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:24:24.393 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:24:24.398 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:24:24.402 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:24:24.406 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:24:24.411 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:24:24.414 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:24:24.419 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:24:24.423 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:24:26.042 [HardwareSearch] discovery finished: 7 device(s)
+2026-08-13 16:24:26.047 [HardwareSearch] ARP candidates: 103 bind="192.168.3.65"
+2026-08-13 16:32:39.712 [HardwareSearch] discovery start bind="192.168.3.65" timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:32:39.713 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:32:39.713 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:32:44.717 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:32:44.722 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:33:06.439 [HardwareSearch] discovery start bind="" timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:33:06.443 [HardwareSearch] original-style sent 37 byte(s) from 127.0.0.1:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.443 [HardwareSearch] original-style sent 14 byte(s) from 127.0.0.1:4001 to 255.255.255.255:4001
+2026-08-13 16:33:06.443 [HardwareSearch] original-style sent 37 byte(s) from 172.16.0.1:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.444 [HardwareSearch] original-style sent 14 byte(s) from 172.16.0.1:4001 to 255.255.255.255:4001
+2026-08-13 16:33:06.444 [HardwareSearch] original-style sent 37 byte(s) from 192.168.101.244:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.444 [HardwareSearch] original-style sent 14 byte(s) from 192.168.101.244:4001 to 255.255.255.255:4001
+2026-08-13 16:33:06.444 [HardwareSearch] original-style sent 37 byte(s) from 192.168.112.1:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.444 [HardwareSearch] original-style sent 14 byte(s) from 192.168.112.1:4001 to 255.255.255.255:4001
+2026-08-13 16:33:06.445 [HardwareSearch] original-style sent 37 byte(s) from 192.168.183.1:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.445 [HardwareSearch] original-style sent 14 byte(s) from 192.168.183.1:4001 to 255.255.255.255:4001
+2026-08-13 16:33:06.445 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:33:06.445 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:33:11.439 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:33:11.442 [HardwareSearch] ARP candidates: 107 bind=""
+2026-08-13 16:35:49.099 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 16:35:49.099 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 16:35:49.099 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 16:35:49.099 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 16:35:49.099 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 16:35:54.110 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:35:54.124 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:36:16.949 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 modernSend=1 legacySend=1
+2026-08-13 16:36:16.949 [HardwareSearch] sent 37 byte(s) to 255.255.255.255:4400
+2026-08-13 16:36:16.949 [HardwareSearch] sent 14 byte(s) to 255.255.255.255:4001
+2026-08-13 16:36:16.950 [HardwareSearch] sent 37 byte(s) to 192.168.15.255:4400
+2026-08-13 16:36:16.950 [HardwareSearch] sent 14 byte(s) to 192.168.15.255:4001
+2026-08-13 16:36:21.944 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:36:21.951 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:36:49.154 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:36:49.154 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:36:49.154 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:36:54.155 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 16:36:54.160 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:37:10.177 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:37:10.183 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:37:10.188 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:37:10.196 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:37:10.200 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:37:10.205 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:37:10.209 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:37:10.212 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:37:10.217 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:37:10.221 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:37:10.225 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:37:10.230 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:37:10.235 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:37:10.239 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:37:10.242 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:37:10.246 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:37:10.251 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:37:10.254 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:37:10.259 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:37:10.263 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:37:10.267 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:37:10.271 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:37:10.276 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:37:10.279 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:37:10.284 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:37:11.815 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 16:37:11.820 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:40:04.764 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:40:04.768 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:40:04.773 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:40:04.778 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:40:04.781 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:40:04.786 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 16:40:04.789 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 16:40:04.793 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 16:40:04.797 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:40:04.801 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:40:04.805 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 16:40:04.809 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:40:04.813 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 16:40:04.820 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:40:04.824 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:40:04.828 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:40:04.832 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:40:04.836 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:40:04.841 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:40:04.845 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:40:04.849 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:40:04.854 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:40:04.858 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:40:04.863 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:40:04.867 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:40:04.871 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:40:04.875 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:40:04.879 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:40:04.884 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:40:04.889 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:40:06.398 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 16:40:06.405 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:45:26.394 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:45:26.399 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:45:26.404 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:45:26.408 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:45:26.412 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:45:26.416 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:45:26.420 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 16:45:26.424 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 16:45:26.428 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 16:45:26.432 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:45:26.436 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:45:26.440 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 16:45:26.444 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 16:45:26.448 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 16:45:26.452 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 16:45:26.457 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 16:45:26.461 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:45:26.466 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:45:26.470 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:45:26.474 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:45:26.477 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:45:26.483 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:45:26.486 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:45:26.491 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:45:26.495 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:45:26.499 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:45:26.503 [HardwareSearch] received 28 byte(s) from 192.168.13.24
+2026-08-13 16:45:26.507 [HardwareSearch] ignored legacy broadcast: host=192.168.13.24 type=$412C bytes=28
+2026-08-13 16:45:26.511 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:45:26.515 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:45:28.029 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 16:45:28.035 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:50:12.382 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:50:12.387 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:50:12.392 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:50:12.397 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 16:50:12.401 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 16:50:12.406 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:50:12.409 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 16:50:12.415 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:50:12.419 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:50:12.423 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:50:12.427 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:50:12.431 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:50:12.435 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:50:12.439 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:50:12.442 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:50:12.447 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:50:12.451 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:50:12.454 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:50:12.459 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:50:12.462 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:50:12.466 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:50:12.470 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:50:12.474 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:50:13.999 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 16:50:14.006 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 16:50:33.592 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 16:50:33.597 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 16:50:33.602 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 16:50:33.606 [HardwareSearch] received 104 byte(s) from 192.168.9.164
+2026-08-13 16:50:33.610 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 16:50:33.614 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 16:50:33.617 [HardwareSearch] received 104 byte(s) from 192.168.9.161
+2026-08-13 16:50:33.622 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 16:50:33.625 [HardwareSearch] received 104 byte(s) from 192.168.9.149
+2026-08-13 16:50:33.629 [HardwareSearch] received 104 byte(s) from 192.168.8.90
+2026-08-13 16:50:33.634 [HardwareSearch] ignored modern broadcast: host=192.168.8.90 type=$C020000 bytes=104
+2026-08-13 16:50:33.637 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 16:50:33.641 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 16:50:33.645 [HardwareSearch] received 28 byte(s) from 192.168.13.84
+2026-08-13 16:50:33.648 [HardwareSearch] ignored legacy broadcast: host=192.168.13.84 type=$412C bytes=28
+2026-08-13 16:50:33.653 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 16:50:33.656 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 16:50:33.660 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 16:50:33.664 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 16:50:33.668 [HardwareSearch] received 28 byte(s) from 192.168.13.22
+2026-08-13 16:50:33.674 [HardwareSearch] ignored legacy broadcast: host=192.168.13.22 type=$412C bytes=28
+2026-08-13 16:50:33.678 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 16:50:33.681 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 16:50:35.307 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 16:50:35.313 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 17:39:10.165 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 17:39:10.169 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 17:39:10.175 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 17:39:10.179 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 17:39:10.183 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 17:39:10.187 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 17:39:10.191 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 17:39:10.194 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 17:39:10.199 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 17:39:10.202 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 17:39:10.207 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$2250000 bytes=104
+2026-08-13 17:39:10.211 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 17:39:10.214 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 17:39:10.219 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 17:39:10.223 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 17:39:10.227 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 17:39:10.232 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 17:39:10.235 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 17:39:10.239 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 17:39:10.244 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 17:39:10.247 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 17:39:11.888 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 17:39:11.896 [HardwareSearch] ARP candidates: 173 bind="192.168.3.65"
+2026-08-13 17:44:45.244 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 17:44:45.248 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 17:44:45.253 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 17:44:45.262 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 17:44:45.266 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 17:44:45.270 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 17:44:45.274 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 17:44:45.278 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 17:44:45.281 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 17:44:45.286 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 17:44:45.290 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 17:44:45.294 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 17:44:45.299 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$2250000 bytes=104
+2026-08-13 17:44:45.303 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 17:44:45.308 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 17:44:45.312 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 17:44:45.315 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 17:44:45.320 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 17:44:45.324 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 17:44:45.328 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 17:44:45.332 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 17:44:46.959 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 17:44:46.969 [HardwareSearch] ARP candidates: 174 bind="192.168.3.65"
+2026-08-13 17:50:04.982 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 17:50:04.988 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 17:50:04.992 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 17:50:04.999 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 17:50:05.002 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 17:50:05.006 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 17:50:05.012 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 17:50:05.015 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 17:50:05.019 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 17:50:05.024 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 17:50:05.029 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 17:50:05.032 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 17:50:05.037 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$2250000 bytes=104
+2026-08-13 17:50:05.041 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 17:50:05.046 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 17:50:05.050 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 17:50:05.054 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 17:50:05.058 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 17:50:05.062 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 17:50:05.067 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 17:50:05.070 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 17:50:05.074 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 17:50:05.079 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 17:50:06.607 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 17:50:06.618 [HardwareSearch] ARP candidates: 175 bind="192.168.3.65"
+2026-08-13 17:53:44.379 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 17:53:44.385 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 17:53:44.390 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 17:53:44.397 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 17:53:44.400 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 17:53:44.404 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 17:53:44.409 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 17:53:44.412 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 17:53:44.416 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 17:53:44.420 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 17:53:44.424 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$2250000 bytes=104
+2026-08-13 17:53:44.428 [HardwareSearch] received 104 byte(s) from 192.168.8.73
+2026-08-13 17:53:44.431 [HardwareSearch] ignored modern broadcast: host=192.168.8.73 type=$C020000 bytes=104
+2026-08-13 17:53:44.435 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 17:53:44.440 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 17:53:44.444 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 17:53:44.448 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 17:53:44.452 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 17:53:44.456 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 17:53:44.461 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 17:53:44.464 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 17:53:46.088 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 17:53:46.095 [HardwareSearch] ARP candidates: 175 bind="192.168.3.65"
+2026-08-13 18:05:19.296 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 18:05:19.301 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 18:05:19.305 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 18:05:19.313 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 18:05:19.317 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 18:05:19.321 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 18:05:19.325 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 18:05:19.329 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 18:05:19.332 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 18:05:19.337 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 18:05:19.341 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 18:05:19.345 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 18:05:19.349 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 18:05:19.353 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 18:05:19.357 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 18:05:19.362 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 18:05:19.366 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 18:05:21.000 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 18:05:21.007 [HardwareSearch] ARP candidates: 176 bind="192.168.3.65"
+2026-08-13 18:13:21.302 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 18:13:21.308 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 18:13:21.313 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 18:13:21.319 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 18:13:21.324 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 18:13:21.327 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 18:13:21.331 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 18:13:21.335 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 18:13:21.339 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 18:13:21.343 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 18:13:21.347 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 18:13:21.350 [HardwareSearch] received 104 byte(s) from 192.168.10.54
+2026-08-13 18:13:21.355 [HardwareSearch] ignored modern broadcast: host=192.168.10.54 type=$2250000 bytes=104
+2026-08-13 18:13:21.359 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 18:13:21.363 [HardwareSearch] received 28 byte(s) from 192.168.13.59
+2026-08-13 18:13:21.369 [HardwareSearch] ignored legacy broadcast: host=192.168.13.59 type=$412C bytes=28
+2026-08-13 18:13:21.373 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 18:13:21.376 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 18:13:21.381 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 18:13:21.385 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 18:13:21.389 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 18:13:23.023 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 18:13:23.030 [HardwareSearch] ARP candidates: 177 bind="192.168.3.65"
+2026-08-13 18:33:36.608 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 18:33:36.611 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 18:33:36.616 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 18:33:36.624 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 18:33:36.627 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 18:33:36.632 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 18:33:36.636 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 18:33:36.640 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 18:33:36.645 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 18:33:36.649 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 18:33:36.653 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 18:33:36.658 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 18:33:36.661 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 18:33:36.665 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 18:33:36.670 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 18:33:36.673 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 18:33:36.678 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 18:33:38.308 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 18:33:38.317 [HardwareSearch] ARP candidates: 179 bind="192.168.3.65"
+2026-08-13 18:36:53.794 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 18:36:53.798 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 18:36:53.804 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 18:36:53.810 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 18:36:53.814 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 18:36:53.818 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 18:36:53.822 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 18:36:53.827 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 18:36:53.831 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 18:36:53.836 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 18:36:53.841 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 18:36:53.846 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 18:36:53.849 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 18:36:53.853 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 18:36:53.858 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 18:36:53.862 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 18:36:53.865 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 18:36:53.870 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 18:36:53.874 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 18:36:55.506 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 18:36:55.517 [HardwareSearch] ARP candidates: 182 bind="192.168.3.65"
+2026-08-13 19:01:16.815 [HardwareSearch] listener bound to 192.168.3.65:4401
+2026-08-13 19:01:16.819 [HardwareSearch] listener bound to 192.168.3.65:4002
+2026-08-13 19:01:16.823 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 19:01:16.831 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 19:01:16.834 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 19:01:16.840 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 192.168.15.255:4400
+2026-08-13 19:01:16.844 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 192.168.15.255:4001
+2026-08-13 19:01:16.848 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:01:16.852 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:01:16.855 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:01:16.860 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:01:16.864 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:01:16.869 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:01:16.874 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:01:16.877 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:01:16.881 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:01:16.886 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:01:16.889 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:01:16.893 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:01:16.897 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:01:16.901 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:01:16.905 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:01:16.909 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:01:16.913 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:01:16.918 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:01:16.921 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:01:16.924 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:01:16.929 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:01:16.933 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:01:16.938 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:01:16.941 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:01:16.945 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:01:16.950 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:01:16.954 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:01:16.957 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:01:16.962 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:01:16.966 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:01:16.970 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:01:16.975 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:01:16.979 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:01:16.983 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:01:16.987 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:01:16.992 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:01:16.995 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:01:16.999 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:01:17.004 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:01:17.008 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:01:17.012 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:01:17.017 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:01:18.532 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 19:01:18.540 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 19:02:26.748 [HardwareSearch] listener bound to 192.168.3.65:4401
+2026-08-13 19:02:26.753 [HardwareSearch] listener bound to 192.168.3.65:4002
+2026-08-13 19:02:26.757 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 19:02:26.765 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 19:02:26.770 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 19:02:26.773 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 192.168.15.255:4400
+2026-08-13 19:02:26.777 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 192.168.15.255:4001
+2026-08-13 19:02:26.782 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:02:26.785 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:02:26.789 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:02:26.793 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:02:26.797 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:02:26.802 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:02:26.806 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:02:26.810 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:02:26.814 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:02:26.818 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:02:26.822 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:02:26.826 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:02:26.829 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:02:26.835 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:02:26.839 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:02:26.843 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:02:26.847 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:02:26.851 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:02:26.856 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:02:26.859 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:02:26.863 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:02:26.867 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:02:26.872 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:02:26.876 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:02:26.880 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:02:26.884 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:02:26.890 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:02:26.894 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:02:26.898 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:02:26.902 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:02:26.905 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:02:26.909 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:02:28.434 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 19:02:28.439 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 19:08:23.483 [HardwareSearch] listener bound to 192.168.3.65:4401
+2026-08-13 19:08:23.491 [HardwareSearch] listener bound to 192.168.3.65:4002
+2026-08-13 19:08:23.495 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 19:08:23.501 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 19:08:23.506 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 19:08:23.510 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 192.168.15.255:4400
+2026-08-13 19:08:23.515 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 192.168.15.255:4001
+2026-08-13 19:08:23.520 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:08:23.524 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:08:23.528 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:08:23.532 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:08:23.537 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:08:23.542 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:08:23.546 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:08:23.550 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:08:23.554 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:08:23.558 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:08:23.563 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:08:23.567 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:08:23.572 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:08:23.576 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:08:23.581 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:08:23.585 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:08:23.589 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:08:23.593 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:08:23.597 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:08:23.601 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:08:23.605 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:08:23.609 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:08:23.614 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:08:23.619 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:08:23.623 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:08:23.627 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:08:23.631 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:08:23.635 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:08:23.640 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:08:23.644 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:08:23.648 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:08:23.653 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:08:25.176 [HardwareSearch] discovery finished: 10 device(s)
+2026-08-13 19:08:25.181 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 19:11:34.488 [HardwareSearch] listener bound to 192.168.3.65:4401
+2026-08-13 19:11:34.493 [HardwareSearch] listener bound to 192.168.3.65:4002
+2026-08-13 19:11:34.497 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 19:11:34.507 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 19:11:34.511 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 19:11:34.516 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 192.168.15.255:4400
+2026-08-13 19:11:34.521 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 192.168.15.255:4001
+2026-08-13 19:11:39.525 [HardwareSearch] discovery finished: 0 device(s)
+2026-08-13 19:11:39.534 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"
+2026-08-13 19:12:47.326 [HardwareSearch] listener bound to 192.168.3.65:4401
+2026-08-13 19:12:47.330 [HardwareSearch] listener bound to 192.168.3.65:4002
+2026-08-13 19:12:47.335 [HardwareSearch] discovery start bind="192.168.3.65" directed=192.168.15.255 timeout=5000 modernListen=1 legacyListen=1 sendMode=original-broadcast
+2026-08-13 19:12:47.340 [HardwareSearch] reply-socket sent 37 byte(s) from port 4401 to 255.255.255.255:4400
+2026-08-13 19:12:47.344 [HardwareSearch] reply-socket sent 14 byte(s) from port 4002 to 255.255.255.255:4001
+2026-08-13 19:12:47.348 [HardwareSearch] reply-socket sent 37 byte(s) from port 4401 to 192.168.15.255:4400
+2026-08-13 19:12:47.352 [HardwareSearch] reply-socket sent 14 byte(s) from port 4002 to 192.168.15.255:4001
+2026-08-13 19:12:47.357 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 255.255.255.255:4400
+2026-08-13 19:12:47.360 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 255.255.255.255:4001
+2026-08-13 19:12:47.364 [HardwareSearch] original-style sent 37 byte(s) from 192.168.3.65:4400 to 192.168.15.255:4400
+2026-08-13 19:12:47.370 [HardwareSearch] original-style sent 14 byte(s) from 192.168.3.65:4001 to 192.168.15.255:4001
+2026-08-13 19:12:47.374 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:12:47.378 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:12:47.383 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:12:47.387 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:12:47.391 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:12:47.395 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:12:47.399 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:12:47.403 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:12:47.407 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:12:47.411 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:12:47.416 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:12:47.420 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:12:47.424 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:12:47.428 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:12:47.432 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:12:47.436 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:12:47.440 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:12:47.444 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:12:47.448 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:12:47.452 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:12:47.457 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:12:47.461 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:12:47.465 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:12:47.470 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:12:47.475 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:12:47.478 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:12:47.482 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:12:47.486 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:12:47.490 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:12:47.495 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:12:47.499 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:12:47.504 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:12:47.508 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:12:47.511 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:12:47.516 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:12:47.520 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:12:47.525 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:12:47.528 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:12:47.533 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:12:47.537 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:12:47.541 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:12:47.545 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:12:47.549 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:12:47.553 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:12:47.558 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:12:47.561 [HardwareSearch] received 104 byte(s) from 192.168.9.151
+2026-08-13 19:12:47.565 [HardwareSearch] received 104 byte(s) from 192.168.9.152
+2026-08-13 19:12:47.570 [HardwareSearch] received 104 byte(s) from 192.168.9.147
+2026-08-13 19:12:47.574 [HardwareSearch] received 104 byte(s) from 192.168.9.155
+2026-08-13 19:12:47.578 [HardwareSearch] received 104 byte(s) from 192.168.11.235
+2026-08-13 19:12:47.582 [HardwareSearch] ignored modern broadcast: host=192.168.11.235 type=$12020000 bytes=104
+2026-08-13 19:12:47.586 [HardwareSearch] received 104 byte(s) from 192.168.9.148
+2026-08-13 19:12:47.591 [HardwareSearch] received 104 byte(s) from 192.168.9.160
+2026-08-13 19:12:47.595 [HardwareSearch] received 104 byte(s) from 192.168.9.159
+2026-08-13 19:12:47.599 [HardwareSearch] received 104 byte(s) from 192.168.9.157
+2026-08-13 19:12:47.604 [HardwareSearch] received 104 byte(s) from 192.168.9.156
+2026-08-13 19:12:47.608 [HardwareSearch] received 104 byte(s) from 192.168.9.150
+2026-08-13 19:12:47.611 [HardwareSearch] received 104 byte(s) from 192.168.9.158
+2026-08-13 19:12:47.616 [HardwareSearch] received 104 byte(s) from 192.168.11.218
+2026-08-13 19:12:47.620 [HardwareSearch] ignored modern broadcast: host=192.168.11.218 type=$12020000 bytes=104
+2026-08-13 19:12:47.625 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:12:47.629 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:12:47.633 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:12:47.638 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:12:47.641 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:12:47.645 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:12:47.650 [HardwareSearch] received 28 byte(s) from 192.168.14.42
+2026-08-13 19:12:47.654 [HardwareSearch] received 28 byte(s) from 192.168.14.41
+2026-08-13 19:12:47.659 [HardwareSearch] received 28 byte(s) from 192.168.14.40
+2026-08-13 19:12:47.663 [HardwareSearch] received 28 byte(s) from 192.168.14.30
+2026-08-13 19:12:47.667 [HardwareSearch] received 28 byte(s) from 192.168.13.223
+2026-08-13 19:12:47.672 [HardwareSearch] ignored legacy broadcast: host=192.168.13.223 type=$412C bytes=28
+2026-08-13 19:12:48.984 [HardwareSearch] discovery finished: 15 device(s)
+2026-08-13 19:12:48.991 [HardwareSearch] ARP candidates: 104 bind="192.168.3.65"

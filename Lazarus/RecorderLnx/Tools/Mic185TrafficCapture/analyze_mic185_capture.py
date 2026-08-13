@@ -25,6 +25,13 @@ IOCTLS = {
     0x00010040: "program",
 }
 
+CALL_COMMANDS = {
+    0x00020004: "get_calibration",
+    0x00020008: "get_software_version",
+    0x00020020: "reload_calibration",
+    0x00020030: "set_controller_params",
+}
+
 
 @dataclass
 class Chunk:
@@ -126,7 +133,19 @@ def classify(direction: str, packet: bytes) -> tuple[str, str, str]:
             event = "alive_response"
         elif direction == "DEV->PC":
             event += "_reply"
-        return event, name, f"to={id_to:08X};from={id_from:08X}"
+        detail = f"to={id_to:08X};from={id_from:08X}"
+        if name == "call_command" and direction == "PC->DEV" and len(body) >= 20:
+            sizes = struct.unpack_from("<I", body, 12)[0]
+            command = struct.unpack_from("<I", body, 16)[0]
+            in_size = sizes >> 16
+            out_size = sizes & 0xFFFF
+            command_name = CALL_COMMANDS.get(command, f"cmd_{command:08X}")
+            detail += f";command={command_name};in={in_size};out={out_size}"
+            if in_size and len(body) >= 20 + in_size:
+                detail += f";input={body[20:20 + in_size].hex()}"
+        elif name == "set_session" and direction == "PC->DEV" and len(body) >= 12:
+            detail += f";session={struct.unpack_from('<I', body, 8)[0]:08X}"
+        return event, name, detail
     return "mebius_service", "", f"to={id_to:08X};from={id_from:08X}"
 
 

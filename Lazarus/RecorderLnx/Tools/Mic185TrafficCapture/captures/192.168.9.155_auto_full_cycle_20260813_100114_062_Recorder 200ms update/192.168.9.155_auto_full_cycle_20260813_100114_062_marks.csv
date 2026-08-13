@@ -1,4 +1,0 @@
-﻿time,relative_ms,stage,note
-2026-08-13T10:01:16.1035143+03:00,1,993,capture,"capture started"
-2026-08-13T10:01:18.7438510+03:00,2642,33,client,"recorder; pid=16216; exe=C:\Program Files (x86)\Mera\Recorder\Recorder.exe"
-2026-08-13T10:02:31.4719404+03:00,75370,419,finish,"recorder process exited"

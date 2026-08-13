@@ -38,6 +38,8 @@ TASK ID задачи измерения: `MEASUREMENT_TASK_ID = MAKE_TASKID(0, C
 7. Приём **data-пакетов** — `id_from` = `DATA_TRANSMIT_TASK_ID` **или** `0x3E904000` (оба варианта в `PacketDispatch.cpp`).
 8. **STOP** — `IOCTL_MEASTASK_STOP`.
 
+Практическая проверка дампами от 2026-08-13: перед запуском текущей конфигурации в трафике должен быть виден `PROGRAMM_DEVICE_BIN` размером около 4 КБ. Если его нет, нельзя считать прибор переконфигурированным только по успешным `SET_SESSION_ID`, `PROGRAM` и `START`. Подробное сравнение: [COMPARISON_2026-08-13.md](../../../Tools/Mic185TrafficCapture/captures/COMPARISON_2026-08-13.md).
+
 ## IOCTL-коды (основные)
 
 ```

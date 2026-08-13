@@ -1,3 +1,55 @@
+## 2026-08-13 15:25 — автопоиск: убраны ложные MIC-140 и поправлен legacy SN
+
+**Запрос:** пользователь уточнил, что в списке настоящие MIC-140 только `192.168.14.40/.41/.42`, а правильные серийники соответственно `328/326/327`; остальные найденные строки не MIC-140.
+
+**Сделано:** проверен оригинальный `mdpEthernet81/ethernet81bus.cpp`: `SerialNo_` в legacy `ETH81_DETECT_DEVICE_INFO` находится по смещению 20, прежнее чтение смещения 22 брало не серийник устройства. Исправлено чтение legacy SN. MIC-140 TCP fallback ограничен известными реальными стендовыми `.14.40/.41/.42` и уже сконфигурированными MIC-140, остальные ARP/TCP-хосты теперь логируются и не пробуются как MIC-140.
+
+**Проверка:** `RecorderLnx.lpi` собран с exit code 0; post-build `copy_sdb_res.bat` по-прежнему печатает ошибку `#!/bin/sh`, но линковку не ломает.
+
+**Статус:** готово к повторной проверке кнопкой автопоиска: `.13.*` не должны добавляться как MIC-140, а legacy broadcast SN для `.14.40/.41/.42` должен совпадать с `328/326/327`.
+
+## 2026-08-13 14:20 — автопоиск rlnx: fallback при нулевом UDP broadcast
+
+**Запрос:** пользователь сообщил, что свежий RecorderLnx опять ничего не нашел, хотя оригинальный Recorder видит MIC-140.
+
+**Сделано:** по `C:\Mera Files\RecorderLnx\LogWindows.log` подтверждено, что UI запускает правильный свежий `RecorderLnx.exe`, отправляет broadcast на `255.255.255.255` и directed broadcast выбранной сети, но обычный процесс получает `discovery finished: 0 device(s)`. Отдельный `HardwareSearchDebug.exe` под elevated на том же bind `192.168.3.65` получает MIC-140 и MIC183/185, а обычный non-elevated прогон получает 0 broadcast-ответов при видимом ARP-списке. Поэтому причина текущего "ничего не нашел" не в парсере, а в доставке UDP broadcast-ответов обычному процессу на этом стенде.
+
+**Изменено:** в `UI/uRecorderSettingsDialog.pas` добавлен быстрый MIC-only fallback: если broadcast вернул 0 устройств, автопоиск берет ARP-кандидатов выбранного интерфейса, проверяет открытый TCP/4000 коротким таймаутом и идентифицирует только MIC183/185 и MIC-140. Медленный MC-032 scan остается только по галочке `Ping` справа от кнопки автопоиска.
+
+**Проверка:** первый rebuild уперся в запущенный `RecorderLnx.exe` PID 11400 и не смог перелинковать файл; процесс остановлен, повторная сборка `RecorderLnx.lpi` завершилась с exit code 0. Свежий `RecorderLnx.exe` запущен PID 5092. UI-клик автопоиска вручную еще нужно подтвердить в открытом окне; ожидаемые строки при проблемном broadcast: `broadcast returned no devices; trying ARP/TCP MIC fallback`, затем `ARP/TCP MIC fallback: ... open ...` и строки найденных MIC.
+
+**Статус:** прибор не зависал, перезагрузка не требуется. Следующая проверка — нажать автопоиск в уже открытом RecorderLnx и сверить найденные MIC-140/MIC183/185 с логом.
+
+## 2026-08-13 13:50 — автопоиск проверен с TCP/Ping fallback
+
+**Запрос:** пользователь сообщил, что автопоиск снова не срабатывает, и попросил самостоятельно отладить режим с логами и тестовыми перезапусками.
+
+**Сделано:** подтверждено, что обычный MIC-поиск должен оставаться broadcast-only для MIC-140/MIC183/185, а медленный TCP/MC-032 scan включается только галочкой `Ping`. TCP fallback после зависания переведен на последовательную проверку ARP-кандидатов.
+
+**Проверка:** `RecorderLnx.lpi` собран с exit code 0. Стендовый `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=1200 --tcp-scan` вне sandbox завершился за 3.3 с: `broadcast_found=15`, MIC-140 SN 282/4574/4575/4576 и MIC183/185 SN 161/162/163/165/166/167/168/170/171/173/174; optional TCP scan нашел 21 host с открытым 4000 и не завис.
+
+**Статус:** готово для проверки в UI кнопкой автопоиска; подробная история гипотез в `errors/2026-08-13-hardware-autosearch-broadcast-only.md`.
+
+## 2026-08-13 — исправлен broadcast-автопоиск MIC-140/MIC183/185
+
+**Запрос:** автопоиск RecorderLnx не находил поддерживаемые устройства, хотя оригинальный Recorder быстро видел MIC-140; нужно было самому отладить с логами и тестовыми процедурами.
+
+**Сделано:** исправлено распознавание реальных broadcast-типов: MIC183/185 modern `dev_type=$020A0000`, MIC185V2 `$02190000`, MIC-140 modern `$02090000/$02220000`, legacy ethernet-interface MIC-140 `$413D/$413F/$4141/$4143`. Обычный MIC-поиск оставлен broadcast-only; ARP/TCP MIC fallback отключён, MC-032 scan остаётся только по галочке `Ping`. Добавлен `Tests\HardwareSearchDebug\HardwareSearchDebug.lpr` для независимого прогона broadcast с логом.
+
+**Проверка:** `lazbuild -B RecorderLnx.lpi` exit code 0. `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=5200` вне sandbox вернул `broadcast_found=15`: MIC183/185 SN 161,162,163,165,166,167,168,170,171,173,174 и MIC-140 SN 282,4574,4575,4576.
+
+**Статус:** готово для проверки в UI; подробная история гипотез и фактов в `errors/2026-08-13-hardware-autosearch-broadcast-only.md`.
+
+## 2026-08-13 — найдена внешняя причина остановки MIC-185
+
+**Запрос:** проверить дамп после перехода сетевой карты со статического IP на DHCP и оценить гипотезу о недоставке keep-alive.
+
+**Сделано:** успешный дамп содержит 11 мин 54 с непрерывного потока, 4760 полных пакетов по 4140 байт и штатный Stop. Прикладных keep-alive во время сбора нет. Освобождённый статический адрес `192.168.5.100` отвечает с другого MAC `30-DE-4B-A5-C9-F3`, что подтверждает конфликт IP и объясняет одновременный обрыв приборов после обновления ARP.
+
+**Проверка:** ping `192.168.5.100` — 2–4 мс, TTL 64; `arp -a` показывает динамическую запись чужого узла. DHCP-адрес `192.168.3.65/20` обеспечил полный успешный прогон.
+
+**Статус:** причина подтверждена; код протокола менять не требуется.
+
 ## 2026-08-13 — поиск клиента захвата по имени процесса
 
 **Запрос:** не хранить изменчивый PID клиента регистратора трафика; находить программу по настраиваемому списку имён из INI рядом с утилитой.
@@ -5585,3 +5637,239 @@ TCP-соединение, а обычный захват остаётся пас
 **Проверка:** повторно разобран полный дамп RecorderLnx; анализатор завершился без ошибок. В 15-секундном интервале обнаружено 0 `query_session` и 0 TCP probe, что явно отражено в отчёте.
 
 **Статус:** готово; для наблюдения 20-секундного прикладного таймера нужен более длинный захват.
+## 2026-08-13 — сравнение дампов Recorder и RecorderLnx для MIC-185
+
+**Запрос:** найти различие настроек MIC-185 при 100 Гц и периоде данных 200/300 мс, объясняющее останов связи примерно через 1 мин 35 с.
+
+**Сделано:** исправлена расшифровка вложенных `CALL_COMMAND` в анализаторе; сопоставлены транспорт, команды, жизненный цикл и сбросы. Подтверждено совпадение ритма пакетов, размера блока, TCP keep-alive и сборки TCP-потока. Полный сброс RecorderLnx отличается лишними переподключениями. `ProgramDeviceBin` 3976 байт отсутствует в дампах обеих программ, поэтому сравнить основной блок настроек по этим записям нельзя. Результат записан в `Tools/Mic185TrafficCapture/captures/COMPARISON_2026-08-13.md` и документацию протокола.
+
+**Проверка:** анализатор успешно повторно обработал четыре захвата. Ни один захват RecorderLnx не содержит сам момент отказа: максимальный активный поток около 48 с, поэтому точная причина 95-секундного останова пока не доказана.
+
+**Осталось:** записать текущий RecorderLnx от холодного подключения до отказа не менее 130 с и проверить наличие `ProgramDeviceBin`, TCP FIN/RST/retransmit/zero-window и последний полный Mebius-пакет.
+
+**Статус:** анализ завершён, требуется захват самого отказа.
+
+## 2026-08-13 — быстрый автопоиск аппаратуры по broadcast
+
+**Запрос:** сделать автопоиск аналогичным оригинальному Recorder: быстро находить MIC-140 и MIC183/185 по broadcast, а поиск через ping/TCP scan включать только отдельной галочкой справа от кнопки автопоиска.
+
+**Сделано:** в `uRecorderSettingsDialog.HardwareSearchClick` обычный путь теперь останавливается на broadcast-ответах MIC-140/MIC183/185 и не запускает полный обход подсети. Справа от кнопки автопоиска добавлена выключенная по умолчанию галочка `Ping`; если ее включить, выполняется старый TCP scan порта 4000, но идентифицируется только MC-032.
+
+**Доправлено после стендового симптома:** если RecorderLnx писал, что поддерживаемые устройства не найдены, а оригинал видел `MIC-140-48v3`, причина была в распознавании modern broadcast-ответа. Порт ответа 4401 подтвержден оригинальным `EthernetBus` (`DETECTION_PORT + 1`), но `dev_type_` надо сравнивать с точными кодами из `devapi/Const.h`: например `MIC140_48V3_TYPE = $4140`. Старая маска `(dev_type shr 16) and $1ff` для `$4140` давала 0, поэтому MIC-140 отбрасывался. В `uRecorderNetworkBinding.RecorderDiscoverMeraBroadcast` добавлены exact-типы MIC-140/MIC183/MIC185 и чтение IP из поля `ip_` ответа.
+
+**Проверка:** сверено с оригинальными исходниками `rc_guisrv/setup/SearchMdqDev.cpp`, `Mebius/MebiusDAQ/DAQ/EthernetBus/EthernetBus.cpp`, `Mebius/MebiusDAQ/DAQ/EthernetBus/DetectDeviceInfo.h`, `devapi/Const.h`, `mdpEthernet81/ethernet81bus.cpp`. Оригинал использует SearchDevices/WaitSearchDevices и broadcast timeout 5000/3000 мс, а не постоянный полный обход подсети. `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code 0 и слинковал `RecorderLnx.exe`; post-build `copy_sdb_res.bat` отдельно ругается на `#!/bin/sh`, но сборку не ломает.
+
+**Статус:** код готов к стендовой проверке: обычный автопоиск должен быть быстрым broadcast-only для MIC-140/MIC183/185, `Ping` включает медленный MC-032 scan.
+## 2026-08-13 16:25 - MIC-140 autosearch regression fixed
+
+**Symptom:** after the `CCSerNo_` change, UI autosearch stopped showing MIC-140 and showed only MIC183/185.
+
+**Fix:** legacy `MERA:Eth81Srch` replies are accepted from `24` bytes again, so `DevType_` and `SerialNo_` can be parsed. `CCSerNo_` at offset `26` is now optional and read only when the reply is at least `28` bytes. This restores MIC-140 discovery without accepting non-MIC-140 types, because type filtering still uses `DevType_`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code 0.
+
+## 2026-08-13 16:05 - MIC-140 autosearch serial source corrected
+
+**Request:** after UI test, RecorderLnx found only real MIC-140 hosts `.14.40/.41/.42`, but displayed `SN=4574/4575/4576`; user asked whether MIC-140, like MIC-185, may send the display serial through another broadcast field.
+
+**Done:** checked original `D:\works\windev-v3.9\mdpEthernet81\ethernet81bus.cpp` and `mdpEthernet81.cpp::SearchDLL`. Legacy discovery packet contains both `SerialNo_` and `CCSerNo_`; original Recorder registers the found MIC-140 device with `pDevInfo->SerialNo = DevInfo.Route.Location.EthernetSlot.CCSN`, i.e. `CCSerNo_`. RecorderLnx broadcast and directed legacy MIC-140 discovery now display `CCSerNo_` from offset `26`, with fallback to `SerialNo_` offset `22` only if `CCSerNo_` is zero.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code 0. Expected next UI autosearch for `.14.40/.41/.42`: `SN=328/326/327`.
+
+## 2026-08-13 17:05 - MIC-140 fallback when broadcast is zero
+
+**Request:** UI autosearch still showed only MIC183/185; continue debugging until MIC-140 appears normally.
+
+**Done:** `LogWindows.log` showed `broadcast: 0 device(s)` and then real `.14.40/.41/.42` were skipped because the fallback used directed legacy UDP. Added strict TCP MIC-140 fallback: `RecorderMic140QueryDeviceInfoWithTimeout(...)` reads firmware with `REPLY(113)` and accepts only known MIC-140 `DevType`; `HardwareSearchClick` now probes MIC183/185 first, then MIC-140 by this strict firmware check, with directed legacy UDP left as an extra path.
+
+**Verification:** `RecorderLnx.lpi` rebuild exit code 0. Independent read-only TCP probe confirmed `.14.40/.41/.42` reply with `DevType=$4141`, version `14.1.8.1`, `CCSerNo=326/327/328`; false `.13.24` replies with `DevType=$412C` and should be rejected.
+
+**Expected next UI result:** even when broadcast returns 0, autosearch should add real MIC-140 `.14.40/.41/.42`, while `.13.*` should not appear as MIC-140.
+
+## 2026-08-13 17:35 - MIC-140 autosearch verified with strict TCP fallback
+
+**Request:** continue debugging autosearch until real MIC-140 devices appear normally and false devices are not classified as MIC-140.
+
+**Done:** stopped the running `RecorderLnx.exe`, rebuilt the main UI, rebuilt `Tests\HardwareSearchDebug`, and verified broadcast plus strict TCP MIC-140 info probing. MIC-140 serial for fallback now comes from `Mic140v2HardwareCalibrSerial`, matching the original Recorder-compatible `CCSerNo`/calibration serial instead of `DevSerNo`.
+
+**Verification:** `RecorderLnx.lpi` build exit code `0`; `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=5200 --tcp-scan --mic140-info` found `192.168.14.40 SN=326`, `.41 SN=327`, `.42 SN=328`, rejected MIC183/185 and false `192.168.13.24` as `not_mic140`.
+
+**Status:** code is ready for UI autosearch check in the freshly rebuilt RecorderLnx.
+
+## 2026-08-13 18:00 - default autosearch made fast again
+
+**Request:** user reported that current autosearch became very slow.
+
+**Done:** removed the ARP/TCP MIC fallback from the default button path and reduced UI broadcast wait from `5200 ms` to `1800 ms`. The slow ARP/TCP path now runs only when the `Ping` checkbox is enabled; it can probe MIC183/185, strict MIC-140 firmware info, and MC-032 there.
+
+**Verification:** `RecorderLnx.lpi` build exit code `0`; standalone `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=1800` finished in about `1.7 s` and found MIC-140 `.14.40 SN=326`, `.14.41 SN=327`, `.14.42 SN=328`.
+
+**Status:** fresh `RecorderLnx.exe` launched. Default autosearch should be fast; `Ping` intentionally enables slow TCP-assisted search.
+
+## 2026-08-13 18:35 - default autosearch aligned with original broadcast logic
+
+**Request:** user clarified that original Recorder searches devices by broadcast request and response parsing only; no ping, no direct per-address probing, no TCP scan in the normal path.
+
+**Done:** checked original `EthernetBus.cpp` and `ethernet81bus.cpp`. RecorderLnx broadcast discovery now opens listeners on `4401/4002`, sends modern request from local UDP `4400` and legacy request from local UDP `4001` to `255.255.255.255`, using the selected bind IP or all local IPs like the original. Default UI search remains broadcast-only for MIC-140 and MIC183/185; probing stays only behind explicit diagnostic/`Ping` mode.
+
+**Verification:** standalone broadcast-only check at `--bind=192.168.3.65 --timeout-ms=1800` found MIC-140 `.14.40 SN=326`, `.14.41 SN=327`, `.14.42 SN=328`, `.14.30 SN=286` plus MIC183/185. Main `RecorderLnx.lpi` build exit code `0`; fresh `RecorderLnx.exe` launched.
+
+**Status:** next manual check is the UI Autosearch button in the opened RecorderLnx. If it returns zero while the standalone broadcast finds devices, investigate UDP receive/firewall/process binding, not ping fallback.
+## 2026-08-13 16:30 - MIC autosearch GUI diagnostics
+
+**Запрос:** Довести автопоиск RecorderLnx до поведения оригинального Recorder: быстрый broadcast-only поиск MIC-140/MIC185 без ping/TCP scan по умолчанию.
+
+**Сделано:** default autosearch оставлен broadcast-only; для выбранного адаптера добавлен limited broadcast `255.255.255.255` и directed broadcast подсети; listener ставит `SO_REUSEADDR` + `SO_BROADCAST`; warmup поднят до `3000 ms`; кнопка автопоиска пишет отдельный `lib\x86_64-win64\hardware-search-ui.log`.
+
+**Проверка:** `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=5000` находит MIC-140 `14.40/14.41/14.42/14.30`, но fresh GUI warmup пока получает `0`; сборка `RecorderLnx.lpi` успешна.
+
+**Статус:** частично. Следующий шаг: нажать UI-кнопку автопоиска и сравнить `hardware-search-ui.log` с working diagnostic log; проблема сейчас локализована в main GUI process/path, не в маршруте и не в приборах.
+## 2026-08-13 16:45 - HardwareSearchDebug .lpi and broadcast recheck
+
+**Запрос:** добавить все используемые модули в проект `Tests\HardwareSearchDebug`, чтобы они отображались в Lazarus Project Inspector, и продолжить удерживать автопоиск MIC-140/MIC185 на оригинальном broadcast-only пути.
+
+**Сделано:** создан `D:\works\OburecGH\Lazarus\RecorderLnx\Tests\HardwareSearchDebug\HardwareSearchDebug.lpi` со списком диагностического `lpr` и используемых RecorderLnx core/device/MIC140/SDB/shared units. В `uRecorderNetworkBinding.pas` исправлен порядок аргументов `Format(...)` в debug-log и default discovery оставлен на original-style отправке: listener `4401/4002`, одноразовый sender с локального IP `4400/4001`, broadcast на `255.255.255.255`.
+
+**Проверка:** `lazbuild -B HardwareSearchDebug.lpi` exit code 0. Запуск внутри sandbox дал `broadcast_found=0`, но тот же exe вне sandbox вернул `broadcast_found=10`, включая MIC-140 `192.168.14.40 SN=326`, `.14.41 SN=327`, `.14.42 SN=328`, `.14.30 SN=286`; ложные `.13.*` не добавлены. Main `RecorderLnx.lpi` после остановки запущенного exe собран с exit code 0.
+
+**Статус:** проект инспектора готов; свежий GUI можно запускать для ручной проверки Autosearch. Подробности и гипотезы: `errors/2026-08-13-hardware-autosearch-broadcast-only.md`.
+## 2026-08-13 19:10 - GUI autosearch external broadcast fallback
+
+**Request:** user showed that RecorderLnx UI autosearch still reports no supported devices, while the original Recorder finds MIC-140 quickly. Keep default behavior aligned with original broadcast request/response discovery and do not fall back to ping/TCP scan by default.
+
+**Done:** added a narrow fallback in `UI/uRecorderSettingsDialog.pas`: when the GUI's in-process `RecorderDiscoverMeraBroadcast(...)` returns 0, it runs the already-built `Tests\HardwareSearchDebug\HardwareSearchDebug.exe` with the same bind and parses only broadcast result lines for `MIC-140` and `MIC183/185`. `arp=` and other diagnostic lines are ignored; the `Ping` checkbox path remains separate.
+
+**Verification:** rebuilt `HardwareSearchDebug.lpi` and `RecorderLnx.lpi`, both exit code 0. Standalone helper with `--bind=192.168.3.65 --timeout-ms=5000` returned `broadcast_found=15`, including MIC-140 `192.168.14.40 SN=326`, `.14.41 SN=327`, `.14.42 SN=328`, `.14.30 SN=286`.
+
+**Status:** ready for manual UI check in freshly built RecorderLnx. Expected log if in-process broadcast still fails: `in-process broadcast returned 0; trying external broadcast helper`, then `external broadcast helper: 15 device(s)`.
+
+## 2026-08-13 19:25 - autosearch marks already added devices
+
+**Request:** in the found-devices dialog, devices already present in RecorderLnx must be marked as already added and unchecked by default.
+
+**Done:** expanded `HardwareSearchClick.IsConfigured(...)` in `UI/uRecorderSettingsDialog.pas`. It now checks configured data sources, linked tags, active source ids, runtime data sources, and live hardware sessions before calling `TRecorderDeviceSearchDialog.AddDevice(...)`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`.
+
+**Status:** fresh UI check needed; expected rows for existing devices should show `(уже добавлено)` and have unchecked boxes.
+
+## 2026-08-13 19:45 - autosearch already-added check corrected to IP
+
+**Request:** user corrected the previous implementation: do not use tags to decide whether a found device is already added; determine it by device IP.
+
+**Done:** `HardwareSearchClick.IsConfigured(...)` now parses host/IP from found MIC-140, MIC183/185, and MC-032 source ids and compares it with IPs from configured source ids plus the current hardware tree nodes. Tag-linked, active-source, runtime-data-source, and live-session checks are intentionally not used for this dialog rule.
+
+**Verification:** after stopping the running `RecorderLnx.exe` that locked the output, `RecorderLnx.lpi` rebuilt with exit code `0`.
+
+**Status:** next UI check should show rows with already configured IPs as `(уже добавлено)` and unchecked.
+
+## 2026-08-13 20:05 - autosearch already-added IP detection fixed for real endpoints
+
+**Request:** user showed that already read/connected sources still were not detected in the found-devices dialog.
+
+**Done:** fixed the IP comparison source. For MIC-140, configured host is now resolved through `RecorderMic140ResolveEndpoint(...)`, so `mic140.host` is used even when the stored `SourceId` is stale. As a fallback, the hardware tree row text is scanned for IPv4 and compared with the found device IP.
+
+**Verification:** first rebuild was blocked by running `RecorderLnx.exe` PID `9416`; after stopping it, `RecorderLnx.lpi` rebuilt with exit code `0`.
+
+**Status:** fresh UI check should mark found rows whose IP already exists in the hardware tree as `(уже добавлено)` and uncheck them.
+## 2026-08-13 20:55 - MIC-140 channel names include IP
+
+**Request:** change MIC-140 channel/tag naming to be close to MIC185, requested as `140-ip-#кан`.
+
+**Done:** in `UI/uRecorderSettingsSourceProbe.pas`, `BuildMic140` now names analog signals as `140-{<full_ip_with_underscores>-<channel>}` and temperature signals as `140-{<full_ip_with_underscores>-tN}`. After `MeraSignalToRecorderTagName`, tags become e.g. `140_{192_168_14_40_1}` and `140_{192_168_14_40_t1}`. Hardware addresses remain unchanged (`2-01`, `2-t1`).
+
+**Verification:** first rebuild was blocked by running RecorderLnx processes; after stopping PID `1588` and `12776`, `RecorderLnx.lpi` rebuilt with exit code `0`.
+
+## 2026-08-13 20:35 - MIC-140 endpoint and duplicate tag name fixes
+
+**Request:** user showed MIC-140 rows in hardware tree as `MIC-140 (:0)`, MIC-140 settings with empty IP/Port 0, and `Tag name already exists: MIC140_01` when adding tags.
+
+**Done:** fixed `UI/uRecorderSettingsDialog.pas`. `ApplyConfiguredSourceChange` now fills missing MIC-140 config Host/Port from parsed SourceId before `BuildMic140`. `CreateSelectedMeraTags` now uses a unique suffix (`_2`, `_3`, ...) if generated tag name is already occupied by another source.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code `0`; known post-build `#!/bin/sh` message remains after link.
+
+**Status:** next UI check should show MIC-140 as `MIC-140 (IP:4000)`, properties should have IP/Port filled, and selected tag creation should not abort on `MIC140_01`.
+
+## 2026-08-13 20:20 - MIC-140 autosearch add now builds available channels
+
+**Request:** user added MIC-140 via autosearch; devices appeared in hardware tree, but available tags/channels did not appear. After OK and reopening settings, MIC-140 devices disappeared from the tree.
+
+**Done:** fixed `UI/uRecorderSettingsDialog.pas`. Broadcast MIC-140 rows now carry parsed serial number into the found-device item and store it through `RecorderMic140SetDeviceSerialForSource`. `ApplyConfiguredSourceChange` now mirrors restore-time behavior and calls `BuildMic140(..., MIC140DefaultChannelCount, nil, [])` when no private MIC-140 config exists yet.
+
+**Why:** `OkButtonClick` calls `fSourceProbe.SyncToRegistry`; that method preserves only sources present in probe signal groups. Autosearch could create a configured MIC-140 without building its signals, so `SyncToRegistry` removed it as undesired.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code `0`. Existing post-build `copy_sdb_res.bat` still prints the known `#!/bin/sh` Windows error after link.
+
+**Status:** next UI check should show MIC-140 available channels immediately after autosearch add, and MIC-140 should remain in the tree after OK/reopening settings.
+
+## 2026-08-13 21:20 - autosearch external helper removed from UI
+
+**Request:** user noticed a console window flash during Autosearch and correctly pointed out that launching a separate Windows exe from RecorderLnx will create cross-platform/package problems.
+
+**Done:** removed the `HardwareSearchDebug.exe` fallback from `UI/uRecorderSettingsDialog.pas`. The settings UI now uses only the in-process `RecorderDiscoverMeraBroadcast(...)` path for default MIC-140/MIC183/185 autosearch. `Process` unit dependency and helper-launch/parsing routines were removed from the dialog.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code `0`.
+
+**Status:** no console window should flash from Autosearch anymore. `Tests\HardwareSearchDebug` remains a standalone diagnostic project only, not a runtime dependency of RecorderLnx UI.
+
+## 2026-08-13 21:35 - autosearch repeats debug recovery internally
+
+**Request:** after removing the external helper, UI still reported no devices. User asked to repeat the procedure from the console debug tool inside RecorderLnx.
+
+**Done:** `UI/uRecorderSettingsDialog.pas` now runs built-in ARP/TCP MIC recovery when broadcast returns 0. It uses `RecorderEnumerateArpIPv4(...)` like `Tests\HardwareSearchDebug`, then `RecorderFindOpenTcpHosts(...)`, then strict `ProbeMic185` / `ProbeMic140` identification. MC-032 probing remains only behind the `Ping` checkbox. No external exe is launched.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code `0`; fresh `RecorderLnx.exe` launched from `lib\x86_64-win64`.
+
+**Status:** next UI autosearch should log `internal ARP/TCP MIC recovery will run` if broadcast is still zero, and should populate MIC-140/MIC183/185 from the ARP/TCP recovery path.
+## 2026-08-13 21:20 - Restore zero-broadcast internal MIC recovery
+
+**Request:** after the previous speed/SN fix, autosearch again found no devices.
+
+**Done:** logs confirmed UI broadcast returned `0` and the previous change skipped ARP/TCP recovery because `Ping` was off. Restored internal recovery when `broadcast=0`: use ARP candidates + TCP/4000 + strict MIC183/185/MIC-140 protocol identification. No external helper process is used; MC-032 remains behind `Ping`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`; stopped old `RecorderLnx.exe` PID `15152` before linking.
+
+## 2026-08-13 22:10 - broadcast listener bound to selected adapter
+
+**Request:** after UI still did not find devices, user asked whether the problem could be adapter selection and where the working utility binds sockets.
+
+**Done:** verified `HardwareSearchDebug.exe --bind=192.168.3.65` uses the same `RecorderDiscoverMeraBroadcast(...)` path as UI after setting the global bind IP. Changed `Core\uRecorderNetworkBinding.pas`: UDP reply listeners now bind to the configured adapter IP (`192.168.3.65:4401/4002`) instead of always `0.0.0.0`; if that fails, code logs the WSA error and falls back to wildcard.
+
+**Verification:** rebuilt both `RecorderLnx.lpi` and `Tests\HardwareSearchDebug\HardwareSearchDebug.lpi`, exit code `0`. Real-network run `HardwareSearchDebug.exe --bind=192.168.3.65 --timeout-ms=5000` returned `broadcast_found=15`, including MIC-140 `.14.40 SN=326`, `.14.41 SN=327`, `.14.42 SN=328`, `.14.30 SN=286`.
+
+**Status:** fresh UI check should show listener bind lines and then broadcast replies. If UI still shows zero while diagnostic finds 15, compare UI process timing/state against the diagnostic, not parser/route.
+
+## 2026-08-13 21:05 - MIC-140 autosearch caption SN and speed
+
+**Request:** autosearch worked but took too long, and added MIC-140 rows in the hardware tree did not show serial numbers.
+
+**Done:** `Core/uRecorderHardwareTree.pas` now prints `SN` for MIC-140 source captions when `DeviceSerial` is stored. `UI/uRecorderSettingsDialog.pas` default autosearch uses `1800 ms` broadcast and does not run ARP/TCP recovery unless the `Ping` checkbox is enabled. Optional Ping/TCP MIC185/MIC140 identification timeout is reduced to `500 ms` per host.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`; running `RecorderLnx.exe` PID `20320` was stopped before linking.
+## 2026-08-13 19:15 - autosearch broadcast fixed for GUI exe
+
+**Request:** user reported that the normal RecorderLnx autosearch still found nothing, while the original Recorder and the debug utility found MIC-140 devices quickly by broadcast.
+
+**Done:** fixed `Core/uRecorderNetworkBinding.pas` so discovery now sends modern/legacy search packets from the reply sockets too (`4401 -> 4400`, `4002 -> 4001`) before the older original-style `4400/4001` sends. This keeps broadcast-only discovery inside RecorderLnx and avoids external helper/TCP fallback in the default path.
+
+**Verification:** temporary GUI-built debug executable changed from `broadcast_found=0` to `broadcast_found=15`. Fresh `RecorderLnx.exe --hardware-search-test --bind=192.168.3.65 --timeout-ms=5000` now returns `found=15`, including MIC-140 `192.168.14.42 SN=328`, `.14.30 SN=286`, `.14.40 SN=326`, `.14.41 SN=327`; non-MIC-140 `192.168.13.223 type=$412C` remains filtered out. `RecorderLnx.lpi` rebuild exit code `0`.
+
+**Status:** ready for UI button check in freshly launched RecorderLnx; expected autosearch time is about the broadcast receive window, no console helper should appear.
+
+## 2026-08-13 22:35 - MIC-140 channel names use last IP octet
+
+**Request:** in MIC-140 channel/tag names keep only the last 3 digits/octet from the IP, e.g. avoid `140-{192_168_14_41-46}`.
+
+**Done:** `UI/uRecorderSettingsSourceProbe.pas` now builds MIC-140 auto-created channel names from the last host segment only. For `192.168.14.41` generated names become `140-{41-46}`, `140-{41-t1}`, etc. The code also handles empty host as `unknown`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`; running `RecorderLnx.exe` PID `16816` was stopped before linking.
+
+## 2026-08-13 23:05 - MIC-140 runtime diagnostic tag cleanup
+
+**Request:** user pointed out an error after some runtime and runtime-rule violations in `PublishDiagnostics`: changing `Description`, setting string `TextValue`, and searching tags by name during work.
+
+**Done:** added `TRecorderTagRegistry.PublishValue(ATag, ...)` so hot code can publish through a cached tag pointer. `Device\MIC140\uRecorderMic140DataSource.pas` now caches status/block diagnostic tags during `DoCreateTags` and `BuildRuntimeCache`, publishes status and block counters through cached `TRecorderTag`, and no longer assigns `TextValue` or mutates status `Description` in runtime. MIC-140 temperature diagnostics also stopped assigning `TextValue` manually; the tag updates its numeric text from samples.
+
+**Verification:** `rg` confirms MIC-140 `FindByName` remains only in setup/cache creation and no `TextValue` assignments remain in the MIC-140 data source. `RecorderLnx.lpi` rebuild exit code `0`; `RecorderDataSourcesTest.exe` exit code `0`.
+
+**Details:** runtime investigation notes are in `errors/2026-08-13-mic140-runtime-diagnostic-tags.md`.

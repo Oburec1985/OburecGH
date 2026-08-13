@@ -355,6 +355,7 @@ procedure TRecorderSettingsSourceProbe.BuildMic140(const ASourceId: string;
 var
   I: Integer;
   lAddress: string;
+  lDeviceNamePrefix: string;
   lDeviceSerial: Integer;
   lDummyMode: TRecorderMic140OutputMode;
   lFreqHz: Double;
@@ -362,6 +363,29 @@ var
   lOutputMode: TRecorderMic140OutputMode;
   lPort: Word;
   lSignal: TMeraSignalInfo;
+
+  function Mic140DeviceNamePrefix: string;
+  var
+    lLastSeparator: Integer;
+    lPrefixHost: string;
+    lPrefixPort: Word;
+  begin
+    lPrefixHost := '';
+    lPrefixPort := 0;
+    if not ((fRegistry <> nil) and
+      RecorderMic140ResolveEndpoint(fRegistry, ASourceId, lPrefixHost,
+        lPrefixPort)) then
+      TryParseRecorderMic140SourceId(ASourceId, lPrefixHost, lPrefixPort);
+    lPrefixHost := Trim(lPrefixHost);
+    if lPrefixHost = '' then
+      lPrefixHost := 'unknown';
+    lLastSeparator := LastDelimiter('.:', lPrefixHost);
+    if lLastSeparator > 0 then
+      lPrefixHost := Copy(lPrefixHost, lLastSeparator + 1, MaxInt);
+    lPrefixHost := StringReplace(lPrefixHost, '.', '_', [rfReplaceAll]);
+    lPrefixHost := StringReplace(lPrefixHost, ':', '_', [rfReplaceAll]);
+    Result := '140-{' + lPrefixHost;
+  end;
 begin
   RemoveSourceSignals(ASourceId);
 
@@ -380,6 +404,7 @@ begin
     if lDeviceSerial <= 0 then
       RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lDeviceSerial);
   end;
+  lDeviceNamePrefix := Mic140DeviceNamePrefix;
 
   for I := 1 to AChannelCount do
   begin
@@ -400,7 +425,7 @@ begin
     lFreqHz := Mic140PollFrequencyForChannel(ASourceId, I);
 
     lSignal := TMeraSignalInfo.Create;
-    lSignal.Name := Format('MIC140_%2.2d', [I]);
+    lSignal.Name := Format('%s-%d}', [lDeviceNamePrefix, I]);
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';
@@ -424,7 +449,7 @@ begin
       lFreqHz := Mic140PollFrequencyForChannel(ASourceId, 1);
 
     lSignal := TMeraSignalInfo.Create;
-    lSignal.Name := RecorderMic140TemperatureDisplayName(MIC140DefaultNodeNumber, I);
+    lSignal.Name := Format('%s-t%d}', [lDeviceNamePrefix, I]);
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC-140';
     lSignal.DataTypeName := 'R8';

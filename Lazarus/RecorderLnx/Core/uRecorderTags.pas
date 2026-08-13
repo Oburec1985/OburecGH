@@ -465,7 +465,9 @@ type
 
     { Публикует новое значение тега и отправляет событие rceDataUpdated. }
     procedure PublishValue(const ATagName: string; ATimeSec, AValue: Double); overload;
+    procedure PublishValue(ATag: TRecorderTag; ATimeSec, AValue: Double); overload;
     procedure PublishValue(const ATagName: string; AValue: Double); overload;
+    procedure PublishValue(ATag: TRecorderTag; AValue: Double); overload;
     { Добавляет блок в кольцевой буфер тега без публикации события. }
     procedure AddBlockSamples(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
@@ -1913,31 +1915,40 @@ end;
 procedure TRecorderTagRegistry.PublishValue(const ATagName: string; ATimeSec,
   AValue: Double);
 var
-  lEvent: TRecorderEvent;
   lTag: TRecorderTag;
-  lEventData: TRecorderTagUpdateEventData;
-  lValue: Double;
 begin
-  ATimeSec := ResolvePublishTime(ATimeSec);
   lTag := FindByName(ATagName);
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
+  PublishValue(lTag, ATimeSec, AValue);
+end;
 
-  lValue := TransformTagValue(lTag, AValue);
-  lTag.AddSample(ATimeSec, lValue);
+procedure TRecorderTagRegistry.PublishValue(ATag: TRecorderTag; ATimeSec,
+  AValue: Double);
+var
+  lEvent: TRecorderEvent;
+  lEventData: TRecorderTagUpdateEventData;
+  lValue: Double;
+begin
+  if ATag = nil then
+    raise ERecorderTagError.Create('Tag is nil');
+
+  ATimeSec := ResolvePublishTime(ATimeSec);
+  lValue := TransformTagValue(ATag, AValue);
+  ATag.AddSample(ATimeSec, lValue);
   MarkRuntimeDataUpdated(ATimeSec);
 
   if Assigned(fOnValuePublished) then
-    fOnValuePublished(fValuePublishedTarget, lTag, ATimeSec, lValue);
+    fOnValuePublished(fValuePublishedTarget, ATag, ATimeSec, lValue);
   if Assigned(fOnAlarmValuePublished) then
-    fOnAlarmValuePublished(fAlarmValuePublishedTarget, lTag, ATimeSec, lValue);
+    fOnAlarmValuePublished(fAlarmValuePublishedTarget, ATag, ATimeSec, lValue);
 
   if fEventBus <> nil then
   begin
-    lEventData := TRecorderTagUpdateEventData.Create(lTag, ATimeSec, lValue);
+    lEventData := TRecorderTagUpdateEventData.Create(ATag, ATimeSec, lValue);
     try
-      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, lTag.Name,
-        lTag.TextValue, 1, lEventData);
+      lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, ATag.Name,
+        ATag.TextValue, 1, lEventData);
       fEventBus.Publish(lEvent);
     finally
       lEventData.Free;
@@ -2009,6 +2020,11 @@ procedure TRecorderTagRegistry.PublishValue(const ATagName: string;
   AValue: Double);
 begin
   PublishValue(ATagName, 0.0, AValue);
+end;
+
+procedure TRecorderTagRegistry.PublishValue(ATag: TRecorderTag; AValue: Double);
+begin
+  PublishValue(ATag, 0.0, AValue);
 end;
 
 function TRecorderTagRegistry.ResolvePublishTime(ATimeSec: Double): Double;

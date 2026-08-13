@@ -1,4 +1,0 @@
-﻿time,relative_ms,stage,note
-2026-08-13T09:39:47.7266404+03:00,1,capture,"capture started"
-2026-08-13T09:39:47.9279670+03:00,202,327,client,"recorderlnx; pid=17984; exe="
-2026-08-13T09:40:14.1890240+03:00,26463,384,finish,"recorderlnx process exited"
