@@ -11,6 +11,9 @@ uses
 const
   CRecorderNetworkAutomatic = '';
 
+type
+  TRecorderSocketSetup = procedure(ASocket: LongInt);
+
 function RecorderNetworkBindAddress: string;
 procedure SetRecorderNetworkBindAddress(const AValue: string);
 procedure RecorderEnumerateLocalIPv4(AItems: TStrings);
@@ -21,7 +24,8 @@ procedure RecorderDiscoverMeraBroadcast(AFoundHosts: TStrings;
   ATimeoutMs: Cardinal = 1200);
 function RecorderOpenBoundTcpStream(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal; out AStream: TSocketStream;
-  out AErrorText: string; AUseConfiguredBind: Boolean = True): Boolean;
+  out AErrorText: string; AUseConfiguredBind: Boolean = True;
+  ABeforeConnect: TRecorderSocketSetup = nil): Boolean;
 
 implementation
 
@@ -572,7 +576,8 @@ end;
 
 function RecorderOpenBoundTcpStream(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal; out AStream: TSocketStream;
-  out AErrorText: string; AUseConfiguredBind: Boolean): Boolean;
+  out AErrorText: string; AUseConfiguredBind: Boolean;
+  ABeforeConnect: TRecorderSocketSetup): Boolean;
 var
   lRemote, lLocal: TInetSockAddr;
   lRemoteHost, lLocalHost: THostAddr;
@@ -617,6 +622,8 @@ begin
         Exit;
       end;
     end;
+    if Assigned(ABeforeConnect) then
+      ABeforeConnect(lSocket);
 {$ifdef unix}
     lFlags := fpFcntl(lSocket, F_GetFl, 0);
     fpFcntl(lSocket, F_SetFl, lFlags or O_NONBLOCK);

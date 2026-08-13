@@ -334,42 +334,33 @@ type
   { One independent device reset. The worker never touches LCL controls. }
   TRecorderHardwareResetTask = class
   private
-    fRegistry: TRecorderTagRegistry;
     fSourceId: string;
     fTraceId: string;
     fStartDelayMs: Cardinal;
     fErrorText: string;
     fSucceeded: Boolean;
   public
-    constructor Create(ARegistry: TRecorderTagRegistry;
-      const ASourceId, ATraceId: string; AStartDelayMs: Cardinal);
+    constructor Create(const ASourceId, ATraceId: string;
+      AStartDelayMs: Cardinal);
     procedure Execute;
     property SourceId: string read fSourceId;
     property ErrorText: string read fErrorText;
     property Succeeded: Boolean read fSucceeded;
   end;
 
-constructor TRecorderHardwareResetTask.Create(ARegistry: TRecorderTagRegistry;
-  const ASourceId, ATraceId: string; AStartDelayMs: Cardinal);
+constructor TRecorderHardwareResetTask.Create(const ASourceId, ATraceId: string;
+  AStartDelayMs: Cardinal);
 begin
   inherited Create;
-  fRegistry := ARegistry;
   fSourceId := Trim(ASourceId);
   fTraceId := Trim(ATraceId);
   fStartDelayMs := AStartDelayMs;
 end;
 
 procedure TRecorderHardwareResetTask.Execute;
-const
-  { Firmware MIC-185 освобождает единственную settings-сессию асинхронно.
-    250 мс недостаточно: TCP уже принимается, но IoControl ещё не обслуживается. }
-  CResetReleaseDelayMs = 1500;
-  CResetRetryDelayMs = 500;
 var
   lHost: string;
   lPort: Word;
-  lAttempt: Integer;
-  lAttemptStartedAt: QWord;
 begin
   fSucceeded := False;
   fErrorText := '';
@@ -398,43 +389,10 @@ begin
         RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-release', 'OK',
           Format('endpoint=%s:%d', [lHost, lPort]));
       end;
-      { Let a single-client device release the old socket before reconnect. }
-      Sleep(CResetReleaseDelayMs);
-      { Some single-client MIC-185 firmware revisions release the previous TCP
-        session with a small delay. Retry the whole atomic reset once. }
-      for lAttempt := 1 to 2 do
-      begin
-        lAttemptStartedAt := GetTickCount64;
-        fErrorText := '';
-        RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
-          'BEGIN', Format('attempt=%d', [lAttempt]));
-        if RecorderMic185ProgramConfiguredSource(fRegistry, fSourceId,
-          fErrorText, fTraceId) then
-        begin
-          fSucceeded := True;
-          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
-            'OK', Format('attempt=%d', [lAttempt]),
-            GetTickCount64 - lAttemptStartedAt);
-          Break;
-        end;
-        RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-attempt',
-          'FAIL', Format('attempt=%d error=%s', [lAttempt, fErrorText]),
-          GetTickCount64 - lAttemptStartedAt);
-        { Repeating a completed TCP connection whose Mebius IoControl timed
-          out only doubles the visible freeze. Retry only transport/session
-          release failures; an application-protocol timeout is final. }
-        if Pos('IoControl timeout', fErrorText) > 0 then
-          Break;
-        if lAttempt = 1 then
-          Sleep(CResetRetryDelayMs);
-      end;
-    end
-    else
-    begin
-      fSucceeded := RecorderHardwareSourceLinkOk(fRegistry, fSourceId);
-      if not fSucceeded then
-        fErrorText := 'TEST устройства не выполнен';
     end;
+    { Переподключение выполняет штатный источник данных. Временный клиент
+      здесь приводил к двойному программированию одного прибора. }
+    fSucceeded := True;
   except
     on E: Exception do
       fErrorText := E.ClassName + ': ' + E.Message;
@@ -569,8 +527,6 @@ begin
     { Вход в конфигурацию проверяет существующие сессии, но не программирует приборы. }
     RecorderHardwareTestAllLiveSources;
     Result := lDialog.ShowModal = mrOk;
-    { Выход из конфигурации повторно фиксирует доступность каналов. }
-    RecorderHardwareTestAllLiveSources;
     ADataSourcesChanged := lDialog.DataSourcesChanged;
   finally
     lDialog.Free;
@@ -2761,6 +2717,9 @@ end;
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
   I: Integer;
+  lHost: string;
+  lPort: Word;
+  lRetryCount: Integer;
   lErrors: TStringList;
   lNode: TTreeNode;
   lProcedures: array of TThreadMethod;
@@ -2815,20 +2774,48 @@ begin
     SetLength(lProcedures, lSourceIds.Count);
     for I := 0 to lSourceIds.Count - 1 do
     begin
-      lTasks[I] := TRecorderHardwareResetTask.Create(
-        fRecorder.TagRegistry, lSourceIds[I],
-        lBatchTraceId + '/' + IntToStr(I + 1), I * 150);
+      lTasks[I] := TRecorderHardwareResetTask.Create(lSourceIds[I],
+        lBatchTraceId + '/' + IntToStr(I + 1), 0);
       lProcedures[I] := @lTasks[I].Execute;
     end;
 
     { Independent endpoints reset concurrently; only result publication and
       LCL refresh happen in the main thread after all workers have finished. }
     SharedRunParallel(lProcedures);
+    { Сброс только освобождает старую сессию. Повторное подключение и
+      программирование выполняет сам источник ровно один раз. }
+    fRecorder.DataSources.PrepareHardwareAll;
+
+    { Общий reset оригинального Recorder повторяет только не
+      восстановившиеся host-устройства. Одиночный reset повтора не делает. }
+    lRetryCount := 0;
+    if Sender = nil then
+    begin
+      for I := 0 to High(lTasks) do
+        if RecorderHardwareIsSourceOffline(lTasks[I].SourceId) then
+        begin
+          RecorderHardwareRequestSourceReset(lTasks[I].SourceId);
+          if TryParseRecorderMic185SourceId(lTasks[I].SourceId, lHost, lPort) then
+            RecorderMic185RuntimeDetach(lHost, lPort);
+          Inc(lRetryCount);
+        end;
+      if lRetryCount > 0 then
+      begin
+        RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'BEGIN',
+          Format('device_count=%d', [lRetryCount]));
+        fRecorder.DataSources.PrepareHardwareAll;
+        RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'OK',
+          Format('device_count=%d', [lRetryCount]));
+      end;
+    end;
     for I := 0 to High(lTasks) do
-      if lTasks[I].Succeeded then
+      if lTasks[I].Succeeded and
+        (not RecorderHardwareIsSourceOffline(lTasks[I].SourceId)) then
         RecorderHardwareClearSourceOffline(lTasks[I].SourceId)
       else
       begin
+        lTasks[I].fErrorText := RecorderHardwareSourceOfflineReason(
+          lTasks[I].SourceId);
         if Trim(lTasks[I].ErrorText) = '' then
           lTasks[I].fErrorText := 'Сброс устройства не выполнен';
         RecorderHardwareMarkSourceOffline(lTasks[I].SourceId,
@@ -3281,6 +3268,8 @@ begin
     fHardwareTree.ReadOnly := True;
     fHardwareTree.Options := fHardwareTree.Options + [tvoAllowMultiselect,
       tvoShowButtons, tvoShowLines, tvoShowRoot];
+    fHardwareTree.MultiSelectStyle := [msControlSelect, msShiftSelect,
+      msVisibleOnly];
     fHardwareTree.ImagesWidth := 16;
   finally
     fHardwareTree.Items.EndUpdate;
@@ -3531,6 +3520,8 @@ begin
   fHardwareTree.OnKeyDown := @fHardwareTreeKeyDown;
   fHardwareTree.Options := fHardwareTree.Options + [tvoAllowMultiselect,
     tvoShowButtons, tvoShowLines, tvoShowRoot];
+  fHardwareTree.MultiSelectStyle := [msControlSelect, msShiftSelect,
+    msVisibleOnly];
 
   lRootNode := fHardwareTree.Items.Add(nil, 'Устройства');
   lRootNode.ImageIndex := CDeviceRootImageIndex;

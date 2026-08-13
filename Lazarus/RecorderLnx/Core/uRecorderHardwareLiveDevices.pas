@@ -32,6 +32,9 @@ procedure RecorderHardwareClearSourceOffline(const ASourceId: string);
 procedure RecorderHardwareClearAllOfflineSources;
 function RecorderHardwareIsSourceOffline(const ASourceId: string): Boolean;
 function RecorderHardwareSourceOfflineReason(const ASourceId: string): string;
+procedure RecorderHardwareSetSourceWarning(const ASourceId, AReason: string);
+procedure RecorderHardwareClearSourceWarning(const ASourceId: string);
+function RecorderHardwareSourceWarning(const ASourceId: string): string;
 
 implementation
 
@@ -60,6 +63,7 @@ type
 var
   gHardwareLiveEntries: TThreadList;
   gHardwareOfflineEntries: TThreadList;
+  gHardwareWarningEntries: TThreadList;
   gHardwareResetEntries: TThreadList;
 
 procedure RecorderHardwareEnsureRegistry;
@@ -68,8 +72,34 @@ begin
     gHardwareLiveEntries := TThreadList.Create;
   if gHardwareOfflineEntries = nil then
     gHardwareOfflineEntries := TThreadList.Create;
+  if gHardwareWarningEntries = nil then
+    gHardwareWarningEntries := TThreadList.Create;
   if gHardwareResetEntries = nil then
     gHardwareResetEntries := TThreadList.Create;
+end;
+
+function RecorderHardwareFindWarningEntry(const ASourceId: string;
+  out AEntry: TRecorderHardwareOfflineEntry): Boolean;
+var
+  I: Integer;
+  lList: TList;
+begin
+  Result := False;
+  AEntry := nil;
+  if (Trim(ASourceId) = '') or (gHardwareWarningEntries = nil) then
+    Exit;
+  lList := gHardwareWarningEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareOfflineEntry(lList[I]).SourceId,
+        ASourceId) then
+      begin
+        AEntry := TRecorderHardwareOfflineEntry(lList[I]);
+        Exit(True);
+      end;
+  finally
+    gHardwareWarningEntries.UnlockList;
+  end;
 end;
 
 function RecorderHardwareFindEntry(const ASourceId: string;
@@ -301,19 +331,15 @@ begin
   if not RecorderHardwareFindEntry(ASourceId, lEntry) then
     Exit;
   lDevice := lEntry.Device;
-  { Сброс инвалидирует аппаратную сессию. Тяжёлая инициализация и
-    программирование выполнятся источником при следующем PrepareHardware. }
+  { ForceResetDevice оригинального Recorder разрывает сессию без проверки:
+    Disconnect, пауза, Connect и Program. Здесь освобождаем старую сессию;
+    подключение и программирование выполняет последующий PrepareHardware. }
   if lDevice <> nil then
   begin
     try
-      lDevice.Stop;
-    except
-      { Разрыв сессии всё равно должен быть выполнен. }
-    end;
-    try
       lDevice.Disconnect;
     except
-      { Ошибка будет отражена последующим TestLink/PrepareHardware. }
+      { Ошибка будет отражена последующим PrepareHardware. }
     end;
   end;
 end;
@@ -424,6 +450,73 @@ begin
     Result := lEntry.Reason;
 end;
 
+procedure RecorderHardwareSetSourceWarning(const ASourceId, AReason: string);
+var
+  I: Integer;
+  lEntry: TRecorderHardwareOfflineEntry;
+  lList: TList;
+begin
+  if Trim(ASourceId) = '' then
+    Exit;
+  RecorderHardwareEnsureRegistry;
+  lList := gHardwareWarningEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareOfflineEntry(lList[I]).SourceId,
+        ASourceId) then
+      begin
+        TRecorderHardwareOfflineEntry(lList[I]).Reason := AReason;
+        Exit;
+      end;
+    lEntry := TRecorderHardwareOfflineEntry.Create;
+    lEntry.SourceId := Trim(ASourceId);
+    lEntry.Reason := AReason;
+    lList.Add(lEntry);
+  finally
+    gHardwareWarningEntries.UnlockList;
+  end;
+end;
+
+procedure RecorderHardwareClearSourceWarning(const ASourceId: string);
+var
+  I: Integer;
+  lList: TList;
+begin
+  if (Trim(ASourceId) = '') or (gHardwareWarningEntries = nil) then
+    Exit;
+  lList := gHardwareWarningEntries.LockList;
+  try
+    for I := lList.Count - 1 downto 0 do
+      if SameText(TRecorderHardwareOfflineEntry(lList[I]).SourceId,
+        ASourceId) then
+      begin
+        TRecorderHardwareOfflineEntry(lList[I]).Free;
+        lList.Delete(I);
+      end;
+  finally
+    gHardwareWarningEntries.UnlockList;
+  end;
+end;
+
+function RecorderHardwareSourceWarning(const ASourceId: string): string;
+var
+  I: Integer;
+  lList: TList;
+begin
+  Result := '';
+  if (Trim(ASourceId) = '') or (gHardwareWarningEntries = nil) then
+    Exit;
+  lList := gHardwareWarningEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareOfflineEntry(lList[I]).SourceId,
+        ASourceId) then
+        Exit(TRecorderHardwareOfflineEntry(lList[I]).Reason);
+  finally
+    gHardwareWarningEntries.UnlockList;
+  end;
+end;
+
 initialization
   { Реестры создаются до запуска подготовительных worker-потоков. Ленивое
     создание из нескольких PrepareHardware одновременно даёт гонку. }
@@ -457,6 +550,20 @@ finalization
       gHardwareOfflineEntries.UnlockList;
     end;
     FreeAndNil(gHardwareOfflineEntries);
+  end;
+  if gHardwareWarningEntries <> nil then
+  begin
+    with gHardwareWarningEntries.LockList do
+    try
+      while Count > 0 do
+      begin
+        TRecorderHardwareOfflineEntry(Items[0]).Free;
+        Delete(0);
+      end;
+    finally
+      gHardwareWarningEntries.UnlockList;
+    end;
+    FreeAndNil(gHardwareWarningEntries);
   end;
   if gHardwareResetEntries <> nil then
   begin

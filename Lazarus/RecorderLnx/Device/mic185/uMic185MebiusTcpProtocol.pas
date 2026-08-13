@@ -48,16 +48,24 @@ type
     fSocket: TSocketStream;
     fTimeoutMs: Cardinal;
     fClientTaskId: LongWord;
+    fRxByteCount: Int64;
+    fRxPacketCountTotal: Int64;
     fRxDataPacketCount: Int64;
+    fRxSyncDropCount: Int64;
+    fRxCompactCount: Int64;
+    fRxMaxBuffered: Integer;
     fConnectionLost: Boolean;
     fLastReadError: string;
-    fRxPacket: TRecorderByteArray;
-    fRxPacketCount: Integer;
+    fRxBuffer: TRecorderByteArray;
+    fRxStart: Integer;
+    fRxCount: Integer;
     procedure ApplySocketTimeout;
-    procedure ConfigureTransport;
     procedure SetTimeoutMs(AValue: Cardinal);
     function SocketHasData: Boolean;
-    function FillRxPacket(ACount: Integer; AWait: Boolean = True): Boolean;
+    procedure CompactRx;
+    procedure DropRx(ACount: Integer);
+    function ReadAvailable(AWait: Boolean): Boolean;
+    function TryTakePacket(out APacket: TRecorderMebiusPacket): Boolean;
     function TryWriteBytes(const ABuffer; ACount: Integer;
       out AErrorText: string): Boolean;
     procedure WriteBytes(const ABuffer; ACount: Integer);
@@ -65,9 +73,8 @@ type
       AWait: Boolean = True): Boolean;
     function IoControl(AIoCode: LongWord; const AInData: TRecorderByteArray;
       AOutSize: Integer; out AOutData: TRecorderByteArray): LongInt;
-    function TryIoControl(AIoCode: LongWord; const AInData: TRecorderByteArray;
-      AOutSize: Integer; out AOutData: TRecorderByteArray;
-      out AErrorMessage: string): Boolean;
+    function TryIoControl(AIoCode: LongWord; const AInData: TRecorderByteArray; AOutSize: Integer; out AOutData: TRecorderByteArray;      out AErrorMessage: string): Boolean;
+    function CheckResult(const AData: TRecorderByteArray; out AErrorMessage: string): Boolean;
   public
     constructor Create(const AHost: string; APort: Word = 4000;
       ATimeoutMs: Cardinal = 2000);
@@ -79,6 +86,7 @@ type
     procedure StartMeasurement;
     procedure StopMeasurement;
     function TrySetSessionId(ASessionId: LongWord; out AErrorMessage: string): Boolean;
+    function TryQuerySessionState(out AErrorMessage: string): Boolean;
     function TryCallCommand(ACommand: LongWord; const AInData: TRecorderByteArray;
       AOutSize: Integer; out AOutData: TRecorderByteArray;
       out AErrorMessage: string): Boolean;
@@ -100,6 +108,12 @@ type
     property Port: Word read fPort;
     property TimeoutMs: Cardinal read fTimeoutMs write SetTimeoutMs;
     property RxDataPacketCount: Int64 read fRxDataPacketCount;
+    property RxByteCount: Int64 read fRxByteCount;
+    property RxPacketCount: Int64 read fRxPacketCountTotal;
+    property RxSyncDropCount: Int64 read fRxSyncDropCount;
+    property RxCompactCount: Int64 read fRxCompactCount;
+    property RxMaxBuffered: Integer read fRxMaxBuffered;
+    property RxBufferedByteCount: Integer read fRxCount;
     property ConnectionLost: Boolean read fConnectionLost;
     property LastReadError: string read fLastReadError;
     procedure ResetRxCounters;
@@ -151,6 +165,8 @@ const
   REC_TYPEIO_MEAS_TASK = 1;
 
   REC_IOCTL_MEASTASK_NULL = (REC_TYPEIO_MEAS_TASK shl 16);
+  REC_IOCTL_MEASTASK_QUERY_SESSION_STATE =
+    (REC_TYPEIO_MEAS_TASK shl 16) or ($0001 shl 2);
   REC_IOCTL_MEASTASK_SET_SESSION_ID = (REC_TYPEIO_MEAS_TASK shl 16) or ($0009 shl 2);
   REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN = (REC_TYPEIO_MEAS_TASK shl 16) or ($000A shl 2);
   REC_IOCTL_MEASTASK_START = (REC_TYPEIO_MEAS_TASK shl 16) or ($000B shl 2);
@@ -176,6 +192,8 @@ type
     Crc: LongWord;
   end;
 
+  TMebeHeaderState = (mhsInvalid, mhsIncomplete, mhsReady);
+
   TUniversalDataSampleHeader = packed record
     PacketType: Word;
     _AlignPad: Word;  { MSVC выравнивает ULONG sampl_count_ на 4 }
@@ -185,8 +203,10 @@ type
 const
   { Размер SO_RCVBUF из CTCPLink оригинального Recorder. }
   CMebiusReceiveBufferSize = 4 * 1024 * 1024;
+  CMebiusReceiveBlockSize = 2 * 1024 * 1024;
   CMebiusMaxPacketSize = 4 * 1024 * 1024;
-  CMebiusDisconnectSettleMs = 200;
+  { ForceResetDevice оригинального Recorder ждёт 300 мс после Disconnect. }
+  CMebiusDisconnectSettleMs = 300;
 
 function RecorderMebiusCtlCode(AType, AFunction, AMethod, AAccess: LongWord): LongWord;
 begin
@@ -201,6 +221,49 @@ end;
 function MebiusHeaderCrc(const AHeader: TMebeHeader): LongWord;
 begin
   Result := AHeader.Signature xor AHeader.Size xor AHeader.IdTo xor AHeader.IdFrom;
+end;
+
+function MebiusHeaderState(const AHeader: TMebeHeader; ABuffered: Integer;
+  out ASize: Integer): TMebeHeaderState;
+var
+  lLegacy: TMebeHeader;
+  lSize: LongWord;
+begin
+  Result := mhsInvalid;
+  ASize := 0;
+  if AHeader.Signature = REC_MEBE_PACKET_SIGNATURE_SIZE_BIG then
+  begin
+    if AHeader.Crc <> MebiusHeaderCrc(AHeader) then
+      Exit;
+    lSize := AHeader.Size;
+  end
+  else if AHeader.Signature = REC_MEBE_PACKET_SIGNATURE then
+  begin
+    lLegacy := AHeader;
+    if AHeader.Crc = MebiusHeaderCrc(AHeader) then
+    begin
+      lSize := AHeader.Size;
+      if lSize > LongWord(ABuffered) then
+        lSize := lSize and $FFFF;
+    end
+    else
+    begin
+      lLegacy.Size := lLegacy.Size and $FFFF;
+      if AHeader.Crc <> MebiusHeaderCrc(lLegacy) then
+        Exit;
+      lSize := lLegacy.Size;
+    end;
+  end
+  else
+    Exit;
+
+  if (lSize < REC_MEBE_PACKET_HEADER_SIZE) or
+    (lSize > CMebiusMaxPacketSize) then
+    Exit;
+  ASize := Integer(lSize);
+  if ASize > ABuffered then
+    Exit(mhsIncomplete);
+  Result := mhsReady;
 end;
 
 procedure PutWordLE(var AData: TRecorderByteArray; AOffset: Integer; AValue: Word);
@@ -538,18 +601,47 @@ begin
   ApplySocketTimeout;
 end;
 
-procedure TRecorderMebiusTcpClient.ConfigureTransport;
+procedure ConfigureMebiusSocket(ASocket: LongInt); forward;
+
+procedure ConfigureMebiusSocket(ASocket: LongInt);
 var
   lEnabled: LongInt;
   lSize: LongInt;
+  {$IFDEF WINDOWS}
+  lBytes: DWORD;
+  lKeepAlive: record
+    OnOff: LongWord;
+    KeepAliveTime: LongWord;
+    KeepAliveInterval: LongWord;
+  end;
+  {$ELSE}
+  lKeepIdle: LongInt;
+  lKeepInterval: LongInt;
+  {$ENDIF}
 begin
-  if fSocket = nil then
+  if ASocket < 0 then
     Exit;
   lSize := CMebiusReceiveBufferSize;
-  fpSetSockOpt(fSocket.Handle, SOL_SOCKET, SO_RCVBUF, @lSize, SizeOf(lSize));
+  fpSetSockOpt(ASocket, SOL_SOCKET, SO_RCVBUF, @lSize, SizeOf(lSize));
   lEnabled := 1;
-  fpSetSockOpt(fSocket.Handle, SOL_SOCKET, SO_KEEPALIVE, @lEnabled,
+  fpSetSockOpt(ASocket, SOL_SOCKET, SO_KEEPALIVE, @lEnabled,
     SizeOf(lEnabled));
+  {$IFDEF WINDOWS}
+  lKeepAlive.OnOff := 1;
+  lKeepAlive.KeepAliveTime := 5000;
+  lKeepAlive.KeepAliveInterval := 1000;
+  lBytes := 0;
+  WinSock2.WSAIoctl(ASocket, WinSock2.IOC_IN or
+    WinSock2.IOC_VENDOR or 4, @lKeepAlive, SizeOf(lKeepAlive), nil, 0,
+    @lBytes, nil, nil);
+  {$ELSE}
+  lKeepIdle := 5;
+  lKeepInterval := 1;
+  fpSetSockOpt(ASocket, IPPROTO_TCP, TCP_KEEPIDLE, @lKeepIdle,
+    SizeOf(lKeepIdle));
+  fpSetSockOpt(ASocket, IPPROTO_TCP, TCP_KEEPINTVL, @lKeepInterval,
+    SizeOf(lKeepInterval));
+  {$ENDIF}
 end;
 
 function TRecorderMebiusTcpClient.SocketHasData: Boolean;
@@ -581,23 +673,34 @@ begin
   fHost := AHost;
   fPort := APort;
   fTimeoutMs := ATimeoutMs;
-  { Original CTCPLink::IoControlEx uses `(TASKID)this` as MEBE_PACKET.id_from,
-    not the shared SETTINGS_PORT_ID constant.  The device echoes this value
-    in replies, so every simultaneous settings connection needs its own ID.
-    TASKID is 32-bit in the wire protocol; truncate the object address exactly
-    as the original 32-bit cast does. }
+  { Оригинальный CTCPLink передаёт (TASKID)this. Для прошивки это
+    не адрес ядра, а уникальный адрес обратного ответа клиента.
+    Общий SETTINGS_PORT_ID нельзя делить между сеансами: чтение
+    паспорта ещё может пройти, а ProgramDeviceBin вернёт E_MEB_TIMEOUT. }
   fClientTaskId := LongWord(PtrUInt(Pointer(Self)) and $FFFFFFFF);
   if fClientTaskId = 0 then
     fClientTaskId := REC_HOST_SETTINGS_PORT_ID;
   fRxDataPacketCount := 0;
+  fRxByteCount := 0;
+  fRxPacketCountTotal := 0;
+  fRxSyncDropCount := 0;
+  fRxCompactCount := 0;
+  fRxMaxBuffered := 0;
   fConnectionLost := False;
   fLastReadError := '';
-  fRxPacketCount := 0;
+  SetLength(fRxBuffer, CMebiusReceiveBufferSize);
+  fRxStart := 0;
+  fRxCount := 0;
 end;
 
 procedure TRecorderMebiusTcpClient.ResetRxCounters;
 begin
   fRxDataPacketCount := 0;
+  fRxByteCount := 0;
+  fRxPacketCountTotal := 0;
+  fRxSyncDropCount := 0;
+  fRxCompactCount := 0;
+  fRxMaxBuffered := 0;
 end;
 
 destructor TRecorderMebiusTcpClient.Destroy;
@@ -631,12 +734,13 @@ begin
   end;
   try
     if not RecorderOpenBoundTcpStream(fHost, fPort, fTimeoutMs, fSocket,
-      AErrorText) then
+      AErrorText, True, @ConfigureMebiusSocket) then
       Exit;
 {$ifdef unix}
     fSocket.WriteFlags := fSocket.WriteFlags or MSG_NOSIGNAL;
 {$endif}
-    ConfigureTransport;
+    { Параметры транспорта установлены до connect: так делает CTCPLink
+      оригинального Recorder, чтобы масштаб TCP-окна согласовался в SYN. }
     ApplySocketTimeout;
     fConnectionLost := False;
     fLastReadError := '';
@@ -676,7 +780,8 @@ begin
     end;
   end;
   FreeAndNil(fSocket);
-  fRxPacketCount := 0;
+  fRxStart := 0;
+  fRxCount := 0;
   RecorderMic185RuntimeUnregisterTcpClient(Self);
   { BIOS освобождает задачу Mebius не одновременно с closesocket. Без
     короткой выдержки немедленное переподключение может открыть TCP, но
@@ -685,54 +790,72 @@ begin
     Sleep(CMebiusDisconnectSettleMs);
 end;
 
-function TRecorderMebiusTcpClient.FillRxPacket(ACount: Integer;
-  AWait: Boolean): Boolean;
+procedure TRecorderMebiusTcpClient.CompactRx;
+begin
+  if (fRxStart = 0) or (fRxCount = 0) then
+    Exit;
+  Move(fRxBuffer[fRxStart], fRxBuffer[0], fRxCount);
+  fRxStart := 0;
+  Inc(fRxCompactCount);
+end;
+
+procedure TRecorderMebiusTcpClient.DropRx(ACount: Integer);
+begin
+  if ACount > fRxCount then
+    ACount := fRxCount;
+  Inc(fRxStart, ACount);
+  Dec(fRxCount, ACount);
+  if fRxCount = 0 then
+    fRxStart := 0;
+end;
+
+function TRecorderMebiusTcpClient.ReadAvailable(AWait: Boolean): Boolean;
 var
   lRead: Integer;
+  lFree: Integer;
 begin
   Result := False;
   if fSocket = nil then
     raise ERecorderMebiusProtocolError.Create('Mebius TCP socket is not connected');
-  if Length(fRxPacket) < ACount then
-    SetLength(fRxPacket, ACount);
-  while fRxPacketCount < ACount do
+  if (not AWait) and (not SocketHasData) then
+    Exit;
+  if fRxStart + fRxCount = Length(fRxBuffer) then
+    CompactRx;
+  lFree := Length(fRxBuffer) - fRxStart - fRxCount;
+  if lFree <= 0 then
   begin
-    { Поток измерений не ждёт продолжение TCP-пакета. Уже принятая часть
-      остаётся в fRxPacket и дочитывается на следующем такте источника. }
-    if (not AWait) and (not SocketHasData) then
-      Exit(False);
-    try
-      lRead := fSocket.Read(fRxPacket[fRxPacketCount], ACount - fRxPacketCount);
-    except
-      on E: Exception do
-      begin
-        if not AWait then
-        begin
-          fConnectionLost := True;
-          fLastReadError := E.Message;
-          Mic185Log(Format('TCP read failed %s:%d: %s',
-            [fHost, fPort, fLastReadError]));
-        end;
-      { Timeout не уничтожает уже принятую часть пакета. Следующий вызов
-        продолжит заполнение того же заголовка/тела. }
-        Exit(False);
-      end;
-    end;
-    if lRead = 0 then
-    begin
-      fConnectionLost := True;
-      fLastReadError := 'TCP connection closed by device';
-      Mic185Log(Format('TCP EOF %s:%d', [fHost, fPort]));
-      Exit(False);
-    end;
-    if lRead < 0 then
-    begin
-      fConnectionLost := True;
-      fLastReadError := 'TCP read returned a negative byte count';
-      Exit(False);
-    end;
-    Inc(fRxPacketCount, lRead);
+    fConnectionLost := True;
+    fLastReadError := 'Mebius receive buffer overflow';
+    Exit;
   end;
+  if lFree > CMebiusReceiveBlockSize then
+    lFree := CMebiusReceiveBlockSize;
+  try
+    lRead := fSocket.Read(fRxBuffer[fRxStart + fRxCount], lFree);
+  except
+    on E: Exception do
+    begin
+      fLastReadError := E.Message;
+      if not AWait then
+      begin
+        fConnectionLost := True;
+        Mic185Log(Format('TCP read failed %s:%d: %s',
+          [fHost, fPort, fLastReadError]));
+      end;
+      Exit;
+    end;
+  end;
+  if lRead <= 0 then
+  begin
+    fConnectionLost := True;
+    fLastReadError := 'TCP connection closed by device';
+    Mic185Log(Format('TCP EOF %s:%d', [fHost, fPort]));
+    Exit;
+  end;
+  Inc(fRxByteCount, lRead);
+  Inc(fRxCount, lRead);
+  if fRxCount > fRxMaxBuffered then
+    fRxMaxBuffered := fRxCount;
   Result := True;
 end;
 
@@ -780,67 +903,56 @@ begin
   end;
 end;
 
-function TRecorderMebiusTcpClient.ReadPacket(out APacket: TRecorderMebiusPacket;
-  AWait: Boolean): Boolean;
+function TRecorderMebiusTcpClient.TryTakePacket(
+  out APacket: TRecorderMebiusPacket): Boolean;
 var
   lBodySize: Integer;
   lHeader: TMebeHeader;
-  lLegacyHeader: TMebeHeader;
-  lPacketSize: Integer;
-  lHeaderValid: Boolean;
+  lSize: Integer;
+  lState: TMebeHeaderState;
 begin
   FillChar(APacket, SizeOf(APacket), 0);
   Result := False;
-  repeat
-    if not FillRxPacket(SizeOf(lHeader), AWait) then
-      Exit;
-    Move(fRxPacket[0], lHeader, SizeOf(lHeader));
-    lHeaderValid :=
-      ((lHeader.Signature = REC_MEBE_PACKET_SIGNATURE) or
-       (lHeader.Signature = REC_MEBE_PACKET_SIGNATURE_SIZE_BIG)) and
-      (lHeader.Crc = MebiusHeaderCrc(lHeader));
-
-    { Старые реализации Mebius оставляли мусор в старших 16 битах Size.
-      Оригинальный CPacketCollector повторяет CRC с маской $FFFF. }
-    if (not lHeaderValid) and
-      (lHeader.Signature = REC_MEBE_PACKET_SIGNATURE) then
+  while fRxCount >= SizeOf(lHeader) do
+  begin
+    Move(fRxBuffer[fRxStart], lHeader, SizeOf(lHeader));
+    lState := MebiusHeaderState(lHeader, fRxCount, lSize);
+    if lState = mhsInvalid then
     begin
-      lLegacyHeader := lHeader;
-      lLegacyHeader.Size := lLegacyHeader.Size and $FFFF;
-      if lHeader.Crc = MebiusHeaderCrc(lLegacyHeader) then
-      begin
-        lHeader.Size := lLegacyHeader.Size;
-        lHeaderValid := True;
-      end;
+      DropRx(1);
+      Inc(fRxSyncDropCount);
+      Continue;
     end;
+    if lState = mhsIncomplete then
+      Exit;
 
-    lPacketSize := lHeader.Size;
-    if lHeaderValid and
-      (lPacketSize >= REC_MEBE_PACKET_HEADER_SIZE) and
-      (lPacketSize <= CMebiusMaxPacketSize) then
-      Break;
+    lBodySize := lSize - REC_MEBE_PACKET_HEADER_SIZE;
+    SetLength(APacket.Data, lBodySize);
+    if lBodySize > 0 then
+      Move(fRxBuffer[fRxStart + REC_MEBE_PACKET_HEADER_SIZE],
+        APacket.Data[0], lBodySize);
+    DropRx(lSize);
+    Inc(fRxPacketCountTotal);
+    APacket.IdFrom := lHeader.IdFrom;
+    APacket.IdTo := lHeader.IdTo;
+    if (lHeader.IdFrom = REC_DATA_TRANSMIT_TASK_ID) or
+      (lHeader.IdFrom = $3E904000) then
+      APacket.Kind := mpkData
+    else
+      APacket.Kind := mpkCommand;
+    Exit(True);
+  end;
+end;
 
-    { Как CPacketCollector оригинального Recorder: неверный заголовок не
-      обрывает поток, а сдвигает поиск сигнатуры на один байт. }
-    Move(fRxPacket[1], fRxPacket[0], fRxPacketCount - 1);
-    Dec(fRxPacketCount);
+function TRecorderMebiusTcpClient.ReadPacket(out APacket: TRecorderMebiusPacket;
+  AWait: Boolean): Boolean;
+begin
+  repeat
+    if TryTakePacket(APacket) then
+      Exit(True);
+    if not ReadAvailable(AWait) then
+      Exit(False);
   until False;
-
-  if not FillRxPacket(lPacketSize, AWait) then
-    Exit;
-  lBodySize := lPacketSize - REC_MEBE_PACKET_HEADER_SIZE;
-  SetLength(APacket.Data, lBodySize);
-  if lBodySize > 0 then
-    Move(fRxPacket[REC_MEBE_PACKET_HEADER_SIZE], APacket.Data[0], lBodySize);
-  fRxPacketCount := 0;
-
-  APacket.IdFrom := lHeader.IdFrom;
-  APacket.IdTo := lHeader.IdTo;
-  if (lHeader.IdFrom = REC_DATA_TRANSMIT_TASK_ID) or (lHeader.IdFrom = $3E904000) then
-    APacket.Kind := mpkData
-  else
-    APacket.Kind := mpkCommand;
-  Result := True;
 end;
 
 function TRecorderMebiusTcpClient.IoControl(AIoCode: LongWord;
@@ -938,7 +1050,36 @@ begin
   SetLength(lIn, SizeOf(ASessionId));
   Move(ASessionId, lIn[0], SizeOf(ASessionId));
   Result := TryIoControl(REC_IOCTL_MEASTASK_SET_SESSION_ID, lIn, SizeOf(LongInt),
-    lOut, AErrorMessage);
+    lOut, AErrorMessage) and CheckResult(lOut, AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.TryQuerySessionState(
+  out AErrorMessage: string): Boolean;
+var
+  lOut: TRecorderByteArray;
+begin
+  Result := TryIoControl(REC_IOCTL_MEASTASK_QUERY_SESSION_STATE, nil,
+    3 * SizeOf(LongWord), lOut, AErrorMessage);
+end;
+
+function TRecorderMebiusTcpClient.CheckResult(
+  const AData: TRecorderByteArray; out AErrorMessage: string): Boolean;
+var
+  lCode: LongInt;
+begin
+  Result := False;
+  if Length(AData) < SizeOf(lCode) then
+  begin
+    AErrorMessage := 'Mebius command result is missing';
+    Exit;
+  end;
+  Move(AData[0], lCode, SizeOf(lCode));
+  if lCode < 0 then
+  begin
+    AErrorMessage := Format('Mebius command failed: %.8x', [LongWord(lCode)]);
+    Exit;
+  end;
+  Result := True;
 end;
 
 function TRecorderMebiusTcpClient.TryCallCommand(ACommand: LongWord;
@@ -987,7 +1128,7 @@ begin
     Move(ASettings[0], lBlock[SizeOf(LongWord) * 2], Length(ASettings));
 
   Result := TryIoControl(REC_IOCTL_MEASTASK_PROGRAMM_DEVICE_BIN, lBlock,
-    SizeOf(LongInt), lOut, AErrorMessage);
+    SizeOf(LongInt), lOut, AErrorMessage) and CheckResult(lOut, AErrorMessage);
 end;
 
 function TRecorderMebiusTcpClient.TryProgramMeasurement(
@@ -996,7 +1137,7 @@ var
   lOut: TRecorderByteArray;
 begin
   Result := TryIoControl(REC_IOCTL_MEASTASK_PROGRAM, nil, SizeOf(LongInt), lOut,
-    AErrorMessage);
+    AErrorMessage) and CheckResult(lOut, AErrorMessage);
 end;
 
 function TRecorderMebiusTcpClient.TryStartMeasurement(
@@ -1005,7 +1146,7 @@ var
   lOut: TRecorderByteArray;
 begin
   Result := TryIoControl(REC_IOCTL_MEASTASK_START, nil, SizeOf(LongInt), lOut,
-    AErrorMessage);
+    AErrorMessage) and CheckResult(lOut, AErrorMessage);
   if Result then
     ResetRxCounters;
 end;
@@ -1023,7 +1164,7 @@ var
   lOut: TRecorderByteArray;
 begin
   Result := TryIoControl(REC_IOCTL_MEASTASK_STOP, nil, SizeOf(LongInt), lOut,
-    AErrorMessage);
+    AErrorMessage) and CheckResult(lOut, AErrorMessage);
 end;
 
 function TRecorderMebiusTcpClient.ReadDataBlock(AChannelCount: Integer;
@@ -1069,16 +1210,10 @@ function TRecorderMebiusTcpClient.ReadMeasDataBlock(AChannelCount: Integer;
   out ATempValues: TRecorderSingleArray; out AHasTemp: Boolean;
   out AUtsDeviceTimeSec, AUtsValueSec: Double;
   out AHasUts: Boolean): Boolean;
-const
-  { Предел должен выдерживать краткие задержки рабочего потока. При штатных
-    100 Гц и периоде источника 200 мс ожидается около 20 пакетов за цикл. }
-  MAX_DRAIN_PACKETS = 512;
 var
-  I: Integer;
   lPacket: TRecorderMebiusPacket;
   lDevId: LongWord;
   lGotMeas: Boolean;
-  lPacketsRead: Integer;
   lPending: TRecorderMebiusFloatBlock;
 begin
   ClearMebiusFloatBlock(ABlock);
@@ -1088,14 +1223,8 @@ begin
   AUtsDeviceTimeSec := 0;
   AUtsValueSec := 0;
   lGotMeas := False;
-  lPacketsRead := 0;
-  for I := 1 to MAX_DRAIN_PACKETS do
+  while ReadPacket(lPacket, False) do
   begin
-      { Измерительный цикл не ожидает данные. Неполный TCP-пакет остаётся
-        в накопителе и дочитывается на следующем такте источника. }
-      if not ReadPacket(lPacket, False) then
-        Break;
-      Inc(lPacketsRead);
       if lPacket.Kind = mpkData then
         Inc(fRxDataPacketCount);
       if lPacket.Kind <> mpkData then
@@ -1120,9 +1249,6 @@ begin
         AHasUts := Mic185ParseUtsValue(lPacket.Data, AUtsDeviceTimeSec,
           AUtsValueSec);
   end;
-  if (lPacketsRead = MAX_DRAIN_PACKETS) and DeviceLogEnabled then
-    Mic185Log(Format('Receive drain limit reached: %d packets',
-      [lPacketsRead]));
   Result := lGotMeas;
 end;
 

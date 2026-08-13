@@ -1,0 +1,128 @@
+﻿Device: 192.168.9.155:4000
+Computer: SKRIPNIKPC2
+Captured: 2026-08-13T09:59:29.4951463+03:00
+
+=== Windows route selected for the device ===
+
+
+PrefixOrigin             : Dhcp
+SuffixOrigin             : Dhcp
+Type                     : Unicast
+Store                    : ActiveStore
+AddressFamily            : IPv4
+AddressState             : Preferred
+ifIndex                  : 11
+Caption                  : 
+Description              : 
+ElementName              : 
+InstanceID               : 
+CommunicationStatus      : 
+DetailedStatus           : 
+HealthState              : 
+InstallDate              : 
+Name                     : ;C<8;@B8=8@?55;;55;55;
+OperatingStatus          : 
+OperationalStatus        : 
+PrimaryStatus            : 
+Status                   : 
+StatusDescriptions       : 
+AvailableRequestedStates : 
+EnabledDefault           : 2
+EnabledState             : 
+OtherEnabledState        : 
+RequestedState           : 12
+TimeOfLastStateChange    : 
+TransitioningToState     : 12
+CreationClassName        : 
+SystemCreationClassName  : 
+SystemName               : 
+NameFormat               : 
+OtherTypeDescription     : 
+ProtocolIFType           : 4096
+ProtocolType             : 
+Address                  : 
+AddressOrigin            : 0
+AddressType              : 
+IPv4Address              : 192.168.3.65
+IPv6Address              : 
+IPVersionSupport         : 
+PrefixLength             : 20
+SubnetMask               : 
+InterfaceAlias           : Ethernet 2
+InterfaceIndex           : 11
+IPAddress                : 192.168.3.65
+PreferredLifetime        : 19.23:51:32
+SkipAsSource             : False
+ValidLifetime            : 19.23:51:32
+PSComputerName           : 
+CimClass                 : ROOT/StandardCimv2:MSFT_NetIPAddress
+CimInstanceProperties    : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties      : Microsoft.Management.Infrastructure.CimSystemProperties
+
+Publish               : No
+Protocol              : Local
+Store                 : ActiveStore
+AddressFamily         : IPv4
+State                 : Alive
+ifIndex               : 11
+Caption               : 
+Description           : 
+ElementName           : 
+InstanceID            : ;C<8;@B8:8:9<:55;;55:8:8:8:55;
+AdminDistance         : 
+DestinationAddress    : 
+IsStatic              : 
+RouteMetric           : 256
+TypeOfRoute           : 3
+CompartmentId         : 1
+DestinationPrefix     : 192.168.0.0/20
+InterfaceAlias        : Ethernet 2
+InterfaceIndex        : 11
+InterfaceMetric       : 25
+NextHop               : 0.0.0.0
+PreferredLifetime     : 10675199.02:48:05.4775807
+ValidLifetime         : 10675199.02:48:05.4775807
+PSComputerName        : 
+CimClass              : ROOT/StandardCimv2:MSFT_NetRoute
+CimInstanceProperties : {Caption, Description, ElementName, InstanceID...}
+CimSystemProperties   : Microsoft.Management.Infrastructure.CimSystemProperties
+
+
+
+
+=== Network adapters and addresses ===
+
+
+InterfaceAlias     : Ethernet 2
+InterfaceIndex     : 11
+IPv4Address        : {192.168.3.65}
+IPv4DefaultGateway : {MSFT_NetRoute (InstanceID = ":8:8:8:9:55;;55;C?8;@B8:8???55;")}
+
+InterfaceAlias     : VMware Network Adapter VMnet8
+InterfaceIndex     : 17
+IPv4Address        : {192.168.112.1}
+IPv4DefaultGateway : 
+
+InterfaceAlias     : VMware Network Adapter VMnet1
+InterfaceIndex     : 22
+IPv4Address        : {192.168.183.1}
+IPv4DefaultGateway : 
+
+InterfaceAlias     : v2raytun
+InterfaceIndex     : 10
+IPv4Address        : {172.16.0.1}
+IPv4DefaultGateway : 
+
+InterfaceAlias     : Сетевое подключение Bluetooth
+InterfaceIndex     : 14
+IPv4Address        : {169.254.123.31}
+IPv4DefaultGateway : 
+
+InterfaceAlias     : Ethernet
+InterfaceIndex     : 5
+IPv4Address        : {169.254.201.127}
+IPv4DefaultGateway : 
+
+
+
+

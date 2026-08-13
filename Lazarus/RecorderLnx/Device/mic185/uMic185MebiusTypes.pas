@@ -164,8 +164,10 @@ implementation
 function Mic185GenerateSessionId(ASerialNumber: LongWord): LongWord;
 begin
   Result := (ASerialNumber and $FF) shl 24;
-  Result := Result or (LongWord(GetTickCount64 and $00000FFF));
+  { Точный формат CMIC185V2::GenerateSessionId: серийный номер,
+    случайные средние 12 бит и младшие 12 бит системного времени. }
   Result := Result or ((LongWord(Random($1000)) shl 12) and $00FFF000);
+  Result := Result or (LongWord(GetTickCount64) and $00000FFF);
 end;
 
 procedure Mic185DefaultChannelProgramSettings(AFrequencyHz: Double;

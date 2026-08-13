@@ -4562,6 +4562,7 @@ var
   db: TDataBlock;
   c: TComplex_d;
 begin
+  if m_shockList.Count=0 then exit;
   for i := 0 to m_shockList.Count - 1 do
   begin
     db := m_shockList.getBlock(i);

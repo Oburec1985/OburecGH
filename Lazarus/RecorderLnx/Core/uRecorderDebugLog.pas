@@ -39,6 +39,7 @@ end;
 
 var
   lLogFile: string;
+  lPreviousLog: string;
 
 initialization
   SharedLogger.Enabled := True;
@@ -48,8 +49,11 @@ initialization
   lLogFile := RecorderServiceFileName('LogLinux.log');
   {$ENDIF}
 
+  lPreviousLog := ChangeFileExt(lLogFile, '.previous.log');
+  if FileExists(lPreviousLog) then
+    DeleteFile(lPreviousLog);
   if FileExists(lLogFile) then
-    DeleteFile(lLogFile);
+    RenameFile(lLogFile, lPreviousLog);
 
   SharedLogger.Configure(lLogFile);
   SharedLogger.Info('RecorderLnx log initialized: ' + lLogFile);

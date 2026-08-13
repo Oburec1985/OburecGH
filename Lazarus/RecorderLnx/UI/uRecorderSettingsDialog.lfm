@@ -675,6 +675,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Width = 889
           Align = alClient
           ImagesWidth = 16
+          MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
           ReadOnly = True
           TabOrder = 2
           Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]

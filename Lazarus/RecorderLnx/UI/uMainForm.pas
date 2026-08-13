@@ -3175,6 +3175,7 @@ procedure TMainForm.UpdateHardwareErrorView;
 var
   I: Integer;
   lCount: Integer;
+  lWarningCount: Integer;
   lIds: TStringList;
   lReason: string;
   lSourceId: string;
@@ -3186,6 +3187,7 @@ begin
   try
     RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lIds, True);
     lCount := 0;
+    lWarningCount := 0;
     lbState.Hint := '';
     for I := 0 to lIds.Count - 1 do
     begin
@@ -3193,17 +3195,25 @@ begin
       if not RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,
         lSourceId) then
         Continue;
-      if not RecorderHardwareIsSourceOffline(lSourceId) then
-        Continue;
-      Inc(lCount);
-      lReason := RecorderHardwareSourceOfflineReason(lSourceId);
+      if RecorderHardwareIsSourceOffline(lSourceId) then
+      begin
+        Inc(lCount);
+        lReason := RecorderHardwareSourceOfflineReason(lSourceId);
+      end
+      else
+      begin
+        lReason := RecorderHardwareSourceWarning(lSourceId);
+        if lReason = '' then
+          Continue;
+        Inc(lWarningCount);
+      end;
       if lbState.Hint <> '' then
         lbState.Hint := lbState.Hint + LineEnding;
       lbState.Hint := lbState.Hint + lSourceId + ': ' + lReason;
     end;
     lStateText := TRecorderStateMachine.StateToString(
       fRecorder.StateMachine.State);
-    if lCount = 0 then
+    if (lCount = 0) and (lWarningCount = 0) then
     begin
       lbState.Caption := lStateText;
       lbState.ShowHint := False;
@@ -3217,11 +3227,21 @@ begin
       lbTime.Font.Color := clBlack;
       Exit;
     end;
-    lbState.Caption := Format('%s  ! %d', [lStateText, lCount]);
+    lbState.Caption := Format('%s  ! %d',
+      [lStateText, lCount + lWarningCount]);
     lbState.ShowHint := True;
-    pnRightStatus.Color := clRed;
-    lbState.Font.Color := clWhite;
-    lbTime.Font.Color := clWhite;
+    if lCount > 0 then
+    begin
+      pnRightStatus.Color := clRed;
+      lbState.Font.Color := clWhite;
+      lbTime.Font.Color := clWhite;
+    end
+    else
+    begin
+      pnRightStatus.Color := $0080C0FF;
+      lbState.Font.Color := clBlack;
+      lbTime.Font.Color := clBlack;
+    end;
   finally
     lIds.Free;
   end;

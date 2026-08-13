@@ -184,6 +184,10 @@ begin
     RecorderHardwareClearSourceOffline(lNorm);
     Exit(True);
   end;
+  { После ошибки рабочего протокола простой TCP probe не подтверждает
+    исправность прибора. Снять ошибку может только живая сессия или reset. }
+  if RecorderHardwareIsSourceOffline(lNorm) then
+    Exit(False);
   if RecorderHardwareIsSourceLinkOk(lNorm) then
   begin
     RecorderHardwareClearSourceOffline(lNorm);

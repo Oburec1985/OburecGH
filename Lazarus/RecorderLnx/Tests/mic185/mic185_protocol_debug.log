@@ -531,3 +531,8 @@ ch50 (3-50): got=-2580 ref=-32768 delta=30188
 2026-08-11 12:20:04.275  CLI test started
 2026-08-11 12:25:05.719  CLI test started
 2026-08-11 12:39:23.673  CLI test started
+2026-08-12 17:57:26.949  MIC183/185 debug form started
+2026-08-12 17:57:26.949  Log file: D:\works\OburecGH\Lazarus\RecorderLnx\Tests\mic185\mic185_protocol_debug.log
+2026-08-12 17:57:32.576  Connect+Program 192.168.9.155:4000 ...
+2026-08-12 17:57:37.603  ProgramDevice (Recorder defaults)...
+2026-08-12 17:57:41.760  Connect FAILED: ProgramDeviceBin: Unexpected Mebius IoControl reply 00010034 for 00010028

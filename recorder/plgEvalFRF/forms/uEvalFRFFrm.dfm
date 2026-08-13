@@ -763,13 +763,13 @@ object FRFFrm: TFRFFrm
     Align = alClient
     Caption = 'SpmChart'
     TabOrder = 1
+    OnClick = WndCBChange
+    OnDblClick = SpmChartDblClick
+    OnMouseZoom = SpmChartMouseZoom
+    OnCursorMove = SpmChartCursorMove
     allowEditPages = False
     showTV = False
     showLegend = False
     selectSize = 5
-    ExplicitLeft = -448
-    ExplicitTop = 216
-    ExplicitWidth = 400
-    ExplicitHeight = 400
   end
 end

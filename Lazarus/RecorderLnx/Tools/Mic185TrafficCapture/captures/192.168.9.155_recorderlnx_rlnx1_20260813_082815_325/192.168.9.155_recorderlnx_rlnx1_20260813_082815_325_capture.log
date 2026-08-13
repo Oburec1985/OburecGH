@@ -1,0 +1,61 @@
+﻿**********************
+Начало записи сценария Windows PowerShell
+Время начала: 20260813082815
+Имя пользователя: SKRIPNIKPC2\User
+Запуск от имени пользователя: SKRIPNIKPC2\User
+Имя конфигурации: 
+Компьютер: SKRIPNIKPC2 (Microsoft Windows NT 10.0.19045.0)
+Ведущее приложение: powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\Capture-Mic185.ps1 -DeviceIp 192.168.9.155 -Client recorderlnx -RunName rlnx1 -NoElevate
+ИД процесса: 17440
+PSVersion: 5.1.19041.6456
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.6456
+BuildVersion: 10.0.19041.6456
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+[PREPARE] Removing old pktmon filters...
+
+
+[PKTMON] Add filter
+pktmon filter add MIC185 -i 192.168.9.155 -t TCP -p 4000
+╨д╨╕╨╗╤М╤В╤А ╨┤╨╛╨▒╨░╨▓╨╗╨╡╨╜.
+Exit code: 0
+[PKTMON] Verify filter
+pktmon filter list
+╨д╨╕╨╗╤М╤В╤А╤Л ╨┐╨░╨║╨╡╤В╨╛╨▓:
+     # ╨Ш╨╝╤П    ╨Я╤А╨╛╤В╨╛╨║╨╛╨╗ IP-╨░╨┤╤А╨╡╤Б      ╨Я╨╛╤А╤В 
+     - ---    -------- --------      ---- 
+     1 MIC185 TCP      192.168.9.155 4000
+Exit code: 0
+[START] Capturing only 192.168.9.155:4000
+[PKTMON] Start capture
+pktmon start --capture --comp nics --pkt-size 0 --file-name D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_recorderlnx_rlnx1_20260813_082815_325\192.168.9.155_recorderlnx_rlnx1_20260813_082815_325.etl --file-size 1024 --log-mode circular
+
+╨Я╨░╤А╨░╨╝╨╡╤В╤А╤Л ╤Б╤А╨╡╨┤╤Б╤В╨▓╨░ ╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╢╤Г╤А╨╜╨░╨╗╨░:
+    ╨Ш╨╝╤П ╤А╨╡╨│╨╕╤Б╤В╤А╨░╤В╨╛╤А╨░:        PktMon
+    ╨а╨╡╨╢╨╕╨╝ ╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╢╤Г╤А╨╜╨░╨╗╨░:       ╤Ж╨╕╨║╨╗╨╕╤З╨╡╤Б╨║╨╕╨╣
+    ╨д╨░╨╣╨╗ ╨╢╤Г╤А╨╜╨░╨╗╨░:           D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_recorderlnx_rlnx1_20260813_082815_325\192.168.9.155_recorderlnx_rlnx1_20260813_082815_325.etl
+    ╨Ь╨░╨║╤Б╨╕╨╝╨░╨╗╤М╨╜╤Л╨╣ ╤А╨░╨╖╨╝╨╡╤А ╤Д╨░╨╣╨╗╨░:      1024 ╨Ь╨С
+    ╨Ш╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╡╨╝╨░╤П ╨┐╨░╨╝╤П╤В╤М:        896 ╨Ь╨С
+
+╨б╨╛╨▒╤А╨░╨╜╨╜╤Л╨╡ ╨┤╨░╨╜╨╜╤Л╨╡:
+    ╨б╤З╨╡╤В╤З╨╕╨║╨╕ ╨┐╨░╨║╨╡╤В╨╛╨▓, ╨╖╨░╤Е╨▓╨░╤В ╨┐╨░╨║╨╡╤В╨╛╨▓
+
+╨в╨╕╨┐ ╨╖╨░╨┐╨╕╤Б╨╕:
+    ╨Т╤Б╨╡ ╨┐╨░╨║╨╡╤В╤Л
+
+╨Э╨░╨▒╨╗╤О╨┤╨░╨╡╨╝╤Л╨╡ ╨║╨╛╨╝╨┐╨╛╨╜╨╡╨╜╤В╤Л:
+    ╨б╨╡╤В╨╡╨▓╤Л╨╡ ╨░╨┤╨░╨┐╤В╨╡╤А╤Л
+
+╨д╨╕╨╗╤М╤В╤А╤Л ╨┐╨░╨║╨╡╤В╨╛╨▓:
+     # ╨Ш╨╝╤П    ╨Я╤А╨╛╤В╨╛╨║╨╛╨╗ IP-╨░╨┤╤А╨╡╤Б      ╨Я╨╛╤А╤В 
+     - ---    -------- --------      ---- 
+     1 MIC185 TCP      192.168.9.155 4000
+Exit code: 0
+[MARK        1 ms] capture: capture started
+
+The protocol lifecycle is decoded automatically.
+Keys: [C] optional user note, [X] finish capture.

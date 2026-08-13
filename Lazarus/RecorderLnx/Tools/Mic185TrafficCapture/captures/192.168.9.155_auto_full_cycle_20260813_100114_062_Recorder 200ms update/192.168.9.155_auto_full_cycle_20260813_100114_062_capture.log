@@ -1,0 +1,107 @@
+﻿**********************
+Начало записи сценария Windows PowerShell
+Время начала: 20260813100114
+Имя пользователя: SKRIPNIKPC2\User
+Запуск от имени пользователя: SKRIPNIKPC2\User
+Имя конфигурации: 
+Компьютер: SKRIPNIKPC2 (Microsoft Windows NT 10.0.19045.0)
+Ведущее приложение: C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\Capture-Mic185.ps1 -DeviceIp 192.168.9.155 -Port 4000 -Client auto -RunName full_cycle
+ИД процесса: 7672
+PSVersion: 5.1.19041.6456
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.6456
+BuildVersion: 10.0.19041.6456
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+[PREPARE] Removing old pktmon filters...
+
+
+[PKTMON] Add filter
+pktmon filter add MIC185 -i 192.168.9.155 -t TCP -p 4000
+╨д╨╕╨╗╤М╤В╤А ╨┤╨╛╨▒╨░╨▓╨╗╨╡╨╜.
+Exit code: 0
+[PKTMON] Verify filter
+pktmon filter list
+╨д╨╕╨╗╤М╤В╤А╤Л ╨┐╨░╨║╨╡╤В╨╛╨▓:
+     # ╨Ш╨╝╤П    ╨Я╤А╨╛╤В╨╛╨║╨╛╨╗ IP-╨░╨┤╤А╨╡╤Б      ╨Я╨╛╤А╤В 
+     - ---    -------- --------      ---- 
+     1 MIC185 TCP      192.168.9.155 4000
+Exit code: 0
+[START] Capturing only 192.168.9.155:4000
+[PKTMON] Start capture
+pktmon start --capture --comp nics --pkt-size 0 --file-name D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062.etl --file-size 1024 --log-mode circular
+
+╨Я╨░╤А╨░╨╝╨╡╤В╤А╤Л ╤Б╤А╨╡╨┤╤Б╤В╨▓╨░ ╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╢╤Г╤А╨╜╨░╨╗╨░:
+    ╨Ш╨╝╤П ╤А╨╡╨│╨╕╤Б╤В╤А╨░╤В╨╛╤А╨░:        PktMon
+    ╨а╨╡╨╢╨╕╨╝ ╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╢╤Г╤А╨╜╨░╨╗╨░:       ╤Ж╨╕╨║╨╗╨╕╤З╨╡╤Б╨║╨╕╨╣
+    ╨д╨░╨╣╨╗ ╨╢╤Г╤А╨╜╨░╨╗╨░:           D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062.etl
+    ╨Ь╨░╨║╤Б╨╕╨╝╨░╨╗╤М╨╜╤Л╨╣ ╤А╨░╨╖╨╝╨╡╤А ╤Д╨░╨╣╨╗╨░:      1024 ╨Ь╨С
+    ╨Ш╤Б╨┐╨╛╨╗╤М╨╖╤Г╨╡╨╝╨░╤П ╨┐╨░╨╝╤П╤В╤М:        896 ╨Ь╨С
+
+╨б╨╛╨▒╤А╨░╨╜╨╜╤Л╨╡ ╨┤╨░╨╜╨╜╤Л╨╡:
+    ╨б╤З╨╡╤В╤З╨╕╨║╨╕ ╨┐╨░╨║╨╡╤В╨╛╨▓, ╨╖╨░╤Е╨▓╨░╤В ╨┐╨░╨║╨╡╤В╨╛╨▓
+
+╨в╨╕╨┐ ╨╖╨░╨┐╨╕╤Б╨╕:
+    ╨Т╤Б╨╡ ╨┐╨░╨║╨╡╤В╤Л
+
+╨Э╨░╨▒╨╗╤О╨┤╨░╨╡╨╝╤Л╨╡ ╨║╨╛╨╝╨┐╨╛╨╜╨╡╨╜╤В╤Л:
+    ╨б╨╡╤В╨╡╨▓╤Л╨╡ ╨░╨┤╨░╨┐╤В╨╡╤А╤Л
+
+╨д╨╕╨╗╤М╤В╤А╤Л ╨┐╨░╨║╨╡╤В╨╛╨▓:
+     # ╨Ш╨╝╤П    ╨Я╤А╨╛╤В╨╛╨║╨╛╨╗ IP-╨░╨┤╤А╨╡╤Б      ╨Я╨╛╤А╤В 
+     - ---    -------- --------      ---- 
+     1 MIC185 TCP      192.168.9.155 4000
+Exit code: 0
+[MARK        2 ms] capture: capture started
+
+Client process names: RecorderLnx, Recorder
+Waiting for a configured client. Capture will finish when that process exits.
+[MARK    2 642 ms] client: recorder; pid=16216; exe=C:\Program Files (x86)\Mera\Recorder\Recorder.exe
+[CLIENT] recorder, PID 16216
+[MARK   75 370 ms] finish: recorder process exited
+[CLIENT] recorder exited; finalizing capture.
+[PKTMON] Stop capture
+pktmon stop
+╨Ц╤Г╤А╨╜╨░╨╗╤Л ╨╖╨░╨┐╨╕╤Б╤Л╨▓╨░╤О╤В╤Б╤П ╨╜╨░ ╨┤╨╕╤Б╨║тАж
+╨б╨╗╨╕╤П╨╜╨╕╨╡ ╨╝╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е...
+╨д╨░╨╣╨╗ ╨╢╤Г╤А╨╜╨░╨╗╨░: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062.etl (╨Э╨╡╤В ╨┐╨╛╤В╨╡╤А╤П╨╜╨╜╤Л╤Е ╤Б╨╛╨▒╤Л╤В╨╕╨╣)
+Exit code: 0
+
+[CONVERT] ETL -> PCAPNG and text/hex...
+Обработка...
+
+Общее количество пакетов: 794
+Количество отброшенных пакетов: 0
+Отформатировано пакетов: 794
+Отформатированный файл: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_ful
+l_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062.pcapng
+Обработка...
+
+Отформатированные события: 1527
+Отформатированный файл: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_ful
+l_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_pktmon.txt
+[PARSE] Creating decoded CSV and timeline...
+PACKETS=794
+CSV=D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100
+114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_packets.csv
+TIMELINE=D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_2026081
+3_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_timeline.txt
+[DECODE] Reassembling TCP and decoding MIC-185 lifecycle...
+EVENTS=D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_
+100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_events.csv
+REPORT=D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_
+100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_lifecycle.md
+CONNECTIONS=2
+DECODED=301
+[DONE]
+Capture directory: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062.pcapng
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_marks.csv
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic185TrafficCapture\captures\192.168.9.155_auto_full_cycle_20260813_100114_062\192.168.9.155_auto_full_cycle_20260813_100114_062_README.md
+**********************
+Конец записи протокола Windows PowerShell
+Время окончания: 20260813100235
+**********************

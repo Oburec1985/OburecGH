@@ -162,6 +162,11 @@ type
     fPollFrequencyHz: Double;
     fDiagTick: QWord;
     fDiagBlocks: QWord;
+    fLastRxPackets: QWord;
+    fLastRxBlocks: QWord;
+    fLastRxTick: QWord;
+    fLastBlockTick: QWord;
+    fRxWarning: Boolean;
     fLastPublishedUtsGeneration: QWord;
     fRuntimeChannelSettings: TMic185ChannelProgramSettingsArray;
     fSelectedNames: TStringList;
@@ -193,7 +198,8 @@ uses
   Math, StrUtils, Variants,
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
   uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration,
-  uRecorderProjectFiles, uRecorderHardwareTree, uRecorderNetworkBinding;
+  uRecorderProjectFiles, uRecorderHardwareTree, uRecorderNetworkBinding,
+  uRecorderDebugLog;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -203,6 +209,9 @@ const
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
   CMic185ParallelStartSlotMs = 150;
+
+var
+  gMic185PrepareLock: TRTLCriticalSection;
 
 function Mic185EndpointStartDelayMs(const AHost: string): Cardinal;
 var
@@ -1785,6 +1794,21 @@ begin
   fDevice.TrySetDeviceProperty(rdpUpdateTimeMs, Integer(UpdateTimeMs));
 end;
 
+function Mic185BlockSize(AFrequencyHz: Double;
+  AUpdateTimeMs: Cardinal): Word;
+var
+  lCount: Int64;
+begin
+  { Размер аппаратной порции задаётся в отсчётах канала. Оригинальный
+    Recorder вычисляет его из частоты и периода данных перед Program. }
+  lCount := Round(AFrequencyHz * AUpdateTimeMs / 1000.0);
+  if lCount < 1 then
+    lCount := 1
+  else if lCount > High(Word) then
+    lCount := High(Word);
+  Result := Word(lCount);
+end;
+
 procedure TRecorderMic185DataSource.ApplyChannelProgramSettings;
 var
   I: Integer;
@@ -1801,6 +1825,9 @@ begin
 
   RecorderMic185BuildSourceProgramSettings(Registry, SourceId, fPollFrequencyHz,
     lSettings);
+  for I := 0 to High(lSettings) do
+    lSettings[I].BlockSize := Mic185BlockSize(lSettings[I].FrequencyHz,
+      UpdateTimeMs);
   fRuntimeChannelSettings := lSettings;
   RecorderMic185GetSourceGroupAddition(Registry, SourceId, lGroupAddition);
   RecorderMic185GetSourceModuleSettings(Registry, SourceId, lModuleSettings);
@@ -1972,8 +1999,13 @@ begin
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'startup-stagger', 'OK', '',
       lStartDelayMs);
   end;
-  inherited PrepareHardware;
+  { Прошивка MIC-185 допускает параллельный сбор, но одновременное
+    программирование нескольких контроллеров даёт нестабильный результат.
+    Последовательно выполняется только connect/init/config. }
+  EnterCriticalSection(gMic185PrepareLock);
   try
+    inherited PrepareHardware;
+    try
     if fDevice = nil then
       ConfigureDevice;
     ApplyChannelProgramSettings;
@@ -2043,25 +2075,31 @@ begin
     RecorderHardwareClearSourceOffline(SourceId);
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'OK',
       Format('sn=%d', [lNativeDevice.DeviceSerial]));
-  except
-    on E: Exception do
-    begin
-      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'EXCEPTION',
-        E.ClassName + ': ' + E.Message);
-      RecorderHardwareMarkSourceOffline(SourceId, E.Message);
-      RecorderHardwareUnregisterLiveDevice(Self);
-      if fDevice <> nil then
+    except
+      on E: Exception do
       begin
-        try
-          fDevice.Disconnect;
-        except
+        RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'EXCEPTION',
+          E.ClassName + ': ' + E.Message);
+        RecorderHardwareMarkSourceOffline(SourceId, E.Message);
+        RecorderHardwareUnregisterLiveDevice(Self);
+        if fDevice <> nil then
+        begin
+          try
+            fDevice.Disconnect;
+          except
+          end;
         end;
       end;
     end;
+  finally
+    LeaveCriticalSection(gMic185PrepareLock);
   end;
 end;
 
 procedure TRecorderMic185DataSource.Start;
+var
+  lError: string;
+  lDevice: TRecorderMic185Device;
 begin
   inherited Start;
   if RecorderHardwareIsSourceOffline(SourceId) then
@@ -2072,14 +2110,18 @@ begin
     Exit;
   if fDevice.State <> rdsStarted then
   begin
-    try
-      fDevice.Start;
-    except
-      on E: Exception do
-      begin
-        RecorderHardwareMarkSourceOffline(SourceId, E.Message);
-        Exit;
-      end;
+    if not (fDevice.GetNativeObject is TRecorderMic185Device) then
+    begin
+      RecorderHardwareMarkSourceOffline(SourceId,
+        'MIC183/185 native device is unavailable');
+      Exit;
+    end;
+    lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
+    if not lDevice.TryStart(lError) then
+    begin
+      RecorderMic185Log(Format('%s start failed: %s', [SourceId, lError]));
+      RecorderHardwareMarkSourceOffline(SourceId, lError);
+      Exit;
     end;
   end;
   { A new acquisition session must publish its first UTS packet even if the
@@ -2087,6 +2129,12 @@ begin
   fLastPublishedUtsGeneration := 0;
   fDiagTick := GetTickCount64;
   fDiagBlocks := 0;
+  fLastRxPackets := 0;
+  fLastRxBlocks := 0;
+  fLastRxTick := fDiagTick;
+  fLastBlockTick := fDiagTick;
+  fRxWarning := False;
+  RecorderHardwareClearSourceWarning(SourceId);
 end;
 
 procedure TRecorderMic185DataSource.RequestStop;
@@ -2097,6 +2145,8 @@ end;
 
 procedure TRecorderMic185DataSource.Stop;
 begin
+  RecorderHardwareClearSourceWarning(SourceId);
+  fRxWarning := False;
   if fDevice <> nil then
   begin
     try
@@ -2223,6 +2273,9 @@ var
   lError: string;
   lNow: QWord;
   lTimeout: Cardinal;
+  lPackets: QWord;
+  lStaleMs: QWord;
+  lWarning: string;
 begin
   if fDevice = nil then
     Exit;
@@ -2246,12 +2299,53 @@ begin
     Exit;
   lDevice := TRecorderMic185Device(fDevice.GetNativeObject);
   lNow := GetTickCount64;
+  lPackets := lDevice.RxDataPacketCount;
+  if lPackets <> fLastRxPackets then
+  begin
+    fLastRxPackets := lPackets;
+    fLastRxTick := lNow;
+  end;
+  if fDiagBlocks <> fLastRxBlocks then
+  begin
+    fLastRxBlocks := fDiagBlocks;
+    fLastBlockTick := lNow;
+  end;
+  lStaleMs := Max(QWord(3000), QWord(UpdateTimeMs) * 15);
+  if fRxWarning and (lNow - fLastRxTick < lStaleMs) and
+    (lNow - fLastBlockTick < lStaleMs) then
+  begin
+    RecorderDebugLog(Format('[MIC185-HEALTH] %s stream resumed: packets=%d blocks=%d',
+      [SourceId, lPackets, fDiagBlocks]));
+    RecorderHardwareClearSourceWarning(SourceId);
+    fRxWarning := False;
+  end;
+  if (not fRxWarning) and ((lNow - fLastRxTick >= lStaleMs) or
+    (lNow - fLastBlockTick >= lStaleMs)) then
+  begin
+    if lNow - fLastRxTick >= lStaleMs then
+      lWarning := Format('TCP-сессия открыта, пакеты MIC-185 не поступают %d мс',
+        [lNow - fLastRxTick])
+    else
+      lWarning := Format('пакеты MIC-185 поступают, готовые блоки не собраны %d мс',
+        [lNow - fLastBlockTick]);
+    RecorderHardwareSetSourceWarning(SourceId, lWarning);
+    RecorderDebugLog(Format(
+      '[MIC185-HEALTH] %s stalled: bytes=%d packets=%d data=%d blocks=%d buffered=%d maxbuf=%d compact=%d syncdrop=%d lost=%s; %s',
+      [SourceId, lDevice.RxByteCount, lDevice.RxPacketCount, lPackets,
+       fDiagBlocks, lDevice.RxBufferedByteCount, lDevice.RxMaxBuffered,
+       lDevice.RxCompactCount, lDevice.RxSyncDropCount,
+       BoolToStr(lDevice.ConnectionLost, True), lWarning]));
+    fRxWarning := True;
+  end;
   if lNow - fDiagTick >= 10000 then
   begin
     RecorderMic185Log(Format(
-      '%s RX heartbeat: packets=%d blocks=%d lost=%s state=%d',
-      [SourceId, lDevice.RxDataPacketCount, fDiagBlocks,
-       BoolToStr(lDevice.ConnectionLost, True), Ord(fDevice.State)]));
+      '%s RX heartbeat: bytes=%d packets=%d data=%d blocks=%d buffered=%d maxbuf=%d compact=%d syncdrop=%d lost=%s state=%d',
+      [SourceId, lDevice.RxByteCount, lDevice.RxPacketCount,
+       lDevice.RxDataPacketCount, fDiagBlocks, lDevice.RxBufferedByteCount,
+       lDevice.RxMaxBuffered, lDevice.RxCompactCount,
+       lDevice.RxSyncDropCount, BoolToStr(lDevice.ConnectionLost, True),
+       Ord(fDevice.State)]));
     fDiagTick := lNow;
   end;
   { Неполный TCP-пакет штатно остаётся в накопителе до следующего такта.
@@ -2274,8 +2368,12 @@ begin
 end;
 
 initialization
+  InitCriticalSection(gMic185PrepareLock);
   RecorderRegisterProjectConfigExtension(@SaveMic185DataSourceConfigs,
     @LoadMic185DataSourceConfigs);
   RecorderRegisterHardwareSourceLinkProbe(@RecorderMic185HardwareLinkProbe);
+
+finalization
+  DoneCriticalSection(gMic185PrepareLock);
 
 end.

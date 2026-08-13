@@ -90,6 +90,7 @@ type
     procedure ApplyKnownIdentity(ASerialNumber, ASoftVersion: LongWord);
     { Запускает измерительную задачу MIC185V2. }
     procedure Start; override;
+    function TryStart(out AErrorText: string): Boolean;
     { Останавливает измерительную задачу MIC185V2. }
     procedure Stop; override;
     { Читает очередной блок измерений и перекладывает его в acquisition block. }
@@ -112,12 +113,19 @@ type
     function HasTempData: Boolean;
     { Признак, что UTS/SEV пакет уже получен. }
     function HasUtsData: Boolean;
+    { Продлевает активную Mebius-сессию без ожидания служебного ответа. }
     { Быстрая проверка TCP/Mebius связи без запуска измерений. }
     function TestLink(out AErrorText: string): Boolean; override;
     { Диагностическое чтение нескольких сырых Mebius-пакетов. }
     function SniffPackets(APacketCount: Integer; ATimeoutMs: Cardinal): Integer;
     { Счетчик принятых DATA_TRANSMIT пакетов для диагностики. }
     function RxDataPacketCount: Int64;
+    function RxByteCount: Int64;
+    function RxPacketCount: Int64;
+    function RxSyncDropCount: Int64;
+    function RxCompactCount: Int64;
+    function RxMaxBuffered: Integer;
+    function RxBufferedByteCount: Integer;
     function ConnectionLost: Boolean;
     function LastReadError: string;
   end;
@@ -132,20 +140,18 @@ uses
 
 const
   CMic185ConnectAttempts = 1;
-  { Cold ARP/interface activation and the single-client firmware service can
-    take longer than one TCP retransmission.  Device workers run in parallel,
-    so this is a per-device deadline rather than a cumulative startup delay. }
-  CMic185ConnectTimeoutMs = 4000;
-  CMic185IdentityTimeoutMs = 3000;
-  CMic185InitializeAttempts = 2;
+  { Недоступность прибора должна определяться быстро. Повтор той же команды
+    после явного IoControl timeout только задерживает сброс. }
+  CMic185ConnectTimeoutMs = 2000;
+  CMic185IdentityTimeoutMs = 2000;
   { A successful TCP handshake is earlier than the Mebius transport-ready
     event used by the original driver's WaitConnecting().  Give the device
     service time to attach the new settings client before the first
     IoControl.  This delay is local to each device, so devices still prepare
     in parallel. }
-  CMic185TransportReadyDelayMs = 500;
-  { MIC185 firmware releases the previous settings client asynchronously. }
-  CMic185InitializeReconnectDelayMs = 1500;
+  { Оригинальный CTCPLink ждёт одну секунду после Connect перед первой
+    командой программирования. }
+  CMic185TransportReadyDelayMs = 1000;
 
 constructor TRecorderMic185Device.Create(const ADeviceId, AName: string);
 begin
@@ -365,10 +371,6 @@ end;
 
 function TRecorderMic185Device.TryInitializeSession(
   out AErrorText: string): Boolean;
-var
-  lAttempt: Integer;
-  lAttemptError: string;
-  lConnectError: string;
 begin
   Result := False;
   AErrorText := '';
@@ -378,41 +380,25 @@ begin
     Exit(False);
   end;
 
-  for lAttempt := 1 to CMic185InitializeAttempts do
+  RecorderMic185RuntimeLog(Format(
+    'Initialize transport-ready wait %s:%d delay=%dms',
+    [fHost, fPort, CMic185TransportReadyDelayMs]));
+  Sleep(CMic185TransportReadyDelayMs);
+  if not TryQueryDeviceInfo(AErrorText) then
   begin
-    RecorderMic185RuntimeLog(Format(
-      'Initialize transport-ready wait %s:%d attempt=%d delay=%dms',
-      [fHost, fPort, lAttempt, CMic185TransportReadyDelayMs]));
+    { TCP мог открыться поверх ещё не освобождённой или полуразорванной
+      сессии прибора. Один раз полностью пересоздаём транспорт. }
+    Disconnect;
     Sleep(CMic185TransportReadyDelayMs);
-    if TryQueryDeviceInfo(lAttemptError) then
-    begin
-      RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial,
-        fSoftVersion, False);
-      Exit(True);
-    end;
-
-    if AErrorText = '' then
-      AErrorText := lAttemptError
-    else
-      AErrorText := AErrorText + '; retry: ' + lAttemptError;
-
-    if lAttempt >= CMic185InitializeAttempts then
-      Break;
-
-    // A failed IoControl can leave the firmware-side settings connection in
-    // an indeterminate state.  End it exactly as the original CTCPLink does,
-    // give the device a short time to process disconnect, then create a new
-    // transport session.  This belongs to one-shot initialization, not to
-    // repeatable device configuration.
-    FreeAndNil(fClient);
-    fState := rdsDisconnected;
-    Sleep(CMic185InitializeReconnectDelayMs);
-    if not TryConnect(lConnectError) then
-    begin
-      AErrorText := AErrorText + '; reconnect: ' + lConnectError;
-      Break;
-    end;
+    if not TryConnect(AErrorText) then
+      Exit;
+    Sleep(CMic185TransportReadyDelayMs);
+    if not TryQueryDeviceInfo(AErrorText) then
+      Exit;
   end;
+  RecorderMic185RuntimeAttach(fHost, Word(fPort), fDeviceSerial,
+    fSoftVersion, False);
+  Result := True;
 end;
 
 procedure TRecorderMic185Device.Connect;
@@ -426,8 +412,8 @@ end;
 
 procedure TRecorderMic185Device.Disconnect;
 begin
-  if fState = rdsStarted then
-    Stop;
+  { При аварийном reset сразу освобождаем транспорт. Штатный Stop вызывается
+    отдельной стадией жизненного цикла. }
   FreeAndNil(fClient);
   RecorderMic185RuntimeDetach(fHost, Word(fPort));
   fState := rdsDisconnected;
@@ -491,6 +477,8 @@ begin
   end;
 
   fSessionId := Mic185GenerateSessionId(fDeviceSerial);
+  RecorderMic185RuntimeLog(Format('MIC-185 session id %s:%d = %.8x',
+    [fHost, fPort, fSessionId]));
   if not fClient.TrySetSessionId(fSessionId, lErrorMessage) then
   begin
     AErrorText := 'SetSessionId: ' + lErrorMessage;
@@ -522,18 +510,32 @@ procedure TRecorderMic185Device.Start;
 var
   lErrorMessage: string;
 begin
-  if fState = rdsDisconnected then
-    Connect;
-  if fState = rdsConnected then
-    ProgramDevice;
-  if (fState <> rdsProgrammed) or (fClient = nil) then
-    Exit;
-
-  if not fClient.TryStartMeasurement(lErrorMessage) then
+  if not TryStart(lErrorMessage) then
     raise ERecorderDeviceError.CreateFmt('StartMeasurement: %s', [lErrorMessage]);
+end;
+
+function TRecorderMic185Device.TryStart(out AErrorText: string): Boolean;
+begin
+  Result := False;
+  AErrorText := '';
+  if fState = rdsDisconnected then
+    if not TryConnect(AErrorText) then
+      Exit;
+  if fState = rdsConnected then
+    if not TryProgramDevice(AErrorText) then
+      Exit;
+  if (fState <> rdsProgrammed) or (fClient = nil) then
+  begin
+    AErrorText := 'MIC183/185 is not programmed';
+    Exit;
+  end;
+
+  if not fClient.TryStartMeasurement(AErrorText) then
+    Exit;
   fSampleIndex := 0;
   fState := rdsStarted;
   RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), True);
+  Result := True;
 end;
 
 procedure TRecorderMic185Device.Stop;
@@ -597,6 +599,36 @@ begin
     Result := fClient.RxDataPacketCount;
 end;
 
+function TRecorderMic185Device.RxByteCount: Int64;
+begin
+  if fClient <> nil then Result := fClient.RxByteCount else Result := 0;
+end;
+
+function TRecorderMic185Device.RxPacketCount: Int64;
+begin
+  if fClient <> nil then Result := fClient.RxPacketCount else Result := 0;
+end;
+
+function TRecorderMic185Device.RxSyncDropCount: Int64;
+begin
+  if fClient <> nil then Result := fClient.RxSyncDropCount else Result := 0;
+end;
+
+function TRecorderMic185Device.RxCompactCount: Int64;
+begin
+  if fClient <> nil then Result := fClient.RxCompactCount else Result := 0;
+end;
+
+function TRecorderMic185Device.RxMaxBuffered: Integer;
+begin
+  if fClient <> nil then Result := fClient.RxMaxBuffered else Result := 0;
+end;
+
+function TRecorderMic185Device.RxBufferedByteCount: Integer;
+begin
+  if fClient <> nil then Result := fClient.RxBufferedByteCount else Result := 0;
+end;
+
 function TRecorderMic185Device.ConnectionLost: Boolean;
 begin
   Result := (fClient <> nil) and fClient.ConnectionLost;
@@ -638,6 +670,7 @@ var
   lHasTemp, lHasUts: Boolean;
   lUtsDeviceTime, lUts: Double;
 begin
+  // очистка блока. Нужна ли? Может делать это при старте измерений разово?
   ClearRecorderAcquisitionBlock(ABlock);
   Result := False;
   if (fState <> rdsStarted) or (fClient = nil) then
