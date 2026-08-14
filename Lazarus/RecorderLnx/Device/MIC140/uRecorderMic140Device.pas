@@ -128,7 +128,7 @@ type
 implementation
 
 uses
-  Math, LCLIntf;
+  Math, LCLIntf, uRecorderMic140Utils;
 
 const
   CMaxFreq = 1000.0;
@@ -225,7 +225,7 @@ begin
   fUpdMs := AUpdateTimeMs;
   fProgrammingProfile := AProgrammingProfile;
   fGroundEnabled := AGroundEnabled;
-  fNode := MIC140v2DefaultNode;
+  fNode := RecorderMic140NodeNumberForHost(fHost);
   fState := rdsDisconnected;
   fInitialized := False;
   fConfiguredInSession := False;

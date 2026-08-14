@@ -310,7 +310,7 @@ begin
   for I := 0 to fRegistry.TagCount - 1 do
   begin
     lTag := fRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) and SameText(lTag.Address, AAddress) and
+    if SameText(lTag.SourceId, ASourceId) and SameMic140Address(lTag.Address, AAddress) and
       (lTag.PollFrequencyHz > 0) then
       Exit(RecorderMic140NormalizeFrequency(lTag.PollFrequencyHz));
   end;
@@ -320,7 +320,8 @@ function TRecorderSettingsSourceProbe.Mic140PollFrequencyForChannel(const ASourc
   AChannelNumber: Integer): Double;
 begin
   Result := Mic140TagPollFrequency(ASourceId,
-    Format('%d-%2.2d', [MIC140DefaultNodeNumber, AChannelNumber]));
+    Format('%d-%2.2d', [RecorderMic140NodeNumberForSourceId(ASourceId),
+      AChannelNumber]));
 end;
 
 function TRecorderSettingsSourceProbe.Mic140TagOutputModeForChannel(const ASourceId: string;
@@ -362,6 +363,7 @@ var
   lHost: string;
   lOutputMode: TRecorderMic140OutputMode;
   lPort: Word;
+  lNodeNumber: Integer;
   lSignal: TMeraSignalInfo;
 
   function Mic140DeviceNamePrefix: string;
@@ -386,6 +388,15 @@ var
     lPrefixHost := StringReplace(lPrefixHost, ':', '_', [rfReplaceAll]);
     Result := '140-{' + lPrefixHost;
   end;
+
+  procedure MigrateLinkedTagAddress(const AAddress: string);
+  var
+    lTag: TRecorderTag;
+  begin
+    lTag := FindTagBySourceAddress(ASourceId, AAddress);
+    if (lTag <> nil) and (not SameText(lTag.Address, AAddress)) then
+      lTag.Address := AAddress;
+  end;
 begin
   RemoveSourceSignals(ASourceId);
 
@@ -404,13 +415,19 @@ begin
     if lDeviceSerial <= 0 then
       RecorderMic140QueryHardwareCalibrSerial(lHost, lPort, lDeviceSerial);
   end;
+  if (fRegistry <> nil) and RecorderMic140ResolveEndpoint(fRegistry, ASourceId,
+    lHost, lPort) then
+    lNodeNumber := RecorderMic140NodeNumberForHost(lHost)
+  else
+    lNodeNumber := RecorderMic140NodeNumberForSourceId(ASourceId);
   lDeviceNamePrefix := Mic140DeviceNamePrefix;
 
   for I := 1 to AChannelCount do
   begin
-    lAddress := Format('%d-%2.2d', [MIC140DefaultNodeNumber, I]);
+    lAddress := Format('%d-%2.2d', [lNodeNumber, I]);
     if not IsChannelEnabled(AEnabledChannels, lAddress) then
       Continue;
+    MigrateLinkedTagAddress(lAddress);
 
     lOutputMode := momMillivolts;
     if (I <= Length(AChannelSettings)) and
@@ -443,7 +460,8 @@ begin
 
   for I := 1 to RecorderMic140VisibleTemperatureCount(1) do
   begin
-    lAddress := RecorderMic140TemperatureAddressText(MIC140DefaultNodeNumber, I);
+    lAddress := RecorderMic140TemperatureAddressText(lNodeNumber, I);
+    MigrateLinkedTagAddress(lAddress);
     lFreqHz := Mic140TagPollFrequency(ASourceId, lAddress);
     if lFreqHz <= 0 then
       lFreqHz := Mic140PollFrequencyForChannel(ASourceId, 1);

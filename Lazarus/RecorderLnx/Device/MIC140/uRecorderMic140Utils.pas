@@ -53,6 +53,8 @@ function TryParseRecorderMic140SourceId(const ASourceId: string;
 function RecorderMic140TcpProbe(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal): Boolean;
 function RecorderMic140HostLastOctet(const AHost: string; out AOctet: Integer): Boolean;
+function RecorderMic140NodeNumberForHost(const AHost: string): Integer;
+function RecorderMic140NodeNumberForSourceId(const ASourceId: string): Integer;
 function RecorderMic140HardwareCalibrSerialFromFirmware(const AFirmware: TRecorderMic140LegacyFirmware): Integer;
 function Mic140FirmwareWordLooksLikeDeviceIdentity(AValue: Word): Boolean;
 function Mic140FirmwareWordIsPlausibleDeviceSerial(AValue: Word): Boolean;
@@ -428,7 +430,23 @@ begin
   lPart := Trim(Copy(AHost, lDotPos + 1, MaxInt));
   if lPart = '' then
     Exit;
-  Result := TryStrToInt(lPart, AOctet);
+  Result := TryStrToInt(lPart, AOctet) and (AOctet > 0) and (AOctet <= 255);
+end;
+
+function RecorderMic140NodeNumberForHost(const AHost: string): Integer;
+begin
+  if not RecorderMic140HostLastOctet(AHost, Result) then
+    Result := MIC140DefaultNodeNumber;
+end;
+
+function RecorderMic140NodeNumberForSourceId(const ASourceId: string): Integer;
+var
+  lHost: string;
+  lPort: Word;
+begin
+  Result := MIC140DefaultNodeNumber;
+  if TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
+    Result := RecorderMic140NodeNumberForHost(lHost);
 end;
 
 function Mic140FirmwareWordLooksLikeDeviceIdentity(AValue: Word): Boolean;

@@ -785,7 +785,7 @@ begin
   fCjcCorrectLogWritten := False;
   fTemperatureModeWarningLogged := False;
   fDeviceSerial := 0;
-  lNodeNumber := MIC140DefaultNodeNumber;
+  lNodeNumber := RecorderMic140NodeNumberForSourceId(lSourceId);
   fStatusTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'status');
   fBlockCountTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'blocks');
   fChannelTagNames := TStringList.Create;
@@ -823,6 +823,8 @@ begin
     Exit;
   if fRuntimeStatusTag = nil then
     Exit;
+  if not Registry.ContainsTag(fRuntimeStatusTag) then
+    Exit;
   if (not AForce) and (fLastStatusCode = AStatusCode) then
     Exit;
   fLastStatusCode := AStatusCode;
@@ -837,6 +839,8 @@ begin
   if Registry = nil then
     Exit;
   if fRuntimeBlockCountTag = nil then
+    Exit;
+  if not Registry.ContainsTag(fRuntimeBlockCountTag) then
     Exit;
   Registry.PublishValue(fRuntimeBlockCountTag,
     Max(0.0, fLastPublishedBlockEndTimeSec), ABlockCount);
@@ -1242,6 +1246,12 @@ var
   lNode: Integer;
   lTag: TRecorderTag;
   lTagName: string;
+  function TagRequested(const AName, AAddress: string): Boolean;
+  begin
+    Result := (fTagNames.Count > 0) and
+      ((fTagNames.IndexOf(AName) >= 0) or
+       ((AAddress <> '') and (fTagNames.IndexOf(AAddress) >= 0)));
+  end;
 begin
   lTag := ARegistry.FindByName(fStatusTagName);
   if lTag = nil then
@@ -1252,6 +1262,10 @@ begin
   lTag.PollFrequencyHz := 1.0;
   lTag.SourceId := SourceId;
   lTag.Description := 'MIC-140 connection status: not checked';
+  lTag.ChannelCalibrationEnabled := False;
+  lTag.HardwareCalibrationEnabled := False;
+  if lTag.CalibrationNames <> nil then
+    lTag.CalibrationNames.Clear;
   fRuntimeStatusTag := lTag;
 
   lTag := ARegistry.FindByName(fBlockCountTagName);
@@ -1263,6 +1277,10 @@ begin
   lTag.PollFrequencyHz := 1.0;
   lTag.SourceId := SourceId;
   lTag.Description := 'MIC-140 successfully received scan blocks';
+  lTag.ChannelCalibrationEnabled := False;
+  lTag.HardwareCalibrationEnabled := False;
+  if lTag.CalibrationNames <> nil then
+    lTag.CalibrationNames.Clear;
   fRuntimeBlockCountTag := lTag;
 
   lNode := MIC140DefaultNodeNumber;
@@ -1271,6 +1289,9 @@ begin
   for I := 0 to fTemperatureTagNames.Count - 1 do
   begin
     if not TemperatureChannelSelected(I + 1) then
+      Continue;
+    if not TagRequested(fTemperatureTagNames[I],
+      RecorderMic140TemperatureDisplayName(lNode, I + 1)) then
       Continue;
 
     lTag := FindTagBySourceAddress(ARegistry, fTemperatureTagNames[I]);
@@ -1288,6 +1309,10 @@ begin
     lTag.SourceId := SourceId;
     lTag.Description := Format('MIC-140 temperature channel %s',
       [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
+    lTag.ChannelCalibrationEnabled := False;
+    lTag.HardwareCalibrationEnabled := False;
+    if lTag.CalibrationNames <> nil then
+      lTag.CalibrationNames.Clear;
   end;
 
   lChannels := fDevice.GetChannels;
@@ -1298,8 +1323,7 @@ begin
     lChannel := lChannels[I];
     if not lChannel.Enabled then
       Continue;
-    if (fTagNames.Count > 0) and (fTagNames.IndexOf(lChannel.Name) < 0) and
-      (fTagNames.IndexOf(lChannel.Address) < 0) then
+    if not TagRequested(lChannel.Name, lChannel.Address) then
       Continue;
 
     lTagName := lChannel.Name;

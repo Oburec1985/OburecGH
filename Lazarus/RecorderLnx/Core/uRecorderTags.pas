@@ -447,6 +447,7 @@ type
 
     { Ищет тег по имени без учета регистра. Возвращает nil, если тег не найден. }
     function FindByName(const AName: string): TRecorderTag;
+    function ContainsTag(ATag: TRecorderTag): Boolean;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
     function FindTagHardwareCalibration(ATag: TRecorderTag): TRecorderCalibration;
@@ -1643,6 +1644,11 @@ begin
       Exit(GetTag(I));
 end;
 
+function TRecorderTagRegistry.ContainsTag(ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and (fTags.IndexOf(ATag) >= 0);
+end;
+
 
 function TRecorderTagRegistry.RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
 var
@@ -1933,6 +1939,8 @@ var
 begin
   if ATag = nil then
     raise ERecorderTagError.Create('Tag is nil');
+  if not ContainsTag(ATag) then
+    Exit;
 
   ATimeSec := ResolvePublishTime(ATimeSec);
   lValue := TransformTagValue(ATag, AValue);
@@ -2004,6 +2012,8 @@ begin
 
   if ATag = nil then
     raise ERecorderTagError.Create('Tag is nil');
+  if not ContainsTag(ATag) then
+    Exit;
 
   if AValuesAlreadyTransformed then
     ATag.AddSamples(ATimes, AValues, ACount)

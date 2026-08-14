@@ -36,7 +36,7 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Classes, SysUtils, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   StrUtils,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
@@ -315,6 +315,10 @@ type
     procedure SaveProjectPackage;
     { Переназначает текущий каталог пакета конфигурации проекта. }
     procedure SetProjectConfigDir(const ADirectoryName: string);
+    function GetAppConfigDir: string;
+    function GetAppConfigFileName: string;
+    function LoadDefaultProjectConfigDir: string;
+    procedure SaveDefaultProjectConfigDir;
     { Создает popup-меню кнопки конфигурации с Save/Load/Save As. }
     procedure EnsureConfigPopupMenu;
     { Показывает popup-меню операций конфигурации. }
@@ -406,9 +410,9 @@ implementation
 {$R *.lfm}
 
 const
-  CDefaultProjectConfigDir = 'config' + DirectorySeparator + 'projects' +
-    DirectorySeparator + 'default';
   CProjectBaseName = 'default';
+  CAppConfigSection = 'Application';
+  CDefaultProjectConfigDirKey = 'DefaultProjectConfigDir';
   COldRunControlFileName = 'run-control.ini';
   CDeviceHealthProbeTimeoutMs = 1000;
 
@@ -418,7 +422,6 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   lPopupMenu: TPopupMenu;
   lMenuItem: TMenuItem;
-  lConfigRoot: string;
   lStageStartedAt: QWord;
 begin
   RegisterThreadName(GetThreadID, 'UIThread');
@@ -455,13 +458,7 @@ begin
   fDetachedForms := TStringList.Create;
   fDetachedForms.Sorted := True;
   fDetachedForms.Duplicates := dupError;
-  lConfigRoot := RecorderConfigPath;
-  if lConfigRoot <> '' then
-    SetProjectConfigDir(IncludeTrailingPathDelimiter(lConfigRoot) +
-      'projects' + DirectorySeparator + 'default')
-  else
-    SetProjectConfigDir(IncludeTrailingPathDelimiter(GetDevProjectDir) +
-      CDefaultProjectConfigDir);
+  SetProjectConfigDir(LoadDefaultProjectConfigDir);
 
   LoadRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
@@ -2327,6 +2324,84 @@ begin
   AddLog('  run-control: ' + lFiles.RunControlFileName);
 end;
 
+function TMainForm.GetAppConfigDir: string;
+begin
+  Result := RecorderConfigPath;
+  if Result = '' then
+    Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config';
+  Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
+end;
+
+function TMainForm.GetAppConfigFileName: string;
+begin
+  Result := GetAppConfigDir + 'app.ini';
+end;
+
+function TMainForm.LoadDefaultProjectConfigDir: string;
+
+  function IsAbsolutePath(const APath: string): Boolean;
+  begin
+    Result := (APath <> '') and
+      (((Length(APath) >= 2) and (APath[2] = ':')) or
+       (APath[1] = PathDelim) or
+       ((Length(APath) >= 2) and (APath[1] = '\') and (APath[2] = '\')));
+  end;
+
+var
+  lAppConfigDir: string;
+  lAppConfigFileName: string;
+  lConfiguredDir: string;
+  lIni: TIniFile;
+begin
+  lAppConfigDir := GetAppConfigDir;
+  Result := lAppConfigDir + 'projects' + DirectorySeparator + 'default';
+  lAppConfigFileName := GetAppConfigFileName;
+  if not FileExists(lAppConfigFileName) then
+    Exit;
+
+  lIni := TIniFile.Create(lAppConfigFileName);
+  try
+    lConfiguredDir := Trim(lIni.ReadString(CAppConfigSection,
+      CDefaultProjectConfigDirKey, ''));
+  finally
+    lIni.Free;
+  end;
+
+  if lConfiguredDir = '' then
+    Exit;
+  if IsAbsolutePath(lConfiguredDir) then
+    Result := lConfiguredDir
+  else
+    Result := lAppConfigDir + lConfiguredDir;
+end;
+
+procedure TMainForm.SaveDefaultProjectConfigDir;
+var
+  lAppConfigDir: string;
+  lAppConfigFileName: string;
+  lProjectConfigDir: string;
+  lValue: string;
+  lIni: TIniFile;
+begin
+  lAppConfigDir := GetAppConfigDir;
+  lAppConfigFileName := GetAppConfigFileName;
+  lProjectConfigDir := IncludeTrailingPathDelimiter(ExpandFileName(
+    fProjectConfigDir));
+
+  lValue := lProjectConfigDir;
+  if AnsiStartsText(lAppConfigDir, lProjectConfigDir) then
+    lValue := ExcludeTrailingPathDelimiter(Copy(lProjectConfigDir,
+      Length(lAppConfigDir) + 1, MaxInt));
+
+  ForceDirectories(lAppConfigDir);
+  lIni := TIniFile.Create(lAppConfigFileName);
+  try
+    lIni.WriteString(CAppConfigSection, CDefaultProjectConfigDirKey, lValue);
+  finally
+    lIni.Free;
+  end;
+end;
+
 procedure TMainForm.SetProjectConfigDir(const ADirectoryName: string);
 var
   lFiles: TRecorderProjectFileSet;
@@ -2391,6 +2466,7 @@ begin
     Exit;
 
   SetProjectConfigDir(lDir);
+  SaveDefaultProjectConfigDir;
   SaveProjectPackage;
   AddLog('Project config directory changed: ' + fProjectConfigDir);
 end;
@@ -2406,6 +2482,7 @@ begin
   if fRecorder.StateMachine.State <> rsStop then
     fRecorder.StateMachine.Stop;
   SetProjectConfigDir(lDir);
+  SaveDefaultProjectConfigDir;
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;

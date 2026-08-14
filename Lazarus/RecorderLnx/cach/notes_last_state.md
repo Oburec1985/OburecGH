@@ -5883,3 +5883,35 @@ TCP-соединение, а обычный захват остаётся пас
 **Verification:** first `RecorderLnx.lpi` rebuild reached link but failed because running `RecorderLnx.exe` PID `7016` locked the output. After stopping it, rebuild completed with exit code `0`. Existing Windows post-build `#!/bin/sh` message remains non-blocking.
 
 **Status:** fresh hardware check needed. If reset log shows `cleanup OK` and then `initialize OK`, power cycling was avoided. If it still shows `Mebius IoControl timeout`, reboot/power-cycle MIC-183/185 hardware.
+## 2026-08-13 20:35 - MIC-140 source-only add no longer creates user tags or crashes calibration transform
+
+**Request:** after adding MIC-140 devices by auto-search and pressing OK, the user re-opened settings and got MIC-140 source errors/crash near `TRecorderTagRegistry.TransformTagValue`; the user did not create channel tags.
+
+**Done:** fixed MIC-140 `DoCreateTags` so an empty selected-tag list means no user measurement tags are created for source-only add. Internal MIC-140 status/block diagnostic tags are numeric and have calibration disabled. Cached runtime tag pointers are validated with `TRecorderTagRegistry.ContainsTag`; stale cached tags are ignored by publish paths. Calibration transform/save/load paths now guard nil tag/calibration lists. Detailed history: `errors/2026-08-13-mic140-source-only-tag-crash.md`.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0. Live hardware communication was not checked in this pass because the user turned the devices off.
+
+**Status:** ready for UI retest with devices powered on. Expected: auto-search can add MIC-140 sources without creating 48+3 user tags, re-entering settings and opening source properties does not crash; offline/error icons are expected while devices are off.
+
+## 2026-08-14 10:40 - Project path persists after Save As / restart
+
+**Request:** user saved config under `C:\Mera Files\RecorderLnx\config\projects\002`, restarted RecorderLnx, but the title still pointed to `D:\works\OburecGH\Lazarus\RecorderLnx\config\projects\default`.
+
+**Done:** fixed `UI/uMainForm.pas` startup so it reads `[Application] DefaultProjectConfigDir` from app config instead of hardcoding `projects/default`. `Save As` and `Load From` now write the selected project dir back to `app.ini`. When `RecorderConfigPath` is empty, app config now falls back to `RecorderServicePath\config`, not the build-tree `GetDevProjectDir\config`. Updated real `C:\Mera Files\RecorderLnx\config\app.ini` to `DefaultProjectConfigDir=projects/002`.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code `0`; old running `RecorderLnx.exe` was stopped before linking. Detailed hypothesis log: `errors/2026-08-14-project-config-default-path.md`.
+
+## 2026-08-14 11:15 - Reset all devices no longer runs full prepare in modal UI
+
+**Request:** user reported that "reset all devices" in hardware settings stayed busy for more than a minute; after it returned only one MIC-185 recovered, although other devices ping.
+
+**Done:** `UI/uRecorderSettingsDialog.pas` no longer calls `DataSources.PrepareHardwareAll` synchronously after reset-all or retry. The reset command now releases/marks device reset requests and refreshes the tree quickly; actual Connect/Initialize/Configure is left to the normal data-source lifecycle. Successful reset tasks clear stale offline flags, while new protocol failures will be recorded on the next real prepare.
+
+**Verification:** first rebuild failed only because running `RecorderLnx.exe` PID `21472` locked the exe; after stopping it, `RecorderLnx.lpi` rebuilt with exit code `0`. Detailed hypothesis log: `errors/2026-08-14-hardware-reset-all-blocks-ui.md`.
+## 2026-08-14 11:23 - MIC-140 channel addresses now include device node
+
+**Request:** user showed MIC-140 selected tags from different devices with identical addresses like `2-38`, while names contained different IP octets (`140_{30_38}`, `140_{41_38}`). Address must include the node number; the tree must not have two nodes with the same index.
+
+**Done:** added MIC-140 node helpers based on the last IPv4 octet and used them in the source probe, runtime `TRecorderMic140Device`, datasource diagnostic setup, and MIC-140 source dialog. Existing old `2-*` tags are migrated by matching channel number inside the same `SourceId`, including when MIC-140 source properties are confirmed with OK, so `.30 ch38` becomes `30-38` and `.41 ch38` becomes `41-38`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`; first link attempt was blocked by a running `RecorderLnx.exe`, then succeeded after stopping only that process. Details: `errors/2026-08-14-mic140-duplicate-node-addresses.md`.

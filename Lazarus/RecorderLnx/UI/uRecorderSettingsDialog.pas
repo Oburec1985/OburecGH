@@ -2919,10 +2919,6 @@ end;
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
   I: Integer;
-  lCleanupError: string;
-  lHost: string;
-  lPort: Word;
-  lRetryCount: Integer;
   lErrors: TStringList;
   lNode: TTreeNode;
   lProcedures: array of TThreadMethod;
@@ -2985,43 +2981,17 @@ begin
     { Independent endpoints reset concurrently; only result publication and
       LCL refresh happen in the main thread after all workers have finished. }
     SharedRunParallel(lProcedures);
-    { Сброс только освобождает старую сессию. Повторное подключение и
-      программирование выполняет сам источник ровно один раз. }
-    fRecorder.DataSources.PrepareHardwareAll;
-
-    { Общий reset оригинального Recorder повторяет только не
-      восстановившиеся host-устройства. Одиночный reset повтора не делает. }
-    lRetryCount := 0;
-    if Sender = nil then
-    begin
-      for I := 0 to High(lTasks) do
-        if RecorderHardwareIsSourceOffline(lTasks[I].SourceId) then
-        begin
-          RecorderHardwareRequestSourceReset(lTasks[I].SourceId);
-          if TryParseRecorderMic185SourceId(lTasks[I].SourceId, lHost, lPort) then
-          begin
-            RecorderMic185RuntimeDetach(lHost, lPort);
-            RecorderMic185CleanupEndpoint(lHost, lPort, lCleanupError);
-          end;
-          Inc(lRetryCount);
-        end;
-      if lRetryCount > 0 then
-      begin
-        RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'BEGIN',
-          Format('device_count=%d', [lRetryCount]));
-        fRecorder.DataSources.PrepareHardwareAll;
-        RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'OK',
-          Format('device_count=%d', [lRetryCount]));
-      end;
-    end;
+    { Reset must not run a full hardware preparation synchronously from the
+      settings dialog.  Offline MIC-185 endpoints can spend seconds in
+      Connect/Initialize/Configure, and doing it here multiplies timeouts by
+      device count while the modal UI is blocked.  The data source consumes the
+      reset request at its normal lifecycle entry point and prepares itself
+      once before the next Preview/Record. }
     for I := 0 to High(lTasks) do
-      if lTasks[I].Succeeded and
-        (not RecorderHardwareIsSourceOffline(lTasks[I].SourceId)) then
+      if lTasks[I].Succeeded then
         RecorderHardwareClearSourceOffline(lTasks[I].SourceId)
       else
       begin
-        lTasks[I].fErrorText := RecorderHardwareSourceOfflineReason(
-          lTasks[I].SourceId);
         if Trim(lTasks[I].ErrorText) = '' then
           lTasks[I].fErrorText := 'Сброс устройства не выполнен';
         lTasks[I].fErrorText := AddMic185PowerCycleHint(lTasks[I].SourceId,

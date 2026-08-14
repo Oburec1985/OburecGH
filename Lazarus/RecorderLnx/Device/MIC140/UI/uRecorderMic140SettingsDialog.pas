@@ -223,7 +223,8 @@ function TRecorderMic140SettingsDialog.ChannelAddressText(
   AChannelNumber: Integer): string;
 begin
   { Адрес = номер узла + канал, не серийный номер прибора. }
-  Result := Format('%d-%2.2d', [MIC140DefaultNodeNumber, AChannelNumber]);
+  Result := Format('%d-%2.2d', [RecorderMic140NodeNumberForHost(
+    Trim(fHostEdit.Text)), AChannelNumber]);
 end;
 
 function TRecorderMic140SettingsDialog.CollectSelectedChannels: TStringList;
@@ -644,6 +645,8 @@ var
   lConfig: TRecorderMic140SourceConfig;
   lHost: string;
   lPort: Word;
+  lNewAddress: string;
+  lNodeNumber: Integer;
   lResult: TRecorderMic140DialogResult;
   lSettings: TRecorderMic140ChannelSettings;
   lTag: TRecorderTag;
@@ -696,6 +699,7 @@ begin
         end;
 
     ANewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
+    lNodeNumber := RecorderMic140NodeNumberForHost(lResult.Host);
     { Обычный OK только сохраняет уже полученные настройки. Автоматический
       опрос здесь открывал отдельный TMic140v2Tcp поверх рабочего сеанса
       источника и приводил к исключению при возврате в диалог тега. }
@@ -758,6 +762,9 @@ begin
       if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
         (lChannelNumber > 0) and (lChannelNumber <= Length(lResult.ChannelSettings)) then
       begin
+        lNewAddress := Format('%d-%2.2d', [lNodeNumber, lChannelNumber]);
+        if not SameText(lTag.Address, lNewAddress) then
+          lTag.Address := lNewAddress;
         lSettings := lResult.ChannelSettings[lChannelNumber - 1];
         lSettings.ChannelAddress := lTag.Address;
         lConfig.SetChannelSettings(lChannelNumber, lTag.Address, lSettings);
