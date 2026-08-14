@@ -2042,10 +2042,8 @@ begin
   { Прошивка MIC-185 допускает параллельный сбор, но одновременное
     программирование нескольких контроллеров даёт нестабильный результат.
     Последовательно выполняется только connect/init/config. }
-  EnterCriticalSection(gMic185PrepareLock);
+  inherited PrepareHardware;
   try
-    inherited PrepareHardware;
-    try
     if fDevice = nil then
       ConfigureDevice;
     ApplyChannelProgramSettings;
@@ -2092,8 +2090,13 @@ begin
       Format('sn=%d version=%s', [lNativeDevice.DeviceSerial,
         Mic185FormatSoftVersion(lNativeDevice.SoftVersion)]),
       GetTickCount64 - lStageStartedAt);
-    RecorderMic185SetKnownIdentity(Registry, SourceId,
-      lNativeDevice.DeviceSerial, lNativeDevice.SoftVersion);
+    EnterCriticalSection(gMic185PrepareLock);
+    try
+      RecorderMic185SetKnownIdentity(Registry, SourceId,
+        lNativeDevice.DeviceSerial, lNativeDevice.SoftVersion);
+    finally
+      LeaveCriticalSection(gMic185PrepareLock);
+    end;
     lStageStartedAt := GetTickCount64;
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'BEGIN', '');
     if not lNativeDevice.TryProgramDevice(lTestError) then
@@ -2115,24 +2118,21 @@ begin
     RecorderHardwareClearSourceOffline(SourceId);
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'OK',
       Format('sn=%d', [lNativeDevice.DeviceSerial]));
-    except
-      on E: Exception do
+  except
+    on E: Exception do
+    begin
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'EXCEPTION',
+        E.ClassName + ': ' + E.Message);
+      RecorderHardwareMarkSourceOffline(SourceId, E.Message);
+      RecorderHardwareUnregisterLiveDevice(Self);
+      if fDevice <> nil then
       begin
-        RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'EXCEPTION',
-          E.ClassName + ': ' + E.Message);
-        RecorderHardwareMarkSourceOffline(SourceId, E.Message);
-        RecorderHardwareUnregisterLiveDevice(Self);
-        if fDevice <> nil then
-        begin
-          try
-            fDevice.Disconnect;
-          except
-          end;
+        try
+          fDevice.Disconnect;
+        except
         end;
       end;
     end;
-  finally
-    LeaveCriticalSection(gMic185PrepareLock);
   end;
 end;
 

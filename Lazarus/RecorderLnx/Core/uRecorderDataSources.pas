@@ -298,6 +298,8 @@ type
       Thread: TRecorderDataSourceThread; { Поток-опрашиватель источника }
       Enabled: Boolean;                  { Разрешён ли сбор с источника }
       PrepareError: string;              { Ошибка подготовки без исключения в UI }
+      Prepared: Boolean;
+      function NeedsPrepareHardware: Boolean;
       procedure PrepareHardware;
     end;
   private
@@ -322,7 +324,7 @@ type
       AEnabled: Boolean = True);
     procedure SetSourceEnabled(const ASourceId: string; AEnabled: Boolean);
     procedure ReplaceSource(const ASource: IRecorderDataSource;
-      AEnabled: Boolean = True);
+      AEnabled: Boolean = True; APrepareNow: Boolean = True);
     procedure RemoveSource(const ASourceId: string);
 
     { Ищет источник по SourceId без учета регистра. }
@@ -1462,11 +1464,22 @@ end;
 
 { TRecorderDataSourceManager }
 
+function TRecorderDataSourceManager.TSourceContext.NeedsPrepareHardware: Boolean;
+begin
+  Result := (not Prepared) or
+    RecorderHardwareHasSourceResetRequest(Source.SourceId);
+end;
+
 procedure TRecorderDataSourceManager.TSourceContext.PrepareHardware;
 begin
   PrepareError := '';
+  Prepared := False;
   try
     Source.PrepareHardware;
+    if RecorderHardwareIsSourceOffline(Source.SourceId) then
+      PrepareError := RecorderHardwareSourceOfflineReason(Source.SourceId)
+    else
+      Prepared := True;
   except
     on E: Exception do
     begin
@@ -1534,6 +1547,7 @@ begin
   lContext := TSourceContext.Create;
   lContext.Source := ASource;
   lContext.Enabled := AEnabled;
+  lContext.Prepared := False;
   fSources.Add(lContext);
 end;
 
@@ -1611,7 +1625,8 @@ begin
 end;
 
 procedure TRecorderDataSourceManager.ReplaceSource(
-  const ASource: IRecorderDataSource; AEnabled: Boolean);
+  const ASource: IRecorderDataSource; AEnabled: Boolean;
+  APrepareNow: Boolean);
 var
   lWasRunning: Boolean;
 begin
@@ -1621,7 +1636,7 @@ begin
   RemoveSource(ASource.SourceId);
   AddSource(ASource, AEnabled);
   ASource.ConfigureTags(fRegistry);
-  if AEnabled then
+  if AEnabled and APrepareNow then
   begin
     GetSourceContext(fSources.Count - 1).PrepareHardware;
     if GetSourceContext(fSources.Count - 1).PrepareError <> '' then
@@ -1683,6 +1698,8 @@ begin
   for I := 0 to fSources.Count - 1 do
     if GetSourceContext(I).Enabled then
     begin
+      if not GetSourceContext(I).NeedsPrepareHardware then
+        Continue;
       SetLength(lProcedures, Length(lProcedures) + 1);
       lProcedures[High(lProcedures)] := @GetSourceContext(I).PrepareHardware;
     end;
@@ -1708,15 +1725,20 @@ begin
     for I := 0 to fSources.Count - 1 do
       if GetSourceContext(I).Enabled then
       begin
-        GetSourceContext(I).PrepareHardware;
-        if GetSourceContext(I).PrepareError <> '' then
-          fLastErrors.Add(GetSourceContext(I).Source.SourceId + ': ' +
-            GetSourceContext(I).PrepareError);
+        lContext := GetSourceContext(I);
+        if not lContext.Prepared then
+        begin
+          if lContext.PrepareError = '' then
+            lContext.PrepareError :=
+              'hardware is not prepared; apply configuration before Preview';
+          fLastErrors.Add(lContext.Source.SourceId + ': ' +
+            lContext.PrepareError);
+        end;
       end;
     for I := 0 to fSources.Count - 1 do
     begin
       lContext := GetSourceContext(I);
-      if (not lContext.Enabled) or
+      if (not lContext.Enabled) or (not lContext.Prepared) or
         RecorderHardwareIsSourceOffline(lContext.Source.SourceId) then
         Continue;
       lContext.Thread := TRecorderDataSourceThread.Create(lContext.Source);

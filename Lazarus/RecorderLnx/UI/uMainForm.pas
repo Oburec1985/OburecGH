@@ -935,9 +935,11 @@ var
   lAfterSignatures: TStringList;
   lBeforeSignatures: TStringList;
   lConfigured: TRecorderConfiguredDataSource;
+  lChangedHardwareSources: Boolean;
   lDataSourcesChanged: Boolean;
   lSourceId: string;
   lSourceIds: TStringList;
+  lWasRunning: Boolean;
 
   procedure CaptureProgrammingSignatures(AList: TStringList);
   var
@@ -971,6 +973,8 @@ begin
     lSourceIds.Sorted := True;
     lSourceIds.Duplicates := dupIgnore;
     CaptureProgrammingSignatures(lBeforeSignatures);
+    lChangedHardwareSources := False;
+    lWasRunning := False;
     if fRecorder.StateMachine.State = rsRecord then
     begin
       fRecorder.StateMachine.Stop;
@@ -987,6 +991,11 @@ begin
       UpdateActiveSourceIds;
       if lDataSourcesChanged then
       begin
+        lChangedHardwareSources := False;
+        lWasRunning := (fRecorder.DataSources <> nil) and
+          fRecorder.DataSources.Running;
+        if lWasRunning then
+          StopDataSources;
         CaptureProgrammingSignatures(lAfterSignatures);
         for I := 0 to lBeforeSignatures.Count - 1 do
           lSourceIds.Add(lBeforeSignatures.Names[I]);
@@ -999,7 +1008,9 @@ begin
             lAfterSignatures.Values[lSourceId] then
             Continue;
           RecorderReplaceRuntimeSource(fRecorder, lSourceId,
-            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog);
+            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog,
+            False);
+          lChangedHardwareSources := True;
         end;
         if fRecorder.AlgorithmManager <> nil then
           fRecorder.AlgorithmManager.PrepareConfiguration;
@@ -1016,6 +1027,13 @@ begin
         if lConfigured <> nil then
           fRecorder.DataSources.SetSourceEnabled(
             fRecorder.DataSources.Sources[I].SourceId, lConfigured.Enabled);
+      end;
+      if lChangedHardwareSources then
+      begin
+        PrepareRuntimeForConfiguration;
+        AddLog('Changed data sources hardware prepared.');
+        if lWasRunning then
+          StartDataSources;
       end;
       UpdateActiveSourceIds;
       AddLog('Project settings applied.');

@@ -25,6 +25,8 @@ function RecorderHardwareSafeTestDeviceLink(ADevice: IRecorderDevice;
   out AErrorText: string): Boolean;
 procedure RecorderHardwareTestAllLiveSources;
 procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
+function RecorderHardwareHasSourceResetRequest(
+  const ASourceId: string): Boolean;
 function RecorderHardwareConsumeSourceResetRequest(
   const ASourceId: string): Boolean;
 procedure RecorderHardwareMarkSourceOffline(const ASourceId, AReason: string);
@@ -341,6 +343,26 @@ begin
     except
       { Ошибка будет отражена последующим PrepareHardware. }
     end;
+  end;
+end;
+
+function RecorderHardwareHasSourceResetRequest(
+  const ASourceId: string): Boolean;
+var
+  I: Integer;
+  lList: TList;
+begin
+  Result := False;
+  if (Trim(ASourceId) = '') or (gHardwareResetEntries = nil) then
+    Exit;
+  lList := gHardwareResetEntries.LockList;
+  try
+    for I := 0 to lList.Count - 1 do
+      if SameText(TRecorderHardwareResetEntry(lList[I]).SourceId,
+        ASourceId) then
+        Exit(True);
+  finally
+    gHardwareResetEntries.UnlockList;
   end;
 end;
 

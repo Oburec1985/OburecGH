@@ -5915,3 +5915,21 @@ TCP-соединение, а обычный захват остаётся пас
 **Done:** added MIC-140 node helpers based on the last IPv4 octet and used them in the source probe, runtime `TRecorderMic140Device`, datasource diagnostic setup, and MIC-140 source dialog. Existing old `2-*` tags are migrated by matching channel number inside the same `SourceId`, including when MIC-140 source properties are confirmed with OK, so `.30 ch38` becomes `30-38` and `.41 ch38` becomes `41-38`.
 
 **Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code `0`; first link attempt was blocked by a running `RecorderLnx.exe`, then succeeded after stopping only that process. Details: `errors/2026-08-14-mic140-duplicate-node-addresses.md`.
+## 2026-08-14 12:05 - Settings exit no longer prepares changed hardware while stopped
+
+**Request:** user reported that leaving Settings and returning to the main screen is very slow, and asked whether RecorderLnx has `ecm/lcm` (`EnterConfigMode`/`LeaveConfigMode`) like the original.
+
+**Findings:** original Recorder has explicit `ecm/lcm` console commands and `EnterConfigMode`/`LeaveConfigMode` API in `mr/rcmain.cpp`; RecorderLnx has no literal ECM/LCM API, only distributed settings-dialog logic. `OkButtonClick` does not call `PrepareHardwareAll`, but changed sources went through `RecorderReplaceRuntimeSource`, whose manager-level `ReplaceSource` synchronously called `PrepareHardware` even in stopped mode.
+
+**Done:** added an `APrepareNow` flag through `TRecorderDataSourceManager.ReplaceSource` and `RecorderReplaceRuntimeSource`. `TMainForm.btnSettingsClick` now prepares replacement hardware immediately only when the data-source manager is already running; in Stop mode settings exit only rebuilds changed runtime source objects and defers device connect/programming until Preview/Record or explicit preparation.
+
+**Verification:** first rebuild was blocked by running `RecorderLnx.exe` PID 5212; after stopping it, `RecorderLnx.lpi` rebuilt with exit code 0. Detailed notes: `errors/2026-08-14-settings-exit-slow-ecm-lcm.md`.
+## 2026-08-14 — Preview не должен программировать железо
+
+**Запрос:** первый переход в просмотр занял около 30 секунд, повторный переход был быстрым. Пользователь уточнил правило жизненного цикла: `HardPrepare` должен выполняться при применении конфигурации только для измененных приборов; в Preview программировать ничего нельзя; подготовка приборов должна идти параллельно, чтобы тайминги ожидания не складывались.
+
+**Сделано:** по `C:\Mera Files\RecorderLnx\LogWindows.log` подтверждено `Data sources started in 25953 ms` на первом Preview и `15 ms` на повторном. В `Core/uRecorderDataSources.pas` добавлен флаг `Prepared` в контекст источника; `PrepareHardwareAll` теперь готовит только pending/reset источники, а `StartAll` больше не вызывает `PrepareHardware`. В `Core/uRecorderHardwareLiveDevices.pas` добавлена неразрушающая проверка pending reset. В `UI/uMainForm.pas` Apply/OK заменяет измененные runtime sources без одиночного prepare, синхронизирует enabled и затем вызывает общий prepare для changed/pending. В `Device/MIC185/uRecorderMic185DataSource.pas` снята глобальная сериализация connect/init/config; lock оставлен только вокруг записи identity в общий registry.
+
+**Проверка:** первый rebuild дошел до линковки и упал `error code: 5`, потому что был запущен `RecorderLnx.exe` PID 10360. Процесс остановлен, повторная сборка `RecorderLnx.lpi` завершилась с exit code 0. Известное post-build сообщение `#!/bin/sh` осталось неблокирующим.
+
+**Статус:** код готов к ручной проверке: после Apply/OK подготовка должна происходить на измененных приборах, Preview не должен занимать 30 секунд из-за `PrepareHardware`.

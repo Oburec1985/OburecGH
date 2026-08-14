@@ -23,7 +23,8 @@ procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
   ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent = nil);
 procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
   const ASourceId: string; ADataUpdateMs: Cardinal;
-  ALog: TRecorderRuntimeSourceLogEvent = nil);
+  ALog: TRecorderRuntimeSourceLogEvent = nil;
+  APrepareNow: Boolean = True);
 
 implementation
 
@@ -261,7 +262,7 @@ end;
 
 procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
   const ASourceId: string; ADataUpdateMs: Cardinal;
-  ALog: TRecorderRuntimeSourceLogEvent);
+  ALog: TRecorderRuntimeSourceLogEvent; APrepareNow: Boolean);
 var
   I: Integer;
   lChannelCount: Integer;
@@ -369,7 +370,8 @@ begin
     else
       Exit;
 
-    ARecorder.DataSources.ReplaceSource(lSource, lConfigured.Enabled);
+    ARecorder.DataSources.ReplaceSource(lSource, lConfigured.Enabled,
+      APrepareNow);
     Log(ALog, 'Runtime source reconfigured: ' + ASourceId);
   finally
     lTagNames.Free;
