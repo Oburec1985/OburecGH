@@ -43,6 +43,8 @@ type
     function LegacyDecommutateRawBlock(const ARaw: TMic140LegacyRawBlock;
       out ABlock: TRecorderDeviceSampleBlock): Boolean;
     function LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
+    function LastUts(out ADeviceTimeSec, AUtsValueSec: Double;
+      out AGeneration: QWord): Boolean;
     function LegacyStreamReadCount: Int64;
     function LegacyNumBuffGapCount: Integer;
     function LegacyDuplicateNumBuffCount: Integer;

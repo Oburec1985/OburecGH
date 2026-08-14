@@ -69,6 +69,16 @@ begin
     Result := TStringList(AList.Objects[lIndex]);
 end;
 
+function RecorderMic140TagDefinesScanFrequency(ATag: TRecorderTag): Boolean;
+var
+  lChannelNumber: Integer;
+begin
+  Result := (ATag <> nil) and (ATag.PollFrequencyHz > 0) and
+    (not RecorderMic140IsUtsAddress(ATag.Address)) and
+    (Pos('diagnostics.', LowerCase(Trim(ATag.Address))) <> 1) and
+    ParseMic140ChannelNumber(ATag.Address, lChannelNumber);
+end;
+
 procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
   ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent);
 var
@@ -171,14 +181,15 @@ begin
       lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
       lMicOutputMode := momMillivolts;
       for J := 0 to lTagNames.Count - 1 do
-        if TryStrToInt(lTagNames[J], lChannelNumber) and
+        if (not RecorderMic140IsUtsAddress(lTagNames[J])) and
+          ParseMic140ChannelNumber(lTagNames[J], lChannelNumber) and
           (lChannelNumber > lChannelCount) then
           lChannelCount := MIC140MaxChannelCount;
       for J := 0 to ARecorder.TagRegistry.TagCount - 1 do
       begin
         lTag := ARecorder.TagRegistry.Tags[J];
         if SameText(lTag.SourceId, lMicSources[I]) and
-          (lTag.PollFrequencyHz > 0) then
+          RecorderMic140TagDefinesScanFrequency(lTag) then
         begin
           lPollFrequencyHz := lTag.PollFrequencyHz;
           if Trim(lTag.SourceValueMode) <> '' then
@@ -332,12 +343,14 @@ begin
         lTag := ARecorder.TagRegistry.Tags[I];
         if not SameText(lTag.SourceId, ASourceId) then
           Continue;
-        if TryStrToInt(lTag.Address, lChannelNumber) and
+        if (not RecorderMic140IsUtsAddress(lTag.Address)) and
+          ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
           (lChannelNumber > lChannelCount) then
           lChannelCount := MIC140MaxChannelCount;
-        if lTag.PollFrequencyHz > 0 then
+        if RecorderMic140TagDefinesScanFrequency(lTag) then
           lPollFrequencyHz := lTag.PollFrequencyHz;
-        if Trim(lTag.SourceValueMode) <> '' then
+        if RecorderMic140TagDefinesScanFrequency(lTag) and
+          (Trim(lTag.SourceValueMode) <> '') then
           lMicOutputMode := RecorderMic140ConfigNameToOutputMode(
             lTag.SourceValueMode);
       end;

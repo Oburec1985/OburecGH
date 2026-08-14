@@ -55,6 +55,7 @@ type
     fReadFailCount: Integer;
     fBlockCountTagName: string;
     fStatusTagName: string;
+    fUtsTagName: string;
     fTagNames: TStringList;
     fCjcActiveLogWritten: Boolean;
     fCjcCorrectLogWritten: Boolean;
@@ -79,6 +80,10 @@ type
     fRuntimeThermoCompensation: Boolean;
     fRuntimeStatusTag: TRecorderTag;
     fRuntimeBlockCountTag: TRecorderTag;
+    fRuntimeUtsTag: TRecorderTag;
+    fLastPublishedUtsGeneration: QWord;
+    fLastPublishedUtsTickMs: QWord;
+    fUtsPublishLogCount: Integer;
     { Сетевой FIFO MIC-140 отдаёт несколько малых пакетов за один период
       обновления Recorder. В RunTime они собираются в одну логическую порцию,
       чтобы калибровка, оценки тегов и уведомления выполнялись один раз за
@@ -101,6 +106,7 @@ type
     procedure PublishDiagnostics(AStatusCode: Integer; const AStatusText: string;
       AForce: Boolean = False);
     procedure PublishBlockCounter(ABlockCount: Int64);
+    procedure PublishUtsIfNew;
     procedure PublishTemperatureBlocks(const AAux: TMic140AuxTemperatureBlock;
       const ATimes: TRecorderDoubleArray);
     function Mic140PublishedCodeInRecorderRange(AChannelIndex: Integer;
@@ -241,6 +247,9 @@ begin
     lTag := ARegistry.Tags[I];
     if SameText(lTag.SourceId, ASourceId) then
     begin
+      if RecorderMic140IsUtsAddress(lTag.Address) or
+        (Pos('diagnostics.', LowerCase(Trim(lTag.Address))) = 1) then
+        Continue;
       lTag.PollFrequencyHz := lFrequencyHz;
       lTag.EnsureBufferCapacity(lCapacity);
     end;
@@ -788,6 +797,7 @@ begin
   lNodeNumber := RecorderMic140NodeNumberForSourceId(lSourceId);
   fStatusTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'status');
   fBlockCountTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'blocks');
+  fUtsTagName := RecorderMic140UtsAddressText(lNodeNumber);
   fChannelTagNames := TStringList.Create;
   fChannelTagNames.CaseSensitive := False;
   fChannelTagNames.Sorted := False;
@@ -805,6 +815,7 @@ begin
   lNodeNumber := fMic.GetNodeNumber;
   fStatusTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'status');
   fBlockCountTagName := RecorderMic140DiagnosticTagName(lNodeNumber, 'blocks');
+  fUtsTagName := RecorderMic140UtsAddressText(lNodeNumber);
   RebuildTemperatureTagNames;
   fHardwarePrepared := False;
   fHardwarePrepareAttempted := False;
@@ -844,6 +855,40 @@ begin
     Exit;
   Registry.PublishValue(fRuntimeBlockCountTag,
     Max(0.0, fLastPublishedBlockEndTimeSec), ABlockCount);
+end;
+
+procedure TRecorderMic140DataSource.PublishUtsIfNew;
+var
+  lDeviceTimeSec: Double;
+  lUtsValueSec: Double;
+  lGeneration: QWord;
+  lNowTickMs: QWord;
+begin
+  if (Registry = nil) or (fRuntimeUtsTag = nil) or (fMic = nil) then
+    Exit;
+  if not Registry.ContainsTag(fRuntimeUtsTag) then
+    Exit;
+  lNowTickMs := GetTickCount64;
+  if (fLastPublishedUtsGeneration > 0) and
+    (lNowTickMs - fLastPublishedUtsTickMs < 900) then
+    Exit;
+  if not fMic.LastUts(lDeviceTimeSec, lUtsValueSec, lGeneration) then
+    Exit;
+  if lGeneration = fLastPublishedUtsGeneration then
+    Exit;
+  fLastPublishedUtsGeneration := lGeneration;
+  fLastPublishedUtsTickMs := lNowTickMs;
+  Registry.PublishValue(fRuntimeUtsTag, lDeviceTimeSec, lUtsValueSec);
+  if fUtsPublishLogCount < 4 then
+  begin
+    Inc(fUtsPublishLogCount);
+    Mic140LogWarning(Format(
+      '[DataSource:%s] MIC-140 UTS published #%d tag=%s x=%.6f uts=%.0f gen=%d',
+      [SourceId, fUtsPublishLogCount, fRuntimeUtsTag.Name, lDeviceTimeSec,
+       lUtsValueSec, lGeneration]));
+  end;
+  if Registry.TimeSystem <> nil then
+    Registry.TimeSystem.UpdateFromTagSample(lDeviceTimeSec, lUtsValueSec);
 end;
 
 procedure TRecorderMic140DataSource.PublishTemperatureBlocks(
@@ -923,6 +968,11 @@ begin
 
   fRuntimeStatusTag := Registry.FindByName(fStatusTagName);
   fRuntimeBlockCountTag := Registry.FindByName(fBlockCountTagName);
+  fRuntimeUtsTag := Registry.FindByName(fUtsTagName);
+  if fRuntimeUtsTag = nil then
+    fRuntimeUtsTag := FindTagBySourceAddress(Registry, fUtsTagName);
+  fUtsPublishLogCount := 0;
+  fLastPublishedUtsTickMs := 0;
 
   SetLength(fRuntimeTemperatureTags, fTemperatureTagNames.Count);
   SetLength(fRuntimeTemperatureSelected, fTemperatureTagNames.Count);
@@ -1286,6 +1336,28 @@ begin
   lNode := MIC140DefaultNodeNumber;
   if fMic <> nil then
     lNode := fMic.GetNodeNumber;
+  fUtsTagName := RecorderMic140UtsAddressText(lNode);
+  if TagRequested(fUtsTagName, RecorderMic140UtsDisplayName(lNode)) then
+  begin
+    lTag := FindTagBySourceAddress(ARegistry, fUtsTagName);
+    if lTag = nil then
+      lTag := ARegistry.FindByName(fUtsTagName);
+    if lTag = nil then
+      lTag := ARegistry.FindByName(RecorderMic140UtsDisplayName(lNode));
+    if lTag = nil then
+      lTag := ARegistry.CreateTag(fUtsTagName, 4096);
+    lTag.Address := fUtsTagName;
+    lTag.UnitName := 's';
+    lTag.ModuleType := 'MIC-140';
+    lTag.PollFrequencyHz := 1.0;
+    lTag.SourceId := SourceId;
+    lTag.Description := 'MIC-140 UTS time channel';
+    lTag.ChannelCalibrationEnabled := False;
+    lTag.HardwareCalibrationEnabled := False;
+    if lTag.CalibrationNames <> nil then
+      lTag.CalibrationNames.Clear;
+  end;
+
   for I := 0 to fTemperatureTagNames.Count - 1 do
   begin
     if not TemperatureChannelSelected(I + 1) then
@@ -1524,6 +1596,7 @@ begin
   fTemperatureModeWarningLogged := False;
   fPublishedCorruptCount := 0;
   fLastAuxRevision := 0;
+  fLastPublishedUtsGeneration := 0;
   fLastPublishedBlockEndTimeSec := -1.0;
   ResetLogicalBlock;
   if (not fHardwarePrepared) or (fDevice = nil) then
@@ -2091,6 +2164,7 @@ begin
       if fReadFailCount = CMic140NoDataFailThreshold then
         PublishDiagnostics(CMic140StatusError, 'no scan data', True);
     end;
+    PublishUtsIfNew;
   except
     on E: Exception do
     begin

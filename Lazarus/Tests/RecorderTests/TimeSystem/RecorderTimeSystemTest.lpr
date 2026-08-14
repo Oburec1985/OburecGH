@@ -73,6 +73,14 @@ begin
   LogLine('OK ' + AStep);
 end;
 
+procedure AssertInRange(AValue, AMin, AMax: Double; const AStep: string);
+begin
+  if (AValue < AMin) or (AValue > AMax) then
+    raise Exception.CreateFmt('%s: expected %.3f..%.3f, got %.3f',
+      [AStep, AMin, AMax, AValue]);
+  LogFmt('OK %s -> %.3f', [AStep, AValue]);
+end;
+
 procedure TestFormatDuration;
 begin
   LogLine('--- FormatDuration ---');
@@ -99,10 +107,21 @@ begin
        lSnapshot.DisplayText]);
 
     lSystem.SourceKind := rtskUtsTime;
+    lSystem.Start;
     lSystem.UpdateFromTagSample(126.0, 7201.0);
     lSnapshot := lSystem.Snapshot;
     AssertEquals(lSnapshot.DisplayText, '02:00:01', 'UTS time display');
     LogFmt('SNAP uts elapsed=%.3f tag=%.3f uts=%.3f text=%s',
+      [lSnapshot.ElapsedSec, lSnapshot.LastTagTimeSec, lSnapshot.LastUtsTimeSec,
+       lSnapshot.DisplayText]);
+
+    Sleep(1100);
+    lSnapshot := lSystem.Snapshot;
+    AssertInRange(lSnapshot.LastUtsTimeSec, 7202.0, 7202.5,
+      'UTS time advances between hardware packets');
+    AssertEquals(lSnapshot.DisplayText, '02:00:02',
+      'UTS display advances between hardware packets');
+    LogFmt('SNAP uts advanced elapsed=%.3f tag=%.3f uts=%.3f text=%s',
       [lSnapshot.ElapsedSec, lSnapshot.LastTagTimeSec, lSnapshot.LastUtsTimeSec,
        lSnapshot.DisplayText]);
   finally

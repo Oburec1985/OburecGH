@@ -482,6 +482,23 @@ begin
     lSignal.Selected := SignalHasLinkedTag(lSignal);
     fMic140Signals.Add(lSignal);
   end;
+
+  lAddress := RecorderMic140UtsAddressText(lNodeNumber);
+  MigrateLinkedTagAddress(lAddress);
+  lSignal := TMeraSignalInfo.Create;
+  lSignal.Name := RecorderMic140UtsDisplayName(lNodeNumber);
+  lSignal.Address := lAddress;
+  lSignal.ModuleName := 'MIC-140';
+  lSignal.DataTypeName := 'R8';
+  lSignal.DataType := mvtFloat64;
+  lSignal.FrequencyHz := 1.0;
+  lSignal.UnitsName := 's';
+  lSignal.SourceValueMode := '';
+  lSignal.Description := 'MIC-140 UTS time channel';
+  lSignal.FileName := ASourceId;
+  lSignal.Enabled := True;
+  lSignal.Selected := SignalHasLinkedTag(lSignal);
+  fMic140Signals.Add(lSignal);
 end;
 
 procedure TRecorderSettingsSourceProbe.BuildMic185(const ASourceId: string);

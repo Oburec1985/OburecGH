@@ -11,12 +11,15 @@ unit uRecorderMic140LegacyConstants;
 interface
 
 const
-  CMic140LegacyScanId = 0;
+  CMic140LegacyScanId = 1;
+  CMic140LegacySevScanId = 0;
   CMic140LegacyTypeMic140 = 12;
+  CMic140LegacyTypeSev = 17;
   CMic140LegacyCmdAppendScanMain = 82;
   CMic140LegacyCmdResetScanMain = 83;
   CMic140LegacyCmdConfigScanMain = 84;
   CMic140LegacyCmdSetStateScan = 87;
+  CMic140LegacyCmdConfigScanSev = 91;
   CMic140LegacyCmdScanSetChans = 132;
   CMic140LegacyCmdScanSetBuff = 133;
   CMic140LegacyCmdAddChannelModule = 152;
@@ -29,6 +32,9 @@ const
   CMic140LegacyBiosScanContextWords = 6;
   CMic140LegacyBiosScanBufferDescWords = 10;
   CMic140LegacyBiosHeaderWords = 10;
+  CMic140LegacySevPayloadWords = 6;
+  CMic140LegacySevFifoReadyEntries = 6;
+  CMic140LegacySevScanDivider = 1;
   CMic140LegacyDescChanWords = 5;
   CMic140LegacyStartDescChanWords = 3;
   CMic140LegacyMaskGroundChannel = $4000;

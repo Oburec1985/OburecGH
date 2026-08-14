@@ -64,6 +64,7 @@ type
     fDisplayUpdateMs: Integer;       { Интервал обновления дисплея в мс }
     fLastTagTimeSec: Double;         { Время последнего тега }
     fLastUtsTimeSec: Double;         { Время последнего UTS }
+    fLastUtsUpdateTickMs: QWord;      { Монотонный тик получения последнего UTS }
     fLock: TRTLCriticalSection;      { Критическая секция для защиты внутренних данных }
     fResetAtStart: Boolean;          { Флаг сброса внешних данных времени при старте }
     fRunning: Boolean;               { Флаг активности записи }
@@ -79,6 +80,7 @@ type
     procedure SetResetAtStart(AValue: Boolean);
     procedure SetSourceKind(AValue: TRecorderTimeSourceKind);
     function InternalElapsedSec(ANowTickMs: QWord): Double;
+    function CurrentUtsDisplaySec(ANowTickMs: QWord): Double;
   public
     { Конструктор инициализирует критическую секцию и значения по умолчанию }
     constructor Create;
@@ -278,6 +280,15 @@ begin
   Result := (ANowTickMs - fStartTickMs) / CMsecsPerSec;
 end;
 
+function TRecorderTimeSystem.CurrentUtsDisplaySec(ANowTickMs: QWord): Double;
+begin
+  Result := fLastUtsTimeSec;
+  if (not fRunning) or (fLastUtsUpdateTickMs = 0) or
+    (ANowTickMs < fLastUtsUpdateTickMs) then
+    Exit;
+  Result := Result + (ANowTickMs - fLastUtsUpdateTickMs) / CMsecsPerSec;
+end;
+
 { TRecorderTimeSystem.Start
   Назначение:
     Потокобезопасно запускает отсчет времени записи/просмотра, фиксируя начальное время ПК и системные тики.
@@ -300,6 +311,7 @@ begin
     begin
       fLastTagTimeSec := 0;
       fLastUtsTimeSec := 0;
+      fLastUtsUpdateTickMs := 0;
     end;
   finally
     LeaveCriticalSection(fLock);
@@ -340,6 +352,7 @@ begin
     fStartTickMs := 0;
     fLastTagTimeSec := 0;
     fLastUtsTimeSec := 0;
+    fLastUtsUpdateTickMs := 0;
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -389,7 +402,10 @@ begin
     if ATagTimeSec >= 0 then
       fLastTagTimeSec := ATagTimeSec;
     if AUtsTimeSec >= 0 then
+    begin
       fLastUtsTimeSec := AUtsTimeSec;
+      fLastUtsUpdateTickMs := GetTickCount64;
+    end;
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -415,7 +431,7 @@ begin
     Result.StartLocalTime := fStartLocalTime;
     Result.ElapsedSec := InternalElapsedSec(lNowTickMs);
     Result.LastTagTimeSec := fLastTagTimeSec;
-    Result.LastUtsTimeSec := fLastUtsTimeSec;
+    Result.LastUtsTimeSec := CurrentUtsDisplaySec(lNowTickMs);
 
     case fSourceKind of
       rtskPcTime:
@@ -423,7 +439,7 @@ begin
       rtskTagTime:
         Result.DisplayText := FormatDuration(fLastTagTimeSec);
       rtskUtsTime:
-        Result.DisplayText := FormatDuration(fLastUtsTimeSec);
+        Result.DisplayText := FormatDuration(Result.LastUtsTimeSec);
     else
       Result.DisplayText := FormatDuration(Result.ElapsedSec);
     end;

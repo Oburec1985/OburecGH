@@ -14,6 +14,7 @@ uses
   SysUtils, Math, StrUtils,
   uRecorderMic140WireTypes,
   uRecorderMic140Protocol, uRecorderMic140Consts,
+  uRecorderMic140LegacyConstants,
   uRecorderMic140Timing, uRecorderMic140ChanDesc, uRecorderMic140Helper;
 
 type
@@ -51,6 +52,7 @@ type
     fLastFifoReady: Word;
     fLastValAddr: Word;
     fLastPayloadStride: Integer;
+    fLastSevProgrammed: Boolean;
     function AllocBuf(AWords: Word; out APg, AAddr: Word): Boolean;
     function AllocHeap(AWords: Word; out APg, AAddr: Word): Boolean;
     function BiosScanSlotCount: Integer;
@@ -59,6 +61,7 @@ type
     function TimerScale: Word;
     function TimerPeriod: Word;
     function ScanDivider: Word;
+    function ProgramSevScan(out AErr: string): Boolean;
   public
     constructor Create(ACli: TMic140v2Tcp; AChCnt: Integer; AFreq: Double;
       AUpdMs: Cardinal; ADevRev, ADevSubRev: Word;
@@ -74,6 +77,7 @@ type
     function LastExpectedMessageWords: Word;
     property LastValAddr: Word read fLastValAddr;
     property LastPayloadStride: Integer read fLastPayloadStride;
+    property LastSevProgrammed: Boolean read fLastSevProgrammed;
     property TemperatureChannelCount: Integer read fTemperatureChannelCount;
   end;
 
@@ -147,6 +151,9 @@ begin
     ┬л╨┤╨╡╤Б╨║╤А╨╕╨┐╤В╨╛╤А ╨╖╨╡╨╝╨╗╨╕ тЖТ ╨┤╨╡╤Б╨║╤А╨╕╨┐╤В╨╛╤А ╨║╨░╨╜╨░╨╗╨░┬╗. }
   fGroundEnabled := AGroundEnabled;
   fLastFifoReady := 0;
+  fLastValAddr := 0;
+  fLastPayloadStride := 0;
+  fLastSevProgrammed := False;
   SetLength(fRangeIndexes, fChCnt);
   SetLength(fCommutIndexes, fChCnt);
   SetLength(fBoardCommutIndexes, fChCnt);
@@ -273,6 +280,108 @@ begin
     Result := 500;
 end;
 
+function TMic140v2ScanProgrammer.ProgramSevScan(out AErr: string): Boolean;
+var
+  args, reply: TMic140v2WordBuf;
+  pg, scanDesc, fifoAddr, fifoDesc, fifoPg: Word;
+  fifoReady, fifoCapacity: Word;
+  lConfigCount: Word;
+begin
+  Result := False;
+  AErr := '';
+  if fCli = nil then
+  begin
+    AErr := 'TCP client missing';
+    Exit;
+  end;
+
+  if not AllocHeap(CMic140LegacyBiosScanContextWords, pg, scanDesc) then
+  begin
+    AErr := 'SEV scan context alloc failed';
+    Exit;
+  end;
+  SetLength(args, 5);
+  args[0] := CMic140LegacyTypeSev;
+  args[1] := CMic140LegacySevScanId;
+  args[2] := CMic140LegacySevScanDivider;
+  args[3] := scanDesc;
+  args[4] := pg;
+  if not fCli.CallCommand(CMic140LegacyCmdAppendScanMain, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'SEV APPENDSCANMAIN: ' + AErr;
+    Exit;
+  end;
+
+  SetLength(args, 2);
+  args[0] := CMic140LegacySevScanId;
+  args[1] := 0;
+  if not fCli.CallCommand(CMic140LegacyCmdSetStateScan, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'SEV SETSTATESCAN: ' + AErr;
+    Exit;
+  end;
+
+  fifoReady := CMic140LegacySevPayloadWords *
+    CMic140LegacySevFifoReadyEntries;
+  fifoCapacity := 2 * fifoReady;
+  if not AllocBuf(fifoCapacity, fifoPg, fifoAddr) then
+  begin
+    AErr := 'SEV FIFO buffer alloc failed';
+    Exit;
+  end;
+  if not AllocHeap(CMic140LegacyBiosScanBufferDescWords, pg, fifoDesc) then
+  begin
+    AErr := 'SEV FIFO desc alloc failed';
+    Exit;
+  end;
+  SetLength(args, CMic140LegacyBiosScanBufferDescWords);
+  args[0] := 0;
+  args[1] := CMic140LegacySevScanId;
+  args[2] := fifoAddr;
+  args[3] := fifoAddr;
+  args[4] := fifoAddr;
+  args[5] := fifoPg;
+  args[6] := fifoCapacity;
+  args[7] := fifoReady;
+  args[8] := 0;
+  args[9] := 0;
+  if not fCli.WriteDmWords(fifoDesc, args, AErr) then
+  begin
+    AErr := 'SEV FIFO desc write: ' + AErr;
+    Exit;
+  end;
+  SetLength(args, 3);
+  args[0] := CMic140LegacySevScanId;
+  args[1] := fifoDesc;
+  args[2] := pg;
+  if not fCli.CallCommand(CMic140LegacyCmdScanSetBuff, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'SEV SCAN_SET_BUFF: ' + AErr;
+    Exit;
+  end;
+
+  lConfigCount := Trunc(CMic140LegacyFreqClkHz /
+    (TimerScale * TimerPeriod) / CMic140LegacySevScanDivider / 1000.0 * 0.7);
+  if lConfigCount = 0 then
+    lConfigCount := 1;
+  SetLength(args, 1);
+  args[0] := lConfigCount;
+  if not fCli.CallCommand(CMic140LegacyCmdConfigScanSev, args, 0, reply,
+    AErr) then
+  begin
+    AErr := 'CONFIG_SCANSEV: ' + AErr;
+    Exit;
+  end;
+
+  Mic140v2Log(Format(
+    '[MIC140v2] SEV scan OK scan=%d fifoReady=%d fifoCapacity=%d count=%d',
+    [CMic140LegacySevScanId, fifoReady, fifoCapacity, lConfigCount]));
+  Result := True;
+end;
+
 function TMic140v2ScanProgrammer.LastTiming: TRecorderMic140Timing;
 begin
   Result := Mic140v2TimingForFrequency(fFreq, fChCnt, fGroundEnabled,
@@ -289,6 +398,7 @@ var
   tim: TRecorderMic140Timing;
   lRev2, lHiddenTIn: Boolean;
   lChannelDelaySport: Word;
+  lSevErr: string;
 begin
   Result := False;
   AErr := '';
@@ -599,6 +709,10 @@ begin
     Exit;
   end;
 
+  fLastSevProgrammed := ProgramSevScan(lSevErr);
+  if not fLastSevProgrammed then
+    Mic140v2Log(Format('[MIC140v2] SEV scan disabled: %s', [lSevErr]));
+
   { Обязательная для холодного MIC-140-48v3 arm-последовательность:
     настройка сообщения BIOS, синхронизации и явный запуск АЦП. }
   SetLength(args, 3);
@@ -651,9 +765,9 @@ begin
   Sleep(CMic140LegacyAdcStartSettleMs);
 
   Mic140v2Log(Format(
-    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d val=0x%.4x message=0x%.4x',
+    '[MIC140v2] scan OK slots=%d ptrs=%d payloadStride=%d fifoReady=%d msgWords=%d val=0x%.4x message=0x%.4x sev=%s',
     [intCnt, ptrCnt, PayloadStride, fifoReady, LastExpectedMessageWords,
-     valAddr, fHeapCur]));
+     valAddr, fHeapCur, BoolToStr(fLastSevProgrammed, True)]));
   fLastValAddr := valAddr;
   fLastPayloadStride := PayloadStride;
   Result := True;

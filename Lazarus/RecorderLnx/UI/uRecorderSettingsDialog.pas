@@ -2919,9 +2919,13 @@ end;
 procedure TRecorderSettingsDialog.HardwareResetSourceClick(Sender: TObject);
 var
   I: Integer;
+  lDataSourceError: string;
   lErrors: TStringList;
   lNode: TTreeNode;
+  lPrepareSourceIds: TStringList;
+  lPrepareStartedAt: QWord;
   lProcedures: array of TThreadMethod;
+  lResetSucceeded: Integer;
   lSourceId: string;
   lSourceIds: TStringList;
   lTasks: array of TRecorderHardwareResetTask;
@@ -2931,10 +2935,13 @@ begin
     (fRecorder.TagRegistry = nil) then
     Exit;
   lSourceIds := TStringList.Create;
+  lPrepareSourceIds := TStringList.Create;
   lErrors := TStringList.Create;
   try
     lSourceIds.Sorted := True;
     lSourceIds.Duplicates := dupIgnore;
+    lPrepareSourceIds.Sorted := True;
+    lPrepareSourceIds.Duplicates := dupIgnore;
     { Sender=nil is the context-menu command "reset all devices".  Enumerate
       the model-backed tree instead of merely clearing offline markers: the
       original Recorder starts reset for every host device, waits for all
@@ -2981,15 +2988,13 @@ begin
     { Independent endpoints reset concurrently; only result publication and
       LCL refresh happen in the main thread after all workers have finished. }
     SharedRunParallel(lProcedures);
-    { Reset must not run a full hardware preparation synchronously from the
-      settings dialog.  Offline MIC-185 endpoints can spend seconds in
-      Connect/Initialize/Configure, and doing it here multiplies timeouts by
-      device count while the modal UI is blocked.  The data source consumes the
-      reset request at its normal lifecycle entry point and prepares itself
-      once before the next Preview/Record. }
+    lResetSucceeded := 0;
     for I := 0 to High(lTasks) do
       if lTasks[I].Succeeded then
-        RecorderHardwareClearSourceOffline(lTasks[I].SourceId)
+      begin
+        Inc(lResetSucceeded);
+        lPrepareSourceIds.Add(lTasks[I].SourceId);
+      end
       else
       begin
         if Trim(lTasks[I].ErrorText) = '' then
@@ -3001,9 +3006,42 @@ begin
         lErrors.Add(lTasks[I].SourceId + ': ' + lTasks[I].ErrorText);
       end;
 
+    if lPrepareSourceIds.Count > 0 then
+    begin
+      lPrepareStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
+        'BEGIN', Format('device_count=%d', [lPrepareSourceIds.Count]));
+      try
+        fRecorder.DataSources.PrepareHardwareSources(lPrepareSourceIds);
+        for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
+        begin
+          lDataSourceError := fRecorder.DataSources.LastErrors[I];
+          lErrors.Add(lDataSourceError);
+        end;
+        if fRecorder.DataSources.LastErrorCount = 0 then
+          RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
+            'OK', Format('device_count=%d', [lPrepareSourceIds.Count]),
+            GetTickCount64 - lPrepareStartedAt)
+        else
+          RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
+            'FAIL', Format('failed=%d of %d',
+              [fRecorder.DataSources.LastErrorCount, lPrepareSourceIds.Count]),
+            GetTickCount64 - lPrepareStartedAt);
+      except
+        on E: Exception do
+        begin
+          lDataSourceError := E.ClassName + ': ' + E.Message;
+          lErrors.Add(lDataSourceError);
+          RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
+            'FAIL', lDataSourceError, GetTickCount64 - lPrepareStartedAt);
+        end;
+      end;
+    end;
+
     if lErrors.Count = 0 then
       RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'OK',
-        Format('device_count=%d', [lSourceIds.Count]))
+        Format('device_count=%d prepared=%d',
+          [lSourceIds.Count, lResetSucceeded]))
     else
       RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'FAIL',
         Format('failed=%d of %d', [lErrors.Count, lSourceIds.Count]));
@@ -3018,6 +3056,7 @@ begin
     for I := 0 to High(lTasks) do
       lTasks[I].Free;
     lErrors.Free;
+    lPrepareSourceIds.Free;
     lSourceIds.Free;
   end;
 end;

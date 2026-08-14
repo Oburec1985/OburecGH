@@ -19,7 +19,8 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, sockets, ssockets,
-  uRecorderMic140WireTypes, uRecorderNetworkBinding;
+  uRecorderMic140WireTypes, uRecorderMic140LegacyConstants,
+  uRecorderMic140Timing, uRecorderNetworkBinding;
 
 type
   TMic140v2Firmware = uRecorderMic140WireTypes.TRecorderMic140LegacyFirmware;
@@ -36,6 +37,12 @@ type
     DataWords: TMic140v2WordBuf;
   end;
 
+  TMic140v2UtsPacket = record
+    DeviceTimeSec: Double;
+    UtsValueSec: Double;
+    Generation: QWord;
+  end;
+
   TMic140v2Tcp = class
   private
     fHost: string;
@@ -50,6 +57,11 @@ type
     fScanQueueCount: Integer;
     fScanQueueDropped: Int64;
     fScanRejectLogCount: Integer;
+    fUtsQueue: array of TMic140v2UtsPacket;
+    fUtsQueueHead: Integer;
+    fUtsQueueCount: Integer;
+    fUtsGeneration: QWord;
+    fUtsAcceptLogCount: Integer;
     function ReadBytes(var ABuffer; ACount: Integer): Boolean;
     function EnsureRxBytes(ACount: Integer): Boolean;
     procedure DropRxBytes(ACount: Integer; AResync: Boolean = False);
@@ -60,14 +72,19 @@ type
     procedure SendPacket(APort: Word; const AWords: TMic140v2WordBuf);
     function ReadPacket(out APort: Word; out AWords: TMic140v2WordBuf): Boolean;
     procedure ClearScanQueue;
+    procedure ClearUtsQueue;
     function ScanQueueCapacity: Integer;
+    function UtsQueueCapacity: Integer;
     function TryDequeueScan(out ABlock: TMic140v2ScanPacket): Boolean;
+    function TryDequeueUts(out AUts: TMic140v2UtsPacket): Boolean;
     procedure EnqueueScan(const ABlock: TMic140v2ScanPacket);
+    procedure EnqueueUts(const AUts: TMic140v2UtsPacket);
+    function AbsorbUtsWords(const AWords: TMic140v2WordBuf): Boolean;
     function TryParseScanWords(const AWords: TMic140v2WordBuf;
       out ABlock: TMic140v2ScanPacket): Boolean;
     procedure LogRejectedScanWords(const AReason: string;
       const AWords: TMic140v2WordBuf);
-    procedure AbsorbScanWords(const AWords: TMic140v2WordBuf);
+    function AbsorbScanWords(const AWords: TMic140v2WordBuf): Boolean;
     procedure PumpScanFromSocket(AMaxPackets: Integer; ATimeoutMs: Cardinal);
   public
     constructor Create(const AHost: string; APort: Word = 4000;
@@ -92,6 +109,7 @@ type
     procedure ClearBufferedPackets;
     function ReadScanBlock(out ABlock: TMic140v2ScanPacket;
       out AErrorMessage: string): Boolean;
+    function LastUtsPacket(out AUts: TMic140v2UtsPacket): Boolean;
     function ReadFlashStorage(AAddress: LongWord; var ABuffer; AByteCount: Integer;
       out AErrorMessage: string): Boolean;
     function MdpResyncByteCount: Int64;
@@ -181,7 +199,7 @@ const
   CLegacyScanHeaderWords = 10;
   CLegacyFlashReadChunkBytes = 256;
   CMic140v2ScanQueueCapacity = 32;
-
+  CMic140v2UtsQueueCapacity = 64;
 function WordSum(const AWords: array of Word): Word;
 var
   I: Integer;
@@ -214,6 +232,7 @@ begin
   fLock := TCriticalSection.Create;
   fMdpResyncBytes := 0;
   SetLength(fScanQueue, CMic140v2ScanQueueCapacity);
+  SetLength(fUtsQueue, CMic140v2UtsQueueCapacity);
   fScanQueueHead := 0;
   fScanQueueCount := 0;
   fScanQueueDropped := 0;
@@ -301,7 +320,9 @@ begin
     SetLength(fRxBuffer, 0);
     fMdpResyncBytes := 0;
     fScanRejectLogCount := 0;
+    fUtsGeneration := 0;
     ClearScanQueue;
+    ClearUtsQueue;
     DrainPendingSocket;
   finally
     fLock.Release;
@@ -313,10 +334,62 @@ begin
   Result := Length(fScanQueue);
 end;
 
+function TMic140v2Tcp.UtsQueueCapacity: Integer;
+begin
+  Result := Length(fUtsQueue);
+end;
+
 procedure TMic140v2Tcp.ClearScanQueue;
 begin
   fScanQueueHead := 0;
   fScanQueueCount := 0;
+end;
+
+procedure TMic140v2Tcp.ClearUtsQueue;
+begin
+  fUtsQueueHead := 0;
+  fUtsQueueCount := 0;
+end;
+
+function Mic140BcdNibble(AValue: Word; AShift: Integer): Integer;
+begin
+  Result := (AValue shr AShift) and $F;
+end;
+
+function Mic140TryBcd8ToSeconds(ALo, AHi: Word; out AValue: Double): Boolean;
+var
+  lD0, lD1, lD2, lD3, lD4, lD5, lD6, lD7: Integer;
+begin
+  lD0 := Mic140BcdNibble(ALo, 0);
+  lD1 := Mic140BcdNibble(ALo, 4);
+  lD2 := Mic140BcdNibble(ALo, 8);
+  lD3 := Mic140BcdNibble(ALo, 12);
+  lD4 := Mic140BcdNibble(AHi, 0);
+  lD5 := Mic140BcdNibble(AHi, 4);
+  lD6 := Mic140BcdNibble(AHi, 8);
+  lD7 := Mic140BcdNibble(AHi, 12);
+  Result := (lD0 <= 9) and (lD1 <= 9) and (lD2 <= 9) and (lD3 <= 9) and
+    (lD4 <= 9) and (lD5 <= 9) and (lD6 <= 9) and (lD7 <= 9);
+  if not Result then
+    Exit;
+  AValue := lD0 + lD1 * 10.0 + lD2 * 100.0 + lD3 * 1000.0 +
+    lD4 * 10000.0 + lD5 * 100000.0 + lD6 * 1000000.0 +
+    lD7 * 10000000.0;
+end;
+
+function Mic140SevLocalTimeSec(ACntLo, ACntHi, ACntDelta: Word): Double;
+var
+  lCnt: LongWord;
+  lDelta: Double;
+  lPeriodRemainder: Double;
+begin
+  lCnt := LongWord(ACntLo) or (LongWord(ACntHi) shl 16);
+  lDelta := ACntDelta;
+  lPeriodRemainder := CMic140LegacyTimerPeriod - 1.0 - lDelta;
+  if lPeriodRemainder < 0.0 then
+    lPeriodRemainder := 0.0;
+  Result := (lCnt * CMic140LegacyTimerPeriod + lPeriodRemainder) /
+    (2.0 * CMic140LegacyFreqClkHz);
 end;
 
 function TMic140v2Tcp.TryDequeueScan(out ABlock: TMic140v2ScanPacket): Boolean;
@@ -344,6 +417,124 @@ begin
   lIdx := (fScanQueueHead + fScanQueueCount) mod ScanQueueCapacity;
   fScanQueue[lIdx] := ABlock;
   Inc(fScanQueueCount);
+end;
+
+function TMic140v2Tcp.TryDequeueUts(out AUts: TMic140v2UtsPacket): Boolean;
+begin
+  Result := fUtsQueueCount > 0;
+  if not Result then
+  begin
+    FillChar(AUts, SizeOf(AUts), 0);
+    Exit;
+  end;
+  AUts := fUtsQueue[fUtsQueueHead];
+  fUtsQueueHead := (fUtsQueueHead + 1) mod UtsQueueCapacity;
+  Dec(fUtsQueueCount);
+end;
+
+procedure TMic140v2Tcp.EnqueueUts(const AUts: TMic140v2UtsPacket);
+var
+  lIdx: Integer;
+begin
+  if UtsQueueCapacity <= 0 then
+    Exit;
+  if fUtsQueueCount >= UtsQueueCapacity then
+  begin
+    fUtsQueueHead := (fUtsQueueHead + 1) mod UtsQueueCapacity;
+    Dec(fUtsQueueCount);
+  end;
+  lIdx := (fUtsQueueHead + fUtsQueueCount) mod UtsQueueCapacity;
+  Inc(fUtsGeneration);
+  fUtsQueue[lIdx] := AUts;
+  fUtsQueue[lIdx].Generation := fUtsGeneration;
+  Inc(fUtsQueueCount);
+end;
+
+function TMic140v2Tcp.AbsorbUtsWords(const AWords: TMic140v2WordBuf): Boolean;
+var
+  lMessageSize: Integer;
+  lPayloadWords: Integer;
+  lDataOffset: Integer;
+  lFrameCount: Integer;
+  lFrameIndex: Integer;
+  lTimeLo: Word;
+  lTimeHi: Word;
+  lHclk: LongWord;
+  lHclkDelta: Word;
+  lUtsSec: Double;
+  lUts: TMic140v2UtsPacket;
+  lRawFrames: string;
+begin
+  Result := False;
+  if CMic140LegacySevScanId = CMic140LegacyScanId then
+    Exit;
+  if Length(AWords) < CLegacyScanHeaderWords + CMic140LegacySevPayloadWords then
+    Exit;
+  lMessageSize := AWords[1];
+  if (lMessageSize < CLegacyScanHeaderWords + CMic140LegacySevPayloadWords) or
+    (lMessageSize > Length(AWords)) then
+    Exit;
+  lPayloadWords := lMessageSize - CLegacyScanHeaderWords;
+  if (lPayloadWords < CMic140LegacySevPayloadWords) or
+    ((lPayloadWords mod CMic140LegacySevPayloadWords) <> 0) then
+    Exit;
+  if (AWords[CMic140LegacyBiosStateIdx] <> 0) or
+    (AWords[CMic140LegacyBiosSlotIdx] <> 0) or
+    (AWords[CMic140LegacyBiosChanIdx] <> 0) then
+    Exit;
+  if AWords[CMic140LegacyBiosScanIdIdx] <> CMic140LegacySevScanId then
+    Exit;
+  if (AWords[0] <> CMic140LegacyBiosMessageType) and
+    (AWords[0] <> CMic140LegacyTypeSev) then
+    Exit;
+
+  lFrameCount := lPayloadWords div CMic140LegacySevPayloadWords;
+  lDataOffset := CLegacyScanHeaderWords +
+    (lFrameCount - 1) * CMic140LegacySevPayloadWords;
+  lTimeLo := AWords[lDataOffset];
+  lTimeHi := AWords[lDataOffset + 1];
+  lHclk := LongWord(AWords[lDataOffset + 3]) or
+    (LongWord(AWords[lDataOffset + 4]) shl 16);
+  if not Mic140TryBcd8ToSeconds(lTimeLo, lTimeHi, lUtsSec) then
+    Exit;
+  if fUtsAcceptLogCount < 4 then
+  begin
+    Inc(fUtsAcceptLogCount);
+    lRawFrames := '';
+    for lFrameIndex := 0 to lFrameCount - 1 do
+    begin
+      lDataOffset := CLegacyScanHeaderWords +
+        lFrameIndex * CMic140LegacySevPayloadWords;
+      lRawFrames := lRawFrames + Format(
+        ' [%d]=%.4x %.4x %.4x %.4x %.4x %.4x',
+        [lFrameIndex,
+         AWords[lDataOffset], AWords[lDataOffset + 1],
+         AWords[lDataOffset + 2], AWords[lDataOffset + 3],
+         AWords[lDataOffset + 4], AWords[lDataOffset + 5]]);
+    end;
+    RecorderDebugLog(Format(
+      '[MIC140v2:%s:%d] UTS packet accepted #%d type=%d scan=%d payload=%d frames=%d timeLo=0x%.4x timeHi=0x%.4x hclk=%u uts=%.0f raw=%s',
+      [fHost, fPort, fUtsAcceptLogCount, AWords[0],
+       AWords[CMic140LegacyBiosScanIdIdx], lPayloadWords, lFrameCount,
+       lTimeLo, lTimeHi, lHclk, lUtsSec, lRawFrames]));
+  end;
+
+  for lFrameIndex := 0 to lFrameCount - 1 do
+  begin
+    lDataOffset := CLegacyScanHeaderWords +
+      lFrameIndex * CMic140LegacySevPayloadWords;
+    lTimeLo := AWords[lDataOffset];
+    lTimeHi := AWords[lDataOffset + 1];
+    if not Mic140TryBcd8ToSeconds(lTimeLo, lTimeHi, lUtsSec) then
+      Exit;
+    lHclkDelta := AWords[lDataOffset + 5];
+    FillChar(lUts, SizeOf(lUts), 0);
+    lUts.DeviceTimeSec := Mic140SevLocalTimeSec(AWords[lDataOffset + 3],
+      AWords[lDataOffset + 4], lHclkDelta);
+    lUts.UtsValueSec := lUtsSec;
+    EnqueueUts(lUts);
+  end;
+  Result := True;
 end;
 
 procedure TMic140v2Tcp.LogRejectedScanWords(const AReason: string;
@@ -425,12 +616,18 @@ begin
   Result := True;
 end;
 
-procedure TMic140v2Tcp.AbsorbScanWords(const AWords: TMic140v2WordBuf);
+function TMic140v2Tcp.AbsorbScanWords(const AWords: TMic140v2WordBuf): Boolean;
 var
   lBlock: TMic140v2ScanPacket;
 begin
+  Result := False;
+  if AbsorbUtsWords(AWords) then
+    Exit;
   if TryParseScanWords(AWords, lBlock) then
+  begin
     EnqueueScan(lBlock);
+    Result := True;
+  end;
 end;
 
 procedure TMic140v2Tcp.PumpScanFromSocket(AMaxPackets: Integer;
@@ -476,8 +673,8 @@ begin
           Не форматировать и не писать лог для каждого пакета: при MIC-140v3
           это десятки синхронных файловых операций в секунду. Подробный дамп
           транспорта выполняется автономным протокольным стендом. }
-        AbsorbScanWords(lWords);
-        Inc(lPumped);
+        if AbsorbScanWords(lWords) then
+          Inc(lPumped);
       end;
     end;
   finally
@@ -1149,6 +1346,16 @@ begin
       on E: Exception do
         AErrorMessage := E.Message;
     end;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TMic140v2Tcp.LastUtsPacket(out AUts: TMic140v2UtsPacket): Boolean;
+begin
+  fLock.Acquire;
+  try
+    Result := TryDequeueUts(AUts);
   finally
     fLock.Release;
   end;

@@ -1,3 +1,160 @@
+## 2026-08-14 15:44 - MIC-140 UTS tag publishes every FIFO frame
+
+**Request:** user clarified that MIC-140 UTS tag itself must increment once per
+second; status interpolation alone is not enough. It was staying near 16000
+and changing rarely.
+
+**Done:** hardware SEV packets were confirmed as FIFO batches of six 6-word UTS
+frames. `uRecorderMic140Protocol.pas` now enqueues every decoded SEV frame in a
+UTS FIFO instead of caching only the newest/tail frame. `uRecorderMic140Device`
+no longer drains this queue from the fast main block pump; `LastUts` dequeues
+one sample on data-source request. `uRecorderMic140DataSource.pas` publishes
+queued UTS samples through the cached tag at about 1 Hz.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0. Hidden
+`RecorderLnx.exe --preview-seconds=20` showed raw MIC-140 `.14.42` SEV FIFO
+`16846..16851`, then tag publications `16846`, `16847`, `16848`, `16849` at
+approximately one second cadence. Detailed notes:
+`errors/2026-08-14-mic140-uts-readout.md`.
+
+## 2026-08-14 15:34 - UTS status time advances between MIC-140 SEV packets
+
+**Request:** user reported that MIC-140 time display holds the same value for
+several seconds and may be wrong.
+
+**Done:** confirmed from hardware logs that MIC-140 SEV arrives as FIFO batches
+of six 1-second UTS frames (`6230..6235`, then `6236..6241`, etc.). The source
+publishes the newest UTS value about every 6 s, so `TimeSystem.Snapshot` froze
+because it displayed only the stored last UTS value. `uRecorderTimeSystem.pas`
+now records the monotonic tick of the last UTS update and displays
+`last UTS + elapsed ticks` while running.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0. Hidden
+`RecorderLnx.exe --preview-seconds=20` showed MIC-140 `.14.42` publishing
+`uts=16235`, `16241`, `16247` and clean stream stop
+`published=105 read=105 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=0
+mdpResync=0`. `RecorderTimeSystemTest.exe` passed; new check advanced
+`UTS=7201` to `7202.109` after about 1.1 s and displayed `02:00:02`.
+
+**Status:** status-bar UTS time should no longer freeze between MIC-140
+packets. Open detail: MIC-140 UTS tag history still stores one tail value per
+SEV FIFO packet, not every internal 1-second frame.
+
+## 2026-08-14 15:25 - MIC-140 UTS no longer looks like garbage
+
+**Request:** user said MIC-140 UTS still looked like garbage and should be
+approximately equal to MIC-185 UTS.
+
+**Done:** compared original `ScanSEV`/`GetTimeLocFromScanUTS` with live
+RecorderLnx logs. MIC-140 UTS Y from BCD already matched the MIC-185
+`.147/.148/.151/.152/.155` group (`15725` on MIC-185, then `15727` on
+MIC-140 about two seconds later). The bad part was MIC-140 local X time:
+RecorderLnx used `HCLK / 50 MHz`, while original code uses the CC timer
+period/counter formula. Replaced this with `Mic140SevLocalTimeSec` based on
+`CMic140LegacyTimerPeriod` and `CMic140LegacyFreqClkHz`.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0. Hidden
+`RecorderLnx.exe --preview-seconds=20` showed MIC-140 `.14.42` publishing
+`uts=15727`, `15733`, `15739` with X `5.38`, `11.38`, `17.38`; stream stopped
+cleanly with `published=105 read=105 readGaps=0 dupRead=0 corruptRead=0
+corruptPublish=0 mdpResync=0`.
+
+**Status:** fixed for the checked stand path. Note that MIC-185 has another
+UTS group `.156/.158/.159` around `2032x`; MIC-140 `.14.42` matches the
+`1572x` MIC-185 group, not that second group. Detailed facts:
+`errors/2026-08-14-mic140-uts-readout.md`.
+
+## 2026-08-14 15:17 - MIC-140 UTS publishes from SEV scan
+
+**Request:** user reported that MIC-140 UTS still did not produce data.
+
+**Done:** compared the lifecycle with original Recorder and fixed the SEV scan
+order: MIC-140 now programs SEV before trigger/ADC start, not after it. Also
+changed the protocol pump so accepted UTS packets do not satisfy the "read one
+main scan block" budget; UTS is cached separately and then published through a
+cached runtime tag.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0 before the final
+hardware run. Hidden `RecorderLnx.exe --preview-seconds=10` showed
+`SEV scan OK scan=0`, `UTS packet accepted #1 ... scan=0`,
+`MIC-140 UTS published #1 tag=MIC140_{42_uts}`, no `reject stream0`, and clean
+stop: `published=54 read=54 readGaps=0 dupRead=0 corruptRead=0
+corruptPublish=0 mdpResync=0`.
+
+**Status:** UTS readout works on the checked MIC-140 `.14.42`; if UI value
+format differs from original Recorder, next check is exact BCD/time-base
+interpretation, not packet routing.
+
+## 2026-08-14 15:03 - MIC-140 UTS no longer accepts garbage frames
+
+**Request:** user reported MIC-140 UTS values are incorrect and look like
+codes from another channel or random garbage.
+
+**Done:** checked current log and code against original `ScanSEV`: main
+MIC-140 stream was clean, but no `SEV scan OK` was present, while the passive
+UTS parser could accept non-main stream-0 packets by length/BCD only. Tightened
+UTS routing so packets are accepted only from the separate SEV scan id, added a
+limited accepted-UTS diagnostic log, and re-enabled separate original-style
+SEV programming/rearm without making SEV failure fatal for main AIn/TIn.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code 0 after the changes. Detailed facts are in
+`errors/2026-08-14-mic140-uts-readout.md`.
+
+**Status:** needs hardware Preview check. Expected log: `SEV scan OK scan=0`,
+`scan programmed ... sev=True`, then `UTS packet accepted ... scan=0`. If SEV
+is disabled by command failure, compare that stage with original Recorder
+traffic.
+
+## 2026-08-14 15:25 - Reset now verifies selected hardware sources
+
+**Request:** user noticed reset now returns almost instantly, tree turns green,
+but Preview immediately reports device failure; asked whether reset is actually
+doing anything.
+
+**Facts:** `LogWindows.log` showed a selected MIC-140 reset batch finishing in
+`0 ms`, then Apply logging `Hardware configuration unchanged: initialized
+devices retained`. Code confirmed reset only placed a pending reset/released a
+session, while Preview intentionally does not consume pending reset by running
+`PrepareHardware`.
+
+**Done:** added `TRecorderDataSourceManager.PrepareHardwareSources(ASourceIds)`
+and changed settings reset so successful reset release/cleanup no longer clears
+offline state by itself. The dialog now prepares only successfully reset source
+ids in parallel via normal data-source `PrepareHardware`; green status is only
+restored after successful prepare, otherwise the error reason stays visible.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+exit code 0. Detailed hypothesis log:
+`errors/2026-08-14-hardware-reset-must-prepare-selected-sources.md`.
+
+## 2026-08-14 15:05 - MIC-185 mass initialize timeout, MIC-140 tags still saved
+
+**Request:** user reported that MIC-185 devices started dropping and MIC-140
+tags were not visible in the list, although the MIC-140 device looked green
+after reset.
+
+**Facts:** `LogWindows.log` showed MIC-185 TCP connect succeeding for all
+sources, then all devices failing `initialize` after about `6.3 s`. This is not
+a ping/routing failure; it is a Mebius command-reply failure during parallel
+prepare. The same log showed configured MIC-140 source
+`192.168.14.41:4000` failing TCP TEST, while broadcast replies were seen from
+`.14.42`, `.14.30`, and `.14.40`. Project
+`C:\Mera Files\RecorderLnx\config\projects\002\default.config.json` still has
+`MIC-140: 192.168.14.41:4000` in `dataSources` and 57 MIC-140 tags, so the tags
+were not lost from the saved config.
+
+**Done:** added a MIC-185 command-stage throttle in
+`Device/mic185/uRecorderMic185DataSource.pas`: data sources still prepare in
+parallel, but only two MIC-185 sources at a time execute
+`TryInitializeSession`/identity update/`TryProgramDevice`. TCP connect remains
+parallel. Lifecycle log now has `prepare-command-slot` with active/limit data.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` exit code 0.
+Post-build `copy_sdb_res.bat` still prints the known non-blocking `#!/bin/sh`
+message. Detailed history:
+`errors/2026-08-14-mic185-mass-initialize-timeout-and-mic140-tags.md`.
+
 ## 2026-08-13 15:25 — автопоиск: убраны ложные MIC-140 и поправлен legacy SN
 
 **Запрос:** пользователь уточнил, что в списке настоящие MIC-140 только `192.168.14.40/.41/.42`, а правильные серийники соответственно `328/326/327`; остальные найденные строки не MIC-140.
@@ -5933,3 +6090,55 @@ TCP-соединение, а обычный захват остаётся пас
 **Проверка:** первый rebuild дошел до линковки и упал `error code: 5`, потому что был запущен `RecorderLnx.exe` PID 10360. Процесс остановлен, повторная сборка `RecorderLnx.lpi` завершилась с exit code 0. Известное post-build сообщение `#!/bin/sh` осталось неблокирующим.
 
 **Статус:** код готов к ручной проверке: после Apply/OK подготовка должна происходить на измененных приборах, Preview не должен занимать 30 секунд из-за `PrepareHardware`.
+## 2026-08-14 - MIC-140 UTS readout layer
+
+**Request:** add MIC-140 UTS support like MIC-185, after checking original Recorder.
+
+**Done:** original Recorder shows MIC-140 UTS is not a TIn/temperature word. It is handled by `ScanSEV`: `mtc/sevscn.cpp` reads a 6-word `TUtsBios`, converts BCD `time_lo/time_hi` to `time_uts`, and adds a device/UTS time pair through `Device::AddTimeDev`. RecorderLnx now has MIC-140 `node-uts` addresses, `MIC140-{node-uts}` display names, an available UTS signal in the MIC-140 source probe, legacy stream-0 parsing for 6-word SEV/UTS packets, and cached-tag numeric publication without runtime string lookup or `TextValue`.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code 0 and linked `RecorderLnx.exe`. Existing post-build `copy_sdb_res.bat` still prints `#!/bin/sh` on Windows but does not break the build.
+
+**Remaining:** hardware check is needed. If selected MIC-140 `*-uts` tags do not update while AIn/TIn is alive, the next step is explicit second-scan programming for `ScanSEV` (`CMD_APPENDSCANMAIN` type 17 + `CMD_CONFIG_SCANSEV=91`). Detailed hypothesis log: `errors/2026-08-14-mic140-uts-readout.md`.
+## 2026-08-14 - MIC-140 UTS readout
+
+**Request:** add MIC-140 UTS handling like MIC-185 and verify against original Recorder sources.
+
+**Done:** original `mtc/sevscn.cpp` / `sevchn.*` checked: MIC-140 UTS is a separate `ScanSEV`/`VT_UTS` 6-word payload, not a TIn channel. RecorderLnx now exposes MIC-140 `{node}-uts`, caches/parses SEV UTS packets in the MIC-140 TCP protocol, stores latest UTS in the MIC-140 device, and publishes it through a cached runtime tag with `TimeSystem.UpdateFromTagSample`.
+
+**Also fixed:** `SameMic140Address` now respects node-qualified addresses, so channels/UTS from different MIC-140 nodes are not treated as the same tag.
+
+**Verification:** `lazbuild -B Lazarus\RecorderLnx\RecorderLnx.lpi` completed with exit code 0. Existing post-build `copy_sdb_res.bat` still prints `#!/bin/sh` under Windows but does not break linking.
+
+**Next hardware check:** select a MIC-140 `*-uts` tag and verify values appear. If AIn/TIn data flows but UTS stays empty, implement explicit `ScanSEV` programming (`CMD_APPENDSCANMAIN` type 17 + `CMD_CONFIG_SCANSEV=91`) from the original scan setup.
+## 2026-08-14 - MIC-140 main stream restored after UTS regression
+
+**Request:** after UTS changes, MIC-140 stopped publishing data entirely.
+
+**Done:** inspected `LogWindows.log`: packets were arriving, but all main
+MIC-140 packets were rejected as `reason=routing`. Root cause was duplicate
+`CMic140LegacyScanId`: new shared constants changed main scan programming to
+`0`, while the existing parser/runtime path expected the working id `1`.
+Restored `CMic140LegacyScanId = 1` and disabled automatic SEV programming and
+SEV rearm for now. UTS tag frequency isolation remains.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+finished with exit code 0. `git diff --check` reports only line-ending
+warnings. Hardware check needed: MIC-140 normal channels should produce data
+again; UTS programming is still pending a safer multi-scan implementation.
+
+## 2026-08-14 - MIC-140 UTS frequency isolation and ScanSEV programming
+
+**Request:** after adding MIC-140 UTS to acquisition, all other MIC-140
+channels became 1 Hz and UTS values did not appear.
+
+**Done:** UTS and diagnostic tags are excluded from MIC-140 source frequency
+selection in runtime source creation/replacement and in source-wide frequency
+application. Added explicit original-style SEV scan programming for MIC-140:
+scan id 1, type 17, FIFO descriptor, `CMD_CONFIG_SCANSEV`, and non-fatal SEV
+rearm on start. Parser now accepts SEV packets containing multiple 6-word UTS
+entries and publishes the newest one through cached tag references only.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+finished with exit code 0 and linked `RecorderLnx.exe`. `git diff --check`
+reported only line-ending warnings. Hardware check remains: normal channels
+must keep configured frequency while `{node}-uts` updates near 1 Hz.

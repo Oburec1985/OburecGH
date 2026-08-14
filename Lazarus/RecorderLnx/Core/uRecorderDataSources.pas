@@ -336,6 +336,8 @@ type
 
     { Подключает и программирует оборудование после полной загрузки конфигурации. }
     procedure PrepareHardwareAll;
+    { Подключает и программирует только явно указанные источники. }
+    procedure PrepareHardwareSources(ASourceIds: TStrings);
 
     { Запускает все источники, создавая отдельный thread-runner на каждый. }
     procedure StartAll;
@@ -1708,6 +1710,44 @@ begin
     if GetSourceContext(I).PrepareError <> '' then
       fLastErrors.Add(GetSourceContext(I).Source.SourceId + ': ' +
         GetSourceContext(I).PrepareError);
+end;
+
+procedure TRecorderDataSourceManager.PrepareHardwareSources(ASourceIds: TStrings);
+var
+  I: Integer;
+  lContext: TSourceContext;
+  lProcedures: array of TThreadMethod;
+begin
+  if (ASourceIds = nil) or (ASourceIds.Count = 0) then
+    Exit;
+  if fRunning then
+    raise ERecorderDataSourceError.Create(
+      'Cannot prepare data source hardware while manager is running');
+  if fRegistry = nil then
+    raise ERecorderDataSourceError.Create(
+      'Data source manager tags are not configured');
+
+  fLastErrors.Clear;
+  SetLength(lProcedures, 0);
+  for I := 0 to fSources.Count - 1 do
+  begin
+    lContext := GetSourceContext(I);
+    if (not lContext.Enabled) or
+      (ASourceIds.IndexOf(lContext.Source.SourceId) < 0) then
+      Continue;
+    if not lContext.NeedsPrepareHardware then
+      Continue;
+    SetLength(lProcedures, Length(lProcedures) + 1);
+    lProcedures[High(lProcedures)] := @lContext.PrepareHardware;
+  end;
+  SharedRunParallel(lProcedures);
+  for I := 0 to fSources.Count - 1 do
+  begin
+    lContext := GetSourceContext(I);
+    if (ASourceIds.IndexOf(lContext.Source.SourceId) >= 0) and
+      (lContext.PrepareError <> '') then
+      fLastErrors.Add(lContext.Source.SourceId + ': ' + lContext.PrepareError);
+  end;
 end;
 
 procedure TRecorderDataSourceManager.StartAll;

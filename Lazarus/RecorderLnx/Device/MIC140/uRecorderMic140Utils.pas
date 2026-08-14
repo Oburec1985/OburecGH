@@ -46,6 +46,9 @@ function RecorderMic140TemperatureDisplayText(ATemperatureIndex,
 function RecorderMic140VisibleTemperatureCount(ADevSubRev: Integer): Integer;
 function ParseMic140TemperatureChannelIndex(const AAddress: string;
   out ATemperatureIndex: Integer): Boolean;
+function RecorderMic140UtsAddressText(ANodeNumber: Integer): string;
+function RecorderMic140UtsDisplayName(ANodeNumber: Integer): string;
+function RecorderMic140IsUtsAddress(const AAddress: string): Boolean;
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;
   const ASuffix: string): string;
 function TryParseRecorderMic140SourceId(const ASourceId: string;
@@ -180,6 +183,23 @@ begin
     ATemperatureIndex := lPhysicalNumber;
 end;
 
+function RecorderMic140UtsAddressText(ANodeNumber: Integer): string;
+begin
+  if ANodeNumber <= 0 then
+    ANodeNumber := MIC140DefaultNodeNumber;
+  Result := Format('%d-uts', [ANodeNumber]);
+end;
+
+function RecorderMic140UtsDisplayName(ANodeNumber: Integer): string;
+begin
+  Result := Format('MIC140-{%s}', [RecorderMic140UtsAddressText(ANodeNumber)]);
+end;
+
+function RecorderMic140IsUtsAddress(const AAddress: string): Boolean;
+begin
+  Result := EndsText('-uts', LowerCase(Trim(AAddress)));
+end;
+
 function RecorderMic140DiagnosticTagName(ANodeNumber: Integer;
   const ASuffix: string): string;
 begin
@@ -190,9 +210,19 @@ function SameMic140Address(const AAddr1, AAddr2: string): Boolean;
 var
   lNum1, lNum2: Integer;
   lTemp1, lTemp2: Integer;
+  lNode1, lNode2: Integer;
+  lHasNode1, lHasNode2: Boolean;
 begin
   if SameText(AAddr1, AAddr2) then
     Exit(True);
+  lHasNode1 := ParseMic140NodeNumber(AAddr1, lNode1);
+  lHasNode2 := ParseMic140NodeNumber(AAddr2, lNode2);
+  if lHasNode1 and lHasNode2 and (lNode1 <> lNode2) then
+    Exit(False);
+  if RecorderMic140IsUtsAddress(AAddr1) or RecorderMic140IsUtsAddress(AAddr2) then
+    Exit(RecorderMic140IsUtsAddress(AAddr1) and
+      RecorderMic140IsUtsAddress(AAddr2) and
+      lHasNode1 and lHasNode2 and (lNode1 = lNode2));
   if ParseMic140TemperatureChannelIndex(AAddr1, lTemp1) and
     ParseMic140TemperatureChannelIndex(AAddr2, lTemp2) then
     Exit(lTemp1 = lTemp2);

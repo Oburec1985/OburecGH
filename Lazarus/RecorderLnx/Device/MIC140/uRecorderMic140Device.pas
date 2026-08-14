@@ -16,7 +16,8 @@ uses
   uRecorderMic140WireTypes,
   uRecorderMic140Protocol, uRecorderMic140Consts, uRecorderMic140Timing,
   uRecorderMic140Scan, uRecorderMic140Stream, uRecorderMic140Helper,
-  uRecorderMic140Diag, uRecorderMic140DataThread;
+  uRecorderMic140Diag, uRecorderMic140DataThread,
+  uRecorderMic140LegacyConstants;
 
 type
   TRecorderMic140Device = class(TInterfacedObject, IMic140Device,
@@ -50,8 +51,13 @@ type
     fValAddr: Word;
     fTinSlots: Integer;
     fScanPayloadStride: Integer;
+    fSevProgrammed: Boolean;
     fLastTinDmWords: TMic140v2WordBuf;
     fLastTinDmReadTick: QWord;
+    fLastUtsDeviceTimeSec: Double;
+    fLastUtsValueSec: Double;
+    fLastUtsGeneration: QWord;
+    fHasLastUts: Boolean;
     { Play: consume DataThread ring. }
     fDataThread: TRecorderMic140DataThread;
     procedure BuildChannels;
@@ -103,6 +109,8 @@ type
       APollFrequencyHz: Double; out AMeans: TRecorderDoubleArray;
       out AErrorMessage: string): Boolean;
     function LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
+    function LastUts(out ADeviceTimeSec, AUtsValueSec: Double;
+      out AGeneration: QWord): Boolean;
     function LegacyStreamReadCount: Int64;
     function LegacyNumBuffGapCount: Integer;
     function LegacyDuplicateNumBuffCount: Integer;
@@ -229,6 +237,7 @@ begin
   fState := rdsDisconnected;
   fInitialized := False;
   fConfiguredInSession := False;
+  fSevProgrammed := False;
   fDataThread := nil;
   Mic140v2StreamClear(fStr);
   BuildChannels;
@@ -762,16 +771,20 @@ begin
       fScanPayloadStride := prog.LastPayloadStride;
       fValAddr := prog.LastValAddr;
       fTinSlots := prog.TemperatureChannelCount;
+      fSevProgrammed := prog.LastSevProgrammed;
       Mic140v2StreamSetExpectedPacket(fStr, fExpDataWords, fExpMsgWords);
       EnsureDataThread;
       Mic140v2Log(Format(
-        '[MIC140v2:%s:%d] scan programmed ch=%d fifoStride=%d tin=%d val=0x%.4x freq=%.3f Hz fifoReady=%d msgWords=%d countAver=%d decayUs=%.3f',
+        '[MIC140v2:%s:%d] scan programmed ch=%d fifoStride=%d tin=%d val=0x%.4x freq=%.3f Hz fifoReady=%d msgWords=%d countAver=%d decayUs=%.3f sev=%s',
         [fHost, fPort, fChCnt, fScanPayloadStride, fTinSlots, fValAddr, fFreq,
          fExpDataWords, fExpMsgWords, tim.AverageSampleCount,
-         tim.ChannelCommutationUs]));
+         tim.ChannelCommutationUs, BoolToStr(fSevProgrammed, True)]));
     end
     else
+    begin
+      fSevProgrammed := False;
       Mic140v2Log(Format('[MIC140v2:%s:%d] program failed: %s', [fHost, fPort, err]));
+    end;
   finally
     prog.Free;
   end;
@@ -916,7 +929,15 @@ begin
       [fHost, fPort, err]));
     Exit;
   end;
-
+  if fSevProgrammed and (CMic140LegacySevScanId <> CMic140LegacyScanId) then
+  begin
+    lArgs[0] := CMic140LegacySevScanId;
+    lArgs[1] := 0;
+    if not fCli.CallCommand(CMic140LegacyCmdSetStateScan, lArgs, 0, lReply,
+      err) then
+      Mic140v2Log(Format('[MIC140v2:%s:%d] SEV rearm failed: %s',
+        [fHost, fPort, err]));
+  end;
   for att := 1 to CMic140LegacyStartAttempts do
   begin
     fCli.ClearBufferedPackets;
@@ -1068,6 +1089,33 @@ end;
 function TRecorderMic140Device.LastAuxTemperatureBlock: TMic140AuxTemperatureBlock;
 begin
   Result := fAux;
+end;
+
+function TRecorderMic140Device.LastUts(out ADeviceTimeSec, AUtsValueSec: Double;
+  out AGeneration: QWord): Boolean;
+var
+  lUts: TMic140v2UtsPacket;
+begin
+  if (fCli <> nil) and fCli.LastUtsPacket(lUts) then
+  begin
+    fLastUtsDeviceTimeSec := lUts.DeviceTimeSec;
+    fLastUtsValueSec := lUts.UtsValueSec;
+    fLastUtsGeneration := lUts.Generation;
+    fHasLastUts := True;
+  end;
+  Result := fHasLastUts;
+  if Result then
+  begin
+    ADeviceTimeSec := fLastUtsDeviceTimeSec;
+    AUtsValueSec := fLastUtsValueSec;
+    AGeneration := fLastUtsGeneration;
+  end
+  else
+  begin
+    ADeviceTimeSec := 0.0;
+    AUtsValueSec := 0.0;
+    AGeneration := 0;
+  end;
 end;
 
 function TRecorderMic140Device.LegacyStreamReadCount: Int64;

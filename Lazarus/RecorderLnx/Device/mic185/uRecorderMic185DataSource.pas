@@ -170,6 +170,7 @@ type
     fLastBlockTick: QWord;
     fRxWarning: Boolean;
     fLastPublishedUtsGeneration: QWord;
+    fUtsPublishLogCount: Integer;
     fRuntimeChannelSettings: TMic185ChannelProgramSettingsArray;
     fSelectedNames: TStringList;
     function ChannelSelected(const AChannel: TRecorderDeviceChannel): Boolean;
@@ -211,9 +212,56 @@ const
     32768 ADC codes correspond to 100% of the selected nominal input range. }
   CMic185NominalAdcFullScale = 32768.0;
   CMic185ParallelStartSlotMs = 150;
+  CMic185PrepareCommandSlots = 2;
 
 var
   gMic185PrepareLock: TRTLCriticalSection;
+  gMic185PrepareCommandActive: Integer = 0;
+
+procedure Mic185EnterPrepareCommandSlot(const ATraceId, ASourceId: string);
+var
+  lStartedAt: QWord;
+  lLoggedWait: Boolean;
+begin
+  lStartedAt := GetTickCount64;
+  lLoggedWait := False;
+  while True do
+  begin
+    EnterCriticalSection(gMic185PrepareLock);
+    try
+      if gMic185PrepareCommandActive < CMic185PrepareCommandSlots then
+      begin
+        Inc(gMic185PrepareCommandActive);
+        RecorderMic185LifecycleLog(ATraceId, ASourceId, 'prepare-command-slot',
+          'OK', Format('active=%d limit=%d',
+            [gMic185PrepareCommandActive, CMic185PrepareCommandSlots]),
+          GetTickCount64 - lStartedAt);
+        Exit;
+      end;
+    finally
+      LeaveCriticalSection(gMic185PrepareLock);
+    end;
+
+    if not lLoggedWait then
+    begin
+      RecorderMic185LifecycleLog(ATraceId, ASourceId, 'prepare-command-slot',
+        'BEGIN', Format('limit=%d', [CMic185PrepareCommandSlots]));
+      lLoggedWait := True;
+    end;
+    Sleep(50);
+  end;
+end;
+
+procedure Mic185LeavePrepareCommandSlot;
+begin
+  EnterCriticalSection(gMic185PrepareLock);
+  try
+    if gMic185PrepareCommandActive > 0 then
+      Dec(gMic185PrepareCommandActive);
+  finally
+    LeaveCriticalSection(gMic185PrepareLock);
+  end;
+end;
 
 function Mic185EndpointStartDelayMs(const AHost: string): Cardinal;
 var
@@ -2070,49 +2118,50 @@ begin
     end;
     RecorderMic185LifecycleLog(lTraceId, SourceId, 'connect', 'OK', '',
       GetTickCount64 - lStageStartedAt);
-    lStageStartedAt := GetTickCount64;
-    RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'BEGIN',
-      'GetSoftVersion/read SN');
-    lInitializeOk := lNativeDevice.TryInitializeSession(lTestError);
-    if not lInitializeOk then
-    begin
-      RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'FAIL',
-        lTestError, GetTickCount64 - lStageStartedAt);
-      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
-        'initialize: ' + lTestError);
-      RecorderHardwareMarkSourceOffline(SourceId,
-        'MIC183/185 initialization failed: ' + lTestError);
-      RecorderHardwareUnregisterLiveDevice(Self);
-      fDevice.Disconnect;
-      Exit;
-    end;
-    RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'OK',
-      Format('sn=%d version=%s', [lNativeDevice.DeviceSerial,
-        Mic185FormatSoftVersion(lNativeDevice.SoftVersion)]),
-      GetTickCount64 - lStageStartedAt);
-    EnterCriticalSection(gMic185PrepareLock);
+    Mic185EnterPrepareCommandSlot(lTraceId, SourceId);
     try
+      lStageStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'BEGIN',
+        'GetSoftVersion/read SN');
+      lInitializeOk := lNativeDevice.TryInitializeSession(lTestError);
+      if not lInitializeOk then
+      begin
+        RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'FAIL',
+          lTestError, GetTickCount64 - lStageStartedAt);
+        RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
+          'initialize: ' + lTestError);
+        RecorderHardwareMarkSourceOffline(SourceId,
+          'MIC183/185 initialization failed: ' + lTestError);
+        RecorderHardwareUnregisterLiveDevice(Self);
+        fDevice.Disconnect;
+        Exit;
+      end;
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'initialize', 'OK',
+        Format('sn=%d version=%s', [lNativeDevice.DeviceSerial,
+          Mic185FormatSoftVersion(lNativeDevice.SoftVersion)]),
+        GetTickCount64 - lStageStartedAt);
       RecorderMic185SetKnownIdentity(Registry, SourceId,
         lNativeDevice.DeviceSerial, lNativeDevice.SoftVersion);
+
+      lStageStartedAt := GetTickCount64;
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'BEGIN', '');
+      if not lNativeDevice.TryProgramDevice(lTestError) then
+      begin
+        RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'FAIL',
+          lTestError, GetTickCount64 - lStageStartedAt);
+        RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
+          'configure: ' + lTestError);
+        RecorderHardwareMarkSourceOffline(SourceId,
+          'MIC183/185 programming failed: ' + lTestError);
+        RecorderHardwareUnregisterLiveDevice(Self);
+        fDevice.Disconnect;
+        Exit;
+      end;
+      RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'OK', '',
+        GetTickCount64 - lStageStartedAt);
     finally
-      LeaveCriticalSection(gMic185PrepareLock);
+      Mic185LeavePrepareCommandSlot;
     end;
-    lStageStartedAt := GetTickCount64;
-    RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'BEGIN', '');
-    if not lNativeDevice.TryProgramDevice(lTestError) then
-    begin
-      RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'FAIL',
-        lTestError, GetTickCount64 - lStageStartedAt);
-      RecorderMic185LifecycleLog(lTraceId, SourceId, 'operation', 'FAIL',
-        'configure: ' + lTestError);
-      RecorderHardwareMarkSourceOffline(SourceId,
-        'MIC183/185 programming failed: ' + lTestError);
-      RecorderHardwareUnregisterLiveDevice(Self);
-      fDevice.Disconnect;
-      Exit;
-    end;
-    RecorderMic185LifecycleLog(lTraceId, SourceId, 'configure', 'OK', '',
-      GetTickCount64 - lStageStartedAt);
     RecorderMic185RegisterLiveDevice(Self, fHost, fPort, fDevice);
     fHardwarePrepared := True;
     RecorderHardwareClearSourceOffline(SourceId);
@@ -2167,6 +2216,7 @@ begin
   { A new acquisition session must publish its first UTS packet even if the
     datasource object is reused after Stop/Start. }
   fLastPublishedUtsGeneration := 0;
+  fUtsPublishLogCount := 0;
   fDiagTick := GetTickCount64;
   fDiagBlocks := 0;
   fLastRxPackets := 0;
@@ -2292,6 +2342,15 @@ begin
         absolute UTS seconds Y. PublishValue preserves the same .x/.dat split. }
       Registry.PublishValue(lTag.Name, lDevice.LastUtsDeviceTimeSec,
         lDevice.LastUts);
+      if fUtsPublishLogCount < 4 then
+      begin
+        Inc(fUtsPublishLogCount);
+        RecorderMic185Log(Format(
+          '[DataSource:%s] MIC-185 UTS published #%d tag=%s x=%.6f uts=%.0f gen=%d',
+          [SourceId, fUtsPublishLogCount, lTag.Name,
+           lDevice.LastUtsDeviceTimeSec, lDevice.LastUts,
+           lDevice.UtsGeneration]));
+      end;
       if Registry.TimeSystem <> nil then
         Registry.TimeSystem.UpdateFromTagSample(lDevice.LastUtsDeviceTimeSec,
           lDevice.LastUts);
