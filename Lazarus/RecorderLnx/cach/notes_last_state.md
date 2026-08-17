@@ -1,3 +1,67 @@
+## 2026-08-17 - Channel settings tag import/export
+
+**Request:** add tag list import/export in RecorderLnx channel settings, similar
+to the original Recorder plugin that edited tags through Excel, but usable with
+OpenOffice/LibreOffice.
+
+**Done:** checked the original plugin at `D:\works\clients\3252\1.6.4`; it used
+Excel COM/OLE and exported/imported tag metadata by table headers. Added
+`Core/uRecorderTagTableExchange.pas` with non-visual fpspreadsheet-based
+export/import and wired `Импорт...` / `Экспорт...` buttons into the channel
+settings dialog. The import matches tags by `ID канала`, then by
+`Источник + Адрес канала`, then by unique name. Editable fields now include
+name, description, unit, poll frequency, auto unit/range and scale min/max.
+
+**Notes:** fpspreadsheet runtime units were vendored under
+`Lazarus/third_party/fpspreadsheet`; its nested `.git` and examples/tests were
+removed. `.ods` and `.csv` are enabled. `.xlsx` support was not enabled because
+the current fpspreadsheet OOXML unit did not compile with this Lazarus/FPC setup
+(`FileNameIsAbsolute` missing); OpenDocument is the preferred Calc format.
+
+**Verification:** full `RecorderLnx.lpi` rebuild completed with exit code 0 and
+linked `RecorderLnx.exe`. The post-build `copy_sdb_res.bat` still prints the
+pre-existing Windows shell error on `#!/bin/sh`, but did not fail lazbuild.
+
+**Crash follow-up:** user reported a crash on import and provided a debugger
+stack in `fpsopendocument.pas`. Fixed two issues: `TTagImportRow` is now
+initialized with `Default(TTagImportRow)` instead of `FillChar`, and vendored
+fpspreadsheet ODS reader uses `FreeAndNil(Doc)` after `content.xml` so the
+`finally` block cannot double-free the XML document. Added
+`errors/2026-08-17-tag-table-import-crash.md` and project rule
+`RLNX_MANAGED_RECORD_NO_FILLCHAR_2026_08_17`. Rebuild passed with exit code 0;
+manual retry of import is still required.
+
+## 2026-08-17 - MIC-185 remains visible during active sessions
+
+**Request:** fix auto-search showing only MIC-140 although configured MIC-185 devices are connected.
+
+**Done:** root cause was the search dialog relying only on fresh broadcast replies after single-client MIC-185 working sessions were already open. It now merges broadcast results with configured MIC-185 devices confirmed through the active runtime registry, without a second TCP connection. Added a project rule for single-client discovery.
+
+**Verification:** full `RecorderLnx.lpi` rebuild completed with exit code 0. Detailed evidence: `errors/2026-08-17-mic185-discovery-regression-check.md`. **Status:** code complete; UI hardware check remains.
+
+## 2026-08-14 17:27 - MIC-140 UTS publishes current clock mapping
+
+**Request:** user clarified that MIC-140 SEV/UTS channels do not need every
+historical measurement replayed. The key requirement is the current mapping
+between crate local clock and SEV/UTS clock, because shared UTS code is the
+same while controller quartz clocks differ.
+
+**Done:** set MIC-140 SEV FIFO readiness to one 6-word UTS record
+(`fifoReady=6`) instead of six records (`fifoReady=36`), removing the
+multi-second startup backlog. Changed `TMic140v2Tcp.LastUtsPacket` so it takes
+the newest queued UTS packet and clears older queued packets; runtime therefore
+publishes the current `(crate local time, UTS)` pair instead of replaying stale
+SEV seconds after any delay.
+
+**Verification:** `RecorderLnx.lpi` rebuilt with exit code 0. Hidden
+`RecorderLnx.exe --preview-seconds=12` showed `SEV scan OK scan=0 fifoReady=6`,
+first MIC-140 UTS immediately after start (`uts=23031`) matching MIC-185
+`uts=23031`, then MIC-140 `23032`, `23033`, `23034` one second apart. Main
+MIC-140 stream stopped cleanly:
+`published=62 read=62 readGaps=0 dupRead=0 corruptRead=0 corruptPublish=0
+mdpResync=0`. Detailed notes:
+`errors/2026-08-14-mic140-uts-readout.md`.
+
 ## 2026-08-14 15:44 - MIC-140 UTS tag publishes every FIFO frame
 
 **Request:** user clarified that MIC-140 UTS tag itself must increment once per

@@ -368,3 +368,69 @@ changes.
   exit code 0. Log confirms MIC-140 `.14.42` accepted one SEV FIFO batch with
   raw UTS values `16846..16851`, then published `16846`, `16847`, `16848`,
   `16849` on the UTS tag at about one second cadence.
+
+## 2026-08-14 17:24 - MIC-140 UTS must be current, not replayed
+
+### New clarification
+
+User clarified that SEV/UTS channels do not need every historical measurement
+shown in the UI. The important behavior is the current mapping between crate
+local clock and SEV/UTS clock, because all devices share the time code while
+different controller quartz clocks drift differently.
+
+### Checked facts
+
+- After changing `CMic140LegacySevFifoReadyEntries` to `1`, the hardware log
+  shows `SEV scan OK scan=0 fifoReady=6 fifoCapacity=12 count=17`.
+- In the same run, first MIC-140 UTS arrived about one second after start:
+  `UTS packet accepted #1 ... payload=6 frames=1 ... uts=22849`.
+- MIC-185 devices published the same UTS second in the same interval:
+  `MIC-185 UTS published ... uts=22849`.
+- Main MIC-140 stream remained clean:
+  `published=61 read=62 readGaps=0 dupRead=0 corruptRead=0
+  corruptPublish=0 mdpResync=0`.
+
+### Hypotheses
+
+- Confirmed: the previous 5-second lag came from SEV FIFO readiness set to six
+  6-word entries (`fifoReady=36`), so the first packet contained a backlog and
+  publishing from the queue head displayed old UTS values.
+- Confirmed: even with one-entry SEV FIFO, runtime must never replay stale UTS
+  samples after a UI/thread delay. For time synchronization, the newest
+  `(crate local time, UTS)` pair is the useful sample.
+- Rejected: preserving every UTS FIFO frame is required for the MIC-140 UTS UI
+  tag. That conflicts with the user's clarified acceptance rule.
+
+### Changes made
+
+- `uRecorderMic140LegacyConstants.pas`: set
+  `CMic140LegacySevFifoReadyEntries = 1`, so SEV packets are requested after
+  one 6-word UTS record instead of six records.
+- `uRecorderMic140Protocol.pas`: `LastUtsPacket` now takes the newest queued
+  UTS packet and clears older queued packets. This keeps the published UTS tag
+  and `TimeSystem` synchronized to current hardware state instead of replaying
+  stale seconds.
+
+### Verification
+
+- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+  completed with exit code 0 after the SEV FIFO threshold change.
+- Hidden hardware run `RecorderLnx.exe --preview-seconds=12` completed with
+  exit code 0 and confirmed `fifoReady=6`, `frames=1`, and MIC-140/MIC-185 UTS
+  values matching at `22849`, `22850`, `22851`, `22852`.
+
+### Final verification
+
+- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+  completed with exit code 0 after the newest-UTS queue change.
+- Hidden hardware run `RecorderLnx.exe --preview-seconds=12` completed with
+  exit code 0.
+- Log confirms first MIC-140 UTS packet arrived immediately after start:
+  `17:27:08.407 UTS packet accepted #1 ... payload=6 frames=1 ... uts=23031`.
+- MIC-185 devices published the same UTS second in the same interval:
+  `17:27:08.529..08.562 MIC-185 UTS published ... uts=23031`.
+- MIC-140 published current UTS values one second apart:
+  `23031`, `23032`, `23033`, `23034`.
+- Main MIC-140 stream stayed clean:
+  `published=62 read=62 readGaps=0 dupRead=0 corruptRead=0
+  corruptPublish=0 mdpResync=0`.

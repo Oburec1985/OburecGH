@@ -76,7 +76,7 @@ type
     function ScanQueueCapacity: Integer;
     function UtsQueueCapacity: Integer;
     function TryDequeueScan(out ABlock: TMic140v2ScanPacket): Boolean;
-    function TryDequeueUts(out AUts: TMic140v2UtsPacket): Boolean;
+    function TryTakeLatestUts(out AUts: TMic140v2UtsPacket): Boolean;
     procedure EnqueueScan(const ABlock: TMic140v2ScanPacket);
     procedure EnqueueUts(const AUts: TMic140v2UtsPacket);
     function AbsorbUtsWords(const AWords: TMic140v2WordBuf): Boolean;
@@ -419,7 +419,9 @@ begin
   Inc(fScanQueueCount);
 end;
 
-function TMic140v2Tcp.TryDequeueUts(out AUts: TMic140v2UtsPacket): Boolean;
+function TMic140v2Tcp.TryTakeLatestUts(out AUts: TMic140v2UtsPacket): Boolean;
+var
+  lIdx: Integer;
 begin
   Result := fUtsQueueCount > 0;
   if not Result then
@@ -427,9 +429,9 @@ begin
     FillChar(AUts, SizeOf(AUts), 0);
     Exit;
   end;
-  AUts := fUtsQueue[fUtsQueueHead];
-  fUtsQueueHead := (fUtsQueueHead + 1) mod UtsQueueCapacity;
-  Dec(fUtsQueueCount);
+  lIdx := (fUtsQueueHead + fUtsQueueCount - 1) mod UtsQueueCapacity;
+  AUts := fUtsQueue[lIdx];
+  ClearUtsQueue;
 end;
 
 procedure TMic140v2Tcp.EnqueueUts(const AUts: TMic140v2UtsPacket);
@@ -1355,7 +1357,7 @@ function TMic140v2Tcp.LastUtsPacket(out AUts: TMic140v2UtsPacket): Boolean;
 begin
   fLock.Acquire;
   try
-    Result := TryDequeueUts(AUts);
+    Result := TryTakeLatestUts(AUts);
   finally
     fLock.Release;
   end;

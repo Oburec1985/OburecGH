@@ -58,6 +58,8 @@ type
     cbOnlyVirtualSelectedChannels: TCheckBox;
     pnCreateVirtualTag: TPanel;
     btnCreateVirtualTag: TBitBtn;
+    btnChannelImport: TButton;
+    btnChannelExport: TButton;
     spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
     fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
     fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
@@ -128,6 +130,8 @@ type
     procedure btnChannelAddClick(Sender: TObject);
     procedure btnChannelRemoveClick(Sender: TObject);
     procedure btnChannelEditClick(Sender: TObject);
+    procedure btnChannelImportClick(Sender: TObject);
+    procedure btnChannelExportClick(Sender: TObject);
     procedure btnCreateVirtualTagClick(Sender: TObject);
     procedure fAvailableChannelsGridDblClick(Sender: TObject);
     procedure fAvailableChannelsGridMouseDown(Sender: TObject; Button: TMouseButton;
@@ -190,6 +194,7 @@ type
     procedure SelectedChannelsFilterChanged(Sender: TObject);
     procedure SelectedChannelsFilterClearClick(Sender: TObject);
     procedure GridPaint(Sender: TObject);
+    procedure InitializeChannelExchangeButtons;
     
     // Вспомогательные методы работы с Mera-сигналами
     procedure ApplyMeraSignalToTag(ATag: TRecorderTag; ASignal: TMeraSignalInfo);
@@ -324,7 +329,8 @@ uses
   uRecorderMic185DataSource, uRecorderMic185Runtime, uMic185Constants,
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
-  uRecorderDeviceSearchDialog, uMc032Device, uRecorderDebugLog;
+  uRecorderDeviceSearchDialog, uMc032Device, uRecorderDebugLog,
+  uRecorderTagTableExchange;
 
 {$R *.lfm}
 
@@ -688,6 +694,7 @@ begin
     btnChannelEdit.ShowHint := True;
     btnChannelEdit.OnClick := @btnChannelEditClick;
   end;
+  InitializeChannelExchangeButtons;
 
   if FindComponent('btnWorkDirBrowse') is TButton then
     TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
@@ -739,6 +746,10 @@ begin
     cbHideInactiveSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
   if cbOnlyVirtualSelectedChannels <> nil then
     cbOnlyVirtualSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
+  if btnChannelImport <> nil then
+    btnChannelImport.OnClick := @btnChannelImportClick;
+  if btnChannelExport <> nil then
+    btnChannelExport.OnClick := @btnChannelExportClick;
 
   if fAvailableChannelsGrid <> nil then
   begin
@@ -786,6 +797,45 @@ begin
   InitializeAlgorithmControls;
   InitializeHardwareTree;
   UpdateConditionControls;
+end;
+
+procedure TRecorderSettingsDialog.InitializeChannelExchangeButtons;
+begin
+  if pnCreateVirtualTag = nil then
+    Exit;
+
+  if btnChannelImport = nil then
+  begin
+    btnChannelImport := TButton.Create(Self);
+    btnChannelImport.Name := 'btnChannelImport';
+    btnChannelImport.Parent := pnCreateVirtualTag;
+    btnChannelImport.Left := 44;
+    btnChannelImport.Top := 2;
+    btnChannelImport.Width := 78;
+    btnChannelImport.Height := 30;
+    btnChannelImport.Caption := 'Импорт...';
+    btnChannelImport.Hint := 'Импорт списка тегов из таблицы LibreOffice/OpenOffice';
+    btnChannelImport.ShowHint := True;
+    btnChannelImport.TabOrder := pnCreateVirtualTag.ControlCount;
+  end;
+
+  if btnChannelExport = nil then
+  begin
+    btnChannelExport := TButton.Create(Self);
+    btnChannelExport.Name := 'btnChannelExport';
+    btnChannelExport.Parent := pnCreateVirtualTag;
+    btnChannelExport.Left := 128;
+    btnChannelExport.Top := 2;
+    btnChannelExport.Width := 78;
+    btnChannelExport.Height := 30;
+    btnChannelExport.Caption := 'Экспорт...';
+    btnChannelExport.Hint := 'Экспорт списка тегов в таблицу LibreOffice/OpenOffice';
+    btnChannelExport.ShowHint := True;
+    btnChannelExport.TabOrder := pnCreateVirtualTag.ControlCount;
+  end;
+
+  btnChannelImport.OnClick := @btnChannelImportClick;
+  btnChannelExport.OnClick := @btnChannelExportClick;
 end;
 
 destructor TRecorderSettingsDialog.Destroy;
@@ -2200,6 +2250,40 @@ var
       ASerialNumber);
   end;
 
+  procedure AddLiveConfiguredMic185;
+  var
+    J: Integer;
+    lLiveHost: string;
+    lLivePort: Word;
+    lLiveSerial: LongWord;
+    lLiveVersion: string;
+    lAcquiring: Boolean;
+    lLiveDisplay: string;
+    lAddedBefore: Integer;
+  begin
+    lAddedBefore := lDialog.DeviceCount;
+    for J := 0 to lConfiguredIds.Count - 1 do
+    begin
+      if not TryParseRecorderMic185SourceId(lConfiguredIds[J], lLiveHost,
+        lLivePort) then
+        Continue;
+      if not RecorderMic185TryGetLiveDeviceInfo(lLiveHost, lLivePort,
+        lLiveSerial, lLiveVersion, lAcquiring) then
+        Continue;
+
+      lLiveDisplay := Format('MIC183/185 - %s:%d',
+        [lLiveHost, lLivePort]);
+      if lLiveSerial <> 0 then
+        lLiveDisplay := lLiveDisplay + Format(', SN=%d', [lLiveSerial]);
+      if lLiveVersion <> '' then
+        lLiveDisplay := lLiveDisplay + ', ' + lLiveVersion;
+      AddFound('MIC183/185', lConfiguredIds[J], lLiveDisplay, lLiveSerial);
+    end;
+    RecorderDebugLog(Format(
+      '[HardwareSearch] live configured MIC183/185: %d device(s)',
+      [lDialog.DeviceCount - lAddedBefore]));
+  end;
+
   function ProbeMic185(const AHost: string; APort: Word;
     ATimeoutMs: Cardinal): Boolean;
   begin
@@ -2277,6 +2361,11 @@ begin
     if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
       RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry,
         lConfiguredIds, True);
+
+    { A single-client MIC-185 may stop answering discovery while RecorderLnx
+      owns its working session. Reuse the confirmed live device so the search
+      dialog does not lose hardware that is already connected. }
+    AddLiveConfiguredMic185;
 
     Screen.Cursor := crHourGlass;
     try
@@ -4166,6 +4255,85 @@ end;
 procedure TRecorderSettingsDialog.btnChannelEditClick(Sender: TObject);
 begin
   OpenSelectedChannelTagSettings;
+end;
+
+procedure TRecorderSettingsDialog.btnChannelImportClick(Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lResult: TRecorderTagTableExchangeResult;
+  lMessage: string;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  lDialog := TOpenDialog.Create(Self);
+  try
+    try
+      lDialog.Title := 'Импорт списка тегов';
+      lDialog.Filter := 'Таблицы LibreOffice/OpenOffice (*.ods;*.csv)|*.ods;*.csv|Все файлы|*.*';
+      lDialog.DefaultExt := 'ods';
+      if not lDialog.Execute then
+        Exit;
+
+      RecorderTagTableExchangeResultInit(lResult);
+      try
+        ImportRecorderTagsFromTable(fRecorder.TagRegistry, lDialog.FileName, lResult);
+        MarkSignalsFromRegistry;
+        PopulateHardwareTree;
+        PopulateChannelGrids;
+        PopulateAlgorithmsTree;
+        fDataSourcesChanged := fDataSourcesChanged or (lResult.UpdatedTags > 0);
+        lMessage := Format('Обновлено тегов: %d'#13#10'Пропущено строк: %d',
+          [lResult.UpdatedTags, lResult.SkippedRows]);
+        if lResult.Warnings.Count > 0 then
+          lMessage := lMessage + #13#10#13#10 + lResult.Warnings.Text;
+        MessageDlg('Импорт списка тегов', lMessage, mtInformation, [mbOK], 0);
+      finally
+        RecorderTagTableExchangeResultDone(lResult);
+      end;
+    except
+      on E: Exception do
+        MessageDlg('Импорт списка тегов', E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.btnChannelExportClick(Sender: TObject);
+var
+  lDialog: TSaveDialog;
+  lResult: TRecorderTagTableExchangeResult;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  lDialog := TSaveDialog.Create(Self);
+  try
+    try
+      lDialog.Title := 'Экспорт списка тегов';
+      lDialog.Filter := 'OpenDocument Calc (*.ods)|*.ods|CSV (*.csv)|*.csv|Все файлы|*.*';
+      lDialog.DefaultExt := 'ods';
+      lDialog.FileName := 'recorder_tags.ods';
+      if not lDialog.Execute then
+        Exit;
+
+      RecorderTagTableExchangeResultInit(lResult);
+      try
+        ExportRecorderTagsToTable(fRecorder.TagRegistry, lDialog.FileName, lResult);
+        MessageDlg('Экспорт списка тегов',
+          Format('Экспортировано тегов: %d', [lResult.ExportedTags]),
+          mtInformation, [mbOK], 0);
+      finally
+        RecorderTagTableExchangeResultDone(lResult);
+      end;
+    except
+      on E: Exception do
+        MessageDlg('Экспорт списка тегов', E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lDialog.Free;
+  end;
 end;
 
 procedure TRecorderSettingsDialog.btnCreateVirtualTagClick(Sender: TObject);

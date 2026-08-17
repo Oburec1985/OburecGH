@@ -33,7 +33,7 @@ const
   CMic140LegacyBiosScanBufferDescWords = 10;
   CMic140LegacyBiosHeaderWords = 10;
   CMic140LegacySevPayloadWords = 6;
-  CMic140LegacySevFifoReadyEntries = 6;
+  CMic140LegacySevFifoReadyEntries = 1;
   CMic140LegacySevScanDivider = 1;
   CMic140LegacyDescChanWords = 5;
   CMic140LegacyStartDescChanWords = 3;
