@@ -16,7 +16,7 @@
       <Unit>
         <Filename Value="Calibrations\Strains\uRecorderStrainCalibration.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="154"/>
+        <UsageCount Value="157"/>
       </Unit>
       <Unit>
         <Filename Value="Calibrations\Strains\uRecorderStrainCalibrationDialog.pas"/>
@@ -24,7 +24,7 @@
         <ComponentName Value="RecorderStrainCalibrationDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="154"/>
+        <UsageCount Value="157"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uMeraFile.pas"/>
@@ -211,7 +211,7 @@
       <Unit>
         <Filename Value="Core\uRecorderTagTableExchange.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="23"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTagRefs.pas"/>
@@ -251,10 +251,9 @@
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140DataSource.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="856"/>
-        <CursorPos X="60" Y="879"/>
+        <TopLine Value="859"/>
+        <CursorPos X="69" Y="874"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit>
@@ -292,7 +291,7 @@
         <ComponentName Value="RecorderButtonSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="156"/>
+        <UsageCount Value="159"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormEditorController.pas"/>
@@ -395,12 +394,12 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="72"/>
+        <TopLine Value="76"/>
         <CursorPos X="19" Y="98"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderVirtualTagDialog.pas"/>
@@ -408,12 +407,16 @@
         <ComponentName Value="RecorderVirtualTagDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="138"/>
+        <UsageCount Value="141"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderNetworkBinding.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="138"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="167"/>
+        <CursorPos X="64" Y="187"/>
+        <UsageCount Value="141"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderDeviceSearchDialog.pas"/>
@@ -421,7 +424,7 @@
         <ComponentName Value="RecorderDeviceSearchDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="166"/>
+        <UsageCount Value="169"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderSpectrumSettingsDialog.pas"/>
@@ -471,12 +474,12 @@
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="155"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendView.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="155"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendSettingsDialog.pas"/>
@@ -484,7 +487,7 @@
         <ComponentName Value="RecorderSqlTrendSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="155"/>
+        <UsageCount Value="158"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderVisualControl.pas"/>
@@ -880,17 +883,17 @@
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbRepository.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbFileStore.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbRuntime.pas"/>
@@ -898,12 +901,12 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="239"/>
         <CursorPos X="42" Y="252"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbManager.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbSettingsDialog.pas"/>
@@ -911,7 +914,7 @@
         <ComponentName Value="RecorderSqlDbSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="160"/>
+        <UsageCount Value="163"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlTrendModel.pas"/>
@@ -1313,7 +1316,7 @@
         <UsageCount Value="10"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="16">
+    <JumpHistory HistoryIndex="20">
       <Position>
         <Filename Value="UI\uRecorderSettingsDialog.pas"/>
         <Caret Line="1956" Column="4" TopLine="1936"/>
@@ -1381,6 +1384,22 @@
       <Position>
         <Filename Value="Device\MIC140\uRecorderMic140Protocol.pas"/>
         <Caret Line="26" Column="45" TopLine="10"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\MIC140\uRecorderMic140DataSource.pas"/>
+        <Caret Line="874" Column="69" TopLine="859"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderNetworkBinding.pas"/>
+        <Caret Line="181" Column="19" TopLine="141"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderNetworkBinding.pas"/>
+        <Caret Line="183" Column="39" TopLine="169"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderNetworkBinding.pas"/>
+        <Caret Line="180" Column="21" TopLine="168"/>
       </Position>
     </JumpHistory>
     <RunParams>

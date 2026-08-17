@@ -134,6 +134,8 @@ procedure LoadMic185DataSourceConfigs(AJson: TJSONObject;
 function RecorderMic185TryGetLiveDeviceInfo(const AHost: string; APort: Word;
   out ASerialNumber: LongWord; out AVersionText: string;
   out AAcquiring: Boolean): Boolean;
+{ Возвращает активный MIC-185 device, если endpoint уже принадлежит runtime. }
+function RecorderMic185FindLiveDevice(const AHost: string; APort: Word): TRecorderMic185Device;
 { Регистрирует активный MIC-185 device для UI/probe без второго TCP-клиента. }
 procedure RecorderMic185RegisterLiveDevice(AOwner: TObject; const AHost: string;
   APort: Word; ADevice: IRecorderDevice);

@@ -58,10 +58,14 @@ var
   lReportFile: string;
   lNetworkLogFile: string;
   lBind: string;
+  lHint: string;
+  lKind: string;
+  lSerial: string;
   lTimeout: Cardinal;
   I: Integer;
 begin
   lBind := SwitchValue('--bind', '');
+  lHint := SwitchValue('--hint', '');
   lTimeout := StrToIntDef(SwitchValue('--timeout-ms', '5200'), 5200);
   lReportFile := ExtractFilePath(ParamStr(0)) +
     'hardware-search-main-summary.log';
@@ -69,12 +73,17 @@ begin
     'hardware-search-main-net.log';
   RecorderSetNetworkDebugLogFile(lNetworkLogFile);
   SetRecorderNetworkBindAddress(lBind);
+  RecorderClearDiscoveryHints;
+  RecorderAddDiscoveryHintIPv4(lHint);
   lFound := TStringList.Create;
   lReport := TStringList.Create;
   try
-    lReport.Add(Format('hardware-search-test exe="%s" bind="%s" effective="%s" timeout=%d',
-      [ParamStr(0), lBind, RecorderNetworkBindAddress, lTimeout]));
+    lReport.Add(Format('hardware-search-test exe="%s" bind="%s" effective="%s" hint="%s" timeout=%d',
+      [ParamStr(0), lBind, RecorderNetworkBindAddress, lHint, lTimeout]));
     RecorderDiscoverMeraBroadcast(lFound, lTimeout);
+    if (lFound.Count = 0) and RecorderProbeMeraLegacyHost(lHint, lKind,
+      lSerial, 600) then
+      lFound.Add(lHint + '=' + lKind + '|' + lSerial);
     lReport.Add(Format('found=%d', [lFound.Count]));
     for I := 0 to lFound.Count - 1 do
       lReport.Add(lFound[I]);

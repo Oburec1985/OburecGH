@@ -1,3 +1,97 @@
+## 2026-08-17 - Linux manual-IP autosearch works without Ping scan
+
+**Request:** if an address is typed explicitly in Linux settings, autosearch
+must find that exact device even with the `Ping` checkbox disabled.
+
+**Done:** fixed `TRecorderSettingsDialog.HardwareSearchClick`: the exact host
+fallback no longer depends on `lDialog.DeviceCount = 0`, because live/configured
+MIC-185 rows can make the dialog non-empty before the typed MIC-140 host is
+probed. The typed host is now skipped only when the same host is already in the
+found list. Broad ARP/TCP subnet recovery still stays behind the `Ping`
+checkbox.
+
+**Verification:** Linux `lazbuild -B RecorderLnx.lpi` completed with exit code
+0. Windows build reached link stage but was blocked by a running
+`RecorderLnx.exe` (`error code: 5`). Details:
+`errors/2026-08-17-linux-network-interface-list.md`.
+
+## 2026-08-17 - Linux MIC autosearch over VM route
+
+**Request:** Linux UI shows only one network adapter (`ens33
+[192.168.112.128]`) and does not show Wi-Fi. TCP ping to MIC-140
+`192.168.14.42:4000` works, but broadcast autosearch finds no devices.
+
+**Done:** confirmed over SSH that the Linux OS exposes only `lo` and `ens33`;
+Wi-Fi is not present inside the guest, so RecorderLnx cannot list it as an
+adapter. Implemented the previously empty Linux `RecorderDiscoverMeraBroadcast`
+path for modern and legacy Mera UDP discovery, fixed Linux bind-address
+byte-order validation, added hint-derived directed broadcasts from the host
+field, and added an exact-host fallback in the settings autosearch: if broadcast
+is empty, RecorderLnx probes the typed host by legacy UDP and then by existing
+TCP protocol probe without enabling full ping scan.
+
+**Verification:** Linux `lazbuild -B RecorderLnx.lpi` completed with exit code
+0. VM tests sent discovery to `255.255.255.255`, `192.168.112.255`, and
+`192.168.14.255`, plus directed legacy UDP to `192.168.14.42`, but got no UDP
+responses; TCP/ICMP unicast still works. Windows build compiled to link stage
+but could not overwrite the running `RecorderLnx.exe` (`error code: 5`).
+Detailed facts: `errors/2026-08-17-linux-network-interface-list.md`.
+
+## 2026-08-17 - Linux network adapter combo lists IPv4 interfaces
+
+**Request:** in Linux settings the network adapter combo allowed only automatic
+OS routing and did not show selectable interfaces.
+
+**Done:** confirmed `RecorderEnumerateLocalIPv4` had a Windows
+`GetAdaptersAddresses` path but the non-Windows path only used hostname
+resolution. Added Unix `SIOCGIFCONF` enumeration in
+`Core/uRecorderNetworkBinding.pas`, producing entries like
+`eth0 [192.168.x.y]` and skipping loopback/link-local addresses.
+
+**Build follow-up:** target Linux build first rejected
+`NetAddrToHost(lSockAddr^.sin_addr)`, then also rejected plain
+`inet_ntoa(lSockAddr^.sin_addr)`. The final Linux enumerator uses 40-byte
+`ifreq` stepping and formats kernel `sin_addr` with
+`NetAddrToStr(lSockAddr^.sin_addr)`.
+
+**Verification:** Windows `RecorderLnx.lpi` rebuild completed with exit code 0.
+Local `-Tlinux` compile is unavailable on this machine because the Windows FPC
+installation has no Linux RTL, so Astra/Linux UI/build verification remains
+required. Details: `errors/2026-08-17-linux-network-interface-list.md`.
+
+**SSH note:** user provided Linux access as `ssh user@linux`, password
+`11111111`; this alias was added to `Docs/vm_atra_lazarus.md`. From the current
+Windows execution environment `linux` did not resolve, so actual adapter
+inspection still needs a resolvable host/IP.
+
+**Final Linux check:** connected by SSH to `user@192.168.112.128`. The real
+Linux adapter list is `lo` and `ens33`; `ens33` is UP with
+`192.168.112.128/24`, MAC `00:0c:29:2b:32:29`, default route via
+`192.168.112.2`. Root cause of the empty combo was wrong Linux `ifreq` size:
+the kernel returned two 40-byte records, while the code stepped by 32 bytes.
+`TRecorderLinuxIfReq` now includes the union padding and uses `NetAddrToStr`
+for `sin_addr`. Linux `lazbuild --pcp=/home/user/.lazarus_work -B
+RecorderLnx.lpi` completed with exit code 0; a temporary test calling
+`RecorderEnumerateLocalIPv4` returned `Автоматически (метрика ОС)` and
+`ens33 [192.168.112.128]`.
+
+## 2026-08-17 - MIC-185 GX read reuses active TCP session
+
+**Request:** fix MIC185 hardware GX read failing for every selected channel with
+`already has an active TCP client in RecorderLnx`.
+
+**Done:** confirmed the tag GX dialog called
+`RecorderMic185DownloadHardwareCalibrationFromDeviceEx` per tag and opened a
+new `TRecorderMebiusTcpClient` on cache miss. Exported
+`RecorderMic185FindLiveDevice`, added
+`TRecorderMic185Device.TryReadChannelRangeKx`, and changed GX read to reuse the
+active live MIC185 session. A separate TCP client is now only used when
+RecorderLnx does not already own the endpoint. If acquisition is started, the
+user gets an explicit request to stop preview before GX read.
+
+**Verification:** full `RecorderLnx.lpi` rebuild completed with exit code 0.
+Details: `errors/2026-08-17-mic185-gx-active-client.md`.
+
 ## 2026-08-17 - Channel settings tag import/export
 
 **Request:** add tag list import/export in RecorderLnx channel settings, similar

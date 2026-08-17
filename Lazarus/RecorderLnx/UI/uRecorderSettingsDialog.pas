@@ -2099,6 +2099,8 @@ var
   lBroadcastValue: string;
   lBroadcastKind: string;
   lBroadcastSerial: string;
+  lProbeKind: string;
+  lProbeSerial: string;
   lBroadcastThread: TRecorderHardwareBroadcastSearchThread;
   lSerial: LongWord;
   lPort: Word;
@@ -2234,6 +2236,18 @@ var
     Result := HardwareTreeContainsHost(lFoundHost);
   end;
 
+  function SeenHost(const AHost: string): Boolean;
+  var
+    J: Integer;
+    lSeenHost: string;
+  begin
+    Result := False;
+    for J := 0 to lSeenIds.Count - 1 do
+      if TrySourceHost(lSeenIds[J], lSeenHost) and
+        SameText(lSeenHost, AHost) then
+        Exit(True);
+  end;
+
   procedure AddFound(const ADeviceType, ASourceId, ADisplayText: string;
     ASerialNumber: LongWord = 0);
   var
@@ -2342,6 +2356,9 @@ begin
   if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
     SetRecorderNetworkBindAddress(RecorderNetworkAddressFromDisplay(
       cbNetworkInterface.Text));
+  RecorderClearDiscoveryHints;
+  if edNetworkTestHost <> nil then
+    RecorderAddDiscoveryHintIPv4(Trim(edNetworkTestHost.Text));
   lFoundHosts := TStringList.Create;
   lBroadcastHosts := TStringList.Create;
   lBroadcastIps := TStringList.Create;
@@ -2408,6 +2425,34 @@ begin
         else if SameText(lBroadcastKind, 'MIC183/185') then
           AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay,
             LongWord(StrToIntDef(lBroadcastSerial, 0)));
+      end;
+
+      if (edNetworkTestHost <> nil) and (Trim(edNetworkTestHost.Text) <> '') and
+        (not SeenHost(Trim(edNetworkTestHost.Text))) and
+        RecorderProbeMeraLegacyHost(Trim(edNetworkTestHost.Text), lProbeKind,
+          lProbeSerial, 600) then
+      begin
+        lHost := Trim(edNetworkTestHost.Text);
+        lDisplay := Format('%s - %s:%d', [lProbeKind, lHost, 4000]);
+        if lProbeSerial <> '' then
+          lDisplay := lDisplay + ', SN=' + lProbeSerial;
+        RecorderDebugLog('[HardwareSearch] directed legacy probe found ' +
+          lDisplay);
+        if SameText(lProbeKind, 'MIC-140') then
+          AddFound('MIC-140', RecorderMic140SourceId(lHost, 4000), lDisplay,
+            LongWord(StrToIntDef(lProbeSerial, 0)))
+        else if SameText(lProbeKind, 'MIC183/185') then
+          AddFound('MIC183/185', RecorderMic185SourceId(lHost, 4000), lDisplay,
+            LongWord(StrToIntDef(lProbeSerial, 0)));
+      end;
+      if (edNetworkTestHost <> nil) and (Trim(edNetworkTestHost.Text) <> '') and
+        (not SeenHost(Trim(edNetworkTestHost.Text))) then
+      begin
+        lHost := Trim(edNetworkTestHost.Text);
+        RecorderDebugLog('[HardwareSearch] directed TCP protocol probe for ' +
+          lHost);
+        if not ProbeMic140(lHost, MIC140DefaultPort, 700) then
+          ProbeMic185(lHost, 4000, 700);
       end;
 
       lUseTcpRecovery := lUsePingSearch;

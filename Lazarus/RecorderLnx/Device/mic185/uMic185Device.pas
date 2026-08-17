@@ -113,6 +113,10 @@ type
     function HasTempData: Boolean;
     { Признак, что UTS/SEV пакет уже получен. }
     function HasUtsData: Boolean;
+    { Читает аппаратные коэффициенты ГХ через уже открытую MIC-185 сессию. }
+    function TryReadChannelRangeKx(AChannelIndex, ARangeIndex: Integer;
+      out AK, AB, ACurrentK, ACurrentB: Double;
+      out AErrorText: string): Boolean;
     { Продлевает активную Mebius-сессию без ожидания служебного ответа. }
     { Быстрая проверка TCP/Mebius связи без запуска измерений. }
     function TestLink(out AErrorText: string): Boolean; override;
@@ -152,6 +156,26 @@ const
   { Оригинальный CTCPLink ждёт одну секунду после Connect перед первой
     командой программирования. }
   CMic185TransportReadyDelayMs = 1000;
+  CMic185HardwareRangeCount = 4;
+  CMic185HardwareEvalCount = 5;
+  CMic185ChannelKxSize = SizeOf(Single) * 2;
+  CMic185ChannelKxFullSize =
+    SizeOf(Single) * (CMic185HardwareEvalCount * 2 + 4 + 8);
+
+function Mic185SingleFromBytes(const AData: TRecorderByteArray;
+  AOffset: Integer): Single;
+begin
+  Result := 0;
+  if (AOffset < 0) or (Length(AData) < AOffset + SizeOf(Result)) then
+    Exit;
+  Move(AData[AOffset], Result, SizeOf(Result));
+end;
+
+function Mic185MakeChannelQuery(AChannelIndex: Integer): TRecorderByteArray;
+begin
+  SetLength(Result, 1);
+  Result[0] := Byte(AChannelIndex);
+end;
 
 constructor TRecorderMic185Device.Create(const ADeviceId, AName: string);
 begin
@@ -582,6 +606,71 @@ end;
 function TRecorderMic185Device.HasUtsData: Boolean;
 begin
   Result := fHasLastUts;
+end;
+
+function TRecorderMic185Device.TryReadChannelRangeKx(AChannelIndex,
+  ARangeIndex: Integer; out AK, AB, ACurrentK, ACurrentB: Double;
+  out AErrorText: string): Boolean;
+var
+  lIn: TRecorderByteArray;
+  lOffset: Integer;
+  lOut: TRecorderByteArray;
+begin
+  Result := False;
+  AK := 0;
+  AB := 0;
+  ACurrentK := 0;
+  ACurrentB := 0;
+  AErrorText := '';
+  if (fState = rdsDisconnected) or (fClient = nil) then
+  begin
+    AErrorText := 'MIC183/185 is not connected';
+    Exit;
+  end;
+  if fState = rdsStarted then
+  begin
+    AErrorText := 'Остановите просмотр перед вычиткой ГХ MIC-185';
+    Exit;
+  end;
+  if (AChannelIndex < 0) or (AChannelIndex >= CMic185ChannelCountMax) then
+  begin
+    AErrorText := 'MIC-185 channel index is out of range';
+    Exit;
+  end;
+  if ARangeIndex < 0 then
+    ARangeIndex := 0;
+  if ARangeIndex >= CMic185HardwareRangeCount then
+    ARangeIndex := CMic185HardwareRangeCount - 1;
+
+  lIn := Mic185MakeChannelQuery(AChannelIndex);
+  if not fClient.TryCallCommand(CMic185IoCtlCmdGetCalibrKoef, lIn,
+    CMic185ChannelKxFullSize, lOut, AErrorText) then
+    Exit;
+  if Length(lOut) < CMic185ChannelKxFullSize then
+  begin
+    AErrorText := 'MIC-185 calibration reply is shorter than expected';
+    Exit;
+  end;
+
+  lOffset := ARangeIndex * CMic185ChannelKxSize;
+  AK := Mic185SingleFromBytes(lOut, lOffset);
+  AB := Mic185SingleFromBytes(lOut, lOffset + SizeOf(Single));
+  lOffset := CMic185HardwareRangeCount * CMic185ChannelKxSize;
+  ACurrentK := Mic185SingleFromBytes(lOut, lOffset);
+  ACurrentB := Mic185SingleFromBytes(lOut, lOffset + SizeOf(Single));
+  if (AK <> AK) or (AB <> AB) or (Abs(AK) > 1E20) or (Abs(AB) > 1E20) then
+  begin
+    AErrorText := 'MIC-185 calibration reply contains invalid k,b values';
+    Exit;
+  end;
+  if (ACurrentK <> ACurrentK) or (ACurrentB <> ACurrentB) or
+    (Abs(ACurrentK) > 1E20) or (Abs(ACurrentB) > 1E20) then
+  begin
+    ACurrentK := 0;
+    ACurrentB := 0;
+  end;
+
+  Result := True;
 end;
 
 function TRecorderMic185Device.SniffPackets(APacketCount: Integer;

@@ -16,6 +16,8 @@ type
 
 function RecorderNetworkBindAddress: string;
 procedure SetRecorderNetworkBindAddress(const AValue: string);
+procedure RecorderClearDiscoveryHints;
+procedure RecorderAddDiscoveryHintIPv4(const AValue: string);
 procedure RecorderEnumerateLocalIPv4(AItems: TStrings);
 function RecorderNetworkAddressFromDisplay(const AValue: string): string;
 procedure RecorderSetNetworkDebugLogFile(const AFileName: string);
@@ -46,6 +48,36 @@ uses
 var
   g_RecorderNetworkBindAddress: string = '';
   g_RecorderNetworkDebugLogFile: string = '';
+  g_RecorderNetworkDiscoveryHints: TStringList = nil;
+
+{$ifdef unix}
+const
+  CRecorderLinuxIfNameSize = 16;
+  CRecorderLinuxSiocGifConf = $8912;
+
+type
+  {$push}
+  {$packrecords c}
+  TRecorderLinuxIfName = record
+    case Integer of
+      0: (Name: array[0..CRecorderLinuxIfNameSize - 1] of Char);
+  end;
+
+  PRecorderLinuxIfReq = ^TRecorderLinuxIfReq;
+  TRecorderLinuxIfReq = record
+    IfName: TRecorderLinuxIfName;
+    case Integer of
+      0: (Addr: TSockAddr; Padding: array[0..7] of Byte);
+  end;
+
+  TRecorderLinuxIfConf = record
+    Len: cint;
+    case Integer of
+      0: (Buffer: Pointer);
+      1: (Req: PRecorderLinuxIfReq);
+  end;
+  {$pop}
+{$endif}
 
 procedure NetworkDebugLog(const AMessage: string);
 var
@@ -79,9 +111,37 @@ begin
   g_RecorderNetworkDebugLogFile := AFileName;
 end;
 
+function RecorderDiscoveryHints: TStringList;
+begin
+  if g_RecorderNetworkDiscoveryHints = nil then
+  begin
+    g_RecorderNetworkDiscoveryHints := TStringList.Create;
+    g_RecorderNetworkDiscoveryHints.CaseSensitive := False;
+    g_RecorderNetworkDiscoveryHints.Sorted := True;
+    g_RecorderNetworkDiscoveryHints.Duplicates := dupIgnore;
+  end;
+  Result := g_RecorderNetworkDiscoveryHints;
+end;
+
+procedure RecorderClearDiscoveryHints;
+begin
+  if g_RecorderNetworkDiscoveryHints <> nil then
+    g_RecorderNetworkDiscoveryHints.Clear;
+end;
+
+procedure RecorderAddDiscoveryHintIPv4(const AValue: string);
+var
+  lAddress: THostAddr;
+begin
+  lAddress := StrToHostAddr(Trim(AValue));
+  if lAddress.s_addr <> 0 then
+    RecorderDiscoveryHints.Add(HostAddrToStr(lAddress));
+end;
+
 {$ifdef unix}
 function IsLocalIPv4(const AValue: string): Boolean;
 var
+  lHostAddress: THostAddr;
   lAddress: TInetSockAddr;
   lSocket: cint;
 begin
@@ -91,8 +151,74 @@ begin
   try
     FillChar(lAddress, SizeOf(lAddress), 0);
     lAddress.sin_family := AF_INET;
-    lAddress.sin_addr := StrToHostAddr(AValue);
+    lHostAddress := StrToHostAddr(AValue);
+    lAddress.sin_addr.s_addr := HostToNet(lHostAddress.s_addr);
     Result := fpBind(lSocket, @lAddress, SizeOf(lAddress)) = 0;
+  finally
+    fpClose(lSocket);
+  end;
+end;
+{$endif}
+
+{$ifdef unix}
+function RecorderLinuxIfNameToString(const AName: array of Char): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to High(AName) do
+  begin
+    if AName[I] = #0 then
+      Break;
+    Result := Result + AName[I];
+  end;
+end;
+
+procedure RecorderEnumerateLinuxLocalIPv4(AItems: TStrings);
+var
+  I: Integer;
+  lBuffer: array[0..8191] of Byte;
+  lConf: TRecorderLinuxIfConf;
+  lCount: Integer;
+  lIfName: string;
+  lIfReq: PRecorderLinuxIfReq;
+  lIp: string;
+  lSocket: cint;
+  lSockAddr: PInetSockAddr;
+begin
+  lSocket := fpSocket(AF_INET, SOCK_DGRAM, 0);
+  if lSocket < 0 then
+  begin
+    NetworkDebugLog('[Network] Linux interface enumeration socket failed');
+    Exit;
+  end;
+  try
+    FillChar(lConf, SizeOf(lConf), 0);
+    lConf.Len := SizeOf(lBuffer);
+    lConf.Buffer := @lBuffer[0];
+    if fpIOCtl(lSocket, CRecorderLinuxSiocGifConf, @lConf) < 0 then
+    begin
+      NetworkDebugLog(Format('[Network] Linux SIOCGIFCONF failed errno=%d',
+        [fpGetErrNo]));
+      Exit;
+    end;
+    lCount := lConf.Len div SizeOf(TRecorderLinuxIfReq);
+    for I := 0 to lCount - 1 do
+    begin
+      lIfReq := PRecorderLinuxIfReq(@lBuffer[I * SizeOf(TRecorderLinuxIfReq)]);
+      if lIfReq^.Addr.sa_family <> AF_INET then
+        Continue;
+      lSockAddr := PInetSockAddr(@lIfReq^.Addr);
+      lIp := NetAddrToStr(lSockAddr^.sin_addr);
+      if (lIp = '') or (lIp = '0.0.0.0') or
+        (Pos('127.', lIp) = 1) or (Pos('169.254.', lIp) = 1) then
+        Continue;
+      lIfName := RecorderLinuxIfNameToString(lIfReq^.IfName.Name);
+      if lIfName = '' then
+        lIfName := 'Linux';
+      if AItems.IndexOf(lIfName + ' [' + lIp + ']') < 0 then
+        AItems.Add(lIfName + ' [' + lIp + ']');
+    end;
   finally
     fpClose(lSocket);
   end;
@@ -212,6 +338,11 @@ begin
       end;
       Exit;
     end;
+{$endif}
+{$ifdef unix}
+    RecorderEnumerateLinuxLocalIPv4(AItems);
+    if AItems.Count > 1 then
+      Exit;
 {$endif}
     lHostName := SysUtils.GetEnvironmentVariable('COMPUTERNAME');
     if lHostName = '' then
@@ -1072,8 +1203,435 @@ begin
   end;
 end;
 {$else}
+const
+  CModernRequest: AnsiString = 'MERA: MebiusDAQ devices search. [v.1]';
+  CLegacyRequest: AnsiString = 'MERA:Eth81Srch';
+  CModernPort = 4400;
+  CLegacyPort = 4001;
+  CMic140_96Type = $412D;
+  CMic140_48Type = $413C;
+  CMic140_48EthernetType = $413D;
+  CMic140_48V2Type = $413E;
+  CMic140_48V2EthernetType = $413F;
+  CMic140_48V3Type = $4140;
+  CMic140_48V3EthernetType = $4141;
+  CMic140_96V3Type = $4142;
+  CMic140_96V3EthernetType = $4143;
+  CMic140_96V5Type = $4144;
+  CMic140MebiusDeviceType = $02090000;
+  CMic140V2MebiusDeviceType = $02220000;
+  CMic183MebiusDeviceType = $020A0000;
+  CMic185V2MebiusDeviceType = $02190000;
+  CMic140DeviceType = $440C;
+  CMic140_96V2DeviceType = $4417;
+  CMic140_16V2DeviceType = $442F;
+  CMic183DeviceType = $440E;
+  CMic185V2DeviceType = $442A;
+  CInvalidSocket = -1;
+var
+  lListenModern, lListenLegacy: cint;
+  lAddr, lFrom: TInetSockAddr;
+  lFromLen: TSockLen;
+  lOpt, lRead, lWait, lReadySocket, lMaxSocket: cint;
+  lReadSet: TFDSet;
+  lTime: TTimeVal;
+  lStarted, lNow, lLastNewReply: QWord;
+  lBuffer: array[0..1023] of Byte;
+  lHost, lDeviceIpText: string;
+  lDeviceKind, lSerial: string;
+  lDeviceType, lDeviceIp: Cardinal;
+  lLegacyType, lLegacySerial, lLegacyCCSerial: Word;
+  lDirectedBroadcasts, lLocalSendIps: TStringList;
+
+  function ReadLEWord(AOffset: Integer): Word;
+  begin
+    Result := Word(lBuffer[AOffset]) or (Word(lBuffer[AOffset + 1]) shl 8);
+  end;
+
+  function ReadLECardinal(AOffset: Integer): Cardinal;
+  begin
+    Result := Cardinal(lBuffer[AOffset]) or
+      (Cardinal(lBuffer[AOffset + 1]) shl 8) or
+      (Cardinal(lBuffer[AOffset + 2]) shl 16) or
+      (Cardinal(lBuffer[AOffset + 3]) shl 24);
+  end;
+
+  function IPv4FromLECardinal(AValue: Cardinal): string;
+  begin
+    if AValue = 0 then Exit('');
+    Result := Format('%d.%d.%d.%d', [
+      AValue and $ff,
+      (AValue shr 8) and $ff,
+      (AValue shr 16) and $ff,
+      (AValue shr 24) and $ff]);
+  end;
+
+  function ReadFixedAnsi(AOffset, ASize: Integer): string;
+  var
+    lCount: Integer;
+  begin
+    Result := '';
+    lCount := 0;
+    while (lCount < ASize) and (AOffset + lCount < lRead) and
+      (lBuffer[AOffset + lCount] <> 0) do Inc(lCount);
+    if lCount > 0 then
+      SetString(Result, PAnsiChar(@lBuffer[AOffset]), lCount);
+    Result := Trim(Result);
+  end;
+
+  function SocketErrorText(const AAction: string): string;
+  begin
+    Result := Format('%s failed: errno=%d', [AAction, fpGetErrNo]);
+  end;
+
+  function SocketAddressFromIPv4(const AValue: string): TInAddr;
+  var
+    lHostAddr: THostAddr;
+  begin
+    lHostAddr := StrToHostAddr(AValue);
+    Result.s_addr := HostToNet(lHostAddr.s_addr);
+  end;
+
+  function DirectedBroadcastForAddress(const AAddress: string): string;
+  var
+    lLocalValue: Cardinal;
+  begin
+    Result := '255.255.255.255';
+    if TryIPv4ToUInt32(AAddress, lLocalValue) then
+      Result := UInt32ToIPv4((lLocalValue and $ffffff00) or $ff);
+  end;
+
+  procedure AddDirectedBroadcast(const AAddress: string);
+  var
+    lBroadcast: string;
+  begin
+    lBroadcast := DirectedBroadcastForAddress(AAddress);
+    if (lBroadcast <> '') and (lDirectedBroadcasts.IndexOf(lBroadcast) < 0) then
+      lDirectedBroadcasts.Add(lBroadcast);
+  end;
+
+  procedure CollectDirectedBroadcasts;
+  var
+    I: Integer;
+  begin
+    lDirectedBroadcasts.Clear;
+    lDirectedBroadcasts.Add('255.255.255.255');
+    if g_RecorderNetworkBindAddress <> '' then
+      AddDirectedBroadcast(g_RecorderNetworkBindAddress);
+    if g_RecorderNetworkDiscoveryHints <> nil then
+      for I := 0 to g_RecorderNetworkDiscoveryHints.Count - 1 do
+        AddDirectedBroadcast(g_RecorderNetworkDiscoveryHints[I]);
+  end;
+
+  function OpenListener(APort: Word): cint;
+  var
+    lLocal: TInetSockAddr;
+  begin
+    Result := fpSocket(AF_INET, SOCK_DGRAM, 0);
+    if Result < 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('socket linux listener/%d', [APort + 1])));
+      Exit(CInvalidSocket);
+    end;
+    lOpt := 1;
+    fpSetSockOpt(Result, SOL_SOCKET, SO_REUSEADDR, @lOpt, SizeOf(lOpt));
+    fpSetSockOpt(Result, SOL_SOCKET, SO_BROADCAST, @lOpt, SizeOf(lOpt));
+    FillChar(lLocal, SizeOf(lLocal), 0);
+    lLocal.sin_family := AF_INET;
+    lLocal.sin_port := htons(APort + 1);
+    if g_RecorderNetworkBindAddress = '' then
+      lLocal.sin_addr.s_addr := 0
+    else
+      lLocal.sin_addr := SocketAddressFromIPv4(g_RecorderNetworkBindAddress);
+    if fpBind(Result, @lLocal, SizeOf(lLocal)) <> 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('bind linux listener/%s:%d',
+        [g_RecorderNetworkBindAddress, APort + 1])) + '; trying 0.0.0.0');
+      FillChar(lLocal, SizeOf(lLocal), 0);
+      lLocal.sin_family := AF_INET;
+      lLocal.sin_port := htons(APort + 1);
+      lLocal.sin_addr.s_addr := 0;
+      if fpBind(Result, @lLocal, SizeOf(lLocal)) <> 0 then
+      begin
+        NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+          Format('bind linux listener/0.0.0.0:%d', [APort + 1])));
+        fpClose(Result);
+        Result := CInvalidSocket;
+      end;
+    end;
+    if Result <> CInvalidSocket then
+      NetworkDebugLog(Format('[HardwareSearch] linux listener bound to %s:%d',
+        [NetAddrToStr(lLocal.sin_addr), APort + 1]));
+  end;
+
+  procedure SendRequest(ASocket: cint; APort: Word;
+    const ARequest: AnsiString; const ADestination: string;
+    const ACaption: string);
+  var
+    lSent: cint;
+  begin
+    if ASocket = CInvalidSocket then Exit;
+    FillChar(lAddr, SizeOf(lAddr), 0);
+    lAddr.sin_family := AF_INET;
+    lAddr.sin_port := htons(APort);
+    lAddr.sin_addr := SocketAddressFromIPv4(ADestination);
+    lSent := fpSendTo(ASocket, @ARequest[1], Length(ARequest), 0,
+      @lAddr, SizeOf(lAddr));
+    if lSent < 0 then
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('sendto linux %s/%d', [ACaption, APort])))
+    else
+      NetworkDebugLog(Format('[HardwareSearch] linux %s sent %d byte(s) to %s:%d',
+        [ACaption, lSent, ADestination, APort]));
+  end;
+
+  procedure AddLocalSendIp(const AValue: string);
+  begin
+    if (AValue <> '') and (AValue <> '0.0.0.0') and
+       (lLocalSendIps.IndexOf(AValue) < 0) then
+      lLocalSendIps.Add(AValue);
+  end;
+
+  procedure CollectOriginalStyleSendIps;
+  var
+    I: Integer;
+    lItems: TStringList;
+    lText, lIp: string;
+  begin
+    lLocalSendIps.Clear;
+    if g_RecorderNetworkBindAddress <> '' then
+    begin
+      AddLocalSendIp(g_RecorderNetworkBindAddress);
+      Exit;
+    end;
+    lItems := TStringList.Create;
+    try
+      RecorderEnumerateLocalIPv4(lItems);
+      for I := 0 to lItems.Count - 1 do
+      begin
+        lText := lItems[I];
+        lIp := RecorderNetworkAddressFromDisplay(lText);
+        if lIp <> '' then AddLocalSendIp(lIp);
+      end;
+    finally
+      lItems.Free;
+    end;
+  end;
+
+  procedure SendOriginalStyleBroadcast(APort: Word; const ARequest: AnsiString;
+    const ALocalIp, ADestination: string);
+  var
+    lSocket: cint;
+    lLocal: TInetSockAddr;
+  begin
+    lSocket := fpSocket(AF_INET, SOCK_DGRAM, 0);
+    if lSocket < 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('socket linux original sender/%d', [APort])));
+      Exit;
+    end;
+    try
+      lOpt := 1;
+      fpSetSockOpt(lSocket, SOL_SOCKET, SO_BROADCAST, @lOpt, SizeOf(lOpt));
+      FillChar(lLocal, SizeOf(lLocal), 0);
+      lLocal.sin_family := AF_INET;
+      lLocal.sin_port := htons(APort);
+      if ALocalIp = '' then
+        lLocal.sin_addr.s_addr := 0
+      else
+        lLocal.sin_addr := SocketAddressFromIPv4(ALocalIp);
+      if fpBind(lSocket, @lLocal, SizeOf(lLocal)) <> 0 then
+      begin
+        NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+          Format('bind linux original sender/%s:%d', [ALocalIp, APort])));
+        Exit;
+      end;
+      SendRequest(lSocket, APort, ARequest, ADestination, 'original-style');
+    finally
+      fpClose(lSocket);
+    end;
+  end;
+
+  procedure SendOriginalStyleRequests;
+  var
+    I, J: Integer;
+  begin
+    for J := 0 to lDirectedBroadcasts.Count - 1 do
+    begin
+      SendRequest(lListenModern, CModernPort, CModernRequest,
+        lDirectedBroadcasts[J], 'reply-socket');
+      SendRequest(lListenLegacy, CLegacyPort, CLegacyRequest,
+        lDirectedBroadcasts[J], 'reply-socket');
+    end;
+    CollectOriginalStyleSendIps;
+    if lLocalSendIps.Count = 0 then
+    begin
+      for J := 0 to lDirectedBroadcasts.Count - 1 do
+      begin
+        SendOriginalStyleBroadcast(CModernPort, CModernRequest, '',
+          lDirectedBroadcasts[J]);
+        SendOriginalStyleBroadcast(CLegacyPort, CLegacyRequest, '',
+          lDirectedBroadcasts[J]);
+      end;
+      Exit;
+    end;
+    for I := 0 to lLocalSendIps.Count - 1 do
+      for J := 0 to lDirectedBroadcasts.Count - 1 do
+      begin
+        SendOriginalStyleBroadcast(CModernPort, CModernRequest,
+          lLocalSendIps[I], lDirectedBroadcasts[J]);
+        SendOriginalStyleBroadcast(CLegacyPort, CLegacyRequest,
+          lLocalSendIps[I], lDirectedBroadcasts[J]);
+      end;
+  end;
+
+  procedure ClassifyPacket;
+  begin
+    lDeviceKind := '';
+    lSerial := '';
+    if (lRead >= 32) and
+       (AnsiChar(lBuffer[0]) = 'M') and (AnsiChar(lBuffer[1]) = 'e') and
+       (AnsiChar(lBuffer[2]) = 'b') and (AnsiChar(lBuffer[3]) = 'D') and
+       (AnsiChar(lBuffer[4]) = 'A') and (AnsiChar(lBuffer[5]) = 'Q') then
+    begin
+      lDeviceType := ReadLECardinal(8);
+      lDeviceIp := ReadLECardinal(12);
+      case lDeviceType of
+        CMic140_96Type, CMic140_48Type, CMic140_48V2Type,
+        CMic140_48V3Type, CMic140_96V3Type, CMic140_96V5Type,
+        CMic140_48EthernetType, CMic140_48V2EthernetType,
+        CMic140_48V3EthernetType, CMic140_96V3EthernetType,
+        CMic140DeviceType, CMic140_96V2DeviceType,
+        CMic140_16V2DeviceType, CMic140MebiusDeviceType,
+        CMic140V2MebiusDeviceType: lDeviceKind := 'MIC-140';
+        CMic183DeviceType, CMic185V2DeviceType, CMic183MebiusDeviceType,
+        CMic185V2MebiusDeviceType: lDeviceKind := 'MIC183/185';
+      end;
+      lDeviceIpText := IPv4FromLECardinal(lDeviceIp);
+      if lDeviceIpText <> '' then lHost := lDeviceIpText;
+      lSerial := ReadFixedAnsi(16, 16);
+      if lDeviceKind = '' then
+        NetworkDebugLog(Format('[HardwareSearch] ignored linux modern broadcast: host=%s type=$%x bytes=%d',
+          [lHost, lDeviceType, lRead]));
+    end
+    else if (lRead >= 24) and
+      CompareMem(@lBuffer[0], PAnsiChar(CLegacyRequest), Length(CLegacyRequest)) then
+    begin
+      lLegacyType := ReadLEWord(18);
+      lLegacySerial := ReadLEWord(22);
+      lLegacyCCSerial := 0;
+      if lRead >= 28 then lLegacyCCSerial := ReadLEWord(26);
+      case lLegacyType of
+        12, CMic140_96Type, CMic140_48Type, CMic140_48EthernetType,
+        CMic140_48V2Type, CMic140_48V2EthernetType, CMic140_48V3Type,
+        CMic140_48V3EthernetType, CMic140_96V3Type,
+        CMic140_96V3EthernetType, CMic140_96V5Type,
+        CMic140DeviceType, CMic140_96V2DeviceType,
+        CMic140_16V2DeviceType: lDeviceKind := 'MIC-140';
+        $440e, $442a: lDeviceKind := 'MIC183/185';
+      end;
+      if lLegacyCCSerial <> 0 then
+        lSerial := IntToStr(lLegacyCCSerial)
+      else if lLegacySerial <> 0 then
+        lSerial := IntToStr(lLegacySerial);
+      if lDeviceKind = '' then
+        NetworkDebugLog(Format('[HardwareSearch] ignored linux legacy broadcast: host=%s type=$%x bytes=%d',
+          [lHost, lLegacyType, lRead]));
+    end;
+  end;
 begin
-  if AFoundHosts <> nil then AFoundHosts.Clear;
+  if AFoundHosts = nil then Exit;
+  AFoundHosts.Clear;
+  lListenModern := CInvalidSocket;
+  lListenLegacy := CInvalidSocket;
+  lDirectedBroadcasts := TStringList.Create;
+  lLocalSendIps := TStringList.Create;
+  try
+    lDirectedBroadcasts.CaseSensitive := False;
+    lDirectedBroadcasts.Sorted := True;
+    lDirectedBroadcasts.Duplicates := dupIgnore;
+    lLocalSendIps.CaseSensitive := False;
+    lLocalSendIps.Sorted := True;
+    lLocalSendIps.Duplicates := dupIgnore;
+    lListenModern := OpenListener(CModernPort);
+    lListenLegacy := OpenListener(CLegacyPort);
+    CollectDirectedBroadcasts;
+    NetworkDebugLog(Format('[HardwareSearch] linux discovery start bind="%s" directed="%s" timeout=%d modernListen=%d legacyListen=%d sendMode=original-broadcast',
+      [g_RecorderNetworkBindAddress, lDirectedBroadcasts.CommaText, ATimeoutMs,
+      Ord(lListenModern <> CInvalidSocket),
+      Ord(lListenLegacy <> CInvalidSocket)]));
+    SendOriginalStyleRequests;
+    lStarted := GetTickCount64;
+    lLastNewReply := 0;
+    repeat
+      lNow := GetTickCount64;
+      if lNow - lStarted >= ATimeoutMs then Break;
+      if (lLastNewReply <> 0) and (lNow - lStarted >= 1600) and
+         (lNow - lLastNewReply >= 1000) then Break;
+      lWait := Integer(ATimeoutMs - (lNow - lStarted));
+      if lWait > 100 then lWait := 100;
+      fpFD_ZERO(lReadSet);
+      lMaxSocket := -1;
+      if lListenModern <> CInvalidSocket then
+      begin
+        fpFD_SET(lListenModern, lReadSet);
+        lMaxSocket := lListenModern;
+      end;
+      if lListenLegacy <> CInvalidSocket then
+      begin
+        fpFD_SET(lListenLegacy, lReadSet);
+        if lListenLegacy > lMaxSocket then lMaxSocket := lListenLegacy;
+      end;
+      if lMaxSocket < 0 then Break;
+      lTime.tv_sec := 0;
+      lTime.tv_usec := lWait * 1000;
+      lRead := fpSelect(lMaxSocket + 1, @lReadSet, nil, nil, @lTime);
+      if lRead < 0 then
+      begin
+        NetworkDebugLog('[HardwareSearch] ' + SocketErrorText('linux select'));
+        Continue;
+      end;
+      if lRead <= 0 then Continue;
+      if (lListenModern <> CInvalidSocket) and
+         (fpFD_ISSET(lListenModern, lReadSet) <> 0) then
+        lReadySocket := lListenModern
+      else if (lListenLegacy <> CInvalidSocket) and
+         (fpFD_ISSET(lListenLegacy, lReadSet) <> 0) then
+        lReadySocket := lListenLegacy
+      else
+        Continue;
+      lFromLen := SizeOf(lFrom);
+      FillChar(lBuffer, SizeOf(lBuffer), 0);
+      lRead := fpRecvFrom(lReadySocket, @lBuffer[0], SizeOf(lBuffer), 0,
+        @lFrom, @lFromLen);
+      if lRead < 0 then
+      begin
+        NetworkDebugLog('[HardwareSearch] ' + SocketErrorText('linux recvfrom'));
+        Continue;
+      end;
+      if lRead <= 0 then Continue;
+      lHost := NetAddrToStr(lFrom.sin_addr);
+      NetworkDebugLog(Format('[HardwareSearch] linux received %d byte(s) from %s',
+        [lRead, lHost]));
+      ClassifyPacket;
+      if (lHost <> '') and (lDeviceKind <> '') and
+         (AFoundHosts.IndexOfName(lHost) < 0) then
+      begin
+        AFoundHosts.Add(lHost + '=' + lDeviceKind + '|' + lSerial);
+        lLastNewReply := GetTickCount64;
+      end;
+    until False;
+    NetworkDebugLog(Format('[HardwareSearch] linux discovery finished: %d device(s)',
+      [AFoundHosts.Count]));
+  finally
+    lDirectedBroadcasts.Free;
+    lLocalSendIps.Free;
+    if lListenModern <> CInvalidSocket then fpClose(lListenModern);
+    if lListenLegacy <> CInvalidSocket then fpClose(lListenLegacy);
+  end;
 end;
 {$endif}
 
@@ -1240,10 +1798,173 @@ begin
   end;
 end;
 {$else}
+const
+  CLegacyRequest: AnsiString = 'MERA:Eth81Srch';
+  CLegacyPort = 4001;
+  CMic140_96Type = $412D;
+  CMic140_48Type = $413C;
+  CMic140_48EthernetType = $413D;
+  CMic140_48V2Type = $413E;
+  CMic140_48V2EthernetType = $413F;
+  CMic140_48V3Type = $4140;
+  CMic140_48V3EthernetType = $4141;
+  CMic140_96V3Type = $4142;
+  CMic140_96V3EthernetType = $4143;
+  CMic140_96V5Type = $4144;
+  CMic140DeviceType = $440C;
+  CMic140_96V2DeviceType = $4417;
+  CMic140_16V2DeviceType = $442F;
+  CMic183DeviceType = $440E;
+  CMic185V2DeviceType = $442A;
+  CInvalidSocket = -1;
+var
+  lListen, lSend: cint;
+  lLocal, lRemote, lFrom: TInetSockAddr;
+  lFromLen: TSockLen;
+  lOpt, lRead, lWait, lReadySocket, lMaxSocket: cint;
+  lReadSet: TFDSet;
+  lTime: TTimeVal;
+  lStarted, lNow: QWord;
+  lBuffer: array[0..127] of Byte;
+  lHost: string;
+  lDeviceType, lSerial, lCCSerial: Word;
+
+  function ReadLEWord(AOffset: Integer): Word;
+  begin
+    Result := Word(lBuffer[AOffset]) or (Word(lBuffer[AOffset + 1]) shl 8);
+  end;
+
+  function SocketErrorText(const AAction: string): string;
+  begin
+    Result := Format('%s failed: errno=%d', [AAction, fpGetErrNo]);
+  end;
+
+  function SocketAddressFromIPv4(const AValue: string): TInAddr;
+  var
+    lHostAddr: THostAddr;
+  begin
+    lHostAddr := StrToHostAddr(AValue);
+    Result.s_addr := HostToNet(lHostAddr.s_addr);
+  end;
 begin
   Result := False;
   AKind := '';
   ASerial := '';
+  if Trim(AHost) = '' then Exit;
+  lListen := CInvalidSocket;
+  lSend := CInvalidSocket;
+  try
+    lListen := fpSocket(AF_INET, SOCK_DGRAM, 0);
+    if lListen < 0 then Exit;
+    lOpt := 1;
+    fpSetSockOpt(lListen, SOL_SOCKET, SO_REUSEADDR, @lOpt, SizeOf(lOpt));
+    FillChar(lLocal, SizeOf(lLocal), 0);
+    lLocal.sin_family := AF_INET;
+    lLocal.sin_port := htons(CLegacyPort + 1);
+    lLocal.sin_addr.s_addr := 0;
+    if fpBind(lListen, @lLocal, SizeOf(lLocal)) <> 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        'bind linux legacy directed listener/4002'));
+      Exit;
+    end;
+
+    lSend := fpSocket(AF_INET, SOCK_DGRAM, 0);
+    if lSend < 0 then Exit;
+    FillChar(lLocal, SizeOf(lLocal), 0);
+    lLocal.sin_family := AF_INET;
+    lLocal.sin_port := htons(CLegacyPort);
+    if g_RecorderNetworkBindAddress = '' then
+      lLocal.sin_addr.s_addr := 0
+    else
+      lLocal.sin_addr := SocketAddressFromIPv4(g_RecorderNetworkBindAddress);
+    if fpBind(lSend, @lLocal, SizeOf(lLocal)) <> 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('bind linux legacy directed sender/%s:4001',
+        [g_RecorderNetworkBindAddress])));
+      Exit;
+    end;
+
+    FillChar(lRemote, SizeOf(lRemote), 0);
+    lRemote.sin_family := AF_INET;
+    lRemote.sin_port := htons(CLegacyPort);
+    lRemote.sin_addr := SocketAddressFromIPv4(AHost);
+    if fpSendTo(lSend, @CLegacyRequest[1], Length(CLegacyRequest), 0,
+      @lRemote, SizeOf(lRemote)) < 0 then
+    begin
+      NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+        Format('sendto linux legacy directed %s:4001', [AHost])));
+      Exit;
+    end;
+
+    lStarted := GetTickCount64;
+    repeat
+      lNow := GetTickCount64;
+      if lNow - lStarted >= ATimeoutMs then Break;
+      lWait := Integer(ATimeoutMs - (lNow - lStarted));
+      if lWait > 50 then lWait := 50;
+      fpFD_ZERO(lReadSet);
+      fpFD_SET(lListen, lReadSet);
+      fpFD_SET(lSend, lReadSet);
+      lMaxSocket := lListen;
+      if lSend > lMaxSocket then lMaxSocket := lSend;
+      lTime.tv_sec := 0;
+      lTime.tv_usec := lWait * 1000;
+      lRead := fpSelect(lMaxSocket + 1, @lReadSet, nil, nil, @lTime);
+      if lRead < 0 then
+      begin
+        NetworkDebugLog('[HardwareSearch] ' + SocketErrorText(
+          'select linux legacy directed'));
+        Continue;
+      end;
+      if lRead <= 0 then Continue;
+      if fpFD_ISSET(lListen, lReadSet) <> 0 then
+        lReadySocket := lListen
+      else if fpFD_ISSET(lSend, lReadSet) <> 0 then
+        lReadySocket := lSend
+      else
+        Continue;
+      lFromLen := SizeOf(lFrom);
+      FillChar(lBuffer, SizeOf(lBuffer), 0);
+      lRead := fpRecvFrom(lReadySocket, @lBuffer[0], SizeOf(lBuffer), 0,
+        @lFrom, @lFromLen);
+      if lRead < 0 then Continue;
+      lHost := NetAddrToStr(lFrom.sin_addr);
+      if not SameText(lHost, AHost) then Continue;
+      if (lRead < 24) or not CompareMem(@lBuffer[0], PAnsiChar(CLegacyRequest),
+        Length(CLegacyRequest)) then Continue;
+      lDeviceType := ReadLEWord(18);
+      lSerial := ReadLEWord(22);
+      lCCSerial := 0;
+      if lRead >= 28 then lCCSerial := ReadLEWord(26);
+      case lDeviceType of
+        12, CMic140_96Type, CMic140_48Type, CMic140_48EthernetType,
+        CMic140_48V2Type, CMic140_48V2EthernetType, CMic140_48V3Type,
+        CMic140_48V3EthernetType, CMic140_96V3Type,
+        CMic140_96V3EthernetType, CMic140_96V5Type,
+        CMic140DeviceType, CMic140_96V2DeviceType,
+        CMic140_16V2DeviceType: AKind := 'MIC-140';
+        CMic183DeviceType, CMic185V2DeviceType: AKind := 'MIC183/185';
+      else
+        NetworkDebugLog(Format('[HardwareSearch] ignored linux legacy directed: host=%s type=$%x bytes=%d',
+          [lHost, lDeviceType, lRead]));
+      end;
+      if AKind = '' then Exit;
+      if lCCSerial <> 0 then
+        ASerial := IntToStr(lCCSerial)
+      else if lSerial <> 0 then
+        ASerial := IntToStr(lSerial);
+      NetworkDebugLog(Format('[HardwareSearch] linux legacy directed OK: host=%s kind=%s serial=%s',
+        [lHost, AKind, ASerial]));
+      Exit(True);
+    until False;
+    NetworkDebugLog(Format('[HardwareSearch] linux legacy directed timeout: host=%s timeout=%d',
+      [AHost, ATimeoutMs]));
+  finally
+    if lSend <> CInvalidSocket then fpClose(lSend);
+    if lListen <> CInvalidSocket then fpClose(lListen);
+  end;
 end;
 {$endif}
 
@@ -1374,5 +2095,8 @@ begin
     if lSocket >= 0 then CloseSocket(lSocket);
   end;
 end;
+
+finalization
+  FreeAndNil(g_RecorderNetworkDiscoveryHints);
 
 end.

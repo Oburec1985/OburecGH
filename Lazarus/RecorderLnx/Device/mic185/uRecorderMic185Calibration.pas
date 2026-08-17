@@ -50,7 +50,8 @@ implementation
 uses
   Math, LazFileUtils,
   uMic185Constants, uMic185MebiusTcpProtocol, uMic185MebiusTypes,
-  uRecorderMeraPaths, uRecorderMic185DataSource, uRecorderMic185Runtime;
+  uMic185Device, uRecorderMeraPaths, uRecorderMic185DataSource,
+  uRecorderMic185Runtime;
 
 const
   { In original MIC183/185: four mV ranges plus one current/Ohm evaluator. }
@@ -545,6 +546,7 @@ var
   lCurrentCalibration: TRecorderCalibration;
   lCurrentK: Double;
   lHost: string;
+  lLiveDevice: TRecorderMic185Device;
   lName: string;
   lPort: Word;
   lSerial: LongWord;
@@ -590,23 +592,44 @@ begin
     end;
   end;
 
-  lClient := TRecorderMebiusTcpClient.Create(lHost, lPort, 5000);
-  try
-    if not lClient.TryConnect(AErrorMessage) then
-      Exit;
-
-    { Match the original working-channel path: CMIC185::LoadCalibrCoefficients
-      reads the currently loaded evaluator with GET_CALIBR_KOEF. RELOAD_CALIBR
-      is intentionally not called here because its flash fileType is a separate
-      device setting and changing it from the tag dialog would alter OMAP state. }
-    if not Mic185ReadChannelRangeKx(lClient, lChannelIndex,
+  { Match the original working-channel path: CMIC185::LoadCalibrCoefficients
+    reads the currently loaded evaluator with GET_CALIBR_KOEF. RELOAD_CALIBR
+    is intentionally not called here because its flash fileType is a separate
+    device setting and changing it from the tag dialog would alter OMAP state. }
+  lLiveDevice := RecorderMic185FindLiveDevice(lHost, lPort);
+  if lLiveDevice <> nil then
+  begin
+    if not lLiveDevice.TryReadChannelRangeKx(lChannelIndex,
       lSettings.MeasRangeIndex, AK, AB, lCurrentK, lCurrentB,
       AErrorMessage) then
       Exit;
     if lSerial = 0 then
-      Mic185ReadSerialFromConnectedClient(lClient, lHost, lPort, lSerial);
-  finally
-    lClient.Free;
+      lSerial := lLiveDevice.DeviceSerial;
+    RecorderMic185Log(Format('Hardware GX read via live MIC-185 session %s:%d ch=%d',
+      [lHost, lPort, lChannelIndex + 1]));
+  end
+  else
+  begin
+    if RecorderMic185RuntimeIsBusy(lHost, lPort) then
+    begin
+      AErrorMessage :=
+        'MIC183/185 endpoint is busy by active RecorderLnx session';
+      Exit;
+    end;
+    lClient := TRecorderMebiusTcpClient.Create(lHost, lPort, 5000);
+    try
+      if not lClient.TryConnect(AErrorMessage) then
+        Exit;
+
+      if not Mic185ReadChannelRangeKx(lClient, lChannelIndex,
+        lSettings.MeasRangeIndex, AK, AB, lCurrentK, lCurrentB,
+        AErrorMessage) then
+        Exit;
+      if lSerial = 0 then
+        Mic185ReadSerialFromConnectedClient(lClient, lHost, lPort, lSerial);
+    finally
+      lClient.Free;
+    end;
   end;
 
   if lSerial = 0 then
