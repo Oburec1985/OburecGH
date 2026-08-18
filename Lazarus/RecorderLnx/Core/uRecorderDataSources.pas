@@ -1175,10 +1175,11 @@ var
     ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
     ATag.SourceId := 'Mera file: ' + fFileName;
     ATag.IsVirtual := True;
-    ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
-      [lSignal.Name, lSignal.DataTypeName,
-      FormatFloat('0.######', lSignal.FrequencyHz),
-      ExtractFileName(lSignal.FileName)]);
+    if Trim(ATag.Description) = '' then
+      ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
+        [lSignal.Name, lSignal.DataTypeName,
+        FormatFloat('0.######', lSignal.FrequencyHz),
+        ExtractFileName(lSignal.FileName)]);
   end;
 
 begin

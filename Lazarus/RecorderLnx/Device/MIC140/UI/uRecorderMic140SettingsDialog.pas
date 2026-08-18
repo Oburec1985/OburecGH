@@ -814,9 +814,10 @@ begin
         RecorderMic140ApplyTagOutputPresentation(lTag,
           lResult.ChannelSettings[lChannelNumber - 1]);
       end;
-      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
-        [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
-         lTag.SourceValueMode]);
+      if Trim(lTag.Description) = '' then
+        lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
+          [lTag.Address, FormatFloat('0.######', lTag.PollFrequencyHz),
+           lTag.SourceValueMode]);
       lTag.EnsureBufferCapacity(lCapacity);
     end;
     Result := True;

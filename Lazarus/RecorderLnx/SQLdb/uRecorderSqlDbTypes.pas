@@ -103,6 +103,7 @@ type
 function RecorderSqlDbNewId: string;
 function RecorderSqlDbBackendToString(AValue: TRecorderSqlDbBackend): string;
 function RecorderSqlDbStringToBackend(const AValue: string): TRecorderSqlDbBackend;
+function RecorderSqlDbDefaultRootDirectory: string;
 
 implementation
 
@@ -137,6 +138,11 @@ begin
   if SameText(Trim(AValue), 'firebird') then
     Exit(rsbFirebird);
   Result := rsbSQLite;
+end;
+
+function RecorderSqlDbDefaultRootDirectory: string;
+begin
+  Result := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
 end;
 
 constructor TRecorderSqlDbConfig.Create;
@@ -199,7 +205,7 @@ begin
   fPort := 3050;
   fQueueCapacity := 8192;
   fRecordPeriodMs := 1000;
-  fRootDirectory := '';
+  fRootDirectory := RecorderSqlDbDefaultRootDirectory;
   fTlsRequired := False;
   fUserName := 'SYSDBA';
 end;
@@ -222,10 +228,10 @@ begin
   if (lRoot = '') or
      ((Length(lRoot) >= 2) and (lRoot[2] = ':')) or
      (Pos('\\', lRoot) > 0) then
-    lRoot := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
+    lRoot := RecorderSqlDbDefaultRootDirectory;
   {$else}
   if (lRoot = '') or ((lRoot <> '') and (lRoot[1] = '/')) then
-    lRoot := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
+    lRoot := RecorderSqlDbDefaultRootDirectory;
   {$endif}
   Result := ExcludeTrailingPathDelimiter(ExpandFileName(lRoot));
 end;

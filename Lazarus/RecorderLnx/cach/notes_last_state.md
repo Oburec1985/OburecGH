@@ -1,3 +1,281 @@
+## 2026-08-18 19:48 - Firebird test/start controls in SQL DB settings
+
+**Запрос:** через настройки RecorderLnx проверить наличие Firebird на host и
+уметь запускать Firebird.
+
+**Сделано:** в диалог SQL БД добавлены кнопки `Проверить Firebird` и
+`Запустить Firebird`. Проверка делает быстрый TCP probe на `host:port`
+через существующий `uRecorderNetworkBinding.RecorderTcpPortOpen`; пустой host
+считается локальным `127.0.0.1`, порт `0` заменяется на стандартный `3050`.
+Запуск доступен только для локального Firebird: Windows пробует службы
+`FirebirdServerDefaultInstance`/`FirebirdGuardianDefaultInstance`, Linux -
+`systemctl start firebird.service` или `service firebird start`. Новый helper
+вынесен в `SQLdb/uRecorderSqlDbFirebirdTools.pas` и добавлен в `.lpi`.
+
+**Проверка:** `git diff --check` по затронутым файлам прошел с exit code 0
+(только штатные LF/CRLF warnings). `C:\lazarus\lazbuild.exe -B
+Lazarus\RecorderLnx\RecorderLnx.lpi` дважды собрал `RecorderLnx.exe` с exit
+code 0. В конце сработал существующий post-build `copy_sdb_res.bat`, который
+на Windows печатает ошибку про `#!/bin/sh`; линковка приложения завершилась
+успешно.
+
+**Статус:** готово к ручной проверке в настройках SQL БД на Windows/Linux.
+
+## 2026-08-18 19:32 - Separate Linux Firebird installer kit
+
+**Запрос:** Firebird нужно разворачивать отдельно от RecorderLnx, но одной
+кнопкой/скриптом из папки `installer\RecorderLnx\firebird\linux`.
+
+**Сделано:** добавлен отдельный комплект: `install-firebird-recorderlnx.sh`,
+`check-firebird-recorderlnx.sh`, desktop-launcher `Install Firebird for
+RecorderLnx.desktop` и обновленный `readme.txt`. Скрипт ищет рядом архив
+`Firebird-*-linux-x64.tar.gz`, ставит зависимости через apt при наличии,
+запускает `install.sh -silent`, включает `firebird.service` и пишет
+`RECORDERLNX_SQLDB_PASSWORD` в `/etc/profile.d/recorderlnx-sqldb.sh`.
+
+**Проверка:** `git diff --check -- installer\RecorderLnx\firebird\linux`
+прошел с exit code 0. `bash -n` не выполнялся: в Windows-окружении Codex нет
+команды `bash`.
+
+**Статус:** готово к проверке на Linux: скопировать папку и запустить
+`bash install-firebird-recorderlnx.sh` или desktop-launcher.
+
+## 2026-08-18 19:16 - DigitalForm refreshes units after tag settings
+
+**Запрос:** после настройки тегов единицы измерения должны обновляться и в
+элементах отображения; на цифровом формуляре колонка `Unit` оставалась `мВ`,
+хотя в диалоге тега уже выбраны `Ом`.
+
+**Сделано:** найдено, что обычный цикл обновления цифрового формуляра обновляет
+только значения/alarms, а статические поля (`Unit`, `Description`, адрес) не
+перерисовывает. После успешной настройки тега активный `DigitalForm` теперь
+перестраивается через `RenderDigitalPage(True)`.
+
+**Проверка:** `git diff --check` по затронутым UI/MIC185 файлам прошёл с
+exit code 0, только LF/CRLF warnings. Полную сборку не запускал: запущен
+`RecorderLnx.exe` PID 20412 из build-папки.
+
+**Статус:** частично: после закрытия RecorderLnx нужна сборка и ручная проверка
+смены `мВ`/`Ом` в диалоге тега с открытым цифровым формуляром.
+
+## 2026-08-18 19:08 - MIC185 hardware GX checkbox no longer self-resets
+
+**Запрос:** при клике по галке `Аппаратная ГХ` в диалоге тега MIC185 галка
+тут же слетала обратно.
+
+**Сделано:** найдено, что обработчик клика вызывал `UpdateHardwareCurveText`,
+а тот до `OK/Apply` перечитывал старое `HardwareCalibrationEnabled=false` из
+тега и сам откатывал UI. MIC185-ветка клика теперь пересчитывает только текст
+эффективного `k/b`, не сбрасывая состояние checkbox.
+
+**Проверка:** `git diff --check` по MIC185 datasource/tag settings прошёл с
+exit code 0, только LF/CRLF warnings. Полную сборку не запускал: запущен
+`RecorderLnx.exe` PID 11648 из build-папки.
+
+**Статус:** частично: после закрытия RecorderLnx нужна сборка и ручная проверка
+клика по галке `Аппаратная ГХ` -> `OK/Apply` -> Preview.
+
+## 2026-08-18 19:05 - MIC185 refreshes runtime transforms after tag-only GX changes
+
+**Запрос:** после запуска галки аппаратной ГХ и авто-единиц у MIC185 слетали;
+после включения ГХ для всех каналов Preview всё равно показывал коды.
+
+**Сделано:** по логу подтверждено: после `Tag settings updated: 64 channel(s)`
+источник не перепрограммировался (`hardware settings unchanged`), поэтому
+MIC185 мог стартовать со старым cache `K/B`. `Start` MIC185 теперь пересобирает
+runtime transforms из текущих тегов. Массовое включение аппаратной ГХ теперь
+подцепляет кеш ГХ и переводит теги из `код` в физическую единицу диапазона;
+`AutoUnit` больше не сбрасывается при временном показе кодов.
+
+**Проверка:** `git diff --check` по MIC185 datasource/tag settings прошёл с
+exit code 0, только LF/CRLF warnings. Полную сборку не запускал: запущен
+`RecorderLnx.exe` PID 23524 из build-папки.
+
+**Статус:** частично: после закрытия RecorderLnx нужна сборка и ручная проверка
+массового включения ГХ -> Preview без кодов.
+
+## 2026-08-18 18:59 - MIC185 unchecked hardware GX means ADC codes
+
+**Запрос:** в таблице снова видны значения порядка `8188` под единицей `Ом`;
+при этом пользователь уточнил, что при снятой галке аппаратной ГХ должны
+показываться именно коды.
+
+**Сделано:** подтверждено по логу, что кеш ГХ MIC185 подцеплялся, но флаг
+оставался `enabled=false`. Диалог больше не включает аппаратную ГХ простым
+открытием/обновлением поля. Для MIC185 введён инвариант: выключенная
+аппаратная ГХ переводит тег в `код` и диапазон `±32768`; включённая ГХ
+оставляет физические единицы и скомпилированную цепочку пересчёта.
+
+**Проверка:** `git diff --check` по MIC185 datasource и tag settings прошёл с
+exit code 0, только LF/CRLF warnings. Полную сборку не запускал: запущен
+`RecorderLnx.exe` PID 16824 из build-папки.
+
+**Статус:** частично: нужна сборка после закрытия RecorderLnx и ручная проверка
+двух сценариев: галка включена -> физические единицы; галка снята -> `код`.
+
+## 2026-08-18 18:40 - MIC185 keeps user tag descriptions from ODS import
+
+**Запрос:** после импорта ODS с изменёнными описаниями каналов в настройке тега
+снова видно шаблонное `MIC183/185 channel ...`; описание должно быть чисто
+пользовательским полем и не перезатираться настройками.
+
+**Сделано:** подтверждено, что импорт пишет `TRecorderTag.Description`, но
+MIC185 диалог/source-синхронизация и аналогичные места MIC-140 безусловно
+возвращали дефолтное описание. Дефолт теперь ставится только при создании
+нового тега или если описание пустое. В диалоге настройки одного тега теперь
+можно очистить описание; при массовом редактировании пустое поле по-прежнему
+не стирает разные описания.
+Найден и закрыт второй источник перезаписи: MERA-привязка генерировала
+`type=...; freq=...; file=...` и тоже теперь делает это только для пустого
+описания.
+
+**Проверка:** `git diff --check` по изменённым MIC140/MIC185 файлам exit code
+0, только LF/CRLF warnings. Полную сборку не запускал, потому что
+`RecorderLnx.exe` PID 21428 сейчас занят из build-папки.
+После закрытия/освобождения exe выполнена полная сборка
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`:
+exit code 0, линковка успешна; старое post-build сообщение `#!/bin/sh`
+неблокирующее.
+
+**Статус:** готово к ручной проверке: ODS import -> открыть настройку тега ->
+описание не меняется.
+
+## 2026-08-18 18:23 - MIC-140 UTS X-axis storage parity with MIC185
+
+**Запрос:** MIC-140 и MIC185 по-разному пишут ось X; у MIC-140 `UTS` есть
+как `.dat`, но нет `.x`, и измерительные каналы не сопоставлены с UTS-каналом.
+
+**Сделано:** в `uMainForm.pas` запись MERA больше не считает UTS особым
+случаем только для MIC185. Теги `MIC-185:*` и `MIC-140:*` с адресом `*-uts`
+теперь принудительно пишутся как XY-сигналы с `.x`; обычные MIC-140 каналы
+получают `UTS_Channel` на выбранный UTS-тег того же источника, если он есть в
+реестре выбранных каналов. В `uRecorderDataStorage.pas` дескриптор пишет
+`UTS_Channel` только если UTS-сигнал реально появился в текущей записи.
+
+**Проверка:** `git diff --check -- Lazarus\RecorderLnx\UI\uMainForm.pas`
+exit code 0, только LF/CRLF warning. Полную сборку не запускал, потому что
+`RecorderLnx.exe` PID 19944 сейчас занят из build-папки.
+
+**Статус:** нужна сборка после закрытия RecorderLnx и ручная запись: в кадре
+должен появиться `MIC140_{42_uts}.x`, а у каналов MIC140 в `.mera` должен быть
+`UTS_Channel=MIC140_{42_uts}`.
+
+## 2026-08-18 18:03 - SQL DB settings dialog host/default directory and selection toggle
+
+**Запрос:** в диалоге SQL БД нужно явно задавать host сервера, показывать каталог БД по умолчанию `Mera Files\SQLdb`, пояснить очередь и заменить `Снять все` на изменение выбранных тегов.
+
+**Сделано:** `TRecorderSqlDbConfig` получил общий `RecorderSqlDbDefaultRootDirectory`; дефолтный root теперь `Mera Files\SQLdb`, а старые пустые настройки показываются в диалоге этим путём. Подпись host стала `Хост БД (пусто = локально)`: пустой host оставляет локальную Firebird/SQLite, IP/имя сервера включает удалённое подключение. `Ёмкость очереди` переименована в `Буфер записи` с hint. Кнопка `Снять все` стала `Изменить выбранные` и переключает checked-состояние только выбранных строк.
+
+**Проверка:** `git diff --check` по SQLdb dialog/types/lfm exit code 0, только LF/CRLF warnings. Полная сборка не запускалась, потому что `RecorderLnx.exe` PID 19944 сейчас запущен.
+
+**Статус:** частично: нужна сборка после закрытия RecorderLnx и ручная проверка диалога.
+
+## 2026-08-18 17:50 - MIC185 settings dialog stops rewriting addresses
+
+**Запрос:** при входе в диалог свойств MIC185 строки сначала показывали `±5 мВ`, после `Выбрать все` переходили в `Ом`, а после простого хождения по диалогам значения в runtime частично стали около `250 Ом`, частично около `8k`.
+
+**Сделано:** найден лог `Source programming required: "156-1=100" -> "185-{156-1}=100"`. Диалог MIC185 теперь отделяет видимое имя строки от аппаратного адреса: read/write настроек, поиск тегов и properties используют canonical `156-1`, а сравнение адресов идёт через `RecorderMic185SameChannelAddress`. `AutoUnit/AutoRange` не сбрасываются для уже существующих тегов.
+
+**Проверка:** `git diff --check` по MIC185 settings/source файлам exit code 0, только LF/CRLF warnings. Полная сборка не запускалась, потому что `RecorderLnx.exe` PID 16824 сейчас запущен.
+
+**Статус:** частично: после закрытия RecorderLnx нужна сборка и ручная проверка, что открытие/OK диалога MIC185 не меняет source signature и не переводит строки обратно в `мВ`.
+
+## 2026-08-18 17:43 - MIC185 address and cached GX load fixed
+
+**Запрос:** пользователь заметил, что адрес тега MIC185 снова стал `185-{156-1}` вместо аппаратного `156-1`, и аппаратная ГХ снова пустая.
+
+**Сделано:** найдено, что новая секция `mic185` при загрузке перетирала serial/version, ранее загруженные из legacy `specificConfigText`, поэтому восстановление ГХ на старте получало `serial unknown`. `uRecorderMic185DataSource.pas` теперь переносит serial/version в новую секцию, сохраняет их, пишет canonical `tagLinks.address` и нормализует top-level `Tag.Address` через `TagLoadedProc`.
+
+**Проверка:** `git diff --check` по затронутым MIC185/tag-settings файлам exit code 0, только LF/CRLF warnings. Полная сборка не запускалась, потому что `RecorderLnx.exe` PID 11656 сейчас запущен; процесс не остановлен по правилу пользователя.
+
+**Статус:** частично: нужно закрыть RecorderLnx и выполнить `lazbuild -B`, затем открыть проект заново и проверить, что адрес `156-1`, ГХ подцепилась из `sn0168`.
+
+## 2026-08-18 - MIC185 compiled GX architecture clarification
+
+**Запрос:** пользователь предложил не считать ГХ каждый раз, а возвращать
+коэффициенты функцией, компилировать результат по исходным данным и хранить
+флаг "ГХ скомпилирована", сбрасывая его при смене диапазона/единиц.
+
+**Сделано:** проверен текущий MIC185 runtime: `TRecorderMic185ValueTransform`
+уже хранит `IsLinear/K/B`, `CacheRuntimeChannels` собирает трансформы до
+рабочего цикла, а `PublishDataBlock` применяет `K*x+B` и передает
+`AValuesAlreadyTransformed=True`. Вывод: идея правильная; нужно довести ее до
+явного compiled/dirty-контракта и использовать только исходные ГХ как данные.
+
+**Проверка:** чтение `uRecorderMic185DataSource.pas` и `uRecorderTags.pas`;
+сборка не запускалась, код не менялся в этой итерации.
+
+## 2026-08-18 - MIC185 hardware GX restored on project load
+
+**Запрос:** после перезапуска RecorderLnx у `185-{156-1}` снова пустая аппаратная ГХ, хотя кеш на диске есть и диапазон уже выглядит пересчитанным.
+
+**Сделано:** проверен реальный проект `C:\Mera Files\RecorderLnx\config\projects\002`: для `192.168.9.156` сохранены SN168, `tagLinks` и имя `MIC185 sn0168 range3 ch01`; CSV существует в `C:\Mera Files\Calibr\hardware\MIC-185\sn0168`. В загрузку MIC185 `tagLinks` добавлено восстановление аппаратной ГХ из кеша для каждого измерительного канала. Загрузка коэффициентов отделена от галки: имя/объект ГХ подцепляются всегда, а `HardwareCalibrationEnabled` остается пользовательским/конфигурационным флагом, который управляет применением.
+
+**Проверка:** `git diff --check` по затронутым файлам exit code 0, только LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code 0; старое post-build сообщение `#!/bin/sh` осталось неблокирующим. Подробности: `errors/2026-08-18-mic185-hardware-calibration-cache-display.md`.
+
+**Статус:** готово к ручной проверке после запуска нового exe.
+
+## 2026-08-18 - MIC185 cached hardware GX checkbox restored
+
+**Запрос:** снова пропала аппаратная ГХ у MIC185 после работы с единицами `Ом`: диапазон уже считался как калиброванный, но в диалоге тега `Аппаратная ГХ` была пустая и выключенная.
+
+**Сделано:** восстановление MIC185 ГХ из кеша Mera Files теперь включает флаг `HardwareCalibrationEnabled`, а не только подставляет имя/текст. Диалог настройки тега перед отображением сравниваемых ГХ подцепляет кешированную ГХ для всех выбранных MIC185-тегов и только потом читает состояние галки. Поиск кеша теперь использует сохраненный серийник источника через `RecorderMic185GetKnownIdentity`, поэтому не требует обязательного live-чтения прибора.
+
+**Проверка:** `git diff --check` по `uTagSettingsDialog.pas` и `uRecorderMic185Calibration.pas` exit code 0, только существующие LF/CRLF warnings. Полную пересборку намеренно не запускал повторно, потому что пользователь может держать запущенный `RecorderLnx.exe` для захвата сессии; предыдущая проверка доходила до линковки без Pascal-ошибок и блокировалась только занятым exe.
+
+**Статус:** готово к ручной проверке: открыть тег MIC185 в `Ом`, аппаратная ГХ должна быть включена и показывать effective `k/b` без повторной вычитки с прибора.
+
+## 2026-08-18 - Auto unit checkbox persists for MIC185 tag groups
+
+**Запрос:** при включении галки `Авто` единиц измерения для группы тегов настройка не срабатывала, а при повторном входе галка оказывалась сброшенной.
+
+**Сделано:** MIC185 settings/source синхронизация больше не сбрасывает `AutoUnit`/`AutoRange` у уже существующих тегов; эти дефолты ставятся только при создании нового тега. `ApplySettingsToRow` перестал снимать `AutoUnit`. В `TTagSettingsDialog.StoreToTags` авто-единица теперь берется из выходной единицы канальной ГХ при включенном `AutoUnit`, даже если в combo остался старый текст.
+
+**Проверка:** `git diff --check` по затронутым исходникам exit code 0 (только LF/CRLF warnings). Первый `lazbuild -B RecorderLnx.lpi` дошел до link и упал `error code: 5`, потому что `RecorderLnx.exe` PID 18252 держал exe; после остановки процесса повторная сборка завершилась с exit code 0.
+
+**Статус:** готово к ручной проверке: массово включить `Авто`, нажать OK/Применить и снова открыть настройки тегов; галка должна остаться включенной, единицы должны подтянуться из канальной ГХ.
+
+## 2026-08-18 - MIC185 hardware GX cache survives unit display changes
+
+**Запрос:** после смены единиц MIC185 на `Ом` аппаратная ГХ в диалоге тега выглядела сброшенной; пользователь уточнил правило: калибровочные коэффициенты хранятся одни по типу прибора/серийнику/каналу в Mera Files, а единицы только меняют производные `K/B` для отображения.
+
+**Сделано:** `uTagSettingsDialog.pas` теперь лениво привязывает сохраненную MIC185 ГХ из Mera Files даже при пустом `HardwareCalibrationName`, перед показом/редактированием ГХ и при сохранении с включенной галкой. Имя ГХ не стирается при выключении галки. `uRecorderMic185DataSource.pas` добавил `RecorderMic185EffectiveTransformText(...)`, который показывает сводные `k/b` в текущих единицах тега, не меняя сохраненный CSV.
+
+**Проверка:** `git diff --check` по затронутым файлам exit code 0 (только LF/CRLF warnings); `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` exit code 0. Перед финальной линковкой остановлен блокирующий `RecorderLnx.exe` PID 21372.
+
+**Статус:** готово к ручной проверке: после выбора `Ом` аппаратная ГХ не должна требовать повторной вычитки; поле должно показывать effective `k/b` для текущих единиц.
+
+## 2026-08-18 - MIC185 reset now retries failed prepare like restart recovery
+
+**Запрос:** пользователь сообщил, что "сброс устройств" иногда не восстанавливает
+MIC-185: несколько приборов остаются красными при успешном TCP-пинге, но после
+перезапуска RecorderLnx все зеленеют без перезагрузки железа.
+
+**Факты:** свежий `C:\Mera Files\RecorderLnx\LogWindows.log` после перезапуска
+показал успешные `connect`/`initialize` для MIC-185 `192.168.9.156`, `.158`,
+`.159` примерно за секунду. Значит, в этом случае приборы не зависли физически;
+manual reset отличался от cold start. Найдено отличие: reset запускал все
+задачи с `0 ms` задержкой и после первого `PrepareHardwareSources` сразу
+показывал ошибки, а cold start использует MIC-185 stagger.
+
+**Сделано:** в `uRecorderSettingsDialog.pas` reset MIC-185 теперь получает
+host-octet based stagger (`last_octet mod 10 * 150 ms`). После первого
+`reset-prepare` источники, оставшиеся offline, собираются через hardware
+offline registry; только по ним выполняется один дополнительный
+release/cleanup/prepare с extra `500 ms`. Финальная ошибка показывается только
+для источников, которые остались offline после retry. Детали:
+`errors/2026-08-14-hardware-reset-must-prepare-selected-sources.md`.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+скомпилировал измененные Pascal units и дошел до линковки; link упал с
+`error code: 5`, потому что запущенный `RecorderLnx.exe` держит выходной exe.
+Программа не была остановлена автоматически, чтобы не оборвать текущую
+проверку/сессию пользователя.
+
+**Статус:** нужна финальная пересборка после закрытия RecorderLnx и ручная
+проверка reset batch: ожидаются `reset-retry` / `reset-retry-prepare OK` при
+временном Mebius timeout.
+
 ## 2026-08-18 - MIC185 actual range uses calibrated excitation current
 
 **Запрос:** пользователь сравнил с оригинальным Recorder: для MIC185 SN168
@@ -6599,3 +6877,43 @@ entries and publishes the newest one through cached tag references only.
 finished with exit code 0 and linked `RecorderLnx.exe`. `git diff --check`
 reported only line-ending warnings. Hardware check remains: normal channels
 must keep configured frequency while `{node}-uts` updates near 1 Hz.
+
+## 2026-08-18 - MIC185 cached hardware GX empty in active project 003
+
+**Request:** user opened `185-{156-1}` and hardware GX was empty again. Need
+look at logs and stop guessing.
+
+**Facts from logs/config:** active config is
+`C:\Mera Files\RecorderLnx\config\projects\003` from `app.ini`.
+`LogWindows.log` identifies `MIC-185: 192.168.9.156:4000` as `sn=168`.
+The active project has `185-{156-1}` saved with unit `Ом`, `autoUnit=true`,
+empty `hardwareCalibrationName`, disabled `hardwareCalibrationEnabled`, and
+old/corrupted address form `185-{156-1}` in both tag/tagLinks. Cached files
+for `sn0168` exist under `C:\Mera Files\Calibr\hardware\MIC-185\sn0168`.
+
+**Done:** MIC185 tag settings dialog now attaches cached hardware GX with
+`AEnableOnTag=True` while opening/updating the hardware GX field. MIC185 cache
+loader now logs exact restore/miss reasons: invalid address, unknown serial,
+missing CSV path, or restore OK. MIC185 project load logs normalization of
+old tag-link addresses such as `185-{156-1}` to canonical `156-1`.
+
+**Verification:** `git diff --check` for changed MIC185/tag-settings files
+exited `0`; only LF/CRLF warnings. Rebuild was not started because
+`RecorderLnx.exe` PID 15596 is currently running from the build output path.
+Detailed log: `errors/2026-08-18-mic185-hardware-calibration-cache-display.md`.
+
+## 2026-08-18 - MIC185 GX miss caused by range0 cache path
+
+**Request:** user reported hardware GX is still empty after the previous
+diagnostic fix.
+
+**Done:** checked fresh `LogWindows.log`; the new diagnostic line says MIC185
+`185-{156-1}` tries to load `...\sn0168\range0\01.csv`. Disk contains
+one-based cache directories such as `range1\01.csv`, so the miss is caused by
+an invalid local range index reaching path/name formatting. Added range-index
+normalization in `uRecorderMic185Calibration.pas` before building calibration
+names and CSV paths.
+
+**Verification:** `git diff --check` exit code `0`; only LF/CRLF warnings.
+Build is pending because `RecorderLnx.exe` PID 6644 is running, and the exe
+timestamp `17:11:06` is older than the fixed source timestamp `17:14:59`.

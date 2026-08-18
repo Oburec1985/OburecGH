@@ -785,7 +785,8 @@ begin
         lText.Add('PrtFile=' + lSignal.SectionName + '.prt');
       end;
       lText.Add('YUnits=' + lSignal.SignalUnitName);
-      if Trim(lSignal.UtsChannelName) <> '' then
+      if (Trim(lSignal.UtsChannelName) <> '') and
+        (FindSignal(lSignal.UtsChannelName) <> nil) then
         lText.Add('UTS_Channel=' + lSignal.UtsChannelName);
       { Original Recorder keeps the nominal channel frequency in the MERA
         descriptor even for VT_UTS/VT_PAIR signals that also have XFile. }

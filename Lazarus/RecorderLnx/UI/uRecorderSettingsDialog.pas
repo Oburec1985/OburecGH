@@ -966,13 +966,15 @@ begin
   ATag.SourceValueMode := ASignal.SourceValueMode;
   if lFirstMc201Bind then
     ATag.HardwareCalibrationEnabled := True;
-  if SameText(ASignal.ModuleName, 'MIC-140') then
-    ATag.Description := Format('%s; freq=%s Hz',
-      [ASignal.Description, FormatFloat('0.######', ASignal.FrequencyHz)])
-  else
-    ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
-      [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######', ASignal.FrequencyHz),
-      ExtractFileName(ASignal.FileName)]);
+  if Trim(ATag.Description) = '' then
+    if SameText(ASignal.ModuleName, 'MIC-140') then
+      ATag.Description := Format('%s; freq=%s Hz',
+        [ASignal.Description, FormatFloat('0.######', ASignal.FrequencyHz)])
+    else
+      ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
+        [ASignal.Name, ASignal.DataTypeName,
+        FormatFloat('0.######', ASignal.FrequencyHz),
+        ExtractFileName(ASignal.FileName)]);
   if not RecorderTagUsesMic140Settings(ATag) then
     RecorderTagClearMic140Settings(ATag);
 end;
@@ -3058,27 +3060,74 @@ var
   I: Integer;
   lDataSourceError: string;
   lErrors: TStringList;
+  lFailedPrepareSourceIds: TStringList;
   lNode: TTreeNode;
   lPrepareSourceIds: TStringList;
   lPrepareStartedAt: QWord;
   lProcedures: array of TThreadMethod;
+  lRetryPrepareSourceIds: TStringList;
+  lRetryProcedures: array of TThreadMethod;
+  lRetryTasks: array of TRecorderHardwareResetTask;
   lResetSucceeded: Integer;
   lSourceId: string;
   lSourceIds: TStringList;
   lTasks: array of TRecorderHardwareResetTask;
   lBatchTraceId: string;
+  function Mic185ResetStartDelayMs(const ASourceId: string): Cardinal;
+  var
+    lHost: string;
+    lLastDot: Integer;
+    lOctet: Integer;
+    lPort: Word;
+  begin
+    Result := 0;
+    if not TryParseRecorderMic185SourceId(ASourceId, lHost, lPort) then
+      Exit;
+    lLastDot := RPos('.', Trim(lHost));
+    if (lLastDot > 0) and TryStrToInt(Copy(Trim(lHost), lLastDot + 1,
+      MaxInt), lOctet) then
+      Result := Cardinal((lOctet mod 10) * 150);
+  end;
+  procedure CollectPrepareFailures(ASourceIds, AFailedSourceIds: TStringList);
+  var
+    J: Integer;
+  begin
+    AFailedSourceIds.Clear;
+    for J := 0 to ASourceIds.Count - 1 do
+      if RecorderHardwareIsSourceOffline(ASourceIds[J]) then
+        AFailedSourceIds.Add(ASourceIds[J]);
+  end;
+  procedure AddOfflineErrors(ASourceIds, AErrors: TStringList);
+  var
+    J: Integer;
+    lReason: string;
+  begin
+    for J := 0 to ASourceIds.Count - 1 do
+      if RecorderHardwareIsSourceOffline(ASourceIds[J]) then
+      begin
+        lReason := AddMic185PowerCycleHint(ASourceIds[J],
+          RecorderHardwareSourceOfflineReason(ASourceIds[J]));
+        AErrors.Add(ASourceIds[J] + ': ' + lReason);
+      end;
+  end;
 begin
   if (fHardwareTree = nil) or (fRecorder = nil) or
     (fRecorder.TagRegistry = nil) then
     Exit;
   lSourceIds := TStringList.Create;
   lPrepareSourceIds := TStringList.Create;
+  lRetryPrepareSourceIds := TStringList.Create;
+  lFailedPrepareSourceIds := TStringList.Create;
   lErrors := TStringList.Create;
   try
     lSourceIds.Sorted := True;
     lSourceIds.Duplicates := dupIgnore;
     lPrepareSourceIds.Sorted := True;
     lPrepareSourceIds.Duplicates := dupIgnore;
+    lRetryPrepareSourceIds.Sorted := True;
+    lRetryPrepareSourceIds.Duplicates := dupIgnore;
+    lFailedPrepareSourceIds.Sorted := True;
+    lFailedPrepareSourceIds.Duplicates := dupIgnore;
     { Sender=nil is the context-menu command "reset all devices".  Enumerate
       the model-backed tree instead of merely clearing offline markers: the
       original Recorder starts reset for every host device, waits for all
@@ -3118,7 +3167,8 @@ begin
     for I := 0 to lSourceIds.Count - 1 do
     begin
       lTasks[I] := TRecorderHardwareResetTask.Create(lSourceIds[I],
-        lBatchTraceId + '/' + IntToStr(I + 1), 0);
+        lBatchTraceId + '/' + IntToStr(I + 1),
+        Mic185ResetStartDelayMs(lSourceIds[I]));
       lProcedures[I] := @lTasks[I].Execute;
     end;
 
@@ -3150,19 +3200,15 @@ begin
         'BEGIN', Format('device_count=%d', [lPrepareSourceIds.Count]));
       try
         fRecorder.DataSources.PrepareHardwareSources(lPrepareSourceIds);
-        for I := 0 to fRecorder.DataSources.LastErrorCount - 1 do
-        begin
-          lDataSourceError := fRecorder.DataSources.LastErrors[I];
-          lErrors.Add(lDataSourceError);
-        end;
-        if fRecorder.DataSources.LastErrorCount = 0 then
+        CollectPrepareFailures(lPrepareSourceIds, lFailedPrepareSourceIds);
+        if lFailedPrepareSourceIds.Count = 0 then
           RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
             'OK', Format('device_count=%d', [lPrepareSourceIds.Count]),
             GetTickCount64 - lPrepareStartedAt)
         else
           RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-prepare',
             'FAIL', Format('failed=%d of %d',
-              [fRecorder.DataSources.LastErrorCount, lPrepareSourceIds.Count]),
+              [lFailedPrepareSourceIds.Count, lPrepareSourceIds.Count]),
             GetTickCount64 - lPrepareStartedAt);
       except
         on E: Exception do
@@ -3173,6 +3219,74 @@ begin
             'FAIL', lDataSourceError, GetTickCount64 - lPrepareStartedAt);
         end;
       end;
+    end;
+
+    if lFailedPrepareSourceIds.Count > 0 then
+    begin
+      RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'BEGIN',
+        Format('device_count=%d', [lFailedPrepareSourceIds.Count]));
+      SetLength(lRetryTasks, lFailedPrepareSourceIds.Count);
+      SetLength(lRetryProcedures, lFailedPrepareSourceIds.Count);
+      for I := 0 to lFailedPrepareSourceIds.Count - 1 do
+      begin
+        lRetryTasks[I] := TRecorderHardwareResetTask.Create(
+          lFailedPrepareSourceIds[I],
+          lBatchTraceId + '/retry/' + IntToStr(I + 1),
+          500 + Mic185ResetStartDelayMs(lFailedPrepareSourceIds[I]));
+        lRetryProcedures[I] := @lRetryTasks[I].Execute;
+      end;
+
+      SharedRunParallel(lRetryProcedures);
+      for I := 0 to High(lRetryTasks) do
+        if lRetryTasks[I].Succeeded then
+          lRetryPrepareSourceIds.Add(lRetryTasks[I].SourceId)
+        else
+        begin
+          if Trim(lRetryTasks[I].ErrorText) = '' then
+            lRetryTasks[I].fErrorText := 'Повторный сброс устройства не выполнен';
+          lRetryTasks[I].fErrorText := AddMic185PowerCycleHint(
+            lRetryTasks[I].SourceId, lRetryTasks[I].ErrorText);
+          RecorderHardwareMarkSourceOffline(lRetryTasks[I].SourceId,
+            lRetryTasks[I].ErrorText);
+          lErrors.Add(lRetryTasks[I].SourceId + ': ' +
+            lRetryTasks[I].ErrorText);
+        end;
+
+      if lRetryPrepareSourceIds.Count > 0 then
+      begin
+        lPrepareStartedAt := GetTickCount64;
+        RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry-prepare',
+          'BEGIN', Format('device_count=%d',
+            [lRetryPrepareSourceIds.Count]));
+        try
+          fRecorder.DataSources.PrepareHardwareSources(lRetryPrepareSourceIds);
+          CollectPrepareFailures(lRetryPrepareSourceIds,
+            lFailedPrepareSourceIds);
+          if lFailedPrepareSourceIds.Count = 0 then
+            RecorderMic185LifecycleLog(lBatchTraceId, '*',
+              'reset-retry-prepare', 'OK',
+              Format('device_count=%d', [lRetryPrepareSourceIds.Count]),
+              GetTickCount64 - lPrepareStartedAt)
+          else
+            RecorderMic185LifecycleLog(lBatchTraceId, '*',
+              'reset-retry-prepare', 'FAIL',
+              Format('failed=%d of %d', [lFailedPrepareSourceIds.Count,
+                lRetryPrepareSourceIds.Count]),
+              GetTickCount64 - lPrepareStartedAt);
+        except
+          on E: Exception do
+          begin
+            lDataSourceError := E.ClassName + ': ' + E.Message;
+            lErrors.Add(lDataSourceError);
+            RecorderMic185LifecycleLog(lBatchTraceId, '*',
+              'reset-retry-prepare', 'FAIL', lDataSourceError,
+              GetTickCount64 - lPrepareStartedAt);
+          end;
+        end;
+      end;
+      AddOfflineErrors(lFailedPrepareSourceIds, lErrors);
+      RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-retry', 'OK',
+        Format('remaining_failed=%d', [lFailedPrepareSourceIds.Count]));
     end;
 
     if lErrors.Count = 0 then
@@ -3190,9 +3304,13 @@ begin
         'Не удалось сбросить:' + LineEnding + lErrors.Text,
         mtWarning, [mbOK], 0);
   finally
+    for I := 0 to High(lRetryTasks) do
+      lRetryTasks[I].Free;
     for I := 0 to High(lTasks) do
       lTasks[I].Free;
     lErrors.Free;
+    lFailedPrepareSourceIds.Free;
+    lRetryPrepareSourceIds.Free;
     lPrepareSourceIds.Free;
     lSourceIds.Free;
   end;

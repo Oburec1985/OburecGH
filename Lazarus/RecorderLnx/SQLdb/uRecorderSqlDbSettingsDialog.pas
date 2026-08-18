@@ -14,7 +14,9 @@ type
     btnBrowse: TButton;
     btnCancel: TButton;
     btnOk: TButton;
+    btnStartFirebird: TButton;
     btnTest: TButton;
+    btnTestFirebird: TButton;
     btnSelectAll: TButton;
     btnSelectNone: TButton;
     btnAssignEstimate: TButton;
@@ -56,7 +58,9 @@ type
     seQueue: TSpinEdit;
     procedure btnBrowseClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
+    procedure btnStartFirebirdClick(Sender: TObject);
     procedure btnTestClick(Sender: TObject);
+    procedure btnTestFirebirdClick(Sender: TObject);
     procedure btnSelectAllClick(Sender: TObject);
     procedure btnSelectNoneClick(Sender: TObject);
     procedure btnAssignEstimateClick(Sender: TObject);
@@ -89,7 +93,7 @@ function ShowRecorderSqlDbSettings(AOwner: TComponent;
 implementation
 
 uses
-  uRecorderSqlDbRepository;
+  uRecorderSqlDbRepository, uRecorderSqlDbFirebirdTools;
 
 {$R *.lfm}
 
@@ -129,7 +133,10 @@ var
 begin
   cbEnabled.Checked := fConfig.Enabled;
   cbBackend.ItemIndex := Ord(fConfig.Backend);
-  edRoot.Text := fConfig.RootDirectory;
+  if Trim(fConfig.RootDirectory) <> '' then
+    edRoot.Text := fConfig.RootDirectory
+  else
+    edRoot.Text := RecorderSqlDbDefaultRootDirectory;
   edDatabase.Text := fConfig.Database;
   edHost.Text := fConfig.Host;
   sePort.Value := fConfig.Port;
@@ -263,8 +270,10 @@ begin
 end;
 
 procedure TRecorderSqlDbSettingsDialog.UpdateControls;
-var lRemote: Boolean;
+var
+  lFirebird, lRemote: Boolean;
 begin
+  lFirebird := cbBackend.ItemIndex = Ord(rsbFirebird);
   lRemote := (cbBackend.ItemIndex <> Ord(rsbSQLite)) and
     (Trim(edHost.Text) <> '');
   edHost.Enabled := cbBackend.ItemIndex <> Ord(rsbSQLite);
@@ -272,6 +281,13 @@ begin
   edUser.Enabled := edHost.Enabled;
   edPasswordEnvironment.Enabled := edHost.Enabled;
   cbTls.Enabled := lRemote;
+  btnTestFirebird.Enabled := lFirebird;
+  btnStartFirebird.Enabled := lFirebird and
+    RecorderSqlDbFirebirdHostIsLocal(edHost.Text);
+  if edHost.Enabled then
+    lblHost.Caption := 'Хост БД (пусто = локально)'
+  else
+    lblHost.Caption := 'Хост БД';
 end;
 
 procedure TRecorderSqlDbSettingsDialog.cbBackendChange(Sender: TObject);
@@ -285,10 +301,54 @@ begin
   UpdateControls;
 end;
 
+procedure TRecorderSqlDbSettingsDialog.btnTestFirebirdClick(Sender: TObject);
+var
+  lPort: Word;
+  lMessage: string;
+begin
+  lPort := sePort.Value;
+  if lPort = 0 then
+    lPort := 3050;
+  if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1200,
+    lMessage) then
+    MessageDlg('Firebird', lMessage, mtInformation, [mbOK], 0)
+  else
+    MessageDlg('Firebird',
+      lMessage + LineEnding +
+      'Для локального сервера можно попробовать кнопку "Запустить Firebird".',
+      mtWarning, [mbOK], 0);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnStartFirebirdClick(Sender: TObject);
+var
+  lPort: Word;
+  lMessage, lProbeMessage: string;
+begin
+  if not RecorderSqlDbFirebirdHostIsLocal(edHost.Text) then
+  begin
+    MessageDlg('Firebird',
+      'Запуск поддержан только для локального Firebird. Для удаленного host ' +
+      'службу нужно запускать на сервере БД.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lPort := sePort.Value;
+  if lPort = 0 then
+    lPort := 3050;
+  if RecorderSqlDbStartLocalFirebird(lMessage) and
+    RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1500,
+      lProbeMessage) then
+    MessageDlg('Firebird', lProbeMessage, mtInformation, [mbOK], 0)
+  else
+    MessageDlg('Firebird', lMessage, mtWarning, [mbOK], 0);
+end;
+
 procedure TRecorderSqlDbSettingsDialog.btnBrowseClick(Sender: TObject);
 var D: string;
 begin
   D := edRoot.Text;
+  if Trim(D) = '' then
+    D := RecorderSqlDbDefaultRootDirectory;
   if SelectDirectory('Каталог SQL БД и файлов данных', '', D) then edRoot.Text := D;
 end;
 
@@ -321,15 +381,31 @@ begin
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnSelectNoneClick(Sender: TObject);
-var I, lCheckedIndex: Integer;
+var
+  I: Integer;
+  lCheckedIndex: Integer;
+  lTargetChecked: Boolean;
 begin
+  lTargetChecked := False;
   for I := 0 to lvSignals.Items.Count - 1 do
-  begin
-    lvSignals.Items[I].Checked := False;
-    lCheckedIndex := fCheckedSignals.IndexOf(lvSignals.Items[I].Caption);
-    if lCheckedIndex >= 0 then
-      fCheckedSignals.Delete(lCheckedIndex);
-  end;
+    if lvSignals.Items[I].Selected and (not lvSignals.Items[I].Checked) then
+    begin
+      lTargetChecked := True;
+      Break;
+    end;
+  for I := 0 to lvSignals.Items.Count - 1 do
+    if lvSignals.Items[I].Selected then
+    begin
+      lvSignals.Items[I].Checked := lTargetChecked;
+      lCheckedIndex := fCheckedSignals.IndexOf(lvSignals.Items[I].Caption);
+      if lTargetChecked then
+      begin
+        if lCheckedIndex < 0 then
+          fCheckedSignals.Add(lvSignals.Items[I].Caption);
+      end
+      else if lCheckedIndex >= 0 then
+        fCheckedSignals.Delete(lCheckedIndex);
+    end;
 end;
 
 function TRecorderSqlDbSettingsDialog.TagIsScalar(ATag: TRecorderTag): Boolean;

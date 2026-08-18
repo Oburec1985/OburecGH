@@ -28,6 +28,7 @@ uses
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderStrainCalibrationDialog,
   uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
+  uMic185MebiusTypes,
   uRecorderMic185Calibration,
   uRecorderMc201Calibration, uRecorderConfiguredDataSources,
   uRecorderCommandImages, uRecorderMc032SettingsDialog,
@@ -184,6 +185,8 @@ type
     procedure UpdateChannelCurveText;
     procedure UpdateHardwareCurveText;
     procedure UpdateHardwareCurveButtons;
+    function EnsureMic185HardwareCalibrationAssigned(ATag: TRecorderTag;
+      AEnableOnTag: Boolean): Boolean;
     procedure HardwareCurveCheckClick(Sender: TObject);
     procedure AutoUnitCheckClick(Sender: TObject);
     procedure DisableEmptyChannelCalibrations;
@@ -531,6 +534,17 @@ begin
     fChannelCurveCheck.Checked := lBool > 0;
 end;
 
+function TTagSettingsDialog.EnsureMic185HardwareCalibrationAssigned(
+  ATag: TRecorderTag; AEnableOnTag: Boolean): Boolean;
+begin
+  Result := False;
+  if (ATag = nil) or (fTagRegistry = nil) or
+    (Pos('MIC-185:', ATag.SourceId) <> 1) then
+    Exit;
+  Result := RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, ATag,
+    AEnableOnTag);
+end;
+
 procedure TTagSettingsDialog.UpdateHardwareCurveText;
 var
   I: Integer;
@@ -538,12 +552,16 @@ var
   lConfigured: TRecorderConfiguredDataSource;
   lFirstEnabled: Boolean;
   lFirstName: string;
+  lMic185Settings: TMic185ChannelProgramSettings;
   lSameEnabled: Boolean;
   lSameName: Boolean;
 begin
   if fTags.Count = 0 then
     Exit;
 
+  if Pos('MIC-185:', TagAt(0).SourceId) = 1 then
+    for I := 0 to fTags.Count - 1 do
+      EnsureMic185HardwareCalibrationAssigned(TagAt(I), False);
   lFirstName := Trim(TagAt(0).HardwareCalibrationName);
   lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
   lSameName := True;
@@ -570,11 +588,12 @@ begin
 
   lCalibration := fTagRegistry.FindCalibrationByName(
     lFirstName);
-  if (lCalibration = nil) and (lFirstName <> '') and
-    (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+  if (lCalibration = nil) and (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
   begin
     RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), False);
     lFirstName := Trim(TagAt(0).HardwareCalibrationName);
+    lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
+    fHardwareCurveCheck.Checked := lFirstEnabled;
     lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
   end;
   { MC-201: если на диске уже есть ГХ для SN+диапазона — подтянуть сразу. }
@@ -596,8 +615,12 @@ begin
     end;
   end;
   if (Pos('MIC-185:', TagAt(0).SourceId) = 1) and (lCalibration <> nil) then
-    fHardwareCurveEdit.Text :=
-      RecorderMic185HardwareCalibrationDisplayText(lCalibration)
+  begin
+    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
+      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
+    fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
+      fTagRegistry, TagAt(0), lMic185Settings, TagAt(0).UnitName);
+  end
   else
     fHardwareCurveEdit.Text := lFirstName;
 end;
@@ -605,10 +628,29 @@ end;
 procedure TTagSettingsDialog.HardwareCurveCheckClick(Sender: TObject);
 var
   lChannelNumber: Integer;
+  lMic185Settings: TMic185ChannelProgramSettings;
   lSettings: TRecorderMic140ChannelSettings;
 begin
-  if (fTags.Count <> 1) or
-    (Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1) then
+  if fTags.Count <> 1 then
+    Exit;
+  if Pos('MIC-185:', TagAt(0).SourceId) = 1 then
+  begin
+    if not fHardwareCurveCheck.Checked then
+    begin
+      fUnitCombo.Text := 'код';
+      Exit;
+    end;
+    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
+      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
+    if SameText(Trim(fUnitCombo.Text), 'код') or
+      SameText(Trim(fUnitCombo.Text), 'code') then
+      fUnitCombo.Text := RecorderMic185RangeUnitText(
+        lMic185Settings.MeasRangeIndex);
+    fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
+      fTagRegistry, TagAt(0), lMic185Settings, fUnitCombo.Text);
+    Exit;
+  end;
+  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
     Exit;
   lSettings.ChannelAddress := '';
   if not RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
@@ -1131,9 +1173,10 @@ begin
   lTag.PollFrequencyHz := ASignal.FrequencyHz;
   lTag.SensorCalibrationName := ASignal.SensorCalibrationName;
   lTag.AmplifierCalibrationName := ASignal.AmplifierCalibrationName;
-  lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
-    [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######',
-    ASignal.FrequencyHz), ExtractFileName(ASignal.FileName)]);
+  if Trim(lTag.Description) = '' then
+    lTag.Description := Format('%s; type=%s; freq=%s; file=%s',
+      [ASignal.Name, ASignal.DataTypeName, FormatFloat('0.######',
+      ASignal.FrequencyHz), ExtractFileName(ASignal.FileName)]);
 end;
 
 procedure TTagSettingsDialog.AddressButtonClick(Sender: TObject);
@@ -1565,6 +1608,7 @@ var
   lEstimateSettings: TRecorderTagEstimateSettings;
   lFloat: Double;
   lInt: Integer;
+  lMic185Settings: TMic185ChannelProgramSettings;
   lSetpoint: TRecorderTagSetpoint;
   lSetpointKind: TRecorderTagSetpointKind;
   lChannelNumber: Integer;
@@ -1592,7 +1636,7 @@ begin
     end;
     if Trim(fUnitCombo.Text) <> '' then
       lTag.UnitName := Trim(fUnitCombo.Text);
-    if Trim(fDescriptionEdit.Text) <> '' then
+    if (fTags.Count = 1) or (Trim(fDescriptionEdit.Text) <> '') then
       lTag.Description := Trim(fDescriptionEdit.Text);
     if fFrequencyCombo.Enabled and (Trim(fFrequencyCombo.Text) <> '') then
     begin
@@ -1630,7 +1674,26 @@ begin
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
     begin
+      if lTag.HardwareCalibrationEnabled <> fHardwareCurveCheck.Checked then
+        lTag.ClearSignalHistory;
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
+      if lTag.HardwareCalibrationEnabled and
+        (Pos('MIC-185:', lTag.SourceId) = 1) then
+      begin
+        EnsureMic185HardwareCalibrationAssigned(lTag, True);
+        RecorderMic185GetSourceChannelMode(fTagRegistry, lTag.SourceId,
+          lTag.Address, lTag.PollFrequencyHz, lMic185Settings);
+        if SameText(Trim(lTag.UnitName), 'код') or
+          SameText(Trim(lTag.UnitName), 'code') then
+          lTag.UnitName := RecorderMic185RangeUnitText(
+            lMic185Settings.MeasRangeIndex);
+        lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fTagRegistry,
+          lTag, lMic185Settings, lTag.UnitName);
+        lTag.RangeMin := -lTag.RangeMax;
+      end;
+      if (not lTag.HardwareCalibrationEnabled) and
+        (Pos('MIC-185:', lTag.SourceId) = 1) then
+        lTag.UnitName := 'код';
       if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
       begin
         lSettings.ChannelAddress := '';
@@ -1759,7 +1822,7 @@ begin
     if (not RecorderTagUsesMic140Settings(lTag)) and
       (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
-    if (Trim(fUnitCombo.Text) = '') and lTag.AutoUnit and
+    if lTag.AutoUnit and
       TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
       lTag.UnitName := lAutoUnitName;
   end;
@@ -2007,6 +2070,9 @@ begin
   end;
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
+    EnsureMic185HardwareCalibrationAssigned(TagAt(0), False);
+
+  if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
     MessageDlg('Аппаратная ГХ',
       'У выбранного тега нет назначенной аппаратной ГХ. Сначала выполните вычитку ГХ из модуля.',
@@ -2040,6 +2106,9 @@ begin
       mtInformation, [mbOK], 0);
     Exit;
   end;
+
+  if Trim(TagAt(0).HardwareCalibrationName) = '' then
+    EnsureMic185HardwareCalibrationAssigned(TagAt(0), False);
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin

@@ -1293,6 +1293,7 @@ var
   I: Integer;
   lChannel: TRecorderDeviceChannel;
   lChannels: TRecorderDeviceChannelArray;
+  lCreated: Boolean;
   lNode: Integer;
   lTag: TRecorderTag;
   lTagName: string;
@@ -1344,6 +1345,7 @@ begin
       lTag := ARegistry.FindByName(fUtsTagName);
     if lTag = nil then
       lTag := ARegistry.FindByName(RecorderMic140UtsDisplayName(lNode));
+    lCreated := lTag = nil;
     if lTag = nil then
       lTag := ARegistry.CreateTag(fUtsTagName, 4096);
     lTag.Address := fUtsTagName;
@@ -1351,7 +1353,8 @@ begin
     lTag.ModuleType := 'MIC-140';
     lTag.PollFrequencyHz := 1.0;
     lTag.SourceId := SourceId;
-    lTag.Description := 'MIC-140 UTS time channel';
+    if lCreated or (Trim(lTag.Description) = '') then
+      lTag.Description := 'MIC-140 UTS time channel';
     lTag.ChannelCalibrationEnabled := False;
     lTag.HardwareCalibrationEnabled := False;
     if lTag.CalibrationNames <> nil then
@@ -1372,6 +1375,7 @@ begin
     if lTag = nil then
       lTag := ARegistry.FindByName(
         RecorderMic140TemperatureDisplayName(lNode, I + 1));
+    lCreated := lTag = nil;
     if lTag = nil then
       lTag := ARegistry.CreateTag(fTemperatureTagNames[I], 4096);
     lTag.Address := fTemperatureTagNames[I];
@@ -1379,8 +1383,9 @@ begin
     lTag.ModuleType := 'MIC-140';
     lTag.PollFrequencyHz := fPollFrequencyHz;
     lTag.SourceId := SourceId;
-    lTag.Description := Format('MIC-140 temperature channel %s',
-      [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
+    if lCreated or (Trim(lTag.Description) = '') then
+      lTag.Description := Format('MIC-140 temperature channel %s',
+        [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
     lTag.ChannelCalibrationEnabled := False;
     lTag.HardwareCalibrationEnabled := False;
     if lTag.CalibrationNames <> nil then
@@ -1404,6 +1409,7 @@ begin
       lTagName := lTag.Name
     else
       lTag := ARegistry.FindByName(lTagName);
+    lCreated := lTag = nil;
     if lTag = nil then
       lTag := ARegistry.CreateTag(lTagName, Ceil(Max(4096, lChannel.PollFrequencyHz)));
     lTag.Address := lChannel.Address;
@@ -1417,9 +1423,10 @@ begin
     lTag.ModuleType := lChannel.ModuleType;
     lTag.PollFrequencyHz := lChannel.PollFrequencyHz;
     lTag.SourceId := SourceId;
-    lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
-      [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz),
-       lTag.SourceValueMode]);
+    if lCreated or (Trim(lTag.Description) = '') then
+      lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
+        [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz),
+         lTag.SourceValueMode]);
     fChannelTagNames[I] := lTag.Name;
   end;
 end;

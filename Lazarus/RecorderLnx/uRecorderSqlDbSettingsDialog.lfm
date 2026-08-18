@@ -37,7 +37,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
     object btnBrowse: TButton Left = 534 Height = 29 Top = 46 Width = 75 Caption = 'Обзор...' OnClick = btnBrowseClick TabOrder = 2 end
     object lblDatabase: TLabel Left = 12 Height = 17 Top = 88 Width = 120 Caption = 'Файл / имя базы' end
     object edDatabase: TEdit Left = 180 Height = 27 Top = 83 Width = 429 TabOrder = 3 end
-    object lblHost: TLabel Left = 12 Height = 17 Top = 124 Width = 100 Caption = 'Сервер (host)' end
+    object lblHost: TLabel Left = 12 Height = 17 Top = 124 Width = 160 Caption = 'Хост БД (пусто = локально)' end
     object edHost: TEdit Left = 180 Height = 27 Top = 119 Width = 250 TabOrder = 4 OnChange = cbBackendChange end
     object lblPort: TLabel Left = 444 Height = 17 Top = 124 Width = 35 Caption = 'Порт' end
     object sePort: TSpinEdit Left = 500 Height = 27 Top = 119 Width = 109 MaxValue = 65535 MinValue = 0 TabOrder = 5 Value = 3050 end
@@ -48,8 +48,8 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
     object cbTls: TCheckBox Left = 180 Height = 23 Top = 230 Width = 270 Caption = 'Требовать защищённый канал (TLS/VPN)' TabOrder = 8 end
     object lblPeriod: TLabel Left = 12 Height = 17 Top = 268 Width = 145 Caption = 'Период медленной записи, мс' end
     object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 263 Width = 120 MaxValue = 3600000 MinValue = 10 TabOrder = 9 Value = 1000 end
-    object lblQueue: TLabel Left = 320 Height = 17 Top = 268 Width = 110 Caption = 'Ёмкость очереди' end
-    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 MaxValue = 1000000 MinValue = 128 TabOrder = 10 Value = 8192 end
+    object lblQueue: TLabel Left = 320 Height = 17 Top = 268 Width = 110 Caption = 'Буфер записи' Hint = 'Максимум ожидающих записей SQL перед сбросом новых событий' ShowHint = True end
+    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 Hint = 'Максимум ожидающих записей SQL перед сбросом новых событий' MaxValue = 1000000 MinValue = 128 ShowHint = True TabOrder = 10 Value = 8192 end
     object btnTest: TButton Left = 180 Height = 31 Top = 299 Width = 170 Caption = 'Проверить и создать БД' OnClick = btnTestClick TabOrder = 11 end
   end
   object gbObject: TGroupBox
@@ -160,7 +160,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       Height = 30
       Top = 444
       Width = 210
-      Caption = 'Снять все'
+      Caption = 'Изменить выбранные'
       OnClick = btnSelectNoneClick
       TabOrder = 6
     end

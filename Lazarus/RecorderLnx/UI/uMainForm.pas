@@ -2799,6 +2799,9 @@ begin
 
       RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
       RebuildTagList(edTagSearch.Text);
+      if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+        (fFormManager.ActivePage.Id = 'DigitalForm') then
+        RenderDigitalPage(True);
       if fFormEditor <> nil then
         fFormEditor.RefreshLive;
       RefreshBaseOscillograms;
@@ -2914,6 +2917,35 @@ begin
   end;
 end;
 
+function RecorderIsMicUtsTag(ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := False;
+  if ATag = nil then
+    Exit;
+  lSourceId := Trim(ATag.SourceId);
+  Result :=
+    (StartsText('MIC-185:', lSourceId) or
+     StartsText('MIC-140:', lSourceId)) and
+    EndsText('-uts', Trim(ATag.Address));
+end;
+
+function RecorderIsMicUtsCapableTag(ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := False;
+  if ATag = nil then
+    Exit;
+  if RecorderIsMicUtsTag(ATag) then
+    Exit;
+  lSourceId := Trim(ATag.SourceId);
+  Result :=
+    StartsText('MIC-185:', lSourceId) or
+    StartsText('MIC-140:', lSourceId);
+end;
+
 { Разбор приходящей из worker-thread очереди снимков значений тегов в UI-поток }
 procedure TMainForm.ConsumeTagDataCycle(Sender: TObject);
 var
@@ -2950,8 +2982,7 @@ begin
           lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
           lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
           lTag.PollFrequencyHz,
-          StartsText('MIC-185:', Trim(lTag.SourceId)) and
-          EndsText('-uts', Trim(lTag.Address)),
+          RecorderIsMicUtsTag(lTag),
           FindUtsChannelNameForTag(lTag));
     end;
   end;
@@ -3413,9 +3444,7 @@ begin
   if (ATag = nil) or (fRecorder = nil) or
     (fRecorder.TagRegistry = nil) then
     Exit;
-  if not StartsText('MIC-185:', Trim(ATag.SourceId)) then
-    Exit;
-  if EndsText('-uts', Trim(ATag.Address)) then
+  if not RecorderIsMicUtsCapableTag(ATag) then
     Exit;
 
   { TagRegistry contains only channels added to the project (the right-hand

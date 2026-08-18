@@ -62,9 +62,19 @@ const
   CMic185ChannelKxFullSize = SizeOf(Single) * (CMic185HardwareEvalCount * 2 + 4 + 8);
   CMic185HardwareCalibrSubDir = 'hardware' + PathDelim + 'MIC-185' + PathDelim;
 
+function Mic185NormalizeHardwareRangeIndex(ARangeIndex: Integer): Integer;
+begin
+  Result := ARangeIndex;
+  if Result < 0 then
+    Result := CMic185Range500mV
+  else if Result >= CMic185HardwareRangeCount then
+    Result := CMic185HardwareRangeCount - 1;
+end;
+
 function RecorderMic185MakeHardwareCalibrationName(ASerial: LongWord;
   ARangeIndex, AChannelNumber: Integer): string;
 begin
+  ARangeIndex := Mic185NormalizeHardwareRangeIndex(ARangeIndex);
   Result := Format('MIC185 sn%4.4d range%d ch%2.2d',
     [ASerial, ARangeIndex + 1, AChannelNumber]);
 end;
@@ -75,6 +85,7 @@ begin
   Result := '';
   if (ASerial = 0) or (AChannelNumber <= 0) then
     Exit;
+  ARangeIndex := Mic185NormalizeHardwareRangeIndex(ARangeIndex);
   Result := IncludeTrailingPathDelimiter(RecorderMeraCalibrRootDir) +
     CMic185HardwareCalibrSubDir + Format('sn%4.4d', [ASerial]) +
     PathDelim + Format('range%d', [ARangeIndex + 1]) + PathDelim +
@@ -233,6 +244,7 @@ var
   lChannelNumber: Integer;
   lErrorText: string;
   lHost: string;
+  lKnownVersion: LongWord;
   lPort: Word;
   lRangeIndex: Integer;
   lVersionText: string;
@@ -244,6 +256,9 @@ begin
     Exit(True);
   if (ATag = nil) or (not TryParseRecorderMic185SourceId(ATag.SourceId, lHost, lPort)) then
     Exit;
+  if RecorderMic185GetKnownIdentity(ARegistry, ATag.SourceId, ASerial,
+    lKnownVersion) and (ASerial > 0) then
+    Exit(True);
   if RecorderMic185TryGetLiveDeviceInfo(lHost, lPort, ASerial, lVersionText,
     lAcquiring) and (ASerial > 0) then
     Exit(True);
@@ -720,7 +735,9 @@ var
   lCalibrationName: string;
   lChannelIndex: Integer;
   lChannelNumber: Integer;
+  lCsvPath: string;
   lK: Double;
+  lOldCalibrationName: string;
   lRangeIndex: Integer;
   lSerial: LongWord;
   lSettings: TMic185ChannelProgramSettings;
@@ -731,23 +748,50 @@ begin
     Exit;
   lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
   if lChannelIndex < 0 then
+  begin
+    RecorderMic185Log(Format(
+      'Hardware GX cache miss tag="%s" addr="%s" source="%s": invalid MIC185 channel address',
+      [ATag.Name, ATag.Address, ATag.SourceId]));
     Exit;
+  end;
   RecorderMic185GetSourceChannelMode(ARegistry, ATag.SourceId, ATag.Address,
     ATag.PollFrequencyHz, lSettings);
-  lRangeIndex := lSettings.MeasRangeIndex;
+  lRangeIndex := Mic185NormalizeHardwareRangeIndex(lSettings.MeasRangeIndex);
+  lOldCalibrationName := Trim(ATag.HardwareCalibrationName);
   if not Mic185TryParseCalibrationName(ATag.HardwareCalibrationName, lSerial,
     lRangeIndex, lChannelNumber) then
   begin
     if not Mic185ResolveSerialFromTag(ARegistry, ATag, lSerial) then
+    begin
+      RecorderMic185Log(Format(
+        'Hardware GX cache miss tag="%s" addr="%s" source="%s": serial unknown',
+      [ATag.Name, ATag.Address, ATag.SourceId]));
       Exit;
+    end;
   end;
+  lRangeIndex := Mic185NormalizeHardwareRangeIndex(lRangeIndex);
   lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
   if not Mic185LoadCachedCalibration(ARegistry, ATag, lSerial, lRangeIndex,
     lChannelIndex, lK, lB, lCalibrationName) then
+  begin
+    lCsvPath := RecorderMic185HardwareCalibrCsvPath(lSerial, lRangeIndex,
+      lChannelIndex + 1);
+    RecorderMic185Log(Format(
+      'Hardware GX cache miss tag="%s" addr="%s" source="%s" sn=%d range=%d ch=%d file="%s"',
+      [ATag.Name, ATag.Address, ATag.SourceId, lSerial, lRangeIndex + 1,
+      lChannelIndex + 1, lCsvPath]));
     Exit;
+  end;
   ATag.HardwareCalibrationName := lCalibrationName;
   if AEnableOnTag then
     ATag.HardwareCalibrationEnabled := True;
+  if (lOldCalibrationName = '') or
+    (not SameText(lOldCalibrationName, lCalibrationName)) then
+    RecorderMic185Log(Format(
+      'Hardware GX cache restore OK tag="%s" addr="%s" source="%s" sn=%d range=%d ch=%d name="%s" enabled=%s',
+      [ATag.Name, ATag.Address, ATag.SourceId, lSerial, lRangeIndex + 1,
+      lChannelIndex + 1, lCalibrationName,
+      BoolToStr(ATag.HardwareCalibrationEnabled, True)]));
   Result := True;
 end;
 
