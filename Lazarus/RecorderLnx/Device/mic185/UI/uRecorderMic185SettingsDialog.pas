@@ -54,6 +54,7 @@ type
     function EnsureTagForGridRow(ARow: Integer): TRecorderTag;
     function FindTagBySourceAddress(const ASourceId,
       AAddress: string): TRecorderTag;
+    procedure FitGridColumns;
     procedure GetSourceRowSettings(ARow: Integer;
       out ASettings: TMic185ChannelProgramSettings);
     procedure FillGrid;
@@ -84,7 +85,7 @@ implementation
 uses
   Dialogs, Math, StrUtils, uRecorderMic185DataSource, uRecorderMic185AdditionalDialog,
   uRecorderMic185ChannelDialog, uRecorderConfiguredSourceEditor,
-  uRecorderMic185DeviceInfoProbe, uMic185Constants;
+  uRecorderMic185DeviceInfoProbe, uMic185Constants, uComponentServices;
 
 var
   GRecorderMic185SettingsSelfTestActive: Boolean = False;
@@ -190,6 +191,7 @@ begin
     if lTag <> nil then
       UpdateGridRow(I, lTag);
   end;
+  FitGridColumns;
 end;
 
 function TRecorderMic185SettingsForm.FindTagBySourceAddress(const ASourceId,
@@ -204,6 +206,11 @@ begin
     if SameText(fRegistry.Tags[I].SourceId, ASourceId) and
       SameText(fRegistry.Tags[I].Address, AAddress) then
       Exit(fRegistry.Tags[I]);
+end;
+
+procedure TRecorderMic185SettingsForm.FitGridColumns;
+begin
+  SGChange(gridChannels, 28, 220, 18);
 end;
 
 procedure TRecorderMic185SettingsForm.GetSourceRowSettings(ARow: Integer;

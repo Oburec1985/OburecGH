@@ -921,12 +921,7 @@ begin
 end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
-  try
-    ShowConfigPopupMenu;
-  except
-    on E: Exception do
-      LogCommandError('Config menu', E);
-  end;
+  SaveCurrentConfigClick(Sender);
 end;
 
 procedure TMainForm.btnSettingsClick(Sender: TObject);
@@ -2460,7 +2455,7 @@ var
   lPoint: TPoint;
 begin
   EnsureConfigPopupMenu;
-  lPoint := btnSaveConfig.ClientToScreen(Point(0, btnSaveConfig.Height));
+  lPoint := btnSaveConfigAs.ClientToScreen(Point(0, btnSaveConfigAs.Height));
   fConfigPopupMenu.PopUp(lPoint.X, lPoint.Y);
 end;
 
@@ -3166,7 +3161,7 @@ begin
   btnSettings.SetBounds(8, 8, 40, 42);
   btnSaveConfig.SetBounds(54, 8, 40, 42);
   btnSaveConfigAs.SetBounds(100, 8, 40, 42);
-  btnRunWinpos.SetBounds(100, 8, 40, 42);
+  btnRunWinpos.SetBounds(146, 8, 40, 42);
   btnStop.SetBounds(16, 58, 42, 42);
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
@@ -3185,15 +3180,15 @@ begin
   btnSaveConfig.Images := ilCommandButtons;
   btnSaveConfig.ImageIndex := CIconSaveConfig;
   btnSaveConfig.ImageWidth := 32;
-  btnSaveConfig.Hint := 'Save/load config';
+  btnSaveConfig.Hint := 'Save current config';
   
   btnSaveConfigAs.Caption := '';
   btnSaveConfigAs.Images := ilCommandButtons;
   btnSaveConfigAs.ImageIndex := CIconSaveConfigAs;
   btnSaveConfigAs.ImageWidth := 32;
-  btnSaveConfigAs.Hint := 'Save/load config';
-  btnSaveConfigAs.Visible := False;
-  btnSaveConfigAs.ShowHint := False;
+  btnSaveConfigAs.Hint := 'Save as / load config';
+  btnSaveConfigAs.Visible := True;
+  btnSaveConfigAs.ShowHint := True;
   btnSaveConfig.ShowHint := True;
 
   btnRunWinpos.Caption := '';

@@ -142,6 +142,8 @@ type
     procedure fSelectedChannelsGridDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure fSelectedChannelsGridDblClick(Sender: TObject);
+    procedure fSelectedChannelsGridKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure fSelectedChannelsGridMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure fAlgorithmsTreeChange(Sender: TObject; Node: TTreeNode);
     procedure fAlgorithmsTreeDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -731,6 +733,7 @@ begin
   begin
     fSelectedChannelsGrid.OnDblClick := @fSelectedChannelsGridDblClick;
     fSelectedChannelsGrid.OnDrawCell := @fSelectedChannelsGridDrawCell;
+    fSelectedChannelsGrid.OnKeyDown := @fSelectedChannelsGridKeyDown;
     fSelectedChannelsGrid.OnMouseDown := @fSelectedChannelsGridMouseDown;
     fSelectedChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
     fSelectedChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
@@ -3962,10 +3965,32 @@ begin
     SetRecorderMeraFilesPath(lPath);
 end;
 
+function NativeRecordRootOrMeraFiles(const APath: string): string;
+var
+  lPath: string;
+begin
+  lPath := Trim(APath);
+  {$IFDEF UNIX}
+  if Length(lPath) >= 2 then
+    if lPath[2] = ':' then
+      lPath := '';
+  if (lPath <> '') and (Pos('\', lPath) > 0) then
+    lPath := '';
+  {$ELSE}
+  if lPath <> '' then
+    if lPath[1] = '/' then
+      lPath := '';
+  {$ENDIF}
+  if lPath = '' then
+    lPath := RecorderMeraFilesPath;
+  Result := IncludeTrailingPathDelimiter(lPath);
+end;
+
 procedure TRecorderSettingsDialog.LoadFromSettings;
 var
   I: Integer;
   lBindAddress: string;
+  lRecordRootDir: string;
 begin
   if fRecorder.RunSettings = nil then
     Exit;
@@ -3993,7 +4018,8 @@ begin
   fScreenUpdateEdit.Text := FormatFloat('0.###', fRecorder.RunSettings.ScreenUpdateMs / 1000);
   fBufferSecondsEdit.Text := FormatFloat('0.###', fRecorder.RunSettings.DisplayBufferMs / 1000);
   fDataUpdateEdit.Text := FormatFloat('0.###', fRecorder.RunSettings.DataUpdateMs / 1000);
-  fWorkDirEdit.Text := IncludeTrailingPathDelimiter(fRecorder.RunSettings.RecordRootDir);
+  lRecordRootDir := NativeRecordRootOrMeraFiles(fRecorder.RunSettings.RecordRootDir);
+  fWorkDirEdit.Text := lRecordRootDir;
   if fMeraFilesPathEdit <> nil then
   begin
     if Trim(fRecorder.RunSettings.MeraFilesPath) <> '' then
@@ -4002,7 +4028,7 @@ begin
       fMeraFilesPathEdit.Text := RecorderMeraFilesPath;
   end;
   SyncMeraFilesPathFromUi;
-  fFrameDirEdit.Text := IncludeTrailingPathDelimiter(fRecorder.RunSettings.RecordRootDir) + '0001';
+  fFrameDirEdit.Text := lRecordRootDir + '0001';
   fResetTimeCheck.Checked := True;
   if cbNetworkInterface <> nil then
   begin
@@ -4143,9 +4169,7 @@ procedure TRecorderSettingsDialog.WorkDirBrowseClick(Sender: TObject);
 var
   lDir: string;
 begin
-  lDir := Trim(fWorkDirEdit.Text);
-  if lDir = '' then
-    lDir := 'C:\USML\';
+  lDir := NativeRecordRootOrMeraFiles(fWorkDirEdit.Text);
   if not SelectDirectory('Выберите рабочий каталог для записи MERA-файлов', '', lDir) then
     Exit;
   fWorkDirEdit.Text := IncludeTrailingPathDelimiter(lDir);
@@ -4277,6 +4301,15 @@ begin
   fDataSourcesChanged := True;
   PopulateHardwareTree;
   PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.fSelectedChannelsGridKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key <> VK_DELETE then
+    Exit;
+  btnChannelRemoveClick(Sender);
+  Key := 0;
 end;
 
 procedure TRecorderSettingsDialog.fAvailableChannelsGridDblClick(Sender: TObject);

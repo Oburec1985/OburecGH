@@ -42,6 +42,8 @@ type
     procedure TagSearchEditChange(Sender: TObject);
     procedure UseDefaultEstimateCheckChange(Sender: TObject);
     procedure BuildUi;
+    procedure AddTagComboItem(ATag: TRecorderTag);
+    procedure PopulateInitialTagSelection;
     procedure LoadFromComponent;
     procedure PopulateTags(const AFilter: string);
     procedure StoreToComponent;
@@ -62,6 +64,9 @@ uses
   uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
   uRecorderSqlTrendSettingsDialog;
+
+const
+  CTagComboEmptyFilterLimit = 200;
 
 function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
@@ -263,9 +268,42 @@ begin
   ClientHeight := lTop + 40;
 end;
 
+procedure TComponentSettingsDialog.AddTagComboItem(ATag: TRecorderTag);
+begin
+  if (fTagCombo = nil) or (ATag = nil) then
+    Exit;
+  fTagCombo.Items.AddObject(LclText(ATag.Name), ATag);
+end;
+
+procedure TComponentSettingsDialog.PopulateInitialTagSelection;
+var
+  lTag: TRecorderTag;
+begin
+  if (fTagCombo = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  fTagCombo.Items.BeginUpdate;
+  try
+    fTagCombo.Items.Clear;
+    lTag := nil;
+    if fComponent.TagId <> 0 then
+      lTag := fTagRegistry.FindById(fComponent.TagId);
+    if (lTag = nil) and (fComponent.TagName <> '') then
+      lTag := fTagRegistry.FindByName(fComponent.TagName);
+    if lTag <> nil then
+    begin
+      AddTagComboItem(lTag);
+      fTagCombo.ItemIndex := 0;
+    end;
+  finally
+    fTagCombo.Items.EndUpdate;
+  end;
+end;
+
 procedure TComponentSettingsDialog.PopulateTags(const AFilter: string);
 var
   I: Integer;
+  lAddedCount: Integer;
   lFilter: string;
   lTag: TRecorderTag;
   lCurrentSelection: string;
@@ -285,12 +323,18 @@ begin
   try
     fTagCombo.Items.Clear;
     lFilter := LowerCase(Trim(LclText(AFilter)));
+    lAddedCount := 0;
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
       lSearchText := LowerCase(LclText(lTag.Name + ' ' + lTag.Address + ' ' + lTag.Description));
       if (lFilter = '') or (Pos(lFilter, lSearchText) > 0) then
-        fTagCombo.Items.AddObject(LclText(lTag.Name), lTag);
+      begin
+        AddTagComboItem(lTag);
+        Inc(lAddedCount);
+        if (lFilter = '') and (lAddedCount >= CTagComboEmptyFilterLimit) then
+          Break;
+      end;
     end;
 
     fTagCombo.ItemIndex := -1;
@@ -314,7 +358,7 @@ var
 begin
   if fTagCombo <> nil then
   begin
-    PopulateTags('');
+    PopulateInitialTagSelection;
     lTagIndex := 0;
     while (lTagIndex < fTagCombo.Items.Count) and
       ((not (fTagCombo.Items.Objects[lTagIndex] is TRecorderTag)) or

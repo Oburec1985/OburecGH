@@ -25,7 +25,8 @@ function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
 implementation
 
 uses
-  Math, uRecorderMic140ChannelDialog, uRecorderConfiguredSourceEditor;
+  Math, uRecorderMic140ChannelDialog, uRecorderConfiguredSourceEditor,
+  uComponentServices;
 
 type
   TRecorderMic140SettingsDialog = class(TForm)
@@ -324,6 +325,7 @@ begin
       fGrid.Cells[6, I] := lSettings.ThermocoupleScaleName;
       fGrid.Cells[7, I] := FormatFloat('0.000', lSettings.SoftBalance);
     end;
+    SGChange(fGrid, 32, 220, 18);
   finally
     lOwned.Free;
   end;

@@ -186,6 +186,7 @@ type
     procedure UpdateHardwareCurveButtons;
     procedure HardwareCurveCheckClick(Sender: TObject);
     procedure AutoUnitCheckClick(Sender: TObject);
+    procedure DisableEmptyChannelCalibrations;
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
     procedure UpdateHardwareSourceSetupButton;
     procedure UpdateTagDeviceActionButtons;
@@ -516,6 +517,7 @@ var
 begin
   if fTags.Count = 0 then
     Exit;
+  DisableEmptyChannelCalibrations;
   if TagAt(0).CalibrationNames.Count > 0 then
     fChannelCurveEdit.Text :=
       TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]
@@ -1650,6 +1652,9 @@ begin
       if lTag.ChannelCalibrationEnabled <> fChannelCurveCheck.Checked then
         lTag.ClearSignalHistory;
       lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
+      if lTag.ChannelCalibrationEnabled and
+        ((lTag.CalibrationNames = nil) or (lTag.CalibrationNames.Count = 0)) then
+        lTag.ChannelCalibrationEnabled := False;
       if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
       begin
         if fChannelCurveCheck.Checked then
@@ -1754,7 +1759,7 @@ begin
     if (not RecorderTagUsesMic140Settings(lTag)) and
       (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
-    if lTag.AutoUnit and
+    if (Trim(fUnitCombo.Text) = '') and lTag.AutoUnit and
       TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
       lTag.UnitName := lAutoUnitName;
   end;
@@ -1840,6 +1845,20 @@ end;
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
 begin
   ApplyAutoUnitFromChannelCalibration;
+end;
+
+procedure TTagSettingsDialog.DisableEmptyChannelCalibrations;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  for I := 0 to fTags.Count - 1 do
+  begin
+    lTag := TagAt(I);
+    if (lTag <> nil) and lTag.ChannelCalibrationEnabled and
+      ((lTag.CalibrationNames = nil) or (lTag.CalibrationNames.Count = 0)) then
+      lTag.ChannelCalibrationEnabled := False;
+  end;
 end;
 
 procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);

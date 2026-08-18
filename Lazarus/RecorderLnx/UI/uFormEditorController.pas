@@ -210,6 +210,7 @@ type
       AItem: TFormEditorClipboardItem): TRecorderVisualComponent;
     procedure RenderLive;
     procedure RenderLiveDuringOperation(AForce: Boolean);
+    procedure RefreshSelectionVisuals;
     procedure NotifyChanged;
     procedure CopyComponentState(ASource, ADest: TRecorderVisualComponent);
     procedure CopySelected;
@@ -679,6 +680,77 @@ procedure TFormEditorController.ClearSelection;
 
 begin
   fSelected.Clear;
+end;
+
+procedure TFormEditorController.RefreshSelectionVisuals;
+var
+  I: Integer;
+  lGroupBounds: TRecorderRect;
+  lHandle: TPanel;
+  lPagePanel: TPanel;
+
+  procedure AddHandle(AOperation: TFormEditorOperation; ALeft, ATop: Integer);
+  begin
+    lHandle := TPanel.Create(lPagePanel);
+    lHandle.Parent := lPagePanel;
+    lHandle.SetBounds(ALeft, ATop, CResizeHandleSize, CResizeHandleSize);
+    lHandle.Tag := Ord(AOperation);
+    lHandle.Color := clFuchsia;
+    lHandle.ParentBackground := False;
+    lHandle.BevelOuter := bvRaised;
+    lHandle.OnMouseDown := @ResizeHandleMouseDown;
+    lHandle.OnMouseMove := @ChildMouseMove;
+    lHandle.OnMouseUp := @ChildMouseUp;
+    lHandle.Cursor := CursorForOperation(AOperation);
+    lHandle.ShowHint := True;
+    lHandle.Hint := 'Resize selection';
+    lHandle.BringToFront;
+  end;
+
+begin
+  if not fEnabled then
+    Exit;
+
+  lPagePanel := GetActivePagePanel;
+  if lPagePanel = nil then
+    Exit;
+
+  I := 0;
+  while I < lPagePanel.ControlCount do
+    if (lPagePanel.Controls[I] is TPanel) and
+      (lPagePanel.Controls[I].Hint = 'Resize selection') then
+      lPagePanel.Controls[I].Free
+    else
+    begin
+      if (lPagePanel.Controls[I] is TPanel) and
+        (lPagePanel.Controls[I].Tag >= 0) then
+      begin
+        if IsSelected(lPagePanel.Controls[I].Tag) then
+          TPanel(lPagePanel.Controls[I]).BevelOuter := bvRaised
+        else
+          TPanel(lPagePanel.Controls[I]).BevelOuter := bvLowered;
+      end;
+      Inc(I);
+    end;
+
+  if GetGroupBounds(lGroupBounds) then
+  begin
+    AddHandle(feoResizeTopLeft, lGroupBounds.Left - 8, lGroupBounds.Top - 8);
+    AddHandle(feoResizeTop, lGroupBounds.Left + lGroupBounds.Width div 2 - 4,
+      lGroupBounds.Top - 8);
+    AddHandle(feoResizeTopRight, lGroupBounds.Left + lGroupBounds.Width,
+      lGroupBounds.Top - 8);
+    AddHandle(feoResizeLeft, lGroupBounds.Left - 8,
+      lGroupBounds.Top + lGroupBounds.Height div 2 - 4);
+    AddHandle(feoResizeRight, lGroupBounds.Left + lGroupBounds.Width,
+      lGroupBounds.Top + lGroupBounds.Height div 2 - 4);
+    AddHandle(feoResizeBottomLeft, lGroupBounds.Left - 8,
+      lGroupBounds.Top + lGroupBounds.Height);
+    AddHandle(feoResizeBottom, lGroupBounds.Left + lGroupBounds.Width div 2 - 4,
+      lGroupBounds.Top + lGroupBounds.Height);
+    AddHandle(feoResizeBottomRight, lGroupBounds.Left + lGroupBounds.Width,
+      lGroupBounds.Top + lGroupBounds.Height);
+  end;
 end;
 
 
@@ -1265,6 +1337,7 @@ procedure TFormEditorController.CanvasMouseDown(Sender: TObject;
 var
   lPagePanel: TPanel;
   lPoint: TPoint;
+  lSelectionChanged: Boolean;
 begin
   if (not fEnabled) or (Button <> mbLeft) then
     Exit;
@@ -1285,8 +1358,14 @@ begin
     Exit;
   end;
 
+  lSelectionChanged := False;
   if not (ssCtrl in Shift) then
+  begin
+    lSelectionChanged := fSelected.Count > 0;
     ClearSelection;
+  end;
+  if lSelectionChanged then
+    RefreshSelectionVisuals;
 
 
   BeginOperation(feoSelectRect, X, Y);
@@ -1318,6 +1397,8 @@ end;
 procedure TFormEditorController.CanvasMouseUp(Sender: TObject;
 
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lChanged: Boolean;
 begin
   if not fEnabled then
     Exit;
@@ -1330,9 +1411,12 @@ begin
   if (fOperation <> feoNone) and (fOperation <> feoSelectRect) then
     UpdateOperation(X, Y);
 
-
+  lChanged := fOperationChanged;
   EndOperation;
-  Render;
+  if lChanged then
+    Render
+  else
+    RefreshSelectionVisuals;
 end;
 
 
@@ -1345,6 +1429,7 @@ var
   lPoint: TPoint;
   lIndex: Integer;
   lOperation: TFormEditorOperation;
+  lSelectionChanged: Boolean;
 begin
   if (not fEnabled) or (Button <> mbLeft) or (not (Sender is TControl)) then
     Exit;
@@ -1363,11 +1448,20 @@ begin
   end;
 
   lIndex := TControl(Sender).Tag;
+  lSelectionChanged := False;
   if ssCtrl in Shift then
-    ToggleIndex(lIndex)
+  begin
+    ToggleIndex(lIndex);
+    lSelectionChanged := True;
+  end
   else if not IsSelected(lIndex) then
+  begin
     SelectIndex(lIndex, False);
+    lSelectionChanged := True;
+  end;
 
+  if lSelectionChanged then
+    RefreshSelectionVisuals;
 
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
   lOperation := GetResizeOperationAtControlPoint(TControl(Sender), X, Y);
@@ -1407,6 +1501,7 @@ var
   lIndex: Integer;
   lPage: TRecorderFormPage;
   lComp: TRecorderVisualComponent;
+  lChanged: Boolean;
 begin
   if not fEnabled then Exit;
   if Button = mbRight then
@@ -1432,8 +1527,12 @@ begin
     lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
     if fOperation <> feoNone then
       UpdateOperation(lPoint.X, lPoint.Y);
+    lChanged := fOperationChanged;
     EndOperation;
-    Render;
+    if lChanged then
+      Render
+    else
+      RefreshSelectionVisuals;
   end;
 
 end;
@@ -1446,6 +1545,7 @@ procedure TFormEditorController.ChildMouseUp(Sender: TObject;
 var
 
   lPoint: TPoint;
+  lChanged: Boolean;
 begin
   if (Button <> mbLeft) or (not (Sender is TControl)) then
     Exit;
@@ -1454,8 +1554,12 @@ begin
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
   if fOperation <> feoNone then
     UpdateOperation(lPoint.X, lPoint.Y);
+  lChanged := fOperationChanged;
   EndOperation;
-  Render;
+  if lChanged then
+    Render
+  else
+    RefreshSelectionVisuals;
 end;
 
 
@@ -1543,6 +1647,8 @@ begin
   lDeltaX := X - fDragStartPoint.X;
   lDeltaY := Y - fDragStartPoint.Y;
 
+  if (fOperation <> feoSelectRect) and (lDeltaX = 0) and (lDeltaY = 0) then
+    Exit;
 
   if fOperation = feoSelectRect then
   begin

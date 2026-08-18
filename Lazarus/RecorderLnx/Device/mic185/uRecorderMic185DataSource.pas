@@ -148,12 +148,25 @@ procedure RecorderMic185LifecycleLog(const ATraceId, ASourceId, APhase,
   AState, ADetails: string; AElapsedMs: QWord = 0);
 
 type
+  TRecorderMic185RuntimeUnit = (mruMillivolts, mruOhm, mruStrain);
+  TRecorderCalibrationArray = array of TRecorderCalibration;
+
+  TRecorderMic185ValueTransform = record
+    IsLinear: Boolean;
+    K: Double;
+    B: Double;
+    Settings: TMic185ChannelProgramSettings;
+    UnitMode: TRecorderMic185RuntimeUnit;
+    HardwareCalibration: TRecorderCalibration;
+    ChannelCalibrations: TRecorderCalibrationArray;
+    PowerMa: Double;
+  end;
+
   TRecorderMic185DataSource = class(TRecorderDataSourceBase)
   private
     fChannelTagNames: TStringList;
     fChannelTags: array of TRecorderTag;
-    fHardwareCalibrations: array of TRecorderCalibration;
-    fPowerMa: array of Double;
+    fValueTransforms: array of TRecorderMic185ValueTransform;
     fTempTags: array of TRecorderTag;
     fTimes: TRecorderDoubleArray;
     fUtsTag: TRecorderTag;
@@ -1135,6 +1148,226 @@ begin
   Result := lMv;
 end;
 
+function Mic185RuntimeUnitFromName(const AUnitName: string;
+  ARangeIndex: LongWord): TRecorderMic185RuntimeUnit;
+var
+  lUnit: string;
+begin
+  lUnit := Mic185NormalizeUnitName(AUnitName, ARangeIndex);
+  if SameText(lUnit, 'Ом') then
+    Result := mruOhm
+  else if SameText(lUnit, 'мкм/м') then
+    Result := mruStrain
+  else
+    Result := mruMillivolts;
+end;
+
+function Mic185TryGetCalibrationLine(ACalibration: TRecorderCalibration;
+  out AK, AB: Double): Boolean;
+var
+  I: Integer;
+  lFirst: TRecorderCalibrationPoint;
+  lPoint: TRecorderCalibrationPoint;
+  lSecond: TRecorderCalibrationPoint;
+begin
+  AK := 1.0;
+  AB := 0.0;
+  Result := False;
+  if ACalibration = nil then
+    Exit(True);
+
+  case ACalibration.Kind of
+    rckScale:
+      begin
+        AK := ACalibration.Scale;
+        Exit(True);
+      end;
+    rckStrain:
+      begin
+        if not SameValue(ACalibration.K2, 0.0, 1E-12) then
+          Exit;
+        AK := ACalibration.K1;
+        AB := ACalibration.Offset;
+        Exit(True);
+      end;
+    rckPiecewiseLinear:
+      begin
+        if ACalibration.PointCount = 0 then
+          Exit(True);
+        lFirst := ACalibration.PointAt(0);
+        if lFirst = nil then
+          Exit;
+        if ACalibration.PointCount = 1 then
+        begin
+          AK := 0.0;
+          AB := lFirst.Y;
+          Exit(True);
+        end;
+
+        lSecond := nil;
+        for I := 1 to ACalibration.PointCount - 1 do
+        begin
+          lPoint := ACalibration.PointAt(I);
+          if (lPoint <> nil) and
+            (not SameValue(lPoint.X, lFirst.X, 1E-12)) then
+          begin
+            lSecond := lPoint;
+            Break;
+          end;
+        end;
+        if lSecond = nil then
+          Exit;
+
+        AK := (lSecond.Y - lFirst.Y) / (lSecond.X - lFirst.X);
+        AB := lFirst.Y - AK * lFirst.X;
+        for I := 0 to ACalibration.PointCount - 1 do
+        begin
+          lPoint := ACalibration.PointAt(I);
+          if lPoint = nil then
+            Exit;
+          if not SameValue(lPoint.Y, AK * lPoint.X + AB, 1E-7) then
+            Exit;
+        end;
+        Exit(True);
+      end;
+  end;
+end;
+
+procedure Mic185ComposeLine(var AK, AB: Double; AStepK, AStepB: Double);
+begin
+  AB := AStepK * AB + AStepB;
+  AK := AStepK * AK;
+end;
+
+procedure Mic185ApplyUnitLine(var AK, AB: Double;
+  const ASettings: TMic185ChannelProgramSettings;
+  AUnitMode: TRecorderMic185RuntimeUnit; APowerMa: Double);
+var
+  lCoeff: Double;
+  lExcitationMv: Double;
+  lPowerMa: Double;
+  lSensitivity: Double;
+begin
+  lPowerMa := APowerMa;
+  if SameValue(lPowerMa, 0.0, 1E-9) then
+    lPowerMa := Mic185EffectivePowerMa(ASettings);
+  case AUnitMode of
+    mruOhm:
+      begin
+        AK := AK / lPowerMa;
+        AB := AB / lPowerMa;
+      end;
+    mruStrain:
+      begin
+        lExcitationMv := lPowerMa * Max(Abs(ASettings.Resistance), 1E-9);
+        lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
+        lCoeff := (Mic185SensorSchemeCoeff(ASettings.SensorScheme) /
+          lSensitivity) * 1000000.0 / lExcitationMv;
+        AK := AK * lCoeff;
+        AB := AB * lCoeff;
+      end;
+  end;
+end;
+
+function Mic185ApplyUnitValue(AValueMv: Double;
+  const ASettings: TMic185ChannelProgramSettings;
+  AUnitMode: TRecorderMic185RuntimeUnit; APowerMa: Double): Double;
+var
+  lExcitationMv: Double;
+  lPowerMa: Double;
+  lSensitivity: Double;
+begin
+  lPowerMa := APowerMa;
+  if SameValue(lPowerMa, 0.0, 1E-9) then
+    lPowerMa := Mic185EffectivePowerMa(ASettings);
+  case AUnitMode of
+    mruOhm:
+      Result := AValueMv / lPowerMa;
+    mruStrain:
+      begin
+        lExcitationMv := lPowerMa * Max(Abs(ASettings.Resistance), 1E-9);
+        lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
+        Result := (AValueMv / lExcitationMv) *
+          (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) *
+          1000000.0;
+      end;
+  else
+    Result := AValueMv;
+  end;
+end;
+
+function Mic185BuildValueTransform(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  AHardwareCalibration: TRecorderCalibration): TRecorderMic185ValueTransform;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lStepB: Double;
+  lStepK: Double;
+begin
+  Result.IsLinear := True;
+  Result.K := RecorderMic185RangeMax(ASettings.MeasRangeIndex) /
+    CMic185NominalAdcFullScale;
+  Result.B := 0.0;
+  Result.Settings := ASettings;
+  Result.UnitMode := Mic185RuntimeUnitFromName(ATag.UnitName,
+    ASettings.MeasRangeIndex);
+  Result.HardwareCalibration := AHardwareCalibration;
+  SetLength(Result.ChannelCalibrations, 0);
+  Result.PowerMa := Mic185EffectivePowerMa(ASettings);
+
+  if AHardwareCalibration <> nil then
+  begin
+    if Mic185TryGetCalibrationLine(AHardwareCalibration, Result.K, Result.B) then
+      Result.HardwareCalibration := nil
+    else
+      Result.IsLinear := False;
+  end;
+
+  if Result.IsLinear then
+    Mic185ApplyUnitLine(Result.K, Result.B, ASettings, Result.UnitMode,
+      Result.PowerMa);
+
+  if (ARegistry = nil) or (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
+    (ATag.CalibrationNames = nil) then
+    Exit;
+
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+  begin
+    lCalibration := ARegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
+    if lCalibration = nil then
+      Continue;
+    SetLength(Result.ChannelCalibrations, Length(Result.ChannelCalibrations) + 1);
+    Result.ChannelCalibrations[High(Result.ChannelCalibrations)] := lCalibration;
+    if Result.IsLinear then
+    begin
+      if Mic185TryGetCalibrationLine(lCalibration, lStepK, lStepB) then
+        Mic185ComposeLine(Result.K, Result.B, lStepK, lStepB)
+      else
+        Result.IsLinear := False;
+    end;
+  end;
+end;
+
+function Mic185ApplyValueTransform(AValueCode: Double;
+  const ATransform: TRecorderMic185ValueTransform): Double;
+var
+  I: Integer;
+begin
+  if ATransform.IsLinear then
+    Exit(ATransform.K * AValueCode + ATransform.B);
+
+  if ATransform.HardwareCalibration <> nil then
+    Result := ATransform.HardwareCalibration.Transform(AValueCode)
+  else
+    Result := Mic185CodeToNominalMv(AValueCode, ATransform.Settings);
+  Result := Mic185ApplyUnitValue(Result, ATransform.Settings,
+    ATransform.UnitMode, ATransform.PowerMa);
+  for I := 0 to High(ATransform.ChannelCalibrations) do
+    if ATransform.ChannelCalibrations[I] <> nil then
+      Result := ATransform.ChannelCalibrations[I].Transform(Result);
+end;
+
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 begin
   case ACommutIndex of
@@ -1951,15 +2184,15 @@ var
   lCalibration: TRecorderCalibration;
   lSettings: TMic185ChannelProgramSettings;
   lTag: TRecorderTag;
-  lUnit: string;
 begin
-  SetLength(fHardwareCalibrations, Length(fChannelTags));
-  SetLength(fPowerMa, Length(fChannelTags));
+  SetLength(fValueTransforms, Length(fChannelTags));
   for I := 0 to High(fChannelTags) do
   begin
     lTag := fChannelTags[I];
-    fHardwareCalibrations[I] := nil;
-    fPowerMa[I] := 0.0;
+    SetLength(fValueTransforms[I].ChannelCalibrations, 0);
+    fValueTransforms[I].IsLinear := True;
+    fValueTransforms[I].K := 1.0;
+    fValueTransforms[I].B := 0.0;
     if lTag = nil then
       Continue;
 
@@ -1970,17 +2203,12 @@ begin
       RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
       lCalibration := Registry.FindTagHardwareCalibration(lTag);
     end;
-    fHardwareCalibrations[I] := lCalibration;
 
     if I > High(fRuntimeChannelSettings) then
       Continue;
     lSettings := fRuntimeChannelSettings[I];
-    fPowerMa[I] := Mic185EffectivePowerMa(lSettings);
-    lUnit := Mic185NormalizeUnitName(lTag.UnitName, lSettings.MeasRangeIndex);
-    if lTag.HardwareCalibrationEnabled and
-      (SameText(lUnit, 'Ом') or SameText(lUnit, 'мкм/м')) then
-      fPowerMa[I] := RecorderMic185ApplyCurrentCalibration(Registry, lTag,
-        fPowerMa[I]);
+    fValueTransforms[I] := Mic185BuildValueTransform(Registry, lTag,
+      lSettings, lCalibration);
   end;
 end;
 
@@ -2261,7 +2489,7 @@ var
   I, J: Integer;
   lCount: Integer;
   lTag: TRecorderTag;
-  lHardwareCalibration: TRecorderCalibration;
+  lTransform: TRecorderMic185ValueTransform;
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
@@ -2291,15 +2519,19 @@ begin
     lTag := fChannelTags[I];
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
-    lHardwareCalibration := fHardwareCalibrations[I];
-    for J := 0 to ABlock.SampleCount - 1 do
-      if not lTag.HardwareCalibrationEnabled then
-        fValues[J] := ABlock.Values[I][J]
-      else if I <= High(fRuntimeChannelSettings) then
-        fValues[J] := RecorderMic185ConvertValue(ABlock.Values[I][J],
-          fRuntimeChannelSettings[I], lTag.UnitName, lHardwareCalibration,
-          fPowerMa[I])
+    if I <= High(fValueTransforms) then
+    begin
+      lTransform := fValueTransforms[I];
+      if lTransform.IsLinear then
+        for J := 0 to ABlock.SampleCount - 1 do
+          fValues[J] := lTransform.K * ABlock.Values[I][J] + lTransform.B
       else
+        for J := 0 to ABlock.SampleCount - 1 do
+          fValues[J] := Mic185ApplyValueTransform(ABlock.Values[I][J],
+            lTransform);
+    end
+    else
+      for J := 0 to ABlock.SampleCount - 1 do
         fValues[J] := ABlock.Values[I][J];
     Registry.AddBlockSamples(lTag, fTimes, fValues, ABlock.SampleCount, True);
     { Значения уже пересчитаны: передаём тот же блок без повторного

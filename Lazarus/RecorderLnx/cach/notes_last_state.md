@@ -1,3 +1,143 @@
+## 2026-08-18 - MIC185 runtime uses summary channel transform
+
+**Запрос:** на диапазоне `±125 Ом` основная таблица показывала около `2.5`,
+то есть значение выглядело как мВ внутри омного диапазона; пользователь
+уточнил, что надо по настройкам диалога вычислять сводную ГХ `y = kx + b`.
+
+**Сделано:** в `uRecorderMic185DataSource.pas` runtime MIC183/185 теперь
+кэширует для каждого канала `TRecorderMic185ValueTransform`. Для линейной
+цепочки заранее сворачиваются `код АЦП -> мВ`, пересчет в `Ом`/`мкм/м` через
+ток из настроек канала и канальные ГХ в одну пару `K,B`; в цикле публикации
+применяется только `K * code + B`. Для нелинейной ГХ оставлен корректный
+fallback по заранее сохраненным ссылкам на объекты ГХ, без поиска по строкам в
+цикле. Детали: `errors/2026-08-18-mic185-ohm-runtime-current-scale.md`.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit
+code 0; `RecorderDataSourcesTest.exe` завершился с exit code 0;
+`git diff --check -- uRecorderMic185DataSource.pas` завершился с exit code 0
+с единственным старым предупреждением LF/CRLF.
+
+**Статус:** готово к ручной проверке на MIC183/185: на `±125 Ом` значение
+должно отображаться в Омной шкале, а не повторять мВ.
+
+## 2026-08-18 - Empty channel calibration disables checkbox
+
+**Запрос:** если список канальной ГХ пустой, галку `Канальная ГХ` надо сразу
+снимать, чтобы пустая цепочка не выглядела включенной.
+
+**Сделано:** в `uTagSettingsDialog.pas` добавлена нормализация пустых
+канальных ГХ: при отображении и при сохранении тегов
+`ChannelCalibrationEnabled` сбрасывается, если `CalibrationNames` пустой.
+Детали: `errors/2026-08-18-empty-channel-calibration-enabled.md`.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit
+code 0.
+
+**Статус:** готово.
+
+## 2026-08-18 - Manual tag unit wins over auto calibration unit
+
+**Запрос:** при выборе для MIC183/185 диапазона 500 мВ, единиц `Ом` и галки
+`Авто` основная таблица тегов всё равно показывала `мВ`.
+
+**Сделано:** в `uTagSettingsDialog.pas` автоподстановка единицы из канальной
+ГХ больше не перезаписывает явно выбранный `fUnitCombo.Text`; она работает
+только как fallback, когда поле единиц пустое. Детали:
+`errors/2026-08-18-tag-auto-unit-overwrites-manual-unit.md`.
+
+**Проверка:** первый rebuild был заблокирован запущенным `RecorderLnx.exe` PID
+10180; процесс остановлен, повторный
+`C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-18 - MIC settings grids auto-fit columns
+
+**Запрос:** в диалогах настройки MIC-140 и MIC183/185 сделать
+автовыравнивание ширины столбцов, работающее в том числе на Linux; по
+возможности использовать существующие сервисные функции SharedUtils.
+
+**Сделано:** оба диалога используют общий `uComponentServices.SGChange`.
+MIC-140 выравнивает `fGrid` после `FillGrid`; MIC183/185 выравнивает
+`gridChannels` после полного заполнения через отдельный `FitGridColumns`.
+
+**Проверка:** первый rebuild был заблокирован запущенным `RecorderLnx.exe` PID
+10744; процесс остановлен, повторный
+`C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-18 - Main config save and save-as menu separated
+
+**Запрос:** вернуть отдельную кнопку для меню `Сохранить как...` /
+`Загрузить конфиг...`; серая дискетка должна сразу сохранять текущую
+конфигурацию без дополнительных вопросов.
+
+**Сделано:** в `uMainForm.pas` `btnSaveConfigClick` снова выполняет прямое
+`SaveCurrentConfigClick`, а `btnSaveConfigAs` снова видима и открывает popup с
+пунктами `Сохранить как...` и `Загрузить конфиг...`. Popup привязан к кнопке
+`btnSaveConfigAs`; кнопку Winpos сдвинул вправо, чтобы она не перекрывала
+кнопку меню.
+
+**Проверка:** первый rebuild был заблокирован запущенным `RecorderLnx.exe` PID
+8032; процесс остановлен, повторный
+`C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-18 - Delete key removes selected channel tags
+
+**Запрос:** в диалоге настройки тегов/каналов удалять теги из списка
+используемых по клавише `Del`.
+
+**Сделано:** в `uRecorderSettingsDialog.pas` для `fSelectedChannelsGrid`
+подключён `OnKeyDown`; при `VK_DELETE` вызывается существующий
+`btnChannelRemoveClick`, поэтому клавиша удаляет тот же диапазон выбранных
+строк, что и кнопка удаления.
+
+**Проверка:** первый rebuild был заблокирован запущенным `RecorderLnx.exe` PID
+10220; процесс остановлен, повторный
+`C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-18 - Form editor selection avoids full render
+
+**Запрос:** пользователь уточнил, что выбор элементов на формуляре всё ещё
+долгий, значит предыдущий fix диалога свойств недостаточен.
+
+**Сделано:** в `uFormEditorController.pas` простой клик без смещения больше не
+помечается как изменение модели: `UpdateOperation` выходит при нулевом delta.
+Для изменения только выделения добавлен лёгкий `RefreshSelectionVisuals`, он
+обновляет bevel и resize-ручки без полного `Render`, без `NotifyChanged` и без
+`RefreshControl` всех компонентов страницы.
+
+**Проверка:** первый rebuild был заблокирован запущенным `RecorderLnx.exe` PID
+10076; процесс остановлен, повторный
+`C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit code 0. Детали:
+`errors/2026-08-18-form-component-settings-open-slow.md`.
+
+**Статус:** готово к ручной проверке выбора элементов.
+
+## 2026-08-18 - Linux work directory default and form editor settings speed
+
+**Запрос:** в Linux при выборе рабочего каталога записи сначала подставлять
+каталог Mera Files; ускорить вход в редактирование/свойства элемента на
+формуляре.
+
+**Сделано:** `uRecorderSettingsDialog.pas` теперь нормализует рабочий каталог:
+на Linux Windows-style путь вроде `D:\usm\`/`C:\USML\` заменяется на
+`RecorderMeraFilesPath`, и диалог выбора каталога открывается оттуда.
+`uComponentSettingsDialog.pas` больше не строит полный combo всех тегов при
+открытии свойств компонента: сначала показывает только текущий тег, а поиск
+заполняет список по фильтру; пустой список ограничен 200 тегами.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit
+code 0. Детали по гипотезам:
+`errors/2026-08-18-form-component-settings-open-slow.md`.
+
+**Статус:** готово к ручной проверке на Linux и в редакторе формуляра.
+
 ## 2026-08-18 - Linux deb unpack parent directories fixed
 
 **Запрос:** пользователь проверил `.deb` на VM: графический установщик дошёл до
