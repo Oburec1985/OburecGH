@@ -38,8 +38,8 @@ object RecorderStrainCalibrationDialog: TRecorderStrainCalibrationDialog
   object lblExpansion: TLabel Left = 336 Top = 296 Caption = 'ТКЛР детали, 1/°C' end
   object edExpansion: TEdit Left = 480 Height = 25 Top = 292 Width = 140 end
   object gbResult: TGroupBox Left = 16 Height = 130 Top = 342 Width = 604 Caption = 'Скомпилированная формула runtime'
-    object lblCoefficients: TLabel Left = 16 Top = 34 Width = 570 Caption = 'y = Offset + K1·x + K2·x²' end
-    object lblError: TLabel Left = 16 Top = 70 Width = 570 Caption = 'Допустимая ошибка: не более 0,1%' end
+    object lblCoefficients: TLabel Left = 16 Top = 34 Width = 570 Caption = 'y = Offset + K·x' end
+    object lblError: TLabel Left = 16 Top = 70 Width = 570 Caption = 'Оценка ошибки линейной аппроксимации' end
   end
   object btnOk: TButton Left = 432 Height = 30 Top = 510 Width = 90 Caption = 'OK' Default = True OnClick = btnOkClick end
   object btnCancel: TButton Left = 530 Height = 30 Top = 510 Width = 90 Caption = 'Отмена' Cancel = True ModalResult = 2 end

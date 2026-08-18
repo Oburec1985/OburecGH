@@ -16,7 +16,7 @@
       <Unit>
         <Filename Value="Calibrations\Strains\uRecorderStrainCalibration.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="197"/>
+        <UsageCount Value="198"/>
       </Unit>
       <Unit>
         <Filename Value="Calibrations\Strains\uRecorderStrainCalibrationDialog.pas"/>
@@ -24,7 +24,7 @@
         <ComponentName Value="RecorderStrainCalibrationDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="197"/>
+        <UsageCount Value="198"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uMeraFile.pas"/>
@@ -211,7 +211,7 @@
       <Unit>
         <Filename Value="Core\uRecorderTagTableExchange.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="63"/>
+        <UsageCount Value="64"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTagRefs.pas"/>
@@ -291,7 +291,7 @@
         <ComponentName Value="RecorderButtonSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="199"/>
+        <UsageCount Value="200"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uFormEditorController.pas"/>
@@ -397,7 +397,7 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <TopLine Value="55"/>
-        <CursorPos X="49" Y="85"/>
+        <CursorPos X="55" Y="74"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -408,7 +408,7 @@
         <ComponentName Value="RecorderVirtualTagDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="181"/>
+        <UsageCount Value="182"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderNetworkBinding.pas"/>
@@ -416,7 +416,7 @@
         <EditorIndex Value="5"/>
         <TopLine Value="167"/>
         <CursorPos X="64" Y="187"/>
-        <UsageCount Value="181"/>
+        <UsageCount Value="182"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -475,12 +475,12 @@
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="198"/>
+        <UsageCount Value="199"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendView.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="198"/>
+        <UsageCount Value="199"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendSettingsDialog.pas"/>
@@ -488,7 +488,7 @@
         <ComponentName Value="RecorderSqlTrendSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="198"/>
+        <UsageCount Value="199"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderVisualControl.pas"/>
@@ -1286,7 +1286,7 @@
         <EditorIndex Value="2"/>
         <TopLine Value="573"/>
         <CursorPos X="32" Y="585"/>
-        <UsageCount Value="30"/>
+        <UsageCount Value="31"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>

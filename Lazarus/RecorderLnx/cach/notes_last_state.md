@@ -1,24 +1,50 @@
-## 2026-08-18 - MIC185 runtime uses summary channel transform
+## 2026-08-18 - MIC185 actual range uses calibrated excitation current
+
+**Запрос:** пользователь сравнил с оригинальным Recorder: для MIC185 SN168
+оригинал показывает разные `Диап-н факт.` по каналам (`±124.943`,
+`±124.953`, ...), а RecorderLnx показывал одинаковые `±125.021`.
+
+**Сделано:** добавлены `RecorderMic185EffectiveRangeMaxForTag` /
+`RecorderMic185EffectiveRangeTextForTag`, которые для конкретного тега
+применяют `RecorderMic185ApplyCurrentCalibration`. Создание/обновление
+MIC185-тегов, таблица настроек и диалог свойств канала теперь считают
+фактический диапазон через калиброванный ток питания канала, а не только через
+номинальный ток из combobox.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершился с exit code 0; `RecorderDataSourcesTest.exe` с первого раза упал на
+тайминговой проверке manager event/snapshot count, повторный запуск завершился
+с exit code 0; `git diff --check` завершился с exit code 0 с предупреждениями
+только про LF/CRLF. Детали:
+`errors/2026-08-18-mic185-ohm-runtime-current-scale.md`.
+
+**Статус:** готово к ручной проверке: колонка `Диап-н факт.` для `Ом` должна
+показывать небольшие отличия по каналам примерно как оригинальный Recorder.
+
+## 2026-08-18 - MIC185 runtime uses calibrated mV-to-Ohm transform
 
 **Запрос:** на диапазоне `±125 Ом` основная таблица показывала около `2.5`,
 то есть значение выглядело как мВ внутри омного диапазона; пользователь
-уточнил, что надо по настройкам диалога вычислять сводную ГХ `y = kx + b`.
+уточнил, что надо по настройкам диалога вычислять сводную ГХ `y = kx + b`, а
+токи питания MIC185 калибруются и их можно прочитать.
 
 **Сделано:** в `uRecorderMic185DataSource.pas` runtime MIC183/185 теперь
-кэширует для каждого канала `TRecorderMic185ValueTransform`. Для линейной
-цепочки заранее сворачиваются `код АЦП -> мВ`, пересчет в `Ом`/`мкм/м` через
-ток из настроек канала и канальные ГХ в одну пару `K,B`; в цикле публикации
-применяется только `K * code + B`. Для нелинейной ГХ оставлен корректный
-fallback по заранее сохраненным ссылкам на объекты ГХ, без поиска по строкам в
-цикле. Детали: `errors/2026-08-18-mic185-ohm-runtime-current-scale.md`.
+кэширует для каждого канала `TRecorderMic185ValueTransform`. Подтверждено, что
+поток MIC185 приходит как `Single` уже в мВ, поэтому базовый runtime-вход теперь
+`K=1`, а не `код АЦП -> мВ`. Пересчет в `Ом`/`мкм/м` использует калиброванный
+ток питания через `RecorderMic185ApplyCurrentCalibration` с fallback на ток из
+настроек канала. Канальный тензокалькулятор переведен на линейную сводную ГХ
+`K2=0`, как более дешевый runtime-вариант. Детали:
+`errors/2026-08-18-mic185-ohm-runtime-current-scale.md`.
 
-**Проверка:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit
-code 0; `RecorderDataSourcesTest.exe` завершился с exit code 0;
-`git diff --check -- uRecorderMic185DataSource.pas` завершился с exit code 0
-с единственным старым предупреждением LF/CRLF.
+**Проверка:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершился с exit code 0; `RecorderDataSourcesTest.exe` завершился с exit code
+0; `git diff --check` по измененным файлам завершился с exit code 0 с
+существующими предупреждениями LF/CRLF.
 
 **Статус:** готово к ручной проверке на MIC183/185: на `±125 Ом` значение
-должно отображаться в Омной шкале, а не повторять мВ.
+около `2.5 мВ` должно отображаться примерно как `0.625 Ом` при номинальных
+`4 мА` либо с поправкой по прочитанной калибровке тока.
 
 ## 2026-08-18 - Empty channel calibration disables checkbox
 

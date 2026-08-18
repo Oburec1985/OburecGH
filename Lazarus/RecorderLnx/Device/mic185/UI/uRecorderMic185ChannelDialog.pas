@@ -51,15 +51,17 @@ type
     procedure btnApplyClick(Sender: TObject);
     procedure SettingsChanged(Sender: TObject);
   private
+    fRegistry: TRecorderTagRegistry;
+    fTag: TRecorderTag;
     procedure ReadSettingsFromUi(var ASettings: TMic185ChannelProgramSettings);
     procedure UpdateActualRange;
   public
-    procedure LoadTag(ATag: TRecorderTag);
+    procedure LoadTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
     procedure SaveTag(ATag: TRecorderTag);
   end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;
-  ATag: TRecorderTag): Boolean;
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
 
 implementation
 
@@ -142,14 +144,17 @@ var
 begin
   RecorderMic185ReadChannelMode('', MIC185DefaultPollFrequencyHz, lSettings);
   ReadSettingsFromUi(lSettings);
-  edActualRange.Text := RecorderMic185EffectiveRangeText(lSettings,
-    cbActualRangeUnit.Text);
+  edActualRange.Text := RecorderMic185EffectiveRangeTextForTag(fRegistry, fTag,
+    lSettings, cbActualRangeUnit.Text);
 end;
 
-procedure TRecorderMic185ChannelForm.LoadTag(ATag: TRecorderTag);
+procedure TRecorderMic185ChannelForm.LoadTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag);
 var
   lSettings: TMic185ChannelProgramSettings;
 begin
+  fRegistry := ARegistry;
+  fTag := ATag;
   FillCombo(cbNominalRange, ['±500', '±50', '±5', '±0.5'], 2);
   FillCombo(cbActualRangeUnit, ['мВ', 'Ом', 'мкм/м', 'мВ(тензо)'], 0);
   FillCombo(cbCommutation, ['Вход', 'Земля', '49 мВ'], 0);
@@ -215,19 +220,20 @@ begin
     lSettings);
   ReadSettingsFromUi(lSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
-  ATag.RangeMax := RecorderMic185EffectiveRangeMax(lSettings, ATag.UnitName);
+  ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
+    lSettings, ATag.UnitName);
   ATag.RangeMin := -ATag.RangeMax;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
 end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;
-  ATag: TRecorderTag): Boolean;
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
 var
   lForm: TRecorderMic185ChannelForm;
 begin
   lForm := TRecorderMic185ChannelForm.Create(AOwner);
   try
-    lForm.LoadTag(ATag);
+    lForm.LoadTag(ARegistry, ATag);
     Result := lForm.ShowModal = mrOk;
     if Result then
       lForm.SaveTag(ATag);

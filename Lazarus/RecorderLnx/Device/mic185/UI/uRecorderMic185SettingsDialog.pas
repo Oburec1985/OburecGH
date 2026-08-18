@@ -147,8 +147,8 @@ begin
     if Trim(AUnitName) <> '' then
       lTargetTag.UnitName := AUnitName;
     lTargetTag.AutoUnit := False;
-    lTargetTag.RangeMax := RecorderMic185EffectiveRangeMax(ASettings,
-      lTargetTag.UnitName);
+    lTargetTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry,
+      lTargetTag, ASettings, lTargetTag.UnitName);
     lTargetTag.RangeMin := -lTargetTag.RangeMax;
     UpdateGridRow(ARow, lTargetTag);
   end;
@@ -357,8 +357,8 @@ begin
     lUnitName := Trim(ATag.UnitName);
     if lUnitName = '' then
       lUnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-    gridChannels.Cells[2, ARow] := RecorderMic185EffectiveRangeText(lSettings,
-      lUnitName);
+    gridChannels.Cells[2, ARow] := RecorderMic185EffectiveRangeTextForTag(
+      fRegistry, ATag, lSettings, lUnitName);
     gridChannels.Cells[3, ARow] := '0.000';
     gridChannels.Cells[4, ARow] := FloatToStr(lSettings.SoftBalance);
     gridChannels.Cells[5, ARow] := lUnitName;
@@ -418,8 +418,8 @@ begin
     lSettings := fChannelSettings[ARow - 1];
     if Trim(Result.UnitName) = '' then
       Result.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-    Result.RangeMax := RecorderMic185EffectiveRangeMax(lSettings,
-      Result.UnitName);
+    Result.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, Result,
+      lSettings, Result.UnitName);
     Result.RangeMin := -Result.RangeMax;
   end
   else if ARow <= CMic185ChannelCountMax + CMic185TempChannelCount then
@@ -614,7 +614,7 @@ begin
   GetSourceRowSettings(lRow, lSettings);
   lSettings.PowerMaCode := fPowerMaCode;
   lTag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
-  if ShowRecorderMic185ChannelDialog(Self, lTag) then
+  if ShowRecorderMic185ChannelDialog(Self, fRegistry, lTag) then
   begin
     RecorderMic185ReadChannelMode(lTag.SourceValueMode, lTag.PollFrequencyHz,
       lSettings);

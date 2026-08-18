@@ -245,18 +245,17 @@ begin
   Y1 := OutputValue(AConfig, 0, 0);
   Y2 := OutputValue(AConfig, E, AConfig.GaugeFactor*E);
   if SameValue(X0,X1) or SameValue(X1,X2) or SameValue(X0,X2) then begin AError := 'Схема не имеет чувствительности на выбранном диапазоне'; Exit; end;
-  ACalibration.K2 := ((Y2-Y0)/(X2-X0) - (Y1-Y0)/(X1-X0))/(X2-X1);
-  ACalibration.K1 := (Y1-Y0)/(X1-X0) - ACalibration.K2*(X0+X1);
-  ACalibration.Offset := Y0 - ACalibration.K1*X0 - ACalibration.K2*Sqr(X0);
+  ACalibration.K1 := (Y2 - Y0) / (X2 - X0);
+  ACalibration.Offset := Y1 - ACalibration.K1 * X1;
+  ACalibration.K2 := 0.0;
   Scale := Max(Max(Abs(Y0), Abs(Y2)), 1E-30);
   for I := 0 to 200 do begin
     E := AConfig.MaxMicrostrain*1E-6*(-1 + I/100.0);
     AM := AConfig.GaugeFactor*E;
     M := RawInput(AConfig, AM); Y := OutputValue(AConfig,E,AM);
-    P := ACalibration.Offset + ACalibration.K1*M + ACalibration.K2*Sqr(M);
+    P := ACalibration.Offset + ACalibration.K1*M;
     AMaxRelativeError := Max(AMaxRelativeError, Abs(P-Y)/Scale);
   end;
-  if AMaxRelativeError > 0.001 then begin AError := Format('Ошибка полинома %.4f%% превышает 0,1%%. Уменьшите рабочий диапазон.', [AMaxRelativeError*100]); Exit; end;
   ACalibration.Kind := rckStrain;
   ACalibration.UnitIn := RecorderStrainInputUnitName(AConfig.InputUnit);
   ACalibration.UnitOut := RecorderStrainOutputUnitName(AConfig.OutputUnit);

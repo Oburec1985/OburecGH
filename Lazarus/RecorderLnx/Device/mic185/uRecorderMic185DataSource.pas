@@ -95,12 +95,19 @@ function RecorderMic185RangeMax(ARangeIndex: LongWord): Double;
 { Верхняя граница диапазона в выбранной пользователем единице. }
 function RecorderMic185EffectiveRangeMax(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+function RecorderMic185EffectiveRangeMaxForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): Double;
 { Текст фактического диапазона для диалога канала. }
 function RecorderMic185EffectiveRangeText(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
-{ Пересчитывает сырые коды MIC-185 в выбранную единицу тега. При отсутствии
-  аппаратной ГХ используется номинал: 32768 кодов = 100% диапазона. }
-function RecorderMic185ConvertValue(AValueCode: Double;
+function RecorderMic185EffectiveRangeTextForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): string;
+{ Пересчитывает измеренное MIC-185 значение в выбранную единицу тега. Основной
+  поток MIC-185 отдаёт Single уже в мВ; аппаратная ГХ, если включена, уточняет
+  это входное значение. }
+function RecorderMic185ConvertValue(AValueMv: Double;
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
   AHardwareCalibration: TRecorderCalibration = nil;
   AEffectivePowerMa: Double = 0.0): Double;
@@ -1083,8 +1090,9 @@ begin
     CMic185NominalAdcFullScale;
 end;
 
-function RecorderMic185EffectiveRangeMax(
-  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+function Mic185EffectiveRangeMaxWithPower(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
+  APowerMa: Double): Double;
 var
   lExcitationMv: Double;
   lRangeMv: Double;
@@ -1094,11 +1102,11 @@ begin
   lRangeMv := RecorderMic185RangeMax(ASettings.MeasRangeIndex);
   lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
   if SameText(lUnit, 'Ом') then
-    Exit(lRangeMv / Mic185EffectivePowerMa(ASettings));
+    Exit(lRangeMv / Max(Abs(APowerMa), 1E-9));
 
   if SameText(lUnit, 'мкм/м') then
   begin
-    lExcitationMv := Mic185EffectivePowerMa(ASettings) *
+    lExcitationMv := Max(Abs(APowerMa), 1E-9) *
       Max(Abs(ASettings.Resistance), 1E-9);
     lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
     Exit((lRangeMv / lExcitationMv) *
@@ -1108,6 +1116,24 @@ begin
   Result := lRangeMv;
 end;
 
+function RecorderMic185EffectiveRangeMax(
+  const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): Double;
+begin
+  Result := Mic185EffectiveRangeMaxWithPower(ASettings, AUnitName,
+    Mic185EffectivePowerMa(ASettings));
+end;
+
+function RecorderMic185EffectiveRangeMaxForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): Double;
+var
+  lPowerMa: Double;
+begin
+  lPowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
+    Mic185EffectivePowerMa(ASettings));
+  Result := Mic185EffectiveRangeMaxWithPower(ASettings, AUnitName, lPowerMa);
+end;
+
 function RecorderMic185EffectiveRangeText(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
 begin
@@ -1115,7 +1141,16 @@ begin
     ASettings, AUnitName));
 end;
 
-function RecorderMic185ConvertValue(AValueCode: Double;
+function RecorderMic185EffectiveRangeTextForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): string;
+begin
+  Result := '±' + FormatFloat('0.000',
+    RecorderMic185EffectiveRangeMaxForTag(ARegistry, ATag, ASettings,
+    AUnitName));
+end;
+
+function RecorderMic185ConvertValue(AValueMv: Double;
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
   AHardwareCalibration: TRecorderCalibration; AEffectivePowerMa: Double): Double;
 var
@@ -1126,9 +1161,9 @@ var
   lUnit: string;
 begin
   if AHardwareCalibration <> nil then
-    lMv := AHardwareCalibration.Transform(AValueCode)
+    lMv := AHardwareCalibration.Transform(AValueMv)
   else
-    lMv := Mic185CodeToNominalMv(AValueCode, ASettings);
+    lMv := AValueMv;
   lUnit := Mic185NormalizeUnitName(AUnitName, ASettings.MeasRangeIndex);
   lPowerMa := AEffectivePowerMa;
   if SameValue(lPowerMa, 0.0, 1E-9) then
@@ -1306,8 +1341,7 @@ var
   lStepK: Double;
 begin
   Result.IsLinear := True;
-  Result.K := RecorderMic185RangeMax(ASettings.MeasRangeIndex) /
-    CMic185NominalAdcFullScale;
+  Result.K := 1.0;
   Result.B := 0.0;
   Result.Settings := ASettings;
   Result.UnitMode := Mic185RuntimeUnitFromName(ATag.UnitName,
@@ -1315,6 +1349,8 @@ begin
   Result.HardwareCalibration := AHardwareCalibration;
   SetLength(Result.ChannelCalibrations, 0);
   Result.PowerMa := Mic185EffectivePowerMa(ASettings);
+  Result.PowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
+    Result.PowerMa);
 
   if AHardwareCalibration <> nil then
   begin
@@ -1360,7 +1396,7 @@ begin
   if ATransform.HardwareCalibration <> nil then
     Result := ATransform.HardwareCalibration.Transform(AValueCode)
   else
-    Result := Mic185CodeToNominalMv(AValueCode, ATransform.Settings);
+    Result := AValueCode;
   Result := Mic185ApplyUnitValue(Result, ATransform.Settings,
     ATransform.UnitMode, ATransform.PowerMa);
   for I := 0 to High(ATransform.ChannelCalibrations) do
@@ -1743,7 +1779,8 @@ begin
           lTag.PollFrequencyHz, lSettings);
         if Trim(lTag.UnitName) = '' then
           lTag.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-        lTag.RangeMax := RecorderMic185EffectiveRangeMax(lSettings, lTag.UnitName);
+        lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
+          lTag, lSettings, lTag.UnitName);
         lTag.RangeMin := -lTag.RangeMax;
       end
       else if Pos('-t', LowerCase(lAddress)) > 0 then
@@ -2254,8 +2291,8 @@ begin
         lChannels[I].Address, lChannels[I].PollFrequencyHz, lChannelSettings);
       if Trim(lTag.UnitName) = '' then
         lTag.UnitName := RecorderMic185RangeUnitText(lChannelSettings.MeasRangeIndex);
-      lTag.RangeMax := RecorderMic185EffectiveRangeMax(lChannelSettings,
-        lTag.UnitName);
+      lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
+        lTag, lChannelSettings, lTag.UnitName);
       lTag.RangeMin := -lTag.RangeMax;
     end
     else
@@ -2508,6 +2545,8 @@ begin
   // TMic185ChannelProgramSettingsArray
   // Этой функции не место в RunTime
   lCount := Min(ABlock.ChannelCount, Length(fChannelTags));
+  if Length(fValueTransforms) < lCount then
+    CacheRuntimeChannels;
   for I := 0 to lCount - 1 do
   begin
     // лучше хранить массив ссылок на теги. Поиск тега по имени каждый раз плохая операция!

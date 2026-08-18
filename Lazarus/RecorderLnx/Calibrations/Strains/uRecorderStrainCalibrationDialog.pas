@@ -134,7 +134,8 @@ begin
     edResistance.Text := FloatToStr(C.NominalResistanceOhm); edDeltaT.Text := FloatToStr(C.TemperatureDeltaC);
     edTcr.Text := FloatToStr(C.GaugeTcr); edExpansion.Text := FloatToStr(C.MaterialExpansion);
     edMaxStrain.Text := FloatToStr(C.MaxMicrostrain);
-    lblCoefficients.Caption := Format('y = %.8g + %.8g·x + %.8g·x²', [fCalibration.Offset, fCalibration.K1, fCalibration.K2]);
+    lblCoefficients.Caption := Format('y = %.8g + %.8g·x',
+      [fCalibration.Offset, fCalibration.K1]);
   finally C.Free; end;
 end;
 
