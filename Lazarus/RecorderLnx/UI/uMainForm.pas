@@ -319,7 +319,7 @@ type
     function GetAppConfigFileName: string;
     function LoadDefaultProjectConfigDir: string;
     procedure SaveDefaultProjectConfigDir;
-    { Создает popup-меню кнопки конфигурации с Save/Load/Save As. }
+    { Создает popup-меню кнопки конфигурации с Save As/Load. }
     procedure EnsureConfigPopupMenu;
     { Показывает popup-меню операций конфигурации. }
     procedure ShowConfigPopupMenu;
@@ -901,10 +901,10 @@ end;
 procedure TMainForm.btnSaveConfigAsClick(Sender: TObject);
 begin
   try
-    SaveConfigAsClick(Sender);
+    ShowConfigPopupMenu;
   except
     on E: Exception do
-      LogCommandError('Save config as', E);
+      LogCommandError('Config menu', E);
   end;
 end;
 
@@ -922,10 +922,10 @@ end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
   try
-    SaveProjectPackage;
+    ShowConfigPopupMenu;
   except
     on E: Exception do
-      LogCommandError('Save config', E);
+      LogCommandError('Config menu', E);
   end;
 end;
 
@@ -2191,6 +2191,7 @@ var
   lAppConfigFileName: string;
   lAppConfig: TStringList;
 begin
+  RecorderEnsureMeraDirectories;
   ForceDirectories(fProjectConfigDir);
 
   lAppConfigDir := RecorderConfigPath;
@@ -2272,6 +2273,7 @@ end;
 
 procedure TMainForm.SaveRunSettings;
 begin
+  RecorderEnsureMeraDirectories;
   ForceDirectories(fProjectConfigDir);
   fRecorder.RunSettings.SaveToFile(fRunControlFileName);
 end;
@@ -2344,10 +2346,12 @@ end;
 
 function TMainForm.GetAppConfigDir: string;
 begin
+  RecorderEnsureMeraDirectories;
   Result := RecorderConfigPath;
   if Result = '' then
     Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config';
   Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
+  ForceDirectories(Result);
 end;
 
 function TMainForm.GetAppConfigFileName: string;
@@ -2441,17 +2445,12 @@ begin
   fConfigPopupMenu := TPopupMenu.Create(Self);
 
   lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := 'Сохранить текущую конфигурацию';
-  lMenuItem.OnClick := @SaveCurrentConfigClick;
-  fConfigPopupMenu.Items.Add(lMenuItem);
-
-  lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := 'Сохранить конфигурацию в каталог...';
+  lMenuItem.Caption := 'Сохранить как...';
   lMenuItem.OnClick := @SaveConfigAsClick;
   fConfigPopupMenu.Items.Add(lMenuItem);
 
   lMenuItem := TMenuItem.Create(fConfigPopupMenu);
-  lMenuItem.Caption := 'Загрузить конфигурацию из каталога...';
+  lMenuItem.Caption := 'Загрузить конфиг...';
   lMenuItem.OnClick := @LoadConfigFromClick;
   fConfigPopupMenu.Items.Add(lMenuItem);
 end;
@@ -3167,7 +3166,7 @@ begin
   btnSettings.SetBounds(8, 8, 40, 42);
   btnSaveConfig.SetBounds(54, 8, 40, 42);
   btnSaveConfigAs.SetBounds(100, 8, 40, 42);
-  btnRunWinpos.SetBounds(146, 8, 40, 42);
+  btnRunWinpos.SetBounds(100, 8, 40, 42);
   btnStop.SetBounds(16, 58, 42, 42);
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
@@ -3186,14 +3185,15 @@ begin
   btnSaveConfig.Images := ilCommandButtons;
   btnSaveConfig.ImageIndex := CIconSaveConfig;
   btnSaveConfig.ImageWidth := 32;
-  btnSaveConfig.Hint := 'Save current config';
+  btnSaveConfig.Hint := 'Save/load config';
   
   btnSaveConfigAs.Caption := '';
   btnSaveConfigAs.Images := ilCommandButtons;
   btnSaveConfigAs.ImageIndex := CIconSaveConfigAs;
   btnSaveConfigAs.ImageWidth := 32;
-  btnSaveConfigAs.Hint := 'Save config as...';
-  btnSaveConfigAs.ShowHint := True;
+  btnSaveConfigAs.Hint := 'Save/load config';
+  btnSaveConfigAs.Visible := False;
+  btnSaveConfigAs.ShowHint := False;
   btnSaveConfig.ShowHint := True;
 
   btnRunWinpos.Caption := '';

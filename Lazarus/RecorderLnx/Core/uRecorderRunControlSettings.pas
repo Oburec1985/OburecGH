@@ -320,6 +320,7 @@ var
   lIni: TIniFile;
 begin
   RequireValid;
+  ForceDirectories(ExtractFileDir(AFileName));
 
   lIni := TIniFile.Create(AFileName);
   try

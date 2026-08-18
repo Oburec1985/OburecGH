@@ -1,3 +1,136 @@
+## 2026-08-18 - Linux deb unpack parent directories fixed
+
+**Запрос:** пользователь проверил `.deb` на VM: графический установщик дошёл до
+unpack/triggers и сообщил общую ошибку `dpkg`.
+
+**Сделано:** через SSH повторена установка на VM и найдена точная причина:
+в data-архиве не хватало родительских каталогов перед вложенными файлами
+(`opt/mera/RecorderLnx/res`, затем
+`usr/share/recorderlnx/config/projects/default`). В `build_deb.py` эти
+каталоги добавлены явно; также убрано двойное копирование ярлыка, когда
+`XDG_DESKTOP_DIR` равен `~/Desktop`.
+
+**Проверка:** `python -m py_compile build_deb.py` OK;
+`build-installer.bat` пересобрал `.deb`; финальный пакет скопирован на
+`user@192.168.112.128` и установлен через `sudo dpkg -i` с `DPKG_EXIT=0`.
+`recorderlnx-install-check` вернул `CHECK_EXIT=0`. Детали:
+`errors/2026-08-18-linux-deb-install-tmp-and-config-dir.md`.
+
+**Статус:** готово, пакет устанавливается на тестовой VM.
+
+## 2026-08-18 - BAT wrapper for Linux installer build
+
+**Запрос:** сделать `.bat`-файл, который будет вызывать остальные скрипты для
+сборки Linux-инсталлятора RecorderLnx.
+
+**Сделано:** добавлен
+`installer/RecorderLnx/linux/build-installer.bat`, который запускает соседний
+`build-installer.ps1` через `powershell.exe -NoProfile -ExecutionPolicy Bypass`
+и пробрасывает параметры дальше. README дополнен вариантом запуска из
+`cmd.exe`/Проводника/Total Commander.
+
+**Проверка:** `cmd.exe /c installer\RecorderLnx\linux\build-installer.bat`
+завершился с exit code 0 и пересобрал
+`installer/RecorderLnx/linux/Output/recorderlnx_0.1.0_amd64.deb`.
+
+**Статус:** готово.
+
+## 2026-08-18 - Dropdown config menu on save button
+
+**Запрос:** на главной кнопке с дискетой сделать выпадающее меню
+`Сохранить как...` / `Загрузить конфиг...`; загруженный конфиг должен
+становиться конфигурацией по умолчанию.
+
+**Сделано:** в `UI/uMainForm.pas` кнопка `btnSaveConfig` теперь открывает
+popup-меню с двумя пунктами. Пункт загрузки использует существующий
+`LoadConfigFromClick`, где после выбора каталога вызывается
+`SaveDefaultProjectConfigDir`, поэтому выбранный конфиг записывается в
+`app.ini` как default. Старая отдельная кнопка `btnSaveConfigAs` скрыта.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B RecorderLnx.lpi` завершился с exit
+code 0; штатное post-build сообщение `#!/bin/sh` осталось неблокирующим.
+
+**Статус:** готово.
+
+## 2026-08-18 - Linux deb creates Mera directories and desktop shortcut
+
+**Запрос:** после установки на Debian/Orel 1.8 RecorderLnx запущен из
+`/tmp/qapt-deb-installer/...`, падает на создании
+`/var/opt/mera/RecorderLnx/config/app.ini`, нужен ярлык на рабочем столе и
+программное создание каталогов как `ForceDirectories`.
+
+**Сделано:** в `uRecorderMeraPaths.pas` добавлен
+`RecorderEnsureMeraDirectories`, вызван перед записью app/run-control config;
+`TRecorderRunControlSettings.SaveToFile` создает родительский каталог. В
+`installer/RecorderLnx/linux/build_deb.py` усилен `postinst`: создает
+`/var/opt/mera/...`, копирует `app.ini` и default project, выставляет
+`a+rwX` на `/var/opt/mera`, создает shortcut в `~/Desktop` или
+`~/Рабочий стол`. README предупреждает не запускать бинарник из
+`/tmp/qapt-deb-installer`, а запускать `/opt/mera/RecorderLnx/RecorderLnx`.
+
+**Проверка:** Windows `RecorderLnx.lpi` rebuild `WIN_BUILD_EXIT=0`;
+`python -m py_compile build_deb.py` OK; `build-installer.ps1` пересобрал
+`Output/recorderlnx_0.1.0_amd64.deb`; содержимое `.deb` и `postinst`
+проверены. Детали: `errors/2026-08-18-linux-deb-install-tmp-and-config-dir.md`.
+
+**Статус:** пакетный fix готов. Так как Windows-сборщик `.deb` не компилирует
+Linux exe, Pascal-side `ForceDirectories` попадет в Linux-пакет после следующей
+Linux-сборки `lib/x86_64-linux/RecorderLnx`.
+
+**Follow-up:** пользователь сообщил, что графический установщик всё равно
+пишет об ошибке, ярлык не создан, приложение нужно в меню "Прочее"/поиске
+через звезду, и спросил про более мощный установщик. В `build_deb.py` добавлен
+диагностический `/usr/bin/recorderlnx-install-check`, лог postinst в
+`/var/opt/mera/RecorderLnx/install.log`, desktop shortcut теперь ищется через
+`~/.config/user-dirs.dirs` (`XDG_DESKTOP_DIR`) и не валит установку при
+ошибке, `.desktop` переведен в `Categories=Utility;` и получил keywords для
+поиска. `.deb` пересобран и инспектирован.
+
+## 2026-08-17 - Windows builder for Linux .deb installer
+
+**Запрос:** сделать сборку Linux-инсталлятора прямо из Windows, без SSH, чтобы
+готовый установщик можно было забрать на флешку и поставить на другие Linux ПК.
+
+**Сделано:** добавлены `installer/RecorderLnx/linux/build-installer.ps1`,
+`build_deb.py` и `README.md`. Скрипт Windows пакует уже собранный Linux-бинарник
+`Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx` в Debian-пакет с установкой
+в `/opt/mera/RecorderLnx`, ярлыком `.desktop`, `/usr/bin/recorderlnx` и
+изменяемыми данными в `/var/opt/mera`.
+
+**Проверка:** `build-installer.ps1` успешно создал
+`installer/RecorderLnx/linux/Output/recorderlnx_0.1.0_amd64.deb`. Проверен
+заголовок `.deb`: `debian-binary`, `control.tar.gz`, `data.tar.gz`.
+
+**Статус:** готово к переносу на флешку и установке через
+`sudo dpkg -i recorderlnx_0.1.0_amd64.deb`. Скрипт не пересобирает Linux exe;
+если нужен свежий бинарник, его сначала собрать на Linux.
+
+**Follow-up:** пользователь уточнил, что Linux-инсталлятор должен ставить те же
+ресурсы, что Windows Inno Setup. Сверено с `RecorderLnx.iss`: `.deb` содержит
+`RecorderLnx`, `res/sdb` icons, `bios/devices/mc201/mc_201a.bio`,
+`RecorderLnx.paths.ini`, desktop entry, `/usr/bin/recorderlnx`, каталоги
+`plugins/bios/syscom`, а Linux-аналог `Mera Files` создаётся как
+`/var/opt/mera` с `RecorderLnx/config`, `Calibr`, `Resources`, `SDB`.
+Шаблоны `app.ini` и default project кладутся в `/usr/share/recorderlnx/config`
+и копируются в `/var/opt/mera` при первой установке. `build-installer.ps1`
+повторно успешно собрал `recorderlnx_0.1.0_amd64.deb`.
+
+## 2026-08-17 - Linux installer approach
+
+**Запрос:** пользователь спросил, как сделать Linux-инсталлятор для
+RecorderLnx рядом с существующим Inno Setup-инсталлятором Windows.
+
+**Сделано:** просмотрены `installer/RecorderLnx/Win/RecorderLnx.iss`,
+`build-installer.ps1` и README. Windows-пакет ставит бинарник в каталог
+приложения, ресурсы/BIOS рядом с ним, а изменяемые конфиги/SDB/калибровки
+выносит в `Mera Files`.
+
+**Проверка:** код не менялся; сборка не выполнялась.
+
+**Статус:** рекомендуемый Linux-эквивалент для Astra/Debian — `.deb` пакет
+через `dpkg-deb` с `/opt/mera/RecorderLnx` для приложения,
+`/var/opt/mera/RecorderLnx` для изменяемых данных и `.desktop` ярлыком.
+
 ## 2026-08-17 - Linux manual-IP autosearch works without Ping scan
 
 **Request:** if an address is typed explicitly in Linux settings, autosearch

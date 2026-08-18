@@ -637,6 +637,9 @@
       <Item>
         <Name Value="EInOutError"/>
       </Item>
+      <Item>
+        <Name Value="EAccessViolation"/>
+      </Item>
     </Exceptions>
   </Debugging>
 </CONFIG>
