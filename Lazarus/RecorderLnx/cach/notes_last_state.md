@@ -7123,3 +7123,38 @@ spectrum bindings, and formula frequency-band terms for the removed tag.
 was not started because `RecorderLnx.exe` PID 22628 is running from the build
 output path. Detailed log:
 `errors/2026-08-19-orphan-tags-after-source-delete.md`.
+
+## 2026-08-19 - Mnemonic editor lag analysis
+
+**Request:** analyze why mnemonic editing reacts slowly to keys/clicks and what
+can be improved.
+
+**Done:** checked previous lag journals and current editor code. Confirmed that
+`FormEditorChanged` ran full `PrepareRuntimeForConfiguration` while stopped,
+which includes a UDP hardware warmup with up to 3000 ms timeout and
+`PrepareHardwareAll`. Split algorithm preparation from hardware preparation:
+mnemonic edits now prepare only algorithms/derived tags, not hardware.
+
+**Verification:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed with exit code `0`. Detailed notes:
+`errors/2026-08-19-mnemonic-editor-lag.md`.
+
+**Status:** first concrete blocker removed. Remaining candidates are
+selection-only render refreshes, keyboard undo coalescing, resize-handle reuse,
+and lightweight UI-stall markers.
+
+## 2026-08-19 - Mnemonic editor lightweight refresh pass
+
+**Request:** continue optimizing mnemonic editor responsiveness.
+
+**Done:** reduced post-operation redraw work in `TFormEditorController`.
+Drag/resize mouse-up now refreshes only selection visuals; arrow-key nudges
+refresh existing component panel bounds through `RefreshComponentLayout` instead
+of running full `Render`. Resize handles are reused instead of recreated on each
+selection refresh. Removed an extra `RenderActivePage` after delete because
+`DeleteSelected` already renders through the editor.
+
+**Verification:** `git diff --check` completed successfully with only standard
+LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+completed successfully. Detailed notes:
+`errors/2026-08-19-mnemonic-editor-lag.md`.

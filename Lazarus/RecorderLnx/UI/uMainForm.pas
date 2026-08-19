@@ -391,6 +391,7 @@ type
       AOldState, ANewState: TRecorderState;
       ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
+    procedure PrepareAlgorithmsForFormConfiguration;
     procedure RecoverOfflineSourcesAfterLoadOnce;
     procedure WarmupHardwareNetwork;
     procedure DeferredPrepareRuntime(Data: PtrInt);
@@ -847,8 +848,9 @@ procedure TMainForm.btnDeleteComponentClick(Sender: TObject);
 begin
   try
     if fFormEditor <> nil then
-      fFormEditor.DeleteSelected;
-    RenderActivePage;
+      fFormEditor.DeleteSelected
+    else
+      RenderActivePage;
   except
     on E: Exception do
       LogCommandError('Delete component', E);
@@ -2238,11 +2240,11 @@ end;
 procedure TMainForm.FormEditorChanged;
 begin
   { Макет мнемосхемы автоматически обновляется в TRecorderFormPage. }
-  // The component settings dialog invokes this callback after it stores a
-  // spectrum configuration. Prepare a newly selected FFT size while stopped,
-  // never from the MIC-140 acquisition callback.
+  // The component settings dialog invokes this callback after it stores
+  // visual/spectrum settings. Form editing must not run hardware preparation:
+  // clicks, drag and arrow keys are UI-only operations.
   if (fRecorder.StateMachine <> nil) and (fRecorder.StateMachine.State = rsStop) then
-    PrepareRuntimeForConfiguration;
+    PrepareAlgorithmsForFormConfiguration;
 end;
 
 { Чтение условий запуска/останова записи из ini }
@@ -3410,8 +3412,7 @@ procedure TMainForm.PrepareRuntimeForConfiguration;
 var
   I: Integer;
 begin
-  if fRecorder.AlgorithmManager <> nil then
-    fRecorder.AlgorithmManager.PrepareConfiguration;
+  PrepareAlgorithmsForFormConfiguration;
 
   { Источники и теги к этому моменту уже созданы. Подключение, программирование
     модулей и выделение аппаратных буферов выполняются здесь, а не при Preview. }
@@ -3429,6 +3430,13 @@ begin
           подготовку оборудования при запуске просмотра. }
         AddLog('Hardware preparation deferred: ' + E.Message);
     end;
+
+end;
+
+procedure TMainForm.PrepareAlgorithmsForFormConfiguration;
+begin
+  if fRecorder.AlgorithmManager <> nil then
+    fRecorder.AlgorithmManager.PrepareConfiguration;
 
   if fRecorder.EventBus <> nil then
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
