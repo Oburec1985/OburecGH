@@ -1164,6 +1164,25 @@ var
   lTag: TRecorderTag;
   lUpdated: Boolean;
   lDisplayAddress: string;
+  lSourceId: string;
+  lTagName: string;
+
+  function UniqueTagName(const ABaseName: string): string;
+  var
+    lBase: string;
+    lIndex: Integer;
+  begin
+    lBase := Trim(ABaseName);
+    if lBase = '' then
+      lBase := 'Tag';
+    Result := lBase;
+    lIndex := 2;
+    while (ARegistry <> nil) and (ARegistry.FindByName(Result) <> nil) do
+    begin
+      Result := Format('%s_%d', [lBase, lIndex]);
+      Inc(lIndex);
+    end;
+  end;
 
   procedure UpdateTag(ATag: TRecorderTag);
   begin
@@ -1173,7 +1192,7 @@ var
     ATag.PollFrequencyHz := lSignal.FrequencyHz;
     ATag.SensorCalibrationName := lSignal.SensorCalibrationName;
     ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
-    ATag.SourceId := 'Mera file: ' + fFileName;
+    ATag.SourceId := lSourceId;
     ATag.IsVirtual := True;
     if Trim(ATag.Description) = '' then
       ATag.Description := Format('%s; type=%s; freq=%s; file=%s',
@@ -1189,19 +1208,20 @@ begin
   lSignals := TList.Create;
   try
     LoadMeraSignalsFromFile(fFileName, lSignals);
+    lSourceId := 'Mera file: ' + fFileName;
     for I := 0 to lSignals.Count - 1 do
     begin
       lSignal := TMeraSignalInfo(lSignals[I]);
       if not IsSignalSelected(lSignal) then
         Continue;
-      lDisplayAddress := RecorderTreeIndexedAddress(ARegistry,
-        'Mera file: ' + fFileName, lSignal.Address, True);
+      lDisplayAddress := RecorderTreeIndexedAddress(ARegistry, lSourceId,
+        lSignal.Address, True);
 
       lUpdated := False;
       for J := 0 to ARegistry.TagCount - 1 do
       begin
         lTag := ARegistry.Tags[J];
-        if SameText(lTag.SourceId, 'Mera file: ' + fFileName) and
+        if SameText(lTag.SourceId, lSourceId) and
           SameText(lTag.Address, lDisplayAddress) then
         begin
           UpdateTag(lTag);
@@ -1211,7 +1231,20 @@ begin
 
       if not lUpdated then
       begin
-        lTag := ARegistry.CreateTag(MeraSignalToRecorderTagName(lSignal), 4096, True);
+        lTagName := MeraSignalToRecorderTagName(lSignal);
+        lTag := ARegistry.FindByName(lTagName);
+        if (lTag <> nil) and SameText(lTag.SourceId, lSourceId) then
+        begin
+          RecorderDebugLog(Format(
+            '[MeraFile] Relink tag by name "%s": old address="%s", new address="%s"',
+            [lTag.Name, lTag.Address, lDisplayAddress]));
+        end
+        else
+        begin
+          if lTag <> nil then
+            lTagName := UniqueTagName(lTagName);
+          lTag := ARegistry.CreateTag(lTagName, 4096, True);
+        end;
         UpdateTag(lTag);
       end;
     end;

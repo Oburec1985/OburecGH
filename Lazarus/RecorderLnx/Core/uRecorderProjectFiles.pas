@@ -91,6 +91,31 @@ var
     of TRecorderProjectConfigExtension;
   g_ProjectConfigExtensionCount: Integer = 0;
 
+function ProjectTagBelongsToDeletedSource(ATags: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := False;
+  if (ATags = nil) or (ATag = nil) then
+    Exit;
+  if ATags.ConfiguredDataSources.Count = 0 then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  if lSourceId = '' then
+    Exit;
+  if SameText(lSourceId, 'manual') or SameText(lSourceId, 'debug.diagnostics') then
+    Exit;
+  if Pos('spectrum:', LowerCase(lSourceId)) = 1 then
+    Exit;
+  if not (RecorderIsVirtualTagSource(lSourceId) or
+    RecorderIsHardwareTagSource(lSourceId)) then
+    Exit;
+
+  Result := RecorderConfiguredDataSourcesFind(ATags, lSourceId) = nil;
+end;
+
 procedure RecorderRegisterProjectConfigExtension(
   ASaveProc, ALoadProc: TRecorderProjectConfigExtensionProc;
   ATagLoadedProc: TRecorderProjectTagLoadedExtensionProc;
@@ -651,6 +676,9 @@ begin
     for I := 0 to ATags.TagCount - 1 do
     begin
       lTag := ATags.Tags[I];
+      if ProjectTagBelongsToDeletedSource(ATags, lTag) then
+        Continue;
+
       lTagJson := TJSONObject.Create;
       lTags.Add(lTagJson);
 
@@ -767,11 +795,14 @@ begin
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
         LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
-        ATags.AddTag(lTag);
-        for J := 0 to g_ProjectConfigExtensionCount - 1 do
-          if Assigned(g_ProjectConfigExtensions[J].TagLoadedProc) then
-            g_ProjectConfigExtensions[J].TagLoadedProc(lTagJson, ATags, lTag);
-        lTag := nil;
+        if not ProjectTagBelongsToDeletedSource(ATags, lTag) then
+        begin
+          ATags.AddTag(lTag);
+          for J := 0 to g_ProjectConfigExtensionCount - 1 do
+            if Assigned(g_ProjectConfigExtensions[J].TagLoadedProc) then
+              g_ProjectConfigExtensions[J].TagLoadedProc(lTagJson, ATags, lTag);
+          lTag := nil;
+        end;
       finally
         lTag.Free;
       end;

@@ -209,6 +209,8 @@ type
     function SignalHasLinkedTag(ASignal: TMeraSignalInfo): Boolean;
     function TagIsVirtual(ATag: TRecorderTag): Boolean;
     function TagLinkedToInactiveHardware(ATag: TRecorderTag): Boolean;
+    function TagBelongsToDeletedSource(ATag: TRecorderTag): Boolean;
+    function RemoveDeletedSourceTagByName(const ATagName: string): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
     function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
     procedure SortSelectedTags(ATags: TList);
@@ -284,6 +286,7 @@ type
     procedure StoreToSettings;
     procedure ApplySpectrumConfiguration;
     procedure RemoveOrphanSpectrumEstimateTags;
+    procedure RemoveTagsFromDeletedSources;
     procedure UpdateConditionControls;
     function ReadFloatEdit(AEdit: TEdit; ADefault: Double): Double;
     function ReadSecondsAsMs(AEdit: TEdit; ADefaultMs: Cardinal): Cardinal;
@@ -1043,6 +1046,53 @@ begin
   Result := not fRecorder.TagRegistry.IsSourceActive(lSourceId);
 end;
 
+function TRecorderSettingsDialog.TagBelongsToDeletedSource(
+  ATag: TRecorderTag): Boolean;
+var
+  lSourceId: string;
+begin
+  Result := False;
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or (ATag = nil) then
+    Exit;
+  if fRecorder.TagRegistry.ConfiguredDataSources.Count = 0 then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  if lSourceId = '' then
+    Exit;
+  if SameText(lSourceId, 'manual') or SameText(lSourceId, 'debug.diagnostics') then
+    Exit;
+  if Pos('spectrum:', LowerCase(lSourceId)) = 1 then
+    Exit;
+  if not (RecorderIsVirtualTagSource(lSourceId) or
+    RecorderIsHardwareTagSource(lSourceId)) then
+    Exit;
+
+  Result := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+    lSourceId) = nil;
+end;
+
+function TRecorderSettingsDialog.RemoveDeletedSourceTagByName(
+  const ATagName: string): Boolean;
+var
+  lTag: TRecorderTag;
+  lSourceId: string;
+begin
+  Result := False;
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+  lTag := fRecorder.TagRegistry.FindByName(Trim(ATagName));
+  if not TagBelongsToDeletedSource(lTag) then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
+  RecorderDebugLog(Format('[Settings] Releasing tag name "%s" from deleted source "%s"',
+    [lTag.Name, lSourceId]));
+  fRecorder.TagRegistry.RemoveTag(lTag);
+  fDataSourcesChanged := True;
+  Result := True;
+end;
+
 function TRecorderSettingsDialog.SelectedTagByGridRow(
   ARow: Integer): TRecorderTag;
 begin
@@ -1783,8 +1833,15 @@ var
         lTag := fRecorder.TagRegistry.FindByName(lTagName);
         if (lTag <> nil) and (not SameText(lTag.SourceId, lSourceId)) then
         begin
-          lTag := nil;
-          lTagName := UniqueTagName(lTagName);
+          if RemoveDeletedSourceTagByName(lTagName) then
+          begin
+            lTag := nil;
+          end
+          else
+          begin
+            lTag := nil;
+            lTagName := UniqueTagName(lTagName);
+          end;
         end;
         if lTag = nil then
           lTag := fRecorder.TagRegistry.CreateTag(lTagName,
@@ -4286,9 +4343,11 @@ end;
 procedure TRecorderSettingsDialog.OkButtonClick(Sender: TObject);
 begin
   StoreToSettings;
+  RemoveTagsFromDeletedSources;
   RemoveOrphanSpectrumEstimateTags;
   if fSourceProbe <> nil then
     fSourceProbe.SyncToRegistry;
+  RemoveTagsFromDeletedSources;
   CreateSelectedMeraTags;
   ModalResult := mrOk;
 end;
@@ -4520,6 +4579,7 @@ begin
       mtWarning, [mbOK], 0);
     Exit;
   end;
+  RemoveTagsFromDeletedSources;
   if fRecorder.TagRegistry.FindByName(lName) <> nil then
   begin
     MessageDlg('Создание виртуального тега',
@@ -4961,6 +5021,40 @@ begin
     end;
     if not lReferenced then
       fRecorder.TagRegistry.RemoveTag(lTag);
+  end;
+end;
+
+procedure TRecorderSettingsDialog.RemoveTagsFromDeletedSources;
+var
+  I: Integer;
+  lRemoved: Integer;
+  lSourceId: string;
+  lTag: TRecorderTag;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+    Exit;
+  if fRecorder.TagRegistry.ConfiguredDataSources.Count = 0 then
+    Exit;
+
+  lRemoved := 0;
+  for I := fRecorder.TagRegistry.TagCount - 1 downto 0 do
+  begin
+    lTag := fRecorder.TagRegistry.Tags[I];
+    lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
+    if not TagBelongsToDeletedSource(lTag) then
+      Continue;
+
+    RecorderDebugLog(Format('[Settings] Removing tag "%s" from deleted source "%s"',
+      [lTag.Name, lSourceId]));
+    fRecorder.TagRegistry.RemoveTag(lTag);
+    Inc(lRemoved);
+  end;
+
+  if lRemoved > 0 then
+  begin
+    fDataSourcesChanged := True;
+    RecorderDebugLog(Format('[Settings] Removed %d tag(s) from deleted sources',
+      [lRemoved]));
   end;
 end;
 

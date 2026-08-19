@@ -1,3 +1,155 @@
+## 2026-08-19 17:55 - Mera tag duplicate on settings OK
+
+**Запрос:** после добавления тега и нажатия `OK` снова возникает
+`Tag name already exists: 1_датчик_X`; существующий тег из Mera file
+`signal0005.mera`, новый создаётся с пустым source/address/module.
+
+**Сделано:** по `LogWindows.log` установлено, что Mera-теги создаются один раз,
+а при применении настроек `TRecorderMeraFileDataSource.ConfigureTags` пытается
+создать их повторно, если не совпал поиск по `SourceId + Address`. В
+`Core/uRecorderDataSources.pas` добавлен fallback: если тег с таким именем уже
+есть у того же Mera-source, он переиспользуется и перелинкуется; если имя занято
+другим source, создаётся уникальное имя с суффиксом.
+
+**Проверка:** `git diff --check` по `uRecorderDataSources.pas` и
+`uRecorderTags.pas` прошёл. `lazbuild -B` дошёл до линковки; exe не заменён
+из-за запущенного `RecorderLnx.exe` (`error code: 5`).
+
+**Статус:** частично: код компилируется, нужна финальная линковка после
+закрытия запущенного приложения.
+
+## 2026-08-19 17:45 - remove unsafe AddTag stack walk
+
+**Запрос:** при добавлении тега появилась новая ошибка Access Violation в
+`RecorderTagStackTrace` на `get_caller_addr(lFrame)`.
+
+**Сделано:** из `Core/uRecorderTags.pas` удалён небезопасный обход frame
+pointer. Лог `AddTag` оставлен без стека: `request`, `added`,
+`remove-detached-existing`, `duplicate-existing` с id/name/source/address/module.
+Исключение дубля по-прежнему содержит данные существующего и нового тега.
+
+**Проверка:** `git diff --check` по `uRecorderTags.pas` прошёл. `lazbuild -B`
+дошёл до линковки; exe не заменён из-за запущенного `RecorderLnx.exe`
+(`error code: 5`).
+
+**Статус:** частично: код компилируется, нужна финальная линковка после
+закрытия запущенного приложения.
+
+## 2026-08-19 17:35 - check AddTag log for `1_датчик_X`
+
+**Запрос:** посмотреть по логам, было ли создание тегов вида `1_датчик_X`.
+
+**Сделано:** проверены `C:\Mera Files\RecorderLnx\LogWindows.log` и
+`LogWindows.previous.log` по `[Tags.AddTag]`, `1_датчик_X`, `name="1_`.
+Свежий лог 17:29-17:30 не содержит создания/добавления таких тегов. В
+previous-логе найден только старый конфликт: существующий тег был реальным
+Mera-тегом из `signal0005.mera`, `address="1- 2- 1"`, `module="MC-201"`.
+
+**Проверка:** `rg` по `C:\Mera Files\RecorderLnx\config` и
+`D:\works\OburecGH\Lazarus\RecorderLnx\config` не нашёл `1_датчик_X`.
+
+**Статус:** готово. Для нового воспроизведения нужен свежий лог с первым
+`[Tags.AddTag] added` для проблемного имени.
+
+## 2026-08-19 03:55 - AddTag stack trace for parasite tag source
+
+**Запрос:** добавить лог или исключение в `AddTag`, чтобы увидеть, где
+паразитный тег появляется до ручного создания пользователем.
+
+**Сделано:** в `Core/uRecorderTags.pas` добавлена временная трассировка
+`AddTag`: логируются `request`, `added`, `remove-detached-existing` и
+`duplicate-existing` с id/name/source/address/module и коротким стеком вызовов.
+Исключение дубля теперь также содержит параметры существующего и нового тега.
+Фиксированных имён нет: диагностика работает для любого имени.
+
+**Проверка:** `lazbuild -B` дошёл до линковки, значит код скомпилировался.
+Линковка не смогла заменить `lib\x86_64-win64\RecorderLnx.exe` из-за
+запущенного процесса (`error code: 5`), что допустимо для этой итерации.
+
+**Статус:** готово к проверке после перезапуска/освобождения exe. В логе искать
+`[Tags.AddTag]`; первый `added` для проблемного имени покажет источник
+раннего создания.
+
+## 2026-08-19 03:35 - generic stale-tag cleanup on project load/save
+
+**Запрос:** чистка не должна зависеть от имени `1_датчик_X`; если реально есть
+зависший тег, удалить его из конфигурации, а ссылки формуляра на отсутствующие
+теги не должны мешать созданию нового тега.
+
+**Сделано:** в `Core/uRecorderProjectFiles.pas` добавлена общая проверка
+`ProjectTagBelongsToDeletedSource`: при загрузке и сохранении проекта
+пропускаются теги Mera/hardware-источников, отсутствующих в `dataSources`.
+Ссылки `default.gui.ini` не чистятся. В `Core/uRecorderTags.pas` добавлен
+диагностический лог дубля в `AddTag` с id/source/address/module старого и
+нового тега.
+
+**Проверка:** первый `lazbuild -B` нашёл синтаксическую ошибку в
+`uRecorderSettingsDialog.pas`, блок исправлен. Повторная сборка
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершилась с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-19 03:20 - release deleted-source tag name before creation
+
+**Запрос:** исключения `Tag name already exists: 1_датчик_X` быть не должно,
+потому что тега уже нет в конфиге и он создаётся заново.
+
+**Сделано:** уточнена логика `UI/uRecorderSettingsDialog.pas`: добавлен общий
+предикат `TagBelongsToDeletedSource` и `RemoveDeletedSourceTagByName`.
+`CreateSelectedMeraTags` теперь освобождает имя от тега удалённого источника
+до `CreateTag`; только если найденный одноимённый тег реально живой, остаётся
+старый fallback с уникальным именем. Для ручных виртуальных тегов чистка также
+выполняется до проверки дубля.
+
+**Проверка:** `git diff --check` по `uRecorderSettingsDialog.pas` прошёл.
+Сборка не запускалась: `RecorderLnx.exe` PID 9540 сейчас запущен из
+`lib\x86_64-win64`.
+
+**Статус:** код готов к пересборке после закрытия запущенного RecorderLnx.
+
+## 2026-08-19 03:05 - orphan tags from deleted sources
+
+**Запрос:** при добавлении тега виртуального источника возникает
+`Tag name already exists: 1_датчик_X`; источник раньше существовал, затем был
+удалён, но где-то остался убитый тег. Формулярные ссылки на отсутствующий тег
+чистить не нужно: они должны показывать битую привязку и оживать при повторном
+создании тега.
+
+**Сделано:** в `UI/uRecorderSettingsDialog.pas` добавлена
+`RemoveTagsFromDeletedSources`. Она удаляет из реестра теги Mera/hardware
+источников, которых уже нет в каноническом `ConfiguredDataSources`, но не
+трогает `manual`, `debug.diagnostics`, spectrum-estimate теги и старые проекты
+без списка `dataSources`. Чистка запускается перед созданием ручного
+виртуального тега и при `OK` настроек до/после `fSourceProbe.SyncToRegistry`.
+
+**Проверка:** активный `C:\Mera Files\RecorderLnx\config\projects\003`
+проверен: `default.config.json` не содержит `1_датчик_X`, только
+`default.gui.ini` содержит допустимые битые ссылки формуляра. `git diff
+--check` по `uRecorderSettingsDialog.pas` прошёл. Сборка не запускалась:
+`RecorderLnx.exe` PID 19964 сейчас запущен из `lib\x86_64-win64`.
+
+**Статус:** код готов к пересборке после закрытия запущенного RecorderLnx.
+
+## 2026-08-19 02:20 - SQL trend axis scale sync
+
+**Запрос:** при изменении min/max осей SQL-графика сразу отображать этот
+диапазон в масштабе графика.
+
+**Сделано:** в `SQLdb/SqlTrend/uRecorderSqlTrendView.pas` добавлена
+синхронизация локальных `fAxisMin/fAxisMax` с моделью осей по сигнатуре
+конфигурации. `RefreshControl` теперь применяет новый диапазон только при
+изменении настроек оси, не сбрасывая ручной zoom/pan каждый кадр. Кнопка
+`Применить` на панели осей удалена; поля `Мин` и `Макс` применяют масштаб сразу
+по `OnChange`, когда оба значения корректны и `max > min`.
+
+**Проверка:** `git diff --check` прошёл с exit code 0, только стандартные
+LF/CRLF warnings. Сборка не запускалась: `RecorderLnx.exe` PID 22888 сейчас
+запущен из выходной папки.
+
+**Статус:** частично, следующий шаг - пересобрать RecorderLnx после закрытия
+запущенного экземпляра.
+
 ## 2026-08-19 02:10 - SQL trend settings date-only interval
 
 **Запрос:** в настройках SQL-отображалки убрать поля времени UTC, оставить

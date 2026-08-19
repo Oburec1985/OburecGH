@@ -34,13 +34,14 @@ type
 
   TRecorderSqlTrendView = class(TPanel, IVForm)
   private
-    fApplyAxisButton: TButton;
     fAxisCombo: TComboBox;
     fAxisMaxEdit: TEdit;
     fAxisMinEdit: TEdit;
     fAxisPanel: TPanel;
     fAxisMax: array of Double;
     fAxisMin: array of Double;
+    fAxisSignature: string;
+    fAxisControlsLoading: Boolean;
     fComponent: TRecorderSqlTrendComponent;
     fCursorButton: TSpeedButton;
     fDisplayCombo: TComboBox;
@@ -71,13 +72,14 @@ type
     fResetZoomButton: TButton;
     fWorker: TRecorderSqlTrendLoadThread;
     fZoomSelecting: Boolean;
-    procedure ApplyAxisClick(Sender: TObject);
+    procedure AxisRangeEditChange(Sender: TObject);
     procedure AxisComboChange(Sender: TObject);
     procedure CursorButtonClick(Sender: TObject);
     procedure DisplayComboChange(Sender: TObject);
     procedure DisplayNextClick(Sender: TObject);
     procedure DisplayPrevClick(Sender: TObject);
     procedure FillDisplayControls;
+    function BuildAxisSignature: string;
     function GetPlotRect: TRect;
     procedure LegendGridDrawCell(Sender: TObject; ACol, ARow: Integer;
       ARect: TRect; AState: TGridDrawState);
@@ -85,6 +87,7 @@ type
     procedure ResetZoomClick(Sender: TObject);
     procedure ReloadTimerTimer(Sender: TObject);
     procedure StartLoad;
+    function SyncAxisRangesFromComponent(AForce: Boolean): Boolean;
     procedure UpdateLegend;
     procedure AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
     function LineIndex(const ASignalName: string): Integer;
@@ -271,6 +274,7 @@ begin
   fAxisMinEdit := TEdit.Create(fAxisPanel);
   fAxisMinEdit.Parent := fAxisPanel;
   fAxisMinEdit.SetBounds(150, 4, 60, 24);
+  fAxisMinEdit.OnChange := @AxisRangeEditChange;
   lLabel := TLabel.Create(fAxisPanel);
   lLabel.Parent := fAxisPanel;
   lLabel.Left := 216;
@@ -279,19 +283,15 @@ begin
   fAxisMaxEdit := TEdit.Create(fAxisPanel);
   fAxisMaxEdit.Parent := fAxisPanel;
   fAxisMaxEdit.SetBounds(256, 4, 60, 24);
-  fApplyAxisButton := TButton.Create(fAxisPanel);
-  fApplyAxisButton.Parent := fAxisPanel;
-  fApplyAxisButton.SetBounds(322, 3, 82, 26);
-  fApplyAxisButton.Caption := 'Применить';
-  fApplyAxisButton.OnClick := @ApplyAxisClick;
+  fAxisMaxEdit.OnChange := @AxisRangeEditChange;
   fResetZoomButton := TButton.Create(fAxisPanel);
   fResetZoomButton.Parent := fAxisPanel;
-  fResetZoomButton.SetBounds(410, 3, 100, 26);
+  fResetZoomButton.SetBounds(322, 3, 100, 26);
   fResetZoomButton.Caption := 'Весь график';
   fResetZoomButton.OnClick := @ResetZoomClick;
   fCursorButton := TSpeedButton.Create(fAxisPanel);
   fCursorButton.Parent := fAxisPanel;
-  fCursorButton.SetBounds(516, 3, 120, 26);
+  fCursorButton.SetBounds(428, 3, 120, 26);
   fCursorButton.Caption := 'Показать курсор';
   fCursorButton.AllowAllUp := True;
   fCursorButton.GroupIndex := 91;
@@ -332,6 +332,63 @@ begin
   fDisplayCombo.ItemIndex := fComponent.ActiveDisplayIndex;
   fDisplayPrevButton.Enabled := fComponent.ActiveDisplayIndex > 0;
   fDisplayNextButton.Enabled := fComponent.ActiveDisplayIndex < fComponent.DisplayCount - 1;
+end;
+
+function TRecorderSqlTrendView.BuildAxisSignature: string;
+var
+  I: Integer;
+  lAxis: TRecorderTrendAxis;
+begin
+  Result := '';
+  if (fComponent = nil) or (fComponent.ActiveDisplay = nil) then
+    Exit;
+  Result := IntToStr(fComponent.ActiveDisplayIndex) + ':' +
+    IntToStr(fComponent.ActiveDisplay.AxisCount) + ':';
+  for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
+  begin
+    lAxis := fComponent.ActiveDisplay.Axes[I];
+    Result := Result + lAxis.Name + '|' + IntToStr(lAxis.Color) + '|' +
+      FloatToStr(lAxis.RangeMin) + '|' + FloatToStr(lAxis.RangeMax) + ';';
+  end;
+end;
+
+function TRecorderSqlTrendView.SyncAxisRangesFromComponent(
+  AForce: Boolean): Boolean;
+var
+  I: Integer;
+  lSignature: string;
+begin
+  Result := False;
+  if (fComponent = nil) or (fComponent.ActiveDisplay = nil) then
+    Exit;
+  lSignature := BuildAxisSignature;
+  if (not AForce) and (lSignature = fAxisSignature) then
+    Exit;
+
+  fAxisCombo.Items.BeginUpdate;
+  try
+    fAxisCombo.Items.Clear;
+    SetLength(fAxisMin, fComponent.ActiveDisplay.AxisCount);
+    SetLength(fAxisMax, fComponent.ActiveDisplay.AxisCount);
+    SetLength(fFullAxisMin, fComponent.ActiveDisplay.AxisCount);
+    SetLength(fFullAxisMax, fComponent.ActiveDisplay.AxisCount);
+    for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
+    begin
+      fAxisCombo.Items.Add(fComponent.ActiveDisplay.Axes[I].Name);
+      fAxisMin[I] := fComponent.ActiveDisplay.Axes[I].RangeMin;
+      fAxisMax[I] := fComponent.ActiveDisplay.Axes[I].RangeMax;
+      fFullAxisMin[I] := fAxisMin[I];
+      fFullAxisMax[I] := fAxisMax[I];
+    end;
+  finally
+    fAxisCombo.Items.EndUpdate;
+  end;
+  if fAxisCombo.Items.Count > 0 then
+    fAxisCombo.ItemIndex := EnsureRange(fAxisCombo.ItemIndex, 0,
+      fAxisCombo.Items.Count - 1);
+  fAxisSignature := lSignature;
+  LoadAxisControls;
+  Result := True;
 end;
 
 procedure TRecorderSqlTrendView.DisplayComboChange(Sender: TObject);
@@ -435,31 +492,12 @@ end;
 
 procedure TRecorderSqlTrendView.Configure(AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry);
-var I: Integer;
 begin
   if not (AComponent is TRecorderSqlTrendComponent) then Exit;
   fComponent := TRecorderSqlTrendComponent(AComponent);
   FillDisplayControls;
-  fAxisCombo.Items.BeginUpdate;
-  try
-    fAxisCombo.Items.Clear;
-    SetLength(fAxisMin, fComponent.ActiveDisplay.AxisCount);
-    SetLength(fAxisMax, fComponent.ActiveDisplay.AxisCount);
-    SetLength(fFullAxisMin, fComponent.ActiveDisplay.AxisCount);
-    SetLength(fFullAxisMax, fComponent.ActiveDisplay.AxisCount);
-    for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
-    begin
-      fAxisCombo.Items.Add(fComponent.ActiveDisplay.Axes[I].Name);
-      fAxisMin[I] := fComponent.ActiveDisplay.Axes[I].RangeMin;
-      fAxisMax[I] := fComponent.ActiveDisplay.Axes[I].RangeMax;
-      fFullAxisMin[I] := fAxisMin[I];
-      fFullAxisMax[I] := fAxisMax[I];
-    end;
-  finally
-    fAxisCombo.Items.EndUpdate;
-  end;
-  if fAxisCombo.Items.Count > 0 then fAxisCombo.ItemIndex := 0;
-  LoadAxisControls;
+  fAxisCombo.ItemIndex := 0;
+  SyncAxisRangesFromComponent(True);
   UpdateLegend;
   fLoadPending := True;
   fReloadTimer.Enabled := True;
@@ -507,8 +545,13 @@ var I: Integer;
 begin
   I := fAxisCombo.ItemIndex;
   if (I < 0) or (I >= Length(fAxisMin)) then Exit;
-  fAxisMinEdit.Text := FloatToStr(fAxisMin[I]);
-  fAxisMaxEdit.Text := FloatToStr(fAxisMax[I]);
+  fAxisControlsLoading := True;
+  try
+    fAxisMinEdit.Text := FloatToStr(fAxisMin[I]);
+    fAxisMaxEdit.Text := FloatToStr(fAxisMax[I]);
+  finally
+    fAxisControlsLoading := False;
+  end;
 end;
 
 procedure TRecorderSqlTrendView.AxisComboChange(Sender: TObject);
@@ -516,9 +559,11 @@ begin
   LoadAxisControls;
 end;
 
-procedure TRecorderSqlTrendView.ApplyAxisClick(Sender: TObject);
+procedure TRecorderSqlTrendView.AxisRangeEditChange(Sender: TObject);
 var I: Integer; lMin, lMax: Double;
 begin
+  if fAxisControlsLoading then
+    Exit;
   I := fAxisCombo.ItemIndex;
   if (fComponent = nil) or (I < 0) or (I >= fComponent.ActiveDisplay.AxisCount) then Exit;
   if not TryStrToFloat(Trim(fAxisMinEdit.Text), lMin) then Exit;
@@ -527,6 +572,7 @@ begin
   fAxisMax[I] := lMax;
   fComponent.ActiveDisplay.Axes[I].RangeMin := lMin;
   fComponent.ActiveDisplay.Axes[I].RangeMax := lMax;
+  fAxisSignature := BuildAxisSignature;
   Invalidate;
 end;
 
@@ -604,7 +650,8 @@ end;
 procedure TRecorderSqlTrendView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
 begin
-  { Исторический тренд не зависит от runtime-тегов Recorder. }
+  if SyncAxisRangesFromComponent(False) then
+    Invalidate;
 end;
 
 function TRecorderSqlTrendView.GetChartControl: TOglChart;

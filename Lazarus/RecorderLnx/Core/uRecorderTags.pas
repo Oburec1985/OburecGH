@@ -569,6 +569,17 @@ const
   CTagThermocoupleInverseMinMv = -20.0;
   CTagThermocoupleInverseMaxMv = 100.0;
   CTagThermocoupleInverseIterations = 48;
+  CTagAddTraceEnabled = True;
+
+procedure RecorderLogTagAddTrace(const AAction: string; ATag: TRecorderTag);
+begin
+  if (not CTagAddTraceEnabled) or (ATag = nil) then
+    Exit;
+  RecorderDebugLog(Format(
+    '[Tags.AddTag] %s: id=%d name="%s" source="%s" address="%s" module="%s"',
+    [AAction, ATag.Id, ATag.Name, ATag.SourceId, ATag.Address,
+    ATag.ModuleType]));
+end;
 
 function RecorderTagEstimateKindToShortName(AKind: TRecorderTagEstimateKind): string;
 begin
@@ -1617,18 +1628,35 @@ var
 begin
   if ATag = nil then
     raise ERecorderTagError.Create('Tag cannot be nil');
+  RecorderLogTagAddTrace('request', ATag);
   if FindById(ATag.Id) <> nil then
     raise ERecorderTagError.CreateFmt('Tag id already exists: %d', [ATag.Id]);
   lExisting := FindByName(ATag.Name);
   if lExisting <> nil then
   begin
     if RecorderIsDetachedTagSource(lExisting.SourceId) then
+    begin
+      RecorderLogTagAddTrace('remove-detached-existing', lExisting);
       RemoveTag(lExisting)
+    end
     else
-      raise ERecorderTagError.CreateFmt('Tag name already exists: %s', [ATag.Name]);
+    begin
+      RecorderLogTagAddTrace('duplicate-existing', lExisting);
+      RecorderDebugLog(Format(
+        '[Tags] Duplicate tag name "%s": existing id=%d source="%s" address="%s" module="%s"; new id=%d source="%s" address="%s" module="%s"',
+        [ATag.Name, lExisting.Id, lExisting.SourceId, lExisting.Address,
+        lExisting.ModuleType, ATag.Id, ATag.SourceId, ATag.Address,
+        ATag.ModuleType]));
+      raise ERecorderTagError.CreateFmt(
+        'Tag name already exists: %s. Existing id=%d source="%s" address="%s" module="%s"; new id=%d source="%s" address="%s" module="%s"',
+        [ATag.Name, lExisting.Id, lExisting.SourceId, lExisting.Address,
+        lExisting.ModuleType, ATag.Id, ATag.SourceId, ATag.Address,
+        ATag.ModuleType]);
+    end;
   end;
 
   fTags.Add(ATag);
+  RecorderLogTagAddTrace('added', ATag);
   if ATag.Id >= fNextId then
     fNextId := ATag.Id + 1;
   Result := ATag;
