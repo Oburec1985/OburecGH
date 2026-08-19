@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, uRecorderTags;
 
 const
-  CRecorderSqlDbSchemaVersion = 1;
+  CRecorderSqlDbSchemaVersion = 2;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
   CRecorderSqlDbControlTagName = 'SqlDbRecordEnabled';

@@ -235,7 +235,8 @@ begin
       lTimeUtc := fTimeSystem.ChannelTimeToUtc(lTimeSec)
     else
       lTimeUtc := LocalTimeToUniversal(Now);
-    fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0);
+    fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0,
+      D.Tag.SourceId, D.Tag.Address, D.Tag.UnitName);
   end
   else if AEvent.Kind = rceAlarmChanged then
   begin

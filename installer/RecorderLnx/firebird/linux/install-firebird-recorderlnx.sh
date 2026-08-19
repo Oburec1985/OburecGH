@@ -5,6 +5,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 LOG_FILE="${RECORDERLNX_FIREBIRD_LOG:-/tmp/recorderlnx-firebird-install.log}"
 FIREBIRD_PREFIX="/opt/firebird"
 PROFILE_FILE="/etc/profile.d/recorderlnx-sqldb.sh"
+ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
 
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -32,16 +33,49 @@ find_archive() {
   printf '%s\n' "$archive"
 }
 
-install_dependencies() {
-  if command -v apt-get >/dev/null 2>&1; then
-    echo "Installing Firebird dependencies through apt..."
-    apt-get update || echo "WARN apt-get update failed; continuing with local library check."
-    apt-get install -y libicu-dev libncurses6 libtommath1 libtomcrypt1 || \
-      apt-get install -y libicu-dev libncurses6 libtommath-dev libtomcrypt-dev || \
-      echo "WARN dependency install failed; Firebird installer will check required libraries."
+install_local_dependencies() {
+  local dep_dir="$SCRIPT_DIR/deps"
+  local packages=()
+  local package
+
+  if ! command -v dpkg >/dev/null 2>&1; then
+    echo "dpkg was not found; skipping local .deb dependency install."
     return
   fi
-  echo "apt-get was not found; assuming required libraries are already installed."
+
+  if [ -d "$dep_dir" ]; then
+    while IFS= read -r -d '' package; do
+      packages+=("$package")
+    done < <(find "$dep_dir" -maxdepth 1 -type f -name '*.deb' -print0 | sort -z)
+  fi
+
+  if [ "${#packages[@]}" -eq 0 ]; then
+    echo "No local dependency packages found in: $dep_dir"
+    echo "Offline mode: apt repositories will not be used."
+    return
+  fi
+
+  echo "Installing local dependency packages from: $dep_dir"
+  dpkg -i "${packages[@]}" || true
+  if dpkg --audit | grep -q .; then
+    echo "WARN dpkg reports unresolved dependencies after local package install."
+    echo "     Add missing .deb packages to '$dep_dir' and run this script again."
+    dpkg --audit || true
+  fi
+}
+
+install_online_dependencies_if_requested() {
+  if [ "$ALLOW_ONLINE_DEPS" != "1" ]; then
+    return
+  fi
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "Online dependency install is explicitly enabled."
+    apt-get update
+    apt-get install -y libicu-dev libncurses6 libtommath1 libtomcrypt1 || \
+      apt-get install -y libicu-dev libncurses6 libtommath-dev libtomcrypt-dev
+  else
+    echo "apt-get was not found; online dependency install skipped."
+  fi
 }
 
 install_firebird() {
@@ -131,12 +165,25 @@ check_firebird() {
       echo "WARN firebird.service is not active"
     fi
   fi
+
+  if command -v ldd >/dev/null 2>&1; then
+    echo
+    echo "Checking Firebird shared libraries..."
+    if ldd "$FIREBIRD_PREFIX/bin/firebird" | grep -q 'not found'; then
+      ldd "$FIREBIRD_PREFIX/bin/firebird" | grep 'not found' || true
+      echo "WARN Missing shared libraries. Put required Debian .deb packages into:"
+      echo "     $SCRIPT_DIR/deps"
+    else
+      echo "OK   Firebird shared libraries are resolved"
+    fi
+  fi
 }
 
 main() {
   local archive
   archive="$(find_archive)"
-  install_dependencies
+  install_local_dependencies
+  install_online_dependencies_if_requested
   install_firebird "$archive"
   enable_firebird_service
   write_recorderlnx_password_env

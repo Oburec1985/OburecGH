@@ -426,6 +426,7 @@ type
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
     procedure MarkRuntimeDataUpdated(ATimeSec: Double);
+    procedure RemoveTagReferences(ATag: TRecorderTag);
     function ResolvePublishTime(ATimeSec: Double): Double;
   public
     { AEventBus - шина событий. Владение не передается, может быть nil. }
@@ -503,6 +504,7 @@ type
     { Удаляет все теги и очищает счетчик id. }
     procedure Clear;
     procedure RemoveTag(ATag: TRecorderTag);
+    procedure RemoveTagsBySourceId(const ASourceId: string);
 
     property ActiveSourceCount: Integer read GetActiveSourceCount;
     property ActiveSourceIds[AIndex: Integer]: string read GetActiveSourceId;
@@ -1610,13 +1612,21 @@ begin
 end;
 
 function TRecorderTagRegistry.AddTag(ATag: TRecorderTag): TRecorderTag;
+var
+  lExisting: TRecorderTag;
 begin
   if ATag = nil then
     raise ERecorderTagError.Create('Tag cannot be nil');
   if FindById(ATag.Id) <> nil then
     raise ERecorderTagError.CreateFmt('Tag id already exists: %d', [ATag.Id]);
-  if FindByName(ATag.Name) <> nil then
-    raise ERecorderTagError.CreateFmt('Tag name already exists: %s', [ATag.Name]);
+  lExisting := FindByName(ATag.Name);
+  if lExisting <> nil then
+  begin
+    if RecorderIsDetachedTagSource(lExisting.SourceId) then
+      RemoveTag(lExisting)
+    else
+      raise ERecorderTagError.CreateFmt('Tag name already exists: %s', [ATag.Name]);
+  end;
 
   fTags.Add(ATag);
   if ATag.Id >= fNextId then
@@ -2144,12 +2154,65 @@ begin
     PublishBlockNotifications(lTag, ATimes, lValues, ACount);
 end;
 
+procedure TRecorderTagRegistry.RemoveTagReferences(ATag: TRecorderTag);
+var
+  I, J: Integer;
+  lBand: TRecorderFrequencyBand;
+  lName: string;
+  lNode: TRecorderSpectrumConfigNode;
+begin
+  if ATag = nil then
+    Exit;
+
+  lName := ATag.Name;
+  if SameText(fSelectedTagName, lName) then
+    fSelectedTagName := '';
+
+  if fSpectrumConfigs <> nil then
+    for I := 0 to fSpectrumConfigs.NodeCount - 1 do
+    begin
+      lNode := fSpectrumConfigs.Nodes[I];
+      for J := lNode.BindingCount - 1 downto 0 do
+        if SameText(lNode.Bindings[J].SourceTagName, lName) then
+          lNode.DeleteBinding(J);
+    end;
+
+  if fFrequencyBands <> nil then
+    for I := fFrequencyBands.BandCount - 1 downto 0 do
+    begin
+      lBand := fFrequencyBands.Bands[I];
+      for J := lBand.TermCount - 1 downto 0 do
+        if SameText(lBand.Terms[J].TagName, lName) then
+          lBand.DeleteTerm(J);
+      if (lBand.Kind = fbkFormula) and (lBand.TermCount = 0) then
+        fFrequencyBands.DeleteBand(I);
+    end;
+end;
+
 procedure TRecorderTagRegistry.RemoveTag(ATag: TRecorderTag);
 begin
   if ATag <> nil then
   begin
+    RemoveTagReferences(ATag);
     fTags.Remove(ATag);
     ATag.Free;
+  end;
+end;
+
+procedure TRecorderTagRegistry.RemoveTagsBySourceId(const ASourceId: string);
+var
+  I: Integer;
+  lSourceId: string;
+  lTag: TRecorderTag;
+begin
+  lSourceId := RecorderNormalizeTagSourceId(ASourceId);
+  if lSourceId = '' then
+    Exit;
+  for I := fTags.Count - 1 downto 0 do
+  begin
+    lTag := TRecorderTag(fTags[I]);
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) then
+      RemoveTag(lTag);
   end;
 end;
 

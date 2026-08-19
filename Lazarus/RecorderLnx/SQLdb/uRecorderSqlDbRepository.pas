@@ -17,10 +17,14 @@ type
     fTransaction: TSQLTransaction;
     function CreateConnection: TSQLConnection;
     function TableExists(const AName: string): Boolean;
+    function ColumnExists(const ATableName, AColumnName: string): Boolean;
     procedure CreateTableIfMissing(const AName, ASql: string);
+    procedure AddColumnIfMissing(const ATableName, AColumnName,
+      ASql: string);
     procedure Exec(const ASql: string);
     function ScalarInt(const ASql: string): Int64;
     function FindId(const ASql, AParamName, AParamValue: string): string;
+    procedure MigrateSchema(AVersion: Integer);
     procedure Commit;
     procedure CommitAndRestart;
   public
@@ -36,7 +40,10 @@ type
     procedure SetObjectProperty(const AObjectId, AName, AValueType,
       AValueText: string);
     function EnsureSignal(const AObjectId, AName, AValueType, AUnit,
-      ARecorderTag: string): string;
+      ARecorderTag: string; const ARecorderSourceId: string = '';
+      const ARecorderAddress: string = ''): string;
+    function RenameSignalByRecorderAddress(const AObjectId,
+      ARecorderSourceId, ARecorderAddress, ANewName, AUnit: string): Boolean;
     function BeginRegistration(const AObjectId, ATestId, AReason: string;
       AStartedUtc: Double): string;
     procedure FinishRegistration(const ARegistrationId, AStatus: string;
@@ -320,14 +327,69 @@ begin
   end;
 end;
 
+function TRecorderSqlDbRepository.ColumnExists(const ATableName,
+  AColumnName: string): Boolean;
+var
+  lNames: TStringList;
+  I: Integer;
+begin
+  Result := False;
+  lNames := TStringList.Create;
+  try
+    fConnection.GetFieldNames(ATableName, lNames);
+    for I := 0 to lNames.Count - 1 do
+      if SameText(lNames[I], AColumnName) then Exit(True);
+  finally
+    lNames.Free;
+  end;
+end;
+
 procedure TRecorderSqlDbRepository.CreateTableIfMissing(const AName, ASql: string);
 begin
   if not TableExists(AName) then Exec(ASql);
 end;
 
+procedure TRecorderSqlDbRepository.AddColumnIfMissing(const ATableName,
+  AColumnName, ASql: string);
+begin
+  if not ColumnExists(ATableName, AColumnName) then Exec(ASql);
+end;
+
+procedure TRecorderSqlDbRepository.MigrateSchema(AVersion: Integer);
+var
+  lQuery: TSQLQuery;
+begin
+  if AVersion < 2 then
+  begin
+    AddColumnIfMissing('signals', 'recorder_source_id',
+      'alter table signals add recorder_source_id varchar(255)');
+    AddColumnIfMissing('signals', 'recorder_address',
+      'alter table signals add recorder_address varchar(255)');
+    CommitAndRestart;
+  end;
+  if SchemaVersion < CRecorderSqlDbSchemaVersion then
+  begin
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
+        'values(:version,:applied_at,:description)';
+      lQuery.Params.ParamByName('version').AsInteger := CRecorderSqlDbSchemaVersion;
+      lQuery.Params.ParamByName('applied_at').AsFloat := Now;
+      lQuery.Params.ParamByName('description').AsString :=
+        'RecorderLnx SQLdb channel recorder address columns';
+      lQuery.ExecSQL;
+    finally
+      lQuery.Free;
+    end;
+  end;
+end;
+
 procedure TRecorderSqlDbRepository.EnsureDatabase;
 var
   lQuery: TSQLQuery;
+  lVersion: Integer;
 begin
   Open;
   CreateTableIfMissing('schema_info',
@@ -339,7 +401,7 @@ begin
   CreateTableIfMissing('object_property_values',
     'create table object_property_values (id varchar(36) primary key, object_id varchar(36) not null, property_id varchar(36) not null, value_text varchar(8191), valid_from double precision, valid_to double precision)');
   CreateTableIfMissing('signals',
-    'create table signals (id varchar(36) primary key, object_id varchar(36) not null, parent_id varchar(36), name varchar(255) not null, value_type varchar(40) not null, unit_name varchar(64), enabled smallint not null)');
+    'create table signals (id varchar(36) primary key, object_id varchar(36) not null, parent_id varchar(36), name varchar(255) not null, value_type varchar(40) not null, unit_name varchar(64), enabled smallint not null, recorder_source_id varchar(255), recorder_address varchar(255))');
   CreateTableIfMissing('signal_bindings',
     'create table signal_bindings (id varchar(36) primary key, signal_id varchar(36) not null, recorder_tag varchar(255), source_kind varchar(40), transform_json varchar(8191))');
   CreateTableIfMissing('tests',
@@ -377,9 +439,11 @@ begin
       lQuery.Free;
     end;
   end;
-  if SchemaVersion > CRecorderSqlDbSchemaVersion then
+  lVersion := SchemaVersion;
+  if lVersion > CRecorderSqlDbSchemaVersion then
     raise ERecorderSqlDbError.CreateFmt('Database schema %d is newer than supported %d',
-      [SchemaVersion, CRecorderSqlDbSchemaVersion]);
+      [lVersion, CRecorderSqlDbSchemaVersion]);
+  MigrateSchema(lVersion);
   Commit;
 end;
 
@@ -506,26 +570,88 @@ begin
 end;
 
 function TRecorderSqlDbRepository.EnsureSignal(const AObjectId, AName,
-  AValueType, AUnit, ARecorderTag: string): string;
+  AValueType, AUnit, ARecorderTag: string; const ARecorderSourceId: string;
+  const ARecorderAddress: string): string;
 var
   lQuery: TSQLQuery;
 begin
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection; lQuery.Transaction := fTransaction;
+    if Trim(ARecorderAddress) <> '' then
+    begin
+      lQuery.SQL.Text :=
+        'select id from signals where object_id=:object_id ' +
+        'and recorder_source_id=:recorder_source_id ' +
+        'and recorder_address=:recorder_address';
+      lQuery.Params.ParamByName('object_id').AsString := AObjectId;
+      lQuery.Params.ParamByName('recorder_source_id').AsString :=
+        ARecorderSourceId;
+      lQuery.Params.ParamByName('recorder_address').AsString :=
+        ARecorderAddress;
+      lQuery.Open;
+      if not lQuery.EOF then
+      begin
+        Result := lQuery.Fields[0].AsString;
+        lQuery.Close;
+        lQuery.SQL.Text :=
+          'update signals set name=:name,value_type=:value_type,' +
+          'unit_name=:unit_name where id=:id';
+        lQuery.Params.ParamByName('name').AsString := AName;
+        lQuery.Params.ParamByName('value_type').AsString := AValueType;
+        lQuery.Params.ParamByName('unit_name').AsString := AUnit;
+        lQuery.Params.ParamByName('id').AsString := Result;
+        lQuery.ExecSQL;
+        lQuery.SQL.Text :=
+          'update signal_bindings set recorder_tag=:tag where signal_id=:signal_id';
+        lQuery.Params.ParamByName('tag').AsString := ARecorderTag;
+        lQuery.Params.ParamByName('signal_id').AsString := Result;
+        lQuery.ExecSQL;
+        Commit;
+        Exit;
+      end;
+      lQuery.Close;
+    end;
     lQuery.SQL.Text := 'select id from signals where object_id=:object_id and name=:name';
     lQuery.Params.ParamByName('object_id').AsString := AObjectId;
     lQuery.Params.ParamByName('name').AsString := AName;
     lQuery.Open;
-    if not lQuery.EOF then Exit(lQuery.Fields[0].AsString);
+    if not lQuery.EOF then
+    begin
+      Result := lQuery.Fields[0].AsString;
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'update signals set value_type=:value_type,unit_name=:unit_name,' +
+        'recorder_source_id=:recorder_source_id,' +
+        'recorder_address=:recorder_address where id=:id';
+      lQuery.Params.ParamByName('value_type').AsString := AValueType;
+      lQuery.Params.ParamByName('unit_name').AsString := AUnit;
+      lQuery.Params.ParamByName('recorder_source_id').AsString :=
+        ARecorderSourceId;
+      lQuery.Params.ParamByName('recorder_address').AsString :=
+        ARecorderAddress;
+      lQuery.Params.ParamByName('id').AsString := Result;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text :=
+        'update signal_bindings set recorder_tag=:tag where signal_id=:signal_id';
+      lQuery.Params.ParamByName('tag').AsString := ARecorderTag;
+      lQuery.Params.ParamByName('signal_id').AsString := Result;
+      lQuery.ExecSQL;
+      Commit;
+      Exit;
+    end;
     lQuery.Close;
     Result := RecorderSqlDbNewId;
-    lQuery.SQL.Text := 'insert into signals(id,object_id,name,value_type,unit_name,enabled) values(:id,:object_id,:name,:value_type,:unit_name,1)';
+    lQuery.SQL.Text := 'insert into signals(id,object_id,name,value_type,unit_name,enabled,recorder_source_id,recorder_address) values(:id,:object_id,:name,:value_type,:unit_name,1,:recorder_source_id,:recorder_address)';
     lQuery.Params.ParamByName('id').AsString := Result;
     lQuery.Params.ParamByName('object_id').AsString := AObjectId;
     lQuery.Params.ParamByName('name').AsString := AName;
     lQuery.Params.ParamByName('value_type').AsString := AValueType;
     lQuery.Params.ParamByName('unit_name').AsString := AUnit;
+    lQuery.Params.ParamByName('recorder_source_id').AsString :=
+      ARecorderSourceId;
+    lQuery.Params.ParamByName('recorder_address').AsString :=
+      ARecorderAddress;
     lQuery.ExecSQL;
     lQuery.SQL.Text := 'insert into signal_bindings(id,signal_id,recorder_tag,source_kind) values(:id,:signal_id,:tag,''recorder-tag'')';
     lQuery.Params.ParamByName('id').AsString := RecorderSqlDbNewId;
@@ -533,6 +659,68 @@ begin
     lQuery.Params.ParamByName('tag').AsString := ARecorderTag;
     lQuery.ExecSQL; Commit;
   finally lQuery.Free; end;
+end;
+
+function TRecorderSqlDbRepository.RenameSignalByRecorderAddress(
+  const AObjectId, ARecorderSourceId, ARecorderAddress, ANewName,
+  AUnit: string): Boolean;
+var
+  lQuery: TSQLQuery;
+  lSignalId: string;
+begin
+  Result := False;
+  if (Trim(AObjectId) = '') or (Trim(ARecorderAddress) = '') or
+    (Trim(ANewName) = '') then Exit;
+  lSignalId := '';
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id from signals where object_id=:object_id ' +
+      'and recorder_source_id=:recorder_source_id ' +
+      'and recorder_address=:recorder_address';
+    lQuery.Params.ParamByName('object_id').AsString := AObjectId;
+    lQuery.Params.ParamByName('recorder_source_id').AsString :=
+      ARecorderSourceId;
+    lQuery.Params.ParamByName('recorder_address').AsString := ARecorderAddress;
+    lQuery.Open;
+    if not lQuery.EOF then
+      lSignalId := lQuery.Fields[0].AsString;
+    lQuery.Close;
+    if lSignalId = '' then
+    begin
+      lQuery.SQL.Text :=
+        'select id from signals where object_id=:object_id and name=:name';
+      lQuery.Params.ParamByName('object_id').AsString := AObjectId;
+      lQuery.Params.ParamByName('name').AsString := ANewName;
+      lQuery.Open;
+      if not lQuery.EOF then
+        lSignalId := lQuery.Fields[0].AsString;
+      lQuery.Close;
+    end;
+    if lSignalId = '' then Exit;
+    lQuery.SQL.Text :=
+      'update signals set name=:name,unit_name=:unit_name,' +
+      'recorder_source_id=:recorder_source_id,' +
+      'recorder_address=:recorder_address where id=:id';
+    lQuery.Params.ParamByName('name').AsString := ANewName;
+    lQuery.Params.ParamByName('unit_name').AsString := AUnit;
+    lQuery.Params.ParamByName('recorder_source_id').AsString :=
+      ARecorderSourceId;
+    lQuery.Params.ParamByName('recorder_address').AsString := ARecorderAddress;
+    lQuery.Params.ParamByName('id').AsString := lSignalId;
+    lQuery.ExecSQL;
+    lQuery.SQL.Text :=
+      'update signal_bindings set recorder_tag=:tag where signal_id=:signal_id';
+    lQuery.Params.ParamByName('tag').AsString := ANewName;
+    lQuery.Params.ParamByName('signal_id').AsString := lSignalId;
+    lQuery.ExecSQL;
+    Commit;
+    Result := True;
+  finally
+    lQuery.Free;
+  end;
 end;
 
 function TRecorderSqlDbRepository.BeginRegistration(const AObjectId, ATestId,

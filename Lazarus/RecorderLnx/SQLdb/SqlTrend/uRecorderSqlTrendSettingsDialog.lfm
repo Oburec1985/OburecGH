@@ -216,32 +216,20 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     end
     object lblFrom: TLabel Left = 210 Top = 18 Caption = 'От (UTC)' end
     object dtpFromDate: TDateTimePicker
-      Left = 210 Height = 25 Top = 40 Width = 108
+      Left = 210 Height = 25 Top = 40 Width = 118
       Kind = dtkDate
       OnChange = TimeFromChange
     end
-    object dtpFromTime: TDateTimePicker
-      Left = 322 Height = 25 Top = 40 Width = 78
-      Kind = dtkTime
-      TimeFormat = tf24
-      OnChange = TimeFromChange
-    end
-    object lblTo: TLabel Left = 410 Top = 18 Caption = 'До (UTC)' end
+    object lblTo: TLabel Left = 350 Top = 18 Caption = 'До (UTC)' end
     object dtpToDate: TDateTimePicker
-      Left = 410 Height = 25 Top = 40 Width = 108
+      Left = 350 Height = 25 Top = 40 Width = 118
       Kind = dtkDate
       OnChange = TimeToChange
     end
-    object dtpToTime: TDateTimePicker
-      Left = 522 Height = 25 Top = 40 Width = 78
-      Kind = dtkTime
-      TimeFormat = tf24
-      OnChange = TimeToChange
-    end
-    object lblMaxPoints: TLabel Left = 614 Top = 18 Caption = 'Макс. точек на линию' end
-    object edMaxPoints: TEdit Left = 614 Height = 25 Top = 40 Width = 112 end
-    object lblWindowHours: TLabel Left = 742 Top = 18 Caption = 'Окно, дней' end
-    object edWindowHours: TEdit Left = 742 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
+    object lblMaxPoints: TLabel Left = 490 Top = 18 Caption = 'Макс. точек на линию' end
+    object edMaxPoints: TEdit Left = 490 Height = 25 Top = 40 Width = 112 end
+    object lblWindowHours: TLabel Left = 618 Top = 18 Caption = 'Окно, дней' end
+    object edWindowHours: TEdit Left = 618 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
   end
   object btnOk: TButton
     Left = 728 Height = 30 Top = 678 Width = 88 Caption = 'OK'

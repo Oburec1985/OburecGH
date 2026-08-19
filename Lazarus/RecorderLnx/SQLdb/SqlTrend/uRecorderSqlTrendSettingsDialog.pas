@@ -33,12 +33,10 @@ type
     edAxisName: TEdit;
     edDisplayName: TEdit;
     dtpFromDate: TDateTimePicker;
-    dtpFromTime: TDateTimePicker;
     edLineCaption: TEdit;
     edMaxPoints: TEdit;
     edWindowHours: TEdit;
     dtpToDate: TDateTimePicker;
-    dtpToTime: TDateTimePicker;
     gbAxes: TGroupBox;
     gbLines: TGroupBox;
     gbTime: TGroupBox;
@@ -257,9 +255,10 @@ begin
     fDraft.ToUtc := AToUtc;
     fDraft.DurationSec := Max(1.0, (AToUtc - AFromUtc) * SecsPerDay);
     dtpFromDate.Date := Trunc(AFromUtc);
-    dtpFromTime.Time := Frac(AFromUtc);
-    dtpToDate.Date := Trunc(AToUtc);
-    dtpToTime.Time := Frac(AToUtc);
+    if Frac(AToUtc) = 0 then
+      dtpToDate.Date := Trunc(AToUtc - 1.0 / SecsPerDay)
+    else
+      dtpToDate.Date := Trunc(AToUtc);
     edWindowHours.Text := FloatToStrF(fDraft.DurationSec / SecsPerDay,
       ffFixed, 12, 6);
   finally
@@ -269,12 +268,12 @@ end;
 
 function TRecorderSqlTrendSettingsDialog.FromUtcValue: TDateTime;
 begin
-  Result := Trunc(dtpFromDate.Date) + Frac(dtpFromTime.Time);
+  Result := Trunc(dtpFromDate.Date);
 end;
 
 function TRecorderSqlTrendSettingsDialog.ToUtcValue: TDateTime;
 begin
-  Result := Trunc(dtpToDate.Date) + Frac(dtpToTime.Time);
+  Result := Trunc(dtpToDate.Date) + 1.0;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeFromChange(Sender: TObject);
@@ -450,7 +449,7 @@ begin
   fDraft.TimeMode := TRecorderSqlTrendTimeMode(Max(0, cbTimeMode.ItemIndex));
   lFromUtc := FromUtcValue;
   lToUtc := ToUtcValue;
-  if lToUtc <= lFromUtc then begin MessageDlg('Время «До» должно быть позже времени «От»', mtError, [mbOK], 0); Exit; end;
+  if lToUtc <= lFromUtc then begin MessageDlg('Дата «До» должна быть не раньше даты «От»', mtError, [mbOK], 0); Exit; end;
   fDraft.FromUtc := lFromUtc;
   fDraft.ToUtc := lToUtc;
   fDraft.DurationSec := (lToUtc - lFromUtc) * SecsPerDay;

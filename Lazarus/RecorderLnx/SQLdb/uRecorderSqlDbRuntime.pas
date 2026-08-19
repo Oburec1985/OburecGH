@@ -11,51 +11,83 @@ uses
 type
   TRecorderSqlDbRuntime = class;
 
+  { TRecorderSqlDbWriterThread
+    Единственный рабочий поток SQLdb runtime. GUI/notify-потоки только кладут
+    задания в очередь; все подключения к БД, транзакции и файловое хранилище
+    живут внутри Execute/RunWriter. }
   TRecorderSqlDbWriterThread = class(TThread)
   private
-    fOwner: TRecorderSqlDbRuntime;
+    fOwner: TRecorderSqlDbRuntime;                  { Runtime-владелец очереди и состояния. }
   protected
     procedure Execute; override;
   public
     constructor Create(AOwner: TRecorderSqlDbRuntime);
+    { Обёртка над Terminated, чтобы RunWriter не зависел от protected-поля потока. }
     function IsStopping: Boolean;
   end;
 
+  { TRecorderSqlDbRuntime
+    Асинхронная запись в SQL БД. Принимает короткие задания из основного
+    Recorder runtime и последовательно выполняет их в одном writer-потоке.
+    Вызовы Submit* не должны открывать БД и не должны блокировать GUI. }
   TRecorderSqlDbRuntime = class
   private type
+    { Вид задания, которое writer-поток достаёт из очереди. }
     TJobKind = (jkStart, jkStop, jkValue, jkEvent, jkFile);
+
+    { TJob
+      Универсальный контейнер одного действия SQLdb. Поля используются
+      по-разному для разных Kind, чтобы не плодить мелкие классы и не таскать
+      ссылки на живые TRecorderTag между потоками. }
     TJob = class
-      Kind: TJobKind;
-      Name: string;
-      Text: string;
-      Extra: string;
-      TimeUtc: Double;
-      Value: Double;
-      Quality: Integer;
+      Kind: TJobKind;                               { Тип операции: старт/стоп/значение/событие/файл. }
+      Name: string;                                 { Имя тега, тип события или имя файла. }
+      SourceId: string;                             { Стабильный источник тега; вместе с Address связывает историю при переименовании. }
+      Address: string;                              { Аппаратный/логический адрес канала внутри источника. }
+      UnitText: string;                             { Единицы измерения тега на момент записи. Не UnitName: конфликтует с FPC. }
+      Text: string;                                 { Причина регистрации или текст события. }
+      Extra: string;                                { Дополнительный тип данных, сейчас формат/тип файла. }
+      TimeUtc: Double;                              { Астрономическое UTC-время события/значения. }
+      Value: Double;                                { Числовое значение или числовая нагрузка события. }
+      Quality: Integer;                             { Качество значения; 0 = штатное значение. }
     end;
   private
-    fConfig: TRecorderSqlDbConfig;
-    fJobs: TThreadList;
-    fThread: TRecorderSqlDbWriterThread;
-    fAccepting: Boolean;
-    fDropped: Int64;
-    fLastError: string;
-    fState: TRecorderSqlDbRuntimeState;
+    fConfig: TRecorderSqlDbConfig;                  { Снимок настроек, с которым создан runtime. }
+    fJobs: TThreadList;                             { Потокобезопасная очередь TJob; владеет объектами до PopJob. }
+    fThread: TRecorderSqlDbWriterThread;            { Активный writer-поток или nil, если запись остановлена. }
+    fAccepting: Boolean;                            { Разрешено ли принимать новые задания в очередь. }
+    fDropped: Int64;                                { Сколько заданий отброшено из-за переполнения очереди. }
+    fLastError: string;                             { Последняя ошибка writer-потока для UI/диагностики. }
+    fState: TRecorderSqlDbRuntimeState;             { Текущее состояние SQLdb runtime. }
+    { Добавляет задание в очередь или освобождает его, если runtime не принимает
+      данные/очередь переполнена. }
     function Enqueue(AJob: TJob): Boolean;
+    { Забирает первое задание из очереди; владение объектом переходит вызывающему. }
     function PopJob: TJob;
+    { Быстрая проверка остатка очереди при остановке writer-потока. }
     function HasJobs: Boolean;
+    { Основной цикл writer-потока: открытие БД, регистрация объекта, обработка заданий. }
     procedure RunWriter;
   public
     constructor Create(AConfig: TRecorderSqlDbConfig);
     destructor Destroy; override;
+    { Создаёт writer-поток и начинает принимать задания. }
     procedure Start;
+    { Запрещает новые задания, ждёт выгрузки очереди и останавливает поток. }
     procedure Stop;
+    { Открывает новую регистрацию/сеанс записи в БД. }
     procedure BeginRegistration(const AReason: string; AStartUtc: TDateTime);
+    { Закрывает текущую регистрацию/сеанс записи. }
     procedure EndRegistration(AStopUtc: TDateTime);
+    { Ставит в очередь значение тега. SourceId+Address нужны, чтобы история
+      оставалась связанной с тем же каналом при смене имени тега. }
     function SubmitValue(const ATagName: string; ATimeUtc, AValue: Double;
-      AQuality: Integer = 0): Boolean;
+      AQuality: Integer = 0; const ASourceId: string = '';
+      const AAddress: string = ''; const AUnitName: string = ''): Boolean;
+    { Ставит в очередь диагностическое/аварийное событие. }
     function SubmitEvent(const AEventType, AText: string; ATimeUtc: Double;
       AValue: Double = 0): Boolean;
+    { Копирует внешний файл в SQLdb file store и связывает его с регистрацией. }
     function SubmitFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
     property DroppedCount: Int64 read fDropped;
@@ -69,13 +101,26 @@ uses
   ssockets, uRecorderSqlDbRepository, uRecorderSqlDbFileStore,
   uRecorderNetworkBinding, uRecorderDebugLog;
 
+{ Ключ локального кэша signal_id внутри writer-потока.
+  Если есть адрес, имя тега не участвует в ключе: переименование не должно
+  создавать новый сигнал в текущем сеансе. }
+function SqlSignalCacheKey(const AName, ASourceId, AAddress: string): string;
+begin
+  if Trim(AAddress) <> '' then
+    Result := Trim(ASourceId) + '|' + Trim(AAddress)
+  else
+    Result := AName;
+end;
+
+{ Лёгкая предварительная проверка удалённого SQL-сервера. Для локальных
+  файловых баз TCP-проверка не нужна: доступность проверит само открытие БД. }
 function SqlServerAvailable(AConfig: TRecorderSqlDbConfig;
   out AError: string): Boolean;
 var
   lStream: TSocketStream;
 begin
   AError := '';
-  if AConfig.Backend = rsbSQLite then
+  if AConfig.IsLocalFileDatabase then
     Exit(True);
   Result := RecorderOpenBoundTcpStream(AConfig.Host, AConfig.Port, 700,
     lStream, AError, False);
@@ -203,10 +248,12 @@ begin
 end;
 
 function TRecorderSqlDbRuntime.SubmitValue(const ATagName: string; ATimeUtc,
-  AValue: Double; AQuality: Integer): Boolean;
+  AValue: Double; AQuality: Integer; const ASourceId: string;
+  const AAddress: string; const AUnitName: string): Boolean;
 var J: TJob;
 begin
   J := TJob.Create; J.Kind := jkValue; J.Name := ATagName; J.TimeUtc := ATimeUtc;
+  J.SourceId := ASourceId; J.Address := AAddress; J.UnitText := AUnitName;
   J.Value := AValue; J.Quality := AQuality; Result := Enqueue(J);
 end;
 
@@ -232,6 +279,7 @@ var
   S: TRecorderSqlDbFileStore;
   J: TJob;
   lObjectId, lRegistrationId, lSignalId: string;
+  lSignalKey: string;
   lSignals: TStringList;
   lStored: TRecorderStoredFile;
   lSequence: Int64;
@@ -276,11 +324,13 @@ begin
           jkValue:
             if lRegistrationId <> '' then
             begin
-              lSignalId := lSignals.Values[J.Name];
+              lSignalKey := SqlSignalCacheKey(J.Name, J.SourceId, J.Address);
+              lSignalId := lSignals.Values[lSignalKey];
               if lSignalId = '' then
               begin
-                lSignalId := R.EnsureSignal(lObjectId, J.Name, 'double', '', J.Name);
-                lSignals.Values[J.Name] := lSignalId;
+                lSignalId := R.EnsureSignal(lObjectId, J.Name, 'double',
+                  J.UnitText, J.Name, J.SourceId, J.Address);
+                lSignals.Values[lSignalKey] := lSignalId;
               end;
               Inc(lSequence);
               R.InsertSignalValue(lRegistrationId, lSignalId, J.TimeUtc,

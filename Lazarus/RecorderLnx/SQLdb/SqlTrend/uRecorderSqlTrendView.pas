@@ -46,6 +46,7 @@ type
     fDisplayCombo: TComboBox;
     fDisplayNextButton: TSpeedButton;
     fDisplayPrevButton: TSpeedButton;
+    fCursorDragging: Boolean;
     fCursorEnabled: Boolean;
     fCursorPoint: TPoint;
     fCursorVisible: Boolean;
@@ -110,6 +111,9 @@ implementation
 
 uses
   uRecorderSqlDbRepository;
+
+const
+  CSqlTrendCursorGrabPixels = 6;
 
 function ClipLineToRect(var AX0, AY0, AX1, AY1: Double;
   const ARect: TRect): Boolean;
@@ -351,13 +355,28 @@ begin
 end;
 
 procedure TRecorderSqlTrendView.CursorButtonClick(Sender: TObject);
+var
+  lPlot: TRect;
 begin
   fCursorEnabled := fCursorButton.Down;
   if fCursorEnabled then
-    fCursorButton.Caption := 'Скрыть курсор'
+  begin
+    fCursorButton.Caption := 'Скрыть курсор';
+    lPlot := GetPlotRect;
+    if not fCursorVisible then
+    begin
+      fCursorPoint := Point((lPlot.Left + lPlot.Right) div 2,
+        (lPlot.Top + lPlot.Bottom) div 2);
+      fCursorVisible := True;
+    end;
+  end
   else
+  begin
     fCursorButton.Caption := 'Показать курсор';
-  if not fCursorEnabled then fCursorVisible := False;
+    fCursorVisible := False;
+    fCursorDragging := False;
+    MouseCapture := False;
+  end;
   Invalidate;
 end;
 
@@ -670,8 +689,16 @@ begin
   fMouseCurrent := fMouseAnchor;
   if Button = mbLeft then
   begin
-    fZoomSelecting := True;
+    if fCursorEnabled then
+    begin
+      if (not fCursorVisible) or
+        (Abs(X - fCursorPoint.X) > CSqlTrendCursorGrabPixels) then Exit;
+      fCursorDragging := True;
+    end
+    else
+      fZoomSelecting := True;
     MouseCapture := True;
+    Invalidate;
   end
   else if Button = mbRight then
   begin
@@ -701,6 +728,13 @@ begin
     fMouseCurrent.Y := EnsureRange(Y, lPlot.Top, lPlot.Bottom);
     Invalidate;
   end
+  else if fCursorDragging then
+  begin
+    fCursorPoint := Point(EnsureRange(X, lPlot.Left, lPlot.Right),
+      EnsureRange(Y, lPlot.Top, lPlot.Bottom));
+    fCursorVisible := True;
+    Invalidate;
+  end
   else if fPanning then
   begin
     lDx := X - fMouseAnchor.X;
@@ -728,20 +762,12 @@ begin
     LoadAxisControls;
     Invalidate;
   end;
-  if not fZoomSelecting and not fPanning then
-  begin
-    fCursorVisible := fCursorEnabled and
-      (X >= lPlot.Left) and (X <= lPlot.Right) and
-      (Y >= lPlot.Top) and (Y <= lPlot.Bottom);
-    if fCursorVisible then fCursorPoint := Point(X, Y);
-    Invalidate;
-  end;
 end;
 
 procedure TRecorderSqlTrendView.MouseLeave;
 begin
   inherited MouseLeave;
-  if fZoomSelecting or fPanning then Exit;
+  if fZoomSelecting or fPanning or fCursorEnabled then Exit;
   fCursorVisible := False;
   Invalidate;
 end;
@@ -753,7 +779,13 @@ var I, lLeft, lRight, lTop, lBottom: Integer; lPlot: TRect;
 begin
   inherited MouseUp(Button, Shift, X, Y);
   lPlot := GetPlotRect;
-  if (Button = mbLeft) and fZoomSelecting then
+  if (Button = mbLeft) and fCursorDragging then
+  begin
+    fCursorDragging := False;
+    MouseCapture := False;
+    Invalidate;
+  end
+  else if (Button = mbLeft) and fZoomSelecting then
   begin
     fZoomSelecting := False;
     MouseCapture := False;
@@ -812,7 +844,7 @@ var
   lPointX, lPointY, lPrevX, lPrevY, lClipX0, lClipY0,
     lClipX1, lClipY1: Double;
   lRange, lCursorUtc, lDistance, lGridValue: Double;
-  lGridIndex, lGridY: Integer;
+  lGridIndex, lGridX, lGridY: Integer;
   lGridText: string;
   lHasPrev: Boolean;
   lCaption: string;
@@ -845,16 +877,29 @@ begin
   begin
     Canvas.Pen.Color := $00E0E0E0;
     Canvas.Font.Color := clGray;
-    for lGridIndex := 0 to 5 do
+    for lGridIndex := 0 to 10 do
     begin
-      lGridY := lPlot.Bottom - Round(lGridIndex / 5.0 * lPlot.Height);
+      lGridY := lPlot.Bottom - Round(lGridIndex / 10.0 * lPlot.Height);
       Canvas.Line(lPlot.Left, lGridY, lPlot.Right, lGridY);
-      lGridValue := fAxisMin[0] + lGridIndex / 5.0 *
+      lGridValue := fAxisMin[0] + lGridIndex / 10.0 *
         (fAxisMax[0] - fAxisMin[0]);
       lGridText := FloatToStrF(lGridValue, ffGeneral, 7, 3);
       Canvas.TextOut(Max(1, lPlot.Left - Canvas.TextWidth(lGridText) - 4),
         lGridY - Canvas.TextHeight(lGridText) div 2, lGridText);
     end;
+    if fToUtc > fFromUtc then
+      for lGridIndex := 1 to 9 do
+      begin
+        lGridX := lPlot.Left + Round(lGridIndex / 10.0 * lPlot.Width);
+        Canvas.Line(lGridX, lPlot.Top, lGridX, lPlot.Bottom);
+        lGridValue := fFromUtc + lGridIndex / 10.0 * (fToUtc - fFromUtc);
+        if (fToUtc - fFromUtc) >= 1.0 then
+          lGridText := FormatDateTime('dd.mm hh:nn', lGridValue)
+        else
+          lGridText := FormatDateTime('hh:nn:ss', lGridValue);
+        Canvas.TextOut(lGridX - Canvas.TextWidth(lGridText) div 2,
+          lPlot.Bottom + Canvas.TextHeight(lGridText) + 6, lGridText);
+      end;
     Canvas.Pen.Color := clGray;
     Canvas.Rectangle(lPlot);
   end;

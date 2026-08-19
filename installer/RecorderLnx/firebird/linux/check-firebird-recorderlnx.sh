@@ -14,6 +14,7 @@ check_path() {
 }
 
 check_path /opt/firebird/bin/isql
+check_path /opt/firebird/bin/firebird
 check_path /opt/firebird/SYSDBA.password
 check_path /etc/profile.d/recorderlnx-sqldb.sh
 
@@ -23,6 +24,16 @@ if command -v systemctl >/dev/null 2>&1; then
   else
     echo "MISS firebird.service is not active"
     status=1
+  fi
+fi
+
+if command -v ldd >/dev/null 2>&1 && [ -x /opt/firebird/bin/firebird ]; then
+  if ldd /opt/firebird/bin/firebird | grep -q 'not found'; then
+    echo "MISS Firebird shared libraries:"
+    ldd /opt/firebird/bin/firebird | grep 'not found' || true
+    status=1
+  else
+    echo "OK   Firebird shared libraries are resolved"
   fi
 fi
 

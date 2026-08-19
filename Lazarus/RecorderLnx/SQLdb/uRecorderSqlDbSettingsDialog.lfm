@@ -46,13 +46,14 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
     object lblPasswordEnvironment: TLabel Left = 12 Height = 34 Top = 194 Width = 155 Caption = 'Переменная окружения\nс паролем' end
     object edPasswordEnvironment: TEdit Left = 180 Height = 27 Top = 195 Width = 429 TabOrder = 7 end
     object cbTls: TCheckBox Left = 180 Height = 23 Top = 230 Width = 270 Caption = 'Требовать защищённый канал (TLS/VPN)' TabOrder = 8 end
-    object lblPeriod: TLabel Left = 12 Height = 17 Top = 268 Width = 145 Caption = 'Период медленной записи, мс' end
-    object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 263 Width = 120 MaxValue = 3600000 MinValue = 10 TabOrder = 9 Value = 1000 end
+    object lblPeriod: TLabel Left = 12 Height = 17 Top = 268 Width = 145 Caption = 'Период записи, с' end
+    object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 263 Width = 120 MaxValue = 3600 MinValue = 1 TabOrder = 9 Value = 1 end
     object lblQueue: TLabel Left = 320 Height = 17 Top = 268 Width = 110 Caption = 'Ёмкость очереди' end
-    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 MaxValue = 1000000 MinValue = 128 TabOrder = 10 Value = 8192 end
+    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 Hint = 'Максимум ожидающих SQL-записей. Если база временно медленная, данные копятся здесь; при переполнении новые записи сбрасываются.' MaxValue = 1000000 MinValue = 128 ShowHint = True TabOrder = 10 Value = 8192 end
     object btnTestFirebird: TButton Left = 12 Height = 31 Top = 299 Width = 150 Caption = 'Проверить Firebird' OnClick = btnTestFirebirdClick TabOrder = 11 end
     object btnStartFirebird: TButton Left = 170 Height = 31 Top = 299 Width = 150 Caption = 'Запустить Firebird' OnClick = btnStartFirebirdClick TabOrder = 12 end
-    object btnTest: TButton Left = 328 Height = 31 Top = 299 Width = 281 Caption = 'Проверить и создать БД' OnClick = btnTestClick TabOrder = 13 end
+    object btnTest: TButton Left = 328 Height = 31 Top = 299 Width = 137 Caption = 'Проверить/создать' OnClick = btnTestClick TabOrder = 13 end
+    object btnRenameDbSignals: TButton Left = 472 Height = 31 Top = 299 Width = 137 Caption = 'Переименовать каналы' OnClick = btnRenameDbSignalsClick TabOrder = 14 end
   end
   object gbObject: TGroupBox
     Left = 12 Height = 142 Top = 400 Width = 626 Caption = 'Объект мониторинга'
@@ -162,7 +163,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       Height = 30
       Top = 444
       Width = 210
-      Caption = 'Снять все'
+      Caption = 'Изменить выбранные'
       OnClick = btnSelectNoneClick
       TabOrder = 6
     end

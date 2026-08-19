@@ -1918,9 +1918,7 @@ end;
 { Обновление дерева аппаратной части при загрузке файлов Mera }
 procedure TRecorderSettingsDialog.DeleteCurrentMeraSource;
 var
-  I: Integer;
   lSourceId: string;
-  lTag: TRecorderTag;
 begin
   if fSourceProbe.MeraFilePath = '' then
     Exit;
@@ -1934,12 +1932,8 @@ begin
   if fRecorder.TagRegistry <> nil then
   begin
     RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, lSourceId);
-    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-    begin
-      lTag := fRecorder.TagRegistry.Tags[I];
-      if SameText(lTag.SourceId, lSourceId) then
-        lTag.SourceId := 'Detached: ' + lSourceId;
-    end;
+    fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
+    fRecorder.TagRegistry.RemoveTagsBySourceId(lSourceId);
   end;
 
   fSourceProbe.MeraFilePath := '';
@@ -2907,10 +2901,6 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.DeleteMic185Source(const ASourceId: string);
-var
-  I: Integer;
-  lSignal: TMeraSignalInfo;
-  lTag: TRecorderTag;
 begin
   if (ASourceId = '') or (fRecorder.TagRegistry = nil) then
     Exit;
@@ -2920,12 +2910,7 @@ begin
   RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, ASourceId);
   fDataSourcesChanged := True;
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
-  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-  begin
-    lTag := fRecorder.TagRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) then
-      lTag.SourceId := 'Detached: ' + ASourceId;
-  end;
+  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
   PopulateHardwareTree;
   PopulateChannelGrids;
@@ -2933,10 +2918,7 @@ end;
 
 procedure TRecorderSettingsDialog.DeleteMic140Source(const ASourceId: string);
 var
-  I: Integer;
   lIdx: Integer;
-  lSignal: TMeraSignalInfo;
-  lTag: TRecorderTag;
 begin
   if (ASourceId = '') or (fRecorder.TagRegistry = nil) then
     Exit;
@@ -2949,12 +2931,7 @@ begin
   if lIdx >= 0 then
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
-  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-  begin
-    lTag := fRecorder.TagRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) then
-      lTag.SourceId := 'Detached: ' + ASourceId;
-  end;
+  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
   PopulateHardwareTree;
   PopulateChannelGrids;
@@ -2968,9 +2945,7 @@ end;
 procedure TRecorderSettingsDialog.DeleteHardwareSourceNoRefresh(
   const ASourceId: string);
 var
-  I: Integer;
   lIdx: Integer;
-  lTag: TRecorderTag;
   lMeraPath: string;
 begin
   if (Trim(ASourceId) = '') or (fRecorder = nil) or
@@ -2983,13 +2958,7 @@ begin
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
   RecorderHardwareClearSourceOffline(ASourceId);
-
-  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-  begin
-    lTag := fRecorder.TagRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) then
-      lTag.SourceId := 'Detached: ' + ASourceId;
-  end;
+  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
 
   if RecorderIsVirtualTagSource(ASourceId) then

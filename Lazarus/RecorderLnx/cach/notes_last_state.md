@@ -1,3 +1,185 @@
+## 2026-08-19 02:10 - SQL trend settings date-only interval
+
+**Запрос:** в настройках SQL-отображалки убрать поля времени UTC, оставить
+только даты.
+
+**Сделано:** из `SQLdb/SqlTrend/uRecorderSqlTrendSettingsDialog.pas/.lfm`
+удалены `dtpFromTime` и `dtpToTime`. Интервал теперь задаётся датами:
+`От` = начало выбранного дня, `До` = начало следующего дня после выбранной
+даты, чтобы день `До` попадал в выборку целиком. Поля справа сдвинуты на
+место удалённых time picker.
+
+**Проверка:** поиск по `dtpFromTime/dtpToTime/Kind = dtkTime` в SQL-trend не
+нашёл оставшихся ссылок. `git diff --check` прошёл с exit code 0 (только
+LF/CRLF warnings). `lazbuild -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово.
+
+## 2026-08-19 02:00 - SQL trend cursor grab threshold
+
+**Запрос:** курсор SQL-тренда не должен перемещаться по простому клику; его
+нужно именно схватить рядом с текущей линией и потащить мышью.
+
+**Сделано:** в `SQLdb/SqlTrend/uRecorderSqlTrendView.pas` добавлен порог
+захвата `CSqlTrendCursorGrabPixels`. При включённом курсоре left-drag начинает
+перемещение только если `MouseDown` попал рядом с уже видимой вертикальной
+линией курсора; клик в другом месте графика курсор не переставляет.
+
+**Проверка:** `git diff --check` прошёл с exit code 0 (только LF/CRLF warning).
+`lazbuild -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово к ручной проверке.
+
+## 2026-08-19 01:50 - SQL trend cursor drag and grid
+
+**Запрос:** в SQL-тренде курсор должен двигаться только тасканием мышью с
+зажатой кнопкой, а не следовать за указателем всегда; на графике нужна
+промежуточная сетка по X/Y.
+
+**Сделано:** в `SQLdb/SqlTrend/uRecorderSqlTrendView.pas` добавлено состояние
+drag для курсора. При включённом `Показать курсор` левая кнопка двигает курсор,
+при выключенном курсоре прежний left-drag zoom остаётся. Курсор больше не
+перепрыгивает от простого движения мыши. Горизонтальная сетка расширена до 10
+делений, добавлены вертикальные деления X с промежуточными подписями времени.
+
+**Проверка:** `git diff --check` прошёл с exit code 0 (только LF/CRLF warning).
+`lazbuild -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово к ручной проверке в окне SQL-тренда.
+
+## 2026-08-19 01:35 - SQLdb runtime field comments
+
+**Запрос:** в `uRecorderSqlDbRuntime` добавить комментарии с назначением полей
+структур и аннотации.
+
+**Сделано:** добавлены поясняющие комментарии к `TRecorderSqlDbWriterThread`,
+`TRecorderSqlDbRuntime`, `TJobKind`, `TJob`, полям очереди/состояния runtime и
+ключевым методам `Start`, `Stop`, `BeginRegistration`, `EndRegistration`,
+`SubmitValue`, `SubmitEvent`, `SubmitFile`. Отдельно подписано, зачем в
+задании значения хранятся `SourceId`, `Address` и `UnitText`.
+
+**Проверка:** `git diff --check` по `SQLdb/uRecorderSqlDbRuntime.pas` прошёл с
+exit code 0 (только предупреждение LF/CRLF). `lazbuild -B RecorderLnx.lpi`
+дошёл до линковки, но не смог заменить
+`lib/x86_64-win64/RecorderLnx.exe`: `error code: 5`. После этого найден живой
+процесс `RecorderLnx` PID 19440, процесс не останавливался.
+
+**Статус:** комментарии внесены; для полной сборки нужно закрыть запущенный
+RecorderLnx и повторить `lazbuild`.
+
+## 2026-08-19 01:20 - SQLdb signals keep recorder channel address
+
+**Запрос:** в SQL БД нужно хранить адреса каналов, чтобы при смене имени тега
+можно было понять, что это тот же канал, и нужна кнопка переименования каналов
+в базе.
+
+**Сделано:** схема SQLdb поднята до v2; `signals` получил
+`recorder_source_id`/`recorder_address`, добавлена миграция старых БД.
+SQL-runtime передает `SourceId`, `Address`, `UnitName`; `EnsureSignal` ищет
+сигнал по адресу и обновляет имя вместо создания нового. В SQL-настройки
+добавлена кнопка `Переименовать каналы`.
+
+**Проверка:** первая сборка нашла `Duplicate identifier "UnitName"` в
+`SQLdb/uRecorderSqlDbRuntime.pas`; поле задания переименовано в `UnitText`.
+Повторная `lazbuild -B RecorderLnx.lpi` прошла с exit code 0. Дополнительно
+починен Windows post-build `Scripts/copy_sdb_res.bat`, который печатал ошибку
+`#! is not recognized`.
+
+**Статус:** частично: сборка OK, нужна ручная проверка миграции/кнопки на
+тестовой БД. Подробности:
+`errors/2026-08-19-sqldb-channel-rename-address.md`.
+
+## 2026-08-19 01:00 - SQL DB channel toggle keeps keyboard focus
+
+**Запрос:** после кнопки `Изменить выбранные` в списке каналов SQL БД
+сбрасывался синий фокус ввода/выделения.
+
+**Сделано:** в `SQLdb/uRecorderSqlDbSettingsDialog.pas` после переключения
+checkbox выбранных строк восстановлен keyboard focus на `lvSignals`, а первой
+восстановленной строке назначается `Focused := True`.
+
+**Проверка:** `git diff --check` по файлу прошел с exit code 0 (только
+предупреждение LF/CRLF). Полная сборка не запускалась: сейчас открыт
+`RecorderLnx.exe` PID 8484.
+
+**Статус:** частично: нужна сборка после закрытия RecorderLnx и ручная проверка
+кнопки `Изменить выбранные`.
+
+## 2026-08-19 00:45 - SQL DB channel toggle preserves selection
+
+**Запрос:** в таблице выбора каналов SQL БД кнопка `Снять все` фактически
+меняет checkbox выбранных строк, но после нажатия пропадает визуальное
+выделение; кнопку нужно назвать `Изменить выбранные`.
+
+**Сделано:** рабочий ресурс `SQLdb/uRecorderSqlDbSettingsDialog.lfm`
+переименован в `Изменить выбранные`. Обработчик `btnSelectNoneClick` теперь
+сохраняет выбранные строки по имени, переключает checkbox только для них и
+восстанавливает `Selected`/видимость после изменения checked-состояния.
+
+**Проверка:** `git diff --check` по измененным SQLdb файлам прошел с exit
+code 0 (только LF/CRLF warnings). Полная сборка не запускалась:
+`RecorderLnx.exe` PID 22440 занят.
+
+**Статус:** частично: нужна сборка после закрытия RecorderLnx и ручная проверка
+multi-select в SQL DB settings.
+
+## 2026-08-19 00:35 - Firebird local check uses repository, not TCP-only probe
+
+**Запрос:** пользователь показал, что SQL-тренд читает каналы и исторические
+данные из БД, значит SQLdb в проекте работала; проблема появилась именно в
+новой проверке Firebird.
+
+**Сделано:** уточнена логика кнопок SQL БД: пустой `host` для Firebird теперь
+проверяется через `TRecorderSqlDbRepository` (тот же путь, что SQL-тренд), а не
+через обязательный TCP `127.0.0.1:3050`. `Проверить и создать БД` сначала
+пытается выполнить реальную проверку/создание схемы и только при ошибке
+пробует стартовать локальный Firebird и повторить. Для `Запустить Firebird` при
+пустом host успех также валидируется открытием локальной БД.
+
+**Проверка:** `git diff --check` по SQLdb settings/helper/error файлам прошел с
+exit code 0 (только LF/CRLF warnings). Полная сборка не запускалась:
+`RecorderLnx.exe` PID 4736 занят.
+
+**Статус:** частично: нужна сборка после закрытия RecorderLnx и ручная проверка
+трех кнопок SQL БД.
+
+## 2026-08-19 00:25 - SQL DB Firebird Windows start diagnostics and seconds period
+
+**Запрос:** на Windows не отработали проверка/запуск Firebird; период записи
+SQL БД нужно задавать в секундах; нужно пояснить `Ёмкость очереди`.
+
+**Сделано:** Firebird helper расширен диагностикой `sc query`/`netstat`,
+поиском Firebird-служб через `sc query state= all`, fallback-запуском
+`firebird.exe -a` из стандартных путей и автоподъёмом локального Firebird перед
+`Проверить и создать БД`. Поле периода SQL записи в UI теперь секунды, внутри
+конфига остается `RecordPeriodMs`. Для очереди добавлен hint с пояснением.
+
+**Проверка:** `git diff --check` по измененным SQLdb/error файлам прошел с
+exit code 0 (только LF/CRLF warnings). Полная сборка не запускалась:
+`RecorderLnx.exe` PID 4736 сейчас занят; по правилу пользователя не
+пересобирал при занятом процессе.
+
+**Статус:** частично: после закрытия RecorderLnx нужна сборка и ручная проверка
+кнопок Firebird на Windows.
+
+## 2026-08-19 00:05 - Firebird installer defaults to offline USB install
+
+**Запрос:** на целевом Linux ПК нет интернета, Firebird надо ставить с флешки,
+без установки репозитория/загрузки через apt.
+
+**Сделано:** `installer/RecorderLnx/firebird/linux/install-firebird-recorderlnx.sh`
+переведен в offline-first режим: по умолчанию не делает `apt-get update/install`,
+ставит только локальные `deps/*.deb` при наличии и архив `Firebird-*-linux-x64.tar.gz`.
+Online apt-зависимости теперь включаются только явным
+`RECORDERLNX_FIREBIRD_ONLINE_DEPS=1`. Добавлен `deps/README.txt`, проверочный
+скрипт теперь показывает отсутствующие shared libraries через `ldd`.
+
+**Проверка:** `git diff --check -- installer\RecorderLnx\firebird\linux`
+прошел с exit code 0 (только LF/CRLF warnings). Bash-синтаксис не запускался:
+в текущем Windows-окружении нет `bash`.
+
+**Статус:** готово к проверке на Linux с флешки.
+
 ## 2026-08-18 19:48 - Firebird test/start controls in SQL DB settings
 
 **Запрос:** через настройки RecorderLnx проверить наличие Firebird на host и
@@ -6917,3 +7099,27 @@ names and CSV paths.
 **Verification:** `git diff --check` exit code `0`; only LF/CRLF warnings.
 Build is pending because `RecorderLnx.exe` PID 6644 is running, and the exe
 timestamp `17:11:06` is older than the fixed source timestamp `17:14:59`.
+
+## 2026-08-19 - Remove orphan tags when deleting sources
+
+**Request:** adding a virtual-source channel failed with
+`Tag name already exists: 1_датчик_X` after the old source had been deleted.
+Need fully clean tags from the config when deleting a source or removing tags
+from the used-channel list.
+
+**Facts:** `AddTag` correctly rejects duplicate names. The leak was earlier:
+Mera/MIC-140/MIC183/185/hardware source deletion rewrote owned tags to
+`Detached: <source>` instead of removing them, so the names stayed reserved and
+could be saved back to the project. `RemoveTag` also did not clean spectrum and
+frequency-band references.
+
+**Done:** added `TRecorderTagRegistry.RemoveTagsBySourceId`; source deletion now
+removes tags owned by that source instead of detaching them. `AddTag` also
+reclaims names from old `Detached:` tags so existing polluted projects can be
+fixed by re-adding the channel. `RemoveTag` now clears selected tag state,
+spectrum bindings, and formula frequency-band terms for the removed tag.
+
+**Verification:** `git diff --check` exit code `0`; only LF/CRLF warnings. Build
+was not started because `RecorderLnx.exe` PID 22628 is running from the build
+output path. Detailed log:
+`errors/2026-08-19-orphan-tags-after-source-delete.md`.

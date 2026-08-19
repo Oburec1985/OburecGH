@@ -7,13 +7,14 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Dialogs, Spin, ComCtrls,
-  LazUTF8, uRecorderSqlDbTypes, uRecorderTags;
+  LazUTF8, Math, uRecorderSqlDbTypes, uRecorderTags;
 
 type
   TRecorderSqlDbSettingsDialog = class(TForm)
     btnBrowse: TButton;
     btnCancel: TButton;
     btnOk: TButton;
+    btnRenameDbSignals: TButton;
     btnStartFirebird: TButton;
     btnTest: TButton;
     btnTestFirebird: TButton;
@@ -58,6 +59,7 @@ type
     seQueue: TSpinEdit;
     procedure btnBrowseClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
+    procedure btnRenameDbSignalsClick(Sender: TObject);
     procedure btnStartFirebirdClick(Sender: TObject);
     procedure btnTestClick(Sender: TObject);
     procedure btnTestFirebirdClick(Sender: TObject);
@@ -77,6 +79,8 @@ type
     procedure SyncVisibleSignalChecks;
     procedure StoreControls;
     procedure UpdateControls;
+    function TryOpenCurrentDatabase(out AMessage: string): Boolean;
+    function TryEnsureCurrentDatabase(out AMessage: string): Boolean;
     function TagIsScalar(ATag: TRecorderTag): Boolean;
     function EstimateText(ATag: TRecorderTag;
       AKind: TRecorderTagEstimateKind): string;
@@ -144,7 +148,7 @@ begin
   edPasswordEnvironment.Text := fConfig.PasswordEnvironment;
   cbTls.Checked := fConfig.TlsRequired;
   seQueue.Value := fConfig.QueueCapacity;
-  sePeriod.Value := fConfig.RecordPeriodMs;
+  sePeriod.Value := Max(1, (fConfig.RecordPeriodMs + 999) div 1000);
   edObjectName.Text := fConfig.ObjectName;
   edObjectType.Text := fConfig.ObjectType;
   edSerial.Text := fConfig.SerialNumber;
@@ -254,7 +258,7 @@ begin
   fConfig.PasswordEnvironment := Trim(edPasswordEnvironment.Text);
   fConfig.TlsRequired := cbTls.Checked;
   fConfig.QueueCapacity := seQueue.Value;
-  fConfig.RecordPeriodMs := sePeriod.Value;
+  fConfig.RecordPeriodMs := sePeriod.Value * 1000;
   fConfig.ObjectName := Trim(edObjectName.Text);
   fConfig.ObjectType := Trim(edObjectType.Text);
   fConfig.SerialNumber := Trim(edSerial.Text);
@@ -290,6 +294,50 @@ begin
     lblHost.Caption := 'Хост БД';
 end;
 
+function TRecorderSqlDbSettingsDialog.TryOpenCurrentDatabase(
+  out AMessage: string): Boolean;
+var
+  R: TRecorderSqlDbRepository;
+begin
+  Result := False;
+  try
+    StoreControls;
+    R := TRecorderSqlDbRepository.Create(fConfig);
+    try
+      R.Open;
+      AMessage := 'Подключение к SQL БД успешно открыто.';
+      Result := True;
+    finally
+      R.Free;
+    end;
+  except
+    on E: Exception do
+      AMessage := E.Message;
+  end;
+end;
+
+function TRecorderSqlDbSettingsDialog.TryEnsureCurrentDatabase(
+  out AMessage: string): Boolean;
+var
+  R: TRecorderSqlDbRepository;
+begin
+  Result := False;
+  try
+    StoreControls;
+    R := TRecorderSqlDbRepository.Create(fConfig);
+    try
+      R.EnsureDatabase;
+      AMessage := 'Подключение успешно. Схема создана/проверена.';
+      Result := True;
+    finally
+      R.Free;
+    end;
+  except
+    on E: Exception do
+      AMessage := E.Message;
+  end;
+end;
+
 procedure TRecorderSqlDbSettingsDialog.cbBackendChange(Sender: TObject);
 begin
   if cbBackend.ItemIndex = Ord(rsbFirebird) then
@@ -304,8 +352,23 @@ end;
 procedure TRecorderSqlDbSettingsDialog.btnTestFirebirdClick(Sender: TObject);
 var
   lPort: Word;
-  lMessage: string;
+  lDetails, lMessage: string;
 begin
+  if (cbBackend.ItemIndex = Ord(rsbFirebird)) and
+    (Trim(edHost.Text) = '') then
+  begin
+    if TryOpenCurrentDatabase(lMessage) then
+      MessageDlg('Firebird',
+        'Firebird доступен через локальное подключение к БД.' + LineEnding +
+        lMessage,
+        mtInformation, [mbOK], 0)
+    else
+      MessageDlg('Firebird',
+        'Не удалось открыть локальное подключение Firebird.' + LineEnding +
+        lMessage,
+        mtWarning, [mbOK], 0);
+    Exit;
+  end;
   lPort := sePort.Value;
   if lPort = 0 then
     lPort := 3050;
@@ -313,16 +376,26 @@ begin
     lMessage) then
     MessageDlg('Firebird', lMessage, mtInformation, [mbOK], 0)
   else
+  begin
+    if RecorderSqlDbFirebirdHostIsLocal(edHost.Text) then
+      lDetails := LineEnding + LineEnding +
+        RecorderSqlDbDescribeLocalFirebird(lPort)
+    else
+      lDetails := '';
     MessageDlg('Firebird',
       lMessage + LineEnding +
-      'Для локального сервера можно попробовать кнопку "Запустить Firebird".',
+      'Для локального сервера можно попробовать кнопку "Запустить Firebird".' +
+      lDetails,
       mtWarning, [mbOK], 0);
+  end;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnStartFirebirdClick(Sender: TObject);
 var
+  I: Integer;
   lPort: Word;
   lMessage, lProbeMessage: string;
+  lUseDbOpenCheck: Boolean;
 begin
   if not RecorderSqlDbFirebirdHostIsLocal(edHost.Text) then
   begin
@@ -335,12 +408,40 @@ begin
   lPort := sePort.Value;
   if lPort = 0 then
     lPort := 3050;
-  if RecorderSqlDbStartLocalFirebird(lMessage) and
-    RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1500,
-      lProbeMessage) then
+  lUseDbOpenCheck := Trim(edHost.Text) = '';
+  if RecorderSqlDbStartLocalFirebird(lMessage) then
+  begin
+    for I := 0 to 9 do
+    begin
+      if lUseDbOpenCheck then
+      begin
+        if TryOpenCurrentDatabase(lProbeMessage) then
+        begin
+          MessageDlg('Firebird', 'Firebird запущен, локальная БД доступна.',
+            mtInformation, [mbOK], 0);
+          Exit;
+        end;
+      end
+      else if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 700,
+        lProbeMessage) then
+      begin
+        MessageDlg('Firebird', lProbeMessage, mtInformation, [mbOK], 0);
+        Exit;
+      end;
+      Sleep(500);
+      Application.ProcessMessages;
+    end;
+  end;
+  if lUseDbOpenCheck and TryOpenCurrentDatabase(lProbeMessage) then
+    MessageDlg('Firebird', 'Локальная БД Firebird доступна.',
+      mtInformation, [mbOK], 0)
+  else if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1500,
+    lProbeMessage) then
     MessageDlg('Firebird', lProbeMessage, mtInformation, [mbOK], 0)
   else
-    MessageDlg('Firebird', lMessage, mtWarning, [mbOK], 0);
+    MessageDlg('Firebird', lMessage + LineEnding + LineEnding +
+      RecorderSqlDbDescribeLocalFirebird(lPort),
+      mtWarning, [mbOK], 0);
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnBrowseClick(Sender: TObject);
@@ -353,16 +454,78 @@ begin
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnTestClick(Sender: TObject);
-var R: TRecorderSqlDbRepository;
+var
+  I: Integer;
+  lFirstError, lMessage: string;
+  lPort: Word;
 begin
+  if TryEnsureCurrentDatabase(lMessage) then
+  begin
+    MessageDlg('SQL БД', lMessage, mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  lFirstError := lMessage;
+  if (fConfig.Backend = rsbFirebird) and
+    RecorderSqlDbFirebirdHostIsLocal(fConfig.Host) then
+  begin
+    lPort := fConfig.Port;
+    if lPort = 0 then
+      lPort := 3050;
+    if Trim(fConfig.Host) <> '' then
+    begin
+      if not RecorderSqlDbFirebirdTcpAvailable(fConfig.Host, lPort, 500,
+        lMessage) then
+        RecorderSqlDbStartLocalFirebird(lMessage);
+    end
+    else
+      RecorderSqlDbStartLocalFirebird(lMessage);
+    for I := 0 to 9 do
+    begin
+      if TryEnsureCurrentDatabase(lMessage) then
+      begin
+        MessageDlg('SQL БД', lMessage, mtInformation, [mbOK], 0);
+        Exit;
+      end;
+      Sleep(500);
+      Application.ProcessMessages;
+    end;
+  end;
+  MessageDlg('Ошибка SQL БД',
+    lFirstError + LineEnding + LineEnding + 'После попытки запуска Firebird:' +
+    LineEnding + lMessage,
+    mtError, [mbOK], 0);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnRenameDbSignalsClick(Sender: TObject);
+var
+  I, lRenamed: Integer;
+  lObjectId: string;
+  lRepository: TRecorderSqlDbRepository;
+  lTag: TRecorderTag;
+begin
+  if fRegistry = nil then Exit;
   try
     StoreControls;
-    R := TRecorderSqlDbRepository.Create(fConfig);
+    lRenamed := 0;
+    lRepository := TRecorderSqlDbRepository.Create(fConfig);
     try
-      R.EnsureDatabase;
-      MessageDlg('SQL БД', 'Подключение успешно. Схема создана/проверена.',
-        mtInformation, [mbOK], 0);
-    finally R.Free; end;
+      lRepository.EnsureDatabase;
+      lObjectId := lRepository.EnsureObject(fConfig.ObjectName,
+        fConfig.ObjectType, fConfig.SerialNumber);
+      for I := 0 to fRegistry.TagCount - 1 do
+      begin
+        lTag := fRegistry.Tags[I];
+        if (lTag = nil) or (Trim(lTag.Address) = '') then Continue;
+        if lRepository.RenameSignalByRecorderAddress(lObjectId,
+          lTag.SourceId, lTag.Address, lTag.Name, lTag.UnitName) then
+          Inc(lRenamed);
+      end;
+    finally
+      lRepository.Free;
+    end;
+    MessageDlg('SQL БД',
+      Format('Имена каналов в БД синхронизированы: %d.', [lRenamed]),
+      mtInformation, [mbOK], 0);
   except
     on E: Exception do
       MessageDlg('Ошибка SQL БД', E.Message, mtError, [mbOK], 0);
@@ -384,28 +547,63 @@ procedure TRecorderSqlDbSettingsDialog.btnSelectNoneClick(Sender: TObject);
 var
   I: Integer;
   lCheckedIndex: Integer;
+  lFirstSelected: TListItem;
+  lItem: TListItem;
+  lSelectedNames: TStringList;
   lTargetChecked: Boolean;
 begin
-  lTargetChecked := False;
-  for I := 0 to lvSignals.Items.Count - 1 do
-    if lvSignals.Items[I].Selected and (not lvSignals.Items[I].Checked) then
+  lSelectedNames := TStringList.Create;
+  try
+    lSelectedNames.CaseSensitive := False;
+    lSelectedNames.Sorted := True;
+    lSelectedNames.Duplicates := dupIgnore;
+    lTargetChecked := False;
+    for I := 0 to lvSignals.Items.Count - 1 do
     begin
-      lTargetChecked := True;
-      Break;
+      lItem := lvSignals.Items[I];
+      if not lItem.Selected then Continue;
+      lSelectedNames.Add(lItem.Caption);
+      if not lItem.Checked then
+        lTargetChecked := True;
     end;
-  for I := 0 to lvSignals.Items.Count - 1 do
-    if lvSignals.Items[I].Selected then
-    begin
-      lvSignals.Items[I].Checked := lTargetChecked;
-      lCheckedIndex := fCheckedSignals.IndexOf(lvSignals.Items[I].Caption);
-      if lTargetChecked then
+    if lSelectedNames.Count = 0 then Exit;
+    lvSignals.Items.BeginUpdate;
+    try
+      for I := 0 to lvSignals.Items.Count - 1 do
       begin
-        if lCheckedIndex < 0 then
-          fCheckedSignals.Add(lvSignals.Items[I].Caption);
-      end
-      else if lCheckedIndex >= 0 then
-        fCheckedSignals.Delete(lCheckedIndex);
+        lItem := lvSignals.Items[I];
+        if lSelectedNames.IndexOf(lItem.Caption) < 0 then Continue;
+        lItem.Checked := lTargetChecked;
+        lCheckedIndex := fCheckedSignals.IndexOf(lItem.Caption);
+        if lTargetChecked then
+        begin
+          if lCheckedIndex < 0 then
+            fCheckedSignals.Add(lItem.Caption);
+        end
+        else if lCheckedIndex >= 0 then
+          fCheckedSignals.Delete(lCheckedIndex);
+      end;
+      lFirstSelected := nil;
+      for I := 0 to lvSignals.Items.Count - 1 do
+      begin
+        lItem := lvSignals.Items[I];
+        lItem.Selected := lSelectedNames.IndexOf(lItem.Caption) >= 0;
+        if lItem.Selected and (lFirstSelected = nil) then
+          lFirstSelected := lItem;
+      end;
+    finally
+      lvSignals.Items.EndUpdate;
     end;
+    if lFirstSelected <> nil then
+    begin
+      if lvSignals.CanFocus then
+        lvSignals.SetFocus;
+      lFirstSelected.Focused := True;
+      lFirstSelected.MakeVisible(False);
+    end;
+  finally
+    lSelectedNames.Free;
+  end;
 end;
 
 function TRecorderSqlDbSettingsDialog.TagIsScalar(ATag: TRecorderTag): Boolean;
