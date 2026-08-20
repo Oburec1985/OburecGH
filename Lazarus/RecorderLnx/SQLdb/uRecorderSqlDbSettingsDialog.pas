@@ -354,21 +354,6 @@ var
   lPort: Word;
   lDetails, lMessage: string;
 begin
-  if (cbBackend.ItemIndex = Ord(rsbFirebird)) and
-    (Trim(edHost.Text) = '') then
-  begin
-    if TryOpenCurrentDatabase(lMessage) then
-      MessageDlg('Firebird',
-        'Firebird доступен через локальное подключение к БД.' + LineEnding +
-        lMessage,
-        mtInformation, [mbOK], 0)
-    else
-      MessageDlg('Firebird',
-        'Не удалось открыть локальное подключение Firebird.' + LineEnding +
-        lMessage,
-        mtWarning, [mbOK], 0);
-    Exit;
-  end;
   lPort := sePort.Value;
   if lPort = 0 then
     lPort := 3050;
@@ -395,7 +380,6 @@ var
   I: Integer;
   lPort: Word;
   lMessage, lProbeMessage: string;
-  lUseDbOpenCheck: Boolean;
 begin
   if not RecorderSqlDbFirebirdHostIsLocal(edHost.Text) then
   begin
@@ -408,21 +392,11 @@ begin
   lPort := sePort.Value;
   if lPort = 0 then
     lPort := 3050;
-  lUseDbOpenCheck := Trim(edHost.Text) = '';
   if RecorderSqlDbStartLocalFirebird(lMessage) then
   begin
     for I := 0 to 9 do
     begin
-      if lUseDbOpenCheck then
-      begin
-        if TryOpenCurrentDatabase(lProbeMessage) then
-        begin
-          MessageDlg('Firebird', 'Firebird запущен, локальная БД доступна.',
-            mtInformation, [mbOK], 0);
-          Exit;
-        end;
-      end
-      else if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 700,
+      if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 700,
         lProbeMessage) then
       begin
         MessageDlg('Firebird', lProbeMessage, mtInformation, [mbOK], 0);
@@ -432,10 +406,7 @@ begin
       Application.ProcessMessages;
     end;
   end;
-  if lUseDbOpenCheck and TryOpenCurrentDatabase(lProbeMessage) then
-    MessageDlg('Firebird', 'Локальная БД Firebird доступна.',
-      mtInformation, [mbOK], 0)
-  else if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1500,
+  if RecorderSqlDbFirebirdTcpAvailable(edHost.Text, lPort, 1500,
     lProbeMessage) then
     MessageDlg('Firebird', lProbeMessage, mtInformation, [mbOK], 0)
   else

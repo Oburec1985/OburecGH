@@ -3299,6 +3299,7 @@ procedure TsSpreadOOXMLWriter.WriteToStream(AStream: TStream);
 var
   FZip: TZipper;
   i: Integer;
+  lZipWorkFile: String;
 begin
   { Analyze the workbook and collect all information needed }
   ListAllNumFormats;
@@ -3318,8 +3319,9 @@ begin
 
   { Now compress the files }
   FZip := TZipper.Create;
+  lZipWorkFile := ChangeFileExt(GetTempFileName('', 'fpsXLSX'), '.zip');
   try
-    FZip.FileName := '__temp__.tmp';
+    FZip.FileName := lZipWorkFile;
     FZip.Entries.AddFileEntry(FSContentTypes, OOXML_PATH_TYPES);
     FZip.Entries.AddFileEntry(FSRelsRels, OOXML_PATH_RELS_RELS);
     FZip.Entries.AddFileEntry(FSWorkbookRels, OOXML_PATH_XL_RELS_RELS);
@@ -3355,6 +3357,8 @@ begin
   finally
     DestroyStreams;
     FZip.Free;
+    if FileExists(lZipWorkFile) then
+      DeleteFile(lZipWorkFile);
   end;
 end;
 

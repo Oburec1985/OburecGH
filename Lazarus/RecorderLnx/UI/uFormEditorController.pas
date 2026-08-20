@@ -64,7 +64,8 @@ uses
   Classes, SysUtils, Types, Math, Controls, ExtCtrls, Graphics, Buttons,
   LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView,
   uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart,
-  uOglChartColors, uRecorderDebugLog, uRecorderSqlTrendModel;
+  uOglChartColors, uRecorderDebugLog, uRecorderSqlTrendModel,
+  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView;
 
 
 type
@@ -667,6 +668,10 @@ begin
     (ADest is TRecorderSqlTrendComponent) then
     TRecorderSqlTrendComponent(ADest).AssignSqlTrend(
       TRecorderSqlTrendComponent(ASource))
+  else if (ASource is TRecorderMeasurementSectionComponent) and
+    (ADest is TRecorderMeasurementSectionComponent) then
+    TRecorderMeasurementSectionComponent(ADest).AssignSection(
+      TRecorderMeasurementSectionComponent(ASource))
   else if (ASource is TRecorderTrendComponent) and
     (ADest is TRecorderTrendComponent) then
     TRecorderTrendComponent(ADest).AssignTrend(TRecorderTrendComponent(ASource))
@@ -1060,6 +1065,8 @@ begin
           TRecorderImageView(lControl).EditMode := fEnabled;
         if lControl is TRecorderButtonView then
           TRecorderButtonView(lControl).EditMode := fEnabled;
+        if lControl is TRecorderMeasurementSectionView then
+          TRecorderMeasurementSectionView(lControl).EditMode := fEnabled;
         lControl.Tag := I;
         TControlAccess(lControl).OnMouseDown := @ComponentMouseDown;
         TControlAccess(lControl).OnMouseMove := @ChildMouseMove;
@@ -1152,6 +1159,8 @@ begin
           end;
           if lCtrl is TRecorderButtonView then
             TRecorderButtonView(lCtrl).EditMode := fEnabled;
+          if lCtrl is TRecorderMeasurementSectionView then
+            TRecorderMeasurementSectionView(lCtrl).EditMode := fEnabled;
           if Supports(lCtrl, IVForm, lVisualCtrl) then
           begin
             lChart := lVisualCtrl.GetChartControl;

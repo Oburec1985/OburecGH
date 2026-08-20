@@ -16,6 +16,8 @@ uses
   uRecorderTrendSettingsDialog, uRecorderTrendView,
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlTrendSettingsDialog,
+  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
+  uRecorderMeasurementSectionSettingsDialog,
   uRecorderCalibrationAddDialog, uRecorderCalibrationListDialog,
   uRecorderCalibrationPropertiesDialog, uRecorderStrainCalibration,
   uRecorderStrainCalibrationDialog, uRecorderMic140SettingsDialog,

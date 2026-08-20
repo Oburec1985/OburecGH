@@ -108,6 +108,8 @@ begin
       begin
         Result := TIBConnection.Create(nil);
         lHost := Trim(fConfig.Host);
+        if lHost = '' then
+          lHost := '127.0.0.1';
         if (lHost <> '') and (fConfig.Port <> 0) then
           lHost := lHost + '/' + IntToStr(fConfig.Port);
         Result.HostName := lHost;
@@ -187,7 +189,7 @@ var
 begin
   if AItems = nil then Exit;
   AItems.Clear;
-  Open;
+  EnsureDatabase;
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection;
@@ -212,7 +214,7 @@ begin
   AFromUtc := 0;
   AToUtc := 0;
   APointCount := 0;
-  Open;
+  EnsureDatabase;
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection;
@@ -246,7 +248,7 @@ begin
   if (ASignalNames = nil) or (ASignalNames.Count = 0) or
     (AToUtc <= AFromUtc) then Exit;
   if AMaxPointsPerSignal < 32 then AMaxPointsPerSignal := 32;
-  Open;
+  EnsureDatabase;
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection;
@@ -472,7 +474,7 @@ end;
 function TRecorderSqlDbRepository.HealthCheck: Boolean;
 begin
   try
-    Open;
+    EnsureDatabase;
     Result := ScalarInt('select 1 from schema_info') = 1;
   except
     Result := False;

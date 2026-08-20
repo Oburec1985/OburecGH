@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils, Types, Forms, Controls, ExtCtrls, Buttons, Graphics,
   ImgList, uRecorderFormModel, uRecorderTags, uRecorderAlarms,
-  uFormEditorController, uRecorderCommandImages;
+  uFormEditorController, uRecorderCommandImages, uRecorderMeasurementSectionModel;
 
 type
   TDetachedMnemonicForm = class(TForm)
@@ -44,6 +44,7 @@ type
     procedure AddValueClick(Sender: TObject);
     procedure AddOscClick(Sender: TObject);
     procedure AddTrendClick(Sender: TObject);
+    procedure AddSectionClick(Sender: TObject);
     procedure AddSpectrumClick(Sender: TObject);
     procedure AddImageClick(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
@@ -95,6 +96,8 @@ begin
     @EditClick, 1, True);
   AddToolButton(38, CIconOscillogram, 'Add oscillogram', @AddOscClick);
   AddToolButton(72, CIconTrends, 'Add trend', @AddTrendClick);
+  AddToolButton(390, -1, 'Добавить измерительное сечение', @AddSectionClick,
+    0, False, True, 'Sec');
   AddToolButton(106, CIconTextLabel, 'Add text label', @AddTextClick);
   AddToolButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
   AddToolButton(174, CIconDigitalIndicator, 'Add digital indicator',
@@ -104,7 +107,7 @@ begin
   AddToolButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
   AddToolButton(282, CIconButton, 'Add button', nil, 0, False, False);
   AddToolButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteButton := AddToolButton(356, -1, 'Delete selected component',
+  fDeleteButton := AddToolButton(424, -1, 'Delete selected component',
     @DeleteClick, 0, False, True, '-');
 
   fCanvas := TPanel.Create(Self);
@@ -218,6 +221,11 @@ end;
 procedure TDetachedMnemonicForm.AddTrendClick(Sender: TObject);
 begin
   AddComponent(TRecorderTrendComponent.TypeId, 'Trend', 400, 300);
+end;
+
+procedure TDetachedMnemonicForm.AddSectionClick(Sender: TObject);
+begin
+  AddComponent(TRecorderMeasurementSectionComponent.TypeId, 'Section', 220, 80);
 end;
 
 procedure TDetachedMnemonicForm.AddSpectrumClick(Sender: TObject);

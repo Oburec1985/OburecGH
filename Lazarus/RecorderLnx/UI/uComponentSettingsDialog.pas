@@ -63,7 +63,8 @@ uses
   uRecorderTrendSettingsDialog, uRecorderSpectrumSettingsDialog,
   uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
-  uRecorderSqlTrendSettingsDialog;
+  uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
+  uRecorderMeasurementSectionSettingsDialog;
 
 const
   CTagComboEmptyFilterLimit = 200;
@@ -76,6 +77,9 @@ begin
   if AComponent is TRecorderSqlTrendComponent then
     Exit(ShowRecorderSqlTrendSettingsDialog(AOwner,
       TRecorderSqlTrendComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderMeasurementSectionComponent then
+    Exit(ShowRecorderMeasurementSectionSettingsDialog(AOwner,
+      TRecorderMeasurementSectionComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderButtonComponent then
     Exit(ShowRecorderButtonSettingsDialog(AOwner,
       TRecorderButtonComponent(AComponent), ATagRegistry));

@@ -68,7 +68,7 @@ implementation
 {$R *.lfm}
 
 uses
-  uRecorderMic185DataSource, uMic185Constants;
+  uRecorderMic185DataSource, uRecorderMic185Calibration, uMic185Constants;
 
 procedure FillCombo(ACombo: TComboBox; const AValues: array of string;
   AIndex: Integer);
@@ -220,10 +220,14 @@ begin
     lSettings);
   ReadSettingsFromUi(lSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
+  ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
+  if ATag.HardwareCalibrationEnabled or
+    (Trim(ATag.HardwareCalibrationName) <> '') then
+    RecorderMic185LoadHardwareCalibrationForTag(fRegistry, ATag,
+      ATag.HardwareCalibrationEnabled);
   ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
     lSettings, ATag.UnitName);
   ATag.RangeMin := -ATag.RangeMax;
-  ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
 end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;

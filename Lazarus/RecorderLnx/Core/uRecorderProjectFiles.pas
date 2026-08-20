@@ -73,7 +73,8 @@ implementation
 
 uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel;
+  uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
+  uRecorderMeasurementSectionModel;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -197,6 +198,8 @@ begin
     Result := TRecorderOscillogramComponent.TypeId
   else if AComponent is TRecorderSqlTrendComponent then
     Result := TRecorderSqlTrendComponent.TypeId
+  else if AComponent is TRecorderMeasurementSectionComponent then
+    Result := TRecorderMeasurementSectionComponent.TypeId
   else if AComponent is TRecorderTrendComponent then
     Result := TRecorderTrendComponent.TypeId
   else if AComponent is TRecorderSpectrumComponent then
@@ -881,6 +884,9 @@ var
   lSpectrum: TRecorderSpectrumComponent;
   lImage: TRecorderImageComponent;
   lSqlDisplay: TRecorderSqlTrendDisplay;
+  lMeasure: TRecorderMeasurementSectionComponent;
+  lMeasureRow: TRecorderMeasurementSectionRow;
+  lRole: TRecorderRosetteRole;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -961,6 +967,42 @@ begin
             lIni.WriteString(lSection, Format('Image%dFile', [K]),
               StoreGuiResourceFileName(AFileName,
                 lImage.Images.ValueFromIndex[K]));
+          end;
+        end;
+        if lComponent is TRecorderMeasurementSectionComponent then
+        begin
+          lMeasure := TRecorderMeasurementSectionComponent(lComponent);
+          lIni.WriteString(lSection, 'MeasureCaption', lMeasure.Caption);
+          lIni.WriteString(lSection, 'MeasureSectionId', lMeasure.SectionId);
+          lIni.WriteFloat(lSection, 'MeasureYoungModulusMPa',
+            lMeasure.YoungModulusMPa);
+          lIni.WriteFloat(lSection, 'MeasurePoissonRatio',
+            lMeasure.PoissonRatio);
+          lIni.WriteFloat(lSection, 'MeasureTemperatureCoefficient',
+            lMeasure.TemperatureCoefficient);
+          lIni.WriteFloat(lSection, 'MeasureReferenceTemperatureC',
+            lMeasure.ReferenceTemperatureC);
+          lIni.WriteInteger(lSection, 'MeasureRowCount', lMeasure.RowCount);
+          for K := 0 to lMeasure.RowCount - 1 do
+          begin
+            lMeasureRow := lMeasure.Rows[K];
+            lIni.WriteInteger(lSection, Format('MeasureRow%dPointNo', [K]),
+              lMeasureRow.PointNo);
+            lIni.WriteInteger(lSection, Format('MeasureRow%dRosetteType', [K]),
+              Ord(lMeasureRow.RosetteType));
+            lIni.WriteFloat(lSection, Format('MeasureRow%dPositionDeg', [K]),
+              lMeasureRow.PositionDeg);
+            for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
+            begin
+              lIni.WriteString(lSection,
+                Format('MeasureRow%d%sTagName', [K,
+                  RecorderRosetteRoleToText(lRole)]),
+                lMeasureRow.TagNames[lRole]);
+              lIni.WriteInt64(lSection,
+                Format('MeasureRow%d%sTagId', [K,
+                  RecorderRosetteRoleToText(lRole)]),
+                lMeasureRow.TagIds[lRole]);
+            end;
           end;
         end;
         if lComponent is TRecorderOscillogramComponent then
@@ -1108,6 +1150,9 @@ var
   lSpectrum: TRecorderSpectrumComponent;
   lImage: TRecorderImageComponent;
   lSqlDisplay: TRecorderSqlTrendDisplay;
+  lMeasure: TRecorderMeasurementSectionComponent;
+  lMeasureRow: TRecorderMeasurementSectionRow;
+  lRole: TRecorderRosetteRole;
   lTypeId: string;
   lIni: TIniFile;
 begin
@@ -1210,6 +1255,47 @@ begin
                 lIni.ReadString(lSection, Format('Image%dValue', [K]), '') +
                 '=' + LoadGuiResourceFileName(AFileName,
                   lIni.ReadString(lSection, Format('Image%dFile', [K]), '')));
+          end;
+          if lComponent is TRecorderMeasurementSectionComponent then
+          begin
+            lMeasure := TRecorderMeasurementSectionComponent(lComponent);
+            lMeasure.Caption := lIni.ReadString(lSection, 'MeasureCaption',
+              lMeasure.Caption);
+            lMeasure.SectionId := lIni.ReadString(lSection,
+              'MeasureSectionId', lMeasure.SectionId);
+            lMeasure.YoungModulusMPa := lIni.ReadFloat(lSection,
+              'MeasureYoungModulusMPa', lMeasure.YoungModulusMPa);
+            lMeasure.PoissonRatio := lIni.ReadFloat(lSection,
+              'MeasurePoissonRatio', lMeasure.PoissonRatio);
+            lMeasure.TemperatureCoefficient := lIni.ReadFloat(lSection,
+              'MeasureTemperatureCoefficient', lMeasure.TemperatureCoefficient);
+            lMeasure.ReferenceTemperatureC := lIni.ReadFloat(lSection,
+              'MeasureReferenceTemperatureC', lMeasure.ReferenceTemperatureC);
+            lMeasure.ClearRows;
+            lItemCount := lIni.ReadInteger(lSection, 'MeasureRowCount', 0);
+            for K := 0 to lItemCount - 1 do
+            begin
+              lMeasureRow := lMeasure.AddRow;
+              lMeasureRow.PointNo := lIni.ReadInteger(lSection,
+                Format('MeasureRow%dPointNo', [K]), K + 1);
+              L := lIni.ReadInteger(lSection,
+                Format('MeasureRow%dRosetteType', [K]), Ord(rrtThreeComponent));
+              if (L < Ord(Low(TRecorderRosetteType))) or
+                (L > Ord(High(TRecorderRosetteType))) then
+                L := Ord(rrtThreeComponent);
+              lMeasureRow.RosetteType := TRecorderRosetteType(L);
+              lMeasureRow.PositionDeg := lIni.ReadFloat(lSection,
+                Format('MeasureRow%dPositionDeg', [K]), 0.0);
+              for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
+              begin
+                lMeasureRow.TagNames[lRole] := lIni.ReadString(lSection,
+                  Format('MeasureRow%d%sTagName', [K,
+                    RecorderRosetteRoleToText(lRole)]), '');
+                lMeasureRow.TagIds[lRole] := lIni.ReadInt64(lSection,
+                  Format('MeasureRow%d%sTagId', [K,
+                    RecorderRosetteRoleToText(lRole)]), 0);
+              end;
+            end;
           end;
           if lComponent is TRecorderOscillogramComponent then
           begin

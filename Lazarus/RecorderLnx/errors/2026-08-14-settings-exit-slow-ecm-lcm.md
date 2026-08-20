@@ -1,5 +1,56 @@
 # 2026-08-14 - Settings exit is slow, ECM/LCM comparison
 
+## Follow-up: Tag settings OK is slow after changing range
+
+### Symptom
+
+Opening a tag settings dialog, changing the hardware range, pressing `OK`, and
+returning to the main window takes too long.
+
+### Checked Facts
+
+- `TMainForm.OpenSelectedTagSettings` handles `OK` from the per-tag settings
+  dialog.
+- If the tag changes its hardware programming signature, this path cleared the
+  whole `DataSources` manager, rebuilt every runtime source, and then called
+  `PrepareRuntimeForConfiguration`.
+- `PrepareRuntimeForConfiguration` is intentionally a configuration boundary:
+  it should run before Preview/Record so entering Preview does not pay the
+  configuration cost.
+- The inefficient part was the full manager clear/rebuild when only one
+  source-id was affected by the tag dialog.
+- After dialog close, the same path also refreshed live mnemonic editor state
+  and base oscillograms even when those pages were not active.
+
+### Hypotheses And Results
+
+- Hypothesis: the delay is caused by unnecessary full source-manager rebuild
+  before the required hardware preparation.
+  - Check: inspected `OpenSelectedTagSettings` after range-change signature
+    comparison.
+  - Result: confirmed. The code called `fRecorder.DataSources.Clear` and
+    invalidated all runtime contexts instead of replacing the changed source.
+
+- Hypothesis: extra hidden-page UI refresh adds avoidable delay.
+  - Check: inspected the post-dialog refresh block.
+  - Result: confirmed. `RefreshLive` and `RefreshBaseOscillograms` were called
+    without checking the active page.
+
+### Fix
+
+- `OpenSelectedTagSettings` now uses `RecorderReplaceRuntimeSource` for the
+  source-id before/after the tag dialog instead of clearing all sources.
+- `PrepareRuntimeForConfiguration` remains on the settings-OK path so changed
+  hardware is prepared before the next Preview/Record.
+- Hidden mnemonic/base pages are no longer refreshed from this dialog-close
+  path.
+
+### Verification
+
+- `git diff --check` completed with only LF/CRLF warnings.
+- `RecorderLnx.lpi` rebuilt successfully with exit code 0.
+- `RecorderDataSourcesTest.exe` completed successfully with exit code 0.
+
 ## Symptom
 
 Leaving the settings dialog and returning to the main screen takes too long.

@@ -87,7 +87,8 @@ implementation
 uses
   Dialogs, Math, StrUtils, uRecorderMic185DataSource, uRecorderMic185AdditionalDialog,
   uRecorderMic185ChannelDialog, uRecorderConfiguredSourceEditor,
-  uRecorderMic185DeviceInfoProbe, uMic185Constants, uComponentServices;
+  uRecorderMic185DeviceInfoProbe, uRecorderMic185Calibration, uMic185Constants,
+  uComponentServices;
 
 var
   GRecorderMic185SettingsSelfTestActive: Boolean = False;
@@ -146,6 +147,11 @@ begin
   lTargetTag := EnsureTagForGridRow(ARow);
   if lTargetTag <> nil then
   begin
+    lTargetTag.SourceValueMode := RecorderMic185FormatChannelMode(ASettings);
+    if lTargetTag.HardwareCalibrationEnabled or
+      (Trim(lTargetTag.HardwareCalibrationName) <> '') then
+      RecorderMic185LoadHardwareCalibrationForTag(fRegistry, lTargetTag,
+        lTargetTag.HardwareCalibrationEnabled);
     if Trim(AUnitName) <> '' then
       lTargetTag.UnitName := AUnitName;
     lTargetTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry,

@@ -4289,6 +4289,7 @@ end;
 procedure TsSpreadOpenDocWriter.WriteToStream(AStream: TStream);
 var
   FZip: TZipper;
+  lZipWorkFile: String;
 begin
   { Analyze the workbook and collect all information needed }
   ListAllNumFormats;
@@ -4309,8 +4310,9 @@ begin
 
   { Now compress the files }
   FZip := TZipper.Create;
+  lZipWorkFile := ChangeFileExt(GetTempFileName('', 'fpsODF'), '.zip');
   try
-    FZip.FileName := '__temp__.tmp';
+    FZip.FileName := lZipWorkFile;
 
     FZip.Entries.AddFileEntry(FSMeta, OPENDOC_PATH_META);
     FZip.Entries.AddFileEntry(FSSettings, OPENDOC_PATH_SETTINGS);
@@ -4326,6 +4328,8 @@ begin
   finally
     DestroyStreams;
     FZip.Free;
+    if FileExists(lZipWorkFile) then
+      DeleteFile(lZipWorkFile);
   end;
 end;
 

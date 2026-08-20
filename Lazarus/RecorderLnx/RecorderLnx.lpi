@@ -95,6 +95,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Core/uRecorderMeasurementSectionModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core/uRecorderHardwareLiveDevices.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -305,6 +309,14 @@
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderTrendView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderMeasurementSectionView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderMeasurementSectionSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>

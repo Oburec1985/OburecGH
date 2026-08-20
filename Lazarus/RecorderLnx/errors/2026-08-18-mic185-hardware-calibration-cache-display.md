@@ -478,3 +478,44 @@ form still showed the previous unit in the `Unit` column until a full redraw.
   `0`; only existing LF/CRLF warnings were reported.
 - Full rebuild was not started because `RecorderLnx.exe` PID `20412` is running
   from `D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64`.
+
+## Follow-up: range change must reattach matching cached GX
+
+### Symptom
+
+When changing the MIC183/185 measurement range, RecorderLnx could keep showing
+an empty or stale hardware GX instead of automatically attaching the cached
+calibration for the new `(serial, range, channel)` tuple.
+
+### Confirmed Facts
+
+- `RecorderMic185LoadHardwareCalibrationForTag` correctly knows how to load
+  cached CSV files from Mera Files by serial/range/channel.
+- Before this fix it initialized `lRangeIndex` from current channel settings,
+  but then `Mic185TryParseCalibrationName(...)` reused the same variable and
+  could overwrite it with the old range parsed from `HardwareCalibrationName`.
+- The channel settings dialog calculated the new displayed range before forcing
+  cached GX reattachment for the newly selected range.
+- The bulk source properties path copied settings to selected rows without
+  updating `SourceValueMode` before cached GX reattachment.
+
+### Done
+
+- `RecorderMic185LoadHardwareCalibrationForTag` now treats the current
+  `SourceValueMode` / configured channel settings as the source of truth for
+  range selection. A parsed old calibration name may provide the serial number,
+  but no longer overrides the current range.
+- `TRecorderMic185ChannelForm.SaveTag` stores the new `SourceValueMode`,
+  reattaches cached MIC185 GX for the new range when GX is enabled or a cached
+  name exists, then recalculates `RangeMin/RangeMax`.
+- `TRecorderMic185SettingsForm.ApplySettingsToRow` does the same for bulk
+  range/unit application to selected rows.
+
+### Verification
+
+- `git diff --check` for the touched MIC185 files completed with exit code `0`
+  and only existing LF/CRLF warnings.
+- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+  completed with exit code `0`.
+- `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
+  completed with exit code `0`.

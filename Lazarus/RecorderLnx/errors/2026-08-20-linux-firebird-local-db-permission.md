@@ -1,5 +1,70 @@
 # 2026-08-20 - Linux Firebird local DB permission
 
+## Follow-up: TCP check succeeds, DB open still uses `/tmp/firebird`
+
+### Symptom
+
+On another Linux PC the SQL DB setup still failed after pressing settings
+buttons:
+
+- `Firebird доступен: 127.0.0.1:3050`
+- but local DB open/create failed with
+  `TIBConnection : DoInternalConnect : operating system directive access failed`
+  and `/tmp/firebird/`
+- SQL trend/read path also reported
+  `Table unknown SIGNAL_VALUES`
+
+### Confirmed Facts
+
+- Firebird TCP server is reachable on `127.0.0.1:3050`; this rejects the
+  hypothesis that the service is simply down.
+- FPC `TIBConnection` treats an empty `HostName` as local/embedded Firebird.
+  In this mode Firebird can touch `/tmp/firebird`, which explains the Linux
+  permission error from the screenshots.
+- RecorderLnx Firebird probe already maps an empty host to `127.0.0.1`, but
+  the real SQL repository connection did not. Therefore the probe and the real
+  DB open tested different connection mechanisms.
+- SQL trend reads used `Open` directly and could query `SIGNAL_VALUES` before
+  RecorderLnx had created/verified the schema.
+
+### Hypotheses Checked
+
+- **Firewall/network blocks Firebird:** rejected for this case because the TCP
+  probe succeeded on `127.0.0.1:3050`.
+- **Need to run RecorderLnx with higher rights:** not the primary fix. The
+  `/tmp/firebird` access is a consequence of selecting embedded/local attach
+  instead of the running server connection.
+- **Missing SQL schema after DB creation/open:** confirmed by the
+  `SIGNAL_VALUES` table-missing error.
+
+### Actions
+
+- `TRecorderSqlDbRepository.CreateConnection` now maps empty Firebird host to
+  `127.0.0.1` before assigning `TIBConnection.HostName`, preserving the port as
+  `127.0.0.1/3050`.
+- `Проверить Firebird` and `Запустить Firebird` now only check/start the
+  Firebird TCP service. They no longer try to open the project DB as a proxy for
+  "is Firebird running", so the buttons do not accidentally enter embedded mode.
+- SQL trend/read helpers (`ListSignalNames`, `GetTrendTimeRange`,
+  `ReadTrendPoints`, `HealthCheck`) now call `EnsureDatabase` instead of `Open`
+  so the expected tables exist before reads.
+
+### Verification
+
+- `git diff --check` for changed SQL DB units completed with only standard
+  LF/CRLF warnings.
+- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+  completed with exit code 0.
+
+### Remaining Risk
+
+- Needs a Linux retest. Expected result: with empty host or `127.0.0.1`, DB
+  operations should go through the Firebird server TCP path and no longer fail
+  on `/tmp/firebird`.
+- If the next error names `/var/opt/mera/SQLdb/...` or
+  `/home/user/Mera Files/SQLdb/...`, the remaining problem is directory/file
+  ownership for the Firebird service account, not host selection.
+
 ## Symptom
 
 On a Linux PC with local Firebird, RecorderLnx fails to create/open the local

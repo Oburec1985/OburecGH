@@ -739,6 +739,7 @@ var
   lK: Double;
   lOldCalibrationName: string;
   lRangeIndex: Integer;
+  lNameRangeIndex: Integer;
   lSerial: LongWord;
   lSettings: TMic185ChannelProgramSettings;
 begin
@@ -756,10 +757,13 @@ begin
   end;
   RecorderMic185GetSourceChannelMode(ARegistry, ATag.SourceId, ATag.Address,
     ATag.PollFrequencyHz, lSettings);
+  if Trim(ATag.SourceValueMode) <> '' then
+    RecorderMic185ReadChannelMode(ATag.SourceValueMode, ATag.PollFrequencyHz,
+      lSettings);
   lRangeIndex := Mic185NormalizeHardwareRangeIndex(lSettings.MeasRangeIndex);
   lOldCalibrationName := Trim(ATag.HardwareCalibrationName);
   if not Mic185TryParseCalibrationName(ATag.HardwareCalibrationName, lSerial,
-    lRangeIndex, lChannelNumber) then
+    lNameRangeIndex, lChannelNumber) then
   begin
     if not Mic185ResolveSerialFromTag(ARegistry, ATag, lSerial) then
     begin

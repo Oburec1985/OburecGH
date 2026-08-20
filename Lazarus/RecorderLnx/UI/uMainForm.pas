@@ -52,13 +52,14 @@ uses
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
   uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
-  uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView;
+  uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
+  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
   TRecorderAddTool = (ratNone, ratText, ratValue, ratOscillogram, ratTrend,
     ratSqlTrend,
-    ratSpectrum, ratImage, ratButton);
+    ratSpectrum, ratImage, ratButton, ratMeasurementSection);
 
   { TMainForm }
 
@@ -136,6 +137,7 @@ type
     fAddOscillogramButton: TSpeedButton;          // Кнопка добавления осциллограммы
     fAddTrendButton: TSpeedButton;                // Кнопка добавления тренда
     fAddSqlTrendButton: TSpeedButton;
+    fAddMeasurementSectionButton: TSpeedButton;
     fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
     fAddSpectrumButton: TSpeedButton;             // Кнопка добавления графика спектра
     fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
@@ -282,6 +284,7 @@ type
     { Добавляет на активную страницу компонент тренда. }
     procedure AddTrendComponentToActivePage;
     procedure AddSqlTrendComponentToActivePage;
+    procedure AddMeasurementSectionComponentToActivePage;
     { Добавляет на активную страницу спектр. }
     procedure AddSpectrumComponentToActivePage;
     { Обработчик кнопки добавления осциллограммы на полотне. }
@@ -289,6 +292,7 @@ type
     { Обработчик кнопки добавления тренда на полотне. }
     procedure AddTrendClick(Sender: TObject);
     procedure AddSqlTrendClick(Sender: TObject);
+    procedure AddMeasurementSectionClick(Sender: TObject);
     { Обработчик кнопки добавления спектра на полотне. }
     procedure AddSpectrumClick(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
@@ -453,6 +457,7 @@ begin
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
   RegisterRecorderSqlTrendFactory(fComponentFactory);
+  RegisterRecorderMeasurementSectionFactory(fComponentFactory);
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
@@ -1612,6 +1617,11 @@ begin
   SelectAddTool(Sender, ratSqlTrend);
 end;
 
+procedure TMainForm.AddMeasurementSectionClick(Sender: TObject);
+begin
+  SelectAddTool(Sender, ratMeasurementSection);
+end;
+
 procedure TMainForm.AddSqlTrendComponentToActivePage;
 var
   lPage: TRecorderFormPage;
@@ -1638,6 +1648,37 @@ begin
     raise;
   end;
   AddLog('SQL trend component added: ' + lComponent.Id);
+end;
+
+procedure TMainForm.AddMeasurementSectionComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderMeasurementSectionComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if (lPage = nil) or (not IsUserMnemonicPage(lPage)) then
+    raise ERecorderFormError.Create(
+      'Measurement section can be added only to a user mnemonic page');
+  if fFormEditor <> nil then
+    fFormEditor.RememberUndoStep;
+
+  Inc(fNextComponentNo);
+  lComponent := TRecorderMeasurementSectionComponent(
+    fComponentFactory.CreateComponent(TRecorderMeasurementSectionComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('Section%d', [fNextComponentNo]);
+    lComponent.Caption := 'Измерительное сечение';
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 220, 80);
+    if fFormEditor <> nil then
+      fFormEditor.PositionNewComponent(lComponent);
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+
+  AddLog('Measurement section component added: ' + lComponent.Id);
 end;
 
 procedure TMainForm.AddTrendComponentToActivePage;
@@ -1914,6 +1955,9 @@ begin
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
   fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick, 2, True);
   fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick, 2, True);
+  fAddMeasurementSectionButton := AddEditMnemoToolBarButton(356, -1,
+    'Добавить измерительное сечение', @AddMeasurementSectionClick, 2, True,
+    True, 'Sec');
   fAddSqlTrendButton := AddEditMnemoToolBarButton(390, CIconTrends,
     'Add SQL database trend', @AddSqlTrendClick, 2, True, True, 'SQL');
   fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
@@ -1924,7 +1968,7 @@ begin
   fAddTagTableButton := AddEditMnemoToolBarButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
   fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
   fAddComboBoxButton := AddEditMnemoToolBarButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteComponentButton := AddEditMnemoToolBarButton(356, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+  fDeleteComponentButton := AddEditMnemoToolBarButton(424, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -2138,6 +2182,8 @@ begin
     fAddTrendButton.Visible := lCanEdit;
   if fAddSqlTrendButton <> nil then
     fAddSqlTrendButton.Visible := lCanEdit;
+  if fAddMeasurementSectionButton <> nil then
+    fAddMeasurementSectionButton.Visible := lCanEdit;
   if fAddTextButton <> nil then
     fAddTextButton.Visible := lCanEdit;
   if fAddSpectrumButton <> nil then
@@ -2752,7 +2798,9 @@ end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
   lBeforeProgramming: string;
+  lBeforeSourceId: string;
   lHardwareProgrammingChanged: Boolean;
+  lAfterSourceId: string;
   lTags: TList;
   lTag: TRecorderTag;
   lWasRunning: Boolean;
@@ -2764,6 +2812,7 @@ begin
       Exit;
 
     lTag := TRecorderTag(lTags[0]);
+    lBeforeSourceId := lTag.SourceId;
     lBeforeProgramming := RecorderSourceProgrammingSignature(
       fRecorder.TagRegistry, lTag);
     if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, ilTagDialogButtons,
@@ -2777,6 +2826,7 @@ begin
         RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag);
       if lHardwareProgrammingChanged then
       begin
+        lAfterSourceId := lTag.SourceId;
         AddLog('Source programming required: ' +
           RecorderProgrammingSignatureDifference(lBeforeProgramming,
             RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag)));
@@ -2785,11 +2835,12 @@ begin
         if lWasRunning then
           StopDataSources;
 
-        fRecorder.DataSources.Clear;
-        fDataSourcesConfigured := False;
+        RecorderReplaceRuntimeSource(fRecorder, lBeforeSourceId,
+          fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog, False);
+        if not SameText(lBeforeSourceId, lAfterSourceId) then
+          RecorderReplaceRuntimeSource(fRecorder, lAfterSourceId,
+            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog, False);
 
-        { Тяжёлая реконфигурация нужна только после изменения аппаратной
-          сигнатуры узла источника. }
         EnsureRuntimeDataSources;
         PrepareRuntimeForConfiguration;
 
@@ -2804,9 +2855,13 @@ begin
       if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
         (fFormManager.ActivePage.Id = 'DigitalForm') then
         RenderDigitalPage(True);
-      if fFormEditor <> nil then
+      if (fFormEditor <> nil) and (fFormManager <> nil) and
+        IsUserMnemonicPage(fFormManager.ActivePage) then
         fFormEditor.RefreshLive;
-      RefreshBaseOscillograms;
+      if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
+        (fFormManager.ActivePage.Id = 'BasePage') and
+        (fBaseChartsPanel <> nil) and fBaseChartsPanel.Visible then
+        RefreshBaseOscillograms;
       AddLog(Format('Tag settings updated: %d channel(s).', [lTags.Count]));
     end;
   except
@@ -3541,6 +3596,7 @@ begin
   if fAddOscillogramButton <> nil then fAddOscillogramButton.Down := False;
   if fAddTrendButton <> nil then fAddTrendButton.Down := False;
   if fAddSqlTrendButton <> nil then fAddSqlTrendButton.Down := False;
+  if fAddMeasurementSectionButton <> nil then fAddMeasurementSectionButton.Down := False;
   if fAddSpectrumButton <> nil then fAddSpectrumButton.Down := False;
   if fAddImageButton <> nil then fAddImageButton.Down := False;
   if fAddButtonButton <> nil then fAddButtonButton.Down := False;
@@ -3561,6 +3617,7 @@ begin
       ratOscillogram: AddOscillogramComponentToActivePage;
       ratTrend: AddTrendComponentToActivePage;
       ratSqlTrend: AddSqlTrendComponentToActivePage;
+      ratMeasurementSection: AddMeasurementSectionComponentToActivePage;
       ratSpectrum: AddSpectrumComponentToActivePage;
       ratImage: AddImageComponentToActivePage;
       ratButton: AddButtonComponentToActivePage;

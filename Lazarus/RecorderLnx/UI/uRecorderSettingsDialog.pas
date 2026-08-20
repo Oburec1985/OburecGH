@@ -5317,6 +5317,13 @@ begin
   OpenSelectedChannelTagSettings;
 end;
 
+function TagTableDialogInitialDir: string;
+begin
+  Result := ExcludeTrailingPathDelimiter(RecorderMeraFilesPath);
+  if (Result = '') or (not DirectoryExists(Result)) then
+    Result := ExcludeTrailingPathDelimiter(GetUserDir);
+end;
+
 procedure TRecorderSettingsDialog.btnChannelImportClick(Sender: TObject);
 var
   lDialog: TOpenDialog;
@@ -5332,6 +5339,7 @@ begin
       lDialog.Title := 'Импорт списка тегов';
       lDialog.Filter := 'Таблицы LibreOffice/OpenOffice (*.ods;*.csv)|*.ods;*.csv|Все файлы|*.*';
       lDialog.DefaultExt := 'ods';
+      lDialog.InitialDir := TagTableDialogInitialDir;
       if not lDialog.Execute then
         Exit;
 
@@ -5377,6 +5385,7 @@ begin
       lDialog.Filter := 'OpenDocument Calc (*.ods)|*.ods|CSV (*.csv)|*.csv|Все файлы|*.*';
       lDialog.DefaultExt := 'ods';
       lDialog.FileName := 'recorder_tags.ods';
+      lDialog.InitialDir := TagTableDialogInitialDir;
       if not lDialog.Execute then
         Exit;
 
