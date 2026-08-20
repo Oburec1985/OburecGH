@@ -133,6 +133,20 @@ type
     procedure btnChannelImportClick(Sender: TObject);
     procedure btnChannelExportClick(Sender: TObject);
     procedure btnCreateVirtualTagClick(Sender: TObject);
+    procedure TagTreeDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure TagTreeDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure TagTreeDblClick(Sender: TObject);
+    procedure TagTreeMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure TagTreeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure TagTreeBeginMoveClick(Sender: TObject);
+    procedure TagTreeMoveHereClick(Sender: TObject);
+    procedure TagTreeCancelMoveClick(Sender: TObject);
+    procedure TagTreeAddRootClick(Sender: TObject);
+    procedure TagTreeAddChildClick(Sender: TObject);
+    procedure TagTreeRenameClick(Sender: TObject);
+    procedure TagTreeDeleteClick(Sender: TObject);
     procedure fAvailableChannelsGridDblClick(Sender: TObject);
     procedure fAvailableChannelsGridMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -178,6 +192,10 @@ type
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fAvailableChannelSignals: TList;            // Row-map доступных каналов
+    fSelectedChannelsPages: TPageControl;
+    fSelectedChannelsTree: TTreeView;
+    fTagTreePendingMoveTags: TList;
+    fTagTreeMoveTargetsOnly: Boolean;
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
@@ -197,6 +215,20 @@ type
     procedure SelectedChannelsFilterClearClick(Sender: TObject);
     procedure GridPaint(Sender: TObject);
     procedure InitializeChannelExchangeButtons;
+    procedure InitializeSelectedChannelsPages;
+    procedure PopulateSelectedChannelsTree;
+    function DefaultTagGroupPath: string;
+    function EffectiveTagGroupPath(ATag: TRecorderTag): string;
+    function NormalizeTagGroupPath(const APath: string): string;
+    function TagGroupNodePath(ANode: TTreeNode): string;
+    function EnsureTagGroupNode(const APath: string): TTreeNode;
+    function SelectedTagTreeGroupNode: TTreeNode;
+    function TagTreeHasGroupPath(const APath: string): Boolean;
+    function TagTreeHasNodeName(const AName: string;
+      AExceptNode: TTreeNode = nil): Boolean;
+    function TagTreeNodeHasTagChild(ANode: TTreeNode): Boolean;
+    procedure MoveSelectedChannelTagsToTreeGroup(ATarget: TTreeNode);
+    procedure MoveSelectedTreeTagsToTreeGroup(ATarget: TTreeNode);
     
     // Вспомогательные методы работы с Mera-сигналами
     procedure ApplyMeraSignalToTag(ATag: TRecorderTag; ASignal: TMeraSignalInfo);
@@ -215,6 +247,7 @@ type
     function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
     procedure SortSelectedTags(ATags: TList);
     procedure SortSelectedChannelsByColumn(AColumn: Integer);
+    procedure OpenChannelTagSettings(ATag: TRecorderTag);
     procedure OpenSelectedChannelTagSettings;
     procedure AddSpectrumAlgorithmsFromSelectedChannels;
     procedure AddSpectrumAlgorithmForTag(ATag: TRecorderTag;
@@ -671,6 +704,9 @@ const
   CDeviceInactiveTagIconSize = 16;
   CDeviceModuleImageIndex = CIconDeviceModule;
   CDeviceTreeProbeTimeoutMs = 1000;
+  CTagGroupFolderImageIndex = CIconFolderOpen;
+  CTagGroupDefault = 'Основные каналы';
+  CTagGroupAuxiliary = 'Вспомогательные каналы';
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
@@ -681,6 +717,7 @@ begin
   fDataSourcesChanged := False;
   fSelectedChannelTags := TList.Create;
   fAvailableChannelSignals := TList.Create;
+  fTagTreePendingMoveTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
   fSelectedSortColumn := 2;
@@ -700,6 +737,7 @@ begin
     btnChannelEdit.OnClick := @btnChannelEditClick;
   end;
   InitializeChannelExchangeButtons;
+  InitializeSelectedChannelsPages;
 
   if FindComponent('btnWorkDirBrowse') is TButton then
     TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
@@ -844,12 +882,812 @@ begin
   btnChannelExport.OnClick := @btnChannelExportClick;
 end;
 
+function TRecorderSettingsDialog.DefaultTagGroupPath: string;
+begin
+  Result := CTagGroupDefault;
+end;
+
+function TRecorderSettingsDialog.NormalizeTagGroupPath(const APath: string): string;
+var
+  I: Integer;
+  lParts: TStringList;
+  lText: string;
+begin
+  Result := '';
+  lText := StringReplace(Trim(APath), '/', '\', [rfReplaceAll]);
+  if lText = '' then
+    Exit;
+
+  lParts := TStringList.Create;
+  try
+    ExtractStrings(['\'], [], PChar(lText), lParts);
+    for I := 0 to lParts.Count - 1 do
+      if Trim(lParts[I]) <> '' then
+      begin
+        if Result <> '' then
+          Result := Result + '\';
+        Result := Result + Trim(lParts[I]);
+      end;
+  finally
+    lParts.Free;
+  end;
+end;
+
+function TRecorderSettingsDialog.EffectiveTagGroupPath(ATag: TRecorderTag): string;
+begin
+  Result := '';
+  if ATag <> nil then
+    Result := NormalizeTagGroupPath(ATag.GroupPath);
+  if Result = '' then
+    Result := DefaultTagGroupPath;
+end;
+
+function TRecorderSettingsDialog.TagGroupNodePath(ANode: TTreeNode): string;
+begin
+  Result := '';
+  while ANode <> nil do
+  begin
+    if ANode.Data = nil then
+    begin
+      if Result = '' then
+        Result := ANode.Text
+      else
+        Result := ANode.Text + '\' + Result;
+    end;
+    ANode := ANode.Parent;
+  end;
+  Result := NormalizeTagGroupPath(Result);
+end;
+
+function TRecorderSettingsDialog.TagTreeHasGroupPath(const APath: string): Boolean;
+var
+  lNode: TTreeNode;
+  lPath: string;
+begin
+  Result := False;
+  lPath := NormalizeTagGroupPath(APath);
+  if (fSelectedChannelsTree = nil) or (lPath = '') then
+    Exit;
+  lNode := fSelectedChannelsTree.Items.GetFirstNode;
+  while lNode <> nil do
+  begin
+    if (lNode.Data = nil) and SameText(TagGroupNodePath(lNode), lPath) then
+      Exit(True);
+    lNode := lNode.GetNext;
+  end;
+end;
+
+function TRecorderSettingsDialog.TagTreeHasNodeName(const AName: string;
+  AExceptNode: TTreeNode): Boolean;
+var
+  lNode: TTreeNode;
+  lName: string;
+begin
+  Result := False;
+  lName := Trim(AName);
+  if (fSelectedChannelsTree = nil) or (lName = '') then
+    Exit;
+  lNode := fSelectedChannelsTree.Items.GetFirstNode;
+  while lNode <> nil do
+  begin
+    if (lNode.Data = nil) and (lNode <> AExceptNode) and
+      SameText(Trim(lNode.Text), lName) then
+      Exit(True);
+    lNode := lNode.GetNext;
+  end;
+end;
+
+function TRecorderSettingsDialog.EnsureTagGroupNode(const APath: string): TTreeNode;
+var
+  I: Integer;
+  lPart: string;
+  lParts: TStringList;
+  lParent: TTreeNode;
+  lNode: TTreeNode;
+  lPath: string;
+
+  function FindChildByText(AParent: TTreeNode; const AText: string): TTreeNode;
+  var
+    lChild: TTreeNode;
+  begin
+    Result := nil;
+    if AParent = nil then
+      lChild := fSelectedChannelsTree.Items.GetFirstNode
+    else
+      lChild := AParent.GetFirstChild;
+    while lChild <> nil do
+    begin
+      if (lChild.Data = nil) and SameText(lChild.Text, AText) then
+        Exit(lChild);
+      lChild := lChild.GetNextSibling;
+    end;
+  end;
+begin
+  Result := nil;
+  if fSelectedChannelsTree = nil then
+    Exit;
+
+  lPath := NormalizeTagGroupPath(APath);
+  if lPath = '' then
+    lPath := DefaultTagGroupPath;
+
+  lParts := TStringList.Create;
+  try
+    ExtractStrings(['\'], [], PChar(lPath), lParts);
+    lParent := nil;
+    for I := 0 to lParts.Count - 1 do
+    begin
+      lPart := Trim(lParts[I]);
+      if lPart = '' then
+        Continue;
+      lNode := FindChildByText(lParent, lPart);
+      if lNode = nil then
+      begin
+        if lParent = nil then
+          lNode := fSelectedChannelsTree.Items.Add(nil, lPart)
+        else
+          lNode := fSelectedChannelsTree.Items.AddChild(lParent, lPart);
+        lNode.Data := nil;
+        lNode.ImageIndex := CTagGroupFolderImageIndex;
+        lNode.SelectedIndex := CTagGroupFolderImageIndex;
+      end;
+      lParent := lNode;
+      Result := lNode;
+    end;
+  finally
+    lParts.Free;
+  end;
+end;
+
+function TRecorderSettingsDialog.SelectedTagTreeGroupNode: TTreeNode;
+begin
+  Result := nil;
+  if fSelectedChannelsTree <> nil then
+    Result := fSelectedChannelsTree.Selected;
+  if (Result <> nil) and (Result.Data <> nil) then
+    Result := Result.Parent;
+  if Result = nil then
+    Result := EnsureTagGroupNode(DefaultTagGroupPath);
+end;
+
+function TRecorderSettingsDialog.TagTreeNodeHasTagChild(ANode: TTreeNode): Boolean;
+begin
+  Result := (ANode <> nil) and ANode.HasChildren;
+end;
+
+procedure TRecorderSettingsDialog.InitializeSelectedChannelsPages;
+var
+  lGroup: TGroupBox;
+  lTableTab: TTabSheet;
+  lTreeTab: TTabSheet;
+  lPopup: TPopupMenu;
+  lItem: TMenuItem;
+begin
+  if (fSelectedChannelsGrid = nil) or (fSelectedChannelsPages <> nil) then
+    Exit;
+  if not (FindComponent('gbSelectedChannels') is TGroupBox) then
+    Exit;
+
+  lGroup := TGroupBox(FindComponent('gbSelectedChannels'));
+  fSelectedChannelsPages := TPageControl.Create(Self);
+  fSelectedChannelsPages.Name := 'pcSelectedChannels';
+  fSelectedChannelsPages.Parent := lGroup;
+  fSelectedChannelsPages.Align := alClient;
+  fSelectedChannelsPages.TabOrder := fSelectedChannelsGrid.TabOrder;
+
+  lTableTab := TTabSheet.Create(Self);
+  lTableTab.PageControl := fSelectedChannelsPages;
+  lTableTab.Caption := 'Таблица';
+
+  lTreeTab := TTabSheet.Create(Self);
+  lTreeTab.PageControl := fSelectedChannelsPages;
+  lTreeTab.Caption := 'Дерево';
+
+  fSelectedChannelsGrid.Parent := lTableTab;
+  fSelectedChannelsGrid.Align := alClient;
+  fSelectedChannelsGrid.Options := fSelectedChannelsGrid.Options + [goRangeSelect];
+
+  fSelectedChannelsTree := TTreeView.Create(Self);
+  fSelectedChannelsTree.Name := 'tvSelectedChannelGroups';
+  fSelectedChannelsTree.Parent := lTreeTab;
+  fSelectedChannelsTree.Align := alClient;
+  fSelectedChannelsTree.ReadOnly := True;
+  fSelectedChannelsTree.Images := fDeviceImageList;
+  fSelectedChannelsTree.ImagesWidth := 16;
+  fSelectedChannelsTree.Options := fSelectedChannelsTree.Options +
+    [tvoShowButtons, tvoShowLines, tvoShowRoot, tvoAllowMultiselect];
+  fSelectedChannelsTree.MultiSelect := True;
+  fSelectedChannelsTree.MultiSelectStyle := [msControlSelect, msShiftSelect,
+    msVisibleOnly];
+  fSelectedChannelsTree.DragMode := dmAutomatic;
+  fSelectedChannelsTree.OnDragOver := @TagTreeDragOver;
+  fSelectedChannelsTree.OnDragDrop := @TagTreeDragDrop;
+  fSelectedChannelsTree.OnDblClick := @TagTreeDblClick;
+  fSelectedChannelsTree.OnMouseDown := @TagTreeMouseDown;
+  fSelectedChannelsTree.OnKeyDown := @TagTreeKeyDown;
+
+  lPopup := TPopupMenu.Create(Self);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Перенести';
+  lItem.OnClick := @TagTreeBeginMoveClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Перенести сюда';
+  lItem.OnClick := @TagTreeMoveHereClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Отменить перенос';
+  lItem.OnClick := @TagTreeCancelMoveClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := '-';
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Добавить узел';
+  lItem.OnClick := @TagTreeAddRootClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Добавить подузел';
+  lItem.OnClick := @TagTreeAddChildClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Переименовать';
+  lItem.OnClick := @TagTreeRenameClick;
+  lPopup.Items.Add(lItem);
+  lItem := TMenuItem.Create(lPopup);
+  lItem.Caption := 'Удалить пустой узел';
+  lItem.OnClick := @TagTreeDeleteClick;
+  lPopup.Items.Add(lItem);
+  fSelectedChannelsTree.PopupMenu := lPopup;
+
+  fSelectedChannelsPages.ActivePage := lTableTab;
+end;
+
+procedure TRecorderSettingsDialog.PopulateSelectedChannelsTree;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lFilterText: string;
+  lPath: string;
+  lParent: TTreeNode;
+  lNode: TTreeNode;
+
+  function TagPassesTreeFilter(ATag: TRecorderTag): Boolean;
+  var
+    lSearchText: string;
+  begin
+    Result := ATag <> nil;
+    if not Result then
+      Exit;
+    if (cbHideInactiveSelectedChannels <> nil) and
+      cbHideInactiveSelectedChannels.Checked and TagLinkedToInactiveHardware(ATag) then
+      Exit(False);
+    if (cbOnlyVirtualSelectedChannels <> nil) and
+      cbOnlyVirtualSelectedChannels.Checked and
+      (not TagIsVirtual(ATag)) then
+      Exit(False);
+    if lFilterText = '' then
+      Exit(True);
+    lSearchText := LowerCase(ATag.Name + ' ' + ATag.Address + ' ' +
+      ATag.ModuleType + ' ' + ATag.SourceId + ' ' + ATag.Description + ' ' +
+      EffectiveTagGroupPath(ATag));
+    Result := Pos(lFilterText, lSearchText) > 0;
+  end;
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  lFilterText := '';
+  if edSelectedChannelsFilter <> nil then
+  begin
+    lFilterText := Trim(LowerCase(edSelectedChannelsFilter.Text));
+    if SameText(lFilterText, 'filter') then
+      lFilterText := '';
+  end;
+  if fTagTreeMoveTargetsOnly then
+    lFilterText := '';
+
+  fSelectedChannelsTree.Items.BeginUpdate;
+  try
+    fSelectedChannelsTree.Items.Clear;
+    if (lFilterText = '') or fTagTreeMoveTargetsOnly then
+    begin
+      EnsureTagGroupNode(DefaultTagGroupPath);
+      EnsureTagGroupNode(CTagGroupAuxiliary);
+      for I := 0 to fRecorder.TagRegistry.TagGroupPaths.Count - 1 do
+        EnsureTagGroupNode(fRecorder.TagRegistry.TagGroupPaths[I]);
+    end;
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := fRecorder.TagRegistry.Tags[I];
+      if (not fTagTreeMoveTargetsOnly) and (not TagPassesTreeFilter(lTag)) then
+        Continue;
+      lPath := EffectiveTagGroupPath(lTag);
+      lParent := EnsureTagGroupNode(lPath);
+      if fTagTreeMoveTargetsOnly then
+        Continue;
+      if lParent <> nil then
+      begin
+        lNode := fSelectedChannelsTree.Items.AddChild(lParent, lTag.Name);
+        lNode.Data := lTag;
+        if TagIsVirtual(lTag) then
+        begin
+          lNode.ImageIndex := CDeviceVirtualTagImageIndex;
+          lNode.SelectedIndex := CDeviceVirtualTagImageIndex;
+        end
+        else if TagLinkedToInactiveHardware(lTag) then
+        begin
+          lNode.ImageIndex := CDeviceInactiveTagImageIndex;
+          lNode.SelectedIndex := CDeviceInactiveTagImageIndex;
+        end;
+      end;
+    end;
+    for I := 0 to fSelectedChannelsTree.Items.Count - 1 do
+    begin
+      if fSelectedChannelsTree.Items[I].Data = nil then
+      begin
+        fSelectedChannelsTree.Items[I].ImageIndex := CTagGroupFolderImageIndex;
+        fSelectedChannelsTree.Items[I].SelectedIndex := CTagGroupFolderImageIndex;
+      end;
+    end;
+    fSelectedChannelsTree.FullExpand;
+  finally
+    fSelectedChannelsTree.Items.EndUpdate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+var
+  I: Integer;
+  lTarget: TTreeNode;
+begin
+  Accept := False;
+  if fSelectedChannelsTree = nil then
+    Exit;
+  lTarget := fSelectedChannelsTree.GetNodeAt(X, Y);
+  if (lTarget <> nil) and (lTarget.Data <> nil) then
+    lTarget := lTarget.Parent;
+  if lTarget = nil then
+    Exit;
+
+  if Source = fSelectedChannelsGrid then
+    Accept := True;
+  if (Source = fSelectedChannelsTree) and (not fTagTreeMoveTargetsOnly) then
+  begin
+    if fSelectedChannelsTree.SelectionCount > 0 then
+    begin
+      for I := 0 to fSelectedChannelsTree.SelectionCount - 1 do
+        if (fSelectedChannelsTree.Selections[I] <> nil) and
+          (fSelectedChannelsTree.Selections[I].Data <> nil) then
+        begin
+          Accept := True;
+          Exit;
+        end;
+    end
+    else
+      Accept := (fSelectedChannelsTree.Selected <> nil) and
+        (fSelectedChannelsTree.Selected.Data <> nil);
+  end;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeDragDrop(Sender, Source: TObject; X,
+  Y: Integer);
+var
+  lTarget: TTreeNode;
+begin
+  if Source = fSelectedChannelsGrid then
+  begin
+    lTarget := fSelectedChannelsTree.GetNodeAt(X, Y);
+    if (lTarget <> nil) and (lTarget.Data <> nil) then
+      lTarget := lTarget.Parent;
+    MoveSelectedChannelTagsToTreeGroup(lTarget);
+  end;
+  if Source = fSelectedChannelsTree then
+  begin
+    lTarget := fSelectedChannelsTree.GetNodeAt(X, Y);
+    if (lTarget <> nil) and (lTarget.Data <> nil) then
+      lTarget := lTarget.Parent;
+    MoveSelectedTreeTagsToTreeGroup(lTarget);
+  end;
+end;
+
+procedure TRecorderSettingsDialog.MoveSelectedChannelTagsToTreeGroup(
+  ATarget: TTreeNode);
+var
+  I: Integer;
+  lRow: Integer;
+  lPath: string;
+  lStoredPath: string;
+  lTag: TRecorderTag;
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  if ATarget = nil then
+    Exit;
+
+  lPath := TagGroupNodePath(ATarget);
+  if lPath = '' then
+    Exit;
+  if SameText(lPath, DefaultTagGroupPath) then
+    lStoredPath := ''
+  else
+    lStoredPath := lPath;
+  if lStoredPath <> '' then
+    fRecorder.TagRegistry.TagGroupPaths.Add(lStoredPath);
+
+  for I := fSelectedChannelsGrid.Selection.Top to fSelectedChannelsGrid.Selection.Bottom do
+  begin
+    lRow := I - 1;
+    if (lRow >= 0) and (lRow < fSelectedChannelTags.Count) then
+    begin
+      lTag := TRecorderTag(fSelectedChannelTags[lRow]);
+      lTag.GroupPath := lStoredPath;
+    end;
+  end;
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
+  if fSelectedChannelsPages <> nil then
+    fSelectedChannelsPages.ActivePageIndex := 1;
+end;
+
+procedure TRecorderSettingsDialog.MoveSelectedTreeTagsToTreeGroup(
+  ATarget: TTreeNode);
+var
+  I: Integer;
+  lPath: string;
+  lStoredPath: string;
+  lTag: TRecorderTag;
+
+  procedure MoveTagNode(ANode: TTreeNode);
+  begin
+    if (ANode = nil) or (ANode.Data = nil) then
+      Exit;
+    lTag := TRecorderTag(ANode.Data);
+    lTag.GroupPath := lStoredPath;
+  end;
+
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) or (ATarget = nil) then
+    Exit;
+
+  lPath := TagGroupNodePath(ATarget);
+  if lPath = '' then
+    Exit;
+  if SameText(lPath, DefaultTagGroupPath) then
+    lStoredPath := ''
+  else
+    lStoredPath := lPath;
+  if lStoredPath <> '' then
+    fRecorder.TagRegistry.TagGroupPaths.Add(lStoredPath);
+
+  if fSelectedChannelsTree.SelectionCount > 0 then
+  begin
+    for I := 0 to fSelectedChannelsTree.SelectionCount - 1 do
+      MoveTagNode(fSelectedChannelsTree.Selections[I]);
+  end
+  else
+    MoveTagNode(fSelectedChannelsTree.Selected);
+
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
+  if fSelectedChannelsPages <> nil then
+    fSelectedChannelsPages.ActivePageIndex := 1;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeDblClick(Sender: TObject);
+var
+  lNode: TTreeNode;
+begin
+  lNode := nil;
+  if fSelectedChannelsTree <> nil then
+    lNode := fSelectedChannelsTree.Selected;
+  if (lNode <> nil) and (lNode.Data <> nil) then
+    OpenChannelTagSettings(TRecorderTag(lNode.Data))
+  else
+    TagTreeRenameClick(Sender);
+end;
+
+procedure TRecorderSettingsDialog.TagTreeMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
+begin
+  if (Button <> mbRight) or (fSelectedChannelsTree = nil) then
+    Exit;
+  lNode := fSelectedChannelsTree.GetNodeAt(X, Y);
+  if lNode = nil then
+    Exit;
+  if not lNode.Selected then
+    fSelectedChannelsTree.Selected := lNode;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and fTagTreeMoveTargetsOnly and (Shift = []) then
+  begin
+    TagTreeMoveHereClick(Sender);
+    Key := 0;
+  end
+  else if (Key = VK_ESCAPE) and fTagTreeMoveTargetsOnly and (Shift = []) then
+  begin
+    TagTreeCancelMoveClick(Sender);
+    Key := 0;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeBeginMoveClick(Sender: TObject);
+var
+  I: Integer;
+  lNode: TTreeNode;
+
+  procedure AddTagNode(ANode: TTreeNode);
+  begin
+    if (ANode = nil) or (ANode.Data = nil) then
+      Exit;
+    if fTagTreePendingMoveTags.IndexOf(ANode.Data) < 0 then
+      fTagTreePendingMoveTags.Add(ANode.Data);
+  end;
+
+begin
+  if (fSelectedChannelsTree = nil) or (fTagTreePendingMoveTags = nil) then
+    Exit;
+  fTagTreePendingMoveTags.Clear;
+  if fSelectedChannelsTree.SelectionCount > 0 then
+  begin
+    for I := 0 to fSelectedChannelsTree.SelectionCount - 1 do
+      AddTagNode(fSelectedChannelsTree.Selections[I]);
+  end
+  else
+  begin
+    lNode := fSelectedChannelsTree.Selected;
+    AddTagNode(lNode);
+  end;
+
+  if fTagTreePendingMoveTags.Count = 0 then
+  begin
+    MessageDlg('Перенос тегов', 'Выделите один или несколько тегов для переноса.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+
+  fTagTreeMoveTargetsOnly := True;
+  PopulateSelectedChannelsTree;
+  if fSelectedChannelsPages <> nil then
+    fSelectedChannelsPages.ActivePageIndex := 1;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeMoveHereClick(Sender: TObject);
+var
+  I: Integer;
+  lPath: string;
+  lStoredPath: string;
+  lTarget: TTreeNode;
+  lTag: TRecorderTag;
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) or (fTagTreePendingMoveTags = nil) then
+    Exit;
+  if fTagTreePendingMoveTags.Count = 0 then
+    Exit;
+
+  lTarget := SelectedTagTreeGroupNode;
+  if lTarget = nil then
+    Exit;
+  lPath := TagGroupNodePath(lTarget);
+  if lPath = '' then
+    Exit;
+  if SameText(lPath, DefaultTagGroupPath) then
+    lStoredPath := ''
+  else
+    lStoredPath := lPath;
+  if lStoredPath <> '' then
+    fRecorder.TagRegistry.TagGroupPaths.Add(lStoredPath);
+
+  for I := 0 to fTagTreePendingMoveTags.Count - 1 do
+  begin
+    lTag := TRecorderTag(fTagTreePendingMoveTags[I]);
+    if lTag <> nil then
+      lTag.GroupPath := lStoredPath;
+  end;
+  fTagTreePendingMoveTags.Clear;
+  fTagTreeMoveTargetsOnly := False;
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
+  if fSelectedChannelsPages <> nil then
+    fSelectedChannelsPages.ActivePageIndex := 1;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeCancelMoveClick(Sender: TObject);
+begin
+  if fTagTreePendingMoveTags <> nil then
+    fTagTreePendingMoveTags.Clear;
+  fTagTreeMoveTargetsOnly := False;
+  PopulateSelectedChannelsTree;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeAddRootClick(Sender: TObject);
+var
+  lName: string;
+  lNode: TTreeNode;
+begin
+  if fSelectedChannelsTree = nil then
+    Exit;
+  lName := '';
+  if not InputQuery('Группа тегов', 'Имя нового узла:', lName) then
+    Exit;
+  lName := Trim(lName);
+  if (lName = '') or (Pos('\', lName) > 0) or (Pos('/', lName) > 0) then
+  begin
+    MessageDlg('Имя узла не должно быть пустым и не должно содержать "\" или "/".',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if TagTreeHasNodeName(lName) then
+  begin
+    MessageDlg('Узел с таким именем уже существует.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lNode := fSelectedChannelsTree.Items.Add(nil, lName);
+  lNode.ImageIndex := CTagGroupFolderImageIndex;
+  lNode.SelectedIndex := CTagGroupFolderImageIndex;
+  if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
+    fRecorder.TagRegistry.TagGroupPaths.Add(TagGroupNodePath(lNode));
+  fSelectedChannelsTree.Selected := lNode;
+  fDataSourcesChanged := True;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeAddChildClick(Sender: TObject);
+var
+  lName: string;
+  lParent: TTreeNode;
+  lNode: TTreeNode;
+begin
+  if fSelectedChannelsTree = nil then
+    Exit;
+  lParent := SelectedTagTreeGroupNode;
+  if lParent = nil then
+    Exit;
+  lName := '';
+  if not InputQuery('Группа тегов', 'Имя нового подузла:', lName) then
+    Exit;
+  lName := Trim(lName);
+  if (lName = '') or (Pos('\', lName) > 0) or (Pos('/', lName) > 0) then
+  begin
+    MessageDlg('Имя узла не должно быть пустым и не должно содержать "\" или "/".',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if TagTreeHasNodeName(lName) then
+  begin
+    MessageDlg('Узел с таким именем уже существует.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lNode := fSelectedChannelsTree.Items.AddChild(lParent, lName);
+  lNode.ImageIndex := CTagGroupFolderImageIndex;
+  lNode.SelectedIndex := CTagGroupFolderImageIndex;
+  lParent.Expand(False);
+  if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
+    fRecorder.TagRegistry.TagGroupPaths.Add(TagGroupNodePath(lNode));
+  fSelectedChannelsTree.Selected := lNode;
+  fDataSourcesChanged := True;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeRenameClick(Sender: TObject);
+var
+  I: Integer;
+  lNode: TTreeNode;
+  lOldPath: string;
+  lNewName: string;
+  lNewPath: string;
+  lTag: TRecorderTag;
+
+  procedure RenameStoredGroupPath(const AOldPath, ANewPath: string);
+  var
+    J: Integer;
+    lPath: string;
+  begin
+    if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
+      Exit;
+    for J := fRecorder.TagRegistry.TagGroupPaths.Count - 1 downto 0 do
+    begin
+      lPath := fRecorder.TagRegistry.TagGroupPaths[J];
+      if SameText(lPath, AOldPath) then
+        fRecorder.TagRegistry.TagGroupPaths[J] := ANewPath
+      else if SameText(Copy(lPath, 1, Length(AOldPath) + 1), AOldPath + '\') then
+        fRecorder.TagRegistry.TagGroupPaths[J] := ANewPath + Copy(lPath, Length(AOldPath) + 1, MaxInt);
+    end;
+  end;
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  lNode := SelectedTagTreeGroupNode;
+  if lNode = nil then
+    Exit;
+  lOldPath := TagGroupNodePath(lNode);
+  lNewName := lNode.Text;
+  if not InputQuery('Группа тегов', 'Новое имя узла:', lNewName) then
+    Exit;
+  lNewName := Trim(lNewName);
+  if (lNewName = '') or (Pos('\', lNewName) > 0) or (Pos('/', lNewName) > 0) then
+  begin
+    MessageDlg('Имя узла не должно быть пустым и не должно содержать "\" или "/".',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if TagTreeHasNodeName(lNewName, lNode) then
+  begin
+    MessageDlg('Узел с таким именем уже существует.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
+  lNode.Text := lNewName;
+  lNewPath := TagGroupNodePath(lNode);
+  RenameStoredGroupPath(lOldPath, lNewPath);
+  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+  begin
+    lTag := fRecorder.TagRegistry.Tags[I];
+    if SameText(EffectiveTagGroupPath(lTag), lOldPath) then
+    begin
+      if SameText(lNewPath, DefaultTagGroupPath) then
+        lTag.GroupPath := ''
+      else
+        lTag.GroupPath := lNewPath;
+    end
+    else if SameText(Copy(EffectiveTagGroupPath(lTag), 1, Length(lOldPath) + 1),
+      lOldPath + '\') then
+      lTag.GroupPath := lNewPath + Copy(EffectiveTagGroupPath(lTag),
+        Length(lOldPath) + 1, MaxInt);
+  end;
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
+  if fSelectedChannelsPages <> nil then
+    fSelectedChannelsPages.ActivePageIndex := 1;
+end;
+
+procedure TRecorderSettingsDialog.TagTreeDeleteClick(Sender: TObject);
+var
+  lNode: TTreeNode;
+  lPath: string;
+  lIndex: Integer;
+begin
+  if (fSelectedChannelsTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  lNode := SelectedTagTreeGroupNode;
+  if lNode = nil then
+    Exit;
+  lPath := TagGroupNodePath(lNode);
+  if SameText(lPath, DefaultTagGroupPath) or SameText(lPath, CTagGroupAuxiliary) then
+  begin
+    MessageDlg('Базовые узлы удалить нельзя.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if TagTreeNodeHasTagChild(lNode) then
+  begin
+    MessageDlg('Узел можно удалить только когда в нем нет тегов и подузлов с тегами.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lIndex := fRecorder.TagRegistry.TagGroupPaths.IndexOf(lPath);
+  if lIndex >= 0 then
+    fRecorder.TagRegistry.TagGroupPaths.Delete(lIndex);
+  lNode.Delete;
+  fDataSourcesChanged := True;
+end;
+
 destructor TRecorderSettingsDialog.Destroy;
 begin
   if fHardwareTree <> nil then
     RecorderHardwareTreeClearNodes(fHardwareTree);
   fFrequencyBands.Free;
   fSpectrumConfigTree.Free;
+  fTagTreePendingMoveTags.Free;
   fSelectedChannelTags.Free;
   fAvailableChannelSignals.Free;
   FreeAndNil(fSourceProbe);
@@ -886,6 +1724,11 @@ begin
   begin
     fAlgorithmsTree.Images := fDeviceImageList;
     fAlgorithmsTree.ImagesWidth := 16;
+  end;
+  if fSelectedChannelsTree <> nil then
+  begin
+    fSelectedChannelsTree.Images := fDeviceImageList;
+    fSelectedChannelsTree.ImagesWidth := 16;
   end;
   SetDialogButtonImages;
 end;
@@ -1184,22 +2027,20 @@ begin
   PopulateChannelGrids;
 end;
 
-procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
+procedure TRecorderSettingsDialog.OpenChannelTagSettings(ATag: TRecorderTag);
 var
   lBeforeProgramming: string;
   lDialogOk: Boolean;
-  lTag: TRecorderTag;
   lTags: TList;
 begin
-  lTag := SelectedTagByGridRow(fSelectedChannelsGrid.Row);
-  if lTag = nil then
+  if ATag = nil then
     Exit;
 
   lTags := TList.Create;
   try
-    lTags.Add(lTag);
+    lTags.Add(ATag);
     lBeforeProgramming := RecorderSourceProgrammingSignature(
-      fRecorder.TagRegistry, lTag);
+      fRecorder.TagRegistry, ATag);
     lDialogOk := ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, fTagDialogImageList,
       ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
       fDeviceImageList);
@@ -1208,7 +2049,7 @@ begin
       { Имя, единицы, ГХ и оценки не требуют пересоздания источника.
         Dirty выставляется только по изменению программируемой конфигурации. }
       if lBeforeProgramming <> RecorderSourceProgrammingSignature(
-        fRecorder.TagRegistry, lTag) then
+        fRecorder.TagRegistry, ATag) then
         fDataSourcesChanged := True;
       MarkSignalsFromRegistry;
       PopulateHardwareTree;
@@ -1217,6 +2058,11 @@ begin
   finally
     lTags.Free;
   end;
+end;
+
+procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
+begin
+  OpenChannelTagSettings(SelectedTagByGridRow(fSelectedChannelsGrid.Row));
 end;
 
 function TRecorderSettingsDialog.SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
@@ -3559,8 +4405,6 @@ var
   I: Integer;
   lRow: Integer;
   lEnabledCount: Integer;
-  lHost: string;
-  lPort: Word;
   lSelectedTags: TList;
   lSignal: TMeraSignalInfo;
   lTag: TRecorderTag;
@@ -3685,16 +4529,7 @@ begin
         fSelectedChannelsGrid.Cells[3, lRow] := lTag.ModuleType;
         fSelectedChannelsGrid.Cells[4, lRow] := FormatFloat('0.######', lTag.PollFrequencyHz);
         fSelectedChannelsGrid.Cells[5, lRow] := '-';
-        if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-          fSelectedChannelsGrid.Cells[6, lRow] := 'MIC-140'
-        else if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
-          fSelectedChannelsGrid.Cells[6, lRow] := 'MIC183/185'
-        else if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
-          fSelectedChannelsGrid.Cells[6, lRow] := 'MC-032 / MC-201'
-        else if Pos('Mera file:', lTag.SourceId) = 1 then
-          fSelectedChannelsGrid.Cells[6, lRow] := 'Mera File'
-        else
-          fSelectedChannelsGrid.Cells[6, lRow] := lTag.SourceId;
+        fSelectedChannelsGrid.Cells[6, lRow] := EffectiveTagGroupPath(lTag);
         fSelectedChannelsGrid.Cells[7, lRow] := lTag.Description;
         fSelectedChannelsGrid.Cells[8, lRow] := IntToStr(lTag.Id);
         Inc(lRow);
@@ -3706,6 +4541,7 @@ begin
 
   SGChange(fAvailableChannelsGrid);
   SGChange(fSelectedChannelsGrid);
+  PopulateSelectedChannelsTree;
 end;
 
 procedure TRecorderSettingsDialog.InitializeHardwareTree;
@@ -4501,7 +5337,9 @@ begin
 
       RecorderTagTableExchangeResultInit(lResult);
       try
-        ImportRecorderTagsFromTable(fRecorder.TagRegistry, lDialog.FileName, lResult);
+        ImportRecorderTagsFromTable(fRecorder.TagRegistry,
+          fRecorder.SqlDbManager.Config, lDialog.FileName, lResult);
+        fRecorder.SqlDbManager.SaveConfig;
         MarkSignalsFromRegistry;
         PopulateHardwareTree;
         PopulateChannelGrids;
@@ -4544,7 +5382,8 @@ begin
 
       RecorderTagTableExchangeResultInit(lResult);
       try
-        ExportRecorderTagsToTable(fRecorder.TagRegistry, lDialog.FileName, lResult);
+        ExportRecorderTagsToTable(fRecorder.TagRegistry,
+          fRecorder.SqlDbManager.Config, lDialog.FileName, lResult);
         MessageDlg('Экспорт списка тегов',
           Format('Экспортировано тегов: %d', [lResult.ExportedTags]),
           mtInformation, [mbOK], 0);

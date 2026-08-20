@@ -14,7 +14,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderTags;
+  uRecorderTags, uRecorderSqlDbTypes;
 
 type
   TRecorderTagTableExchangeResult = record
@@ -32,9 +32,11 @@ procedure RecorderTagTableExchangeResultDone(
   var AResult: TRecorderTagTableExchangeResult);
 
 procedure ExportRecorderTagsToTable(ARegistry: TRecorderTagRegistry;
-  const AFileName: string; var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; const AFileName: string;
+  var AResult: TRecorderTagTableExchangeResult);
 procedure ImportRecorderTagsFromTable(ARegistry: TRecorderTagRegistry;
-  const AFileName: string; var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; const AFileName: string;
+  var AResult: TRecorderTagTableExchangeResult);
 
 implementation
 
@@ -58,7 +60,9 @@ const
   CColRangeMin = 10;
   CColRangeMax = 11;
   CColIsVirtual = 12;
-  CColumnCount = 13;
+  CColSqlRecord = 13;
+  CColGroupPath = 14;
+  CColumnCount = 15;
 
   CHeaders: array[0..CColumnCount - 1] of string = (
     'Имя канала',
@@ -73,10 +77,14 @@ const
     'Авто диапазон',
     'Мин. шкалы',
     'Макс. шкалы',
-    'Виртуальный'
+    'Виртуальный',
+    'Запись SQL',
+    'Группа'
   );
 
 type
+  TTagTableColumnMap = array[0..CColumnCount - 1] of Integer;
+
   TTagImportRow = record
     RowNumber: Integer;
     Name: string;
@@ -96,6 +104,10 @@ type
     HasRangeMax: Boolean;
     TagId: TRecorderTagId;
     HasTagId: Boolean;
+    SqlRecordEnabled: Boolean;
+    HasSqlRecordEnabled: Boolean;
+    GroupPath: string;
+    HasGroupPath: Boolean;
     TargetTag: TRecorderTag;
   end;
 
@@ -183,12 +195,30 @@ begin
   Result := Trim(ASheet.ReadAsUTF8Text(ARow, ACol));
 end;
 
+function WorksheetLastUsedCol(ASheet: TsWorksheet): Integer;
+var
+  lLastCol: Cardinal;
+begin
+  Result := 0;
+  if ASheet = nil then
+    Exit;
+  lLastCol := ASheet.GetLastColIndex(True);
+  if (lLastCol = 0) and (Trim(ASheet.ReadAsUTF8Text(0, 0)) = '') and
+    (ASheet.GetCellCount = 0) then
+    Exit(-1);
+  Result := Integer(lLastCol);
+end;
+
 function HeaderIndex(ASheet: TsWorksheet; const AHeader: string): Integer;
 var
   I: Integer;
+  lLastCol: Integer;
 begin
   Result := -1;
-  for I := 0 to CColumnCount - 1 do
+  if ASheet = nil then
+    Exit;
+  lLastCol := Max(WorksheetLastUsedCol(ASheet), CColumnCount - 1);
+  for I := 0 to lLastCol do
     if SameText(ReadCell(ASheet, 0, I), AHeader) then
       Exit(I);
 end;
@@ -199,6 +229,78 @@ begin
   Result := HeaderIndex(ASheet, AHeader);
   if Result < 0 then
     Result := ADefaultIndex;
+end;
+
+procedure BuildColumnMap(ASheet: TsWorksheet; AAllowDefaultColumns: Boolean;
+  out AMap: TTagTableColumnMap);
+var
+  I: Integer;
+begin
+  for I := 0 to CColumnCount - 1 do
+  begin
+    AMap[I] := HeaderIndex(ASheet, CHeaders[I]);
+    if (AMap[I] < 0) and AAllowDefaultColumns then
+      AMap[I] := I;
+  end;
+end;
+
+function NextAppendColumn(ASheet: TsWorksheet): Integer;
+var
+  lLastCol: Integer;
+begin
+  lLastCol := WorksheetLastUsedCol(ASheet);
+  if lLastCol < 0 then
+    Result := 0
+  else
+    Result := lLastCol + 1;
+end;
+
+procedure EnsureExportColumns(ASheet: TsWorksheet;
+  var AMap: TTagTableColumnMap; AIncludeGroupPath: Boolean);
+var
+  I: Integer;
+begin
+  for I := 0 to CColumnCount - 1 do
+  begin
+    if (I = CColGroupPath) and (not AIncludeGroupPath) and (AMap[I] < 0) then
+      Continue;
+    if AMap[I] < 0 then
+      AMap[I] := NextAppendColumn(ASheet);
+    WriteCell(ASheet, 0, AMap[I], CHeaders[I]);
+  end;
+end;
+
+procedure WriteMappedCell(ASheet: TsWorksheet; const AMap: TTagTableColumnMap;
+  AColumnId: Integer; ARow: Cardinal; const AText: string);
+begin
+  if (AColumnId < Low(AMap)) or (AColumnId > High(AMap)) then
+    Exit;
+  if AMap[AColumnId] < 0 then
+    Exit;
+  WriteCell(ASheet, ARow, AMap[AColumnId], AText);
+end;
+
+function ReadMappedCell(ASheet: TsWorksheet; const AMap: TTagTableColumnMap;
+  AColumnId: Integer; ARow: Cardinal): string;
+begin
+  Result := '';
+  if (AColumnId < Low(AMap)) or (AColumnId > High(AMap)) then
+    Exit;
+  if AMap[AColumnId] < 0 then
+    Exit;
+  Result := ReadCell(ASheet, ARow, AMap[AColumnId]);
+end;
+
+function WorkbookTagWorksheet(ABook: TsWorkbook): TsWorksheet;
+begin
+  Result := nil;
+  if ABook = nil then
+    Exit;
+  Result := ABook.GetWorksheetByName(CSheetName);
+  if (Result = nil) and (ABook.GetWorksheetCount > 0) then
+    Result := ABook.GetWorksheetByIndex(0);
+  if Result = nil then
+    Result := ABook.AddWorksheet(CSheetName);
 end;
 
 function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
@@ -223,6 +325,44 @@ begin
   end;
 end;
 
+function FindExportRowForTag(ASheet: TsWorksheet; const AMap: TTagTableColumnMap;
+  ATag: TRecorderTag): Integer;
+var
+  lLastRow: Cardinal;
+  lRow: Cardinal;
+  lTagId: TRecorderTagId;
+  lText: string;
+begin
+  Result := -1;
+  if (ASheet = nil) or (ATag = nil) then
+    Exit;
+
+  lLastRow := ASheet.GetLastRowIndex(True);
+  for lRow := 1 to lLastRow do
+  begin
+    lText := ReadMappedCell(ASheet, AMap, CColTagId, lRow);
+    if TryStrToInt64(lText, lTagId) and (lTagId = ATag.Id) then
+      Exit(Integer(lRow));
+  end;
+
+  for lRow := 1 to lLastRow do
+    if SameText(ReadMappedCell(ASheet, AMap, CColSourceId, lRow),
+      ATag.SourceId) and SameText(ReadMappedCell(ASheet, AMap, CColAddress,
+      lRow), ATag.Address) then
+      Exit(Integer(lRow));
+
+  for lRow := 1 to lLastRow do
+    if SameText(ReadMappedCell(ASheet, AMap, CColName, lRow), ATag.Name) then
+      Exit(Integer(lRow));
+end;
+
+function AppendExportRow(ASheet: TsWorksheet): Integer;
+begin
+  Result := Integer(ASheet.GetLastRowIndex(True)) + 1;
+  if (Result = 1) and (ASheet.GetCellCount = 0) then
+    Result := 1;
+end;
+
 function ResolveImportTarget(ARegistry: TRecorderTagRegistry;
   const ARow: TTagImportRow): TRecorderTag;
 begin
@@ -235,6 +375,63 @@ begin
     Result := FindTagBySourceAddress(ARegistry, ARow.SourceId, ARow.Address);
   if (Result = nil) and (ARow.Name <> '') then
     Result := ARegistry.FindByName(ARow.Name);
+end;
+
+function SqlRecordEnabled(ASqlDbConfig: TRecorderSqlDbConfig;
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := True;
+  if ATag = nil then
+    Exit(False);
+  if ASqlDbConfig <> nil then
+    Result := ASqlDbConfig.SignalEnabled(ATag.Name);
+end;
+
+procedure EnsureExplicitSqlRecordSelection(ARegistry: TRecorderTagRegistry;
+  ASqlDbConfig: TRecorderSqlDbConfig);
+var
+  I: Integer;
+begin
+  if (ARegistry = nil) or (ASqlDbConfig = nil) or
+    ASqlDbConfig.SignalSelectionConfigured then
+    Exit;
+  ASqlDbConfig.SignalNames.Clear;
+  for I := 0 to ARegistry.TagCount - 1 do
+    ASqlDbConfig.SignalNames.Add(ARegistry.Tags[I].Name);
+  ASqlDbConfig.SignalSelectionConfigured := True;
+end;
+
+procedure SetSqlRecordEnabled(ARegistry: TRecorderTagRegistry;
+  ASqlDbConfig: TRecorderSqlDbConfig; const AOldName, ANewName: string;
+  AEnabled: Boolean);
+var
+  lIndex: Integer;
+  lName: string;
+  lOldName: string;
+begin
+  if ASqlDbConfig = nil then
+    Exit;
+  lName := Trim(ANewName);
+  if lName = '' then
+    Exit;
+  EnsureExplicitSqlRecordSelection(ARegistry, ASqlDbConfig);
+
+  lOldName := Trim(AOldName);
+  if (lOldName <> '') and (not SameText(lOldName, lName)) then
+  begin
+    lIndex := ASqlDbConfig.SignalNames.IndexOf(lOldName);
+    if lIndex >= 0 then
+      ASqlDbConfig.SignalNames.Delete(lIndex);
+  end;
+
+  lIndex := ASqlDbConfig.SignalNames.IndexOf(lName);
+  if AEnabled then
+  begin
+    if lIndex < 0 then
+      ASqlDbConfig.SignalNames.Add(lName);
+  end
+  else if lIndex >= 0 then
+    ASqlDbConfig.SignalNames.Delete(lIndex);
 end;
 
 function MakeTempTagName(ATag: TRecorderTag): string;
@@ -261,17 +458,20 @@ begin
 end;
 
 procedure ApplyImportRows(ARegistry: TRecorderTagRegistry;
-  const ARows: TTagImportRows; var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; const ARows: TTagImportRows;
+  var AResult: TRecorderTagTableExchangeResult);
 var
   I: Integer;
   lTag: TRecorderTag;
   lNewName: string;
+  lOldName: string;
 begin
   for I := 0 to High(ARows) do
   begin
     lTag := ARows[I].TargetTag;
     if lTag = nil then
       Continue;
+    lOldName := lTag.Name;
     lNewName := Trim(ARows[I].Name);
     if lNewName <> '' then
       ARegistry.RenameTag(lTag, lNewName);
@@ -288,45 +488,84 @@ begin
       lTag.RangeMin := ARows[I].RangeMin;
     if ARows[I].HasRangeMax then
       lTag.RangeMax := ARows[I].RangeMax;
+    if ARows[I].HasSqlRecordEnabled then
+      SetSqlRecordEnabled(ARegistry, ASqlDbConfig, lOldName, lTag.Name,
+        ARows[I].SqlRecordEnabled);
+    if ARows[I].HasGroupPath then
+    begin
+      lTag.GroupPath := ARows[I].GroupPath;
+      if Trim(lTag.GroupPath) <> '' then
+        ARegistry.TagGroupPaths.Add(Trim(lTag.GroupPath));
+    end;
     Inc(AResult.UpdatedTags);
   end;
 end;
 
+function ExportNeedsGroupPath(ARegistry: TRecorderTagRegistry;
+  const AMap: TTagTableColumnMap): Boolean;
+var
+  I: Integer;
+begin
+  Result := AMap[CColGroupPath] >= 0;
+  if Result or (ARegistry = nil) then
+    Exit;
+  if ARegistry.TagGroupPaths.Count > 0 then
+    Exit(True);
+  for I := 0 to ARegistry.TagCount - 1 do
+    if Trim(ARegistry.Tags[I].GroupPath) <> '' then
+      Exit(True);
+end;
+
 procedure ExportRecorderTagsToTable(ARegistry: TRecorderTagRegistry;
-  const AFileName: string; var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; const AFileName: string;
+  var AResult: TRecorderTagTableExchangeResult);
 var
   lBook: TsWorkbook;
   lSheet: TsWorksheet;
   I: Integer;
   lRow: Integer;
   lTag: TRecorderTag;
+  lMap: TTagTableColumnMap;
+  lIncludeGroupPath: Boolean;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
 
   lBook := TsWorkbook.Create;
   try
-    lSheet := lBook.AddWorksheet(CSheetName);
-    for I := 0 to CColumnCount - 1 do
-      WriteCell(lSheet, 0, I, CHeaders[I]);
+    if FileExists(AFileName) then
+      lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
+    lSheet := WorkbookTagWorksheet(lBook);
+    BuildColumnMap(lSheet, not FileExists(AFileName), lMap);
+    lIncludeGroupPath := ExportNeedsGroupPath(ARegistry, lMap);
+    EnsureExportColumns(lSheet, lMap, lIncludeGroupPath);
 
     for I := 0 to ARegistry.TagCount - 1 do
     begin
       lTag := ARegistry.Tags[I];
-      lRow := I + 1;
-      WriteCell(lSheet, lRow, CColName, lTag.Name);
-      WriteCell(lSheet, lRow, CColDescription, lTag.Description);
-      WriteCell(lSheet, lRow, CColAddress, lTag.Address);
-      WriteCell(lSheet, lRow, CColSourceId, lTag.SourceId);
-      WriteCell(lSheet, lRow, CColModuleType, lTag.ModuleType);
-      WriteCell(lSheet, lRow, CColTagId, IntToStr(lTag.Id));
-      WriteCell(lSheet, lRow, CColUnit, lTag.UnitName);
-      WriteCell(lSheet, lRow, CColPollFrequency, FormatValue(lTag.PollFrequencyHz));
-      WriteCell(lSheet, lRow, CColAutoUnit, BoolToTableText(lTag.AutoUnit));
-      WriteCell(lSheet, lRow, CColAutoRange, BoolToTableText(lTag.AutoRange));
-      WriteCell(lSheet, lRow, CColRangeMin, FormatValue(lTag.RangeMin));
-      WriteCell(lSheet, lRow, CColRangeMax, FormatValue(lTag.RangeMax));
-      WriteCell(lSheet, lRow, CColIsVirtual, BoolToTableText(lTag.IsVirtual));
+      lRow := FindExportRowForTag(lSheet, lMap, lTag);
+      if lRow < 0 then
+        lRow := AppendExportRow(lSheet);
+      WriteCell(lSheet, lRow, lMap[CColName], lTag.Name);
+      WriteCell(lSheet, lRow, lMap[CColDescription], lTag.Description);
+      WriteCell(lSheet, lRow, lMap[CColAddress], lTag.Address);
+      WriteCell(lSheet, lRow, lMap[CColSourceId], lTag.SourceId);
+      WriteCell(lSheet, lRow, lMap[CColModuleType], lTag.ModuleType);
+      WriteCell(lSheet, lRow, lMap[CColTagId], IntToStr(lTag.Id));
+      WriteCell(lSheet, lRow, lMap[CColUnit], lTag.UnitName);
+      WriteCell(lSheet, lRow, lMap[CColPollFrequency],
+        FormatValue(lTag.PollFrequencyHz));
+      WriteCell(lSheet, lRow, lMap[CColAutoUnit],
+        BoolToTableText(lTag.AutoUnit));
+      WriteCell(lSheet, lRow, lMap[CColAutoRange],
+        BoolToTableText(lTag.AutoRange));
+      WriteCell(lSheet, lRow, lMap[CColRangeMin], FormatValue(lTag.RangeMin));
+      WriteCell(lSheet, lRow, lMap[CColRangeMax], FormatValue(lTag.RangeMax));
+      WriteCell(lSheet, lRow, lMap[CColIsVirtual],
+        BoolToTableText(lTag.IsVirtual));
+      WriteCell(lSheet, lRow, lMap[CColSqlRecord],
+        BoolToTableText(SqlRecordEnabled(ASqlDbConfig, lTag)));
+      WriteMappedCell(lSheet, lMap, CColGroupPath, lRow, lTag.GroupPath);
       Inc(AResult.ExportedTags);
     end;
     AResult.TotalRows := ARegistry.TagCount;
@@ -337,7 +576,8 @@ begin
 end;
 
 procedure ImportRecorderTagsFromTable(ARegistry: TRecorderTagRegistry;
-  const AFileName: string; var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; const AFileName: string;
+  var AResult: TRecorderTagTableExchangeResult);
 var
   lBook: TsWorkbook;
   lSheet: TsWorksheet;
@@ -345,17 +585,7 @@ var
   lRowIndex: Cardinal;
   lRows: TTagImportRows;
   lRow: TTagImportRow;
-  lColName: Integer;
-  lColDescription: Integer;
-  lColAddress: Integer;
-  lColSourceId: Integer;
-  lColTagId: Integer;
-  lColUnit: Integer;
-  lColPollFrequency: Integer;
-  lColAutoUnit: Integer;
-  lColAutoRange: Integer;
-  lColRangeMin: Integer;
-  lColRangeMax: Integer;
+  lMap: TTagTableColumnMap;
   lText: string;
 begin
   if ARegistry = nil then
@@ -368,19 +598,7 @@ begin
       raise ERecorderTagError.Create('Spreadsheet does not contain worksheets');
     lSheet := lBook.GetWorksheetByIndex(0);
 
-    lColName := ColumnIndex(lSheet, CColName, CHeaders[CColName]);
-    lColDescription := ColumnIndex(lSheet, CColDescription,
-      CHeaders[CColDescription]);
-    lColAddress := ColumnIndex(lSheet, CColAddress, CHeaders[CColAddress]);
-    lColSourceId := ColumnIndex(lSheet, CColSourceId, CHeaders[CColSourceId]);
-    lColTagId := ColumnIndex(lSheet, CColTagId, CHeaders[CColTagId]);
-    lColUnit := ColumnIndex(lSheet, CColUnit, CHeaders[CColUnit]);
-    lColPollFrequency := ColumnIndex(lSheet, CColPollFrequency,
-      CHeaders[CColPollFrequency]);
-    lColAutoUnit := ColumnIndex(lSheet, CColAutoUnit, CHeaders[CColAutoUnit]);
-    lColAutoRange := ColumnIndex(lSheet, CColAutoRange, CHeaders[CColAutoRange]);
-    lColRangeMin := ColumnIndex(lSheet, CColRangeMin, CHeaders[CColRangeMin]);
-    lColRangeMax := ColumnIndex(lSheet, CColRangeMax, CHeaders[CColRangeMax]);
+    BuildColumnMap(lSheet, True, lMap);
 
     lLastRow := lSheet.GetLastRowIndex(True);
     SetLength(lRows, 0);
@@ -388,23 +606,30 @@ begin
     begin
       lRow := Default(TTagImportRow);
       lRow.RowNumber := lRowIndex + 1;
-      lRow.Name := ReadCell(lSheet, lRowIndex, lColName);
-      lRow.Description := ReadCell(lSheet, lRowIndex, lColDescription);
-      lRow.Address := ReadCell(lSheet, lRowIndex, lColAddress);
-      lRow.SourceId := ReadCell(lSheet, lRowIndex, lColSourceId);
-      lRow.UnitName := ReadCell(lSheet, lRowIndex, lColUnit);
-      lText := ReadCell(lSheet, lRowIndex, lColTagId);
+      lRow.Name := ReadMappedCell(lSheet, lMap, CColName, lRowIndex);
+      lRow.Description := ReadMappedCell(lSheet, lMap, CColDescription,
+        lRowIndex);
+      lRow.Address := ReadMappedCell(lSheet, lMap, CColAddress, lRowIndex);
+      lRow.SourceId := ReadMappedCell(lSheet, lMap, CColSourceId, lRowIndex);
+      lRow.UnitName := ReadMappedCell(lSheet, lMap, CColUnit, lRowIndex);
+      lText := ReadMappedCell(lSheet, lMap, CColTagId, lRowIndex);
       lRow.HasTagId := TryStrToInt64(lText, lRow.TagId);
-      lText := ReadCell(lSheet, lRowIndex, lColPollFrequency);
+      lText := ReadMappedCell(lSheet, lMap, CColPollFrequency, lRowIndex);
       lRow.HasPollFrequencyHz := TryParseFloatValue(lText, lRow.PollFrequencyHz);
-      lText := ReadCell(lSheet, lRowIndex, lColAutoUnit);
+      lText := ReadMappedCell(lSheet, lMap, CColAutoUnit, lRowIndex);
       lRow.HasAutoUnit := TryParseBoolValue(lText, lRow.AutoUnit);
-      lText := ReadCell(lSheet, lRowIndex, lColAutoRange);
+      lText := ReadMappedCell(lSheet, lMap, CColAutoRange, lRowIndex);
       lRow.HasAutoRange := TryParseBoolValue(lText, lRow.AutoRange);
-      lText := ReadCell(lSheet, lRowIndex, lColRangeMin);
+      lText := ReadMappedCell(lSheet, lMap, CColRangeMin, lRowIndex);
       lRow.HasRangeMin := TryParseFloatValue(lText, lRow.RangeMin);
-      lText := ReadCell(lSheet, lRowIndex, lColRangeMax);
+      lText := ReadMappedCell(lSheet, lMap, CColRangeMax, lRowIndex);
       lRow.HasRangeMax := TryParseFloatValue(lText, lRow.RangeMax);
+      lText := ReadMappedCell(lSheet, lMap, CColSqlRecord, lRowIndex);
+      lRow.HasSqlRecordEnabled := TryParseBoolValue(lText,
+        lRow.SqlRecordEnabled);
+      lRow.HasGroupPath := lMap[CColGroupPath] >= 0;
+      if lRow.HasGroupPath then
+        lRow.GroupPath := ReadMappedCell(lSheet, lMap, CColGroupPath, lRowIndex);
 
       if (lRow.Name = '') and (lRow.Address = '') and (not lRow.HasTagId) then
         Continue;
@@ -421,7 +646,7 @@ begin
     end;
 
     RenameTargetsToTemporaryNames(ARegistry, lRows, AResult);
-    ApplyImportRows(ARegistry, lRows, AResult);
+    ApplyImportRows(ARegistry, ASqlDbConfig, lRows, AResult);
   finally
     lBook.Free;
   end;

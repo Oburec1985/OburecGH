@@ -2,11 +2,11 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
   Left = 360
   Height = 716
   Top = 160
-  Width = 920
+  Width = 1040
   BorderStyle = bsDialog
   Caption = 'SQL-тренд: исторические данные'
   ClientHeight = 716
-  ClientWidth = 920
+  ClientWidth = 1040
   Position = poOwnerFormCenter
   object lblDisplay: TLabel
     Left = 20
@@ -17,43 +17,59 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     Left = 112
     Height = 25
     Top = 12
-    Width = 220
+    Width = 190
     Style = csDropDownList
     OnChange = DisplayChange
   end
   object lblDisplayName: TLabel
-    Left = 350
+    Left = 320
     Top = 16
     Caption = 'Имя'
   end
   object edDisplayName: TEdit
-    Left = 390
+    Left = 360
     Height = 25
     Top = 12
-    Width = 250
+    Width = 220
     OnEditingDone = DisplayNameExit
   end
   object btnAddDisplay: TButton
-    Left = 650
+    Left = 592
     Height = 28
     Top = 10
-    Width = 120
+    Width = 88
     Caption = 'Добавить'
     OnClick = btnAddDisplayClick
   end
   object btnDeleteDisplay: TButton
+    Left = 686
+    Height = 28
+    Top = 10
+    Width = 88
+    Caption = 'Удалить'
+    OnClick = btnDeleteDisplayClick
+  end
+  object btnAutoDisplays: TButton
     Left = 780
     Height = 28
     Top = 10
-    Width = 120
-    Caption = 'Удалить'
-    OnClick = btnDeleteDisplayClick
+    Width = 122
+    Caption = 'Авто отображения'
+    OnClick = btnAutoDisplaysClick
+  end
+  object btnAutoAxes: TButton
+    Left = 908
+    Height = 28
+    Top = 10
+    Width = 112
+    Caption = 'Авто оси'
+    OnClick = btnAutoAxesClick
   end
   object gbLines: TGroupBox
     Left = 8
     Height = 360
     Top = 50
-    Width = 904
+    Width = 1024
     Caption = 'Линии и каналы из базы данных'
     object lblSignal: TLabel
       Left = 12
@@ -95,7 +111,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       Left = 380
       Height = 170
       Top = 28
-      Width = 500
+      Width = 620
       ItemHeight = 0
       OnSelectionChange = LineSelectionChange
     end
@@ -112,12 +128,12 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       OnEditingDone = LineControlsExit
     end
     object lblAxis: TLabel
-      Left = 652
+      Left = 672
       Top = 214
       Caption = 'Ось'
     end
     object cbLineAxis: TComboBox
-      Left = 652
+      Left = 672
       Height = 25
       Top = 236
       Width = 140
@@ -153,7 +169,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     object lblDbRange: TLabel
       Left = 380
       Top = 320
-      Width = 500
+      Width = 620
       Caption = 'Нажмите «Прочитать каналы из БД», чтобы проверить диапазон данных'
     end
     object btnUseDbRange: TButton
@@ -170,7 +186,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     Left = 8
     Height = 130
     Top = 418
-    Width = 904
+    Width = 1024
     Caption = 'Оси Y'
     object lbAxes: TListBox
       Left = 12
@@ -207,7 +223,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     Left = 8
     Height = 94
     Top = 556
-    Width = 904
+    Width = 1024
     Caption = 'Астрономическое время UTC'
     object cbTimeMode: TComboBox
       Left = 12 Height = 25 Top = 36 Width = 180 Style = csDropDownList
@@ -232,11 +248,11 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     object edWindowHours: TEdit Left = 618 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
   end
   object btnOk: TButton
-    Left = 728 Height = 30 Top = 678 Width = 88 Caption = 'OK'
+    Left = 848 Height = 30 Top = 678 Width = 88 Caption = 'OK'
     Default = True OnClick = btnOkClick
   end
   object btnCancel: TButton
-    Left = 824 Height = 30 Top = 678 Width = 88 Caption = 'Отмена'
+    Left = 944 Height = 30 Top = 678 Width = 88 Caption = 'Отмена'
     Cancel = True ModalResult = 2
   end
   object ColorDialog1: TColorDialog Left = 672 Top = 280

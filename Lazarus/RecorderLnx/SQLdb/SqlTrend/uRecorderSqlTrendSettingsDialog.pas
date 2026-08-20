@@ -8,7 +8,7 @@ interface
 uses
   Classes, SysUtils, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
   Graphics, Math, DateTimePicker,
-  uRecorderSqlTrendModel;
+  uRecorderFormModel, uRecorderSqlTrendModel, uRecorderTags;
 
 type
   TRecorderSqlTrendSettingsDialog = class(TForm)
@@ -22,6 +22,8 @@ type
     btnOk: TButton;
     btnCancel: TButton;
     btnAddDisplay: TButton;
+    btnAutoAxes: TButton;
+    btnAutoDisplays: TButton;
     btnDeleteDisplay: TButton;
     cbDisplay: TComboBox;
     cbLineAxis: TComboBox;
@@ -74,12 +76,15 @@ type
     procedure TimeModeChange(Sender: TObject);
     procedure btnUseDbRangeClick(Sender: TObject);
     procedure btnAddDisplayClick(Sender: TObject);
+    procedure btnAutoAxesClick(Sender: TObject);
+    procedure btnAutoDisplaysClick(Sender: TObject);
     procedure btnDeleteDisplayClick(Sender: TObject);
     procedure DisplayChange(Sender: TObject);
     procedure DisplayNameExit(Sender: TObject);
   private
     fComponent: TRecorderSqlTrendComponent;
     fDraft: TRecorderSqlTrendComponent;
+    fTagRegistry: TRecorderTagRegistry;
     fLineColor: TColor;
     fUpdatingTime: Boolean;
     fDbFromUtc: Double;
@@ -96,37 +101,56 @@ type
     function FromUtcValue: TDateTime;
     function ToUtcValue: TDateTime;
     function CurrentDisplay: TRecorderSqlTrendDisplay;
+    function DisplayNameForGroupPath(const AGroupPath: string): string;
+    function FindDisplayByName(const AName: string): TRecorderSqlTrendDisplay;
+    function FindLineByTagName(ADisplay: TRecorderSqlTrendDisplay;
+      const ATagName: string): TRecorderTrendLine;
+    function FindAxisByName(ADisplay: TRecorderSqlTrendDisplay;
+      const AName: string): Integer;
+    function TagAutoDisplayGroup(ATag: TRecorderTag): string;
+    function AxisNameForTag(ATag: TRecorderTag): string;
+    function EnsureAxisForTag(ADisplay: TRecorderSqlTrendDisplay;
+      ATag: TRecorderTag): Integer;
+    procedure AssignDisplayAxesByUnits(ADisplay: TRecorderSqlTrendDisplay);
   public
     constructor CreateDialog(AOwner: TComponent;
-      AComponent: TRecorderSqlTrendComponent); reintroduce;
+      AComponent: TRecorderSqlTrendComponent;
+      ATagRegistry: TRecorderTagRegistry); reintroduce;
     destructor Destroy; override;
   end;
 
 function ShowRecorderSqlTrendSettingsDialog(AOwner: TComponent;
-  AComponent: TRecorderSqlTrendComponent): Boolean;
+  AComponent: TRecorderSqlTrendComponent;
+  ATagRegistry: TRecorderTagRegistry): Boolean;
 
 implementation
 
 {$R *.lfm}
 
 uses
-  uRecorderFormModel, uRecorderSqlDbTypes, uRecorderSqlDbRepository,
-  uOglChartColors;
+  uRecorderSqlDbTypes, uRecorderSqlDbRepository, uOglChartColors;
+
+const
+  CSqlTrendMainGroup = 'Основные каналы';
+  CSqlTrendDefaultAxis = 'Y';
 
 function ShowRecorderSqlTrendSettingsDialog(AOwner: TComponent;
-  AComponent: TRecorderSqlTrendComponent): Boolean;
+  AComponent: TRecorderSqlTrendComponent;
+  ATagRegistry: TRecorderTagRegistry): Boolean;
 var
   lDialog: TRecorderSqlTrendSettingsDialog;
 begin
-  lDialog := TRecorderSqlTrendSettingsDialog.CreateDialog(AOwner, AComponent);
+  lDialog := TRecorderSqlTrendSettingsDialog.CreateDialog(AOwner, AComponent,
+    ATagRegistry);
   try Result := lDialog.ShowModal = mrOk; finally lDialog.Free; end;
 end;
 
 constructor TRecorderSqlTrendSettingsDialog.CreateDialog(AOwner: TComponent;
-  AComponent: TRecorderSqlTrendComponent);
+  AComponent: TRecorderSqlTrendComponent; ATagRegistry: TRecorderTagRegistry);
 begin
   inherited Create(AOwner);
   fComponent := AComponent;
+  fTagRegistry := ATagRegistry;
   fDraft := TRecorderSqlTrendComponent.Create;
   fDraft.AssignSqlTrend(AComponent);
   cbTimeMode.ItemIndex := Ord(fDraft.TimeMode);
@@ -152,6 +176,132 @@ end;
 function TRecorderSqlTrendSettingsDialog.CurrentDisplay: TRecorderSqlTrendDisplay;
 begin
   Result := fDraft.ActiveDisplay;
+end;
+
+function TRecorderSqlTrendSettingsDialog.DisplayNameForGroupPath(
+  const AGroupPath: string): string;
+begin
+  Result := Trim(StringReplace(AGroupPath, '\', '-', [rfReplaceAll]));
+  if Result = '' then
+    Result := CSqlTrendMainGroup;
+end;
+
+function TRecorderSqlTrendSettingsDialog.FindDisplayByName(
+  const AName: string): TRecorderSqlTrendDisplay;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to fDraft.DisplayCount - 1 do
+    if SameText(fDraft.Displays[I].Name, AName) then
+      Exit(fDraft.Displays[I]);
+end;
+
+function TRecorderSqlTrendSettingsDialog.FindLineByTagName(
+  ADisplay: TRecorderSqlTrendDisplay; const ATagName: string): TRecorderTrendLine;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if ADisplay = nil then
+    Exit;
+  for I := 0 to ADisplay.LineCount - 1 do
+    if SameText(ADisplay.Lines[I].TagName, ATagName) then
+      Exit(ADisplay.Lines[I]);
+end;
+
+function TRecorderSqlTrendSettingsDialog.FindAxisByName(
+  ADisplay: TRecorderSqlTrendDisplay; const AName: string): Integer;
+begin
+  Result := -1;
+  if ADisplay = nil then
+    Exit;
+  for Result := 0 to ADisplay.AxisCount - 1 do
+    if SameText(ADisplay.Axes[Result].Name, AName) then
+      Exit;
+  Result := -1;
+end;
+
+function TRecorderSqlTrendSettingsDialog.TagAutoDisplayGroup(
+  ATag: TRecorderTag): string;
+begin
+  Result := '';
+  if ATag = nil then
+    Exit;
+  Result := Trim(ATag.GroupPath);
+  Result := StringReplace(Result, '/', '\', [rfReplaceAll]);
+  while Pos('\\', Result) > 0 do
+    Result := StringReplace(Result, '\\', '\', [rfReplaceAll]);
+  while (Length(Result) > 0) and (Result[1] = '\') do
+    Delete(Result, 1, 1);
+  while (Length(Result) > 0) and (Result[Length(Result)] = '\') do
+    Delete(Result, Length(Result), 1);
+  if SameText(Result, CSqlTrendMainGroup) then
+    Result := '';
+end;
+
+function TRecorderSqlTrendSettingsDialog.AxisNameForTag(ATag: TRecorderTag): string;
+begin
+  Result := '';
+  if ATag <> nil then
+    Result := Trim(ATag.UnitName);
+  if (Result = '') or (Result = '-') then
+    Result := CSqlTrendDefaultAxis;
+end;
+
+function TRecorderSqlTrendSettingsDialog.EnsureAxisForTag(
+  ADisplay: TRecorderSqlTrendDisplay; ATag: TRecorderTag): Integer;
+var
+  lAxis: TRecorderTrendAxis;
+  lAxisName: string;
+  lNewAxis: Boolean;
+begin
+  Result := 0;
+  if ADisplay = nil then
+    Exit;
+  lAxisName := AxisNameForTag(ATag);
+  Result := FindAxisByName(ADisplay, lAxisName);
+  lNewAxis := Result < 0;
+  if lNewAxis then
+  begin
+    lAxis := ADisplay.AddAxis;
+    lAxis.Name := lAxisName;
+    Result := ADisplay.AxisCount - 1;
+  end
+  else
+    lAxis := ADisplay.Axes[Result];
+
+  if (ATag <> nil) and (ATag.RangeMax > ATag.RangeMin) then
+  begin
+    if lNewAxis or (lAxis.RangeMax <= lAxis.RangeMin) then
+    begin
+      lAxis.RangeMin := ATag.RangeMin;
+      lAxis.RangeMax := ATag.RangeMax;
+    end
+    else
+    begin
+      lAxis.RangeMin := Min(lAxis.RangeMin, ATag.RangeMin);
+      lAxis.RangeMax := Max(lAxis.RangeMax, ATag.RangeMax);
+    end;
+  end;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.AssignDisplayAxesByUnits(
+  ADisplay: TRecorderSqlTrendDisplay);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lLine: TRecorderTrendLine;
+begin
+  if (ADisplay = nil) or (fTagRegistry = nil) then
+    Exit;
+  for I := 0 to ADisplay.LineCount - 1 do
+  begin
+    lLine := ADisplay.Lines[I];
+    lTag := fTagRegistry.FindByName(lLine.TagName);
+    if lTag <> nil then
+      lLine.AxisIndex := EnsureAxisForTag(ADisplay, lTag);
+  end;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.FillDisplays;
@@ -381,6 +531,84 @@ begin
   OglChartLineAppearance(CurrentDisplay.LineCount - 1, lPaletteName, lPaletteColor);
   L.AxisIndex := 0; L.Color := lPaletteColor; L.Visible := True; L.Width := 1;
   FillLines; lbLines.ItemIndex := CurrentDisplay.LineCount - 1; LoadLine;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.btnAutoDisplaysClick(Sender: TObject);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lGroupPath: string;
+  lDisplayName: string;
+  lDisplay: TRecorderSqlTrendDisplay;
+  lLine: TRecorderTrendLine;
+  lPaletteName: string;
+  lPaletteColor: LongInt;
+  lCreatedDisplays: Integer;
+  lCreatedLines: Integer;
+begin
+  if fTagRegistry = nil then
+  begin
+    MessageDlg('SQL-тренд', 'Реестр тегов недоступен.', mtError, [mbOK], 0);
+    Exit;
+  end;
+  StoreAxis;
+  StoreLine;
+  DisplayNameExit(nil);
+  lCreatedDisplays := 0;
+  lCreatedLines := 0;
+  for I := 0 to fTagRegistry.TagCount - 1 do
+  begin
+    lTag := fTagRegistry.Tags[I];
+    lGroupPath := TagAutoDisplayGroup(lTag);
+    if lGroupPath = '' then
+      Continue;
+    lDisplayName := DisplayNameForGroupPath(lGroupPath);
+    lDisplay := FindDisplayByName(lDisplayName);
+    if lDisplay = nil then
+    begin
+      lDisplay := fDraft.AddDisplay(lDisplayName);
+      Inc(lCreatedDisplays);
+    end;
+    if FindLineByTagName(lDisplay, lTag.Name) <> nil then
+      Continue;
+    lLine := lDisplay.AddLine;
+    lLine.TagName := lTag.Name;
+    lLine.Name := lTag.Name;
+    OglChartLineAppearance(lDisplay.LineCount - 1, lPaletteName, lPaletteColor);
+    lLine.AxisIndex := EnsureAxisForTag(lDisplay, lTag);
+    lLine.Color := lPaletteColor;
+    lLine.Visible := True;
+    lLine.Width := 1;
+    Inc(lCreatedLines);
+  end;
+  if lCreatedDisplays + lCreatedLines > 0 then
+  begin
+    FillDisplays;
+    FillAxes;
+    FillLines;
+  end;
+  MessageDlg('SQL-тренд',
+    Format('Создано отображений: %d. Добавлено линий: %d.',
+      [lCreatedDisplays, lCreatedLines]), mtInformation, [mbOK], 0);
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.btnAutoAxesClick(Sender: TObject);
+var
+  I: Integer;
+begin
+  if fTagRegistry = nil then
+  begin
+    MessageDlg('SQL-тренд', 'Реестр тегов недоступен.', mtError, [mbOK], 0);
+    Exit;
+  end;
+  StoreAxis;
+  StoreLine;
+  for I := 0 to fDraft.DisplayCount - 1 do
+    AssignDisplayAxesByUnits(fDraft.Displays[I]);
+  FillAxes;
+  FillLines;
+  MessageDlg('SQL-тренд', 'Оси назначены по единицам измерения тегов.',
+    mtInformation, [mbOK], 0);
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.btnDeleteLineClick(Sender: TObject);

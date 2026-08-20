@@ -647,6 +647,7 @@ procedure SaveRecorderProjectConfig(const AFileName: string;
 var
   I, J: Integer;
   lRoot: TJSONObject;
+  lGroups: TJSONArray;
   lTags: TJSONArray;
   lTagJson: TJSONObject;
   lTag: TRecorderTag;
@@ -671,6 +672,10 @@ begin
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
+    lGroups := JsonArray(lRoot, 'tagGroups');
+    for I := 0 to ATags.TagGroupPaths.Count - 1 do
+      if Trim(ATags.TagGroupPaths[I]) <> '' then
+        lGroups.Add(ATags.TagGroupPaths[I]);
 
     lTags := JsonArray(lRoot, 'tags');
     for I := 0 to ATags.TagCount - 1 do
@@ -687,6 +692,7 @@ begin
       lTagJson.Add('address', lTag.Address);
       lTagJson.Add('unit', lTag.UnitName);
       lTagJson.Add('description', lTag.Description);
+      lTagJson.Add('groupPath', lTag.GroupPath);
       lTagJson.Add('sourceId', lTag.SourceId);
       lTagJson.Add('isVirtual', lTag.IsVirtual);
       lTagJson.Add('isVector', lTag.IsVector);
@@ -726,6 +732,7 @@ var
   lRoot: TJSONObject;
   lTag: TRecorderTag;
   lTagJson: TJSONObject;
+  lGroups: TJSONArray;
   lTags: TJSONArray;
   lText: TStringList;
 begin
@@ -757,6 +764,11 @@ begin
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
     LoadFrequencyBands(FindArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
+    lGroups := FindArray(lRoot, 'tagGroups');
+    if lGroups <> nil then
+      for I := 0 to lGroups.Count - 1 do
+        if Trim(lGroups.Strings[I]) <> '' then
+          ATags.TagGroupPaths.Add(Trim(lGroups.Strings[I]));
     for I := 0 to lTags.Count - 1 do
     begin
       if not (lTags.Items[I] is TJSONObject) then
@@ -769,6 +781,7 @@ begin
         lTag.Address := lTagJson.Get('address', lTag.Address);
         lTag.UnitName := lTagJson.Get('unit', lTag.UnitName);
         lTag.Description := lTagJson.Get('description', lTag.Description);
+        lTag.GroupPath := lTagJson.Get('groupPath', lTag.GroupPath);
         lTag.SourceId := lTagJson.Get('sourceId', lTag.SourceId);
         { Совместимость со старыми проектами: до появления явного поля
           виртуальность можно было восстановить только по известным источникам. }

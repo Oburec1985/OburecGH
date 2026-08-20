@@ -17,6 +17,12 @@ check_path /opt/firebird/bin/isql
 check_path /opt/firebird/bin/firebird
 check_path /opt/firebird/SYSDBA.password
 check_path /etc/profile.d/recorderlnx-sqldb.sh
+check_path /var/opt/mera/SQLdb
+check_path /var/opt/mera/RecorderLnx/sqldb
+
+if [ -d /var/opt/mera/SQLdb ]; then
+  echo "INFO $(ls -ld /var/opt/mera/SQLdb)"
+fi
 
 if command -v systemctl >/dev/null 2>&1; then
   if systemctl is-active --quiet firebird.service; then

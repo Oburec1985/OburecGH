@@ -141,7 +141,12 @@ begin
 end;
 
 function RecorderSqlDbDefaultRootDirectory: string;
+var
+  lRoot: string;
 begin
+  lRoot := Trim(SysUtils.GetEnvironmentVariable('RECORDERLNX_SQLDB_ROOT'));
+  if lRoot <> '' then
+    Exit(ExcludeTrailingPathDelimiter(lRoot));
   Result := IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'SQLdb';
 end;
 
@@ -229,6 +234,12 @@ begin
      ((Length(lRoot) >= 2) and (lRoot[2] = ':')) or
      (Pos('\\', lRoot) > 0) then
     lRoot := RecorderSqlDbDefaultRootDirectory;
+  if (fBackend = rsbFirebird) and
+     ((Trim(fHost) = '') or SameText(Trim(fHost), 'localhost') or
+      SameText(Trim(fHost), '127.0.0.1') or SameText(Trim(fHost), '::1')) and
+     DirectoryExists('/var/opt/mera/SQLdb') and
+     (Pos('/home/', lRoot) = 1) then
+    lRoot := '/var/opt/mera/SQLdb';
   {$else}
   if (lRoot = '') or ((lRoot <> '') and (lRoot[1] = '/')) then
     lRoot := RecorderSqlDbDefaultRootDirectory;

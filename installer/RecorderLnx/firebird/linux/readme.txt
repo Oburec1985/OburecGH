@@ -38,8 +38,19 @@ sudo RECORDERLNX_FIREBIRD_ONLINE_DEPS=1 bash install-firebird-recorderlnx.sh
 - распаковывает архив во временную папку;
 - запускает `install.sh -silent`;
 - включает и запускает `firebird.service`;
+- создает системный каталог Mera Files для SQL БД:
+  `/var/opt/mera/SQLdb`;
+- назначает владельцем этого каталога пользователя Firebird
+  (`firebird`/`firebirdsql`, если такой пользователь есть);
+- создает совместимый старый каталог `/var/opt/mera/RecorderLnx/sqldb`;
 - создает `/etc/profile.d/recorderlnx-sqldb.sh` с переменной
-  `RECORDERLNX_SQLDB_PASSWORD` для RecorderLnx.
+  `RECORDERLNX_SQLDB_PASSWORD` для RecorderLnx и
+  `RECORDERLNX_SQLDB_ROOT=/var/opt/mera/SQLdb`.
+
+Для локального Firebird не используйте `/home/user/Mera Files/SQLdb` как
+каталог файла БД: сервер Firebird работает отдельным пользователем и часто не
+имеет права прохода в домашний каталог пользователя. Используйте системный
+Mera Files: `/var/opt/mera/SQLdb`.
 
 Firebird в silent-режиме сам генерирует пароль SYSDBA и сохраняет его в:
 

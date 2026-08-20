@@ -32,6 +32,7 @@ type
     destructor Destroy; override;
     procedure Configure(const AFileName: string);
     procedure Reload;
+    procedure SaveConfig;
     procedure StartRegistration(const AReason: string = 'manual');
     procedure StopRegistration;
     procedure SetRecordingEnabled(AValue: Boolean);
@@ -87,6 +88,13 @@ begin
   fConfig.LoadFromFile(fConfigFileName);
   if fConfig.Enabled then
     SetRecordingActive(True, 'SQLdb enabled');
+end;
+
+procedure TRecorderSqlDbManager.SaveConfig;
+begin
+  if Trim(fConfigFileName) = '' then
+    Exit;
+  fConfig.SaveToFile(fConfigFileName);
 end;
 
 procedure TRecorderSqlDbManager.EnsureRuntime;

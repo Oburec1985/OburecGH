@@ -202,17 +202,16 @@
       <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
-        <TopLine Value="1631"/>
-        <CursorPos X="35" Y="1650"/>
+        <TopLine Value="1738"/>
+        <CursorPos X="65" Y="1762"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTagTableExchange.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="90"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderTagRefs.pas"/>
@@ -395,9 +394,10 @@
         <ComponentName Value="RecorderSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1831"/>
-        <CursorPos X="41" Y="1858"/>
+        <TopLine Value="127"/>
+        <CursorPos X="95" Y="244"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -408,7 +408,7 @@
         <ComponentName Value="RecorderVirtualTagDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="200"/>
+        <UsageCount Value="208"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderNetworkBinding.pas"/>
@@ -416,7 +416,7 @@
         <EditorIndex Value="6"/>
         <TopLine Value="167"/>
         <CursorPos X="64" Y="187"/>
-        <UsageCount Value="200"/>
+        <UsageCount Value="208"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
@@ -900,7 +900,8 @@
         <Filename Value="SQLdb\uRecorderSqlDbRuntime.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
-        <CursorPos X="73" Y="8"/>
+        <TopLine Value="94"/>
+        <CursorPos Y="104"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit>
@@ -920,7 +921,7 @@
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbFirebirdTools.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="35"/>
+        <UsageCount Value="40"/>
       </Unit>
       <Unit>
         <Filename Value="Device\uRecorderMic140DeviceApi.pas"/>
@@ -1197,7 +1198,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="15"/>
         <CursorPos X="8" Y="35"/>
-        <UsageCount Value="0"/>
+        <UsageCount Value="10"/>
       </Unit>
       <Unit>
         <Filename Value="..\third_party\fpspreadsheet\fpsopendocument.pas"/>
@@ -1211,11 +1212,11 @@
         <EditorIndex Value="3"/>
         <TopLine Value="573"/>
         <CursorPos X="32" Y="585"/>
-        <UsageCount Value="42"/>
+        <UsageCount Value="43"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="29">
+    <JumpHistory HistoryIndex="23">
       <Position>
         <Filename Value="UI\uRecorderSettingsDialog.pas"/>
         <Caret Line="1956" Column="4" TopLine="1936"/>
@@ -1311,30 +1312,6 @@
       <Position>
         <Filename Value="SQLdb\uRecorderSqlDbRuntime.pas"/>
         <Caret Line="40" Column="32" TopLine="12"/>
-      </Position>
-      <Position>
-        <Filename Value="SQLdb\uRecorderSqlDbRuntime.pas"/>
-        <Caret Line="8" Column="73"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="59" Column="55" TopLine="37"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="54" Column="31" TopLine="31"/>
-      </Position>
-      <Position>
-        <Filename Value="UI\uRecorderSettingsDialog.pas"/>
-        <Caret Line="1858" Column="41" TopLine="1831"/>
-      </Position>
-      <Position>
-        <Filename Value="Core\uRecorderTags.pas"/>
-        <Caret Line="1624" Column="50" TopLine="1608"/>
-      </Position>
-      <Position>
-        <Filename Value="Core\uRecorderTags.pas"/>
-        <Caret Line="591" Column="52" TopLine="570"/>
       </Position>
     </JumpHistory>
     <RunParams>

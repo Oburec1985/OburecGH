@@ -75,7 +75,7 @@ var
 begin
   if AComponent is TRecorderSqlTrendComponent then
     Exit(ShowRecorderSqlTrendSettingsDialog(AOwner,
-      TRecorderSqlTrendComponent(AComponent)));
+      TRecorderSqlTrendComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderButtonComponent then
     Exit(ShowRecorderButtonSettingsDialog(AOwner,
       TRecorderButtonComponent(AComponent), ATagRegistry));

@@ -1,3 +1,181 @@
+## 2026-08-20 00:00 - Linux Firebird DB directory permissions
+
+**Запрос:** локальная SQL БД на Linux не подключилась; обсудили, стоит ли
+доработать Firebird-инсталлятор, чтобы права были выше. Уточнение: Mera Files
+является специальным каталогом данных.
+
+**Сделано:** Firebird-инсталлятор
+`installer/RecorderLnx/firebird/linux/install-firebird-recorderlnx.sh` теперь
+создаёт системный Mera Files SQL-каталог `/var/opt/mera/SQLdb`, назначает его
+владельцем `firebird`/`firebirdsql` при наличии такого пользователя, выставляет
+`2775` и пишет `RECORDERLNX_SQLDB_ROOT=/var/opt/mera/SQLdb` в profile.d.
+Проверочный скрипт и readme обновлены. RecorderLnx на Linux предпочитает
+`/var/opt/mera` как Mera Files, если каталог существует, и для локального
+Firebird уводит старый `/home/.../Mera Files/SQLdb` в `/var/opt/mera/SQLdb`.
+
+**Проверка:** `git diff --check` по изменённым файлам чистый, кроме обычных
+LF/CRLF warnings. `lazbuild -B RecorderLnx.lpi` скомпилировал Pascal-часть и
+упал только на линковке: `RecorderLnx.exe` занят запущенным процессом
+(`error code: 5`). `bash -n` локально не выполнен, потому что `bash` отсутствует
+в Windows shell. Подробности: `errors/2026-08-20-linux-firebird-local-db-permission.md`.
+
+**Статус:** код/инсталлятор исправлены; нужна финальная линковка после закрытия
+RecorderLnx и проверка на Linux через `bash check-firebird-recorderlnx.sh`.
+
+## 2026-08-19 19:45 - Tag tree move keyboard shortcuts
+
+**Запрос:** созданным узлам дерева тегов назначать иконку папки; перенос в
+выбранный узел подтверждать `Enter`, а отменять `Esc`.
+
+**Сделано:** в `UI/uRecorderSettingsDialog.pas` ручное создание root-узла и
+подузла теперь сразу выставляет `ImageIndex/SelectedIndex` папки. Для дерева
+выбранных каналов добавлен `OnKeyDown`: в режиме выбора цели переноса `Enter`
+вызывает `Перенести сюда`, `Esc` отменяет перенос и возвращает обычный вид.
+
+**Проверка:** `git diff --check` чистый, кроме стандартного предупреждения
+LF→CRLF. `lazbuild -B` дошёл до линковки без ошибок компиляции, но не смог
+заменить `lib\x86_64-win64\RecorderLnx.exe`: файл занят запущенным RecorderLnx
+PID 13944 (`error code: 5`).
+
+**Статус:** код исправлен; финальная линковка нужна после закрытия запущенного
+RecorderLnx/отладчика.
+
+## 2026-08-19 19:38 - Context-menu tag move target mode
+
+**Запрос:** кнопка `Перенести` работает некорректно и при скрытии тегов прячет
+узел `Бак\Труба1`; перенос тегов должен быть из контекстного меню дерева, а
+кнопку нужно убрать.
+
+**Сделано:** в `UI/uRecorderSettingsDialog.pas` удалено динамическое создание
+кнопки `Перенести`. В контекстное меню дерева добавлены команды `Перенести`,
+`Перенести сюда` и `Отменить перенос`: первая запоминает выделенные теги и
+перестраивает дерево в режим выбора цели только из папок, включая все сохранённые
+пользовательские группы; вторая переносит запомненные теги в выбранный узел.
+Правый клик по узлу выбирает его, не сбрасывая уже выделенные теги, если клик
+попал по одному из них.
+
+**Проверка:** `rg` не нашёл оставшихся ссылок на старую кнопку/обработчик,
+`git diff --check` чистый, кроме стандартного предупреждения LF→CRLF.
+`lazbuild -B` дошёл до линковки без ошибок компиляции, но не смог заменить
+`lib\x86_64-win64\RecorderLnx.exe`: файл занят запущенным RecorderLnx PID 13368
+(`error code: 5`).
+
+**Статус:** код исправлен; нужна финальная линковка после закрытия запущенного
+RecorderLnx/отладчика.
+
+## 2026-08-19 19:22 - Tags restored in selected-channel tree
+
+**Запрос:** во вкладке `Дерево` папка `Основные каналы` оказалась пустой; теги
+должны отображаться внутри групп.
+
+**Сделано:** в `UI/uRecorderSettingsDialog.pas` восстановлено добавление
+дочерних узлов-тегов под группы дерева с учётом фильтра, `Скрыть неактивные` и
+`Только виртуальные`. Двойной клик по тегу дерева открывает настройки именно
+этого тега, двойной клик по папке оставляет переименование. Добавлен перенос
+выделенных тегов drag-drop прямо из дерева в папку.
+
+**Проверка:** `git diff --check` по `uRecorderSettingsDialog.pas` прошёл
+чисто, кроме стандартного предупреждения LF→CRLF. `lazbuild -B` дошёл до
+линковки без ошибок компиляции, но не смог заменить
+`lib\x86_64-win64\RecorderLnx.exe`: файл занят (`error code: 5`).
+
+**Статус:** код исправлен; финальная линковка нужна после закрытия запущенного
+RecorderLnx/отладчика.
+
+## 2026-08-19 19:05 - Tag group tree folders and move button
+
+**Запрос:** фильтр тегов должен работать и в дереве; дерево должно показывать
+только папки-группы с иконками, а выбранные теги из таблицы нужно переносить в
+выбранную папку кнопкой `Перенести` с мультивыбором.
+
+**Сделано:** в `UI/uRecorderSettingsDialog.pas` дерево групп больше не выводит
+теги как дочерние элементы, показывает только папки и получает `ImageList`
+главной формы с иконкой папки `CIconFolderOpen`. Фильтр выбранных каналов теперь
+применяется и к дереву: при активном фильтре остаются только папки, содержащие
+подходящие теги. В таблице выбранных каналов включён range-multiselect, добавлена
+кнопка `Перенести`, которая переносит все выделенные строки таблицы в выбранный
+узел дерева; drag-drop из таблицы использует ту же логику.
+
+**Проверка:** `git diff --check` по `uRecorderSettingsDialog.pas` прошёл
+чисто, кроме стандартного предупреждения LF→CRLF. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0 и перелинковал `RecorderLnx.exe`.
+
+**Статус:** готово к ручной проверке в диалоге настроек каналов.
+
+## 2026-08-19 18:45 - Tag groups tree and ODS group column
+
+**Запрос:** таблицу выбранных тегов на вкладке `Каналы` положить на PageControl
+с переключением на дерево. По умолчанию теги должны лежать в `Основные каналы`,
+добавить `Вспомогательные каналы`, разрешить пользовательские узлы/подузлы и
+drag-drop тегов между группами. При ODS export/import поддержать колонку
+`Группа` с путём узла.
+
+**Сделано:** у `TRecorderTag` добавлен `GroupPath`, а у
+`TRecorderTagRegistry` список `TagGroupPaths` как root модели дерева групп.
+Группы сохраняются в проектный json (`tagGroups`), теги сохраняют ссылку на
+родительскую группу через `groupPath`. В `uRecorderSettingsDialog.pas`
+выбранные каналы теперь имеют PageControl `Таблица`/`Дерево`; дерево строится
+из root-групп и `tag.GroupPath`, содержит базовые узлы `Основные каналы` и
+`Вспомогательные каналы`, поддерживает создание root/child узлов, переименование
+без дублей имён, удаление пустых небазовых узлов и drag-drop тегов из таблицы
+или дерева. Колонка `Группа` в таблице теперь показывает путь группы, а не тип
+источника.
+
+**ODS:** `Core/uRecorderTagTableExchange.pas` добавляет/читает колонку
+`Группа` по имени заголовка. При экспорте колонка создаётся только если в
+конфигурации есть пользовательские группы/групповые привязки или колонка уже
+существовала в файле. При импорте путь группы записывается в тег и добавляется
+в root-группы registry.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+скомпилировал изменённые модули без compile errors, но на линковке не смог
+заменить `lib\x86_64-win64\RecorderLnx.exe`: `error code: 5`, файл занят
+запущенным RecorderLnx/отладчиком. Процесс не останавливался по правилу
+пользователя.
+
+**Статус:** код компилируется; нужна финальная линковка после закрытия
+запущенного RecorderLnx.
+
+## 2026-08-19 18:24 - SQL flag in tag ODS exchange
+
+**Запрос:** при экспорте/импорте списка каналов добавить колонку `Запись SQL`
+и учитывать в ней признак записи тега в SQL БД.
+
+**Сделано:** в `Core/uRecorderTagTableExchange.pas` добавлена колонка
+`Запись SQL`. Экспорт пишет `1/0` из `TRecorderSqlDbConfig.SignalEnabled`.
+Импорт читает флаг по заголовку, поддерживает `1/0`, `true/false`, `да/нет` и
+обновляет `SignalNames`; если раньше выбор каналов SQL был неявным "все",
+при первом импортированном флаге создаётся явный список текущих тегов.
+В `UI/uRecorderSettingsDialog.pas` импорт/экспорт теперь получает текущую
+SQLdb-конфигурацию из `fRecorder.SqlDbManager.Config`; после импорта
+`TRecorderSqlDbManager.SaveConfig` сразу сохраняет изменённый список SQL-тегов.
+
+**Проверка:** `git diff --check` по изменённым файлам прошёл.
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершился успешно.
+
+**Статус:** готово.
+
+## 2026-08-19 18:10 - ODS tag table columns by header names
+
+**Запрос:** импорт/экспорт списка тегов в ODS должен работать по именам
+столбцов, чтобы пользователь мог добавлять в таблицу свои колонки и хранить
+там дополнительную информацию.
+
+**Сделано:** в `Core/uRecorderTagTableExchange.pas` добавлена карта колонок по
+заголовкам. Импорт читает рабочие поля через найденные заголовки по всей строке
+0. Экспорт, если файл уже существует, открывает его, сохраняет пользовательские
+колонки, находит/добавляет справа наши служебные колонки и обновляет строки
+существующих тегов по `ID`, затем `source+address`, затем имени; новые теги
+добавляет вниз.
+
+**Проверка:** `git diff --check` по `uRecorderTagTableExchange.pas` прошёл.
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершился `BUILD_OK`.
+
+**Статус:** готово.
+
 ## 2026-08-19 17:55 - Mera tag duplicate on settings OK
 
 **Запрос:** после добавления тега и нажатия `OK` снова возникает
@@ -7310,3 +7488,39 @@ selection refresh. Removed an extra `RenderActivePage` after delete because
 LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
 completed successfully. Detailed notes:
 `errors/2026-08-19-mnemonic-editor-lag.md`.
+
+## 2026-08-19 - SQL trend auto displays and axes
+
+**Request:** in SQL trend component settings, add automatic display creation for
+tags outside the main tag-tree node, and automatic Y-axis creation per unit.
+
+**Done:** `ShowRecorderSqlTrendSettingsDialog` now receives the current
+`TRecorderTagRegistry`. The SQL trend settings dialog has `Авто отображения`
+and `Авто оси` buttons. Auto displays scan current tags with non-main
+`GroupPath`, create/reuse displays named from the group path with `\` replaced
+by `-` (`Бак\Труба1` -> `Бак-Труба1`), and add missing lines without
+duplicates. Auto axes scan each display line, resolve the line signal back to a
+current tag by name, create/reuse an axis named by `UnitName` (fallback `Y`),
+assign the line to that axis, and widen axis ranges from tag ranges.
+
+**Verification:** `git diff --check` completed with only standard LF/CRLF
+warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed successfully.
+
+## 2026-08-19 - Tag group tree Shift selection
+
+**Request:** enable Shift range selection for tags in the channel group tree.
+
+**Done:** enabled explicit multi-select behavior for the programmatically
+created `fSelectedChannelsTree`: `MultiSelect := True` and
+`MultiSelectStyle := [msControlSelect, msShiftSelect, msVisibleOnly]`.
+Existing move/drag logic already works through `SelectionCount` and
+`Selections[]`, so Shift-selected ranges are included in group move operations.
+
+**Verification:** `git diff --check --
+Lazarus/RecorderLnx/UI/uRecorderSettingsDialog.pas` completed successfully with
+only the standard LF/CRLF warning. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` compiled the Pascal
+units and failed only at link because
+`Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe` is locked by a running
+RecorderLnx process (`error code: 5`).

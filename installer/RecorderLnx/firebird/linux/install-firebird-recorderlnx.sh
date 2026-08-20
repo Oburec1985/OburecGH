@@ -5,6 +5,8 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 LOG_FILE="${RECORDERLNX_FIREBIRD_LOG:-/tmp/recorderlnx-firebird-install.log}"
 FIREBIRD_PREFIX="/opt/firebird"
 PROFILE_FILE="/etc/profile.d/recorderlnx-sqldb.sh"
+RECORDERLNX_SQLDB_DIR="/var/opt/mera/SQLdb"
+RECORDERLNX_LEGACY_SQLDB_DIR="/var/opt/mera/RecorderLnx/sqldb"
 ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
 
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -115,6 +117,36 @@ enable_firebird_service() {
   fi
 }
 
+firebird_account() {
+  if getent passwd firebird >/dev/null 2>&1; then
+    printf '%s\n' 'firebird'
+  elif getent passwd firebirdsql >/dev/null 2>&1; then
+    printf '%s\n' 'firebirdsql'
+  else
+    printf '%s\n' 'root'
+  fi
+}
+
+prepare_recorderlnx_sqldb_dirs() {
+  local fb_user
+  local fb_group
+
+  fb_user="$(firebird_account)"
+  fb_group="$fb_user"
+  if ! getent group "$fb_group" >/dev/null 2>&1; then
+    fb_group="root"
+  fi
+
+  echo "Preparing RecorderLnx SQL DB directories..."
+  install -d -m 2775 "$RECORDERLNX_SQLDB_DIR"
+  install -d -m 2775 "$RECORDERLNX_LEGACY_SQLDB_DIR"
+  chown "$fb_user:$fb_group" "$RECORDERLNX_SQLDB_DIR" || true
+  chown "$fb_user:$fb_group" "$RECORDERLNX_LEGACY_SQLDB_DIR" || true
+  chmod 2775 "$RECORDERLNX_SQLDB_DIR" "$RECORDERLNX_LEGACY_SQLDB_DIR" || true
+  echo "OK   $RECORDERLNX_SQLDB_DIR owner target: $fb_user:$fb_group"
+  echo "OK   $RECORDERLNX_LEGACY_SQLDB_DIR owner target: $fb_user:$fb_group"
+}
+
 write_recorderlnx_password_env() {
   local password
   local escaped_password
@@ -136,6 +168,7 @@ write_recorderlnx_password_env() {
 # RecorderLnx SQL DB password for Firebird SYSDBA.
 # Created by install-firebird-recorderlnx.sh.
 export RECORDERLNX_SQLDB_PASSWORD='$escaped_password'
+export RECORDERLNX_SQLDB_ROOT='$RECORDERLNX_SQLDB_DIR'
 EOF
   chmod 0644 "$PROFILE_FILE"
   echo "RecorderLnx SQL password environment file created: $PROFILE_FILE"
@@ -156,6 +189,20 @@ check_firebird() {
     echo "OK   $PROFILE_FILE"
   else
     echo "MISS $PROFILE_FILE"
+  fi
+
+  if [ -d "$RECORDERLNX_SQLDB_DIR" ]; then
+    echo "OK   $RECORDERLNX_SQLDB_DIR"
+    ls -ld "$RECORDERLNX_SQLDB_DIR" || true
+  else
+    echo "MISS $RECORDERLNX_SQLDB_DIR"
+  fi
+
+  if [ -d "$RECORDERLNX_LEGACY_SQLDB_DIR" ]; then
+    echo "OK   $RECORDERLNX_LEGACY_SQLDB_DIR"
+    ls -ld "$RECORDERLNX_LEGACY_SQLDB_DIR" || true
+  else
+    echo "MISS $RECORDERLNX_LEGACY_SQLDB_DIR"
   fi
 
   if command -v systemctl >/dev/null 2>&1; then
@@ -186,6 +233,7 @@ main() {
   install_online_dependencies_if_requested
   install_firebird "$archive"
   enable_firebird_service
+  prepare_recorderlnx_sqldb_dirs
   write_recorderlnx_password_env
   check_firebird
   echo

@@ -156,6 +156,8 @@ begin
 {$ELSE}
   if SysUtils.GetEnvironmentVariable('MERA_FILES') <> '' then
     Result := SysUtils.GetEnvironmentVariable('MERA_FILES')
+  else if DirectoryExists('/var/opt/mera') then
+    Result := '/var/opt/mera'
   else
     Result := IncludeTrailingPathDelimiter(GetUserDir) + 'Mera Files';
 {$ENDIF}

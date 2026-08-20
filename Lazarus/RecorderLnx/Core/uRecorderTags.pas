@@ -185,6 +185,7 @@ type
   private
     fAddress: string;                                          { Адрес тега (например, в модуле) }
     fDescription: string;                                      { Описание тега }
+    fGroupPath: string;                                        { Пользовательский путь группы в дереве тегов }
     fAutoRange: Boolean;                                       { Автоматический диапазон шкалы }
     fAutoUnit: Boolean;                                        { Автоматические единицы измерения }
     fCalibrationNames: TStringList;                          { Цепочка имен канальных ГХ }
@@ -258,6 +259,7 @@ type
     property Address: string read fAddress write fAddress;
     property UnitName: string read fUnitName write fUnitName;
     property Description: string read fDescription write fDescription;
+    property GroupPath: string read fGroupPath write fGroupPath;
     property PollFrequencyHz: Double read fPollFrequencyHz write fPollFrequencyHz;
     property SensorCalibrationName: string read fSensorCalibrationName write fSensorCalibrationName;
     property AmplifierCalibrationName: string read fAmplifierCalibrationName write fAmplifierCalibrationName;
@@ -412,6 +414,7 @@ type
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
     fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
+    fTagGroupPaths: TStringList;                      { Пользовательские группы дерева тегов }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
@@ -515,6 +518,7 @@ type
     property TimeSystem: TRecorderTimeSystem read fTimeSystem write fTimeSystem;
     property SelectedTag: TRecorderTag read GetSelectedTag;
     property SelectedTagName: string read fSelectedTagName write fSelectedTagName;
+    property TagGroupPaths: TStringList read fTagGroupPaths;
     property TagCount: Integer read GetTagCount;
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
@@ -1534,6 +1538,10 @@ begin
   fActiveSourceIds := TStringList.Create;
   fActiveSourceIds.CaseSensitive := False;
   fActiveSourceIds.Sorted := False;
+  fTagGroupPaths := TStringList.Create;
+  fTagGroupPaths.CaseSensitive := False;
+  fTagGroupPaths.Sorted := True;
+  fTagGroupPaths.Duplicates := dupIgnore;
   fTags := TList.Create;
   fNextId := 1;
   fCalibrations := TRecorderCalibrationList.Create;
@@ -1554,6 +1562,7 @@ begin
   fFrequencyBands.Free;
   fSpectrumConfigs.Free;
   fCalibrations.Free;
+  fTagGroupPaths.Free;
   fActiveSourceIds.Free;
   fTags.Free;
   DoneCriticalSection(fRuntimeDataLock);
@@ -2253,6 +2262,7 @@ begin
   fTags.Clear;
   fSourceSpecificConfigs.Clear;
   fConfiguredDataSources.Clear;
+  fTagGroupPaths.Clear;
   fSelectedTagName := '';
   fNextId := 1;
 end;
