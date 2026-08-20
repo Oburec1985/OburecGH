@@ -79,6 +79,7 @@ type
     procedure RefreshGrid;
     procedure StoreGrid;
     procedure StoreToComponent;
+    function CurrentSectionId: string;
     function ParseFloatText(const AText: string; ADefault: Double): Double;
     function SelectedListTag: TRecorderTag;
     function TagByName(const AName: string): TRecorderTag;
@@ -202,6 +203,11 @@ begin
   Result := FloatToStr(AValue, lFormat);
 end;
 
+function SameSectionId(const ALeft, ARight: string): Boolean;
+begin
+  Result := SameText(Trim(ALeft), Trim(ARight));
+end;
+
 { TRecorderMeasurementSectionSettingsDialog }
 
 constructor TRecorderMeasurementSectionSettingsDialog.CreateDialog(
@@ -236,6 +242,16 @@ begin
   lText := StringReplace(lText, '.', DecimalSeparator, [rfReplaceAll]);
   lText := StringReplace(lText, ',', DecimalSeparator, [rfReplaceAll]);
   Result := StrToFloatDef(lText, ADefault);
+end;
+
+function TRecorderMeasurementSectionSettingsDialog.CurrentSectionId: string;
+begin
+  Result := Trim(fSectionIdEdit.Text);
+  if Result = '' then
+    Result := fDraft.SectionId;
+  Result := Trim(Result);
+  if Result = '' then
+    Result := '1';
 end;
 
 function TRecorderMeasurementSectionSettingsDialog.SelectedListTag: TRecorderTag;
@@ -525,9 +541,7 @@ begin
   fDraft.Caption := Trim(fCaptionEdit.Text);
   if fDraft.Caption = '' then
     fDraft.Caption := 'Измерительное сечение';
-  fDraft.SectionId := Trim(fSectionIdEdit.Text);
-  if fDraft.SectionId = '' then
-    fDraft.SectionId := '1';
+  fDraft.SectionId := CurrentSectionId;
   fDraft.YoungModulusMPa := ParseFloatText(fYoungEdit.Text,
     fDraft.YoungModulusMPa);
   fDraft.PoissonRatio := ParseFloatText(fPoissonEdit.Text,
@@ -624,9 +638,7 @@ begin
   fDraft.Caption := Trim(fCaptionEdit.Text);
   if fDraft.Caption = '' then
     fDraft.Caption := 'Измерительное сечение';
-  fDraft.SectionId := Trim(fSectionIdEdit.Text);
-  if fDraft.SectionId = '' then
-    fDraft.SectionId := '1';
+  fDraft.SectionId := CurrentSectionId;
   fDraft.YoungModulusMPa := ParseFloatText(fYoungEdit.Text,
     fDraft.YoungModulusMPa);
   fDraft.PoissonRatio := ParseFloatText(fPoissonEdit.Text,
@@ -747,7 +759,7 @@ var
   lRow: TRecorderMeasurementSectionRow;
   lTag: TRecorderTag;
   lTagId: TRecorderTagId;
-  lTagName, lText: string;
+  lSectionId, lTagName, lText: string;
   I: Integer;
 begin
   lBook := TsWorkbook.Create;
@@ -757,10 +769,15 @@ begin
       Exit;
     lSheet := lBook.GetWorksheetByIndex(0);
     BuildColumnMap(lSheet, True, lMap);
+    fDraft.SectionId := CurrentSectionId;
     fDraft.ClearRows;
     lLastRow := lSheet.GetLastRowIndex(True);
     for lRowIndex := 1 to lLastRow do
     begin
+      lSectionId := ReadCell(lSheet, lRowIndex, lMap[scolSection]);
+      if (lSectionId <> '') and
+        (not SameSectionId(lSectionId, fDraft.SectionId)) then
+        Continue;
       if not RecorderRosetteRoleFromText(ReadCell(lSheet, lRowIndex,
         lMap[scolRole]), lRole) then
         Continue;

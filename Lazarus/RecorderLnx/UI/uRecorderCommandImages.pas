@@ -46,9 +46,11 @@ const
   CIconRunWp = 37;
   CIconSaveConfigAs = 48;
   CIconTrends = 5;
+  CIconImageComponent = 59;
+  CIconMeasurementSection = 60;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 59;
+  CRecorderCommandImageCount = 61;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -357,7 +359,9 @@ begin
   AImages.Width := 42;
   AImages.Height := 42;
 
-  if AImages.Count < CRecorderCommandImageCount then
+  { Forms usually keep ilCommandButtons in the .lfm. Do not append file-based
+    fallback icons to a designer-filled list: indexes 59/60 are semantic now. }
+  if AImages.Count = 0 then
   begin
     while AImages.Count < CRecorderOriginalImageCount do
       AddBitmapFile(AImages, '');
@@ -385,8 +389,9 @@ begin
     AddIconFile(AImages, ImageFile('from_rcguisrv\res\arw_rl.ico'));
     AddIconFile(AImages, ImageFile('from_rcguisrv\res\arw_lr.ico'));
     AddIconFile(AImages, ImageFile('from_rcguisrv\ico\play.ico'));
-    EnsureImageListSize(AImages, CRecorderCommandImageCount);
   end;
+
+  EnsureImageListSize(AImages, CRecorderCommandImageCount);
 
   { Save и Save As берутся непосредственно из встроенного ilCommandButtons
     (индексы 58 и 48). Внешняя платформенная подмена здесь недопустима: иначе

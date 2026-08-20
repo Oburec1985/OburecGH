@@ -1955,16 +1955,17 @@ begin
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
   fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick, 2, True);
   fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick, 2, True);
-  fAddMeasurementSectionButton := AddEditMnemoToolBarButton(356, -1,
+  fAddMeasurementSectionButton := AddEditMnemoToolBarButton(356,
+    CIconMeasurementSection,
     'Добавить измерительное сечение', @AddMeasurementSectionClick, 2, True,
-    True, 'Sec');
+    True);
   fAddSqlTrendButton := AddEditMnemoToolBarButton(390, CIconTrends,
     'Add SQL database trend', @AddSqlTrendClick, 2, True, True, 'SQL');
   fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
   fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick, 2, True);
   fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick, 2, True);
-  fAddImageButton := AddEditMnemoToolBarButton(208, -1, 'Добавить картинку',
-    @AddImageClick, 2, True, True, 'Img');
+  fAddImageButton := AddEditMnemoToolBarButton(208, CIconImageComponent,
+    'Добавить картинку', @AddImageClick, 2, True, True);
   fAddTagTableButton := AddEditMnemoToolBarButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
   fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
   fAddComboBoxButton := AddEditMnemoToolBarButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);

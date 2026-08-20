@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
-  Graphics, Math, DateTimePicker,
+  Graphics, Math, DateTimePicker, EditBtn,
   uRecorderFormModel, uRecorderSqlTrendModel, uRecorderTags;
 
 type
@@ -90,6 +90,8 @@ type
     fDbFromUtc: Double;
     fDbToUtc: Double;
     fDbPointCount: Int64;
+    fFromDateEdit: TDateEdit;
+    fToDateEdit: TDateEdit;
     procedure FillAxes;
     procedure FillDisplays;
     procedure FillLines;
@@ -97,6 +99,16 @@ type
     procedure LoadLine;
     procedure StoreAxis;
     procedure StoreLine;
+    procedure ConfigureDatePicker(APicker: TDateTimePicker);
+    procedure CreateDateEditFallbacks;
+    procedure CreateDateEditFallback(APicker: TDateTimePicker;
+      var AEdit: TDateEdit);
+    procedure ConfigureDateEdit(AEdit: TDateEdit);
+    function UseDateEditFallback: Boolean;
+    function DateEditValue(AEdit: TDateEdit;
+      APicker: TDateTimePicker): TDateTime;
+    procedure SetDateEditValue(AEdit: TDateEdit;
+      APicker: TDateTimePicker; AValue: TDateTime);
     procedure SetTimeEdits(AFromUtc, AToUtc: TDateTime);
     function FromUtcValue: TDateTime;
     function ToUtcValue: TDateTime;
@@ -153,6 +165,9 @@ begin
   fTagRegistry := ATagRegistry;
   fDraft := TRecorderSqlTrendComponent.Create;
   fDraft.AssignSqlTrend(AComponent);
+  ConfigureDatePicker(dtpFromDate);
+  ConfigureDatePicker(dtpToDate);
+  CreateDateEditFallbacks;
   cbTimeMode.ItemIndex := Ord(fDraft.TimeMode);
   if fDraft.TimeMode = sttmLatestWindow then
   begin
@@ -396,6 +411,90 @@ begin
     CurrentDisplay.Lines[lbLines.ItemIndex].Name;
 end;
 
+procedure TRecorderSqlTrendSettingsDialog.ConfigureDatePicker(
+  APicker: TDateTimePicker);
+begin
+  if APicker = nil then
+    Exit;
+  APicker.Enabled := True;
+  APicker.ReadOnly := False;
+  APicker.TabStop := True;
+  APicker.Kind := dtkDate;
+  APicker.DateMode := dmComboBox;
+  APicker.ShowCheckBox := False;
+  APicker.NullInputAllowed := False;
+  APicker.UseDefaultSeparators := False;
+  APicker.DateSeparator := '.';
+  APicker.DateDisplayOrder := ddoDMY;
+  APicker.LeadingZeros := True;
+  APicker.AutoButtonSize := True;
+end;
+
+function TRecorderSqlTrendSettingsDialog.UseDateEditFallback: Boolean;
+begin
+  {$IFDEF UNIX}
+  Result := True;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.ConfigureDateEdit(AEdit: TDateEdit);
+begin
+  if AEdit = nil then
+    Exit;
+  AEdit.Enabled := True;
+  AEdit.ReadOnly := False;
+  AEdit.TabStop := True;
+  AEdit.DirectInput := True;
+  AEdit.DefaultToday := False;
+  AEdit.DateOrder := doDMY;
+  AEdit.DateFormat := 'dd.mm.yyyy';
+  AEdit.ButtonOnlyWhenFocused := False;
+  AEdit.OnChange := @TimeFromChange;
+  AEdit.OnEditingDone := @TimeFromChange;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.CreateDateEditFallback(
+  APicker: TDateTimePicker; var AEdit: TDateEdit);
+begin
+  if (APicker = nil) or (AEdit <> nil) then
+    Exit;
+  AEdit := TDateEdit.Create(Self);
+  AEdit.Parent := APicker.Parent;
+  AEdit.SetBounds(APicker.Left, APicker.Top, APicker.Width, APicker.Height);
+  AEdit.Anchors := APicker.Anchors;
+  AEdit.TabOrder := APicker.TabOrder;
+  ConfigureDateEdit(AEdit);
+  APicker.Visible := False;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.CreateDateEditFallbacks;
+begin
+  if not UseDateEditFallback then
+    Exit;
+  CreateDateEditFallback(dtpFromDate, fFromDateEdit);
+  CreateDateEditFallback(dtpToDate, fToDateEdit);
+end;
+
+function TRecorderSqlTrendSettingsDialog.DateEditValue(AEdit: TDateEdit;
+  APicker: TDateTimePicker): TDateTime;
+begin
+  if AEdit <> nil then
+    Result := Trunc(AEdit.Date)
+  else
+    Result := Trunc(APicker.Date);
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.SetDateEditValue(AEdit: TDateEdit;
+  APicker: TDateTimePicker; AValue: TDateTime);
+begin
+  if APicker <> nil then
+    APicker.Date := AValue;
+  if AEdit <> nil then
+    AEdit.Date := AValue;
+end;
+
 procedure TRecorderSqlTrendSettingsDialog.SetTimeEdits(AFromUtc,
   AToUtc: TDateTime);
 begin
@@ -404,11 +503,11 @@ begin
     fDraft.FromUtc := AFromUtc;
     fDraft.ToUtc := AToUtc;
     fDraft.DurationSec := Max(1.0, (AToUtc - AFromUtc) * SecsPerDay);
-    dtpFromDate.Date := Trunc(AFromUtc);
+    SetDateEditValue(fFromDateEdit, dtpFromDate, Trunc(AFromUtc));
     if Frac(AToUtc) = 0 then
-      dtpToDate.Date := Trunc(AToUtc - 1.0 / SecsPerDay)
+      SetDateEditValue(fToDateEdit, dtpToDate, Trunc(AToUtc - 1.0 / SecsPerDay))
     else
-      dtpToDate.Date := Trunc(AToUtc);
+      SetDateEditValue(fToDateEdit, dtpToDate, Trunc(AToUtc));
     edWindowHours.Text := FloatToStrF(fDraft.DurationSec / SecsPerDay,
       ffFixed, 12, 6);
   finally
@@ -418,12 +517,12 @@ end;
 
 function TRecorderSqlTrendSettingsDialog.FromUtcValue: TDateTime;
 begin
-  Result := Trunc(dtpFromDate.Date);
+  Result := DateEditValue(fFromDateEdit, dtpFromDate);
 end;
 
 function TRecorderSqlTrendSettingsDialog.ToUtcValue: TDateTime;
 begin
-  Result := Trunc(dtpToDate.Date) + 1.0;
+  Result := DateEditValue(fToDateEdit, dtpToDate) + 1.0;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeFromChange(Sender: TObject);

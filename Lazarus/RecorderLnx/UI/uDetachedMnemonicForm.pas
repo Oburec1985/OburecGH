@@ -96,14 +96,14 @@ begin
     @EditClick, 1, True);
   AddToolButton(38, CIconOscillogram, 'Add oscillogram', @AddOscClick);
   AddToolButton(72, CIconTrends, 'Add trend', @AddTrendClick);
-  AddToolButton(390, -1, 'Добавить измерительное сечение', @AddSectionClick,
-    0, False, True, 'Sec');
+  AddToolButton(390, CIconMeasurementSection,
+    'Добавить измерительное сечение', @AddSectionClick);
   AddToolButton(106, CIconTextLabel, 'Add text label', @AddTextClick);
   AddToolButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
   AddToolButton(174, CIconDigitalIndicator, 'Add digital indicator',
     @AddValueClick);
-  AddToolButton(208, -1, 'Добавить картинку', @AddImageClick, 0, False,
-    True, 'Img');
+  AddToolButton(208, CIconImageComponent, 'Добавить картинку',
+    @AddImageClick);
   AddToolButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
   AddToolButton(282, CIconButton, 'Add button', nil, 0, False, False);
   AddToolButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);

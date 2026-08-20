@@ -42,3 +42,38 @@
 - Причина: внешние X-точки разрывали сегмент, а Y ограничивался через `EnsureRange`.
 - Исправление: отрезки клипуются по прямоугольнику графика; внешние маркеры не рисуются.
 - Проверка: полная сборка `RecorderLnx.lpi`, exit code 0.
+
+## 2026-08-20 — Linux date picker выглядит как просмотр
+
+- Симптом: на Linux в настройке SQL-тренда поля выбора дат `От`/`До` выглядят
+  неактивными, пользователь не может выбрать дату.
+- Проверено: в форме используется `TDateTimePicker`, у класса есть `ReadOnly`,
+  `TabStop`, `DateMode`, `AutoButtonSize`, `DateDisplayOrder`; замена на
+  `TEdit` отклонена, потому что сломала бы календарь на Windows.
+- Действие: добавлена явная настройка `TDateTimePicker` при создании диалога:
+  `Enabled=True`, `ReadOnly=False`, `TabStop=True`, `Kind=dtkDate`,
+  `DateMode=dmComboBox`, `NullInputAllowed=False`, формат `dd.mm.yyyy` через
+  `DateDisplayOrder=ddoDMY` и `DateSeparator='.'`.
+- Проверка: `lazbuild -B RecorderLnx.lpi` завершился с exit code 0 на Windows.
+- Оставшийся риск: нужна визуальная проверка на Linux. Если GTK всё равно не
+  даёт открыть календарь, следующий шаг — платформенный fallback на `TDateEdit`
+  только для Linux, сохранив `TDateTimePicker` на Windows.
+
+## 2026-08-20 — Linux TDateTimePicker popup не принимает клик по дате
+
+- Симптом: на Linux выпадающий календарь `TDateTimePicker` открывается, но
+  выбор ячейки даты не применяется.
+- Проверено: предыдущая гипотеза с явным включением `Enabled`, `ReadOnly=False`,
+  `DateMode=dmComboBox`, `DateDisplayOrder=ddoDMY` не решила проблему.
+- Гипотеза: это GTK2/LCL проблема popup-календаря внутри модального диалога.
+  Перевод всего проекта на Qt/Qt6 возможен, но слишком широк для локального
+  дефекта одного диалога.
+- Действие: в `uRecorderSqlTrendSettingsDialog.pas` добавлен Unix-only fallback:
+  штатные `TDateTimePicker` остаются для Windows, а под Unix поверх них
+  программно создаются `TDateEdit` с `DateOrder=doDMY`, `DateFormat=dd.mm.yyyy`,
+  прямым вводом и теми же обработчиками пересчёта диапазона.
+- Проверка: `git diff --check` по unit чистый, кроме стандартного LF/CRLF
+  warning. `lazbuild -B RecorderLnx.lpi` завершился с exit code 0 на Windows.
+- Оставшийся риск: нужна ручная проверка на Linux/GTK. Если `TDateEdit` тоже
+  окажется завязан на тот же popup-баг, следующий вариант — отдельный маленький
+  немодальный/модальный LCL-диалог выбора даты вместо drop-down popup.
