@@ -17,8 +17,10 @@ type
     fTransaction: TSQLTransaction;
     function CreateConnection: TSQLConnection;
     function TableExists(const AName: string): Boolean;
+    function IndexExists(const AName: string): Boolean;
     function ColumnExists(const ATableName, AColumnName: string): Boolean;
     procedure CreateTableIfMissing(const AName, ASql: string);
+    procedure CreateIndexIfMissing(const AName, ASql: string);
     procedure AddColumnIfMissing(const ATableName, AColumnName,
       ASql: string);
     procedure Exec(const ASql: string);
@@ -58,6 +60,13 @@ type
       AEventId: string; AAnchorUtc, AFromUtc, AToUtc: Double);
     procedure ListAttachments(AFromUtc, AToUtc: Double; AItems: TList);
     procedure ListSignalNames(AItems: TStrings);
+    procedure ListSignalInfos(out AItems: TRecorderSqlDbSignalInfos;
+      AWithPointCounts: Boolean);
+    function DatabaseAttachmentName(out AName: string): Boolean;
+    procedure DeleteSignalsByName(ANames: TStrings; out ASignalCount,
+      AValueCount: Int64);
+    procedure DeleteSignalValuesInterval(ASignalNames: TStrings; AFromUtc,
+      AToUtc: Double; out AValueCount: Int64);
     function GetTrendTimeRange(out AFromUtc, AToUtc: Double;
       out APointCount: Int64): Boolean;
     procedure ReadTrendPoints(ASignalNames: TStrings; AFromUtc, AToUtc: Double;
@@ -206,6 +215,167 @@ begin
   end;
 end;
 
+procedure TRecorderSqlDbRepository.ListSignalInfos(
+  out AItems: TRecorderSqlDbSignalInfos; AWithPointCounts: Boolean);
+var
+  lQuery: TSQLQuery;
+  lIndex: Integer;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    if AWithPointCounts then
+      lQuery.SQL.Text :=
+        'select s.name, s.unit_name, s.recorder_source_id, ' +
+        's.recorder_address, count(v.id) ' +
+        'from signals s left join signal_values v on v.signal_id=s.id ' +
+        'group by s.name, s.unit_name, s.recorder_source_id, ' +
+        's.recorder_address order by s.name'
+    else
+      lQuery.SQL.Text :=
+        'select s.name, s.unit_name, s.recorder_source_id, ' +
+        's.recorder_address, cast(0 as bigint) from signals s order by s.name';
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      lIndex := Length(AItems);
+      SetLength(AItems, lIndex + 1);
+      AItems[lIndex].Name := lQuery.Fields[0].AsString;
+      AItems[lIndex].UnitName := lQuery.Fields[1].AsString;
+      AItems[lIndex].RecorderSourceId := lQuery.Fields[2].AsString;
+      AItems[lIndex].RecorderAddress := lQuery.Fields[3].AsString;
+      AItems[lIndex].PointCount := lQuery.Fields[4].AsLargeInt;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.DatabaseAttachmentName(out AName: string): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  AName := '';
+  Result := False;
+  EnsureDatabase;
+  if fConfig.Backend <> rsbFirebird then
+  begin
+    AName := fConfig.DatabaseFileName;
+    Exit(AName <> '');
+  end;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select mon$attachment_name from mon$attachments ' +
+      'where mon$attachment_id=current_connection';
+    lQuery.Open;
+    if not lQuery.EOF then
+      AName := Trim(lQuery.Fields[0].AsString);
+    Result := AName <> '';
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.DeleteSignalsByName(ANames: TStrings;
+  out ASignalCount, AValueCount: Int64);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+  lName: string;
+begin
+  ASignalCount := 0;
+  AValueCount := 0;
+  if (ANames = nil) or (ANames.Count = 0) then Exit;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    for I := 0 to ANames.Count - 1 do
+    begin
+      lName := Trim(ANames[I]);
+      if lName = '' then Continue;
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'select count(*) from signal_values v join signals s on s.id=v.signal_id ' +
+        'where s.name=:name';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.Open;
+      Inc(AValueCount, lQuery.Fields[0].AsLargeInt);
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'delete from signal_values where signal_id in ' +
+        '(select id from signals where name=:name)';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text :=
+        'delete from signal_bindings where signal_id in ' +
+        '(select id from signals where name=:name)';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text := 'delete from signals where name=:name';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.ExecSQL;
+      Inc(ASignalCount);
+    end;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.DeleteSignalValuesInterval(
+  ASignalNames: TStrings; AFromUtc, AToUtc: Double; out AValueCount: Int64);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+  lName: string;
+begin
+  AValueCount := 0;
+  if (ASignalNames = nil) or (ASignalNames.Count = 0) or
+    (AToUtc <= AFromUtc) then Exit;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    for I := 0 to ASignalNames.Count - 1 do
+    begin
+      lName := Trim(ASignalNames[I]);
+      if lName = '' then Continue;
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'select count(*) from signal_values v join signals s on s.id=v.signal_id ' +
+        'where s.name=:name and v.timestamp_utc>=:time_from ' +
+        'and v.timestamp_utc<=:time_to';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.Params.ParamByName('time_from').AsFloat := AFromUtc;
+      lQuery.Params.ParamByName('time_to').AsFloat := AToUtc;
+      lQuery.Open;
+      Inc(AValueCount, lQuery.Fields[0].AsLargeInt);
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'delete from signal_values where signal_id in ' +
+        '(select id from signals where name=:name) ' +
+        'and timestamp_utc>=:time_from and timestamp_utc<=:time_to';
+      lQuery.Params.ParamByName('name').AsString := lName;
+      lQuery.Params.ParamByName('time_from').AsFloat := AFromUtc;
+      lQuery.Params.ParamByName('time_to').AsFloat := AToUtc;
+      lQuery.ExecSQL;
+    end;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
 function TRecorderSqlDbRepository.GetTrendTimeRange(out AFromUtc,
   AToUtc: Double; out APointCount: Int64): Boolean;
 var
@@ -329,6 +499,39 @@ begin
   end;
 end;
 
+function TRecorderSqlDbRepository.IndexExists(const AName: string): Boolean;
+var
+  lQuery: TSQLQuery;
+  lSql: string;
+begin
+  Result := False;
+  if Trim(AName) = '' then Exit;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    case fConfig.Backend of
+      rsbFirebird:
+        lSql :=
+          'select 1 from rdb$indices where upper(trim(rdb$index_name))=:name';
+      rsbSQLite:
+        lSql :=
+          'select 1 from sqlite_master where type=''index'' and upper(name)=:name';
+      rsbPostgreSQL:
+        lSql :=
+          'select 1 from pg_indexes where upper(indexname)=:name';
+    else
+      Exit;
+    end;
+    lQuery.SQL.Text := lSql;
+    lQuery.Params.ParamByName('name').AsString := UpperCase(AName);
+    lQuery.Open;
+    Result := not lQuery.EOF;
+  finally
+    lQuery.Free;
+  end;
+end;
+
 function TRecorderSqlDbRepository.ColumnExists(const ATableName,
   AColumnName: string): Boolean;
 var
@@ -351,6 +554,11 @@ begin
   if not TableExists(AName) then Exec(ASql);
 end;
 
+procedure TRecorderSqlDbRepository.CreateIndexIfMissing(const AName, ASql: string);
+begin
+  if not IndexExists(AName) then Exec(ASql);
+end;
+
 procedure TRecorderSqlDbRepository.AddColumnIfMissing(const ATableName,
   AColumnName, ASql: string);
 begin
@@ -368,9 +576,30 @@ begin
     AddColumnIfMissing('signals', 'recorder_address',
       'alter table signals add recorder_address varchar(255)');
     CommitAndRestart;
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
+        'values(:version,:applied_at,:description)';
+      lQuery.Params.ParamByName('version').AsInteger := 2;
+      lQuery.Params.ParamByName('applied_at').AsFloat := Now;
+      lQuery.Params.ParamByName('description').AsString :=
+        'RecorderLnx SQLdb channel recorder address columns';
+      lQuery.ExecSQL;
+    finally
+      lQuery.Free;
+    end;
   end;
-  if SchemaVersion < CRecorderSqlDbSchemaVersion then
+  if AVersion < 3 then
   begin
+    CreateIndexIfMissing('idx_signals_name',
+      'create index idx_signals_name on signals(name)');
+    CreateIndexIfMissing('idx_signal_values_signal',
+      'create index idx_signal_values_signal on signal_values(signal_id)');
+    CreateIndexIfMissing('idx_signal_values_signal_time',
+      'create index idx_signal_values_signal_time on signal_values(signal_id,timestamp_utc)');
+    CommitAndRestart;
     lQuery := TSQLQuery.Create(nil);
     try
       lQuery.DataBase := fConnection;
@@ -380,7 +609,7 @@ begin
       lQuery.Params.ParamByName('version').AsInteger := CRecorderSqlDbSchemaVersion;
       lQuery.Params.ParamByName('applied_at').AsFloat := Now;
       lQuery.Params.ParamByName('description').AsString :=
-        'RecorderLnx SQLdb channel recorder address columns';
+        'RecorderLnx SQLdb maintenance indexes';
       lQuery.ExecSQL;
     finally
       lQuery.Free;
@@ -420,6 +649,12 @@ begin
     'create table data_files (id varchar(36) primary key, storage_key varchar(500) not null unique, data_type varchar(80), data_format varchar(80), file_size bigint not null, checksum varchar(128), file_state varchar(32) not null, created_at double precision not null)');
   CreateTableIfMissing('data_file_links',
     'create table data_file_links (id varchar(36) primary key, file_id varchar(36) not null, registration_id varchar(36), signal_id varchar(36), event_id varchar(36), anchor_time_utc double precision, time_from_utc double precision, time_to_utc double precision)');
+  CreateIndexIfMissing('idx_signals_name',
+    'create index idx_signals_name on signals(name)');
+  CreateIndexIfMissing('idx_signal_values_signal',
+    'create index idx_signal_values_signal on signal_values(signal_id)');
+  CreateIndexIfMissing('idx_signal_values_signal_time',
+    'create index idx_signal_values_signal_time on signal_values(signal_id,timestamp_utc)');
   { Firebird publishes newly created metadata at a transaction boundary.
     Preparing a query for SCHEMA_INFO in the DDL transaction can otherwise
     fail with SQL error -204 / table unknown on a newly created database. }

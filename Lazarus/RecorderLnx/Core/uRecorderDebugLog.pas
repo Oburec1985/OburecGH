@@ -8,6 +8,7 @@ procedure RecorderDebugLog(const AMessage: string);
 procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
 procedure SetDeviceLogEnabled(AEnabled: Boolean);
 function DeviceLogEnabled: Boolean;
+function RecorderDebugLogFileName: string;
 
 implementation
 
@@ -16,6 +17,7 @@ uses
 
 var
   gDeviceLogEnabled: Boolean = True;
+  gLogFile: string = '';
 
 procedure RecorderDebugLog(const AMessage: string);
 begin
@@ -37,25 +39,29 @@ begin
   Result := gDeviceLogEnabled;
 end;
 
+function RecorderDebugLogFileName: string;
+begin
+  Result := gLogFile;
+end;
+
 var
-  lLogFile: string;
   lPreviousLog: string;
 
 initialization
   SharedLogger.Enabled := True;
   {$IFDEF MSWINDOWS}
-  lLogFile := RecorderServiceFileName('LogWindows.log');
+  gLogFile := RecorderServiceFileName('LogWindows.log');
   {$ELSE}
-  lLogFile := RecorderServiceFileName('LogLinux.log');
+  gLogFile := RecorderServiceFileName('LogLinux.log');
   {$ENDIF}
 
-  lPreviousLog := ChangeFileExt(lLogFile, '.previous.log');
+  lPreviousLog := ChangeFileExt(gLogFile, '.previous.log');
   if FileExists(lPreviousLog) then
     DeleteFile(lPreviousLog);
-  if FileExists(lLogFile) then
-    RenameFile(lLogFile, lPreviousLog);
+  if FileExists(gLogFile) then
+    RenameFile(gLogFile, lPreviousLog);
 
-  SharedLogger.Configure(lLogFile);
-  SharedLogger.Info('RecorderLnx log initialized: ' + lLogFile);
+  SharedLogger.Configure(gLogFile);
+  SharedLogger.Info('RecorderLnx log initialized: ' + gLogFile);
 
 end.

@@ -21,7 +21,7 @@ unit uMc201ProtocolTypes;
 interface
 
 uses
-  Math, uRecorderFrequencyGrids;
+  Math, uRecorderFrequencyGrids, uRecorderDeviceInterfaces;
 
 type
   TMc201WordArray = array of Word;
@@ -109,7 +109,7 @@ const
     Это настройки теста, а не глобальная политика устройств RecorderLnx. }
   CMc201DefaultHost = '192.169.12.87';
   CMc201DefaultPort = 4000;
-  CMc201DefaultTimeoutMs = 1200;
+  CMc201DefaultTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   CMc201DefaultMaxSlots = 4;
   CMc201CrateMaxStartSlots = 16;
   CMc201DefaultSampleRateHz = 57600;

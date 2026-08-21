@@ -21,6 +21,7 @@ type
 
   TRecorderMeasurementSectionRow = class
   private
+    fBalances: array[TRecorderRosetteRole] of Double;
     fPointNo: Integer;
     fRosetteType: TRecorderRosetteType;
     fPositionDeg: Double;
@@ -28,17 +29,23 @@ type
     fTagNames: array[TRecorderRosetteRole] of string;
     function GetTagId(ARole: TRecorderRosetteRole): TRecorderTagId;
     function GetTagName(ARole: TRecorderRosetteRole): string;
+    function GetBalance(ARole: TRecorderRosetteRole): Double;
+    procedure SetBalance(ARole: TRecorderRosetteRole; AValue: Double);
     procedure SetTagId(ARole: TRecorderRosetteRole; AValue: TRecorderTagId);
     procedure SetTagName(ARole: TRecorderRosetteRole; const AValue: string);
   public
     constructor Create;
     procedure Assign(ASource: TRecorderMeasurementSectionRow);
     procedure BindTag(ARole: TRecorderRosetteRole; ATag: TRecorderTag);
+    function CaptureBalance(ARegistry: TRecorderTagRegistry;
+      ARole: TRecorderRosetteRole): Boolean;
     function ResolveTag(ARegistry: TRecorderTagRegistry;
       ARole: TRecorderRosetteRole): TRecorderTag;
     property PointNo: Integer read fPointNo write fPointNo;
     property RosetteType: TRecorderRosetteType read fRosetteType write fRosetteType;
     property PositionDeg: Double read fPositionDeg write fPositionDeg;
+    property Balances[ARole: TRecorderRosetteRole]: Double
+      read GetBalance write SetBalance;
     property TagIds[ARole: TRecorderRosetteRole]: TRecorderTagId
       read GetTagId write SetTagId;
     property TagNames[ARole: TRecorderRosetteRole]: string
@@ -58,6 +65,10 @@ type
     Sigma1: Double;
     Sigma2: Double;
     AngleDeg: Double;
+    HasSigma1: Boolean;
+    HasSigma2: Boolean;
+    HasAngle: Boolean;
+    MaxAbsStrain: Double;
   end;
 
   TRecorderMeasurementSectionComponent = class(TRecorderVisualComponent)
@@ -79,6 +90,10 @@ type
     function AddRow: TRecorderMeasurementSectionRow;
     procedure AssignSection(ASource: TRecorderMeasurementSectionComponent);
     procedure ClearRows;
+    procedure CaptureBalance(ARegistry: TRecorderTagRegistry);
+    function CaptureRowBalance(ARegistry: TRecorderTagRegistry;
+      ARow: TRecorderMeasurementSectionRow;
+      ARole: TRecorderRosetteRole): Boolean;
     procedure DeleteRow(AIndex: Integer);
     procedure CalculateRow(ARegistry: TRecorderTagRegistry;
       ARow: TRecorderMeasurementSectionRow;
@@ -183,6 +198,7 @@ begin
   fPositionDeg := 0.0;
   for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
   begin
+    fBalances[lRole] := 0.0;
     fTagIds[lRole] := 0;
     fTagNames[lRole] := '';
   end;
@@ -200,6 +216,7 @@ begin
   fPositionDeg := ASource.PositionDeg;
   for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
   begin
+    fBalances[lRole] := ASource.Balances[lRole];
     fTagIds[lRole] := ASource.TagIds[lRole];
     fTagNames[lRole] := ASource.TagNames[lRole];
   end;
@@ -214,6 +231,23 @@ begin
   fTagNames[ARole] := ATag.Name;
 end;
 
+function TRecorderMeasurementSectionRow.CaptureBalance(
+  ARegistry: TRecorderTagRegistry; ARole: TRecorderRosetteRole): Boolean;
+var
+  lValue: Double;
+begin
+  Result := (ARole <> rrrTemperature) and
+    LatestTagValue(ResolveTag(ARegistry, ARole), lValue);
+  if Result then
+    fBalances[ARole] := lValue;
+end;
+
+function TRecorderMeasurementSectionRow.GetBalance(
+  ARole: TRecorderRosetteRole): Double;
+begin
+  Result := fBalances[ARole];
+end;
+
 function TRecorderMeasurementSectionRow.GetTagId(
   ARole: TRecorderRosetteRole): TRecorderTagId;
 begin
@@ -224,6 +258,12 @@ function TRecorderMeasurementSectionRow.GetTagName(
   ARole: TRecorderRosetteRole): string;
 begin
   Result := fTagNames[ARole];
+end;
+
+procedure TRecorderMeasurementSectionRow.SetBalance(
+  ARole: TRecorderRosetteRole; AValue: Double);
+begin
+  fBalances[ARole] := AValue;
 end;
 
 procedure TRecorderMeasurementSectionRow.SetTagId(
@@ -324,6 +364,24 @@ begin
   end;
 end;
 
+procedure TRecorderMeasurementSectionComponent.CaptureBalance(
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lRole: TRecorderRosetteRole;
+begin
+  for I := 0 to RowCount - 1 do
+    for lRole := rrrE1 to rrrE3 do
+      CaptureRowBalance(ARegistry, Rows[I], lRole);
+end;
+
+function TRecorderMeasurementSectionComponent.CaptureRowBalance(
+  ARegistry: TRecorderTagRegistry; ARow: TRecorderMeasurementSectionRow;
+  ARole: TRecorderRosetteRole): Boolean;
+begin
+  Result := (ARow <> nil) and ARow.CaptureBalance(ARegistry, ARole);
+end;
+
 procedure TRecorderMeasurementSectionComponent.DeleteRow(AIndex: Integer);
 begin
   if (AIndex < 0) or (AIndex >= fRows.Count) then
@@ -338,7 +396,7 @@ procedure TRecorderMeasurementSectionComponent.CalculateRow(
 var
   lE1, lE2, lE3, lTemp: Double;
   lAvg, lDiff, lGamma, lRoot: Double;
-  lEps1, lEps2, lFactor: Double;
+  lEps1, lEps2, lFactor, lDen: Double;
 begin
   AValues := Default(TRecorderMeasurementSectionValues);
   if ARow = nil then
@@ -349,44 +407,100 @@ begin
   AValues.HasE3 := LatestTagValue(ARow.ResolveTag(ARegistry, rrrE3), lE3);
   AValues.HasTemperature := LatestTagValue(
     ARow.ResolveTag(ARegistry, rrrTemperature), lTemp);
-  AValues.E1 := lE1;
-  AValues.E2 := lE2;
-  AValues.E3 := lE3;
+  if AValues.HasE1 then
+    lE1 := lE1 - ARow.Balances[rrrE1];
+  if AValues.HasE2 then
+    lE2 := lE2 - ARow.Balances[rrrE2];
+  if AValues.HasE3 then
+    lE3 := lE3 - ARow.Balances[rrrE3];
   AValues.Temperature := lTemp;
 
   if AValues.HasTemperature and (not SameValue(fTemperatureCoefficient, 0.0)) then
   begin
-    lE1 := lE1 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
-    lE2 := lE2 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
-    lE3 := lE3 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
+    if AValues.HasE1 then
+      lE1 := lE1 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
+    if AValues.HasE2 then
+      lE2 := lE2 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
+    if AValues.HasE3 then
+      lE3 := lE3 - fTemperatureCoefficient * (lTemp - fReferenceTemperatureC);
   end;
+  AValues.E1 := lE1;
+  AValues.E2 := lE2;
+  AValues.E3 := lE3;
+  if AValues.HasE1 then
+    AValues.MaxAbsStrain := Max(AValues.MaxAbsStrain, Abs(lE1));
+  if AValues.HasE2 then
+    AValues.MaxAbsStrain := Max(AValues.MaxAbsStrain, Abs(lE2));
+  if AValues.HasE3 then
+    AValues.MaxAbsStrain := Max(AValues.MaxAbsStrain, Abs(lE3));
 
+  lDen := 1.0 - Sqr(fPoissonRatio);
   if ARow.RosetteType = rrtTwoComponent then
   begin
-    AValues.Valid := AValues.HasE1 and AValues.HasE2;
-    if not AValues.Valid then
+    if Abs(lDen) <= 1E-12 then
       Exit;
-    AValues.Sigma1 := fYoungModulusMPa * lE1 * 1E-6;
-    AValues.Sigma2 := fYoungModulusMPa * lE2 * 1E-6;
-    AValues.AngleDeg := ARow.PositionDeg;
+    if AValues.HasE1 and AValues.HasE3 then
+    begin
+      lFactor := fYoungModulusMPa / lDen * 1E-6;
+      AValues.Sigma1 := lFactor * (lE1 + fPoissonRatio * lE3);
+      AValues.Sigma2 := lFactor * (lE3 + fPoissonRatio * lE1);
+      AValues.HasSigma1 := True;
+      AValues.HasSigma2 := True;
+      AValues.AngleDeg := 0.0;
+      AValues.HasAngle := True;
+    end
+    else if AValues.HasE1 then
+    begin
+      AValues.Sigma1 := fYoungModulusMPa * lE1 * 1E-6;
+      AValues.HasSigma1 := True;
+    end
+    else if AValues.HasE3 then
+    begin
+      AValues.Sigma2 := fYoungModulusMPa * lE3 * 1E-6;
+      AValues.HasSigma2 := True;
+    end;
+    AValues.Valid := AValues.HasSigma1 or AValues.HasSigma2;
     Exit;
   end;
 
-  AValues.Valid := AValues.HasE1 and AValues.HasE2 and AValues.HasE3 and
-    (Abs(1.0 - Sqr(fPoissonRatio)) > 1E-12);
-  if not AValues.Valid then
+  if Abs(lDen) <= 1E-12 then
     Exit;
-  lAvg := (lE1 + lE3) / 2.0;
-  lDiff := (lE1 - lE3) / 2.0;
-  lGamma := 2.0 * lE2 - lE1 - lE3;
-  lRoot := Sqrt(Sqr(lDiff) + Sqr(lGamma / 2.0));
-  lEps1 := lAvg + lRoot;
-  lEps2 := lAvg - lRoot;
-  lFactor := fYoungModulusMPa / (1.0 - Sqr(fPoissonRatio)) * 1E-6;
-  AValues.Sigma1 := lFactor * (lEps1 + fPoissonRatio * lEps2);
-  AValues.Sigma2 := lFactor * (lEps2 + fPoissonRatio * lEps1);
-  AValues.AngleDeg := RadToDeg(0.5 * ArcTan2(lGamma, lE1 - lE3)) +
-    ARow.PositionDeg;
+  if AValues.HasE1 and AValues.HasE2 and AValues.HasE3 then
+  begin
+    lAvg := (lE1 + lE3) / 2.0;
+    lDiff := (lE1 - lE3) / 2.0;
+    lGamma := 2.0 * lE2 - lE1 - lE3;
+    lRoot := Sqrt(Sqr(lDiff) + Sqr(lGamma / 2.0));
+    lEps1 := lAvg + lRoot;
+    lEps2 := lAvg - lRoot;
+    lFactor := fYoungModulusMPa / lDen * 1E-6;
+    AValues.Sigma1 := lFactor * (lEps1 + fPoissonRatio * lEps2);
+    AValues.Sigma2 := lFactor * (lEps2 + fPoissonRatio * lEps1);
+    AValues.AngleDeg := RadToDeg(0.5 * ArcTan2(lGamma, lE1 - lE3)) +
+      ARow.PositionDeg;
+    AValues.HasSigma1 := True;
+    AValues.HasSigma2 := True;
+    AValues.HasAngle := True;
+  end
+  else if AValues.HasE1 and AValues.HasE3 then
+  begin
+    lFactor := fYoungModulusMPa / lDen * 1E-6;
+    AValues.Sigma1 := lFactor * (lE1 + fPoissonRatio * lE3);
+    AValues.Sigma2 := lFactor * (lE3 + fPoissonRatio * lE1);
+    AValues.HasSigma1 := True;
+    AValues.HasSigma2 := True;
+  end
+  else if AValues.HasE1 then
+  begin
+    AValues.Sigma1 := fYoungModulusMPa * lE1 * 1E-6;
+    AValues.HasSigma1 := True;
+  end
+  else if AValues.HasE3 then
+  begin
+    AValues.Sigma2 := fYoungModulusMPa * lE3 * 1E-6;
+    AValues.HasSigma2 := True;
+  end;
+  AValues.Valid := AValues.HasSigma1 or AValues.HasSigma2;
 end;
 
 { TRecorderMeasurementSectionFactory }

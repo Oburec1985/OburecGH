@@ -295,3 +295,42 @@ protocol task.
 The MIC185 protocol remains unchanged. Disk persistence is implemented at the
 RecorderLnx calibration layer and reuses the same CSV-style Mera/Calibr storage
 contract that MIC140 and the standard Mebius virtual-channel path already use.
+
+## Follow-up 2026-08-21: MIC185 hardware-GX checkbox drops after channel settings
+
+### Symptom
+
+- User opened tag settings for `185-{156-1}`, opened MIC185 hardware/channel
+  settings, selected `Ом`, pressed Apply/OK, and returned to tag settings.
+- The hardware-GX text showed a valid `k=...; b=0`, but the
+  `Аппаратная КХ` checkbox was unchecked.
+
+### Checked facts
+
+- `TRecorderMic185ChannelForm.SaveTag` wrote `ATag.UnitName` and
+  `SourceValueMode`, then restored cached hardware GX only when
+  `HardwareCalibrationEnabled` was already true or a calibration name was
+  already assigned.
+- For an old tag with an empty `HardwareCalibrationName` and disabled flag,
+  choosing `Ом` changed the displayed/effective unit but did not enable
+  `HardwareCalibrationEnabled`.
+- `TTagSettingsDialog.StoreToTags` intentionally treats disabled MIC185
+  hardware GX as raw-code mode and writes unit `код`, so the unchecked state was
+  then persisted by the outer tag dialog.
+
+### Action
+
+- `Device/mic185/UI/uRecorderMic185ChannelDialog.pas`: saving a MIC185 channel
+  now maps unit `код/code` to disabled hardware GX, and any physical unit
+  (`мВ`, `Ом`, `мкм/м`, etc.) to enabled hardware GX with a cache restore
+  attempt.
+- `Device/mic185/UI/uRecorderMic185SettingsDialog.pas`: the same mapping is
+  applied when channel settings are copied from the edited row to other selected
+  MIC185 rows.
+
+### Verification
+
+- `C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+  completed with exit code 0.
+- `git diff --check` for the touched MIC185 UI units reported only the
+  existing LF/CRLF warnings.

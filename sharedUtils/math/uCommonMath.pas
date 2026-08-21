@@ -1796,9 +1796,9 @@ begin
   if sepPos > 0 then
   begin
     ch:=Str[sepPos];
-    if decimalseparator <> ch then
+    if FormatSettings.DecimalSeparator <> ch then
     begin
-      Str[i] := decimalseparator;
+      Str[i] := FormatSettings.DecimalSeparator;
     end;
   end;
   resstr:='';

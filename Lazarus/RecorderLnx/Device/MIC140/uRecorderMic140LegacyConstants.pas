@@ -10,6 +10,9 @@ unit uRecorderMic140LegacyConstants;
 
 interface
 
+uses
+  uRecorderDeviceInterfaces;
+
 const
   CMic140LegacyScanId = 1;
   CMic140LegacySevScanId = 0;
@@ -44,7 +47,7 @@ const
   CMic140ChannelCommutIn = 0;
   CMic140ChannelCommutGround = 1;
 
-  CMic140LegacyCommandTimeoutMs = 5000;
+  CMic140LegacyCommandTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   CMic140LegacyStartCommandTimeoutMs = 12000;
   CMic140LegacyStartProbeTimeoutMs = 3000;
   CMic140LegacyStartAttempts = 2;

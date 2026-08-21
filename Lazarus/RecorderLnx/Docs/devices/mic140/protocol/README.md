@@ -21,7 +21,7 @@
 
 - [../acquisition_rules.md](../acquisition_rules.md) — правила приёма в RecorderLnx
 - [../mic140_configuration_details.md](../mic140_configuration_details.md) — длинные таблицы WRITEDM
-- [../../../Tests/Mic140ProtocolDebug/](../../../Tests/Mic140ProtocolDebug/) — автономный стенд `Mic140Example`
+- [../../../../Tests/mic140/Mic140ProtocolDebug_Codex/](../../../../Tests/mic140/Mic140ProtocolDebug_Codex/) — автономный стенд `Mic140Example`
 
 ## Краткая схема
 

@@ -15,6 +15,8 @@ check_path() {
 
 check_path /opt/firebird/bin/isql
 check_path /opt/firebird/bin/firebird
+check_path /opt/firebird/bin/gfix
+check_path /opt/firebird/bin/gbak
 check_path /opt/firebird/SYSDBA.password
 check_path /etc/profile.d/recorderlnx-sqldb.sh
 check_path /var/opt/mera/SQLdb

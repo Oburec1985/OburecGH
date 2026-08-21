@@ -22,7 +22,7 @@
 | Канал `MIC140_12` | Не **32767**, не **−32768**, не явный положительный скачок; диапазон **−15000…+500** |
 | Насыщение АЦП | Не более 0 «плохих» кодов среди проверяемых каналов; не менее 4 «хороших» |
 **Корректные коды АЦП из Recorder:**
-![[Pasted image 20260626193036.png]]
+![Корректные коды Recorder](../../screens/mic140-acceptance-codes-20260626.png)
 
 ### Text rule: Recorder ADC code profile
 
@@ -163,5 +163,5 @@ MIC-140 stream stop: published=15 read=15 readGaps=0 dupRead=0 corruptRead=0 pub
 Скрипт и критерии общие для legacy и v2: меняется только код драйвера, строки в логе
 и формат `stream stop` должны сохраниться.
 
-См. также [mic140_legacy_scan_stream.md](../../mic140_legacy_scan_stream.md) §9.1,
+См. также [mic140_legacy_scan_stream.md](../../old/mic140_legacy_scan_stream.md) §9.1,
 [migration_mic140v2.md](../migration_mic140v2.md).

@@ -184,6 +184,16 @@ check_firebird() {
     echo "MISS $FIREBIRD_PREFIX/bin/isql"
     exit 1
   fi
+  if [ -x "$FIREBIRD_PREFIX/bin/gfix" ]; then
+    echo "OK   $FIREBIRD_PREFIX/bin/gfix"
+  else
+    echo "MISS $FIREBIRD_PREFIX/bin/gfix"
+  fi
+  if [ -x "$FIREBIRD_PREFIX/bin/gbak" ]; then
+    echo "OK   $FIREBIRD_PREFIX/bin/gbak"
+  else
+    echo "MISS $FIREBIRD_PREFIX/bin/gbak"
+  fi
 
   if [ -f "$PROFILE_FILE" ]; then
     echo "OK   $PROFILE_FILE"

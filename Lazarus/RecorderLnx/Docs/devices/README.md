@@ -15,8 +15,8 @@
 
 ## Связанные материалы
 
-- [data_sources_architecture.md](../data_sources_architecture.md) — источники данных и теги
-- [recorder_run_lifecycle.md](../recorder_run_lifecycle.md) — жизненный цикл Recorder
+- [data_sources_architecture.md](../architecture/data_sources_architecture.md) — источники данных и теги
+- [recorder_run_lifecycle.md](../architecture/recorder_run_lifecycle.md) — жизненный цикл Recorder
 - Оригинал: `windev-v3.9` — `IDevice.h`, `HubAPI/Device.h`, `hwiface/idevice.h`
 
 ## Код

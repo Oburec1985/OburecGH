@@ -12,6 +12,9 @@ unit uRecorderMic140Consts;
 
 interface
 
+uses
+  uRecorderDeviceInterfaces;
+
 const
   { --- scan_id / type [ORIG: mtc/Ccdevice.h TYPE_MIC140, scan_id=0 ╨▓ Modscn] --- }
   { RecorderLnx и автономный тест используют единственную главную
@@ -62,7 +65,7 @@ const
   CMic140ChannelCommutGround = 1;
 
   { --- ╤В╨░╨╣╨╝╨░╤Г╤В╤Л ╨╕ ╨┐╨╛╨▓╤В╨╛╤А╤Л [LNX: ╨┐╤А╤П╨╝╨╛╨╣ TCP/MDP ╨▒╨╡╨╖ MFC; ╨╜╨╡ ╨▓ Ccdevice] --- }
-  CMic140LegacyCommandTimeoutMs = 1500;
+  CMic140LegacyCommandTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   { mdpEthernet81::CheckInitialized перед первой штатной командой передаёт
     максимальный массив из 32 нулевых WORD. Это прочищает командный автомат
     контроллера после холодного запуска. }

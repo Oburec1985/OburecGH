@@ -1421,11 +1421,7 @@ begin
   end;
 
   if PlacePendingComponentAt(fLastCanvasClick) then
-  begin
-    NotifyChanged;
-    Render;
     Exit;
-  end;
 
   lSelectionChanged := False;
   if not (ssCtrl in Shift) then
@@ -1503,11 +1499,7 @@ begin
       TControl(Sender).ClientToScreen(Point(X, Y)));
     fHasCanvasClick := True;
     if PlacePendingComponentAt(fLastCanvasClick) then
-    begin
-      NotifyChanged;
-      Render;
       Exit;
-    end;
   end;
 
   lIndex := TControl(Sender).Tag;

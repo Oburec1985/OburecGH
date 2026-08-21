@@ -17,6 +17,7 @@ type
     btnColor: TButton;
     btnDeleteAxis: TButton;
     btnDeleteLine: TButton;
+    btnDeleteDbInterval: TButton;
     btnLoadSignals: TButton;
     btnUseDbRange: TButton;
     btnOk: TButton;
@@ -64,6 +65,7 @@ type
     procedure btnAddLineClick(Sender: TObject);
     procedure btnColorClick(Sender: TObject);
     procedure btnDeleteAxisClick(Sender: TObject);
+    procedure btnDeleteDbIntervalClick(Sender: TObject);
     procedure btnDeleteLineClick(Sender: TObject);
     procedure btnLoadSignalsClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
@@ -585,7 +587,11 @@ begin
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.btnLoadSignalsClick(Sender: TObject);
-var C: TRecorderSqlDbConfig; R: TRecorderSqlDbRepository;
+var
+  I: Integer;
+  C: TRecorderSqlDbConfig;
+  R: TRecorderSqlDbRepository;
+  lInfos: TRecorderSqlDbSignalInfos;
 begin
   lbDbSignals.Clear;
   try
@@ -594,23 +600,72 @@ begin
       C.LoadFromFile(fDraft.ConfigFileName);
       R := TRecorderSqlDbRepository.Create(C);
       try
-        R.ListSignalNames(lbDbSignals.Items);
-        if R.GetTrendTimeRange(fDbFromUtc, fDbToUtc, fDbPointCount) then
-        begin
-          lblDbRange.Caption := Format('В БД: %d точек, UTC %s — %s',
-            [fDbPointCount,
-             FormatDateTime('dd.mm.yyyy hh:nn:ss', fDbFromUtc),
-             FormatDateTime('dd.mm.yyyy hh:nn:ss', fDbToUtc)]);
-          btnUseDbRange.Enabled := True;
-        end
-        else
-        begin
-          lblDbRange.Caption := 'В БД пока нет значений сигналов';
-          btnUseDbRange.Enabled := False;
-        end;
+        R.ListSignalInfos(lInfos, False);
+        for I := 0 to High(lInfos) do
+          lbDbSignals.Items.Add(lInfos[I].Name);
+        fDbPointCount := 0;
+        lblDbRange.Caption := 'Каналы прочитаны. Диапазон БД не считался.';
+        btnUseDbRange.Enabled := False;
       finally R.Free; end;
     finally C.Free; end;
   except on E: Exception do MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0); end;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.btnDeleteDbIntervalClick(Sender: TObject);
+var
+  I: Integer;
+  C: TRecorderSqlDbConfig;
+  R: TRecorderSqlDbRepository;
+  lNames: TStringList;
+  lDeleted: Int64;
+  lLine: TRecorderTrendLine;
+begin
+  lNames := TStringList.Create;
+  try
+    try
+      lNames.CaseSensitive := False;
+      lNames.Sorted := True;
+      lNames.Duplicates := dupIgnore;
+      for I := 0 to CurrentDisplay.LineCount - 1 do
+      begin
+        lLine := CurrentDisplay.Lines[I];
+        if (lLine <> nil) and lLine.Visible and (Trim(lLine.TagName) <> '') then
+          lNames.Add(lLine.TagName);
+      end;
+      if lNames.Count = 0 then
+      begin
+        MessageDlg('SQL БД', 'В текущем отображении нет видимых линий.',
+          mtWarning, [mbOK], 0);
+        Exit;
+      end;
+      if MessageDlg('SQL БД',
+        Format('Удалить точки выбранного интервала UTC для видимых линий: %d?',
+          [lNames.Count]), mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+        Exit;
+      C := TRecorderSqlDbConfig.Create;
+      try
+        C.LoadFromFile(fDraft.ConfigFileName);
+        R := TRecorderSqlDbRepository.Create(C);
+        try
+          R.DeleteSignalValuesInterval(lNames, FromUtcValue, ToUtcValue,
+            lDeleted);
+        finally
+          R.Free;
+        end;
+      finally
+        C.Free;
+      end;
+      MessageDlg('SQL БД',
+        Format('Удалено точек из интервала: %d.', [lDeleted]),
+        mtInformation, [mbOK], 0);
+      btnLoadSignalsClick(nil);
+    except
+      on E: Exception do
+        MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lNames.Free;
+  end;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.btnUseDbRangeClick(Sender: TObject);
@@ -626,7 +681,10 @@ var L: TRecorderTrendLine; lPaletteName: string; lPaletteColor: LongInt;
 begin
   if lbDbSignals.ItemIndex < 0 then Exit;
   StoreLine; L := CurrentDisplay.AddLine;
-  L.TagName := lbDbSignals.Items[lbDbSignals.ItemIndex]; L.Name := L.TagName;
+  L.TagName := lbDbSignals.Items[lbDbSignals.ItemIndex];
+  if Pos(' (', L.TagName) > 0 then
+    L.TagName := Copy(L.TagName, 1, Pos(' (', L.TagName) - 1);
+  L.Name := L.TagName;
   OglChartLineAppearance(CurrentDisplay.LineCount - 1, lPaletteName, lPaletteColor);
   L.AxisIndex := 0; L.Color := lPaletteColor; L.Visible := True; L.Width := 1;
   FillLines; lbLines.ItemIndex := CurrentDisplay.LineCount - 1; LoadLine;

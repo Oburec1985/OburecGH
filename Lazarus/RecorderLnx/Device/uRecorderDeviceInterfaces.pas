@@ -23,6 +23,9 @@ uses
   Classes, SysUtils, Variants,
   uRecorderAcquisitionTypes;
 
+const
+  CRecorderDeviceCommandTimeoutMs = 2000;
+
 type
   ERecorderDeviceError = class(Exception);
 
@@ -93,6 +96,11 @@ type
       AIndex: Integer = -1): Variant;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean;
+    { Строковый мост свойств прибора для UI/плагинов и будущих устройств.
+      Формат SetProp: key=value; key2=value2. Ожидаемые ошибки возвращаются
+      через False, без исключений и без сетевых побочных действий. }
+    function GetProp(const AName: string; AIndex: Integer = -1): string;
+    function SetProp(const AText: string; AIndex: Integer = -1): Boolean;
     // подключиться к устройству (разовая операция)
     procedure Connect;
     // отключение
@@ -149,6 +157,8 @@ type
       AIndex: Integer = -1): Variant; virtual;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; virtual;
+    function GetProp(const AName: string; AIndex: Integer = -1): string; virtual;
+    function SetProp(const AText: string; AIndex: Integer = -1): Boolean; virtual;
     // подключить устройство
     procedure Connect; virtual;
     // отключить устройство
@@ -180,6 +190,57 @@ procedure CopyRecorderDeviceSampleBlock(const ASource: TRecorderDeviceSampleBloc
   var ADest: TRecorderDeviceSampleBlock);
 
 implementation
+
+function RecorderDeviceNormalizePropName(const AName: string): string;
+begin
+  Result := LowerCase(Trim(AName));
+end;
+
+function RecorderDevicePropValue(const AText, AName: string;
+  out AValue: string): Boolean;
+var
+  lItems: TStringList;
+  I: Integer;
+  lItem: string;
+  lName: string;
+  lPos: Integer;
+begin
+  Result := False;
+  AValue := '';
+  lItems := TStringList.Create;
+  try
+    lItems.StrictDelimiter := True;
+    lItems.Delimiter := ';';
+    lItems.DelimitedText := AText;
+    for I := 0 to lItems.Count - 1 do
+    begin
+      lItem := Trim(lItems[I]);
+      lPos := Pos('=', lItem);
+      if lPos <= 0 then
+        Continue;
+      lName := RecorderDeviceNormalizePropName(Copy(lItem, 1, lPos - 1));
+      if lName = RecorderDeviceNormalizePropName(AName) then
+      begin
+        AValue := Trim(Copy(lItem, lPos + 1, MaxInt));
+        Result := True;
+        Exit;
+      end;
+    end;
+  finally
+    lItems.Free;
+  end;
+end;
+
+function RecorderDeviceTryStrToFloat(const AText: string; out AValue: Double): Boolean;
+var
+  lText: string;
+begin
+  lText := StringReplace(Trim(AText), '.', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  Result := TryStrToFloat(lText, AValue);
+end;
 
 constructor TRecorderDevice.Create(const ADeviceId, AName: string);
 begin
@@ -277,6 +338,55 @@ begin
   else
     Result := False;
   end;
+end;
+
+function TRecorderDevice.GetProp(const AName: string; AIndex: Integer): string;
+var
+  lName: string;
+begin
+  lName := RecorderDeviceNormalizePropName(AName);
+  if lName = 'name' then
+    Result := fName
+  else if lName = 'host' then
+    Result := fHost
+  else if lName = 'port' then
+    Result := IntToStr(fPort)
+  else if (lName = 'fs') or (lName = 'freq') or
+    (lName = 'pollfrequencyhz') then
+    Result := FloatToStr(fPollFrequencyHz)
+  else if (lName = 'updatems') or (lName = 'updatetimems') then
+    Result := IntToStr(fUpdateTimeMs)
+  else if lName = 'channelcount' then
+    Result := IntToStr(fChannelCount)
+  else
+    Result := '';
+end;
+
+function TRecorderDevice.SetProp(const AText: string; AIndex: Integer): Boolean;
+var
+  lFloat: Double;
+  lInt: Integer;
+  lValue: string;
+begin
+  Result := False;
+  if RecorderDevicePropValue(AText, 'name', lValue) then
+    Result := TrySetDeviceProperty(rdpName, lValue, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'host', lValue) then
+    Result := TrySetDeviceProperty(rdpHost, lValue, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'port', lValue) and TryStrToInt(lValue, lInt) then
+    Result := TrySetDeviceProperty(rdpPort, lInt, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'fs', lValue) and
+    RecorderDeviceTryStrToFloat(lValue, lFloat) then
+    Result := TrySetDeviceProperty(rdpPollFrequencyHz, lFloat, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'freq', lValue) and
+    RecorderDeviceTryStrToFloat(lValue, lFloat) then
+    Result := TrySetDeviceProperty(rdpPollFrequencyHz, lFloat, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'updatems', lValue) and
+    TryStrToInt(lValue, lInt) then
+    Result := TrySetDeviceProperty(rdpUpdateTimeMs, lInt, AIndex) or Result;
+  if RecorderDevicePropValue(AText, 'channelcount', lValue) and
+    TryStrToInt(lValue, lInt) then
+    Result := TrySetDeviceProperty(rdpChannelCount, lInt, AIndex) or Result;
 end;
 
 procedure TRecorderDevice.Connect;

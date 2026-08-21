@@ -16,7 +16,7 @@ uses
   Classes, SysUtils, sockets, ssockets,
   {$IFDEF WINDOWS}WinSock2,{$ENDIF}
   {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  uRecorderNetworkBinding;
+  uRecorderNetworkBinding, uRecorderDeviceInterfaces;
 
 type
   ERecorderMebiusProtocolError = class(Exception);
@@ -77,7 +77,7 @@ type
     function CheckResult(const AData: TRecorderByteArray; out AErrorMessage: string): Boolean;
   public
     constructor Create(const AHost: string; APort: Word = 4000;
-      ATimeoutMs: Cardinal = 2000);
+      ATimeoutMs: Cardinal = CRecorderDeviceCommandTimeoutMs);
     destructor Destroy; override;
 
     function TryConnect(out AErrorText: string): Boolean;

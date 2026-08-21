@@ -187,8 +187,12 @@ type
     procedure UpdateHardwareCurveButtons;
     function EnsureMic185HardwareCalibrationAssigned(ATag: TRecorderTag;
       AEnableOnTag: Boolean): Boolean;
+    function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
+      out AExcitation: string): Boolean;
     procedure HardwareCurveCheckClick(Sender: TObject);
     procedure AutoUnitCheckClick(Sender: TObject);
+    procedure EstimateCheckClick(Sender: TObject);
+    procedure DefaultEstimateComboChange(Sender: TObject);
     procedure DisableEmptyChannelCalibrations;
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
     procedure UpdateHardwareSourceSetupButton;
@@ -369,6 +373,8 @@ constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList;
   ADataUpdateMs: Cardinal; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
   AOnZeroBalance: TTagZeroBalanceEvent; ACommandImages: TCustomImageList);
+var
+  lEstimateKind: TRecorderTagEstimateKind;
 begin
   inherited Create(AOwner);
   if ATagRegistry = nil then
@@ -401,6 +407,10 @@ begin
   fEstimateChecks[tekMaximum] := fEstimateCheckMax;
   fEstimateChecks[tekPeakToPeakByRmsDeviation] := fEstimateCheckPeakPeakByRms;
   fEstimateChecks[tekLastValue] := nil;
+  for lEstimateKind := Low(TRecorderTagEstimateKind) to
+    tekPeakToPeakByRmsDeviation do
+    if fEstimateChecks[lEstimateKind] <> nil then
+      fEstimateChecks[lEstimateKind].OnClick := @EstimateCheckClick;
 
   fSetpointEnabledChecks[tskHighAlarm] := fSetpointEnabledCheck0;
   fSetpointEnabledChecks[tskHighWarning] := fSetpointEnabledCheck1;
@@ -449,6 +459,7 @@ begin
     CTagDialogIconHardwareSource, 'Настройка аппаратной части', CTagDeviceActionBtnSize);
   LayoutTagDeviceActionButtons;
   LoadFromTags;
+  fDefaultEstimateCombo.OnChange := @DefaultEstimateComboChange;
 end;
 
 destructor TTagSettingsDialog.Destroy;
@@ -543,6 +554,33 @@ begin
     Exit;
   Result := RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, ATag,
     AEnableOnTag);
+end;
+
+function TTagSettingsDialog.TryGetStrainDeviceExcitation(ATag: TRecorderTag;
+  out AExcitation: string): Boolean;
+var
+  lEffectivePowerMa: Double;
+  lNominalPowerMa: Double;
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  Result := False;
+  AExcitation := '';
+  if (ATag = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  if RecorderIsHardwareMic185TagSource(ATag.SourceId) then
+  begin
+    RecorderMic185GetSourceChannelMode(fTagRegistry, ATag.SourceId,
+      ATag.Address, ATag.PollFrequencyHz, lSettings);
+    lNominalPowerMa := Abs(Mic185PowerCodeToMa(lSettings.PowerMaCode));
+    if SameValue(lNominalPowerMa, 0.0, 1E-9) then
+      lNominalPowerMa := Abs(Mic185PowerCodeToMa(
+        RecorderMic185GetSourcePowerMaCode(fTagRegistry, ATag.SourceId)));
+    lEffectivePowerMa := RecorderMic185ApplyCurrentCalibration(fTagRegistry,
+      ATag, lNominalPowerMa);
+    AExcitation := FormatFloat('0.###', lEffectivePowerMa) + 'mA';
+    Result := True;
+  end;
 end;
 
 procedure TTagSettingsDialog.UpdateHardwareCurveText;
@@ -1613,7 +1651,9 @@ var
   lSetpointKind: TRecorderTagSetpointKind;
   lChannelNumber: Integer;
   lSettings: TRecorderMic140ChannelSettings;
+  lAppliedMic185Sources: TStringList;
   lAutoUnitName: string;
+  lSourceId: string;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
@@ -1624,9 +1664,12 @@ begin
       raise ERecorderTagError.Create('Invalid tag name');
   end;
 
-  for I := 0 to fTags.Count - 1 do
-  begin
-    lTag := TagAt(I);
+  lAppliedMic185Sources := TStringList.Create;
+  try
+    lAppliedMic185Sources.CaseSensitive := False;
+    for I := 0 to fTags.Count - 1 do
+    begin
+      lTag := TagAt(I);
     if fSelectedMeraFileName <> '' then
     begin
       lTag.Address := Trim(fModuleEdit.Text);
@@ -1653,6 +1696,15 @@ begin
       else if Pos('MC-032:', lTag.SourceId) = 1 then
         RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
           lTag.Address, lFloat)
+      else if Pos('MIC-185:', lTag.SourceId) = 1 then
+      begin
+        lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
+        if lAppliedMic185Sources.IndexOf(lSourceId) < 0 then
+        begin
+          lAppliedMic185Sources.Add(lSourceId);
+          RecorderMic185ApplySourceFrequency(fTagRegistry, lSourceId, lFloat);
+        end;
+      end
       else
         lTag.PollFrequencyHz := lFloat;
     end;
@@ -1826,6 +1878,9 @@ begin
       TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
       lTag.UnitName := lAutoUnitName;
   end;
+  finally
+    lAppliedMic185Sources.Free;
+  end;
 end;
 
 procedure TTagSettingsDialog.ApplyButtonClick(Sender: TObject);
@@ -1910,6 +1965,36 @@ begin
   ApplyAutoUnitFromChannelCalibration;
 end;
 
+procedure TTagSettingsDialog.EstimateCheckClick(Sender: TObject);
+var
+  lCheck: TCheckBox;
+begin
+  if not (Sender is TCheckBox) then
+    Exit;
+  lCheck := TCheckBox(Sender);
+  if lCheck.State = cbGrayed then
+    lCheck.State := cbChecked;
+  lCheck.AllowGrayed := False;
+end;
+
+procedure TTagSettingsDialog.DefaultEstimateComboChange(Sender: TObject);
+var
+  lCheck: TCheckBox;
+  lKind: TRecorderTagEstimateKind;
+begin
+  if fDefaultEstimateCombo.ItemIndex < 0 then
+    Exit;
+  lKind := TRecorderTagEstimateKind(PtrInt(
+    fDefaultEstimateCombo.Items.Objects[fDefaultEstimateCombo.ItemIndex]));
+  if lKind > tekPeakToPeakByRmsDeviation then
+    Exit;
+  lCheck := fEstimateChecks[lKind];
+  if lCheck = nil then
+    Exit;
+  lCheck.AllowGrayed := False;
+  lCheck.Checked := True;
+end;
+
 procedure TTagSettingsDialog.DisableEmptyChannelCalibrations;
 var
   I: Integer;
@@ -1928,6 +2013,7 @@ procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);
 var
   lAction: TRecorderCalibrationAddAction;
   lCalibrationName: string;
+  lExcitation: string;
   lKey: string;
   I: Integer;
   lKind: TRecorderCalibrationKind;
@@ -1967,7 +2053,10 @@ begin
 
     if lKind = rckStrain then
     begin
-      if not ShowRecorderStrainCalibrationDialog(Self, lCalibration) then Exit;
+      if fTags.Count > 0 then
+        TryGetStrainDeviceExcitation(TagAt(0), lExcitation);
+      if not ShowRecorderStrainCalibrationDialog(Self, lCalibration,
+        lExcitation, TagAt(0).UnitName) then Exit;
     end
     else if not ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
       Exit;
@@ -2011,6 +2100,7 @@ end;
 procedure TTagSettingsDialog.EditCalibrationButtonClick(Sender: TObject);
 var
   lCalibration: TRecorderCalibration;
+  lExcitation: string;
 begin
   if fTags.Count <> 1 then
   begin
@@ -2047,8 +2137,10 @@ begin
     Exit;
   end;
 
+  TryGetStrainDeviceExcitation(TagAt(0), lExcitation);
   if (((lCalibration.Kind = rckStrain) and
-    ShowRecorderStrainCalibrationDialog(Self, lCalibration)) or
+    ShowRecorderStrainCalibrationDialog(Self, lCalibration, lExcitation,
+    TagAt(0).UnitName)) or
     ((lCalibration.Kind <> rckStrain) and
     ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
   begin

@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Buttons, Grids, Graphics,
-  Math, DateUtils,
+  Math, DateUtils, Dialogs,
   uOglChart, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel;
 
@@ -44,11 +44,16 @@ type
     fAxisControlsLoading: Boolean;
     fComponent: TRecorderSqlTrendComponent;
     fCursorButton: TSpeedButton;
+    fCursorModeCombo: TComboBox;
+    fDeleteIntervalButton: TButton;
     fDisplayCombo: TComboBox;
     fDisplayNextButton: TSpeedButton;
     fDisplayPrevButton: TSpeedButton;
     fCursorDragging: Boolean;
+    fCursorDragIndex: Integer;
     fCursorEnabled: Boolean;
+    fCursor2Point: TPoint;
+    fCursor2Visible: Boolean;
     fCursorPoint: TPoint;
     fCursorVisible: Boolean;
     fErrorText: string;
@@ -75,11 +80,17 @@ type
     procedure AxisRangeEditChange(Sender: TObject);
     procedure AxisComboChange(Sender: TObject);
     procedure CursorButtonClick(Sender: TObject);
+    procedure CursorModeChange(Sender: TObject);
+    procedure DeleteIntervalButtonClick(Sender: TObject);
     procedure DisplayComboChange(Sender: TObject);
     procedure DisplayNextClick(Sender: TObject);
     procedure DisplayPrevClick(Sender: TObject);
     procedure FillDisplayControls;
     function BuildAxisSignature: string;
+    function CursorUtc(APoint: TPoint): Double;
+    function DoubleCursorMode: Boolean;
+    function DoubleCursorReady: Boolean;
+    procedure EnsureCursorDefaults;
     function GetPlotRect: TRect;
     procedure LegendGridDrawCell(Sender: TObject; ACol, ARow: Integer;
       ARect: TRect; AState: TGridDrawState);
@@ -88,6 +99,7 @@ type
     procedure ReloadTimerTimer(Sender: TObject);
     procedure StartLoad;
     function SyncAxisRangesFromComponent(AForce: Boolean): Boolean;
+    procedure UpdateDeleteIntervalButton;
     procedure UpdateLegend;
     procedure AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
     function LineIndex(const ASignalName: string): Integer;
@@ -291,12 +303,26 @@ begin
   fResetZoomButton.OnClick := @ResetZoomClick;
   fCursorButton := TSpeedButton.Create(fAxisPanel);
   fCursorButton.Parent := fAxisPanel;
-  fCursorButton.SetBounds(428, 3, 120, 26);
+  fCursorButton.SetBounds(428, 3, 112, 26);
   fCursorButton.Caption := 'Показать курсор';
   fCursorButton.AllowAllUp := True;
   fCursorButton.GroupIndex := 91;
   fCursorButton.Down := False;
   fCursorButton.OnClick := @CursorButtonClick;
+  fCursorModeCombo := TComboBox.Create(fAxisPanel);
+  fCursorModeCombo.Parent := fAxisPanel;
+  fCursorModeCombo.SetBounds(546, 3, 92, 26);
+  fCursorModeCombo.Style := csDropDownList;
+  fCursorModeCombo.Items.Add('Один');
+  fCursorModeCombo.Items.Add('Два');
+  fCursorModeCombo.ItemIndex := 0;
+  fCursorModeCombo.OnChange := @CursorModeChange;
+  fDeleteIntervalButton := TButton.Create(fAxisPanel);
+  fDeleteIntervalButton.Parent := fAxisPanel;
+  fDeleteIntervalButton.SetBounds(644, 3, 138, 26);
+  fDeleteIntervalButton.Caption := 'Удалить интервал';
+  fDeleteIntervalButton.Enabled := False;
+  fDeleteIntervalButton.OnClick := @DeleteIntervalButtonClick;
   lLabel := TLabel.Create(fAxisPanel);
   lLabel.Parent := fAxisPanel;
   lLabel.SetBounds(6, 39, 92, 18);
@@ -411,30 +437,167 @@ begin
   begin fDisplayCombo.ItemIndex := fDisplayCombo.ItemIndex + 1; DisplayComboChange(nil); end;
 end;
 
-procedure TRecorderSqlTrendView.CursorButtonClick(Sender: TObject);
+function TRecorderSqlTrendView.DoubleCursorMode: Boolean;
+begin
+  Result := (fCursorModeCombo <> nil) and (fCursorModeCombo.ItemIndex = 1);
+end;
+
+function TRecorderSqlTrendView.CursorUtc(APoint: TPoint): Double;
 var
   lPlot: TRect;
+begin
+  lPlot := GetPlotRect;
+  Result := fFromUtc + (EnsureRange(APoint.X, lPlot.Left, lPlot.Right) -
+    lPlot.Left) / Max(1, lPlot.Width) * (fToUtc - fFromUtc);
+end;
+
+function TRecorderSqlTrendView.DoubleCursorReady: Boolean;
+begin
+  Result := fCursorEnabled and DoubleCursorMode and fCursorVisible and
+    fCursor2Visible and (fToUtc > fFromUtc);
+end;
+
+procedure TRecorderSqlTrendView.UpdateDeleteIntervalButton;
+begin
+  if fDeleteIntervalButton <> nil then
+    fDeleteIntervalButton.Enabled := DoubleCursorReady;
+end;
+
+procedure TRecorderSqlTrendView.EnsureCursorDefaults;
+var
+  lPlot: TRect;
+begin
+  lPlot := GetPlotRect;
+  if not fCursorVisible then
+  begin
+    if DoubleCursorMode then
+      fCursorPoint := Point(lPlot.Left + Max(1, lPlot.Width) div 3,
+        (lPlot.Top + lPlot.Bottom) div 2)
+    else
+      fCursorPoint := Point((lPlot.Left + lPlot.Right) div 2,
+        (lPlot.Top + lPlot.Bottom) div 2);
+    fCursorVisible := True;
+  end;
+  if DoubleCursorMode then
+  begin
+    if not fCursor2Visible then
+    begin
+      fCursor2Point := Point(lPlot.Left + 2 * Max(1, lPlot.Width) div 3,
+        (lPlot.Top + lPlot.Bottom) div 2);
+      fCursor2Visible := True;
+    end;
+  end
+  else
+    fCursor2Visible := False;
+end;
+
+procedure TRecorderSqlTrendView.CursorModeChange(Sender: TObject);
+begin
+  if fCursorEnabled then
+    EnsureCursorDefaults
+  else
+    fCursor2Visible := False;
+  UpdateDeleteIntervalButton;
+  Invalidate;
+end;
+
+procedure TRecorderSqlTrendView.CursorButtonClick(Sender: TObject);
 begin
   fCursorEnabled := fCursorButton.Down;
   if fCursorEnabled then
   begin
     fCursorButton.Caption := 'Скрыть курсор';
-    lPlot := GetPlotRect;
-    if not fCursorVisible then
-    begin
-      fCursorPoint := Point((lPlot.Left + lPlot.Right) div 2,
-        (lPlot.Top + lPlot.Bottom) div 2);
-      fCursorVisible := True;
-    end;
+    EnsureCursorDefaults;
   end
   else
   begin
     fCursorButton.Caption := 'Показать курсор';
     fCursorVisible := False;
+    fCursor2Visible := False;
     fCursorDragging := False;
+    fCursorDragIndex := 0;
     MouseCapture := False;
   end;
+  UpdateDeleteIntervalButton;
   Invalidate;
+end;
+
+procedure TRecorderSqlTrendView.DeleteIntervalButtonClick(Sender: TObject);
+var
+  I: Integer;
+  lConfig: TRecorderSqlDbConfig;
+  lRepository: TRecorderSqlDbRepository;
+  lNames: TStringList;
+  lDeleted: Int64;
+  lLine: TRecorderTrendLine;
+  lDeleteFromUtc, lDeleteToUtc: Double;
+begin
+  if (fComponent = nil) or (fComponent.ActiveDisplay = nil) then Exit;
+  if not DoubleCursorReady then
+  begin
+    MessageDlg('SQL БД',
+      'Удаление интервала доступно только в режиме двойного курсора.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lDeleteFromUtc := Min(CursorUtc(fCursorPoint), CursorUtc(fCursor2Point));
+  lDeleteToUtc := Max(CursorUtc(fCursorPoint), CursorUtc(fCursor2Point));
+  if SameValue(lDeleteFromUtc, lDeleteToUtc) then
+  begin
+    MessageDlg('SQL БД', 'Интервал между курсорами пустой.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lNames := TStringList.Create;
+  try
+    try
+      lNames.CaseSensitive := False;
+      lNames.Sorted := True;
+      lNames.Duplicates := dupIgnore;
+      for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
+      begin
+        lLine := fComponent.ActiveDisplay.Lines[I];
+        if (lLine <> nil) and lLine.Visible and (Trim(lLine.TagName) <> '') then
+          lNames.Add(lLine.TagName);
+      end;
+      if lNames.Count = 0 then
+      begin
+        MessageDlg('SQL БД', 'В текущем отображении нет видимых линий.',
+          mtWarning, [mbOK], 0);
+        Exit;
+      end;
+      if MessageDlg('SQL БД',
+        Format('Удалить из БД интервал UTC %s .. %s для линий: %d?',
+          [FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', lDeleteFromUtc),
+           FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', lDeleteToUtc),
+           lNames.Count]),
+        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+        Exit;
+      lConfig := TRecorderSqlDbConfig.Create;
+      try
+        lConfig.LoadFromFile(fComponent.ConfigFileName);
+        lRepository := TRecorderSqlDbRepository.Create(lConfig);
+        try
+          lRepository.DeleteSignalValuesInterval(lNames, lDeleteFromUtc,
+            lDeleteToUtc, lDeleted);
+        finally
+          lRepository.Free;
+        end;
+      finally
+        lConfig.Free;
+      end;
+      MessageDlg('SQL БД',
+        Format('Удалено точек из интервала: %d.', [lDeleted]),
+        mtInformation, [mbOK], 0);
+      fLoadPending := True;
+      StartLoad;
+    except
+      on E: Exception do
+        MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lNames.Free;
+  end;
 end;
 
 procedure TRecorderSqlTrendView.LegendGridDrawCell(Sender: TObject; ACol,
@@ -499,6 +662,7 @@ begin
   fAxisCombo.ItemIndex := 0;
   SyncAxisRangesFromComponent(True);
   UpdateLegend;
+  UpdateDeleteIntervalButton;
   fLoadPending := True;
   fReloadTimer.Enabled := True;
   Invalidate;
@@ -698,6 +862,7 @@ begin
     end;
     fFromUtc := lFromUtc;
     fToUtc := lToUtc;
+    UpdateDeleteIntervalButton;
     fWorker := TRecorderSqlTrendLoadThread.Create(Self,
       fComponent.ConfigFileName, lSignals, lFromUtc, lToUtc,
       fComponent.MaxPointsPerLine);
@@ -721,6 +886,7 @@ begin
   AWorker.FreeOnTerminate := True;
   fWorker := nil;
   if fLoadPending then fReloadTimer.Enabled := True;
+  UpdateDeleteIntervalButton;
   Invalidate;
 end;
 
@@ -738,8 +904,16 @@ begin
   begin
     if fCursorEnabled then
     begin
-      if (not fCursorVisible) or
-        (Abs(X - fCursorPoint.X) > CSqlTrendCursorGrabPixels) then Exit;
+      fCursorDragIndex := 0;
+      if fCursorVisible and
+        (Abs(X - fCursorPoint.X) <= CSqlTrendCursorGrabPixels) then
+        fCursorDragIndex := 1;
+      if DoubleCursorMode and fCursor2Visible and
+        (Abs(X - fCursor2Point.X) <= CSqlTrendCursorGrabPixels) and
+        ((fCursorDragIndex = 0) or
+         (Abs(X - fCursor2Point.X) < Abs(X - fCursorPoint.X))) then
+        fCursorDragIndex := 2;
+      if fCursorDragIndex = 0 then Exit;
       fCursorDragging := True;
     end
     else
@@ -777,9 +951,19 @@ begin
   end
   else if fCursorDragging then
   begin
-    fCursorPoint := Point(EnsureRange(X, lPlot.Left, lPlot.Right),
-      EnsureRange(Y, lPlot.Top, lPlot.Bottom));
-    fCursorVisible := True;
+    if fCursorDragIndex = 2 then
+    begin
+      fCursor2Point := Point(EnsureRange(X, lPlot.Left, lPlot.Right),
+        EnsureRange(Y, lPlot.Top, lPlot.Bottom));
+      fCursor2Visible := True;
+    end
+    else
+    begin
+      fCursorPoint := Point(EnsureRange(X, lPlot.Left, lPlot.Right),
+        EnsureRange(Y, lPlot.Top, lPlot.Bottom));
+      fCursorVisible := True;
+    end;
+    UpdateDeleteIntervalButton;
     Invalidate;
   end
   else if fPanning then
@@ -829,7 +1013,9 @@ begin
   if (Button = mbLeft) and fCursorDragging then
   begin
     fCursorDragging := False;
+    fCursorDragIndex := 0;
     MouseCapture := False;
+    UpdateDeleteIntervalButton;
     Invalidate;
   end
   else if (Button = mbLeft) and fZoomSelecting then
@@ -883,14 +1069,14 @@ end;
 procedure TRecorderSqlTrendView.Paint;
 var
   I, J, lAxisIndex, lLineIndex, lPrevLine, lBoxHeight,
-    lBoxTop, lBoxLeft: Integer;
+    lBoxTop, lBoxLeft, lIntervalLeft, lIntervalRight: Integer;
   lAxis: TRecorderTrendAxis;
   lLine: TRecorderTrendLine;
   lPlot: TRect;
   lX, lY: Integer;
   lPointX, lPointY, lPrevX, lPrevY, lClipX0, lClipY0,
     lClipX1, lClipY1: Double;
-  lRange, lCursorUtc, lDistance, lGridValue: Double;
+  lRange, lCursorUtc, lCursor2Utc, lDistance, lGridValue: Double;
   lGridIndex, lGridX, lGridY: Integer;
   lGridText: string;
   lHasPrev: Boolean;
@@ -1003,8 +1189,7 @@ begin
   Canvas.Pen.Width := 1;
   if fCursorEnabled and fCursorVisible and (fToUtc > fFromUtc) then
   begin
-    lCursorUtc := fFromUtc + (fCursorPoint.X - lPlot.Left) /
-      Max(1, lPlot.Width) * (fToUtc - fFromUtc);
+    lCursorUtc := CursorUtc(fCursorPoint);
     SetLength(lNearestDistance, fComponent.ActiveDisplay.LineCount);
     SetLength(lNearestValue, fComponent.ActiveDisplay.LineCount);
     SetLength(lNearestFound, fComponent.ActiveDisplay.LineCount);
@@ -1023,6 +1208,24 @@ begin
     Canvas.Pen.Color := clGray;
     Canvas.Pen.Style := psDot;
     Canvas.Line(fCursorPoint.X, lPlot.Top, fCursorPoint.X, lPlot.Bottom);
+    if DoubleCursorReady then
+    begin
+      lCursor2Utc := CursorUtc(fCursor2Point);
+      Canvas.Line(fCursor2Point.X, lPlot.Top, fCursor2Point.X, lPlot.Bottom);
+      lIntervalLeft := Min(fCursorPoint.X, fCursor2Point.X);
+      lIntervalRight := Max(fCursorPoint.X, fCursor2Point.X);
+      Canvas.Pen.Color := clRed;
+      Canvas.Pen.Style := psDash;
+      Canvas.Line(lIntervalLeft, lPlot.Top + 5, lIntervalRight,
+        lPlot.Top + 5);
+      Canvas.Font.Color := clBlack;
+      Canvas.Brush.Style := bsClear;
+      lCaption := FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', lCursor2Utc) +
+        ' UTC';
+      Canvas.TextOut(EnsureRange(fCursor2Point.X + 8, lPlot.Left,
+        Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 4)),
+        lPlot.Top + 10, lCaption);
+    end;
     Canvas.Pen.Style := psSolid;
     lBoxHeight := Canvas.TextHeight('Ag') + 8;
     for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do

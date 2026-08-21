@@ -13,6 +13,7 @@ interface
 
 uses
   Classes, SysUtils, Variants,
+  Math,
   uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
   uMic185MebiusTcpProtocol, uMic185MebiusTypes, uMic185Constants;
 
@@ -69,6 +70,9 @@ type
     { Меняет свойства прибора, которые задаются из источника данных/диалога. }
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
+    { String properties for UI/plugin bridges. Exc returns configured bridge
+      excitation current for the channel, for example "4mA". }
+    function GetProp(const AName: string; AIndex: Integer = -1): string; override;
     { Открывает только транспортную TCP-сессию. }
     function TryConnect(out AErrorText: string): Boolean;
     procedure Connect; override;
@@ -146,8 +150,8 @@ const
   CMic185ConnectAttempts = 1;
   { Недоступность прибора должна определяться быстро. Повтор той же команды
     после явного IoControl timeout только задерживает сброс. }
-  CMic185ConnectTimeoutMs = 2000;
-  CMic185IdentityTimeoutMs = 2000;
+  CMic185ConnectTimeoutMs = CRecorderDeviceCommandTimeoutMs;
+  CMic185IdentityTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   { A successful TCP handshake is earlier than the Mebius transport-ready
     event used by the original driver's WaitConnecting().  Give the device
     service time to attach the new settings client before the first
@@ -161,6 +165,23 @@ const
   CMic185ChannelKxSize = SizeOf(Single) * 2;
   CMic185ChannelKxFullSize =
     SizeOf(Single) * (CMic185HardwareEvalCount * 2 + 4 + 8);
+
+function Mic185MeasurementAddressText(ADeviceIndex,
+  AChannelNumber: Integer): string;
+begin
+  Result := Format('%d-%2.2d', [ADeviceIndex, AChannelNumber]);
+end;
+
+function Mic185TemperatureAddressText(ADeviceIndex,
+  ATemperatureIndex: Integer): string;
+begin
+  Result := Format('%d-t%d', [ADeviceIndex, ATemperatureIndex]);
+end;
+
+function Mic185UtsAddressText(ADeviceIndex: Integer): string;
+begin
+  Result := Format('%d-uts', [ADeviceIndex]);
+end;
 
 function Mic185SingleFromBytes(const AData: TRecorderByteArray;
   AOffset: Integer): Single;
@@ -214,23 +235,28 @@ end;
 function TRecorderMic185Device.BuildLogicalChannelName(AIndex: Integer): string;
 begin
   if AIndex < fMeasChannelCount then
-    Result := Format('185-{%d-%d}', [fRecorderDeviceIndex, AIndex + 1])
+    Result := Format('185-{%s}',
+      [Mic185MeasurementAddressText(fRecorderDeviceIndex,
+      AIndex + 1)])
   else if AIndex < fMeasChannelCount + fTempChannelCount then
-    Result := Format('185-{%d-t%d}', [fRecorderDeviceIndex,
-      AIndex - fMeasChannelCount + 1])
+    Result := Format('185-{%s}',
+      [Mic185TemperatureAddressText(fRecorderDeviceIndex,
+      AIndex - fMeasChannelCount + 1)])
   else
-    Result := Format('185-{%d-uts}', [fRecorderDeviceIndex]);
+    Result := Format('185-{%s}',
+      [Mic185UtsAddressText(fRecorderDeviceIndex)]);
 end;
 
 function TRecorderMic185Device.BuildLogicalChannelAddress(AIndex: Integer): string;
 begin
   if AIndex < fMeasChannelCount then
-    Result := Format('%d-%d', [fRecorderDeviceIndex, AIndex + 1])
+    Result := Mic185MeasurementAddressText(fRecorderDeviceIndex,
+      AIndex + 1)
   else if AIndex < fMeasChannelCount + fTempChannelCount then
-    Result := Format('%d-t%d', [fRecorderDeviceIndex,
-      AIndex - fMeasChannelCount + 1])
+    Result := Mic185TemperatureAddressText(fRecorderDeviceIndex,
+      AIndex - fMeasChannelCount + 1)
   else
-    Result := Format('%d-uts', [fRecorderDeviceIndex]);
+    Result := Mic185UtsAddressText(fRecorderDeviceIndex);
 end;
 
 function TRecorderMic185Device.BuildLogicalChannelUnit(AIndex: Integer): string;
@@ -312,6 +338,28 @@ begin
   else
     Result := inherited TrySetDeviceProperty(AProperty, AValue, AIndex);
   end;
+end;
+
+function TRecorderMic185Device.GetProp(const AName: string;
+  AIndex: Integer): string;
+var
+  lPowerMa: Double;
+  lPowerMaCode: LongWord;
+begin
+  if SameText(Trim(AName), 'Exc') then
+  begin
+    lPowerMaCode := fPowerMaCode;
+    if fHasChannelProgramSettings and (AIndex >= 0) and
+      (AIndex < Length(fChannelProgramSettings)) and
+      (fChannelProgramSettings[AIndex].PowerMaCode <> 0) then
+      lPowerMaCode := fChannelProgramSettings[AIndex].PowerMaCode;
+    lPowerMa := Abs(Mic185PowerCodeToMa(lPowerMaCode));
+    if SameValue(lPowerMa, 0.0, 1E-9) then
+      lPowerMa := Abs(Mic185PowerCodeToMa(CMic185DefaultPowerMaCode));
+    Result := FormatFloat('0.###', lPowerMa) + 'mA';
+    Exit;
+  end;
+  Result := inherited GetProp(AName, AIndex);
 end;
 
 function TRecorderMic185Device.TryQueryDeviceInfo(

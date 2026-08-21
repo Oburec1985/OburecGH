@@ -50,7 +50,8 @@ implementation
 uses
   Math, LazFileUtils,
   uMic185Constants, uMic185MebiusTcpProtocol, uMic185MebiusTypes,
-  uMic185Device, uRecorderMeraPaths, uRecorderMic185DataSource,
+  uMic185Device, uRecorderDeviceInterfaces, uRecorderMeraPaths,
+  uRecorderMic185DataSource,
   uRecorderMic185Runtime;
 
 const
@@ -631,7 +632,8 @@ begin
         'MIC183/185 endpoint is busy by active RecorderLnx session';
       Exit;
     end;
-    lClient := TRecorderMebiusTcpClient.Create(lHost, lPort, 5000);
+    lClient := TRecorderMebiusTcpClient.Create(lHost, lPort,
+      CRecorderDeviceCommandTimeoutMs);
     try
       if not lClient.TryConnect(AErrorMessage) then
         Exit;

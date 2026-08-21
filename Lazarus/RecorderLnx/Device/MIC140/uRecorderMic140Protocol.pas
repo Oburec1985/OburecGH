@@ -20,7 +20,7 @@ interface
 uses
   Classes, SysUtils, SyncObjs, sockets, ssockets,
   uRecorderMic140WireTypes, uRecorderMic140LegacyConstants,
-  uRecorderMic140Timing, uRecorderNetworkBinding;
+  uRecorderMic140Timing, uRecorderNetworkBinding, uRecorderDeviceInterfaces;
 
 type
   TMic140v2Firmware = uRecorderMic140WireTypes.TRecorderMic140LegacyFirmware;
@@ -88,7 +88,7 @@ type
     procedure PumpScanFromSocket(AMaxPackets: Integer; ATimeoutMs: Cardinal);
   public
     constructor Create(const AHost: string; APort: Word = 4000;
-      ATimeoutMs: Cardinal = 5000);
+      ATimeoutMs: Cardinal = CRecorderDeviceCommandTimeoutMs);
     destructor Destroy; override;
 
     function TryConnect(out AErrorText: string): Boolean;

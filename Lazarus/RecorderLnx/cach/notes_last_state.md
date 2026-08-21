@@ -1,3 +1,347 @@
+## 2026-08-21 19:25 - MIC185 source-wide frequency apply
+
+**Запрос:** при выборе другой частоты в настройке MIC-185 тега и нажатии OK
+частота не применялась; у MIC-185 частота одна на весь прибор. Также список
+частот должен быть как в оригинальном Recorder: `1, 10, 25, 50, 100`.
+
+**Сделано:** ограничил MIC-185 frequency grid до реальной UI-сетки оригинала.
+Добавил `RecorderMic185ApplySourceFrequency`: изменение частоты из диалога тега
+обновляет default источника, все измерительные теги MIC-185 этого SourceId и
+сохранённые per-channel `pollFrequencyHz`; `t*`/`uts` не трогаются.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0. Детали: `errors/2026-08-21-mic185-frequency-combo-empty.md`.
+
+**Статус:** готово к ручной проверке на приборе.
+
+## 2026-08-21 19:05 - MIC185 frequency combo restored
+
+**Запрос:** у MIC-185 в настройке тега перестал раскрываться список частот
+опроса; текущее значение `100` видно, но выпадающий список пустой. Пользователь
+не знает, когда именно это сломалось.
+
+**Сделано:** сверил с оригинальным `mic185v2chanbase.cpp`: сетка MIC-185
+`1, 10, 25, 50, 100, 150, 200, 250, 400, 10000, 20000, 35000`. В
+`uRecorderMic185DataSource.pas` зарегистрировал эту сетку в общем
+`uRecorderFrequencyGrids` по префиксу `MIC-185:`.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0. Детали: `errors/2026-08-21-mic185-frequency-combo-empty.md`.
+
+**Статус:** готово к ручной проверке: открыть настройку MIC-185 тега и
+раскрыть список `Частота опроса`.
+
+## 2026-08-21 18:20 - Oscillogram relative binding and grouped estimates
+
+**Запрос:** в настройке осциллограммы при относительной привязке нельзя давать
+выбирать тег, иначе в просмотре отображается `MemTag`; групповое включение
+амплитуды для MIC185 не проявляется в осциллограмме и цифровом формуляре.
+
+**Сделано:** в `uRecorderOscillogramSettingsDialog.pas` режим относительной
+привязки отключает поиск/выбор канала и кнопку добавления линии. В
+`uTagSettingsDialog.pas` checkbox-и оценок при клике в групповом режиме
+становятся явными, а выбор оценки по умолчанию явно включает соответствующий
+расчет.
+
+**Проверка:** `git diff --check` без ошибок, кроме штатных LF/CRLF warnings.
+`C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi`
+завершился с exit code 0. Детали:
+`errors/2026-08-21-oscillogram-relative-binding-and-group-estimates.md`.
+
+**Статус:** готово к ручной проверке в UI.
+
+## 2026-08-21 17:55 - Toggle button visual state
+
+**Запрос:** кнопка с фиксацией самоотщелкивается визуально, хотя значение тега
+остается как у нажатой.
+
+**Сделано:** `TRecorderButtonView.RefreshControl` больше не сбрасывает
+визуальное состояние toggle-кнопки без достоверного нового sample тега. Чтение
+состояния теперь сравнивает значение с `PressedValue` и `ReleasedValue` по
+близости, что устойчивее для дробных значений.
+
+**Проверка:** `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0. Детали: `errors/2026-08-21-toggle-button-visual-release.md`.
+
+**Статус:** готово к ручной проверке кнопки с фиксацией без картинок и с
+дробным `PressedValue`.
+
+## 2026-08-21 17:35 - MIC185 hardware GX stays enabled after choosing physical unit
+
+**Запрос:** при входе в настройку тега MIC185, открытии аппаратных настроек,
+выборе `Ом`, Apply/OK галка `Аппаратная КХ` слетает, хотя коэффициент `k,b`
+отображается.
+
+**Сделано:** в одиночном MIC185 channel dialog и групповом применении MIC185
+связал выбранную единицу с режимом аппаратной ГХ: `код/code` оставляет raw-коды
+и выключает флаг, физические единицы включают `HardwareCalibrationEnabled` и
+пытаются подхватить cached hardware GX.
+
+**Проверка:** `git diff --check` по MIC185 UI units без ошибок, только штатные
+LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0. Детали: `errors/2026-07-10-mic185-units-gx-encoding.md`.
+
+**Статус:** готово к ручной проверке сценария `Ом -> OK`: в настройке тега
+галка аппаратной ГХ должна остаться включенной.
+
+## 2026-08-21 16:51 - Device CallCommand timeout
+
+**Запрос:** проверить MIC-140, MIC185 и MC-031/032 `CallCommand`-операции:
+таймаут ожидания ответа команды должен быть общей константой и не больше
+двух секунд; 5 секунд из MIC-140-примера слишком долго.
+
+**Сделано:** добавлена общая `CRecorderDeviceCommandTimeoutMs = 2000` в
+`uRecorderDeviceInterfaces.pas`. MIC-140, MIC183/185 и MCbus командные
+таймауты/создание командных TCP-клиентов переведены на эту константу. Явные
+повышения MCbus command timeout до 5/3 секунд заменены на общий лимит. Длинные
+аппаратные задержки reset/start и таймауты чтения потока данных не трогались.
+
+**Проверка:** `rg` по командным местам больше не показывает явных `5000`/`3000`
+для `CallCommand` timeout; `git diff --check` без ошибок, только штатные
+LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0.
+
+**Статус:** готово; нужна аппаратная проверка, что обычные offline/timeout
+сценарии теперь быстрее возвращают ошибку без регрессии старта скана.
+
+## 2026-08-21 13:48 - Selected channels grid header sorting
+
+**Запрос:** в настройке каналов при изменении ширины столбцов не должна
+срабатывать пересортировка; сортировать нужно только по клику на заголовках
+`Имя` и `Адрес`. Также при мультивыборе по правой кнопке нужно дать команду
+редактирования выбранных тегов.
+
+**Сделано:** для таблицы выбранных каналов добавлено контекстное меню
+`Редактировать`, которое открывает диалог настройки для всех выделенных строк.
+Сортировка теперь вызывается только левым кликом по заголовкам колонок `Имя`
+или `Адрес`; клики рядом с границей заголовка распознаются как изменение
+ширины столбца и сортировку не запускают.
+
+**Проверка:** `git diff --check -- Lazarus/RecorderLnx/UI/uRecorderSettingsDialog.pas`
+без ошибок, только штатное предупреждение LF/CRLF. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0.
+
+**Статус:** готово; нужна ручная проверка в UI: потянуть границы столбцов без
+пересортировки, затем кликнуть `Имя`/`Адрес` и убедиться, что сортировка
+осталась.
+
+## 2026-08-21 13:32 - MIC185 channel address padding
+
+**Запрос:** в таблице выбранных каналов сортировка по адресу идет строкой:
+`156-10` попадает перед `156-2`; нужно форматировать номера каналов как
+`01`, `02` и сортировать адреса по числам.
+
+**Сделано:** MIC183/185 теперь формирует измерительные адреса как `156-01`
+и имена как `185-{156-01}` во всех основных точках генерации: probe,
+диалог MIC185, device-описание и сохранение source settings. Старые MIC185
+адреса канонизируются из `156-1`/`185-{156-1}` в `156-01`. Сортировка
+таблицы выбранных каналов сравнивает числовые части адреса, а не строку.
+
+**Проверка:** `git diff --check` по измененным модулям без ошибок, только
+штатные LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0.
+
+**Статус:** готово; нужна ручная проверка в настройке каналов на текущем
+проекте, что адреса MIC185 отображаются `156-01..156-64` и сортируются по
+номеру канала.
+
+## 2026-08-21 13:08 - RecorderLnx Docs folder cleanup
+
+**Запрос:** документация RecorderLnx, открытая в Obsidian, лежит россыпью в
+корне `Docs`; нужно разложить ее по папкам.
+
+**Сделано:** верхнеуровневые заметки перенесены в тематические разделы
+`architecture`, `ui`, `algorithms`, `calibration`, `setup`, `original`; уже
+существующие `devices`, `sql`, `errors`, `screens`, `old` сохранены. Добавлено
+корневое оглавление `Docs/README.md` и README в новых разделах. `current-plan.md`
+и `development-rules.md` оставлены в корне как короткие совместимые входные
+ссылки на новые файлы в `architecture`, чтобы не ломать рабочие навыки и
+инструменты.
+
+**Проверка:** скриптовая проверка markdown/wiki/image-ссылок внутри
+`Docs` дала `MISSING_COUNT 0`. Сборка не выполнялась: менялась только
+документация.
+
+**Статус:** готово; в Obsidian корень теперь содержит только папки, README и
+две совместимые точки входа.
+
+## 2026-08-21 12:17 - Measurement section STT calculation and balance
+
+**Запрос:** реализовать расчет `sigma1/sigma2/угол` для компонента
+`Измерительное сечение` по PDF-методике СТТ, сохранить методику в читаемом
+виде и добавить балансировку деформаций внутри самого компонента, с возможностью
+обновлять баланс не сразу по всем каналам.
+
+**Сделано:** добавлены балансы `e1/e2/e3` в строки компонента с сохранением в
+проекте, расчет вычитает баланс и температурную поправку перед формулами. В
+окне таблицы появилась кнопка `Обновить балансировку`: при выделении колонок
+`e1/e2/e3` обновляет только выбранные роли, иначе все деформационные роли
+выбранных строк. Таблица теперь показывает `sigma1/sigma2/угол` по отдельным
+флагам доступности, а закрытый компонент на мнемосхеме рисует номер самой
+нагруженной точки и максимальную абсолютную деформацию. Методика сохранена в
+`Docs/measurement-section-stt-calculation.md`, основная документация обновлена.
+
+**Проверка:** `git diff --check` по измененным файлам чистый, кроме штатных
+LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` завершился с exit code
+0.
+
+**Статус:** готово к ручной проверке на живых тегах: открыть таблицу сечения,
+выделить нужные строки/ячейки `e1/e2/e3`, нажать `Обновить балансировку` и
+убедиться, что после закрытия таблицы компонент показывает самую нагруженную
+точку.
+
+## 2026-08-21 00:00 - SQLdb deleted channel project sync
+
+**Запрос:** при удалении тегов/каналов из SQL БД нужно вычищать их из
+компонентов SQL-трендов и снимать с этих тегов галочку `писать в БД`.
+
+**Сделано:** добавлен `TRecorderSqlDbProjectManager`, который координирует
+SQLdb-настройки и компоненты мнемосхем. После успешного удаления каналов из БД
+диалог снимает их из `sql-db.ini`, обновляет видимые галки и через callback
+просит главную форму очистить линии `TRecorderSqlTrendComponent` на всех
+страницах. Изменённые SQLdb/GUI настройки сразу сохраняются, потому что
+удаление из самой БД уже выполнено фактически.
+
+**Проверка:** `git diff --check` чистый, кроме штатных LF/CRLF warnings.
+`lazbuild -B RecorderLnx.lpi` дошёл до линковки; `RecorderLnx.exe` был занят
+(`error code: 5`), процесс не останавливался.
+
+**Статус:** кодовая часть готова; после закрытия запущенного RecorderLnx нужна
+перелинковка и ручная проверка удаления каналов из БД.
+
+## 2026-08-21 00:00 - SQLdb settings channels split into tabs
+
+**Запрос:** в настройке SQL БД мало места под таблицу каналов БД; нужно
+разнести теги для записи и каналы БД по вкладкам одного `PageControl`, убрать
+кнопку переименования каналов, а вместо фактического пути БД дать поиск по
+каналам БД. В списке БД должны отображаться единицы и адрес.
+
+**Сделано:** `TRecorderSqlDbSettingsDialog` программно переносит существующие
+панели в две вкладки: `Теги для записи` и `Каналы в БД`. Вкладка БД получила
+строку поиска без повторного запроса к Firebird. Удалена кнопка
+`Переименовать каналы`. Для старых записей БД, где `unit/address` пустые,
+отображение подставляет единицы и адрес из текущего реестра тегов по имени.
+
+**Проверка:** `git diff --check` чистый, кроме штатных LF/CRLF warnings.
+`lazbuild -B RecorderLnx.lpi` скомпилировал Pascal-модули и остановился только
+на линковке: `RecorderLnx.exe` занят (`error code: 5`), процесс не
+останавливался.
+
+**Статус:** кодовая часть готова; после закрытия запущенного RecorderLnx нужна
+финальная перелинковка и ручная проверка вкладки `Каналы в БД`.
+
+## 2026-08-21 00:00 - SQLdb channel read fast path restored
+
+**Запрос:** после правок SQLdb кнопка `Прочитать каналы` перестала
+возвращать список и просто висит, хотя раньше каналы из БД читались быстро.
+
+**Сделано:** обычное чтение каналов в настройке SQL БД и SQL-тренда больше не
+считает точки через `signal_values`. `ListSignalInfos` вызывается в быстром
+режиме без `count`, в колонке `Точек` временно отображается `-`; диапазон/общее
+число точек в настройке SQL-тренда также не считается при чтении списка.
+
+**Проверка:** `git diff --check` по изменённым файлам чистый, кроме штатных
+LF/CRLF warnings. `lazbuild -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово к ручной проверке: список каналов должен открываться быстро.
+Если нужны количества точек, делать отдельной командой для выбранных каналов
+или фоновым подсчётом с прогрессом/отменой.
+
+## 2026-08-21 00:00 - SQLdb duplicate index startup fix
+
+**Запрос:** при запуске после попытки чтения каналов БД RecorderLnx падает с
+Firebird-ошибкой `CREATE INDEX IDX_SIGNALS_NAME failed` /
+`Index IDX_SIGNALS_NAME already exists`.
+
+**Сделано:** в `TRecorderSqlDbRepository` создание индексов SQLdb переведено с
+catch-and-ignore DDL на предварительную проверку метаданных. Для Firebird
+проверяется `rdb$indices`, для SQLite `sqlite_master`, для PostgreSQL
+`pg_indexes`; повторный запуск миграции теперь пропускает уже созданные
+индексы и не портит транзакцию Firebird.
+
+**Проверка:** `git diff --check` по изменённым файлам чистый, кроме штатного
+LF/CRLF warning. `lazbuild -B RecorderLnx.lpi` завершился с exit code 0.
+
+**Статус:** готово к ручной проверке: повторно запустить RecorderLnx на той же
+БД и прочитать каналы БД. Подробности:
+`errors/2026-08-21-sqldb-duplicate-index-migration.md`.
+
+## 2026-08-21 00:00 - SQLdb maintenance and channel cleanup UI
+
+**Запрос:** в настройке SQL БД показывать фактический путь БД после
+подключения, читать каналы из БД с количеством точек, дать удаление каналов и
+интервалов, добавить обслуживание Firebird/сборку мусора и проверить
+инсталлятор.
+
+**Сделано:** `TRecorderSqlDbRepository` получил общий список каналов БД с
+количеством точек, чтение attachment/path Firebird, удаление каналов с их
+значениями и удаление значений по интервалу. В диалог SQL БД добавлен блок
+`Каналы в БД`: фактический путь БД, чтение каналов, удаление выбранных каналов
+и ручная `Сборка мусора` через `gfix -sweep`. В настройке SQL-тренда чтение
+каналов теперь показывает количество точек, добавлено удаление выбранного
+интервала для видимых линий. На панели самого SQL-тренда добавлена кнопка
+`Удалить интервал`. Linux-инсталлятор RecorderLnx теперь создаёт и проверяет
+`/var/opt/mera/SQLdb`; Firebird-инсталлятор/проверка дополнительно проверяют
+наличие `gfix` и `gbak`.
+
+**Проверка:** `git diff --check` чистый, кроме штатных LF/CRLF warnings.
+`lazbuild -B RecorderLnx.lpi` завершился с exit code 0. Linux deb собран:
+`installer/RecorderLnx/linux/Output/recorderlnx_0.1.0_amd64.deb`.
+
+**Статус:** готово к ручной проверке на реальной Firebird БД: проверить
+отображение фактического пути, скорость подсчёта точек на большой базе,
+удаление тестового канала/интервала и результат `gfix -sweep`.
+
+## 2026-08-20 00:00 - Strain calibration excitation auto-fill
+
+**Запрос:** в диалоге тензометрической ГХ автоматически подставлять питание
+датчика из настроек модуля; для MIC-185 брать ток питания с учётом сохранённой
+калибровки, а для устройств добавить общий строковый `GetProp/SetProp`.
+Также вывести в журнал главной формы пути Mera Files, программы, USML и лога.
+
+**Сделано:** `IRecorderDevice` получил строковые `GetProp/SetProp`, базовые
+устройства обрабатывают общие свойства, MIC-185 отдаёт `Exc` в формате `mA`,
+MIC-140 получил совместимый no-I/O контракт. При создании/редактировании
+тензо-ГХ выбранный MIC-185 тег вычисляет фактический ток через
+`RecorderMic185ApplyCurrentCalibration` и диалог переключается на ток питания.
+В стартовый журнал главной формы добавлены основные пути.
+
+**Проверка:** `git diff --check` чистый, кроме штатных LF/CRLF warnings.
+`lazbuild -B RecorderLnx.lpi` скомпилировал модули и остановился только на
+линковке: `RecorderLnx.exe` занят (`error code: 5`), процесс не останавливался.
+
+**Статус:** код готов к перелинковке после закрытия запущенного RecorderLnx;
+нужна ручная проверка диалога тензо-ГХ на MIC-185 канале.
+
+## 2026-08-20 00:00 - Mnemonic measurement-section placement lag
+
+**Запрос:** при выкладывании компонента `Измерительное сечение` на мнемосхему
+происходят длительные тормоза, хотя настройки компонента ещё не открывались.
+Также уточнено правило: `notify` использовать редко, в основном для клиентов,
+которые не должны знать о ядре, например плагины и межпроектные модули.
+
+**Сделано:** убран дублирующий `NotifyChanged`/`Render` после успешного
+размещения pending-компонента в `TFormEditorController`. `FormEditorChanged`
+сделан чисто UI-callback без подготовки алгоритмов: тяжёлая подготовка остаётся
+на явных путях настройки/применения/старта. В `PlaceSelectedTool` добавлен
+медленный лог `[MNEMO-PERF] place ...`, если размещение всё ещё занимает
+50 мс или больше.
+
+**Проверка:** `git diff --check` по изменённым файлам чистый, кроме
+стандартных LF/CRLF warnings. `lazbuild -B RecorderLnx.lpi` завершился с exit
+code 0.
+
+**Статус:** код собран; нужна ручная проверка выкладывания измерительного
+сечения. Если задержка останется, смотреть `[MNEMO-PERF] place ...` в логе.
+
 ## 2026-08-20 00:00 - Linux SQL trend date picker fallback
 
 **Запрос:** на Linux календарь диапазона SQL-тренда открывается, но клик по
@@ -7775,3 +8119,73 @@ D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` compiled the Pascal
 units and failed only at link because
 `Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe` is locked by a running
 RecorderLnx process (`error code: 5`).
+
+## 2026-08-21 - SQL trend double cursor delete interval
+
+**Request:** add a cursor mode selector (`single`/`double`) in SQL trend view.
+The `Delete interval` action must be enabled only in double-cursor mode and
+must delete the interval between the two cursors, not the current processing or
+loaded time window.
+
+**Done:** updated `SQLdb/SqlTrend/uRecorderSqlTrendView.pas`. Added a cursor
+mode combo (`Один`/`Два`), second cursor state, nearest-cursor dragging, and UTC
+conversion from cursor coordinates. The interval delete button is disabled
+unless cursor display is enabled, double mode is selected, and both cursors are
+visible. Deletion now uses `Min(Cursor1Utc, Cursor2Utc)` ..
+`Max(Cursor1Utc, Cursor2Utc)` and confirms those exact UTC dates. After
+deletion, the SQL trend reload is requested.
+
+**Verification:** `git diff --check -- Lazarus/RecorderLnx/SQLdb/SqlTrend/uRecorderSqlTrendView.pas`
+completed successfully with only the standard LF/CRLF warning. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` compiled the Pascal
+units including `uRecorderSqlTrendView.pas` and failed only at link because
+`Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe` is locked (`error code:
+5`).
+
+## 2026-08-21 - GaugeCmn strain calibration method comparison
+
+**Request:** compare RecorderLnx strain calibration calculation with the old
+GaugeCmn project under
+`D:\works\clients\тензо\инфа по тензо\WinDevice Каринский GaugeCmn`.
+
+**Findings:** GaugeCmn's `SensCalc` dialog is only a generic sensitivity helper:
+`CalcSens = OutValue / InValue`, `Sens = CalcSens * SecondSens`. The actual
+strain gauge method is in `GaugeStrainAIn::GetBridgeK` and
+`GaugeStrainAIn::GetSens`. GaugeCmn computes an analytic linear bridge transfer
+factor `BridgeK` from circuit type, gauge factor, Poisson ratio, excitation mode,
+and bridge resistances. Then it converts units by
+`Sens = BridgeK * OutMult / InMult` for relative strain, or
+`Sens = m_Sens * BridgeK * OutMult / InMult` for stress/other output types.
+For current excitation it reads `R1`, `R2/R3`, `R4` and includes them directly in
+the bridge coefficient table.
+
+RecorderLnx currently uses a different method in
+`Calibrations/Strains/uRecorderStrainCalibration.pas`: it numerically models
+bridge shoulder deltas, evaluates raw input at `-range`, `0`, `+range`, and
+builds a linear approximation from those three points. This can match some
+simple magnitudes around zero, but it is not the same method as GaugeCmn and has
+different sign/scheme/current-excitation semantics.
+
+**Verification:** source comparison only; no code changes or build.
+
+## 2026-08-21 - Button toggle state without glyph dependency
+
+**Request:** fixed/toggle mnemonic button writes pressed value but a repeated
+click does not switch it back to zero; user suspected missing button images may
+affect the logic.
+
+**Done:** updated `UI/uRecorderVisualControl.pas`. `TRecorderButtonView` now
+keeps toggle state in `fTogglePressed` and flips that state on click before
+publishing `PressedValue` or `ReleasedValue`. The visual pressed state still
+syncs from the tag during refresh, but the click decision no longer depends on
+glyph presence or on rereading the tag in the click handler.
+
+**Also done:** while finishing the previous strain-calibration change,
+`Calibrations/Strains/uRecorderStrainCalibrationDialog.pas` now accepts the
+current tag input unit, and `UI/uTagSettingsDialog.pas` passes `TagAt(0).UnitName`
+when opening the strain calculator from a tag. This lets the calculator select
+`мВ`, `мВ/мА`, or `Ом` based on the actual tag units.
+
+**Verification:** `git diff --check` completed successfully with only standard
+LF/CRLF warnings. `C:\lazarus\lazbuild.exe -B
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed successfully.

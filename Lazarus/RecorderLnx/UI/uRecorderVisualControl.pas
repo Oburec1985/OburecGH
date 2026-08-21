@@ -68,9 +68,11 @@ type
     fPressedGlyph: TBitmap;
     fReleasedGlyph: TBitmap;
     fVisualPressed: Boolean;
+    fTogglePressed: Boolean;
     function CurrentStateGlyph: TBitmap;
     procedure LoadStateGlyph(const AFileName: string; ABitmap: TBitmap);
     procedure SetVisualPressed(AValue: Boolean);
+    function TryReadTagPressed(out APressed: Boolean): Boolean;
     function TagIsPressed: Boolean;
     procedure ButtonClick(Sender: TObject);
     procedure ButtonMouseDown(Sender: TObject; Button: TMouseButton;
@@ -244,15 +246,28 @@ begin
   Canvas.StretchDraw(ClientRect, lBitmap);
 end;
 
-function TRecorderButtonView.TagIsPressed: Boolean;
+function TRecorderButtonView.TryReadTagPressed(out APressed: Boolean): Boolean;
 var
   lTag: TRecorderTag;
+  lValue: Double;
 begin
+  APressed := False;
   Result := False;
-  if (fComponent = nil) or (fTagRegistry = nil) then Exit;
+  if (fComponent = nil) or (fTagRegistry = nil) then
+    Exit;
   lTag := fTagRegistry.FindByName(fComponent.TagName);
-  Result := (lTag <> nil) and (lTag.SignalBuffer.Count > 0) and
-    SameValue(lTag.SignalBuffer.LatestValue, fComponent.PressedValue);
+  if (lTag = nil) or (lTag.SignalBuffer.Count <= 0) then
+    Exit;
+  lValue := lTag.SignalBuffer.LatestValue;
+  APressed := Abs(lValue - fComponent.PressedValue) <=
+    Abs(lValue - fComponent.ReleasedValue);
+  Result := True;
+end;
+
+function TRecorderButtonView.TagIsPressed: Boolean;
+begin
+  if not TryReadTagPressed(Result) then
+    Result := False;
 end;
 
 procedure TRecorderButtonView.SetVisualPressed(AValue: Boolean);
@@ -271,7 +286,8 @@ begin
   Caption := fComponent.Caption;
   LoadStateGlyph(fComponent.PressedImageFileName, fPressedGlyph);
   LoadStateGlyph(fComponent.ReleasedImageFileName, fReleasedGlyph);
-  SetVisualPressed(TagIsPressed);
+  fTogglePressed := TagIsPressed;
+  SetVisualPressed(fTogglePressed);
   if not fEditMode then
   begin
     OnClick := @ButtonClick;
@@ -296,22 +312,17 @@ begin
 end;
 
 procedure TRecorderButtonView.ButtonClick(Sender: TObject);
-var
-  lTag: TRecorderTag;
 begin
   if fEditMode or (fComponent = nil) or (fComponent.Behavior <> rbbToggle) then Exit;
-  lTag := nil;
-  if fTagRegistry <> nil then lTag := fTagRegistry.FindByName(fComponent.TagName);
-  if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) and
-    SameValue(lTag.SignalBuffer.LatestValue, fComponent.PressedValue) then
+  fTogglePressed := not fTogglePressed;
+  SetVisualPressed(fTogglePressed);
+  if fTogglePressed then
   begin
-    SetVisualPressed(False);
-    Publish(fComponent.ReleasedValue)
+    Publish(fComponent.PressedValue);
   end
   else
   begin
-    SetVisualPressed(True);
-    Publish(fComponent.PressedValue);
+    Publish(fComponent.ReleasedValue)
   end;
 end;
 
@@ -358,8 +369,17 @@ end;
 
 procedure TRecorderButtonView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
+var
+  lPressed: Boolean;
 begin
   if ATagRegistry <> nil then fTagRegistry := ATagRegistry;
+  if (fComponent <> nil) and (fComponent.Behavior = rbbToggle) then
+  begin
+    if TryReadTagPressed(lPressed) then
+      fTogglePressed := lPressed;
+    SetVisualPressed(fTogglePressed);
+    Exit;
+  end;
   SetVisualPressed(TagIsPressed);
 end;
 

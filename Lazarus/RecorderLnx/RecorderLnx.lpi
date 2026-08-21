@@ -605,6 +605,10 @@
         <Filename Value="SQLdb/uRecorderSqlDbFirebirdTools.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="SQLdb/uRecorderSqlDbProjectManager.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -80,6 +80,8 @@ type
       AIndex: Integer): Variant;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer): Boolean;
+    function GetProp(const AName: string; AIndex: Integer = -1): string;
+    function SetProp(const AText: string; AIndex: Integer = -1): Boolean;
   public
     constructor Create(const ADeviceId, AHost: string; APort: Word;
       AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
@@ -143,6 +145,54 @@ const
   CBalMin = 30;
   CBalSkip = 10;
   CBalFrac = 0.3;
+
+function Mic140PropName(const AName: string): string;
+begin
+  Result := LowerCase(Trim(AName));
+end;
+
+function Mic140PropValue(const AText, AName: string; out AValue: string): Boolean;
+var
+  lItems: TStringList;
+  I: Integer;
+  lItem: string;
+  lPos: Integer;
+begin
+  Result := False;
+  AValue := '';
+  lItems := TStringList.Create;
+  try
+    lItems.StrictDelimiter := True;
+    lItems.Delimiter := ';';
+    lItems.DelimitedText := AText;
+    for I := 0 to lItems.Count - 1 do
+    begin
+      lItem := Trim(lItems[I]);
+      lPos := Pos('=', lItem);
+      if lPos <= 0 then
+        Continue;
+      if Mic140PropName(Copy(lItem, 1, lPos - 1)) = Mic140PropName(AName) then
+      begin
+        AValue := Trim(Copy(lItem, lPos + 1, MaxInt));
+        Result := True;
+        Exit;
+      end;
+    end;
+  finally
+    lItems.Free;
+  end;
+end;
+
+function Mic140TryStrToFloat(const AText: string; out AValue: Double): Boolean;
+var
+  lText: string;
+begin
+  lText := StringReplace(Trim(AText), '.', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  Result := TryStrToFloat(lText, AValue);
+end;
 
 function TRecorderMic140Device.SupportsDeviceAction(
   AAction: TRecorderDeviceAction): Boolean;
@@ -612,7 +662,7 @@ begin
     Exit;
   end;
 
-  fCli := TMic140v2Tcp.Create(fHost, fPort, 5000);
+  fCli := TMic140v2Tcp.Create(fHost, fPort, CMic140LegacyCommandTimeoutMs);
   try
     fCli.Connect;
     fState := rdsConnected;
@@ -787,6 +837,75 @@ begin
     end;
   finally
     prog.Free;
+  end;
+end;
+
+function TRecorderMic140Device.GetProp(const AName: string;
+  AIndex: Integer): string;
+var
+  lName: string;
+begin
+  lName := Mic140PropName(AName);
+  if lName = 'name' then
+    Result := GetName
+  else if lName = 'host' then
+    Result := fHost
+  else if lName = 'port' then
+    Result := IntToStr(fPort)
+  else if (lName = 'fs') or (lName = 'freq') or
+    (lName = 'pollfrequencyhz') then
+    Result := FloatToStr(fFreq)
+  else if (lName = 'updatems') or (lName = 'updatetimems') then
+    Result := IntToStr(fUpdMs)
+  else if lName = 'channelcount' then
+    Result := IntToStr(fChCnt)
+  else
+    Result := '';
+end;
+
+function TRecorderMic140Device.SetProp(const AText: string;
+  AIndex: Integer): Boolean;
+var
+  lFloat: Double;
+  lInt: Integer;
+  lValue: string;
+begin
+  Result := False;
+  if Mic140PropValue(AText, 'host', lValue) then
+  begin
+    fHost := lValue;
+    Result := True;
+  end;
+  if Mic140PropValue(AText, 'port', lValue) and TryStrToInt(lValue, lInt) and
+    (lInt >= 0) and (lInt <= High(Word)) then
+  begin
+    fPort := Word(lInt);
+    Result := True;
+  end;
+  if Mic140PropValue(AText, 'fs', lValue) and
+    Mic140TryStrToFloat(lValue, lFloat) then
+  begin
+    fFreq := lFloat;
+    Result := True;
+  end;
+  if Mic140PropValue(AText, 'freq', lValue) and
+    Mic140TryStrToFloat(lValue, lFloat) then
+  begin
+    fFreq := lFloat;
+    Result := True;
+  end;
+  if Mic140PropValue(AText, 'updatems', lValue) and TryStrToInt(lValue, lInt) and
+    (lInt >= 0) then
+  begin
+    fUpdMs := Cardinal(lInt);
+    Result := True;
+  end;
+  if Mic140PropValue(AText, 'channelcount', lValue) and
+    TryStrToInt(lValue, lInt) and (lInt > 0) then
+  begin
+    fChCnt := lInt;
+    BuildChannels;
+    Result := True;
   end;
 end;
 

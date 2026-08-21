@@ -30,6 +30,7 @@ type
     procedure ClearLines;
     procedure DeleteAxis(AIndex: Integer);
     procedure DeleteLine(AIndex: Integer);
+    function RemoveLinesByTagNames(ATagNames: TStrings): Integer;
     property Name: string read fName write fName;
     property AxisCount: Integer read GetAxisCount;
     property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
@@ -62,6 +63,7 @@ type
     procedure ClearDisplays;
     procedure DeleteDisplay(AIndex: Integer);
     procedure ImportLegacyTrend;
+    function RemoveLinesByTagNames(ATagNames: TStrings): Integer;
     property ConfigFileName: string read fConfigFileName write fConfigFileName;
     property FromUtc: Double read fFromUtc write fFromUtc;
     property ToUtc: Double read fToUtc write fToUtc;
@@ -126,6 +128,21 @@ procedure TRecorderSqlTrendDisplay.DeleteAxis(AIndex: Integer);
 begin if (AIndex >= 0) and (AIndex < fAxes.Count) then begin TObject(fAxes[AIndex]).Free; fAxes.Delete(AIndex); end; end;
 procedure TRecorderSqlTrendDisplay.DeleteLine(AIndex: Integer);
 begin if (AIndex >= 0) and (AIndex < fLines.Count) then begin TObject(fLines[AIndex]).Free; fLines.Delete(AIndex); end; end;
+
+function TRecorderSqlTrendDisplay.RemoveLinesByTagNames(
+  ATagNames: TStrings): Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  if ATagNames = nil then Exit;
+  for I := LineCount - 1 downto 0 do
+    if ATagNames.IndexOf(Lines[I].TagName) >= 0 then
+    begin
+      DeleteLine(I);
+      Inc(Result);
+    end;
+end;
 
 procedure TRecorderSqlTrendDisplay.Assign(ASource: TRecorderSqlTrendDisplay);
 var I: Integer; A: TRecorderTrendAxis; L: TRecorderTrendLine;
@@ -192,6 +209,17 @@ procedure TRecorderSqlTrendComponent.ClearDisplays;
 begin while fDisplays.Count > 0 do begin TObject(fDisplays[0]).Free; fDisplays.Delete(0); end; fActiveDisplayIndex := 0; end;
 procedure TRecorderSqlTrendComponent.DeleteDisplay(AIndex: Integer);
 begin if (DisplayCount <= 1) or (AIndex < 0) or (AIndex >= DisplayCount) then Exit; TObject(fDisplays[AIndex]).Free; fDisplays.Delete(AIndex); SetActiveDisplayIndex(fActiveDisplayIndex); end;
+
+function TRecorderSqlTrendComponent.RemoveLinesByTagNames(
+  ATagNames: TStrings): Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  if ATagNames = nil then Exit;
+  for I := 0 to DisplayCount - 1 do
+    Inc(Result, Displays[I].RemoveLinesByTagNames(ATagNames));
+end;
 
 procedure TRecorderSqlTrendComponent.ImportLegacyTrend;
 var I: Integer; D: TRecorderSqlTrendDisplay; A: TRecorderTrendAxis; L: TRecorderTrendLine;

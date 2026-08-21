@@ -7,14 +7,19 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Dialogs, Spin, ComCtrls,
-  LazUTF8, Math, uRecorderSqlDbTypes, uRecorderTags;
+  LazUTF8, Math, uRecorderSqlDbTypes, uRecorderSqlDbRepository,
+  uRecorderTags;
 
 type
+  TRecorderSqlDbSignalsDeletedEvent = procedure(ASignalNames: TStrings) of object;
+
   TRecorderSqlDbSettingsDialog = class(TForm)
     btnBrowse: TButton;
     btnCancel: TButton;
     btnOk: TButton;
-    btnRenameDbSignals: TButton;
+    btnDeleteDbSignals: TButton;
+    btnReadDbSignals: TButton;
+    btnSweepDb: TButton;
     btnStartFirebird: TButton;
     btnTest: TButton;
     btnTestFirebird: TButton;
@@ -27,6 +32,7 @@ type
     cbTls: TCheckBox;
     cbSignalEstimate: TComboBox;
     edDatabase: TEdit;
+    edDbSignalSearch: TEdit;
     edHost: TEdit;
     edObjectName: TEdit;
     edObjectType: TEdit;
@@ -36,8 +42,11 @@ type
     edSerial: TEdit;
     edUser: TEdit;
     gbConnection: TGroupBox;
+    gbDbChannels: TGroupBox;
     gbObject: TGroupBox;
     gbSignals: TGroupBox;
+    lvDbSignals: TListView;
+    lblDbSignalSearch: TLabel;
     lvSignals: TListView;
     lblBackend: TLabel;
     lblControlTag: TLabel;
@@ -58,8 +67,10 @@ type
     sePort: TSpinEdit;
     seQueue: TSpinEdit;
     procedure btnBrowseClick(Sender: TObject);
+    procedure btnDeleteDbSignalsClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
-    procedure btnRenameDbSignalsClick(Sender: TObject);
+    procedure btnReadDbSignalsClick(Sender: TObject);
+    procedure btnSweepDbClick(Sender: TObject);
     procedure btnStartFirebirdClick(Sender: TObject);
     procedure btnTestClick(Sender: TObject);
     procedure btnTestFirebirdClick(Sender: TObject);
@@ -67,15 +78,30 @@ type
     procedure btnSelectNoneClick(Sender: TObject);
     procedure btnAssignEstimateClick(Sender: TObject);
     procedure cbBackendChange(Sender: TObject);
+    procedure edDbSignalSearchChange(Sender: TObject);
     procedure edSignalSearchChange(Sender: TObject);
   private
     fAllSignals: TStringList;
     fCheckedSignals: TStringList;
     fConfig: TRecorderSqlDbConfig;
+    fDbSignals: TRecorderSqlDbSignalInfos;
     fFileName: string;
+    fChannelPages: TPageControl;
+    fWriteSignalsTab: TTabSheet;
+    fDbSignalsTab: TTabSheet;
+    fOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent;
     fRegistry: TRecorderTagRegistry;
+    procedure BuildChannelPages;
+    procedure LayoutDbChannelControls;
+    procedure LayoutWriteSignalControls;
+    procedure DbChannelsResize(Sender: TObject);
+    procedure WriteSignalsResize(Sender: TObject);
     procedure LoadControls;
     procedure ApplySignalFilter;
+    procedure ApplyDbSignalFilter;
+    function DbSignalMatchesFilter(const AInfo: TRecorderSqlDbSignalInfo;
+      const AFilter: string): Boolean;
+    procedure FillDbSignalFallback(var AInfo: TRecorderSqlDbSignalInfo);
     procedure SyncVisibleSignalChecks;
     procedure StoreControls;
     procedure UpdateControls;
@@ -88,22 +114,25 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure LoadConfig(const AFileName: string;
-      ARegistry: TRecorderTagRegistry);
+      ARegistry: TRecorderTagRegistry;
+      AOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent = nil);
   end;
 
 function ShowRecorderSqlDbSettings(AOwner: TComponent;
-  const AFileName: string; ARegistry: TRecorderTagRegistry): Boolean;
+  const AFileName: string; ARegistry: TRecorderTagRegistry;
+  AOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent = nil): Boolean;
 
 implementation
 
 uses
-  uRecorderSqlDbRepository, uRecorderSqlDbFirebirdTools;
+  uRecorderSqlDbFirebirdTools, uRecorderSqlDbProjectManager;
 
 {$R *.lfm}
 
 constructor TRecorderSqlDbSettingsDialog.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  BuildChannelPages;
   fAllSignals := TStringList.Create;
   fAllSignals.CaseSensitive := False;
   fCheckedSignals := TStringList.Create;
@@ -112,19 +141,123 @@ begin
   fCheckedSignals.Duplicates := dupIgnore;
 end;
 
+procedure TRecorderSqlDbSettingsDialog.BuildChannelPages;
+begin
+  fChannelPages := TPageControl.Create(Self);
+  fChannelPages.Parent := Self;
+  fChannelPages.SetBounds(gbSignals.Left, gbSignals.Top, gbSignals.Width,
+    btnOk.Top - gbSignals.Top - 8);
+  fChannelPages.Anchors := [akTop, akLeft, akRight, akBottom];
+  fChannelPages.TabOrder := gbSignals.TabOrder;
+
+  fWriteSignalsTab := TTabSheet.Create(Self);
+  fWriteSignalsTab.PageControl := fChannelPages;
+  fWriteSignalsTab.Caption := 'Теги для записи';
+
+  fDbSignalsTab := TTabSheet.Create(Self);
+  fDbSignalsTab.PageControl := fChannelPages;
+  fDbSignalsTab.Caption := 'Каналы в БД';
+
+  gbSignals.Parent := fWriteSignalsTab;
+  gbSignals.Align := alClient;
+  gbSignals.BorderSpacing.Around := 4;
+  gbSignals.TabOrder := 0;
+  gbSignals.OnResize := @WriteSignalsResize;
+  LayoutWriteSignalControls;
+
+  gbDbChannels.Parent := fDbSignalsTab;
+  gbDbChannels.Align := alClient;
+  gbDbChannels.BorderSpacing.Around := 4;
+  gbDbChannels.TabOrder := 0;
+  gbDbChannels.OnResize := @DbChannelsResize;
+  LayoutDbChannelControls;
+
+  fChannelPages.ActivePage := fWriteSignalsTab;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.LayoutWriteSignalControls;
+var
+  lBottomTop, lEstimateTop: Integer;
+begin
+  if gbSignals = nil then Exit;
+
+  cbControlTag.Width := Max(120, gbSignals.ClientWidth - 16);
+  edSignalSearch.Width := Max(120, gbSignals.ClientWidth - edSignalSearch.Left - 8);
+
+  lBottomTop := Max(150, gbSignals.ClientHeight - btnSelectAll.Height - 8);
+  lEstimateTop := Max(110, lBottomTop - cbSignalEstimate.Height - 28);
+
+  lvSignals.SetBounds(8, lvSignals.Top, Max(120, gbSignals.ClientWidth - 16),
+    Max(80, lEstimateTop - lvSignals.Top - 6));
+  lvSignals.Anchors := [akTop, akLeft, akRight, akBottom];
+
+  lblSignalEstimate.Top := lEstimateTop + 6;
+  cbSignalEstimate.Top := lEstimateTop;
+  btnAssignEstimate.Top := lEstimateTop;
+  btnAssignEstimate.Left := Max(8, gbSignals.ClientWidth -
+    btnAssignEstimate.Width - 8);
+  cbSignalEstimate.Width := Max(120,
+    btnAssignEstimate.Left - cbSignalEstimate.Left - 8);
+
+  btnSelectAll.Top := lBottomTop;
+  btnSelectNone.Top := lBottomTop;
+  btnSelectAll.Width := Max(100, (gbSignals.ClientWidth - 24) div 2);
+  btnSelectNone.Left := btnSelectAll.Left + btnSelectAll.Width + 8;
+  btnSelectNone.Width := Max(100,
+    gbSignals.ClientWidth - btnSelectNone.Left - 8);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.LayoutDbChannelControls;
+var
+  lButtonTop: Integer;
+begin
+  if gbDbChannels = nil then Exit;
+
+  lblDbSignalSearch.SetBounds(12, 20, 50, lblDbSignalSearch.Height);
+  edDbSignalSearch.SetBounds(70, 15,
+    Max(120, gbDbChannels.ClientWidth - 82), edDbSignalSearch.Height);
+  edDbSignalSearch.Anchors := [akTop, akLeft, akRight];
+
+  lButtonTop := Max(56, gbDbChannels.ClientHeight - 40);
+  btnReadDbSignals.SetBounds(12, lButtonTop, 150, btnReadDbSignals.Height);
+  btnDeleteDbSignals.SetBounds(170, lButtonTop, 150,
+    btnDeleteDbSignals.Height);
+  btnSweepDb.SetBounds(328, lButtonTop, 150, btnSweepDb.Height);
+  btnReadDbSignals.Anchors := [akLeft, akBottom];
+  btnDeleteDbSignals.Anchors := [akLeft, akBottom];
+  btnSweepDb.Anchors := [akLeft, akBottom];
+
+  lvDbSignals.SetBounds(12, 52, Max(120, gbDbChannels.ClientWidth - 24),
+    Max(80, lButtonTop - 62));
+  lvDbSignals.Anchors := [akTop, akLeft, akRight, akBottom];
+end;
+
+procedure TRecorderSqlDbSettingsDialog.DbChannelsResize(Sender: TObject);
+begin
+  LayoutDbChannelControls;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.WriteSignalsResize(Sender: TObject);
+begin
+  LayoutWriteSignalControls;
+end;
+
 destructor TRecorderSqlDbSettingsDialog.Destroy;
 begin
   fCheckedSignals.Free;
   fAllSignals.Free;
+  SetLength(fDbSignals, 0);
   fConfig.Free;
   inherited Destroy;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.LoadConfig(const AFileName: string;
-  ARegistry: TRecorderTagRegistry);
+  ARegistry: TRecorderTagRegistry;
+  AOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent);
 begin
   fFileName := AFileName;
   fRegistry := ARegistry;
+  fOnSignalsDeleted := AOnSignalsDeleted;
   FreeAndNil(fConfig);
   fConfig := TRecorderSqlDbConfig.Create;
   fConfig.LoadFromFile(AFileName);
@@ -174,6 +307,9 @@ begin
   fAllSignals.Clear;
   fCheckedSignals.Clear;
   lvSignals.Clear;
+  lvDbSignals.Clear;
+  edDbSignalSearch.Clear;
+  SetLength(fDbSignals, 0);
   if fRegistry <> nil then
     for I := 0 to fRegistry.TagCount - 1 do
     begin
@@ -183,6 +319,7 @@ begin
         fCheckedSignals.Add(fRegistry.Tags[I].Name);
     end;
   ApplySignalFilter;
+  ApplyDbSignalFilter;
   UpdateControls;
 end;
 
@@ -242,6 +379,72 @@ begin
   ApplySignalFilter;
 end;
 
+function TRecorderSqlDbSettingsDialog.DbSignalMatchesFilter(
+  const AInfo: TRecorderSqlDbSignalInfo; const AFilter: string): Boolean;
+var
+  lFilter: string;
+begin
+  lFilter := UTF8LowerCase(Trim(AFilter));
+  Result := (lFilter = '') or
+    (Pos(lFilter, UTF8LowerCase(AInfo.Name)) > 0) or
+    (Pos(lFilter, UTF8LowerCase(AInfo.UnitName)) > 0) or
+    (Pos(lFilter, UTF8LowerCase(AInfo.RecorderAddress)) > 0) or
+    (Pos(lFilter, UTF8LowerCase(AInfo.RecorderSourceId)) > 0);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.FillDbSignalFallback(
+  var AInfo: TRecorderSqlDbSignalInfo);
+var
+  lTag: TRecorderTag;
+begin
+  if (fRegistry = nil) or (Trim(AInfo.Name) = '') then Exit;
+  if (Trim(AInfo.UnitName) <> '') and (Trim(AInfo.RecorderAddress) <> '') and
+    (Trim(AInfo.RecorderSourceId) <> '') then
+    Exit;
+  lTag := fRegistry.FindByName(AInfo.Name);
+  if lTag = nil then Exit;
+  if Trim(AInfo.UnitName) = '' then
+    AInfo.UnitName := lTag.UnitName;
+  if Trim(AInfo.RecorderAddress) = '' then
+    AInfo.RecorderAddress := lTag.Address;
+  if Trim(AInfo.RecorderSourceId) = '' then
+    AInfo.RecorderSourceId := lTag.SourceId;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.ApplyDbSignalFilter;
+var
+  I: Integer;
+  lInfo: TRecorderSqlDbSignalInfo;
+  lItem: TListItem;
+begin
+  lvDbSignals.Items.BeginUpdate;
+  try
+    lvDbSignals.Clear;
+    for I := 0 to High(fDbSignals) do
+    begin
+      lInfo := fDbSignals[I];
+      FillDbSignalFallback(lInfo);
+      if not DbSignalMatchesFilter(lInfo, edDbSignalSearch.Text) then
+        Continue;
+      lItem := lvDbSignals.Items.Add;
+      lItem.Caption := lInfo.Name;
+      if lInfo.PointCount > 0 then
+        lItem.SubItems.Add(IntToStr(lInfo.PointCount))
+      else
+        lItem.SubItems.Add('-');
+      lItem.SubItems.Add(lInfo.UnitName);
+      lItem.SubItems.Add(lInfo.RecorderAddress);
+    end;
+  finally
+    lvDbSignals.Items.EndUpdate;
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.edDbSignalSearchChange(Sender: TObject);
+begin
+  ApplyDbSignalFilter;
+end;
+
 procedure TRecorderSqlDbSettingsDialog.StoreControls;
 var
   I: Integer;
@@ -288,6 +491,7 @@ begin
   btnTestFirebird.Enabled := lFirebird;
   btnStartFirebird.Enabled := lFirebird and
     RecorderSqlDbFirebirdHostIsLocal(edHost.Text);
+  btnSweepDb.Enabled := lFirebird;
   if edHost.Enabled then
     lblHost.Caption := 'Хост БД (пусто = локально)'
   else
@@ -335,6 +539,87 @@ begin
   except
     on E: Exception do
       AMessage := E.Message;
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnReadDbSignalsClick(Sender: TObject);
+var
+  lInfos: TRecorderSqlDbSignalInfos;
+  lRepository: TRecorderSqlDbRepository;
+begin
+  try
+    StoreControls;
+    lRepository := TRecorderSqlDbRepository.Create(fConfig);
+    try
+      lRepository.ListSignalInfos(lInfos, False);
+      fDbSignals := lInfos;
+      ApplyDbSignalFilter;
+    finally
+      lRepository.Free;
+    end;
+  except
+    on E: Exception do
+      MessageDlg('Ошибка SQL БД', E.Message, mtError, [mbOK], 0);
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnDeleteDbSignalsClick(Sender: TObject);
+var
+  I: Integer;
+  lNames: TStringList;
+  lSyncResult: TRecorderSqlDbProjectSyncResult;
+  lSignalsDeleted, lValuesDeleted: Int64;
+  lRepository: TRecorderSqlDbRepository;
+begin
+  lNames := TStringList.Create;
+  try
+    for I := 0 to lvDbSignals.Items.Count - 1 do
+      if lvDbSignals.Items[I].Selected then
+        lNames.Add(lvDbSignals.Items[I].Caption);
+    if lNames.Count = 0 then Exit;
+    if MessageDlg('SQL БД',
+      Format('Удалить выбранные каналы из БД: %d?', [lNames.Count]),
+      mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+    StoreControls;
+    lRepository := TRecorderSqlDbRepository.Create(fConfig);
+    try
+      lRepository.DeleteSignalsByName(lNames, lSignalsDeleted, lValuesDeleted);
+    finally
+      lRepository.Free;
+    end;
+    MessageDlg('SQL БД',
+      Format('Удалено каналов: %d. Удалено точек: %d.',
+        [lSignalsDeleted, lValuesDeleted]), mtInformation, [mbOK], 0);
+    lSyncResult := TRecorderSqlDbProjectManager.RemoveSignals(fConfig, nil,
+      lNames);
+    if lSyncResult.ConfigSignalCount > 0 then
+    begin
+      fConfig.SaveToFile(fFileName);
+      fCheckedSignals.Assign(fConfig.SignalNames);
+      SyncVisibleSignalChecks;
+    end;
+    if Assigned(fOnSignalsDeleted) then
+      fOnSignalsDeleted(lNames);
+    btnReadDbSignalsClick(nil);
+  finally
+    lNames.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnSweepDbClick(Sender: TObject);
+var
+  lMessage: string;
+begin
+  try
+    StoreControls;
+    if RecorderSqlDbRunFirebirdSweep(fConfig, lMessage) then
+      MessageDlg('SQL БД', lMessage, mtInformation, [mbOK], 0)
+    else
+      MessageDlg('SQL БД', lMessage, mtWarning, [mbOK], 0);
+  except
+    on E: Exception do
+      MessageDlg('Ошибка SQL БД', E.Message, mtError, [mbOK], 0);
   end;
 end;
 
@@ -467,42 +752,6 @@ begin
     mtError, [mbOK], 0);
 end;
 
-procedure TRecorderSqlDbSettingsDialog.btnRenameDbSignalsClick(Sender: TObject);
-var
-  I, lRenamed: Integer;
-  lObjectId: string;
-  lRepository: TRecorderSqlDbRepository;
-  lTag: TRecorderTag;
-begin
-  if fRegistry = nil then Exit;
-  try
-    StoreControls;
-    lRenamed := 0;
-    lRepository := TRecorderSqlDbRepository.Create(fConfig);
-    try
-      lRepository.EnsureDatabase;
-      lObjectId := lRepository.EnsureObject(fConfig.ObjectName,
-        fConfig.ObjectType, fConfig.SerialNumber);
-      for I := 0 to fRegistry.TagCount - 1 do
-      begin
-        lTag := fRegistry.Tags[I];
-        if (lTag = nil) or (Trim(lTag.Address) = '') then Continue;
-        if lRepository.RenameSignalByRecorderAddress(lObjectId,
-          lTag.SourceId, lTag.Address, lTag.Name, lTag.UnitName) then
-          Inc(lRenamed);
-      end;
-    finally
-      lRepository.Free;
-    end;
-    MessageDlg('SQL БД',
-      Format('Имена каналов в БД синхронизированы: %d.', [lRenamed]),
-      mtInformation, [mbOK], 0);
-  except
-    on E: Exception do
-      MessageDlg('Ошибка SQL БД', E.Message, mtError, [mbOK], 0);
-  end;
-end;
-
 procedure TRecorderSqlDbSettingsDialog.btnSelectAllClick(Sender: TObject);
 var I: Integer;
 begin
@@ -623,12 +872,13 @@ begin
 end;
 
 function ShowRecorderSqlDbSettings(AOwner: TComponent;
-  const AFileName: string; ARegistry: TRecorderTagRegistry): Boolean;
+  const AFileName: string; ARegistry: TRecorderTagRegistry;
+  AOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent): Boolean;
 var D: TRecorderSqlDbSettingsDialog;
 begin
   D := TRecorderSqlDbSettingsDialog.Create(AOwner);
   try
-    D.LoadConfig(AFileName, ARegistry);
+    D.LoadConfig(AFileName, ARegistry, AOnSignalsDeleted);
     Result := D.ShowModal = mrOk;
   finally D.Free; end;
 end;

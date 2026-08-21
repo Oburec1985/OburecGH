@@ -98,6 +98,28 @@ begin
   GRecorderMic185SettingsSelfTestActive := AActive;
 end;
 
+function Mic185UnitIsRawCode(const AUnitName: string): Boolean;
+var
+  lUnit: string;
+begin
+  lUnit := Trim(AUnitName);
+  Result := SameText(lUnit, 'код') or SameText(lUnit, 'code');
+end;
+
+procedure ApplyMic185HardwareModeFromUnit(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag);
+begin
+  if ATag = nil then
+    Exit;
+  if Mic185UnitIsRawCode(ATag.UnitName) then
+  begin
+    ATag.HardwareCalibrationEnabled := False;
+    Exit;
+  end;
+  ATag.HardwareCalibrationEnabled := True;
+  RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+end;
+
 procedure TRecorderMic185SettingsForm.FormCreate(Sender: TObject);
 begin
   Mic185DefaultChannelProgramSettingsArray(MIC185DefaultPollFrequencyHz,
@@ -148,12 +170,9 @@ begin
   if lTargetTag <> nil then
   begin
     lTargetTag.SourceValueMode := RecorderMic185FormatChannelMode(ASettings);
-    if lTargetTag.HardwareCalibrationEnabled or
-      (Trim(lTargetTag.HardwareCalibrationName) <> '') then
-      RecorderMic185LoadHardwareCalibrationForTag(fRegistry, lTargetTag,
-        lTargetTag.HardwareCalibrationEnabled);
     if Trim(AUnitName) <> '' then
       lTargetTag.UnitName := AUnitName;
+    ApplyMic185HardwareModeFromUnit(fRegistry, lTargetTag);
     lTargetTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry,
       lTargetTag, ASettings, lTargetTag.UnitName);
     lTargetTag.RangeMin := -lTargetTag.RangeMax;
@@ -221,11 +240,12 @@ var
 begin
   lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, BuildSourceId);
   if (ARow >= 1) and (ARow <= CMic185ChannelCountMax) then
-    Result := Format('%d-%d', [lDeviceIndex, ARow])
+    Result := RecorderMic185MeasurementAddressText(lDeviceIndex, ARow)
   else if ARow <= CMic185ChannelCountMax + CMic185TempChannelCount then
-    Result := Format('%d-t%d', [lDeviceIndex, ARow - CMic185ChannelCountMax])
+    Result := RecorderMic185TemperatureAddressText(lDeviceIndex,
+      ARow - CMic185ChannelCountMax)
   else
-    Result := Format('%d-uts', [lDeviceIndex]);
+    Result := RecorderMic185UtsAddressText(lDeviceIndex);
 end;
 
 function TRecorderMic185SettingsForm.GridRowDefaultName(ARow: Integer): string;

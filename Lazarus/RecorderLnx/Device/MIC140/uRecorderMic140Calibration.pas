@@ -208,7 +208,7 @@ begin
       [lSourceId, lErrorMessage]));
     Exit;
   end;
-  lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
+  lCli := TMic140v2Tcp.Create(AHost, APort, CMic140LegacyCommandTimeoutMs);
   try
     try
       lCli.Connect;
@@ -804,7 +804,7 @@ begin
   end
   else
   begin
-    lCli := TMic140v2Tcp.Create(lHost, lPort, 5000);
+    lCli := TMic140v2Tcp.Create(lHost, lPort, CMic140LegacyCommandTimeoutMs);
     lClient := TMic140LegacyClientAdapter.Create(lCli);
     Mic140LogFlash(lLogPrefix + 'using standalone MIC-140 service session');
   end;

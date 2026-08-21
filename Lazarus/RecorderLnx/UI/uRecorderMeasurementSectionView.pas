@@ -17,12 +17,16 @@ uses
 type
   TRecorderMeasurementSectionTableForm = class(TForm)
   private
+    fBalanceButton: TButton;
     fComponent: TRecorderMeasurementSectionComponent;
     fGrid: TStringGrid;
     fRegistry: TRecorderTagRegistry;
     fTimer: TTimer;
+    procedure BalanceClick(Sender: TObject);
+    procedure CaptureSelectedBalance;
     function FormatMaybe(AHasValue: Boolean; AValue: Double;
       const AFormat: string): string;
+    function SelectedCellsIncludeColumn(ACol: Integer): Boolean;
     procedure TimerTick(Sender: TObject);
   public
     constructor CreateTable(AOwner: TComponent;
@@ -37,8 +41,11 @@ type
     fEditMode: Boolean;
     fRegistry: TRecorderTagRegistry;
     fTableForm: TRecorderMeasurementSectionTableForm;
+    function BuildSummaryText: string;
     procedure OpenTable(Sender: TObject);
     procedure TableDestroyed(Sender: TObject);
+  protected
+    procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -78,6 +85,13 @@ begin
   Width := 760;
   Height := 360;
 
+  fBalanceButton := TButton.Create(Self);
+  fBalanceButton.Parent := Self;
+  fBalanceButton.Align := alTop;
+  fBalanceButton.Height := 28;
+  fBalanceButton.Caption := 'Обновить балансировку';
+  fBalanceButton.OnClick := @BalanceClick;
+
   fGrid := TStringGrid.Create(Self);
   fGrid.Parent := Self;
   fGrid.Align := alClient;
@@ -86,7 +100,7 @@ begin
   fGrid.ColCount := 8;
   fGrid.RowCount := 2;
   fGrid.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
-    goRowSelect, goColSizing];
+    goRangeSelect, goColSizing];
   fGrid.Cells[CColPoint, 0] := 'N точки';
   fGrid.Cells[CColTemp, 0] := 'Температура, °C';
   fGrid.Cells[CColE1, 0] := 'e1, мкстрн';
@@ -109,6 +123,49 @@ begin
   fTimer.OnTimer := @TimerTick;
   fTimer.Enabled := True;
   RefreshTable;
+end;
+
+procedure TRecorderMeasurementSectionTableForm.BalanceClick(Sender: TObject);
+begin
+  CaptureSelectedBalance;
+  RefreshTable;
+end;
+
+procedure TRecorderMeasurementSectionTableForm.CaptureSelectedBalance;
+var
+  I, lTop, lBottom: Integer;
+  lAnyRoleColumn: Boolean;
+  lSelection: TGridRect;
+begin
+  if (fComponent = nil) or (fGrid.RowCount <= 1) then
+    Exit;
+  lSelection := fGrid.Selection;
+  if lSelection.Top < lSelection.Bottom then
+  begin
+    lTop := lSelection.Top;
+    lBottom := lSelection.Bottom;
+  end
+  else
+  begin
+    lTop := lSelection.Bottom;
+    lBottom := lSelection.Top;
+  end;
+  if lTop < 1 then
+    lTop := 1;
+  if lBottom > fComponent.RowCount then
+    lBottom := fComponent.RowCount;
+
+  lAnyRoleColumn := SelectedCellsIncludeColumn(CColE1) or
+    SelectedCellsIncludeColumn(CColE2) or SelectedCellsIncludeColumn(CColE3);
+  for I := lTop to lBottom do
+  begin
+    if (not lAnyRoleColumn) or SelectedCellsIncludeColumn(CColE1) then
+      fComponent.CaptureRowBalance(fRegistry, fComponent.Rows[I - 1], rrrE1);
+    if (not lAnyRoleColumn) or SelectedCellsIncludeColumn(CColE2) then
+      fComponent.CaptureRowBalance(fRegistry, fComponent.Rows[I - 1], rrrE2);
+    if (not lAnyRoleColumn) or SelectedCellsIncludeColumn(CColE3) then
+      fComponent.CaptureRowBalance(fRegistry, fComponent.Rows[I - 1], rrrE3);
+  end;
 end;
 
 function TRecorderMeasurementSectionTableForm.FormatMaybe(AHasValue: Boolean;
@@ -147,13 +204,33 @@ begin
       '0.###');
     fGrid.Cells[CColE3, I + 1] := FormatMaybe(lValues.HasE3, lValues.E3,
       '0.###');
-    fGrid.Cells[CColSigma1, I + 1] := FormatMaybe(lValues.Valid,
+    fGrid.Cells[CColSigma1, I + 1] := FormatMaybe(lValues.HasSigma1,
       lValues.Sigma1, '0.###');
-    fGrid.Cells[CColSigma2, I + 1] := FormatMaybe(lValues.Valid,
+    fGrid.Cells[CColSigma2, I + 1] := FormatMaybe(lValues.HasSigma2,
       lValues.Sigma2, '0.###');
-    fGrid.Cells[CColAngle, I + 1] := FormatMaybe(lValues.Valid,
+    fGrid.Cells[CColAngle, I + 1] := FormatMaybe(lValues.HasAngle,
       lValues.AngleDeg, '0.###');
   end;
+end;
+
+function TRecorderMeasurementSectionTableForm.SelectedCellsIncludeColumn(
+  ACol: Integer): Boolean;
+var
+  lLeft, lRight: Integer;
+  lSelection: TGridRect;
+begin
+  lSelection := fGrid.Selection;
+  if lSelection.Left < lSelection.Right then
+  begin
+    lLeft := lSelection.Left;
+    lRight := lSelection.Right;
+  end
+  else
+  begin
+    lLeft := lSelection.Right;
+    lRight := lSelection.Left;
+  end;
+  Result := (ACol >= lLeft) and (ACol <= lRight);
 end;
 
 { TRecorderMeasurementSectionView }
@@ -186,8 +263,8 @@ begin
     Exit;
   fComponent := TRecorderMeasurementSectionComponent(AComponent);
   fRegistry := ATagRegistry;
-  Caption := fComponent.Caption;
-  Hint := Caption;
+  Caption := '';
+  Hint := fComponent.Caption;
 end;
 
 procedure TRecorderMeasurementSectionView.RefreshControl(
@@ -195,10 +272,10 @@ procedure TRecorderMeasurementSectionView.RefreshControl(
 begin
   if ATagRegistry <> nil then
     fRegistry := ATagRegistry;
-  if (fComponent <> nil) and (Caption <> fComponent.Caption) then
-    Caption := fComponent.Caption;
   if fTableForm <> nil then
-    fTableForm.RefreshTable;
+    fTableForm.RefreshTable
+  else
+    Invalidate;
 end;
 
 function TRecorderMeasurementSectionView.GetChartControl: TOglChart;
@@ -219,11 +296,64 @@ begin
   fTableForm.Show;
   fTableForm.BringToFront;
   fTableForm.RefreshTable;
+  Invalidate;
 end;
 
 procedure TRecorderMeasurementSectionView.TableDestroyed(Sender: TObject);
 begin
   fTableForm := nil;
+  Invalidate;
+end;
+
+function TRecorderMeasurementSectionView.BuildSummaryText: string;
+var
+  I: Integer;
+  lBestPoint: Integer;
+  lBestStrain: Double;
+  lValues: TRecorderMeasurementSectionValues;
+begin
+  Result := '';
+  if fComponent = nil then
+    Exit;
+  lBestPoint := 0;
+  lBestStrain := -1.0;
+  for I := 0 to fComponent.RowCount - 1 do
+  begin
+    fComponent.CalculateRow(fRegistry, fComponent.Rows[I], lValues);
+    if lValues.MaxAbsStrain > lBestStrain then
+    begin
+      lBestStrain := lValues.MaxAbsStrain;
+      lBestPoint := fComponent.Rows[I].PointNo;
+    end;
+  end;
+  if lBestPoint > 0 then
+    Result := Format('Точка %d: e=%.3f мкстрн', [lBestPoint, lBestStrain]);
+end;
+
+procedure TRecorderMeasurementSectionView.Paint;
+var
+  lCaption, lSummary: string;
+  lTextY: Integer;
+begin
+  inherited Paint;
+  if fComponent = nil then
+    Exit;
+
+  lCaption := fComponent.Caption;
+  lSummary := '';
+  if fTableForm = nil then
+    lSummary := BuildSummaryText;
+
+  Canvas.Brush.Style := bsClear;
+  Canvas.Font.Color := clWindowText;
+  lTextY := 6;
+  if lCaption <> '' then
+  begin
+    Canvas.TextOut(6, lTextY, lCaption);
+    Inc(lTextY, Canvas.TextHeight(lCaption) + 4);
+  end;
+  if lSummary <> '' then
+    Canvas.TextOut(6, lTextY, lSummary);
 end;
 
 initialization

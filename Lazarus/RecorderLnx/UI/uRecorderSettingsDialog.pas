@@ -194,6 +194,7 @@ type
     fAvailableChannelSignals: TList;            // Row-map доступных каналов
     fSelectedChannelsPages: TPageControl;
     fSelectedChannelsTree: TTreeView;
+    fSelectedChannelsPopup: TPopupMenu;
     fTagTreePendingMoveTags: TList;
     fTagTreeMoveTargetsOnly: Boolean;
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
@@ -215,6 +216,7 @@ type
     procedure SelectedChannelsFilterClearClick(Sender: TObject);
     procedure GridPaint(Sender: TObject);
     procedure InitializeChannelExchangeButtons;
+    procedure InitializeSelectedChannelsPopup;
     procedure InitializeSelectedChannelsPages;
     procedure PopulateSelectedChannelsTree;
     function DefaultTagGroupPath: string;
@@ -244,11 +246,14 @@ type
     function TagBelongsToDeletedSource(ATag: TRecorderTag): Boolean;
     function RemoveDeletedSourceTagByName(const ATagName: string): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
+    procedure CollectSelectedGridTags(ATags: TList);
     function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
     procedure SortSelectedTags(ATags: TList);
     procedure SortSelectedChannelsByColumn(AColumn: Integer);
     procedure OpenChannelTagSettings(ATag: TRecorderTag);
+    procedure OpenChannelTagsSettings(ATags: TList);
     procedure OpenSelectedChannelTagSettings;
+    procedure SelectedChannelsPopupEditClick(Sender: TObject);
     procedure AddSpectrumAlgorithmsFromSelectedChannels;
     procedure AddSpectrumAlgorithmForTag(ATag: TRecorderTag;
       ATargetNode: TRecorderSpectrumConfigNode);
@@ -738,6 +743,7 @@ begin
   end;
   InitializeChannelExchangeButtons;
   InitializeSelectedChannelsPages;
+  InitializeSelectedChannelsPopup;
 
   if FindComponent('btnWorkDirBrowse') is TButton then
     TButton(FindComponent('btnWorkDirBrowse')).OnClick := @WorkDirBrowseClick;
@@ -779,6 +785,7 @@ begin
     fSelectedChannelsGrid.OnMouseMove := @fSelectedChannelsGridMouseMove;
     fSelectedChannelsGrid.OnMouseUp := @fSelectedChannelsGridMouseUp;
     fSelectedChannelsGrid.OnPaint := @GridPaint;
+    fSelectedChannelsGrid.PopupMenu := fSelectedChannelsPopup;
     fSelectedChannelsGrid.DragMode := dmManual;
   end;
 
@@ -1053,6 +1060,20 @@ end;
 function TRecorderSettingsDialog.TagTreeNodeHasTagChild(ANode: TTreeNode): Boolean;
 begin
   Result := (ANode <> nil) and ANode.HasChildren;
+end;
+
+procedure TRecorderSettingsDialog.InitializeSelectedChannelsPopup;
+var
+  lItem: TMenuItem;
+begin
+  if fSelectedChannelsPopup <> nil then
+    Exit;
+
+  fSelectedChannelsPopup := TPopupMenu.Create(Self);
+  lItem := TMenuItem.Create(fSelectedChannelsPopup);
+  lItem.Caption := 'Редактировать';
+  lItem.OnClick := @SelectedChannelsPopupEditClick;
+  fSelectedChannelsPopup.Items.Add(lItem);
 end;
 
 procedure TRecorderSettingsDialog.InitializeSelectedChannelsPages;
@@ -1947,6 +1968,83 @@ begin
     Result := TRecorderTag(fSelectedChannelTags[ARow - 1]);
 end;
 
+procedure TRecorderSettingsDialog.CollectSelectedGridTags(ATags: TList);
+var
+  lBottom: Integer;
+  lRow: Integer;
+  lSelection: TGridRect;
+  lTag: TRecorderTag;
+  lTop: Integer;
+begin
+  if (ATags = nil) or (fSelectedChannelsGrid = nil) then
+    Exit;
+
+  lSelection := fSelectedChannelsGrid.Selection;
+  lTop := lSelection.Top;
+  lBottom := lSelection.Bottom;
+  if lTop > lBottom then
+  begin
+    lTop := lSelection.Bottom;
+    lBottom := lSelection.Top;
+  end;
+
+  for lRow := lTop to lBottom do
+  begin
+    lTag := SelectedTagByGridRow(lRow);
+    if (lTag <> nil) and (ATags.IndexOf(lTag) < 0) then
+      ATags.Add(lTag);
+  end;
+end;
+
+function CompareAddressText(const ALeft, ARight: string): Integer;
+var
+  lLeftNode: Integer;
+  lRightNode: Integer;
+  lLeftChannel: Integer;
+  lRightChannel: Integer;
+
+  function SplitAddress(const AText: string; out ANode,
+    AChannel: Integer): Boolean;
+  var
+    lDash: Integer;
+    lStart: Integer;
+    lTail: string;
+    lText: string;
+  begin
+    Result := False;
+    ANode := 0;
+    AChannel := 0;
+    lText := Trim(AText);
+    if Pos('185-', UpperCase(lText)) = 1 then
+      lText := Copy(lText, Length('185-') + 1, MaxInt);
+    lStart := Pos('{', lText);
+    if lStart > 0 then
+      Delete(lText, lStart, 1);
+    if (lText <> '') and (lText[Length(lText)] = '}') then
+      Delete(lText, Length(lText), 1);
+    lDash := Pos('-', lText);
+    if lDash <= 0 then
+      Exit;
+    lTail := Copy(lText, lDash + 1, MaxInt);
+    if (lTail = '') or (Pos('t', LowerCase(lTail)) > 0) or
+      SameText(lTail, 'uts') then
+      Exit;
+    Result := TryStrToInt(Copy(lText, 1, lDash - 1), ANode) and
+      TryStrToInt(lTail, AChannel);
+  end;
+
+begin
+  if SplitAddress(ALeft, lLeftNode, lLeftChannel) and
+    SplitAddress(ARight, lRightNode, lRightChannel) then
+  begin
+    Result := CompareValue(lLeftNode, lRightNode);
+    if Result = 0 then
+      Result := CompareValue(lLeftChannel, lRightChannel);
+    Exit;
+  end;
+  Result := CompareText(ALeft, ARight);
+end;
+
 function TRecorderSettingsDialog.CompareTagsForSelectedGrid(ATagA,
   ATagB: TRecorderTag): Integer;
 begin
@@ -1961,7 +2059,7 @@ begin
       Result := CompareText(ATagA.Name, ATagB.Name);
     2:
       begin
-        Result := CompareText(ATagA.Address, ATagB.Address);
+        Result := CompareAddressText(ATagA.Address, ATagB.Address);
         if Result = 0 then
           Result := CompareText(ATagA.Name, ATagB.Name);
       end;
@@ -1983,7 +2081,7 @@ begin
 
   if (Result = 0) and (fSelectedSortColumn <> 2) then
   begin
-    Result := CompareText(ATagA.Address, ATagB.Address);
+    Result := CompareAddressText(ATagA.Address, ATagB.Address);
     if Result = 0 then
       Result := CompareText(ATagA.Name, ATagB.Name);
   end;
@@ -2029,8 +2127,6 @@ end;
 
 procedure TRecorderSettingsDialog.OpenChannelTagSettings(ATag: TRecorderTag);
 var
-  lBeforeProgramming: string;
-  lDialogOk: Boolean;
   lTags: TList;
 begin
   if ATag = nil then
@@ -2039,30 +2135,78 @@ begin
   lTags := TList.Create;
   try
     lTags.Add(ATag);
-    lBeforeProgramming := RecorderSourceProgrammingSignature(
-      fRecorder.TagRegistry, ATag);
-    lDialogOk := ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, fTagDialogImageList,
-      ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
-      fDeviceImageList);
-    if lDialogOk then
-    begin
-      { Имя, единицы, ГХ и оценки не требуют пересоздания источника.
-        Dirty выставляется только по изменению программируемой конфигурации. }
-      if lBeforeProgramming <> RecorderSourceProgrammingSignature(
-        fRecorder.TagRegistry, ATag) then
-        fDataSourcesChanged := True;
-      MarkSignalsFromRegistry;
-      PopulateHardwareTree;
-      PopulateChannelGrids;
-    end;
+    OpenChannelTagsSettings(lTags);
   finally
     lTags.Free;
   end;
 end;
 
-procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
+procedure TRecorderSettingsDialog.OpenChannelTagsSettings(ATags: TList);
+var
+  lBeforeProgramming: string;
+  lDialogOk: Boolean;
+  I: Integer;
+
+  function SelectedTagsProgrammingSignature: string;
+  var
+    J: Integer;
+    lTag: TRecorderTag;
+  begin
+    Result := '';
+    if ATags = nil then
+      Exit;
+    for J := 0 to ATags.Count - 1 do
+    begin
+      lTag := TRecorderTag(ATags[J]);
+      Result := Result + IntToStr(lTag.Id) + '=' +
+        RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag) + #10;
+    end;
+  end;
 begin
-  OpenChannelTagSettings(SelectedTagByGridRow(fSelectedChannelsGrid.Row));
+  if (ATags = nil) or (ATags.Count = 0) then
+    Exit;
+
+  for I := ATags.Count - 1 downto 0 do
+    if ATags[I] = nil then
+      ATags.Delete(I);
+  if ATags.Count = 0 then
+    Exit;
+
+  lBeforeProgramming := SelectedTagsProgrammingSignature;
+  lDialogOk := ShowTagSettingsDialog(Self, fRecorder.TagRegistry, ATags,
+    fTagDialogImageList,
+      ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
+      fDeviceImageList);
+  if lDialogOk then
+  begin
+    { Имя, единицы, ГХ и оценки не требуют пересоздания источника.
+      Dirty выставляется только по изменению программируемой конфигурации. }
+    if lBeforeProgramming <> SelectedTagsProgrammingSignature then
+      fDataSourcesChanged := True;
+    MarkSignalsFromRegistry;
+    PopulateHardwareTree;
+    PopulateChannelGrids;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.OpenSelectedChannelTagSettings;
+var
+  lTags: TList;
+begin
+  lTags := TList.Create;
+  try
+    CollectSelectedGridTags(lTags);
+    if lTags.Count = 0 then
+      lTags.Add(SelectedTagByGridRow(fSelectedChannelsGrid.Row));
+    OpenChannelTagsSettings(lTags);
+  finally
+    lTags.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.SelectedChannelsPopupEditClick(Sender: TObject);
+begin
+  OpenSelectedChannelTagSettings;
 end;
 
 function TRecorderSettingsDialog.SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
@@ -5465,6 +5609,25 @@ var
   lGrid: TStringGrid;
   lCol: LongInt;
   lRow: LongInt;
+
+  function HeaderResizeHit(AGrid: TStringGrid; AX, ACol: Integer): Boolean;
+  var
+    I: Integer;
+    lBoundary: Integer;
+  begin
+    Result := False;
+    if (AGrid = nil) or (ACol < 0) then
+      Exit;
+
+    lBoundary := 0;
+    for I := 0 to ACol - 1 do
+      Inc(lBoundary, AGrid.ColWidths[I]);
+    if Abs(AX - lBoundary) <= 4 then
+      Exit(True);
+
+    Inc(lBoundary, AGrid.ColWidths[ACol]);
+    Result := Abs(AX - lBoundary) <= 4;
+  end;
 begin
   lGrid := TStringGrid(Sender);
   if (Button <> mbLeft) or (lGrid = nil) then
@@ -5473,7 +5636,8 @@ begin
   lGrid.MouseToCell(X, Y, lCol, lRow);
   if lRow = 0 then
   begin
-    if lGrid = fSelectedChannelsGrid then
+    if (lGrid = fSelectedChannelsGrid) and ((lCol = 1) or (lCol = 2)) and
+      (not HeaderResizeHit(lGrid, X, lCol)) then
       SortSelectedChannelsByColumn(lCol);
     Exit;
   end;

@@ -290,7 +290,7 @@ begin
   finally
     fUpdating := lWasUpdating;
   end;
-  fAddLineButton.Enabled := fTagCombo.ItemIndex >= 0;
+  UpdatePrimaryTagVisibility;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.SyncDraftLineNames;
@@ -558,7 +558,7 @@ var
   lCurrentName: string;
   lTag: TRecorderTag;
 begin
-  fAddLineButton.Enabled := fTagCombo.ItemIndex >= 0;
+  UpdatePrimaryTagVisibility;
   if fUpdating or (fTagCombo.ItemIndex < 0) or
     not (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) or
     (fSelectedLine < 0) or (fSelectedLine > fDraft.LineCount) then
@@ -601,11 +601,18 @@ end;
 
 procedure TRecorderOscillogramSettingsDialog.UpdatePrimaryTagVisibility;
 var
-  lShowTagChoice: Boolean;
+  lCanSelectTag: Boolean;
 begin
-  lShowTagChoice := True;
-  fTagSearchEdit.Visible := lShowTagChoice;
-  fTagCombo.Visible := lShowTagChoice;
+  lCanSelectTag := (fBindingModeCombo = nil) or
+    (TRecorderTagBindingMode(fBindingModeCombo.ItemIndex) <>
+    rtbmRelativeSelectedTag);
+  if fTagSearchEdit <> nil then
+    fTagSearchEdit.Enabled := lCanSelectTag;
+  if fTagCombo <> nil then
+    fTagCombo.Enabled := lCanSelectTag;
+  if fAddLineButton <> nil then
+    fAddLineButton.Enabled := lCanSelectTag and (fTagCombo <> nil) and
+      (fTagCombo.ItemIndex >= 0);
 end;
 
 end.

@@ -97,6 +97,28 @@ begin
     Result := ADefault;
 end;
 
+function Mic185UnitIsRawCode(const AUnitName: string): Boolean;
+var
+  lUnit: string;
+begin
+  lUnit := Trim(AUnitName);
+  Result := SameText(lUnit, 'код') or SameText(lUnit, 'code');
+end;
+
+procedure ApplyMic185HardwareModeFromUnit(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag);
+begin
+  if ATag = nil then
+    Exit;
+  if Mic185UnitIsRawCode(ATag.UnitName) then
+  begin
+    ATag.HardwareCalibrationEnabled := False;
+    Exit;
+  end;
+  ATag.HardwareCalibrationEnabled := True;
+  RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+end;
+
 procedure TRecorderMic185ChannelForm.btnApplyClick(Sender: TObject);
 begin
 
@@ -221,10 +243,7 @@ begin
   ReadSettingsFromUi(lSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
-  if ATag.HardwareCalibrationEnabled or
-    (Trim(ATag.HardwareCalibrationName) <> '') then
-    RecorderMic185LoadHardwareCalibrationForTag(fRegistry, ATag,
-      ATag.HardwareCalibrationEnabled);
+  ApplyMic185HardwareModeFromUnit(fRegistry, ATag);
   ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
     lSettings, ATag.UnitName);
   ATag.RangeMin := -ATag.RangeMax;

@@ -490,7 +490,7 @@ var
 begin
   Result := False;
   ADeviceSerial := 0;
-  lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
+  lCli := TMic140v2Tcp.Create(AHost, APort, CMic140LegacyCommandTimeoutMs);
   try
     if not lCli.TryConnect(lErrorMessage) then
       Exit;
@@ -513,7 +513,7 @@ var
 begin
   Result := False;
   ACalibrSerial := 0;
-  lCli := TMic140v2Tcp.Create(AHost, APort, 5000);
+  lCli := TMic140v2Tcp.Create(AHost, APort, CMic140LegacyCommandTimeoutMs);
   try
     if not lCli.TryConnect(lErrorMessage) then
       Exit;

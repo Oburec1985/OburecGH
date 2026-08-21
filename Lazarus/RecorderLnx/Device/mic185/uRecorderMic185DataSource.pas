@@ -48,6 +48,9 @@ function RecorderMic185CleanupEndpoint(const AHost: string; APort: Word;
   out AErrorText: string; ATimeoutMs: Cardinal = 1500): Boolean;
 { Текст режима канала по умолчанию для хранения в старых проектах. }
 function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
+function RecorderMic185NormalizeFrequency(AFrequencyHz: Double): Double;
+procedure RecorderMic185ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; AFrequencyHz: Double);
 { Сериализует настройки канала MIC-185 в компактную строку. }
 function RecorderMic185FormatChannelMode(
   const ASettings: TMic185ChannelProgramSettings): string;
@@ -123,6 +126,11 @@ function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
 { Возвращает индекс измерительного канала из адресов 155-3,
   185-{155-3} и старых MIC183_185-{3-3}. }
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
+function RecorderMic185MeasurementAddressText(ADeviceIndex,
+  AChannelNumber: Integer): string;
+function RecorderMic185TemperatureAddressText(ADeviceIndex,
+  ATemperatureIndex: Integer): string;
+function RecorderMic185UtsAddressText(ADeviceIndex: Integer): string;
 { Сравнивает разные допустимые записи одного канала MIC-185, например
   155-3, 185-{155-3} и старую MIC183_185-{3-3}. Источник данных должен
   сравниваться вызывающим кодом отдельно. }
@@ -229,7 +237,7 @@ uses
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
   uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration,
   uRecorderProjectFiles, uRecorderHardwareTree, uRecorderNetworkBinding,
-  uRecorderDebugLog;
+  uRecorderDebugLog, uRecorderFrequencyGrids;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -240,6 +248,8 @@ const
   CMic185NominalAdcFullScale = 32768.0;
   CMic185ParallelStartSlotMs = 150;
   CMic185PrepareCommandSlots = 2;
+  CMic185Frequencies: array[0..4] of Double =
+    (1.0, 10.0, 25.0, 50.0, 100.0);
 
 var
   gMic185PrepareLock: TRTLCriticalSection;
@@ -311,6 +321,10 @@ end;
 function Mic185CanonicalAddress(const AAddress: string): string;
 var
   lStart: Integer;
+  lDash: Integer;
+  lDeviceIndex: Integer;
+  lChannelNumber: Integer;
+  lTail: string;
 begin
   Result := Trim(AAddress);
   if Pos('MIC183_185-', UpperCase(Result)) = 1 then
@@ -322,6 +336,34 @@ begin
     Delete(Result, lStart, 1);
   if (Result <> '') and (Result[Length(Result)] = '}') then
     Delete(Result, Length(Result), 1);
+  lDash := Pos('-', Result);
+  if lDash <= 0 then
+    Exit;
+  lTail := Copy(Result, lDash + 1, MaxInt);
+  if (lTail = '') or (Pos('t', LowerCase(lTail)) > 0) or
+    SameText(lTail, 'uts') then
+    Exit;
+  if TryStrToInt(Copy(Result, 1, lDash - 1), lDeviceIndex) and
+    TryStrToInt(lTail, lChannelNumber) then
+    Result := RecorderMic185MeasurementAddressText(lDeviceIndex,
+      lChannelNumber);
+end;
+
+function RecorderMic185MeasurementAddressText(ADeviceIndex,
+  AChannelNumber: Integer): string;
+begin
+  Result := Format('%d-%2.2d', [ADeviceIndex, AChannelNumber]);
+end;
+
+function RecorderMic185TemperatureAddressText(ADeviceIndex,
+  ATemperatureIndex: Integer): string;
+begin
+  Result := Format('%d-t%d', [ADeviceIndex, ATemperatureIndex]);
+end;
+
+function RecorderMic185UtsAddressText(ADeviceIndex: Integer): string;
+begin
+  Result := Format('%d-uts', [ADeviceIndex]);
 end;
 
 function SameMic185Address(const ALeft, ARight: string): Boolean;
@@ -406,6 +448,66 @@ var
 begin
   Mic185DefaultChannelProgramSettings(AFrequencyHz, lSettings);
   Result := RecorderMic185FormatChannelMode(lSettings);
+end;
+
+function RecorderMic185NormalizeFrequency(AFrequencyHz: Double): Double;
+var
+  I: Integer;
+  lBestDelta: Double;
+  lDelta: Double;
+begin
+  Result := CMic185Frequencies[0];
+  lBestDelta := Abs(AFrequencyHz - Result);
+  for I := 1 to High(CMic185Frequencies) do
+  begin
+    lDelta := Abs(AFrequencyHz - CMic185Frequencies[I]);
+    if lDelta < lBestDelta then
+    begin
+      Result := CMic185Frequencies[I];
+      lBestDelta := lDelta;
+    end;
+  end;
+end;
+
+procedure RecorderMic185ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; AFrequencyHz: Double);
+var
+  I: Integer;
+  lCapacity: Integer;
+  lFrequencyHz: Double;
+  lOldFrequencyHz: Double;
+  lSettings: TMic185ChannelProgramSettings;
+  lSourceId: string;
+  lTag: TRecorderTag;
+begin
+  if (ARegistry = nil) or (Trim(ASourceId) = '') then
+    Exit;
+
+  lSourceId := RecorderNormalizeTagSourceId(ASourceId);
+  lFrequencyHz := RecorderMic185NormalizeFrequency(AFrequencyHz);
+  lCapacity := Ceil(Max(4096, lFrequencyHz * 4));
+  RecorderConfiguredDataSourcesEnsure(ARegistry, lSourceId,
+    CMic185ModuleName, lFrequencyHz);
+
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if (not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+      lSourceId)) or (RecorderMic185ChannelAddressToIndex(lTag.Address) <= 0)
+      then
+      Continue;
+
+    lOldFrequencyHz := lTag.PollFrequencyHz;
+    if lOldFrequencyHz <= 0 then
+      lOldFrequencyHz := lFrequencyHz;
+    RecorderMic185GetSourceChannelMode(ARegistry, lSourceId, lTag.Address,
+      lOldFrequencyHz, lSettings);
+    lSettings.FrequencyHz := lFrequencyHz;
+    lTag.PollFrequencyHz := lFrequencyHz;
+    lTag.EnsureBufferCapacity(lCapacity);
+    RecorderMic185SetSourceChannelMode(ARegistry, lSourceId, lTag.Address,
+      lFrequencyHz, lSettings);
+  end;
 end;
 
 function Mic185ModeValue(const AMode, AKey: string; const ADefault: string): string;
@@ -872,7 +974,7 @@ begin
   lDeviceIndex := RecorderMic185SourceDeviceIndex(ARegistry, ASourceId);
   for I := 0 to CMic185ChannelCountMax - 1 do
   begin
-    lAddress := Format('%d-%d', [lDeviceIndex, I + 1]);
+    lAddress := RecorderMic185MeasurementAddressText(lDeviceIndex, I + 1);
     RecorderMic185GetSourceChannelMode(ARegistry, ASourceId, lAddress,
       AFrequencyHz, ASettings[I]);
     if ASettings[I].FrequencyHz <= 0 then
@@ -1670,8 +1772,8 @@ begin
       begin
         lLink := TJSONObject.Create;
         lChannels.Add(lLink);
-        lLink.Add('address', Format('%d-%d',
-          [RecorderMic185SourceDeviceIndex(ARegistry, lSourceId), J + 1]));
+        lLink.Add('address', RecorderMic185MeasurementAddressText(
+          RecorderMic185SourceDeviceIndex(ARegistry, lSourceId), J + 1));
         lLink.Add('sourceValueMode',
           RecorderMic185FormatChannelMode(lSettings[J]));
         lLink.Add('pollFrequencyHz', lPollHz);
@@ -2871,6 +2973,7 @@ end;
 
 initialization
   InitCriticalSection(gMic185PrepareLock);
+  RecorderRegisterFrequencyGrid('MIC-185:', CMic185Frequencies);
   RecorderRegisterProjectConfigExtension(@SaveMic185DataSourceConfigs,
     @LoadMic185DataSourceConfigs, @Mic185ProjectTagLoaded);
   RecorderRegisterHardwareSourceLinkProbe(@RecorderMic185HardwareLinkProbe);

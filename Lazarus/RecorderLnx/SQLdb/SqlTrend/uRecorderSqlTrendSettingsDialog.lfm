@@ -181,6 +181,14 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       Enabled = False
       OnClick = btnUseDbRangeClick
     end
+    object btnDeleteDbInterval: TButton
+      Left = 12
+      Height = 28
+      Top = 312
+      Width = 200
+      Caption = 'Удалить интервал в БД'
+      OnClick = btnDeleteDbIntervalClick
+    end
   end
   object gbAxes: TGroupBox
     Left = 8

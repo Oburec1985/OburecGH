@@ -506,8 +506,10 @@ var
   I: Integer;
   lDeviceIndex: Integer;
   lAddress: string;
+  lDisplayName: string;
   lFreqHz: Double;
   lSignal: TMeraSignalInfo;
+  lTag: TRecorderTag;
 begin
   RemoveSourceSignals(ASourceId);
   lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, ASourceId);
@@ -516,23 +518,28 @@ begin
   begin
     if I <= CMic185ChannelCountMax then
     begin
-      lAddress := Format('185-{%d-%d}', [lDeviceIndex, I]);
+      lAddress := RecorderMic185MeasurementAddressText(lDeviceIndex, I);
       lFreqHz := CMic185DefaultMeasFrequencyHz;
     end
     else if I <= CMic185ChannelCountMax + CMic185TempChannelCount then
     begin
-      lAddress := Format('185-{%d-t%d}', [lDeviceIndex,
-        I - CMic185ChannelCountMax]);
+      lAddress := RecorderMic185TemperatureAddressText(lDeviceIndex,
+        I - CMic185ChannelCountMax);
       lFreqHz := CMic185DefaultTempFrequencyHz;
     end
     else
     begin
-      lAddress := Format('185-{%d-uts}', [lDeviceIndex]);
+      lAddress := RecorderMic185UtsAddressText(lDeviceIndex);
       lFreqHz := CMic185DefaultTempFrequencyHz;
     end;
+    lDisplayName := Format('185-{%s}', [lAddress]);
+
+    lTag := FindTagBySourceAddress(ASourceId, lAddress);
+    if (lTag <> nil) and (not SameText(lTag.Address, lAddress)) then
+      lTag.Address := lAddress;
 
     lSignal := TMeraSignalInfo.Create;
-    lSignal.Name := lAddress;
+    lSignal.Name := lDisplayName;
     lSignal.Address := lAddress;
     lSignal.ModuleName := 'MIC183/185';
     lSignal.DataTypeName := 'R8';

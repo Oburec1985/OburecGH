@@ -1002,6 +1002,10 @@ begin
                 Format('MeasureRow%d%sTagId', [K,
                   RecorderRosetteRoleToText(lRole)]),
                 lMeasureRow.TagIds[lRole]);
+              lIni.WriteFloat(lSection,
+                Format('MeasureRow%d%sBalance', [K,
+                  RecorderRosetteRoleToText(lRole)]),
+                lMeasureRow.Balances[lRole]);
             end;
           end;
         end;
@@ -1294,6 +1298,9 @@ begin
                 lMeasureRow.TagIds[lRole] := lIni.ReadInt64(lSection,
                   Format('MeasureRow%d%sTagId', [K,
                     RecorderRosetteRoleToText(lRole)]), 0);
+                lMeasureRow.Balances[lRole] := lIni.ReadFloat(lSection,
+                  Format('MeasureRow%d%sBalance', [K,
+                    RecorderRosetteRoleToText(lRole)]), 0.0);
               end;
             end;
           end;

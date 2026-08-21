@@ -53,7 +53,8 @@ uses
   uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
-  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView;
+  uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
+  uRecorderMeasurementSectionView;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -202,7 +203,9 @@ type
       const ACaption: string = ''; AImageWidth: Integer = 25): TSpeedButton;
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
+    procedure LogStartupPaths;
     procedure ReportSqlDbError;
+    procedure SqlDbSignalsDeleted(ASignalNames: TStrings);
     { Возвращает текущий корневой каталог MERA-записи. }
     function CurrentRecordRootDir: string;
     { Обновляет менеджер каталогов записи из текущих настроек. }
@@ -524,6 +527,7 @@ begin
   RecorderDebugLog(Format('[Startup] RenderActivePage elapsed=%dms',
     [GetTickCount64 - lStageStartedAt]));
   AddLog('RecorderLnx started.');
+  LogStartupPaths;
   Application.QueueAsyncCall(@DeferredPrepareRuntime, 0);
   ParseAutoPreviewCommandLine;
   ScheduleCommandLineDeviceTests;
@@ -1065,7 +1069,8 @@ var
 begin
   lFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
   try
-    if ShowRecorderSqlDbSettings(Self, lFileName, fRecorder.TagRegistry) then
+    if ShowRecorderSqlDbSettings(Self, lFileName, fRecorder.TagRegistry,
+      @SqlDbSignalsDeleted) then
     begin
       fRecorder.SqlDbManager.Configure(lFileName);
       fUpdatingSqlDbRecording := True;
@@ -1079,6 +1084,31 @@ begin
   except
     on E: Exception do LogCommandError('SQL database settings', E);
   end;
+end;
+
+procedure TMainForm.SqlDbSignalsDeleted(ASignalNames: TStrings);
+var
+  lFiles: TRecorderProjectFileSet;
+  lResult: TRecorderSqlDbProjectSyncResult;
+begin
+  if (ASignalNames = nil) or (ASignalNames.Count = 0) or
+     (fRecorder = nil) or (fRecorder.SqlDbManager = nil) then
+    Exit;
+
+  lResult := TRecorderSqlDbProjectManager.RemoveSignals(
+    fRecorder.SqlDbManager.Config, fFormManager, ASignalNames);
+  if lResult.ConfigSignalCount > 0 then
+    fRecorder.SqlDbManager.SaveConfig;
+  if lResult.TrendLineCount > 0 then
+  begin
+    lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
+    SaveDetachedFormPlacements;
+    SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
+    RenderActivePage;
+  end;
+  if (lResult.ConfigSignalCount > 0) or (lResult.TrendLineCount > 0) then
+    AddLog(Format('SQLdb deleted channels synchronized: write flags=%d, SQL trend lines=%d.',
+      [lResult.ConfigSignalCount, lResult.TrendLineCount]));
 end;
 
 procedure TMainForm.cbSqlDbRecordingChange(Sender: TObject);
@@ -1148,6 +1178,15 @@ begin
   FreeAndNil(fRecordFrameManager);
   fRecordFrameManager := TRecorderRecordFrameManager.Create(lRootDir);
   UpdateMainCaption;
+end;
+
+procedure TMainForm.LogStartupPaths;
+begin
+  AddLog('Mera Files: ' + RecorderMeraFilesPath);
+  AddLog('Program directory: ' + IncludeTrailingPathDelimiter(
+    ExpandFileName(ExtractFilePath(Application.ExeName))));
+  AddLog('USML directory: ' + CurrentRecordRootDir);
+  AddLog('Log file: ' + RecorderDebugLogFileName);
 end;
 
 function TMainForm.CurrentMeasureDir: string;
@@ -2286,12 +2325,8 @@ end;
 
 procedure TMainForm.FormEditorChanged;
 begin
-  { Макет мнемосхемы автоматически обновляется в TRecorderFormPage. }
-  // The component settings dialog invokes this callback after it stores
-  // visual/spectrum settings. Form editing must not run hardware preparation:
-  // clicks, drag and arrow keys are UI-only operations.
-  if (fRecorder.StateMachine <> nil) and (fRecorder.StateMachine.State = rsStop) then
-    PrepareAlgorithmsForFormConfiguration;
+  { UI-only mnemonic edits update TRecorderFormPage directly. Heavy runtime and
+    algorithm preparation is done by explicit settings/apply/start paths. }
 end;
 
 { Чтение условий запуска/останова записи из ini }
@@ -3607,12 +3642,17 @@ procedure TMainForm.PlaceSelectedTool(const APoint: TPoint);
 var
   lPage: TRecorderFormPage;
   lOldCount: Integer;
+  lStartedAt: QWord;
+  lElapsedMs: QWord;
+  lTool: TRecorderAddTool;
 begin
   lPage := GetActiveEditorPage;
   if (lPage = nil) or (fPendingAddTool = ratNone) then begin ReleaseAddTool; Exit; end;
+  lTool := fPendingAddTool;
+  lStartedAt := GetTickCount64;
   lOldCount := lPage.ComponentCount;
   try
-    case fPendingAddTool of
+    case lTool of
       ratText: AddStaticTextComponentToActivePage;
       ratValue: AddTagValueComponentToActivePage;
       ratOscillogram: AddOscillogramComponentToActivePage;
@@ -3626,7 +3666,10 @@ begin
     if (lPage.ComponentCount > lOldCount) and (fFormEditor <> nil) then
       fFormEditor.PositionComponentAt(lPage.Components[lOldCount], APoint);
     RenderActivePage;
-    FormEditorChanged;
+    lElapsedMs := GetTickCount64 - lStartedAt;
+    if lElapsedMs >= 50 then
+      RecorderDebugLog(Format('[MNEMO-PERF] place tool=%d components=%d elapsed=%dms',
+        [Ord(lTool), lPage.ComponentCount, lElapsedMs]));
   except
     on E: Exception do LogCommandError('Add mnemonic component', E);
   end;

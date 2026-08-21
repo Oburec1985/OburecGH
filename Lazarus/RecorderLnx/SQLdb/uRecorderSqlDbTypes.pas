@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, uRecorderTags;
 
 const
-  CRecorderSqlDbSchemaVersion = 2;
+  CRecorderSqlDbSchemaVersion = 3;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
   CRecorderSqlDbControlTagName = 'SqlDbRecordEnabled';
@@ -27,6 +27,15 @@ type
     Value: Double;
   end;
   TRecorderSqlTrendPoints = array of TRecorderSqlTrendPoint;
+
+  TRecorderSqlDbSignalInfo = record
+    Name: string;
+    UnitName: string;
+    RecorderSourceId: string;
+    RecorderAddress: string;
+    PointCount: Int64;
+  end;
+  TRecorderSqlDbSignalInfos = array of TRecorderSqlDbSignalInfo;
 
   TRecorderSqlDbConfig = class
   private

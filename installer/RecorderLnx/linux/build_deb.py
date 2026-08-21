@@ -143,6 +143,7 @@ check_path /usr/bin/recorderlnx
 check_path /var/opt/mera/RecorderLnx/config/app.ini
 check_path /var/opt/mera/RecorderLnx/config/projects/default/default.config.json
 check_writable_dir /var/opt/mera
+check_writable_dir /var/opt/mera/SQLdb
 check_writable_dir /var/opt/mera/RecorderLnx/config
 check_writable_dir /var/opt/mera/Calibr
 check_writable_dir /var/opt/mera/Resources
@@ -216,6 +217,7 @@ $candidates"
 }
 
 mkdir -p /var/opt/mera/RecorderLnx/config/projects/default
+mkdir -p /var/opt/mera/SQLdb
 mkdir -p /var/opt/mera/Calibr /var/opt/mera/Resources /var/opt/mera/SDB
 touch "$LOG" 2>/dev/null || true
 log "RecorderLnx postinst started"
@@ -302,6 +304,7 @@ NoDisplay=false
             "var",
             "var/opt",
             "var/opt/mera",
+            "var/opt/mera/SQLdb",
             "var/opt/mera/RecorderLnx",
             "var/opt/mera/RecorderLnx/config",
             "var/opt/mera/RecorderLnx/config/projects",

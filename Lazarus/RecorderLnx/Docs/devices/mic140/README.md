@@ -32,9 +32,9 @@
 
 Детальная отладка, история находок, длинные таблицы констант:
 
-- [../../mic140_protocol.md](../../mic140_protocol.md)
-- [../../mic140_legacy_scan_stream.md](../../mic140_legacy_scan_stream.md)
-- [../../mic140_quickstart.md](../../mic140_quickstart.md)
+- [../../old/mic140_protocol.md](../../old/mic140_protocol.md)
+- [../../old/mic140_legacy_scan_stream.md](../../old/mic140_legacy_scan_stream.md)
+- [../../old/mic140_quickstart.md](../../old/mic140_quickstart.md)
 
 
 **Задание**

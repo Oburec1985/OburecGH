@@ -1,7 +1,7 @@
 # MIC-140: драйвер, протокол и цикл обмена
 
 > **Краткое описание протокола (таблицы посылок):**  
-> [Docs/devices/mic140/protocol.md](devices/mic140/protocol.md)
+> [Docs/devices/mic140/protocol.md](../devices/mic140/protocol.md)
 
 Документ фиксирует все, что сейчас известно по подключению MIC-140 в
 RecorderLnx. Его нужно поддерживать рядом с кодом: любые новые знания из

@@ -21,16 +21,22 @@ type
     procedure FormCreate(Sender: TObject);
   private
     fCalibration: TRecorderCalibration;
+    fDeviceExcitation: string;
+    fPreferredInputUnit: string;
     function SelectedInputUnit: TRecorderStrainInputUnit;
+    function TryPreferredInputUnit(out AUnit: TRecorderStrainInputUnit): Boolean;
     function ReadValue(AEdit: TEdit; out AValue: Double): Boolean;
     procedure PopulateInputUnits(ASelected: TRecorderStrainInputUnit);
+    procedure ApplyDeviceExcitation(var AConfig: TRecorderStrainConfig);
     procedure LoadCalibration;
   public
-    procedure EditCalibration(ACalibration: TRecorderCalibration);
+    procedure EditCalibration(ACalibration: TRecorderCalibration;
+      const ADeviceExcitation: string = ''; const AInputUnit: string = '');
   end;
 
 function ShowRecorderStrainCalibrationDialog(AOwner: TComponent;
-  ACalibration: TRecorderCalibration): Boolean;
+  ACalibration: TRecorderCalibration; const ADeviceExcitation: string = '';
+  const AInputUnit: string = ''): Boolean;
 
 implementation
 
@@ -114,15 +120,100 @@ begin
 end;
 
 procedure TRecorderStrainCalibrationDialog.EditCalibration(
-  ACalibration: TRecorderCalibration);
-begin fCalibration := ACalibration; LoadCalibration; end;
+  ACalibration: TRecorderCalibration; const ADeviceExcitation: string;
+  const AInputUnit: string);
+begin
+  fCalibration := ACalibration;
+  fDeviceExcitation := Trim(ADeviceExcitation);
+  fPreferredInputUnit := Trim(AInputUnit);
+  LoadCalibration;
+end;
+
+function TRecorderStrainCalibrationDialog.TryPreferredInputUnit(
+  out AUnit: TRecorderStrainInputUnit): Boolean;
+var
+  lText: string;
+begin
+  Result := True;
+  lText := LowerCase(Trim(fPreferredInputUnit));
+  lText := StringReplace(lText, ' ', '', [rfReplaceAll]);
+  if (lText = 'ом') or (lText = 'ohm') then
+    AUnit := rsiOhm
+  else if (lText = 'мв/ма') or (lText = 'mv/ma') or
+    (lText = 'мв/мa') or (lText = 'mv/мa') then
+    AUnit := rsiMilliVoltPerMilliAmp
+  else if (lText = 'мв') or (lText = 'mv') then
+    AUnit := rsiMilliVolt
+  else if (lText = 'в') or (lText = 'v') then
+    AUnit := rsiVolt
+  else if (lText = 'мв/в') or (lText = 'mv/v') then
+    AUnit := rsiMilliVoltPerVolt
+  else
+    Result := False;
+end;
+
+function TryParseStrainExcitationText(const AText: string;
+  out AKind: TRecorderStrainExcitationKind; out AValue: Double): Boolean;
+var
+  lClean: string;
+  lNumber: string;
+  I: Integer;
+begin
+  lClean := LowerCase(Trim(AText));
+  lClean := StringReplace(lClean, ' ', '', [rfReplaceAll]);
+  lClean := StringReplace(lClean, ',', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  lClean := StringReplace(lClean, '.', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  lNumber := '';
+  for I := 1 to Length(lClean) do
+    if lClean[I] in ['0'..'9', '-', '+', DefaultFormatSettings.DecimalSeparator] then
+      lNumber := lNumber + lClean[I]
+    else if lNumber <> '' then
+      Break;
+  Result := TryStrToFloat(lNumber, AValue);
+  if not Result then
+    Exit;
+  if (Pos('ma', lClean) > 0) or (Pos('ма', lClean) > 0) then
+    AKind := rsekCurrent
+  else if (Pos('a', lClean) > 0) or (Pos('а', lClean) > 0) then
+  begin
+    AKind := rsekCurrent;
+    AValue := AValue * 1000.0;
+  end
+  else
+    AKind := rsekVoltage;
+end;
+
+procedure TRecorderStrainCalibrationDialog.ApplyDeviceExcitation(
+  var AConfig: TRecorderStrainConfig);
+var
+  lKind: TRecorderStrainExcitationKind;
+  lValue: Double;
+begin
+  if not TryParseStrainExcitationText(fDeviceExcitation, lKind, lValue) then
+    Exit;
+  AConfig.ExcitationKind := lKind;
+  AConfig.ExcitationValue := lValue;
+  if (lKind = rsekCurrent) and
+    (AConfig.InputUnit in [rsiRatio, rsiMilliVoltPerVolt, rsiVolt]) then
+    AConfig.InputUnit := rsiMilliVoltPerMilliAmp
+  else if (lKind = rsekVoltage) and
+    (AConfig.InputUnit in [rsiMilliVoltPerMilliAmp, rsiOhm]) then
+    AConfig.InputUnit := rsiMilliVoltPerVolt;
+end;
 
 procedure TRecorderStrainCalibrationDialog.LoadCalibration;
-var C: TRecorderStrainConfig;
+var
+  C: TRecorderStrainConfig;
+  lPreferredUnit: TRecorderStrainInputUnit;
 begin
   C := TRecorderStrainConfig.Create;
   try
     if fCalibration <> nil then C.Load(fCalibration.ModuleData);
+    ApplyDeviceExcitation(C);
+    if TryPreferredInputUnit(lPreferredUnit) then
+      C.InputUnit := lPreferredUnit;
     edName.Text := fCalibration.Name;
     cbScheme.ItemIndex := Ord(C.Scheme);
     cbOutputUnit.ItemIndex := Ord(C.OutputUnit);
@@ -163,8 +254,9 @@ begin
 end;
 
 function ShowRecorderStrainCalibrationDialog(AOwner: TComponent;
-  ACalibration: TRecorderCalibration): Boolean;
+  ACalibration: TRecorderCalibration; const ADeviceExcitation: string;
+  const AInputUnit: string): Boolean;
 var D: TRecorderStrainCalibrationDialog;
-begin D := TRecorderStrainCalibrationDialog.Create(AOwner); try D.EditCalibration(ACalibration); Result := D.ShowModal=mrOk; finally D.Free; end; end;
+begin D := TRecorderStrainCalibrationDialog.Create(AOwner); try D.EditCalibration(ACalibration, ADeviceExcitation, AInputUnit); Result := D.ShowModal=mrOk; finally D.Free; end; end;
 
 end.

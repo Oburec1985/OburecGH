@@ -6,7 +6,7 @@ unit uRecorderSqlDbFirebirdTools;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uRecorderSqlDbTypes;
 
 function RecorderSqlDbFirebirdProbeHost(const AHost: string): string;
 function RecorderSqlDbFirebirdHostIsLocal(const AHost: string): Boolean;
@@ -14,6 +14,8 @@ function RecorderSqlDbFirebirdTcpAvailable(const AHost: string; APort: Word;
   ATimeoutMs: Cardinal; out AMessage: string): Boolean;
 function RecorderSqlDbStartLocalFirebird(out AMessage: string): Boolean;
 function RecorderSqlDbDescribeLocalFirebird(APort: Word): string;
+function RecorderSqlDbRunFirebirdSweep(AConfig: TRecorderSqlDbConfig;
+  out AMessage: string): Boolean;
 
 implementation
 
@@ -129,6 +131,103 @@ begin
   Result := Result + ATitle;
   if Trim(AOutput) <> '' then
     Result := Result + LineEnding + Trim(AOutput);
+end;
+
+function RecorderSqlDbFirebirdDatabaseSpec(AConfig: TRecorderSqlDbConfig): string;
+var
+  lHost: string;
+begin
+  Result := '';
+  if AConfig = nil then Exit;
+  lHost := RecorderSqlDbFirebirdProbeHost(AConfig.Host);
+  if (AConfig.Port <> 0) and (Pos('/', lHost) = 0) then
+    lHost := lHost + '/' + IntToStr(AConfig.Port);
+  if RecorderSqlDbFirebirdHostIsLocal(AConfig.Host) and (Trim(AConfig.Host) = '') then
+    Result := AConfig.DatabaseFileName
+  else
+    Result := lHost + ':' + AConfig.DatabaseFileName;
+end;
+
+function RecorderSqlDbFirebirdToolCandidates(const AToolName: string): TStringList;
+
+  procedure AddCandidate(const AValue: string);
+  begin
+    if (Trim(AValue) <> '') and FileExists(AValue) and
+      (Result.IndexOf(AValue) < 0) then
+      Result.Add(AValue);
+  end;
+
+  procedure AddUnder(const ARoot: string);
+  begin
+    if Trim(ARoot) = '' then Exit;
+    {$ifdef windows}
+    AddCandidate(IncludeTrailingPathDelimiter(ARoot) + AToolName + '.exe');
+    AddCandidate(IncludeTrailingPathDelimiter(ARoot) + 'bin\' + AToolName + '.exe');
+    {$else}
+    AddCandidate(IncludeTrailingPathDelimiter(ARoot) + AToolName);
+    AddCandidate(IncludeTrailingPathDelimiter(ARoot) + 'bin/' + AToolName);
+    {$endif}
+  end;
+
+var
+  lFirebird: string;
+begin
+  Result := TStringList.Create;
+  lFirebird := Trim(GetEnvironmentVariable('FIREBIRD'));
+  if lFirebird = '' then
+    lFirebird := Trim(GetEnvironmentVariable('FIREBIRD_HOME'));
+  AddUnder(lFirebird);
+  {$ifdef windows}
+  AddUnder('C:\Firebird');
+  AddUnder('C:\Program Files\Firebird\Firebird_5_0');
+  AddUnder('C:\Program Files (x86)\Firebird\Firebird_5_0');
+  AddUnder('C:\Program Files\Firebird\Firebird_4_0');
+  {$else}
+  AddUnder('/opt/firebird');
+  AddUnder('/usr/bin');
+  AddUnder('/usr/local/bin');
+  {$endif}
+end;
+
+function RecorderSqlDbRunFirebirdSweep(AConfig: TRecorderSqlDbConfig;
+  out AMessage: string): Boolean;
+var
+  I: Integer;
+  lCandidates: TStringList;
+  lDatabase, lOutput, lLog: string;
+begin
+  Result := False;
+  lLog := '';
+  if (AConfig = nil) or (AConfig.Backend <> rsbFirebird) then
+  begin
+    AMessage := 'Сборка мусора поддержана только для Firebird.';
+    Exit;
+  end;
+  lDatabase := RecorderSqlDbFirebirdDatabaseSpec(AConfig);
+  lCandidates := RecorderSqlDbFirebirdToolCandidates('gfix');
+  try
+    if lCandidates.Count = 0 then
+    begin
+      AMessage := 'Утилита Firebird gfix не найдена. ' +
+        'Обычно она лежит в /opt/firebird/bin или в каталоге Firebird.';
+      Exit;
+    end;
+    for I := 0 to lCandidates.Count - 1 do
+    begin
+      Result := RunProcessCapture(lCandidates[I],
+        ['-user', AConfig.UserName, '-password', AConfig.Password,
+         '-sweep', lDatabase], 30000, lOutput);
+      lLog := AppendAttempt(lLog, lCandidates[I] + ' -sweep', lOutput);
+      if Result then Break;
+    end;
+  finally
+    lCandidates.Free;
+  end;
+  if Result then
+    AMessage := 'Сборка мусора Firebird выполнена.' + LineEnding + lLog
+  else
+    AMessage := 'Не удалось выполнить сборку мусора Firebird.' +
+      LineEnding + lLog;
 end;
 
 function OutputHasTcpListen(const AOutput: string; APort: Word): Boolean;

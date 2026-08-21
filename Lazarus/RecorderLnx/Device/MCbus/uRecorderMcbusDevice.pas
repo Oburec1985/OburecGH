@@ -1160,8 +1160,8 @@ begin
 
   lOldTimeout := fController.TimeoutMs;
   try
-    if fController.TimeoutMs < 5000 then
-      fController.TimeoutMs := 5000;
+    if fController.TimeoutMs < CRecorderDeviceCommandTimeoutMs then
+      fController.TimeoutMs := CRecorderDeviceCommandTimeoutMs;
     BalanceTrace('apply: TryApplySavedBalanceDac');
     if not TryApplySavedBalanceDac(AErrorText) then
     begin

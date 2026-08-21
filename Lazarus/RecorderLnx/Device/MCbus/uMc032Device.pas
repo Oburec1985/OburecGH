@@ -19,7 +19,8 @@ unit uMc032Device;
 interface
 
 uses
-  Classes, SysUtils, uMc201LegacyMdpClient, uMc201ProtocolTypes;
+  Classes, SysUtils, uMc201LegacyMdpClient, uMc201ProtocolTypes,
+  uRecorderDeviceInterfaces;
 
 type
   EMc032Device = class(Exception);
@@ -1190,8 +1191,8 @@ begin
     lOldTimeout := fClient.TimeoutMs;
     if AConfig.ReadTimeoutMs > lOldTimeout then
       fClient.TimeoutMs := AConfig.ReadTimeoutMs;
-    if fClient.TimeoutMs < 5000 then
-      fClient.TimeoutMs := 5000;
+    if fClient.TimeoutMs < CRecorderDeviceCommandTimeoutMs then
+      fClient.TimeoutMs := CRecorderDeviceCommandTimeoutMs;
     Result := ProgramMc201Scan(AConfig, AErrorMessage);
     if Result then
       Exit;
@@ -1491,8 +1492,8 @@ begin
 
   lOldTimeout := fClient.TimeoutMs;
   try
-    if fClient.TimeoutMs < 3000 then
-      fClient.TimeoutMs := 3000;
+    if fClient.TimeoutMs < CRecorderDeviceCommandTimeoutMs then
+      fClient.TimeoutMs := CRecorderDeviceCommandTimeoutMs;
     Progress('StopAfterHeavyStream: CallCommand STOP');
     if fClient.CallCommand(CMc201CmdStopScanMain, nil, 0, lReply,
       AErrorMessage) then
