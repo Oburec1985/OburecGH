@@ -18,6 +18,7 @@ type
   TRecorderMeasurementSectionTableForm = class(TForm)
   private
     fBalanceButton: TButton;
+    fBadCells: array of array of Boolean;
     fComponent: TRecorderMeasurementSectionComponent;
     fGrid: TStringGrid;
     fRegistry: TRecorderTagRegistry;
@@ -26,7 +27,11 @@ type
     procedure CaptureSelectedBalance;
     function FormatMaybe(AHasValue: Boolean; AValue: Double;
       const AFormat: string): string;
+    procedure GridPrepareCanvas(Sender: TObject; ACol, ARow: Integer;
+      AState: TGridDrawState);
+    procedure MarkBadCell(ACol, ARow: Integer);
     function SelectedCellsIncludeColumn(ACol: Integer): Boolean;
+    function TagValueOutOfTolerance(ATag: TRecorderTag): Boolean;
     procedure TimerTick(Sender: TObject);
   public
     constructor CreateTable(AOwner: TComponent;
@@ -101,6 +106,7 @@ begin
   fGrid.RowCount := 2;
   fGrid.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
     goRangeSelect, goColSizing];
+  fGrid.OnPrepareCanvas := @GridPrepareCanvas;
   fGrid.Cells[CColPoint, 0] := 'N точки';
   fGrid.Cells[CColTemp, 0] := 'Температура, °C';
   fGrid.Cells[CColE1, 0] := 'e1, мкстрн';
@@ -177,6 +183,27 @@ begin
     Result := '-';
 end;
 
+procedure TRecorderMeasurementSectionTableForm.GridPrepareCanvas(
+  Sender: TObject; ACol, ARow: Integer; AState: TGridDrawState);
+begin
+  if (gdSelected in AState) or (ARow <= 0) or (ACol < 0) or
+    (ARow >= Length(fBadCells)) or (ACol >= Length(fBadCells[ARow])) then
+    Exit;
+  if fBadCells[ARow][ACol] then
+  begin
+    fGrid.Canvas.Brush.Color := clSilver;
+    fGrid.Canvas.Font.Color := clBlack;
+  end;
+end;
+
+procedure TRecorderMeasurementSectionTableForm.MarkBadCell(ACol,
+  ARow: Integer);
+begin
+  if (ARow >= 0) and (ARow < Length(fBadCells)) and
+    (ACol >= 0) and (ACol < Length(fBadCells[ARow])) then
+    fBadCells[ARow][ACol] := True;
+end;
+
 procedure TRecorderMeasurementSectionTableForm.TimerTick(Sender: TObject);
 begin
   RefreshTable;
@@ -185,16 +212,33 @@ end;
 procedure TRecorderMeasurementSectionTableForm.RefreshTable;
 var
   I: Integer;
+  J: Integer;
+  lBadE1: Boolean;
+  lBadE2: Boolean;
+  lBadE3: Boolean;
+  lBadTemp: Boolean;
   lRow: TRecorderMeasurementSectionRow;
   lValues: TRecorderMeasurementSectionValues;
 begin
   if fComponent = nil then
     Exit;
   fGrid.RowCount := Max(2, fComponent.RowCount + 1);
+  SetLength(fBadCells, fGrid.RowCount);
+  for I := 0 to fGrid.RowCount - 1 do
+  begin
+    SetLength(fBadCells[I], fGrid.ColCount);
+    for J := 0 to fGrid.ColCount - 1 do
+      fBadCells[I][J] := False;
+  end;
   for I := 0 to fComponent.RowCount - 1 do
   begin
     lRow := fComponent.Rows[I];
     fComponent.CalculateRow(fRegistry, lRow, lValues);
+    lBadTemp := TagValueOutOfTolerance(lRow.ResolveTag(fRegistry,
+      rrrTemperature));
+    lBadE1 := TagValueOutOfTolerance(lRow.ResolveTag(fRegistry, rrrE1));
+    lBadE2 := TagValueOutOfTolerance(lRow.ResolveTag(fRegistry, rrrE2));
+    lBadE3 := TagValueOutOfTolerance(lRow.ResolveTag(fRegistry, rrrE3));
     fGrid.Cells[CColPoint, I + 1] := IntToStr(lRow.PointNo);
     fGrid.Cells[CColTemp, I + 1] := FormatMaybe(lValues.HasTemperature,
       lValues.Temperature, '0.###');
@@ -210,6 +254,20 @@ begin
       lValues.Sigma2, '0.###');
     fGrid.Cells[CColAngle, I + 1] := FormatMaybe(lValues.HasAngle,
       lValues.AngleDeg, '0.###');
+    if lBadTemp then
+      MarkBadCell(CColTemp, I + 1);
+    if lBadE1 then
+      MarkBadCell(CColE1, I + 1);
+    if lBadE2 then
+      MarkBadCell(CColE2, I + 1);
+    if lBadE3 then
+      MarkBadCell(CColE3, I + 1);
+    if lBadTemp or lBadE1 or lBadE2 or lBadE3 then
+    begin
+      MarkBadCell(CColSigma1, I + 1);
+      MarkBadCell(CColSigma2, I + 1);
+      MarkBadCell(CColAngle, I + 1);
+    end;
   end;
 end;
 
@@ -231,6 +289,19 @@ begin
     lRight := lSelection.Left;
   end;
   Result := (ACol >= lLeft) and (ACol <= lRight);
+end;
+
+function TRecorderMeasurementSectionTableForm.TagValueOutOfTolerance(
+  ATag: TRecorderTag): Boolean;
+var
+  lValue: Double;
+begin
+  Result := False;
+  if (ATag = nil) or (ATag.SignalBuffer.Count = 0) or
+    (ATag.RangeMax <= ATag.RangeMin) then
+    Exit;
+  lValue := ATag.SignalBuffer.LatestValue;
+  Result := (lValue < ATag.RangeMin) or (lValue > ATag.RangeMax);
 end;
 
 { TRecorderMeasurementSectionView }
@@ -273,9 +344,8 @@ begin
   if ATagRegistry <> nil then
     fRegistry := ATagRegistry;
   if fTableForm <> nil then
-    fTableForm.RefreshTable
-  else
-    Invalidate;
+    fTableForm.RefreshTable;
+  Invalidate;
 end;
 
 function TRecorderMeasurementSectionView.GetChartControl: TOglChart;
@@ -340,9 +410,7 @@ begin
     Exit;
 
   lCaption := fComponent.Caption;
-  lSummary := '';
-  if fTableForm = nil then
-    lSummary := BuildSummaryText;
+  lSummary := BuildSummaryText;
 
   Canvas.Brush.Style := bsClear;
   Canvas.Font.Color := clWindowText;
