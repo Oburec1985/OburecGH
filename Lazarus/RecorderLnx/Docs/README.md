@@ -20,6 +20,7 @@
 ## Быстрые входы
 
 - [Правила разработки](architecture/development-rules.md)
+- [Команда разработки](architecture/development-team.md)
 - [Текущий план](architecture/current-plan.md)
 - [Система времени](architecture/time-system.md)
 - [Измерительное сечение](ui/measurement-section-component.md)

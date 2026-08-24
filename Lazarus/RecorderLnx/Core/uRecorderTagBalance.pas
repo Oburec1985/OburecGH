@@ -156,7 +156,7 @@ begin
   fLabel.Height := 42;
   fLabel.Alignment := taCenter;
   fLabel.Layout := tlCenter;
-  fLabel.Caption := 'Выполняется аппаратная балансировка MC-201...' +
+  fLabel.Caption := 'Выполняется балансировка нуля...' +
     LineEnding + 'Дождитесь завершения операции.';
 
   fLog := TMemo.Create(Self);

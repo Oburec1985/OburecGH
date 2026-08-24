@@ -7,3 +7,4 @@
 - [tag-data-client-model.md](tag-data-client-model.md) - клиенты кольцевых буферов тегов.
 - [time-system.md](time-system.md) - системное и астрономическое время.
 - [eventbus-audit.md](eventbus-audit.md) - аудит event bus.
+- [development-team.md](development-team.md) - роли команды и процесс разработки.

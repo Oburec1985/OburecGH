@@ -142,7 +142,6 @@ begin
     CMic185DefaultChnCommutUs);
   ASettings.BalancePortionLength := ReadEditLongWord(edBalanceSamples,
     CMic185DefaultBlnPortionLength);
-  ASettings.HardBalance := CMic185DefaultHardBalance;
   if not TryStrToInt(Trim(cbAverageCount.Text), lPointCount) then
     lPointCount := Mic185AverageExponentToPointCount(CMic185DefaultAveragePointCount);
   ASettings.AveragePointCount :=

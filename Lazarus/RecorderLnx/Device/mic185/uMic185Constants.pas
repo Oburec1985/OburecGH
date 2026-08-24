@@ -49,6 +49,9 @@ const
   CMic185DefaultChnCommutUs = 150;
   CMic185DefaultBlnPortionLength = 30;
   CMic185DefaultHardBalance = 8192;
+  CMic185HardBalanceDacMax = 16384;
+  CMic185HardBalanceRangeMv = 100.0;
+  CMic185SoftBalanceMaxCode = 32767;
   CMic185DefaultAveragePointCount = 7;
   CMic185DefaultPowerMaCode = 10813;
   CMic185DefaultCalibrShuntIndex = 3;
@@ -75,6 +78,8 @@ const
     (CMic185IoCtlTypeCallCommand shl 16) or ($0002 shl 2);
   CMic185IoCtlCmdReloadCalibr =
     (CMic185IoCtlTypeCallCommand shl 16) or ($0008 shl 2);
+  CMic185IoCtlCmdZeroBalance =
+    (1 shl 16) or (1 shl 14) or ($0006 shl 2);
   CMic185CalibrTypeDefault = 0;
   CMic185CalibrTypeInner = 1;
 

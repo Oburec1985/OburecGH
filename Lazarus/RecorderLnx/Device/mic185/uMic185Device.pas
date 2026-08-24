@@ -121,6 +121,12 @@ type
     function TryReadChannelRangeKx(AChannelIndex, ARangeIndex: Integer;
       out AK, AB, ACurrentK, ACurrentB: Double;
       out AErrorText: string): Boolean;
+    { Выполняет штатную MIC185V2 ZBalance для измерительных каналов 0..63.
+      Прошивка возвращает SHORT soft-balance в кодах АЦП; результат сразу
+      подмешивается в программируемые настройки канала. }
+    function TryZeroBalanceChannels(const AChannelIndices: array of Integer;
+      out ASoftBalances: TRecorderDeviceActionValues;
+      out AErrorText: string): Boolean;
     { Продлевает активную Mebius-сессию без ожидания служебного ответа. }
     { Быстрая проверка TCP/Mebius связи без запуска измерений. }
     function TestLink(out AErrorText: string): Boolean; override;
@@ -796,6 +802,64 @@ begin
   { A connected socket alone is not a successful TEST. Every non-running
     TestLink reads the current identity and refreshes SN/version. }
   Result := TryQueryDeviceInfo(AErrorText);
+end;
+
+function TRecorderMic185Device.TryZeroBalanceChannels(
+  const AChannelIndices: array of Integer;
+  out ASoftBalances: TRecorderDeviceActionValues;
+  out AErrorText: string): Boolean;
+var
+  I: Integer;
+  lBalance: SmallInt;
+  lCh: Integer;
+  lIn: TRecorderByteArray;
+  lOut: TRecorderByteArray;
+begin
+  Result := False;
+  SetLength(ASoftBalances, 0);
+  AErrorText := '';
+  if (fState = rdsDisconnected) or (fClient = nil) then
+  begin
+    AErrorText := 'MIC183/185 is not connected';
+    Exit;
+  end;
+  if Length(AChannelIndices) = 0 then
+  begin
+    AErrorText := 'No MIC183/185 measurement channels selected';
+    Exit;
+  end;
+
+  SetLength(lIn, Length(AChannelIndices) * SizeOf(Word));
+  for I := 0 to High(AChannelIndices) do
+  begin
+    lCh := AChannelIndices[I];
+    if (lCh < 0) or (lCh >= CMic185ChannelCountMax) then
+    begin
+      AErrorText := Format('MIC183/185 channel index %d is out of range', [lCh]);
+      Exit;
+    end;
+    Word(Pointer(@lIn[I * SizeOf(Word)])^) := Word(lCh);
+  end;
+
+  if not fClient.TryCallCommand(CMic185IoCtlCmdZeroBalance, lIn,
+    Length(AChannelIndices) * SizeOf(SmallInt), lOut, AErrorText) then
+    Exit;
+  if Length(lOut) < Length(AChannelIndices) * SizeOf(SmallInt) then
+  begin
+    AErrorText := 'MIC183/185 zero-balance reply is shorter than expected';
+    Exit;
+  end;
+
+  SetLength(ASoftBalances, Length(AChannelIndices));
+  for I := 0 to High(AChannelIndices) do
+  begin
+    lBalance := SmallInt(Pointer(@lOut[I * SizeOf(SmallInt)])^);
+    lCh := AChannelIndices[I];
+    ASoftBalances[I] := lBalance;
+    fChannelProgramSettings[lCh].SoftBalance := lBalance;
+  end;
+  fHasChannelProgramSettings := True;
+  Result := True;
 end;
 
 function TRecorderMic185Device.ReadBlock(ATimeoutMs: Cardinal;

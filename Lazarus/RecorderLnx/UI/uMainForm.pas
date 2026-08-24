@@ -1013,6 +1013,12 @@ begin
           if lBeforeSignatures.Values[lSourceId] =
             lAfterSignatures.Values[lSourceId] then
             Continue;
+          if RecorderSourceProgrammingAlreadyApplied(fRecorder.TagRegistry,
+            lSourceId, lAfterSignatures.Values[lSourceId]) then
+          begin
+            AddLog('Source programming already applied: ' + lSourceId);
+            Continue;
+          end;
           RecorderReplaceRuntimeSource(fRecorder, lSourceId,
             fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog,
             False);
@@ -2863,6 +2869,16 @@ begin
       if lHardwareProgrammingChanged then
       begin
         lAfterSourceId := lTag.SourceId;
+        if RecorderSourceProgrammingAlreadyApplied(fRecorder.TagRegistry,
+          lAfterSourceId,
+          RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag)) then
+        begin
+          AddLog('Source programming already applied: ' + lAfterSourceId);
+          lHardwareProgrammingChanged := False;
+        end;
+      end;
+      if lHardwareProgrammingChanged then
+      begin
         AddLog('Source programming required: ' +
           RecorderProgrammingSignatureDifference(lBeforeProgramming,
             RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag)));
@@ -2916,6 +2932,8 @@ end;
 procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
   ATags: TList);
 begin
+  // из диалога uTagSettingsDialog ZeroBalanceButtonClick попадаем сюда!!!
+  // в MainForm вообще балансировок не должно быть!!!
   RecorderBalanceTagDevices(Self, fRecorder, ARegistry, ATags);
 end;
 
