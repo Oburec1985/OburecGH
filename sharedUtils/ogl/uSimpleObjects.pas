@@ -61,7 +61,7 @@ procedure glDrawElements(mode: GLenum;count: GLsizei;
 procedure drawrect(rect:frect; color:point3);
 var
  data:array[0..3] of point2;
- curcolor:point3;
+ curcolor:array[0..3] of glfloat;
 begin
   data[0]:=rect.BottomLeft;
   data[1]:=p2(rect.BottomLeft.x,rect.topright.y);
@@ -77,13 +77,13 @@ begin
   glvertex2fv(@data[2]);
   glvertex2fv(@data[3]);
   glend;
-  glcolor3fv(@curcolor);
+  glcolor3fv(@curcolor[0]);
 end;
 
 procedure drawBorder(rect:frect; color:point3);
 var
  data:array[0..3] of point2;
- curcolor:point3;
+ curcolor:array[0..3] of glfloat;
 begin
   data[0]:=rect.BottomLeft;
   data[1]:=p2(rect.BottomLeft.x,rect.topright.y);
@@ -100,7 +100,7 @@ begin
     glvertex2fv(@data[2]);
     glvertex2fv(@data[3]);
   glend;
-  glcolor3fv(@curcolor);
+  glcolor3fv(@curcolor[0]);
   glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 end;
 
