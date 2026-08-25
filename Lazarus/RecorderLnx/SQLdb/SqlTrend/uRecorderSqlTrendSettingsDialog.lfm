@@ -244,16 +244,20 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       Kind = dtkDate
       OnChange = TimeFromChange
     end
-    object lblTo: TLabel Left = 350 Top = 18 Caption = 'До (UTC)' end
     object dtpToDate: TDateTimePicker
       Left = 350 Height = 25 Top = 40 Width = 118
       Kind = dtkDate
       OnChange = TimeToChange
     end
-    object lblMaxPoints: TLabel Left = 490 Top = 18 Caption = 'Макс. точек на линию' end
-    object edMaxPoints: TEdit Left = 490 Height = 25 Top = 40 Width = 112 end
-    object lblWindowHours: TLabel Left = 618 Top = 18 Caption = 'Окно, дней' end
-    object edWindowHours: TEdit Left = 618 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
+    object cbCurrentDate: TCheckBox
+      Left = 350 Height = 23 Top = 14 Width = 132
+      Caption = 'Текущая дата'
+      OnChange = CurrentDateChange
+    end
+    object lblMaxPoints: TLabel Left = 618 Top = 18 Caption = 'Макс. точек на линию' end
+    object edMaxPoints: TEdit Left = 618 Height = 25 Top = 40 Width = 112 end
+    object lblWindowHours: TLabel Left = 746 Top = 18 Caption = 'Окно, дней' end
+    object edWindowHours: TEdit Left = 746 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
   end
   object btnOk: TButton
     Left = 848 Height = 30 Top = 678 Width = 88 Caption = 'OK'

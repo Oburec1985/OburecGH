@@ -21,7 +21,7 @@ unit uRecorderProjectFiles;
 interface
 
 uses
-  Classes, SysUtils, fpjson,
+  Classes, SysUtils, Math, fpjson,
   uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding;
 
 type
@@ -887,6 +887,7 @@ var
   lMeasure: TRecorderMeasurementSectionComponent;
   lMeasureRow: TRecorderMeasurementSectionRow;
   lRole: TRecorderRosetteRole;
+  lNamedFont: TRecorderNamedFont;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -897,6 +898,19 @@ begin
     lIni.EraseSection('Project');
     lIni.WriteInteger('Project', 'Version', 1);
     lIni.WriteInteger('Project', 'PageCount', AForms.PageCount);
+    lIni.WriteInteger('NamedFonts', 'Count', AForms.NamedFonts.Count);
+    for I := 0 to AForms.NamedFonts.Count - 1 do
+    begin
+      lNamedFont := AForms.NamedFonts.Items[I];
+      lSection := Format('NamedFont.%d', [I]);
+      lIni.EraseSection(lSection);
+      lIni.WriteString(lSection, 'Name', lNamedFont.Name);
+      lIni.WriteString(lSection, 'FontName', lNamedFont.FontName);
+      lIni.WriteInteger(lSection, 'FontSize', lNamedFont.FontSize);
+      lIni.WriteInteger(lSection, 'FontColor', lNamedFont.FontColor);
+      lIni.WriteBool(lSection, 'Bold', lNamedFont.Bold);
+      lIni.WriteBool(lSection, 'Italic', lNamedFont.Italic);
+    end;
     if AForms.ActivePage <> nil then
       lIni.WriteString('Project', 'ActivePageId', AForms.ActivePage.Id);
 
@@ -936,9 +950,17 @@ begin
         lIni.WriteInteger(lSection, 'Top', lComponent.Bounds.Top);
         lIni.WriteInteger(lSection, 'Width', lComponent.Bounds.Width);
         lIni.WriteInteger(lSection, 'Height', lComponent.Bounds.Height);
+        lIni.WriteString(lSection, 'NamedFont', lComponent.NamedFontName);
         if lComponent is TRecorderStaticTextComponent then
+        begin
           lIni.WriteString(lSection, 'Text',
             TRecorderStaticTextComponent(lComponent).Text);
+          lIni.WriteString(lSection, 'FontName', TRecorderStaticTextComponent(lComponent).FontName);
+          lIni.WriteInteger(lSection, 'FontSize', TRecorderStaticTextComponent(lComponent).FontSize);
+          lIni.WriteInteger(lSection, 'FontColor', TRecorderStaticTextComponent(lComponent).FontColor);
+          lIni.WriteBool(lSection, 'FontBold', TRecorderStaticTextComponent(lComponent).FontStyleBold);
+          lIni.WriteBool(lSection, 'FontItalic', TRecorderStaticTextComponent(lComponent).FontStyleItalic);
+        end;
         if lComponent is TRecorderButtonComponent then
         begin
           lIni.WriteString(lSection, 'Caption', TRecorderButtonComponent(lComponent).Caption);
@@ -955,6 +977,11 @@ begin
             TRecorderTagValueComponent(lComponent).DisplayFormat);
           lIni.WriteInteger(lSection, 'ShowNameMode',
             Ord(TRecorderTagValueComponent(lComponent).ShowNameMode));
+          lIni.WriteString(lSection, 'FontName', TRecorderTagValueComponent(lComponent).FontName);
+          lIni.WriteInteger(lSection, 'FontSize', TRecorderTagValueComponent(lComponent).FontSize);
+          lIni.WriteInteger(lSection, 'FontColor', TRecorderTagValueComponent(lComponent).FontColor);
+          lIni.WriteBool(lSection, 'FontBold', TRecorderTagValueComponent(lComponent).FontStyleBold);
+          lIni.WriteBool(lSection, 'FontItalic', TRecorderTagValueComponent(lComponent).FontStyleItalic);
         end;
         if lComponent is TRecorderImageComponent then
         begin
@@ -1168,6 +1195,19 @@ begin
   lIni := TIniFile.Create(AFileName);
   try
     AForms.Clear;
+    AForms.NamedFonts.Clear;
+    lItemCount := lIni.ReadInteger('NamedFonts', 'Count', 0);
+    for I := 0 to lItemCount - 1 do
+    begin
+      lSection := Format('NamedFont.%d', [I]);
+      AForms.NamedFonts.Define(
+        lIni.ReadString(lSection, 'Name', ''),
+        lIni.ReadString(lSection, 'FontName', 'Tahoma'),
+        lIni.ReadInteger(lSection, 'FontSize', 10),
+        lIni.ReadInteger(lSection, 'FontColor', 0),
+        lIni.ReadBool(lSection, 'Bold', False),
+        lIni.ReadBool(lSection, 'Italic', False));
+    end;
     lCount := lIni.ReadInteger('Project', 'PageCount', 0);
     for I := 0 to lCount - 1 do
     begin
@@ -1221,9 +1261,22 @@ begin
             lIni.ReadInteger(lSection, 'Top', 0),
             lIni.ReadInteger(lSection, 'Width', 0),
             lIni.ReadInteger(lSection, 'Height', 0));
+          lComponent.NamedFontName := lIni.ReadString(lSection, 'NamedFont', '');
           if lComponent is TRecorderStaticTextComponent then
+          begin
             TRecorderStaticTextComponent(lComponent).Text :=
               lIni.ReadString(lSection, 'Text', '');
+            TRecorderStaticTextComponent(lComponent).FontName :=
+              lIni.ReadString(lSection, 'FontName', 'Tahoma');
+            TRecorderStaticTextComponent(lComponent).FontSize :=
+              lIni.ReadInteger(lSection, 'FontSize', 10);
+            TRecorderStaticTextComponent(lComponent).FontColor :=
+              lIni.ReadInteger(lSection, 'FontColor', 0);
+            TRecorderStaticTextComponent(lComponent).FontStyleBold :=
+              lIni.ReadBool(lSection, 'FontBold', False);
+            TRecorderStaticTextComponent(lComponent).FontStyleItalic :=
+              lIni.ReadBool(lSection, 'FontItalic', False);
+          end;
           if lComponent is TRecorderButtonComponent then
           begin
             TRecorderButtonComponent(lComponent).Caption := lIni.ReadString(lSection, 'Caption', 'Button');
@@ -1248,6 +1301,16 @@ begin
               lItemCount := Ord(tvnmTop);
             TRecorderTagValueComponent(lComponent).ShowNameMode :=
               TRecorderTagValueNameMode(lItemCount);
+            TRecorderTagValueComponent(lComponent).FontName :=
+              lIni.ReadString(lSection, 'FontName', 'Tahoma');
+            TRecorderTagValueComponent(lComponent).FontSize :=
+              lIni.ReadInteger(lSection, 'FontSize', 10);
+            TRecorderTagValueComponent(lComponent).FontColor :=
+              lIni.ReadInteger(lSection, 'FontColor', 0);
+            TRecorderTagValueComponent(lComponent).FontStyleBold :=
+              lIni.ReadBool(lSection, 'FontBold', True);
+            TRecorderTagValueComponent(lComponent).FontStyleItalic :=
+              lIni.ReadBool(lSection, 'FontItalic', False);
           end;
           if lComponent is TRecorderImageComponent then
           begin
@@ -1405,15 +1468,20 @@ begin
               TRecorderSqlTrendComponent(lComponent).ConfigFileName :=
                 LoadGuiResourceFileName(AFileName,
                   lIni.ReadString(lSection, 'SqlConfigFile', 'sql-db.ini'));
+              lItemCount := lIni.ReadInteger(lSection, 'SqlTimeMode',
+                Ord(sttmLatestWindow));
+              if (lItemCount < Ord(Low(TRecorderSqlTrendTimeMode))) or
+                (lItemCount > Ord(High(TRecorderSqlTrendTimeMode))) then
+                lItemCount := Ord(sttmLatestWindow);
               TRecorderSqlTrendComponent(lComponent).TimeMode :=
-                TRecorderSqlTrendTimeMode(lIni.ReadInteger(lSection,
-                  'SqlTimeMode', Ord(sttmLatestWindow)));
+                TRecorderSqlTrendTimeMode(lItemCount);
               TRecorderSqlTrendComponent(lComponent).FromUtc :=
                 lIni.ReadFloat(lSection, 'SqlFromUtc', Now - 1);
               TRecorderSqlTrendComponent(lComponent).ToUtc :=
                 lIni.ReadFloat(lSection, 'SqlToUtc', Now);
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine :=
-                lIni.ReadInteger(lSection, 'SqlMaxPoints', 4000);
+                EnsureRange(lIni.ReadInteger(lSection, 'SqlMaxPoints', 4000),
+                  32, 100000);
               lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
               if lItemCount < 0 then
                 TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend

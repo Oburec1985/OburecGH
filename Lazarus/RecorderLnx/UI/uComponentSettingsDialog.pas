@@ -28,6 +28,9 @@ type
     fSelectedFontItalic: Boolean;
     fFontPreviewLabel: TLabel;
     fFontButton: TButton;
+    fNamedFontCombo: TComboBox;
+    fAssignAllButton: TButton;
+    fAssignAllRequested: Boolean;
     fTextEdit: TEdit;
     fDisplayFormatEdit: TEdit;
     fShowNameCombo: TComboBox;
@@ -38,6 +41,8 @@ type
 
     procedure BindingModeComboChange(Sender: TObject);
     procedure FontButtonClick(Sender: TObject);
+    procedure NamedFontChange(Sender: TObject);
+    procedure AssignFontToAllClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure TagSearchEditChange(Sender: TObject);
     procedure UseDefaultEstimateCheckChange(Sender: TObject);
@@ -48,6 +53,7 @@ type
     procedure PopulateTags(const AFilter: string);
     procedure StoreToComponent;
     procedure UpdateFontPreview;
+    procedure DefineSelectedFont;
     procedure UpdateTagVisibility;
   public
     constructor CreateDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
@@ -123,6 +129,7 @@ var
   lTop: Integer;
   lLabel: TLabel;
   lEst: TRecorderTagEstimateKind;
+  I: Integer;
 begin
   lTop := 16;
 
@@ -171,17 +178,33 @@ begin
     lLabel.SetBounds(16, lTop + 10, 120, 16);
     lLabel.Caption := 'Шрифт компонента:';
 
+    fNamedFontCombo := TComboBox.Create(Self);
+    fNamedFontCombo.Parent := Self;
+    fNamedFontCombo.SetBounds(140, lTop, 120, 25);
+    fNamedFontCombo.OnChange := @NamedFontChange;
+    if fComponent.NamedFonts <> nil then
+      for I := 0 to fComponent.NamedFonts.Count - 1 do
+        fNamedFontCombo.Items.Add(fComponent.NamedFonts.Items[I].Name);
+
     fFontButton := TButton.Create(Self);
     fFontButton.Parent := Self;
-    fFontButton.SetBounds(140, lTop, 100, 25);
+    fFontButton.SetBounds(268, lTop, 82, 25);
     fFontButton.Caption := 'Выбрать...';
     fFontButton.OnClick := @FontButtonClick;
 
     fFontPreviewLabel := TLabel.Create(Self);
     fFontPreviewLabel.Parent := Self;
-    fFontPreviewLabel.SetBounds(250, lTop + 4, 190, 25);
+    fFontPreviewLabel.SetBounds(140, lTop + 28, 180, 25);
     fFontPreviewLabel.Caption := 'Образец текста';
-    Inc(lTop, 40);
+    if fComponent is TRecorderTagValueComponent then
+    begin
+      fAssignAllButton := TButton.Create(Self);
+      fAssignAllButton.Parent := Self;
+      fAssignAllButton.SetBounds(354, lTop, 90, 25);
+      fAssignAllButton.Caption := 'Назначить всем';
+      fAssignAllButton.OnClick := @AssignFontToAllClick;
+    end;
+    Inc(lTop, 58);
   end;
 
   if fComponent is TRecorderTagValueComponent then
@@ -403,12 +426,16 @@ begin
     fBindingModeCombo.ItemIndex := Ord(TRecorderOscillogramComponent(fComponent).BindingMode);
     fTagOffsetEdit.Text := IntToStr(TRecorderOscillogramComponent(fComponent).TagOffset);
   end;
+  if fNamedFontCombo <> nil then
+    fNamedFontCombo.Text := fComponent.NamedFontName;
   UpdateTagVisibility;
 end;
 
 procedure TComponentSettingsDialog.StoreToComponent;
 var
   lTag: TRecorderTag;
+  I: Integer;
+  lOther: TRecorderVisualComponent;
 begin
   if fTagCombo <> nil then
   begin
@@ -436,6 +463,8 @@ begin
 
   if fComponent is TRecorderStaticTextComponent then
   begin
+    DefineSelectedFont;
+    fComponent.NamedFontName := Trim(fNamedFontCombo.Text);
     TRecorderStaticTextComponent(fComponent).Text := fTextEdit.Text;
     TRecorderStaticTextComponent(fComponent).FontName := fSelectedFontName;
     TRecorderStaticTextComponent(fComponent).FontSize := fSelectedFontSize;
@@ -445,6 +474,8 @@ begin
   end
   else if fComponent is TRecorderTagValueComponent then
   begin
+    DefineSelectedFont;
+    fComponent.NamedFontName := Trim(fNamedFontCombo.Text);
     TRecorderTagValueComponent(fComponent).DisplayFormat := fDisplayFormatEdit.Text;
     TRecorderTagValueComponent(fComponent).ShowNameMode := TRecorderTagValueNameMode(fShowNameCombo.ItemIndex);
     TRecorderTagValueComponent(fComponent).UseDefaultEstimate := fUseDefaultEstimateCheck.Checked;
@@ -454,6 +485,13 @@ begin
     TRecorderTagValueComponent(fComponent).FontColor := fSelectedFontColor;
     TRecorderTagValueComponent(fComponent).FontStyleBold := fSelectedFontBold;
     TRecorderTagValueComponent(fComponent).FontStyleItalic := fSelectedFontItalic;
+    if fAssignAllRequested and (fComponent.Factory <> nil) then
+      for I := 0 to fComponent.Factory.ChildCount - 1 do
+      begin
+        lOther := fComponent.Factory.Children[I];
+        if lOther is TRecorderTagValueComponent then
+          lOther.NamedFontName := fComponent.NamedFontName;
+      end;
   end
   else if fComponent is TRecorderOscillogramComponent then
   begin
@@ -474,6 +512,45 @@ begin
     fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsBold];
   if fSelectedFontItalic then
     fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsItalic];
+end;
+
+procedure TComponentSettingsDialog.DefineSelectedFont;
+var
+  lName: string;
+begin
+  lName := Trim(fNamedFontCombo.Text);
+  if (lName = '') or (fComponent.NamedFonts = nil) then
+    Exit;
+  fComponent.NamedFonts.Define(lName, fSelectedFontName, fSelectedFontSize,
+    fSelectedFontColor, fSelectedFontBold, fSelectedFontItalic);
+end;
+
+procedure TComponentSettingsDialog.NamedFontChange(Sender: TObject);
+var
+  lFont: TRecorderNamedFont;
+begin
+  if fComponent.NamedFonts = nil then
+    Exit;
+  lFont := fComponent.NamedFonts.Find(fNamedFontCombo.Text);
+  if lFont = nil then
+    Exit;
+  fSelectedFontName := lFont.FontName;
+  fSelectedFontSize := lFont.FontSize;
+  fSelectedFontColor := lFont.FontColor;
+  fSelectedFontBold := lFont.Bold;
+  fSelectedFontItalic := lFont.Italic;
+  UpdateFontPreview;
+end;
+
+procedure TComponentSettingsDialog.AssignFontToAllClick(Sender: TObject);
+begin
+  if Trim(fNamedFontCombo.Text) = '' then
+  begin
+    MessageDlg('Шрифт', 'Введите имя общего шрифта.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  fAssignAllRequested := True;
+  fAssignAllButton.Caption := 'Будет назначен';
 end;
 
 procedure TComponentSettingsDialog.FontButtonClick(Sender: TObject);

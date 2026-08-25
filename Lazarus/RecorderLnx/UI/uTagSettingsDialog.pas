@@ -187,6 +187,8 @@ type
     procedure UpdateHardwareCurveButtons;
     function EnsureMic185HardwareCalibrationAssigned(ATag: TRecorderTag;
       AEnableOnTag: Boolean): Boolean;
+    function Mic185SourceUnitName(ATag: TRecorderTag;
+      const ASettings: TMic185ChannelProgramSettings): string;
     function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
       out AExcitation: string): Boolean;
     procedure HardwareCurveCheckClick(Sender: TObject);
@@ -663,6 +665,15 @@ begin
     fHardwareCurveEdit.Text := lFirstName;
 end;
 
+function TTagSettingsDialog.Mic185SourceUnitName(ATag: TRecorderTag;
+  const ASettings: TMic185ChannelProgramSettings): string;
+begin
+  Result := RecorderMic185GetSourceChannelUnitName(fTagRegistry,
+    ATag.SourceId, ATag.Address);
+  if Result = '' then
+    Result := RecorderMic185RangeUnitText(ASettings.MeasRangeIndex);
+end;
+
 procedure TTagSettingsDialog.HardwareCurveCheckClick(Sender: TObject);
 var
   lChannelNumber: Integer;
@@ -682,8 +693,7 @@ begin
       TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
     if SameText(Trim(fUnitCombo.Text), 'код') or
       SameText(Trim(fUnitCombo.Text), 'code') then
-      fUnitCombo.Text := RecorderMic185RangeUnitText(
-        lMic185Settings.MeasRangeIndex);
+      fUnitCombo.Text := Mic185SourceUnitName(TagAt(0), lMic185Settings);
     fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
       fTagRegistry, TagAt(0), lMic185Settings, fUnitCombo.Text);
     Exit;
@@ -1653,6 +1663,7 @@ var
   lSettings: TRecorderMic140ChannelSettings;
   lAppliedMic185Sources: TStringList;
   lAutoUnitName: string;
+  lPreviousUnitName: string;
   lSourceId: string;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
@@ -1670,6 +1681,7 @@ begin
     for I := 0 to fTags.Count - 1 do
     begin
       lTag := TagAt(I);
+      lPreviousUnitName := lTag.UnitName;
     if fSelectedMeraFileName <> '' then
     begin
       lTag.Address := Trim(fModuleEdit.Text);
@@ -1737,15 +1749,18 @@ begin
           lTag.Address, lTag.PollFrequencyHz, lMic185Settings);
         if SameText(Trim(lTag.UnitName), 'код') or
           SameText(Trim(lTag.UnitName), 'code') then
-          lTag.UnitName := RecorderMic185RangeUnitText(
-            lMic185Settings.MeasRangeIndex);
+          lTag.UnitName := Mic185SourceUnitName(lTag, lMic185Settings);
         lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fTagRegistry,
           lTag, lMic185Settings, lTag.UnitName);
         lTag.RangeMin := -lTag.RangeMax;
       end;
       if (not lTag.HardwareCalibrationEnabled) and
         (Pos('MIC-185:', lTag.SourceId) = 1) then
+      begin
+        RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
+          lTag.Address, lTag.PollFrequencyHz, lPreviousUnitName);
         lTag.UnitName := 'код';
+      end;
       if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
       begin
         lSettings.ChannelAddress := '';

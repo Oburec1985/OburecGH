@@ -54,7 +54,7 @@ uses
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
-  uRecorderMeasurementSectionView;
+  uRecorderMeasurementSectionView, uRecorderTrendView;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -77,7 +77,6 @@ type
     btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
-    btnTrigger: TSpeedButton;                    // Кнопка принудительного старта по выполнению условий
     edTagSearch: TEdit;                          // Поле поиска (фильтрации) тегов
     ilCommandButtons: TImageList;                // Список картинок для кнопок управления
     ilTagDialogButtons: TImageList;              // Список картинок для кнопок настройки каналов
@@ -108,7 +107,6 @@ type
     procedure btnSqlDbClick(Sender: TObject);
     procedure cbSqlDbRecordingChange(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure btnTriggerClick(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -242,6 +240,7 @@ type
     procedure DetachedFormAttach(Sender: TObject);
     procedure DetachedFormChanged(Sender: TObject);
     procedure SaveDetachedFormPlacements;
+    procedure ResetTrendSessions;
     { Создает раннюю область редактора мнемосхемы с тулбаром и пустым полотном. }
     procedure EnsureEditorSurface;
     { Создает тулбар базовой страницы с количеством осциллограмм. }
@@ -313,6 +312,7 @@ type
     procedure FormEditorChanged;
     { Загружает настройки запуска/остановки из проектного каталога. }
     procedure LoadRunSettings;
+    procedure ConfigureOptionalSqlDb;
     { Сохраняет настройки запуска/остановки в проектный каталог. }
     procedure SaveRunSettings;
     { Применяет периоды обновления отображения из настроек запуска. }
@@ -495,13 +495,12 @@ begin
   EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
-  fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
-    fProjectConfigDir) + 'sql-db.ini');
   ApplyDisplayTimingSettings;
   lStageStartedAt := GetTickCount64;
   LoadProjectPackage;
   RecorderDebugLog(Format('[Startup] LoadProjectPackage elapsed=%dms',
     [GetTickCount64 - lStageStartedAt]));
+  ConfigureOptionalSqlDb;
   EnsureSqlDbControlTag;
   SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
@@ -886,16 +885,6 @@ begin
   except
     on E: Exception do
       LogCommandError('Record', E);
-  end;
-end;
-
-procedure TMainForm.btnTriggerClick(Sender: TObject);
-begin
-  try
-    fRecorder.StateMachine.StartConditionMet;
-  except
-    on E: Exception do
-      LogCommandError('Trigger', E);
   end;
 end;
 
@@ -2559,6 +2548,24 @@ begin
   end;
 end;
 
+procedure TMainForm.ConfigureOptionalSqlDb;
+var
+  lMessage: string;
+begin
+  try
+    fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
+      fProjectConfigDir) + 'sql-db.ini');
+  except
+    on E: Exception do
+    begin
+      fRecorder.SqlDbManager.DisableRuntimeAfterConfigurationError;
+      lMessage := 'SQL database unavailable: ' + E.ClassName + ': ' + E.Message;
+      RecorderDebugLog(lMessage);
+      AddLog(lMessage, rlkSystem);
+    end;
+  end;
+end;
+
 procedure TMainForm.SaveConfigAsClick(Sender: TObject);
 var
   lDir: string;
@@ -2588,6 +2595,7 @@ begin
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  ConfigureOptionalSqlDb;
   fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
   fStartupOfflineRecoveryDone := False;
@@ -3307,9 +3315,8 @@ begin
   btnStop.SetBounds(16, 58, 42, 42);
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
-  btnTrigger.SetBounds(16, 108, 142, 32);
-  cbSqlDbRecording.SetBounds(12, 151, 72, 23);
-  btnSqlDb.SetBounds(86, 146, 72, 32);
+  cbSqlDbRecording.SetBounds(12, 112, 72, 23);
+  btnSqlDb.SetBounds(86, 107, 72, 32);
 
   btnSettings.Caption := '';
   btnSettings.Images := ilCommandButtons;
@@ -3360,10 +3367,6 @@ begin
   btnRecord.ImageWidth := 32;
   btnRecord.Hint := 'Record';
   btnRecord.ShowHint := True;
-
-  btnTrigger.Caption := 'Trigger';
-  btnTrigger.Hint := 'Trigger / condition met';
-  btnTrigger.ShowHint := True;
 
   btnClearSearch.Caption := 'X';
   btnClearSearch.Hint := ' Очистка поиска тегов';
@@ -3752,6 +3755,7 @@ begin
         begin
           if fRecorder.AlgorithmManager <> nil then
             fRecorder.AlgorithmManager.HandleStateTransition(lTransition);
+          ResetTrendSessions;
           fRecorder.TimeSystem.Start;
           StartDataSources;
         end;
@@ -3782,6 +3786,18 @@ begin
   AddLog(Format('State changed: %s -> %s',
     [TRecorderStateMachine.StateToString(AOldState),
      TRecorderStateMachine.StateToString(ANewState)]));
+end;
+
+procedure TMainForm.ResetTrendSessions;
+var
+  I: Integer;
+begin
+  TRecorderTrendView.BeginAcquisitionSession(fRecorder.TagRegistry);
+  if fFormEditor <> nil then
+    fFormEditor.ResetTrendSessions;
+  if fDetachedForms <> nil then
+    for I := 0 to fDetachedForms.Count - 1 do
+      TDetachedMnemonicForm(fDetachedForms.Objects[I]).ResetTrendSessions;
 end;
 
 end.

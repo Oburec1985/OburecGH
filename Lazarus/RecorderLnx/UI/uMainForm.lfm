@@ -199,15 +199,6 @@ object MainForm: TMainForm
         ParentShowHint = False
         OnClick = btnRecordClick
       end
-      object btnTrigger: TSpeedButton
-        Left = 16
-        Height = 32
-        Top = 108
-        Width = 142
-        ShowHint = True
-        ParentShowHint = False
-        OnClick = btnTriggerClick
-      end
     end
     object pnTagSearch: TPanel
       Left = 1

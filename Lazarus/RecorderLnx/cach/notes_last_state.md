@@ -1,3 +1,160 @@
+## 2026-08-25 — Named fonts and chart interaction
+
+**Запрос:** добавить переиспользуемые шрифты и массовое назначение цифровым
+индикаторам; удалить Trigger; поправить Trend; расширить live/zoom SQL Trend и
+мышиный zoom осциллограммы.
+
+**Сделано:** добавлен project-scoped менеджер именованных шрифтов с revision,
+сериализацией и factory-wide «Назначить всем». Удалён `btnTrigger`, увеличены
+отступы обычного Trend. SQL Trend получил «Текущая дата», инкрементальный live
+buffer и направленный X/Y/XY zoom/anti-zoom без изменения Y при новых точках.
+Только у осциллограммы отключён reset по double-click и включён обратный zoom.
+
+**Проверка:** forced Windows/Linux builds — exit `0`; Linux runtime запущен,
+SQL errors `0`, Firebird `ESTABLISHED`. Выполняется финальный повторный gate.
+
+**Статус:** реализация готова, закрываются замечания финального review.
+
+## 2026-08-25 — SQL password shown as plain text
+
+**Запрос:** не маскировать пароль БД в настройках RecorderLnx.
+
+**Сделано:** у поля «Пароль БД» удалён `PasswordChar`; введённый пароль теперь
+виден обычным текстом. Хранение и использование пароля не изменялись.
+
+**Проверка:** forced-сборки Windows и Linux RecorderLnx завершились с exit `0`.
+На VM новый процесс жив, SQL errors `0`, соединение с Firebird — `ESTABLISHED`.
+
+**Статус:** готово; teamlead и QA — `PASS`.
+
+## 2026-08-25 — Firebird Linux startup verified over SSH
+
+**Запрос:** самостоятельно подключиться к Linux VM и устранить ошибку Firebird
+login при запуске RecorderLnx.
+
+**Сделано:** подключение переведено на штатные `HostName`/`Port`, удалённой БД
+передаётся полный server-side путь; `Port=0` означает default драйвера. Исправлены
+права config/data, fresh-DEB выбор единственного desktop-пользователя и отдельные
+fail-fast post-build scripts для Linux/Windows.
+
+**Проверка:** forced Linux и Windows builds — exit 0; bash syntax, Python compile
+и diff-check — без ошибок. На VM после чистого перезапуска оставлен один процесс
+RecorderLnx: SQL errors `0`, TCP к Windows Firebird `:3050` — `ESTABLISHED`.
+Повторные QA и teamlead gates запрошены после закрытия всех замечаний.
+
+**Статус:** исправление работает на целевой VM; RecorderLnx оставлен запущенным.
+
+## 2026-08-25 — SQL password stored in project config
+
+**Запрос:** хранить пароль Firebird в конфигурации Recorder, чтобы Linux GUI и
+Lazarus не зависели от `RECORDERLNX_SQLDB_PASSWORD`.
+
+**Сделано:** добавлен `[SQLdb] Password`, отдельное маскированное поле диалога и
+приоритет INI password → environment → Windows registry. Старые конфиги
+совместимы; шаблон содержит пустое значение; Unix Save задаёт mode `0600`.
+
+**Проверка:** forced Windows `lazbuild -B RecorderLnx.lpi` — exit 0;
+teamlead security/code gate и static QA — PASS; `git diff --check` чист.
+Linux target необходимо пересобрать отдельно.
+
+**Статус:** код готов; после Linux rebuild ввести пароль Windows Firebird в
+поле «Пароль БД» и сохранить настройки.
+
+## 2026-08-25 — Linux installer rejects stale executable
+
+**Запрос:** выяснить, почему собранный в 13:23 Linux `.deb` поддерживал SQL
+schema 2, и когда база перешла на schema 3.
+
+**Сделано:** schema 3 введена 21.08, до Trend-задачи. BAT не компилировал Linux
+target: пакет 13:23 содержал старый executable, а новый появился лишь в 13:33.
+В packager добавлены проверки freshness/ELF/schema markers, полное сравнение
+упакованного binary и SHA-256; README и error-журнал обновлены.
+
+**Проверка:** `build-installer.bat` теперь корректно завершился с exit 1 и
+потребовал Linux rebuild, потому что binary 13:33 старее production input 14:24.
+
+**Статус:** защита готова; далее пересобрать `RecorderLnx.lpi` на Linux, снова
+запустить BAT, переустановить новый `.deb`.
+
+## 2026-08-25 — SQL schema mismatch traced to stale executable
+
+**Запрос:** после исправления обычного Trend SQLdb сообщила, что schema 3 новее
+поддерживаемой 2; проверить регрессию и восстановить работу базы.
+
+**Сделано:** единственный источник сообщения найден в SQL repository. Текущие
+исходники и актуальный workspace EXE поддерживают schema 3; Trend не зависит от
+SQLdb. Ошибку мог выдать только старый schema-v2 executable. Подтверждён текущий
+процесс из актуального `lib/x86_64-win64/RecorderLnx.exe`; БД не изменялась.
+Граница подсистем добавлена в UML жизненного цикла и error-журнал.
+
+**Проверка:** teamlead/architect/QA static audit; проверены source constant,
+фактический process image path/time и артефакты. Прямой SQL не выполнялся без
+пароля; destructive migration/version downgrade запрещены.
+
+**Статус:** диагностика готова; актуальный EXE совместим с существующей v3 БД.
+
+## 2026-08-25 — Trend starts each View/Record session empty
+
+**Запрос:** обычный Trend после многократных Stop/Start сохранял старые линии
+и мог не рисовать новые точки. При `StopToView` и `StopToRecord` начинать график
+заново.
+
+**Сделано:** добавлен явный reset runtime-истории `TRecorderTrendView`: очищаются
+OGL-очереди, временные и block cursors, последнее значение легенды и диагностика,
+но сохраняются линии, оси и настройки. Перед запуском времени и источников reset
+рассылается всем созданным Trend на обычных и detached-мнемосхемах. Общая session
+generation и baseline `BlockCounter` применяются также к лениво созданным и
+перестроенным Trend, поэтому последний блок завершённой сессии не появляется
+снова. Скрытые графики не перерисовываются, пользовательский zoom сохраняется.
+SQL Trend не изменён.
+
+**Проверка:** forced `lazbuild -B RecorderLnx.lpi` завершился с exit code `0`;
+`git diff --check` без ошибок; замечания независимого code review по lazy pages,
+hidden redraw и zoom устранены; static QA — PASS. Отдельный существующий
+`RecorderStateMachineTest.lpi` не собирается из-за отсутствующего search path к
+`uRecorderMeraPaths`; это инфраструктурная проблема тестового проекта.
+
+**Статус:** код готов; требуется ручная стендовая проверка циклов
+View → Stop → View и Record → Stop → Record.
+
+## 2026-08-25 — MIC185 balance display follows source unit
+
+**Запрос:** аппаратная и программная балансировка в таблице MIC-185 всегда
+показывалась в мВ; отображать её в текущей единице канала источника.
+
+**Сделано:** balance code по-прежнему хранится/программируется без изменений,
+но таблица после перевода в мВ пересчитывает значение в `мВ`, `Ом` или `мкм/м`
+по выбранной source unit. Для `Ом` используется калиброванный ток, для strain —
+ток, сопротивление, чувствительность и схема. Hardware/channel GX повторно не
+применяются. Правило добавлено в `value_units_conversion.md`.
+
+**Проверка:** compliance и static QA review — `PASS`; `git diff --check` без
+ошибок. Forced build скомпилировал Pascal, но линковка заблокирована запущенным
+`RecorderLnx.exe` (`error code: 5`).
+
+**Статус:** частично готово; закрыть RecorderLnx и повторить `lazbuild -B` до
+exit code 0, затем проверить значения таблицы на стенде.
+
+## 2026-08-25 — MIC185 GX restores source channel unit
+
+**Запрос:** канал MIC-185 настроен в источнике на `Ом`; после выключения
+аппаратной ГХ тега и её повторного включения возвращались `мВ`. Требуется
+восстанавливать ГХ и единицу из настроек источника данных.
+
+**Сделано:** физическая единица сохранена в `channels[].unitName` конфигурации
+источника и отделена от raw-режима тега. GX off оставляет источник неизменным и
+ставит тегу `код`; GX on восстанавливает `Ом`/другую единицу источника. Исправлены
+single/bulk source dialogs, project save/load и identity runtime для GX off.
+Правило закреплено в `Docs/devices/mic185/value_units_conversion.md`, детали —
+в `errors/2026-08-18-mic185-hardware-calibration-cache-display.md`.
+
+**Проверка:** независимые compliance и static QA review — `PASS`;
+`git diff --check` без ошибок; forced `lazbuild -B RecorderLnx.lpi` завершился
+с exit code `0` и успешной линковкой.
+
+**Статус:** код готов; нужна ручная проверка на MIC-185 полного цикла
+`Ом -> GX off -> OK -> reopen -> GX on -> OK`.
+
 ## 2026-08-24 20:25 — MIC185 fine zero-balance waits for fresh samples
 
 **Запрос:** после предыдущего исправления на `185-{156-1}` снова остается около
@@ -8396,3 +8553,106 @@ the source signature before writing to the cache, and wraps global
 
 **Verification:** `C:\lazarus\lazbuild.exe -B
 D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed successfully.
+## 2026-08-25 — Firebird password startup hardening
+
+Linux desktop запускает `/usr/bin/recorderlnx`, который читает SQLdb profile.
+Firebird installer также переносит generated SYSDBA password в установленный
+`sql-db.ini`. Основной проект загружается до optional SQLdb; синхронный SQL
+configuration failure отключает только runtime в памяти и записывается в лог.
+## 2026-08-25 — Firebird empty-login preflight
+
+**Запрос:** Linux Lazarus debugger снова останавливался на
+`TIBConnection.DoInternalConnect: user name and password are not defined`.
+
+**Сделано:** до запуска SQL runtime добавлена проверка Firebird credentials.
+При пустом логине/пароле SQLdb отключается только в памяти, основной проект
+продолжает загрузку, а `TIBConnection.Open` не вызывается.
+
+**Проверка:** forced build RecorderLnx и командное review.
+
+**Статус:** готово после повторной Linux-сборки.
+## 2026-08-25 — Firebird Linux VM fixed over SSH
+
+**Запрос:** самостоятельно подключиться к Linux VM и отлаживать запуск до
+исчезновения `EIBDatabaseError`.
+
+**Сделано:** по SSH собран и многократно запущен RecorderLnx; перенесён
+действующий пароль Windows Firebird; исправлены штатный Port, полный remote DB
+path, права SQLdb data и Linux post-build copy.
+
+**Проверка:** Linux `lazbuild -B` — exit 0; финальный процесс жив после 45 с,
+SQL errors — 0, соединение `192.168.3.65:3050` — ESTAB.
+
+**Статус:** готово; исправленная программа оставлена запущенной на VM.
+## 2026-08-25 — Именованные шрифты визуальных компонентов
+
+**Запрос:** добавить проектные именованные шрифты с общей связью компонентов и
+командой «Назначить всем» для цифровых индикаторов.
+
+**Сделано:** менеджер определений добавлен в модель форм; StaticText и TagValue
+разрешают эффективный шрифт по имени, GUI INI сохраняет определения, связь и
+локальный fallback. Диалог умеет создать/изменить именованный шрифт и назначить
+его всем TagValue через реестр фабрики. Контракт описан в `Docs/named-fonts.md`.
+
+**Проверка:** Pascal-код полностью скомпилирован; линковка остановлена занятым
+`RecorderLnx.exe` (Windows error 5). `git diff --check` без ошибок.
+
+**Статус:** частично; закрыть запущенный RecorderLnx и повторить forced build.
+## 2026-08-25 — Runtime-оптимизация именованных шрифтов
+
+**Запрос:** убрать повторные поиски definition и записи LCL Font на каждом
+периодическом RefreshControl; проверить редактирование существующего шрифта.
+
+**Сделано:** менеджер получил revision, компонент кэширует resolved definition,
+view сравнивает единый effective snapshot и применяет Font только при изменении.
+Выбор существующего имени → FontDialog → OK обновляет общее определение; ввод
+нового имени создаёт его.
+
+**Проверка:** forced build полностью прошёл компиляцию; линковка ожидаемо
+заблокирована запущенным RecorderLnx.exe (error 5).
+
+**Статус:** код готов к финальной сборке после освобождения EXE.
+
+## 2026-08-25 — Графики, SQL live и Linux-диагностика
+
+**Запрос:** уточнить управление масштабом осциллограммы и SQL-тренда, не
+сбрасывать Y при live-добавлении, связать легенду с осями, запретить уход X в
+будущее и восстановить каналы `MemTag`/`CpuUsage` под Linux.
+
+**Сделано:** двойной щелчок осциллограммы нормализует полный X и Y с 20 %
+запасом; обратный X-зум ограничен исходной шкалой. SQL live загружает только
+хвост с перекрытием, объединяет строки по ID, сохраняет пользовательский Y и
+двигает X только у правого live-края. Выбор строки легенды выбирает её ось,
+двойной щелчок вписывает сигнал по Y. В режиме «Текущая дата» X ограничен
+интервалом от настройки `FromUtc` до текущего UTC после zoom, anti-zoom,
+панорамирования, сброса и live-обновления. Linux-каналы читают RSS процесса и
+дельту CPU непосредственно из `/proc`, без запуска внешних команд.
+
+**Проверка:** forced Windows build RecorderLnx — PASS. Forced Linux build —
+PASS. Linux diagnostics test: `MemTag=27.602 MB`, второй sample
+`CpuUsage=8.333 %`. Полный Windows DataSources suite — PASS; Linux suite после
+успешных diagnostics останавливается на ранее существующем нестабильном тесте
+MERA timestamp (`0.000` против `0.002`), не связанном с метриками.
+
+**Дополнительное исправление:** результат dblClick Y-fit осциллограммы теперь
+сохраняется при периодическом Refresh, но сбрасывается вместе с линиями и X при
+новой acquisition session. SQL-подписи времени и курсоры показываются в
+локальном часовом поясе, внутренние значения остаются UTC.
+
+**Статус:** готово; итоговый командный review не выявил P0/P1 после исправления
+session lifecycle.
+## 2026-08-25 — Linux MemTag и CpuUsage через procfs
+
+**Запрос:** восстановить process RSS и CPU usage диагностического источника под
+Linux без shell и лишних runtime allocations.
+
+**Сделано:** MemTag читает `VmRSS` из `/proc/self/status` в MB; CpuUsage считает
+delta `utime+stime` относительно общих ticks `/proc/stat`. Proc streams открыты
+один раз, parsing использует фиксированные буферы. Добавлена узкая Linux-проверка.
+
+**Проверка:** Windows forced build — exit 0; Linux RecorderLnx на Atra собран и
+слинкован успешно. GUI запускается; численные assertions отдельного DataSources
+test пока блокирует существующая конфигурация Linux search paths теста.
+
+**Статус:** production-код компилируется на обеих ОС; runtime numeric acceptance
+остаётся выполнить после починки автономной сборки DataSources test.

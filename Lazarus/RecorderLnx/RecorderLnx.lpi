@@ -630,7 +630,7 @@
     </Linking>
     <Other>
       <ExecuteAfter>
-        <Command Value="$(ProjPath)Scripts/copy_sdb_res.bat $(ProjOutDir)"/>
+        <Command Value="$(ProjPath)Scripts/copy_sdb_res.$(TargetOS).bat $(ProjOutDir)"/>
       </ExecuteAfter>
     </Other>
   </CompilerOptions>

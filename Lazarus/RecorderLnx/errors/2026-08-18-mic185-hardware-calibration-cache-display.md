@@ -519,3 +519,66 @@ calibration for the new `(serial, range, channel)` tuple.
   completed with exit code `0`.
 - `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
   completed with exit code `0`.
+
+## Follow-up 2026-08-25: GX re-enable restored mV instead of source Ohms
+
+### Symptom
+
+For a MIC-185 channel configured in the data source as `Ом`, disabling the
+tag's hardware GX and pressing OK switched the tag to raw codes. Re-enabling
+the GX later restored `мВ` instead of the source channel's `Ом` setting.
+
+### Root Cause
+
+The physical channel unit was stored only in `Tag.UnitName`. Raw mode replaced
+that value with `код`; the enable path then reconstructed a unit from the ADC
+range through `RecorderMic185RangeUnitText`, which can only return `мВ` or
+`мВ(тензо)`. The source configuration had no durable per-channel unit field.
+
+### Done
+
+- MIC-185 source channel config now owns `channels[].unitName`; source and
+  channel dialogs save/read that value independently from tag raw mode.
+- Tag GX off preserves/migrates the previous physical unit into source config
+  and sets only the tag presentation to `код`; GX on restores the source unit.
+- Project save/load persists `channels[].unitName`.
+- Disabled GX builds an identity runtime transform before hardware, unit,
+  soft-fine and channel calibration stages.
+- Source settings grid and bulk properties use the source unit, so a raw/code
+  master row cannot spread `код` or disable GX on other selected channels.
+
+### Verification
+
+- Independent Skill Compliance Review: `PASS`.
+- Independent static QA review: `PASS`; single, mixed bulk, source-grid and
+  persistence paths inspected.
+- `git diff --check` passed with only standard LF/CRLF warnings.
+- `C:\lazarus\lazbuild.exe -B
+  D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi` completed and linked
+  with exit code `0`.
+- Hardware/UI acceptance remains: `Ом -> GX off -> OK -> reopen -> GX on ->
+  OK` must show `код`, then restore `Ом` and physical values.
+
+## Follow-up 2026-08-25: balance columns use selected source units
+
+### Symptom
+
+The MIC-185 source grid showed hardware and software balance as their mV
+equivalents even when the channel source unit was `Ом` or `мкм/м`.
+
+### Done
+
+- Added a unit-only balance conversion helper. It uses the channel's calibrated
+  excitation current and the existing Ohm/strain formulas, but deliberately
+  does not reapply hardware GX or user channel calibration chains.
+- Both balance columns now convert their stored code to mV first and then from
+  mV to the physical `channels[].unitName` used by the same grid row.
+- Protocol values and the editable mV balance fields are unchanged.
+
+### Verification
+
+- Independent Skill Compliance Review and static QA review: `PASS`.
+- `git diff --check` passed with only standard LF/CRLF warnings.
+- Forced `lazbuild -B RecorderLnx.lpi` compiled all Pascal units and stopped at
+  final link because a running `RecorderLnx.exe` locked the output file
+  (`error code: 5`). Repeat after closing the application.

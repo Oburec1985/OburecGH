@@ -9,7 +9,8 @@ uses
   Classes, SysUtils, DateUtils, uRecorderFormModel;
 
 type
-  TRecorderSqlTrendTimeMode = (sttmFixedUtc, sttmLatestWindow);
+  TRecorderSqlTrendTimeMode = (sttmFixedUtc, sttmLatestWindow,
+    sttmFixedFromToCurrentUtc);
 
   TRecorderSqlTrendDisplay = class
   private

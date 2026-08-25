@@ -29,6 +29,7 @@ type
     cbDisplay: TComboBox;
     cbLineAxis: TComboBox;
     cbLineVisible: TCheckBox;
+    cbCurrentDate: TCheckBox;
     cbTimeMode: TComboBox;
     ColorDialog1: TColorDialog;
     edAxisMax: TEdit;
@@ -52,7 +53,6 @@ type
     lblMaxPoints: TLabel;
     lblWindowHours: TLabel;
     lblSignal: TLabel;
-    lblTo: TLabel;
     lblDbRange: TLabel;
     lblDisplay: TLabel;
     lblDisplayName: TLabel;
@@ -73,6 +73,7 @@ type
     procedure AxisControlsExit(Sender: TObject);
     procedure LineControlsExit(Sender: TObject);
     procedure TimeFromChange(Sender: TObject);
+    procedure CurrentDateChange(Sender: TObject);
     procedure TimeToChange(Sender: TObject);
     procedure TimeWindowEditingDone(Sender: TObject);
     procedure TimeModeChange(Sender: TObject);
@@ -112,6 +113,7 @@ type
     procedure SetDateEditValue(AEdit: TDateEdit;
       APicker: TDateTimePicker; AValue: TDateTime);
     procedure SetTimeEdits(AFromUtc, AToUtc: TDateTime);
+    procedure UpdateCurrentDateControls;
     function FromUtcValue: TDateTime;
     function ToUtcValue: TDateTime;
     function CurrentDisplay: TRecorderSqlTrendDisplay;
@@ -171,6 +173,13 @@ begin
   ConfigureDatePicker(dtpToDate);
   CreateDateEditFallbacks;
   cbTimeMode.ItemIndex := Ord(fDraft.TimeMode);
+  cbCurrentDate.Checked := fDraft.TimeMode = sttmFixedFromToCurrentUtc;
+  if cbCurrentDate.Checked then
+  begin
+    cbTimeMode.ItemIndex := Ord(sttmFixedUtc);
+    fDraft.ToUtc := LocalTimeToUniversal(Now);
+  end;
+  UpdateCurrentDateControls;
   if fDraft.TimeMode = sttmLatestWindow then
   begin
     fDraft.ToUtc := LocalTimeToUniversal(Now);
@@ -477,6 +486,11 @@ begin
     Exit;
   CreateDateEditFallback(dtpFromDate, fFromDateEdit);
   CreateDateEditFallback(dtpToDate, fToDateEdit);
+  if fToDateEdit <> nil then
+  begin
+    fToDateEdit.OnChange := @TimeToChange;
+    fToDateEdit.OnEditingDone := @TimeToChange;
+  end;
 end;
 
 function TRecorderSqlTrendSettingsDialog.DateEditValue(AEdit: TDateEdit;
@@ -532,10 +546,16 @@ var lFromUtc, lToUtc: TDateTime;
 begin
   if fUpdatingTime then Exit;
   lFromUtc := FromUtcValue;
-  lToUtc := ToUtcValue;
+  if cbCurrentDate.Checked then
+    lToUtc := LocalTimeToUniversal(Now)
+  else
+    lToUtc := ToUtcValue;
   if lToUtc > lFromUtc then
   begin
-    fDraft.TimeMode := sttmFixedUtc;
+    if cbCurrentDate.Checked then
+      fDraft.TimeMode := sttmFixedFromToCurrentUtc
+    else
+      fDraft.TimeMode := sttmFixedUtc;
     cbTimeMode.ItemIndex := Ord(sttmFixedUtc);
     SetTimeEdits(lFromUtc, lToUtc);
   end;
@@ -543,7 +563,39 @@ end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeToChange(Sender: TObject);
 begin
+  if not fUpdatingTime then
+    cbCurrentDate.Checked := False;
   TimeFromChange(Sender);
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.CurrentDateChange(Sender: TObject);
+var
+  lTodayUtc: TDateTime;
+begin
+  if fUpdatingTime then Exit;
+  if cbCurrentDate.Checked then
+  begin
+    { The picker displays a local calendar date; stored/query times remain UTC. }
+    lTodayUtc := Trunc(Now);
+    fUpdatingTime := True;
+    try
+      cbTimeMode.ItemIndex := Ord(sttmFixedUtc);
+      SetDateEditValue(fToDateEdit, dtpToDate, lTodayUtc);
+    finally
+      fUpdatingTime := False;
+    end;
+    fDraft.TimeMode := sttmFixedFromToCurrentUtc;
+  end
+  else
+    fDraft.TimeMode := sttmFixedUtc;
+  UpdateCurrentDateControls;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.UpdateCurrentDateControls;
+begin
+  dtpToDate.Enabled := not cbCurrentDate.Checked;
+  if fToDateEdit <> nil then
+    fToDateEdit.Enabled := not cbCurrentDate.Checked;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeWindowEditingDone(Sender: TObject);
@@ -554,6 +606,7 @@ begin
   begin
     lToUtc := ToUtcValue;
     fDraft.TimeMode := sttmFixedUtc;
+    cbCurrentDate.Checked := False;
     cbTimeMode.ItemIndex := Ord(sttmFixedUtc);
     SetTimeEdits(lToUtc - lDays, lToUtc);
   end
@@ -562,11 +615,21 @@ begin
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeModeChange(Sender: TObject);
-var lToUtc: TDateTime;
+var
+  lToUtc: TDateTime;
+  lMode: TRecorderSqlTrendTimeMode;
 begin
   if fUpdatingTime then Exit;
-  fDraft.TimeMode := TRecorderSqlTrendTimeMode(Max(0, cbTimeMode.ItemIndex));
-  if fDraft.TimeMode = sttmLatestWindow then
+  lMode := TRecorderSqlTrendTimeMode(Max(0, cbTimeMode.ItemIndex));
+  fUpdatingTime := True;
+  try
+    cbCurrentDate.Checked := False;
+  finally
+    fUpdatingTime := False;
+  end;
+  UpdateCurrentDateControls;
+  fDraft.TimeMode := lMode;
+  if lMode = sttmLatestWindow then
   begin
     lToUtc := LocalTimeToUniversal(Now);
     SetTimeEdits(lToUtc - fDraft.DurationSec / SecsPerDay, lToUtc);
@@ -831,9 +894,15 @@ procedure TRecorderSqlTrendSettingsDialog.btnOkClick(Sender: TObject);
 var lFromUtc, lToUtc: TDateTime; N: Integer;
 begin
   StoreAxis; StoreLine; DisplayNameExit(nil);
-  fDraft.TimeMode := TRecorderSqlTrendTimeMode(Max(0, cbTimeMode.ItemIndex));
+  if cbCurrentDate.Checked then
+    fDraft.TimeMode := sttmFixedFromToCurrentUtc
+  else
+    fDraft.TimeMode := TRecorderSqlTrendTimeMode(Max(0, cbTimeMode.ItemIndex));
   lFromUtc := FromUtcValue;
-  lToUtc := ToUtcValue;
+  if cbCurrentDate.Checked then
+    lToUtc := LocalTimeToUniversal(Now)
+  else
+    lToUtc := ToUtcValue;
   if lToUtc <= lFromUtc then begin MessageDlg('Дата «До» должна быть не раньше даты «От»', mtError, [mbOK], 0); Exit; end;
   fDraft.FromUtc := lFromUtc;
   fDraft.ToUtc := lToUtc;

@@ -52,6 +52,9 @@ type
   TRecorderStaticTextView = class(TPanel, IVForm)
   private
     fComponent: TRecorderStaticTextComponent;
+    fAppliedFont: TRecorderFontSnapshot;
+    fHasAppliedFont: Boolean;
+    procedure ApplyFont;
   public
     constructor Create(AOwner: TComponent); override;
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
@@ -101,6 +104,9 @@ type
     fLastTag: TRecorderTag;
     fLastRevision: QWord;
     fHasRevision: Boolean;
+    fAppliedFont: TRecorderFontSnapshot;
+    fHasAppliedFont: Boolean;
+    procedure ApplyFont;
   public
     constructor Create(AOwner: TComponent); override;
     procedure Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
@@ -390,6 +396,25 @@ end;
 
 { TRecorderStaticTextView }
 
+procedure TRecorderStaticTextView.ApplyFont;
+var
+  lFont: TRecorderFontSnapshot;
+begin
+  fComponent.GetFontSnapshot(lFont);
+  if fHasAppliedFont and (fAppliedFont.Name = lFont.Name) and
+     (fAppliedFont.Size = lFont.Size) and (fAppliedFont.Color = lFont.Color) and
+     (fAppliedFont.Bold = lFont.Bold) and (fAppliedFont.Italic = lFont.Italic) then
+    Exit;
+  Font.Name := lFont.Name;
+  if lFont.Size > 0 then Font.Size := lFont.Size;
+  Font.Color := TColor(lFont.Color);
+  Font.Style := [];
+  if lFont.Bold then Font.Style := Font.Style + [fsBold];
+  if lFont.Italic then Font.Style := Font.Style + [fsItalic];
+  fAppliedFont := lFont;
+  fHasAppliedFont := True;
+end;
+
 constructor TRecorderStaticTextView.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -403,26 +428,18 @@ procedure TRecorderStaticTextView.Configure(AComponent: TRecorderVisualComponent
   ATagRegistry: TRecorderTagRegistry);
 begin
   fComponent := TRecorderStaticTextComponent(AComponent);
+  fHasAppliedFont := False;
   Caption := fComponent.Text;
   Alignment := taLeftJustify;
   Color := clWhite;
   
-  // Применение настроек шрифта
-  Font.Name := fComponent.FontName;
-  if fComponent.FontSize > 0 then
-    Font.Size := fComponent.FontSize;
-  Font.Color := TColor(fComponent.FontColor);
-  Font.Style := [];
-  if fComponent.FontStyleBold then
-    Font.Style := Font.Style + [fsBold];
-  if fComponent.FontStyleItalic then
-    Font.Style := Font.Style + [fsItalic];
+  ApplyFont;
 end;
 
 procedure TRecorderStaticTextView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
 begin
-  // Статический текст не требует обновления значений в реальном времени
+  ApplyFont;
 end;
 
 function TRecorderStaticTextView.GetChartControl: TOglChart;
@@ -431,6 +448,25 @@ begin
 end;
 
 { TRecorderTagValueView }
+
+procedure TRecorderTagValueView.ApplyFont;
+var
+  lFont: TRecorderFontSnapshot;
+begin
+  fComponent.GetFontSnapshot(lFont);
+  if fHasAppliedFont and (fAppliedFont.Name = lFont.Name) and
+     (fAppliedFont.Size = lFont.Size) and (fAppliedFont.Color = lFont.Color) and
+     (fAppliedFont.Bold = lFont.Bold) and (fAppliedFont.Italic = lFont.Italic) then
+    Exit;
+  Font.Name := lFont.Name;
+  if lFont.Size > 0 then Font.Size := lFont.Size;
+  Font.Color := TColor(lFont.Color);
+  Font.Style := [];
+  if lFont.Bold then Font.Style := Font.Style + [fsBold];
+  if lFont.Italic then Font.Style := Font.Style + [fsItalic];
+  fAppliedFont := lFont;
+  fHasAppliedFont := True;
+end;
 
 constructor TRecorderTagValueView.Create(AOwner: TComponent);
 begin
@@ -445,20 +481,13 @@ procedure TRecorderTagValueView.Configure(AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry);
 begin
   fComponent := TRecorderTagValueComponent(AComponent);
+  fHasAppliedFont := False;
   fLastTag := nil;
   fLastRevision := 0;
   fHasRevision := False;
   Alignment := taCenter;
   WordWrap := True;
-  Font.Name := fComponent.FontName;
-  if fComponent.FontSize > 0 then
-    Font.Size := fComponent.FontSize;
-  Font.Color := TColor(fComponent.FontColor);
-  Font.Style := [];
-  if fComponent.FontStyleBold then
-    Font.Style := Font.Style + [fsBold];
-  if fComponent.FontStyleItalic then
-    Font.Style := Font.Style + [fsItalic];
+  ApplyFont;
   Color := $00F2F8FF;
   RefreshControl(ATagRegistry, 0);
 end;
@@ -478,6 +507,7 @@ begin
 
   if (fComponent = nil) or (ATagRegistry = nil) then
     Exit;
+  ApplyFont;
     
   lTag := RecorderResolveTag(ATagRegistry, fComponent.TagId, fComponent.TagName);
   if lTag <> nil then

@@ -65,6 +65,13 @@ function RecorderMic185GetSourceChannelMode(ARegistry: TRecorderTagRegistry;
 procedure RecorderMic185SetSourceChannelMode(ARegistry: TRecorderTagRegistry;
   const ASourceId, AAddress: string; AFrequencyHz: Double;
   const ASettings: TMic185ChannelProgramSettings);
+{ Возвращает физическую единицу канала из конфигурации источника. }
+function RecorderMic185GetSourceChannelUnitName(ARegistry: TRecorderTagRegistry;
+  const ASourceId, AAddress: string): string;
+{ Сохраняет физическую единицу канала в конфигурации источника. }
+procedure RecorderMic185SetSourceChannelUnitName(ARegistry: TRecorderTagRegistry;
+  const ASourceId, AAddress: string; AFrequencyHz: Double;
+  const AUnitName: string);
 { Возвращает код тока питания датчика из конфигурации источника. }
 function RecorderMic185GetSourcePowerMaCode(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): LongWord;
@@ -131,6 +138,12 @@ function RecorderMic185ConvertValue(AValueMv: Double;
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
   AHardwareCalibration: TRecorderCalibration = nil;
   AEffectivePowerMa: Double = 0.0): Double;
+{ Пересчитывает уже выраженное в мВ служебное значение в единицу канала,
+  учитывая индивидуальную калибровку тока питания. }
+function RecorderMic185ConvertUnitValueForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AValueMv: Double;
+  const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): Double;
 { Текст коммутации канала для таблицы настройки. }
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 { Текст схемы включения датчика для таблицы настройки. }
@@ -746,6 +759,81 @@ begin
       lItem.Delete(lIndex);
     lItem.Add('sourceValueMode', RecorderMic185FormatChannelMode(ASettings));
     lItem.Add('pollFrequencyHz', AFrequencyHz);
+    Mic185StoreSourceConfigObject(lEntry, lConfig);
+  finally
+    lConfig.Free;
+  end;
+end;
+
+function RecorderMic185GetSourceChannelUnitName(ARegistry: TRecorderTagRegistry;
+  const ASourceId, AAddress: string): string;
+var
+  I: Integer;
+  lChannels: TJSONArray;
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+  lItem: TJSONObject;
+begin
+  Result := '';
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  lConfig := Mic185SourceConfigObject(lEntry, False);
+  try
+    lChannels := Mic185ConfigChannels(lConfig, False);
+    if lChannels = nil then
+      Exit;
+    for I := 0 to lChannels.Count - 1 do
+    begin
+      if not (lChannels.Items[I] is TJSONObject) then
+        Continue;
+      lItem := TJSONObject(lChannels.Items[I]);
+      if SameMic185Address(lItem.Get('address', ''), AAddress) then
+        Exit(Trim(lItem.Get('unitName', '')));
+    end;
+  finally
+    lConfig.Free;
+  end;
+end;
+
+procedure RecorderMic185SetSourceChannelUnitName(ARegistry: TRecorderTagRegistry;
+  const ASourceId, AAddress: string; AFrequencyHz: Double;
+  const AUnitName: string);
+var
+  I: Integer;
+  lChannels: TJSONArray;
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+  lIndex: Integer;
+  lItem: TJSONObject;
+  lUnitName: string;
+begin
+  lUnitName := Trim(AUnitName);
+  if (ARegistry = nil) or (lUnitName = '') or SameText(lUnitName, 'код') or
+    SameText(lUnitName, 'code') then
+    Exit;
+  lEntry := RecorderConfiguredDataSourcesEnsure(ARegistry, ASourceId,
+    CMic185ModuleName, AFrequencyHz);
+  lConfig := Mic185SourceConfigObject(lEntry, True);
+  try
+    lChannels := Mic185ConfigChannels(lConfig, True);
+    lItem := nil;
+    for I := 0 to lChannels.Count - 1 do
+      if (lChannels.Items[I] is TJSONObject) and
+        SameMic185Address(TJSONObject(lChannels.Items[I]).Get('address', ''),
+          AAddress) then
+      begin
+        lItem := TJSONObject(lChannels.Items[I]);
+        Break;
+      end;
+    if lItem = nil then
+    begin
+      lItem := TJSONObject.Create;
+      lChannels.Add(lItem);
+      lItem.Add('address', AAddress);
+    end;
+    lIndex := lItem.IndexOfName('unitName');
+    if lIndex >= 0 then
+      lItem.Delete(lIndex);
+    lItem.Add('unitName', lUnitName);
     Mic185StoreSourceConfigObject(lEntry, lConfig);
   finally
     lConfig.Free;
@@ -1707,6 +1795,19 @@ begin
   Result := lMv;
 end;
 
+function RecorderMic185ConvertUnitValueForTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; AValueMv: Double;
+  const ASettings: TMic185ChannelProgramSettings;
+  const AUnitName: string): Double;
+var
+  lPowerMa: Double;
+begin
+  lPowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
+    Mic185EffectivePowerMa(ASettings));
+  Result := RecorderMic185ConvertValue(AValueMv, ASettings, AUnitName, nil,
+    lPowerMa);
+end;
+
 function Mic185RuntimeUnitFromName(const AUnitName: string;
   ARangeIndex: LongWord): TRecorderMic185RuntimeUnit;
 var
@@ -1872,6 +1973,11 @@ begin
     ASettings.MeasRangeIndex);
   Result.HardwareCalibration := AHardwareCalibration;
   SetLength(Result.ChannelCalibrations, 0);
+  if not ATag.HardwareCalibrationEnabled then
+  begin
+    Result.HardwareCalibration := nil;
+    Exit;
+  end;
   Result.PowerMa := Mic185EffectivePowerMa(ASettings);
   Result.PowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
     Result.PowerMa);
@@ -2057,6 +2163,7 @@ var
   lSettings: TMic185ChannelProgramSettingsArray;
   lTag: TRecorderTag;
   lTemperatureCompensation: Boolean;
+  lUnitName: string;
 begin
   if (AJson = nil) or (ARegistry = nil) then
     Exit;
@@ -2157,6 +2264,10 @@ begin
         lLink.Add('sourceValueMode',
           RecorderMic185FormatChannelMode(lSettings[J]));
         lLink.Add('pollFrequencyHz', lPollHz);
+        lUnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
+          lSourceId, lLink.Get('address', ''));
+        if lUnitName <> '' then
+          lLink.Add('unitName', lUnitName);
       end;
     end;
   finally
@@ -2352,9 +2463,17 @@ begin
           lTag.PollFrequencyHz, lSettings);
         RecorderMic185LoadHardwareCalibrationForTag(ARegistry, lTag,
           lTag.HardwareCalibrationEnabled);
-        if Trim(lTag.UnitName) = '' then
-          lTag.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-        if not lTag.HardwareCalibrationEnabled then
+        if lTag.HardwareCalibrationEnabled then
+        begin
+          lMode := RecorderMic185GetSourceChannelUnitName(ARegistry,
+            lSourceId, lAddress);
+          if lMode <> '' then
+            lTag.UnitName := lMode
+          else if Trim(lTag.UnitName) = '' then
+            lTag.UnitName := RecorderMic185RangeUnitText(
+              lSettings.MeasRangeIndex);
+        end
+        else
           lTag.UnitName := 'код';
         lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
           lTag, lSettings, lTag.UnitName);
@@ -2894,6 +3013,7 @@ var
   lChannelSettings: TMic185ChannelProgramSettings;
   lTag: TRecorderTag;
   lCreated: Boolean;
+  lUnitName: string;
 begin
   if fDevice = nil then
     ConfigureDevice;
@@ -2928,9 +3048,17 @@ begin
     begin
       RecorderMic185GetSourceChannelMode(ARegistry, SourceId,
         lChannels[I].Address, lChannels[I].PollFrequencyHz, lChannelSettings);
-      if Trim(lTag.UnitName) = '' then
-        lTag.UnitName := RecorderMic185RangeUnitText(lChannelSettings.MeasRangeIndex);
-      if not lTag.HardwareCalibrationEnabled then
+      if lTag.HardwareCalibrationEnabled then
+      begin
+        lUnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
+          SourceId, lChannels[I].Address);
+        if lUnitName <> '' then
+          lTag.UnitName := lUnitName
+        else if Trim(lTag.UnitName) = '' then
+          lTag.UnitName := RecorderMic185RangeUnitText(
+            lChannelSettings.MeasRangeIndex);
+      end
+      else
         lTag.UnitName := 'код';
       lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
         lTag, lChannelSettings, lTag.UnitName);

@@ -115,7 +115,9 @@ begin
   if Mic185UnitIsRawCode(ATag.UnitName) then
     ATag.HardwareCalibrationEnabled := False;
   if ATag.HardwareCalibrationEnabled then
-    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True)
+  else
+    ATag.UnitName := 'код';
 end;
 
 procedure TRecorderMic185SettingsForm.FormCreate(Sender: TObject);
@@ -170,7 +172,11 @@ begin
   begin
     lTargetTag.SourceValueMode := RecorderMic185FormatChannelMode(ASettings);
     if Trim(AUnitName) <> '' then
+    begin
       lTargetTag.UnitName := AUnitName;
+      RecorderMic185SetSourceChannelUnitName(fRegistry, lTargetTag.SourceId,
+        lTargetTag.Address, lTargetTag.PollFrequencyHz, AUnitName);
+    end;
     ApplyMic185HardwareModeFromUnit(fRegistry, lTargetTag);
     lTargetTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry,
       lTargetTag, ASettings, lTargetTag.UnitName);
@@ -392,16 +398,22 @@ begin
   if ARow <= CMic185ChannelCountMax then
   begin
     GetSourceRowSettings(ARow, lSettings);
-    lUnitName := Trim(ATag.UnitName);
+    lUnitName := RecorderMic185GetSourceChannelUnitName(fRegistry,
+      ATag.SourceId, ATag.Address);
+    if (lUnitName = '') and (not Mic185UnitIsRawCode(ATag.UnitName)) then
+      lUnitName := Trim(ATag.UnitName);
     if lUnitName = '' then
       lUnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
     gridChannels.Cells[2, ARow] := RecorderMic185EffectiveRangeTextForTag(
       fRegistry, ATag, lSettings, lUnitName);
     gridChannels.Cells[3, ARow] := FormatFloat('0.###',
-      RecorderMic185HardBalanceCodeToMv(fModuleSettings.HardBalance));
+      RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
+      RecorderMic185HardBalanceCodeToMv(fModuleSettings.HardBalance),
+      lSettings, lUnitName));
     gridChannels.Cells[4, ARow] := FormatFloat('0.###',
+      RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
       RecorderMic185SoftBalanceCodeToMv(lSettings.SoftBalance,
-      lSettings.MeasRangeIndex));
+      lSettings.MeasRangeIndex), lSettings, lUnitName));
     gridChannels.Cells[5, ARow] := lUnitName;
     gridChannels.Cells[6, ARow] := RecorderMic185CommutationText(lSettings.CommutIndex);
     gridChannels.Cells[7, ARow] := RecorderMic185SensorSchemeText(lSettings.SensorScheme);
@@ -691,7 +703,12 @@ begin
     if lSettings.PowerMaCode <> 0 then
       fPowerMaCode := lSettings.PowerMaCode;
     lSettings.PowerMaCode := fPowerMaCode;
-    lUnitName := lTag.UnitName;
+    lUnitName := RecorderMic185GetSourceChannelUnitName(fRegistry,
+      lSourceId, lAddress);
+    if lUnitName = '' then
+      lUnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+    RecorderMic185SetSourceChannelUnitName(fRegistry, lSourceId, lAddress,
+      lTag.PollFrequencyHz, lUnitName);
     fChannelSettings[lRow - 1] := lSettings;
     RecorderMic185SetSourceChannelMode(fRegistry, lSourceId, lAddress,
       lTag.PollFrequencyHz, fChannelSettings[lRow - 1]);

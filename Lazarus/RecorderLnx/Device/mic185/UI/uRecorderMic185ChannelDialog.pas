@@ -118,7 +118,9 @@ begin
   if Mic185UnitIsRawCode(ATag.UnitName) then
     ATag.HardwareCalibrationEnabled := False;
   if ATag.HardwareCalibrationEnabled then
-    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True)
+  else
+    ATag.UnitName := 'код';
 end;
 
 procedure TRecorderMic185ChannelForm.btnApplyClick(Sender: TObject);
@@ -240,8 +242,16 @@ begin
       lSettings.MeasRangeIndex));
     edStrainSensitivity.Text := FloatToStr(lSettings.TensoSensitivity);
     edOuterResistance.Text := FloatToStr(lSettings.Resistance);
-    if ATag.UnitName <> '' then
-      cbActualRangeUnit.Text := ATag.UnitName;
+    cbActualRangeUnit.Text := RecorderMic185GetSourceChannelUnitName(
+      fRegistry, ATag.SourceId, ATag.Address);
+    if cbActualRangeUnit.Text = '' then
+    begin
+      if not Mic185UnitIsRawCode(ATag.UnitName) then
+        cbActualRangeUnit.Text := ATag.UnitName;
+      if cbActualRangeUnit.Text = '' then
+        cbActualRangeUnit.Text := RecorderMic185RangeUnitText(
+          lSettings.MeasRangeIndex);
+    end;
   end;
   UpdateActualRange;
 end;
@@ -259,6 +269,8 @@ begin
   ReadModuleSettingsFromUi(AModuleSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
+  RecorderMic185SetSourceChannelUnitName(fRegistry, ATag.SourceId,
+    ATag.Address, ATag.PollFrequencyHz, ATag.UnitName);
   ApplyMic185HardwareModeFromUnit(fRegistry, ATag);
   ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
     lSettings, ATag.UnitName);

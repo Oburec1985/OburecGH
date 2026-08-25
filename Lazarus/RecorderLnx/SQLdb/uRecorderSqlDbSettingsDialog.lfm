@@ -1,11 +1,11 @@
 object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
   Left = 360
-  Height = 724
+  Height = 760
   Top = 140
   Width = 1120
   BorderStyle = bsDialog
   Caption = 'SQL БД RecorderLnx'
-  ClientHeight = 724
+  ClientHeight = 760
   ClientWidth = 1120
   Position = poScreenCenter
   LCLVersion = '4.2.0.0'
@@ -19,11 +19,11 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
   end
   object gbConnection: TGroupBox
     Left = 12
-    Height = 350
+    Height = 386
     Top = 42
     Width = 626
     Caption = 'Подключение и хранилище'
-    ClientHeight = 330
+    ClientHeight = 366
     ClientWidth = 622
     TabOrder = 1
     object lblBackend: TLabel Left = 12 Height = 17 Top = 14 Width = 80 Caption = 'Сервер БД' end
@@ -43,19 +43,21 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
     object sePort: TSpinEdit Left = 500 Height = 27 Top = 119 Width = 109 MaxValue = 65535 MinValue = 0 TabOrder = 5 Value = 3050 end
     object lblUser: TLabel Left = 12 Height = 17 Top = 160 Width = 100 Caption = 'Пользователь' end
     object edUser: TEdit Left = 180 Height = 27 Top = 155 Width = 250 TabOrder = 6 end
-    object lblPasswordEnvironment: TLabel Left = 12 Height = 34 Top = 194 Width = 155 Caption = 'Переменная окружения\nс паролем' end
-    object edPasswordEnvironment: TEdit Left = 180 Height = 27 Top = 195 Width = 429 TabOrder = 7 end
-    object cbTls: TCheckBox Left = 180 Height = 23 Top = 230 Width = 270 Caption = 'Требовать защищённый канал (TLS/VPN)' TabOrder = 8 end
-    object lblPeriod: TLabel Left = 12 Height = 17 Top = 268 Width = 145 Caption = 'Период записи, с' end
-    object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 263 Width = 120 MaxValue = 3600 MinValue = 1 TabOrder = 9 Value = 1 end
-    object lblQueue: TLabel Left = 320 Height = 17 Top = 268 Width = 110 Caption = 'Ёмкость очереди' end
-    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 263 Width = 164 Hint = 'Максимум ожидающих SQL-записей. Если база временно медленная, данные копятся здесь; при переполнении новые записи сбрасываются.' MaxValue = 1000000 MinValue = 128 ShowHint = True TabOrder = 10 Value = 8192 end
-    object btnTestFirebird: TButton Left = 12 Height = 31 Top = 299 Width = 150 Caption = 'Проверить Firebird' OnClick = btnTestFirebirdClick TabOrder = 11 end
-    object btnStartFirebird: TButton Left = 170 Height = 31 Top = 299 Width = 150 Caption = 'Запустить Firebird' OnClick = btnStartFirebirdClick TabOrder = 12 end
-    object btnTest: TButton Left = 328 Height = 31 Top = 299 Width = 137 Caption = 'Проверить/создать' OnClick = btnTestClick TabOrder = 13 end
+    object lblPassword: TLabel Left = 12 Height = 17 Top = 196 Width = 100 Caption = 'Пароль БД' end
+    object edPassword: TEdit Left = 180 Height = 27 Top = 191 Width = 429 TabOrder = 7 end
+    object lblPasswordEnvironment: TLabel Left = 12 Height = 34 Top = 230 Width = 155 Caption = 'Переменная окружения\n(если пароль пуст)' end
+    object edPasswordEnvironment: TEdit Left = 180 Height = 27 Top = 231 Width = 429 TabOrder = 8 end
+    object cbTls: TCheckBox Left = 180 Height = 23 Top = 266 Width = 270 Caption = 'Требовать защищённый канал (TLS/VPN)' TabOrder = 9 end
+    object lblPeriod: TLabel Left = 12 Height = 17 Top = 304 Width = 145 Caption = 'Период записи, с' end
+    object sePeriod: TSpinEdit Left = 180 Height = 27 Top = 299 Width = 120 MaxValue = 3600 MinValue = 1 TabOrder = 10 Value = 1 end
+    object lblQueue: TLabel Left = 320 Height = 17 Top = 304 Width = 110 Caption = 'Ёмкость очереди' end
+    object seQueue: TSpinEdit Left = 445 Height = 27 Top = 299 Width = 164 Hint = 'Максимум ожидающих SQL-записей. Если база временно медленная, данные копятся здесь; при переполнении новые записи сбрасываются.' MaxValue = 1000000 MinValue = 128 ShowHint = True TabOrder = 11 Value = 8192 end
+    object btnTestFirebird: TButton Left = 12 Height = 31 Top = 335 Width = 150 Caption = 'Проверить Firebird' OnClick = btnTestFirebirdClick TabOrder = 12 end
+    object btnStartFirebird: TButton Left = 170 Height = 31 Top = 335 Width = 150 Caption = 'Запустить Firebird' OnClick = btnStartFirebirdClick TabOrder = 13 end
+    object btnTest: TButton Left = 328 Height = 31 Top = 335 Width = 137 Caption = 'Проверить/создать' OnClick = btnTestClick TabOrder = 14 end
   end
   object gbObject: TGroupBox
-    Left = 12 Height = 142 Top = 400 Width = 626 Caption = 'Объект мониторинга'
+    Left = 12 Height = 142 Top = 436 Width = 626 Caption = 'Объект мониторинга'
     ClientHeight = 122 ClientWidth = 622 TabOrder = 2
     object lblObjectName: TLabel Left = 12 Height = 17 Top = 15 Width = 90 Caption = 'Наименование' end
     object edObjectName: TEdit Left = 180 Height = 27 Top = 10 Width = 429 TabOrder = 0 end
@@ -67,7 +69,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
   object gbDbChannels: TGroupBox
     Left = 12
     Height = 166
-    Top = 550
+    Top = 586
     Width = 626
     Caption = 'Каналы в БД'
     ClientHeight = 146

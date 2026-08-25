@@ -287,12 +287,18 @@ begin
     begin
       lSelectedAxis.HasPresetRange := False;
       FitZoomY(lSelectedAxis);
+      if APage.PreserveAutoFitZoomY then
+        MarkAxisUserZoomY(lSelectedAxis);
       Exit;
     end;
     for I := 0 to APage.ChildCount - 1 do
       if APage.Children[I] is TChartAxis then
         TChartAxis(APage.Children[I]).HasPresetRange := False;
     FitZoomY(APage);
+    if APage.PreserveAutoFitZoomY then
+      for I := 0 to APage.ChildCount - 1 do
+        if APage.Children[I] is TChartAxis then
+          MarkAxisUserZoomY(TChartAxis(APage.Children[I]));
   end
   else
     ApplyPresetZoomY(APage, ASelected);
@@ -705,7 +711,7 @@ begin
           if lModel.Children[lIndex] is TChartPage then
           begin
             lPage := TChartPage(lModel.Children[lIndex]);
-            if not lPage.Locked then
+            if (not lPage.Locked) and lPage.ResetZoomOnDoubleClick then
             begin
               lPageRect := lRenderer.GetPageRect(lPage);
               if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
@@ -906,6 +912,7 @@ var
   NewXMin, NewXMax, NewYMin, NewYMax: Double;
   lSelRect: TChartPixelRect;
   lSelectedAxis: TChartAxis;
+  lFactorX, lFactorY, lCenter, lSpan: Double;
 begin
   if not Enabled then Exit;
   if Supports(ASender, IChartControl, lControl) then
@@ -922,8 +929,59 @@ begin
          ((fZoomSelectMode = zsmXOnly) and (X < fZoomStartX - 5)) or
          ((fZoomSelectMode = zsmYOnly) and (Y < fZoomStartY - 5)) then
       begin
-        RestoreUserZoomOnPage(fActivePage, lRenderer.SelectedObject,
-          fZoomSelectMode <> zsmYOnly, fZoomSelectMode <> zsmXOnly);
+        if fActivePage.ReverseDragZoomOut then
+        begin
+          lContentRect := lRenderer.GetPageContentRect(fActivePage);
+          lFactorX := Max(1.0, (lContentRect.Right - lContentRect.Left) /
+            Max(5, Abs(X - fZoomStartX)));
+          lFactorY := Max(1.0, (lContentRect.Bottom - lContentRect.Top) /
+            Max(5, Abs(Y - fZoomStartY)));
+          if fZoomSelectMode <> zsmYOnly then
+          begin
+            lCenter := (fActivePage.XMinValue + fActivePage.XMaxValue) * 0.5;
+            lSpan := (fActivePage.XMaxValue - fActivePage.XMinValue) * lFactorX;
+            fActivePage.XMinValue := lCenter - lSpan * 0.5;
+            fActivePage.XMaxValue := lCenter + lSpan * 0.5;
+            if fActivePage.PresetMaxXValue > fActivePage.PresetMinXValue then
+            begin
+              fActivePage.XMinValue := Max(fActivePage.XMinValue,
+                fActivePage.PresetMinXValue);
+              fActivePage.XMaxValue := Min(fActivePage.XMaxValue,
+                fActivePage.PresetMaxXValue);
+              if fActivePage.XMaxValue <= fActivePage.XMinValue then
+              begin
+                fActivePage.XMinValue := fActivePage.PresetMinXValue;
+                fActivePage.XMaxValue := fActivePage.PresetMaxXValue;
+              end;
+              fActivePage.ZoomedX :=
+                (not SameValue(fActivePage.XMinValue,
+                  fActivePage.PresetMinXValue)) or
+                (not SameValue(fActivePage.XMaxValue,
+                  fActivePage.PresetMaxXValue));
+            end
+            else
+              fActivePage.ZoomedX := True;
+          end;
+          lSelectedAxis := ResolveSelectedAxis(fActivePage,
+            lRenderer.SelectedObject);
+          for lIndex := 0 to fActivePage.ChildCount - 1 do
+            if fActivePage.Children[lIndex] is TChartAxis then
+            begin
+              lAxis := TChartAxis(fActivePage.Children[lIndex]);
+              if ((lSelectedAxis = nil) or (lAxis = lSelectedAxis)) and
+                 (fZoomSelectMode <> zsmXOnly) then
+              begin
+                lCenter := (lAxis.MinValue + lAxis.MaxValue) * 0.5;
+                lSpan := (lAxis.MaxValue - lAxis.MinValue) * lFactorY;
+                lAxis.MinValue := lCenter - lSpan * 0.5;
+                lAxis.MaxValue := lCenter + lSpan * 0.5;
+                MarkAxisUserZoomY(lAxis);
+              end;
+            end;
+        end
+        else
+          RestoreUserZoomOnPage(fActivePage, lRenderer.SelectedObject,
+            fZoomSelectMode <> zsmYOnly, fZoomSelectMode <> zsmXOnly);
         lControl.Redraw;
         Handled := True;
       end

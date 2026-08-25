@@ -256,6 +256,8 @@ type
     { Полностью перестраивает визуальное представление активной страницы. }
     procedure Render;
     procedure RefreshLive;
+    { Clears runtime history of every instantiated ordinary Trend view. }
+    procedure ResetTrendSessions;
     { Размещает новый компонент около последней точки клика по полотну. }
     procedure PositionNewComponent(AComponent: TRecorderVisualComponent);
     { Включает размещение компонента следующим щелчком по странице. }
@@ -289,6 +291,9 @@ type
 
 
 implementation
+
+uses
+  uRecorderTrendView;
 
 
 
@@ -610,6 +615,7 @@ begin
   if (ASource = nil) or (ADest = nil) then
     Exit;
 
+  ADest.NamedFontName := ASource.NamedFontName;
   ADest.Id := ASource.Id;
   ADest.Name := ASource.Name;
   ADest.TagName := ASource.TagName;
@@ -2172,6 +2178,37 @@ begin
       lChild := TPanel(lCompPanel).Controls[0];
       if lChild.Visible and Supports(lChild, IVForm, lVisualCtrl) then
         lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
+    end;
+  end;
+end;
+
+procedure TFormEditorController.ResetTrendSessions;
+var
+  I, J: Integer;
+  lPagePanel: TPanel;
+  lCompPanel: TControl;
+  lChild: TControl;
+begin
+  if fPagePanels = nil then
+    Exit;
+
+  for I := 0 to fPagePanels.Count - 1 do
+  begin
+    lPagePanel := TPanel(fPagePanels.Objects[I]);
+    if lPagePanel = nil then
+      Continue;
+    for J := 0 to lPagePanel.ControlCount - 1 do
+    begin
+      lCompPanel := lPagePanel.Controls[J];
+      if (lCompPanel is TPanel) and
+        (TPanel(lCompPanel).ControlCount > 0) then
+      begin
+        lChild := TPanel(lCompPanel).Controls[0];
+        if lChild is TRecorderTrendView then
+          TRecorderTrendView(lChild).ResetSessionData
+        else if lChild is TRecorderOglOscillogram then
+          TRecorderOglOscillogram(lChild).ResetSessionData;
+      end;
     end;
   end;
 end;

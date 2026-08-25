@@ -47,6 +47,9 @@ type
     fHasPresetXRange: Boolean;           // Признак заданного преднастроенного диапазона X
     fZoomedX: Boolean;                   // Признак активного зума по оси X
     fAutoScaleOnZoomReset: Boolean;      // При сбросе зума подгонять диапазон к данным или пресету (мин/макс)
+    fResetZoomOnDoubleClick: Boolean;
+    fReverseDragZoomOut: Boolean;
+    fPreserveAutoFitZoomY: Boolean;
   public
     // Установка свойств страницы по умолчанию
     procedure AssignDefaultProperties; override;
@@ -65,6 +68,9 @@ type
     property HasPresetXRange: Boolean read fHasPresetXRange write fHasPresetXRange;
     property ZoomedX: Boolean read fZoomedX write fZoomedX;
     property AutoScaleOnZoomReset: Boolean read fAutoScaleOnZoomReset write fAutoScaleOnZoomReset;
+    property ResetZoomOnDoubleClick: Boolean read fResetZoomOnDoubleClick write fResetZoomOnDoubleClick;
+    property ReverseDragZoomOut: Boolean read fReverseDragZoomOut write fReverseDragZoomOut;
+    property PreserveAutoFitZoomY: Boolean read fPreserveAutoFitZoomY write fPreserveAutoFitZoomY;
   end;
 
   TChartPage = cBasePage;
@@ -103,6 +109,9 @@ begin
   fHasPresetXRange := False;
   fZoomedX := False;
   fAutoScaleOnZoomReset := False;
+  fResetZoomOnDoubleClick := True;
+  fReverseDragZoomOut := False;
+  fPreserveAutoFitZoomY := False;
 end;
 
 procedure ChartPageApplyUserXValue(APage: TChartPage; AIsMin: Boolean; AValue: Double);
