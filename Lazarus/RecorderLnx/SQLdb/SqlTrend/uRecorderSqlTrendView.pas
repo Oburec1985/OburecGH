@@ -93,6 +93,9 @@ type
     procedure DisplayPrevClick(Sender: TObject);
     procedure FillDisplayControls;
     function BuildAxisSignature: string;
+    function AxisCaption(AIndex: Integer): string;
+    procedure GetAxisHeaderLayout(ARight: Integer; out AColumnWidth,
+      AColumnCount, ARowCount: Integer);
     function CursorUtc(APoint: TPoint): Double;
     function UtcDisplayTime(AUtc: TDateTime): TDateTime;
     function DoubleCursorMode: Boolean;
@@ -775,9 +778,34 @@ begin
 end;
 
 function TRecorderSqlTrendView.GetPlotRect: TRect;
+var
+  lColumnWidth, lColumnCount, lRowCount: Integer;
 begin
-  Result := Rect(64, 18, Max(65, fLegendSplitter.Left - 8),
-    Max(19, ClientHeight - fAxisPanel.Height - 42));
+  Result.Right := Max(65, fLegendSplitter.Left - 8);
+  Result.Left := 112;
+  GetAxisHeaderLayout(Result.Right, lColumnWidth, lColumnCount, lRowCount);
+  Result.Top := 8 + lRowCount * (Canvas.TextHeight('Ag') + 2);
+  Result.Bottom := Max(Result.Top + 1,
+    ClientHeight - fAxisPanel.Height - 42);
+end;
+
+function TRecorderSqlTrendView.AxisCaption(AIndex: Integer): string;
+begin
+  Result := fComponent.ActiveDisplay.Axes[AIndex].Name + ' [' +
+    FloatToStrF(fAxisMin[AIndex], ffGeneral, 7, 3) + '..' +
+    FloatToStrF(fAxisMax[AIndex], ffGeneral, 7, 3) + ']';
+end;
+
+procedure TRecorderSqlTrendView.GetAxisHeaderLayout(ARight: Integer;
+  out AColumnWidth, AColumnCount, ARowCount: Integer);
+begin
+  AColumnWidth := Max(1, Min(220, ARight - 8));
+  AColumnCount := 1;
+  ARowCount := 0;
+  if (fComponent = nil) or (fComponent.ActiveDisplay.AxisCount = 0) then Exit;
+  AColumnCount := Max(1, (ARight - 8) div AColumnWidth);
+  ARowCount := (fComponent.ActiveDisplay.AxisCount + AColumnCount - 1) div
+    AColumnCount;
 end;
 
 procedure TRecorderSqlTrendView.UpdateLegend;
@@ -1434,7 +1462,8 @@ end;
 procedure TRecorderSqlTrendView.Paint;
 var
   I, J, lAxisIndex, lLineIndex, lPrevLine, lBoxHeight,
-    lBoxTop, lBoxLeft, lIntervalLeft, lIntervalRight: Integer;
+    lBoxTop, lBoxLeft, lIntervalLeft, lIntervalRight, lAxisColumnWidth,
+    lAxisColumnCount, lAxisRowCount: Integer;
   lAxis: TRecorderTrendAxis;
   lLine: TRecorderTrendLine;
   lPlot: TRect;
@@ -1505,12 +1534,15 @@ begin
     Canvas.Pen.Color := clGray;
     Canvas.Rectangle(lPlot);
   end;
+  GetAxisHeaderLayout(lPlot.Right, lAxisColumnWidth, lAxisColumnCount,
+    lAxisRowCount);
   for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
   begin
     lAxis := fComponent.ActiveDisplay.Axes[I];
     Canvas.Font.Color := TColor(lAxis.Color);
-    Canvas.TextOut(4, 18 + I * Canvas.TextHeight('Ag'), lAxis.Name + ' ['+
-      FloatToStr(fAxisMin[I]) + '..' + FloatToStr(fAxisMax[I]) + ']');
+    Canvas.TextOut(8 + (I mod lAxisColumnCount) * lAxisColumnWidth,
+      6 + (I div lAxisColumnCount) * (Canvas.TextHeight('Ag') + 2),
+      AxisCaption(I));
   end;
   lPrevLine := -1;
   lPrevX := 0;

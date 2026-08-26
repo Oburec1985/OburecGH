@@ -205,6 +205,16 @@
         <UsageCount Value="200"/>
       </Unit>
       <Unit>
+        <Filename Value="Core\uRecorderApplicationController.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core\uRecorderConfigurationService.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
         <Filename Value="Core\uRecorderTags.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
@@ -316,9 +326,10 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="2921"/>
-        <CursorPos Y="2937"/>
+        <TopLine Value="49"/>
+        <CursorPos X="75" Y="65"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -633,10 +644,9 @@
       <Unit>
         <Filename Value="Device\mic185\uRecorderMic185DataSource.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
         <TopLine Value="2645"/>
-        <CursorPos X="88" Y="2664"/>
+        <CursorPos X="116" Y="2662"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>

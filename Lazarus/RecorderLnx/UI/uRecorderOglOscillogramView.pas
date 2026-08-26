@@ -45,6 +45,7 @@ type
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
     fExtraLines: TList;
+    fLineSnapshots: array of TRecorderSignalSnapshot;
     fModel: TObject;
     fPage: TObject;
     fAxis: TObject;
@@ -121,6 +122,7 @@ type
     fHasDataRevision: Boolean;
     fLastDataRevisions: array of QWord;
     fLastRevisionDisplaySeconds: Double;
+    fSnapshots: array of TRecorderSignalSnapshot;
     fModel: TChartModel;
     function GetFpsText: string;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -173,10 +175,7 @@ implementation
 
 uses
   SysUtils, Math,
-  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng, uSharedAlgorithms;
-
-type
-  TDoubleSearch = specialize TBinarySearch<Double>;
+  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng;
 
 procedure ApplyOscillogramTagYRange(AAxis: TChartAxis; ATag: TRecorderTag;
   ADataMin, ADataMax: Double);
@@ -719,7 +718,6 @@ procedure TRecorderOglOscillogram.FillTrendFromSnapshot(ATrend: cBuffTrend1d;
 var
   I: Integer;
   lFirst: Boolean;
-  lStartIdx: Integer;
   lValueCount: Integer;
 begin
   APointCount := 0;
@@ -732,11 +730,9 @@ begin
   ATrend.DX := 1;
   if ASnapshot.Count = 0 then
     Exit;
-  lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(ASnapshot.Times,
-    ASnapshot.Count, ADisplayStart);
   lFirst := True;
-  lValueCount := ASnapshot.Count - lStartIdx;
-  for I := lStartIdx to ASnapshot.Count - 1 do
+  lValueCount := ASnapshot.Count;
+  for I := 0 to ASnapshot.Count - 1 do
   begin
     if lFirst then
     begin
@@ -759,7 +755,7 @@ begin
     end;
     Inc(APointCount);
   end;
-  ATrend.ReplaceValues(ASnapshot.Values, lStartIdx, lValueCount);
+  ATrend.ReplaceValues(ASnapshot.Values, 0, lValueCount);
 end;
 
 function TRecorderOglOscillogram.ResolveTagByName(
@@ -773,7 +769,6 @@ procedure TRecorderOglOscillogram.Refresh(ATagRegistry: TRecorderTagRegistry;
 var
   I: Integer;
   lDisplayStart: Double;
-  lEndTime: Double;
   lHasRange: Boolean;
   lLine: TRecorderTrendLine;
   lLineMin: Double;
@@ -826,6 +821,8 @@ begin
     TChartPage(fPage).PresetMaxXValue := ADisplaySeconds;
   end;
   EnsureTrendCount;
+  if Length(fLineSnapshots) <> 1 + fExtraLines.Count then
+    SetLength(fLineSnapshots, 1 + fExtraLines.Count);
   if fTrend = nil then
     Exit;
   lTag := ResolveTag(ATagRegistry);
@@ -843,7 +840,9 @@ begin
 
   fCurrentTagName := lTag.Name;
   UpdateInfoLabel(ATagRegistry, lTag);
-  lSnapshot := lTag.Snapshot;
+  lTag.CopyLatestInto(ADisplaySeconds, fLineSnapshots[0].Times,
+    fLineSnapshots[0].Values, fLineSnapshots[0].Count, lDisplayStart);
+  lSnapshot := fLineSnapshots[0];
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   if lSnapshot.Count = 0 then
   begin
@@ -860,8 +859,6 @@ begin
     Exit;
   end;
 
-  lEndTime := lSnapshot.Times[lSnapshot.Count - 1];
-  lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
   lHasRange := False;
   lPointCount := 0;
   lTrend := GetTrendByIndex(0);
@@ -886,7 +883,10 @@ begin
       lTrend.ClearValues;
       Continue;
     end;
-    lSnapshot := lTag.Snapshot;
+    lTag.SnapshotRangeInto(lDisplayStart, False,
+      fLineSnapshots[I + 1].Times, fLineSnapshots[I + 1].Values,
+      fLineSnapshots[I + 1].Count);
+    lSnapshot := fLineSnapshots[I + 1];
     FillTrendFromSnapshot(lTrend, lSnapshot, lDisplayStart, ADisplaySeconds,
       lLineMin, lLineMax, lLinePoints);
     if lLinePoints = 0 then
@@ -1261,7 +1261,6 @@ procedure TRecorderOglOscillogramSurface.Refresh(
 var
   I: Integer;
   lDisplayStart: Double;
-  lEndTime: Double;
   lFirst: Boolean;
   lMaxValue: Double;
   lMinValue: Double;
@@ -1272,7 +1271,6 @@ var
   lTrend: cBuffTrend1d;
   lAxis: TChartAxis;
   lValueIndex: Integer;
-  lStartIdx: Integer;
   lDataChanged: Boolean;
   lRevision: QWord;
 begin
@@ -1287,6 +1285,8 @@ begin
     (Length(fLastDataRevisions) <> fCount);
   if Length(fLastDataRevisions) <> fCount then
     SetLength(fLastDataRevisions, fCount);
+  if Length(fSnapshots) <> fCount then
+    SetLength(fSnapshots, fCount);
   for I := 0 to fCount - 1 do
   begin
     lTag := ResolveTag(ATagRegistry, I);
@@ -1328,19 +1328,18 @@ begin
       Continue;
     end;
 
-    lSnapshot := lTag.Snapshot;
+    lTag.CopyLatestInto(ADisplaySeconds, fSnapshots[I].Times,
+      fSnapshots[I].Values, fSnapshots[I].Count, lDisplayStart);
+    lSnapshot := fSnapshots[I];
     if lSnapshot.Count = 0 then
     begin
       SetAxisRange(lAxis, -1, 1);
       Continue;
     end;
 
-    lEndTime := lSnapshot.Times[lSnapshot.Count - 1];
-    lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
     lFirst := True;
     lPointCount := 0;
-    lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(lSnapshot.Times, lSnapshot.Count, lDisplayStart);
-    for lValueIndex := lStartIdx to lSnapshot.Count - 1 do
+    for lValueIndex := 0 to lSnapshot.Count - 1 do
     begin
       if lFirst then
       begin
@@ -1365,8 +1364,7 @@ begin
 
       Inc(lPointCount);
     end;
-    lTrend.ReplaceValues(lSnapshot.Values, lStartIdx,
-      lSnapshot.Count - lStartIdx);
+    lTrend.ReplaceValues(lSnapshot.Values, 0, lSnapshot.Count);
 
     if lPointCount = 0 then
       SetAxisRange(lAxis, -1, 1)
