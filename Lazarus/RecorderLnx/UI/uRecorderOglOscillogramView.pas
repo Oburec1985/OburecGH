@@ -41,6 +41,7 @@ type
     fLastDataSignature: QWord;
     fLastSignatureDisplaySeconds: Double;
     fInfoPanel: TPanel;
+    fDyLabel: TLabel;
     fInfoNextLeft: Integer;
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
@@ -129,11 +130,13 @@ type
     function GetAxis(AIndex: Integer): TChartAxis;
     function GetPage(AIndex: Integer): TChartPage;
     function GetTrend(AIndex: Integer): cBuffTrend1d;
+    function RefreshRangeCaptions: Boolean;
     function ResolveTag(ATagRegistry: TRecorderTagRegistry;
       AIndex: Integer): TRecorderTag;
     procedure ResetFpsMeasure;
     procedure SetAxisRange(AAxis: TChartAxis; AMinValue, AMaxValue: Double);
-    procedure UpdatePageCaption(APage: TChartPage; ATag: TRecorderTag);
+    procedure UpdatePageCaption(APage: TChartPage; AAxis: TChartAxis;
+      ATag: TRecorderTag);
     private
     fPageCaptionFontSize: Integer;
     function GetPageCaptionFontSize: Integer;
@@ -212,6 +215,53 @@ begin
   AAxis.MaxValue := lMax;
   AAxis.PresetMinValue := lMin;
   AAxis.PresetMaxValue := lMax;
+end;
+
+function ClampOscillogramPageX(APage: TChartPage;
+  ADisplaySeconds: Double): Boolean;
+var
+  lFullWidth: Double;
+  lOldMax: Double;
+  lOldMin: Double;
+  lWidth: Double;
+begin
+  Result := False;
+  if APage = nil then
+    Exit;
+  if ADisplaySeconds <= 0 then
+    ADisplaySeconds := 1.0;
+
+  lOldMin := APage.XMinValue;
+  lOldMax := APage.XMaxValue;
+  lFullWidth := ADisplaySeconds;
+  lWidth := APage.XMaxValue - APage.XMinValue;
+
+  if (lWidth <= 0) or (lWidth >= lFullWidth) then
+  begin
+    APage.XMinValue := 0;
+    APage.XMaxValue := lFullWidth;
+    APage.ZoomedX := False;
+  end
+  else
+  begin
+    if APage.XMinValue < 0 then
+    begin
+      APage.XMaxValue := lWidth;
+      APage.XMinValue := 0;
+    end;
+    if APage.XMaxValue > lFullWidth then
+    begin
+      APage.XMinValue := lFullWidth - lWidth;
+      APage.XMaxValue := lFullWidth;
+    end;
+    if APage.XMinValue < 0 then
+      APage.XMinValue := 0;
+  end;
+
+  APage.PresetMinXValue := 0;
+  APage.PresetMaxXValue := lFullWidth;
+  Result := (Abs(lOldMin - APage.XMinValue) > 1E-12) or
+    (Abs(lOldMax - APage.XMaxValue) > 1E-12);
 end;
 
 function OscillogramEstimateShortName(AKind: TRecorderTagEstimateKind): string;
@@ -401,8 +451,16 @@ procedure TRecorderOglOscillogram.ChartAfterRender(Sender: TObject;
   ARenderTimeMs: Double);
 var
   lNowMs: QWord;
+  lDyText: string;
 begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
+  if (fDyLabel <> nil) and (fAxis <> nil) then
+  begin
+    lDyText := Format('; dY=%s', [FormatFloat('0.###',
+      TChartAxis(fAxis).MaxValue - TChartAxis(fAxis).MinValue)]);
+    if fDyLabel.Caption <> lDyText then
+      fDyLabel.Caption := lDyText;
+  end;
   if fFpsMeasureEnabled then
   begin
     lNowMs := GetTickCount64;
@@ -438,6 +496,7 @@ var
 begin
   if fInfoPanel = nil then
     Exit;
+  fDyLabel := nil;
   for I := fInfoPanel.ControlCount - 1 downto 0 do
     fInfoPanel.Controls[I].Free;
   fInfoNextLeft := 0;
@@ -479,6 +538,12 @@ begin
   if ATag = nil then
   begin
     AppendInfoPart('-', clGray);
+    if fAxis <> nil then
+    begin
+      AppendInfoPart(Format('; dY=%s', [FormatFloat('0.###',
+        TChartAxis(fAxis).MaxValue - TChartAxis(fAxis).MinValue)]), clGray);
+      fDyLabel := TLabel(fInfoPanel.Controls[fInfoPanel.ControlCount - 1]);
+    end;
     Exit;
   end;
 
@@ -527,6 +592,13 @@ begin
         AppendInfoPart(Format('%s | %s', [lTagName, lEstimateText]), lTagColors[I])
       else
         AppendInfoPart(lTagName, lTagColors[I]);
+    end;
+    if fAxis <> nil then
+    begin
+      AppendInfoPart(Format('; dY=%s',
+        [FormatFloat('0.###', TChartAxis(fAxis).MaxValue -
+          TChartAxis(fAxis).MinValue)]), clGray);
+      fDyLabel := TLabel(fInfoPanel.Controls[fInfoPanel.ControlCount - 1]);
     end;
   finally
     lShownTags.Free;
@@ -782,6 +854,7 @@ var
   lTrend: cBuffTrend1d;
   lDataSignature: QWord;
   lSignatureTag: TRecorderTag;
+  lViewChanged: Boolean;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -807,9 +880,14 @@ begin
         (lDataSignature shr 59)) xor
         (QWord(lSignatureTag.Id) + lSignatureTag.SignalBuffer.Revision);
   end;
+  lViewChanged := ClampOscillogramPageX(TChartPage(fPage), ADisplaySeconds);
   if fHasDataSignature and (fLastDataSignature = lDataSignature) and
     (Abs(fLastSignatureDisplaySeconds - ADisplaySeconds) <= 1E-12) then
+  begin
+    if lViewChanged and (fChart is TOglChart) then
+      TOglChart(fChart).Redraw;
     Exit;
+  end;
   fHasDataSignature := True;
   fLastDataSignature := lDataSignature;
   fLastSignatureDisplaySeconds := ADisplaySeconds;
@@ -820,6 +898,7 @@ begin
     TChartPage(fPage).PresetMinXValue := 0;
     TChartPage(fPage).PresetMaxXValue := ADisplaySeconds;
   end;
+  ClampOscillogramPageX(TChartPage(fPage), ADisplaySeconds);
   EnsureTrendCount;
   if Length(fLineSnapshots) <> 1 + fExtraLines.Count then
     SetLength(fLineSnapshots, 1 + fExtraLines.Count);
@@ -829,17 +908,16 @@ begin
   if lTag = nil then
   begin
     fCurrentTagName := '';
-    UpdateInfoLabel(ATagRegistry, nil);
     SetChartTitle(Format('No tag frame:%d', [fFrameNo]));
     if not TChartAxis(fAxis).HasPresetRange then
       SetAxisRange(-1, 1);
+    UpdateInfoLabel(ATagRegistry, nil);
     if fChart is TOglChart then
       TOglChart(fChart).Redraw;
     Exit;
   end;
 
   fCurrentTagName := lTag.Name;
-  UpdateInfoLabel(ATagRegistry, lTag);
   lTag.CopyLatestInto(ADisplaySeconds, fLineSnapshots[0].Times,
     fLineSnapshots[0].Values, fLineSnapshots[0].Count, lDisplayStart);
   lSnapshot := fLineSnapshots[0];
@@ -854,6 +932,7 @@ begin
     end;
     if not TChartAxis(fAxis).HasPresetRange then
       SetAxisRange(-1, 1);
+    UpdateInfoLabel(ATagRegistry, lTag);
     if fChart is TOglChart then
       TOglChart(fChart).Redraw;
     Exit;
@@ -914,6 +993,7 @@ begin
   end
   else
     ApplyOscillogramTagYRange(TChartAxis(fAxis), lTag, lMinValue, lMaxValue);
+  UpdateInfoLabel(ATagRegistry, ResolveTag(ATagRegistry));
   { MIC-140 stream debug: oscillogram render diag suppressed.
   RecorderDebugLog(Format('Ogl osc render: tag=%s points=%d lines=%d frame=%d window=%.3f',
     [fCurrentTagName, lPointCount, 1 + fExtraLines.Count, fFrameNo, ADisplaySeconds])); }
@@ -1022,6 +1102,8 @@ var
   lNowMs: QWord;
 begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
+  if RefreshRangeCaptions then
+    fChart.Invalidate;
   if not fFpsMeasureEnabled then
     Exit;
   lNowMs := GetTickCount64;
@@ -1144,6 +1226,34 @@ begin
   end;
 end;
 
+function TRecorderOglOscillogramSurface.RefreshRangeCaptions: Boolean;
+var
+  I, lSeparator: Integer;
+  lAxis: TChartAxis;
+  lCaption, lPrefix: string;
+  lPage: TChartPage;
+begin
+  Result := False;
+  for I := 0 to fCount - 1 do
+  begin
+    lPage := GetPage(I);
+    lAxis := GetAxis(I);
+    if (lPage = nil) or (lAxis = nil) then Continue;
+    lSeparator := LastDelimiter('|', lPage.Caption);
+    if lSeparator > 0 then
+      lPrefix := TrimRight(Copy(lPage.Caption, 1, lSeparator - 1))
+    else
+      lPrefix := lPage.Caption;
+    lCaption := Format('%s | dY=%s', [lPrefix, FormatFloat('0.###',
+      lAxis.MaxValue - lAxis.MinValue)]);
+    if lPage.Caption <> lCaption then
+    begin
+      lPage.Caption := lCaption;
+      Result := True;
+    end;
+  end;
+end;
+
 procedure TRecorderOglOscillogramSurface.ResetFpsMeasure;
 begin
   fFpsMeasured := 0;
@@ -1173,10 +1283,11 @@ begin
 end;
 
 procedure TRecorderOglOscillogramSurface.UpdatePageCaption(APage: TChartPage;
-  ATag: TRecorderTag);
+  AAxis: TChartAxis; ATag: TRecorderTag);
 var
   lEstimateText: string;
   lTagName: string;
+  lDeltaText: string;
 begin
   if APage = nil then
     Exit;
@@ -1185,10 +1296,16 @@ begin
   else
     lTagName := 'None';
   lEstimateText := FormatEnabledEstimateCaption(ATag);
-  if lEstimateText <> '' then
-    APage.Caption := Format('%s | %s', [lTagName, lEstimateText])
+  if AAxis <> nil then
+    lDeltaText := Format('dY=%s', [FormatFloat('0.###',
+      AAxis.MaxValue - AAxis.MinValue)])
   else
-    APage.Caption := lTagName;
+    lDeltaText := 'dY=-';
+  if lEstimateText <> '' then
+    APage.Caption := Format('%s | %s | %s',
+      [lTagName, lEstimateText, lDeltaText])
+  else
+    APage.Caption := Format('%s | %s', [lTagName, lDeltaText]);
 end;
 
 procedure TRecorderOglOscillogramSurface.Rebuild(
@@ -1234,6 +1351,8 @@ begin
     lPage.PixelTabSpace := lTabSpace;
     lPage.XMinValue := 0;
     lPage.XMaxValue := ADisplaySeconds;
+    lPage.PresetMinXValue := 0;
+    lPage.PresetMaxXValue := ADisplaySeconds;
     fModel.AddChild(lPage);
     lAxis := TChartAxis.Create;
     lAxis.Name := Format('Axis%d', [I + 1]);
@@ -1272,6 +1391,7 @@ var
   lAxis: TChartAxis;
   lValueIndex: Integer;
   lDataChanged: Boolean;
+  lViewChanged: Boolean;
   lRevision: QWord;
 begin
   if ADisplaySeconds <= 0 then
@@ -1280,6 +1400,10 @@ begin
     ResetFpsMeasure;
   fFpsMeasureEnabled := AMeasureFps;
   fDisplaySeconds := ADisplaySeconds;
+  lViewChanged := False;
+  for I := 0 to fCount - 1 do
+    lViewChanged := ClampOscillogramPageX(GetPage(I), ADisplaySeconds) or
+      lViewChanged;
   lDataChanged := (not fHasDataRevision) or
     (Abs(fLastRevisionDisplaySeconds - ADisplaySeconds) > 1E-12) or
     (Length(fLastDataRevisions) <> fCount);
@@ -1301,7 +1425,11 @@ begin
   fHasDataRevision := True;
   fLastRevisionDisplaySeconds := ADisplaySeconds;
   if not lDataChanged then
+  begin
+    if lViewChanged then
+      fChart.Redraw;
     Exit;
+  end;
   Inc(fFrameNo);
   for I := 0 to fCount - 1 do
   begin
@@ -1317,14 +1445,15 @@ begin
       lPage.PresetMinXValue := 0;
       lPage.PresetMaxXValue := ADisplaySeconds;
     end;
+    ClampOscillogramPageX(lPage, ADisplaySeconds);
     lTrend.ClearValues;
     lTrend.X0 := 0;
     lTrend.DX := 1;
     lTag := ResolveTag(ATagRegistry, I);
-    UpdatePageCaption(lPage, lTag);
     if lTag = nil then
     begin
       SetAxisRange(lAxis, -1, 1);
+      UpdatePageCaption(lPage, lAxis, lTag);
       Continue;
     end;
 
@@ -1334,6 +1463,7 @@ begin
     if lSnapshot.Count = 0 then
     begin
       SetAxisRange(lAxis, -1, 1);
+      UpdatePageCaption(lPage, lAxis, lTag);
       Continue;
     end;
 
@@ -1370,6 +1500,7 @@ begin
       SetAxisRange(lAxis, -1, 1)
     else
       ApplyOscillogramTagYRange(lAxis, lTag, lMinValue, lMaxValue);
+    UpdatePageCaption(lPage, lAxis, lTag);
   end;
 
   { MIC-140 stream debug: oscillogram surface render diag suppressed.

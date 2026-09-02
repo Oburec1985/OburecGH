@@ -35,12 +35,15 @@ type
     MaxMicrostrain: Double;
     constructor Create;
     procedure Load(const AText: string);
+    function IsValid(out AError: string): Boolean;
     function Save: string;
   end;
 
 function RecorderStrainBuildCalibration(AConfig: TRecorderStrainConfig;
   ACalibration: TRecorderCalibration; out AMaxRelativeError: Double;
   out AError: string): Boolean;
+function RecorderStrainInputRange(AConfig: TRecorderStrainConfig;
+  out AMin, AMax: Double): Boolean;
 function RecorderStrainSchemeName(AValue: TRecorderStrainScheme): string;
 function RecorderStrainInputUnitName(AValue: TRecorderStrainInputUnit): string;
 function RecorderStrainOutputUnitName(AValue: TRecorderStrainOutputUnit): string;
@@ -67,16 +70,24 @@ begin
 end;
 
 procedure TRecorderStrainConfig.Load(const AText: string);
-var L: TStringList;
+var
+  L: TStringList;
+  lValue: Integer;
 begin
   L := TStringList.Create;
   try
     L.Text := StringReplace(AText, ';', LineEnding, [rfReplaceAll]);
-    Scheme := TRecorderStrainScheme(StrToIntDef(L.Values['scheme'], Ord(Scheme)));
-    InputUnit := TRecorderStrainInputUnit(StrToIntDef(L.Values['input'], Ord(InputUnit)));
-    OutputUnit := TRecorderStrainOutputUnit(StrToIntDef(L.Values['output'], Ord(OutputUnit)));
-    ExcitationKind := TRecorderStrainExcitationKind(StrToIntDef(
-      L.Values['excitationKind'], Ord(ExcitationKind)));
+    lValue := StrToIntDef(L.Values['scheme'], Ord(Scheme));
+    Scheme := TRecorderStrainScheme(EnsureRange(lValue, Ord(Low(Scheme)), Ord(High(Scheme))));
+    lValue := StrToIntDef(L.Values['input'], Ord(InputUnit));
+    InputUnit := TRecorderStrainInputUnit(EnsureRange(lValue,
+      Ord(Low(InputUnit)), Ord(High(InputUnit))));
+    lValue := StrToIntDef(L.Values['output'], Ord(OutputUnit));
+    OutputUnit := TRecorderStrainOutputUnit(EnsureRange(lValue,
+      Ord(Low(OutputUnit)), Ord(High(OutputUnit))));
+    lValue := StrToIntDef(L.Values['excitationKind'], Ord(ExcitationKind));
+    ExcitationKind := TRecorderStrainExcitationKind(EnsureRange(lValue,
+      Ord(Low(ExcitationKind)), Ord(High(ExcitationKind))));
     ExcitationValue := StrToFloatDef(L.Values['excitation'], ExcitationValue);
     GaugeFactor := StrToFloatDef(L.Values['gaugeFactor'], GaugeFactor);
     Poisson := StrToFloatDef(L.Values['poisson'], Poisson);
@@ -90,6 +101,24 @@ begin
     MaterialExpansion := StrToFloatDef(L.Values['expansion'], MaterialExpansion);
     MaxMicrostrain := StrToFloatDef(L.Values['maxMicrostrain'], MaxMicrostrain);
   finally L.Free; end;
+end;
+
+function TRecorderStrainConfig.IsValid(out AError: string): Boolean;
+begin
+  AError := '';
+  Result := not IsNan(ExcitationValue) and not IsInfinite(ExcitationValue) and
+    not IsNan(GaugeFactor) and not IsInfinite(GaugeFactor) and
+    not IsNan(Poisson) and not IsInfinite(Poisson) and
+    not IsNan(YoungMPa) and not IsInfinite(YoungMPa) and
+    not IsNan(NominalResistanceOhm) and not IsInfinite(NominalResistanceOhm) and
+    not IsNan(TemperatureDeltaC) and not IsInfinite(TemperatureDeltaC) and
+    not IsNan(GaugeTcr) and not IsInfinite(GaugeTcr) and
+    not IsNan(MaterialExpansion) and not IsInfinite(MaterialExpansion) and
+    not IsNan(MaxMicrostrain) and not IsInfinite(MaxMicrostrain) and
+    (GaugeFactor > 0) and (MaxMicrostrain > 0) and
+    ((ExcitationKind <> rsekCurrent) or (NominalResistanceOhm > 0));
+  if not Result then
+    AError := 'Параметры тензокалькулятора повреждены или выходят за допустимый диапазон.';
 end;
 
 function TRecorderStrainConfig.Save: string;
@@ -199,6 +228,27 @@ begin
     rsiMilliVoltPerMilliAmp, rsiOhm:
       Result := R * BridgeEquivalentResistance(C, AM);
   end;
+end;
+
+function RecorderStrainInputRange(AConfig: TRecorderStrainConfig;
+  out AMin, AMax: Double): Boolean;
+var
+  lMaxStrain: Double;
+  lValue1: Double;
+  lValue2: Double;
+begin
+  Result := False;
+  AMin := 0;
+  AMax := 0;
+  if (AConfig = nil) or (AConfig.GaugeFactor <= 0) or
+    (AConfig.MaxMicrostrain <= 0) then
+    Exit;
+  lMaxStrain := AConfig.MaxMicrostrain * 1E-6;
+  lValue1 := RawInput(AConfig, -AConfig.GaugeFactor * lMaxStrain);
+  lValue2 := RawInput(AConfig, AConfig.GaugeFactor * lMaxStrain);
+  AMin := Min(lValue1, lValue2);
+  AMax := Max(lValue1, lValue2);
+  Result := not SameValue(AMin, AMax);
 end;
 
 function OutputValue(C: TRecorderStrainConfig; AEpsilon, AM: Double): Double;

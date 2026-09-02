@@ -49,6 +49,11 @@ type
     rstopDuration
   );
 
+  TRecorderWinposButtonAction = (
+    rwbaOpenDirectory,
+    rwbaRunWinpos
+  );
+
   { Исключение при некорректных настройках запуска/останова }
   ERecorderRunControlSettingsError = class(Exception);
 
@@ -72,6 +77,7 @@ type
     fDataUpdateMs: Cardinal;                       { Период обновления источников данных в мс }
     fRecordRootDir: string;                        { Корневой каталог записи MERA-кадров }
     fMeraFilesPath: string;                        { Корень Mera Files: SDB и calibr }
+    fWinposButtonAction: TRecorderWinposButtonAction;
 
     function ValidateStart(out AMessage: string): Boolean;
     function ValidateStop(out AMessage: string): Boolean;
@@ -126,6 +132,10 @@ type
       ADefault: TRecorderStopCondition): TRecorderStopCondition; static;
     class function StringToStartCondition(const AValue: string;
       ADefault: TRecorderStartCondition): TRecorderStartCondition; static;
+    class function WinposButtonActionToString(
+      AAction: TRecorderWinposButtonAction): string; static;
+    class function StringToWinposButtonAction(const AValue: string;
+      ADefault: TRecorderWinposButtonAction): TRecorderWinposButtonAction; static;
 
     property StartCondition: TRecorderStartCondition read fStartCondition write fStartCondition;
     property StartChannelName: string read fStartChannelName write fStartChannelName;
@@ -144,6 +154,8 @@ type
     property DataUpdateMs: Cardinal read fDataUpdateMs write fDataUpdateMs;
     property RecordRootDir: string read fRecordRootDir write fRecordRootDir;
     property MeraFilesPath: string read fMeraFilesPath write fMeraFilesPath;
+    property WinposButtonAction: TRecorderWinposButtonAction
+      read fWinposButtonAction write fWinposButtonAction;
   end;
 
 implementation
@@ -175,6 +187,7 @@ begin
   fDataUpdateMs := 300;
   fRecordRootDir := 'C:\USML\';
   fMeraFilesPath := RecorderMeraFilesPath;
+  fWinposButtonAction := rwbaOpenDirectory;
 end;
 
 function TRecorderRunControlSettings.ValidateStart(out AMessage: string): Boolean;
@@ -342,6 +355,8 @@ begin
     lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
     lIni.WriteString('Record', 'RootDir', fRecordRootDir);
     lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
+    lIni.WriteString('Winpos', 'ButtonAction',
+      WinposButtonActionToString(fWinposButtonAction));
   finally
     lIni.Free;
   end;
@@ -375,11 +390,37 @@ begin
       fDataUpdateMs);
     fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
     fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
+    fWinposButtonAction := StringToWinposButtonAction(
+      lIni.ReadString('Winpos', 'ButtonAction', ''), fWinposButtonAction);
+    SetRecorderMeraFilesPath(fMeraFilesPath);
+    fMeraFilesPath := RecorderMeraFilesPath;
   finally
     lIni.Free;
   end;
 
   RequireValid;
+end;
+
+class function TRecorderRunControlSettings.WinposButtonActionToString(
+  AAction: TRecorderWinposButtonAction): string;
+begin
+  case AAction of
+    rwbaRunWinpos: Result := 'RunWinpos';
+  else
+    Result := 'OpenDirectory';
+  end;
+end;
+
+class function TRecorderRunControlSettings.StringToWinposButtonAction(
+  const AValue: string; ADefault: TRecorderWinposButtonAction):
+  TRecorderWinposButtonAction;
+begin
+  if SameText(Trim(AValue), 'OpenDirectory') then
+    Result := rwbaOpenDirectory
+  else if SameText(Trim(AValue), 'RunWinpos') then
+    Result := rwbaRunWinpos
+  else
+    Result := ADefault;
 end;
 
 function TRecorderRunControlSettings.StartNeedsArming: Boolean;

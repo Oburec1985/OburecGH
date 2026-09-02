@@ -21,6 +21,7 @@ function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
 function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; AMic140Configs: TStringList;
   const ASourceId: string; out ANewSourceId: string): Boolean;
+function CreateRecorderMic140SettingsGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
@@ -329,6 +330,11 @@ begin
   finally
     lOwned.Free;
   end;
+end;
+
+function CreateRecorderMic140SettingsGuideForm(AOwner: TComponent): TForm;
+begin
+  Result := TRecorderMic140SettingsDialog.Create(AOwner);
 end;
 
 procedure TRecorderMic140SettingsDialog.ToggleGridRow(ARow: Integer);

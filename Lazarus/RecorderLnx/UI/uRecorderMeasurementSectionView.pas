@@ -11,6 +11,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Grids, Graphics,
+  LCLType, LCLIntf,
   Math, uOglChart, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
   uRecorderMeasurementSectionModel;
 
@@ -47,6 +48,9 @@ type
     fRegistry: TRecorderTagRegistry;
     fTableForm: TRecorderMeasurementSectionTableForm;
     function BuildSummaryText: string;
+    procedure ApplyFont(const AFont: TRecorderFontSnapshot);
+    function DrawWrappedText(const AText: string; ATop: Integer;
+      const AFont: TRecorderFontSnapshot): Integer;
     procedure OpenTable(Sender: TObject);
     procedure TableDestroyed(Sender: TObject);
   protected
@@ -379,32 +383,79 @@ function TRecorderMeasurementSectionView.BuildSummaryText: string;
 var
   I: Integer;
   lBestPoint: Integer;
-  lBestStrain: Double;
+  lBestStress: Double;
+  lStress: Double;
   lValues: TRecorderMeasurementSectionValues;
 begin
   Result := '';
   if fComponent = nil then
     Exit;
   lBestPoint := 0;
-  lBestStrain := -1.0;
+  lBestStress := -1.0;
   for I := 0 to fComponent.RowCount - 1 do
   begin
     fComponent.CalculateRow(fRegistry, fComponent.Rows[I], lValues);
-    if lValues.MaxAbsStrain > lBestStrain then
+    lStress := -1.0;
+    if lValues.HasSigma1 then
+      lStress := Abs(lValues.Sigma1);
+    if lValues.HasSigma2 then
+      lStress := Max(lStress, Abs(lValues.Sigma2));
+    if lStress > lBestStress then
     begin
-      lBestStrain := lValues.MaxAbsStrain;
+      lBestStress := lStress;
       lBestPoint := fComponent.Rows[I].PointNo;
     end;
   end;
   if lBestPoint > 0 then
-    Result := Format('Точка %d: e=%.3f мкстрн', [lBestPoint, lBestStrain]);
+    Result := Format('Точка %d: sigma=%.3f МПа', [lBestPoint, lBestStress]);
+end;
+
+procedure TRecorderMeasurementSectionView.ApplyFont(
+  const AFont: TRecorderFontSnapshot);
+begin
+  Canvas.Font.Name := AFont.Name;
+  Canvas.Font.Size := AFont.Size;
+  Canvas.Font.Color := TColor(AFont.Color);
+  Canvas.Font.Style := [];
+  if AFont.Bold then
+    Canvas.Font.Style := Canvas.Font.Style + [fsBold];
+  if AFont.Italic then
+    Canvas.Font.Style := Canvas.Font.Style + [fsItalic];
+end;
+
+function TRecorderMeasurementSectionView.DrawWrappedText(
+  const AText: string; ATop: Integer;
+  const AFont: TRecorderFontSnapshot): Integer;
+var
+  lRect: TRect;
+begin
+  Result := ATop;
+  if AText = '' then
+    Exit;
+  ApplyFont(AFont);
+  lRect := Rect(6, ATop, Max(7, ClientWidth - 6), ClientHeight - 6);
+  DrawText(Canvas.Handle, PChar(AText), Length(AText), lRect,
+    DT_WORDBREAK or DT_NOPREFIX or DT_CALCRECT);
+  lRect.Right := Max(7, ClientWidth - 6);
+  lRect.Bottom := Min(lRect.Bottom, ClientHeight - 6);
+  Canvas.Brush.Style := bsSolid;
+  Canvas.Brush.Color := TColor(fComponent.TextBackgroundColor);
+  Canvas.FillRect(lRect);
+  Canvas.Brush.Style := bsClear;
+  DrawText(Canvas.Handle, PChar(AText), Length(AText), lRect,
+    DT_WORDBREAK or DT_NOPREFIX);
+  Result := lRect.Bottom;
 end;
 
 procedure TRecorderMeasurementSectionView.Paint;
 var
+  lCaptionFont: TRecorderFontSnapshot;
   lCaption, lSummary: string;
+  lStressFont: TRecorderFontSnapshot;
   lTextY: Integer;
 begin
+  if fComponent <> nil then
+    Color := TColor(fComponent.BackgroundColor);
   inherited Paint;
   if fComponent = nil then
     Exit;
@@ -413,15 +464,17 @@ begin
   lSummary := BuildSummaryText;
 
   Canvas.Brush.Style := bsClear;
-  Canvas.Font.Color := clWindowText;
   lTextY := 6;
   if lCaption <> '' then
   begin
-    Canvas.TextOut(6, lTextY, lCaption);
-    Inc(lTextY, Canvas.TextHeight(lCaption) + 4);
+    fComponent.GetCaptionFont(lCaptionFont);
+    lTextY := DrawWrappedText(lCaption, lTextY, lCaptionFont) + 4;
   end;
   if lSummary <> '' then
-    Canvas.TextOut(6, lTextY, lSummary);
+  begin
+    fComponent.GetStressFont(lStressFont);
+    DrawWrappedText(lSummary, lTextY, lStressFont);
+  end;
 end;
 
 initialization

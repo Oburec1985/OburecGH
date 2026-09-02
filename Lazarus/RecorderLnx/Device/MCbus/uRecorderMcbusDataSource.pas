@@ -51,6 +51,8 @@ type
       APollFrequencyHz: Double; AUpdateTimeMs: Cardinal; ATagNames: TStrings;
       const ASpecificConfigText: string = '');
     destructor Destroy; override;
+    function Reconfigure(AUpdateTimeMs: Cardinal;
+      out AErrorText: string): Boolean; override;
     procedure PrepareHardware; override;
     procedure Start; override;
     procedure Stop; override;
@@ -251,6 +253,36 @@ begin
   fTagNames.Free;
   DoneCriticalSection(fIoLock);
   inherited Destroy;
+end;
+
+function TRecorderMcbusDataSource.Reconfigure(AUpdateTimeMs: Cardinal;
+  out AErrorText: string): Boolean;
+begin
+  Result := inherited Reconfigure(AUpdateTimeMs, AErrorText);
+  if not Result then
+    Exit;
+  if fDevice = nil then
+    Exit(True);
+  try
+    if not fDevice.TrySetDeviceProperty(rdpUpdateTimeMs,
+      Integer(UpdateTimeMs)) then
+    begin
+      AErrorText := 'MCbus update period is not supported';
+      Exit(False);
+    end;
+    if fDevice.State = rdsProgrammed then
+      fDevice.ConfigureDevice;
+    BuildChannelMap;
+    SetLength(fTimes, Max(1, Ceil(fPollFrequencyHz *
+      UpdateTimeMs / 1000.0)));
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      AErrorText := E.ClassName + ': ' + E.Message;
+      Result := False;
+    end;
+  end;
 end;
 
 procedure TRecorderMcbusDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);

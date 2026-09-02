@@ -227,6 +227,34 @@ completed with exit code 0 and linked `lib\x86_64-win64\RecorderLnx.exe`.
 The existing post-build `copy_sdb_res.bat` still prints the `#!/bin/sh`
 message, but `lazbuild` returned success.
 
+### Regression audit 2026-09-02: groups 2-4 were not configurable
+
+The packet fix above was correct, but the channel dialog never bound
+`cbThermoChannel` to `groupAddition[]`. It always displayed input 1 and did not
+read or save the selection. This was hidden for channels 1..16 by the legacy
+default `[0,4,4,4]`; channel 43 belongs to group index 2 and therefore still
+sent `4` (off).
+
+`LoadTag` now reads `groupAddition[(channelNumber-1) div 16]`, and `SaveTag`
+updates only that group. Values `0..3` select compensation inputs 1..4 and
+value `4` disables the group. Thus all four independent groups (1..16, 17..32,
+33..48, 49..64) are configurable without changing the other groups.
+
+Verification: forced Windows build of `RecorderLnx.lpi` completed with exit
+code 0. Hardware effect still requires an operator check on MIC-185 `.149`;
+for channel 43 with input 1 the programming log must contain
+`groupAddition=[0,4,0,4]` for the current project.
+
+### UI follow-up 2026-09-02
+
+The settings grid still hard-coded column `Канал термо` to `1`, although the
+new selection was already stored correctly. It now renders the actual
+`groupAddition` value and refreshes all 16 rows of the affected group after
+Apply. The unlabeled channel checkbox was identified against the original as
+`Калибровочный шунт канала`; it is now captioned and stored strictly as the
+boolean channel `ShuntOn` flag, independently from the module shunt-value
+index.
+
 ## 2026-07-09 source restart overwrote dialog programming
 
 ### Symptom

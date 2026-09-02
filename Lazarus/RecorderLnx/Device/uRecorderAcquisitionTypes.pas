@@ -49,15 +49,25 @@ begin
   ADest.SampleCount := ASource.SampleCount;
   ADest.FirstTimeSec := ASource.FirstTimeSec;
   ADest.SampleRateHz := ASource.SampleRateHz;
-  ADest.ChannelSampleCounts := Copy(ASource.ChannelSampleCounts);
-  ADest.ChannelFirstTimesSec := Copy(ASource.ChannelFirstTimesSec);
-  ADest.ChannelSampleRatesHz := Copy(ASource.ChannelSampleRatesHz);
+  SetLength(ADest.ChannelSampleCounts, Length(ASource.ChannelSampleCounts));
+  if Length(ASource.ChannelSampleCounts) > 0 then
+    Move(ASource.ChannelSampleCounts[0], ADest.ChannelSampleCounts[0],
+      Length(ASource.ChannelSampleCounts) * SizeOf(Integer));
+  SetLength(ADest.ChannelFirstTimesSec, Length(ASource.ChannelFirstTimesSec));
+  if Length(ASource.ChannelFirstTimesSec) > 0 then
+    Move(ASource.ChannelFirstTimesSec[0], ADest.ChannelFirstTimesSec[0],
+      Length(ASource.ChannelFirstTimesSec) * SizeOf(Double));
+  SetLength(ADest.ChannelSampleRatesHz, Length(ASource.ChannelSampleRatesHz));
+  if Length(ASource.ChannelSampleRatesHz) > 0 then
+    Move(ASource.ChannelSampleRatesHz[0], ADest.ChannelSampleRatesHz[0],
+      Length(ASource.ChannelSampleRatesHz) * SizeOf(Double));
 
   SetLength(ADest.Values, ASource.ChannelCount);
   lSampleCount := ASource.SampleCount;
   for I := 0 to ASource.ChannelCount - 1 do
   begin
-    SetLength(ADest.Values[I], lSampleCount);
+    if Length(ADest.Values[I]) <> lSampleCount then
+      SetLength(ADest.Values[I], lSampleCount);
     if lSampleCount > 0 then
       Move(ASource.Values[I][0], ADest.Values[I][0],
         lSampleCount * SizeOf(Double));

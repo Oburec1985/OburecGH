@@ -175,6 +175,11 @@ type
     { Возвращает следующий целый непрочитанный блок. В уведомления массивы не копируются. }
     function SnapshotNextBlock(var ABlockCursor: QWord;
       out ASnapshot: TRecorderSignalSnapshot): Boolean;
+    { Копирует следующий логический блок в принадлежащие вызывающему массивы.
+      Массивы растут только при нехватке емкости и затем переиспользуются. }
+    function SnapshotNextBlockInto(var ABlockCursor: QWord;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer): Boolean;
+    function CurrentBlockSampleCapacity: Integer;
     function CurrentBlockCursor: QWord;
     { Возвращает снимок последнего добавленного блока точек. }
     function LastBlockSnapshot: TRecorderSignalSnapshot;
@@ -466,6 +471,9 @@ type
     function ContainsTag(ATag: TRecorderTag): Boolean;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
+    function CommitCalibrationEdit(ATarget, ADraft: TRecorderCalibration): Boolean;
+    function AddCalibrationCopyForTag(ATag: TRecorderTag;
+      APipelineIndex: Integer; ADraft: TRecorderCalibration): TRecorderCalibration;
     function FindTagHardwareCalibration(ATag: TRecorderTag): TRecorderCalibration;
     function FindTagThermocoupleCalibration(ATag: TRecorderTag): TRecorderCalibration;
     function TransformTagHardwareValue(ATag: TRecorderTag; AValue: Double): Double;
@@ -558,6 +566,8 @@ function RecorderTagDefaultEstimatePortionLength(APollFrequencyHz: Double;
 { Проверяет, похож ли размер порции на автоматический дефолт, а не ручную настройку. }
 function RecorderTagEstimatePortionLengthIsAuto(AValue: Integer;
   APollFrequencyHz: Double; ADataUpdateMs: Cardinal): Boolean;
+procedure RecorderTagUpdateAutoEstimatePortion(ATag: TRecorderTag;
+  AOldPollFrequencyHz: Double; AOldDataUpdateMs, ANewDataUpdateMs: Cardinal);
 
 function RecorderTagsShareSourceId(ARegistry: TRecorderTagRegistry;
   const ATagNames: array of string): Boolean;
@@ -738,7 +748,7 @@ begin
   if APollFrequencyHz <= 0 then
     Result := 1
   else
-    Result := Round(APollFrequencyHz * ADataUpdateMs / 1000.0);
+    Result := Ceil(APollFrequencyHz * ADataUpdateMs / 1000.0);
   if Result < 1 then
     Result := 1;
 end;
@@ -751,6 +761,21 @@ begin
   Result := (AValue = CRecorderLegacyDefaultPortionLength) or
     (AValue = RecorderTagDefaultEstimatePortionLength(APollFrequencyHz,
     ADataUpdateMs));
+end;
+
+procedure RecorderTagUpdateAutoEstimatePortion(ATag: TRecorderTag;
+  AOldPollFrequencyHz: Double; AOldDataUpdateMs, ANewDataUpdateMs: Cardinal);
+var
+  lSettings: TRecorderTagEstimateSettings;
+begin
+  if (ATag = nil) or not RecorderTagEstimatePortionLengthIsAuto(
+    ATag.EstimateSettings.PortionLength, AOldPollFrequencyHz,
+    AOldDataUpdateMs) then
+    Exit;
+  lSettings := ATag.EstimateSettings;
+  lSettings.PortionLength := RecorderTagDefaultEstimatePortionLength(
+    ATag.PollFrequencyHz, ANewDataUpdateMs);
+  ATag.EstimateSettings := lSettings;
 end;
 
 function RecorderTagsShareSourceId(ARegistry: TRecorderTagRegistry;
@@ -1263,6 +1288,16 @@ end;
 
 function TRecorderSignalBuffer.SnapshotNextBlock(var ABlockCursor: QWord;
   out ASnapshot: TRecorderSignalSnapshot): Boolean;
+begin
+  ASnapshot.Count := 0;
+  SetLength(ASnapshot.Times, 0);
+  SetLength(ASnapshot.Values, 0);
+  Result := SnapshotNextBlockInto(ABlockCursor, ASnapshot.Times,
+    ASnapshot.Values, ASnapshot.Count);
+end;
+
+function TRecorderSignalBuffer.SnapshotNextBlockInto(var ABlockCursor: QWord;
+  var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer): Boolean;
 var
   lAvailableStart: QWord;
   lBlockStart: QWord;
@@ -1271,9 +1306,7 @@ var
   lReadIndex: Integer;
 begin
   Result := False;
-  ASnapshot.Count := 0;
-  SetLength(ASnapshot.Times, 0);
-  SetLength(ASnapshot.Values, 0);
+  ACount := 0;
   EnterCriticalSection(fLock);
   try
     if (fBlockSampleCapacity <= 0) or
@@ -1294,22 +1327,34 @@ begin
 
     lBlockStart := fBlockBaseSample +
       (ABlockCursor - fBlockBaseSequence) * QWord(fBlockSampleCapacity);
-    ASnapshot.Count := fBlockSampleCapacity;
-    SetLength(ASnapshot.Times, ASnapshot.Count);
-    SetLength(ASnapshot.Values, ASnapshot.Count);
+    ACount := fBlockSampleCapacity;
+    if Length(ATimes) < ACount then
+      SetLength(ATimes, ACount);
+    if Length(AValues) < ACount then
+      SetLength(AValues, ACount);
     lReadIndex := (fStart + Integer(lBlockStart - lAvailableStart)) mod fCapacity;
-    lFirstCount := Min(ASnapshot.Count, fCapacity - lReadIndex);
-    Move(fTimes[lReadIndex], ASnapshot.Times[0], lFirstCount * SizeOf(Double));
-    Move(fValues[lReadIndex], ASnapshot.Values[0], lFirstCount * SizeOf(Double));
-    if lFirstCount < ASnapshot.Count then
+    lFirstCount := Min(ACount, fCapacity - lReadIndex);
+    Move(fTimes[lReadIndex], ATimes[0], lFirstCount * SizeOf(Double));
+    Move(fValues[lReadIndex], AValues[0], lFirstCount * SizeOf(Double));
+    if lFirstCount < ACount then
     begin
-      Move(fTimes[0], ASnapshot.Times[lFirstCount],
-        (ASnapshot.Count - lFirstCount) * SizeOf(Double));
-      Move(fValues[0], ASnapshot.Values[lFirstCount],
-        (ASnapshot.Count - lFirstCount) * SizeOf(Double));
+      Move(fTimes[0], ATimes[lFirstCount],
+        (ACount - lFirstCount) * SizeOf(Double));
+      Move(fValues[0], AValues[lFirstCount],
+        (ACount - lFirstCount) * SizeOf(Double));
     end;
     Inc(ABlockCursor);
     Result := True;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderSignalBuffer.CurrentBlockSampleCapacity: Integer;
+begin
+  EnterCriticalSection(fLock);
+  try
+    Result := fBlockSampleCapacity;
   finally
     LeaveCriticalSection(fLock);
   end;
@@ -1837,6 +1882,76 @@ begin
   for I := 0 to fCalibrations.Count - 1 do
     if (fCalibrations[I] <> nil) and SameText(fCalibrations[I].Name, AName) then
       Exit(fCalibrations[I]);
+end;
+
+function TRecorderTagRegistry.CommitCalibrationEdit(ATarget,
+  ADraft: TRecorderCalibration): Boolean;
+var
+  I: Integer;
+  J: Integer;
+  lExisting: TRecorderCalibration;
+  lNewName: string;
+  lOldName: string;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if (ATarget = nil) or (ADraft = nil) then
+    Exit;
+  lOldName := Trim(ATarget.Name);
+  lNewName := Trim(ADraft.Name);
+  if lNewName = '' then
+    raise ERecorderTagError.Create('Calibration name cannot be empty');
+  lExisting := FindCalibrationByName(lNewName);
+  if (lExisting <> nil) and (lExisting <> ATarget) then
+    raise ERecorderTagError.Create('Calibration name already exists: ' + lNewName);
+
+  ATarget.Assign(ADraft);
+  ATarget.Name := lNewName;
+  if SameText(lOldName, lNewName) then
+    Exit(True);
+
+  for I := 0 to TagCount - 1 do
+  begin
+    lTag := Tags[I];
+    if lTag = nil then
+      Continue;
+    for J := 0 to lTag.CalibrationNames.Count - 1 do
+      if SameText(lTag.CalibrationNames[J], lOldName) then
+        lTag.CalibrationNames[J] := lNewName;
+    if SameText(lTag.HardwareCalibrationName, lOldName) then
+      lTag.HardwareCalibrationName := lNewName;
+  end;
+  Result := True;
+end;
+
+function TRecorderTagRegistry.AddCalibrationCopyForTag(ATag: TRecorderTag;
+  APipelineIndex: Integer; ADraft: TRecorderCalibration): TRecorderCalibration;
+var
+  lBaseName: string;
+  lName: string;
+  lNumber: Integer;
+begin
+  Result := nil;
+  if (ATag = nil) or (ADraft = nil) or
+    (APipelineIndex < 0) or (APipelineIndex >= ATag.CalibrationNames.Count) then
+    Exit;
+  lBaseName := Trim(ADraft.Name);
+  if lBaseName = '' then
+    lBaseName := Trim(ATag.CalibrationNames[APipelineIndex]);
+  if lBaseName = '' then
+    lBaseName := 'ГХ';
+  lName := lBaseName;
+  lNumber := 2;
+  while FindCalibrationByName(lName) <> nil do
+  begin
+    lName := lBaseName + ' (копия ' + IntToStr(lNumber) + ')';
+    Inc(lNumber);
+  end;
+
+  Result := ADraft.Clone;
+  Result.Name := lName;
+  fCalibrations.Add(Result);
+  ATag.CalibrationNames[APipelineIndex] := lName;
 end;
 
 function TRecorderTagRegistry.FindTagHardwareCalibration(

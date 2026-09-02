@@ -15,7 +15,7 @@ interface
 uses
   Classes, Controls, Graphics, Math, SysUtils, ExtCtrls,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
-  uOglChartTrend, uOglChartTypes, uOglChartDrawObj,
+  uOglChartTrend, uOglChartTypes, uOglChartDrawObj, uOglChartBaseObj,
   uRecorderFormModel, uRecorderTags, uRecorderVisualControl, uSharedAlgorithms, uRecorderDebugLog;
 
 type
@@ -65,6 +65,8 @@ end;
     procedure TrimSeriesToDurationWindow;
     procedure PruneSeries(ALineIndex: Integer);
     procedure DrawLegend(ACanvas: TCanvas; const ARect: TRect);
+    function SelectedAxis: TChartAxis;
+    procedure UpdateRangeCaption;
     procedure UpdateLegendLayout;
     procedure LegendPaintBoxPaint(Sender: TObject);
     procedure ResetSeriesRuntime(ALineIndex: Integer;
@@ -206,6 +208,7 @@ begin
     UpdateLegendLayout;
     if fAppliedSessionGeneration <> fSessionGeneration then
       ResetSessionData;
+    UpdateRangeCaption;
     if fChart <> nil then
       fChart.Redraw;
     Invalidate;
@@ -315,6 +318,7 @@ begin
   UpdateLegendLayout;
   if fAppliedSessionGeneration <> fSessionGeneration then
     ResetSessionData;
+  UpdateRangeCaption;
   fChart.Redraw;
   Invalidate;
 end;
@@ -684,6 +688,7 @@ begin
       end;
   end;
 
+  UpdateRangeCaption;
   if fChart <> nil then
     fChart.Redraw;
 
@@ -732,6 +737,7 @@ end;
 procedure TRecorderTrendView.DrawLegend(ACanvas: TCanvas; const ARect: TRect);
 var
   I: Integer;
+  lAxis: TChartAxis;
   lLine: TRecorderTrendLine;
   lText: string;
   lY: Integer;
@@ -743,6 +749,16 @@ begin
   ACanvas.FillRect(ARect);
 
   lY := ARect.Top + 4;
+  lAxis := SelectedAxis;
+  if lAxis <> nil then
+  begin
+    ACanvas.Font.Color := clGray;
+    ACanvas.Font.Name := 'Segoe UI';
+    ACanvas.Font.Size := 9;
+    ACanvas.TextOut(ARect.Left + 4, lY, Format('dY=%s',
+      [FormatFloat('0.###', lAxis.MaxValue - lAxis.MinValue)]));
+    Inc(lY, 18);
+  end;
   for I := 0 to fComponent.LineCount - 1 do
   begin
     lLine := fComponent.Lines[I];
@@ -762,6 +778,43 @@ begin
     ACanvas.TextOut(ARect.Left + 28, lY, lText);
     Inc(lY, 18);
   end;
+end;
+
+function TRecorderTrendView.SelectedAxis: TChartAxis;
+var
+  lPage: TChartPage;
+  lSelected: cBaseObj;
+begin
+  Result := nil;
+  if fChart <> nil then
+  begin
+    lSelected := fChart.SelectedObject;
+    if lSelected is TChartAxis then
+      Exit(TChartAxis(lSelected));
+    if (lSelected <> nil) and (lSelected.Parent is TChartAxis) then
+      Exit(TChartAxis(lSelected.Parent));
+  end;
+  if (fModel = nil) or (fModel.ChildCount = 0) or
+    (not (fModel.Children[0] is TChartPage)) then Exit;
+  lPage := TChartPage(fModel.Children[0]);
+  if (lPage.ChildCount > 0) and (lPage.Children[0] is TChartAxis) then
+    Result := TChartAxis(lPage.Children[0]);
+end;
+
+procedure TRecorderTrendView.UpdateRangeCaption;
+var
+  lAxis: TChartAxis;
+  lPage: TChartPage;
+begin
+  if (fModel = nil) or (fModel.ChildCount = 0) or
+    (not (fModel.Children[0] is TChartPage)) then Exit;
+  lPage := TChartPage(fModel.Children[0]);
+  lAxis := SelectedAxis;
+  if lAxis = nil then
+    lPage.Caption := 'Page 1'
+  else
+    lPage.Caption := Format('%s | dY=%s', [lAxis.Name,
+      FormatFloat('0.###', lAxis.MaxValue - lAxis.MinValue)]);
 end;
 
 finalization

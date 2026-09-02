@@ -47,6 +47,7 @@ type
 function ShowRecorderMic185AdditionalDialog(AOwner: TComponent;
   var ASettings: TMic185ModuleProgramSettings;
   var ATemperatureCompensation: Boolean): Boolean;
+function CreateRecorderMic185AdditionalGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
@@ -54,6 +55,15 @@ implementation
 
 uses
   Math, uMic185Constants;
+
+function CreateRecorderMic185AdditionalGuideForm(AOwner: TComponent): TForm;
+var
+  lForm: TRecorderMic185AdditionalForm;
+begin
+  lForm := TRecorderMic185AdditionalForm.Create(AOwner);
+  lForm.LoadDefaults;
+  Result := lForm;
+end;
 
 constructor TRecorderMic185AdditionalForm.Create(AOwner: TComponent);
 begin

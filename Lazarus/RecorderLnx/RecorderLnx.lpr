@@ -29,6 +29,7 @@ uses
   uRecorderMic185SettingsDialog,
   uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
   uRecorderMeraPaths, uOglChartLog,
+  uRecorderUserGuideCapture,
   uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
   uMc032Device, uRecorderMcbusDevice;
 
@@ -120,5 +121,10 @@ begin
   {$ENDIF}
   ChartLogSetFileName(RecorderServiceFileName('oglchart_debug.log'));
   Application.CreateForm(TMainForm, MainForm);
+  if HasSwitch('--capture-user-guide') then
+    StartRecorderUserGuideCapture(MainForm, SwitchValue('--guide-output',
+      ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+        PathDelim + 'Docs' + PathDelim + 'Руководство пользователя' +
+        PathDelim + 'screens')));
   Application.Run;
 end.

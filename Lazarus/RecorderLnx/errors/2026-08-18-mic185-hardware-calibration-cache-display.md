@@ -579,6 +579,45 @@ equivalents even when the channel source unit was `Ом` or `мкм/м`.
 
 - Independent Skill Compliance Review and static QA review: `PASS`.
 - `git diff --check` passed with only standard LF/CRLF warnings.
+
+## Follow-up 2026-08-27: one Linux channel loses hardware GX after restart
+
+### Symptom
+
+On an installed Linux PC, enabling MIC-185 hardware GX immediately changes one
+tag from raw codes to Ohms, but after Save and application restart the checkbox
+is off and the tag is back in codes.
+
+### Static diagnosis
+
+- The in-memory UI path is correct: `StoreToTags` copies the checkbox into
+  `TRecorderTag.HardwareCalibrationEnabled` and attaches the MIC-185 GX.
+- Project save can fail because of Linux ownership/permissions, while the
+  exception is reported only to the application log and not as a blocking
+  dialog. The installer can leave `/var/opt/mera/RecorderLnx/config` root-owned
+  when the runtime user cannot be inferred reliably.
+- The same flag is persisted twice: `tags[].hardwareCalibrationEnabled` and
+  `dataSources[].mic185.tagLinks[].hardwareCalibrationEnabled`. MIC-185 config
+  loading may overwrite the top-level tag value with an older `false` link.
+- Therefore the leading hypothesis is a non-writable active project file plus
+  a stale `false` in the MIC-185 tag link. A different active config path or an
+  older prebuilt Linux executable are secondary possibilities.
+
+### Verification needed on target
+
+Check `DefaultProjectConfigDir`, file owner/mode, SHA-256 before/after Save,
+the two JSON occurrences for the affected tag, and `Save config failed:` in
+the lower application log. No production code was changed in this iteration.
 - Forced `lazbuild -B RecorderLnx.lpi` compiled all Pascal units and stopped at
   final link because a running `RecorderLnx.exe` locked the output file
   (`error code: 5`). Repeat after closing the application.
+
+### Fix 2026-08-27: remove duplicate ownership
+
+- Removed `hardwareCalibrationEnabled` and `hardwareCalibrationName` from the
+  MIC-185 `dataSources[].mic185.tagLinks[]` save/load path.
+- `tags[]` is now the only persistent owner of these tag settings. Legacy link
+  fields are ignored on load and disappear after the next project save.
+- The focused DataSources target rebuilt successfully and its existing test
+  suite passed. The main target compiled through all Pascal units; its final
+  link remained blocked only by the running `RecorderLnx.exe`.

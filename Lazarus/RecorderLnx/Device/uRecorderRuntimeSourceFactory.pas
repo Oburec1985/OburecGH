@@ -134,6 +134,12 @@ begin
         lTagNames := EnsureGroup(lFiles, lFileName);
         if lTagNames.IndexOf(lTag.Address) < 0 then
           lTagNames.Add(lTag.Address);
+        { Address в сохранённом проекте содержит индекс источника в дереве
+          (например, "5- 2- 1"), а MERA-файл хранит исходный адрес
+          ("1- 2- 1"). Имя тега не зависит от позиции источника и поэтому
+          является основной устойчивой связью с сигналом файла. }
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
       end
       else if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
       begin

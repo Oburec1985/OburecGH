@@ -131,6 +131,8 @@ type
       AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
       ATagNames: TStrings = nil; AOutputMode: TRecorderMic140OutputMode = momMillivolts);
     destructor Destroy; override;
+    function Reconfigure(AUpdateTimeMs: Cardinal;
+      out AErrorText: string): Boolean; override;
     procedure Start; override;
     procedure Stop; override;
     procedure RequestStop; override;
@@ -1669,6 +1671,41 @@ begin
     Mic140LogWarning(Format(
       '[DataSource:%s] MIC-140 source is not started; preview will continue without device samples',
       [SourceId]));
+  end;
+end;
+
+function TRecorderMic140DataSource.Reconfigure(AUpdateTimeMs: Cardinal;
+  out AErrorText: string): Boolean;
+begin
+  Result := inherited Reconfigure(AUpdateTimeMs, AErrorText);
+  if not Result then
+    Exit;
+  if fDevice = nil then
+    Exit(True);
+  try
+    if not fDevice.TrySetDeviceProperty(rdpUpdateTimeMs,
+      Integer(UpdateTimeMs)) then
+    begin
+      AErrorText := 'MIC-140 update period is not supported';
+      Exit(False);
+    end;
+    if not fHardwarePrepared then
+      Exit(True);
+    fDevice.ConfigureDevice;
+    fConfigured := fDevice.State = rdsProgrammed;
+    if not fConfigured then
+    begin
+      AErrorText := 'MIC-140 reconfiguration failed';
+      Exit(False);
+    end;
+    BuildRuntimeCache;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      AErrorText := E.ClassName + ': ' + E.Message;
+      Result := False;
+    end;
   end;
 end;
 

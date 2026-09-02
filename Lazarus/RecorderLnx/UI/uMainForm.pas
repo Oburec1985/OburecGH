@@ -181,9 +181,14 @@ type
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
     fConfigPopupMenu: TPopupMenu;                 // Меню операций сохранения/загрузки конфигурации
+    fWinposPopupMenu: TPopupMenu;
+    fWinposOpenDirItem: TMenuItem;
+    fWinposRunItem: TMenuItem;
     fRecordFrameManager: TRecorderRecordFrameManager; // Менеджер каталогов кадров записи
+    fLastRecordFrameDir: string;                  // Последний фактически открытый каталог замера
     fMeraWriter: TRecorderMeraTagWriter;          // Writer MERA files of current record
     fRecordTagCursors: array of QWord;            // Независимые позиции writer-а в кольцах тегов
+    fRecordTagBlocks: array of TRecorderSignalSnapshot; // Переиспользуемый MERA block на тег
     fDiagLastLogTickMs: QWord;                    // Время последнего диагностического лога
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
@@ -219,6 +224,8 @@ type
     procedure UpdateMainCaption;
     { Возвращает путь к последнему записанному record.mera. }
     function LastRecordedMeraFileName: string;
+    { Возвращает фактический каталог последнего записанного замера. }
+    function LastRecordedMeasureDir: string;
     { Создает галочки фильтрации нижнего журнала. }
     procedure EnsureLogFilterPanel;
     { Обработчик изменения фильтров нижнего журнала. }
@@ -333,6 +340,9 @@ type
     procedure SaveDefaultProjectConfigDir;
     { Создает popup-меню кнопки конфигурации с Save As/Load. }
     procedure EnsureConfigPopupMenu;
+    procedure EnsureWinposPopupMenu;
+    procedure UpdateWinposButtonAction;
+    procedure WinposActionClick(Sender: TObject);
     { Показывает popup-меню операций конфигурации. }
     procedure ShowConfigPopupMenu;
     { Команды popup-меню конфигурации. }
@@ -489,6 +499,7 @@ begin
   LoadRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
   SetupCommandButtons;
+  EnsureWinposPopupMenu;
   EnsureLogFilterPanel;
   EnsurePageControl;
   EnsureEditorSurface;
@@ -512,6 +523,7 @@ begin
   EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
+  UpdateWinposButtonAction;
   ApplyDisplayTimingSettings;
   lStageStartedAt := GetTickCount64;
   LoadProjectPackage;
@@ -928,25 +940,86 @@ end;
 
 procedure TMainForm.btnRunWinposClick(Sender: TObject);
 var
+  lMeasureDir: string;
   lMeraFileName: string;
 begin
-  lMeraFileName := LastRecordedMeraFileName;
-  if lMeraFileName = '' then
-    Exit;
-
-  OpenDocument(lMeraFileName);
+  try
+    case fRecorder.RunSettings.WinposButtonAction of
+      rwbaRunWinpos:
+        begin
+          lMeraFileName := LastRecordedMeraFileName;
+          if lMeraFileName = '' then
+          begin
+            AddLog('Нет записанного MERA-файла для запуска Winpos.');
+            Exit;
+          end;
+          AddLog('Запускаю Winpos для замера: ' + lMeraFileName);
+          if not OpenDocument(lMeraFileName) then
+            AddLog('Не удалось открыть MERA-файл. ' +
+              'Проверьте системную ассоциацию .mera с Winpos.');
+        end;
+    else
+      lMeasureDir := LastRecordedMeasureDir;
+      if lMeasureDir = '' then
+      begin
+        AddLog('Нет записанного MERA-замера для открытия.');
+        Exit;
+      end;
+      AddLog('Открываю каталог записанного замера: ' + lMeasureDir);
+      if not OpenDocument(lMeasureDir) then
+        AddLog('Не удалось открыть каталог замера.');
+    end;
+  except
+    on E: Exception do
+      LogCommandError('Winpos button', E);
+  end;
 end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
   SaveCurrentConfigClick(Sender);
 end;
 
+function TMainForm.LastRecordedMeasureDir: string;
+var
+  lFrameNo: Integer;
+begin
+  Result := '';
+  if fRecordFrameManager = nil then
+    Exit;
+
+  if fRecordFrameManager.Recording and
+    (fRecordFrameManager.CurrentFrameDir <> '') and
+    DirectoryExists(fRecordFrameManager.CurrentFrameDir) then
+    Exit(IncludeTrailingPathDelimiter(fRecordFrameManager.CurrentFrameDir));
+
+  if (fLastRecordFrameDir <> '') and DirectoryExists(fLastRecordFrameDir) then
+    Exit(IncludeTrailingPathDelimiter(fLastRecordFrameDir));
+
+  lFrameNo := fRecordFrameManager.FindLastFrameNo;
+  if lFrameNo <= 0 then
+    Exit;
+
+  Result := IncludeTrailingPathDelimiter(fRecordFrameManager.RootDir) +
+    TRecorderRecordFrameManager.FormatFrameName(lFrameNo);
+  if DirectoryExists(Result) then
+    Result := IncludeTrailingPathDelimiter(Result)
+  else
+    Result := '';
+end;
+
 procedure TMainForm.btnSettingsClick(Sender: TObject);
 var
+  I: Integer;
   lChanges: TRecorderConfigurationChangeSet;
   lDataSourcesChanged: Boolean;
+  lDataUpdateChanged: Boolean;
+  lOldDataUpdateMs: Cardinal;
+  lReconfigureErrors: TStringList;
   lResult: TRecorderConfigurationResult;
+  lSourcesWereRunning: Boolean;
 begin
+  lOldDataUpdateMs := fRecorder.RunSettings.DataUpdateMs;
+  lSourcesWereRunning := False;
   lChanges := TRecorderConfigurationChangeSet.Create(
     fConfigurationService.CaptureState, nil);
   try
@@ -957,10 +1030,19 @@ begin
         AddLog('Configuration mode requested: recording stopped before settings.');
       end;
       AddLog('Configuration mode: settings dialog opened.');
+      lSourcesWereRunning := fRecorder.DataSources.Running;
       lDataSourcesChanged := False;
       if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
         ilTagDialogButtons, lDataSourcesChanged) then
       begin
+        lDataUpdateChanged := lOldDataUpdateMs <>
+          fRecorder.RunSettings.DataUpdateMs;
+        if lDataUpdateChanged then
+          for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+            RecorderTagUpdateAutoEstimatePortion(
+              fRecorder.TagRegistry.Tags[I],
+              fRecorder.TagRegistry.Tags[I].PollFrequencyHz,
+              lOldDataUpdateMs, fRecorder.RunSettings.DataUpdateMs);
         ApplyDisplayTimingSettings;
         UpdateRecordFrameManager;
         UpdateActiveSourceIds;
@@ -977,6 +1059,24 @@ begin
           lResult.Free;
         end;
         UpdateActiveSourceIds;
+        if lDataUpdateChanged then
+        begin
+          StopDataSources;
+          lReconfigureErrors := TStringList.Create;
+          try
+            if not fRecorder.DataSources.ReconfigureAll(
+              fRecorder.RunSettings.DataUpdateMs, lReconfigureErrors) then
+              raise ERecorderDataSourceError.Create(
+                Trim(lReconfigureErrors.Text));
+            EnsureTagSignalBufferCapacities;
+          finally
+            lReconfigureErrors.Free;
+          end;
+          if lSourcesWereRunning then
+            StartDataSources;
+        end
+        else
+          EnsureTagSignalBufferCapacities;
         AddLog('Project settings applied.');
       end
       else
@@ -1152,19 +1252,12 @@ end;
 
 function TMainForm.LastRecordedMeraFileName: string;
 var
-  lFrameNo: Integer;
   lFrameDir: string;
 begin
   Result := '';
-  if fRecordFrameManager = nil then
+  lFrameDir := LastRecordedMeasureDir;
+  if lFrameDir = '' then
     Exit;
-
-  lFrameNo := fRecordFrameManager.FindLastFrameNo;
-  if lFrameNo <= 0 then
-    Exit;
-
-  lFrameDir := IncludeTrailingPathDelimiter(fRecordFrameManager.RootDir) +
-    TRecorderRecordFrameManager.FormatFrameName(lFrameNo);
   Result := IncludeTrailingPathDelimiter(lFrameDir) +
     ExtractFileName(ExcludeTrailingPathDelimiter(lFrameDir)) + '.mera';
   if not FileExists(Result) then
@@ -2095,7 +2188,10 @@ begin
 
   RebuildBaseOscillograms(lCount);
   RefreshBaseOscillograms;
-  RepaintRecorderOglOscillograms(fBaseChartsPanel);
+  { Repaint синхронно ждёт тяжёлую OpenGL-отрисовку и блокировал обработчик
+    смены вкладки на сотни миллисекунд. Invalidate отдаёт кадр штатному циклу
+    сообщений, поэтому вкладка переключается сразу. }
+  fBaseChartsPanel.Invalidate;
 end;
 
 procedure TMainForm.RebuildBaseOscillograms(ACount: Integer);
@@ -2279,6 +2375,7 @@ begin
   end;
   SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
   UpdateRecordFrameManager;
+  UpdateWinposButtonAction;
 end;
 
 procedure TMainForm.SaveRunSettings;
@@ -2465,6 +2562,74 @@ begin
   fConfigPopupMenu.Items.Add(lMenuItem);
 end;
 
+procedure TMainForm.EnsureWinposPopupMenu;
+begin
+  if fWinposPopupMenu <> nil then
+    Exit;
+
+  fWinposPopupMenu := TPopupMenu.Create(Self);
+
+  fWinposOpenDirItem := TMenuItem.Create(fWinposPopupMenu);
+  fWinposOpenDirItem.Caption := 'Открыть каталог';
+  fWinposOpenDirItem.RadioItem := True;
+  fWinposOpenDirItem.GroupIndex := 1;
+  fWinposOpenDirItem.OnClick := @WinposActionClick;
+  fWinposPopupMenu.Items.Add(fWinposOpenDirItem);
+
+  fWinposRunItem := TMenuItem.Create(fWinposPopupMenu);
+  fWinposRunItem.Caption := 'Запустить Winpos';
+  fWinposRunItem.RadioItem := True;
+  fWinposRunItem.GroupIndex := 1;
+  fWinposRunItem.OnClick := @WinposActionClick;
+  fWinposPopupMenu.Items.Add(fWinposRunItem);
+
+  btnRunWinpos.PopupMenu := fWinposPopupMenu;
+  UpdateWinposButtonAction;
+end;
+
+procedure TMainForm.UpdateWinposButtonAction;
+var
+  lRunWinpos: Boolean;
+begin
+  if (fRecorder = nil) or (fRecorder.RunSettings = nil) then
+    Exit;
+
+  lRunWinpos := fRecorder.RunSettings.WinposButtonAction = rwbaRunWinpos;
+  if fWinposOpenDirItem <> nil then
+    fWinposOpenDirItem.Checked := not lRunWinpos;
+  if fWinposRunItem <> nil then
+    fWinposRunItem.Checked := lRunWinpos;
+
+  if lRunWinpos then
+    btnRunWinpos.Hint := 'Запустить Winpos для последнего замера'
+  else
+    btnRunWinpos.Hint := 'Открыть каталог последнего замера';
+end;
+
+procedure TMainForm.WinposActionClick(Sender: TObject);
+var
+  lOldAction: TRecorderWinposButtonAction;
+begin
+  lOldAction := fRecorder.RunSettings.WinposButtonAction;
+  if Sender = fWinposRunItem then
+    fRecorder.RunSettings.WinposButtonAction := rwbaRunWinpos
+  else
+    fRecorder.RunSettings.WinposButtonAction := rwbaOpenDirectory;
+
+  try
+    SaveRunSettings;
+    UpdateWinposButtonAction;
+    if fRecorder.RunSettings.WinposButtonAction = rwbaRunWinpos then
+      AddLog('Действие кнопки Winpos: запустить Winpos.')
+    else
+      AddLog('Действие кнопки Winpos: открыть каталог.');
+  except
+    fRecorder.RunSettings.WinposButtonAction := lOldAction;
+    UpdateWinposButtonAction;
+    raise;
+  end;
+end;
+
 procedure TMainForm.ShowConfigPopupMenu;
 var
   lPoint: TPoint;
@@ -2554,6 +2719,7 @@ begin
     SetProjectConfigDir(fProjectConfigDir);
 
   lFrameDir := fRecordFrameManager.OpenNextFrame;
+  fLastRecordFrameDir := IncludeTrailingPathDelimiter(lFrameDir);
   fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
   fMeraWriter.Open(lFrameDir);
   ResetRecordTagCursors;
@@ -2564,16 +2730,28 @@ end;
 procedure TMainForm.ResetRecordTagCursors;
 var
   I: Integer;
+  lBlockCapacity: Integer;
 begin
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
   begin
     SetLength(fRecordTagCursors, 0);
+    SetLength(fRecordTagBlocks, 0);
     Exit;
   end;
   SetLength(fRecordTagCursors, fRecorder.TagRegistry.TagCount);
+  SetLength(fRecordTagBlocks, fRecorder.TagRegistry.TagCount);
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+  begin
     fRecordTagCursors[I] :=
       fRecorder.TagRegistry.Tags[I].SignalBuffer.CurrentBlockCursor;
+    fRecordTagBlocks[I].Count := 0;
+    lBlockCapacity := fRecorder.TagRegistry.Tags[I].SignalBuffer.
+      CurrentBlockSampleCapacity;
+    if Length(fRecordTagBlocks[I].Times) < lBlockCapacity then
+      SetLength(fRecordTagBlocks[I].Times, lBlockCapacity);
+    if Length(fRecordTagBlocks[I].Values) < lBlockCapacity then
+      SetLength(fRecordTagBlocks[I].Values, lBlockCapacity);
+  end;
 end;
 
 procedure TMainForm.CloseRecordFrame;
@@ -2879,6 +3057,7 @@ var
   lDisplaySeconds: Double;
   lPortionLength: Integer;
   lRequired: Integer;
+  lEstimateSettings: TRecorderTagEstimateSettings;
   lTag: TRecorderTag;
 begin
   if (fRecorder.TagRegistry = nil) or (fRecorder.RunSettings = nil) then
@@ -2893,13 +3072,22 @@ begin
     lTag := fRecorder.TagRegistry.Tags[I];
     lBlockSamples := 0;
     lPortionLength := lTag.EstimateSettings.PortionLength;
+    if RecorderTagEstimatePortionLengthIsAuto(lPortionLength,
+      lTag.PollFrequencyHz, fRecorder.RunSettings.DataUpdateMs) then
+    begin
+      lPortionLength := RecorderTagDefaultEstimatePortionLength(
+        lTag.PollFrequencyHz, fRecorder.RunSettings.DataUpdateMs);
+      lEstimateSettings := lTag.EstimateSettings;
+      lEstimateSettings.PortionLength := lPortionLength;
+      lTag.EstimateSettings := lEstimateSettings;
+    end;
     if lPortionLength < 1 then
       lPortionLength := 1;
 
     lCapacity := lPortionLength + 1;
     if lTag.PollFrequencyHz > 0 then
     begin
-      lBlockSamples := Max(1, Round(lTag.PollFrequencyHz *
+      lBlockSamples := Max(1, Ceil(lTag.PollFrequencyHz *
         fRecorder.RunSettings.DataUpdateMs / 1000.0));
       lBlockCount := Max(1, Ceil(fRecorder.RunSettings.DisplayBufferMs /
         Max(1, fRecorder.RunSettings.DataUpdateMs)));
@@ -2954,7 +3142,6 @@ var
   I: Integer;
   lLatestTime: Double;
   lRevisionSignature: QWord;
-  lSnapshot: TRecorderSignalSnapshot;
   lStartMs: QWord;
   lTag: TRecorderTag;
   lRecordMetadata: TRecorderRecordChannelMetadata;
@@ -2983,11 +3170,13 @@ begin
         Continue;
       lRecordMetadata := lMetadataService.Resolve(
         fRecorder.TagRegistry, lTag);
-      while lTag.SignalBuffer.SnapshotNextBlock(fRecordTagCursors[I],
-        lSnapshot) do
+      while lTag.SignalBuffer.SnapshotNextBlockInto(fRecordTagCursors[I],
+        fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
+        fRecordTagBlocks[I].Count) do
         fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
           lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
-          lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
+          fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
+          fRecordTagBlocks[I].Count,
           lTag.PollFrequencyHz,
           lRecordMetadata.IsUts,
           lRecordMetadata.UtsChannelName);
@@ -3094,7 +3283,11 @@ begin
     перерисовка таблицы, мнемосхемы или OpenGL-страницы разрешена только после
     изменения ревизии хотя бы одного кольца. Смена страницы вызывает Render
     явно и в этом флаге не нуждается. }
-  if fRuntimeViewDirty then
+  { Пока открыт модальный диалог, перерисовка расположенного под ним главного
+    окна конкурирует с системным перемещением диалога и создаёт заметное
+    отставание от курсора. Данные продолжают приниматься; накопленный dirty
+    будет отрисован первым таймером после закрытия диалога. }
+  if fRuntimeViewDirty and (Application.ModalLevel = 0) then
     if DoRepaintVisiblePage then
       fRuntimeViewDirty := False;
 
@@ -3232,7 +3425,7 @@ begin
   btnRunWinpos.Images := ilCommandButtons;
   btnRunWinpos.ImageIndex := CIconRunWp;
   btnRunWinpos.ImageWidth := 32;
-  btnRunWinpos.Hint := 'Run Winpos';
+  btnRunWinpos.Hint := 'Открыть каталог последнего замера';
   btnRunWinpos.ShowHint := True;
 
   btnStop.Caption := '';

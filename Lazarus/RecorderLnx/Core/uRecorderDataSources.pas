@@ -58,6 +58,10 @@ type
     { Создает/подключает теги источника в общем registry.
       ARegistry - общий реестр тегов проекта. Владение не передается. }
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry);
+    { Меняет runtime-параметры существующего источника без замены объекта.
+      Вызывается только после остановки worker-потока. }
+    function Reconfigure(AUpdateTimeMs: Cardinal;
+      out AErrorText: string): Boolean;
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
     { Подготовка железа/транспорта до старта потока сбора. Метод не обращается
@@ -138,6 +142,8 @@ type
 
     { Настройка реестра тегов }
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry); virtual;
+    function Reconfigure(AUpdateTimeMs: Cardinal;
+      out AErrorText: string): Boolean; virtual;
     { Запуск источника }
     procedure Start; virtual;
     { Подготовка железа/транспорта до старта потока сбора. UI использовать нельзя. }
@@ -240,6 +246,7 @@ type
     fPlayRangeMinSec: Double;             { Минимальное время старта среди сигналов }
     fPlaybackSpeed: Cardinal;             { Коэффициент скорости воспроизведения }
     fPlaybackSignals: TList;              { Список проигрываемых сигналов TMeraPlaybackSignal }
+    fFirstBlockLogged: Boolean;            { Однократная диагностика фактической публикации }
     fStartTickMs: QWord;                  { Системное время старта воспроизведения }
     fSelectedTagNames: TStringList;       { Список выбранных адресов каналов }
     function IsSignalSelected(ASignal: TMeraSignalInfo): Boolean;
@@ -347,6 +354,8 @@ type
     procedure PrepareHardwareAll;
     { Подключает и программирует только явно указанные источники. }
     procedure PrepareHardwareSources(ASourceIds: TStrings);
+    function ReconfigureAll(AUpdateTimeMs: Cardinal;
+      AErrors: TStrings = nil): Boolean;
 
     { Запускает все источники, создавая отдельный thread-runner на каждый. }
     procedure StartAll;
@@ -515,6 +524,24 @@ begin
 
   fRegistry := ARegistry;
   DoCreateTags(ARegistry);
+end;
+
+function TRecorderDataSourceBase.Reconfigure(AUpdateTimeMs: Cardinal;
+  out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  if AUpdateTimeMs = 0 then
+  begin
+    AErrorText := 'Data source update period must be positive';
+    Exit(False);
+  end;
+  if fState <> dssStopped then
+  begin
+    AErrorText := 'Stop data source before reconfiguration';
+    Exit(False);
+  end;
+  fUpdateTimeMs := AUpdateTimeMs;
+  Result := True;
 end;
 
 procedure TRecorderDataSourceBase.Start;
@@ -1461,6 +1488,7 @@ var
 
 begin
   inherited Start;
+  fFirstBlockLogged := False;
   lHasRange := False;
   lSourceId := 'Mera file: ' + fFileName;
   fPlayRangeMinSec := 0;
@@ -1505,6 +1533,8 @@ begin
     ClearMeraSignals(lSignals);
     lSignals.Free;
   end;
+  RecorderDebugLog(Format('[MeraFile] started file="%s" signals=%d',
+    [fFileName, fPlaybackSignals.Count]));
 end;
 
 procedure TRecorderMeraFileDataSource.Stop;
@@ -1558,6 +1588,12 @@ begin
 
   if not lAnyPublished then
     Exit;
+  if not fFirstBlockLogged then
+  begin
+    fFirstBlockLogged := True;
+    RecorderDebugLog(Format('[MeraFile] first data published file="%s" signals=%d',
+      [fFileName, fPlaybackSignals.Count]));
+  end;
 end;
 { TRecorderDataSourceThread }
 
@@ -1936,6 +1972,35 @@ begin
     if (ASourceIds.IndexOf(lContext.Source.SourceId) >= 0) and
       (lContext.PrepareError <> '') then
       fLastErrors.Add(lContext.Source.SourceId + ': ' + lContext.PrepareError);
+  end;
+end;
+
+function TRecorderDataSourceManager.ReconfigureAll(AUpdateTimeMs: Cardinal;
+  AErrors: TStrings): Boolean;
+var
+  I: Integer;
+  lContext: TSourceContext;
+  lErrorText: string;
+begin
+  Result := False;
+  if fRunning then
+  begin
+    if AErrors <> nil then
+      AErrors.Add('Stop data sources before reconfiguration');
+    Exit;
+  end;
+  Result := True;
+  for I := 0 to fSources.Count - 1 do
+  begin
+    lContext := GetSourceContext(I);
+    lErrorText := '';
+    if lContext.Source.Reconfigure(AUpdateTimeMs, lErrorText) then
+      Continue;
+    Result := False;
+    lContext.Prepared := False;
+    lContext.PrepareError := lErrorText;
+    if AErrors <> nil then
+      AErrors.Add(lContext.Source.SourceId + ': ' + lErrorText);
   end;
 end;
 

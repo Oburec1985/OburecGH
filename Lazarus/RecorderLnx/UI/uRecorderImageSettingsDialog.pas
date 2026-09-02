@@ -30,6 +30,7 @@ type
     procedure OkButtonClick(Sender: TObject);
   private
     fComponent: TRecorderImageComponent;
+    fOwnComponent: Boolean;
     fTagRegistry: TRecorderTagRegistry;
     fPreviews: TList;
     procedure ClearPreviews;
@@ -48,6 +49,7 @@ type
 function ShowRecorderImageSettingsDialog(AOwner: TComponent;
   AComponent: TRecorderImageComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
+function CreateRecorderImageSettingsGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
@@ -68,6 +70,23 @@ begin
   end;
 end;
 
+function CreateRecorderImageSettingsGuideForm(AOwner: TComponent): TForm;
+var
+  lComponent: TRecorderImageComponent;
+  lDialog: TRecorderImageSettingsDialog;
+begin
+  lComponent := TRecorderImageComponent.Create;
+  lComponent.Name := 'Картинка';
+  try
+    lDialog := TRecorderImageSettingsDialog.CreateDialog(AOwner, lComponent, nil);
+    lDialog.fOwnComponent := True;
+    Result := lDialog;
+  except
+    lComponent.Free;
+    raise;
+  end;
+end;
+
 constructor TRecorderImageSettingsDialog.CreateDialog(AOwner: TComponent;
   AComponent: TRecorderImageComponent; ATagRegistry: TRecorderTagRegistry);
 begin
@@ -84,6 +103,8 @@ destructor TRecorderImageSettingsDialog.Destroy;
 begin
   ClearPreviews;
   fPreviews.Free;
+  if fOwnComponent then
+    fComponent.Free;
   inherited Destroy;
 end;
 
@@ -91,6 +112,8 @@ procedure TRecorderImageSettingsDialog.ClearPreviews;
 var
   I: Integer;
 begin
+  if fPreviews = nil then
+    Exit;
   for I := 0 to fPreviews.Count - 1 do
     TObject(fPreviews[I]).Free;
   fPreviews.Clear;

@@ -57,6 +57,8 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
     OnCollapsed = treeSdbCollapsed
     OnDblClick = treeSdbDblClick
     OnExpanded = treeSdbExpanded
+    OnMouseDown = treeSdbMouseDown
+    PopupMenu = pmSdbTree
   end
   object spTree: TSplitter
     Left = 330
@@ -228,6 +230,41 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
             end
           end
         end
+        object tsParameters: TTabSheet
+          Caption = 'Настройка'
+          ClientHeight = 374
+          ClientWidth = 673
+          TabVisible = False
+          object sbStrainEditor: TScrollBox
+            Left = 0
+            Height = 332
+            Top = 0
+            Width = 673
+            Align = alClient
+            TabOrder = 0
+          end
+          object pnStrainActions: TPanel
+            Left = 0
+            Height = 42
+            Top = 332
+            Width = 673
+            Align = alBottom
+            BevelOuter = bvNone
+            ClientHeight = 42
+            ClientWidth = 673
+            TabOrder = 1
+            object btnSaveStrain: TButton
+              Left = 508
+              Height = 30
+              Top = 6
+              Width = 150
+              Anchors = [akTop, akRight]
+              Caption = 'Сохранить ГХ'
+              OnClick = btnSaveStrainClick
+              TabOrder = 0
+            end
+          end
+        end
       end
     end
   end
@@ -246,5 +283,14 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       7339B461C55B31D5EC09BF01FE65BBBCD028D21FFDFFE2F996B277BDBAE1D699
       0F4B298283
     }
+  end
+  object pmSdbTree: TPopupMenu
+    OnPopup = pmSdbTreePopup
+    Left = 88
+    Top = 56
+    object miCreateFolder: TMenuItem
+      Caption = 'Создать каталог...'
+      OnClick = miCreateFolderClick
+    end
   end
 end

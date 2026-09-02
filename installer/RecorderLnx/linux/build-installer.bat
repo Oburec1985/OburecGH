@@ -10,4 +10,10 @@ if not exist "%PS_SCRIPT%" (
 )
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
-exit /b %ERRORLEVEL%
+set "BUILD_RESULT=%ERRORLEVEL%"
+if not "%BUILD_RESULT%"=="0" (
+  echo.
+  echo Linux installer build failed. See the error above.
+  pause
+)
+exit /b %BUILD_RESULT%

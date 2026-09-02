@@ -292,6 +292,61 @@ begin
   end;
 end;
 
+procedure TestReusableBlockSnapshot;
+var
+  I: Integer;
+  lBlock: TRecorderSignalSnapshot;
+  lBuffer: TRecorderSignalBuffer;
+  lCursor: QWord;
+  lTimes: array[0..1] of Double;
+  lValues: array[0..1] of Double;
+  lTimesAddress: Pointer;
+  lValuesAddress: Pointer;
+begin
+  Writeln('--- Reusable logical block snapshot test ---');
+  lBuffer := TRecorderSignalBuffer.Create(4);
+  try
+    lBuffer.ConfigureBlockRing(2, 2);
+    for I := 0 to 2 do
+    begin
+      lTimes[0] := I * 2;
+      lTimes[1] := I * 2 + 1;
+      lValues[0] := I * 20;
+      lValues[1] := I * 20 + 10;
+      lBuffer.AddSamples(lTimes, lValues, 2);
+    end;
+
+    lCursor := 0;
+    AssertTrue(lBuffer.SnapshotNextBlockInto(lCursor, lBlock.Times,
+      lBlock.Values, lBlock.Count), 'overwritten cursor receives oldest available block');
+    AssertEquals(lBlock.Count, 2, 'reusable block count');
+    AssertEquals(lBlock.Times[0], 2.0, 'overwritten cursor starts at oldest retained block');
+    AssertEquals(lBlock.Values[1], 30.0, 'oldest retained block preserves order');
+    lTimesAddress := @lBlock.Times[0];
+    lValuesAddress := @lBlock.Values[0];
+
+    AssertTrue(lBuffer.SnapshotNextBlockInto(lCursor, lBlock.Times,
+      lBlock.Values, lBlock.Count), 'reusable reader receives wrapped block');
+    AssertEquals(lBlock.Times[0], 4.0, 'wrapped block starts in order');
+    AssertEquals(lBlock.Values[1], 50.0, 'wrapped block ends in order');
+    AssertTrue(@lBlock.Times[0] = lTimesAddress,
+      'time buffer address remains stable between blocks');
+    AssertTrue(@lBlock.Values[0] = lValuesAddress,
+      'value buffer address remains stable between blocks');
+
+    AssertTrue(not lBuffer.SnapshotNextBlockInto(lCursor, lBlock.Times,
+      lBlock.Values, lBlock.Count), 'reusable reader does not duplicate blocks');
+    AssertEquals(lBlock.Count, 0, 'empty reusable read reports zero valid samples');
+    AssertTrue(@lBlock.Times[0] = lTimesAddress,
+      'empty reusable read retains allocated time buffer');
+    AssertTrue(@lBlock.Values[0] = lValuesAddress,
+      'empty reusable read retains allocated value buffer');
+    Writeln('RESULT reusable logical block snapshot test passed.');
+  finally
+    lBuffer.Free;
+  end;
+end;
+
 procedure TestTagAlarmEngine;
 var
   lEngine: IRecorderAlarmEngine;
@@ -342,8 +397,14 @@ begin
     TestReusableRangeSnapshot;
     Halt(0);
   end;
+  if (ParamCount > 0) and SameText(ParamStr(1), '--block-reuse-only') then
+  begin
+    TestReusableBlockSnapshot;
+    Halt(0);
+  end;
   TestTagRegistryAndSignalBuffer;
   TestTagBlockEstimates;
   TestReusableRangeSnapshot;
+  TestReusableBlockSnapshot;
   TestTagAlarmEngine;
 end.

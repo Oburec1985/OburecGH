@@ -12,19 +12,25 @@ unit uRecorderSdbSelectDialog;
 interface
 
 uses
-  Classes, SysUtils, Math, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls, Grids,
+  Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  ExtCtrls, ComCtrls, Grids, Menus,
   ImgList, TAGraph, TASeries, TATypes,
   uRecorderSdbStore, uRecorderSdbTypes, uRecorderSdbImages, uRecorderTags,
+  uRecorderStrainCalibration, uRecorderStrainCalibrationFrame,
   uSharedStringEncoding;
 
 function ShowRecorderSdbSelectDialog(AOwner: TComponent; const AInitialKey: string;
   out ASelectedKey: string): Boolean;
+function ShowRecorderSdbFolderSelectDialog(AOwner: TComponent;
+  const AInitialKey: string; out ASelectedKey: string): Boolean;
+function CreateRecorderSdbSelectGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
 type
   TRecorderSdbSelectDialog = class(TForm)
     btnCancel: TButton;
+    btnSaveStrain: TButton;
     btnSelect: TButton;
     chartScale: TChart;
     edDescription: TEdit;
@@ -37,41 +43,61 @@ type
     lbKey: TLabel;
     lbRange: TLabel;
     lbUnits: TLabel;
+    miCreateFolder: TMenuItem;
     pcScaleData: TPageControl;
+    pmSdbTree: TPopupMenu;
     pnBottom: TPanel;
     pnDetails: TPanel;
     pnScale: TPanel;
+    pnStrainActions: TPanel;
+    sbStrainEditor: TScrollBox;
     seriesScale: TLineSeries;
     spTree: TSplitter;
     treeSdb: TTreeView;
     tsChart: TTabSheet;
+    tsParameters: TTabSheet;
     tsTable: TTabSheet;
     procedure btnSelectClick(Sender: TObject);
+    procedure btnSaveStrainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure pcScaleDataChange(Sender: TObject);
+    procedure miCreateFolderClick(Sender: TObject);
+    procedure pmSdbTreePopup(Sender: TObject);
     procedure treeSdbChange(Sender: TObject; Node: TTreeNode);
     procedure treeSdbCollapsed(Sender: TObject; Node: TTreeNode);
     procedure treeSdbDblClick(Sender: TObject);
     procedure treeSdbExpanded(Sender: TObject; Node: TTreeNode);
+    procedure treeSdbMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     fScaleDataActiveTab: TTabSheet;
     fSelectedKey: string;
+    fSelectFolders: Boolean;
+    fStrainDraft: TRecorderCalibration;
+    fStrainEditor: TRecorderStrainCalibrationFrame;
+    fStrainKey: string;
     fTree: TRecorderSdbTree;
     procedure AddNode(AParent: TTreeNode; AItem: TRecorderSdbNode);
     procedure ApplyNodeIcon(ANode: TTreeNode; AExpanded: Boolean);
     procedure ClearScaleDetails;
     procedure ConfigureScaleChart;
     procedure ConfigureScaleSeries;
+    function FolderKey(AItem: TRecorderSdbNode): string;
+    procedure ReloadTree(const ASelectedKey: string);
     function SelectedItem: TRecorderSdbNode;
-    function SelectedScale: TRecorderSdbNode;
+    function SelectedChoice: TRecorderSdbNode;
     procedure SelectInitialKey(const AKey: string);
     procedure ShowItem(AItem: TRecorderSdbNode);
     procedure ShowNodeCommonInfo(AItem: TRecorderSdbNode);
     procedure ShowScaleDetails(AItem: TRecorderSdbNode);
+    procedure ShowStrainDetails(ACalibration: TRecorderCalibration;
+      const AKey: string);
     procedure UpdateScaleChart(ACalibration: TRecorderCalibration);
     procedure UpdateTreeIcons(ANode: TTreeNode);
   public
-    function Execute(const AInitialKey: string; out ASelectedKey: string): Boolean;
+    destructor Destroy; override;
+    function Execute(const AInitialKey: string; ASelectFolders: Boolean;
+      out ASelectedKey: string): Boolean;
   end;
 
 {$R *.lfm}
@@ -83,10 +109,104 @@ var
 begin
   lDialog := TRecorderSdbSelectDialog.Create(AOwner);
   try
-    Result := lDialog.Execute(AInitialKey, ASelectedKey);
+    Result := lDialog.Execute(AInitialKey, False, ASelectedKey);
   finally
     lDialog.Free;
   end;
+end;
+
+function TRecorderSdbSelectDialog.FolderKey(AItem: TRecorderSdbNode): string;
+begin
+  Result := '';
+  if (AItem <> nil) and (AItem.ItemKind in [sikRoot, sikFolder]) then
+    Result := AItem.FolderInfo.Key;
+end;
+
+procedure TRecorderSdbSelectDialog.treeSdbMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
+begin
+  if Button <> mbRight then
+    Exit;
+  lNode := treeSdb.GetNodeAt(X, Y);
+  if lNode <> nil then
+    treeSdb.Selected := lNode
+  else
+    treeSdb.Selected := nil;
+end;
+
+procedure TRecorderSdbSelectDialog.pmSdbTreePopup(Sender: TObject);
+var
+  lItem: TRecorderSdbNode;
+begin
+  lItem := SelectedItem;
+  miCreateFolder.Enabled := (lItem <> nil) and
+    (lItem.ItemKind in [sikRoot, sikFolder]);
+end;
+
+procedure TRecorderSdbSelectDialog.miCreateFolderClick(Sender: TObject);
+var
+  lCreatedKey: string;
+  lError: string;
+  lItem: TRecorderSdbNode;
+  lName: string;
+begin
+  lItem := SelectedItem;
+  if (lItem = nil) or not (lItem.ItemKind in [sikRoot, sikFolder]) then
+    Exit;
+  lName := '';
+  if not InputQuery('Новый каталог БДГХ', 'Имя каталога:', lName) then
+    Exit;
+  if not RecorderSdbCreateFolder(FolderKey(lItem), lName,
+    lCreatedKey, lError) then
+  begin
+    MessageDlg('Создание каталога БДГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ReloadTree(lCreatedKey);
+end;
+
+procedure TRecorderSdbSelectDialog.ReloadTree(const ASelectedKey: string);
+begin
+  treeSdb.Items.BeginUpdate;
+  try
+    treeSdb.Items.Clear;
+    fTree.Load;
+    AddNode(nil, fTree.Root);
+    treeSdb.FullExpand;
+    UpdateTreeIcons(treeSdb.Items.GetFirstNode);
+  finally
+    treeSdb.Items.EndUpdate;
+  end;
+  SelectInitialKey(ASelectedKey);
+  if treeSdb.Selected = nil then
+    treeSdb.Selected := treeSdb.Items.GetFirstNode;
+  ShowItem(SelectedItem);
+end;
+
+function ShowRecorderSdbFolderSelectDialog(AOwner: TComponent;
+  const AInitialKey: string; out ASelectedKey: string): Boolean;
+var
+  lDialog: TRecorderSdbSelectDialog;
+begin
+  lDialog := TRecorderSdbSelectDialog.Create(AOwner);
+  try
+    Result := lDialog.Execute(AInitialKey, True, ASelectedKey);
+  finally
+    lDialog.Free;
+  end;
+end;
+
+function CreateRecorderSdbSelectGuideForm(AOwner: TComponent): TForm;
+begin
+  Result := TRecorderSdbSelectDialog.Create(AOwner);
+end;
+
+destructor TRecorderSdbSelectDialog.Destroy;
+begin
+  fStrainDraft.Free;
+  inherited Destroy;
 end;
 
 procedure TRecorderSdbSelectDialog.FormCreate(Sender: TObject);
@@ -205,10 +325,12 @@ begin
       AddNode(lNode, TRecorderSdbNode(AItem.GetChild(I)));
 end;
 
-function TRecorderSdbSelectDialog.SelectedScale: TRecorderSdbNode;
+function TRecorderSdbSelectDialog.SelectedChoice: TRecorderSdbNode;
 begin
   Result := nil;
-  if (SelectedItem <> nil) and (SelectedItem.ItemKind = sikScale) then
+  if (SelectedItem <> nil) and
+    (((not fSelectFolders) and (SelectedItem.ItemKind = sikScale)) or
+    (fSelectFolders and (SelectedItem.ItemKind in [sikRoot, sikFolder]))) then
     Result := SelectedItem;
 end;
 
@@ -228,6 +350,9 @@ begin
   gridPoints.Cells[0, 1] := '';
   gridPoints.Cells[1, 1] := '';
   gridPoints.Cells[2, 1] := '';
+  tsTable.TabVisible := True;
+  tsChart.TabVisible := True;
+  tsParameters.TabVisible := False;
   seriesScale.Clear;
   chartScale.Title.Visible := False;
 end;
@@ -265,6 +390,59 @@ begin
   chartScale.Title.Visible := True;
 end;
 
+procedure TRecorderSdbSelectDialog.ShowStrainDetails(
+  ACalibration: TRecorderCalibration; const AKey: string);
+var
+  I: Integer;
+  lCfg: TRecorderStrainConfig;
+  lMaxX: Double;
+  lMinX: Double;
+  lX: Double;
+begin
+  FreeAndNil(fStrainDraft);
+  fStrainDraft := ACalibration.Clone;
+  fStrainKey := AKey;
+  if fStrainEditor = nil then
+  begin
+    fStrainEditor := TRecorderStrainCalibrationFrame.Create(Self);
+    fStrainEditor.Parent := sbStrainEditor;
+    fStrainEditor.Align := alTop;
+  end;
+  fStrainEditor.LoadCalibration(fStrainDraft);
+  tsTable.TabVisible := False;
+  tsParameters.TabVisible := True;
+  if pcScaleData.ActivePage <> tsChart then
+  begin
+    pcScaleData.ActivePage := tsParameters;
+    fScaleDataActiveTab := tsParameters;
+  end;
+
+  lCfg := TRecorderStrainConfig.Create;
+  try
+    lCfg.Load(ACalibration.ModuleData);
+    edRange.Text := '±' + FormatFloat('0.###############',
+      lCfg.MaxMicrostrain) + ' мкстр';
+    ConfigureScaleChart;
+    ConfigureScaleSeries;
+    seriesScale.Clear;
+    if RecorderStrainInputRange(lCfg, lMinX, lMaxX) then
+    begin
+      for I := 0 to 100 do
+      begin
+        lX := lMinX + (lMaxX - lMinX) * I / 100;
+        seriesScale.AddXY(lX, ACalibration.Transform(lX));
+      end;
+      chartScale.BottomAxis.Title.Caption := ACalibration.UnitIn;
+      chartScale.LeftAxis.Title.Caption := ACalibration.UnitOut;
+      chartScale.Title.Text.Clear;
+      chartScale.Title.Text.Add('Тензокалькуляторная ГХ');
+      chartScale.Title.Visible := True;
+    end;
+  finally
+    lCfg.Free;
+  end;
+end;
+
 procedure TRecorderSdbSelectDialog.ShowScaleDetails(AItem: TRecorderSdbNode);
 var
   I: Integer;
@@ -273,15 +451,25 @@ var
 begin
   lInfo := AItem.ScaleInfo;
   edUnits.Text := lInfo.SrcUnits + ' -> ' + lInfo.DstUnits;
-  edRange.Text := FormatFloat('0.######', lInfo.SrcFrom) + ' .. ' +
-    FormatFloat('0.######', lInfo.SrcTo) + ' -> ' +
-    FormatFloat('0.######', lInfo.DstFrom) + ' .. ' +
-    FormatFloat('0.######', lInfo.DstTo);
 
   lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
   try
     if not RecorderSdbLoadScaleCalibrationFromInfo(lInfo, lCalibration) then
       Exit;
+    if lCalibration.Kind = rckStrain then
+    begin
+      ShowStrainDetails(lCalibration, lInfo.Key);
+      Exit;
+    end;
+    if fScaleDataActiveTab = tsParameters then
+    begin
+      fScaleDataActiveTab := tsTable;
+      pcScaleData.ActivePage := tsTable;
+    end;
+    edRange.Text := FormatFloat('0.######', lInfo.SrcFrom) + ' .. ' +
+      FormatFloat('0.######', lInfo.SrcTo) + ' -> ' +
+      FormatFloat('0.######', lInfo.DstFrom) + ' .. ' +
+      FormatFloat('0.######', lInfo.DstTo);
     gridPoints.RowCount := Max(2, lCalibration.PointCount + 1);
     for I := 0 to lCalibration.PointCount - 1 do
     begin
@@ -303,7 +491,7 @@ begin
     fScaleDataActiveTab := pcScaleData.ActivePage;
   ClearScaleDetails;
   pnScale.Visible := False;
-  btnSelect.Enabled := (AItem <> nil) and (AItem.ItemKind = sikScale);
+  btnSelect.Enabled := SelectedChoice <> nil;
   ShowNodeCommonInfo(AItem);
   if (AItem = nil) or (AItem.ItemKind <> sikScale) then
     Exit;
@@ -322,16 +510,47 @@ procedure TRecorderSdbSelectDialog.btnSelectClick(Sender: TObject);
 var
   lScale: TRecorderSdbNode;
 begin
-  lScale := SelectedScale;
+  lScale := SelectedChoice;
   if lScale = nil then
     Exit;
-  fSelectedKey := lScale.ScaleInfo.Key;
+  if lScale.ItemKind = sikScale then
+    fSelectedKey := lScale.ScaleInfo.Key
+  else
+    fSelectedKey := lScale.FolderInfo.Key;
   ModalResult := mrOk;
 end;
 
 procedure TRecorderSdbSelectDialog.treeSdbDblClick(Sender: TObject);
 begin
-  btnSelectClick(Sender);
+  if fSelectFolders then
+  begin
+    if (treeSdb.Selected <> nil) and treeSdb.Selected.HasChildren then
+      treeSdb.Selected.Expanded := not treeSdb.Selected.Expanded;
+  end
+  else
+    btnSelectClick(Sender);
+end;
+
+procedure TRecorderSdbSelectDialog.btnSaveStrainClick(Sender: TObject);
+var
+  lError: string;
+  lKey: string;
+begin
+  if (fStrainEditor = nil) or (fStrainDraft = nil) or (fStrainKey = '') then
+    Exit;
+  if not fStrainEditor.TryApply(fStrainDraft, lError) then
+  begin
+    if lError <> '' then
+      MessageDlg('Настройка ГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  lKey := fStrainKey;
+  if not RecorderSdbUpdateCalibration(lKey, fStrainDraft, lError) then
+  begin
+    MessageDlg('Сохранение ГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ReloadTree(lKey);
 end;
 
 procedure TRecorderSdbSelectDialog.SelectInitialKey(const AKey: string);
@@ -344,7 +563,10 @@ begin
   while lNode <> nil do
   begin
     if (TObject(lNode.Data) is TRecorderSdbNode) and
-      SameText(TRecorderSdbNode(lNode.Data).ScaleInfo.Key, lKey) then
+      (((TRecorderSdbNode(lNode.Data).ItemKind = sikScale) and
+      SameText(TRecorderSdbNode(lNode.Data).ScaleInfo.Key, lKey)) or
+      ((TRecorderSdbNode(lNode.Data).ItemKind in [sikRoot, sikFolder]) and
+      SameText(TRecorderSdbNode(lNode.Data).FolderInfo.Key, lKey))) then
     begin
       treeSdb.Selected := lNode;
       lNode.MakeVisible;
@@ -355,26 +577,19 @@ begin
 end;
 
 function TRecorderSdbSelectDialog.Execute(const AInitialKey: string;
-  out ASelectedKey: string): Boolean;
+  ASelectFolders: Boolean; out ASelectedKey: string): Boolean;
 begin
   ASelectedKey := '';
   fSelectedKey := '';
+  fSelectFolders := ASelectFolders;
+  if fSelectFolders then
+  begin
+    Caption := 'Выбор папки базы градуировочных характеристик';
+    btnSelect.Caption := 'Экспортировать';
+  end;
   fTree := TRecorderSdbTree.Create;
   try
-    fTree.Load;
-    treeSdb.Items.BeginUpdate;
-    try
-      treeSdb.Items.Clear;
-      AddNode(nil, fTree.Root);
-      treeSdb.FullExpand;
-      UpdateTreeIcons(treeSdb.Items.GetFirstNode);
-    finally
-      treeSdb.Items.EndUpdate;
-    end;
-    SelectInitialKey(AInitialKey);
-    if treeSdb.Selected = nil then
-      treeSdb.Selected := treeSdb.Items.GetFirstNode;
-    ShowItem(SelectedItem);
+    ReloadTree(AInitialKey);
     Result := ShowModal = mrOk;
     if Result then
       ASelectedKey := fSelectedKey;

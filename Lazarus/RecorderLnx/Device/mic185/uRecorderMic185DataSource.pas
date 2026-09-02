@@ -50,7 +50,7 @@ function RecorderMic185CleanupEndpoint(const AHost: string; APort: Word;
 function RecorderMic185DefaultChannelModeText(AFrequencyHz: Double): string;
 function RecorderMic185NormalizeFrequency(AFrequencyHz: Double): Double;
 procedure RecorderMic185ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
-  const ASourceId: string; AFrequencyHz: Double);
+  const ASourceId: string; AFrequencyHz: Double; ADataUpdateMs: Cardinal = 300);
 { Сериализует настройки канала MIC-185 в компактную строку. }
 function RecorderMic185FormatChannelMode(
   const ASettings: TMic185ChannelProgramSettings): string;
@@ -85,6 +85,13 @@ procedure RecorderMic185GetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
 procedure RecorderMic185SetSourceModuleSettings(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; APollFrequencyHz: Double;
   const ASettings: TMic185ModuleProgramSettings);
+{ Возвращает выбранные входы-компенсаторы для четырех групп по 16 каналов. }
+procedure RecorderMic185GetSourceGroupAddition(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; out AGroupAddition: TMic185GroupAdditionArray);
+{ Меняет вход-компенсатор только для группы указанного измерительного канала. }
+procedure RecorderMic185SetSourceChannelAddition(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string; APollFrequencyHz: Double; AChannelIndex,
+  AAdditionIndex: Integer);
 { Возвращает флаг аппаратной термокомпенсации из конфигурации источника. }
 function RecorderMic185GetSourceTemperatureCompensation(
   ARegistry: TRecorderTagRegistry; const ASourceId: string): Boolean;
@@ -253,6 +260,8 @@ type
       APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
       ASelectedNames: TStrings = nil);
     destructor Destroy; override;
+    function Reconfigure(AUpdateTimeMs: Cardinal;
+      out AErrorText: string): Boolean; override;
     procedure RequestStop; override;
     procedure Start; override;
     procedure Stop; override;
@@ -508,7 +517,7 @@ begin
 end;
 
 procedure RecorderMic185ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
-  const ASourceId: string; AFrequencyHz: Double);
+  const ASourceId: string; AFrequencyHz: Double; ADataUpdateMs: Cardinal);
 var
   I: Integer;
   lCapacity: Integer;
@@ -531,7 +540,7 @@ begin
   begin
     lTag := ARegistry.Tags[I];
     if (not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
-      lSourceId)) or (RecorderMic185ChannelAddressToIndex(lTag.Address) <= 0)
+      lSourceId)) or (RecorderMic185ChannelAddressToIndex(lTag.Address) < 0)
       then
       Continue;
 
@@ -542,6 +551,8 @@ begin
       lOldFrequencyHz, lSettings);
     lSettings.FrequencyHz := lFrequencyHz;
     lTag.PollFrequencyHz := lFrequencyHz;
+    RecorderTagUpdateAutoEstimatePortion(lTag, lOldFrequencyHz,
+      ADataUpdateMs, ADataUpdateMs);
     lTag.EnsureBufferCapacity(lCapacity);
     RecorderMic185SetSourceChannelMode(ARegistry, lSourceId, lTag.Address,
       lFrequencyHz, lSettings);
@@ -1037,6 +1048,38 @@ begin
   AConfig.Add('groupAddition', lArray);
   for I := 0 to High(AGroupAddition) do
     lArray.Add(Integer(AGroupAddition[I]));
+end;
+
+procedure RecorderMic185SetSourceChannelAddition(
+  ARegistry: TRecorderTagRegistry; const ASourceId: string;
+  APollFrequencyHz: Double; AChannelIndex, AAdditionIndex: Integer);
+var
+  lConfig: TJSONObject;
+  lEntry: TRecorderConfiguredDataSource;
+  lGroup: Integer;
+  lGroupAddition: TMic185GroupAdditionArray;
+  lTemperatureCompensation: Boolean;
+begin
+  if (AChannelIndex < 0) or (AChannelIndex >= CMic185ChannelCountMax) then
+    Exit;
+  if (AAdditionIndex < Integer(CMic185ModAdd1)) or
+    (AAdditionIndex > Integer(CMic185ModAddOff)) then
+    Exit;
+  lGroup := AChannelIndex div 16;
+  RecorderMic185GetSourceGroupAddition(ARegistry, ASourceId, lGroupAddition);
+  lGroupAddition[lGroup] := LongWord(AAdditionIndex);
+  lTemperatureCompensation := RecorderMic185GetSourceTemperatureCompensation(
+    ARegistry, ASourceId);
+  lEntry := RecorderConfiguredDataSourcesEnsure(ARegistry, ASourceId,
+    CMic185ModuleName, APollFrequencyHz);
+  lConfig := Mic185SourceConfigObject(lEntry, True);
+  try
+    RecorderMic185StoreSourceCompensation(lConfig, lGroupAddition,
+      lTemperatureCompensation);
+    Mic185StoreSourceConfigObject(lEntry, lConfig);
+  finally
+    lConfig.Free;
+  end;
 end;
 
 procedure RecorderMic185SetSourceTemperatureCompensation(
@@ -2246,9 +2289,6 @@ begin
         lLink.Add('tagName', lTag.Name);
         lLink.Add('address', Mic185CanonicalAddress(lTag.Address));
         lLink.Add('pollFrequencyHz', lTag.PollFrequencyHz);
-        lLink.Add('hardwareCalibrationEnabled',
-          lTag.HardwareCalibrationEnabled);
-        lLink.Add('hardwareCalibrationName', lTag.HardwareCalibrationName);
       end;
 
       RecorderMic185BuildSourceProgramSettings(ARegistry, lSourceId, lPollHz,
@@ -2434,10 +2474,6 @@ begin
       lTag.Address := lAddress;
       lTag.ModuleType := CMic185ModuleName;
       lTag.PollFrequencyHz := lLink.Get('pollFrequencyHz', lPollHz);
-      lTag.HardwareCalibrationEnabled := lLink.Get(
-        'hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
-      lTag.HardwareCalibrationName := lLink.Get('hardwareCalibrationName',
-        lTag.HardwareCalibrationName);
       lMode := lLink.Get('sourceValueMode', '');
       if Trim(lMode) = '' then
         lMode := lTag.SourceValueMode;
@@ -2917,7 +2953,7 @@ var
 begin
   { Размер аппаратной порции задаётся в отсчётах канала. Оригинальный
     Recorder вычисляет его из частоты и периода данных перед Program. }
-  lCount := Round(AFrequencyHz * AUpdateTimeMs / 1000.0);
+  lCount := Ceil(AFrequencyHz * AUpdateTimeMs / 1000.0);
   if lCount < 1 then
     lCount := 1
   else if lCount > High(Word) then
@@ -3267,6 +3303,43 @@ begin
   fLastBlockTick := fDiagTick;
   fRxWarning := False;
   RecorderHardwareClearSourceWarning(SourceId);
+end;
+
+function TRecorderMic185DataSource.Reconfigure(AUpdateTimeMs: Cardinal;
+  out AErrorText: string): Boolean;
+var
+  lNative: TRecorderMic185Device;
+begin
+  Result := inherited Reconfigure(AUpdateTimeMs, AErrorText);
+  if not Result then
+    Exit;
+  if fDevice = nil then
+    Exit(True);
+  try
+    fDevice.TrySetDeviceProperty(rdpPollFrequencyHz, fPollFrequencyHz);
+    fDevice.TrySetDeviceProperty(rdpUpdateTimeMs, Integer(UpdateTimeMs));
+    ApplyChannelProgramSettings;
+    if not fHardwarePrepared then
+      Exit(True);
+    if not (fDevice.GetNativeObject is TRecorderMic185Device) then
+    begin
+      AErrorText := 'MIC183/185 native device is unavailable';
+      Exit(False);
+    end;
+    lNative := TRecorderMic185Device(fDevice.GetNativeObject);
+    Result := lNative.TryProgramDevice(AErrorText);
+    if Result then
+      RecorderHardwareClearSourceOffline(SourceId)
+    else
+      RecorderHardwareMarkSourceOffline(SourceId, AErrorText);
+  except
+    on E: Exception do
+    begin
+      AErrorText := E.ClassName + ': ' + E.Message;
+      RecorderHardwareMarkSourceOffline(SourceId, AErrorText);
+      Result := False;
+    end;
+  end;
 end;
 
 procedure TRecorderMic185DataSource.RequestStop;

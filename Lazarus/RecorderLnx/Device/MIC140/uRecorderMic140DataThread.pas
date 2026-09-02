@@ -20,7 +20,7 @@ uses
 type
   { ���� ���� �� �������; True = ���� �����. ����� ������ �� DataThread. }
   TMic140DataThreadReadFunc = function(ATimeoutMs: Cardinal;
-    out ABlock: TRecorderAcquisitionBlock): Boolean of object;
+    var ABlock: TRecorderAcquisitionBlock): Boolean of object;
 
   TRecorderMic140DataThread = class(TRecorderDeviceDataThread)
   private

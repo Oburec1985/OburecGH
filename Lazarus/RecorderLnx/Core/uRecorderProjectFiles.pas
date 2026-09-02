@@ -92,6 +92,16 @@ var
     of TRecorderProjectConfigExtension;
   g_ProjectConfigExtensionCount: Integer = 0;
 
+function MakeFontSnapshot(const AName: string; ASize, AColor: Integer;
+  ABold, AItalic: Boolean): TRecorderFontSnapshot;
+begin
+  Result.Name := AName;
+  Result.Size := ASize;
+  Result.Color := AColor;
+  Result.Bold := ABold;
+  Result.Italic := AItalic;
+end;
+
 function ProjectTagBelongsToDeletedSource(ATags: TRecorderTagRegistry;
   ATag: TRecorderTag): Boolean;
 var
@@ -924,6 +934,8 @@ begin
       lIni.WriteString(lSection, 'Title', lPage.Title);
       lIni.WriteString(lSection, 'BackgroundImage',
         StoreGuiResourceFileName(AFileName, lPage.BackgroundImageFileName));
+      lIni.WriteBool(lSection, 'BackgroundKeepAspect',
+        lPage.BackgroundKeepAspect);
       lIni.WriteInteger(lSection, 'Mode', Ord(lPage.Mode));
       lIni.WriteInteger(lSection, 'BaseOscillogramCount',
         lPage.BaseOscillogramCount);
@@ -1000,6 +1012,32 @@ begin
         begin
           lMeasure := TRecorderMeasurementSectionComponent(lComponent);
           lIni.WriteString(lSection, 'MeasureCaption', lMeasure.Caption);
+          lIni.WriteInteger(lSection, 'MeasureBackgroundColor',
+            lMeasure.BackgroundColor);
+          lIni.WriteInteger(lSection, 'MeasureTextBackgroundColor',
+            lMeasure.TextBackgroundColor);
+          lIni.WriteString(lSection, 'MeasureCaptionFontName',
+            lMeasure.CaptionFont.Name);
+          lIni.WriteInteger(lSection, 'MeasureCaptionFontSize',
+            lMeasure.CaptionFont.Size);
+          lIni.WriteInteger(lSection, 'MeasureCaptionFontColor',
+            lMeasure.CaptionFont.Color);
+          lIni.WriteBool(lSection, 'MeasureCaptionFontBold',
+            lMeasure.CaptionFont.Bold);
+          lIni.WriteBool(lSection, 'MeasureCaptionFontItalic',
+            lMeasure.CaptionFont.Italic);
+          lIni.WriteString(lSection, 'MeasureStressNamedFont',
+            lMeasure.StressNamedFontName);
+          lIni.WriteString(lSection, 'MeasureStressFontName',
+            lMeasure.StressFont.Name);
+          lIni.WriteInteger(lSection, 'MeasureStressFontSize',
+            lMeasure.StressFont.Size);
+          lIni.WriteInteger(lSection, 'MeasureStressFontColor',
+            lMeasure.StressFont.Color);
+          lIni.WriteBool(lSection, 'MeasureStressFontBold',
+            lMeasure.StressFont.Bold);
+          lIni.WriteBool(lSection, 'MeasureStressFontItalic',
+            lMeasure.StressFont.Italic);
           lIni.WriteString(lSection, 'MeasureSectionId', lMeasure.SectionId);
           lIni.WriteFloat(lSection, 'MeasureYoungModulusMPa',
             lMeasure.YoungModulusMPa);
@@ -1219,6 +1257,8 @@ begin
       try
         lPage.BackgroundImageFileName := LoadGuiResourceFileName(AFileName,
           lIni.ReadString(lSection, 'BackgroundImage', ''));
+        lPage.BackgroundKeepAspect := lIni.ReadBool(lSection,
+          'BackgroundKeepAspect', False);
         lPage.Mode := TRecorderFormPageMode(lIni.ReadInteger(lSection, 'Mode',
           Ord(fpmView)));
         lPage.BaseOscillogramCount := lIni.ReadInteger(lSection,
@@ -1328,6 +1368,34 @@ begin
             lMeasure := TRecorderMeasurementSectionComponent(lComponent);
             lMeasure.Caption := lIni.ReadString(lSection, 'MeasureCaption',
               lMeasure.Caption);
+            lMeasure.BackgroundColor := lIni.ReadInteger(lSection,
+              'MeasureBackgroundColor', lMeasure.BackgroundColor);
+            lMeasure.TextBackgroundColor := lIni.ReadInteger(lSection,
+              'MeasureTextBackgroundColor', lMeasure.TextBackgroundColor);
+            lMeasure.CaptionFont := MakeFontSnapshot(
+              lIni.ReadString(lSection, 'MeasureCaptionFontName',
+                lMeasure.CaptionFont.Name),
+              lIni.ReadInteger(lSection, 'MeasureCaptionFontSize',
+                lMeasure.CaptionFont.Size),
+              lIni.ReadInteger(lSection, 'MeasureCaptionFontColor',
+                lMeasure.CaptionFont.Color),
+              lIni.ReadBool(lSection, 'MeasureCaptionFontBold',
+                lMeasure.CaptionFont.Bold),
+              lIni.ReadBool(lSection, 'MeasureCaptionFontItalic',
+                lMeasure.CaptionFont.Italic));
+            lMeasure.StressNamedFontName := lIni.ReadString(lSection,
+              'MeasureStressNamedFont', '');
+            lMeasure.StressFont := MakeFontSnapshot(
+              lIni.ReadString(lSection, 'MeasureStressFontName',
+                lMeasure.StressFont.Name),
+              lIni.ReadInteger(lSection, 'MeasureStressFontSize',
+                lMeasure.StressFont.Size),
+              lIni.ReadInteger(lSection, 'MeasureStressFontColor',
+                lMeasure.StressFont.Color),
+              lIni.ReadBool(lSection, 'MeasureStressFontBold',
+                lMeasure.StressFont.Bold),
+              lIni.ReadBool(lSection, 'MeasureStressFontItalic',
+                lMeasure.StressFont.Italic));
             lMeasure.SectionId := lIni.ReadString(lSection,
               'MeasureSectionId', lMeasure.SectionId);
             lMeasure.YoungModulusMPa := lIni.ReadFloat(lSection,

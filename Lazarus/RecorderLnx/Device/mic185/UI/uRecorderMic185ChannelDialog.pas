@@ -51,6 +51,7 @@ type
     procedure btnApplyClick(Sender: TObject);
     procedure SettingsChanged(Sender: TObject);
   private
+    fGuideTag: TRecorderTag;
     fRegistry: TRecorderTagRegistry;
     fTag: TRecorderTag;
     fModuleSettings: TMic185ModuleProgramSettings;
@@ -58,6 +59,7 @@ type
     procedure ReadModuleSettingsFromUi(var ASettings: TMic185ModuleProgramSettings);
     procedure UpdateActualRange;
   public
+    destructor Destroy; override;
     procedure LoadTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
       const AModuleSettings: TMic185ModuleProgramSettings);
     procedure SaveTag(ATag: TRecorderTag;
@@ -67,6 +69,7 @@ type
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   var AModuleSettings: TMic185ModuleProgramSettings): Boolean;
+function CreateRecorderMic185ChannelGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
@@ -74,6 +77,34 @@ implementation
 
 uses
   uRecorderMic185DataSource, uRecorderMic185Calibration, uMic185Constants;
+
+function CreateRecorderMic185ChannelGuideForm(AOwner: TComponent): TForm;
+var
+  lForm: TRecorderMic185ChannelForm;
+  lModule: TMic185ModuleProgramSettings;
+begin
+  lForm := TRecorderMic185ChannelForm.Create(AOwner);
+  lForm.fGuideTag := TRecorderTag.Create(18501, '185-{156-1}', 4096, False);
+  lForm.fGuideTag.Address := '156-1';
+  lForm.fGuideTag.SourceId := 'MIC-185: 192.168.9.156:4000';
+  lForm.fGuideTag.UnitName := 'Ом';
+  lForm.fGuideTag.PollFrequencyHz := 100;
+  lForm.fGuideTag.HardwareCalibrationEnabled := True;
+  Mic185DefaultModuleProgramSettings(lModule);
+  lForm.LoadTag(nil, lForm.fGuideTag, lModule);
+  lForm.cbActualRangeUnit.Text := 'Ом';
+  lForm.edActualRange.Text := '±350.000';
+  lForm.edSoftBalance.Text := '0.738';
+  lForm.edSoftBalanceUnit.Text := 'Ом';
+  lForm.edHardBalance.Text := '0.125';
+  Result := lForm;
+end;
+
+destructor TRecorderMic185ChannelForm.Destroy;
+begin
+  fGuideTag.Free;
+  inherited Destroy;
+end;
 
 procedure FillCombo(ACombo: TComboBox; const AValues: array of string;
   AIndex: Integer);
@@ -152,12 +183,7 @@ begin
   ASettings.SoftBalance := RecorderMic185SoftBalanceMvToCode(
     TextToFloatDef(edSoftBalance.Text, 0), ASettings.MeasRangeIndex);
   if chkChannelShunt.Checked then
-  begin
-    if cbShuntValue.ItemIndex > 0 then
-      ASettings.ShuntOn := cbShuntValue.ItemIndex - 1
-    else
-      ASettings.ShuntOn := 1;
-  end
+    ASettings.ShuntOn := 1
   else
     ASettings.ShuntOn := 0;
   ASettings.TensoSensitivity := TextToFloatDef(edStrainSensitivity.Text, 2);
@@ -185,6 +211,9 @@ end;
 procedure TRecorderMic185ChannelForm.LoadTag(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const AModuleSettings: TMic185ModuleProgramSettings);
 var
+  lChannelIndex: Integer;
+  lGroup: Integer;
+  lGroupAddition: TMic185GroupAdditionArray;
   lSettings: TMic185ChannelProgramSettings;
 begin
   fRegistry := ARegistry;
@@ -252,6 +281,15 @@ begin
         cbActualRangeUnit.Text := RecorderMic185RangeUnitText(
           lSettings.MeasRangeIndex);
     end;
+    lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
+    if lChannelIndex >= 0 then
+    begin
+      lGroup := lChannelIndex div 16;
+      RecorderMic185GetSourceGroupAddition(fRegistry, ATag.SourceId,
+        lGroupAddition);
+      if lGroupAddition[lGroup] <= CMic185ModAddOff then
+        cbThermoChannel.ItemIndex := Integer(lGroupAddition[lGroup]);
+    end;
   end;
   UpdateActualRange;
 end;
@@ -259,6 +297,7 @@ end;
 procedure TRecorderMic185ChannelForm.SaveTag(ATag: TRecorderTag;
   var AModuleSettings: TMic185ModuleProgramSettings);
 var
+  lChannelIndex: Integer;
   lSettings: TMic185ChannelProgramSettings;
 begin
   if ATag = nil then
@@ -271,6 +310,12 @@ begin
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
   RecorderMic185SetSourceChannelUnitName(fRegistry, ATag.SourceId,
     ATag.Address, ATag.PollFrequencyHz, ATag.UnitName);
+  lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
+  if (lChannelIndex >= 0) and
+    (cbThermoChannel.ItemIndex >= Integer(CMic185ModAdd1)) and
+    (cbThermoChannel.ItemIndex <= Integer(CMic185ModAddOff)) then
+    RecorderMic185SetSourceChannelAddition(fRegistry, ATag.SourceId,
+      ATag.PollFrequencyHz, lChannelIndex, cbThermoChannel.ItemIndex);
   ApplyMic185HardwareModeFromUnit(fRegistry, ATag);
   ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
     lSettings, ATag.UnitName);

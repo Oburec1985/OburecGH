@@ -68,7 +68,9 @@ type
     function SoftRestartScan: Boolean;
     function StallRestartScan: Boolean;
     function PumpOneBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderDeviceSampleBlock): Boolean;
+      var ABlock: TRecorderDeviceSampleBlock): Boolean;
+    function FillLegacyBlock(const ARaw: TMic140LegacyRawBlock;
+      var ABlock: TRecorderDeviceSampleBlock): Boolean;
     procedure EnsureDataThread;
     procedure StopDataThread;
     function GetDeviceId: string;
@@ -344,14 +346,13 @@ begin
 end;
 
 function TRecorderMic140Device.PumpOneBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderDeviceSampleBlock): Boolean;
+  var ABlock: TRecorderDeviceSampleBlock): Boolean;
 var
   raw: TMic140LegacyRawBlock;
 begin
-  ClearRecorderDeviceSampleBlock(ABlock);
   if not ReadLegacyRawBlock(ATimeoutMs, raw) then
     Exit(False);
-  Result := LegacyDecommutateRawBlock(raw, ABlock);
+  Result := FillLegacyBlock(raw, ABlock);
 end;
 
 function TRecorderMic140Device.GetDeviceId: string;
@@ -1157,6 +1158,13 @@ end;
 function TRecorderMic140Device.LegacyDecommutateRawBlock(
   const ARaw: TMic140LegacyRawBlock;
   out ABlock: TRecorderDeviceSampleBlock): Boolean;
+begin
+  Result := FillLegacyBlock(ARaw, ABlock);
+end;
+
+function TRecorderMic140Device.FillLegacyBlock(
+  const ARaw: TMic140LegacyRawBlock;
+  var ABlock: TRecorderDeviceSampleBlock): Boolean;
 var
   lStride: Integer;
 begin
@@ -1172,9 +1180,8 @@ function TRecorderMic140Device.ReadBlock(ATimeoutMs: Cardinal;
   out ABlock: TRecorderDeviceSampleBlock): Boolean;
 var
   lDeadline: QWord;
-  lRing: TRecorderAcquisitionBlock;
+  lLease: TRecorderAcquisitionBlockLease;
 begin
-  ClearRecorderDeviceSampleBlock(ABlock);
   { Play: ������ �� DataThread; consumer (DataSource) ������ ������ ������. }
   if (fState = rdsStarted) and (fDataThread <> nil) and
     (fDataThread.State = dtsPlaying) then
@@ -1183,25 +1190,33 @@ begin
     { timeout=0: non-blocking ring poll (DoTick drain). }
     if ATimeoutMs = 0 then
     begin
-      if fDataThread.ReadBlock(lRing) then
+      if fDataThread.AcquireReadBlock(lLease) then
       begin
-        { ReadBlock уже вернул независимый снимок кольца. }
-        ABlock := lRing;
+        try
+          CopyRecorderAcquisitionBlock(lLease.Block^, ABlock);
+        finally
+          fDataThread.ReleaseReadBlock(lLease);
+        end;
         Exit(True);
       end;
       Exit(False);
     end;
     lDeadline := GetTickCount64 + ATimeoutMs;
     repeat
-      if fDataThread.ReadBlock(lRing) then
+      if fDataThread.AcquireReadBlock(lLease) then
       begin
-        ABlock := lRing;
+        try
+          CopyRecorderAcquisitionBlock(lLease.Block^, ABlock);
+        finally
+          fDataThread.ReleaseReadBlock(lLease);
+        end;
         Exit(True);
       end;
       Sleep(1);
     until GetTickCount64 >= lDeadline;
     Exit;
   end;
+  ClearRecorderDeviceSampleBlock(ABlock);
   Result := PumpOneBlock(ATimeoutMs, ABlock);
 end;
 

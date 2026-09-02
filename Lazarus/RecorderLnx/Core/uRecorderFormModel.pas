@@ -502,6 +502,7 @@ type
     fComponents: TList;                            { список компонентов на странице (TRecorderVisualComponent) }
     fNamedFonts: TRecorderNamedFontManager;
     fBackgroundImageFileName: string;              { файл фонового изображения пользовательской страницы }
+    fBackgroundKeepAspect: Boolean;
     fBaseOscillogramCount: Integer;                { количество осциллограмм для встроенной BasePage }
     fDetached: Boolean;                            { страница открыта отдельным окном }
     fDetachedLeft: Integer;                        { экранная координата отдельного окна }
@@ -546,6 +547,8 @@ type
     property Title: string read fTitle write fTitle;
     property BackgroundImageFileName: string read fBackgroundImageFileName
       write fBackgroundImageFileName;
+    property BackgroundKeepAspect: Boolean read fBackgroundKeepAspect
+      write fBackgroundKeepAspect;
     property Mode: TRecorderFormPageMode read fMode write fMode;
     property BaseOscillogramCount: Integer read fBaseOscillogramCount
       write fBaseOscillogramCount;
@@ -1563,6 +1566,7 @@ begin
   fName := AName;
   fTitle := ATitle;
   fBackgroundImageFileName := '';
+  fBackgroundKeepAspect := False;
   fMode := fpmView;
   fBaseOscillogramCount := 2;
   fDetached := False;

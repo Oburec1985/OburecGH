@@ -326,6 +326,9 @@
       <Unit>
         <Filename Value="UI/uRecorderMeasurementSectionSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMeasurementSectionSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb/SqlTrend/uRecorderSqlTrendModel.pas"/>

@@ -24,6 +24,7 @@ function RecorderHardwareTestSourceLink(const ASourceId: string;
 function RecorderHardwareSafeTestDeviceLink(ADevice: IRecorderDevice;
   out AErrorText: string): Boolean;
 procedure RecorderHardwareTestAllLiveSources;
+procedure RecorderHardwareRefreshLiveSourceWarnings;
 procedure RecorderHardwareRequestSourceReset(const ASourceId: string);
 function RecorderHardwareHasSourceResetRequest(
   const ASourceId: string): Boolean;
@@ -294,6 +295,42 @@ begin
       if Trim(lErrorText) = '' then
         lErrorText := 'TEST устройства не выполнен';
       RecorderHardwareMarkSourceOffline(lSourceIds[I], lErrorText);
+    end;
+  end;
+end;
+
+procedure RecorderHardwareRefreshLiveSourceWarnings;
+var
+  I: Integer;
+  lDevices: array of IRecorderDevice;
+  lErrorText: string;
+  lList: TList;
+  lSourceIds: array of string;
+begin
+  if gHardwareLiveEntries = nil then
+    Exit;
+  lList := gHardwareLiveEntries.LockList;
+  try
+    SetLength(lDevices, lList.Count);
+    SetLength(lSourceIds, lList.Count);
+    for I := 0 to lList.Count - 1 do
+    begin
+      lDevices[I] := TRecorderHardwareLiveEntry(lList[I]).Device;
+      lSourceIds[I] := TRecorderHardwareLiveEntry(lList[I]).SourceId;
+    end;
+  finally
+    gHardwareLiveEntries.UnlockList;
+  end;
+  for I := 0 to High(lDevices) do
+  begin
+    lErrorText := '';
+    if RecorderHardwareSafeTestDeviceLink(lDevices[I], lErrorText) then
+      RecorderHardwareClearSourceWarning(lSourceIds[I])
+    else
+    begin
+      if Trim(lErrorText) = '' then
+        lErrorText := 'TEST устройства не выполнен';
+      RecorderHardwareSetSourceWarning(lSourceIds[I], lErrorText);
     end;
   end;
 end;

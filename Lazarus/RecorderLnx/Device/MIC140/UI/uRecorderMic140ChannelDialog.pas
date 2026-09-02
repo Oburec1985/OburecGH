@@ -19,6 +19,7 @@ function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Int
   ADeviceSerial, ADevSubRev: Integer;
   var ASettings: TRecorderMic140ChannelSettings;
   ABulkChannelCount: Integer = 0): Boolean;
+function CreateRecorderMic140ChannelGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
@@ -66,6 +67,11 @@ type
       var ASettings: TRecorderMic140ChannelSettings;
       ABulkChannelCount: Integer = 0): Boolean;
   end;
+
+function CreateRecorderMic140ChannelGuideForm(AOwner: TComponent): TForm;
+begin
+  Result := TRecorderMic140ChannelDialog.Create(AOwner);
+end;
 
 {$R *.lfm}
 

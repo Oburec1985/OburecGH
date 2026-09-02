@@ -25,14 +25,19 @@ type
     fOwner: TRecorderSqlTrendView;
     fPoints: TRecorderSqlTrendPoints;
     fSignalNames: TStringList;
+    fWakeEvent: PRTLEvent;
+    fRequestLock: TRTLCriticalSection;
+    fRequestPending: Boolean;
+    fBusy: Boolean;
     procedure Deliver;
   protected
     procedure Execute; override;
   public
-    constructor Create(AOwner: TRecorderSqlTrendView; const AConfigFileName: string;
-      ASignalNames: TStrings; AFromUtc, AToUtc: Double; AMaxPoints: Integer;
-      AAppendLoad: Boolean);
+    constructor Create(AOwner: TRecorderSqlTrendView);
     destructor Destroy; override;
+    function RequestLoad(const AConfigFileName: string; ASignalNames: TStrings;
+      AFromUtc, AToUtc: Double; AMaxPoints: Integer;
+      AAppendLoad: Boolean): Boolean;
   end;
 
   TRecorderSqlTrendView = class(TPanel, IVForm)
@@ -82,6 +87,10 @@ type
     fResetViewOnLoad: Boolean;
     fResetZoomButton: TButton;
     fWorker: TRecorderSqlTrendLoadThread;
+    fLoadSignalNames: TStringList;
+    fMergeCombined: TRecorderSqlTrendPoints;
+    fMergeOutput: TRecorderSqlTrendPoints;
+    fMergeRowIds: TStringList;
     fZoomSelecting: Boolean;
     procedure AxisRangeEditChange(Sender: TObject);
     procedure AxisComboChange(Sender: TObject);
@@ -196,51 +205,113 @@ begin
   AY1 := lOldY0 + lT1 * lDy;
 end;
 
-constructor TRecorderSqlTrendLoadThread.Create(AOwner: TRecorderSqlTrendView;
-  const AConfigFileName: string; ASignalNames: TStrings; AFromUtc,
-  AToUtc: Double; AMaxPoints: Integer; AAppendLoad: Boolean);
+constructor TRecorderSqlTrendLoadThread.Create(AOwner: TRecorderSqlTrendView);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
   fOwner := AOwner;
-  fConfigFileName := AConfigFileName;
   fSignalNames := TStringList.Create;
-  fSignalNames.Assign(ASignalNames);
-  fFromUtc := AFromUtc;
-  fToUtc := AToUtc;
-  fMaxPoints := AMaxPoints;
-  fAppendLoad := AAppendLoad;
+  InitCriticalSection(fRequestLock);
+  fWakeEvent := RTLEventCreate;
 end;
 
 destructor TRecorderSqlTrendLoadThread.Destroy;
 begin
+  RTLEventDestroy(fWakeEvent);
+  DoneCriticalSection(fRequestLock);
   fSignalNames.Free;
   inherited Destroy;
+end;
+
+function TRecorderSqlTrendLoadThread.RequestLoad(
+  const AConfigFileName: string; ASignalNames: TStrings; AFromUtc,
+  AToUtc: Double; AMaxPoints: Integer; AAppendLoad: Boolean): Boolean;
+begin
+  Result := False;
+  EnterCriticalSection(fRequestLock);
+  try
+    if fBusy or fRequestPending or Terminated then Exit;
+    fConfigFileName := AConfigFileName;
+    fSignalNames.Assign(ASignalNames);
+    fFromUtc := AFromUtc;
+    fToUtc := AToUtc;
+    fMaxPoints := AMaxPoints;
+    fAppendLoad := AAppendLoad;
+    fRequestPending := True;
+    Result := True;
+  finally
+    LeaveCriticalSection(fRequestLock);
+  end;
+  RTLEventSetEvent(fWakeEvent);
 end;
 
 procedure TRecorderSqlTrendLoadThread.Execute;
 var
   lConfig: TRecorderSqlDbConfig;
   lRepository: TRecorderSqlDbRepository;
+  lLoadedConfigFileName: string;
+  lLoadedConfigAge, lConfigAge: LongInt;
 begin
+  lConfig := nil;
+  lRepository := nil;
+  lLoadedConfigFileName := '';
+  lLoadedConfigAge := 0;
   try
-    lConfig := TRecorderSqlDbConfig.Create;
-    try
-      lConfig.LoadFromFile(fConfigFileName);
-      lRepository := TRecorderSqlDbRepository.Create(lConfig);
+    while not Terminated do
+    begin
+      RTLEventWaitFor(fWakeEvent);
+      RTLEventResetEvent(fWakeEvent);
+      if Terminated then Break;
+      EnterCriticalSection(fRequestLock);
       try
+        if not fRequestPending then Continue;
+        fRequestPending := False;
+        fBusy := True;
+      finally
+        LeaveCriticalSection(fRequestLock);
+      end;
+      fErrorText := '';
+      SetLength(fPoints, 0);
+      try
+        lConfigAge := FileAge(fConfigFileName);
+        if (lRepository = nil) or
+          (not SameFileName(lLoadedConfigFileName, fConfigFileName)) or
+          (lLoadedConfigAge <> lConfigAge) then
+        begin
+          FreeAndNil(lRepository);
+          FreeAndNil(lConfig);
+          lConfig := TRecorderSqlDbConfig.Create;
+          lConfig.LoadFromFile(fConfigFileName);
+          lRepository := TRecorderSqlDbRepository.Create(lConfig);
+          lLoadedConfigFileName := fConfigFileName;
+          lLoadedConfigAge := lConfigAge;
+        end;
         lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
           fMaxPoints, fPoints, False);
-      finally
-        lRepository.Free;
+      except
+        on E: Exception do
+        begin
+          fErrorText := E.Message;
+          { A broken connection must be recreated on the retry, while a
+            healthy live session keeps its repository and SQL connection. }
+          FreeAndNil(lRepository);
+          FreeAndNil(lConfig);
+          lLoadedConfigFileName := '';
+          lLoadedConfigAge := 0;
+        end;
       end;
-    finally
-      lConfig.Free;
+      EnterCriticalSection(fRequestLock);
+      try
+        fBusy := False;
+      finally
+        LeaveCriticalSection(fRequestLock);
+      end;
+      if not Terminated then Synchronize(@Deliver);
     end;
-  except
-    on E: Exception do fErrorText := E.Message;
+  finally
+    lRepository.Free;
+    lConfig.Free;
   end;
-  if not Terminated then Synchronize(@Deliver);
 end;
 
 procedure TRecorderSqlTrendLoadThread.Deliver;
@@ -283,6 +354,12 @@ begin
   fLegendGrid.OnDrawCell := @LegendGridDrawCell;
   fLegendGrid.OnSelectCell := @LegendGridSelectCell;
   fLegendGrid.OnDblClick := @LegendGridDblClick;
+  fLoadSignalNames := TStringList.Create;
+  fMergeRowIds := TStringList.Create;
+  fMergeRowIds.Sorted := True;
+  fMergeRowIds.Duplicates := dupIgnore;
+  fWorker := TRecorderSqlTrendLoadThread.Create(Self);
+  fWorker.Start;
   fLegendSplitter := TSplitter.Create(Self);
   fLegendSplitter.Parent := Self;
   fLegendSplitter.Align := alRight;
@@ -753,10 +830,14 @@ begin
   fLiveReloadTimer.Enabled := False;
   if fWorker <> nil then
   begin
+    fWorker.fOwner := nil;
     fWorker.Terminate;
+    RTLEventSetEvent(fWorker.fWakeEvent);
     fWorker.WaitFor;
     FreeAndNil(fWorker);
   end;
+  fMergeRowIds.Free;
+  fLoadSignalNames.Free;
   inherited Destroy;
 end;
 
@@ -794,15 +875,27 @@ begin
   Result := fComponent.ActiveDisplay.Axes[AIndex].Name + ' [' +
     FloatToStrF(fAxisMin[AIndex], ffGeneral, 7, 3) + '..' +
     FloatToStrF(fAxisMax[AIndex], ffGeneral, 7, 3) + ']';
+  if AIndex = fAxisCombo.ItemIndex then
+    Result := Result + ' dY=' +
+      FloatToStrF(fAxisMax[AIndex] - fAxisMin[AIndex], ffGeneral, 7, 3);
 end;
 
 procedure TRecorderSqlTrendView.GetAxisHeaderLayout(ARight: Integer;
   out AColumnWidth, AColumnCount, ARowCount: Integer);
+var
+  I, lCaptionWidth: Integer;
 begin
-  AColumnWidth := Max(1, Min(220, ARight - 8));
+  AColumnWidth := 1;
   AColumnCount := 1;
   ARowCount := 0;
   if (fComponent = nil) or (fComponent.ActiveDisplay.AxisCount = 0) then Exit;
+  for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
+  begin
+    lCaptionWidth := Canvas.TextWidth(AxisCaption(I)) + 12;
+    if lCaptionWidth > AColumnWidth then
+      AColumnWidth := lCaptionWidth;
+  end;
+  AColumnWidth := Max(1, Min(AColumnWidth, ARight - 8));
   AColumnCount := Max(1, (ARight - 8) div AColumnWidth);
   ARowCount := (fComponent.ActiveDisplay.AxisCount + AColumnCount - 1) div
     AColumnCount;
@@ -991,7 +1084,6 @@ begin
   if (fComponent = nil) or
     (fComponent.TimeMode <> sttmFixedFromToCurrentUtc) or (not Showing) then
     Exit;
-  if fWorker <> nil then Exit;
   fLoadPending := True;
   StartLoad;
 end;
@@ -999,11 +1091,10 @@ end;
 procedure TRecorderSqlTrendView.StartLoad;
 var
   I: Integer;
-  lSignals: TStringList;
   lFromUtc, lToUtc, lOverlapMs: Double;
   lAppendLoad: Boolean;
 begin
-  if (not fLoadPending) or (fComponent = nil) or (fWorker <> nil) then Exit;
+  if (not fLoadPending) or (fComponent = nil) or (fWorker = nil) then Exit;
   fLoadPending := False;
   fErrorText := '';
   if not FileExists(fComponent.ConfigFileName) then
@@ -1012,13 +1103,12 @@ begin
     Invalidate;
     Exit;
   end;
-  lSignals := TStringList.Create;
-  try
+  fLoadSignalNames.Clear;
     for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
       if fComponent.ActiveDisplay.Lines[I].Visible and
         (Trim(fComponent.ActiveDisplay.Lines[I].TagName) <> '') then
-        if lSignals.IndexOf(fComponent.ActiveDisplay.Lines[I].TagName) < 0 then
-          lSignals.Add(fComponent.ActiveDisplay.Lines[I].TagName);
+        if fLoadSignalNames.IndexOf(fComponent.ActiveDisplay.Lines[I].TagName) < 0 then
+          fLoadSignalNames.Add(fComponent.ActiveDisplay.Lines[I].TagName);
     lAppendLoad := (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
       (not fResetViewOnLoad) and (fFullToUtc > fFullFromUtc);
     if fComponent.TimeMode = sttmLatestWindow then
@@ -1043,54 +1133,51 @@ begin
       lFromUtc := fComponent.FromUtc;
       lToUtc := fComponent.ToUtc;
     end;
-    fWorker := TRecorderSqlTrendLoadThread.Create(Self,
-      fComponent.ConfigFileName, lSignals, lFromUtc, lToUtc,
-      fComponent.MaxPointsPerLine, lAppendLoad);
-    fWorker.Start;
-  finally
-    lSignals.Free;
-  end;
+  if not fWorker.RequestLoad(fComponent.ConfigFileName, fLoadSignalNames,
+    lFromUtc, lToUtc, fComponent.MaxPointsPerLine, lAppendLoad) then
+    fLoadPending := True;
 end;
 
 procedure TRecorderSqlTrendView.AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
 var
   lWasAtLiveEdge: Boolean;
   lEdgeTolerance: Double;
+  lOldPoints: TRecorderSqlTrendPoints;
 begin
   if AWorker <> fWorker then Exit;
-  if not fLoadPending then
+  fErrorText := AWorker.fErrorText;
+  if fErrorText = '' then
   begin
-    fErrorText := AWorker.fErrorText;
-    if fErrorText = '' then
+    lEdgeTolerance := Max(1, fLiveReloadTimer.Interval) /
+      MSecsPerDay;
+    lWasAtLiveEdge := (fFullToUtc <= fFullFromUtc) or
+      SameValue(fToUtc, fFullToUtc, lEdgeTolerance);
+    if AWorker.fAppendLoad then
+      MergeLivePoints(AWorker.fPoints)
+    else
     begin
-      lEdgeTolerance := Max(1, fLiveReloadTimer.Interval) /
-        MSecsPerDay;
-      lWasAtLiveEdge := (fFullToUtc <= fFullFromUtc) or
-        SameValue(fToUtc, fFullToUtc, lEdgeTolerance);
-      if AWorker.fAppendLoad then
-        MergeLivePoints(AWorker.fPoints)
-      else
-        fPoints := Copy(AWorker.fPoints, 0, Length(AWorker.fPoints));
-      { A failed load must not advance this watermark: the next live tick has
-        to retry the same interval instead of permanently skipping its data. }
-      if fResetViewOnLoad then
-      begin
-        fFromUtc := AWorker.fFromUtc;
-        fToUtc := AWorker.fToUtc;
-        fResetViewOnLoad := False;
-      end
-      else if (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
-        lWasAtLiveEdge then
-        fToUtc := AWorker.fToUtc;
-      if not AWorker.fAppendLoad then
-        fFullFromUtc := AWorker.fFromUtc;
-      fFullToUtc := AWorker.fToUtc;
-      ClampCurrentDateXRange;
+      { Transfer ownership instead of copying a complete historical result.
+        The worker receives the previous buffer and can reuse it later. }
+      lOldPoints := fPoints;
+      fPoints := AWorker.fPoints;
+      AWorker.fPoints := lOldPoints;
+    end;
+    { A failed load must not advance this watermark: the next live tick has
+      to retry the same interval instead of permanently skipping its data. }
+    if fResetViewOnLoad then
+    begin
+      fFromUtc := AWorker.fFromUtc;
+      fToUtc := AWorker.fToUtc;
+      fResetViewOnLoad := False;
     end
+    else if (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
+      lWasAtLiveEdge then
+      fToUtc := AWorker.fToUtc;
+    if not AWorker.fAppendLoad then
+      fFullFromUtc := AWorker.fFromUtc;
+    fFullToUtc := AWorker.fToUtc;
+    ClampCurrentDateXRange;
   end;
-  AWorker.fOwner := nil;
-  AWorker.FreeOnTerminate := True;
-  fWorker := nil;
   if fLoadPending then fReloadTimer.Enabled := True;
   UpdateDeleteIntervalButton;
   Invalidate;
@@ -1101,9 +1188,8 @@ procedure TRecorderSqlTrendView.MergeLivePoints(
 var
   I, J, K, lCombinedCount, lKeepFrom, lOutputStart: Integer;
   lSignalName: string;
-  lMerged, lCombined: TRecorderSqlTrendPoints;
   lDuplicate: Boolean;
-  lRowIds: TStringList;
+  lOldPoints: TRecorderSqlTrendPoints;
 
   procedure SortCombinedByTime(ALeft, ARight: Integer);
   var
@@ -1113,15 +1199,15 @@ var
   begin
     lLeft := ALeft;
     lRight := ARight;
-    lPivot := lCombined[(ALeft + ARight) div 2].TimestampUtc;
+    lPivot := fMergeCombined[(ALeft + ARight) div 2].TimestampUtc;
     repeat
-      while lCombined[lLeft].TimestampUtc < lPivot do Inc(lLeft);
-      while lCombined[lRight].TimestampUtc > lPivot do Dec(lRight);
+      while fMergeCombined[lLeft].TimestampUtc < lPivot do Inc(lLeft);
+      while fMergeCombined[lRight].TimestampUtc > lPivot do Dec(lRight);
       if lLeft <= lRight then
       begin
-        lSwap := lCombined[lLeft];
-        lCombined[lLeft] := lCombined[lRight];
-        lCombined[lRight] := lSwap;
+        lSwap := fMergeCombined[lLeft];
+        fMergeCombined[lLeft] := fMergeCombined[lRight];
+        fMergeCombined[lRight] := lSwap;
         Inc(lLeft);
         Dec(lRight);
       end;
@@ -1130,12 +1216,10 @@ var
     if lLeft < ARight then SortCombinedByTime(lLeft, ARight);
   end;
 begin
-  SetLength(lCombined, 2 * fComponent.MaxPointsPerLine);
-  SetLength(lMerged, 0);
-  lRowIds := TStringList.Create;
+  if Length(fMergeCombined) < 2 * fComponent.MaxPointsPerLine then
+    SetLength(fMergeCombined, 2 * fComponent.MaxPointsPerLine);
+  lOutputStart := 0;
   try
-    lRowIds.Sorted := True;
-    lRowIds.Duplicates := dupIgnore;
     for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
     begin
       if not fComponent.ActiveDisplay.Lines[I].Visible then Continue;
@@ -1153,35 +1237,39 @@ begin
       if lDuplicate then Continue;
 
       lCombinedCount := 0;
-      lRowIds.Clear;
+      fMergeRowIds.Clear;
       for J := 0 to High(fPoints) do
         if SameText(fPoints[J].SignalName, lSignalName) then
         begin
-          lCombined[lCombinedCount] := fPoints[J];
+          fMergeCombined[lCombinedCount] := fPoints[J];
           Inc(lCombinedCount);
-          lRowIds.Add(fPoints[J].RowId);
+          fMergeRowIds.Add(fPoints[J].RowId);
         end;
       for J := 0 to High(ANewPoints) do
         if SameText(ANewPoints[J].SignalName, lSignalName) and
-          (lRowIds.IndexOf(ANewPoints[J].RowId) < 0) then
+          (fMergeRowIds.IndexOf(ANewPoints[J].RowId) < 0) then
         begin
-          lCombined[lCombinedCount] := ANewPoints[J];
+          fMergeCombined[lCombinedCount] := ANewPoints[J];
           Inc(lCombinedCount);
-          lRowIds.Add(ANewPoints[J].RowId);
+          fMergeRowIds.Add(ANewPoints[J].RowId);
         end;
       if lCombinedCount > 1 then
         SortCombinedByTime(0, lCombinedCount - 1);
       lKeepFrom := Max(0,
         lCombinedCount - fComponent.MaxPointsPerLine);
-      lOutputStart := Length(lMerged);
-      SetLength(lMerged, lOutputStart + lCombinedCount - lKeepFrom);
+      if Length(fMergeOutput) < lOutputStart + lCombinedCount - lKeepFrom then
+        SetLength(fMergeOutput, lOutputStart + lCombinedCount - lKeepFrom);
       for J := lKeepFrom to lCombinedCount - 1 do
-        lMerged[lOutputStart + J - lKeepFrom] := lCombined[J];
+        fMergeOutput[lOutputStart + J - lKeepFrom] := fMergeCombined[J];
+      Inc(lOutputStart, lCombinedCount - lKeepFrom);
     end;
   finally
-    lRowIds.Free;
+    { Keep capacities for the next live tick. }
   end;
-  fPoints := lMerged;
+  SetLength(fMergeOutput, lOutputStart);
+  lOldPoints := fPoints;
+  fPoints := fMergeOutput;
+  fMergeOutput := lOldPoints;
 end;
 
 procedure TRecorderSqlTrendView.ClampCurrentDateXRange;

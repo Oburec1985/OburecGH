@@ -7,6 +7,7 @@ object TagSettingsDialog: TTagSettingsDialog
   ClientHeight = 664
   ClientWidth = 716
   Position = poScreenCenter
+  LCLVersion = '4.2.0.0'
   object fPageControl: TPageControl
     Left = 8
     Height = 560

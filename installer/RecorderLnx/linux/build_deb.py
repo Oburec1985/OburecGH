@@ -24,8 +24,8 @@ def newest_source(repo_root):
         repo_root / "Lazarus" / "RecorderLnx",
         repo_root / "Lazarus" / "SharedUtils",
     ]
-    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr", ".lpi"}
-    excluded = {"lib", "_buildverify", "cach", "errors", ".git"}
+    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr"}
+    excluded = {"lib", "_buildverify", "backup", "cach", "errors", "tmp", ".git"}
     newest = None
     for source_root in roots:
         for path in source_root.rglob("*"):

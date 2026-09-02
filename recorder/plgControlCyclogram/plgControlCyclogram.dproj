@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{2A3F32A3-8A55-4170-86ED-FAC06098330D}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
@@ -539,7 +539,7 @@
 				<Form>SpmThresholdProfileFrm</Form>
 			</DCCReference>
 			<DCCReference Include="units\uCreateComponents.pas"/>
-			<DCCReference Include="..\plgCalibratorPascal\units\uCompMng.pas"/>
+			<DCCReference Include="..\SharedRUnits\uCompMng.pas"/>
 			<DCCReference Include="..\SharedRUnits\uFrmSync.pas">
 				<Form>FrmSync</Form>
 			</DCCReference>
@@ -551,7 +551,7 @@
 			<DCCReference Include="forms\uDACFrm.pas">
 				<Form>DACFrm</Form>
 			</DCCReference>
-			<DCCReference Include="..\plgCalibratorPascal\units\PlgClass.pas"/>
+			<DCCReference Include="..\SharedRUnits\PluginClass.pas"/>
 			<DCCReference Include="units\DAC\uAccuracyStepSin.pas"/>
 			<DCCReference Include="units\DAC\uDacDevice.pas"/>
 			<DCCReference Include="units\DAC\uDacProgram.pas"/>

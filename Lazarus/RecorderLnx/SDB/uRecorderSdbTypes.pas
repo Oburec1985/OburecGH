@@ -47,6 +47,7 @@ type
     ModTime: string;
     XmlPath: string;
     CsvPath: string;
+    JsonPath: string;
   end;
 
   TSdbFolderInfo = record

@@ -15,6 +15,7 @@ type
     fConfig: TRecorderSqlDbConfig;
     fConnection: TSQLConnection;
     fTransaction: TSQLTransaction;
+    fDatabaseEnsured: Boolean;
     function CreateConnection: TSQLConnection;
     function TableExists(const AName: string): Boolean;
     function IndexExists(const AName: string): Boolean;
@@ -180,6 +181,7 @@ end;
 
 procedure TRecorderSqlDbRepository.Close;
 begin
+  fDatabaseEnsured := False;
   if fTransaction <> nil then
   begin
     if fTransaction.Active then
@@ -423,6 +425,10 @@ begin
     (AToUtc <= AFromUtc) then Exit;
   if AMaxPointsPerSignal < 32 then AMaxPointsPerSignal := 32;
   EnsureDatabase;
+  { A long-lived SQL Trend repository must begin each read with a fresh
+    transaction snapshot, otherwise Firebird can keep showing the rows that
+    were visible during the first live request. }
+  CommitAndRestart;
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection;
@@ -653,6 +659,8 @@ var
   lQuery: TSQLQuery;
   lVersion: Integer;
 begin
+  if fDatabaseEnsured and (fConnection <> nil) and fConnection.Connected then
+    Exit;
   Open;
   CreateTableIfMissing('schema_info',
     'create table schema_info (version integer not null, applied_at double precision not null, description varchar(255))');
@@ -713,6 +721,7 @@ begin
       [lVersion, CRecorderSqlDbSchemaVersion]);
   MigrateSchema(lVersion);
   Commit;
+  fDatabaseEnsured := True;
 end;
 
 function TRecorderSqlDbRepository.ScalarInt(const ASql: string): Int64;

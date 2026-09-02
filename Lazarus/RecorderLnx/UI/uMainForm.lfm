@@ -6,7 +6,6 @@ object MainForm: TMainForm
   Caption = 'RecorderLnx'
   ClientHeight = 700
   ClientWidth = 1064
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object pnToolbar: TPanel

@@ -23,10 +23,19 @@ uses
   uRecorderMic140Device,
   uRecorderMic140Calibration,
   uRecorderMic140Utils,
+  uRecorderDeviceDataThread,
+  uRecorderAcquisitionTypes,
   uRecorderMeraPaths,
   uSharedFileLogger;
 
 type
+  TMockDeviceDataThread = class(TRecorderDeviceDataThread)
+  protected
+    function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; override;
+  public
+    procedure PublishSequence(ASequence: Integer);
+  end;
+
   TDataSourceEventProbe = class
   public
     Count: Integer;
@@ -99,6 +108,27 @@ begin
   for I := 0 to ASnapshot.Count - 1 do
     LogFmt('  [%d] t=%.3f value=%.3f',
       [I, ASnapshot.Times[I], ASnapshot.Values[I]]);
+end;
+
+function TMockDeviceDataThread.ReadBlockFromDevice(
+  var ABlock: TRecorderAcquisitionBlock): Boolean;
+begin
+  Result := False;
+end;
+
+procedure TMockDeviceDataThread.PublishSequence(ASequence: Integer);
+var
+  lBlock: TRecorderAcquisitionBlock;
+begin
+  lBlock.ChannelCount := 1;
+  lBlock.SampleCount := 2;
+  lBlock.FirstTimeSec := ASequence;
+  lBlock.SampleRateHz := 10;
+  SetLength(lBlock.Values, 1);
+  SetLength(lBlock.Values[0], 2);
+  lBlock.Values[0][0] := ASequence;
+  lBlock.Values[0][1] := ASequence + 0.5;
+  PushBlock(lBlock);
 end;
 
 procedure TDataSourceEventProbe.HandleEvent(ASender: TObject;
@@ -627,6 +657,7 @@ begin
 
   LogLine('RESULT MIC-140 ready words pacing test passed.');
 end;
+
 {$ENDIF}
 
 procedure TestMic140AddressHelpers;
@@ -750,9 +781,66 @@ begin
   LogLine('RESULT MIC-140 Mera Files calibr path test passed.');
 end;
 
+procedure TestDeviceDataThreadLeaseRing;
+var
+  I: Integer;
+  lFirstPointer: Pointer;
+  lLease: TRecorderAcquisitionBlockLease;
+  lThread: TMockDeviceDataThread;
+begin
+  LogLine('--- Device data thread lease ring test ---');
+  lThread := TMockDeviceDataThread.Create;
+  try
+    lThread.Config(1, 2, 10);
+
+    { Capacity is 32. Newest blocks are dropped while full, preserving the
+      order and lifetime of already published slots. }
+    for I := 0 to 39 do
+      lThread.PublishSequence(I);
+
+    lFirstPointer := nil;
+    for I := 0 to 31 do
+    begin
+      AssertTrue(lThread.AcquireReadBlock(lLease), 'lease available');
+      try
+        if I = 0 then
+        begin
+          lFirstPointer := lLease.Block;
+          lThread.PublishSequence(1000);
+          AssertEquals(lLease.Block^.Values[0][0], 0.0,
+            'leased slot cannot be overwritten');
+        end;
+        AssertEquals(lLease.Block^.FirstTimeSec, I, 'ring order');
+        AssertEquals(lLease.Block^.Values[0][1], I + 0.5, 'ring payload');
+      finally
+        lThread.ReleaseReadBlock(lLease);
+      end;
+    end;
+    AssertTrue(not lThread.AcquireReadBlock(lLease), 'full-ring drops newest');
+
+    lThread.PublishSequence(100);
+    AssertTrue(lThread.AcquireReadBlock(lLease), 'wrapped slot available');
+    try
+      AssertTrue(Pointer(lLease.Block) = lFirstPointer,
+        'ring reuses stable preallocated slot');
+      AssertEquals(lLease.Block^.FirstTimeSec, 100.0, 'wrapped payload');
+    finally
+      lThread.ReleaseReadBlock(lLease);
+    end;
+    LogLine('RESULT device data thread lease ring test passed.');
+  finally
+    lThread.Free;
+  end;
+end;
+
 begin
   OpenLog;
   try
+    if SameText(ParamStr(1), '--lease-only') then
+    begin
+      TestDeviceDataThreadLeaseRing;
+      Exit;
+    end;
     TestMockSineDataSource;
     LogLine('');
     TestDiagnosticsDataSource;
@@ -770,6 +858,8 @@ begin
     TestMic140HardwareCalibrationLoad;
     LogLine('');
     TestMic140MeraCalibrPath;
+    LogLine('');
+    TestDeviceDataThreadLeaseRing;
   finally
     CloseLog;
   end;

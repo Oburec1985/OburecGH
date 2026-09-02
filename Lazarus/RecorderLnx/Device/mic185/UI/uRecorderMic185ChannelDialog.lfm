@@ -122,7 +122,8 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Left = 250
       Height = 17
       Top = 166
-      Width = 18
+      Width = 176
+      Caption = 'Калибровочный шунт канала'
       TabOrder = 8
     end
   end

@@ -170,9 +170,12 @@ type
     procedure AddressButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure SelectCalibrationButtonClick(Sender: TObject);
+    procedure ChannelCurveNotebookClick(Sender: TObject);
     procedure AddCalibrationButtonClick(Sender: TObject);
     procedure DeleteCalibrationButtonClick(Sender: TObject);
     procedure EditCalibrationButtonClick(Sender: TObject);
+    procedure EditCalibrationAt(APipelineIndex: Integer);
+    procedure ExportCalibrationButtonClick(Sender: TObject);
     procedure SelectHardwareCalibrationButtonClick(Sender: TObject);
     procedure EditHardwareCalibrationButtonClick(Sender: TObject);
     procedure DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
@@ -431,10 +434,10 @@ begin
   fAddressButton.OnClick := @AddressButtonClick;
   fHardwareSourceSetupBtn.OnClick := @HardwareSourceSetupButtonClick;
   fHardwareSourceSetupBtn.Visible := False;
-  fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
+  fChannelCurveSelectBtn.OnClick := @ChannelCurveNotebookClick;
   fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
   fChannelCurveDeleteBtn.OnClick := @DeleteCalibrationButtonClick;
-  fChannelCurveEditBtn.OnClick := @EditCalibrationButtonClick;
+  fChannelCurveEditBtn.OnClick := @ExportCalibrationButtonClick;
   fHardwareCurveSelectBtn.OnClick := @SelectHardwareCalibrationButtonClick;
   fHardwareCurveSetupBtn.OnClick := @EditHardwareCalibrationButtonClick;
   fHardwareCurveDownloadBtn.OnClick := @DownloadHardwareCalibrationFromDeviceClick;
@@ -451,10 +454,12 @@ begin
     CTagDialogIconHardwareCurveRead, 'Выгрузка из памяти ГХ');
   if (fHardwareCurveDownloadBtn <> nil) and (fHardwareCurveDownloadBtn.Images = nil) then
     AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
-  AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty);
+  AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty,
+    'Редактировать канальную ГХ');
   AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CTagDialogIconAdd);
   AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CTagDialogIconRemove);
-  AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CTagDialogIconChannelCurve);
+  AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CTagDialogIconChannelCurve,
+    'Экспорт текущей ГХ в БДГХ');
   AssignSpeedButtonImage(fZeroBalanceBtn, fCommandImages, CTagDialogIconZeroBalance,
     'Балансировка нуля', CTagDeviceActionBtnSize);
   AssignSpeedButtonImage(fHardwareDeviceSetupBtn, fCommandImages,
@@ -636,7 +641,7 @@ begin
     fHardwareCurveCheck.Checked := lFirstEnabled;
     lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
   end;
-  { MC-201: если на диске уже есть ГХ для SN+диапазона — подтянуть сразу. }
+  // MC-201: если на диске уже есть ГХ для SN+диапазона — подтянуть сразу.
   if (Pos('MC-032:', TagAt(0).SourceId) = 1) and
     ((lCalibration = nil) or (lFirstName = '')) then
   begin
@@ -1714,7 +1719,8 @@ begin
         if lAppliedMic185Sources.IndexOf(lSourceId) < 0 then
         begin
           lAppliedMic185Sources.Add(lSourceId);
-          RecorderMic185ApplySourceFrequency(fTagRegistry, lSourceId, lFloat);
+          RecorderMic185ApplySourceFrequency(fTagRegistry, lSourceId, lFloat,
+            fDataUpdateMs);
         end;
       end
       else
@@ -2113,9 +2119,20 @@ begin
 end;
 
 procedure TTagSettingsDialog.EditCalibrationButtonClick(Sender: TObject);
+begin
+  if (fTags.Count = 1) and (TagAt(0).CalibrationNames.Count > 0) then
+    EditCalibrationAt(TagAt(0).CalibrationNames.Count - 1)
+  else
+    EditCalibrationAt(-1);
+end;
+
+procedure TTagSettingsDialog.EditCalibrationAt(APipelineIndex: Integer);
 var
   lCalibration: TRecorderCalibration;
+  lDraft: TRecorderCalibration;
   lExcitation: string;
+  lName: string;
+  lChoice: TModalResult;
 begin
   if fTags.Count <> 1 then
   begin
@@ -2124,7 +2141,8 @@ begin
     Exit;
   end;
 
-  if TagAt(0).CalibrationNames.Count = 0 then
+  if (APipelineIndex < 0) or
+    (APipelineIndex >= TagAt(0).CalibrationNames.Count) then
   begin
     MessageDlg('Канальная ГХ',
       'У выбранного тега нет назначенной ГХ.',
@@ -2132,36 +2150,123 @@ begin
     Exit;
   end;
 
-  if TagAt(0).CalibrationNames.Count > 1 then
-  begin
-    if ShowRecorderCalibrationPipelineDialog(Self, fTagRegistry.Calibrations,
-      TagAt(0).CalibrationNames) then
-    begin
-      ApplyAutoUnitFromChannelCalibration;
-      UpdateChannelCurveText;
-    end;
-    Exit;
-  end;
-
-  lCalibration := fTagRegistry.FindCalibrationByName(
-    TagAt(0).CalibrationNames[0]);
+  lName := TagAt(0).CalibrationNames[APipelineIndex];
+  lCalibration := fTagRegistry.FindCalibrationByName(lName);
   if lCalibration = nil then
   begin
-    MessageDlg('Канальная ГХ',   'Градуировка ГХ не найдена в списке калибровок.',
+    MessageDlg('Канальная ГХ', 'ГХ «' + lName +
+      '» не найдена в реестре калибровок.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
-  TryGetStrainDeviceExcitation(TagAt(0), lExcitation);
-  if (((lCalibration.Kind = rckStrain) and
-    ShowRecorderStrainCalibrationDialog(Self, lCalibration, lExcitation,
-    TagAt(0).UnitName)) or
-    ((lCalibration.Kind <> rckStrain) and
-    ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
-  begin
+  lDraft := lCalibration.Clone;
+  try
+    TryGetStrainDeviceExcitation(TagAt(0), lExcitation);
+    if not (((lDraft.Kind = rckStrain) and
+      ShowRecorderStrainCalibrationDialog(Self, lDraft, lExcitation,
+      TagAt(0).UnitName)) or
+      ((lDraft.Kind <> rckStrain) and
+      ShowRecorderCalibrationPropertiesDialog(Self, lDraft))) then
+      Exit;
+
+    lChoice := MessageDlg('Сохранение канальной ГХ',
+      'Да — изменить общую ГХ для всех тегов, которые её используют.' + LineEnding +
+      'Нет — создать отдельную локальную копию только для текущего тега.' + LineEnding +
+      'Отмена — не применять изменения.', mtConfirmation,
+      [mbYes, mbNo, mbCancel], 0);
+    try
+      case lChoice of
+        mrYes:
+          fTagRegistry.CommitCalibrationEdit(lCalibration, lDraft);
+        mrNo:
+          fTagRegistry.AddCalibrationCopyForTag(TagAt(0), APipelineIndex, lDraft);
+      else
+        Exit;
+      end;
+    except
+      on E: ERecorderTagError do
+      begin
+        MessageDlg('Канальная ГХ', E.Message, mtError, [mbOK], 0);
+        Exit;
+      end;
+    end;
     ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
+  finally
+    lDraft.Free;
   end;
+end;
+
+procedure TTagSettingsDialog.ChannelCurveNotebookClick(Sender: TObject);
+var
+  lIndex: Integer;
+begin
+  if (fTags.Count <> 1) or (TagAt(0).CalibrationNames.Count = 0) then
+  begin
+    EditCalibrationAt(-1);
+    Exit;
+  end;
+  if TagAt(0).CalibrationNames.Count = 1 then
+  begin
+    EditCalibrationAt(0);
+    Exit;
+  end;
+  if ShowRecorderCalibrationPipelineItemDialog(Self,
+    fTagRegistry.Calibrations, TagAt(0).CalibrationNames, lIndex) then
+    EditCalibrationAt(lIndex);
+end;
+
+procedure TTagSettingsDialog.ExportCalibrationButtonClick(Sender: TObject);
+var
+  lCalibration: TRecorderCalibration;
+  lCreatedKey: string;
+  lError: string;
+  lFolderKey: string;
+  lName: string;
+begin
+  if fTags.Count <> 1 then
+  begin
+    MessageDlg('Экспорт ГХ',
+      'Экспорт доступен только для одного значения тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  if TagAt(0).CalibrationNames.Count = 0 then
+  begin
+    MessageDlg('Экспорт ГХ', 'У выбранного тега нет назначенной ГХ.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  lName := TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1];
+  lCalibration := fTagRegistry.FindCalibrationByName(lName);
+  if lCalibration = nil then
+  begin
+    MessageDlg('Экспорт ГХ', 'Назначенная ГХ не найдена в реестре.', mtError, [mbOK], 0);
+    Exit;
+  end;
+  if not ShowRecorderSdbFolderSelectDialog(Self, '', lFolderKey) then
+    Exit;
+  if RecorderSdbExportCalibration(lFolderKey, lCalibration, False,
+    lCreatedKey, lError) then
+  begin
+    MessageDlg('Экспорт ГХ', 'ГХ экспортирована в БДГХ:' + LineEnding + lCreatedKey, mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  if lError = 'EXISTS' then
+  begin
+    if MessageDlg('Экспорт ГХ', 'В выбранной папке уже есть ГХ с таким именем.' +LineEnding + 'Заменить её?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+    if RecorderSdbExportCalibration(lFolderKey, lCalibration, True,
+      lCreatedKey, lError) then
+    begin
+      MessageDlg('Экспорт ГХ', 'ГХ заменена в БДГХ:' + LineEnding +
+        lCreatedKey, mtInformation, [mbOK], 0);
+      Exit;
+    end;
+  end;
+  MessageDlg('Экспорт ГХ', 'Не удалось экспортировать ГХ:' + LineEnding +
+    lError, mtError, [mbOK], 0);
 end;
 
 procedure TTagSettingsDialog.SelectHardwareCalibrationButtonClick(Sender: TObject);

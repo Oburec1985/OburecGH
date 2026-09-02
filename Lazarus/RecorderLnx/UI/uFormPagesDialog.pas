@@ -31,6 +31,7 @@ type
     fActivating: Boolean;                  { Флаг процесса активации страницы }
     fFactory: TRecorderFormFactory;        { Фабрика создания форм }
     fBackgroundEdit: TEdit;                { Путь к фоновому изображению страницы }
+    fKeepAspectCheck: TCheckBox;
     fChooseBackgroundButton: TButton;
     fClearBackgroundButton: TButton;
     fDetachButton: TButton;                        { Открепить/вернуть пользовательский формуляр }
@@ -45,6 +46,7 @@ type
     procedure ActivateClick(Sender: TObject);
     procedure ChooseBackgroundClick(Sender: TObject);
     procedure ClearBackgroundClick(Sender: TObject);
+    procedure KeepAspectChange(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
     procedure DetachClick(Sender: TObject);
     procedure MoveDownClick(Sender: TObject);
@@ -178,7 +180,7 @@ begin
   lAddMnemonic := TButton.Create(Self);
   lAddMnemonic.Parent := Self;
   lAddMnemonic.Left := 10;
-  lAddMnemonic.Top := 290;
+  lAddMnemonic.Top := 310;
   lAddMnemonic.Width := 142;
   lAddMnemonic.Height := 24;
   lAddMnemonic.Caption := 'Add mnemonic';
@@ -215,10 +217,16 @@ begin
   fClearBackgroundButton.Caption := 'Очистить';
   fClearBackgroundButton.OnClick := @ClearBackgroundClick;
 
+  fKeepAspectCheck := TCheckBox.Create(Self);
+  fKeepAspectCheck.Parent := Self;
+  fKeepAspectCheck.SetBounds(52, 280, 240, 24);
+  fKeepAspectCheck.Caption := 'Сохранять пропорции';
+  fKeepAspectCheck.OnChange := @KeepAspectChange;
+
   fDetachButton := TButton.Create(Self);
   fDetachButton.Parent := Self;
   fDetachButton.Left := 162;
-  fDetachButton.Top := 290;
+  fDetachButton.Top := 310;
   fDetachButton.Width := 142;
   fDetachButton.Height := 24;
   fDetachButton.Caption := 'Открепить окно';
@@ -282,13 +290,16 @@ begin
   begin
     fNameEdit.Text := APage.Title;
     fBackgroundEdit.Text := APage.BackgroundImageFileName;
+    fKeepAspectCheck.Checked := APage.BackgroundKeepAspect;
   end
   else
   begin
     fNameEdit.Text := '';
     fBackgroundEdit.Text := '';
+    fKeepAspectCheck.Checked := False;
   end;
   fBackgroundEdit.Enabled := lEnabled;
+  fKeepAspectCheck.Enabled := lEnabled;
   fChooseBackgroundButton.Enabled := lEnabled;
   fClearBackgroundButton.Enabled := lEnabled and
     (fBackgroundEdit.Text <> '');
@@ -297,6 +308,18 @@ begin
     fDetachButton.Caption := 'Вернуть во вкладку'
   else
     fDetachButton.Caption := 'Открепить окно';
+end;
+
+procedure TFormPagesDialog.KeepAspectChange(Sender: TObject);
+var
+  lPage: TRecorderFormPage;
+begin
+  if fUpdating then
+    Exit;
+  lPage := GetSelectedPage;
+  if (lPage = nil) or (PageDescription(lPage) <> 'Mnemonic page') then
+    Exit;
+  lPage.BackgroundKeepAspect := fKeepAspectCheck.Checked;
 end;
 
 function TFormPagesDialog.GetSelectedPageIndex: Integer;

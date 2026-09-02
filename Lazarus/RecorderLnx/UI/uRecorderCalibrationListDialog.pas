@@ -33,6 +33,7 @@ type
     fList: TRecorderCalibrationList;
     fPipelineNames: TStrings;
     fPipelineMode: Boolean;
+    fPickMode: Boolean;
     procedure RefreshGrid;
     procedure UpdateGridColumns;
     function CurrentIndex: Integer;
@@ -40,12 +41,17 @@ type
   public
     procedure EditList(AList: TRecorderCalibrationList);
     procedure EditPipeline(AList: TRecorderCalibrationList; APipelineNames: TStrings);
+    procedure PickPipelineItem(AList: TRecorderCalibrationList;
+      APipelineNames: TStrings);
   end;
 
 function ShowRecorderCalibrationListDialog(AOwner: TComponent;
   AList: TRecorderCalibrationList; out ASelected: TRecorderCalibration): Boolean;
 function ShowRecorderCalibrationPipelineDialog(AOwner: TComponent;
   AList: TRecorderCalibrationList; APipelineNames: TStrings): Boolean;
+function ShowRecorderCalibrationPipelineItemDialog(AOwner: TComponent;
+  AList: TRecorderCalibrationList; APipelineNames: TStrings;
+  out ASelectedIndex: Integer): Boolean;
 
 implementation
 
@@ -76,6 +82,7 @@ begin
   fList := AList;
   fPipelineNames := nil;
   fPipelineMode := False;
+  fPickMode := False;
   RefreshGrid;
 end;
 
@@ -85,7 +92,28 @@ begin
   fList := AList;
   fPipelineNames := APipelineNames;
   fPipelineMode := True;
+  fPickMode := False;
+  { Свойства общей ГХ редактируются только из диалога тега через draft.
+    Здесь остаются выбор, порядок и удаление ступеней pipeline. }
+  btnProperties.Visible := False;
   RefreshGrid;
+end;
+
+procedure TRecorderCalibrationListDialog.PickPipelineItem(
+  AList: TRecorderCalibrationList; APipelineNames: TStrings);
+begin
+  fList := AList;
+  fPipelineNames := APipelineNames;
+  fPipelineMode := True;
+  fPickMode := True;
+  btnAdd.Visible := False;
+  btnDelete.Visible := False;
+  btnProperties.Visible := False;
+  btnUp.Visible := False;
+  btnDown.Visible := False;
+  btnOk.Caption := 'Выбрать';
+  RefreshGrid;
+  Caption := 'Выбор ГХ для редактирования';
 end;
 
 function TRecorderCalibrationListDialog.CurrentIndex: Integer;
@@ -110,7 +138,8 @@ begin
   begin
     if fPipelineNames = nil then
       Exit;
-    Caption := 'Настройка Мульти ГХ';
+    if not fPickMode then
+      Caption := 'Настройка Мульти ГХ';
     gridList.RowCount := Max(2, fPipelineNames.Count + 1);
     for I := 1 to gridList.RowCount - 1 do
     begin
@@ -226,31 +255,12 @@ end;
 procedure TRecorderCalibrationListDialog.btnPropertiesClick(Sender: TObject);
 var
   lIndex: Integer;
-  lCalibration: TRecorderCalibration;
 begin
+  if fPipelineMode then
+    Exit;
   lIndex := CurrentIndex;
   if lIndex < 0 then
     Exit;
-  if fPipelineMode then
-  begin
-    if fPipelineNames = nil then
-      Exit;
-    lCalibration := CalibrationByName(fPipelineNames[lIndex]);
-    if lCalibration = nil then
-    begin
-      MessageDlg('Канальная ГХ',
-        'Градуировка «' + fPipelineNames[lIndex] +
-        '» не найдена в реестре.', mtInformation, [mbOK], 0);
-      Exit;
-    end;
-    if (((lCalibration.Kind = rckStrain) and
-      ShowRecorderStrainCalibrationDialog(Self, lCalibration)) or
-      ((lCalibration.Kind <> rckStrain) and
-      ShowRecorderCalibrationPropertiesDialog(Self, lCalibration))) then
-      RefreshGrid;
-    Exit;
-  end;
-
   if (((fList[lIndex].Kind = rckStrain) and
     ShowRecorderStrainCalibrationDialog(Self, fList[lIndex])) or
     ((fList[lIndex].Kind <> rckStrain) and
@@ -298,7 +308,10 @@ end;
 
 procedure TRecorderCalibrationListDialog.gridListDblClick(Sender: TObject);
 begin
-  btnPropertiesClick(Sender);
+  if fPickMode and (CurrentIndex >= 0) then
+    ModalResult := mrOk
+  else
+    btnPropertiesClick(Sender);
 end;
 
 function ShowRecorderCalibrationListDialog(AOwner: TComponent;
@@ -336,6 +349,25 @@ begin
   finally
     lDialog.Free;
     lWorkingNames.Free;
+  end;
+end;
+
+function ShowRecorderCalibrationPipelineItemDialog(AOwner: TComponent;
+  AList: TRecorderCalibrationList; APipelineNames: TStrings;
+  out ASelectedIndex: Integer): Boolean;
+var
+  lDialog: TRecorderCalibrationListDialog;
+begin
+  ASelectedIndex := -1;
+  lDialog := TRecorderCalibrationListDialog.Create(AOwner);
+  try
+    lDialog.PickPipelineItem(AList, APipelineNames);
+    Result := lDialog.ShowModal = mrOk;
+    if Result then
+      ASelectedIndex := lDialog.CurrentIndex;
+    Result := Result and (ASelectedIndex >= 0);
+  finally
+    lDialog.Free;
   end;
 end;
 

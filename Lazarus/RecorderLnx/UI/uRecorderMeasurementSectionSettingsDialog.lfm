@@ -1,0 +1,323 @@
+object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSettingsDialog
+  Left = 320
+  Height = 625
+  Top = 180
+  Width = 928
+  Caption = 'Настройка измерительного сечения'
+  ClientHeight = 625
+  ClientWidth = 928
+  Position = poOwnerFormCenter
+  object pnlSettings: TPanel
+    Left = 0
+    Height = 214
+    Top = 0
+    Width = 928
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 214
+    ClientWidth = 928
+    TabOrder = 0
+    object lblCaption: TLabel
+      Left = 12
+      Height = 15
+      Top = 14
+      Width = 48
+      Caption = 'Подпись'
+    end
+    object fCaptionEdit: TEdit
+      Left = 154
+      Height = 23
+      Top = 10
+      Width = 255
+      TabOrder = 0
+    end
+    object lblSection: TLabel
+      Left = 12
+      Height = 15
+      Top = 48
+      Width = 92
+      Caption = 'Объект/Сечение'
+    end
+    object fSectionIdEdit: TEdit
+      Left = 154
+      Height = 23
+      Top = 44
+      Width = 170
+      TabOrder = 1
+    end
+    object lblYoung: TLabel
+      Left = 416
+      Height = 15
+      Top = 14
+      Width = 38
+      Caption = 'E, МПа'
+    end
+    object fYoungEdit: TEdit
+      Left = 470
+      Height = 23
+      Top = 10
+      Width = 90
+      TabOrder = 2
+    end
+    object lblPoisson: TLabel
+      Left = 580
+      Height = 15
+      Top = 14
+      Width = 14
+      Caption = 'nu'
+    end
+    object fPoissonEdit: TEdit
+      Left = 608
+      Height = 23
+      Top = 10
+      Width = 70
+      TabOrder = 3
+    end
+    object lblTempCoeff: TLabel
+      Left = 12
+      Height = 15
+      Top = 82
+      Width = 129
+      Caption = 'Темп. коэф., мкстрн/°C'
+    end
+    object fTempCoeffEdit: TEdit
+      Left = 154
+      Height = 23
+      Top = 78
+      Width = 170
+      TabOrder = 4
+    end
+    object lblTempRef: TLabel
+      Left = 384
+      Height = 15
+      Top = 50
+      Width = 77
+      Caption = 'Опорная T, °C'
+    end
+    object fTempRefEdit: TEdit
+      Left = 470
+      Height = 23
+      Top = 48
+      Width = 96
+      TabOrder = 5
+    end
+    object lblCaptionFont: TLabel
+      Left = 12
+      Height = 15
+      Top = 112
+      Width = 97
+      Caption = 'Шрифт заголовка'
+    end
+    object fCaptionFontCombo: TComboBox
+      Left = 154
+      Height = 23
+      Top = 110
+      Width = 170
+      ItemHeight = 15
+      TabOrder = 6
+      OnChange = FontNameChange
+    end
+    object fCaptionFontButton: TButton
+      Left = 334
+      Height = 26
+      Top = 110
+      Width = 96
+      Caption = 'Выбрать...'
+      TabOrder = 7
+      OnClick = ChooseFontClick
+    end
+    object lblStressFont: TLabel
+      Left = 12
+      Height = 15
+      Top = 150
+      Width = 138
+      Caption = 'Шрифт мех. напряжений'
+    end
+    object fStressFontCombo: TComboBox
+      Left = 154
+      Height = 23
+      Top = 144
+      Width = 170
+      ItemHeight = 15
+      TabOrder = 8
+      OnChange = FontNameChange
+    end
+    object fStressFontButton: TButton
+      Left = 334
+      Height = 26
+      Top = 144
+      Width = 96
+      Caption = 'Выбрать...'
+      TabOrder = 9
+      OnClick = ChooseFontClick
+    end
+    object fAddButton: TButton
+      Left = 12
+      Height = 26
+      Top = 180
+      Width = 86
+      Caption = 'Добавить'
+      TabOrder = 10
+      OnClick = AddClick
+    end
+    object fDeleteButton: TButton
+      Left = 104
+      Height = 26
+      Top = 180
+      Width = 86
+      Caption = 'Удалить'
+      TabOrder = 11
+      OnClick = DeleteClick
+    end
+    object fImportButton: TButton
+      Left = 210
+      Height = 26
+      Top = 180
+      Width = 90
+      Caption = 'Импорт...'
+      TabOrder = 12
+      OnClick = ImportClick
+    end
+    object fExportButton: TButton
+      Left = 334
+      Height = 26
+      Top = 180
+      Width = 96
+      Caption = 'Экспорт...'
+      TabOrder = 13
+      OnClick = ExportClick
+    end
+    object fFormatAllButton: TButton
+      Left = 440
+      Height = 26
+      Top = 112
+      Width = 160
+      Caption = 'Отформатировать все'
+      TabOrder = 14
+      OnClick = FormatAllClick
+    end
+    object lblBackgroundColor: TLabel
+      Left = 620
+      Height = 15
+      Top = 82
+      Width = 104
+      Caption = 'Фон компонента'
+    end
+    object fBackgroundColorPanel: TPanel
+      Left = 744
+      Height = 24
+      Top = 76
+      Width = 150
+      BevelOuter = bvLowered
+      Caption = 'Двойной щелчок'
+      ParentBackground = False
+      TabOrder = 15
+      OnDblClick = ColorPanelDblClick
+    end
+    object lblTextBackgroundColor: TLabel
+      Left = 620
+      Height = 15
+      Top = 116
+      Width = 115
+      Caption = 'Фон текста измерений'
+    end
+    object fTextBackgroundColorPanel: TPanel
+      Left = 744
+      Height = 24
+      Top = 110
+      Width = 150
+      BevelOuter = bvLowered
+      Caption = 'Двойной щелчок'
+      ParentBackground = False
+      TabOrder = 16
+      OnDblClick = ColorPanelDblClick
+    end
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Height = 44
+    Top = 581
+    Width = 928
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 44
+    ClientWidth = 928
+    TabOrder = 1
+    object fOkButton: TButton
+      Left = 724
+      Height = 26
+      Top = 8
+      Width = 90
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      TabOrder = 0
+      OnClick = OkClick
+    end
+    object fCancelButton: TButton
+      Left = 820
+      Height = 26
+      Top = 8
+      Width = 90
+      Anchors = [akTop, akRight]
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object pnlTags: TPanel
+    Left = 668
+    Height = 367
+    Top = 214
+    Width = 260
+    Align = alRight
+    BorderSpacing.Left = 6
+    BevelOuter = bvNone
+    ClientHeight = 367
+    ClientWidth = 260
+    TabOrder = 2
+    object lblTags: TLabel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 260
+      Align = alTop
+      Caption = 'Теги'
+    end
+    object fTagFilterEdit: TEdit
+      Left = 0
+      Height = 23
+      Top = 15
+      Width = 260
+      Align = alTop
+      TabOrder = 0
+      TextHint = 'Фильтр'
+      OnChange = TagFilterChange
+    end
+    object fTagList: TListBox
+      Left = 0
+      Height = 329
+      Top = 38
+      Width = 260
+      Align = alClient
+      DragMode = dmAutomatic
+      ItemHeight = 0
+      TabOrder = 1
+      OnDblClick = TagListDblClick
+    end
+  end
+  object fGrid: TStringGrid
+    Left = 0
+    Height = 367
+    Top = 214
+    Width = 662
+    Align = alClient
+    ColCount = 7
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect]
+    RowCount = 2
+    TabOrder = 3
+    OnDragDrop = GridDragDrop
+    OnDragOver = GridDragOver
+  end
+end

@@ -73,9 +73,14 @@ type
 
   TRecorderMeasurementSectionComponent = class(TRecorderVisualComponent)
   private
+    fBackgroundColor: LongInt;
     fCaption: string;
+    fCaptionFont: TRecorderFontSnapshot;
     fSectionId: string;
     fRows: TList;
+    fStressFont: TRecorderFontSnapshot;
+    fStressNamedFontName: string;
+    fTextBackgroundColor: LongInt;
     fYoungModulusMPa: Double;
     fPoissonRatio: Double;
     fTemperatureCoefficient: Double;
@@ -98,7 +103,13 @@ type
     procedure CalculateRow(ARegistry: TRecorderTagRegistry;
       ARow: TRecorderMeasurementSectionRow;
       out AValues: TRecorderMeasurementSectionValues);
+    procedure GetCaptionFont(out AFont: TRecorderFontSnapshot);
+    procedure GetStressFont(out AFont: TRecorderFontSnapshot);
     property Caption: string read fCaption write fCaption;
+    property BackgroundColor: LongInt read fBackgroundColor
+      write fBackgroundColor;
+    property CaptionFont: TRecorderFontSnapshot read fCaptionFont
+      write fCaptionFont;
     property SectionId: string read fSectionId write fSectionId;
     property RowCount: Integer read GetRowCount;
     property Rows[AIndex: Integer]: TRecorderMeasurementSectionRow read GetRow;
@@ -108,6 +119,12 @@ type
       write fTemperatureCoefficient;
     property ReferenceTemperatureC: Double read fReferenceTemperatureC
       write fReferenceTemperatureC;
+    property StressFont: TRecorderFontSnapshot read fStressFont
+      write fStressFont;
+    property StressNamedFontName: string read fStressNamedFontName
+      write fStressNamedFontName;
+    property TextBackgroundColor: LongInt read fTextBackgroundColor
+      write fTextBackgroundColor;
   end;
 
   TRecorderMeasurementSectionFactory = class(TRecorderComponentFactoryBase)
@@ -304,11 +321,20 @@ begin
   inherited Create;
   fRows := TList.Create;
   fCaption := 'Измерительное сечение';
+  fBackgroundColor := $00FFF4E8;
+  fCaptionFont.Name := 'Tahoma';
+  fCaptionFont.Size := 10;
+  fCaptionFont.Color := 0;
+  fCaptionFont.Bold := False;
+  fCaptionFont.Italic := False;
   fSectionId := '1';
   fYoungModulusMPa := 2.1E5;
   fPoissonRatio := 0.30;
   fTemperatureCoefficient := 0.0;
   fReferenceTemperatureC := 20.0;
+  fStressFont := fCaptionFont;
+  fStressNamedFontName := '';
+  fTextBackgroundColor := fBackgroundColor;
 end;
 
 destructor TRecorderMeasurementSectionComponent.Destroy;
@@ -345,14 +371,46 @@ begin
   if ASource = nil then
     Exit;
   fCaption := ASource.Caption;
+  fBackgroundColor := ASource.BackgroundColor;
+  NamedFontName := ASource.NamedFontName;
+  fCaptionFont := ASource.CaptionFont;
   fSectionId := ASource.SectionId;
   fYoungModulusMPa := ASource.YoungModulusMPa;
   fPoissonRatio := ASource.PoissonRatio;
   fTemperatureCoefficient := ASource.TemperatureCoefficient;
   fReferenceTemperatureC := ASource.ReferenceTemperatureC;
+  fStressNamedFontName := ASource.StressNamedFontName;
+  fStressFont := ASource.StressFont;
+  fTextBackgroundColor := ASource.TextBackgroundColor;
   ClearRows;
   for I := 0 to ASource.RowCount - 1 do
     AddRow.Assign(ASource.Rows[I]);
+end;
+
+procedure TRecorderMeasurementSectionComponent.GetCaptionFont(
+  out AFont: TRecorderFontSnapshot);
+begin
+  GetEffectiveFont(fCaptionFont, AFont);
+end;
+
+procedure TRecorderMeasurementSectionComponent.GetStressFont(
+  out AFont: TRecorderFontSnapshot);
+var
+  lFont: TRecorderNamedFont;
+begin
+  lFont := nil;
+  if (NamedFonts <> nil) and (Trim(fStressNamedFontName) <> '') then
+    lFont := NamedFonts.Find(fStressNamedFontName);
+  if lFont = nil then
+  begin
+    AFont := fStressFont;
+    Exit;
+  end;
+  AFont.Name := lFont.FontName;
+  AFont.Size := lFont.FontSize;
+  AFont.Color := lFont.FontColor;
+  AFont.Bold := lFont.Bold;
+  AFont.Italic := lFont.Italic;
 end;
 
 procedure TRecorderMeasurementSectionComponent.ClearRows;

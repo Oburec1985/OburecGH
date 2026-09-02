@@ -560,7 +560,7 @@ begin
     lDialog.TagDialogImageList := ATagDialogImageList;
     lDialog.Recorder := ARecorder;
     { Вход в конфигурацию проверяет существующие сессии, но не программирует приборы. }
-    RecorderHardwareTestAllLiveSources;
+    RecorderHardwareRefreshLiveSourceWarnings;
     Result := lDialog.ShowModal = mrOk;
     ADataSourcesChanged := lDialog.DataSourcesChanged;
   finally
@@ -5231,8 +5231,13 @@ begin
     fRecorder.RunSettings.DataUpdateMs);
   fRecorder.RunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   if fMeraFilesPathEdit <> nil then
-    fRecorder.RunSettings.MeraFilesPath := ExcludeTrailingPathDelimiter(Trim(fMeraFilesPathEdit.Text));
-  SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
+  begin
+    SetRecorderMeraFilesPath(fMeraFilesPathEdit.Text);
+    fRecorder.RunSettings.MeraFilesPath := RecorderMeraFilesPath;
+    fMeraFilesPathEdit.Text := fRecorder.RunSettings.MeraFilesPath;
+  end
+  else
+    SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
   fRecorder.RunSettings.RequireValid;
   if fRecorder.TagRegistry <> nil then
   begin

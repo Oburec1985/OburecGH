@@ -42,6 +42,10 @@ application controller и координатором аппаратного life
 6. MERA recording использует новый snapshot arrays для каждого блока/тега;
    writer должен получать reusable snapshot или две части кольца.
 
+Статус на 2026-08-26: пункты 1–6 выполнены безопасными отдельными этапами.
+Device acquisition использует bounded slot lease, MERA — caller-owned block
+buffers, SQL trend — долгоживущий worker/repository и reusable merge buffers.
+
 Дополнительно: исправить освобождение `lSignals` при раннем выходе SQL writer;
 ограничить/coalesce очередь alarm events; заменить строковый `fLastSamples` на
 индексированный числовой кэш.

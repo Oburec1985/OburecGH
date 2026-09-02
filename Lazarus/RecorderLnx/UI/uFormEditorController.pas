@@ -308,8 +308,10 @@ type
   TRecorderPagePanel = class(TPanel)
   private
     fBackgroundFileName: string;
+    fBackgroundKeepAspect: Boolean;
     fBackgroundPicture: TPicture;
     procedure SetBackgroundFileName(const AValue: string);
+    procedure SetBackgroundKeepAspect(AValue: Boolean);
   protected
     procedure Paint; override;
   public
@@ -317,6 +319,8 @@ type
     destructor Destroy; override;
     property BackgroundFileName: string read fBackgroundFileName
       write SetBackgroundFileName;
+    property BackgroundKeepAspect: Boolean read fBackgroundKeepAspect
+      write SetBackgroundKeepAspect;
   end;
 
   TControlAccess = class(TControl);
@@ -362,12 +366,38 @@ begin
   Invalidate;
 end;
 
+procedure TRecorderPagePanel.SetBackgroundKeepAspect(AValue: Boolean);
+begin
+  if fBackgroundKeepAspect = AValue then Exit;
+  fBackgroundKeepAspect := AValue;
+  Invalidate;
+end;
+
 procedure TRecorderPagePanel.Paint;
+var
+  lDst: TRect;
+  lScale: Double;
+  lWidth, lHeight: Integer;
 begin
   inherited Paint;
   if (fBackgroundPicture.Graphic <> nil) and
     not fBackgroundPicture.Graphic.Empty then
-    Canvas.StretchDraw(ClientRect, fBackgroundPicture.Graphic);
+  begin
+    lDst := ClientRect;
+    if fBackgroundKeepAspect and (fBackgroundPicture.Width > 0) and
+      (fBackgroundPicture.Height > 0) then
+    begin
+      lScale := Min(ClientWidth / fBackgroundPicture.Width,
+        ClientHeight / fBackgroundPicture.Height);
+      lWidth := Round(fBackgroundPicture.Width * lScale);
+      lHeight := Round(fBackgroundPicture.Height * lScale);
+      lDst := Rect((ClientWidth - lWidth) div 2,
+        (ClientHeight - lHeight) div 2,
+        (ClientWidth + lWidth) div 2,
+        (ClientHeight + lHeight) div 2);
+    end;
+    Canvas.StretchDraw(lDst, fBackgroundPicture.Graphic);
+  end;
 end;
 
 procedure OscillogramLinesToStrings(AOsc: TRecorderOscillogramComponent;
@@ -944,6 +974,8 @@ begin
 
   TRecorderPagePanel(lPagePanel).BackgroundFileName :=
     lPage.BackgroundImageFileName;
+  TRecorderPagePanel(lPagePanel).BackgroundKeepAspect :=
+    lPage.BackgroundKeepAspect;
   lPagePanel.OnMouseDown := @CanvasMouseDown;
   lPagePanel.OnMouseMove := @CanvasMouseMove;
   lPagePanel.OnMouseUp := @CanvasMouseUp;

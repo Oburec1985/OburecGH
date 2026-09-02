@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic185/recorderlnx_integration.md",
+                "file": "devices/mic140/protocol/mic140-protocol.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "recorderlnx_integration"
+              "title": "mic140-protocol"
             }
           }
         ]
@@ -187,6 +187,15 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
+    "Руководство пользователя/~WRL0005.tmp",
+    "Руководство пользователя/~WRD0004.tmp",
+    "Руководство пользователя/~WRD0002.tmp",
+    "Руководство пользователя/~WRL0001.tmp",
+    "Руководство пользователя/~WRD0000.tmp",
+    "Руководство пользователя/Руководство пользователя RecorderLnx.md",
+    "Руководство пользователя/Как обновлять руководство пользователя.md",
+    "devices/mic140/protocol/mic140-protocol.md",
+    "devices/mic185/recorderlnx_integration.md",
     "devices/mic185/protocol.md",
     "devices/mic185/hardware_calibration_cache.md",
     "devices/mic185/defaults.md",
@@ -214,11 +223,6 @@
     "screens/mic140-acceptance-codes-20260626.png",
     "errors/2026-06-29-mic140v2-acceptance.md",
     "devices/mc/mc201-hardware-scale.md",
-    "devices/mic185/recorderlnx_integration.md",
-    "devices/device_abstraction.md",
-    "devices/device-lifecycle-template.md",
-    "devices/disabled-data-sources.md",
-    "devices/mic140-lifecycle.md",
     "devices/mic140/6B52DE20",
     "devices/mic140/~$Расчет точек АЦП.xlsx",
     "devices/mic185/images/recorder_mic185_main.png",
@@ -228,10 +232,6 @@
     "devices/mic185/images",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white",
     "devices/mic185/mebius.daq/utils/mera_monitor/config/windows/qt.conf",
-    "devices/mic185/mebius.daq/utils/mera_monitor/config/linux/qt.conf",
-    "devices/mic185/mebius.daq/utils/mera_monitor/ui/monitor.ui",
-    "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_properties.ui",
-    "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_outliner.ui",
-    "devices/mic185/mebius.daq/utils/mera_monitor/ui/hw_deck.ui"
+    "devices/mic185/mebius.daq/utils/mera_monitor/config/linux/qt.conf"
   ]
 }

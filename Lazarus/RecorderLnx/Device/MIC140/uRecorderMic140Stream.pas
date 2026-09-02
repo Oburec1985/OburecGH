@@ -58,7 +58,7 @@ function Mic140v2StreamReadRaw(ACli: TMic140v2Tcp; var S: TMic140v2StreamState;
 function Mic140v2StreamDecommutate(const ARaw: TMic140LegacyRawBlock;
   AChCnt, AStride: Integer; AFreq: Double;
   var SAux: TMic140AuxTemperatureBlock;
-  out ABlock: TRecorderDeviceSampleBlock): Boolean;
+  var ABlock: TRecorderDeviceSampleBlock): Boolean;
 
 implementation
 
@@ -591,11 +591,10 @@ end;
 function Mic140v2StreamDecommutate(const ARaw: TMic140LegacyRawBlock;
   AChCnt, AStride: Integer; AFreq: Double;
   var SAux: TMic140AuxTemperatureBlock;
-  out ABlock: TRecorderDeviceSampleBlock): Boolean;
+  var ABlock: TRecorderDeviceSampleBlock): Boolean;
 var
   i, j, idx: Integer;
 begin
-  ClearRecorderDeviceSampleBlock(ABlock);
   ClearMic140AuxTemperatureBlock(SAux);
   Result := False;
   if (AStride <= 0) and (ARaw.PayloadStrideWords > 0) then

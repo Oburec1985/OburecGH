@@ -11,13 +11,105 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Dialogs, ExtCtrls,
-  Math, uRecorderTags, uRecorderMeasurementSectionModel;
+  Graphics,
+  Math, uRecorderFormModel, uRecorderTags, uRecorderMeasurementSectionModel;
+
+type
+
+  { TRecorderMeasurementSectionSettingsDialog }
+
+  TRecorderMeasurementSectionSettingsDialog = class(TForm)
+  published
+    fCaptionEdit: TEdit;
+    fBackgroundColorPanel: TPanel;
+    fCaptionFontButton: TButton;
+    fCaptionFontCombo: TComboBox;
+    fFormatAllButton: TButton;
+    fSectionIdEdit: TEdit;
+    fGrid: TStringGrid;
+    fTagFilterEdit: TEdit;
+    fTagList: TListBox;
+    fYoungEdit: TEdit;
+    fPoissonEdit: TEdit;
+    fTempCoeffEdit: TEdit;
+    fTempRefEdit: TEdit;
+    fStressFontButton: TButton;
+    fStressFontCombo: TComboBox;
+    fTextBackgroundColorPanel: TPanel;
+    fOkButton: TButton;
+    fCancelButton: TButton;
+    fAddButton: TButton;
+    fDeleteButton: TButton;
+    fImportButton: TButton;
+    fExportButton: TButton;
+    lblCaption: TLabel;
+    lblCaptionFont: TLabel;
+    lblPoisson: TLabel;
+    lblSection: TLabel;
+    lblStressFont: TLabel;
+    lblTags: TLabel;
+    lblTempCoeff: TLabel;
+    lblTempRef: TLabel;
+    lblYoung: TLabel;
+    pnlButtons: TPanel;
+    pnlSettings: TPanel;
+    pnlTags: TPanel;
+    procedure AddClick(Sender: TObject);
+    procedure DeleteClick(Sender: TObject);
+    procedure ExportClick(Sender: TObject);
+    procedure GridDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure GridDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure ImportClick(Sender: TObject);
+    procedure ChooseFontClick(Sender: TObject);
+    procedure ColorPanelDblClick(Sender: TObject);
+    procedure FontNameChange(Sender: TObject);
+    procedure FormatAllClick(Sender: TObject);
+    procedure TagFilterChange(Sender: TObject);
+    procedure TagListDblClick(Sender: TObject);
+    procedure OkClick(Sender: TObject);
+  private
+    fCaptionFont: TRecorderFontSnapshot;
+    fComponent: TRecorderMeasurementSectionComponent;
+    fDraft: TRecorderMeasurementSectionComponent;
+    fFormatAllRequested: Boolean;
+    fRegistry: TRecorderTagRegistry;
+    fStressFont: TRecorderFontSnapshot;
+    procedure AssignSelectedTagToGrid;
+    procedure ApplyFontsToFactory;
+    procedure LoadFromComponent;
+    procedure PopulateTagList(const AFilter: string);
+    procedure RefreshGrid;
+    procedure StoreGrid;
+    procedure StoreToComponent;
+    procedure FillFontCombo(ACombo: TComboBox);
+    procedure LoadNamedFont(ACombo: TComboBox;
+      var AFont: TRecorderFontSnapshot);
+    procedure SyncSharedFont(AChangedCombo: TComboBox);
+    procedure DefineNamedFont(ACombo: TComboBox;
+      const AFont: TRecorderFontSnapshot);
+    function CurrentSectionId: string;
+    function ParseFloatText(const AText: string; ADefault: Double): Double;
+    function SelectedListTag: TRecorderTag;
+    function TagByName(const AName: string): TRecorderTag;
+    procedure ExportToFile(const AFileName: string);
+    procedure ImportFromFile(const AFileName: string;
+      out APointCount, ABindingCount: Integer);
+    procedure InitGrid;
+  public
+    constructor CreateDialog(AOwner: TComponent;
+      AComponent: TRecorderMeasurementSectionComponent;
+      ATagRegistry: TRecorderTagRegistry); reintroduce;
+    destructor Destroy; override;
+  end;
 
 function ShowRecorderMeasurementSectionSettingsDialog(AOwner: TComponent;
   AComponent: TRecorderMeasurementSectionComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
 
 implementation
+
+{$R *.lfm}
 
 uses
   fpspreadsheet, fpstypes, fpsopendocument, fpscsv, uRecorderMeraPaths;
@@ -33,6 +125,7 @@ const
   CGridCols = 7;
 
   CSheetName = 'Recorder_Tags';
+  CMaxHeaderColumn = 255;
 
 type
   TSectionColumn = (scolTagName, scolSection, scolPoint, scolRole,
@@ -40,57 +133,6 @@ type
     scolModuleType, scolTagId, scolUnit, scolPollFrequency, scolSqlRecord,
     scolGroup);
   TSectionColumnMap = array[TSectionColumn] of Integer;
-
-  TRecorderMeasurementSectionSettingsDialog = class(TForm)
-  private
-    fCaptionEdit: TEdit;
-    fSectionIdEdit: TEdit;
-    fDraft: TRecorderMeasurementSectionComponent;
-    fGrid: TStringGrid;
-    fRegistry: TRecorderTagRegistry;
-    fComponent: TRecorderMeasurementSectionComponent;
-    fTagFilterEdit: TEdit;
-    fTagList: TListBox;
-    fYoungEdit: TEdit;
-    fPoissonEdit: TEdit;
-    fTempCoeffEdit: TEdit;
-    fTempRefEdit: TEdit;
-    fOkButton: TButton;
-    fCancelButton: TButton;
-    fAddButton: TButton;
-    fDeleteButton: TButton;
-    fImportButton: TButton;
-    fExportButton: TButton;
-    procedure AddClick(Sender: TObject);
-    procedure DeleteClick(Sender: TObject);
-    procedure ExportClick(Sender: TObject);
-    procedure GridDragDrop(Sender, Source: TObject; X, Y: Integer);
-    procedure GridDragOver(Sender, Source: TObject; X, Y: Integer;
-      State: TDragState; var Accept: Boolean);
-    procedure ImportClick(Sender: TObject);
-    procedure TagFilterChange(Sender: TObject);
-    procedure TagListDblClick(Sender: TObject);
-    procedure OkClick(Sender: TObject);
-    procedure BuildUi;
-    procedure BuildTagListPanel;
-    procedure AssignSelectedTagToGrid;
-    procedure LoadFromComponent;
-    procedure PopulateTagList(const AFilter: string);
-    procedure RefreshGrid;
-    procedure StoreGrid;
-    procedure StoreToComponent;
-    function CurrentSectionId: string;
-    function ParseFloatText(const AText: string; ADefault: Double): Double;
-    function SelectedListTag: TRecorderTag;
-    function TagByName(const AName: string): TRecorderTag;
-    procedure ExportToFile(const AFileName: string);
-    procedure ImportFromFile(const AFileName: string);
-  public
-    constructor CreateDialog(AOwner: TComponent;
-      AComponent: TRecorderMeasurementSectionComponent;
-      ATagRegistry: TRecorderTagRegistry); reintroduce;
-    destructor Destroy; override;
-  end;
 
 const
   CHeaders: array[TSectionColumn] of string = (
@@ -139,6 +181,14 @@ begin
   Result := Trim(ASheet.ReadAsUTF8Text(ARow, ACol));
 end;
 
+function ReadMappedCell(ASheet: TsWorksheet; ARow: Cardinal;
+  ACol: Integer): string;
+begin
+  if ACol < 0 then
+    Exit('');
+  Result := ReadCell(ASheet, ARow, Cardinal(ACol));
+end;
+
 procedure WriteCell(ASheet: TsWorksheet; ARow, ACol: Cardinal;
   const AText: string);
 begin
@@ -153,7 +203,10 @@ begin
   Result := -1;
   if ASheet = nil then
     Exit;
-  lLastCol := Max(Integer(ASheet.GetLastColIndex(True)), 0);
+  // LibreOffice can serialize a repeated empty tail up to column 16383.
+  // Such cells are not table columns and must not expand a header lookup.
+  lLastCol := Min(Max(Integer(ASheet.GetLastColIndex(True)), 0),
+    CMaxHeaderColumn);
   for I := 0 to lLastCol do
     if SameText(ReadCell(ASheet, 0, I), AHeader) then
       Exit(I);
@@ -214,17 +267,35 @@ constructor TRecorderMeasurementSectionSettingsDialog.CreateDialog(
   AOwner: TComponent; AComponent: TRecorderMeasurementSectionComponent;
   ATagRegistry: TRecorderTagRegistry);
 begin
-  inherited CreateNew(AOwner, 1);
+  inherited Create(AOwner);
   fComponent := AComponent;
   fRegistry := ATagRegistry;
   fDraft := TRecorderMeasurementSectionComponent.Create;
-  Caption := 'Настройка измерительного сечения';
-  BorderStyle := bsSizeable;
-  Position := poOwnerFormCenter;
-  Width := 880;
-  Height := 560;
-  BuildUi;
+  fFormatAllRequested := False;
+  InitGrid;
+  FillFontCombo(fCaptionFontCombo);
+  FillFontCombo(fStressFontCombo);
   LoadFromComponent;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.InitGrid;
+begin
+  fGrid.ColCount := CGridCols;
+  fGrid.RowCount := 2;
+  fGrid.Cells[CColPoint, 0] := 'N точки';
+  fGrid.Cells[CColRosette, 0] := 'Тип розетки';
+  fGrid.Cells[CColPosition, 0] := 'Расположение';
+  fGrid.Cells[CColE1, 0] := 'e1';
+  fGrid.Cells[CColE2, 0] := 'e2';
+  fGrid.Cells[CColE3, 0] := 'e3';
+  fGrid.Cells[CColTemp, 0] := 't';
+  fGrid.ColWidths[CColPoint] := 70;
+  fGrid.ColWidths[CColRosette] := 90;
+  fGrid.ColWidths[CColPosition] := 90;
+  fGrid.ColWidths[CColE1] := 130;
+  fGrid.ColWidths[CColE2] := 130;
+  fGrid.ColWidths[CColE3] := 130;
+  fGrid.ColWidths[CColTemp] := 130;
 end;
 
 destructor TRecorderMeasurementSectionSettingsDialog.Destroy;
@@ -269,181 +340,195 @@ begin
     Result := fRegistry.FindByName(Trim(AName));
 end;
 
-procedure TRecorderMeasurementSectionSettingsDialog.BuildTagListPanel;
-var
-  lPanel: TPanel;
-  lLabel: TLabel;
-begin
-  lPanel := TPanel.Create(Self);
-  lPanel.Parent := Self;
-  lPanel.Align := alRight;
-  lPanel.Width := 260;
-  lPanel.BevelOuter := bvNone;
-  lPanel.BorderSpacing.Left := 6;
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.Align := alTop;
-  lLabel.Height := 22;
-  lLabel.Caption := 'Теги';
-
-  fTagFilterEdit := TEdit.Create(lPanel);
-  fTagFilterEdit.Parent := lPanel;
-  fTagFilterEdit.Align := alTop;
-  fTagFilterEdit.TextHint := 'Фильтр';
-  fTagFilterEdit.OnChange := @TagFilterChange;
-
-  fTagList := TListBox.Create(lPanel);
-  fTagList.Parent := lPanel;
-  fTagList.Align := alClient;
-  fTagList.DragMode := dmAutomatic;
-  fTagList.OnDblClick := @TagListDblClick;
-end;
-
-procedure TRecorderMeasurementSectionSettingsDialog.BuildUi;
-var
-  lLabel: TLabel;
-  lPanel: TPanel;
-begin
-  lPanel := TPanel.Create(Self);
-  lPanel.Parent := Self;
-  lPanel.Align := alTop;
-  lPanel.Height := 146;
-  lPanel.BevelOuter := bvNone;
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(12, 14, 80, 18);
-  lLabel.Caption := 'Подпись';
-  fCaptionEdit := TEdit.Create(lPanel);
-  fCaptionEdit.Parent := lPanel;
-  fCaptionEdit.SetBounds(96, 10, 260, 24);
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(12, 48, 120, 18);
-  lLabel.Caption := 'Объект/Сечение';
-  fSectionIdEdit := TEdit.Create(lPanel);
-  fSectionIdEdit.Parent := lPanel;
-  fSectionIdEdit.SetBounds(136, 44, 120, 24);
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(380, 14, 90, 18);
-  lLabel.Caption := 'E, МПа';
-  fYoungEdit := TEdit.Create(lPanel);
-  fYoungEdit.Parent := lPanel;
-  fYoungEdit.SetBounds(470, 10, 90, 24);
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(580, 14, 40, 18);
-  lLabel.Caption := 'nu';
-  fPoissonEdit := TEdit.Create(lPanel);
-  fPoissonEdit.Parent := lPanel;
-  fPoissonEdit.SetBounds(620, 10, 70, 24);
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(12, 82, 150, 18);
-  lLabel.Caption := 'Темп. коэф., мкстрн/°C';
-  fTempCoeffEdit := TEdit.Create(lPanel);
-  fTempCoeffEdit.Parent := lPanel;
-  fTempCoeffEdit.SetBounds(170, 78, 90, 24);
-
-  lLabel := TLabel.Create(lPanel);
-  lLabel.Parent := lPanel;
-  lLabel.SetBounds(280, 82, 120, 18);
-  lLabel.Caption := 'Опорная T, °C';
-  fTempRefEdit := TEdit.Create(lPanel);
-  fTempRefEdit.Parent := lPanel;
-  fTempRefEdit.SetBounds(400, 78, 90, 24);
-
-  fAddButton := TButton.Create(lPanel);
-  fAddButton.Parent := lPanel;
-  fAddButton.SetBounds(12, 114, 86, 26);
-  fAddButton.Caption := 'Добавить';
-  fAddButton.OnClick := @AddClick;
-
-  fDeleteButton := TButton.Create(lPanel);
-  fDeleteButton.Parent := lPanel;
-  fDeleteButton.SetBounds(104, 114, 86, 26);
-  fDeleteButton.Caption := 'Удалить';
-  fDeleteButton.OnClick := @DeleteClick;
-
-  fImportButton := TButton.Create(lPanel);
-  fImportButton.Parent := lPanel;
-  fImportButton.SetBounds(210, 114, 90, 26);
-  fImportButton.Caption := 'Импорт...';
-  fImportButton.OnClick := @ImportClick;
-
-  fExportButton := TButton.Create(lPanel);
-  fExportButton.Parent := lPanel;
-  fExportButton.SetBounds(306, 114, 90, 26);
-  fExportButton.Caption := 'Экспорт...';
-  fExportButton.OnClick := @ExportClick;
-
-  fGrid := TStringGrid.Create(Self);
-  fGrid.Parent := Self;
-  fGrid.Align := alClient;
-  fGrid.FixedCols := 0;
-  fGrid.FixedRows := 1;
-  fGrid.ColCount := CGridCols;
-  fGrid.RowCount := 2;
-  fGrid.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
-    goEditing, goRowSelect, goColSizing];
-  fGrid.Cells[CColPoint, 0] := 'N точки';
-  fGrid.Cells[CColRosette, 0] := 'Тип розетки';
-  fGrid.Cells[CColPosition, 0] := 'Расположение';
-  fGrid.Cells[CColE1, 0] := 'e1';
-  fGrid.Cells[CColE2, 0] := 'e2';
-  fGrid.Cells[CColE3, 0] := 'e3';
-  fGrid.Cells[CColTemp, 0] := 't';
-  fGrid.OnDragOver := @GridDragOver;
-  fGrid.OnDragDrop := @GridDragDrop;
-  fGrid.ColWidths[CColPoint] := 70;
-  fGrid.ColWidths[CColRosette] := 90;
-  fGrid.ColWidths[CColPosition] := 90;
-  fGrid.ColWidths[CColE1] := 130;
-  fGrid.ColWidths[CColE2] := 130;
-  fGrid.ColWidths[CColE3] := 130;
-  fGrid.ColWidths[CColTemp] := 130;
-
-  lPanel := TPanel.Create(Self);
-  lPanel.Parent := Self;
-  lPanel.Align := alBottom;
-  lPanel.Height := 44;
-  lPanel.BevelOuter := bvNone;
-
-  fOkButton := TButton.Create(lPanel);
-  fOkButton.Parent := lPanel;
-  fOkButton.SetBounds(676, 8, 90, 26);
-  fOkButton.Caption := 'OK';
-  fOkButton.Default := True;
-  fOkButton.OnClick := @OkClick;
-
-  fCancelButton := TButton.Create(lPanel);
-  fCancelButton.Parent := lPanel;
-  fCancelButton.SetBounds(772, 8, 90, 26);
-  fCancelButton.Caption := 'Отмена';
-  fCancelButton.ModalResult := mrCancel;
-
-  BuildTagListPanel;
-end;
-
 procedure TRecorderMeasurementSectionSettingsDialog.LoadFromComponent;
 begin
   fDraft.AssignSection(fComponent);
   if fDraft.RowCount = 0 then
     fDraft.AddRow;
   fCaptionEdit.Text := fDraft.Caption;
+  fBackgroundColorPanel.Color := TColor(fDraft.BackgroundColor);
+  fTextBackgroundColorPanel.Color := TColor(fDraft.TextBackgroundColor);
   fSectionIdEdit.Text := fDraft.SectionId;
   fYoungEdit.Text := FloatToStr(fDraft.YoungModulusMPa);
   fPoissonEdit.Text := FloatToStr(fDraft.PoissonRatio);
   fTempCoeffEdit.Text := FloatToStr(fDraft.TemperatureCoefficient);
   fTempRefEdit.Text := FloatToStr(fDraft.ReferenceTemperatureC);
+  fCaptionFont := fDraft.CaptionFont;
+  fStressFont := fDraft.StressFont;
+  fCaptionFontCombo.Text := fDraft.NamedFontName;
+  fStressFontCombo.Text := fDraft.StressNamedFontName;
+  LoadNamedFont(fCaptionFontCombo, fCaptionFont);
+  LoadNamedFont(fStressFontCombo, fStressFont);
   PopulateTagList('');
   RefreshGrid;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ColorPanelDblClick(
+  Sender: TObject);
+var
+  lDialog: TColorDialog;
+  lPanel: TPanel;
+begin
+  if not (Sender is TPanel) then
+    Exit;
+  lPanel := TPanel(Sender);
+  lDialog := TColorDialog.Create(Self);
+  try
+    lDialog.Color := lPanel.Color;
+    if lDialog.Execute then
+      lPanel.Color := lDialog.Color;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.FillFontCombo(
+  ACombo: TComboBox);
+var
+  I: Integer;
+begin
+  if (ACombo = nil) or (fComponent = nil) or
+    (fComponent.NamedFonts = nil) then
+    Exit;
+  for I := 0 to fComponent.NamedFonts.Count - 1 do
+    ACombo.Items.Add(fComponent.NamedFonts.Items[I].Name);
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.LoadNamedFont(
+  ACombo: TComboBox; var AFont: TRecorderFontSnapshot);
+var
+  lFont: TRecorderNamedFont;
+begin
+  if (ACombo = nil) or (fComponent = nil) or
+    (fComponent.NamedFonts = nil) then
+    Exit;
+  lFont := fComponent.NamedFonts.Find(ACombo.Text);
+  if lFont = nil then
+    Exit;
+  AFont.Name := lFont.FontName;
+  AFont.Size := lFont.FontSize;
+  AFont.Color := lFont.FontColor;
+  AFont.Bold := lFont.Bold;
+  AFont.Italic := lFont.Italic;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.DefineNamedFont(
+  ACombo: TComboBox; const AFont: TRecorderFontSnapshot);
+var
+  lName: string;
+begin
+  if (ACombo = nil) or (fComponent = nil) or
+    (fComponent.NamedFonts = nil) then
+    Exit;
+  lName := Trim(ACombo.Text);
+  if lName <> '' then
+    fComponent.NamedFonts.Define(lName, AFont.Name, AFont.Size, AFont.Color,
+      AFont.Bold, AFont.Italic);
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.SyncSharedFont(
+  AChangedCombo: TComboBox);
+begin
+  if not SameText(Trim(fCaptionFontCombo.Text),
+    Trim(fStressFontCombo.Text)) then
+    Exit;
+  if AChangedCombo = fCaptionFontCombo then
+    fStressFont := fCaptionFont
+  else if AChangedCombo = fStressFontCombo then
+    fCaptionFont := fStressFont;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.FormatAllClick(
+  Sender: TObject);
+begin
+  if Trim(fCaptionFontCombo.Text) = '' then
+  begin
+    MessageDlg('Шрифт', 'Введите имя шрифта заголовка.', mtWarning,
+      [mbOK], 0);
+    Exit;
+  end;
+  if Trim(fStressFontCombo.Text) = '' then
+  begin
+    MessageDlg('Шрифт', 'Введите имя шрифта механических напряжений.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  fFormatAllRequested := True;
+  fFormatAllButton.Caption := 'Будет применено ко всем';
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ApplyFontsToFactory;
+var
+  I: Integer;
+  lItem: TRecorderMeasurementSectionComponent;
+begin
+  if (fComponent = nil) or (fComponent.Factory = nil) then
+    Exit;
+  for I := 0 to fComponent.Factory.ChildCount - 1 do
+    if fComponent.Factory.Children[I] is
+      TRecorderMeasurementSectionComponent then
+    begin
+      lItem := TRecorderMeasurementSectionComponent(
+        fComponent.Factory.Children[I]);
+      lItem.NamedFontName := fComponent.NamedFontName;
+      lItem.CaptionFont := fComponent.CaptionFont;
+      lItem.StressNamedFontName := fComponent.StressNamedFontName;
+      lItem.StressFont := fComponent.StressFont;
+    end;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.FontNameChange(
+  Sender: TObject);
+begin
+  if Sender = fCaptionFontCombo then
+    LoadNamedFont(fCaptionFontCombo, fCaptionFont)
+  else if Sender = fStressFontCombo then
+    LoadNamedFont(fStressFontCombo, fStressFont);
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ChooseFontClick(
+  Sender: TObject);
+var
+  lDialog: TFontDialog;
+  lFont: ^TRecorderFontSnapshot;
+  lCombo: TComboBox;
+begin
+  if Sender = fCaptionFontButton then
+  begin
+    lFont := @fCaptionFont;
+    lCombo := fCaptionFontCombo;
+  end
+  else if Sender = fStressFontButton then
+  begin
+    lFont := @fStressFont;
+    lCombo := fStressFontCombo;
+  end
+  else
+    Exit;
+
+  lDialog := TFontDialog.Create(Self);
+  try
+    lDialog.Font.Name := lFont^.Name;
+    lDialog.Font.Size := lFont^.Size;
+    lDialog.Font.Color := lFont^.Color;
+    lDialog.Font.Style := [];
+    if lFont^.Bold then
+      lDialog.Font.Style := lDialog.Font.Style + [fsBold];
+    if lFont^.Italic then
+      lDialog.Font.Style := lDialog.Font.Style + [fsItalic];
+    if not lDialog.Execute then
+      Exit;
+    lFont^.Name := lDialog.Font.Name;
+    lFont^.Size := lDialog.Font.Size;
+    lFont^.Color := lDialog.Font.Color;
+    lFont^.Bold := fsBold in lDialog.Font.Style;
+    lFont^.Italic := fsItalic in lDialog.Font.Style;
+    // One manager name is one shared definition. Keep both local drafts in
+    // sync so the second role cannot overwrite the just-edited definition.
+    SyncSharedFont(lCombo);
+  finally
+    lDialog.Free;
+  end;
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.PopulateTagList(
@@ -541,6 +626,8 @@ begin
   fDraft.Caption := Trim(fCaptionEdit.Text);
   if fDraft.Caption = '' then
     fDraft.Caption := 'Измерительное сечение';
+  fDraft.BackgroundColor := LongInt(fBackgroundColorPanel.Color);
+  fDraft.TextBackgroundColor := LongInt(fTextBackgroundColorPanel.Color);
   fDraft.SectionId := CurrentSectionId;
   fDraft.YoungModulusMPa := ParseFloatText(fYoungEdit.Text,
     fDraft.YoungModulusMPa);
@@ -550,7 +637,16 @@ begin
     fDraft.TemperatureCoefficient);
   fDraft.ReferenceTemperatureC := ParseFloatText(fTempRefEdit.Text,
     fDraft.ReferenceTemperatureC);
+  fDraft.NamedFontName := Trim(fCaptionFontCombo.Text);
+  fDraft.CaptionFont := fCaptionFont;
+  fDraft.StressNamedFontName := Trim(fStressFontCombo.Text);
+  fDraft.StressFont := fStressFont;
+  DefineNamedFont(fCaptionFontCombo, fCaptionFont);
+  if not SameText(fDraft.NamedFontName, fDraft.StressNamedFontName) then
+    DefineNamedFont(fStressFontCombo, fStressFont);
   fComponent.AssignSection(fDraft);
+  if fFormatAllRequested then
+    ApplyFontsToFactory;
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.AddClick(Sender: TObject);
@@ -663,6 +759,7 @@ end;
 procedure TRecorderMeasurementSectionSettingsDialog.ImportClick(Sender: TObject);
 var
   lDialog: TOpenDialog;
+  lPointCount, lBindingCount: Integer;
 begin
   lDialog := TOpenDialog.Create(Self);
   try
@@ -671,8 +768,11 @@ begin
     lDialog.InitialDir := RecorderMeraFilesPath;
     if lDialog.Execute then
     begin
-      ImportFromFile(lDialog.FileName);
+      ImportFromFile(lDialog.FileName, lPointCount, lBindingCount);
       RefreshGrid;
+      MessageDlg('Импорт измерительного сечения', Format(
+        'Импортировано точек: %d, привязок каналов: %d.',
+        [lPointCount, lBindingCount]), mtInformation, [mbOK], 0);
     end;
   finally
     lDialog.Free;
@@ -748,7 +848,7 @@ begin
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.ImportFromFile(
-  const AFileName: string);
+  const AFileName: string; out APointCount, ABindingCount: Integer);
 var
   lBook: TsWorkbook;
   lSheet: TsWorksheet;
@@ -762,13 +862,22 @@ var
   lSectionId, lTagName, lText: string;
   I: Integer;
 begin
+  APointCount := 0;
+  ABindingCount := 0;
   lBook := TsWorkbook.Create;
   try
     lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
     if lBook.GetWorksheetCount = 0 then
       Exit;
-    lSheet := lBook.GetWorksheetByIndex(0);
-    BuildColumnMap(lSheet, True, lMap);
+    lSheet := lBook.GetWorksheetByName(CSheetName);
+    if lSheet = nil then
+      lSheet := lBook.GetWorksheetByIndex(0);
+    BuildColumnMap(lSheet, False, lMap);
+    if (lMap[scolTagName] < 0) or (lMap[scolSection] < 0) or
+      (lMap[scolPoint] < 0) or (lMap[scolRole] < 0) or
+      (lMap[scolRosette] < 0) or (lMap[scolPosition] < 0) then
+      raise Exception.Create('В таблице отсутствуют обязательные колонки ' +
+        'измерительного сечения.');
     fDraft.SectionId := CurrentSectionId;
     fDraft.ClearRows;
     lLastRow := lSheet.GetLastRowIndex(True);
@@ -794,6 +903,7 @@ begin
       begin
         lRow := fDraft.AddRow;
         lRow.PointNo := lPoint;
+        Inc(APointCount);
       end;
       lText := ReadCell(lSheet, lRowIndex, lMap[scolRosette]);
       if lText <> '' then
@@ -801,16 +911,23 @@ begin
       lRow.PositionDeg := ParseFloatText(ReadCell(lSheet, lRowIndex,
         lMap[scolPosition]), lRow.PositionDeg);
       lTag := nil;
-      lText := ReadCell(lSheet, lRowIndex, lMap[scolTagId]);
+      lText := ReadMappedCell(lSheet, lRowIndex, lMap[scolTagId]);
       if (fRegistry <> nil) and TryStrToInt64(lText, lTagId) then
         lTag := fRegistry.FindById(lTagId);
       lTagName := ReadCell(lSheet, lRowIndex, lMap[scolTagName]);
       if (lTag = nil) and (fRegistry <> nil) and (lTagName <> '') then
         lTag := fRegistry.FindByName(lTagName);
       if lTag <> nil then
-        lRow.BindTag(lRole, lTag)
+      begin
+        lRow.BindTag(lRole, lTag);
+        Inc(ABindingCount);
+      end
       else
+      begin
         lRow.TagNames[lRole] := lTagName;
+        if lTagName <> '' then
+          Inc(ABindingCount);
+      end;
     end;
   finally
     lBook.Free;

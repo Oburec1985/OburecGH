@@ -1,16 +1,17 @@
 unit uRecorderDeviceDataThread;
 
 {
-  Универсальный поток сбора данных с приборов (Lazarus/RecorderLnx).
-  Не привязан к конкретному протоколу конкретного прибора.
+  РЈРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ РїРѕС‚РѕРє СЃР±РѕСЂР° РґР°РЅРЅС‹С… СЃ РїСЂРёР±РѕСЂРѕРІ (Lazarus/RecorderLnx).
+  РќРµ РїСЂРёРІСЏР·Р°РЅ Рє РєРѕРЅРєСЂРµС‚РЅРѕРјСѓ РїСЂРѕС‚РѕРєРѕР»Сѓ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РїСЂРёР±РѕСЂР°.
   
-  Реализует:
-  - Предварительное выделение памяти (в Config) во избежание аллокаций в RunTime.
-  - Управление состоянием (Play/Stop) строго изнутри потока.
-  - Кольцевой буфер блоков данных защищен критической секцией.
+  Р РµР°Р»РёР·СѓРµС‚:
+  - РџСЂРµРґРІР°СЂРёС‚РµР»СЊРЅРѕРµ РІС‹РґРµР»РµРЅРёРµ РїР°РјСЏС‚Рё (РІ Config) РІРѕ РёР·Р±РµР¶Р°РЅРёРµ Р°Р»Р»РѕРєР°С†РёР№ РІ RunTime.
+  - РЈРїСЂР°РІР»РµРЅРёРµ СЃРѕСЃС‚РѕСЏРЅРёРµРј (Play/Stop) СЃС‚СЂРѕРіРѕ РёР·РЅСѓС‚СЂРё РїРѕС‚РѕРєР°.
+  - РљРѕР»СЊС†РµРІРѕР№ Р±СѓС„РµСЂ Р±Р»РѕРєРѕРІ РґР°РЅРЅС‹С… Р·Р°С‰РёС‰РµРЅ РєСЂРёС‚РёС‡РµСЃРєРѕР№ СЃРµРєС†РёРµР№.
 }
 
 {$mode objfpc}{$H+}
+{$codepage utf8}
 
 interface
 
@@ -20,7 +21,19 @@ uses
 type
   TDataThreadState = (dtsIdle, dtsStarting, dtsPlaying, dtsStopping);
 
-  { Callback для передачи прочитанного блока данных. Вызывается в контексте потока. }
+  PRecorderAcquisitionBlock = ^TRecorderAcquisitionBlock;
+
+  { Borrowed immutable view of one ring slot. Block remains valid until the
+    same consumer calls ReleaseReadBlock. }
+  TRecorderAcquisitionBlockLease = record
+    Block: PRecorderAcquisitionBlock;
+    SlotIndex: Integer;
+    Generation: QWord;
+  end;
+
+  TRecorderRingSlotState = (rssEmpty, rssReady, rssReading);
+
+  { Callback РґР»СЏ РїРµСЂРµРґР°С‡Рё РїСЂРѕС‡РёС‚Р°РЅРЅРѕРіРѕ Р±Р»РѕРєР° РґР°РЅРЅС‹С…. Р’С‹Р·С‹РІР°РµС‚СЃСЏ РІ РєРѕРЅС‚РµРєСЃС‚Рµ РїРѕС‚РѕРєР°. }
   TDataThreadBlockCallback = procedure(const ABlock: TRecorderAcquisitionBlock) of object;
 
   TRecorderDeviceDataThread = class(TThread)
@@ -32,46 +45,58 @@ type
     fCallback: TDataThreadBlockCallback;
     fLock: TCriticalSection;
     
-    { Кольцевой буфер блоков }
+    { РљРѕР»СЊС†РµРІРѕР№ Р±СѓС„РµСЂ Р±Р»РѕРєРѕРІ }
     fBlocks: array of TRecorderAcquisitionBlock;
+    fSlotStates: array of TRecorderRingSlotState;
+    fSlotGenerations: array of QWord;
     fCapacity: Integer;
     fReadIndex: Integer;
     fWriteIndex: Integer;
     fBlockCount: Integer;
     
-    { Активный блок для накопления в RunTime (выделен заранее) }
+    { Р—Р°РїР°СЃРЅРѕР№ Р±Р»РѕРє РґР»СЏ С‡С‚РµРЅРёСЏ Рё РѕС‚Р±СЂР°СЃС‹РІР°РЅРёСЏ РїСЂРё Р·Р°РїРѕР»РЅРµРЅРЅРѕРј РєРѕР»СЊС†Рµ. }
     fActiveBlock: TRecorderAcquisitionBlock;
+    fWriteReserved: Boolean;
+    fReservedWriteIndex: Integer;
     
     procedure SetState(AState: TDataThreadState);
-    procedure PushBlock(const ABlock: TRecorderAcquisitionBlock);
+    function ReserveWriteBlock(out ABlock: PRecorderAcquisitionBlock): Boolean;
+    procedure PublishReservedBlock;
+    procedure CancelReservedBlock;
   protected
+    procedure PushBlock(const ABlock: TRecorderAcquisitionBlock);
     procedure Execute; override;
     
-    { Разовые операции при старте и стопе (переопределяются в наследниках) }
+    { Р Р°Р·РѕРІС‹Рµ РѕРїРµСЂР°С†РёРё РїСЂРё СЃС‚Р°СЂС‚Рµ Рё СЃС‚РѕРїРµ (РїРµСЂРµРѕРїСЂРµРґРµР»СЏСЋС‚СЃСЏ РІ РЅР°СЃР»РµРґРЅРёРєР°С…) }
     procedure OnStart; virtual;
     procedure OnStop; virtual;
     
-    { Чтение сырых данных из прибора и заполнение ABlock.
-      Должен быть переопределен в потомке. Возвращает True, если блок успешно собран. }
+    { Р§С‚РµРЅРёРµ СЃС‹СЂС‹С… РґР°РЅРЅС‹С… РёР· РїСЂРёР±РѕСЂР° Рё Р·Р°РїРѕР»РЅРµРЅРёРµ ABlock.
+      Р”РѕР»Р¶РµРЅ Р±С‹С‚СЊ РїРµСЂРµРѕРїСЂРµРґРµР»РµРЅ РІ РїРѕС‚РѕРјРєРµ. Р’РѕР·РІСЂР°С‰Р°РµС‚ True, РµСЃР»Рё Р±Р»РѕРє СѓСЃРїРµС€РЅРѕ СЃРѕР±СЂР°РЅ. }
     function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; virtual; abstract;
     
-    { Переопределяемый метод отправки (если прибору нужно что-то слать периодически) }
+    { РџРµСЂРµРѕРїСЂРµРґРµР»СЏРµРјС‹Р№ РјРµС‚РѕРґ РѕС‚РїСЂР°РІРєРё (РµСЃР»Рё РїСЂРёР±РѕСЂСѓ РЅСѓР¶РЅРѕ С‡С‚Рѕ-С‚Рѕ СЃР»Р°С‚СЊ РїРµСЂРёРѕРґРёС‡РµСЃРєРё) }
     procedure SendBlockToDevice; virtual;
   public
     constructor Create;
     destructor Destroy; override;
     
-    { Выделение памяти под структуры данных и буферы (вызывать из основного потока!) }
+    { Р’С‹РґРµР»РµРЅРёРµ РїР°РјСЏС‚Рё РїРѕРґ СЃС‚СЂСѓРєС‚СѓСЂС‹ РґР°РЅРЅС‹С… Рё Р±СѓС„РµСЂС‹ (РІС‹Р·С‹РІР°С‚СЊ РёР· РѕСЃРЅРѕРІРЅРѕРіРѕ РїРѕС‚РѕРєР°!) }
     procedure Config(AChannelCount: Integer; ASampleCount: Integer; ASampleRateHz: Double); virtual;
     
-    { Команды управления (вызываются извне, только взводят флаги-команды) }
+    { РљРѕРјР°РЅРґС‹ СѓРїСЂР°РІР»РµРЅРёСЏ (РІС‹Р·С‹РІР°СЋС‚СЃСЏ РёР·РІРЅРµ, С‚РѕР»СЊРєРѕ РІР·РІРѕРґСЏС‚ С„Р»Р°РіРё-РєРѕРјР°РЅРґС‹) }
     procedure StartPlay;
     procedure StopPlay;
     
-    { Чтение блока из кольцевого буфера внешним потребителем (без аллокаций) }
+    { Р§С‚РµРЅРёРµ Р±Р»РѕРєР° РёР· РєРѕР»СЊС†РµРІРѕРіРѕ Р±СѓС„РµСЂР° РІРЅРµС€РЅРёРј РїРѕС‚СЂРµР±РёС‚РµР»РµРј (Р±РµР· Р°Р»Р»РѕРєР°С†РёР№) }
     function ReadBlock(out ABlock: TRecorderAcquisitionBlock): Boolean; virtual;
+
+    { Zero-copy SPSC read. One lease may be active at a time; release is
+      mandatory in a finally block. }
+    function AcquireReadBlock(out ALease: TRecorderAcquisitionBlockLease): Boolean;
+    procedure ReleaseReadBlock(var ALease: TRecorderAcquisitionBlockLease);
     
-    { Очистка данных буферов без перевыделения памяти }
+    { РћС‡РёСЃС‚РєР° РґР°РЅРЅС‹С… Р±СѓС„РµСЂРѕРІ Р±РµР· РїРµСЂРµРІС‹РґРµР»РµРЅРёСЏ РїР°РјСЏС‚Рё }
     procedure Clear; virtual;
     
     property State: TDataThreadState read fState;
@@ -81,7 +106,7 @@ type
 
 implementation
 
-{ Вспомогательная процедура копирования данных блока без перевыделения памяти, если размеры совпадают }
+{ Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅР°СЏ РїСЂРѕС†РµРґСѓСЂР° РєРѕРїРёСЂРѕРІР°РЅРёСЏ РґР°РЅРЅС‹С… Р±Р»РѕРєР° Р±РµР· РїРµСЂРµРІС‹РґРµР»РµРЅРёСЏ РїР°РјСЏС‚Рё, РµСЃР»Рё СЂР°Р·РјРµСЂС‹ СЃРѕРІРїР°РґР°СЋС‚ }
 procedure CopyBlockData(const ASource: TRecorderAcquisitionBlock; var ADest: TRecorderAcquisitionBlock);
 var
   lChan, lSamples: Integer;
@@ -124,17 +149,19 @@ end;
 
 constructor TRecorderDeviceDataThread.Create;
 begin
-  { Создаем поток в приостановленном состоянии }
+  { РЎРѕР·РґР°РµРј РїРѕС‚РѕРє РІ РїСЂРёРѕСЃС‚Р°РЅРѕРІР»РµРЅРЅРѕРј СЃРѕСЃС‚РѕСЏРЅРёРё }
   inherited Create(True);
   fState := dtsIdle;
   fCommandPlay := False;
   fCommandStop := False;
   fConfigured := False;
   fLock := TCriticalSection.Create;
-  fCapacity := 32; { Емкость кольцевого буфера по умолчанию }
+  fCapacity := 32; { Р•РјРєРѕСЃС‚СЊ РєРѕР»СЊС†РµРІРѕРіРѕ Р±СѓС„РµСЂР° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ }
   fReadIndex := 0;
   fWriteIndex := 0;
   fBlockCount := 0;
+  fWriteReserved := False;
+  fReservedWriteIndex := -1;
 end;
 
 destructor TRecorderDeviceDataThread.Destroy;
@@ -142,7 +169,7 @@ begin
   Terminate;
   StopPlay;
   
-  { Ждем завершения потока }
+  { Р–РґРµРј Р·Р°РІРµСЂС€РµРЅРёСЏ РїРѕС‚РѕРєР° }
   inherited Destroy;
   
   Clear;
@@ -160,13 +187,21 @@ var
 begin
   fLock.Acquire;
   try
+    for I := 0 to Length(fSlotStates) - 1 do
+      if fSlotStates[I] = rssReading then
+        raise EInvalidOperation.Create(
+          'Cannot configure device data ring while a read lease is active');
     fConfigured := False;
     
-    { Выделяем память под кольцевой буфер блоков }
+    { Р’С‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ РїРѕРґ РєРѕР»СЊС†РµРІРѕР№ Р±СѓС„РµСЂ Р±Р»РѕРєРѕРІ }
     SetLength(fBlocks, fCapacity);
+    SetLength(fSlotStates, fCapacity);
+    SetLength(fSlotGenerations, fCapacity);
     for I := 0 to fCapacity - 1 do
     begin
       ClearRecorderAcquisitionBlock(fBlocks[I]);
+      fSlotStates[I] := rssEmpty;
+      fSlotGenerations[I] := 0;
       fBlocks[I].ChannelCount := AChannelCount;
       fBlocks[I].SampleCount := ASampleCount;
       fBlocks[I].SampleRateHz := ASampleRateHz;
@@ -175,7 +210,7 @@ begin
         SetLength(fBlocks[I].Values[J], ASampleCount);
     end;
     
-    { Выделяем память под активный рабочий блок }
+    { Р’С‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ РїРѕРґ Р°РєС‚РёРІРЅС‹Р№ СЂР°Р±РѕС‡РёР№ Р±Р»РѕРє }
     ClearRecorderAcquisitionBlock(fActiveBlock);
     fActiveBlock.ChannelCount := AChannelCount;
     fActiveBlock.SampleCount := ASampleCount;
@@ -187,6 +222,8 @@ begin
     fReadIndex := 0;
     fWriteIndex := 0;
     fBlockCount := 0;
+    fWriteReserved := False;
+    fReservedWriteIndex := -1;
     fConfigured := True;
   finally
     fLock.Release;
@@ -197,7 +234,7 @@ procedure TRecorderDeviceDataThread.StartPlay;
 begin
   fCommandPlay := True;
   fCommandStop := False;
-  { Запускаем выполнение потока, если он был заморожен при создании }
+  { Р—Р°РїСѓСЃРєР°РµРј РІС‹РїРѕР»РЅРµРЅРёРµ РїРѕС‚РѕРєР°, РµСЃР»Рё РѕРЅ Р±С‹Р» Р·Р°РјРѕСЂРѕР¶РµРЅ РїСЂРё СЃРѕР·РґР°РЅРёРё }
   if Suspended then
     Start;
 end;
@@ -217,73 +254,165 @@ begin
     for I := 0 to Length(fBlocks) - 1 do
       ClearRecorderAcquisitionBlock(fBlocks[I]);
     SetLength(fBlocks, 0);
+    SetLength(fSlotStates, 0);
+    SetLength(fSlotGenerations, 0);
     ClearRecorderAcquisitionBlock(fActiveBlock);
     fReadIndex := 0;
     fWriteIndex := 0;
     fBlockCount := 0;
+    fWriteReserved := False;
+    fReservedWriteIndex := -1;
     fConfigured := False;
   finally
     fLock.Release;
   end;
 end;
 
-procedure TRecorderDeviceDataThread.PushBlock(const ABlock: TRecorderAcquisitionBlock);
+function TRecorderDeviceDataThread.ReserveWriteBlock(
+  out ABlock: PRecorderAcquisitionBlock): Boolean;
 begin
+  ABlock := nil;
   fLock.Acquire;
   try
-    if fCapacity <= 0 then Exit;
-    
-    { Копируем данные без перевыделения памяти }
-    CopyBlockData(ABlock, fBlocks[fWriteIndex]);
-    
-    fWriteIndex := (fWriteIndex + 1) mod fCapacity;
-    if fBlockCount < fCapacity then
-      Inc(fBlockCount)
-    else
-      fReadIndex := (fReadIndex + 1) mod fCapacity; { Буфер переполнен, сдвигаем индекс чтения }
+    Result := (not fWriteReserved) and (fBlockCount < fCapacity) and
+      (fCapacity > 0) and (fSlotStates[fWriteIndex] = rssEmpty);
+    if not Result then
+      Exit;
+    fWriteReserved := True;
+    fReservedWriteIndex := fWriteIndex;
+    ABlock := @fBlocks[fReservedWriteIndex];
   finally
     fLock.Release;
   end;
-  
-  { Вызываем Callback, если он зарегистрирован }
-  if Assigned(fCallback) then
-    fCallback(ABlock);
+end;
+
+procedure TRecorderDeviceDataThread.PublishReservedBlock;
+var
+  lIndex: Integer;
+begin
+  fLock.Acquire;
+  try
+    if not fWriteReserved then
+      Exit;
+    lIndex := fReservedWriteIndex;
+    Inc(fSlotGenerations[lIndex]);
+    fSlotStates[lIndex] := rssReady;
+    fWriteIndex := (lIndex + 1) mod fCapacity;
+    Inc(fBlockCount);
+    fWriteReserved := False;
+    fReservedWriteIndex := -1;
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TRecorderDeviceDataThread.CancelReservedBlock;
+begin
+  fLock.Acquire;
+  try
+    fWriteReserved := False;
+    fReservedWriteIndex := -1;
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TRecorderDeviceDataThread.PushBlock(
+  const ABlock: TRecorderAcquisitionBlock);
+var
+  lDest: PRecorderAcquisitionBlock;
+begin
+  if not ReserveWriteBlock(lDest) then
+    Exit;
+  try
+    CopyBlockData(ABlock, lDest^);
+    if Assigned(fCallback) then
+      fCallback(lDest^);
+    PublishReservedBlock;
+  except
+    CancelReservedBlock;
+    raise;
+  end;
 end;
 
 function TRecorderDeviceDataThread.ReadBlock(out ABlock: TRecorderAcquisitionBlock): Boolean;
+var
+  lLease: TRecorderAcquisitionBlockLease;
 begin
+  Result := AcquireReadBlock(lLease);
+  if not Result then
+    Exit;
+  try
+    CopyBlockData(lLease.Block^, ABlock);
+  finally
+    ReleaseReadBlock(lLease);
+  end;
+end;
+
+function TRecorderDeviceDataThread.AcquireReadBlock(
+  out ALease: TRecorderAcquisitionBlockLease): Boolean;
+begin
+  ALease.Block := nil;
+  ALease.SlotIndex := -1;
+  ALease.Generation := 0;
   Result := False;
   fLock.Acquire;
   try
-    if fBlockCount > 0 then
-    begin
-      { Глубокое копирование блока для внешнего потребителя }
-      CopyRecorderAcquisitionBlock(fBlocks[fReadIndex], ABlock);
-      fReadIndex := (fReadIndex + 1) mod fCapacity;
-      Dec(fBlockCount);
-      Result := True;
-    end;
+    if (fBlockCount <= 0) or (fSlotStates[fReadIndex] <> rssReady) then
+      Exit;
+    fSlotStates[fReadIndex] := rssReading;
+    ALease.Block := @fBlocks[fReadIndex];
+    ALease.SlotIndex := fReadIndex;
+    ALease.Generation := fSlotGenerations[fReadIndex];
+    Result := True;
   finally
     fLock.Release;
+  end;
+end;
+
+procedure TRecorderDeviceDataThread.ReleaseReadBlock(
+  var ALease: TRecorderAcquisitionBlockLease);
+var
+  lIndex: Integer;
+begin
+  lIndex := ALease.SlotIndex;
+  fLock.Acquire;
+  try
+    if (ALease.Block = nil) or (lIndex <> fReadIndex) or
+      (lIndex < 0) or (lIndex >= fCapacity) or
+      (fSlotStates[lIndex] <> rssReading) or
+      (fSlotGenerations[lIndex] <> ALease.Generation) then
+      Exit;
+    fSlotStates[lIndex] := rssEmpty;
+    fReadIndex := (lIndex + 1) mod fCapacity;
+    Dec(fBlockCount);
+  finally
+    fLock.Release;
+    ALease.Block := nil;
+    ALease.SlotIndex := -1;
+    ALease.Generation := 0;
   end;
 end;
 
 procedure TRecorderDeviceDataThread.SendBlockToDevice;
 begin
-  { По умолчанию ничего не делаем }
+  { РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј }
 end;
 
 procedure TRecorderDeviceDataThread.OnStart;
 begin
-  { Переопределяется в потомках }
+  { РџРµСЂРµРѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РІ РїРѕС‚РѕРјРєР°С… }
 end;
 
 procedure TRecorderDeviceDataThread.OnStop;
 begin
-  { Переопределяется в потомках }
+  { РџРµСЂРµРѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ РІ РїРѕС‚РѕРјРєР°С… }
 end;
 
 procedure TRecorderDeviceDataThread.Execute;
+var
+  I: Integer;
+  lWriteBlock: PRecorderAcquisitionBlock;
 begin
   while not Terminated do
   begin
@@ -307,7 +436,7 @@ begin
           except
             on E: Exception do
             begin
-              { В случае ошибки старта возвращаемся в Idle }
+              { Р’ СЃР»СѓС‡Р°Рµ РѕС€РёР±РєРё СЃС‚Р°СЂС‚Р° РІРѕР·РІСЂР°С‰Р°РµРјСЃСЏ РІ Idle }
               fCommandPlay := False;
               SetState(dtsIdle);
             end;
@@ -324,20 +453,38 @@ begin
           else
           begin
             try
-              { Опрашиваем прибор и пишем в преаллоцированный fActiveBlock }
-              if ReadBlockFromDevice(fActiveBlock) then
-                PushBlock(fActiveBlock);
+              { Producer fills an empty ring slot directly. When the bounded
+                ring is full, the device is still drained into preallocated
+                scratch and that newest block is deliberately dropped. }
+              if ReserveWriteBlock(lWriteBlock) then
+              begin
+                try
+                  if ReadBlockFromDevice(lWriteBlock^) then
+                  begin
+                    if Assigned(fCallback) then
+                      fCallback(lWriteBlock^);
+                    PublishReservedBlock;
+                  end
+                  else
+                    CancelReservedBlock;
+                except
+                  CancelReservedBlock;
+                  raise;
+                end;
+              end
+              else
+                ReadBlockFromDevice(fActiveBlock);
                 
               SendBlockToDevice;
             except
               on E: Exception do
               begin
-                { При возникновении ошибки связи можно остановить скан }
+                { РџСЂРё РІРѕР·РЅРёРєРЅРѕРІРµРЅРёРё РѕС€РёР±РєРё СЃРІСЏР·Рё РјРѕР¶РЅРѕ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРєР°РЅ }
                 SetState(dtsStopping);
               end;
             end;
             
-            { Небольшая пауза, чтобы не забивать процессор, если ReadBlockFromDevice вернул False }
+            { РќРµР±РѕР»СЊС€Р°СЏ РїР°СѓР·Р°, С‡С‚РѕР±С‹ РЅРµ Р·Р°Р±РёРІР°С‚СЊ РїСЂРѕС†РµСЃСЃРѕСЂ, РµСЃР»Рё ReadBlockFromDevice РІРµСЂРЅСѓР» False }
             Sleep(1);
           end;
         end;
@@ -349,9 +496,13 @@ begin
           finally
             fLock.Acquire;
             try
+              for I := 0 to Length(fSlotStates) - 1 do
+                fSlotStates[I] := rssEmpty;
               fReadIndex := 0;
               fWriteIndex := 0;
               fBlockCount := 0;
+              fWriteReserved := False;
+              fReservedWriteIndex := -1;
             finally
               fLock.Release;
             end;
@@ -361,13 +512,13 @@ begin
     end;
   end;
   
-  { Если поток завершается во время работы, принудительно вызываем OnStop }
+  { Р•СЃР»Рё РїРѕС‚РѕРє Р·Р°РІРµСЂС€Р°РµС‚СЃСЏ РІРѕ РІСЂРµРјСЏ СЂР°Р±РѕС‚С‹, РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕ РІС‹Р·С‹РІР°РµРј OnStop }
   if (fState = dtsPlaying) or (fState = dtsStarting) then
   begin
     try
       OnStop;
     except
-      { Игнорируем ошибки при деструкции }
+      { РРіРЅРѕСЂРёСЂСѓРµРј РѕС€РёР±РєРё РїСЂРё РґРµСЃС‚СЂСѓРєС†РёРё }
     end;
   end;
 end;
