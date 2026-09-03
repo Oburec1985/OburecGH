@@ -32,6 +32,7 @@ type
     destructor Destroy; override;
     procedure Configure(const AFileName: string);
     procedure Reload;
+    procedure DisableRuntimeAfterConfigurationError;
     procedure SaveConfig;
     procedure StartRegistration(const AReason: string = 'manual');
     procedure StopRegistration;
@@ -46,7 +47,7 @@ type
 implementation
 
 uses
-  uRecorderTags, uRecorderAlarms;
+  uRecorderTags, uRecorderAlarms, uRecorderDebugLog;
 
 constructor TRecorderSqlDbManager.Create(AEventBus: TRecorderEventBus;
   ATimeSystem: TRecorderTimeSystem);
@@ -86,8 +87,32 @@ begin
   SetRecordingActive(False, 'SQLdb settings reload');
   FreeAndNil(fRuntime);
   fConfig.LoadFromFile(fConfigFileName);
+  if fConfig.Enabled and (fConfig.Backend = rsbFirebird) and
+     ((Trim(fConfig.UserName) = '') or (fConfig.Password = '')) then
+  begin
+    { Не вызываем TIBConnection.Open с пустыми credentials: в Lazarus debugger
+      даже обработанная ошибка Firebird показывается как first-chance exception. }
+    fConfig.Enabled := False;
+    RecorderDebugLog('SQL database disabled: Firebird login is not configured');
+    Exit;
+  end;
   if fConfig.Enabled then
     SetRecordingActive(True, 'SQLdb enabled');
+end;
+
+procedure TRecorderSqlDbManager.DisableRuntimeAfterConfigurationError;
+begin
+  SetRecordingActive(False, 'SQLdb configuration error');
+  FreeAndNil(fRuntime);
+  { Отключаем только рабочую копию: ошибочный runtime не должен повторно
+    запускаться управляющим тегом. Файл настроек не перезаписываем. }
+  fConfig.Enabled := False;
+  EnterCriticalSection(fSampleLock);
+  try
+    fLastSamples.Clear;
+  finally
+    LeaveCriticalSection(fSampleLock);
+  end;
 end;
 
 procedure TRecorderSqlDbManager.SaveConfig;
@@ -117,6 +142,8 @@ end;
 procedure TRecorderSqlDbManager.SetRecordingActive(AValue: Boolean;
   const AReason: string);
 begin
+  if AValue and not fConfig.Enabled then
+    Exit;
   EnterCriticalSection(fStateLock);
   try
     if fRecordingEnabled = AValue then Exit;

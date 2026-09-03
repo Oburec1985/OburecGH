@@ -48,6 +48,7 @@ type
     BlockSize: Word;
     MeasRangeIndex: LongWord;
     SoftBalance: LongInt;
+    SoftBalanceFine: Double;
     CommutIndex: LongWord;
     ShuntOn: LongWord;
     EvalType: LongWord;

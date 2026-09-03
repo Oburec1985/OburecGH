@@ -1,4 +1,4 @@
-п»ї// С‚РµРєСЃС‚РѕРІР°СЏ РјРµС‚РєР°, РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅР° РґР»СЏ РїРѕРґРїРёСЃРµР№ РЅР° СЃС‚СЂР°РЅРёС†Р°С…
+// текстовая метка, предназначена для подписей на страницах
 unit uTextLabel;
 
 interface
@@ -14,13 +14,13 @@ type
     fTransperentBckGnd:boolean;
     fAutoWidth:boolean;
     falign:integer;
-    // РѕС‚РѕР±СЂР°Р¶Р°РµРјС‹Р№ С‚РµРєСЃС‚
+    // отображаемый текст
     ftext:string;
-    // СЂР°Р·РјРµСЂ РІ РїРёРєСЃРµР»СЏС… СЂР°РјРєРё
+    // размер в пикселях рамки
     fPixSize:tpoint;
-    //fontmng РЅР°СЃС‚СЂРѕР№РєРё С€СЂРёС„С‚Р°
+    //fontmng настройки шрифта
     fdrawBorder:boolean;
-    // С‚РѕС‡РєР° РІ РєРѕС‚РѕСЂСѓСЋ РёРґРµС‚ СЃРЅРѕСЃРєР° РѕС‚ РјРµС‚РєРё
+    // точка в которую идет сноска от метки
     fline:point2;
     fdrawline:boolean;
   public
@@ -30,20 +30,20 @@ type
     m_borderColor:point3;
   protected
     procedure fupdatebound;override;
-    // РїСЂРѕРёСЃС…РѕРґРёС‚ РїСЂРё Р»РёРЅРєРѕРІРєРµ Рє СЂРѕРґРёС‚РµР»СЋ
+    // происходит при линковке к родителю
     procedure doLincParent;override;
-    // СѓРїСЂР°РІР»РµРЅРёРµ СЂР°Р·РјРµСЂРѕРј СЂР°РјРєРё РІ РїРёРєСЃРµР»СЏС…
+    // управление размером рамки в пикселях
     procedure SetPixSize(p:tpoint);
     function GetPixSize:tpoint;
-    // СѓРїСЂР°РІР»РµРЅРёРµ РѕС‚РѕР±СЂР°Р¶Р°РµРјС‹Рј С‚РµСЃС‚РѕРј
+    // управление отображаемым тестом
     procedure SetText(str:string);
     procedure SetDrawBorder(b:boolean);
-    // СѓРїСЂР°РІР»РµРЅРёРµ РІС‹СЂР°РІРЅРёРІР°РЅРёРµРј С‚РµРєСЃС‚Р°
+    // управление выравниванием текста
     procedure SetAlign(al:integer);
     procedure setTransperentBckGnd(b:boolean);
-    // СѓРїСЂР°РІР»РµРЅРёРµ РІС‹СЂР°РІРЅРёРІР°РЅРёРµРј С‚РµРєСЃС‚Р°
+    // управление выравниванием текста
     procedure SetAutoWidth(b:boolean);
-    // РїРµСЂРµСЃС‡РёС‚С‹РІР°РµС‚ РїРёРєСЃРµР»СЊРЅС‹Рµ СЂР°Р·РјРµСЂС‹ СЂР°РјРєРё РІ РјРёСЂРѕРІС‹Рµ
+    // пересчитывает пиксельные размеры рамки в мировые
     procedure UpdateWorldSize;
     procedure DeleteEvents;Override;
     procedure CreateEvents;override;
@@ -58,7 +58,7 @@ type
     constructor create;
     destructor destroy;override;
     procedure drawdata;override;
-    // СѓРїСЂР°РІР»РµРЅРёРµ РїРѕР»РѕР¶РµРЅРёРµРј РјРµС‚РєРё
+    // управление положением метки
     function GetTypeString:string;override;
     procedure setFont(p_font:cfont);
     procedure SetPos(p:point2);override;
@@ -130,7 +130,7 @@ procedure cTextLabel.doDrawLine;
 var
   intersect:point2;
   r:fRect;
-  curcolor:point3;
+  curcolor:array[0..3] of glfloat;
 begin
   r:=boundrect;
   intersect:=EvalIntersect(r.BottomLeft,r.TopRight,
@@ -138,7 +138,7 @@ begin
                            p2(r.TopRight.x,r.BottomLeft.y));
   glGetFloatv(GL_CURRENT_COLOR,@curcolor);
   glcolor3fv(@black);
-  // РѕС‚СЂРёСЃРѕРІРєР° РїРѕР»РёРіРѕРЅР°
+  // отрисовка полигона
   glBegin(GL_LINES);
     glvertex2fv(@fline);
     glvertex2fv(@intersect);
@@ -146,7 +146,7 @@ begin
   glBegin(GL_POINTS);
     glvertex2fv(@fline);
   glend;
-  glcolor3fv(@curcolor);
+  glcolor3fv(@curcolor[0]);
 end;
 
 
@@ -173,7 +173,7 @@ end;
 
 function cTextLabel.GetTypeString:string;
 begin
-  result:='РўРµРєСЃС‚';
+  result:='Текст';
 end;
 
 procedure cTextLabel.initfont;
@@ -273,15 +273,15 @@ end;
 
 procedure cTextLabel.DeleteEvents;
 begin
-  // Р·Р°РєРѕРјРµРЅС‚ РѕС‚ 17.12.25
+  // закомент от 17.12.25
   //events.removeEvent(doOnUpdateAxis, e_onResize+E_OnZoom);
-  // Р·Р°РєРѕРјРµРЅС‚ РѕС‚ 17.12.25
+  // закомент от 17.12.25
   //inherited;
 end;
 
 procedure cTextLabel.CreateEvents;
 begin
-  // Р·Р°РєРѕРјРµРЅС‚ РѕС‚ 17.12.25
+  // закомент от 17.12.25
   //events.AddEvent(name+'_OnUpadeteTextLabelBound', e_onResize+E_OnZoom, doOnUpdateAxis);
 end;
 
@@ -292,7 +292,7 @@ end;
 
 procedure cTextLabel.SetPos(p:point2);
 begin
-  // Р·Р°РєРѕРјРµРЅС‚РёР» РѕС‚ 06.09.18 С‚.Рє. РІСЃРµ РІС‹С‡РёСЃР»РµРЅРёСЏ РґР»СЏ РµС‚РєРё СЂР°Р±РѕС‚Р°СЋС‚ РЅР° РѕСЃРЅРѕРІРµ РїРѕР·РёС†РёРё Рё РЅРµ РёСЃРїРѕР»СЊР·СѓСЋС‚ РЅРѕРґ
+  // закоментил от 06.09.18 т.к. все вычисления для етки работают на основе позиции и не используют нод
   //inherited;
   fpos := p;
   UpdateWorldSize;

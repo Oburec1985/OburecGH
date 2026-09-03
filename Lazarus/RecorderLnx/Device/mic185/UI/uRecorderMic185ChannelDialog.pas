@@ -53,15 +53,20 @@ type
   private
     fRegistry: TRecorderTagRegistry;
     fTag: TRecorderTag;
+    fModuleSettings: TMic185ModuleProgramSettings;
     procedure ReadSettingsFromUi(var ASettings: TMic185ChannelProgramSettings);
+    procedure ReadModuleSettingsFromUi(var ASettings: TMic185ModuleProgramSettings);
     procedure UpdateActualRange;
   public
-    procedure LoadTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag);
-    procedure SaveTag(ATag: TRecorderTag);
+    procedure LoadTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      const AModuleSettings: TMic185ModuleProgramSettings);
+    procedure SaveTag(ATag: TRecorderTag;
+      var AModuleSettings: TMic185ModuleProgramSettings);
   end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var AModuleSettings: TMic185ModuleProgramSettings): Boolean;
 
 implementation
 
@@ -111,12 +116,11 @@ begin
   if ATag = nil then
     Exit;
   if Mic185UnitIsRawCode(ATag.UnitName) then
-  begin
     ATag.HardwareCalibrationEnabled := False;
-    Exit;
-  end;
-  ATag.HardwareCalibrationEnabled := True;
-  RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+  if ATag.HardwareCalibrationEnabled then
+    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True)
+  else
+    ATag.UnitName := 'код';
 end;
 
 procedure TRecorderMic185ChannelForm.btnApplyClick(Sender: TObject);
@@ -145,7 +149,8 @@ begin
     lPowerMa := TextToFloatDef(cbModulePower.Text, cbModulePower.ItemIndex);
     ASettings.PowerMaCode := Mic185PowerMaToCode(lPowerMa);
   end;
-  ASettings.SoftBalance := Round(TextToFloatDef(edSoftBalance.Text, 0));
+  ASettings.SoftBalance := RecorderMic185SoftBalanceMvToCode(
+    TextToFloatDef(edSoftBalance.Text, 0), ASettings.MeasRangeIndex);
   if chkChannelShunt.Checked then
   begin
     if cbShuntValue.ItemIndex > 0 then
@@ -160,6 +165,13 @@ begin
   ASettings.BlockSize := 1;
 end;
 
+procedure TRecorderMic185ChannelForm.ReadModuleSettingsFromUi(
+  var ASettings: TMic185ModuleProgramSettings);
+begin
+  ASettings.HardBalance := RecorderMic185HardBalanceMvToCode(
+    TextToFloatDef(edHardBalance.Text, 0));
+end;
+
 procedure TRecorderMic185ChannelForm.UpdateActualRange;
 var
   lSettings: TMic185ChannelProgramSettings;
@@ -171,12 +183,13 @@ begin
 end;
 
 procedure TRecorderMic185ChannelForm.LoadTag(ARegistry: TRecorderTagRegistry;
-  ATag: TRecorderTag);
+  ATag: TRecorderTag; const AModuleSettings: TMic185ModuleProgramSettings);
 var
   lSettings: TMic185ChannelProgramSettings;
 begin
   fRegistry := ARegistry;
   fTag := ATag;
+  fModuleSettings := AModuleSettings;
   FillCombo(cbNominalRange, ['±500', '±50', '±5', '±0.5'], 2);
   FillCombo(cbActualRangeUnit, ['мВ', 'Ом', 'мкм/м', 'мВ(тензо)'], 0);
   FillCombo(cbCommutation, ['Вход', 'Земля', '49 мВ'], 0);
@@ -191,7 +204,8 @@ begin
   edStrainSensitivity.Text := '2.000';
   edOuterResistance.Text := '200.000';
   edInnerResistance.Text := '10000';
-  edHardBalance.Text := '0.000';
+  edHardBalance.Text := FormatFloat('0.###',
+    RecorderMic185HardBalanceCodeToMv(fModuleSettings.HardBalance));
   chkChannelShunt.Checked := False;
   cbNominalRange.OnChange := @SettingsChanged;
   cbActualRangeUnit.OnChange := @SettingsChanged;
@@ -223,16 +237,27 @@ begin
     chkChannelShunt.Checked := lSettings.ShuntOn <> 0;
     edActualRange.Text := RecorderMic185RangeText(lSettings.MeasRangeIndex);
     cbActualRangeUnit.Text := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-    edSoftBalance.Text := FloatToStr(lSettings.SoftBalance);
+    edSoftBalance.Text := FormatFloat('0.###',
+      RecorderMic185SoftBalanceCodeToMv(lSettings.SoftBalance,
+      lSettings.MeasRangeIndex));
     edStrainSensitivity.Text := FloatToStr(lSettings.TensoSensitivity);
     edOuterResistance.Text := FloatToStr(lSettings.Resistance);
-    if ATag.UnitName <> '' then
-      cbActualRangeUnit.Text := ATag.UnitName;
+    cbActualRangeUnit.Text := RecorderMic185GetSourceChannelUnitName(
+      fRegistry, ATag.SourceId, ATag.Address);
+    if cbActualRangeUnit.Text = '' then
+    begin
+      if not Mic185UnitIsRawCode(ATag.UnitName) then
+        cbActualRangeUnit.Text := ATag.UnitName;
+      if cbActualRangeUnit.Text = '' then
+        cbActualRangeUnit.Text := RecorderMic185RangeUnitText(
+          lSettings.MeasRangeIndex);
+    end;
   end;
   UpdateActualRange;
 end;
 
-procedure TRecorderMic185ChannelForm.SaveTag(ATag: TRecorderTag);
+procedure TRecorderMic185ChannelForm.SaveTag(ATag: TRecorderTag;
+  var AModuleSettings: TMic185ModuleProgramSettings);
 var
   lSettings: TMic185ChannelProgramSettings;
 begin
@@ -241,8 +266,11 @@ begin
   RecorderMic185ReadChannelMode(ATag.SourceValueMode, ATag.PollFrequencyHz,
     lSettings);
   ReadSettingsFromUi(lSettings);
+  ReadModuleSettingsFromUi(AModuleSettings);
   ATag.UnitName := cbActualRangeUnit.Text;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
+  RecorderMic185SetSourceChannelUnitName(fRegistry, ATag.SourceId,
+    ATag.Address, ATag.PollFrequencyHz, ATag.UnitName);
   ApplyMic185HardwareModeFromUnit(fRegistry, ATag);
   ATag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry, ATag,
     lSettings, ATag.UnitName);
@@ -250,16 +278,17 @@ begin
 end;
 
 function ShowRecorderMic185ChannelDialog(AOwner: TComponent;
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var AModuleSettings: TMic185ModuleProgramSettings): Boolean;
 var
   lForm: TRecorderMic185ChannelForm;
 begin
   lForm := TRecorderMic185ChannelForm.Create(AOwner);
   try
-    lForm.LoadTag(ARegistry, ATag);
+    lForm.LoadTag(ARegistry, ATag, AModuleSettings);
     Result := lForm.ShowModal = mrOk;
     if Result then
-      lForm.SaveTag(ATag);
+      lForm.SaveTag(ATag, AModuleSettings);
   finally
     lForm.Free;
   end;

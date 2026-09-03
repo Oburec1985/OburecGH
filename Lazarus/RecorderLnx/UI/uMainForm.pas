@@ -50,11 +50,12 @@ uses
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
-  uRecorderMic185DataSource, uRecorderMic185Runtime,
+  uRecorderRecordChannelMetadata, uRecorderDeviceRecordChannelMetadata,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
-  uRecorderMeasurementSectionView;
+  uRecorderMeasurementSectionView, uRecorderTrendView,
+  uRecorderApplicationController, uRecorderConfigurationService;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -65,7 +66,8 @@ type
   { TMainForm }
 
   { Класс главной формы приложения RecorderLnx }
-  TMainForm = class(TForm)
+  TMainForm = class(TForm, IRecorderApplicationLifecycle,
+    IRecorderConfigurationRuntime)
     btnAddPage: TButton;                         // Кнопка вызова диалога страниц/формуляров
     btnClearSearch: TButton;                     // Кнопка очистки фильтра поиска тегов
     btnPreview: TSpeedButton;                    // Кнопка запуска просмотра (без записи)
@@ -77,7 +79,6 @@ type
     btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
-    btnTrigger: TSpeedButton;                    // Кнопка принудительного старта по выполнению условий
     edTagSearch: TEdit;                          // Поле поиска (фильтрации) тегов
     ilCommandButtons: TImageList;                // Список картинок для кнопок управления
     ilTagDialogButtons: TImageList;              // Список картинок для кнопок настройки каналов
@@ -108,7 +109,6 @@ type
     procedure btnSqlDbClick(Sender: TObject);
     procedure cbSqlDbRecordingChange(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure btnTriggerClick(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -165,8 +165,11 @@ type
     
     // Ядро системы рекордера
     fRecorder: TRecorder;                         // Корневой объект ядра (теги, источники, runtime)
+    fApplicationController: TRecorderApplicationController;
+    fConfigurationService: TRecorderConfigurationService;
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
+    fHardwareStatusSourceIds: TStringList;        // Переиспользуемый список источников для UI health snapshot
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
@@ -242,6 +245,7 @@ type
     procedure DetachedFormAttach(Sender: TObject);
     procedure DetachedFormChanged(Sender: TObject);
     procedure SaveDetachedFormPlacements;
+    procedure ResetTrendSessions;
     { Создает раннюю область редактора мнемосхемы с тулбаром и пустым полотном. }
     procedure EnsureEditorSurface;
     { Создает тулбар базовой страницы с количеством осциллограмм. }
@@ -313,6 +317,7 @@ type
     procedure FormEditorChanged;
     { Загружает настройки запуска/остановки из проектного каталога. }
     procedure LoadRunSettings;
+    procedure ConfigureOptionalSqlDb;
     { Сохраняет настройки запуска/остановки в проектный каталог. }
     procedure SaveRunSettings;
     { Применяет периоды обновления отображения из настроек запуска. }
@@ -365,7 +370,6 @@ type
     procedure DrainUiEventQueue(Sender: TObject);
     { По периоду DataUpdateMs читает только новые данные тегов; EventBus массивы не переносит. }
     procedure ConsumeTagDataCycle(Sender: TObject);
-    function FindUtsChannelNameForTag(ATag: TRecorderTag): string;
     { Выполняет визуальную часть display-цикла только для видимой страницы. }
     function DoRepaintVisiblePage: Boolean;
     procedure ResetRecordTagCursors;
@@ -391,12 +395,6 @@ type
     procedure DeviceTestStartPreview;
     procedure DeviceTestLog(const AMessage: string);
     procedure DeviceTestFinished(Sender: TObject);
-    { Обработчик события ядра: фиксирует переход состояния в журнале и на форме. }
-    procedure StateMachineStateChanged(ASender: TObject;
-      AOldState, ANewState: TRecorderState);
-    procedure StateMachineStateChanging(ASender: TObject;
-      AOldState, ANewState: TRecorderState;
-      ATransition: TRecorderStateTransition);
     procedure PrepareRuntimeForConfiguration;
     procedure PrepareAlgorithmsForFormConfiguration;
     procedure RecoverOfflineSourcesAfterLoadOnce;
@@ -407,7 +405,25 @@ type
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
       ATags: TList);
     procedure UpdateActiveSourceIds;
+    procedure LogConfigurationResult(AResult: TRecorderConfigurationResult);
   public
+    procedure OpenRecordSession;
+    procedure CloseRecordSession;
+    procedure ResetDisplaySessions;
+    procedure StartAcquisition;
+    procedure StopAcquisition;
+    procedure RunStateChanged(AOldState, ANewState: TRecorderState);
+    procedure LifecycleMessage(const AMessage: string);
+    procedure CaptureProgrammingState(AState: TRecorderSourceProgrammingState);
+    function SourceProgrammingApplied(const ASourceId, ASignature: string): Boolean;
+    function AcquisitionRunning: Boolean;
+    procedure StopAcquisitionForConfiguration;
+    procedure ReplaceRuntimeSource(const ASourceId: string);
+    procedure EnsureRuntimeSources;
+    procedure PrepareAlgorithms;
+    procedure PrepareHardware;
+    procedure StartAcquisitionAfterConfiguration;
+    procedure SyncEnabledSourceStates;
   end;
 
 var
@@ -439,11 +455,12 @@ begin
 
   fSelectedComponentRow := -1;
   fRecorder := TRecorder.Create;
-  fRecorder.StateMachine.OnStateChanging := @StateMachineStateChanging;
-  fRecorder.StateMachine.OnStateChanged := @StateMachineStateChanged;
+  fApplicationController := TRecorderApplicationController.Create(fRecorder, Self);
+  fConfigurationService := TRecorderConfigurationService.Create(Self);
 
   fLatestTagValues := TStringList.Create;
   fLogLines := TStringList.Create;
+  fHardwareStatusSourceIds := TStringList.Create;
   fLatestTagValues.CaseSensitive := False;
   fLatestTagValues.Sorted := False;
   fLatestTagValues.Duplicates := dupAccept;
@@ -495,13 +512,12 @@ begin
   EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
-  fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
-    fProjectConfigDir) + 'sql-db.ini');
   ApplyDisplayTimingSettings;
   lStageStartedAt := GetTickCount64;
   LoadProjectPackage;
   RecorderDebugLog(Format('[Startup] LoadProjectPackage elapsed=%dms',
     [GetTickCount64 - lStageStartedAt]));
+  ConfigureOptionalSqlDb;
   EnsureSqlDbControlTag;
   SyncDetachedForms;
   { Источники создаются сразу при загрузке проекта; подготовка оборудования не
@@ -638,6 +654,8 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(fConfigurationService);
+  FreeAndNil(fApplicationController);
   if fDataConsumeTimer <> nil then
     fDataConsumeTimer.Enabled := False;
   if fUiUpdateTimer <> nil then
@@ -655,6 +673,7 @@ begin
   FreeAndNil(fRecordFrameManager);
   FreeAndNil(fLatestTagValues);
   FreeAndNil(fLogLines);
+  FreeAndNil(fHardwareStatusSourceIds);
   FreeAndNil(fRecorder);
 end;
 
@@ -869,9 +888,7 @@ end;
 procedure TMainForm.btnPreviewClick(Sender: TObject);
 begin
   try
-    if fRecorder.StateMachine.State = rsPreview then
-      Exit;
-    fRecorder.StateMachine.StartPreview(rscManual);
+    fApplicationController.StartPreview;
   except
     on E: Exception do
       LogCommandError('Preview', E);
@@ -881,28 +898,17 @@ end;
 procedure TMainForm.btnRecordClick(Sender: TObject);
 begin
   try
-    fRecorder.RunSettings.RequireValid;
-    fRecorder.StateMachine.StartRecord(fRecorder.RunSettings.StartCondition);
+    fApplicationController.StartRecord;
   except
     on E: Exception do
       LogCommandError('Record', E);
   end;
 end;
 
-procedure TMainForm.btnTriggerClick(Sender: TObject);
-begin
-  try
-    fRecorder.StateMachine.StartConditionMet;
-  except
-    on E: Exception do
-      LogCommandError('Trigger', E);
-  end;
-end;
-
 procedure TMainForm.btnStopClick(Sender: TObject);
 begin
   try
-    fRecorder.StateMachine.Stop;
+    fApplicationController.Stop;
   except
     on E: Exception do
       LogCommandError('Stop', E);
@@ -937,129 +943,54 @@ end;
 
 procedure TMainForm.btnSettingsClick(Sender: TObject);
 var
-  I: Integer;
-  lAfterSignatures: TStringList;
-  lBeforeSignatures: TStringList;
-  lConfigured: TRecorderConfiguredDataSource;
-  lChangedHardwareSources: Boolean;
+  lChanges: TRecorderConfigurationChangeSet;
   lDataSourcesChanged: Boolean;
-  lSourceId: string;
-  lSourceIds: TStringList;
-  lWasRunning: Boolean;
-
-  procedure CaptureProgrammingSignatures(AList: TStringList);
-  var
-    J: Integer;
-    lEntry: TRecorderConfiguredDataSource;
-    lEntries: TObjectList;
-    lSignature: string;
-  begin
-    AList.Clear;
-    lEntries := RecorderConfiguredDataSourceList(fRecorder.TagRegistry);
-    if lEntries = nil then
-      Exit;
-    for J := 0 to lEntries.Count - 1 do
-    begin
-      lEntry := TRecorderConfiguredDataSource(lEntries[J]);
-      lSignature := RecorderSourceProgrammingSignatureById(
-        fRecorder.TagRegistry, lEntry.SourceId);
-      lSignature := StringReplace(lSignature, LineEnding, #1, [rfReplaceAll]);
-      AList.Values[lEntry.SourceId] := lSignature;
-    end;
-  end;
+  lResult: TRecorderConfigurationResult;
 begin
-  lBeforeSignatures := TStringList.Create;
-  lAfterSignatures := TStringList.Create;
-  lSourceIds := TStringList.Create;
+  lChanges := TRecorderConfigurationChangeSet.Create(
+    fConfigurationService.CaptureState, nil);
   try
     try
-    lBeforeSignatures.CaseSensitive := False;
-    lAfterSignatures.CaseSensitive := False;
-    lSourceIds.CaseSensitive := False;
-    lSourceIds.Sorted := True;
-    lSourceIds.Duplicates := dupIgnore;
-    CaptureProgrammingSignatures(lBeforeSignatures);
-    lChangedHardwareSources := False;
-    lWasRunning := False;
-    if fRecorder.StateMachine.State = rsRecord then
-    begin
-      fRecorder.StateMachine.Stop;
-      AddLog('Configuration mode requested: recording stopped before settings.');
-    end;
-
-    AddLog('Configuration mode: settings dialog opened.');
-    lDataSourcesChanged := False;
-    if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
-      ilTagDialogButtons, lDataSourcesChanged) then
-    begin
-      ApplyDisplayTimingSettings;
-      UpdateRecordFrameManager;
-      UpdateActiveSourceIds;
-      if lDataSourcesChanged then
+      if fRecorder.StateMachine.State = rsRecord then
       begin
-        lChangedHardwareSources := False;
-        lWasRunning := (fRecorder.DataSources <> nil) and
-          fRecorder.DataSources.Running;
-        if lWasRunning then
-          StopDataSources;
-        CaptureProgrammingSignatures(lAfterSignatures);
-        for I := 0 to lBeforeSignatures.Count - 1 do
-          lSourceIds.Add(lBeforeSignatures.Names[I]);
-        for I := 0 to lAfterSignatures.Count - 1 do
-          lSourceIds.Add(lAfterSignatures.Names[I]);
-        for I := 0 to lSourceIds.Count - 1 do
-        begin
-          lSourceId := lSourceIds[I];
-          if lBeforeSignatures.Values[lSourceId] =
-            lAfterSignatures.Values[lSourceId] then
-            Continue;
-          RecorderReplaceRuntimeSource(fRecorder, lSourceId,
-            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog,
-            False);
-          lChangedHardwareSources := True;
+        fApplicationController.Stop;
+        AddLog('Configuration mode requested: recording stopped before settings.');
+      end;
+      AddLog('Configuration mode: settings dialog opened.');
+      lDataSourcesChanged := False;
+      if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
+        ilTagDialogButtons, lDataSourcesChanged) then
+      begin
+        ApplyDisplayTimingSettings;
+        UpdateRecordFrameManager;
+        UpdateActiveSourceIds;
+        lChanges.AfterState := fConfigurationService.CaptureState;
+        lChanges.SourcesChanged := lDataSourcesChanged;
+        lChanges.PrepareAlgorithmRuntime := True;
+        lChanges.SyncEnabledStates := True;
+        lResult := fConfigurationService.Apply(lChanges);
+        try
+          LogConfigurationResult(lResult);
+          if lResult.ErrorMessage <> '' then
+            raise Exception.Create(lResult.ErrorMessage);
+        finally
+          lResult.Free;
         end;
-        if fRecorder.AlgorithmManager <> nil then
-          fRecorder.AlgorithmManager.PrepareConfiguration;
-        AddLog('Changed data sources reconfigured individually.');
+        UpdateActiveSourceIds;
+        AddLog('Project settings applied.');
       end
       else
-        AddLog('Hardware configuration unchanged: initialized devices retained.');
-      { Enabled управляет только участием готового контекста в сборе. Не
-        очищаем manager и не программируем остальные устройства повторно. }
-      for I := 0 to fRecorder.DataSources.SourceCount - 1 do
-      begin
-        lConfigured := RecorderConfiguredDataSourcesFind(
-          fRecorder.TagRegistry, fRecorder.DataSources.Sources[I].SourceId);
-        if lConfigured <> nil then
-          fRecorder.DataSources.SetSourceEnabled(
-            fRecorder.DataSources.Sources[I].SourceId, lConfigured.Enabled);
-      end;
-      if lChangedHardwareSources then
-      begin
-        PrepareRuntimeForConfiguration;
-        AddLog('Changed data sources hardware prepared.');
-        if lWasRunning then
-          StartDataSources;
-      end;
-      UpdateActiveSourceIds;
-      AddLog('Project settings applied.');
-    end
-    else
-      AddLog('Configuration mode: settings dialog closed without applying OK.');
+        AddLog('Configuration mode: settings dialog closed without applying OK.');
 
-    { Внутренняя и общая кнопки «Применить» изменяют реестр ещё до закрытия
-      диалога. Поэтому список тегов надо перечитать и после «Закрыть», а не
-      только после OK. При чистой отмене это безопасное обновление представления. }
-    RebuildTagList(edTagSearch.Text);
-    RenderActivePage;
+      { Apply inside the dialog may update registry even before it closes. }
+      RebuildTagList(edTagSearch.Text);
+      RenderActivePage;
     except
       on E: Exception do
         LogCommandError('Settings', E);
     end;
   finally
-    lSourceIds.Free;
-    lAfterSignatures.Free;
-    lBeforeSignatures.Free;
+    lChanges.Free;
   end;
 end;
 
@@ -2553,6 +2484,24 @@ begin
   end;
 end;
 
+procedure TMainForm.ConfigureOptionalSqlDb;
+var
+  lMessage: string;
+begin
+  try
+    fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
+      fProjectConfigDir) + 'sql-db.ini');
+  except
+    on E: Exception do
+    begin
+      fRecorder.SqlDbManager.DisableRuntimeAfterConfigurationError;
+      lMessage := 'SQL database unavailable: ' + E.ClassName + ': ' + E.Message;
+      RecorderDebugLog(lMessage);
+      AddLog(lMessage, rlkSystem);
+    end;
+  end;
+end;
+
 procedure TMainForm.SaveConfigAsClick(Sender: TObject);
 var
   lDir: string;
@@ -2576,12 +2525,13 @@ begin
     Exit;
 
   if fRecorder.StateMachine.State <> rsStop then
-    fRecorder.StateMachine.Stop;
+    fApplicationController.Stop;
   SetProjectConfigDir(lDir);
   SaveDefaultProjectConfigDir;
   LoadRunSettings;
   ApplyDisplayTimingSettings;
   LoadProjectPackage;
+  ConfigureOptionalSqlDb;
   fRecorder.DataSources.Clear;
   fDataSourcesConfigured := False;
   fStartupOfflineRecoveryDone := False;
@@ -2833,58 +2783,43 @@ begin
 end;
 procedure TMainForm.OpenSelectedTagSettings;
 var
-  lBeforeProgramming: string;
-  lBeforeSourceId: string;
-  lHardwareProgrammingChanged: Boolean;
-  lAfterSourceId: string;
-  lTags: TList;
+  lChanges: TRecorderConfigurationChangeSet;
+  lResult: TRecorderConfigurationResult;
   lTag: TRecorderTag;
-  lWasRunning: Boolean;
+  lTags: TList;
 begin
   lTags := TList.Create;
+  lChanges := nil;
   try
     CollectSelectedTags(lTags);
     if lTags.Count = 0 then
+    begin
+      lTags.Free;
       Exit;
-
+    end;
+    lChanges := TRecorderConfigurationChangeSet.Create(
+      fConfigurationService.CaptureState, nil);
     lTag := TRecorderTag(lTags[0]);
-    lBeforeSourceId := lTag.SourceId;
-    lBeforeProgramming := RecorderSourceProgrammingSignature(
-      fRecorder.TagRegistry, lTag);
+    lChanges.SingleSourceEdit := True;
+    lChanges.BeforePrimarySourceId := lTag.SourceId;
     if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, ilTagDialogButtons,
       fRecorder.RunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
       ilCommandButtons) then
     begin
       if fRecorder.AlarmEngine <> nil then
         fRecorder.AlarmEngine.Reset;
-
-      lHardwareProgrammingChanged := lBeforeProgramming <>
-        RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag);
-      if lHardwareProgrammingChanged then
-      begin
-        lAfterSourceId := lTag.SourceId;
-        AddLog('Source programming required: ' +
-          RecorderProgrammingSignatureDifference(lBeforeProgramming,
-            RecorderSourceProgrammingSignature(fRecorder.TagRegistry, lTag)));
-        lWasRunning := (fRecorder.DataSources <> nil) and
-          fRecorder.DataSources.Running;
-        if lWasRunning then
-          StopDataSources;
-
-        RecorderReplaceRuntimeSource(fRecorder, lBeforeSourceId,
-          fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog, False);
-        if not SameText(lBeforeSourceId, lAfterSourceId) then
-          RecorderReplaceRuntimeSource(fRecorder, lAfterSourceId,
-            fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog, False);
-
-        EnsureRuntimeDataSources;
-        PrepareRuntimeForConfiguration;
-
-        if lWasRunning then
-          StartDataSources;
-      end
-      else
-        AddLog('Source programming skipped: hardware settings unchanged.');
+      lChanges.AfterState := fConfigurationService.CaptureState;
+      lChanges.AfterPrimarySourceId := lTag.SourceId;
+      lChanges.SourcesChanged := True;
+      lChanges.EnsureRuntimeSources := True;
+      lResult := fConfigurationService.Apply(lChanges);
+      try
+        LogConfigurationResult(lResult);
+        if lResult.ErrorMessage <> '' then
+          raise Exception.Create(lResult.ErrorMessage);
+      finally
+        lResult.Free;
+      end;
 
       RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
       RebuildTagList(edTagSearch.Text);
@@ -2904,6 +2839,7 @@ begin
     on E: Exception do
       LogCommandError('Tag settings', E);
   end;
+  lChanges.Free;
   lTags.Free;
 end;
 
@@ -2916,6 +2852,8 @@ end;
 procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
   ATags: TList);
 begin
+  // из диалога uTagSettingsDialog ZeroBalanceButtonClick попадаем сюда!!!
+  // в MainForm вообще балансировок не должно быть!!!
   RecorderBalanceTagDevices(Self, fRecorder, ARegistry, ATags);
 end;
 
@@ -3010,35 +2948,6 @@ begin
   end;
 end;
 
-function RecorderIsMicUtsTag(ATag: TRecorderTag): Boolean;
-var
-  lSourceId: string;
-begin
-  Result := False;
-  if ATag = nil then
-    Exit;
-  lSourceId := Trim(ATag.SourceId);
-  Result :=
-    (StartsText('MIC-185:', lSourceId) or
-     StartsText('MIC-140:', lSourceId)) and
-    EndsText('-uts', Trim(ATag.Address));
-end;
-
-function RecorderIsMicUtsCapableTag(ATag: TRecorderTag): Boolean;
-var
-  lSourceId: string;
-begin
-  Result := False;
-  if ATag = nil then
-    Exit;
-  if RecorderIsMicUtsTag(ATag) then
-    Exit;
-  lSourceId := Trim(ATag.SourceId);
-  Result :=
-    StartsText('MIC-185:', lSourceId) or
-    StartsText('MIC-140:', lSourceId);
-end;
-
 { Разбор приходящей из worker-thread очереди снимков значений тегов в UI-поток }
 procedure TMainForm.ConsumeTagDataCycle(Sender: TObject);
 var
@@ -3048,6 +2957,8 @@ var
   lSnapshot: TRecorderSignalSnapshot;
   lStartMs: QWord;
   lTag: TRecorderTag;
+  lRecordMetadata: TRecorderRecordChannelMetadata;
+  lMetadataService: IRecorderRecordChannelMetadataService;
 begin
   lStartMs := GetTickCount64;
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
@@ -3064,19 +2975,22 @@ begin
     один сводный счётчик реестра и не блокирует каждый тег каждые 200 мс. }
   if (fMeraWriter <> nil) and fMeraWriter.FileOpen then
   begin
+    lMetadataService := RecorderRecordChannelMetadataService;
     for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
     begin
       lTag := fRecorder.TagRegistry.Tags[I];
       if I >= Length(fRecordTagCursors) then
         Continue;
+      lRecordMetadata := lMetadataService.Resolve(
+        fRecorder.TagRegistry, lTag);
       while lTag.SignalBuffer.SnapshotNextBlock(fRecordTagCursors[I],
         lSnapshot) do
         fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
           lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
           lSnapshot.Times, lSnapshot.Values, lSnapshot.Count,
           lTag.PollFrequencyHz,
-          RecorderIsMicUtsTag(lTag),
-          FindUtsChannelNameForTag(lTag));
+          lRecordMetadata.IsUts,
+          lRecordMetadata.UtsChannelName);
     end;
   end;
   if lLatestTime > 0 then
@@ -3289,9 +3203,8 @@ begin
   btnStop.SetBounds(16, 58, 42, 42);
   btnPreview.SetBounds(66, 58, 42, 42);
   btnRecord.SetBounds(116, 58, 42, 42);
-  btnTrigger.SetBounds(16, 108, 142, 32);
-  cbSqlDbRecording.SetBounds(12, 151, 72, 23);
-  btnSqlDb.SetBounds(86, 146, 72, 32);
+  cbSqlDbRecording.SetBounds(12, 112, 72, 23);
+  btnSqlDb.SetBounds(86, 107, 72, 32);
 
   btnSettings.Caption := '';
   btnSettings.Images := ilCommandButtons;
@@ -3343,10 +3256,6 @@ begin
   btnRecord.Hint := 'Record';
   btnRecord.ShowHint := True;
 
-  btnTrigger.Caption := 'Trigger';
-  btnTrigger.Hint := 'Trigger / condition met';
-  btnTrigger.ShowHint := True;
-
   btnClearSearch.Caption := 'X';
   btnClearSearch.Hint := ' Очистка поиска тегов';
   btnClearSearch.ShowHint := True;
@@ -3382,7 +3291,6 @@ begin
   lbState.ParentColor := True;
   lbTime.Font.Color := clBlack;
   lbTime.ParentColor := True;
-  UpdateHardwareErrorView;
 end;
 
 procedure TMainForm.UpdateHardwareErrorView;
@@ -3397,9 +3305,11 @@ var
 begin
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
     Exit;
-  lIds := TStringList.Create;
-  try
-    RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lIds, True);
+  lIds := fHardwareStatusSourceIds;
+  if lIds = nil then
+    Exit;
+  lIds.Clear;
+  RecorderEnumerateConfiguredSourceIds(fRecorder.TagRegistry, lIds, True);
     lCount := 0;
     lWarningCount := 0;
     lbState.Hint := '';
@@ -3456,9 +3366,6 @@ begin
       lbState.Font.Color := clBlack;
       lbTime.Font.Color := clBlack;
     end;
-  finally
-    lIds.Free;
-  end;
 end;
 
 procedure TMainForm.ReportSqlDbError;
@@ -3532,31 +3439,6 @@ begin
   if fRecorder.EventBus <> nil then
     fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceConfigurationPrepared,
       Self, 'ConfigurationPrepared'));
-end;
-
-function TMainForm.FindUtsChannelNameForTag(ATag: TRecorderTag): string;
-var
-  I: Integer;
-  lCandidate: TRecorderTag;
-begin
-  Result := '';
-  if (ATag = nil) or (fRecorder = nil) or
-    (fRecorder.TagRegistry = nil) then
-    Exit;
-  if not RecorderIsMicUtsCapableTag(ATag) then
-    Exit;
-
-  { TagRegistry contains only channels added to the project (the right-hand
-    "Selected channels" table). Discovered/available channels live in the
-    settings SourceProbe and must not produce a UTS_Channel reference. }
-  for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-  begin
-    lCandidate := fRecorder.TagRegistry.Tags[I];
-    if (lCandidate <> nil) and
-      SameText(Trim(lCandidate.SourceId), Trim(ATag.SourceId)) and
-      EndsText('-uts', Trim(lCandidate.Address)) then
-      Exit(lCandidate.Name);
-  end;
 end;
 
 procedure TMainForm.WarmupHardwareNetwork;
@@ -3697,73 +3579,138 @@ begin
   AddLog('Deferred hardware preparation finished.');
 end;
 
-procedure TMainForm.StateMachineStateChanging(ASender: TObject;
-  AOldState, ANewState: TRecorderState;
-  ATransition: TRecorderStateTransition);
+procedure TMainForm.OpenRecordSession;
 begin
-  if ATransition = rstNone then
-    Exit;
-
-  { No allocation, FFT benchmark or channel creation is permitted here.
-    A configuration must have prepared the spectrum runtime while stopped. }
-  if fRecorder.AlgorithmManager <> nil then
-    fRecorder.AlgorithmManager.ValidateStateTransition(ATransition);
-
-  if fRecorder.EventBus <> nil then
-    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionBefore,
-      Self, TRecorderStateMachine.TransitionToString(ATransition), '', 0, nil,
-      ATransition));
+  OpenRecordFrame;
 end;
 
-procedure TMainForm.StateMachineStateChanged(ASender: TObject;
-  AOldState, ANewState: TRecorderState);
-var
-  lTransition: TRecorderStateTransition;
+procedure TMainForm.CloseRecordSession;
 begin
-  lTransition := TRecorderStateMachine(ASender).LastTransition;
+  CloseRecordFrame;
+end;
 
-  if (ANewState = rsRecord) and (AOldState <> rsRecord) then
-  begin
-    OpenRecordFrame;
-  end;
+procedure TMainForm.ResetDisplaySessions;
+begin
+  ResetTrendSessions;
+end;
 
-  case ANewState of
-    rsPreview, rsRecord:
-      begin
-        if lTransition in [rstStopToView, rstStopToRecord] then
-        begin
-          if fRecorder.AlgorithmManager <> nil then
-            fRecorder.AlgorithmManager.HandleStateTransition(lTransition);
-          fRecorder.TimeSystem.Start;
-          StartDataSources;
-        end;
-      end;
-    rsStop:
-      begin
-        if lTransition in [rstViewToStop, rstRecordToStop] then
-        begin
-          StopDataSources;
-          CloseRecordFrame;
-          fRecorder.TimeSystem.Stop;
-          if fRecorder.AlgorithmManager <> nil then
-            fRecorder.AlgorithmManager.HandleStateTransition(lTransition);
-        end;
-      end;
-  end;
+procedure TMainForm.StartAcquisition;
+begin
+  StartDataSources;
+end;
 
-  if (AOldState = rsRecord) and (ANewState <> rsRecord) and (ANewState <> rsStop) then
-  begin
-    CloseRecordFrame;
-  end;
+procedure TMainForm.StopAcquisition;
+begin
+  StopDataSources;
+end;
 
+procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState);
+begin
   UpdateStateView;
-  if (lTransition <> rstNone) and (fRecorder.EventBus <> nil) then
-    fRecorder.EventBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionAfter,
-      Self, TRecorderStateMachine.TransitionToString(lTransition), '', 0, nil,
-      lTransition));
-  AddLog(Format('State changed: %s -> %s',
-    [TRecorderStateMachine.StateToString(AOldState),
-     TRecorderStateMachine.StateToString(ANewState)]));
+end;
+
+procedure TMainForm.LifecycleMessage(const AMessage: string);
+begin
+  AddLog(AMessage);
+end;
+
+procedure TMainForm.CaptureProgrammingState(
+  AState: TRecorderSourceProgrammingState);
+var
+  I: Integer;
+  lEntry: TRecorderConfiguredDataSource;
+  lEntries: TObjectList;
+begin
+  if AState = nil then Exit;
+  lEntries := RecorderConfiguredDataSourceList(fRecorder.TagRegistry);
+  if lEntries = nil then Exit;
+  for I := 0 to lEntries.Count - 1 do
+  begin
+    lEntry := TRecorderConfiguredDataSource(lEntries[I]);
+    AState.Add(lEntry.SourceId, RecorderSourceProgrammingSignatureById(
+      fRecorder.TagRegistry, lEntry.SourceId));
+  end;
+end;
+
+function TMainForm.SourceProgrammingApplied(const ASourceId,
+  ASignature: string): Boolean;
+begin
+  Result := RecorderSourceProgrammingAlreadyApplied(fRecorder.TagRegistry,
+    ASourceId, ASignature);
+end;
+
+function TMainForm.AcquisitionRunning: Boolean;
+begin
+  Result := (fRecorder.DataSources <> nil) and fRecorder.DataSources.Running;
+end;
+
+procedure TMainForm.StopAcquisitionForConfiguration;
+begin
+  StopDataSources;
+end;
+
+procedure TMainForm.ReplaceRuntimeSource(const ASourceId: string);
+begin
+  RecorderReplaceRuntimeSource(fRecorder, ASourceId,
+    fRecorder.RunSettings.DataUpdateMs, @DeviceTestLog, False);
+end;
+
+procedure TMainForm.EnsureRuntimeSources;
+begin
+  EnsureRuntimeDataSources;
+end;
+
+procedure TMainForm.PrepareAlgorithms;
+begin
+  if fRecorder.AlgorithmManager <> nil then
+    fRecorder.AlgorithmManager.PrepareConfiguration;
+end;
+
+procedure TMainForm.PrepareHardware;
+begin
+  PrepareRuntimeForConfiguration;
+end;
+
+procedure TMainForm.StartAcquisitionAfterConfiguration;
+begin
+  StartDataSources;
+end;
+
+procedure TMainForm.SyncEnabledSourceStates;
+var
+  I: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
+begin
+  for I := 0 to fRecorder.DataSources.SourceCount - 1 do
+  begin
+    lConfigured := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+      fRecorder.DataSources.Sources[I].SourceId);
+    if lConfigured <> nil then
+      fRecorder.DataSources.SetSourceEnabled(
+        fRecorder.DataSources.Sources[I].SourceId, lConfigured.Enabled);
+  end;
+end;
+
+procedure TMainForm.LogConfigurationResult(
+  AResult: TRecorderConfigurationResult);
+var
+  I: Integer;
+begin
+  if AResult = nil then Exit;
+  for I := 0 to AResult.Messages.Count - 1 do
+    AddLog(AResult.Messages[I]);
+end;
+
+procedure TMainForm.ResetTrendSessions;
+var
+  I: Integer;
+begin
+  TRecorderTrendView.BeginAcquisitionSession(fRecorder.TagRegistry);
+  if fFormEditor <> nil then
+    fFormEditor.ResetTrendSessions;
+  if fDetachedForms <> nil then
+    for I := 0 to fDetachedForms.Count - 1 do
+      TDetachedMnemonicForm(fDetachedForms.Objects[I]).ResetTrendSessions;
 end;
 
 end.

@@ -138,6 +138,8 @@ type
     function GetRevision: QWord;
     function GetLatestTime: Double;
     function GetLatestValue: Double;
+    procedure CopyRangeLocked(AFromTimeSec: Double; AIncludePrevious: Boolean;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer);
     procedure AccumulateLogicalBlocks(AStartSample: QWord; ACount: Integer);
   public
     { ACapacity - максимальное число точек в кольцевом буфере. }
@@ -160,6 +162,11 @@ type
     procedure SetCapacity(ACapacity: Integer);
     { Возвращает снимок от старой точки к новой. }
     function Snapshot: TRecorderSignalSnapshot;
+    procedure SnapshotRangeInto(AFromTimeSec: Double; AIncludePrevious: Boolean;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer);
+    procedure CopyLatestInto(AWindowSeconds: Double;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer;
+      out ADisplayStart: Double);
     { Возвращает только ещё не прочитанные потребителем отсчёты и передвигает его курсор.
       Если потребитель отстал больше ёмкости кольца, возвращается вся доступная история. }
     function SnapshotSince(var ACursor: QWord): TRecorderSignalSnapshot;
@@ -246,6 +253,11 @@ type
 
     { Возвращает снимок сигнала тега. }
     function Snapshot: TRecorderSignalSnapshot;
+    procedure SnapshotRangeInto(AFromTimeSec: Double; AIncludePrevious: Boolean;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer);
+    procedure CopyLatestInto(AWindowSeconds: Double;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer;
+      out ADisplayStart: Double);
     { Возвращает снимок последнего записанного блока тега. }
     function LastBlockSnapshot: TRecorderSignalSnapshot;
     property BlockCounter: QWord read GetBlockCounter;
@@ -1121,6 +1133,87 @@ begin
   end;
 end;
 
+procedure TRecorderSignalBuffer.CopyRangeLocked(AFromTimeSec: Double;
+  AIncludePrevious: Boolean; var ATimes, AValues: TRecorderDoubleArray;
+  out ACount: Integer);
+var
+  lFirstCount: Integer;
+  lHigh: Integer;
+  lLow: Integer;
+  lMiddle: Integer;
+  lReadIndex: Integer;
+  lRequired: Integer;
+begin
+  ACount := 0;
+  if fCount = 0 then
+    Exit;
+  lLow := 0;
+  lHigh := fCount;
+  while lLow < lHigh do
+  begin
+    lMiddle := lLow + (lHigh - lLow) div 2;
+    if fTimes[(fStart + lMiddle) mod fCapacity] < AFromTimeSec then
+      lLow := lMiddle + 1
+    else
+      lHigh := lMiddle;
+  end;
+  if AIncludePrevious and (lLow > 0) then
+    Dec(lLow);
+  lRequired := fCount - lLow;
+  if lRequired <= 0 then
+    Exit;
+  if Length(ATimes) < lRequired then
+    SetLength(ATimes, lRequired);
+  if Length(AValues) < lRequired then
+    SetLength(AValues, lRequired);
+  lReadIndex := (fStart + lLow) mod fCapacity;
+  lFirstCount := Min(lRequired, fCapacity - lReadIndex);
+  Move(fTimes[lReadIndex], ATimes[0], lFirstCount * SizeOf(Double));
+  Move(fValues[lReadIndex], AValues[0], lFirstCount * SizeOf(Double));
+  if lFirstCount < lRequired then
+  begin
+    Move(fTimes[0], ATimes[lFirstCount],
+      (lRequired - lFirstCount) * SizeOf(Double));
+    Move(fValues[0], AValues[lFirstCount],
+      (lRequired - lFirstCount) * SizeOf(Double));
+  end;
+  ACount := lRequired;
+end;
+
+procedure TRecorderSignalBuffer.SnapshotRangeInto(AFromTimeSec: Double;
+  AIncludePrevious: Boolean; var ATimes, AValues: TRecorderDoubleArray;
+  out ACount: Integer);
+begin
+  EnterCriticalSection(fLock);
+  try
+    CopyRangeLocked(AFromTimeSec, AIncludePrevious, ATimes, AValues, ACount);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+procedure TRecorderSignalBuffer.CopyLatestInto(AWindowSeconds: Double;
+  var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer;
+  out ADisplayStart: Double);
+var
+  lLatestTime: Double;
+begin
+  ACount := 0;
+  ADisplayStart := 0;
+  EnterCriticalSection(fLock);
+  try
+    if fCount = 0 then
+      Exit;
+    lLatestTime := fTimes[(fStart + fCount - 1) mod fCapacity];
+    ADisplayStart := lLatestTime - Max(0, AWindowSeconds);
+    CopyRangeLocked(ADisplayStart, False, ATimes, AValues, ACount);
+    if ACount > 0 then
+      ADisplayStart := Max(ADisplayStart, ATimes[0]);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
 function TRecorderSignalBuffer.SnapshotSince(
   var ACursor: QWord): TRecorderSignalSnapshot;
 var
@@ -1346,6 +1439,22 @@ end;
 function TRecorderTag.Snapshot: TRecorderSignalSnapshot;
 begin
   Result := fSignalBuffer.Snapshot;
+end;
+
+procedure TRecorderTag.SnapshotRangeInto(AFromTimeSec: Double;
+  AIncludePrevious: Boolean; var ATimes, AValues: TRecorderDoubleArray;
+  out ACount: Integer);
+begin
+  fSignalBuffer.SnapshotRangeInto(AFromTimeSec, AIncludePrevious, ATimes,
+    AValues, ACount);
+end;
+
+procedure TRecorderTag.CopyLatestInto(AWindowSeconds: Double;
+  var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer;
+  out ADisplayStart: Double);
+begin
+  fSignalBuffer.CopyLatestInto(AWindowSeconds, ATimes, AValues, ACount,
+    ADisplayStart);
 end;
 
 function TRecorderTag.LastBlockSnapshot: TRecorderSignalSnapshot;

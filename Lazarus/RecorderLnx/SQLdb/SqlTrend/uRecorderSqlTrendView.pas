@@ -13,6 +13,7 @@ uses
 
 type
   TRecorderSqlTrendView = class;
+  TRecorderSqlTrendZoomMode = (stzmNone, stzmX, stzmY, stzmXY);
 
   TRecorderSqlTrendLoadThread = class(TThread)
   private
@@ -20,6 +21,7 @@ type
     fErrorText: string;
     fFromUtc, fToUtc: Double;
     fMaxPoints: Integer;
+    fAppendLoad: Boolean;
     fOwner: TRecorderSqlTrendView;
     fPoints: TRecorderSqlTrendPoints;
     fSignalNames: TStringList;
@@ -28,7 +30,8 @@ type
     procedure Execute; override;
   public
     constructor Create(AOwner: TRecorderSqlTrendView; const AConfigFileName: string;
-      ASignalNames: TStrings; AFromUtc, AToUtc: Double; AMaxPoints: Integer);
+      ASignalNames: TStrings; AFromUtc, AToUtc: Double; AMaxPoints: Integer;
+      AAppendLoad: Boolean);
     destructor Destroy; override;
   end;
 
@@ -68,12 +71,15 @@ type
     fLegendSplitter: TSplitter;
     fMouseAnchor: TPoint;
     fMouseCurrent: TPoint;
+    fZoomMode: TRecorderSqlTrendZoomMode;
     fPanAxisMax: array of Double;
     fPanAxisMin: array of Double;
     fPanFromUtc, fPanToUtc: Double;
     fPanning: Boolean;
     fPoints: TRecorderSqlTrendPoints;
     fReloadTimer: TTimer;
+    fLiveReloadTimer: TTimer;
+    fResetViewOnLoad: Boolean;
     fResetZoomButton: TButton;
     fWorker: TRecorderSqlTrendLoadThread;
     fZoomSelecting: Boolean;
@@ -87,17 +93,33 @@ type
     procedure DisplayPrevClick(Sender: TObject);
     procedure FillDisplayControls;
     function BuildAxisSignature: string;
+    function AxisCaption(AIndex: Integer): string;
+    procedure GetAxisHeaderLayout(ARight: Integer; out AColumnWidth,
+      AColumnCount, ARowCount: Integer);
     function CursorUtc(APoint: TPoint): Double;
+    function UtcDisplayTime(AUtc: TDateTime): TDateTime;
     function DoubleCursorMode: Boolean;
     function DoubleCursorReady: Boolean;
     procedure EnsureCursorDefaults;
     function GetPlotRect: TRect;
     procedure LegendGridDrawCell(Sender: TObject; ACol, ARow: Integer;
       ARect: TRect; AState: TGridDrawState);
+    procedure LegendGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure LegendGridDblClick(Sender: TObject);
+    function LegendLineIndex(ARow: Integer): Integer;
     procedure LoadAxisControls;
     procedure ResetZoomClick(Sender: TObject);
     procedure ReloadTimerTimer(Sender: TObject);
+    procedure LiveReloadTimerTimer(Sender: TObject);
+    procedure ConfigureLiveReload;
     procedure StartLoad;
+    procedure ClampCurrentDateXRange;
+    procedure ApplyHorizontalZoom(ALeft, ARight: Integer; AZoomIn: Boolean;
+      const APlot: TRect);
+    procedure ApplyVerticalZoom(ATop, ABottom: Integer; AZoomIn: Boolean;
+      const APlot: TRect);
+    procedure MergeLivePoints(const ANewPoints: TRecorderSqlTrendPoints);
     function SyncAxisRangesFromComponent(AForce: Boolean): Boolean;
     procedure UpdateDeleteIntervalButton;
     procedure UpdateLegend;
@@ -176,7 +198,7 @@ end;
 
 constructor TRecorderSqlTrendLoadThread.Create(AOwner: TRecorderSqlTrendView;
   const AConfigFileName: string; ASignalNames: TStrings; AFromUtc,
-  AToUtc: Double; AMaxPoints: Integer);
+  AToUtc: Double; AMaxPoints: Integer; AAppendLoad: Boolean);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -187,6 +209,7 @@ begin
   fFromUtc := AFromUtc;
   fToUtc := AToUtc;
   fMaxPoints := AMaxPoints;
+  fAppendLoad := AAppendLoad;
 end;
 
 destructor TRecorderSqlTrendLoadThread.Destroy;
@@ -207,7 +230,7 @@ begin
       lRepository := TRecorderSqlDbRepository.Create(lConfig);
       try
         lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
-          fMaxPoints, fPoints);
+          fMaxPoints, fPoints, False);
       finally
         lRepository.Free;
       end;
@@ -258,6 +281,8 @@ begin
     goHorzLine, goRowSelect];
   fLegendGrid.DefaultDrawing := False;
   fLegendGrid.OnDrawCell := @LegendGridDrawCell;
+  fLegendGrid.OnSelectCell := @LegendGridSelectCell;
+  fLegendGrid.OnDblClick := @LegendGridDblClick;
   fLegendSplitter := TSplitter.Create(Self);
   fLegendSplitter.Parent := Self;
   fLegendSplitter.Align := alRight;
@@ -346,6 +371,10 @@ begin
   fReloadTimer.Enabled := False;
   fReloadTimer.Interval := 50;
   fReloadTimer.OnTimer := @ReloadTimerTimer;
+  fLiveReloadTimer := TTimer.Create(Self);
+  fLiveReloadTimer.Enabled := False;
+  fLiveReloadTimer.Interval := 1000;
+  fLiveReloadTimer.OnTimer := @LiveReloadTimerTimer;
 end;
 
 procedure TRecorderSqlTrendView.FillDisplayControls;
@@ -449,6 +478,11 @@ begin
   lPlot := GetPlotRect;
   Result := fFromUtc + (EnsureRange(APoint.X, lPlot.Left, lPlot.Right) -
     lPlot.Left) / Max(1, lPlot.Width) * (fToUtc - fFromUtc);
+end;
+
+function TRecorderSqlTrendView.UtcDisplayTime(AUtc: TDateTime): TDateTime;
+begin
+  Result := UniversalTimeToLocal(AUtc);
 end;
 
 function TRecorderSqlTrendView.DoubleCursorReady: Boolean;
@@ -641,9 +675,82 @@ begin
   end;
 end;
 
+function TRecorderSqlTrendView.LegendLineIndex(ARow: Integer): Integer;
+var
+  I, lVisibleRow: Integer;
+begin
+  Result := -1;
+  if (ARow <= 0) or (fComponent = nil) or
+    (fComponent.ActiveDisplay = nil) then Exit;
+  lVisibleRow := 0;
+  for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
+    if fComponent.ActiveDisplay.Lines[I].Visible then
+    begin
+      Inc(lVisibleRow);
+      if lVisibleRow = ARow then Exit(I);
+    end;
+end;
+
+procedure TRecorderSqlTrendView.LegendGridSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+var
+  lLineIndex, lAxisIndex: Integer;
+begin
+  lLineIndex := LegendLineIndex(ARow);
+  if lLineIndex < 0 then Exit;
+  lAxisIndex := fComponent.ActiveDisplay.Lines[lLineIndex].AxisIndex;
+  if (lAxisIndex < 0) or (lAxisIndex >= fAxisCombo.Items.Count) then Exit;
+  fAxisCombo.ItemIndex := lAxisIndex;
+  LoadAxisControls;
+end;
+
+procedure TRecorderSqlTrendView.LegendGridDblClick(Sender: TObject);
+var
+  I, lLineIndex, lAxisIndex: Integer;
+  lMin, lMax, lRange, lPadding: Double;
+  lFound: Boolean;
+  lSignalName: string;
+begin
+  lLineIndex := LegendLineIndex(fLegendGrid.Row);
+  if lLineIndex < 0 then Exit;
+  lAxisIndex := fComponent.ActiveDisplay.Lines[lLineIndex].AxisIndex;
+  if (lAxisIndex < 0) or (lAxisIndex > High(fAxisMin)) then Exit;
+  lSignalName := fComponent.ActiveDisplay.Lines[lLineIndex].TagName;
+  lFound := False;
+  for I := 0 to High(fPoints) do
+    if SameText(fPoints[I].SignalName, lSignalName) and
+      (fPoints[I].TimestampUtc >= fFromUtc) and
+      (fPoints[I].TimestampUtc <= fToUtc) then
+    begin
+      if not lFound then
+      begin
+        lMin := fPoints[I].Value;
+        lMax := lMin;
+        lFound := True;
+      end
+      else
+      begin
+        lMin := Min(lMin, fPoints[I].Value);
+        lMax := Max(lMax, fPoints[I].Value);
+      end;
+    end;
+  if not lFound then Exit;
+  lRange := lMax - lMin;
+  if lRange > 0 then
+    lPadding := lRange * 0.10
+  else
+    lPadding := Max(1.0, Abs(lMin) * 0.10);
+  fAxisMin[lAxisIndex] := lMin - lPadding;
+  fAxisMax[lAxisIndex] := lMax + lPadding;
+  fAxisCombo.ItemIndex := lAxisIndex;
+  LoadAxisControls;
+  Invalidate;
+end;
+
 destructor TRecorderSqlTrendView.Destroy;
 begin
   fReloadTimer.Enabled := False;
+  fLiveReloadTimer.Enabled := False;
   if fWorker <> nil then
   begin
     fWorker.Terminate;
@@ -663,15 +770,42 @@ begin
   SyncAxisRangesFromComponent(True);
   UpdateLegend;
   UpdateDeleteIntervalButton;
+  ConfigureLiveReload;
+  fResetViewOnLoad := True;
   fLoadPending := True;
   fReloadTimer.Enabled := True;
   Invalidate;
 end;
 
 function TRecorderSqlTrendView.GetPlotRect: TRect;
+var
+  lColumnWidth, lColumnCount, lRowCount: Integer;
 begin
-  Result := Rect(64, 18, Max(65, fLegendSplitter.Left - 8),
-    Max(19, ClientHeight - fAxisPanel.Height - 42));
+  Result.Right := Max(65, fLegendSplitter.Left - 8);
+  Result.Left := 112;
+  GetAxisHeaderLayout(Result.Right, lColumnWidth, lColumnCount, lRowCount);
+  Result.Top := 8 + lRowCount * (Canvas.TextHeight('Ag') + 2);
+  Result.Bottom := Max(Result.Top + 1,
+    ClientHeight - fAxisPanel.Height - 42);
+end;
+
+function TRecorderSqlTrendView.AxisCaption(AIndex: Integer): string;
+begin
+  Result := fComponent.ActiveDisplay.Axes[AIndex].Name + ' [' +
+    FloatToStrF(fAxisMin[AIndex], ffGeneral, 7, 3) + '..' +
+    FloatToStrF(fAxisMax[AIndex], ffGeneral, 7, 3) + ']';
+end;
+
+procedure TRecorderSqlTrendView.GetAxisHeaderLayout(ARight: Integer;
+  out AColumnWidth, AColumnCount, ARowCount: Integer);
+begin
+  AColumnWidth := Max(1, Min(220, ARight - 8));
+  AColumnCount := 1;
+  ARowCount := 0;
+  if (fComponent = nil) or (fComponent.ActiveDisplay.AxisCount = 0) then Exit;
+  AColumnCount := Max(1, (ARight - 8) div AColumnWidth);
+  ARowCount := (fComponent.ActiveDisplay.AxisCount + AColumnCount - 1) div
+    AColumnCount;
 end;
 
 procedure TRecorderSqlTrendView.UpdateLegend;
@@ -801,6 +935,7 @@ begin
       fAxisMax[I] := fFullAxisMax[I] + lPadding;
     end;
   end;
+  ClampCurrentDateXRange;
   LoadAxisControls;
   Invalidate;
 end;
@@ -829,11 +964,44 @@ begin
   StartLoad;
 end;
 
+procedure TRecorderSqlTrendView.ConfigureLiveReload;
+var
+  lConfig: TRecorderSqlDbConfig;
+begin
+  fLiveReloadTimer.Enabled := False;
+  if (fComponent = nil) or
+    (fComponent.TimeMode <> sttmFixedFromToCurrentUtc) or
+    (not FileExists(fComponent.ConfigFileName)) then Exit;
+  lConfig := TRecorderSqlDbConfig.Create;
+  try
+    try
+      lConfig.LoadFromFile(fComponent.ConfigFileName);
+      fLiveReloadTimer.Interval := Max(1000, lConfig.RecordPeriodMs);
+    except
+      fLiveReloadTimer.Interval := 1000;
+    end;
+  finally
+    lConfig.Free;
+  end;
+  fLiveReloadTimer.Enabled := True;
+end;
+
+procedure TRecorderSqlTrendView.LiveReloadTimerTimer(Sender: TObject);
+begin
+  if (fComponent = nil) or
+    (fComponent.TimeMode <> sttmFixedFromToCurrentUtc) or (not Showing) then
+    Exit;
+  if fWorker <> nil then Exit;
+  fLoadPending := True;
+  StartLoad;
+end;
+
 procedure TRecorderSqlTrendView.StartLoad;
 var
   I: Integer;
   lSignals: TStringList;
-  lFromUtc, lToUtc: Double;
+  lFromUtc, lToUtc, lOverlapMs: Double;
+  lAppendLoad: Boolean;
 begin
   if (not fLoadPending) or (fComponent = nil) or (fWorker <> nil) then Exit;
   fLoadPending := False;
@@ -849,23 +1017,35 @@ begin
     for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
       if fComponent.ActiveDisplay.Lines[I].Visible and
         (Trim(fComponent.ActiveDisplay.Lines[I].TagName) <> '') then
-        lSignals.Add(fComponent.ActiveDisplay.Lines[I].TagName);
+        if lSignals.IndexOf(fComponent.ActiveDisplay.Lines[I].TagName) < 0 then
+          lSignals.Add(fComponent.ActiveDisplay.Lines[I].TagName);
+    lAppendLoad := (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
+      (not fResetViewOnLoad) and (fFullToUtc > fFullFromUtc);
     if fComponent.TimeMode = sttmLatestWindow then
     begin
       lToUtc := LocalTimeToUniversal(Now);
       lFromUtc := lToUtc - Max(1.0, fComponent.DurationSec) / SecsPerDay;
+    end
+    else if fComponent.TimeMode = sttmFixedFromToCurrentUtc then
+    begin
+      lToUtc := LocalTimeToUniversal(Now);
+      if lAppendLoad then
+      begin
+        lOverlapMs := Max(30000.0, 3.0 * fLiveReloadTimer.Interval);
+        lFromUtc := Max(fComponent.FromUtc,
+          fFullToUtc - lOverlapMs / MSecsPerDay);
+      end
+      else
+        lFromUtc := fComponent.FromUtc;
     end
     else
     begin
       lFromUtc := fComponent.FromUtc;
       lToUtc := fComponent.ToUtc;
     end;
-    fFromUtc := lFromUtc;
-    fToUtc := lToUtc;
-    UpdateDeleteIntervalButton;
     fWorker := TRecorderSqlTrendLoadThread.Create(Self,
       fComponent.ConfigFileName, lSignals, lFromUtc, lToUtc,
-      fComponent.MaxPointsPerLine);
+      fComponent.MaxPointsPerLine, lAppendLoad);
     fWorker.Start;
   finally
     lSignals.Free;
@@ -873,14 +1053,40 @@ begin
 end;
 
 procedure TRecorderSqlTrendView.AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
+var
+  lWasAtLiveEdge: Boolean;
+  lEdgeTolerance: Double;
 begin
   if AWorker <> fWorker then Exit;
   if not fLoadPending then
   begin
-    fPoints := Copy(AWorker.fPoints, 0, Length(AWorker.fPoints));
     fErrorText := AWorker.fErrorText;
-    fFullFromUtc := fFromUtc;
-    fFullToUtc := fToUtc;
+    if fErrorText = '' then
+    begin
+      lEdgeTolerance := Max(1, fLiveReloadTimer.Interval) /
+        MSecsPerDay;
+      lWasAtLiveEdge := (fFullToUtc <= fFullFromUtc) or
+        SameValue(fToUtc, fFullToUtc, lEdgeTolerance);
+      if AWorker.fAppendLoad then
+        MergeLivePoints(AWorker.fPoints)
+      else
+        fPoints := Copy(AWorker.fPoints, 0, Length(AWorker.fPoints));
+      { A failed load must not advance this watermark: the next live tick has
+        to retry the same interval instead of permanently skipping its data. }
+      if fResetViewOnLoad then
+      begin
+        fFromUtc := AWorker.fFromUtc;
+        fToUtc := AWorker.fToUtc;
+        fResetViewOnLoad := False;
+      end
+      else if (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
+        lWasAtLiveEdge then
+        fToUtc := AWorker.fToUtc;
+      if not AWorker.fAppendLoad then
+        fFullFromUtc := AWorker.fFromUtc;
+      fFullToUtc := AWorker.fToUtc;
+      ClampCurrentDateXRange;
+    end
   end;
   AWorker.fOwner := nil;
   AWorker.FreeOnTerminate := True;
@@ -890,20 +1096,187 @@ begin
   Invalidate;
 end;
 
+procedure TRecorderSqlTrendView.MergeLivePoints(
+  const ANewPoints: TRecorderSqlTrendPoints);
+var
+  I, J, K, lCombinedCount, lKeepFrom, lOutputStart: Integer;
+  lSignalName: string;
+  lMerged, lCombined: TRecorderSqlTrendPoints;
+  lDuplicate: Boolean;
+  lRowIds: TStringList;
+
+  procedure SortCombinedByTime(ALeft, ARight: Integer);
+  var
+    lLeft, lRight: Integer;
+    lPivot: Double;
+    lSwap: TRecorderSqlTrendPoint;
+  begin
+    lLeft := ALeft;
+    lRight := ARight;
+    lPivot := lCombined[(ALeft + ARight) div 2].TimestampUtc;
+    repeat
+      while lCombined[lLeft].TimestampUtc < lPivot do Inc(lLeft);
+      while lCombined[lRight].TimestampUtc > lPivot do Dec(lRight);
+      if lLeft <= lRight then
+      begin
+        lSwap := lCombined[lLeft];
+        lCombined[lLeft] := lCombined[lRight];
+        lCombined[lRight] := lSwap;
+        Inc(lLeft);
+        Dec(lRight);
+      end;
+    until lLeft > lRight;
+    if ALeft < lRight then SortCombinedByTime(ALeft, lRight);
+    if lLeft < ARight then SortCombinedByTime(lLeft, ARight);
+  end;
+begin
+  SetLength(lCombined, 2 * fComponent.MaxPointsPerLine);
+  SetLength(lMerged, 0);
+  lRowIds := TStringList.Create;
+  try
+    lRowIds.Sorted := True;
+    lRowIds.Duplicates := dupIgnore;
+    for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
+    begin
+      if not fComponent.ActiveDisplay.Lines[I].Visible then Continue;
+      lSignalName := fComponent.ActiveDisplay.Lines[I].TagName;
+      if Trim(lSignalName) = '' then Continue;
+      lDuplicate := False;
+      for K := 0 to I - 1 do
+        if fComponent.ActiveDisplay.Lines[K].Visible and
+          SameText(fComponent.ActiveDisplay.Lines[K].TagName,
+            lSignalName) then
+        begin
+          lDuplicate := True;
+          Break;
+        end;
+      if lDuplicate then Continue;
+
+      lCombinedCount := 0;
+      lRowIds.Clear;
+      for J := 0 to High(fPoints) do
+        if SameText(fPoints[J].SignalName, lSignalName) then
+        begin
+          lCombined[lCombinedCount] := fPoints[J];
+          Inc(lCombinedCount);
+          lRowIds.Add(fPoints[J].RowId);
+        end;
+      for J := 0 to High(ANewPoints) do
+        if SameText(ANewPoints[J].SignalName, lSignalName) and
+          (lRowIds.IndexOf(ANewPoints[J].RowId) < 0) then
+        begin
+          lCombined[lCombinedCount] := ANewPoints[J];
+          Inc(lCombinedCount);
+          lRowIds.Add(ANewPoints[J].RowId);
+        end;
+      if lCombinedCount > 1 then
+        SortCombinedByTime(0, lCombinedCount - 1);
+      lKeepFrom := Max(0,
+        lCombinedCount - fComponent.MaxPointsPerLine);
+      lOutputStart := Length(lMerged);
+      SetLength(lMerged, lOutputStart + lCombinedCount - lKeepFrom);
+      for J := lKeepFrom to lCombinedCount - 1 do
+        lMerged[lOutputStart + J - lKeepFrom] := lCombined[J];
+    end;
+  finally
+    lRowIds.Free;
+  end;
+  fPoints := lMerged;
+end;
+
+procedure TRecorderSqlTrendView.ClampCurrentDateXRange;
+var
+  lNowUtc, lMinUtc, lSpan: Double;
+begin
+  if (fComponent = nil) or
+    (fComponent.TimeMode <> sttmFixedFromToCurrentUtc) then Exit;
+  lNowUtc := LocalTimeToUniversal(Now);
+  lMinUtc := fComponent.FromUtc;
+  lSpan := Max(0.0, fToUtc - fFromUtc);
+  if fToUtc > lNowUtc then
+  begin
+    fToUtc := lNowUtc;
+    fFromUtc := fToUtc - lSpan;
+  end;
+  if fFromUtc < lMinUtc then
+  begin
+    fFromUtc := lMinUtc;
+    fToUtc := fFromUtc + lSpan;
+    if fToUtc > lNowUtc then
+      fToUtc := lNowUtc;
+  end;
+end;
+
+procedure TRecorderSqlTrendView.ApplyHorizontalZoom(ALeft, ARight: Integer;
+  AZoomIn: Boolean; const APlot: TRect);
+var
+  lOldFrom, lOldTo, lRange, lLeftPart, lRightPart, lSelectedPart: Double;
+begin
+  lOldFrom := fFromUtc;
+  lOldTo := fToUtc;
+  lRange := lOldTo - lOldFrom;
+  if lRange <= 0 then Exit;
+  lLeftPart := (ALeft - APlot.Left) / Max(1, APlot.Width);
+  lRightPart := (ARight - APlot.Left) / Max(1, APlot.Width);
+  if AZoomIn then
+  begin
+    fFromUtc := lOldFrom + lLeftPart * lRange;
+    fToUtc := lOldFrom + lRightPart * lRange;
+  end
+  else
+  begin
+    lSelectedPart := lRightPart - lLeftPart;
+    if lSelectedPart <= 0 then Exit;
+    fFromUtc := lOldFrom - lLeftPart / lSelectedPart * lRange;
+    fToUtc := lOldTo + (1.0 - lRightPart) / lSelectedPart * lRange;
+  end;
+  ClampCurrentDateXRange;
+end;
+
+procedure TRecorderSqlTrendView.ApplyVerticalZoom(ATop, ABottom: Integer;
+  AZoomIn: Boolean; const APlot: TRect);
+var
+  I: Integer;
+  lOldMin, lOldMax, lRange, lLowPart, lHighPart, lSelectedPart: Double;
+begin
+  lLowPart := (APlot.Bottom - ABottom) / Max(1, APlot.Height);
+  lHighPart := (APlot.Bottom - ATop) / Max(1, APlot.Height);
+  lSelectedPart := lHighPart - lLowPart;
+  if lSelectedPart <= 0 then Exit;
+  for I := 0 to High(fAxisMin) do
+  begin
+    lOldMin := fAxisMin[I];
+    lOldMax := fAxisMax[I];
+    lRange := lOldMax - lOldMin;
+    if lRange <= 0 then Continue;
+    if AZoomIn then
+    begin
+      fAxisMin[I] := lOldMin + lLowPart * lRange;
+      fAxisMax[I] := lOldMin + lHighPart * lRange;
+    end
+    else
+    begin
+      fAxisMin[I] := lOldMin - lLowPart / lSelectedPart * lRange;
+      fAxisMax[I] := lOldMax + (1.0 - lHighPart) /
+        lSelectedPart * lRange;
+    end;
+  end;
+end;
+
 procedure TRecorderSqlTrendView.MouseDown(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var I: Integer; lPlot: TRect;
 begin
   inherited MouseDown(Button, Shift, X, Y);
   lPlot := GetPlotRect;
-  if (X < lPlot.Left) or (X > lPlot.Right) or
-    (Y < lPlot.Top) or (Y > lPlot.Bottom) then Exit;
   fMouseAnchor := Point(X, Y);
   fMouseCurrent := fMouseAnchor;
   if Button = mbLeft then
   begin
     if fCursorEnabled then
     begin
+      if (X < lPlot.Left) or (X > lPlot.Right) or
+        (Y < lPlot.Top) or (Y > lPlot.Bottom) then Exit;
       fCursorDragIndex := 0;
       if fCursorVisible and
         (Abs(X - fCursorPoint.X) <= CSqlTrendCursorGrabPixels) then
@@ -917,12 +1290,28 @@ begin
       fCursorDragging := True;
     end
     else
+    begin
+      if (X >= lPlot.Left) and (X <= lPlot.Right) and
+        (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
+        fZoomMode := stzmXY
+      else if (X >= lPlot.Left) and (X <= lPlot.Right) and
+        (Y > lPlot.Bottom) and (Y < fAxisPanel.Top) then
+        fZoomMode := stzmX
+      else if (X < lPlot.Left) and (X >= 0) and
+        (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
+        fZoomMode := stzmY
+      else
+        fZoomMode := stzmNone;
+      if fZoomMode = stzmNone then Exit;
       fZoomSelecting := True;
+    end;
     MouseCapture := True;
     Invalidate;
   end
   else if Button = mbRight then
   begin
+    if (X < lPlot.Left) or (X > lPlot.Right) or
+      (Y < lPlot.Top) or (Y > lPlot.Bottom) then Exit;
     fPanning := True;
     fPanFromUtc := fFromUtc;
     fPanToUtc := fToUtc;
@@ -945,8 +1334,10 @@ begin
   lPlot := GetPlotRect;
   if fZoomSelecting then
   begin
-    fMouseCurrent.X := EnsureRange(X, lPlot.Left, lPlot.Right);
-    fMouseCurrent.Y := EnsureRange(Y, lPlot.Top, lPlot.Bottom);
+    if fZoomMode in [stzmX, stzmXY] then
+      fMouseCurrent.X := EnsureRange(X, lPlot.Left, lPlot.Right);
+    if fZoomMode in [stzmY, stzmXY] then
+      fMouseCurrent.Y := EnsureRange(Y, lPlot.Top, lPlot.Bottom);
     Invalidate;
   end
   else if fCursorDragging then
@@ -983,6 +1374,7 @@ begin
       fFromUtc := fFromUtc - (fToUtc - fFullToUtc);
       fToUtc := fFullToUtc;
     end;
+    ClampCurrentDateXRange;
     for I := 0 to High(fAxisMin) do
     begin
       lRange := fPanAxisMax[I] - fPanAxisMin[I];
@@ -1005,8 +1397,10 @@ end;
 
 procedure TRecorderSqlTrendView.MouseUp(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-var I, lLeft, lRight, lTop, lBottom: Integer; lPlot: TRect;
-  lOldFrom, lOldTo, lOldMin, lOldMax: Double;
+var
+  lLeft, lRight, lTop, lBottom: Integer;
+  lPlot: TRect;
+  lZoomIn, lHorizontalReady, lVerticalReady: Boolean;
 begin
   inherited MouseUp(Button, Shift, X, Y);
   lPlot := GetPlotRect;
@@ -1026,25 +1420,24 @@ begin
     lRight := Max(fMouseAnchor.X, fMouseCurrent.X);
     lTop := Min(fMouseAnchor.Y, fMouseCurrent.Y);
     lBottom := Max(fMouseAnchor.Y, fMouseCurrent.Y);
-    if (lRight - lLeft >= 6) and (lBottom - lTop >= 6) then
-    begin
-      lOldFrom := fFromUtc;
-      lOldTo := fToUtc;
-      fFromUtc := lOldFrom + (lLeft - lPlot.Left) / Max(1, lPlot.Width) *
-        (lOldTo - lOldFrom);
-      fToUtc := lOldFrom + (lRight - lPlot.Left) / Max(1, lPlot.Width) *
-        (lOldTo - lOldFrom);
-      for I := 0 to High(fAxisMin) do
-      begin
-        lOldMin := fAxisMin[I];
-        lOldMax := fAxisMax[I];
-        fAxisMin[I] := lOldMax - (lBottom - lPlot.Top) /
-          Max(1, lPlot.Height) * (lOldMax - lOldMin);
-        fAxisMax[I] := lOldMax - (lTop - lPlot.Top) /
-          Max(1, lPlot.Height) * (lOldMax - lOldMin);
-      end;
-      LoadAxisControls;
+    lHorizontalReady := (fZoomMode in [stzmX, stzmXY]) and
+      (lRight - lLeft >= 6);
+    lVerticalReady := (fZoomMode in [stzmY, stzmXY]) and
+      (lBottom - lTop >= 6);
+    case fZoomMode of
+      stzmX: lZoomIn := fMouseCurrent.X > fMouseAnchor.X;
+      stzmY: lZoomIn := fMouseCurrent.Y > fMouseAnchor.Y;
+      stzmXY: lZoomIn := (fMouseCurrent.X > fMouseAnchor.X) and
+        (fMouseCurrent.Y > fMouseAnchor.Y);
+      else lZoomIn := False;
     end;
+    if lHorizontalReady then
+      ApplyHorizontalZoom(lLeft, lRight, lZoomIn, lPlot);
+    if lVerticalReady then
+      ApplyVerticalZoom(lTop, lBottom, lZoomIn, lPlot);
+    if lHorizontalReady or lVerticalReady then
+      LoadAxisControls;
+    fZoomMode := stzmNone;
     Invalidate;
   end
   else if (Button = mbRight) and fPanning then
@@ -1069,7 +1462,8 @@ end;
 procedure TRecorderSqlTrendView.Paint;
 var
   I, J, lAxisIndex, lLineIndex, lPrevLine, lBoxHeight,
-    lBoxTop, lBoxLeft, lIntervalLeft, lIntervalRight: Integer;
+    lBoxTop, lBoxLeft, lIntervalLeft, lIntervalRight, lAxisColumnWidth,
+    lAxisColumnCount, lAxisRowCount: Integer;
   lAxis: TRecorderTrendAxis;
   lLine: TRecorderTrendLine;
   lPlot: TRect;
@@ -1103,8 +1497,10 @@ begin
     Canvas.TextOut(8, 8, 'Загрузка данных из SQL БД...');
   end;
   Canvas.Font.Color := clBlack;
-  Canvas.TextOut(lPlot.Left, lPlot.Bottom + 4, FormatDateTime('dd.mm.yyyy hh:nn:ss', fFromUtc));
-  lCaption := FormatDateTime('dd.mm.yyyy hh:nn:ss', fToUtc);
+  Canvas.TextOut(lPlot.Left, lPlot.Bottom + 4,
+    FormatDateTime('dd.mm.yyyy hh:nn:ss', UtcDisplayTime(fFromUtc)));
+  lCaption := FormatDateTime('dd.mm.yyyy hh:nn:ss',
+    UtcDisplayTime(fToUtc));
   Canvas.TextOut(lPlot.Right - Canvas.TextWidth(lCaption), lPlot.Bottom + 4, lCaption);
   if Length(fAxisMin) > 0 then
   begin
@@ -1127,21 +1523,26 @@ begin
         Canvas.Line(lGridX, lPlot.Top, lGridX, lPlot.Bottom);
         lGridValue := fFromUtc + lGridIndex / 10.0 * (fToUtc - fFromUtc);
         if (fToUtc - fFromUtc) >= 1.0 then
-          lGridText := FormatDateTime('dd.mm hh:nn', lGridValue)
+          lGridText := FormatDateTime('dd.mm hh:nn',
+            UtcDisplayTime(lGridValue))
         else
-          lGridText := FormatDateTime('hh:nn:ss', lGridValue);
+          lGridText := FormatDateTime('hh:nn:ss',
+            UtcDisplayTime(lGridValue));
         Canvas.TextOut(lGridX - Canvas.TextWidth(lGridText) div 2,
           lPlot.Bottom + Canvas.TextHeight(lGridText) + 6, lGridText);
       end;
     Canvas.Pen.Color := clGray;
     Canvas.Rectangle(lPlot);
   end;
+  GetAxisHeaderLayout(lPlot.Right, lAxisColumnWidth, lAxisColumnCount,
+    lAxisRowCount);
   for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
   begin
     lAxis := fComponent.ActiveDisplay.Axes[I];
     Canvas.Font.Color := TColor(lAxis.Color);
-    Canvas.TextOut(4, 18 + I * Canvas.TextHeight('Ag'), lAxis.Name + ' ['+
-      FloatToStr(fAxisMin[I]) + '..' + FloatToStr(fAxisMax[I]) + ']');
+    Canvas.TextOut(8 + (I mod lAxisColumnCount) * lAxisColumnWidth,
+      6 + (I div lAxisColumnCount) * (Canvas.TextHeight('Ag') + 2),
+      AxisCaption(I));
   end;
   lPrevLine := -1;
   lPrevX := 0;
@@ -1220,8 +1621,8 @@ begin
         lPlot.Top + 5);
       Canvas.Font.Color := clBlack;
       Canvas.Brush.Style := bsClear;
-      lCaption := FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', lCursor2Utc) +
-        ' UTC';
+      lCaption := FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz',
+        UtcDisplayTime(lCursor2Utc));
       Canvas.TextOut(EnsureRange(fCursor2Point.X + 8, lPlot.Left,
         Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 4)),
         lPlot.Top + 10, lCaption);
@@ -1241,7 +1642,8 @@ begin
     Canvas.Font.Color := clBlack;
     Canvas.Brush.Style := bsClear;
     Canvas.TextOut(lBoxLeft + 5, lBoxTop + 4,
-      FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz', lCursorUtc) + ' UTC');
+      FormatDateTime('dd.mm.yyyy hh:nn:ss.zzz',
+        UtcDisplayTime(lCursorUtc)));
     J := lBoxTop + Canvas.TextHeight('Ag') + 7;
     for I := 0 to fComponent.ActiveDisplay.LineCount - 1 do
       if lNearestFound[I] then
@@ -1263,10 +1665,19 @@ begin
     Canvas.Brush.Style := bsClear;
     Canvas.Pen.Color := clBlue;
     Canvas.Pen.Style := psDash;
-    Canvas.Rectangle(Min(fMouseAnchor.X, fMouseCurrent.X),
-      Min(fMouseAnchor.Y, fMouseCurrent.Y),
-      Max(fMouseAnchor.X, fMouseCurrent.X),
-      Max(fMouseAnchor.Y, fMouseCurrent.Y));
+    case fZoomMode of
+      stzmX:
+        Canvas.Rectangle(Min(fMouseAnchor.X, fMouseCurrent.X), lPlot.Top,
+          Max(fMouseAnchor.X, fMouseCurrent.X), lPlot.Bottom);
+      stzmY:
+        Canvas.Rectangle(lPlot.Left, Min(fMouseAnchor.Y, fMouseCurrent.Y),
+          lPlot.Right, Max(fMouseAnchor.Y, fMouseCurrent.Y));
+      stzmXY:
+        Canvas.Rectangle(Min(fMouseAnchor.X, fMouseCurrent.X),
+          Min(fMouseAnchor.Y, fMouseCurrent.Y),
+          Max(fMouseAnchor.X, fMouseCurrent.X),
+          Max(fMouseAnchor.Y, fMouseCurrent.Y));
+    end;
     Canvas.Pen.Style := psSolid;
     Canvas.Brush.Style := bsSolid;
   end;

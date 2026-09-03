@@ -40,6 +40,13 @@ type
     Width: Integer;
     Height: Integer;
   end;
+  TRecorderFontSnapshot = record
+    Name: string;
+    Size: Integer;
+    Color: LongInt;
+    Bold: Boolean;
+    Italic: Boolean;
+  end;
 { TRecorderFormPageMode
     Режим страницы мнемосхемы.
 
@@ -54,6 +61,8 @@ type
   ERecorderFormError = class(Exception);
 
   TRecorderComponentFactoryBase = class;
+  TRecorderNamedFont = class;
+  TRecorderNamedFontManager = class;
   TRecorderVisualComponent = class;
   TRecorderVisualComponentClass = class of TRecorderVisualComponent;
 
@@ -76,10 +85,16 @@ type
     fName: string;                                 { имя компонента }
     fTagName: string;
     fTagId: TRecorderTagId;                        { Id привязанного тега }
+    fNamedFontName: string;
+    fNamedFonts: TRecorderNamedFontManager;
+    fResolvedNamedFont: TRecorderNamedFont;
+    fResolvedFontRevision: QWord;
+    procedure SetNamedFontName(const AValue: string);
   protected
     { Возвращает строковый идентификатор типа для сериализации и палитры
       редактора. }
     class function GetTypeId: string; virtual;
+    function ResolveNamedFont: TRecorderNamedFont;
   public
     { Создаёт компонент с нулевыми размерами и пустым именем. }
     constructor Create; virtual;
@@ -90,6 +105,8 @@ type
       ALeft, ATop - координаты левого верхнего угла.
       AWidth, AHeight - размеры прямоугольника; отрицательные значения запрещены. }
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
+    procedure GetEffectiveFont(const ALocal: TRecorderFontSnapshot;
+      out AResult: TRecorderFontSnapshot);
 
     { Возвращает идентификатор типа для фабрики. }
     class function TypeId: string;
@@ -100,6 +117,36 @@ type
     property TagId: TRecorderTagId read fTagId write fTagId;
     property Bounds: TRecorderRect read fBounds write fBounds;
     property Factory: TRecorderComponentFactoryBase read fFactory;
+    property NamedFontName: string read fNamedFontName write SetNamedFontName;
+    property NamedFonts: TRecorderNamedFontManager read fNamedFonts;
+  end;
+
+  TRecorderNamedFont = class
+  public
+    Name: string;
+    FontName: string;
+    FontSize: Integer;
+    FontColor: LongInt;
+    Bold: Boolean;
+    Italic: Boolean;
+  end;
+
+  TRecorderNamedFontManager = class
+  private
+    fItems: TStringList;
+    fRevision: QWord;
+    function GetCount: Integer;
+    function GetItem(AIndex: Integer): TRecorderNamedFont;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+    function Find(const AName: string): TRecorderNamedFont;
+    function Define(const AName, AFontName: string; AFontSize: Integer;
+      AFontColor: LongInt; ABold, AItalic: Boolean): TRecorderNamedFont;
+    property Count: Integer read GetCount;
+    property Items[AIndex: Integer]: TRecorderNamedFont read GetItem;
+    property Revision: QWord read fRevision;
   end;
 
   TRecorderTagValueNameMode = (tvnmNone, tvnmTop, tvnmLeft);
@@ -113,16 +160,22 @@ type
     fFontColor: LongInt;
     fFontStyleBold: Boolean;
     fFontStyleItalic: Boolean;
+    function GetFontName: string;
+    function GetFontSize: Integer;
+    function GetFontColor: LongInt;
+    function GetFontStyleBold: Boolean;
+    function GetFontStyleItalic: Boolean;
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
+    procedure GetFontSnapshot(out AFont: TRecorderFontSnapshot);
     property Text: string read fText write fText;
-    property FontName: string read fFontName write fFontName;
-    property FontSize: Integer read fFontSize write fFontSize;
-    property FontColor: LongInt read fFontColor write fFontColor;
-    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
-    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
+    property FontName: string read GetFontName write fFontName;
+    property FontSize: Integer read GetFontSize write fFontSize;
+    property FontColor: LongInt read GetFontColor write fFontColor;
+    property FontStyleBold: Boolean read GetFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read GetFontStyleItalic write fFontStyleItalic;
   end;
 
   TRecorderTagValueComponent = class(TRecorderVisualComponent)
@@ -136,16 +189,22 @@ type
     fShowNameMode: TRecorderTagValueNameMode;
     fEstimateKind: TRecorderTagEstimateKind;
     fUseDefaultEstimate: Boolean;
+    function GetFontName: string;
+    function GetFontSize: Integer;
+    function GetFontColor: LongInt;
+    function GetFontStyleBold: Boolean;
+    function GetFontStyleItalic: Boolean;
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
+    procedure GetFontSnapshot(out AFont: TRecorderFontSnapshot);
     property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
-    property FontName: string read fFontName write fFontName;
-    property FontSize: Integer read fFontSize write fFontSize;
-    property FontColor: LongInt read fFontColor write fFontColor;
-    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
-    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
+    property FontName: string read GetFontName write fFontName;
+    property FontSize: Integer read GetFontSize write fFontSize;
+    property FontColor: LongInt read GetFontColor write fFontColor;
+    property FontStyleBold: Boolean read GetFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read GetFontStyleItalic write fFontStyleItalic;
     property ShowNameMode: TRecorderTagValueNameMode read fShowNameMode write fShowNameMode;
     property EstimateKind: TRecorderTagEstimateKind read fEstimateKind write fEstimateKind;
     property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
@@ -441,6 +500,7 @@ type
   TRecorderFormPage = class
   private
     fComponents: TList;                            { список компонентов на странице (TRecorderVisualComponent) }
+    fNamedFonts: TRecorderNamedFontManager;
     fBackgroundImageFileName: string;              { файл фонового изображения пользовательской страницы }
     fBaseOscillogramCount: Integer;                { количество осциллограмм для встроенной BasePage }
     fDetached: Boolean;                            { страница открыта отдельным окном }
@@ -508,6 +568,7 @@ type
   private
     fActivePage: TRecorderFormPage;                { текущая активная страница }
     fPages: TList;                                 { список страниц (TRecorderFormPage) }
+    fNamedFonts: TRecorderNamedFontManager;
     function GetPage(AIndex: Integer): TRecorderFormPage;
     function GetPageCount: Integer;
   public
@@ -549,6 +610,7 @@ type
     property ActivePage: TRecorderFormPage read fActivePage;
     property PageCount: Integer read GetPageCount;
     property Pages[AIndex: Integer]: TRecorderFormPage read GetPage;
+    property NamedFonts: TRecorderNamedFontManager read fNamedFonts;
   end;
 
   { TRecorderComponentFactory
@@ -628,6 +690,122 @@ begin
   fBounds.Height := 0;
   fTagName := '';
   fTagId := 0;
+  fResolvedFontRevision := High(QWord);
+end;
+
+function TRecorderVisualComponent.ResolveNamedFont: TRecorderNamedFont;
+begin
+  if (fNamedFonts = nil) or (Trim(fNamedFontName) = '') then
+    Exit(nil);
+  if fResolvedFontRevision <> fNamedFonts.Revision then
+  begin
+    fResolvedNamedFont := fNamedFonts.Find(fNamedFontName);
+    fResolvedFontRevision := fNamedFonts.Revision;
+  end;
+  Result := fResolvedNamedFont;
+end;
+
+procedure TRecorderVisualComponent.SetNamedFontName(const AValue: string);
+begin
+  if fNamedFontName = Trim(AValue) then
+    Exit;
+  fNamedFontName := Trim(AValue);
+  fResolvedNamedFont := nil;
+  fResolvedFontRevision := High(QWord);
+end;
+
+procedure TRecorderVisualComponent.GetEffectiveFont(
+  const ALocal: TRecorderFontSnapshot; out AResult: TRecorderFontSnapshot);
+var
+  lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont = nil then
+  begin
+    AResult := ALocal;
+    Exit;
+  end;
+  AResult.Name := lFont.FontName;
+  AResult.Size := lFont.FontSize;
+  AResult.Color := lFont.FontColor;
+  AResult.Bold := lFont.Bold;
+  AResult.Italic := lFont.Italic;
+end;
+
+{ TRecorderNamedFontManager }
+
+constructor TRecorderNamedFontManager.Create;
+begin
+  inherited Create;
+  fItems := TStringList.Create;
+  fItems.CaseSensitive := False;
+  fItems.Sorted := True;
+  fItems.Duplicates := dupError;
+end;
+
+destructor TRecorderNamedFontManager.Destroy;
+begin
+  Clear;
+  fItems.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderNamedFontManager.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to fItems.Count - 1 do
+    fItems.Objects[I].Free;
+  fItems.Clear;
+  Inc(fRevision);
+end;
+
+function TRecorderNamedFontManager.GetCount: Integer;
+begin
+  Result := fItems.Count;
+end;
+
+function TRecorderNamedFontManager.GetItem(AIndex: Integer): TRecorderNamedFont;
+begin
+  Result := TRecorderNamedFont(fItems.Objects[AIndex]);
+end;
+
+function TRecorderNamedFontManager.Find(const AName: string): TRecorderNamedFont;
+var
+  lIndex: Integer;
+begin
+  lIndex := fItems.IndexOf(Trim(AName));
+  if lIndex < 0 then
+    Exit(nil);
+  Result := TRecorderNamedFont(fItems.Objects[lIndex]);
+end;
+
+function TRecorderNamedFontManager.Define(const AName, AFontName: string;
+  AFontSize: Integer; AFontColor: LongInt; ABold, AItalic: Boolean): TRecorderNamedFont;
+var
+  lName: string;
+begin
+  lName := Trim(AName);
+  if lName = '' then
+    raise ERecorderFormError.Create('Named font name cannot be empty');
+  Result := Find(lName);
+  if Result = nil then
+  begin
+    Result := TRecorderNamedFont.Create;
+    Result.Name := lName;
+    Result.FontSize := -1;
+    fItems.AddObject(lName, Result);
+  end;
+  if (Result.FontName = AFontName) and (Result.FontSize = AFontSize) and
+     (Result.FontColor = AFontColor) and (Result.Bold = ABold) and
+     (Result.Italic = AItalic) then
+    Exit;
+  Result.FontName := AFontName;
+  Result.FontSize := AFontSize;
+  Result.FontColor := AFontColor;
+  Result.Bold := ABold;
+  Result.Italic := AItalic;
+  Inc(fRevision);
 end;
 
 destructor TRecorderVisualComponent.Destroy;
@@ -679,6 +857,54 @@ begin
   fFontStyleItalic := False;
 end;
 
+procedure TRecorderStaticTextComponent.GetFontSnapshot(
+  out AFont: TRecorderFontSnapshot);
+var
+  lLocal: TRecorderFontSnapshot;
+begin
+  lLocal.Name := fFontName;
+  lLocal.Size := fFontSize;
+  lLocal.Color := fFontColor;
+  lLocal.Bold := fFontStyleBold;
+  lLocal.Italic := fFontStyleItalic;
+  GetEffectiveFont(lLocal, AFont);
+end;
+
+function TRecorderStaticTextComponent.GetFontName: string;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontName else Result := fFontName;
+end;
+
+function TRecorderStaticTextComponent.GetFontSize: Integer;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontSize else Result := fFontSize;
+end;
+
+function TRecorderStaticTextComponent.GetFontColor: LongInt;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontColor else Result := fFontColor;
+end;
+
+function TRecorderStaticTextComponent.GetFontStyleBold: Boolean;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.Bold else Result := fFontStyleBold;
+end;
+
+function TRecorderStaticTextComponent.GetFontStyleItalic: Boolean;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.Italic else Result := fFontStyleItalic;
+end;
+
 constructor TRecorderTagValueComponent.Create;
 begin
   inherited Create;
@@ -691,6 +917,54 @@ begin
   fShowNameMode := tvnmTop;
   fEstimateKind := tekMean;
   fUseDefaultEstimate := True;
+end;
+
+procedure TRecorderTagValueComponent.GetFontSnapshot(
+  out AFont: TRecorderFontSnapshot);
+var
+  lLocal: TRecorderFontSnapshot;
+begin
+  lLocal.Name := fFontName;
+  lLocal.Size := fFontSize;
+  lLocal.Color := fFontColor;
+  lLocal.Bold := fFontStyleBold;
+  lLocal.Italic := fFontStyleItalic;
+  GetEffectiveFont(lLocal, AFont);
+end;
+
+function TRecorderTagValueComponent.GetFontName: string;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontName else Result := fFontName;
+end;
+
+function TRecorderTagValueComponent.GetFontSize: Integer;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontSize else Result := fFontSize;
+end;
+
+function TRecorderTagValueComponent.GetFontColor: LongInt;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.FontColor else Result := fFontColor;
+end;
+
+function TRecorderTagValueComponent.GetFontStyleBold: Boolean;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.Bold else Result := fFontStyleBold;
+end;
+
+function TRecorderTagValueComponent.GetFontStyleItalic: Boolean;
+var lFont: TRecorderNamedFont;
+begin
+  lFont := ResolveNamedFont;
+  if lFont <> nil then Result := lFont.Italic else Result := fFontStyleItalic;
 end;
 
 { TRecorderButtonComponent }
@@ -1340,6 +1614,8 @@ begin
       [AComponent.Id]);
 
   fComponents.Add(AComponent);
+  AComponent.fNamedFonts := fNamedFonts;
+  AComponent.fResolvedFontRevision := High(QWord);
   Result := AComponent;
 end;
 
@@ -1395,6 +1671,7 @@ constructor TRecorderFormManager.Create;
 begin
   inherited Create;
   fPages := TList.Create;
+  fNamedFonts := TRecorderNamedFontManager.Create;
 end;
 
 destructor TRecorderFormManager.Destroy;
@@ -1404,6 +1681,7 @@ begin
   for I := 0 to fPages.Count - 1 do
     TObject(fPages[I]).Free;
   fPages.Free;
+  fNamedFonts.Free;
   inherited Destroy;
 end;
 
@@ -1418,6 +1696,8 @@ begin
 end;
 
 function TRecorderFormManager.AddPage(APage: TRecorderFormPage): TRecorderFormPage;
+var
+  I: Integer;
 begin
   if APage = nil then
     raise ERecorderFormError.Create('Cannot add nil page');
@@ -1425,6 +1705,12 @@ begin
   if (APage.Id <> '') and (FindPageById(APage.Id) <> nil) then
     raise ERecorderFormError.CreateFmt('Page id already exists: %s', [APage.Id]);
 
+  APage.fNamedFonts := fNamedFonts;
+  for I := 0 to APage.ComponentCount - 1 do
+  begin
+    APage.Components[I].fNamedFonts := fNamedFonts;
+    APage.Components[I].fResolvedFontRevision := High(QWord);
+  end;
   fPages.Add(APage);
   if fActivePage = nil then
     fActivePage := APage;

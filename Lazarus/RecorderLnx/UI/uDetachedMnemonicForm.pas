@@ -61,6 +61,7 @@ type
       AOnAttach, AOnChanged: TNotifyEvent);
     destructor Destroy; override;
     procedure RefreshLive;
+    procedure ResetTrendSessions;
     procedure SavePlacement;
     procedure CloseForApplication;
     procedure DiscardDeletedPage;
@@ -326,6 +327,12 @@ procedure TDetachedMnemonicForm.RefreshLive;
 begin
   if Visible and (WindowState <> wsMinimized) then
     fEditor.RefreshLive;
+end;
+
+procedure TDetachedMnemonicForm.ResetTrendSessions;
+begin
+  if fEditor <> nil then
+    fEditor.ResetTrendSessions;
 end;
 
 procedure TDetachedMnemonicForm.SavePlacement;

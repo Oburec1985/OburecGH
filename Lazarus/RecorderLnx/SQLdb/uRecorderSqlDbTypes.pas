@@ -22,6 +22,7 @@ type
     rsrsDegraded, rsrsError);
 
   TRecorderSqlTrendPoint = record
+    RowId: string;
     SignalName: string;
     TimestampUtc: Double;
     Value: Double;
@@ -51,6 +52,7 @@ type
     fSignalEstimates: TStringList;
     fSignalSelectionConfigured: Boolean;
     fPasswordEnvironment: string;
+    fStoredPassword: string;
     fPort: Word;
     fQueueCapacity: Integer;
     fRecordPeriodMs: Integer;
@@ -88,6 +90,7 @@ type
     property SignalSelectionConfigured: Boolean read fSignalSelectionConfigured
       write fSignalSelectionConfigured;
     property PasswordEnvironment: string read fPasswordEnvironment write fPasswordEnvironment;
+    property StoredPassword: string read fStoredPassword write fStoredPassword;
     property Port: Word read fPort write fPort;
     property QueueCapacity: Integer read fQueueCapacity write SetQueueCapacity;
     property RecordPeriodMs: Integer read fRecordPeriodMs write fRecordPeriodMs;
@@ -118,6 +121,7 @@ implementation
 
 uses
   IniFiles, uRecorderMeraPaths
+  {$ifdef unix}, BaseUnix{$endif}
   {$ifdef windows}, Registry, Windows{$endif};
 
 function RecorderSqlDbNewId: string;
@@ -194,6 +198,7 @@ begin
   fSignalEstimates.Assign(ASource.fSignalEstimates);
   fSignalSelectionConfigured := ASource.fSignalSelectionConfigured;
   fPasswordEnvironment := ASource.fPasswordEnvironment;
+  fStoredPassword := ASource.fStoredPassword;
   fPort := ASource.fPort;
   fQueueCapacity := ASource.fQueueCapacity;
   fRecordPeriodMs := ASource.fRecordPeriodMs;
@@ -216,6 +221,7 @@ begin
   fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
   fPasswordEnvironment := 'RECORDERLNX_SQLDB_PASSWORD';
+  fStoredPassword := '';
   fPort := 3050;
   fQueueCapacity := 8192;
   fRecordPeriodMs := 1000;
@@ -271,23 +277,41 @@ begin
       raise ERecorderSqlDbError.Create('Remote SQLdb host is empty');
     if Trim(fDatabase) = '' then
       raise ERecorderSqlDbError.Create('Remote SQLdb database is empty');
-    if fPort = 0 then
-      raise ERecorderSqlDbError.Create('Remote SQLdb port is zero');
+    // Port 0 means: use the database driver's default port.
   end;
 end;
 
 function TRecorderSqlDbConfig.DatabaseFileName: string;
 var
-  lName: string;
+  lName, lRoot: string;
 begin
-  if not IsLocalFileDatabase then
-    Exit(fDatabase);
   lName := Trim(fDatabase);
   if lName = '' then
     if fBackend = rsbFirebird then
       lName := CRecorderFirebirdDefaultFileName
     else
       lName := CRecorderSqlDbDefaultFileName;
+  if not IsLocalFileDatabase then
+  begin
+    lRoot := Trim(fRootDirectory);
+    if (lRoot = '') or (ExtractFileDrive(lName) <> '') or
+       ((Length(lName) >= 2) and (lName[2] = ':')) or
+       ((lName <> '') and (lName[1] = '/')) then
+      Exit(lName);
+    if Pos('\', lRoot) > 0 then
+    begin
+      if (lRoot[Length(lRoot)] = '\') or (lRoot[Length(lRoot)] = '/') then
+        Exit(lRoot + lName);
+      Exit(lRoot + '\' + lName);
+    end;
+    if Pos('/', lRoot) > 0 then
+    begin
+      if lRoot[Length(lRoot)] = '/' then
+        Exit(lRoot + lName);
+      Exit(lRoot + '/' + lName);
+    end;
+    Exit(lRoot + '/' + lName);
+  end;
   {$ifdef unix}
   if ((Length(lName) >= 2) and (lName[2] = ':')) or
      (Pos('\\', lName) > 0) then
@@ -319,6 +343,9 @@ var
   lRegistry: TRegistry;
 {$endif}
 begin
+  Result := fStoredPassword;
+  if Result <> '' then
+    Exit;
   Result := SysUtils.GetEnvironmentVariable(fPasswordEnvironment);
   {$ifdef windows}
   if Result = '' then
@@ -382,6 +409,7 @@ begin
     fPort := lIni.ReadInteger('SQLdb', 'Port', fPort);
     fUserName := lIni.ReadString('SQLdb', 'UserName', fUserName);
     fPasswordEnvironment := lIni.ReadString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
+    fStoredPassword := lIni.ReadString('SQLdb', 'Password', fStoredPassword);
     fTlsRequired := lIni.ReadBool('SQLdb', 'TlsRequired', fTlsRequired);
     QueueCapacity := lIni.ReadInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
     fRecordPeriodMs := lIni.ReadInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
@@ -399,6 +427,9 @@ procedure TRecorderSqlDbConfig.SaveToFile(const AFileName: string);
 var
   lIni: TIniFile;
   lIndex: Integer;
+  {$ifdef unix}
+  lErrorCode: Integer;
+  {$endif}
 begin
   RequireValid;
   if not ForceDirectories(ExtractFileDir(ExpandFileName(AFileName))) then
@@ -417,6 +448,7 @@ begin
     lIni.WriteInteger('SQLdb', 'Port', fPort);
     lIni.WriteString('SQLdb', 'UserName', fUserName);
     lIni.WriteString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
+    lIni.WriteString('SQLdb', 'Password', fStoredPassword);
     lIni.WriteBool('SQLdb', 'TlsRequired', fTlsRequired);
     lIni.WriteInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
     lIni.WriteInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
@@ -433,6 +465,15 @@ begin
   finally
     lIni.Free;
   end;
+  {$ifdef unix}
+  if fpChmod(PChar(AFileName), &600) <> 0 then
+  begin
+    lErrorCode := fpGetErrNo;
+    raise ERecorderSqlDbError.CreateFmt(
+      'Cannot protect SQLdb config %s: %s (%d)',
+      [AFileName, SysErrorMessage(lErrorCode), lErrorCode]);
+  end;
+  {$endif}
 end;
 
 end.

@@ -260,6 +260,38 @@ begin
   end;
 end;
 
+procedure TestReusableRangeSnapshot;
+var
+  I: Integer;
+  lBuffer: TRecorderSignalBuffer;
+  lCount: Integer;
+  lFirstValueAddress: Pointer;
+  lTimes: TRecorderDoubleArray;
+  lValues: TRecorderDoubleArray;
+begin
+  Writeln('--- Reusable range snapshot test ---');
+  lBuffer := TRecorderSignalBuffer.Create(5);
+  try
+    for I := 0 to 6 do
+      lBuffer.AddSample(I, I * 10);
+
+    lBuffer.SnapshotRangeInto(4.0, False, lTimes, lValues, lCount);
+    AssertEquals(lCount, 3, 'range count after ring wrap');
+    AssertEquals(lTimes[0], 4.0, 'range starts at requested time');
+    AssertEquals(lValues[2], 60.0, 'range keeps latest value');
+    lFirstValueAddress := @lValues[0];
+
+    lBuffer.SnapshotRangeInto(5.0, True, lTimes, lValues, lCount);
+    AssertEquals(lCount, 3, 'range includes previous boundary sample');
+    AssertEquals(lTimes[0], 4.0, 'previous boundary time');
+    AssertTrue(@lValues[0] = lFirstValueAddress,
+      'caller-owned range buffer is reused when capacity is sufficient');
+    Writeln('RESULT reusable range snapshot test passed.');
+  finally
+    lBuffer.Free;
+  end;
+end;
+
 procedure TestTagAlarmEngine;
 var
   lEngine: IRecorderAlarmEngine;
@@ -305,7 +337,13 @@ begin
 end;
 
 begin
+  if (ParamCount > 0) and SameText(ParamStr(1), '--range-only') then
+  begin
+    TestReusableRangeSnapshot;
+    Halt(0);
+  end;
   TestTagRegistryAndSignalBuffer;
   TestTagBlockEstimates;
+  TestReusableRangeSnapshot;
   TestTagAlarmEngine;
 end.

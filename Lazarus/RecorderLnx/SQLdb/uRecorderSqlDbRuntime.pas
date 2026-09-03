@@ -285,29 +285,30 @@ var
   lSequence: Int64;
 begin
   R := nil; S := nil; lSignals := TStringList.Create;
-  lRegistrationId := '';
-  lSequence := 0;
-  lSignals.NameValueSeparator := '=';
   try
-    if not SqlServerAvailable(fConfig, fLastError) then
-    begin
-      fLastError := 'SQL server not found: ' + fConfig.Host + ':' +
-        IntToStr(fConfig.Port) + ' (' + fLastError + ')';
-      fState := rsrsError;
-      RecorderDebugLog(fLastError);
-      Exit;
-    end;
-    R := TRecorderSqlDbRepository.Create(fConfig);
-    R.EnsureDatabase;
-    S := TRecorderSqlDbFileStore.Create(fConfig.DataDirectory);
-    lObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
-      fConfig.SerialNumber);
-    while not fThread.IsStopping or HasJobs do
-    begin
-      J := PopJob;
-      if J = nil then begin Sleep(10); Continue; end;
-      try
-        case J.Kind of
+    lRegistrationId := '';
+    lSequence := 0;
+    lSignals.NameValueSeparator := '=';
+    try
+      if not SqlServerAvailable(fConfig, fLastError) then
+      begin
+        fLastError := 'SQL server not found: ' + fConfig.Host + ':' +
+          IntToStr(fConfig.Port) + ' (' + fLastError + ')';
+        fState := rsrsError;
+        RecorderDebugLog(fLastError);
+        Exit;
+      end;
+      R := TRecorderSqlDbRepository.Create(fConfig);
+      R.EnsureDatabase;
+      S := TRecorderSqlDbFileStore.Create(fConfig.DataDirectory);
+      lObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
+        fConfig.SerialNumber);
+      while not fThread.IsStopping or HasJobs do
+      begin
+        J := PopJob;
+        if J = nil then begin Sleep(10); Continue; end;
+        try
+          case J.Kind of
           jkStart:
             begin
               if lRegistrationId <> '' then
@@ -347,20 +348,24 @@ begin
                 lStored.Checksum, 'ready', lRegistrationId, '', '', J.TimeUtc,
                 J.TimeUtc, J.TimeUtc);
             end;
-        end;
-      finally J.Free; end;
+          end;
+        finally J.Free; end;
+      end;
+      if lRegistrationId <> '' then
+        R.FinishRegistration(lRegistrationId, 'interrupted', Now);
+    except
+      on E: Exception do
+      begin
+        fLastError := E.Message;
+        fState := rsrsError;
+        RecorderDebugLog('SQL database disabled: ' + fLastError);
+      end;
     end;
-    if lRegistrationId <> '' then
-      R.FinishRegistration(lRegistrationId, 'interrupted', Now);
-  except
-    on E: Exception do
-    begin
-      fLastError := E.Message;
-      fState := rsrsError;
-      RecorderDebugLog('SQL database disabled: ' + fLastError);
-    end;
+  finally
+    lSignals.Free;
+    S.Free;
+    R.Free;
   end;
-  lSignals.Free; S.Free; R.Free;
 end;
 
 end.

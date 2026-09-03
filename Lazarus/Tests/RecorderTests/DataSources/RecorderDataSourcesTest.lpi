@@ -22,6 +22,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
         <PackageName Value="LazUtils"/>
       </Item>
     </RequiredPackages>
@@ -35,8 +38,8 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/Core;../../../SharedUtils"/>
-      <UnitOutputDirectory Value="lib"/>
+      <OtherUnitFiles Value="../../../RecorderLnx/Algs;../../../RecorderLnx/Core;../../../RecorderLnx/SDB;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/Device;../../../RecorderLnx/Device/MIC140;../../../RecorderLnx/Device/MIC140/utils;../../../RecorderLnx;../../../SharedUtils;../../../SharedUtils/components/chart_lzr"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
       <Debugging>

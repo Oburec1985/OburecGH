@@ -5,6 +5,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 LOG_FILE="${RECORDERLNX_FIREBIRD_LOG:-/tmp/recorderlnx-firebird-install.log}"
 FIREBIRD_PREFIX="/opt/firebird"
 PROFILE_FILE="/etc/profile.d/recorderlnx-sqldb.sh"
+RECORDERLNX_SQLDB_CONFIG="/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini"
 RECORDERLNX_SQLDB_DIR="/var/opt/mera/SQLdb"
 RECORDERLNX_LEGACY_SQLDB_DIR="/var/opt/mera/RecorderLnx/sqldb"
 ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
@@ -163,16 +164,41 @@ write_recorderlnx_password_env() {
     return
   fi
 
-  escaped_password="${password//\'/\'\\\'\'}"
   cat > "$PROFILE_FILE" <<EOF
-# RecorderLnx SQL DB password for Firebird SYSDBA.
 # Created by install-firebird-recorderlnx.sh.
-export RECORDERLNX_SQLDB_PASSWORD='$escaped_password'
 export RECORDERLNX_SQLDB_ROOT='$RECORDERLNX_SQLDB_DIR'
 EOF
   chmod 0644 "$PROFILE_FILE"
-  echo "RecorderLnx SQL password environment file created: $PROFILE_FILE"
-  echo "For current terminal only, run: source $PROFILE_FILE"
+  echo "RecorderLnx SQL root environment file created: $PROFILE_FILE"
+
+  if [ -f "$RECORDERLNX_SQLDB_CONFIG" ]; then
+    config_owner="${SUDO_USER:-}"
+    if [ -z "$config_owner" ] || [ "$config_owner" = "root" ]; then
+      config_owner="$(stat -c '%U' "$RECORDERLNX_SQLDB_CONFIG" 2>/dev/null || true)"
+    fi
+    if [ -z "$config_owner" ] || [ "$config_owner" = "root" ]; then
+      echo "Cannot determine RecorderLnx desktop user. Run this installer via sudo from that user."
+      exit 1
+    fi
+    escaped_password="$(printf '%s' "$password" | sed 's/[\\&|]/\\&/g')"
+    if grep -q '^Password=' "$RECORDERLNX_SQLDB_CONFIG"; then
+      sed -i "s|^Password=.*$|Password=$escaped_password|" \
+        "$RECORDERLNX_SQLDB_CONFIG"
+    else
+      printf '\nPassword=%s\n' "$password" >> "$RECORDERLNX_SQLDB_CONFIG"
+    fi
+    chmod 0600 "$RECORDERLNX_SQLDB_CONFIG"
+    config_group="$(id -gn "$config_owner")"
+    config_root="$(dirname "$(dirname "$(dirname "$RECORDERLNX_SQLDB_CONFIG")")")"
+    chown -R "$config_owner:$config_group" "$config_root"
+    find "$config_root" -type d -exec chmod 0700 {} +
+    find "$config_root" -type f -exec chmod 0600 {} +
+    install -d -m 0700 -o "$config_owner" -g "$config_group" \
+      "$RECORDERLNX_SQLDB_DIR/data"
+    echo "RecorderLnx SQL password stored in: $RECORDERLNX_SQLDB_CONFIG"
+  else
+    echo "RecorderLnx SQL config not found. Install RecorderLnx and repeat this installer."
+  fi
 }
 
 check_firebird() {
@@ -247,7 +273,7 @@ main() {
   write_recorderlnx_password_env
   check_firebird
   echo
-  echo "Done. Re-login or restart RecorderLnx so it can see RECORDERLNX_SQLDB_PASSWORD."
+  echo "Done. Restart RecorderLnx; the password is stored in its protected config."
 }
 
 main "$@"

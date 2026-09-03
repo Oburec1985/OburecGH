@@ -49,6 +49,9 @@ end;
     fLegendPaintBox: TPaintBox;
     fLastTrendDiagTickMs: QWord;
     fConfiguredAxisCount: Integer;
+    fAppliedSessionGeneration: QWord;
+    class var fSessionGeneration: QWord;
+    class var fSessionBaselines: TStringList;
     function CalcTrendQueueCapacity: Integer;
     procedure AddPoint(ALineIndex: Integer; ATime, AValue: Double);
     procedure AddScalarPoint(ALineIndex: Integer; const ASnapshot: TRecorderSignalSnapshot);
@@ -64,7 +67,10 @@ end;
     procedure DrawLegend(ACanvas: TCanvas; const ARect: TRect);
     procedure UpdateLegendLayout;
     procedure LegendPaintBoxPaint(Sender: TObject);
+    procedure ResetSeriesRuntime(ALineIndex: Integer;
+      ABaselineBlockCounter: QWord);
   public
+    class procedure BeginAcquisitionSession(ATagRegistry: TRecorderTagRegistry);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     
@@ -75,6 +81,8 @@ end;
     function GetChartControl: TOglChart;
     
     procedure RefreshTrend;
+    { Starts a new acquisition epoch without changing trend configuration. }
+    procedure ResetSessionData;
     property ChartControl: TOglChart read fChart;
   end;
 
@@ -88,6 +96,10 @@ type
 
 const
   CMaxTrendPortionsPerRefresh = 64;
+  CTrendPageLeftSpace = 46;
+  CTrendPageTopSpace = 28;
+  CTrendPageRightSpace = 10;
+  CTrendPageBottomSpace = 26;
 
 function TRecorderTrendView.CalcTrendQueueCapacity: Integer;
 var
@@ -192,6 +204,8 @@ begin
     end;
 
     UpdateLegendLayout;
+    if fAppliedSessionGeneration <> fSessionGeneration then
+      ResetSessionData;
     if fChart <> nil then
       fChart.Redraw;
     Invalidate;
@@ -245,10 +259,10 @@ begin
     lPage.FillColor := $FFFFFFFF;
     lPage.BorderColor := $FF808080;
     
-    lTabSpace.Left := 42;
-    lTabSpace.Top := 20;
-    lTabSpace.Right := 8;
-    lTabSpace.Bottom := 22;
+    lTabSpace.Left := CTrendPageLeftSpace;
+    lTabSpace.Top := CTrendPageTopSpace;
+    lTabSpace.Right := CTrendPageRightSpace;
+    lTabSpace.Bottom := CTrendPageBottomSpace;
     lPage.PixelTabSpace := lTabSpace;
     lPage.XMinValue := 0;
     lPage.XMaxValue := Max(1.0, fComponent.DurationSec);
@@ -299,6 +313,8 @@ begin
 
   fConfiguredAxisCount := fComponent.AxisCount;
   UpdateLegendLayout;
+  if fAppliedSessionGeneration <> fSessionGeneration then
+    ResetSessionData;
   fChart.Redraw;
   Invalidate;
 end;
@@ -318,6 +334,8 @@ begin
       fSeries[I].Count := 0;
       fSeries[I].LastValue := 0;
       fSeries[I].HasValue := False;
+      fSeries[I].LastProcessedTime := 0;
+      fSeries[I].LastBlockCounter := 0;
       fSeries[I].LastBlockKind := '';
       fSeries[I].LastPortionLength := 0;
       fSeries[I].LastPointsAdded := 0;
@@ -325,6 +343,90 @@ begin
       fSeries[I].LastBlockCount := 0;
       fSeries[I].LastSnapshotTime := 0;
     end;
+  end;
+end;
+
+procedure TRecorderTrendView.ResetSeriesRuntime(ALineIndex: Integer;
+  ABaselineBlockCounter: QWord);
+begin
+  if (ALineIndex < 0) or (ALineIndex >= Length(fSeries)) then
+    Exit;
+
+  if fSeries[ALineIndex].OglSeries <> nil then
+    fSeries[ALineIndex].OglSeries.ClearPoints;
+  fSeries[ALineIndex].Count := 0;
+  fSeries[ALineIndex].LastProcessedTime := 0;
+  fSeries[ALineIndex].LastBlockCounter := ABaselineBlockCounter;
+  fSeries[ALineIndex].LastValue := 0;
+  fSeries[ALineIndex].HasValue := False;
+  fSeries[ALineIndex].LastBlockKind := '';
+  fSeries[ALineIndex].LastPortionLength := 0;
+  fSeries[ALineIndex].LastPointsAdded := 0;
+  fSeries[ALineIndex].LastSnapshotCount := 0;
+  fSeries[ALineIndex].LastBlockCount := 0;
+  fSeries[ALineIndex].LastSnapshotTime := 0;
+end;
+
+procedure TRecorderTrendView.ResetSessionData;
+var
+  I: Integer;
+  lLine: TRecorderTrendLine;
+  lTag: TRecorderTag;
+  lBaselineBlockCounter: QWord;
+  lBaselineIndex: Integer;
+begin
+  for I := 0 to High(fSeries) do
+  begin
+    lBaselineBlockCounter := 0;
+    if (fComponent <> nil) and (fTagRegistry <> nil) and
+      (I < fComponent.LineCount) then
+    begin
+      lLine := fComponent.Lines[I];
+      lTag := RecorderResolveTag(fTagRegistry, lLine.TagId, lLine.TagName);
+      if lTag <> nil then
+      begin
+        lBaselineIndex := -1;
+        if fSessionBaselines <> nil then
+          lBaselineIndex := fSessionBaselines.IndexOfName(IntToStr(lTag.Id));
+        if lBaselineIndex >= 0 then
+          lBaselineBlockCounter := StrToQWordDef(
+            fSessionBaselines.ValueFromIndex[lBaselineIndex], lTag.BlockCounter)
+        else
+          lBaselineBlockCounter := lTag.BlockCounter;
+      end;
+    end;
+    ResetSeriesRuntime(I, lBaselineBlockCounter);
+  end;
+
+  fLastTrendDiagTickMs := 0;
+  fAppliedSessionGeneration := fSessionGeneration;
+  if IsVisible and (fChart <> nil) then
+    fChart.Redraw;
+  if IsVisible and (fLegendPaintBox <> nil) then
+    fLegendPaintBox.Invalidate;
+  if IsVisible then
+    Invalidate;
+end;
+
+class procedure TRecorderTrendView.BeginAcquisitionSession(
+  ATagRegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  Inc(fSessionGeneration);
+  if fSessionBaselines = nil then
+  begin
+    fSessionBaselines := TStringList.Create;
+    fSessionBaselines.NameValueSeparator := '=';
+  end;
+  fSessionBaselines.Clear;
+  if ATagRegistry = nil then
+    Exit;
+  for I := 0 to ATagRegistry.TagCount - 1 do
+  begin
+    lTag := ATagRegistry.Tags[I];
+    fSessionBaselines.Values[IntToStr(lTag.Id)] := UIntToStr(lTag.BlockCounter);
   end;
 end;
 
@@ -661,5 +763,8 @@ begin
     Inc(lY, 18);
   end;
 end;
+
+finalization
+  FreeAndNil(TRecorderTrendView.fSessionBaselines);
 
 end.

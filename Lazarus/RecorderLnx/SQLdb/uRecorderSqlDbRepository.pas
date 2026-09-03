@@ -6,7 +6,7 @@ unit uRecorderSqlDbRepository;
 interface
 
 uses
-  Classes, SysUtils, DB, SQLDB,
+  Classes, SysUtils, StrUtils, Math, DB, SQLDB,
   uRecorderSqlDbTypes;
 
 type
@@ -70,7 +70,8 @@ type
     function GetTrendTimeRange(out AFromUtc, AToUtc: Double;
       out APointCount: Int64): Boolean;
     procedure ReadTrendPoints(ASignalNames: TStrings; AFromUtc, AToUtc: Double;
-      AMaxPointsPerSignal: Integer; out APoints: TRecorderSqlTrendPoints);
+      AMaxPointsPerSignal: Integer; out APoints: TRecorderSqlTrendPoints;
+      AExcludeFrom: Boolean = False);
     function CountRows(const ATableName: string): Int64;
     property Connection: TSQLConnection read fConnection;
   end;
@@ -119,9 +120,9 @@ begin
         lHost := Trim(fConfig.Host);
         if lHost = '' then
           lHost := '127.0.0.1';
-        if (lHost <> '') and (fConfig.Port <> 0) then
-          lHost := lHost + '/' + IntToStr(fConfig.Port);
         Result.HostName := lHost;
+        if fConfig.Port <> 0 then
+          TIBConnection(Result).Port := fConfig.Port;
         Result.DatabaseName := fConfig.DatabaseFileName;
         Result.UserName := fConfig.UserName;
         Result.Password := fConfig.Password;
@@ -408,11 +409,14 @@ end;
 
 procedure TRecorderSqlDbRepository.ReadTrendPoints(ASignalNames: TStrings;
   AFromUtc, AToUtc: Double; AMaxPointsPerSignal: Integer;
-  out APoints: TRecorderSqlTrendPoints);
+  out APoints: TRecorderSqlTrendPoints; AExcludeFrom: Boolean);
 var
-  I, lCount, lStep, lSourceIndex: Integer;
+  I, J, lBucket, lLastBucket, lSignalCount, lOutputStart: Integer;
   lQuery: TSQLQuery;
   lName: string;
+  lPoint, lFirstPoint, lLastPoint: TRecorderSqlTrendPoint;
+  lSignalPoints: TRecorderSqlTrendPoints;
+  lHasFirst: Boolean;
 begin
   SetLength(APoints, 0);
   if (ASignalNames = nil) or (ASignalNames.Count = 0) or
@@ -424,10 +428,12 @@ begin
     lQuery.DataBase := fConnection;
     lQuery.Transaction := fTransaction;
     lQuery.SQL.Text :=
-      'select s.name, v.timestamp_utc, v.measured_value '+
+      'select v.id, s.name, v.timestamp_utc, v.measured_value '+
       'from signal_values v join signals s on s.id=v.signal_id '+
-      'where s.name=:signal_name and v.timestamp_utc>=:time_from '+
+      'where s.name=:signal_name and v.timestamp_utc' +
+      IfThen(AExcludeFrom, '>', '>=') + ':time_from '+
       'and v.timestamp_utc<=:time_to order by v.timestamp_utc';
+    SetLength(lSignalPoints, AMaxPointsPerSignal);
     for I := 0 to ASignalNames.Count - 1 do
     begin
       lName := ASignalNames[I];
@@ -436,25 +442,50 @@ begin
       lQuery.ParamByName('time_from').AsFloat := AFromUtc;
       lQuery.ParamByName('time_to').AsFloat := AToUtc;
       lQuery.Open;
-      lCount := 0;
-      while not lQuery.EOF do begin Inc(lCount); lQuery.Next; end;
-      lStep := 1;
-      if lCount > AMaxPointsPerSignal then
-        lStep := (lCount + AMaxPointsPerSignal - 1) div AMaxPointsPerSignal;
-      lQuery.First;
-      lSourceIndex := 0;
+      lSignalCount := 0;
+      lLastBucket := -1;
+      lHasFirst := False;
       while not lQuery.EOF do
       begin
-        if (lSourceIndex mod lStep = 0) or (lSourceIndex = lCount - 1) then
+        lPoint.RowId := lQuery.Fields[0].AsString;
+        lPoint.SignalName := lQuery.Fields[1].AsString;
+        lPoint.TimestampUtc := lQuery.Fields[2].AsFloat;
+        lPoint.Value := lQuery.Fields[3].AsFloat;
+        if not lHasFirst then
         begin
-          SetLength(APoints, Length(APoints) + 1);
-          APoints[High(APoints)].SignalName := lQuery.Fields[0].AsString;
-          APoints[High(APoints)].TimestampUtc := lQuery.Fields[1].AsFloat;
-          APoints[High(APoints)].Value := lQuery.Fields[2].AsFloat;
+          lFirstPoint := lPoint;
+          lLastPoint := lPoint;
+          lHasFirst := True;
+        end
+        else
+        begin
+          lLastPoint := lPoint;
+          lBucket := EnsureRange(Floor((lPoint.TimestampUtc - AFromUtc) /
+            (AToUtc - AFromUtc) * (AMaxPointsPerSignal - 2)), 0,
+            AMaxPointsPerSignal - 3);
+          if (lBucket <> lLastBucket) and
+            (lSignalCount < AMaxPointsPerSignal - 2) then
+          begin
+            lSignalPoints[1 + lSignalCount] := lPoint;
+            Inc(lSignalCount);
+            lLastBucket := lBucket;
+          end;
         end;
-        Inc(lSourceIndex);
         lQuery.Next;
       end;
+      if not lHasFirst then Continue;
+      lSignalPoints[0] := lFirstPoint;
+      Inc(lSignalCount);
+      if lLastPoint.TimestampUtc <>
+        lSignalPoints[lSignalCount - 1].TimestampUtc then
+      begin
+        lSignalPoints[lSignalCount] := lLastPoint;
+        Inc(lSignalCount);
+      end;
+      lOutputStart := Length(APoints);
+      SetLength(APoints, lOutputStart + lSignalCount);
+      for J := 0 to lSignalCount - 1 do
+        APoints[lOutputStart + J] := lSignalPoints[J];
     end;
   finally
     lQuery.Free;

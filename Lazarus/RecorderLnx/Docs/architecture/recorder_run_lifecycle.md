@@ -18,6 +18,39 @@
 Обработчик `Before` синхронный: исключение отменяет переход до изменения
 состояния и до запуска/останова источников.
 
+## Основная последовательность запуска
+
+Диаграмма показывает только архитектурно значимые границы. Обычный Trend и
+SQLdb — независимые потребители жизненного цикла и не управляют состоянием друг
+друга.
+
+```mermaid
+sequenceDiagram
+    participant SM as StateMachine
+    participant MF as MainForm
+    participant TV as Ordinary Trend views
+    participant TS as TimeSystem
+    participant DS as DataSources
+    participant SQL as SQLdb Runtime
+    participant Repo as SQLdb Repository
+
+    SM->>MF: StopToView / StopToRecord
+    MF->>TV: BeginAcquisitionSession + ResetSessionData
+    Note over TV: Только OGL-точки и runtime-cursors<br/>SQL Trend не затрагивается
+    MF->>TS: Start
+    MF->>DS: StartDataSources
+    DS-->>TV: Новые блоки тегов
+    DS-->>SQL: Данные для записи
+    SQL->>Repo: EnsureDatabase
+    Repo->>Repo: Проверка schema_info / миграция
+```
+
+Версия SQL-схемы принадлежит `TRecorderSqlDbRepository` и compile-time
+константе `CRecorderSqlDbSchemaVersion`. Код `TRecorderTrendView` не подключает
+SQLdb units, не открывает соединение и не выполняет миграции. Сообщение
+`Database schema 3 is newer than supported 2` означает запуск бинарника,
+скомпилированного с поддержкой схемы 2, а не изменение базы обычным Trend.
+
 ## Подготовка до сбора
 
 После загрузки или подтверждённого изменения конфигурации, только в `Stop`,

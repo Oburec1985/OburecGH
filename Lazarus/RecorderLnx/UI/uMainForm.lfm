@@ -6,6 +6,7 @@ object MainForm: TMainForm
   Caption = 'RecorderLnx'
   ClientHeight = 700
   ClientWidth = 1064
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object pnToolbar: TPanel
@@ -197,15 +198,6 @@ object MainForm: TMainForm
         ShowHint = True
         ParentShowHint = False
         OnClick = btnRecordClick
-      end
-      object btnTrigger: TSpeedButton
-        Left = 16
-        Height = 32
-        Top = 108
-        Width = 142
-        ShowHint = True
-        ParentShowHint = False
-        OnClick = btnTriggerClick
       end
     end
     object pnTagSearch: TPanel

@@ -7,6 +7,11 @@ built binary:
 
 `Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx`
 
+The build fails if that executable is older than production Pascal/LFM sources,
+is not an ELF binary, does not contain the SQL schema markers expected by the
+current sources, or differs from the executable embedded into the generated
+package. The successful build prints SHA-256 for both input and `.deb`.
+
 ## Build From Windows
 
 ```powershell

@@ -229,7 +229,7 @@ end;
 procedure drawrect(rect: frect; color: point3);
 var
   data: array [0 .. 3] of point2;
-  curcolor: point3;
+  curcolor: array [0 .. 3] of glfloat;
 
   p: GLUInt;
   ightX: array [0 .. 3] of glfloat; // правая граница выводимого текста
@@ -253,7 +253,7 @@ begin
   glvertex2fv(@data[2]);
   glvertex2fv(@data[3]);
   glend;
-  glcolor3fv(@curcolor);
+  glcolor3fv(@curcolor[0]);
   // возврат матриц
   glPopMatrix;
   if p = GL_MODELVIEW then

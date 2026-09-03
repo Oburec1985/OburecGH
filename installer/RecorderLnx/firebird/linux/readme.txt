@@ -43,9 +43,9 @@ sudo RECORDERLNX_FIREBIRD_ONLINE_DEPS=1 bash install-firebird-recorderlnx.sh
 - назначает владельцем этого каталога пользователя Firebird
   (`firebird`/`firebirdsql`, если такой пользователь есть);
 - создает совместимый старый каталог `/var/opt/mera/RecorderLnx/sqldb`;
-- создает `/etc/profile.d/recorderlnx-sqldb.sh` с переменной
-  `RECORDERLNX_SQLDB_PASSWORD` для RecorderLnx и
-  `RECORDERLNX_SQLDB_ROOT=/var/opt/mera/SQLdb`.
+- создает `/etc/profile.d/recorderlnx-sqldb.sh` только с путем
+  `RECORDERLNX_SQLDB_ROOT=/var/opt/mera/SQLdb`;
+- сохраняет пароль в конфигурации RecorderLnx с правами `0600`.
 
 Для локального Firebird не используйте `/home/user/Mera Files/SQLdb` как
 каталог файла БД: сервер Firebird работает отдельным пользователем и часто не
@@ -56,6 +56,11 @@ Firebird в silent-режиме сам генерирует пароль SYSDBA 
 
 `/opt/firebird/SYSDBA.password`
 
+Установщик переносит этот пароль в проектный `sql-db.ini`, если RecorderLnx уже
+установлен и защищает файл правами `0600`. Пусковой файл
+`/usr/bin/recorderlnx` загружает из `/etc/profile.d/recorderlnx-sqldb.sh`
+только путь к каталогу SQLdb; пароль в общем profile не хранится.
+
 Проверка:
 
 ```bash
@@ -65,8 +70,8 @@ bash check-firebird-recorderlnx.sh
 Если в проверке есть строки `not found`, нужно добавить соответствующие
 Debian/Орел `.deb` пакеты в `deps` и повторить установку.
 
-После установки нужно заново войти в систему или перезапустить RecorderLnx,
-чтобы программа увидела `RECORDERLNX_SQLDB_PASSWORD`.
+После установки перезапустите RecorderLnx. Повторный вход в систему для запуска
+через штатный ярлык больше не требуется.
 
 Лог установки:
 

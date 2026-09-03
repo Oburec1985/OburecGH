@@ -37,6 +37,7 @@ type
     edObjectName: TEdit;
     edObjectType: TEdit;
     edPasswordEnvironment: TEdit;
+    edPassword: TEdit;
     edRoot: TEdit;
     edSignalSearch: TEdit;
     edSerial: TEdit;
@@ -55,6 +56,7 @@ type
     lblObjectName: TLabel;
     lblObjectType: TLabel;
     lblPasswordEnvironment: TLabel;
+    lblPassword: TLabel;
     lblPeriod: TLabel;
     lblPort: TLabel;
     lblQueue: TLabel;
@@ -278,6 +280,7 @@ begin
   edHost.Text := fConfig.Host;
   sePort.Value := fConfig.Port;
   edUser.Text := fConfig.UserName;
+  edPassword.Text := fConfig.StoredPassword;
   edPasswordEnvironment.Text := fConfig.PasswordEnvironment;
   cbTls.Checked := fConfig.TlsRequired;
   seQueue.Value := fConfig.QueueCapacity;
@@ -458,6 +461,7 @@ begin
   fConfig.Host := Trim(edHost.Text);
   fConfig.Port := sePort.Value;
   fConfig.UserName := Trim(edUser.Text);
+  fConfig.StoredPassword := edPassword.Text;
   fConfig.PasswordEnvironment := Trim(edPasswordEnvironment.Text);
   fConfig.TlsRequired := cbTls.Checked;
   fConfig.QueueCapacity := seQueue.Value;
@@ -486,6 +490,7 @@ begin
   edHost.Enabled := cbBackend.ItemIndex <> Ord(rsbSQLite);
   sePort.Enabled := edHost.Enabled;
   edUser.Enabled := edHost.Enabled;
+  edPassword.Enabled := edHost.Enabled;
   edPasswordEnvironment.Enabled := edHost.Enabled;
   cbTls.Enabled := lRemote;
   btnTestFirebird.Enabled := lFirebird;

@@ -45,6 +45,7 @@ type
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
     fExtraLines: TList;
+    fLineSnapshots: array of TRecorderSignalSnapshot;
     fModel: TObject;
     fPage: TObject;
     fAxis: TObject;
@@ -86,6 +87,8 @@ type
       AMeasureFps      - True only while RecorderLnx measures display-loop FPS. }
     procedure Refresh(ATagRegistry: TRecorderTagRegistry;
       ADisplaySeconds: Double; AMeasureFps: Boolean = False);
+    { Clears data and user zoom state at an acquisition-session boundary. }
+    procedure ResetSessionData;
     { Forces an immediate LCL/OpenGL repaint after a page becomes visible.
       This is used on tab switching: OpenGL controls can keep an invalidated
       back buffer until the next window message, while Recorder users expect the
@@ -119,6 +122,7 @@ type
     fHasDataRevision: Boolean;
     fLastDataRevisions: array of QWord;
     fLastRevisionDisplaySeconds: Double;
+    fSnapshots: array of TRecorderSignalSnapshot;
     fModel: TChartModel;
     function GetFpsText: string;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -171,10 +175,7 @@ implementation
 
 uses
   SysUtils, Math,
-  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng, uSharedAlgorithms;
-
-type
-  TDoubleSearch = specialize TBinarySearch<Double>;
+  uOglChartDrawObj, uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng;
 
 procedure ApplyOscillogramTagYRange(AAxis: TChartAxis; ATag: TRecorderTag;
   ADataMin, ADataMax: Double);
@@ -369,6 +370,9 @@ begin
   { Обратная рамка масштабирует по точкам текущего кадра. Общий FitZoomY
     добавляет по 10% сверху и снизу, то есть 20% к полному диапазону сигнала. }
   lPage.AutoScaleOnZoomReset := True;
+  lPage.ResetZoomOnDoubleClick := True;
+  lPage.ReverseDragZoomOut := True;
+  lPage.PreserveAutoFitZoomY := True;
   lAxis := TChartAxis.Create;
   lAxis.Name := 'Axis1';
   lAxis.Caption := '';
@@ -714,7 +718,6 @@ procedure TRecorderOglOscillogram.FillTrendFromSnapshot(ATrend: cBuffTrend1d;
 var
   I: Integer;
   lFirst: Boolean;
-  lStartIdx: Integer;
   lValueCount: Integer;
 begin
   APointCount := 0;
@@ -727,11 +730,9 @@ begin
   ATrend.DX := 1;
   if ASnapshot.Count = 0 then
     Exit;
-  lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(ASnapshot.Times,
-    ASnapshot.Count, ADisplayStart);
   lFirst := True;
-  lValueCount := ASnapshot.Count - lStartIdx;
-  for I := lStartIdx to ASnapshot.Count - 1 do
+  lValueCount := ASnapshot.Count;
+  for I := 0 to ASnapshot.Count - 1 do
   begin
     if lFirst then
     begin
@@ -754,7 +755,7 @@ begin
     end;
     Inc(APointCount);
   end;
-  ATrend.ReplaceValues(ASnapshot.Values, lStartIdx, lValueCount);
+  ATrend.ReplaceValues(ASnapshot.Values, 0, lValueCount);
 end;
 
 function TRecorderOglOscillogram.ResolveTagByName(
@@ -768,7 +769,6 @@ procedure TRecorderOglOscillogram.Refresh(ATagRegistry: TRecorderTagRegistry;
 var
   I: Integer;
   lDisplayStart: Double;
-  lEndTime: Double;
   lHasRange: Boolean;
   lLine: TRecorderTrendLine;
   lLineMin: Double;
@@ -821,6 +821,8 @@ begin
     TChartPage(fPage).PresetMaxXValue := ADisplaySeconds;
   end;
   EnsureTrendCount;
+  if Length(fLineSnapshots) <> 1 + fExtraLines.Count then
+    SetLength(fLineSnapshots, 1 + fExtraLines.Count);
   if fTrend = nil then
     Exit;
   lTag := ResolveTag(ATagRegistry);
@@ -829,7 +831,8 @@ begin
     fCurrentTagName := '';
     UpdateInfoLabel(ATagRegistry, nil);
     SetChartTitle(Format('No tag frame:%d', [fFrameNo]));
-    SetAxisRange(-1, 1);
+    if not TChartAxis(fAxis).HasPresetRange then
+      SetAxisRange(-1, 1);
     if fChart is TOglChart then
       TOglChart(fChart).Redraw;
     Exit;
@@ -837,7 +840,9 @@ begin
 
   fCurrentTagName := lTag.Name;
   UpdateInfoLabel(ATagRegistry, lTag);
-  lSnapshot := lTag.Snapshot;
+  lTag.CopyLatestInto(ADisplaySeconds, fLineSnapshots[0].Times,
+    fLineSnapshots[0].Values, fLineSnapshots[0].Count, lDisplayStart);
+  lSnapshot := fLineSnapshots[0];
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   if lSnapshot.Count = 0 then
   begin
@@ -847,14 +852,13 @@ begin
       if lTrend <> nil then
         lTrend.ClearValues;
     end;
-    SetAxisRange(-1, 1);
+    if not TChartAxis(fAxis).HasPresetRange then
+      SetAxisRange(-1, 1);
     if fChart is TOglChart then
       TOglChart(fChart).Redraw;
     Exit;
   end;
 
-  lEndTime := lSnapshot.Times[lSnapshot.Count - 1];
-  lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
   lHasRange := False;
   lPointCount := 0;
   lTrend := GetTrendByIndex(0);
@@ -879,7 +883,10 @@ begin
       lTrend.ClearValues;
       Continue;
     end;
-    lSnapshot := lTag.Snapshot;
+    lTag.SnapshotRangeInto(lDisplayStart, False,
+      fLineSnapshots[I + 1].Times, fLineSnapshots[I + 1].Values,
+      fLineSnapshots[I + 1].Count);
+    lSnapshot := fLineSnapshots[I + 1];
     FillTrendFromSnapshot(lTrend, lSnapshot, lDisplayStart, ADisplaySeconds,
       lLineMin, lLineMax, lLinePoints);
     if lLinePoints = 0 then
@@ -901,7 +908,10 @@ begin
   end;
 
   if not lHasRange then
-    SetAxisRange(-1, 1)
+  begin
+    if not TChartAxis(fAxis).HasPresetRange then
+      SetAxisRange(-1, 1);
+  end
   else
     ApplyOscillogramTagYRange(TChartAxis(fAxis), lTag, lMinValue, lMaxValue);
   { MIC-140 stream debug: oscillogram render diag suppressed.
@@ -921,6 +931,39 @@ begin
     fChart.Invalidate;
     fChart.Repaint;
   end;
+end;
+
+procedure TRecorderOglOscillogram.ResetSessionData;
+var
+  I: Integer;
+  lTrend: cBuffTrend1d;
+  lPage: TChartPage;
+  lAxis: TChartAxis;
+begin
+  for I := 0 to fExtraLines.Count do
+  begin
+    lTrend := GetTrendByIndex(I);
+    if lTrend <> nil then
+      lTrend.ClearValues;
+  end;
+  lPage := TChartPage(fPage);
+  lAxis := TChartAxis(fAxis);
+  if lPage <> nil then
+  begin
+    lPage.ZoomedX := False;
+    if lPage.PresetMaxXValue > lPage.PresetMinXValue then
+    begin
+      lPage.XMinValue := lPage.PresetMinXValue;
+      lPage.XMaxValue := lPage.PresetMaxXValue;
+    end;
+  end;
+  if lAxis <> nil then
+    lAxis.HasPresetRange := False;
+  fHasDataSignature := False;
+  fCurrentTagName := '';
+  ResetFpsMeasure;
+  if Visible and (fChart <> nil) then
+    fChart.Redraw;
 end;
 
 { TRecorderOglOscillogramSurface }
@@ -1218,7 +1261,6 @@ procedure TRecorderOglOscillogramSurface.Refresh(
 var
   I: Integer;
   lDisplayStart: Double;
-  lEndTime: Double;
   lFirst: Boolean;
   lMaxValue: Double;
   lMinValue: Double;
@@ -1229,7 +1271,6 @@ var
   lTrend: cBuffTrend1d;
   lAxis: TChartAxis;
   lValueIndex: Integer;
-  lStartIdx: Integer;
   lDataChanged: Boolean;
   lRevision: QWord;
 begin
@@ -1244,6 +1285,8 @@ begin
     (Length(fLastDataRevisions) <> fCount);
   if Length(fLastDataRevisions) <> fCount then
     SetLength(fLastDataRevisions, fCount);
+  if Length(fSnapshots) <> fCount then
+    SetLength(fSnapshots, fCount);
   for I := 0 to fCount - 1 do
   begin
     lTag := ResolveTag(ATagRegistry, I);
@@ -1285,19 +1328,18 @@ begin
       Continue;
     end;
 
-    lSnapshot := lTag.Snapshot;
+    lTag.CopyLatestInto(ADisplaySeconds, fSnapshots[I].Times,
+      fSnapshots[I].Values, fSnapshots[I].Count, lDisplayStart);
+    lSnapshot := fSnapshots[I];
     if lSnapshot.Count = 0 then
     begin
       SetAxisRange(lAxis, -1, 1);
       Continue;
     end;
 
-    lEndTime := lSnapshot.Times[lSnapshot.Count - 1];
-    lDisplayStart := Max(lSnapshot.Times[0], lEndTime - ADisplaySeconds);
     lFirst := True;
     lPointCount := 0;
-    lStartIdx := TDoubleSearch.FindFirstGreaterOrEqual(lSnapshot.Times, lSnapshot.Count, lDisplayStart);
-    for lValueIndex := lStartIdx to lSnapshot.Count - 1 do
+    for lValueIndex := 0 to lSnapshot.Count - 1 do
     begin
       if lFirst then
       begin
@@ -1322,8 +1364,7 @@ begin
 
       Inc(lPointCount);
     end;
-    lTrend.ReplaceValues(lSnapshot.Values, lStartIdx,
-      lSnapshot.Count - lStartIdx);
+    lTrend.ReplaceValues(lSnapshot.Values, 0, lSnapshot.Count);
 
     if lPointCount = 0 then
       SetAxisRange(lAxis, -1, 1)

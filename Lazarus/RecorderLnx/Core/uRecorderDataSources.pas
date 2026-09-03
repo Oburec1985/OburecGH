@@ -199,6 +199,14 @@ type
     fCpuTagName: string;
     fLastCpuTime100Ns: QWord;
     fLastWallTickMs: QWord;
+    {$IFDEF LINUX}
+    fProcSelfStat: TFileStream;
+    fProcSelfStatus: TFileStream;
+    fProcSystemStat: TFileStream;
+    fLastProcessTicks: QWord;
+    fLastSystemTicks: QWord;
+    fMetricsSampleCount: Integer;
+    {$ENDIF}
     fMemoryTagName: string;
     fTimeSec: Double;
     fMemoryTag: TRecorderTag;
@@ -213,6 +221,7 @@ type
   public
     constructor Create(const ASourceId: string; AUpdateTimeMs: Cardinal;
       const AMemoryTagName: string = 'MemTag'; const ACpuTagName: string = 'CpuUsage');
+    destructor Destroy; override;
     procedure Start; override;
 
     property MemoryTagName: string read GetMemoryTagName;
@@ -385,6 +394,41 @@ type
 
 function GetProcessMemoryInfo(Process: THandle; var Counters: TProcessMemoryCounters;
   Size: DWORD): BOOL; stdcall; external 'psapi.dll';
+{$ENDIF}
+
+{$IFDEF LINUX}
+type
+  TProcBuffer = array[0..4095] of Char;
+
+function ReadProcBuffer(AStream: TFileStream; out ABuffer: TProcBuffer;
+  out ALength: Integer): Boolean;
+begin
+  Result := False;
+  ALength := 0;
+  if AStream = nil then
+    Exit;
+  try
+    AStream.Position := 0;
+    ALength := AStream.Read(ABuffer[0], SizeOf(ABuffer) - 1);
+    ABuffer[ALength] := #0;
+    Result := ALength > 0;
+  except
+    ALength := 0;
+  end;
+end;
+
+function ParseProcUnsigned(var ACursor: PChar; AEnd: PChar;
+  out AValue: QWord): Boolean;
+begin
+  AValue := 0;
+  while (ACursor < AEnd) and (ACursor^ in [' ', #9]) do Inc(ACursor);
+  Result := (ACursor < AEnd) and (ACursor^ in ['0'..'9']);
+  while (ACursor < AEnd) and (ACursor^ in ['0'..'9']) do
+  begin
+    AValue := AValue * 10 + Ord(ACursor^) - Ord('0');
+    Inc(ACursor);
+  end;
+end;
 {$ENDIF}
 
 function RecorderDataSourceStateToString(AState: TRecorderDataSourceState): string;
@@ -594,6 +638,24 @@ begin
   fLastCpuTime100Ns := 0;
   fLastWallTickMs := 0;
   fTimeSec := 0;
+  {$IFDEF LINUX}
+  try fProcSelfStat := TFileStream.Create('/proc/self/stat', fmOpenRead or fmShareDenyNone); except fProcSelfStat := nil; end;
+  try fProcSelfStatus := TFileStream.Create('/proc/self/status', fmOpenRead or fmShareDenyNone); except fProcSelfStatus := nil; end;
+  try fProcSystemStat := TFileStream.Create('/proc/stat', fmOpenRead or fmShareDenyNone); except fProcSystemStat := nil; end;
+  fLastProcessTicks := 0;
+  fLastSystemTicks := 0;
+  fMetricsSampleCount := 0;
+  {$ENDIF}
+end;
+
+destructor TRecorderDiagnosticsDataSource.Destroy;
+begin
+  {$IFDEF LINUX}
+  fProcSystemStat.Free;
+  fProcSelfStatus.Free;
+  fProcSelfStat.Free;
+  {$ENDIF}
+  inherited Destroy;
 end;
 
 procedure TRecorderDiagnosticsDataSource.Start;
@@ -601,6 +663,11 @@ begin
   fLastCpuTime100Ns := 0;
   fLastWallTickMs := 0;
   fTimeSec := 0;
+  {$IFDEF LINUX}
+  fLastProcessTicks := 0;
+  fLastSystemTicks := 0;
+  fMetricsSampleCount := 0;
+  {$ENDIF}
   inherited Start;
 end;
 
@@ -685,12 +752,35 @@ begin
     Result := 0;
 end;
 {$ELSE}
+{$IFDEF LINUX}
 var
-  lHeap: THeapStatus;
+  lBuffer: TProcBuffer;
+  lCursor, lEnd: PChar;
+  lLength: Integer;
+  lValueKb: QWord;
 begin
-  lHeap := GetHeapStatus;
-  Result := lHeap.TotalAllocated / (1024.0 * 1024.0);
+  Result := 0;
+  if not ReadProcBuffer(fProcSelfStatus, lBuffer, lLength) then Exit;
+  lCursor := @lBuffer[0];
+  lEnd := lCursor + lLength;
+  while lCursor + 6 < lEnd do
+  begin
+    if CompareMem(lCursor, PChar('VmRSS:'), 6) then
+    begin
+      Inc(lCursor, 6);
+      if ParseProcUnsigned(lCursor, lEnd, lValueKb) then
+        Result := lValueKb / 1024.0;
+      Exit;
+    end;
+    while (lCursor < lEnd) and (lCursor^ <> #10) do Inc(lCursor);
+    if lCursor < lEnd then Inc(lCursor);
+  end;
 end;
+{$ELSE}
+begin
+  Result := 0;
+end;
+{$ENDIF}
 {$ENDIF}
 
 function TRecorderDiagnosticsDataSource.GetProcessCpuUsagePercent: Double;
@@ -741,15 +831,80 @@ begin
   Result := Max(0.0, Min(100.0, Result));
 end;
 {$ELSE}
+{$IFDEF LINUX}
+var
+  lBuffer: TProcBuffer;
+  lCursor, lEnd, lToken: PChar;
+  lField, lLength: Integer;
+  lProcessTicks, lSystemTicks, lValue: QWord;
+  lUserTicks, lKernelTicks: QWord;
+begin
+  Result := 0;
+  if not ReadProcBuffer(fProcSelfStat, lBuffer, lLength) then Exit;
+  lCursor := @lBuffer[0];
+  lEnd := lCursor + lLength;
+  while (lEnd > lCursor) and ((lEnd - 1)^ <> ')') do Dec(lEnd);
+  if lEnd <= lCursor then Exit;
+  Inc(lEnd);
+  lCursor := lEnd;
+  lEnd := @lBuffer[0] + lLength;
+  lField := 3;
+  lUserTicks := 0;
+  lKernelTicks := 0;
+  while (lCursor < lEnd) and (lField <= 15) do
+  begin
+    while (lCursor < lEnd) and (lCursor^ in [' ', #9]) do Inc(lCursor);
+    lToken := lCursor;
+    while (lCursor < lEnd) and not (lCursor^ in [' ', #9, #10]) do Inc(lCursor);
+    if lField = 14 then
+      ParseProcUnsigned(lToken, lCursor, lUserTicks)
+    else if lField = 15 then
+      ParseProcUnsigned(lToken, lCursor, lKernelTicks);
+    Inc(lField);
+  end;
+  lProcessTicks := lUserTicks + lKernelTicks;
+
+  if not ReadProcBuffer(fProcSystemStat, lBuffer, lLength) then Exit;
+  lCursor := @lBuffer[0];
+  lEnd := lCursor + lLength;
+  if (lLength < 4) or not CompareMem(lCursor, PChar('cpu '), 4) then Exit;
+  Inc(lCursor, 4);
+  lSystemTicks := 0;
+  while (lCursor < lEnd) and (lCursor^ <> #10) do
+  begin
+    if not ParseProcUnsigned(lCursor, lEnd, lValue) then Break;
+    Inc(lSystemTicks, lValue);
+  end;
+
+  if (fLastSystemTicks <> 0) and (lSystemTicks > fLastSystemTicks) and
+     (lProcessTicks >= fLastProcessTicks) then
+    Result := 100.0 * (lProcessTicks - fLastProcessTicks) /
+      (lSystemTicks - fLastSystemTicks);
+  fLastProcessTicks := lProcessTicks;
+  fLastSystemTicks := lSystemTicks;
+  Result := Max(0.0, Min(100.0, Result));
+end;
+{$ELSE}
 begin
   Result := 0;
 end;
 {$ENDIF}
+{$ENDIF}
 
 procedure TRecorderDiagnosticsDataSource.DoTick;
+var
+  lCpuPercent, lMemoryMb: Double;
 begin
-  Registry.PublishValue(MemoryTagName, fTimeSec, GetProcessMemoryMb);
-  Registry.PublishValue(CpuTagName, fTimeSec, GetProcessCpuUsagePercent);
+  lMemoryMb := GetProcessMemoryMb;
+  lCpuPercent := GetProcessCpuUsagePercent;
+  Registry.PublishValue(MemoryTagName, fTimeSec, lMemoryMb);
+  Registry.PublishValue(CpuTagName, fTimeSec, lCpuPercent);
+  {$IFDEF LINUX}
+  Inc(fMetricsSampleCount);
+  if fMetricsSampleCount = 2 then
+    RecorderDebugLog(Format('Diagnostics metrics: MemTag=%.3f MB CpuUsage=%.3f%%',
+      [lMemoryMb, lCpuPercent]));
+  {$ENDIF}
   fTimeSec := fTimeSec + (UpdateTimeMs / 1000.0);
 end;
 

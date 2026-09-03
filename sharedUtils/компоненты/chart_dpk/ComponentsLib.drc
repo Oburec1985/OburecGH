@@ -3452,24 +3452,24 @@ BEGIN
 	JclResources_RsCILNamestloc1,	"stloc.1"
 END
 
-/* chart\forms\uDrawObjFrame.dfm */
-/* ..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
-/* chart\forms\uTextLabelForm.dfm */
-/* chart\forms\uDoubleCursorForm.dfm */
-/* chart\forms\uCursorForm.dfm */
-/* chart\forms\uPageForm.dfm */
-/* chart\forms\uDrawObjEditForm.dfm */
-/* chart\forms\uGistFrame.dfm */
-/* chart\forms\uGistForm.dfm */
-/* chart\forms\uTrendFrame.dfm */
-/* chart\forms\uTrendForm.dfm */
-/* chart\forms\uChartCfgForm.dfm */
-/* chart\forms\uEditMenuChartForm.dfm */
-/* chart\forms\uEditChartObjFrame.dfm */
-/* chart\forms\uCreateTrendFrame.dfm */
-/* chart\forms\uCreateObjForm.dfm */
-/* chart\forms\frames\uChartInputFrame.dfm */
-/* ..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
-/* chart\forms\uCreateObjFrm.dfm */
-/* E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.res */
-/* E:\Oburec\delphi\2011\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.drf */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uChartCfgForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTrendForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uGistForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDrawObjEditForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uPageForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCursorForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uDoubleCursorForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uTextLabelForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uAxisForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditMenuChartForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uEditChartObjFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateTrendFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjForm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\frames\uChartInputFrame.dfm */
+/* D:\works\OburecGH\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common\JclUnicode.res */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\chart\forms\uCreateObjFrm.dfm */
+/* D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.res */
+/* C:\Users\User\AppData\Local\Temp\dtfE271.tmp */

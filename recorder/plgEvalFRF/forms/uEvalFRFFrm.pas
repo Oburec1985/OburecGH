@@ -2623,6 +2623,8 @@ var
   db: TDataBlock;
 begin
   t := getTaho;
+  if t = nil then exit;
+  
   c := t.getCfg(0);
   if WndCB.ItemIndex = -1 then
     WndCB.ItemIndex := 0;
@@ -3690,6 +3692,7 @@ var
 begin
   // нормализация спектров
   r.BottomLeft.x := m_minX;
+
   r.TopRight.x := m_maxX;
   r.BottomLeft.y := MinSpmY;
   r.TopRight.y := MaxSpmY;

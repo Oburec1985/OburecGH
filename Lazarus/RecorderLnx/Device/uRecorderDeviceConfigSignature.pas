@@ -20,6 +20,10 @@ function RecorderSourceProgrammingSignatureById(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): string;
 function RecorderProgrammingSignatureDifference(const ABefore,
   AAfter: string): string;
+procedure RecorderMarkSourceProgrammingApplied(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
+function RecorderSourceProgrammingAlreadyApplied(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ASignature: string): Boolean;
 
 implementation
 
@@ -29,9 +33,76 @@ uses
   uRecorderMic140Utils, uRecorderMic140DeviceConfig,
   uRecorderMic140StreamTypes;
 
+var
+  gAppliedSourceSignatures: TStringList;
+  gAppliedSignatureLock: TRTLCriticalSection;
+
 function FloatSignature(AValue: Double): string;
 begin
   Result := FloatToStr(AValue, DefaultFormatSettings);
+end;
+
+function AppliedSignatureKey(const ASourceId: string): string;
+begin
+  Result := RecorderNormalizeTagSourceId(ASourceId);
+end;
+
+procedure EnsureAppliedSignatureCache;
+begin
+  if gAppliedSourceSignatures <> nil then
+    Exit;
+  gAppliedSourceSignatures := TStringList.Create;
+  gAppliedSourceSignatures.CaseSensitive := False;
+  gAppliedSourceSignatures.NameValueSeparator := '=';
+end;
+
+function CacheSignatureValue(const ASignature: string): string;
+begin
+  Result := StringReplace(ASignature, LineEnding, #1, [rfReplaceAll]);
+end;
+
+procedure RecorderMarkSourceProgrammingApplied(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
+var
+  lKey: string;
+  lSignature: string;
+begin
+  if ARegistry = nil then
+    Exit;
+  lKey := AppliedSignatureKey(ASourceId);
+  if lKey = '' then
+    Exit;
+  lSignature := CacheSignatureValue(
+    RecorderSourceProgrammingSignatureById(ARegistry, ASourceId));
+  if lSignature = '' then
+    Exit;
+  EnterCriticalSection(gAppliedSignatureLock);
+  try
+    EnsureAppliedSignatureCache;
+    gAppliedSourceSignatures.Values[lKey] := lSignature;
+  finally
+    LeaveCriticalSection(gAppliedSignatureLock);
+  end;
+end;
+
+function RecorderSourceProgrammingAlreadyApplied(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ASignature: string): Boolean;
+var
+  lKey: string;
+begin
+  Result := False;
+  lKey := AppliedSignatureKey(ASourceId);
+  if lKey = '' then
+    Exit;
+  EnterCriticalSection(gAppliedSignatureLock);
+  try
+    if gAppliedSourceSignatures = nil then
+      Exit;
+    Result := gAppliedSourceSignatures.Values[lKey] =
+      CacheSignatureValue(ASignature);
+  finally
+    LeaveCriticalSection(gAppliedSignatureLock);
+  end;
 end;
 
 function RecorderProgrammingSignatureDifference(const ABefore,
@@ -172,5 +243,17 @@ begin
     lLines.Free;
   end;
 end;
+
+initialization
+  InitCriticalSection(gAppliedSignatureLock);
+
+finalization
+  EnterCriticalSection(gAppliedSignatureLock);
+  try
+    FreeAndNil(gAppliedSourceSignatures);
+  finally
+    LeaveCriticalSection(gAppliedSignatureLock);
+    DoneCriticalSection(gAppliedSignatureLock);
+  end;
 
 end.
