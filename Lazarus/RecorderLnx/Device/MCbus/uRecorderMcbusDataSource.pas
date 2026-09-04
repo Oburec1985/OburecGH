@@ -604,15 +604,9 @@ begin
   for I := 0 to Min(High(fChannelTags), High(ABlock.Values)) do
     if fChannelTags[I] <> nil then
     begin
-      lCount := ABlock.SampleCount;
-      lFirstTime := ABlock.FirstTimeSec;
-      lSampleRate := ABlock.SampleRateHz;
-      if I <= High(ABlock.ChannelSampleCounts) then
-        lCount := ABlock.ChannelSampleCounts[I];
-      if I <= High(ABlock.ChannelFirstTimesSec) then
-        lFirstTime := ABlock.ChannelFirstTimesSec[I];
-      if I <= High(ABlock.ChannelSampleRatesHz) then
-        lSampleRate := ABlock.ChannelSampleRatesHz[I];
+      lCount := RecorderBlockChannelSampleCount(ABlock, I);
+      lFirstTime := RecorderBlockChannelFirstTime(ABlock, I);
+      lSampleRate := RecorderBlockChannelSampleRate(ABlock, I);
       if (lCount <= 0) or (lSampleRate <= 0) or
         (Length(ABlock.Values[I]) < lCount) then Continue;
       for J := 0 to lCount - 1 do

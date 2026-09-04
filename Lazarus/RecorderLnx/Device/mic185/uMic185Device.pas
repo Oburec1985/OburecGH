@@ -24,6 +24,9 @@ type
     fDeviceSerial: LongWord;
     fSoftVersion: LongWord;
     fSampleIndex: Int64;
+    fSampleCounterValid: Boolean;
+    fLastRawSampleCount: LongWord;
+    fUnwrappedSampleCount: QWord;
     fSessionId: LongWord;
     fMeasChannelCount: Integer;
     fTempChannelCount: Integer;
@@ -611,6 +614,9 @@ begin
   if not fClient.TryStartMeasurement(AErrorText) then
     Exit;
   fSampleIndex := 0;
+  fSampleCounterValid := False;
+  fLastRawSampleCount := 0;
+  fUnwrappedSampleCount := 0;
   fState := rdsStarted;
   RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), True);
   Result := True;
@@ -866,10 +872,15 @@ function TRecorderMic185Device.ReadBlock(ATimeoutMs: Cardinal;
   out ABlock: TRecorderAcquisitionBlock): Boolean;
 var
   I, J: Integer;
+  lGroup: Integer;
+  lGroupOrder: array[0..CMic185ModuleCount - 1] of Integer;
   lRaw: TRecorderMebiusFloatBlock;
   lTemp: TRecorderSingleArray;
+  lGotMeas: Boolean;
   lHasTemp, lHasUts: Boolean;
   lUtsDeviceTime, lUts: Double;
+  lDelta: LongWord;
+  lFirstCount: QWord;
 begin
   // очистка блока. Нужна ли? Может делать это при старте измерений разово?
   ClearRecorderAcquisitionBlock(ABlock);
@@ -878,9 +889,8 @@ begin
     Exit;
 
   fClient.TimeoutMs := ATimeoutMs;
-  if not fClient.ReadMeasDataBlock(fMeasChannelCount, lRaw, lTemp, lHasTemp,
-    lUtsDeviceTime, lUts, lHasUts) then
-    Exit;
+  lGotMeas := fClient.ReadMeasDataBlock(fMeasChannelCount, lRaw, lTemp,
+    lHasTemp, lUtsDeviceTime, lUts, lHasUts);
 
   if lHasTemp then
   begin
@@ -896,11 +906,56 @@ begin
     fHasLastUts := True;
     Inc(fUtsGeneration);
   end;
+  if not lGotMeas then
+    Exit;
 
   ABlock.ChannelCount := lRaw.ChannelCount;
   ABlock.SampleCount := lRaw.SampleCount;
   ABlock.SampleRateHz := fMeasFrequencyHz;
-  ABlock.FirstTimeSec := fSampleIndex / fMeasFrequencyHz;
+  if lRaw.HasSampleCount then
+  begin
+    if not fSampleCounterValid then
+      lFirstCount := lRaw.FirstSampleCount
+    else
+    begin
+      lDelta := lRaw.FirstSampleCount - fLastRawSampleCount;
+      { Forward modular delta also covers the UInt32 wrap. A delta in the
+        backward half-range means the device counter restarted unexpectedly. }
+      if lDelta <= High(LongInt) then
+        lFirstCount := fUnwrappedSampleCount + lDelta
+      else
+        lFirstCount := lRaw.FirstSampleCount;
+    end;
+    lDelta := lRaw.HeaderSampleCount - lRaw.FirstSampleCount;
+    fUnwrappedSampleCount := lFirstCount + lDelta;
+    fLastRawSampleCount := lRaw.HeaderSampleCount;
+    fSampleCounterValid := True;
+    fSampleIndex := fUnwrappedSampleCount;
+    ABlock.FirstTimeSec := lFirstCount / fMeasFrequencyHz;
+  end
+  else
+  begin
+    ABlock.FirstTimeSec := fSampleIndex / fMeasFrequencyHz;
+    Inc(fSampleIndex, ABlock.SampleCount);
+  end;
+  SetLength(ABlock.ChannelFirstTimesSec, ABlock.ChannelCount);
+  FillChar(lGroupOrder, SizeOf(lGroupOrder), 0);
+  for I := 0 to ABlock.ChannelCount - 1 do
+  begin
+    ABlock.ChannelFirstTimesSec[I] := ABlock.FirstTimeSec;
+    if (I <= High(fChannelProgramSettings)) and
+      fChannelProgramSettings[I].Connected then
+    begin
+      lGroup := I div CMic185ChannelsPerModule;
+      if lGroup <= High(lGroupOrder) then
+      begin
+        ABlock.ChannelFirstTimesSec[I] := ABlock.FirstTimeSec +
+          Mic185ChannelStartOffsetSec(fModuleProgramSettings,
+            lGroupOrder[lGroup]);
+        Inc(lGroupOrder[lGroup]);
+      end;
+    end;
+  end;
   SetLength(ABlock.Values, ABlock.ChannelCount);
   for I := 0 to ABlock.ChannelCount - 1 do
   begin
@@ -908,7 +963,6 @@ begin
     for J := 0 to ABlock.SampleCount - 1 do
       ABlock.Values[I][J] := lRaw.Values[I][J];
   end;
-  Inc(fSampleIndex, ABlock.SampleCount);
   Result := True;
 end;
 

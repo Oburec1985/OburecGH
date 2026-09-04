@@ -141,6 +141,11 @@ function Mic185AveragePointCountToExponent(APointCount: LongWord): Word;
 { Calculates the same max channel rate as CMIC185V2Base::CalcMaxRate. }
 function Mic185CalcMaxFrequencyHz(
   const ASettings: TMic185ModuleProgramSettings): Double;
+{ Original MIC185V2 time offset for an active channel inside its 16-channel
+  group. AOrderInGroup is the zero-based order among connected channels. }
+function Mic185ChannelStartOffsetSec(
+  const ASettings: TMic185ModuleProgramSettings;
+  AOrderInGroup: Integer): Double;
 { Совместимый wrapper для старого пути программирования без индивидуальных
   настроек каналов. }
 function Mic185BuildSettings(AMeasFrequencyHz, ATempFrequencyHz: Double;
@@ -260,6 +265,24 @@ begin
   if (lChannelTimeUs <= 0) or (lGroupCount <= 0) then
     Exit(0);
   Result := (1000000.0 / (lChannelTimeUs * lGroupCount)) * 0.90;
+end;
+
+function Mic185ChannelStartOffsetSec(
+  const ASettings: TMic185ModuleProgramSettings;
+  AOrderInGroup: Integer): Double;
+var
+  lAveragePoints: LongWord;
+  lSampleTimeUs: Double;
+begin
+  if AOrderInGroup < 0 then
+    Exit(0);
+  lAveragePoints := Mic185AverageExponentToPointCount(
+    ASettings.AveragePointCount);
+  lSampleTimeUs := ASettings.GroundCommutationUs + CMic185NiosIrqDelayUs +
+    ASettings.ChannelCommutationUs + CMic185NiosIrqDelayUs +
+    2.0 * lAveragePoints + CMic185SpiTempDelayUs;
+  Result := (lSampleTimeUs * AOrderInGroup - lAveragePoints -
+    CMic185DriverStartOffsetUs) / 1000000.0;
 end;
 
 function Mic185BuildSettingsEx(AMeasFrequencyHz, ATempFrequencyHz: Double;

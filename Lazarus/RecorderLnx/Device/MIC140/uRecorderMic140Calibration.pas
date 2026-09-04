@@ -1019,15 +1019,26 @@ begin
     (Pos(CMic140SourcePrefix, ATag.SourceId) <> 1) then
     Exit;
 
-  { Конфигурация устройства загружается раньше тегов. Возвращаем её значения
-    в универсальную модель тега, затем без обращения к прибору подхватываем
-    сохранённую CSV по типу, серийному номеру, диапазону и номеру канала. }
+  { Конфигурация устройства загружается раньше тегов. В новых проектах флаг
+    применения аппаратной ГХ принадлежит тегу; копия в старом channel config
+    используется только как fallback для прежнего формата. }
   if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
     lSettings) then
   begin
-    ATag.HardwareCalibrationEnabled :=
-      lSettings.HardwareCalibrationEnabled;
-    ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
+    if (AJson <> nil) and
+      (AJson.Find('hardwareCalibrationEnabled') <> nil) then
+    begin
+      lSettings.HardwareCalibrationEnabled :=
+        ATag.HardwareCalibrationEnabled;
+      lSettings.HardwareCalibrationName := ATag.HardwareCalibrationName;
+      RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
+    end
+    else
+    begin
+      ATag.HardwareCalibrationEnabled :=
+        lSettings.HardwareCalibrationEnabled;
+      ATag.HardwareCalibrationName := lSettings.HardwareCalibrationName;
+    end;
     RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
   end;
   { Project loading is a UI-startup path and must not probe the same device

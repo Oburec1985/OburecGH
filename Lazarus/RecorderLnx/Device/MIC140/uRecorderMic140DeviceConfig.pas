@@ -195,18 +195,16 @@ end;
 procedure RecorderMic140ApplyTagOutputPresentation(ATag: TRecorderTag;
   const ASettings: TRecorderMic140ChannelSettings);
 var
+  lAutoUnit: string;
   lMode: string;
   lUnit: string;
 begin
   if ATag = nil then
     Exit;
 
-  if not ASettings.HardwareCalibrationEnabled then
-  begin
-    lMode := 'code';
-    lUnit := 'code';
-  end
-  else if ASettings.ChannelCalibrationEnabled and
+  { OutputMode describes the physical values produced by the source when the
+    tag enables hardware calibration. Raw-code selection belongs to the tag. }
+  if ASettings.ChannelCalibrationEnabled and
     RecorderMic140ChannelUsesTemperature(ASettings) then
   begin
     lMode := 'degC';
@@ -218,11 +216,16 @@ begin
     lUnit := 'mV';
   end;
 
+  if ATag.HardwareCalibrationEnabled then
+    lAutoUnit := lUnit
+  else
+    lAutoUnit := 'code';
   if (not SameText(ATag.SourceValueMode, lMode)) or
-    (not SameText(ATag.UnitName, lUnit)) then
+    (ATag.AutoUnit and (not SameText(ATag.UnitName, lAutoUnit))) then
     ATag.ClearSignalHistory;
   ATag.SourceValueMode := lMode;
-  ATag.UnitName := lUnit;
+  if ATag.AutoUnit then
+    ATag.UnitName := lAutoUnit;
 end;
 
 function RecorderMic140ChannelGradRangeText(const ASettings: TRecorderMic140ChannelSettings): string;
@@ -585,14 +588,9 @@ end;
 
 function RecorderMic140TagHardwareCalibrationEnabled(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
-var
-  lSettings: TRecorderMic140ChannelSettings;
-  lChannelNumber: Integer;
 begin
-  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannelNumber,
-    lSettings) then
-    Exit(lSettings.HardwareCalibrationEnabled);
-  Result := False;
+  { Применение аппаратной ГХ является пользовательским свойством тега. }
+  Result := (ATag <> nil) and ATag.HardwareCalibrationEnabled;
 end;
 
 function RecorderMic140TagHardwareCalibrationName(ARegistry: TRecorderTagRegistry;

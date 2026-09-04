@@ -238,19 +238,29 @@ begin
   for I := 0 to fRegistry.TagCount - 1 do
   begin
     lTag := fRegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) then
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+      RecorderNormalizeTagSourceId(ASourceId)) then
     begin
       { MIC-140 historically stores channel addresses both as 2-1 and 2-01.
         Treat both spellings as the same channel, otherwise a just-added tag
         remains visible in the available-channel grid. }
       if (Pos('MIC-140:', ASourceId) = 1) and
         SameMic140Address(lTag.Address, AAddress) then
+      begin
+        lTag.SourceId := ASourceId;
         Exit(lTag);
+      end;
       if (Pos('MIC-185:', ASourceId) = 1) and
         RecorderMic185SameChannelAddress(lTag.Address, AAddress) then
+      begin
+        lTag.SourceId := ASourceId;
         Exit(lTag);
+      end;
       if SameText(lTag.Address, AAddress) then
+      begin
+        lTag.SourceId := ASourceId;
         Exit(lTag);
+      end;
     end;
   end;
 end;

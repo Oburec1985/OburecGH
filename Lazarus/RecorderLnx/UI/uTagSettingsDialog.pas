@@ -710,6 +710,8 @@ begin
     lChannelNumber, lSettings) then
     Exit;
 
+  if fAutoUnitCheck.State <> cbChecked then
+    Exit;
   if not fHardwareCurveCheck.Checked then
     fUnitCombo.Text := 'code'
   else if lSettings.ChannelCalibrationEnabled and
@@ -1805,7 +1807,8 @@ begin
               lTag.ClearSignalHistory;
             lTag.SourceValueMode :=
               RecorderMic140OutputModeToConfigName(momTemperatureC);
-            lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
+            if lTag.AutoUnit then
+              lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
           end;
         end
         else
@@ -1815,7 +1818,8 @@ begin
             lTag.ClearSignalHistory;
           lTag.SourceValueMode :=
             RecorderMic140OutputModeToConfigName(momMillivolts);
-          lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
+          if lTag.AutoUnit then
+            lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
         end;
       end;
     end;
@@ -1895,7 +1899,7 @@ begin
     if (not RecorderTagUsesMic140Settings(lTag)) and
       (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
-    if lTag.AutoUnit and
+    if lTag.AutoUnit and (Pos(CMic140SourcePrefix, lTag.SourceId) <> 1) and
       TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
       lTag.UnitName := lAutoUnitName;
   end;
@@ -1982,7 +1986,23 @@ begin
 end;
 
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
+var
+  lChannelNumber: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
+  if (fAutoUnitCheck.State = cbChecked) and (fTags.Count = 1) and
+    (Pos(CMic140SourcePrefix, TagAt(0).SourceId) = 1) then
+  begin
+    lSettings.ChannelAddress := '';
+    if RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
+      lChannelNumber, lSettings) then
+      if fHardwareCurveCheck.Checked then
+        fUnitCombo.Text := RecorderMic140OutputModeUnitName(
+          RecorderMic140ConfigNameToOutputMode(lSettings.OutputMode))
+      else
+        fUnitCombo.Text := 'code';
+    Exit;
+  end;
   ApplyAutoUnitFromChannelCalibration;
 end;
 

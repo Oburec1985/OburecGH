@@ -27,6 +27,14 @@ type
   end;
 
 procedure ClearRecorderAcquisitionBlock(var ABlock: TRecorderAcquisitionBlock);
+function RecorderBlockChannelSampleCount(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Integer;
+function RecorderBlockChannelSampleRate(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Double;
+function RecorderBlockChannelFirstTime(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Double;
+function RecorderBlockSampleTime(const ABlock: TRecorderAcquisitionBlock;
+  AChannel, ASample: Integer): Double;
 {
   Глубокое копирование блока для передачи между потоками (чтение → публикация).
 
@@ -38,6 +46,41 @@ procedure ClearRecorderAcquisitionBlock(var ABlock: TRecorderAcquisitionBlock);
 procedure CopyRecorderAcquisitionBlock(const ASource: TRecorderAcquisitionBlock;
   var ADest: TRecorderAcquisitionBlock);
 implementation
+
+function RecorderBlockChannelSampleCount(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Integer;
+begin
+  Result := ABlock.SampleCount;
+  if (AChannel >= 0) and (AChannel <= High(ABlock.ChannelSampleCounts)) then
+    Result := ABlock.ChannelSampleCounts[AChannel];
+end;
+
+function RecorderBlockChannelSampleRate(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Double;
+begin
+  Result := ABlock.SampleRateHz;
+  if (AChannel >= 0) and (AChannel <= High(ABlock.ChannelSampleRatesHz)) then
+    Result := ABlock.ChannelSampleRatesHz[AChannel];
+end;
+
+function RecorderBlockChannelFirstTime(const ABlock: TRecorderAcquisitionBlock;
+  AChannel: Integer): Double;
+begin
+  Result := ABlock.FirstTimeSec;
+  if (AChannel >= 0) and (AChannel <= High(ABlock.ChannelFirstTimesSec)) then
+    Result := ABlock.ChannelFirstTimesSec[AChannel];
+end;
+
+function RecorderBlockSampleTime(const ABlock: TRecorderAcquisitionBlock;
+  AChannel, ASample: Integer): Double;
+var
+  lRate: Double;
+begin
+  Result := RecorderBlockChannelFirstTime(ABlock, AChannel);
+  lRate := RecorderBlockChannelSampleRate(ABlock, AChannel);
+  if (ASample > 0) and (lRate > 0) then
+    Result := Result + ASample / lRate;
+end;
 
 procedure CopyRecorderAcquisitionBlock(const ASource: TRecorderAcquisitionBlock;
   var ADest: TRecorderAcquisitionBlock);

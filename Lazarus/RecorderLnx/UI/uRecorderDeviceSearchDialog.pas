@@ -21,10 +21,16 @@ type
   TRecorderDeviceSearchDialog = class(TForm)
     btnCancel: TButton;
     btnOk: TButton;
+    cbSelectAll: TCheckBox;
     lbDevices: TCheckListBox;
     lblHint: TLabel;
+    procedure cbSelectAllChange(Sender: TObject);
+    procedure lbDevicesClickCheck(Sender: TObject);
   private
     fDevices: TList;
+    fUpdatingSelectAll: Boolean;
+    procedure SetEligibleDevicesChecked(AValue: Boolean);
+    procedure UpdateSelectAllState;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -70,6 +76,64 @@ begin
 
   lIndex := lbDevices.Items.Add(ADisplayText);
   lbDevices.Checked[lIndex] := not AAlreadyConfigured;
+  lbDevices.ItemEnabled[lIndex] := not AAlreadyConfigured;
+  UpdateSelectAllState;
+end;
+
+procedure TRecorderDeviceSearchDialog.SetEligibleDevicesChecked(AValue: Boolean);
+var
+  I: Integer;
+begin
+  for I := 0 to fDevices.Count - 1 do
+    if not DeviceAt(I).AlreadyConfigured then
+      lbDevices.Checked[I] := AValue;
+end;
+
+procedure TRecorderDeviceSearchDialog.UpdateSelectAllState;
+var
+  I: Integer;
+  lCheckedCount: Integer;
+  lEligibleCount: Integer;
+begin
+  lCheckedCount := 0;
+  lEligibleCount := 0;
+  for I := 0 to fDevices.Count - 1 do
+    if not DeviceAt(I).AlreadyConfigured then
+    begin
+      Inc(lEligibleCount);
+      if lbDevices.Checked[I] then
+        Inc(lCheckedCount);
+    end;
+
+  fUpdatingSelectAll := True;
+  try
+    if (lEligibleCount = 0) or (lCheckedCount = 0) then
+      cbSelectAll.State := cbUnchecked
+    else if lCheckedCount = lEligibleCount then
+      cbSelectAll.State := cbChecked
+    else
+      cbSelectAll.State := cbGrayed;
+  finally
+    fUpdatingSelectAll := False;
+  end;
+end;
+
+procedure TRecorderDeviceSearchDialog.cbSelectAllChange(Sender: TObject);
+begin
+  if fUpdatingSelectAll then
+    Exit;
+  if cbSelectAll.State = cbGrayed then
+  begin
+    cbSelectAll.State := cbChecked;
+    Exit;
+  end;
+  SetEligibleDevicesChecked(cbSelectAll.Checked);
+  UpdateSelectAllState;
+end;
+
+procedure TRecorderDeviceSearchDialog.lbDevicesClickCheck(Sender: TObject);
+begin
+  UpdateSelectAllState;
 end;
 
 function TRecorderDeviceSearchDialog.DeviceCount: Integer;

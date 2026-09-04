@@ -18,7 +18,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderDataSources, uRecorderDeviceInterfaces,
+  uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
   uRecorderMic140Utils, uRecorderMic140StreamTypes,
   uRecorderMic140DeviceApi,
   uRecorderTags;
@@ -75,6 +75,7 @@ type
     fRuntimeCjcChannels: array of Integer;
     fRuntimeTemperatureTags: array of TRecorderTag;
     fRuntimeTemperatureSelected: array of Boolean;
+    fRuntimeTInCalibrations: array of TRecorderCalibration;
     fRuntimeCjcTemperatures: array of Double;
     fRuntimeCjcTemperatureValid: array of Boolean;
     fRuntimeThermoCompensation: Boolean;
@@ -116,6 +117,7 @@ type
     procedure PublishUtsIfNew;
     procedure PublishTemperatureBlocks(const AAux: TMic140AuxTemperatureBlock;
       const ATimes: TRecorderDoubleArray);
+    procedure UpdateCjcTemperatures(const AAux: TMic140AuxTemperatureBlock);
     function Mic140PublishedCodeInRecorderRange(AChannelIndex: Integer;
       AValue: Double): Boolean;
     procedure CheckPublishedTinCodes(const AAux: TMic140AuxTemperatureBlock);
@@ -937,6 +939,39 @@ begin
   end;
 end;
 
+procedure TRecorderMic140DataSource.UpdateCjcTemperatures(
+  const AAux: TMic140AuxTemperatureBlock);
+var
+  I, J, lCount: Integer;
+  lCal: TRecorderCalibration;
+  lSum: Double;
+begin
+  for I := 0 to High(fRuntimeCjcTemperatureValid) do
+  begin
+    fRuntimeCjcTemperatureValid[I] := False;
+    if (I >= AAux.ChannelCount) or (I >= Length(AAux.Values)) or
+      (I >= Length(fRuntimeTInCalibrations)) then
+      Continue;
+    lCal := fRuntimeTInCalibrations[I];
+    if lCal = nil then
+      Continue;
+    lSum := 0;
+    lCount := 0;
+    for J := 0 to AAux.SampleCount - 1 do
+      if (I < Length(AAux.Valid)) and (J < Length(AAux.Valid[I])) and
+        AAux.Valid[I][J] then
+      begin
+        lSum := lSum + lCal.Transform(AAux.Values[I][J]);
+        Inc(lCount);
+      end;
+    if (lCount > 0) and Mic140JunctionTemperatureLooksValid(lSum / lCount) then
+    begin
+      fRuntimeCjcTemperatures[I] := lSum / lCount;
+      fRuntimeCjcTemperatureValid[I] := True;
+    end;
+  end;
+end;
+
 procedure TRecorderMic140DataSource.EnsureRuntimeScratch(ASampleCount,
   AAuxChannelCount: Integer);
 var
@@ -966,6 +1001,7 @@ end;
 procedure TRecorderMic140DataSource.BuildRuntimeCache;
 var
   I: Integer;
+  lCalName: string;
   lChannelNumber: Integer;
 begin
   if fDevice <> nil then
@@ -989,8 +1025,14 @@ begin
     if not fRuntimeChannelSettingsValid[I] then
       RecorderMic140InitChannelSettings(fRuntimeChannelSettings[I], I,
         CMic140Mic140SubRev1);
-    fRuntimeHardwareCalibrations[I] :=
-      Registry.FindTagHardwareCalibration(fRuntimeChannelTags[I]);
+    { Саму ГХ кэшируем независимо от текущей галочки тега: её можно менять
+      во время Preview без пересоздания источника и TCP-сессии. }
+    if (fRuntimeChannelTags[I] <> nil) and
+      (Trim(fRuntimeChannelTags[I].HardwareCalibrationName) <> '') then
+      fRuntimeHardwareCalibrations[I] := Registry.FindCalibrationByName(
+        fRuntimeChannelTags[I].HardwareCalibrationName)
+    else
+      fRuntimeHardwareCalibrations[I] := nil;
     fRuntimeThermocoupleCalibrations[I] :=
       Registry.FindTagThermocoupleCalibration(fRuntimeChannelTags[I]);
     fRuntimeTemperatureMode[I] :=
@@ -1010,6 +1052,7 @@ begin
 
   SetLength(fRuntimeTemperatureTags, fTemperatureTagNames.Count);
   SetLength(fRuntimeTemperatureSelected, fTemperatureTagNames.Count);
+  SetLength(fRuntimeTInCalibrations, fTemperatureTagNames.Count);
   SetLength(fRuntimeCjcTemperatures, fTemperatureTagNames.Count);
   SetLength(fRuntimeCjcTemperatureValid, fTemperatureTagNames.Count);
   for I := 0 to fTemperatureTagNames.Count - 1 do
@@ -1019,6 +1062,10 @@ begin
       fRuntimeTemperatureTags[I] :=
         FindTagBySourceAddress(Registry, fTemperatureTagNames[I]);
     fRuntimeTemperatureSelected[I] := TemperatureChannelSelected(I + 1);
+    fRuntimeTInCalibrations[I] := nil;
+    if (fDeviceSerial > 0) and RecorderMic140EnsureTInHardwareCalibration(
+      Registry, fDeviceSerial, I, CMic140Mic140SubRev1, lCalName) then
+      fRuntimeTInCalibrations[I] := Registry.FindCalibrationByName(lCalName);
   end;
   fRuntimeThermoCompensation :=
     RecorderMic140ThermoCompensationForSource(Registry, SourceId);
@@ -1591,7 +1638,8 @@ begin
         lTag.CalibrationNames.Add(lCalibrationName);
       RecorderMic140UpdateChannelSettings(Registry, lTag, lSettings);
       lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
-      lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
+      if lTag.AutoUnit then
+        lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
       Mic140LogWarning(Format('[DataSource:%s] MIC-140 thermocouple curve ready: tag=%s SDB=%s',
         [SourceId, lTag.Name, lSettings.ThermocoupleScalePath]));
     end;
@@ -2023,7 +2071,7 @@ begin
   EnsureRuntimeScratch(ABlock.SampleCount,
     Max(0, ABlock.ChannelCount - lCount));
   for lJ := 0 to ABlock.SampleCount - 1 do
-    fRuntimeTimes[lJ] := ABlock.FirstTimeSec + (lJ / ABlock.SampleRateHz);
+    fRuntimeTimes[lJ] := RecorderBlockSampleTime(ABlock, 0, lJ);
 
   { TIn находятся в том же атомарном FIFO-блоке после основных AIn.
     Общий LastAuxTemperatureBlock использовать здесь нельзя: при асинхронном
@@ -2057,18 +2105,19 @@ begin
   if (fGoodBlockCount <= 5) or ((fGoodBlockCount mod 100) = 0) then
     CheckPublishedTinCodes(fRuntimeAuxTemperature);
   {$ENDIF}
+  { Вызываем и для блока без TIn: метод сбросит validity предыдущего блока и
+    не позволит применить устаревшую температуру ХТС к новым AIn. }
+  UpdateCjcTemperatures(fRuntimeAuxTemperature);
   if fRuntimeAuxTemperature.SampleCount > 0 then
   begin
+    { Внутренний тракт КХС обрабатывает все TIn. Пользовательские теги для
+      этого не требуются; PublishTemperatureBlocks сам отфильтрует публикацию. }
     PublishTemperatureBlocks(fRuntimeAuxTemperature, fRuntimeTimes);
     fLastAuxRevision := fRuntimeAuxTemperature.Revision;
   end;
 
-  { МО каждого канала холодного спая читается один раз на принятый блок.
-    Все основные каналы одной группы используют этот общий снимок. }
-  for lI := 0 to High(fRuntimeCjcTemperatures) do
-    fRuntimeCjcTemperatureValid[lI] :=
-      Mic140TryGetColdJunctionTemperature(fRuntimeTemperatureTags[lI],
-        fRuntimeCjcTemperatures[lI]);
+  { fRuntimeCjcTemperatures уже содержит средние физические значения всех TIn,
+    рассчитанные напрямую из атомарного блока независимо от публикации тегов. }
 
   for lI := 0 to lCount - 1 do
   begin
@@ -2083,6 +2132,9 @@ begin
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
 
+    for lJ := 0 to ABlock.SampleCount - 1 do
+      fRuntimeTimes[lJ] := RecorderBlockSampleTime(ABlock, lI, lJ);
+
     if lI < Length(fRuntimeHardwareCalibrations) then
       lHardwareCalibration := fRuntimeHardwareCalibrations[lI]
     else
@@ -2092,7 +2144,19 @@ begin
     else
       lThermocoupleCalibration := nil;
 
-    if lHardwareCalibration = nil then
+    { ГХ могла быть назначена уже после старта Preview. Обновляем только
+      программный кэш преобразования, не трогая жизненный цикл прибора. }
+    if lTag.HardwareCalibrationEnabled and (lHardwareCalibration = nil) and
+      (Trim(lTag.HardwareCalibrationName) <> '') then
+    begin
+      lHardwareCalibration := Registry.FindCalibrationByName(
+        lTag.HardwareCalibrationName);
+      if lI < Length(fRuntimeHardwareCalibrations) then
+        fRuntimeHardwareCalibrations[lI] := lHardwareCalibration;
+    end;
+
+    if (not lTag.HardwareCalibrationEnabled) or
+      (lHardwareCalibration = nil) then
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
         fRuntimeValues[lJ] := Mic140RawSample(ABlock, lI, lJ, lTag);

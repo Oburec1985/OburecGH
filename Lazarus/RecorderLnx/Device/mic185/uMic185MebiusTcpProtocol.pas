@@ -37,7 +37,9 @@ type
     DeviceId: LongWord;
     ChannelCount: Integer;
     SampleCount: Integer;
+    FirstSampleCount: LongWord;
     HeaderSampleCount: LongWord;
+    HasSampleCount: Boolean;
     Values: array of array of Single;
   end;
 
@@ -58,6 +60,8 @@ type
     fLastReadError: string;
     fRxBuffer: TRecorderByteArray;
     fRxStart: Integer;
+    fPendingMeasBlock: TRecorderMebiusFloatBlock;
+    fHasPendingMeasBlock: Boolean;
     fRxCount: Integer;
     procedure ApplySocketTimeout;
     procedure SetTimeoutMs(AValue: Cardinal);
@@ -378,7 +382,11 @@ begin
   ABlock.DeviceId := GetLongLE(AData, 0);
   ABlock.ChannelCount := AChannelCount;
   ABlock.SampleCount := lCount;
+  { sampl_count_ is the end-exclusive common sample counter. Keep the first
+    counter now: aggregation must not lose the origin of its first packet. }
+  ABlock.FirstSampleCount := lHeaderCount - LongWord(lCount);
   ABlock.HeaderSampleCount := lHeaderCount;
+  ABlock.HasSampleCount := True;
   SetLength(ABlock.Values, AChannelCount);
   for I := 0 to AChannelCount - 1 do
     SetLength(ABlock.Values[I], lCount);
@@ -399,7 +407,9 @@ begin
   ABlock.DeviceId := 0;
   ABlock.ChannelCount := 0;
   ABlock.SampleCount := 0;
+  ABlock.FirstSampleCount := 0;
   ABlock.HeaderSampleCount := 0;
+  ABlock.HasSampleCount := False;
 end;
 
 function AppendMebiusFloatBlock(var ADest: TRecorderMebiusFloatBlock;
@@ -418,6 +428,8 @@ begin
     ADest.DeviceId := ASrc.DeviceId;
     ADest.ChannelCount := ASrc.ChannelCount;
     ADest.HeaderSampleCount := ASrc.HeaderSampleCount;
+    ADest.FirstSampleCount := ASrc.FirstSampleCount;
+    ADest.HasSampleCount := ASrc.HasSampleCount;
     SetLength(ADest.Values, ASrc.ChannelCount);
     for I := 0 to ASrc.ChannelCount - 1 do
     begin
@@ -443,6 +455,7 @@ begin
   end;
   ADest.SampleCount := lNewCount;
   ADest.HeaderSampleCount := ASrc.HeaderSampleCount;
+  ADest.HasSampleCount := ADest.HasSampleCount and ASrc.HasSampleCount;
   Result := True;
 end;
 
@@ -694,6 +707,8 @@ begin
   SetLength(fRxBuffer, CMebiusReceiveBufferSize);
   fRxStart := 0;
   fRxCount := 0;
+  fHasPendingMeasBlock := False;
+  ClearMebiusFloatBlock(fPendingMeasBlock);
 end;
 
 procedure TRecorderMebiusTcpClient.ResetRxCounters;
@@ -704,6 +719,8 @@ begin
   fRxSyncDropCount := 0;
   fRxCompactCount := 0;
   fRxMaxBuffered := 0;
+  fHasPendingMeasBlock := False;
+  ClearMebiusFloatBlock(fPendingMeasBlock);
 end;
 
 destructor TRecorderMebiusTcpClient.Destroy;
@@ -1235,6 +1252,13 @@ begin
   AUtsDeviceTimeSec := 0;
   AUtsValueSec := 0;
   lGotMeas := False;
+  if fHasPendingMeasBlock then
+  begin
+    AppendMebiusFloatBlock(ABlock, fPendingMeasBlock);
+    ClearMebiusFloatBlock(fPendingMeasBlock);
+    fHasPendingMeasBlock := False;
+    lGotMeas := True;
+  end;
   while ReadPacket(lPacket, False) do
   begin
       if lPacket.Kind = mpkData then
@@ -1245,8 +1269,20 @@ begin
       if lDevId = CMic185DevIdMeasChannels then
       begin
         if RecorderMebiusParseFloatBlock(lPacket.Data, AChannelCount,
-          lPending) and AppendMebiusFloatBlock(ABlock, lPending) then
-          lGotMeas := True;
+          lPending) then
+        begin
+          { A gap is a block boundary. Preserve the next packet for the next
+            read so each published block keeps a uniform time axis. }
+          if lGotMeas and ABlock.HasSampleCount and lPending.HasSampleCount and
+            (lPending.FirstSampleCount <> ABlock.HeaderSampleCount) then
+          begin
+            fPendingMeasBlock := lPending;
+            fHasPendingMeasBlock := True;
+            Break;
+          end;
+          if AppendMebiusFloatBlock(ABlock, lPending) then
+            lGotMeas := True;
+        end;
         Continue;
       end;
       if lDevId = CMic185DevIdTempChannels then

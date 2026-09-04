@@ -126,6 +126,7 @@ type
   private
     fFrameDir: string;
     fFileOpen: Boolean;
+    fFrameStartLocal: TDateTime;
     fLock: TRTLCriticalSection;
     fSignals: TList;
     function FloatToMera(AValue: Double): string;
@@ -136,7 +137,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Open(const AFrameDir: string);
+    procedure Open(const AFrameDir: string; AFrameStartLocal: TDateTime = 0);
     procedure WriteSample(const ATagName, AUnitName, ADescription: string;
       ATimeSec, AValue: Double; APollFrequencyHz: Double);
     procedure WriteBlock(const ATagName, AUnitName, ADescription,
@@ -751,6 +752,8 @@ end;
 procedure TRecorderMeraTagWriter.WriteDescriptor;
 var
   I: Integer;
+  lYear, lMonth, lDay: Word;
+  lHour, lMinute, lSecond, lMillisecond: Word;
   lText: TStringList;
   lSignal: TRecorderMeraSignalWriter;
 begin
@@ -760,6 +763,11 @@ begin
   lText := TStringList.Create;
   try
     lText.Add('[MERA]');
+    DecodeDate(fFrameStartLocal, lYear, lMonth, lDay);
+    DecodeTime(fFrameStartLocal, lHour, lMinute, lSecond, lMillisecond);
+    lText.Add(Format('Time=%.2d:%.2d:%.2d.%.3d',
+      [lHour, lMinute, lSecond, lMillisecond]));
+    lText.Add(Format('Date=%.2d.%.2d.%.4d', [lDay, lMonth, lYear]));
     lText.Add('Format=RecorderLnx.MERA');
     lText.Add('Version=1');
     lText.Add('');
@@ -816,12 +824,17 @@ end;
     Вызывается при начале записи кадра.
   Аналог в оригинальном Recorder:
     Открытие MERA дескриптора и файлов данных. }
-procedure TRecorderMeraTagWriter.Open(const AFrameDir: string);
+procedure TRecorderMeraTagWriter.Open(const AFrameDir: string;
+  AFrameStartLocal: TDateTime);
 begin
   if Trim(AFrameDir) = '' then
     raise ERecorderDataStorageError.Create('Frame directory cannot be empty');
 
   Close;
+  if AFrameStartLocal > 0 then
+    fFrameStartLocal := AFrameStartLocal
+  else
+    fFrameStartLocal := Now;
   fFrameDir := IncludeTrailingPathDelimiter(AFrameDir);
   ForceDirectories(fFrameDir);
   fFileOpen := True;

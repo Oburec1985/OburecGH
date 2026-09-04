@@ -3373,6 +3373,7 @@ procedure TRecorderMic185DataSource.PublishMeasurementBlock(const ABlock: TRecor
 var
   I, J: Integer;
   lCount: Integer;
+  lFirstTime: Double;
   lTag: TRecorderTag;
   lTransform: TRecorderMic185ValueTransform;
 begin
@@ -3385,9 +3386,6 @@ begin
     SetLength(fValues, ABlock.SampleCount);
   // нельзя формировать для каждой точки времена X - это задача для линий в чарте
   // там есть x0 для одномерных сигналов и dx - шейдер сам разворачивает X для каждой точки
-  for J := 0 to ABlock.SampleCount - 1 do
-    fTimes[J] := ABlock.FirstTimeSec + (J / ABlock.SampleRateHz);
-
   // собирает полный снимок настроек всех 64 измерительных каналов одного MIC-185 источника
   // из конфигурации проекта (registry / configuredDataSources), в виде массива
   // TMic185ChannelProgramSettingsArray
@@ -3406,6 +3404,9 @@ begin
     lTag := fChannelTags[I];
     if (lTag = nil) or (not SameText(lTag.SourceId, SourceId)) then
       Continue;
+    lFirstTime := RecorderBlockChannelFirstTime(ABlock, I);
+    for J := 0 to ABlock.SampleCount - 1 do
+      fTimes[J] := lFirstTime + (J / ABlock.SampleRateHz);
     if I <= High(fValueTransforms) then
     begin
       lTransform := fValueTransforms[I];
@@ -3427,7 +3428,8 @@ begin
       ABlock.SampleCount);
   end;
   // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!
-  PublishAuxChannels(fTimes[ABlock.SampleCount - 1]);
+  PublishAuxChannels(RecorderBlockSampleTime(ABlock, -1,
+    ABlock.SampleCount - 1));
 end;
 
 // не надо каждому отсчету время сопоставлять! вре5мя должно соответсвовать блоку а не каждому отсчету если это одномерный сигнал!

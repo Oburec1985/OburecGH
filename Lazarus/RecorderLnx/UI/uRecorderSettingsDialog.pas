@@ -2980,7 +2980,7 @@ begin
   begin
     RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, lSourceId);
     fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
-    fRecorder.TagRegistry.RemoveTagsBySourceId(lSourceId);
+    fRecorder.TagRegistry.DetachTagsBySourceId(lSourceId);
   end;
 
   fSourceProbe.MeraFilePath := '';
@@ -3957,7 +3957,7 @@ begin
   RecorderConfiguredDataSourcesRemove(fRecorder.TagRegistry, ASourceId);
   fDataSourcesChanged := True;
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
-  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
+  fRecorder.TagRegistry.DetachTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
   PopulateHardwareTree;
   PopulateChannelGrids;
@@ -3978,7 +3978,7 @@ begin
   if lIdx >= 0 then
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
-  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
+  fRecorder.TagRegistry.DetachTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
   PopulateHardwareTree;
   PopulateChannelGrids;
@@ -4005,7 +4005,7 @@ begin
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
   RecorderHardwareClearSourceOffline(ASourceId);
-  fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId);
+  fRecorder.TagRegistry.DetachTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
 
   if RecorderIsVirtualTagSource(ASourceId) then
@@ -6044,7 +6044,7 @@ end;
 procedure TRecorderSettingsDialog.RemoveTagsFromDeletedSources;
 var
   I: Integer;
-  lRemoved: Integer;
+  lDetached: Integer;
   lSourceId: string;
   lTag: TRecorderTag;
 begin
@@ -6053,7 +6053,7 @@ begin
   if fRecorder.TagRegistry.ConfiguredDataSources.Count = 0 then
     Exit;
 
-  lRemoved := 0;
+  lDetached := 0;
   for I := fRecorder.TagRegistry.TagCount - 1 downto 0 do
   begin
     lTag := fRecorder.TagRegistry.Tags[I];
@@ -6061,17 +6061,17 @@ begin
     if not TagBelongsToDeletedSource(lTag) then
       Continue;
 
-    RecorderDebugLog(Format('[Settings] Removing tag "%s" from deleted source "%s"',
+    RecorderDebugLog(Format('[Settings] Detaching tag "%s" from deleted source "%s"',
       [lTag.Name, lSourceId]));
-    fRecorder.TagRegistry.RemoveTag(lTag);
-    Inc(lRemoved);
+    lTag.SourceId := CDetachedTagSourcePrefix + ' ' + lSourceId;
+    Inc(lDetached);
   end;
 
-  if lRemoved > 0 then
+  if lDetached > 0 then
   begin
     fDataSourcesChanged := True;
-    RecorderDebugLog(Format('[Settings] Removed %d tag(s) from deleted sources',
-      [lRemoved]));
+    RecorderDebugLog(Format('[Settings] Detached %d tag(s) from deleted sources',
+      [lDetached]));
   end;
 end;
 

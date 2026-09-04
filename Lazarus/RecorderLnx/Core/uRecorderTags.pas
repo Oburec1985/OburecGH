@@ -528,6 +528,7 @@ type
     procedure Clear;
     procedure RemoveTag(ATag: TRecorderTag);
     procedure RemoveTagsBySourceId(const ASourceId: string);
+    procedure DetachTagsBySourceId(const ASourceId: string);
 
     property ActiveSourceCount: Integer read GetActiveSourceCount;
     property ActiveSourceIds[AIndex: Integer]: string read GetActiveSourceId;
@@ -2474,6 +2475,23 @@ begin
     lTag := TRecorderTag(fTags[I]);
     if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) then
       RemoveTag(lTag);
+  end;
+end;
+
+procedure TRecorderTagRegistry.DetachTagsBySourceId(const ASourceId: string);
+var
+  I: Integer;
+  lSourceId: string;
+  lTag: TRecorderTag;
+begin
+  lSourceId := RecorderNormalizeTagSourceId(ASourceId);
+  if lSourceId = '' then
+    Exit;
+  for I := 0 to fTags.Count - 1 do
+  begin
+    lTag := TRecorderTag(fTags[I]);
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) then
+      lTag.SourceId := CDetachedTagSourcePrefix + ' ' + lSourceId;
   end;
 end;
 

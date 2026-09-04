@@ -110,6 +110,9 @@ begin
   Result := False;
   if (ATags = nil) or (ATag = nil) then
     Exit;
+  { Отвязанные теги являются частью проекта: удален только источник, а не тег. }
+  if RecorderIsDetachedTagSource(ATag.SourceId) then
+    Exit;
   if ATags.ConfiguredDataSources.Count = 0 then
     Exit;
 

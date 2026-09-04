@@ -53,6 +53,10 @@ const
   CMic185HardBalanceRangeMv = 100.0;
   CMic185SoftBalanceMaxCode = 32767;
   CMic185DefaultAveragePointCount = 7;
+  { MIC185V2 CalcStartOffset timing constants from the original driver. }
+  CMic185NiosIrqDelayUs = 10;
+  CMic185SpiTempDelayUs = 10;
+  CMic185DriverStartOffsetUs = 75;
   CMic185DefaultPowerMaCode = 10813;
   CMic185DefaultCalibrShuntIndex = 3;
 
