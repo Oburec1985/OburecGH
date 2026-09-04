@@ -353,8 +353,8 @@ type
     useWndCb: TCheckBox;
     LoadBtn: TButton;
     SpmChart:cchart;
-    FilteredSpinButton1: TFilteredSpinButton;
     ShowPeaks: TCheckBox;
+    SpinButton1: TSpinButton;
     procedure FormCreate(sender: tobject);
     procedure SaveBtnClick(sender: tobject);
     procedure WinPosBtnClick(sender: tobject);
@@ -2042,7 +2042,7 @@ begin
       // for i := 0 to t.m_tag.lastindex - 1 do
       begin
         v := srcTag.m_ReadData[i];
-        if t.m_noTaho then
+        if t.m_noTaho then //
           cmpV := abs(v - baseValue)
         else
           cmpV := v;
