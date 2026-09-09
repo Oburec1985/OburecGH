@@ -22,6 +22,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 WizardStyle=modern
 UninstallDisplayIcon={app}\RecorderLnx.exe
+SetupIconFile={#SourceRoot}\resources\app\RecorderLnx.ico
 SetupLogging=yes
 
 [Languages]
@@ -75,8 +76,19 @@ Name: "desktopicon"; Description: "Создать ярлык на рабочем
   GroupDescription: "Дополнительные значки:"
 
 [Run]
+Filename: "{sys}\netsh.exe"; \
+  Parameters: "advfirewall firewall delete rule name=""Mera RecorderLnx discovery"""; \
+  Flags: runhidden; StatusMsg: "Обновление правила сетевого обнаружения..."
+Filename: "{sys}\netsh.exe"; \
+  Parameters: "advfirewall firewall add rule name=""Mera RecorderLnx discovery"" dir=in action=allow program=""{app}\RecorderLnx.exe"" protocol=UDP localport=38766 profile=domain,private enable=yes"; \
+  Flags: runhidden; StatusMsg: "Разрешение сетевого обнаружения RecorderLnx..."
 Filename: "{app}\RecorderLnx.exe"; Description: "Запустить RecorderLnx"; \
   WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{sys}\netsh.exe"; \
+  Parameters: "advfirewall firewall delete rule name=""Mera RecorderLnx discovery"""; \
+  Flags: runhidden
 
 [Code]
 var

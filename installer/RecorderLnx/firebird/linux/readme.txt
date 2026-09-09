@@ -1,78 +1,80 @@
-Firebird для RecorderLnx ставится отдельно от RecorderLnx.
+Дополнительные компоненты RecorderLnx для Linux
+================================================
 
-Комплект папки:
+Установщик предлагает два независимых компонента:
 
-- Firebird-*-linux-x64.tar.gz
-- install-firebird-recorderlnx.sh
-- check-firebird-recorderlnx.sh
-- Install Firebird for RecorderLnx.desktop
-- deps\*.deb (необязательно, локальные зависимости Debian/Орел без интернета)
+- Firebird — локальный SQL-сервер для событий записи;
+- rcPanel — графическая панель управления RecorderLnx. Внутреннее имя
+  исполняемого файла пока остается RecorderCoordinator.
 
-Установка с флешки без интернета:
+Подготовка комплекта на Windows
+-------------------------------
 
-1. Скопируйте всю папку на флешку или сразу на Linux ПК.
-2. Если на целевом ПК нет интернета, положите недостающие пакеты `.deb`
-   в подпапку `deps`.
-   Скрипт сам выполнит `dpkg -i deps/*.deb`.
-   Репозитории apt по умолчанию не используются.
-3. Откройте папку в файловом менеджере.
-4. Запустите `Install Firebird for RecorderLnx.desktop`
-   или командой `bash install-firebird-recorderlnx.sh`.
-5. Введите пароль администратора, если система запросит sudo.
+Для обычного обновления перед копированием на флешку запустите двойным щелчком:
 
-Важно:
+  update-offline-installer.bat
 
-- По умолчанию установка полностью offline и не делает `apt-get update`.
-- Если специально нужна online-установка зависимостей через apt, запустите:
+BAT обновит payload rcPanel из актуальной Linux-сборки, пересоздаст контрольные
+суммы и проверит полноту переносимой папки. После сообщения READY копируйте на
+флешку всю эту папку целиком. Для автоматического запуска без Pause используйте
+`update-offline-installer.bat --no-pause`.
 
-```bash
-sudo RECORDERLNX_FIREBIRD_ONLINE_DEPS=1 bash install-firebird-recorderlnx.sh
-```
+После сборки Linux-версии RecorderCoordinator выполните из этой папки:
 
-Что делает скрипт:
+  powershell -ExecutionPolicy Bypass -File .\prepare-installer.ps1
 
-- ищет рядом архив `Firebird-*-linux-x64.tar.gz`;
-- ставит локальные зависимости из `deps/*.deb`, если они есть;
-- не использует apt-репозитории без явного
-  `RECORDERLNX_FIREBIRD_ONLINE_DEPS=1`;
-- распаковывает архив во временную папку;
-- запускает `install.sh -silent`;
-- включает и запускает `firebird.service`;
-- создает системный каталог Mera Files для SQL БД:
-  `/var/opt/mera/SQLdb`;
-- назначает владельцем этого каталога пользователя Firebird
-  (`firebird`/`firebirdsql`, если такой пользователь есть);
-- создает совместимый старый каталог `/var/opt/mera/RecorderLnx/sqldb`;
-- создает `/etc/profile.d/recorderlnx-sqldb.sh` только с путем
-  `RECORDERLNX_SQLDB_ROOT=/var/opt/mera/SQLdb`;
-- сохраняет пароль в конфигурации RecorderLnx с правами `0600`.
+Скрипт копирует
+Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator в
+payload/RecorderCoordinator и создает payload/RecorderCoordinator.sha256.
 
-Для локального Firebird не используйте `/home/user/Mera Files/SQLdb` как
-каталог файла БД: сервер Firebird работает отдельным пользователем и часто не
-имеет права прохода в домашний каталог пользователя. Используйте системный
-Mera Files: `/var/opt/mera/SQLdb`.
+Установка
+---------
 
-Firebird в silent-режиме сам генерирует пароль SYSDBA и сохраняет его в:
+1. Скопируйте всю папку на Linux ПК.
+2. Запустите ярлык «Install RecorderLnx components» или команду:
 
-`/opt/firebird/SYSDBA.password`
+     bash install-firebird-recorderlnx.sh
 
-Установщик переносит этот пароль в проектный `sql-db.ini`, если RecorderLnx уже
-установлен и защищает файл правами `0600`. Пусковой файл
-`/usr/bin/recorderlnx` загружает из `/etc/profile.d/recorderlnx-sqldb.sh`
-только путь к каталогу SQLdb; пароль в общем profile не хранится.
+   При запуске без параметров Zenity покажет выбор Firebird и rcPanel.
+3. Введите пароль администратора, если sudo его запросит.
 
-Проверка:
+Установка без графического окна:
 
-```bash
-bash check-firebird-recorderlnx.sh
-```
+  bash install-firebird-recorderlnx.sh --firebird --no-gui
+  bash install-firebird-recorderlnx.sh --rcpanel --no-gui
+  bash install-firebird-recorderlnx.sh --all --no-gui
 
-Если в проверке есть строки `not found`, нужно добавить соответствующие
-Debian/Орел `.deb` пакеты в `deps` и повторить установку.
+Firebird
+--------
 
-После установки перезапустите RecorderLnx. Повторный вход в систему для запуска
-через штатный ярлык больше не требуется.
+Рядом должен лежать Firebird-*-linux-x64.tar.gz. Локальные зависимости Debian
+или ОС «Орел» можно положить в deps/*.deb. По умолчанию apt-репозитории не
+используются. Явно разрешить online-зависимости можно так:
 
-Лог установки:
+  RECORDERLNX_FIREBIRD_ONLINE_DEPS=1 bash install-firebird-recorderlnx.sh --firebird
 
-`/tmp/recorderlnx-firebird-install.log`
+Установщик создает /var/opt/mera/SQLdb, совместимый старый каталог
+/var/opt/mera/RecorderLnx/sqldb и записывает пароль SYSDBA в sql-db.ini уже
+установленного RecorderLnx. Пароль не помещается в общий profile.
+
+rcPanel
+-------
+
+Программа устанавливается в /opt/mera/RecorderCoordinator, а команда запуска —
+/usr/bin/rcpanel. Создаются общий ярлык /usr/share/applications/rcpanel.desktop,
+конфигурация и лог рядом с программой, а также архив
+/var/opt/mera/RecorderCoordinator/archive. Конфигурация, лог и архив передаются
+пользователю, от имени которого был вызван sudo. Системная служба для rcPanel не
+создается: это обычное графическое приложение.
+
+Проверка
+--------
+
+  bash check-firebird-recorderlnx.sh --firebird
+  bash check-firebird-recorderlnx.sh --rcpanel
+  bash check-firebird-recorderlnx.sh --all
+
+Без параметров проверяются оба компонента. Проверку прав записи rcPanel нужно
+запускать от того же обычного пользователя, который будет запускать панель.
+
+Лог установки: /tmp/recorderlnx-firebird-install.log

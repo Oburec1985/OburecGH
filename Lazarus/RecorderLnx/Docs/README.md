@@ -27,3 +27,5 @@
 - [MIC-140](devices/mic140/README.md)
 - [MIC-185](devices/mic185/README.md)
 - [SQL БД](sql/sql-recording-module-tz.md)
+- [События MERA-записи и распределённый архив](sql/mera-record-events-and-archive.md)
+- [Автоматическое обнаружение RecorderLnx и Coordinator в локальной сети](setup/lan-discovery.md)

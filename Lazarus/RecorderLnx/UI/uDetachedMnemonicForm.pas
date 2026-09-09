@@ -16,7 +16,8 @@ interface
 uses
   Classes, SysUtils, Types, Forms, Controls, ExtCtrls, Buttons, Graphics,
   ImgList, uRecorderFormModel, uRecorderTags, uRecorderAlarms,
-  uFormEditorController, uRecorderCommandImages, uRecorderMeasurementSectionModel;
+  uFormEditorController, uRecorderCommandImages, uRecorderMeasurementSectionModel,
+  uRecorderComponentToolGroup, uRecorderSqlTrendModel;
 
 type
   TDetachedMnemonicForm = class(TForm)
@@ -27,7 +28,9 @@ type
     fCanvas: TPanel;
     fToolbar: TPanel;
     fImages: TCustomImageList;
+    fProjectConfigDir: string;
     fEditButton: TSpeedButton;
+    fChartToolGroup: TRecorderComponentToolGroup;
     fDeleteButton: TSpeedButton;
     fOnAttach: TNotifyEvent;
     fOnChanged: TNotifyEvent;
@@ -44,6 +47,7 @@ type
     procedure AddValueClick(Sender: TObject);
     procedure AddOscClick(Sender: TObject);
     procedure AddTrendClick(Sender: TObject);
+    procedure AddSqlTrendClick(Sender: TObject);
     procedure AddSectionClick(Sender: TObject);
     procedure AddSpectrumClick(Sender: TObject);
     procedure AddImageClick(Sender: TObject);
@@ -57,7 +61,7 @@ type
     constructor CreateForPage(AOwner: TComponent; APage: TRecorderFormPage;
       AFactory: TRecorderComponentFactory; ATagRegistry: TRecorderTagRegistry;
       AAlarmEngine: IRecorderAlarmEngine; ADisplaySeconds: Double;
-      AImages: TCustomImageList;
+      AImages: TCustomImageList; const AProjectConfigDir: string;
       AOnAttach, AOnChanged: TNotifyEvent);
     destructor Destroy; override;
     procedure RefreshLive;
@@ -74,12 +78,14 @@ constructor TDetachedMnemonicForm.CreateForPage(AOwner: TComponent;
   APage: TRecorderFormPage; AFactory: TRecorderComponentFactory;
   ATagRegistry: TRecorderTagRegistry; AAlarmEngine: IRecorderAlarmEngine;
   ADisplaySeconds: Double; AImages: TCustomImageList;
+  const AProjectConfigDir: string;
   AOnAttach, AOnChanged: TNotifyEvent);
 begin
   inherited CreateNew(AOwner);
   fPage := APage;
   fFactory := AFactory;
   fImages := AImages;
+  fProjectConfigDir := AProjectConfigDir;
   fOnAttach := AOnAttach;
   fOnChanged := AOnChanged;
   Caption := fPage.Title;
@@ -95,20 +101,23 @@ begin
 
   fEditButton := AddToolButton(4, CIconEditForm, 'Edit mnemonic',
     @EditClick, 1, True);
-  AddToolButton(38, CIconOscillogram, 'Add oscillogram', @AddOscClick);
-  AddToolButton(72, CIconTrends, 'Add trend', @AddTrendClick);
-  AddToolButton(390, CIconMeasurementSection,
+  fChartToolGroup := TRecorderComponentToolGroup.Create(Self, fToolbar,
+    fImages, 38, CIconTrends, 'Графики');
+  fChartToolGroup.AddCommand('Осциллограмма', CIconOscillogram, @AddOscClick);
+  fChartToolGroup.AddCommand('Тренд', CIconTrends, @AddTrendClick);
+  fChartToolGroup.AddCommand('SQL-тренд', CIconTrends, @AddSqlTrendClick);
+  fChartToolGroup.AddCommand('Спектр', CIconSpectrum, @AddSpectrumClick);
+  AddToolButton(282, CIconMeasurementSection,
     'Добавить измерительное сечение', @AddSectionClick);
-  AddToolButton(106, CIconTextLabel, 'Add text label', @AddTextClick);
-  AddToolButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick);
-  AddToolButton(174, CIconDigitalIndicator, 'Add digital indicator',
+  AddToolButton(72, CIconTextLabel, 'Add text label', @AddTextClick);
+  AddToolButton(106, CIconDigitalIndicator, 'Add digital indicator',
     @AddValueClick);
-  AddToolButton(208, CIconImageComponent, 'Добавить картинку',
+  AddToolButton(140, CIconImageComponent, 'Добавить картинку',
     @AddImageClick);
-  AddToolButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  AddToolButton(282, CIconButton, 'Add button', nil, 0, False, False);
-  AddToolButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteButton := AddToolButton(424, -1, 'Delete selected component',
+  AddToolButton(180, CIconTagTable, 'Add tag table', nil, 0, False, False);
+  AddToolButton(214, CIconButton, 'Add button', nil, 0, False, False);
+  AddToolButton(248, CIconComboBox, 'Add combo box', nil, 0, False, False);
+  fDeleteButton := AddToolButton(316, -1, 'Delete selected component',
     @DeleteClick, 0, False, True, '-');
 
   fCanvas := TPanel.Create(Self);
@@ -222,6 +231,29 @@ end;
 procedure TDetachedMnemonicForm.AddTrendClick(Sender: TObject);
 begin
   AddComponent(TRecorderTrendComponent.TypeId, 'Trend', 400, 300);
+end;
+
+procedure TDetachedMnemonicForm.AddSqlTrendClick(Sender: TObject);
+var
+  lComponent: TRecorderSqlTrendComponent;
+begin
+  fEditor.RememberUndoStep;
+  lComponent := TRecorderSqlTrendComponent(
+    fFactory.CreateComponent(TRecorderSqlTrendComponent.TypeId));
+  try
+    lComponent.Id := UniqueComponentId('SqlTrend');
+    lComponent.Name := ExtractFileName(lComponent.Id);
+    lComponent.ConfigFileName := IncludeTrailingPathDelimiter(
+      fProjectConfigDir) + 'sql-db.ini';
+    lComponent.SetBounds(16, 16, 520, 320);
+    fEditor.PositionNewComponent(lComponent);
+    fPage.AddComponent(lComponent);
+    lComponent := nil;
+  finally
+    lComponent.Free;
+  end;
+  fEditor.Render;
+  EditorChanged;
 end;
 
 procedure TDetachedMnemonicForm.AddSectionClick(Sender: TObject);

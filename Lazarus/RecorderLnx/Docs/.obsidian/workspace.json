@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "devices/mic140/protocol/mic140-protocol.md",
+                "file": "devices/mic140/cold-start-init.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "mic140-protocol"
+              "title": "cold-start-init"
             }
           }
         ]
@@ -187,6 +187,22 @@
   },
   "active": "5887f9d2481b1755",
   "lastOpenFiles": [
+    "devices/mic140/Pasted image 20260625154044.png",
+    "devices/mic140/programming_profiles.md",
+    "devices/mic140/protocol.md",
+    "devices/mic140/protocol/05_data_stream.md",
+    "devices/mic140/protocol/00_full_reproduction_spec.md",
+    "architecture/recorder_run_lifecycle.md",
+    "architecture/tag-data-client-model.md",
+    "architecture/README.md",
+    "architecture/development-team.md",
+    "architecture/data_sources_architecture.md",
+    "algorithms/spectrum_worker_isolation.md",
+    "algorithms/spectrum_runtime_engine.md",
+    "algorithms/spectrum_best_pipeline.md",
+    "algorithms/notes_spectra_lazarus.md",
+    "algorithms/algorithm-manager-requirements.md",
+    "devices/mic140/protocol/mic140-protocol.md",
     "Руководство пользователя/~WRL0005.tmp",
     "Руководство пользователя/~WRD0004.tmp",
     "Руководство пользователя/~WRD0002.tmp",
@@ -194,7 +210,6 @@
     "Руководство пользователя/~WRD0000.tmp",
     "Руководство пользователя/Руководство пользователя RecorderLnx.md",
     "Руководство пользователя/Как обновлять руководство пользователя.md",
-    "devices/mic140/protocol/mic140-protocol.md",
     "devices/mic185/recorderlnx_integration.md",
     "devices/mic185/protocol.md",
     "devices/mic185/hardware_calibration_cache.md",
@@ -203,35 +218,19 @@
     "development-rules.md",
     "ui/README_MnemonicControls.md",
     "ui/settings_dialog.md",
-    "ui/README.md",
-    "ui/form-editor.md",
-    "ui/detached-mnemonic-windows.md",
     "sql/sql-recording-assets/03-entity-descriptions.png",
     "sql/sql-recording-assets/02-functions.png",
     "sql/sql-recording-assets/01-entity-schema.png",
-    "sql/firebird-install.md",
-    "sql/sql-recording-module-tz.md",
-    "sql/sql-db-historical-trend.md",
-    "setup/windows-installer.md",
-    "setup/vm_atra_lazarus.md",
-    "setup/source-encoding.md",
-    "setup/README.md",
-    "setup/network-interface-binding.md",
-    "setup/lazarus_vm_docking.md",
     "screens/settings_recorder_reference.svg",
     "screens/settings_devices_reference.svg",
     "screens/mic140-acceptance-codes-20260626.png",
-    "errors/2026-06-29-mic140v2-acceptance.md",
-    "devices/mc/mc201-hardware-scale.md",
     "devices/mic140/6B52DE20",
     "devices/mic140/~$Расчет точек АЦП.xlsx",
     "devices/mic185/images/recorder_mic185_main.png",
     "devices/mic185/images/recorder_mic185_commutation_combo.png",
     "devices/mic185/images/recorder_mic185_channel.png",
-    "devices/mic185/images/recorder_mic185_additional.png",
     "devices/mic185/images",
     "devices/mic185/mebius.daq/utils/mera_monitor/resources/icons/black_white",
-    "devices/mic185/mebius.daq/utils/mera_monitor/config/windows/qt.conf",
-    "devices/mic185/mebius.daq/utils/mera_monitor/config/linux/qt.conf"
+    "devices/mic185/mebius.daq/utils/mera_monitor/config/windows/qt.conf"
   ]
 }

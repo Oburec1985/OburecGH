@@ -1,8 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Install Firebird for RecorderLnx
-Comment=Install local Firebird SQL server for RecorderLnx
-Exec=sh -c 'cd "$(dirname "$1")" && bash ./install-firebird-recorderlnx.sh; echo; echo "Press Enter to close..."; read dummy' dummy %k
+Name=Install RecorderLnx components
+Comment=Install Firebird and rcPanel for RecorderLnx
+Exec=bash ./install-firebird-recorderlnx.sh
+TryExec=bash
 Terminal=true
+Icon=system-software-install
 Categories=Utility;
 StartupNotify=false

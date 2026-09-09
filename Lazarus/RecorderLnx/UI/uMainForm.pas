@@ -38,7 +38,7 @@ interface
 uses
   Classes, SysUtils, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
-  StrUtils,
+  StrUtils, DateUtils, fpjson, jsonparser,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
@@ -51,11 +51,14 @@ uses
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
   uRecorderRecordChannelMetadata, uRecorderDeviceRecordChannelMetadata,
+  uRecorderRecordTimebase,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionView, uRecorderTrendView,
-  uRecorderApplicationController, uRecorderConfigurationService;
+  uRecorderApplicationController, uRecorderConfigurationService,
+  uRecorderComponentToolGroup,
+  uRecorderCoordinatorProtocol, uRecorderCoordinatorClient;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -135,12 +138,9 @@ type
     fEditorToolbar: TPanel;                       // Панель инструментов редактора
     fFormEditor: TFormEditorController;           // Контроллер логики перетаскивания и редактирования
     fEditModeButton: TSpeedButton;                // Кнопка включения режима конструктора
-    fAddOscillogramButton: TSpeedButton;          // Кнопка добавления осциллограммы
-    fAddTrendButton: TSpeedButton;                // Кнопка добавления тренда
-    fAddSqlTrendButton: TSpeedButton;
+    fChartToolGroup: TRecorderComponentToolGroup; // Осциллограмма, тренды и спектр
     fAddMeasurementSectionButton: TSpeedButton;
     fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
-    fAddSpectrumButton: TSpeedButton;             // Кнопка добавления графика спектра
     fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
     fAddImageButton: TSpeedButton;                // Кнопка добавления картинки
     fAddTagTableButton: TSpeedButton;             // Кнопка добавления таблицы тегов
@@ -166,6 +166,12 @@ type
     // Ядро системы рекордера
     fRecorder: TRecorder;                         // Корневой объект ядра (теги, источники, runtime)
     fApplicationController: TRecorderApplicationController;
+    fCoordinatorClient: TRecorderCoordinatorClient;
+    fCoordinatorTimer: TTimer;
+    fScheduledCoordinatorCommand: TRecorderCoordinatorCommand;
+    fCoordinatorRecordingId: string;
+    fCoordinatorCorrelationId: string;
+    fCoordinatorRecordingStartedUtc: TDateTime;
     fConfigurationService: TRecorderConfigurationService;
     fLatestTagValues: TStringList;                // Буфер последних текстовых значений тегов для отображения
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
@@ -189,6 +195,9 @@ type
     fMeraWriter: TRecorderMeraTagWriter;          // Writer MERA files of current record
     fRecordTagCursors: array of QWord;            // Независимые позиции writer-а в кольцах тегов
     fRecordTagBlocks: array of TRecorderSignalSnapshot; // Переиспользуемый MERA block на тег
+    fRecordTagMetadata: array of TRecorderRecordChannelMetadata;
+    fRecordTagTimeDomains: array of Integer;
+    fRecordTimebase: TRecorderRecordTimebase;
     fDiagLastLogTickMs: QWord;                    // Время последнего диагностического лога
     fDiagUiTicks: Integer;                        // Количество тиков UI за период диагностики
     fDiagDataEvents: Integer;                     // Количество событий данных за период диагностики
@@ -309,6 +318,7 @@ type
     procedure AddMeasurementSectionClick(Sender: TObject);
     { Обработчик кнопки добавления спектра на полотне. }
     procedure AddSpectrumClick(Sender: TObject);
+    procedure ChartToolGroupOpening(Sender: TObject);
     { Обработчик кнопки добавления цифрового индикатора на полотне. }
     procedure AddDigitalIndicatorClick(Sender: TObject);
     procedure AddImageClick(Sender: TObject);
@@ -378,6 +388,13 @@ type
     procedure StopDataSources;
     { Вычитывает очередь снимков событий в UI thread и обновляет отображение. }
     procedure DrainUiEventQueue(Sender: TObject);
+    procedure CoordinatorTimerTimer(Sender: TObject);
+    procedure ConfigureCoordinatorClient;
+    procedure UpdateCoordinatorSnapshot;
+    procedure ExecuteCoordinatorCommand(ACommand: TRecorderCoordinatorCommand);
+    function CoordinatorRuntimeState: string;
+    function CoordinatorStateJson: string;
+    function CoordinatorRecordingJson(ACompleted: Boolean = False): string;
     { По периоду DataUpdateMs читает только новые данные тегов; EventBus массивы не переносит. }
     procedure ConsumeTagDataCycle(Sender: TObject);
     { Выполняет визуальную часть display-цикла только для видимой страницы. }
@@ -495,6 +512,7 @@ begin
   fDetachedForms.Sorted := True;
   fDetachedForms.Duplicates := dupError;
   SetProjectConfigDir(LoadDefaultProjectConfigDir);
+  ConfigureCoordinatorClient;
 
   LoadRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
@@ -666,6 +684,10 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  if fCoordinatorTimer <> nil then
+    fCoordinatorTimer.Enabled := False;
+  FreeAndNil(fScheduledCoordinatorCommand);
+  FreeAndNil(fCoordinatorClient);
   FreeAndNil(fConfigurationService);
   FreeAndNil(fApplicationController);
   if fDataConsumeTimer <> nil then
@@ -973,6 +995,253 @@ begin
     on E: Exception do
       LogCommandError('Winpos button', E);
   end;
+end;
+
+function JsonQuoted(const AValue: string): string;
+var
+  lValue: string;
+begin
+  lValue := StringReplace(AValue, '\', '\\', [rfReplaceAll]);
+  lValue := StringReplace(lValue, '"', '\"', [rfReplaceAll]);
+  lValue := StringReplace(lValue, #13, '\r', [rfReplaceAll]);
+  lValue := StringReplace(lValue, #10, '\n', [rfReplaceAll]);
+  Result := '"' + lValue + '"';
+end;
+
+procedure TMainForm.ConfigureCoordinatorClient;
+var
+  lConfig: TRecorderCoordinatorClientConfig;
+  lFileName: string;
+begin
+  FreeAndNil(fCoordinatorClient);
+  lFileName := GetAppConfigDir + 'coordinator-client.ini';
+  lConfig := TRecorderCoordinatorClientConfig.Create;
+  lConfig.LoadFromFile(lFileName);
+  fCoordinatorClient := TRecorderCoordinatorClient.Create(lConfig);
+  fCoordinatorTimer := TTimer.Create(Self);
+  fCoordinatorTimer.Interval := 250;
+  fCoordinatorTimer.OnTimer := @CoordinatorTimerTimer;
+  fCoordinatorTimer.Enabled := True;
+  UpdateCoordinatorSnapshot;
+  fCoordinatorClient.Start;
+end;
+
+function TMainForm.CoordinatorRuntimeState: string;
+begin
+  case fRecorder.StateMachine.State of
+    rsStop:
+      Result := 'stopped';
+    rsPreviewArmed, rsPreview:
+      Result := 'preview';
+    rsRecordArmed, rsRecord:
+      Result := 'recording';
+  else
+    Result := 'offline';
+  end;
+end;
+
+function TMainForm.CoordinatorStateJson: string;
+begin
+  Result := Format('{"state":%s,"run_state":%s,"project_dir":%s}',
+    [JsonQuoted(CoordinatorRuntimeState),
+     JsonQuoted(TRecorderStateMachine.StateToString(
+       fRecorder.StateMachine.State)), JsonQuoted(fProjectConfigDir)]);
+end;
+
+function TMainForm.CoordinatorRecordingJson(ACompleted: Boolean): string;
+var
+  lDir, lMera, lMeasureName, lStarted, lFinished, lProject: string;
+  lActive: Boolean;
+begin
+  lActive := (fRecorder <> nil) and
+    (fRecorder.StateMachine.State = rsRecord);
+  if lActive and (fRecordFrameManager <> nil) then
+    lDir := fRecordFrameManager.CurrentFrameDir
+  else
+    lDir := LastRecordedMeasureDir;
+  lMeasureName := ExtractFileName(ExcludeTrailingPathDelimiter(lDir));
+  if lMeasureName <> '' then
+    lMera := IncludeTrailingPathDelimiter(lDir) + lMeasureName + '.mera'
+  else
+  begin
+    lMera := '';
+    lMeasureName := 'Запись RecorderLnx';
+  end;
+  if fCoordinatorRecordingStartedUtc > 0 then
+    lStarted := DateToISO8601(fCoordinatorRecordingStartedUtc, True)
+  else
+    lStarted := '';
+  if ACompleted then
+    lFinished := DateToISO8601(RecorderCoordinatorUtcNow, True)
+  else
+    lFinished := '';
+  lProject := ExtractFileName(ExcludeTrailingPathDelimiter(fProjectConfigDir));
+  Result := Format(
+    '{"recording_id":%s,"active":%s,"state":%s,"local_path":%s,"entry_file":%s,' +
+    '"available":%s,"started_utc":%s,"finished_utc":%s,"display_name":%s,"project_name":%s}',
+    [JsonQuoted(fCoordinatorRecordingId), LowerCase(BoolToStr(lActive, True)),
+     JsonQuoted(CoordinatorRuntimeState),
+     JsonQuoted(lDir), JsonQuoted(lMera),
+     LowerCase(BoolToStr((lDir <> '') and DirectoryExists(lDir), True)),
+     JsonQuoted(lStarted), JsonQuoted(lFinished),
+     JsonQuoted(lMeasureName), JsonQuoted(lProject)]);
+end;
+
+procedure TMainForm.UpdateCoordinatorSnapshot;
+begin
+  if fCoordinatorClient <> nil then
+    fCoordinatorClient.UpdateSnapshot(CoordinatorStateJson,
+      CoordinatorRecordingJson);
+end;
+
+procedure TMainForm.ExecuteCoordinatorCommand(
+  ACommand: TRecorderCoordinatorCommand);
+var
+  lCode: TRecorderCoordinatorResultCode;
+  lText, lPayload: string;
+  lCommandPayload: TJSONData;
+  lFirebirdHost: string;
+begin
+  if (ACommand.ExecuteAtUtc > 0) and
+    (ACommand.ExecuteAtUtc > RecorderCoordinatorUtcNow) then
+  begin
+    if fScheduledCoordinatorCommand <> nil then
+    begin
+      fCoordinatorClient.CompleteCommand(ACommand, rcrcNotReady,
+        'Another scheduled command is pending', '{}');
+      Exit;
+    end;
+    fScheduledCoordinatorCommand := ACommand;
+    Exit;
+  end;
+
+  lCode := rcrcNoError;
+  lText := 'OK';
+  lPayload := '{}';
+  try
+    if (ACommand.DeadlineUtc > 0) and
+      (ACommand.DeadlineUtc < RecorderCoordinatorUtcNow) then
+    begin
+      lCode := rcrcTimeout;
+      lText := 'Command deadline expired';
+    end
+    else if SameText(ACommand.CommandType, 'state.get') then
+      lPayload := CoordinatorStateJson
+    else if SameText(ACommand.CommandType, 'recording.current.get') or
+      SameText(ACommand.CommandType, 'recording.get') or
+      SameText(ACommand.CommandType, 'recording.location.resolve') then
+      lPayload := CoordinatorRecordingJson
+    else if SameText(ACommand.CommandType, 'recording.prepare') then
+    begin
+      if fRecorder.StateMachine.State <> rsStop then
+      begin
+        lCode := rcrcNotReady;
+        lText := 'Recorder must be stopped before prepare';
+      end;
+    end
+    else if SameText(ACommand.CommandType, 'recording.preview') then
+    begin
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote recording control is disabled';
+      end
+      else if fRecorder.StateMachine.State <> rsPreview then
+        fApplicationController.StartPreview;
+    end
+    else if SameText(ACommand.CommandType, 'recording.start_at') or
+      SameText(ACommand.CommandType, 'recording.start') then
+    begin
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote recording control is disabled';
+      end
+      else if fRecorder.StateMachine.State = rsRecord then
+      begin
+        lCode := rcrcAlreadyRecording;
+        lText := 'Recorder is already recording';
+      end
+      else
+      begin
+        fCoordinatorCorrelationId := ACommand.CorrelationId;
+        fApplicationController.StartRecord;
+      end;
+    end
+    else if SameText(ACommand.CommandType, 'recording.stop') then
+    begin
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote recording control is disabled';
+      end
+      else if fRecorder.StateMachine.State <> rsStop then
+        fApplicationController.Stop;
+    end
+    else if SameText(ACommand.CommandType, 'config.get') then
+      lPayload := Format('{"project_dir":%s}', [JsonQuoted(fProjectConfigDir)])
+    else if SameText(ACommand.CommandType, 'config.sql_database.set') then
+    begin
+      { This is a deliberately narrow managed action: it changes only the
+        Firebird endpoint. General remote project/config editing remains
+        protected by AllowRemoteConfig. }
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote managed actions are disabled';
+      end
+      else
+      begin
+        lCommandPayload := GetJSON(ACommand.PayloadJson);
+        try
+          if not (lCommandPayload is TJSONObject) then
+            raise Exception.Create('Command payload must be a JSON object');
+          lFirebirdHost := Trim(TJSONObject(lCommandPayload).Get('host', ''));
+          if lFirebirdHost = '' then
+            raise Exception.Create('Firebird host is empty');
+          fRecorder.SqlDbManager.Config.Host := lFirebirdHost;
+          fRecorder.SqlDbManager.SaveConfig;
+          fRecorder.SqlDbManager.Reload;
+          lPayload := Format('{"host":%s}', [JsonQuoted(lFirebirdHost)]);
+          AddLog('Сервер SQL БД изменён координатором: ' + lFirebirdHost);
+        finally
+          lCommandPayload.Free;
+        end;
+      end;
+    end
+    else
+    begin
+      lCode := rcrcInvalidCommand;
+      lText := 'Unsupported command: ' + ACommand.CommandType;
+    end;
+  except
+    on E: Exception do
+    begin
+      lCode := rcrcInternalError;
+      lText := E.Message;
+    end;
+  end;
+  UpdateCoordinatorSnapshot;
+  fCoordinatorClient.CompleteCommand(ACommand, lCode, lText, lPayload);
+end;
+
+procedure TMainForm.CoordinatorTimerTimer(Sender: TObject);
+var
+  lCommand: TRecorderCoordinatorCommand;
+begin
+  UpdateCoordinatorSnapshot;
+  if (fScheduledCoordinatorCommand <> nil) and
+    (fScheduledCoordinatorCommand.ExecuteAtUtc <= RecorderCoordinatorUtcNow) then
+  begin
+    lCommand := fScheduledCoordinatorCommand;
+    fScheduledCoordinatorCommand := nil;
+    ExecuteCoordinatorCommand(lCommand);
+  end;
+  if (fCoordinatorClient = nil) or
+    (fScheduledCoordinatorCommand <> nil) then Exit;
+  lCommand := fCoordinatorClient.PopCommand;
+  if lCommand <> nil then
+    ExecuteCoordinatorCommand(lCommand);
 end;
 procedure TMainForm.btnSaveConfigClick(Sender: TObject);
 begin
@@ -1550,7 +1819,7 @@ begin
       lForm := TDetachedMnemonicForm.CreateForPage(Self, lPage,
         fComponentFactory, fRecorder.TagRegistry, fRecorder.AlarmEngine,
         fRecorder.RunSettings.DisplayBufferMs / 1000,
-        ilCommandButtons,
+        ilCommandButtons, fProjectConfigDir,
         @DetachedFormAttach, @DetachedFormChanged);
       fDetachedForms.AddObject(lPage.Id, lForm);
     end;
@@ -1631,7 +1900,8 @@ end;
 
 procedure TMainForm.AddOscillogramClick(Sender: TObject);
 begin
-  SelectAddTool(Sender, ratOscillogram);
+  fChartToolGroup.Button.Down := True;
+  SelectAddTool(fChartToolGroup.Button, ratOscillogram);
 end;
 
 procedure TMainForm.AddOscillogramComponentToActivePage;
@@ -1672,12 +1942,14 @@ end;
 
 procedure TMainForm.AddTrendClick(Sender: TObject);
 begin
-  SelectAddTool(Sender, ratTrend);
+  fChartToolGroup.Button.Down := True;
+  SelectAddTool(fChartToolGroup.Button, ratTrend);
 end;
 
 procedure TMainForm.AddSqlTrendClick(Sender: TObject);
 begin
-  SelectAddTool(Sender, ratSqlTrend);
+  fChartToolGroup.Button.Down := True;
+  SelectAddTool(fChartToolGroup.Button, ratSqlTrend);
 end;
 
 procedure TMainForm.AddMeasurementSectionClick(Sender: TObject);
@@ -1811,7 +2083,13 @@ end;
 
 procedure TMainForm.AddSpectrumClick(Sender: TObject);
 begin
-  SelectAddTool(Sender, ratSpectrum);
+  fChartToolGroup.Button.Down := True;
+  SelectAddTool(fChartToolGroup.Button, ratSpectrum);
+end;
+
+procedure TMainForm.ChartToolGroupOpening(Sender: TObject);
+begin
+  ReleaseAddTool;
 end;
 
 procedure TMainForm.AddSpectrumComponentToActivePage;
@@ -2016,23 +2294,27 @@ begin
   fEditorToolbar.BevelOuter := bvLowered;
 
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
-  fAddOscillogramButton := AddEditMnemoToolBarButton(38, CIconOscillogram, 'Add oscillogram', @AddOscillogramClick, 2, True);
-  fAddTrendButton := AddEditMnemoToolBarButton(72, CIconTrends, 'Add trend', @AddTrendClick, 2, True);
+  fChartToolGroup := TRecorderComponentToolGroup.Create(Self, fEditorToolbar,
+    ilCommandButtons, 38, CIconTrends, 'Графики', 2, True,
+    @ChartToolGroupOpening);
+  fChartToolGroup.AddCommand('Осциллограмма', CIconOscillogram,
+    @AddOscillogramClick);
+  fChartToolGroup.AddCommand('Тренд', CIconTrends, @AddTrendClick);
+  fChartToolGroup.AddCommand('SQL-тренд', CIconTrends, @AddSqlTrendClick);
+  fChartToolGroup.AddCommand('Спектр', CIconSpectrum, @AddSpectrumClick);
   fAddMeasurementSectionButton := AddEditMnemoToolBarButton(356,
     CIconMeasurementSection,
     'Добавить измерительное сечение', @AddMeasurementSectionClick, 2, True,
     True);
-  fAddSqlTrendButton := AddEditMnemoToolBarButton(390, CIconTrends,
-    'Add SQL database trend', @AddSqlTrendClick, 2, True, True, 'SQL');
-  fAddTextButton := AddEditMnemoToolBarButton(106, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
-  fAddSpectrumButton := AddEditMnemoToolBarButton(140, CIconSpectrum, 'Add spectrum', @AddSpectrumClick, 2, True);
-  fAddDigitalButton := AddEditMnemoToolBarButton(174, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick, 2, True);
-  fAddImageButton := AddEditMnemoToolBarButton(208, CIconImageComponent,
+  fAddTextButton := AddEditMnemoToolBarButton(72, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
+  fAddDigitalButton := AddEditMnemoToolBarButton(106, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick, 2, True);
+  fAddImageButton := AddEditMnemoToolBarButton(140, CIconImageComponent,
     'Добавить картинку', @AddImageClick, 2, True, True);
-  fAddTagTableButton := AddEditMnemoToolBarButton(248, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  fAddButtonButton := AddEditMnemoToolBarButton(282, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
-  fAddComboBoxButton := AddEditMnemoToolBarButton(316, CIconComboBox, 'Add combo box', nil, 0, False, False);
-  fDeleteComponentButton := AddEditMnemoToolBarButton(424, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+  fAddTagTableButton := AddEditMnemoToolBarButton(180, CIconTagTable, 'Add tag table', nil, 0, False, False);
+  fAddButtonButton := AddEditMnemoToolBarButton(214, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
+  fAddComboBoxButton := AddEditMnemoToolBarButton(248, CIconComboBox, 'Add combo box', nil, 0, False, False);
+  fAddMeasurementSectionButton.Left := 282;
+  fDeleteComponentButton := AddEditMnemoToolBarButton(316, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -2243,18 +2525,12 @@ begin
       fEditModeButton.Down := False;
   end;
 
-  if fAddOscillogramButton <> nil then
-    fAddOscillogramButton.Visible := lCanEdit;
-  if fAddTrendButton <> nil then
-    fAddTrendButton.Visible := lCanEdit;
-  if fAddSqlTrendButton <> nil then
-    fAddSqlTrendButton.Visible := lCanEdit;
+  if fChartToolGroup <> nil then
+    fChartToolGroup.Button.Visible := lCanEdit;
   if fAddMeasurementSectionButton <> nil then
     fAddMeasurementSectionButton.Visible := lCanEdit;
   if fAddTextButton <> nil then
     fAddTextButton.Visible := lCanEdit;
-  if fAddSpectrumButton <> nil then
-    fAddSpectrumButton.Visible := lCanEdit;
   if fAddDigitalButton <> nil then
     fAddDigitalButton.Visible := lCanEdit;
   if fAddImageButton <> nil then
@@ -2720,46 +2996,84 @@ begin
 
   lFrameDir := fRecordFrameManager.OpenNextFrame;
   fLastRecordFrameDir := IncludeTrailingPathDelimiter(lFrameDir);
+  fCoordinatorRecordingId := RecorderCoordinatorNewId;
+  if fCoordinatorCorrelationId = '' then
+    fCoordinatorCorrelationId := RecorderCoordinatorNewId;
+  fCoordinatorRecordingStartedUtc := RecorderCoordinatorUtcNow;
   fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
   fMeraWriter.Open(lFrameDir);
   ResetRecordTagCursors;
   UpdateMainCaption;
   AddLog('MERA recording opened: ' + lFrameDir);
+  if fCoordinatorClient <> nil then
+    fCoordinatorClient.PublishEvent('recording.started', fCoordinatorCorrelationId,
+      CoordinatorRecordingJson);
 end;
 
 procedure TMainForm.ResetRecordTagCursors;
 var
   I: Integer;
   lBlockCapacity: Integer;
+  lDomainKey: string;
+  lMetadataService: IRecorderRecordChannelMetadataService;
+  lTag: TRecorderTag;
 begin
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
   begin
     SetLength(fRecordTagCursors, 0);
     SetLength(fRecordTagBlocks, 0);
+    SetLength(fRecordTagMetadata, 0);
+    SetLength(fRecordTagTimeDomains, 0);
     Exit;
   end;
+  if fRecordTimebase = nil then
+    fRecordTimebase := TRecorderRecordTimebase.Create;
+  fRecordTimebase.Reset;
+  lMetadataService := RecorderRecordChannelMetadataService;
   SetLength(fRecordTagCursors, fRecorder.TagRegistry.TagCount);
   SetLength(fRecordTagBlocks, fRecorder.TagRegistry.TagCount);
+  SetLength(fRecordTagMetadata, fRecorder.TagRegistry.TagCount);
+  SetLength(fRecordTagTimeDomains, fRecorder.TagRegistry.TagCount);
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
-    fRecordTagCursors[I] :=
-      fRecorder.TagRegistry.Tags[I].SignalBuffer.CurrentBlockCursor;
+    lTag := fRecorder.TagRegistry.Tags[I];
+    fRecordTagCursors[I] := lTag.SignalBuffer.CurrentBlockCursor;
     fRecordTagBlocks[I].Count := 0;
-    lBlockCapacity := fRecorder.TagRegistry.Tags[I].SignalBuffer.
-      CurrentBlockSampleCapacity;
+    lBlockCapacity := lTag.SignalBuffer.CurrentBlockSampleCapacity;
     if Length(fRecordTagBlocks[I].Times) < lBlockCapacity then
       SetLength(fRecordTagBlocks[I].Times, lBlockCapacity);
     if Length(fRecordTagBlocks[I].Values) < lBlockCapacity then
       SetLength(fRecordTagBlocks[I].Values, lBlockCapacity);
+    fRecordTagMetadata[I] := lMetadataService.Resolve(
+      fRecorder.TagRegistry, lTag);
+    if fRecordTagMetadata[I].IsUts then
+      lDomainKey := 'uts:' + lTag.Name
+    else if fRecordTagMetadata[I].UtsChannelName <> '' then
+      lDomainKey := 'uts:' + fRecordTagMetadata[I].UtsChannelName
+    else if Trim(lTag.SourceId) <> '' then
+      lDomainKey := 'source:' + Trim(lTag.SourceId)
+    else
+      lDomainKey := 'tag:' + lTag.Name;
+    fRecordTagTimeDomains[I] := fRecordTimebase.RequireDomain(lDomainKey);
   end;
 end;
 
 procedure TMainForm.CloseRecordFrame;
+var
+  lPayload: string;
 begin
   if fMeraWriter <> nil then
     fMeraWriter.Close;
+  if (fCoordinatorClient <> nil) and (fCoordinatorRecordingId <> '') then
+  begin
+    lPayload := CoordinatorRecordingJson(True);
+    fCoordinatorClient.PublishEvent('recording.completed',
+      fCoordinatorCorrelationId, lPayload);
+  end;
   if fRecordFrameManager <> nil then
     fRecordFrameManager.CloseFrame;
+  fCoordinatorRecordingStartedUtc := 0;
+  fCoordinatorCorrelationId := '';
   UpdateMainCaption;
 end;
 procedure TMainForm.ResetProjectCounters;
@@ -3144,8 +3458,7 @@ var
   lRevisionSignature: QWord;
   lStartMs: QWord;
   lTag: TRecorderTag;
-  lRecordMetadata: TRecorderRecordChannelMetadata;
-  lMetadataService: IRecorderRecordChannelMetadataService;
+  lPass: Integer;
 begin
   lStartMs := GetTickCount64;
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
@@ -3162,25 +3475,38 @@ begin
     один сводный счётчик реестра и не блокирует каждый тег каждые 200 мс. }
   if (fMeraWriter <> nil) and fMeraWriter.FileOpen then
   begin
-    lMetadataService := RecorderRecordChannelMetadataService;
-    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-    begin
-      lTag := fRecorder.TagRegistry.Tags[I];
-      if I >= Length(fRecordTagCursors) then
-        Continue;
-      lRecordMetadata := lMetadataService.Resolve(
-        fRecorder.TagRegistry, lTag);
-      while lTag.SignalBuffer.SnapshotNextBlockInto(fRecordTagCursors[I],
-        fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
-        fRecordTagBlocks[I].Count) do
-        fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
-          lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
+    { UTS is consumed first: its first recorded X defines the origin for the
+      whole MIC clock domain. Linked channels keep their cursor until then. }
+    for lPass := 0 to 1 do
+      for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+      begin
+        if (I >= Length(fRecordTagCursors)) or
+          ((lPass = 0) <> fRecordTagMetadata[I].IsUts) then
+          Continue;
+        lTag := fRecorder.TagRegistry.Tags[I];
+        if (not fRecordTagMetadata[I].IsUts) and
+          (fRecordTagMetadata[I].UtsChannelName <> '') and
+          not fRecordTimebase.OriginReady(fRecordTagTimeDomains[I]) then
+          Continue;
+        while lTag.SignalBuffer.SnapshotNextBlockInto(fRecordTagCursors[I],
           fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
-          fRecordTagBlocks[I].Count,
-          lTag.PollFrequencyHz,
-          lRecordMetadata.IsUts,
-          lRecordMetadata.UtsChannelName);
-    end;
+          fRecordTagBlocks[I].Count) do
+        begin
+          if (fRecordTagBlocks[I].Count > 0) and
+            not fRecordTimebase.OriginReady(fRecordTagTimeDomains[I]) then
+            fRecordTimebase.SetOrigin(fRecordTagTimeDomains[I],
+              fRecordTagBlocks[I].Times[0]);
+          if not fRecordTimebase.Normalize(fRecordTagTimeDomains[I],
+            fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Count) then
+            Break;
+          fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
+            lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
+            fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
+            fRecordTagBlocks[I].Count, lTag.PollFrequencyHz,
+            fRecordTagMetadata[I].IsUts,
+            fRecordTagMetadata[I].UtsChannelName);
+        end;
+      end;
   end;
   if lLatestTime > 0 then
     fRecorder.TimeSystem.UpdateFromTagSample(lLatestTime);
@@ -3704,11 +4030,8 @@ begin
   if fFormEditor <> nil then fFormEditor.CancelComponentPlacement;
   if fAddTextButton <> nil then fAddTextButton.Down := False;
   if fAddDigitalButton <> nil then fAddDigitalButton.Down := False;
-  if fAddOscillogramButton <> nil then fAddOscillogramButton.Down := False;
-  if fAddTrendButton <> nil then fAddTrendButton.Down := False;
-  if fAddSqlTrendButton <> nil then fAddSqlTrendButton.Down := False;
+  if fChartToolGroup <> nil then fChartToolGroup.Button.Down := False;
   if fAddMeasurementSectionButton <> nil then fAddMeasurementSectionButton.Down := False;
-  if fAddSpectrumButton <> nil then fAddSpectrumButton.Down := False;
   if fAddImageButton <> nil then fAddImageButton.Down := False;
   if fAddButtonButton <> nil then fAddButtonButton.Down := False;
 end;
@@ -3800,6 +4123,7 @@ end;
 procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState);
 begin
   UpdateStateView;
+  UpdateCoordinatorSnapshot;
 end;
 
 procedure TMainForm.LifecycleMessage(const AMessage: string);

@@ -1,46 +1,46 @@
 BUILD_EXIT=0
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(394,30) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(356,35) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(354,33) Hint: (5024) Parameter "Sender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(391,38) Hint: (5024) Parameter "Data" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(385,41) Hint: (5024) Parameter "ASender" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(386,7) Hint: (5024) Parameter "AOldState" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(386,18) Hint: (5024) Parameter "ANewState" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(412,3) Hint: (5028) Local const "CDeviceHealthProbeTimeoutMs" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(429,38) Hint: (5024) Parameter "Data" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(442,31) Hint: (5024) Parameter "AOldState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(442,42) Hint: (5024) Parameter "ANewState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(468,3) Hint: (5028) Local const "CDeviceHealthProbeTimeoutMs" is not used
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(49,3) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in uMainForm
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(13,3) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(14,3) Hint: (5023) Unit "uRecorderVirtualTagDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(15,3) Hint: (5023) Unit "uRecorderButtonSettingsDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(16,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(16,33) Hint: (5023) Unit "uRecorderTrendView" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(17,3) Hint: (5023) Unit "uRecorderSqlTrendModel" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(18,3) Hint: (5023) Unit "uRecorderSqlTrendSettingsDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(19,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(19,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(20,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(20,41) Hint: (5023) Unit "uRecorderStrainCalibration" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(21,3) Hint: (5023) Unit "uRecorderStrainCalibrationDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(22,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(22,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(23,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(23,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(24,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(24,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(24,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(28,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(31,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(3104) Compiling ./UI/uRecorderUserGuideCapture.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,11) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,37) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(47,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(14,3) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(15,3) Hint: (5023) Unit "uRecorderVirtualTagDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(16,3) Hint: (5023) Unit "uRecorderButtonSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(17,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(18,3) Hint: (5023) Unit "uRecorderSqlTrendModel" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(19,3) Hint: (5023) Unit "uRecorderSqlTrendSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(20,3) Hint: (5023) Unit "uRecorderMeasurementSectionModel" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(22,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(22,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(23,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(23,41) Hint: (5023) Unit "uRecorderStrainCalibration" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(24,3) Hint: (5023) Unit "uRecorderStrainCalibrationDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(25,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(25,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(27,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(27,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(27,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(31,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(34,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(34,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(35,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
 (9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
 (9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
-(1008) 77111 lines compiled, 10.2 sec
-(1021) 138 warning(s) issued
-(1022) 637 hint(s) issued
-(1023) 83 note(s) issued
+(1008) 134978 lines compiled, 16.6 sec
+(1021) 228 warning(s) issued
+(1022) 791 hint(s) issued
+(1023) 128 note(s) issued
 ARTIFACT
-2026-08-11 11:39:43.000000000 +0300|54321568|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+2026-09-09 20:35:04.000000000 +0300|60593352|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.4.0, with debug_info, not stripped
 MISSING_LIBS
 none

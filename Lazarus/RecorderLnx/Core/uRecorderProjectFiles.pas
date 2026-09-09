@@ -21,7 +21,7 @@ unit uRecorderProjectFiles;
 interface
 
 uses
-  Classes, SysUtils, Math, fpjson,
+  Classes, SysUtils, DateUtils, Math, fpjson,
   uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding;
 
 type
@@ -1163,6 +1163,8 @@ begin
               TRecorderSqlTrendComponent(lComponent).ToUtc);
             lIni.WriteInteger(lSection, 'SqlMaxPoints',
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
+            lIni.WriteBool(lSection, 'SqlShowEvents',
+              TRecorderSqlTrendComponent(lComponent).ShowEvents);
             lIni.WriteInteger(lSection, 'SqlDisplayCount',
               TRecorderSqlTrendComponent(lComponent).DisplayCount);
             lIni.WriteInteger(lSection, 'SqlActiveDisplay',
@@ -1547,12 +1549,16 @@ begin
               TRecorderSqlTrendComponent(lComponent).TimeMode :=
                 TRecorderSqlTrendTimeMode(lItemCount);
               TRecorderSqlTrendComponent(lComponent).FromUtc :=
-                lIni.ReadFloat(lSection, 'SqlFromUtc', Now - 1);
+                lIni.ReadFloat(lSection, 'SqlFromUtc',
+                  LocalTimeToUniversal(Now) - 1);
               TRecorderSqlTrendComponent(lComponent).ToUtc :=
-                lIni.ReadFloat(lSection, 'SqlToUtc', Now);
+                lIni.ReadFloat(lSection, 'SqlToUtc',
+                  LocalTimeToUniversal(Now));
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine :=
                 EnsureRange(lIni.ReadInteger(lSection, 'SqlMaxPoints', 4000),
                   32, 100000);
+              TRecorderSqlTrendComponent(lComponent).ShowEvents :=
+                lIni.ReadBool(lSection, 'SqlShowEvents', True);
               lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
               if lItemCount < 0 then
                 TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend

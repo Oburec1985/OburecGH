@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, uRecorderTags;
 
 const
-  CRecorderSqlDbSchemaVersion = 3;
+  CRecorderSqlDbSchemaVersion = 5;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
   CRecorderSqlDbControlTagName = 'SqlDbRecordEnabled';
@@ -37,6 +37,80 @@ type
     PointCount: Int64;
   end;
   TRecorderSqlDbSignalInfos = array of TRecorderSqlDbSignalInfo;
+
+  TRecorderSqlDbRecorderInstance = record
+    Id: string;
+    InstanceKey: string;
+    HostName: string;
+    DisplayName: string;
+    Platform: string;
+    LastSeenAtUtc: Double;
+  end;
+
+  TRecorderSqlDbMeraRecording = record
+    Id: string;
+    EventId: string;
+    RecorderInstanceId: string;
+    RegistrationId: string;
+    CorrelationId: string;
+    DisplayName: string;
+    StartedAtUtc: Double;
+    FinishedAtUtc: Double;
+    State: string;
+    EntryFileId: string;
+    ProjectName: string;
+    ErrorText: string;
+  end;
+  TRecorderSqlDbMeraRecordings = array of TRecorderSqlDbMeraRecording;
+
+  TRecorderSqlDbMeraEvent = record
+    EventId: string;
+    CorrelationId: string;
+    DisplayName: string;
+    Description: string;
+    StartedAtUtc: Double;
+    FinishedAtUtc: Double;
+    State: string;
+    PackageCount: Integer;
+    TotalSize: Int64;
+  end;
+  TRecorderSqlDbMeraEvents = array of TRecorderSqlDbMeraEvent;
+
+  TRecorderSqlDbMeraFile = record
+    FileId: string;
+    RecordingId: string;
+    FileRole: string;
+    RelativeName: string;
+    Ordinal: Integer;
+    StorageKey: string;
+    DataFormat: string;
+    Size: Int64;
+    Checksum: string;
+    State: string;
+  end;
+  TRecorderSqlDbMeraFiles = array of TRecorderSqlDbMeraFile;
+
+  TRecorderSqlDbMeraPackage = record
+    Recording: TRecorderSqlDbMeraRecording;
+    InstanceKey: string;
+    HostName: string;
+    FileCount: Integer;
+    TotalSize: Int64;
+  end;
+  TRecorderSqlDbMeraPackages = array of TRecorderSqlDbMeraPackage;
+
+  TRecorderSqlDbFileLocation = record
+    Id: string;
+    FileId: string;
+    RecorderInstanceId: string;
+    LocationKind: string;
+    PathKey: string;
+    State: string;
+    CreatedAtUtc: Double;
+    VerifiedAtUtc: Double;
+    ErrorText: string;
+  end;
+  TRecorderSqlDbFileLocations = array of TRecorderSqlDbFileLocation;
 
   TRecorderSqlDbConfig = class
   private

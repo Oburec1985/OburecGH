@@ -6,7 +6,7 @@ unit uRecorderSqlTrendView;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Buttons, Grids, Graphics,
+  Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Buttons, Grids, Graphics,
   Math, DateUtils, Dialogs,
   uOglChart, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel;
@@ -24,6 +24,7 @@ type
     fAppendLoad: Boolean;
     fOwner: TRecorderSqlTrendView;
     fPoints: TRecorderSqlTrendPoints;
+    fEvents: TRecorderSqlDbMeraEvents;
     fSignalNames: TStringList;
     fWakeEvent: PRTLEvent;
     fRequestLock: TRTLCriticalSection;
@@ -54,6 +55,7 @@ type
     fCursorButton: TSpeedButton;
     fCursorModeCombo: TComboBox;
     fDeleteIntervalButton: TButton;
+    fOpenMeraEventButton: TButton;
     fDisplayCombo: TComboBox;
     fDisplayNextButton: TSpeedButton;
     fDisplayPrevButton: TSpeedButton;
@@ -65,6 +67,7 @@ type
     fCursorPoint: TPoint;
     fCursorVisible: Boolean;
     fErrorText: string;
+    fForceFullReload: Boolean;
     fFullAxisMax: array of Double;
     fFullAxisMin: array of Double;
     fFullFromUtc, fFullToUtc: Double;
@@ -82,6 +85,9 @@ type
     fPanFromUtc, fPanToUtc: Double;
     fPanning: Boolean;
     fPoints: TRecorderSqlTrendPoints;
+    fEvents: TRecorderSqlDbMeraEvents;
+    fHoveredEventIndex: Integer;
+    fPinnedEventIndex: Integer;
     fReloadTimer: TTimer;
     fLiveReloadTimer: TTimer;
     fResetViewOnLoad: Boolean;
@@ -97,6 +103,7 @@ type
     procedure CursorButtonClick(Sender: TObject);
     procedure CursorModeChange(Sender: TObject);
     procedure DeleteIntervalButtonClick(Sender: TObject);
+    procedure OpenMeraEventButtonClick(Sender: TObject);
     procedure DisplayComboChange(Sender: TObject);
     procedure DisplayNextClick(Sender: TObject);
     procedure DisplayPrevClick(Sender: TObject);
@@ -129,11 +136,15 @@ type
     procedure ApplyVerticalZoom(ATop, ABottom: Integer; AZoomIn: Boolean;
       const APlot: TRect);
     procedure MergeLivePoints(const ANewPoints: TRecorderSqlTrendPoints);
+    procedure MergeLiveEvents(const ANewEvents: TRecorderSqlDbMeraEvents;
+      AFromUtc: Double);
     function SyncAxisRangesFromComponent(AForce: Boolean): Boolean;
     procedure UpdateDeleteIntervalButton;
     procedure UpdateLegend;
     procedure AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
     function LineIndex(const ASignalName: string): Integer;
+    function EventIndexAtX(AX: Integer; const APlot: TRect): Integer;
+    procedure UpdateMeraEventButton;
   protected
     procedure Paint; override;
     procedure DblClick; override;
@@ -156,7 +167,21 @@ type
 implementation
 
 uses
-  uRecorderSqlDbRepository;
+  uRecorderSqlDbRepository, uRecorderMeraEventDialog, uSharedFileLogger;
+
+function SqlTrendConnectionIdentity(const AConfigFileName: string;
+  AConfig: TRecorderSqlDbConfig): string;
+var
+  lHost: string;
+begin
+  lHost := Trim(AConfig.Host);
+  if lHost = '' then lHost := 'local';
+  if AConfig.Port <> 0 then lHost := lHost + ':' + IntToStr(AConfig.Port);
+  Result := Format('config=%s; backend=%s; server=%s; database=%s',
+    [ExpandFileName(AConfigFileName),
+     RecorderSqlDbBackendToString(AConfig.Backend), lHost,
+     AConfig.DatabaseFileName]);
+end;
 
 const
   CSqlTrendCursorGrabPixels = 6;
@@ -288,10 +313,17 @@ begin
         end;
         lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
           fMaxPoints, fPoints, False);
+        lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
       except
         on E: Exception do
         begin
-          fErrorText := E.Message;
+          if lConfig <> nil then
+            fErrorText := E.Message + ' [' +
+              SqlTrendConnectionIdentity(fConfigFileName, lConfig) + ']'
+          else
+            fErrorText := E.Message + ' [config=' +
+              ExpandFileName(fConfigFileName) + ']';
+          SharedLogger.Error('SQL trend load error: ' + fErrorText);
           { A broken connection must be recreated on the retry, while a
             healthy live session keeps its repository and SQL connection. }
           FreeAndNil(lRepository);
@@ -425,6 +457,12 @@ begin
   fDeleteIntervalButton.Caption := 'Удалить интервал';
   fDeleteIntervalButton.Enabled := False;
   fDeleteIntervalButton.OnClick := @DeleteIntervalButtonClick;
+  fOpenMeraEventButton := TButton.Create(fAxisPanel);
+  fOpenMeraEventButton.Parent := fAxisPanel;
+  fOpenMeraEventButton.SetBounds(788, 3, 154, 26);
+  fOpenMeraEventButton.Caption := 'Открыть в WinПОС';
+  fOpenMeraEventButton.Enabled := False;
+  fOpenMeraEventButton.OnClick := @OpenMeraEventButtonClick;
   lLabel := TLabel.Create(fAxisPanel);
   lLabel.Parent := fAxisPanel;
   lLabel.SetBounds(6, 39, 92, 18);
@@ -452,6 +490,41 @@ begin
   fLiveReloadTimer.Enabled := False;
   fLiveReloadTimer.Interval := 1000;
   fLiveReloadTimer.OnTimer := @LiveReloadTimerTimer;
+  fHoveredEventIndex := -1;
+  fPinnedEventIndex := -1;
+end;
+
+procedure TRecorderSqlTrendView.OpenMeraEventButtonClick(Sender: TObject);
+var
+  lIndex: Integer;
+  lResult: TRecorderMeraEventDialogResult;
+begin
+  lIndex := fPinnedEventIndex;
+  if lIndex < 0 then lIndex := fHoveredEventIndex;
+  if (lIndex < 0) or (lIndex > High(fEvents)) or (fComponent = nil) then Exit;
+  lResult := ShowRecorderMeraEventDialog(GetParentForm(Self),
+    fComponent.ConfigFileName, fEvents[lIndex]);
+  if lResult <> medrUnchanged then
+  begin
+    if lResult = medrDeleted then fPinnedEventIndex := -1;
+    fHoveredEventIndex := -1;
+    { Editing or deleting must reconcile against the complete interval.  An
+      overlap merge cannot discover a deletion outside its short window. }
+    fForceFullReload := True;
+    fLoadPending := True;
+    fReloadTimer.Enabled := True;
+    UpdateMeraEventButton;
+    Invalidate;
+  end;
+end;
+
+procedure TRecorderSqlTrendView.UpdateMeraEventButton;
+begin
+  if fOpenMeraEventButton <> nil then
+    fOpenMeraEventButton.Enabled := (fComponent <> nil) and
+      fComponent.ShowEvents and
+      (((fPinnedEventIndex >= 0) and (fPinnedEventIndex <= High(fEvents))) or
+       ((fHoveredEventIndex >= 0) and (fHoveredEventIndex <= High(fEvents))));
 end;
 
 procedure TRecorderSqlTrendView.FillDisplayControls;
@@ -846,6 +919,11 @@ procedure TRecorderSqlTrendView.Configure(AComponent: TRecorderVisualComponent;
 begin
   if not (AComponent is TRecorderSqlTrendComponent) then Exit;
   fComponent := TRecorderSqlTrendComponent(AComponent);
+  if not fComponent.ShowEvents then
+  begin
+    fHoveredEventIndex := -1;
+    fPinnedEventIndex := -1;
+  end;
   FillDisplayControls;
   fAxisCombo.ItemIndex := 0;
   SyncAxisRangesFromComponent(True);
@@ -1008,6 +1086,25 @@ begin
       fFullAxisMax[lAxisIndex] := Max(fFullAxisMax[lAxisIndex], fPoints[I].Value);
     end;
   end;
+  { Event markers are part of the horizontal data domain.  Ignoring them here
+    made Reset zoom collapse to old signal points and hide newer recordings. }
+  if fComponent.ShowEvents then
+  for I := 0 to High(fEvents) do
+  begin
+    if not lHasX then
+    begin
+      fFullFromUtc := fEvents[I].StartedAtUtc;
+      fFullToUtc := fEvents[I].StartedAtUtc;
+      lHasX := True;
+    end
+    else
+    begin
+      fFullFromUtc := Min(fFullFromUtc, fEvents[I].StartedAtUtc);
+      fFullToUtc := Max(fFullToUtc, fEvents[I].StartedAtUtc);
+    end;
+    if fEvents[I].FinishedAtUtc > fEvents[I].StartedAtUtc then
+      fFullToUtc := Max(fFullToUtc, fEvents[I].FinishedAtUtc);
+  end;
   if lHasX then
   begin
     fFromUtc := fFullFromUtc;
@@ -1109,7 +1206,8 @@ begin
         (Trim(fComponent.ActiveDisplay.Lines[I].TagName) <> '') then
         if fLoadSignalNames.IndexOf(fComponent.ActiveDisplay.Lines[I].TagName) < 0 then
           fLoadSignalNames.Add(fComponent.ActiveDisplay.Lines[I].TagName);
-    lAppendLoad := (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
+    lAppendLoad := (not fForceFullReload) and
+      (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
       (not fResetViewOnLoad) and (fFullToUtc > fFullFromUtc);
     if fComponent.TimeMode = sttmLatestWindow then
     begin
@@ -1133,25 +1231,24 @@ begin
       lFromUtc := fComponent.FromUtc;
       lToUtc := fComponent.ToUtc;
     end;
-  if not fWorker.RequestLoad(fComponent.ConfigFileName, fLoadSignalNames,
+  if fWorker.RequestLoad(fComponent.ConfigFileName, fLoadSignalNames,
     lFromUtc, lToUtc, fComponent.MaxPointsPerLine, lAppendLoad) then
+    fForceFullReload := False
+  else
     fLoadPending := True;
 end;
 
 procedure TRecorderSqlTrendView.AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
 var
-  lWasAtLiveEdge: Boolean;
-  lEdgeTolerance: Double;
+  I: Integer;
   lOldPoints: TRecorderSqlTrendPoints;
+  lOldEvents: TRecorderSqlDbMeraEvents;
+  lPinnedEventId: string;
 begin
   if AWorker <> fWorker then Exit;
   fErrorText := AWorker.fErrorText;
   if fErrorText = '' then
   begin
-    lEdgeTolerance := Max(1, fLiveReloadTimer.Interval) /
-      MSecsPerDay;
-    lWasAtLiveEdge := (fFullToUtc <= fFullFromUtc) or
-      SameValue(fToUtc, fFullToUtc, lEdgeTolerance);
     if AWorker.fAppendLoad then
       MergeLivePoints(AWorker.fPoints)
     else
@@ -1162,6 +1259,26 @@ begin
       fPoints := AWorker.fPoints;
       AWorker.fPoints := lOldPoints;
     end;
+    lPinnedEventId := '';
+    if (fPinnedEventIndex >= 0) and (fPinnedEventIndex <= High(fEvents)) then
+      lPinnedEventId := fEvents[fPinnedEventIndex].EventId;
+    if AWorker.fAppendLoad then
+      MergeLiveEvents(AWorker.fEvents, fComponent.FromUtc)
+    else
+    begin
+      lOldEvents := fEvents;
+      fEvents := AWorker.fEvents;
+      AWorker.fEvents := lOldEvents;
+    end;
+    fHoveredEventIndex := -1;
+    fPinnedEventIndex := -1;
+    if lPinnedEventId <> '' then
+      for I := 0 to High(fEvents) do
+        if SameText(fEvents[I].EventId, lPinnedEventId) then
+        begin
+          fPinnedEventIndex := I;
+          Break;
+        end;
     { A failed load must not advance this watermark: the next live tick has
       to retry the same interval instead of permanently skipping its data. }
     if fResetViewOnLoad then
@@ -1170,9 +1287,13 @@ begin
       fToUtc := AWorker.fToUtc;
       fResetViewOnLoad := False;
     end
-    else if (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
-      lWasAtLiveEdge then
+    else if fComponent.TimeMode = sttmFixedFromToCurrentUtc then
+    begin
+      { "По текущую дату" means one growing interval from the configured
+        start, not a sliding window with the previously visible width. }
+      fFromUtc := fComponent.FromUtc;
       fToUtc := AWorker.fToUtc;
+    end;
     if not AWorker.fAppendLoad then
       fFullFromUtc := AWorker.fFromUtc;
     fFullToUtc := AWorker.fToUtc;
@@ -1180,7 +1301,44 @@ begin
   end;
   if fLoadPending then fReloadTimer.Enabled := True;
   UpdateDeleteIntervalButton;
+  UpdateMeraEventButton;
   Invalidate;
+end;
+
+procedure TRecorderSqlTrendView.MergeLiveEvents(
+  const ANewEvents: TRecorderSqlDbMeraEvents; AFromUtc: Double);
+var
+  I, J, lCount: Integer;
+  lFound: Boolean;
+  lMerged: TRecorderSqlDbMeraEvents;
+begin
+  SetLength(lMerged, Length(fEvents) + Length(ANewEvents));
+  lCount := 0;
+  for I := 0 to High(fEvents) do
+    if fEvents[I].StartedAtUtc >= AFromUtc then
+    begin
+      lMerged[lCount] := fEvents[I];
+      Inc(lCount);
+    end;
+  for I := 0 to High(ANewEvents) do
+  begin
+    lFound := False;
+    for J := 0 to lCount - 1 do
+      if SameText(lMerged[J].EventId, ANewEvents[I].EventId) then
+      begin
+        { The overlap query returns the newest lifecycle state and file count. }
+        lMerged[J] := ANewEvents[I];
+        lFound := True;
+        Break;
+      end;
+    if not lFound then
+    begin
+      lMerged[lCount] := ANewEvents[I];
+      Inc(lCount);
+    end;
+  end;
+  SetLength(lMerged, lCount);
+  fEvents := lMerged;
 end;
 
 procedure TRecorderSqlTrendView.MergeLivePoints(
@@ -1353,7 +1511,7 @@ end;
 
 procedure TRecorderSqlTrendView.MouseDown(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-var I: Integer; lPlot: TRect;
+var I, lEventIndex: Integer; lPlot: TRect;
 begin
   inherited MouseDown(Button, Shift, X, Y);
   lPlot := GetPlotRect;
@@ -1361,6 +1519,21 @@ begin
   fMouseCurrent := fMouseAnchor;
   if Button = mbLeft then
   begin
+    lEventIndex := EventIndexAtX(X, lPlot);
+    if (lEventIndex >= 0) and (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
+    begin
+      fPinnedEventIndex := lEventIndex;
+      fHoveredEventIndex := lEventIndex;
+      UpdateMeraEventButton;
+      Invalidate;
+      Exit;
+    end;
+    if fPinnedEventIndex >= 0 then
+    begin
+      fPinnedEventIndex := -1;
+      UpdateMeraEventButton;
+      Invalidate;
+    end;
     if fCursorEnabled then
     begin
       if (X < lPlot.Left) or (X > lPlot.Right) or
@@ -1416,10 +1589,27 @@ begin
 end;
 
 procedure TRecorderSqlTrendView.MouseMove(Shift: TShiftState; X, Y: Integer);
-var I, lDx, lDy: Integer; lPlot: TRect; lShift, lRange: Double;
+var I, lDx, lDy, lOldHover: Integer; lPlot: TRect; lShift, lRange: Double;
 begin
   inherited MouseMove(Shift, X, Y);
   lPlot := GetPlotRect;
+  lOldHover := fHoveredEventIndex;
+  if (not fZoomSelecting) and (not fCursorDragging) and (not fPanning) and
+    (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
+    fHoveredEventIndex := EventIndexAtX(X, lPlot)
+  else
+    fHoveredEventIndex := -1;
+  if lOldHover <> fHoveredEventIndex then
+  begin
+    UpdateMeraEventButton;
+    Invalidate;
+  end;
+  if fPanning then
+    Cursor := crSizeAll
+  else if fHoveredEventIndex >= 0 then
+    Cursor := crHandPoint
+  else
+    Cursor := crDefault;
   if fZoomSelecting then
   begin
     if fZoomMode in [stzmX, stzmXY] then
@@ -1478,8 +1668,12 @@ end;
 procedure TRecorderSqlTrendView.MouseLeave;
 begin
   inherited MouseLeave;
-  if fZoomSelecting or fPanning or fCursorEnabled then Exit;
-  fCursorVisible := False;
+  if fZoomSelecting or fPanning or fCursorDragging then Exit;
+  Cursor := crDefault;
+  fHoveredEventIndex := -1;
+  UpdateMeraEventButton;
+  if not fCursorEnabled then
+    fCursorVisible := False;
   Invalidate;
 end;
 
@@ -1536,6 +1730,20 @@ begin
     LoadAxisControls;
     Invalidate;
   end;
+  if (not fZoomSelecting) and (not fCursorDragging) and (not fPanning) then
+  begin
+    if (X >= lPlot.Left) and (X <= lPlot.Right) and
+      (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
+      fHoveredEventIndex := EventIndexAtX(X, lPlot)
+    else
+      fHoveredEventIndex := -1;
+    if fHoveredEventIndex >= 0 then
+      Cursor := crHandPoint
+    else
+      Cursor := crDefault;
+    UpdateMeraEventButton;
+    Invalidate;
+  end;
 end;
 
 function TRecorderSqlTrendView.LineIndex(const ASignalName: string): Integer;
@@ -1545,6 +1753,29 @@ begin
   for Result := 0 to fComponent.ActiveDisplay.LineCount - 1 do
     if SameText(fComponent.ActiveDisplay.Lines[Result].TagName, ASignalName) then Exit;
   Result := -1;
+end;
+
+function TRecorderSqlTrendView.EventIndexAtX(AX: Integer;
+  const APlot: TRect): Integer;
+var
+  I, lEventX, lDistance, lBestDistance: Integer;
+begin
+  Result := -1;
+  if (fComponent = nil) or (not fComponent.ShowEvents) then Exit;
+  if (fToUtc <= fFromUtc) or (AX < APlot.Left - CSqlTrendCursorGrabPixels) or
+    (AX > APlot.Right + CSqlTrendCursorGrabPixels) then Exit;
+  lBestDistance := CSqlTrendCursorGrabPixels + 1;
+  for I := 0 to High(fEvents) do
+  begin
+    lEventX := APlot.Left + Round((fEvents[I].StartedAtUtc - fFromUtc) /
+      (fToUtc - fFromUtc) * (APlot.Width - 1));
+    lDistance := Abs(AX - lEventX);
+    if lDistance < lBestDistance then
+    begin
+      Result := I;
+      lBestDistance := lDistance;
+    end;
+  end;
 end;
 
 procedure TRecorderSqlTrendView.Paint;
@@ -1563,6 +1794,7 @@ var
   lGridText: string;
   lHasPrev: Boolean;
   lCaption: string;
+  lEventIndex, lEventX, lEventEndX, lEventBoxLeft, lEventBoxTop: Integer;
   lNearestDistance, lNearestValue: array of Double;
   lNearestFound: array of Boolean;
 begin
@@ -1622,6 +1854,33 @@ begin
     Canvas.Pen.Color := clGray;
     Canvas.Rectangle(lPlot);
   end;
+  if fComponent.ShowEvents and (fToUtc > fFromUtc) then
+    for I := 0 to High(fEvents) do
+    begin
+      lEventX := lPlot.Left + Round((fEvents[I].StartedAtUtc - fFromUtc) /
+        (fToUtc - fFromUtc) * (lPlot.Width - 1));
+      if fEvents[I].FinishedAtUtc > fEvents[I].StartedAtUtc then
+        lEventEndX := lPlot.Left + Round((fEvents[I].FinishedAtUtc - fFromUtc) /
+          (fToUtc - fFromUtc) * (lPlot.Width - 1))
+      else
+        lEventEndX := lEventX;
+      if (lEventEndX < lPlot.Left) or (lEventX > lPlot.Right) then Continue;
+      Canvas.Pen.Width := 1;
+      Canvas.Pen.Style := psDash;
+      if (I = fPinnedEventIndex) or (I = fHoveredEventIndex) then
+        Canvas.Pen.Color := clRed
+      else
+        Canvas.Pen.Color := $008080FF;
+      Canvas.Line(EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Top,
+        EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Bottom);
+      Canvas.Pen.Style := psSolid;
+      Canvas.Pen.Width := 3;
+      Canvas.Line(EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Top + 3,
+        EnsureRange(Max(lEventX + 2, lEventEndX), lPlot.Left, lPlot.Right),
+        lPlot.Top + 3);
+    end;
+  Canvas.Pen.Width := 1;
+  Canvas.Pen.Style := psSolid;
   GetAxisHeaderLayout(lPlot.Right, lAxisColumnWidth, lAxisColumnCount,
     lAxisRowCount);
   for I := 0 to fComponent.ActiveDisplay.AxisCount - 1 do
@@ -1768,6 +2027,35 @@ begin
     end;
     Canvas.Pen.Style := psSolid;
     Canvas.Brush.Style := bsSolid;
+  end;
+  { Подпись показывается только для явно выбранного щелчком события.
+    Наведение подсвечивает пунктир, но не загромождает график подписями. }
+  if fComponent.ShowEvents then
+    lEventIndex := fPinnedEventIndex
+  else
+    lEventIndex := -1;
+  if (lEventIndex >= 0) and (lEventIndex <= High(fEvents)) then
+  begin
+    lEventX := lPlot.Left + Round((fEvents[lEventIndex].StartedAtUtc - fFromUtc) /
+      Max(1E-12, fToUtc - fFromUtc) * (lPlot.Width - 1));
+    lCaption := Format('%s  %s  ПК/пакетов: %d  %s', [
+      FormatDateTime('dd.mm.yyyy hh:nn:ss',
+        UtcDisplayTime(fEvents[lEventIndex].StartedAtUtc)),
+      fEvents[lEventIndex].DisplayName,
+      fEvents[lEventIndex].PackageCount,
+      fEvents[lEventIndex].State]);
+    lEventBoxLeft := EnsureRange(lEventX + 8, lPlot.Left,
+      Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 12));
+    lEventBoxTop := lPlot.Top + 10;
+    Canvas.Brush.Color := $00FFFFE8;
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Pen.Color := clGray;
+    Canvas.Rectangle(lEventBoxLeft, lEventBoxTop,
+      lEventBoxLeft + Canvas.TextWidth(lCaption) + 10,
+      lEventBoxTop + Canvas.TextHeight(lCaption) + 8);
+    Canvas.Font.Color := clBlack;
+    Canvas.Brush.Style := bsClear;
+    Canvas.TextOut(lEventBoxLeft + 5, lEventBoxTop + 4, lCaption);
   end;
 end;
 

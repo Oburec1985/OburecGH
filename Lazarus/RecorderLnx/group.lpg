@@ -7,6 +7,11 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
+      <Target FileName="..\RecorderCoordinator\RecorderCoordinator.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
       <Target FileName="..\SharedUtils\components\chart_lzr\lzrObrPack.lpk"/>
       <Target FileName="..\OGlChartLaz\Test_component\project1.lpi">
         <BuildModes>

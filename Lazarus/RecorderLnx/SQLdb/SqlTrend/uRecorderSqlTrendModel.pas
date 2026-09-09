@@ -48,6 +48,7 @@ type
     fDisplays: TList;
     fActiveDisplayIndex: Integer;
     fMaxPointsPerLine: Integer;
+    fShowEvents: Boolean;
     fTimeMode: TRecorderSqlTrendTimeMode;
     fToUtc: Double;
     function GetActiveDisplay: TRecorderSqlTrendDisplay;
@@ -71,6 +72,7 @@ type
     property TimeMode: TRecorderSqlTrendTimeMode read fTimeMode write fTimeMode;
     property MaxPointsPerLine: Integer read fMaxPointsPerLine
       write fMaxPointsPerLine;
+    property ShowEvents: Boolean read fShowEvents write fShowEvents;
     property DisplayCount: Integer read GetDisplayCount;
     property Displays[AIndex: Integer]: TRecorderSqlTrendDisplay read GetDisplay;
     property ActiveDisplayIndex: Integer read fActiveDisplayIndex
@@ -172,6 +174,7 @@ begin
   fToUtc := LocalTimeToUniversal(Now);
   fFromUtc := fToUtc - 1.0;
   fMaxPointsPerLine := 4000;
+  fShowEvents := True;
   if AxisCount = 0 then
   begin
     lAxis := AddAxis;
@@ -252,6 +255,7 @@ begin
   fToUtc := ASource.fToUtc;
   fTimeMode := ASource.fTimeMode;
   fMaxPointsPerLine := ASource.fMaxPointsPerLine;
+  fShowEvents := ASource.fShowEvents;
 end;
 
 constructor TRecorderSqlTrendFactory.Create;

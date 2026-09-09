@@ -258,6 +258,13 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     object edMaxPoints: TEdit Left = 618 Height = 25 Top = 40 Width = 112 end
     object lblWindowHours: TLabel Left = 746 Top = 18 Caption = 'Окно, дней' end
     object edWindowHours: TEdit Left = 746 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
+    object cbShowEvents: TCheckBox
+      Left = 892
+      Height = 23
+      Top = 40
+      Width = 122
+      Caption = 'Отображать события'
+    end
   end
   object btnOk: TButton
     Left = 848 Height = 30 Top = 678 Width = 88 Caption = 'OK'

@@ -9,6 +9,61 @@ RECORDERLNX_SQLDB_CONFIG="/var/opt/mera/RecorderLnx/config/projects/default/sql-
 RECORDERLNX_SQLDB_DIR="/var/opt/mera/SQLdb"
 RECORDERLNX_LEGACY_SQLDB_DIR="/var/opt/mera/RecorderLnx/sqldb"
 ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
+INSTALL_FIREBIRD=0
+INSTALL_RCPANEL=0
+NO_GUI=0
+
+usage() {
+  cat <<'EOF'
+Usage: install-firebird-recorderlnx.sh [--firebird] [--rcpanel] [--all] [--no-gui]
+With no component flags, a Zenity checklist is shown.
+EOF
+}
+
+parse_args() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --firebird) INSTALL_FIREBIRD=1 ;;
+      --rcpanel) INSTALL_RCPANEL=1 ;;
+      --all) INSTALL_FIREBIRD=1; INSTALL_RCPANEL=1 ;;
+      --no-gui) NO_GUI=1 ;;
+      -h|--help) usage; exit 0 ;;
+      *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+    esac
+    shift
+  done
+}
+
+choose_components() {
+  local selected
+  if [ "$INSTALL_FIREBIRD" = 1 ] || [ "$INSTALL_RCPANEL" = 1 ]; then
+    return
+  fi
+  if [ "$NO_GUI" = 1 ]; then
+    echo "No component selected. Use --firebird, --rcpanel, or --all." >&2
+    exit 2
+  fi
+  if ! command -v zenity >/dev/null 2>&1; then
+    echo "Zenity was not found. Run with --firebird, --rcpanel, or --all." >&2
+    exit 2
+  fi
+  selected="$(zenity --list --checklist \
+    --title='RecorderLnx: дополнительные компоненты' \
+    --text='Выберите компоненты для установки:' \
+    --column='Установить' --column='Компонент' --column='Назначение' \
+    TRUE Firebird 'Локальная SQL база данных' \
+    TRUE rcPanel 'Панель управления RecorderLnx' \
+    --separator='|' --width=650 --height=300)" || exit 0
+  case "|$selected|" in *'|Firebird|'*) INSTALL_FIREBIRD=1 ;; esac
+  case "|$selected|" in *'|rcPanel|'*) INSTALL_RCPANEL=1 ;; esac
+  if [ "$INSTALL_FIREBIRD" = 0 ] && [ "$INSTALL_RCPANEL" = 0 ]; then
+    echo "No component selected."
+    exit 0
+  fi
+}
+
+parse_args "$@"
+choose_components
 
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -19,7 +74,10 @@ echo
 if [ "$(id -u)" -ne 0 ]; then
   if command -v sudo >/dev/null 2>&1; then
     echo "Requesting administrator permissions..."
-    exec sudo -E bash "$0"
+    reexec_args=(--no-gui)
+    [ "$INSTALL_FIREBIRD" = 1 ] && reexec_args+=(--firebird)
+    [ "$INSTALL_RCPANEL" = 1 ] && reexec_args+=(--rcpanel)
+    exec sudo -E bash "$0" "${reexec_args[@]}"
   fi
   echo "Run this script as root or install sudo first."
   exit 1
@@ -148,6 +206,196 @@ prepare_recorderlnx_sqldb_dirs() {
   echo "OK   $RECORDERLNX_LEGACY_SQLDB_DIR owner target: $fb_user:$fb_group"
 }
 
+desktop_user() {
+  local candidate
+  candidate="${SUDO_USER:-}"
+  if [ -n "$candidate" ] && [ "$candidate" != root ] &&
+     id "$candidate" >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return
+  fi
+  candidate="$(awk -F: '$3 >= 1000 && $3 < 65534 && $6 ~ "^/home/" && $7 !~ /(nologin|false)$/ {print $1}' /etc/passwd)"
+  if [ "$(printf '%s\n' "$candidate" | sed '/^$/d' | wc -l)" -eq 1 ]; then
+    printf '%s\n' "$candidate" | sed '/^$/d'
+  fi
+}
+
+desktop_dir_from_user_dirs() {
+  local user_home="$1"
+  local user_dirs="$user_home/.config/user-dirs.dirs"
+  local desktop_line
+  local desktop_value
+
+  [ -f "$user_dirs" ] || return 1
+  desktop_line="$(grep '^XDG_DESKTOP_DIR=' "$user_dirs" 2>/dev/null | tail -n 1 || true)"
+  [ -n "$desktop_line" ] || return 1
+  desktop_value="$(printf '%s\n' "$desktop_line" | sed 's/^XDG_DESKTOP_DIR=//; s/^"//; s/"$//')"
+  desktop_value="$(printf '%s\n' "$desktop_value" | sed "s|\$HOME|$user_home|g")"
+  [ -n "$desktop_value" ] || return 1
+  printf '%s\n' "$desktop_value"
+}
+
+install_rcpanel_desktop_shortcuts() {
+  local src=/usr/share/applications/rcpanel.desktop
+  local home
+  local user
+  local desktop
+  local xdg_desktop
+  local candidates
+
+  [ -f "$src" ] || return 0
+  for home in /home/*; do
+    [ -d "$home" ] || continue
+    user="$(basename "$home")"
+    candidates="$home/Desktop"
+    xdg_desktop="$(desktop_dir_from_user_dirs "$home" || true)"
+    if [ -n "$xdg_desktop" ] && [ "$xdg_desktop" != "$home/Desktop" ]; then
+      candidates="$xdg_desktop
+$candidates"
+    fi
+    while IFS= read -r desktop; do
+      [ -n "$desktop" ] || continue
+      [ -d "$desktop" ] || continue
+      cp "$src" "$desktop/rcPanel.desktop" || continue
+      sed -i 's|^Icon=.*$|Icon=/usr/share/pixmaps/rcpanel.png|' \
+        "$desktop/rcPanel.desktop"
+      chmod 0755 "$desktop/rcPanel.desktop" || true
+      chown "$user:$user" "$desktop/rcPanel.desktop" 2>/dev/null || true
+      echo "OK   rcPanel desktop shortcut: $desktop/rcPanel.desktop"
+    done <<EOF
+$candidates
+EOF
+  done
+}
+
+find_rcpanel_binary() {
+  local bundled="$SCRIPT_DIR/payload/RecorderCoordinator"
+  local repo_binary="$SCRIPT_DIR/../../../../Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator"
+  if [ -f "$bundled" ]; then
+    printf '%s\n' "$bundled"
+  elif [ -f "$repo_binary" ]; then
+    printf '%s\n' "$repo_binary"
+  else
+    echo "rcPanel payload was not found. Run prepare-installer.ps1 first." >&2
+    return 1
+  fi
+}
+
+normalize_rcpanel_config() {
+  local config_file="$1"
+
+  if grep -q '^[[:space:]]*sql_db_config[[:space:]]*=' "$config_file"; then
+    sed -i \
+      "s|^[[:space:]]*sql_db_config[[:space:]]*=.*$|sql_db_config=$RECORDERLNX_SQLDB_CONFIG|" \
+      "$config_file"
+  elif grep -q '^\[events\][[:space:]]*$' "$config_file"; then
+    sed -i "/^\[events\][[:space:]]*$/a sql_db_config=$RECORDERLNX_SQLDB_CONFIG" \
+      "$config_file"
+  else
+    printf '\n[events]\nsql_db_config=%s\n' "$RECORDERLNX_SQLDB_CONFIG" >> "$config_file"
+  fi
+  echo "OK   rcPanel SQL config path: $RECORDERLNX_SQLDB_CONFIG"
+}
+
+install_rcpanel() {
+  local source_binary
+  local runtime_user
+  local runtime_group
+  local config_file=/opt/mera/RecorderCoordinator/RecorderCoordinator.ini
+  local log_file=/opt/mera/RecorderCoordinator/RecorderCoordinator.log
+  local archive_dir=/var/opt/mera/RecorderCoordinator/archive
+
+  source_binary="$(find_rcpanel_binary)"
+  if [ "$source_binary" = "$SCRIPT_DIR/payload/RecorderCoordinator" ] &&
+     [ -f "$SCRIPT_DIR/payload/RecorderCoordinator.sha256" ] &&
+     command -v sha256sum >/dev/null 2>&1; then
+    (cd "$SCRIPT_DIR/payload" && sha256sum -c RecorderCoordinator.sha256)
+  fi
+  if [ "$(dd if="$source_binary" bs=1 count=4 2>/dev/null)" != "$(printf '\177ELF')" ]; then
+    echo "rcPanel payload is not a Linux ELF executable: $source_binary" >&2
+    exit 1
+  fi
+
+  install -d -m 0755 /opt/mera/RecorderCoordinator
+  install -m 0755 "$source_binary" /opt/mera/RecorderCoordinator/RecorderCoordinator
+  install -d -m 0755 /usr/share/icons/hicolor/256x256/apps
+  install -m 0644 "$SCRIPT_DIR/payload/rcpanel.png" /usr/share/icons/hicolor/256x256/apps/rcpanel.png
+  install -d -m 0755 /usr/share/pixmaps
+  install -m 0644 "$SCRIPT_DIR/payload/rcpanel.png" /usr/share/pixmaps/rcpanel.png
+  install -d -m 0755 /var/opt/mera/RecorderCoordinator
+  install -d -m 0755 "$archive_dir"
+  touch "$config_file" "$log_file"
+  if [ ! -s "$config_file" ]; then
+    cat > "$config_file" <<'EOF'
+[service]
+listen=0.0.0.0
+port=8765
+event_window_sec=30
+
+[events]
+create_recording_events=1
+sql_db_config=/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini
+
+[commands]
+start_all_on_any_recording=0
+
+[storages]
+count=1
+
+[storage.0]
+name=Локальный архив
+kind=local
+root=/var/opt/mera/RecorderCoordinator/archive
+host=
+user=
+EOF
+  fi
+  normalize_rcpanel_config "$config_file"
+
+  runtime_user="$(desktop_user)"
+  if [ -n "$runtime_user" ]; then
+    runtime_group="$(id -gn "$runtime_user")"
+    chown "$runtime_user:$runtime_group" "$config_file" "$log_file"
+    chown -R "$runtime_user:$runtime_group" /var/opt/mera/RecorderCoordinator
+    chmod 0600 "$config_file" "$log_file"
+    chmod 0700 /var/opt/mera/RecorderCoordinator "$archive_dir"
+  else
+    echo "WARN Desktop user is unknown; rcPanel writable files remain root-owned."
+  fi
+
+  cat > /usr/bin/rcpanel <<'EOF'
+#!/bin/sh
+if [ -r /etc/profile.d/recorderlnx-sqldb.sh ]; then
+  . /etc/profile.d/recorderlnx-sqldb.sh
+fi
+exec /opt/mera/RecorderCoordinator/RecorderCoordinator "$@"
+EOF
+  chmod 0755 /usr/bin/rcpanel
+  cat > /usr/share/applications/rcpanel.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=rcPanel
+GenericName=RecorderLnx Control Panel
+Comment=Панель управления RecorderLnx
+Exec=/usr/bin/rcpanel
+Path=/opt/mera/RecorderCoordinator
+Terminal=false
+Icon=rcpanel
+Categories=Utility;
+Keywords=RecorderLnx;Mera;Coordinator;rcPanel;
+StartupNotify=false
+EOF
+  chmod 0644 /usr/share/applications/rcpanel.desktop
+  install_rcpanel_desktop_shortcuts
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+  fi
+  if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t /usr/share/icons/hicolor >/dev/null 2>&1 || true
+  fi
+  echo "OK   rcPanel installed (internal binary name: RecorderCoordinator)"
+}
+
 write_recorderlnx_password_env() {
   local password
   local escaped_password
@@ -264,16 +512,21 @@ check_firebird() {
 
 main() {
   local archive
-  archive="$(find_archive)"
-  install_local_dependencies
-  install_online_dependencies_if_requested
-  install_firebird "$archive"
-  enable_firebird_service
-  prepare_recorderlnx_sqldb_dirs
-  write_recorderlnx_password_env
-  check_firebird
+  if [ "$INSTALL_RCPANEL" = 1 ]; then
+    install_rcpanel
+  fi
+  if [ "$INSTALL_FIREBIRD" = 1 ]; then
+    archive="$(find_archive)"
+    install_local_dependencies
+    install_online_dependencies_if_requested
+    install_firebird "$archive"
+    enable_firebird_service
+    prepare_recorderlnx_sqldb_dirs
+    write_recorderlnx_password_env
+    check_firebird
+  fi
   echo
-  echo "Done. Restart RecorderLnx; the password is stored in its protected config."
+  echo "Done. Selected components were installed."
 }
 
 main "$@"

@@ -1,0 +1,152 @@
+object RecorderMeraEventDialog: TRecorderMeraEventDialog
+  Left = 320
+  Height = 590
+  Top = 180
+  Width = 1060
+  BorderStyle = bsSizeable
+  Caption = 'MERA-пакеты события записи'
+  ClientHeight = 590
+  ClientWidth = 1060
+  Constraints.MinHeight = 360
+  Constraints.MinWidth = 800
+  Position = poOwnerFormCenter
+  object pnlEvent: TPanel
+    Align = alTop
+    Height = 132
+    BevelOuter = bvNone
+    Caption = ''
+    object lblEventTimeTitle: TLabel
+      Left = 10
+      Height = 18
+      Top = 10
+      Width = 110
+      Caption = 'Время события:'
+    end
+    object lblEventTime: TLabel
+      Left = 132
+      Height = 18
+      Top = 10
+      Width = 180
+      Caption = '-'
+    end
+    object lblDisplayName: TLabel
+      Left = 10
+      Height = 18
+      Top = 38
+      Width = 110
+      Caption = 'Имя на тренде:'
+    end
+    object edDisplayName: TEdit
+      Left = 132
+      Height = 24
+      Top = 34
+      Width = 918
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 0
+    end
+    object lblDescription: TLabel
+      Left = 10
+      Height = 18
+      Top = 69
+      Width = 110
+      Caption = 'Описание:'
+    end
+    object memDescription: TMemo
+      Left = 132
+      Height = 58
+      Top = 65
+      Width = 918
+      Anchors = [akTop, akLeft, akRight]
+      ScrollBars = ssAutoVertical
+      TabOrder = 1
+    end
+  end
+  object grdPackages: TStringGrid
+    Align = alClient
+    BorderSpacing.Left = 10
+    BorderSpacing.Right = 10
+    ColCount = 7
+    Columns = <
+      item Title.Caption = 'Выбран' Width = 58 end
+      item Title.Caption = 'Замер' Width = 165 end
+      item Title.Caption = 'Recorder-хост' Width = 130 end
+      item Title.Caption = 'Состояние' Width = 100 end
+      item Title.Caption = 'Файлов' Width = 55 end
+      item Title.Caption = 'Размер' Width = 85 end
+      item Title.Caption = 'Путь MERA (редактируется)' Width = 360 end>
+    FixedCols = 0
+    FixedRows = 1
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goThumbTracking]
+    RowCount = 2
+    OnDblClick = grdPackagesDblClick
+    OnSelectCell = grdPackagesSelectCell
+  end
+  object lblStatus: TLabel
+    Align = alBottom
+    BorderSpacing.Around = 10
+    Height = 20
+    Caption = 'Загрузка...'
+  end
+  object pnlButtons: TPanel
+    Align = alBottom
+    Height = 52
+    BevelOuter = bvNone
+    Caption = ''
+    object btnOpenSelected: TButton
+      Left = 10
+      Height = 30
+      Top = 10
+      Width = 160
+      Caption = 'Открыть выбранные'
+      OnClick = btnOpenSelectedClick
+    end
+    object btnOpenAll: TButton
+      Left = 178
+      Height = 30
+      Top = 10
+      Width = 130
+      Caption = 'Открыть все'
+      OnClick = btnOpenAllClick
+    end
+    object btnTransferSelected: TButton
+      Left = 330
+      Height = 30
+      Top = 10
+      Width = 176
+      Caption = 'Перенести выбранные'
+      OnClick = btnTransferSelectedClick
+    end
+    object btnTransferAll: TButton
+      Left = 514
+      Height = 30
+      Top = 10
+      Width = 138
+      Caption = 'Перенести все'
+      OnClick = btnTransferAllClick
+    end
+    object btnSave: TButton
+      Left = 660
+      Height = 30
+      Top = 10
+      Width = 108
+      Caption = 'Сохранить'
+      OnClick = btnSaveClick
+    end
+    object btnDeleteEvent: TButton
+      Left = 776
+      Height = 30
+      Top = 10
+      Width = 156
+      Caption = 'Удалить событие'
+      OnClick = btnDeleteEventClick
+    end
+    object btnClose: TButton
+      Align = alRight
+      BorderSpacing.Around = 10
+      Height = 30
+      Width = 100
+      Caption = 'Закрыть'
+      ModalResult = 2
+    end
+  end
+end

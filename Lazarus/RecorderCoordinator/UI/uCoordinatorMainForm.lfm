@@ -1,0 +1,586 @@
+object CoordinatorMainForm: TCoordinatorMainForm
+  Left = 250
+  Height = 620
+  Top = 120
+  Width = 1000
+  Caption = 'Recorder Coordinator'
+  ClientHeight = 620
+  ClientWidth = 1000
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object pnlService: TPanel
+    Left = 0
+    Height = 48
+    Top = 0
+    Width = 1000
+    Align = alTop
+    ClientHeight = 48
+    ClientWidth = 1000
+    TabOrder = 0
+    object lblListen: TLabel
+      Left = 12
+      Height = 15
+      Top = 16
+      Width = 97
+      Caption = 'Адрес HTTP API:'
+    end
+    object edtListen: TEdit
+      Left = 116
+      Height = 23
+      Top = 12
+      Width = 140
+      TabOrder = 0
+    end
+    object lblPort: TLabel
+      Left = 270
+      Height = 15
+      Top = 16
+      Width = 31
+      Caption = 'Порт:'
+    end
+    object edtPort: TEdit
+      Left = 310
+      Height = 23
+      Top = 12
+      Width = 65
+      TabOrder = 1
+    end
+    object btnService: TButton
+      Left = 388
+      Height = 28
+      Top = 9
+      Width = 150
+      Caption = 'Запустить сервис'
+      TabOrder = 2
+      OnClick = btnServiceClick
+    end
+    object btnSave: TButton
+      Left = 546
+      Height = 28
+      Top = 9
+      Width = 130
+      Caption = 'Сохранить'
+      TabOrder = 3
+      OnClick = btnSaveClick
+    end
+    object cbCreateRecordingEvents: TCheckBox
+      Left = 784
+      Height = 23
+      Top = 12
+      Width = 205
+      Caption = 'Создавать события записи'
+      ShowHint = True
+      TabOrder = 4
+      OnChange = cbCreateRecordingEventsChange
+    end
+    object lblEventWindow: TLabel
+      Left = 686
+      Height = 15
+      Top = 16
+      Width = 47
+      Caption = 'Окно, с:'
+    end
+    object edtEventWindow: TEdit
+      Left = 738
+      Height = 23
+      Top = 12
+      Width = 40
+      TabOrder = 5
+    end
+  end
+  object pageMain: TPageControl
+    Left = 0
+    Height = 572
+    Top = 48
+    Width = 1000
+    ActivePage = tabHosts
+    Align = alClient
+    TabIndex = 0
+    TabOrder = 1
+    object tabHosts: TTabSheet
+      Caption = 'RecorderLnx хосты'
+      ClientHeight = 544
+      ClientWidth = 992
+      object pnlHostCommands: TPanel
+        Left = 0
+        Height = 44
+        Top = 0
+        Width = 992
+        Align = alTop
+        BevelOuter = bvNone
+        ClientHeight = 44
+        ClientWidth = 992
+        TabOrder = 0
+        object btnCommandStartAll: TButton
+          Left = 8
+          Height = 30
+          Top = 7
+          Width = 140
+          Caption = 'Запустить все'
+          TabOrder = 0
+          OnClick = btnCommandStartAllClick
+        end
+        object btnCommandStopAll: TButton
+          Left = 156
+          Height = 30
+          Top = 7
+          Width = 140
+          Caption = 'Остановить все'
+          TabOrder = 1
+          OnClick = btnCommandStopAllClick
+        end
+        object btnRefresh: TButton
+          Left = 304
+          Height = 30
+          Top = 7
+          Width = 110
+          Caption = 'Обновить'
+          TabOrder = 2
+          OnClick = btnRefreshClick
+        end
+        object cbStartAllOnAnyRecording: TCheckBox
+          Left = 430
+          Height = 23
+          Top = 10
+          Width = 350
+          Caption = 'При старте одного запускать остальные'
+          TabOrder = 3
+          OnChange = cbStartAllOnAnyRecordingChange
+        end
+      end
+      object gridHosts: TStringGrid
+        Left = 0
+        Height = 388
+        Top = 44
+        Width = 992
+        Align = alClient
+        Columns = <        
+          item
+            Title.Caption = 'Статус'
+            Width = 44
+          end        
+          item
+            Title.Caption = 'Instance ID'
+            Width = 150
+          end        
+          item
+            Title.Caption = 'Адрес'
+            Width = 130
+          end        
+          item
+            Title.Caption = 'Компьютер'
+            Width = 120
+          end        
+          item
+            Title.Caption = 'Состояние'
+            Width = 100
+          end        
+          item
+            Title.Caption = 'Путь к замеру'
+            Width = 280
+          end        
+          item
+            Title.Caption = 'Последний ответ'
+            Width = 140
+          end>
+        FixedCols = 0
+        RowCount = 1
+        TabOrder = 1
+        OnDrawCell = gridHostsDrawCell
+        OnSelection = gridHostsSelection
+      end
+      object pnlHostActions: TPanel
+        Left = 0
+        Height = 112
+        Top = 432
+        Width = 992
+        Align = alBottom
+        BevelOuter = bvNone
+        ClientHeight = 112
+        ClientWidth = 992
+        TabOrder = 2
+        object lblSelectedHost: TLabel
+          Left = 8
+          Height = 15
+          Top = 12
+          Width = 143
+          Caption = 'Адрес выбранного хоста:'
+        end
+        object edtSelectedHost: TEdit
+          Left = 160
+          Height = 23
+          Top = 8
+          Width = 260
+          ReadOnly = True
+          TabOrder = 0
+        end
+        object btnCommandStop: TButton
+          Left = 436
+          Height = 30
+          Top = 5
+          Width = 110
+          Caption = 'Стоп'
+          Enabled = False
+          TabOrder = 1
+          OnClick = btnCommandStopClick
+        end
+        object btnCommandPreview: TButton
+          Left = 554
+          Height = 30
+          Top = 5
+          Width = 110
+          Caption = 'Просмотр'
+          Enabled = False
+          TabOrder = 2
+          OnClick = btnCommandPreviewClick
+        end
+        object btnCommandStart: TButton
+          Left = 672
+          Height = 30
+          Top = 5
+          Width = 110
+          Caption = 'Запись'
+          Enabled = False
+          TabOrder = 3
+          OnClick = btnCommandStartClick
+        end
+        object lblDatabaseHost: TLabel
+          Left = 8
+          Height = 15
+          Top = 45
+          Width = 102
+          Caption = 'Firebird-сервер:'
+        end
+        object edtDatabaseHost: TEdit
+          Left = 120
+          Height = 23
+          Top = 40
+          Width = 200
+          TabOrder = 4
+        end
+        object btnSetDatabaseForAll: TButton
+          Left = 332
+          Height = 28
+          Top = 38
+          Width = 226
+          Caption = 'Установить всем путь к базе'
+          TabOrder = 5
+          OnClick = btnSetDatabaseForAllClick
+        end
+        object lblHostId: TLabel
+          Left = 8
+          Height = 15
+          Top = 76
+          Width = 105
+          Caption = 'Добавить ID / адрес:'
+        end
+        object edtHostId: TEdit
+          Left = 120
+          Height = 23
+          Top = 72
+          Width = 200
+          TabOrder = 6
+        end
+        object lblHostName: TLabel
+          Left = 332
+          Height = 15
+          Top = 76
+          Width = 27
+          Caption = 'Имя:'
+        end
+        object edtHostName: TEdit
+          Left = 368
+          Height = 23
+          Top = 72
+          Width = 190
+          TabOrder = 7
+        end
+        object btnAddHost: TButton
+          Left = 570
+          Height = 28
+          Top = 69
+          Width = 140
+          Caption = 'Добавить хост'
+          TabOrder = 8
+          OnClick = btnAddHostClick
+        end
+      end
+    end
+    object tabEvents: TTabSheet
+      Caption = 'События записи'
+      ClientHeight = 544
+      ClientWidth = 992
+      object pnlEventFilter: TPanel
+        Left = 0
+        Height = 48
+        Top = 0
+        Width = 992
+        Align = alTop
+        BevelOuter = bvNone
+        ClientHeight = 48
+        ClientWidth = 992
+        TabOrder = 0
+        object lblEventsFrom: TLabel
+          Left = 8
+          Height = 15
+          Top = 17
+          Width = 16
+          Caption = 'От:'
+        end
+        object dtpEventsFrom: TDateTimePicker
+          Left = 32
+          Height = 25
+          Top = 11
+          Width = 180
+          Kind = dtkDateTime
+          TabOrder = 0
+        end
+        object lblEventsTo: TLabel
+          Left = 224
+          Height = 15
+          Top = 17
+          Width = 18
+          Caption = 'До:'
+        end
+        object dtpEventsTo: TDateTimePicker
+          Left = 250
+          Height = 25
+          Top = 11
+          Width = 180
+          Kind = dtkDateTime
+          TabOrder = 1
+          OnChange = dtpEventsToChange
+        end
+        object btnRefreshEvents: TButton
+          Left = 442
+          Height = 30
+          Top = 8
+          Width = 110
+          Caption = 'Обновить'
+          TabOrder = 2
+          OnClick = btnRefreshEventsClick
+        end
+        object btnEditEvent: TButton
+          Left = 562
+          Height = 30
+          Top = 8
+          Width = 118
+          Caption = 'Редактировать'
+          Enabled = False
+          TabOrder = 3
+          OnClick = btnEditEventClick
+        end
+        object btnOpenEvent: TButton
+          Left = 688
+          Height = 30
+          Top = 8
+          Width = 138
+          Caption = 'Открыть замеры'
+          Enabled = False
+          TabOrder = 4
+          OnClick = btnOpenEventClick
+        end
+        object btnDeleteEvent: TButton
+          Left = 834
+          Height = 30
+          Top = 8
+          Width = 150
+          Caption = 'Удалить событие'
+          Enabled = False
+          TabOrder = 5
+          OnClick = btnDeleteEventClick
+        end
+      end
+      object gridEvents: TStringGrid
+        Left = 0
+        Height = 496
+        Top = 48
+        Width = 992
+        Align = alClient
+        ColCount = 6
+        Columns = <        
+          item
+            Title.Caption = 'Имя'
+            Width = 210
+          end        
+          item
+            Title.Caption = 'Начало'
+            Width = 160
+          end        
+          item
+            Title.Caption = 'Состояние'
+            Width = 110
+          end        
+          item
+            Title.Caption = 'Замеров'
+            Width = 90
+          end
+          item
+            Title.Caption = 'Размер, байт'
+            Width = 110
+          end
+          item
+            Title.Caption = 'Event ID'
+            Width = 250
+          end>
+        FixedCols = 0
+        RowCount = 1
+        TabOrder = 1
+        OnSelection = gridEventsSelection
+      end
+    end
+    object tabStorages: TTabSheet
+      Caption = 'Файловые хранилища'
+      ClientHeight = 544
+      ClientWidth = 992
+      object gridStorages: TStringGrid
+        Left = 8
+        Height = 230
+        Top = 8
+        Width = 976
+        Anchors = [akTop, akLeft, akRight]
+        ColCount = 4
+        Columns = <        
+          item
+            Title.Caption = 'Имя'
+            Width = 180
+          end        
+          item
+            Title.Caption = 'Тип'
+            Width = 80
+          end        
+          item
+            Title.Caption = 'База / сетевой каталог'
+            Width = 430
+          end        
+          item
+            Title.Caption = 'SQL / файловый сервер'
+            Width = 190
+          end>
+        FixedCols = 0
+        RowCount = 1
+        TabOrder = 0
+        OnSelection = gridStoragesSelection
+      end
+      object lblStorageName: TLabel
+        Left = 16
+        Height = 15
+        Top = 258
+        Width = 27
+        Caption = 'Имя:'
+      end
+      object edtStorageName: TEdit
+        Left = 170
+        Height = 23
+        Top = 254
+        Width = 360
+        TabOrder = 1
+      end
+      object lblStorageKind: TLabel
+        Left = 16
+        Height = 15
+        Top = 292
+        Width = 23
+        Caption = 'Тип:'
+      end
+      object cbStorageKind: TComboBox
+        Left = 170
+        Height = 23
+        Top = 288
+        Width = 180
+        ItemHeight = 15
+        ItemIndex = 0
+        Items.Strings = (
+          'local'
+          'smb'
+          'sftp'
+        )
+        Style = csDropDownList
+        TabOrder = 2
+        Text = 'local'
+      end
+      object lblStoragePath: TLabel
+        Left = 16
+        Height = 15
+        Top = 326
+        Width = 155
+        Caption = 'Путь / точка монтирования:'
+      end
+      object edtStoragePath: TEdit
+        Left = 170
+        Height = 23
+        Top = 322
+        Width = 650
+        TabOrder = 3
+      end
+      object lblStorageHost: TLabel
+        Left = 16
+        Height = 15
+        Top = 360
+        Width = 43
+        Caption = 'Сервер:'
+      end
+      object edtStorageHost: TEdit
+        Left = 170
+        Height = 23
+        Top = 356
+        Width = 360
+        TabOrder = 4
+      end
+      object lblStorageUser: TLabel
+        Left = 16
+        Height = 15
+        Top = 394
+        Width = 80
+        Caption = 'Пользователь:'
+      end
+      object edtStorageUser: TEdit
+        Left = 170
+        Height = 23
+        Top = 390
+        Width = 360
+        TabOrder = 5
+      end
+      object btnAddStorage: TButton
+        Left = 16
+        Height = 30
+        Top = 440
+        Width = 130
+        Caption = 'Добавить'
+        TabOrder = 6
+        OnClick = btnAddStorageClick
+      end
+      object btnTestStorage: TButton
+        Left = 156
+        Height = 30
+        Top = 440
+        Width = 180
+        Caption = 'Проверить каталог'
+        TabOrder = 7
+        OnClick = btnTestStorageClick
+      end
+    end
+    object tabLog: TTabSheet
+      Caption = 'Журнал'
+      ClientHeight = 544
+      ClientWidth = 992
+      object memoLog: TMemo
+        Left = 0
+        Height = 544
+        Top = 0
+        Width = 992
+        Align = alClient
+        ReadOnly = True
+        ScrollBars = ssAutoBoth
+        TabOrder = 0
+      end
+    end
+  end
+  object timerRefresh: TTimer
+    Interval = 250
+    OnTimer = timerRefreshTimer
+    Left = 928
+    Top = 8
+  end
+end

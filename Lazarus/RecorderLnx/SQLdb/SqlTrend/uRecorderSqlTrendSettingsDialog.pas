@@ -29,6 +29,7 @@ type
     cbDisplay: TComboBox;
     cbLineAxis: TComboBox;
     cbLineVisible: TCheckBox;
+    cbShowEvents: TCheckBox;
     cbCurrentDate: TCheckBox;
     cbTimeMode: TComboBox;
     ColorDialog1: TColorDialog;
@@ -187,6 +188,7 @@ begin
   end;
   SetTimeEdits(fDraft.FromUtc, fDraft.ToUtc);
   edMaxPoints.Text := IntToStr(fDraft.MaxPointsPerLine);
+  cbShowEvents.Checked := fDraft.ShowEvents;
   edWindowHours.Text := FloatToStr(fDraft.DurationSec / SecsPerDay);
   FillAxes;
   FillLines;
@@ -513,17 +515,25 @@ end;
 
 procedure TRecorderSqlTrendSettingsDialog.SetTimeEdits(AFromUtc,
   AToUtc: TDateTime);
+var
+  lFromLocal, lToLocal: TDateTime;
 begin
   fUpdatingTime := True;
   try
     fDraft.FromUtc := AFromUtc;
     fDraft.ToUtc := AToUtc;
     fDraft.DurationSec := Max(1.0, (AToUtc - AFromUtc) * SecsPerDay);
-    SetDateEditValue(fFromDateEdit, dtpFromDate, Trunc(AFromUtc));
-    if Frac(AToUtc) = 0 then
-      SetDateEditValue(fToDateEdit, dtpToDate, Trunc(AToUtc - 1.0 / SecsPerDay))
+    { The repository contract is UTC, while the date controls are explicitly
+      user-facing local calendar dates. Keeping UTC values in these controls
+      silently shifted the selected day on hosts in another time zone. }
+    lFromLocal := UniversalTimeToLocal(AFromUtc);
+    lToLocal := UniversalTimeToLocal(AToUtc);
+    SetDateEditValue(fFromDateEdit, dtpFromDate, Trunc(lFromLocal));
+    if Frac(lToLocal) = 0 then
+      SetDateEditValue(fToDateEdit, dtpToDate,
+        Trunc(lToLocal - 1.0 / SecsPerDay))
     else
-      SetDateEditValue(fToDateEdit, dtpToDate, Trunc(AToUtc));
+      SetDateEditValue(fToDateEdit, dtpToDate, Trunc(lToLocal));
     edWindowHours.Text := FloatToStrF(fDraft.DurationSec / SecsPerDay,
       ffFixed, 12, 6);
   finally
@@ -533,12 +543,13 @@ end;
 
 function TRecorderSqlTrendSettingsDialog.FromUtcValue: TDateTime;
 begin
-  Result := DateEditValue(fFromDateEdit, dtpFromDate);
+  Result := LocalTimeToUniversal(DateEditValue(fFromDateEdit, dtpFromDate));
 end;
 
 function TRecorderSqlTrendSettingsDialog.ToUtcValue: TDateTime;
 begin
-  Result := DateEditValue(fToDateEdit, dtpToDate) + 1.0;
+  Result := LocalTimeToUniversal(
+    DateEditValue(fToDateEdit, dtpToDate) + 1.0);
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.TimeFromChange(Sender: TObject);
@@ -909,6 +920,7 @@ begin
   fDraft.DurationSec := (lToUtc - lFromUtc) * SecsPerDay;
   if not TryStrToInt(edMaxPoints.Text, N) then N := 4000;
   fDraft.MaxPointsPerLine := EnsureRange(N, 32, 100000);
+  fDraft.ShowEvents := cbShowEvents.Checked;
   fComponent.AssignSqlTrend(fDraft);
   ModalResult := mrOk;
 end;

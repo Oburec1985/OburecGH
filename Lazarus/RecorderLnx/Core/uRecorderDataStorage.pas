@@ -729,6 +729,7 @@ begin
       ASignal.TimeStream.WriteBuffer(lTime, SizeOf(lTime));
     end;
 end;
+
 { TRecorderMeraTagWriter.RequireOpen
   Назначение:
     Проверяет, открыта ли сессия записи MERA. Если нет, выбрасывает исключение.

@@ -59,6 +59,39 @@ type
     procedure InsertDataFile(const AId, AStorageKey, ADataType, AFormat: string;
       ASize: Int64; const AChecksum, AState, ARegistrationId, ASignalId,
       AEventId: string; AAnchorUtc, AFromUtc, AToUtc: Double);
+    function UpsertRecorderInstance(const AInstanceKey, AHostName,
+      ADisplayName, APlatform: string; ALastSeenAtUtc: Double): string;
+    procedure SetSystemSetting(const AKey, AValue, AValueType,
+      AUpdatedByInstanceId: string; AUpdatedAtUtc: Double);
+    function GetSystemSetting(const AKey: string; out AValue,
+      AValueType: string): Boolean;
+    function BeginMeraRecording(const ARecording: TRecorderSqlDbMeraRecording): string;
+    procedure CompleteMeraRecording(const ARecordingId, AState,
+      AEntryFileId, AErrorText: string; AFinishedAtUtc: Double);
+    procedure UpsertMeraFile(const AFile: TRecorderSqlDbMeraFile);
+    procedure UpsertDataFileLocation(const ALocation: TRecorderSqlDbFileLocation);
+    procedure ListMeraRecordings(AFromUtc, AToUtc: Double;
+      out AItems: TRecorderSqlDbMeraRecordings);
+    function GetCurrentMeraRecording(const ARecorderInstanceId: string;
+      out AItem: TRecorderSqlDbMeraRecording): Boolean;
+    procedure ListMeraFiles(const ARecordingId: string;
+      out AItems: TRecorderSqlDbMeraFiles);
+    procedure ListDataFileLocations(const AFileId: string;
+      out AItems: TRecorderSqlDbFileLocations);
+    procedure ListMeraRecordingEvents(AFromUtc, AToUtc: Double;
+      out AItems: TRecorderSqlDbMeraEvents);
+    function GetMeraEventSnapshot(const AEventId: string;
+      out AEventUtc, AFirstStartedUtc, ALastFinishedUtc: Double;
+      out ARecordingCount: Integer): Boolean;
+    function UpdateMeraEvent(const AEventId, ADisplayName,
+      ADescription: string): Boolean;
+    function UpdateDataFileLocationPath(const AEventId, ALocationId,
+      APathKey: string): Boolean;
+    function DeleteMeraEvent(const AEventId: string): Boolean; overload;
+    function DeleteMeraEvent(const AEventId: string; out ADeletedPackages,
+      ADeletedFiles: Integer): Boolean; overload;
+    procedure ListMeraPackages(const AEventId: string;
+      out AItems: TRecorderSqlDbMeraPackages);
     procedure ListAttachments(AFromUtc, AToUtc: Double; AItems: TList);
     procedure ListSignalNames(AItems: TStrings);
     procedure ListSignalInfos(out AItems: TRecorderSqlDbSignalInfos;
@@ -83,11 +116,33 @@ uses
   SQLite3Conn, IBConnection, PQConnection;
 
 const
-  CSchemaTables: array[0..12] of string = (
+  CSchemaTables: array[0..17] of string = (
     'schema_info', 'objects', 'property_definitions', 'object_property_values',
     'signals', 'signal_bindings', 'tests', 'registrations',
     'recording_policies', 'signal_values', 'events', 'data_files',
-    'data_file_links');
+    'data_file_links', 'recorder_instances', 'system_settings',
+    'mera_recordings', 'mera_recording_files', 'data_file_locations');
+
+function FirebirdOpenError(const AConfig: TRecorderSqlDbConfig;
+  const AMessage: string): ERecorderSqlDbError;
+var
+  lMessage: string;
+begin
+  lMessage := LowerCase(AMessage);
+  if (Pos('fbclient', lMessage) > 0) or
+     (Pos('libgds', lMessage) > 0) or
+     (Pos('client library', lMessage) > 0) or
+     (Pos('client libraries', lMessage) > 0) then
+    Result := ERecorderSqlDbError.Create(
+      'Не найдена клиентская библиотека Firebird. Сервер Firebird на этом ПК ' +
+      'не требуется, но для доступа к удалённой БД нужно установить пакет ' +
+      'libfbclient2 (Linux) или fbclient.dll той же разрядности (Windows). ' +
+      'Исходная ошибка: ' + AMessage)
+  else
+    Result := ERecorderSqlDbError.CreateFmt(
+      'Не удалось открыть Firebird %s:%d, БД %s. %s',
+      [AConfig.Host, AConfig.Port, AConfig.DatabaseFileName, AMessage]);
+end;
 
 constructor TRecorderSqlDbRepository.Create(AConfig: TRecorderSqlDbConfig);
 begin
@@ -174,8 +229,13 @@ begin
       fConnection.Open;
     if not fTransaction.Active then fTransaction.StartTransaction;
   except
-    Close;
-    raise;
+    on E: Exception do
+    begin
+      Close;
+      if fConfig.Backend = rsbFirebird then
+        raise FirebirdOpenError(fConfig, E.Message);
+      raise;
+    end;
   end;
 end;
 
@@ -643,11 +703,68 @@ begin
       lQuery.Transaction := fTransaction;
       lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
         'values(:version,:applied_at,:description)';
-      lQuery.Params.ParamByName('version').AsInteger := CRecorderSqlDbSchemaVersion;
+      lQuery.Params.ParamByName('version').AsInteger := 3;
       lQuery.Params.ParamByName('applied_at').AsFloat := Now;
       lQuery.Params.ParamByName('description').AsString :=
         'RecorderLnx SQLdb maintenance indexes';
       lQuery.ExecSQL;
+    finally
+      lQuery.Free;
+    end;
+  end;
+  if AVersion < 4 then
+  begin
+    CreateIndexIfMissing('idx_events_type_time',
+      'create index idx_events_type_time on events(event_type,timestamp_utc)');
+    CreateIndexIfMissing('idx_data_file_links_anchor',
+      'create index idx_data_file_links_anchor on data_file_links(anchor_time_utc)');
+    CreateIndexIfMissing('idx_mera_recordings_time',
+      'create index idx_mera_recordings_time on mera_recordings(started_at_utc,finished_at_utc,state)');
+    CreateIndexIfMissing('idx_data_file_locations_state',
+      'create index idx_data_file_locations_state on data_file_locations(file_id,state)');
+    CommitAndRestart;
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
+        'values(:version,:applied_at,:description)';
+      lQuery.Params.ParamByName('version').AsInteger := 4;
+      lQuery.Params.ParamByName('applied_at').AsFloat := Now;
+      lQuery.Params.ParamByName('description').AsString :=
+        'RecorderLnx MERA recording events and file locations';
+      lQuery.ExecSQL;
+    finally
+      lQuery.Free;
+    end;
+  end;
+  if AVersion < 5 then
+  begin
+    AddColumnIfMissing('events', 'display_name',
+      'alter table events add display_name varchar(255)');
+    AddColumnIfMissing('events', 'description',
+      'alter table events add description varchar(2048)');
+    { Firebird publishes ALTER TABLE metadata only after the DDL transaction
+      is committed.  The backfill query below must be prepared in a fresh
+      transaction, otherwise it fails with -206 Column unknown DISPLAY_NAME. }
+    CommitAndRestart;
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text :=
+        'update events set display_name=coalesce((select max(r.display_name) ' +
+        'from mera_recordings r where r.event_id=events.id),event_text,''''),' +
+        'description=coalesce(event_text,'''') where event_type=''mera.recording''';
+      lQuery.ExecSQL;
+      lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
+        'values(:version,:applied_at,:description)';
+      lQuery.Params.ParamByName('version').AsInteger := 5;
+      lQuery.Params.ParamByName('applied_at').AsFloat := Now;
+      lQuery.Params.ParamByName('description').AsString :=
+        'Editable MERA event display name and description';
+      lQuery.ExecSQL;
+      CommitAndRestart;
     finally
       lQuery.Free;
     end;
@@ -683,17 +800,35 @@ begin
   CreateTableIfMissing('signal_values',
     'create table signal_values (id varchar(36) primary key, registration_id varchar(36) not null, signal_id varchar(36) not null, timestamp_utc double precision not null, measured_value double precision, quality integer not null, sequence_no bigint not null)');
   CreateTableIfMissing('events',
-    'create table events (id varchar(36) primary key, registration_id varchar(36), object_id varchar(36), signal_id varchar(36), timestamp_utc double precision not null, event_type varchar(80) not null, severity varchar(32), measured_value double precision, event_text varchar(2048), payload_json varchar(8191))');
+    'create table events (id varchar(36) primary key, registration_id varchar(36), object_id varchar(36), signal_id varchar(36), timestamp_utc double precision not null, event_type varchar(80) not null, severity varchar(32), measured_value double precision, event_text varchar(2048), payload_json varchar(8191), display_name varchar(255), description varchar(2048))');
   CreateTableIfMissing('data_files',
     'create table data_files (id varchar(36) primary key, storage_key varchar(500) not null unique, data_type varchar(80), data_format varchar(80), file_size bigint not null, checksum varchar(128), file_state varchar(32) not null, created_at double precision not null)');
   CreateTableIfMissing('data_file_links',
     'create table data_file_links (id varchar(36) primary key, file_id varchar(36) not null, registration_id varchar(36), signal_id varchar(36), event_id varchar(36), anchor_time_utc double precision, time_from_utc double precision, time_to_utc double precision)');
+  CreateTableIfMissing('recorder_instances',
+    'create table recorder_instances (id varchar(36) primary key, instance_key varchar(100) not null unique, host_name varchar(255), display_name varchar(255), platform varchar(80), last_seen_at_utc double precision not null)');
+  CreateTableIfMissing('system_settings',
+    'create table system_settings (setting_key varchar(255) primary key, value_text varchar(8191), value_type varchar(40) not null, updated_at_utc double precision not null, updated_by_instance_id varchar(36))');
+  CreateTableIfMissing('mera_recordings',
+    'create table mera_recordings (id varchar(36) primary key, event_id varchar(36) not null, recorder_instance_id varchar(36) not null, registration_id varchar(36), correlation_id varchar(36), display_name varchar(255), started_at_utc double precision not null, finished_at_utc double precision, state varchar(32) not null, entry_file_id varchar(36), project_name varchar(255), error_text varchar(2048))');
+  CreateTableIfMissing('mera_recording_files',
+    'create table mera_recording_files (recording_id varchar(36) not null, file_id varchar(36) not null, file_role varchar(40) not null, relative_name varchar(500) not null, ordinal integer not null, primary key(recording_id,file_id))');
+  CreateTableIfMissing('data_file_locations',
+    'create table data_file_locations (id varchar(36) primary key, file_id varchar(36) not null, recorder_instance_id varchar(36), location_kind varchar(40) not null, path_key varchar(1024) not null, state varchar(32) not null, created_at_utc double precision not null, verified_at_utc double precision, error_text varchar(2048))');
   CreateIndexIfMissing('idx_signals_name',
     'create index idx_signals_name on signals(name)');
   CreateIndexIfMissing('idx_signal_values_signal',
     'create index idx_signal_values_signal on signal_values(signal_id)');
   CreateIndexIfMissing('idx_signal_values_signal_time',
     'create index idx_signal_values_signal_time on signal_values(signal_id,timestamp_utc)');
+  CreateIndexIfMissing('idx_events_type_time',
+    'create index idx_events_type_time on events(event_type,timestamp_utc)');
+  CreateIndexIfMissing('idx_data_file_links_anchor',
+    'create index idx_data_file_links_anchor on data_file_links(anchor_time_utc)');
+  CreateIndexIfMissing('idx_mera_recordings_time',
+    'create index idx_mera_recordings_time on mera_recordings(started_at_utc,finished_at_utc,state)');
+  CreateIndexIfMissing('idx_data_file_locations_state',
+    'create index idx_data_file_locations_state on data_file_locations(file_id,state)');
   { Firebird publishes newly created metadata at a transaction boundary.
     Preparing a query for SCHEMA_INFO in the DDL transaction can otherwise
     fail with SQL error -204 / table unknown on a newly created database. }
@@ -719,6 +854,29 @@ begin
   if lVersion > CRecorderSqlDbSchemaVersion then
     raise ERecorderSqlDbError.CreateFmt('Database schema %d is newer than supported %d',
       [lVersion, CRecorderSqlDbSchemaVersion]);
+  { The version row alone is not a structural guarantee.  A legacy database
+    can have an empty/restored schema_info or a partially completed DDL
+    migration.  Repair the columns idempotently before any v5 query. }
+  AddColumnIfMissing('events', 'display_name',
+    'alter table events add display_name varchar(255)');
+  AddColumnIfMissing('events', 'description',
+    'alter table events add description varchar(2048)');
+  CommitAndRestart;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'update events set display_name=coalesce(display_name,(select ' +
+      'max(r.display_name) from mera_recordings r where r.event_id=events.id),' +
+      'event_text,''''),description=coalesce(description,event_text,'''') ' +
+      'where event_type=''mera.recording'' and ' +
+      '(display_name is null or description is null)';
+    lQuery.ExecSQL;
+    CommitAndRestart;
+  finally
+    lQuery.Free;
+  end;
   MigrateSchema(lVersion);
   Commit;
   fDatabaseEnsured := True;
@@ -1106,6 +1264,768 @@ begin
     lQuery.Params.ParamByName('time_to_utc').AsFloat := AToUtc;
     lQuery.ExecSQL; Commit;
   finally lQuery.Free; end;
+end;
+
+function TRecorderSqlDbRepository.UpsertRecorderInstance(const AInstanceKey,
+  AHostName, ADisplayName, APlatform: string; ALastSeenAtUtc: Double): string;
+var
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  Result := FindId('select id from recorder_instances where instance_key=:key',
+    'key', AInstanceKey);
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    if Result = '' then
+    begin
+      Result := RecorderSqlDbNewId;
+      lQuery.SQL.Text :=
+        'insert into recorder_instances(id,instance_key,host_name,display_name,' +
+        'platform,last_seen_at_utc) values(:id,:key,:host,:display,:platform,:seen)';
+      lQuery.ParamByName('id').AsString := Result;
+      lQuery.ParamByName('key').AsString := AInstanceKey;
+    end
+    else
+    begin
+      lQuery.SQL.Text :=
+        'update recorder_instances set host_name=:host,display_name=:display,' +
+        'platform=:platform,last_seen_at_utc=:seen where id=:id';
+      lQuery.ParamByName('id').AsString := Result;
+    end;
+    lQuery.ParamByName('host').AsString := AHostName;
+    lQuery.ParamByName('display').AsString := ADisplayName;
+    lQuery.ParamByName('platform').AsString := APlatform;
+    lQuery.ParamByName('seen').AsFloat := ALastSeenAtUtc;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.SetSystemSetting(const AKey, AValue,
+  AValueType, AUpdatedByInstanceId: string; AUpdatedAtUtc: Double);
+var
+  lExists: Boolean;
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text := 'select setting_key from system_settings where setting_key=:key';
+    lQuery.ParamByName('key').AsString := AKey;
+    lQuery.Open;
+    lExists := not lQuery.EOF;
+    lQuery.Close;
+    if not lExists then
+      lQuery.SQL.Text :=
+        'insert into system_settings(setting_key,value_text,value_type,' +
+        'updated_at_utc,updated_by_instance_id) values(:key,:value,:type,:updated,:instance)'
+    else
+      lQuery.SQL.Text :=
+        'update system_settings set value_text=:value,value_type=:type,' +
+        'updated_at_utc=:updated,updated_by_instance_id=:instance where setting_key=:key';
+    lQuery.ParamByName('key').AsString := AKey;
+    lQuery.ParamByName('value').AsString := AValue;
+    lQuery.ParamByName('type').AsString := AValueType;
+    lQuery.ParamByName('updated').AsFloat := AUpdatedAtUtc;
+    if AUpdatedByInstanceId = '' then
+      lQuery.ParamByName('instance').Clear
+    else
+      lQuery.ParamByName('instance').AsString := AUpdatedByInstanceId;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.GetSystemSetting(const AKey: string;
+  out AValue, AValueType: string): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  AValue := '';
+  AValueType := '';
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select value_text,value_type from system_settings where setting_key=:key';
+    lQuery.ParamByName('key').AsString := AKey;
+    lQuery.Open;
+    Result := not lQuery.EOF;
+    if Result then
+    begin
+      AValue := lQuery.Fields[0].AsString;
+      AValueType := lQuery.Fields[1].AsString;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.BeginMeraRecording(
+  const ARecording: TRecorderSqlDbMeraRecording): string;
+var
+  lExists: Boolean;
+  lEventId: string;
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  Result := ARecording.Id;
+  if Result = '' then Result := RecorderSqlDbNewId;
+  lEventId := ARecording.EventId;
+  if lEventId = '' then lEventId := RecorderSqlDbNewId;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text := 'select id from events where id=:id';
+    lQuery.ParamByName('id').AsString := lEventId;
+    lQuery.Open;
+    lExists := not lQuery.EOF;
+    lQuery.Close;
+    if not lExists then
+    begin
+      lQuery.SQL.Text :=
+        'insert into events(id,registration_id,timestamp_utc,event_type,severity,' +
+        'payload_json,display_name,description) values(:id,:registration,:time,' +
+        '''mera.recording'',''info'',:payload,:display,:description)';
+      lQuery.ParamByName('id').AsString := lEventId;
+      if ARecording.RegistrationId = '' then lQuery.ParamByName('registration').Clear
+      else lQuery.ParamByName('registration').AsString := ARecording.RegistrationId;
+      lQuery.ParamByName('time').AsFloat := ARecording.StartedAtUtc;
+      lQuery.ParamByName('payload').AsString := '{}';
+      lQuery.ParamByName('display').AsString := ARecording.DisplayName;
+      lQuery.ParamByName('description').AsString := '';
+      lQuery.ExecSQL;
+    end;
+
+    lQuery.SQL.Text := 'select id from mera_recordings where id=:id';
+    lQuery.ParamByName('id').AsString := Result;
+    lQuery.Open;
+    lExists := not lQuery.EOF;
+    lQuery.Close;
+    if not lExists then
+      lQuery.SQL.Text :=
+        'insert into mera_recordings(id,event_id,recorder_instance_id,' +
+        'registration_id,correlation_id,display_name,started_at_utc,state,' +
+        'project_name,error_text) values(:id,:event,:instance,:registration,' +
+        ':correlation,:display,:started,:state,:project,:error)'
+    else
+      lQuery.SQL.Text :=
+        'update mera_recordings set event_id=:event,recorder_instance_id=:instance,' +
+        'registration_id=:registration,correlation_id=:correlation,' +
+        'display_name=:display,started_at_utc=:started,state=:state,' +
+        'project_name=:project,error_text=:error where id=:id';
+    lQuery.ParamByName('id').AsString := Result;
+    lQuery.ParamByName('event').AsString := lEventId;
+    lQuery.ParamByName('instance').AsString := ARecording.RecorderInstanceId;
+    if ARecording.RegistrationId = '' then lQuery.ParamByName('registration').Clear
+    else lQuery.ParamByName('registration').AsString := ARecording.RegistrationId;
+    if ARecording.CorrelationId = '' then lQuery.ParamByName('correlation').Clear
+    else lQuery.ParamByName('correlation').AsString := ARecording.CorrelationId;
+    lQuery.ParamByName('display').AsString := ARecording.DisplayName;
+    lQuery.ParamByName('started').AsFloat := ARecording.StartedAtUtc;
+    lQuery.ParamByName('state').AsString := ARecording.State;
+    lQuery.ParamByName('project').AsString := ARecording.ProjectName;
+    lQuery.ParamByName('error').AsString := ARecording.ErrorText;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.CompleteMeraRecording(const ARecordingId,
+  AState, AEntryFileId, AErrorText: string; AFinishedAtUtc: Double);
+var
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'update mera_recordings set finished_at_utc=:finished,state=:state,' +
+      'entry_file_id=:entry,error_text=:error where id=:id';
+    lQuery.ParamByName('finished').AsFloat := AFinishedAtUtc;
+    lQuery.ParamByName('state').AsString := AState;
+    if AEntryFileId = '' then lQuery.ParamByName('entry').Clear
+    else lQuery.ParamByName('entry').AsString := AEntryFileId;
+    lQuery.ParamByName('error').AsString := AErrorText;
+    lQuery.ParamByName('id').AsString := ARecordingId;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.UpsertMeraFile(
+  const AFile: TRecorderSqlDbMeraFile);
+var
+  lExists: Boolean;
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text := 'select id from data_files where id=:id';
+    lQuery.ParamByName('id').AsString := AFile.FileId;
+    lQuery.Open;
+    lExists := not lQuery.EOF;
+    lQuery.Close;
+    if not lExists then
+      lQuery.SQL.Text :=
+        'insert into data_files(id,storage_key,data_type,data_format,file_size,' +
+        'checksum,file_state,created_at) values(:id,:key,''mera'',:format,' +
+        ':size,:checksum,:state,:created)'
+    else
+      lQuery.SQL.Text :=
+        'update data_files set storage_key=:key,data_format=:format,file_size=:size,' +
+        'checksum=:checksum,file_state=:state where id=:id';
+    lQuery.ParamByName('id').AsString := AFile.FileId;
+    lQuery.ParamByName('key').AsString := AFile.StorageKey;
+    lQuery.ParamByName('format').AsString := AFile.DataFormat;
+    lQuery.ParamByName('size').AsLargeInt := AFile.Size;
+    lQuery.ParamByName('checksum').AsString := AFile.Checksum;
+    lQuery.ParamByName('state').AsString := AFile.State;
+    if lQuery.Params.FindParam('created') <> nil then
+      lQuery.ParamByName('created').AsFloat := Now;
+    lQuery.ExecSQL;
+
+    lQuery.SQL.Text :=
+      'select file_id from mera_recording_files where recording_id=:recording ' +
+      'and relative_name=:name';
+    lQuery.ParamByName('recording').AsString := AFile.RecordingId;
+    lQuery.ParamByName('name').AsString := AFile.RelativeName;
+    lQuery.Open;
+    lExists := not lQuery.EOF;
+    lQuery.Close;
+    if not lExists then
+      lQuery.SQL.Text :=
+        'insert into mera_recording_files(recording_id,file_id,file_role,' +
+        'relative_name,ordinal) values(:recording,:file,:role,:name,:ordinal)'
+    else
+      lQuery.SQL.Text :=
+        'update mera_recording_files set file_id=:file,file_role=:role,' +
+        'ordinal=:ordinal where recording_id=:recording and relative_name=:name';
+    lQuery.ParamByName('recording').AsString := AFile.RecordingId;
+    lQuery.ParamByName('file').AsString := AFile.FileId;
+    lQuery.ParamByName('role').AsString := AFile.FileRole;
+    lQuery.ParamByName('name').AsString := AFile.RelativeName;
+    lQuery.ParamByName('ordinal').AsInteger := AFile.Ordinal;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.UpsertDataFileLocation(
+  const ALocation: TRecorderSqlDbFileLocation);
+var
+  lId: string;
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id from data_file_locations where file_id=:file and ' +
+      'location_kind=:kind and ((recorder_instance_id=:instance) or ' +
+      '(recorder_instance_id is null and :instance is null))';
+    lQuery.ParamByName('file').AsString := ALocation.FileId;
+    lQuery.ParamByName('kind').AsString := ALocation.LocationKind;
+    if ALocation.RecorderInstanceId = '' then lQuery.ParamByName('instance').Clear
+    else lQuery.ParamByName('instance').AsString := ALocation.RecorderInstanceId;
+    lQuery.Open;
+    if lQuery.EOF then lId := '' else lId := lQuery.Fields[0].AsString;
+    lQuery.Close;
+    if lId = '' then
+    begin
+      lId := ALocation.Id;
+      if lId = '' then lId := RecorderSqlDbNewId;
+      lQuery.SQL.Text :=
+        'insert into data_file_locations(id,file_id,recorder_instance_id,' +
+        'location_kind,path_key,state,created_at_utc,verified_at_utc,error_text) ' +
+        'values(:id,:file,:instance,:kind,:path,:state,:created,:verified,:error)';
+    end
+    else
+      lQuery.SQL.Text :=
+        'update data_file_locations set path_key=:path,state=:state,' +
+        'verified_at_utc=:verified,error_text=:error where id=:id';
+    lQuery.ParamByName('id').AsString := lId;
+    if lQuery.Params.FindParam('file') <> nil then
+      lQuery.ParamByName('file').AsString := ALocation.FileId;
+    if lQuery.Params.FindParam('instance') <> nil then
+      if ALocation.RecorderInstanceId = '' then lQuery.ParamByName('instance').Clear
+      else lQuery.ParamByName('instance').AsString := ALocation.RecorderInstanceId;
+    if lQuery.Params.FindParam('kind') <> nil then
+      lQuery.ParamByName('kind').AsString := ALocation.LocationKind;
+    lQuery.ParamByName('path').AsString := ALocation.PathKey;
+    lQuery.ParamByName('state').AsString := ALocation.State;
+    if lQuery.Params.FindParam('created') <> nil then
+      lQuery.ParamByName('created').AsFloat := ALocation.CreatedAtUtc;
+    if ALocation.VerifiedAtUtc = 0 then lQuery.ParamByName('verified').Clear
+    else lQuery.ParamByName('verified').AsFloat := ALocation.VerifiedAtUtc;
+    lQuery.ParamByName('error').AsString := ALocation.ErrorText;
+    lQuery.ExecSQL;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListMeraRecordings(AFromUtc,
+  AToUtc: Double; out AItems: TRecorderSqlDbMeraRecordings);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id,event_id,recorder_instance_id,registration_id,correlation_id,' +
+      'display_name,started_at_utc,finished_at_utc,state,entry_file_id,' +
+      'project_name,error_text from mera_recordings where started_at_utc<=:to ' +
+      'and (finished_at_utc is null or finished_at_utc>=:from) order by started_at_utc';
+    lQuery.ParamByName('from').AsFloat := AFromUtc;
+    lQuery.ParamByName('to').AsFloat := AToUtc;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].Id := lQuery.Fields[0].AsString;
+      AItems[I].EventId := lQuery.Fields[1].AsString;
+      AItems[I].RecorderInstanceId := lQuery.Fields[2].AsString;
+      AItems[I].RegistrationId := lQuery.Fields[3].AsString;
+      AItems[I].CorrelationId := lQuery.Fields[4].AsString;
+      AItems[I].DisplayName := lQuery.Fields[5].AsString;
+      AItems[I].StartedAtUtc := lQuery.Fields[6].AsFloat;
+      if not lQuery.Fields[7].IsNull then
+        AItems[I].FinishedAtUtc := lQuery.Fields[7].AsFloat;
+      AItems[I].State := lQuery.Fields[8].AsString;
+      AItems[I].EntryFileId := lQuery.Fields[9].AsString;
+      AItems[I].ProjectName := lQuery.Fields[10].AsString;
+      AItems[I].ErrorText := lQuery.Fields[11].AsString;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.GetCurrentMeraRecording(
+  const ARecorderInstanceId: string;
+  out AItem: TRecorderSqlDbMeraRecording): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  FillChar(AItem, SizeOf(AItem), 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id,event_id,recorder_instance_id,registration_id,correlation_id,' +
+      'display_name,started_at_utc,finished_at_utc,state,entry_file_id,' +
+      'project_name,error_text from mera_recordings where recorder_instance_id=:id ' +
+      'order by started_at_utc desc';
+    lQuery.ParamByName('id').AsString := ARecorderInstanceId;
+    lQuery.Open;
+    Result := not lQuery.EOF;
+    if not Result then Exit;
+    AItem.Id := lQuery.Fields[0].AsString;
+    AItem.EventId := lQuery.Fields[1].AsString;
+    AItem.RecorderInstanceId := lQuery.Fields[2].AsString;
+    AItem.RegistrationId := lQuery.Fields[3].AsString;
+    AItem.CorrelationId := lQuery.Fields[4].AsString;
+    AItem.DisplayName := lQuery.Fields[5].AsString;
+    AItem.StartedAtUtc := lQuery.Fields[6].AsFloat;
+    if not lQuery.Fields[7].IsNull then
+      AItem.FinishedAtUtc := lQuery.Fields[7].AsFloat;
+    AItem.State := lQuery.Fields[8].AsString;
+    AItem.EntryFileId := lQuery.Fields[9].AsString;
+    AItem.ProjectName := lQuery.Fields[10].AsString;
+    AItem.ErrorText := lQuery.Fields[11].AsString;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListMeraFiles(const ARecordingId: string;
+  out AItems: TRecorderSqlDbMeraFiles);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select f.id,m.recording_id,m.file_role,m.relative_name,m.ordinal,' +
+      'f.storage_key,f.data_format,f.file_size,f.checksum,f.file_state ' +
+      'from mera_recording_files m join data_files f on f.id=m.file_id ' +
+      'where m.recording_id=:id order by m.ordinal,m.relative_name';
+    lQuery.ParamByName('id').AsString := ARecordingId;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].FileId := lQuery.Fields[0].AsString;
+      AItems[I].RecordingId := lQuery.Fields[1].AsString;
+      AItems[I].FileRole := lQuery.Fields[2].AsString;
+      AItems[I].RelativeName := lQuery.Fields[3].AsString;
+      AItems[I].Ordinal := lQuery.Fields[4].AsInteger;
+      AItems[I].StorageKey := lQuery.Fields[5].AsString;
+      AItems[I].DataFormat := lQuery.Fields[6].AsString;
+      AItems[I].Size := lQuery.Fields[7].AsLargeInt;
+      AItems[I].Checksum := lQuery.Fields[8].AsString;
+      AItems[I].State := lQuery.Fields[9].AsString;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListDataFileLocations(const AFileId: string;
+  out AItems: TRecorderSqlDbFileLocations);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id,file_id,recorder_instance_id,location_kind,path_key,state,' +
+      'created_at_utc,verified_at_utc,error_text from data_file_locations ' +
+      'where file_id=:id order by location_kind,created_at_utc';
+    lQuery.ParamByName('id').AsString := AFileId;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].Id := lQuery.Fields[0].AsString;
+      AItems[I].FileId := lQuery.Fields[1].AsString;
+      AItems[I].RecorderInstanceId := lQuery.Fields[2].AsString;
+      AItems[I].LocationKind := lQuery.Fields[3].AsString;
+      AItems[I].PathKey := lQuery.Fields[4].AsString;
+      AItems[I].State := lQuery.Fields[5].AsString;
+      AItems[I].CreatedAtUtc := lQuery.Fields[6].AsFloat;
+      if not lQuery.Fields[7].IsNull then
+        AItems[I].VerifiedAtUtc := lQuery.Fields[7].AsFloat;
+      AItems[I].ErrorText := lQuery.Fields[8].AsString;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListMeraRecordingEvents(AFromUtc,
+  AToUtc: Double; out AItems: TRecorderSqlDbMeraEvents);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select e.id,max(r.correlation_id),e.display_name,e.description,' +
+      'e.timestamp_utc,max(r.finished_at_utc),max(r.state),' +
+      'count(distinct r.id),cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'from events e join mera_recordings r on r.event_id=e.id ' +
+      'left join mera_recording_files m ' +
+      'on m.recording_id=r.id left join data_files f on f.id=m.file_id ' +
+      'where r.started_at_utc<=:to and (r.finished_at_utc is null or ' +
+      'r.finished_at_utc>=:from) group by e.id,e.display_name,e.description,' +
+      'e.timestamp_utc order by e.timestamp_utc';
+    lQuery.ParamByName('from').AsFloat := AFromUtc;
+    lQuery.ParamByName('to').AsFloat := AToUtc;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].EventId := lQuery.Fields[0].AsString;
+      AItems[I].CorrelationId := lQuery.Fields[1].AsString;
+      AItems[I].DisplayName := lQuery.Fields[2].AsString;
+      AItems[I].Description := lQuery.Fields[3].AsString;
+      AItems[I].StartedAtUtc := lQuery.Fields[4].AsFloat;
+      if not lQuery.Fields[5].IsNull then
+        AItems[I].FinishedAtUtc := lQuery.Fields[5].AsFloat;
+      AItems[I].State := lQuery.Fields[6].AsString;
+      AItems[I].PackageCount := lQuery.Fields[7].AsInteger;
+      AItems[I].TotalSize := lQuery.Fields[8].AsLargeInt;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.GetMeraEventSnapshot(const AEventId: string;
+  out AEventUtc, AFirstStartedUtc, ALastFinishedUtc: Double;
+  out ARecordingCount: Integer): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  Result := False;
+  AEventUtc := 0;
+  AFirstStartedUtc := 0;
+  ALastFinishedUtc := 0;
+  ARecordingCount := 0;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select e.timestamp_utc,min(r.started_at_utc),max(r.finished_at_utc),' +
+      'count(r.id) from events e ' +
+      'left join mera_recordings r on r.event_id=e.id ' +
+      'where e.id=:id group by e.id,e.timestamp_utc';
+    lQuery.ParamByName('id').AsString := AEventId;
+    lQuery.Open;
+    Result := not lQuery.EOF;
+    if Result then
+    begin
+      AEventUtc := lQuery.Fields[0].AsFloat;
+      if not lQuery.Fields[1].IsNull then
+        AFirstStartedUtc := lQuery.Fields[1].AsFloat;
+      if not lQuery.Fields[2].IsNull then
+        ALastFinishedUtc := lQuery.Fields[2].AsFloat;
+      ARecordingCount := lQuery.Fields[3].AsInteger;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.UpdateMeraEvent(const AEventId,
+  ADisplayName, ADescription: string): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'update events set display_name=:display,description=:description ' +
+      'where id=:id and event_type=''mera.recording''';
+    lQuery.ParamByName('display').AsString := ADisplayName;
+    lQuery.ParamByName('description').AsString := ADescription;
+    lQuery.ParamByName('id').AsString := AEventId;
+    lQuery.ExecSQL;
+    Result := lQuery.RowsAffected > 0;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.UpdateDataFileLocationPath(const AEventId,
+  ALocationId, APathKey: string): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'update data_file_locations set path_key=:path where id=:location ' +
+      'and exists(select 1 from mera_recording_files m ' +
+      'join mera_recordings r on r.id=m.recording_id ' +
+      'where m.file_id=data_file_locations.file_id and r.event_id=:event)';
+    lQuery.ParamByName('path').AsString := APathKey;
+    lQuery.ParamByName('location').AsString := ALocationId;
+    lQuery.ParamByName('event').AsString := AEventId;
+    lQuery.ExecSQL;
+    Result := lQuery.RowsAffected > 0;
+    Commit;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+function TRecorderSqlDbRepository.DeleteMeraEvent(
+  const AEventId: string): Boolean;
+var
+  lDeletedFiles, lDeletedPackages: Integer;
+begin
+  Result := DeleteMeraEvent(AEventId, lDeletedPackages, lDeletedFiles);
+end;
+
+function TRecorderSqlDbRepository.DeleteMeraEvent(const AEventId: string;
+  out ADeletedPackages, ADeletedFiles: Integer): Boolean;
+var
+  lQuery: TSQLQuery;
+begin
+  ADeletedPackages := 0;
+  ADeletedFiles := 0;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    try
+      lQuery.SQL.Text :=
+        'select count(*) from mera_recordings where event_id=:event';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.Open;
+      ADeletedPackages := lQuery.Fields[0].AsInteger;
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'select count(distinct m.file_id) from mera_recording_files m ' +
+        'join mera_recordings r on r.id=m.recording_id ' +
+        'where r.event_id=:event and not exists ' +
+        '(select 1 from mera_recording_files m2 join mera_recordings r2 ' +
+        'on r2.id=m2.recording_id where m2.file_id=m.file_id ' +
+        'and r2.event_id<>:event) and not exists ' +
+        '(select 1 from data_file_links l where l.file_id=m.file_id and ' +
+        '(l.event_id is null or l.event_id<>:event))';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.Open;
+      ADeletedFiles := lQuery.Fields[0].AsInteger;
+      lQuery.Close;
+      lQuery.SQL.Text :=
+        'delete from data_file_locations where file_id in ' +
+        '(select m.file_id from mera_recording_files m join mera_recordings r ' +
+        'on r.id=m.recording_id where r.event_id=:event) and not exists ' +
+        '(select 1 from mera_recording_files m2 join mera_recordings r2 ' +
+        'on r2.id=m2.recording_id where m2.file_id=data_file_locations.file_id ' +
+        'and r2.event_id<>:event) and not exists ' +
+        '(select 1 from data_file_links l where ' +
+        'l.file_id=data_file_locations.file_id and ' +
+        '(l.event_id is null or l.event_id<>:event))';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text := 'delete from data_file_links where event_id=:event';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text :=
+        'delete from data_files where id in (select m.file_id from ' +
+        'mera_recording_files m join mera_recordings r on r.id=m.recording_id ' +
+        'where r.event_id=:event) and not exists ' +
+        '(select 1 from mera_recording_files m2 join mera_recordings r2 ' +
+        'on r2.id=m2.recording_id where m2.file_id=data_files.id ' +
+        'and r2.event_id<>:event) and not exists ' +
+        '(select 1 from data_file_links l where l.file_id=data_files.id)';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text := 'delete from mera_recording_files where recording_id ' +
+        'in (select id from mera_recordings where event_id=:event)';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text := 'delete from mera_recordings where event_id=:event';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      lQuery.SQL.Text :=
+        'delete from events where id=:event and event_type=''mera.recording''';
+      lQuery.ParamByName('event').AsString := AEventId;
+      lQuery.ExecSQL;
+      Result := lQuery.RowsAffected > 0;
+      Commit;
+    except
+      if fTransaction.Active then fTransaction.RollbackRetaining;
+      raise;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListMeraPackages(const AEventId: string;
+  out AItems: TRecorderSqlDbMeraPackages);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select r.id,r.event_id,r.recorder_instance_id,r.registration_id,' +
+      'r.correlation_id,r.display_name,r.started_at_utc,r.finished_at_utc,' +
+      'r.state,r.entry_file_id,r.project_name,r.error_text,i.instance_key,' +
+      'i.host_name,count(m.file_id),' +
+      'cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'from mera_recordings r join recorder_instances i ' +
+      'on i.id=r.recorder_instance_id left join mera_recording_files m ' +
+      'on m.recording_id=r.id left join data_files f on f.id=m.file_id ' +
+      'where r.event_id=:event group by r.id,r.event_id,r.recorder_instance_id,' +
+      'r.registration_id,r.correlation_id,r.display_name,r.started_at_utc,' +
+      'r.finished_at_utc,r.state,r.entry_file_id,r.project_name,r.error_text,' +
+      'i.instance_key,i.host_name order by r.started_at_utc';
+    lQuery.ParamByName('event').AsString := AEventId;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].Recording.Id := lQuery.Fields[0].AsString;
+      AItems[I].Recording.EventId := lQuery.Fields[1].AsString;
+      AItems[I].Recording.RecorderInstanceId := lQuery.Fields[2].AsString;
+      AItems[I].Recording.RegistrationId := lQuery.Fields[3].AsString;
+      AItems[I].Recording.CorrelationId := lQuery.Fields[4].AsString;
+      AItems[I].Recording.DisplayName := lQuery.Fields[5].AsString;
+      AItems[I].Recording.StartedAtUtc := lQuery.Fields[6].AsFloat;
+      if not lQuery.Fields[7].IsNull then
+        AItems[I].Recording.FinishedAtUtc := lQuery.Fields[7].AsFloat;
+      AItems[I].Recording.State := lQuery.Fields[8].AsString;
+      AItems[I].Recording.EntryFileId := lQuery.Fields[9].AsString;
+      AItems[I].Recording.ProjectName := lQuery.Fields[10].AsString;
+      AItems[I].Recording.ErrorText := lQuery.Fields[11].AsString;
+      AItems[I].InstanceKey := lQuery.Fields[12].AsString;
+      AItems[I].HostName := lQuery.Fields[13].AsString;
+      AItems[I].FileCount := lQuery.Fields[14].AsInteger;
+      AItems[I].TotalSize := lQuery.Fields[15].AsLargeInt;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
 end;
 
 procedure TRecorderSqlDbRepository.ListAttachments(AFromUtc, AToUtc: Double;

@@ -3,6 +3,7 @@ program RecorderLnx;
 {$mode objfpc}{$H+}
 {$IFDEF MSWINDOWS}
 {$R Device/MCbus/resources/mcbus.rc}
+{$R resources/app/recorderlnx_app.rc}
 {$ENDIF}
 
 uses
@@ -105,7 +106,6 @@ begin
   end;
 
   RequireDerivedFormResource := True;
-  Application.Scaled := True;
   Application.Initialize;
   if HasSwitch('--hardware-search-test-after-init') then
   begin

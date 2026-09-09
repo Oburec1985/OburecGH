@@ -51,6 +51,12 @@ cat /var/opt/mera/RecorderLnx/install.log
 recorderlnx-install-check
 ```
 
+The package installs the Firebird **client** runtime (`libfbclient2`) as a
+dependency. A local Firebird server is not required when `sql-db.ini` points to
+a database on another computer. The client runtime is still required by SQL
+trend components. `recorderlnx-install-check` reports it separately as
+`Firebird client library`.
+
 Installed application files:
 
 - `/opt/mera/RecorderLnx`

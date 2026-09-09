@@ -220,9 +220,16 @@ check_path /opt/mera/RecorderLnx/RecorderLnx.paths.ini
 check_path /opt/mera/RecorderLnx/bios/devices/mc201/mc_201a.bio
 check_path /opt/mera/RecorderLnx/res/sdb/Scales.ico
 check_path /usr/share/applications/recorderlnx.desktop
+check_path /usr/share/icons/hicolor/256x256/apps/recorderlnx.png
 check_path /usr/bin/recorderlnx
 check_path /var/opt/mera/RecorderLnx/config/app.ini
 check_path /var/opt/mera/RecorderLnx/config/projects/default/default.config.json
+if ldconfig -p 2>/dev/null | grep -q 'libfbclient[.]so'; then
+  echo "OK   Firebird client library"
+else
+  echo "MISS Firebird client library (install libfbclient2)"
+  status=1
+fi
 check_writable_dir /var/opt/mera
 check_writable_dir /var/opt/mera/SQLdb
 check_writable_dir /var/opt/mera/RecorderLnx/config
@@ -241,7 +248,7 @@ Section: science
 Priority: optional
 Architecture: {architecture}
 Maintainer: Mera
-Depends: libc6, libgtk2.0-0
+Depends: libc6, libgtk2.0-0, libfbclient2
 Installed-Size: {installed_size_kb}
 Description: RecorderLnx measurement recorder
  Cross-platform RecorderLnx measurement recorder.
@@ -366,6 +373,7 @@ def make_data_tar(repo_root):
     app_ini = project_root / "config" / "app.ini"
     default_project = project_root / "config" / "projects" / "default"
     bios_file = project_root / "Device" / "MCbus" / "resources" / "devices" / "mc201" / "mc_201a.bio"
+    app_icon = project_root / "resources" / "app" / "RecorderLnx.png"
     paths_ini = """[Paths]
 MeraFiles=/var/opt/mera
 Config=/var/opt/mera/RecorderLnx/config
@@ -381,6 +389,7 @@ Comment=RecorderLnx measurement recorder
 Exec=/usr/bin/recorderlnx
 Path=/opt/mera/RecorderLnx
 Terminal=false
+Icon=recorderlnx
 Categories=Utility;
 Keywords=RecorderLnx;Mera;Recorder;Measurements;
 StartupNotify=false
@@ -402,6 +411,10 @@ NoDisplay=false
             "usr/bin",
             "usr/share",
             "usr/share/applications",
+            "usr/share/icons",
+            "usr/share/icons/hicolor",
+            "usr/share/icons/hicolor/256x256",
+            "usr/share/icons/hicolor/256x256/apps",
             "usr/share/recorderlnx",
             "usr/share/recorderlnx/config",
             "usr/share/recorderlnx/config/projects",
@@ -425,6 +438,7 @@ NoDisplay=false
             add_file(tar, bios_file, "opt/mera/RecorderLnx/bios/devices/mc201/mc_201a.bio")
         add_bytes(tar, "opt/mera/RecorderLnx/RecorderLnx.paths.ini", paths_ini)
         add_bytes(tar, "usr/share/applications/recorderlnx.desktop", desktop)
+        add_file(tar, app_icon, "usr/share/icons/hicolor/256x256/apps/recorderlnx.png")
         launcher = """#!/bin/sh
 if [ -r /etc/profile.d/recorderlnx-sqldb.sh ]; then
   . /etc/profile.d/recorderlnx-sqldb.sh
