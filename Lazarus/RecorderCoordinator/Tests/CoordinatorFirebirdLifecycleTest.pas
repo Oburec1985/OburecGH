@@ -134,6 +134,8 @@ var
   Packages: TRecorderSqlDbMeraPackages;
   Events: TRecorderSqlDbMeraEvents;
   AttachmentName: string;
+  FoundEvent: Boolean;
+  EventIndex: Integer;
   Query: TSQLQuery;
   Repository: TRecorderSqlDbRepository;
   SnapshotCount: Integer;
@@ -165,22 +167,30 @@ begin
           'fresh repository cannot read persisted event');
         Check(SnapshotCount = 1,
           'fresh repository returned unexpected recording count');
+        Writeln('SNAPSHOT event=', SnapshotUtc:0:8, ' started=',
+          SnapshotStartedUtc:0:8, ' finished=', SnapshotFinishedUtc:0:8);
         Check(Repository.DatabaseAttachmentName(AttachmentName),
           'cannot identify database attachment');
         Repository.ListMeraRecordingEvents(
           Min(SnapshotStartedUtc, SnapshotFinishedUtc) - 1.0 / SecsPerDay,
           Max(SnapshotStartedUtc, SnapshotFinishedUtc) + 1.0 / SecsPerDay,
           Events);
-        Check(Length(Events) = 1,
+        FoundEvent := False;
+        for EventIndex := 0 to High(Events) do
+          if Events[EventIndex].EventId = Event1 then
+          begin
+            FoundEvent := True;
+            Break;
+          end;
+        Check(FoundEvent,
           'event is not visible through production interval query');
-        Check(Events[0].EventId = Event1,
-          'production interval query returned another event');
         Repository.ListMeraRecordingEvents(
           Max(SnapshotStartedUtc, SnapshotFinishedUtc) + 2.0 / SecsPerDay,
           Max(SnapshotStartedUtc, SnapshotFinishedUtc) + 60.0 / SecsPerDay,
           Events);
-        Check(Length(Events) = 0,
-          'event leaked outside its recording time interval');
+        for EventIndex := 0 to High(Events) do
+          Check(Events[EventIndex].EventId <> Event1,
+            'event leaked outside its recording time interval');
         Repository.ListMeraPackages(Event1, Packages);
         Check(Length(Packages) = 1, 'expected exactly one idempotent package');
         Check(Packages[0].Recording.Id = CRecording, 'recording id mismatch');

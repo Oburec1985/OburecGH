@@ -34,3 +34,5 @@ Lazarus/RecorderLnx/Tools/Mic185TrafficCapture/captures.zip
 *.pcapng
 *_pktmon.txt
 *_packets.csv
+*.exe
+*.exe
