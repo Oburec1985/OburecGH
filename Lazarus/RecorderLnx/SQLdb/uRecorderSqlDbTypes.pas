@@ -12,6 +12,10 @@ const
   CRecorderSqlDbSchemaVersion = 5;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
+  CRecorderFirebirdDefaultHost = '192.168.9.66';
+  CRecorderFirebirdDefaultDatabase = '/var/opt/mera/SQLdb/recorderlnx.fdb';
+  CRecorderFirebirdDefaultUserName = 'SYSDBA';
+  CRecorderFirebirdDefaultPassword = '123';
   CRecorderSqlDbControlTagName = 'SqlDbRecordEnabled';
 
 type
@@ -134,6 +138,8 @@ type
     fTlsRequired: Boolean;
     fUserName: string;
     function EffectiveRootDirectory: string;
+    procedure LoadConnectionFromAppConfig;
+    procedure SaveConnectionToAppConfig;
     procedure SetQueueCapacity(AValue: Integer);
   public
     constructor Create;
@@ -143,6 +149,7 @@ type
     procedure LoadFromFile(const AFileName: string);
     procedure SaveToFile(const AFileName: string);
     procedure RequireValid;
+    function ConnectionConfigurationReady(out AErrorText: string): Boolean;
     function DatabaseFileName: string;
     function IsLocalFileDatabase: Boolean;
     function DataDirectory: string;
@@ -284,10 +291,10 @@ end;
 procedure TRecorderSqlDbConfig.ResetDefaults;
 begin
   fBackend := rsbFirebird;
-  fDatabase := CRecorderFirebirdDefaultFileName;
+  fDatabase := CRecorderFirebirdDefaultDatabase;
   fControlTagName := '';
   fEnabled := False;
-  fHost := '';
+  fHost := CRecorderFirebirdDefaultHost;
   fObjectName := 'Объект мониторинга';
   fObjectType := '';
   fSerialNumber := '';
@@ -295,13 +302,13 @@ begin
   fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
   fPasswordEnvironment := 'RECORDERLNX_SQLDB_PASSWORD';
-  fStoredPassword := '';
+  fStoredPassword := CRecorderFirebirdDefaultPassword;
   fPort := 3050;
   fQueueCapacity := 8192;
   fRecordPeriodMs := 1000;
   fRootDirectory := RecorderSqlDbDefaultRootDirectory;
   fTlsRequired := False;
-  fUserName := 'SYSDBA';
+  fUserName := CRecorderFirebirdDefaultUserName;
 end;
 
 procedure TRecorderSqlDbConfig.SetQueueCapacity(AValue: Integer);
@@ -353,6 +360,25 @@ begin
       raise ERecorderSqlDbError.Create('Remote SQLdb database is empty');
     // Port 0 means: use the database driver's default port.
   end;
+end;
+
+function TRecorderSqlDbConfig.ConnectionConfigurationReady(
+  out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  if ((fBackend = rsbSQLite) or
+      ((fBackend = rsbFirebird) and IsLocalFileDatabase)) and
+     (EffectiveRootDirectory = '') then
+    AErrorText := 'Не задан каталог SQL БД.'
+  else if (not IsLocalFileDatabase) and (Trim(fHost) = '') then
+    AErrorText := 'Не задан хост SQL БД.'
+  else if (not IsLocalFileDatabase) and (Trim(fDatabase) = '') then
+    AErrorText := 'Не задан путь или имя SQL БД.'
+  else if (fBackend = rsbFirebird) and (Trim(fUserName) = '') then
+    AErrorText := 'Не задано имя пользователя Firebird.'
+  else if (fBackend = rsbFirebird) and (Password = '') then
+    AErrorText := 'Не задан пароль Firebird.';
+  Result := AErrorText = '';
 end;
 
 function TRecorderSqlDbConfig.DatabaseFileName: string;
@@ -468,33 +494,101 @@ var
   lIni: TIniFile;
 begin
   ResetDefaults;
-  if not FileExists(AFileName) then Exit;
-  lIni := TIniFile.Create(AFileName);
+  if FileExists(AFileName) then
+  begin
+    lIni := TIniFile.Create(AFileName);
+    try
+      fEnabled := lIni.ReadBool('SQLdb', 'Enabled', fEnabled);
+      fBackend := RecorderSqlDbStringToBackend(lIni.ReadString('SQLdb', 'Backend', 'firebird'));
+      fRootDirectory := lIni.ReadString('SQLdb', 'RootDirectory', fRootDirectory);
+      fDatabase := lIni.ReadString('SQLdb', 'Database', fDatabase);
+      fControlTagName := lIni.ReadString('SQLdb', 'ControlTag', fControlTagName);
+      fHost := lIni.ReadString('SQLdb', 'Host', fHost);
+      fObjectName := lIni.ReadString('SQLdb', 'ObjectName', fObjectName);
+      fObjectType := lIni.ReadString('SQLdb', 'ObjectType', fObjectType);
+      fSerialNumber := lIni.ReadString('SQLdb', 'SerialNumber', fSerialNumber);
+      fPort := lIni.ReadInteger('SQLdb', 'Port', fPort);
+      fUserName := lIni.ReadString('SQLdb', 'UserName', fUserName);
+      fPasswordEnvironment := lIni.ReadString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
+      fStoredPassword := lIni.ReadString('SQLdb', 'Password', fStoredPassword);
+      if (fBackend = rsbFirebird) and (fStoredPassword = '') then
+        fStoredPassword := CRecorderFirebirdDefaultPassword;
+      fTlsRequired := lIni.ReadBool('SQLdb', 'TlsRequired', fTlsRequired);
+      QueueCapacity := lIni.ReadInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
+      fRecordPeriodMs := lIni.ReadInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
+      fSignalSelectionConfigured := lIni.ReadBool('SQLdb',
+        'SignalSelectionConfigured', fSignalSelectionConfigured);
+      lIni.ReadSection('SQLdbSignals', fSignalNames);
+      lIni.ReadSectionValues('SQLdbSignalEstimates', fSignalEstimates);
+    finally
+      lIni.Free;
+    end;
+  end;
+  LoadConnectionFromAppConfig;
+  // Firebird credentials are an internal application setting.  A legacy
+  // project file may contain empty values and must not erase the defaults
+  // after the complete connection configuration has been assembled.
+  if fBackend = rsbFirebird then
+  begin
+    fUserName := CRecorderFirebirdDefaultUserName;
+    fStoredPassword := CRecorderFirebirdDefaultPassword;
+    fPasswordEnvironment := '';
+  end;
+  RequireValid;
+end;
+
+procedure TRecorderSqlDbConfig.LoadConnectionFromAppConfig;
+var
+  lFileName: string;
+  lIni: TIniFile;
+begin
+  lFileName := RecorderAppConfigFileName;
+  if not FileExists(lFileName) then Exit;
+  lIni := TIniFile.Create(lFileName);
   try
-    fEnabled := lIni.ReadBool('SQLdb', 'Enabled', fEnabled);
-    fBackend := RecorderSqlDbStringToBackend(lIni.ReadString('SQLdb', 'Backend', 'firebird'));
-    fRootDirectory := lIni.ReadString('SQLdb', 'RootDirectory', fRootDirectory);
-    fDatabase := lIni.ReadString('SQLdb', 'Database', fDatabase);
-    fControlTagName := lIni.ReadString('SQLdb', 'ControlTag', fControlTagName);
-    fHost := lIni.ReadString('SQLdb', 'Host', fHost);
-    fObjectName := lIni.ReadString('SQLdb', 'ObjectName', fObjectName);
-    fObjectType := lIni.ReadString('SQLdb', 'ObjectType', fObjectType);
-    fSerialNumber := lIni.ReadString('SQLdb', 'SerialNumber', fSerialNumber);
-    fPort := lIni.ReadInteger('SQLdb', 'Port', fPort);
-    fUserName := lIni.ReadString('SQLdb', 'UserName', fUserName);
-    fPasswordEnvironment := lIni.ReadString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
-    fStoredPassword := lIni.ReadString('SQLdb', 'Password', fStoredPassword);
-    fTlsRequired := lIni.ReadBool('SQLdb', 'TlsRequired', fTlsRequired);
-    QueueCapacity := lIni.ReadInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
-    fRecordPeriodMs := lIni.ReadInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
-    fSignalSelectionConfigured := lIni.ReadBool('SQLdb',
-      'SignalSelectionConfigured', fSignalSelectionConfigured);
-    lIni.ReadSection('SQLdbSignals', fSignalNames);
-    lIni.ReadSectionValues('SQLdbSignalEstimates', fSignalEstimates);
+    if not lIni.SectionExists('SQLdbConnection') then Exit;
+    fBackend := RecorderSqlDbStringToBackend(lIni.ReadString(
+      'SQLdbConnection', 'Backend', RecorderSqlDbBackendToString(fBackend)));
+    fRootDirectory := lIni.ReadString('SQLdbConnection', 'RootDirectory',
+      fRootDirectory);
+    fDatabase := lIni.ReadString('SQLdbConnection', 'Database', fDatabase);
+    fHost := lIni.ReadString('SQLdbConnection', 'Host', fHost);
+    fPort := lIni.ReadInteger('SQLdbConnection', 'Port', fPort);
+    fTlsRequired := lIni.ReadBool('SQLdbConnection', 'TlsRequired',
+      fTlsRequired);
   finally
     lIni.Free;
   end;
-  RequireValid;
+  if fBackend = rsbFirebird then
+  begin
+    fUserName := CRecorderFirebirdDefaultUserName;
+    fStoredPassword := CRecorderFirebirdDefaultPassword;
+    fPasswordEnvironment := '';
+  end;
+end;
+
+procedure TRecorderSqlDbConfig.SaveConnectionToAppConfig;
+var
+  lFileName: string;
+  lIni: TIniFile;
+begin
+  lFileName := RecorderAppConfigFileName;
+  if not ForceDirectories(ExtractFileDir(lFileName)) then
+    raise ERecorderSqlDbError.CreateFmt('Cannot create config directory: %s',
+      [ExtractFileDir(lFileName)]);
+  lIni := TIniFile.Create(lFileName);
+  try
+    lIni.WriteString('SQLdbConnection', 'Backend',
+      RecorderSqlDbBackendToString(fBackend));
+    lIni.WriteString('SQLdbConnection', 'RootDirectory', fRootDirectory);
+    lIni.WriteString('SQLdbConnection', 'Database', fDatabase);
+    lIni.WriteString('SQLdbConnection', 'Host', fHost);
+    lIni.WriteInteger('SQLdbConnection', 'Port', fPort);
+    lIni.WriteBool('SQLdbConnection', 'TlsRequired', fTlsRequired);
+    lIni.UpdateFile;
+  finally
+    lIni.Free;
+  end;
 end;
 
 procedure TRecorderSqlDbConfig.SaveToFile(const AFileName: string);
@@ -506,24 +600,25 @@ var
   {$endif}
 begin
   RequireValid;
+  SaveConnectionToAppConfig;
   if not ForceDirectories(ExtractFileDir(ExpandFileName(AFileName))) then
     raise ERecorderSqlDbError.CreateFmt('Cannot create config directory: %s', [ExtractFileDir(AFileName)]);
   lIni := TIniFile.Create(AFileName);
   try
     lIni.WriteBool('SQLdb', 'Enabled', fEnabled);
-    lIni.WriteString('SQLdb', 'Backend', RecorderSqlDbBackendToString(fBackend));
-    lIni.WriteString('SQLdb', 'RootDirectory', fRootDirectory);
-    lIni.WriteString('SQLdb', 'Database', fDatabase);
     lIni.WriteString('SQLdb', 'ControlTag', fControlTagName);
-    lIni.WriteString('SQLdb', 'Host', fHost);
     lIni.WriteString('SQLdb', 'ObjectName', fObjectName);
     lIni.WriteString('SQLdb', 'ObjectType', fObjectType);
     lIni.WriteString('SQLdb', 'SerialNumber', fSerialNumber);
-    lIni.WriteInteger('SQLdb', 'Port', fPort);
-    lIni.WriteString('SQLdb', 'UserName', fUserName);
-    lIni.WriteString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
-    lIni.WriteString('SQLdb', 'Password', fStoredPassword);
-    lIni.WriteBool('SQLdb', 'TlsRequired', fTlsRequired);
+    lIni.DeleteKey('SQLdb', 'Backend');
+    lIni.DeleteKey('SQLdb', 'RootDirectory');
+    lIni.DeleteKey('SQLdb', 'Database');
+    lIni.DeleteKey('SQLdb', 'Host');
+    lIni.DeleteKey('SQLdb', 'Port');
+    lIni.DeleteKey('SQLdb', 'UserName');
+    lIni.DeleteKey('SQLdb', 'PasswordEnvironment');
+    lIni.DeleteKey('SQLdb', 'Password');
+    lIni.DeleteKey('SQLdb', 'TlsRequired');
     lIni.WriteInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
     lIni.WriteInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
     lIni.WriteBool('SQLdb', 'SignalSelectionConfigured',

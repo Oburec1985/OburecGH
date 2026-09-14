@@ -14,9 +14,13 @@
 
   update-offline-installer.bat
 
-BAT обновит payload rcPanel из актуальной Linux-сборки, пересоздаст контрольные
-суммы и проверит полноту переносимой папки. После сообщения READY копируйте на
-флешку всю эту папку целиком. Для автоматического запуска без Pause используйте
+BAT проверит актуальность Linux-сборки rcPanel, обновит её исполняемый файл,
+иконку и контрольные суммы в payload, затем проверит полноту переносимой папки.
+Этот комплект не собирает и не проверяет RecorderLnx или RecorderHostAgent:
+для них используется отдельный DEB-установщик из `installer/RecorderLnx/linux`.
+Если ELF rcPanel старее его исходников, BAT остановится с требованием сначала
+собрать RecorderCoordinator на Linux. После сообщения READY копируйте на флешку
+всю эту папку целиком. Для запуска без Pause используйте
 `update-offline-installer.bat --no-pause`.
 
 После сборки Linux-версии RecorderCoordinator выполните из этой папки:
@@ -54,8 +58,14 @@ Firebird
   RECORDERLNX_FIREBIRD_ONLINE_DEPS=1 bash install-firebird-recorderlnx.sh --firebird
 
 Установщик создает /var/opt/mera/SQLdb, совместимый старый каталог
-/var/opt/mera/RecorderLnx/sqldb и записывает пароль SYSDBA в sql-db.ini уже
-установленного RecorderLnx. Пароль не помещается в общий profile.
+/var/opt/mera/RecorderLnx/sqldb и устанавливает реальный пароль Firebird
+SYSDBA равным 123. Старый пароль ищется в SYSDBA.password и legacy sql-db.ini;
+после изменения обязательно выполняется реальный вход через gsec. Пароль не
+помещается в общий profile и проектные конфиги.
+
+Для удалённых клиентов установщик создаёт серверный alias `recorderlnx.fdb`.
+Физический путь `/var/opt/mera/SQLdb/recorderlnx.fdb` остаётся локальной
+настройкой сервера и не передаётся клиентам.
 
 rcPanel
 -------

@@ -1,6 +1,7 @@
 program RecorderLnx;
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 {$IFDEF MSWINDOWS}
 {$R Device/MCbus/resources/mcbus.rc}
 {$R resources/app/recorderlnx_app.rc}
@@ -10,7 +11,9 @@ uses
   {$IFDEF UNIX}
   cthreads, BaseUnix,
   {$ENDIF}
-  SysUtils, Classes, Interfaces, Forms, uMainForm, uRecorderNetworkBinding,
+  SysUtils, Classes, Interfaces, Forms, uMainForm,
+  uRecorderSingleInstance, uRecorderNetworkBinding,
+  uRecorderDebugLog,
   uComponentSettingsDialog,
   uRecorderVirtualTagDialog,
   uRecorderButtonSettingsDialog,
@@ -98,6 +101,8 @@ begin
   end;
 end;
 
+var
+  lSingleInstance: TRecorderSingleInstance;
 begin
   if HasSwitch('--hardware-search-test') then
   begin
@@ -105,8 +110,18 @@ begin
     Halt(0);
   end;
 
+  lSingleInstance := nil;
+  if not RecorderAllowsMultipleInstances then
+    lSingleInstance := TRecorderSingleInstance.Create;
+
   RequireDerivedFormResource := True;
   Application.Initialize;
+  if Assigned(lSingleInstance) and not lSingleInstance.Acquired then
+  begin
+    RecorderDebugLog('Повторный запуск RecorderLnx отклонён: приложение уже запущено.');
+    lSingleInstance.Free;
+    Halt(0);
+  end;
   if HasSwitch('--hardware-search-test-after-init') then
   begin
     RunHardwareSearchTest;
@@ -126,5 +141,9 @@ begin
       ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
         PathDelim + 'Docs' + PathDelim + 'Руководство пользователя' +
         PathDelim + 'screens')));
-  Application.Run;
+  try
+    Application.Run;
+  finally
+    lSingleInstance.Free;
+  end;
 end.

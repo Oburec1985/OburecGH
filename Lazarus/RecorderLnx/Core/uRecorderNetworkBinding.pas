@@ -19,6 +19,7 @@ procedure SetRecorderNetworkBindAddress(const AValue: string);
 procedure RecorderClearDiscoveryHints;
 procedure RecorderAddDiscoveryHintIPv4(const AValue: string);
 procedure RecorderEnumerateLocalIPv4(AItems: TStrings);
+procedure RecorderEnumerateLocalMacAddresses(AItems: TStrings);
 function RecorderNetworkAddressFromDisplay(const AValue: string): string;
 procedure RecorderSetNetworkDebugLogFile(const AFileName: string);
 procedure RecorderEnumerateArpIPv4(AItems: TStrings);
@@ -49,6 +50,77 @@ var
   g_RecorderNetworkBindAddress: string = '';
   g_RecorderNetworkDebugLogFile: string = '';
   g_RecorderNetworkDiscoveryHints: TStringList = nil;
+
+procedure RecorderEnumerateLocalMacAddresses(AItems: TStrings);
+var
+  lMac: string;
+  lIndex: Integer;
+{$ifdef windows}
+  lBuffer: Pointer;
+  lBufferSize, lResult: ULONG;
+  lAdapter: PIP_ADAPTER_ADDRESSES;
+{$else}
+  lSearch: TSearchRec;
+  lLines: TStringList;
+  lPath: string;
+{$endif}
+begin
+  if AItems = nil then Exit;
+  AItems.Clear;
+{$ifdef windows}
+  lBuffer := nil;
+  lBufferSize := 0;
+  lResult := GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST or
+    GAA_FLAG_SKIP_MULTICAST or GAA_FLAG_SKIP_DNS_SERVER, nil, nil,
+    @lBufferSize);
+  if (lResult <> ERROR_BUFFER_OVERFLOW) or (lBufferSize = 0) then Exit;
+  GetMem(lBuffer, lBufferSize);
+  try
+    lResult := GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_ANYCAST or
+      GAA_FLAG_SKIP_MULTICAST or GAA_FLAG_SKIP_DNS_SERVER, nil,
+      PIP_ADAPTER_ADDRESSES(lBuffer), @lBufferSize);
+    if lResult <> NO_ERROR then Exit;
+    lAdapter := PIP_ADAPTER_ADDRESSES(lBuffer);
+    while lAdapter <> nil do
+    begin
+      if (lAdapter^.OperStatus = IfOperStatusUp) and
+         (lAdapter^.PhysicalAddressLength = 6) then
+      begin
+        lMac := '';
+        for lIndex := 0 to 5 do
+        begin
+          if lMac <> '' then lMac := lMac + ':';
+          lMac := lMac + IntToHex(lAdapter^.PhysicalAddress[lIndex], 2);
+        end;
+        if AItems.IndexOf(lMac) < 0 then AItems.Add(lMac);
+      end;
+      lAdapter := lAdapter^.Next;
+    end;
+  finally
+    FreeMem(lBuffer);
+  end;
+{$else}
+  { /sys/class/net entries are symlinks on Linux, so faDirectory can skip
+    every physical interface and leave Coordinator without a MAC address. }
+  if FindFirst('/sys/class/net/*', faAnyFile, lSearch) <> 0 then Exit;
+  lLines := TStringList.Create;
+  try
+    repeat
+      if (lSearch.Name = '.') or (lSearch.Name = '..') or
+         SameText(lSearch.Name, 'lo') then Continue;
+      lPath := '/sys/class/net/' + lSearch.Name + '/address';
+      if not FileExists(lPath) then Continue;
+      lLines.LoadFromFile(lPath);
+      lMac := UpperCase(Trim(lLines.Text));
+      if (lMac <> '') and (lMac <> '00:00:00:00:00:00') and
+         (AItems.IndexOf(lMac) < 0) then AItems.Add(lMac);
+    until FindNext(lSearch) <> 0;
+  finally
+    FindClose(lSearch);
+    lLines.Free;
+  end;
+{$endif}
+end;
 
 {$ifdef unix}
 const

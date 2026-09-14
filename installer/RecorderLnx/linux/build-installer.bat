@@ -14,6 +14,9 @@ set "BUILD_RESULT=%ERRORLEVEL%"
 if not "%BUILD_RESULT%"=="0" (
   echo.
   echo Linux installer build failed. See the error above.
-  pause
+) else (
+  echo.
+  echo Linux installer build completed successfully.
 )
+if not defined RECORDER_BUILD_NO_PAUSE pause
 exit /b %BUILD_RESULT%

@@ -70,7 +70,7 @@ uses
   uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
   uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
-  uRecorderMeasurementSectionSettingsDialog;
+  uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog;
 
 const
   CTagComboEmptyFilterLimit = 200;
@@ -89,6 +89,9 @@ begin
   if AComponent is TRecorderButtonComponent then
     Exit(ShowRecorderButtonSettingsDialog(AOwner,
       TRecorderButtonComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderInputFieldComponent then
+    Exit(ShowRecorderInputFieldSettingsDialog(AOwner,
+      TRecorderInputFieldComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderImageComponent then
     Exit(ShowRecorderImageSettingsDialog(AOwner,
       TRecorderImageComponent(AComponent), ATagRegistry));

@@ -178,13 +178,22 @@ object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSett
       TabOrder = 12
       OnClick = ImportClick
     end
+    object fImportAllButton: TButton
+      Left = 306
+      Height = 26
+      Top = 180
+      Width = 180
+      Caption = 'Импортировать все...'
+      TabOrder = 13
+      OnClick = ImportAllClick
+    end
     object fExportButton: TButton
-      Left = 334
+      Left = 492
       Height = 26
       Top = 180
       Width = 96
       Caption = 'Экспорт...'
-      TabOrder = 13
+      TabOrder = 14
       OnClick = ExportClick
     end
     object fFormatAllButton: TButton

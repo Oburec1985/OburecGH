@@ -7,7 +7,22 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
+      <Target FileName="Tools\NetworkShareManager\NetworkShareManager.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Tools\LinuxSetupManager\LinuxSetupManager.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
       <Target FileName="..\RecorderCoordinator\RecorderCoordinator.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="..\RecorderHostAgent\RecorderHostAgent.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

@@ -456,12 +456,22 @@ begin
   fConfig.Enabled := cbEnabled.Checked;
   if cbBackend.ItemIndex >= 0 then
     fConfig.Backend := TRecorderSqlDbBackend(cbBackend.ItemIndex);
-  fConfig.RootDirectory := Trim(edRoot.Text);
+  if Trim(edHost.Text) = '' then
+    fConfig.RootDirectory := Trim(edRoot.Text);
   fConfig.Database := Trim(edDatabase.Text);
   fConfig.Host := Trim(edHost.Text);
   fConfig.Port := sePort.Value;
-  fConfig.UserName := Trim(edUser.Text);
-  fConfig.StoredPassword := edPassword.Text;
+  if fConfig.Backend = rsbFirebird then
+    fConfig.UserName := CRecorderFirebirdDefaultUserName
+  else
+  if fConfig.Backend = rsbFirebird then
+    fConfig.UserName := CRecorderFirebirdDefaultUserName
+  else
+    fConfig.UserName := Trim(edUser.Text);
+  if fConfig.Backend = rsbFirebird then
+    fConfig.StoredPassword := CRecorderFirebirdDefaultPassword
+  else
+    fConfig.StoredPassword := edPassword.Text;
   fConfig.PasswordEnvironment := Trim(edPasswordEnvironment.Text);
   fConfig.TlsRequired := cbTls.Checked;
   fConfig.QueueCapacity := seQueue.Value;
@@ -493,6 +503,25 @@ begin
   edPassword.Enabled := edHost.Enabled;
   edPasswordEnvironment.Enabled := edHost.Enabled;
   cbTls.Enabled := lRemote;
+  lblRoot.Visible := not lRemote;
+  edRoot.Visible := not lRemote;
+  btnBrowse.Visible := not lRemote;
+  lblPassword.Visible := not lFirebird;
+  edPassword.Visible := not lFirebird;
+  lblPasswordEnvironment.Visible := not lFirebird;
+  edPasswordEnvironment.Visible := not lFirebird;
+  lblUser.Visible := not lFirebird;
+  edUser.Visible := not lFirebird;
+  lblUser.Visible := not lFirebird;
+  edUser.Visible := not lFirebird;
+  if lRemote then
+  begin
+    lblDatabase.Caption := 'Сетевой путь к БД';
+    if ExtractFilePath(Trim(edDatabase.Text)) = '' then
+      edDatabase.Text := CRecorderFirebirdDefaultDatabase;
+  end
+  else
+    lblDatabase.Caption := 'Файл / имя базы';
   btnTestFirebird.Enabled := lFirebird;
   btnStartFirebird.Enabled := lFirebird and
     RecorderSqlDbFirebirdHostIsLocal(edHost.Text);
@@ -511,6 +540,8 @@ begin
   Result := False;
   try
     StoreControls;
+    if not fConfig.ConnectionConfigurationReady(AMessage) then
+      Exit;
     R := TRecorderSqlDbRepository.Create(fConfig);
     try
       R.Open;
@@ -533,6 +564,8 @@ begin
   Result := False;
   try
     StoreControls;
+    if not fConfig.ConnectionConfigurationReady(AMessage) then
+      Exit;
     R := TRecorderSqlDbRepository.Create(fConfig);
     try
       R.EnsureDatabase;

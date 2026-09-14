@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -eu
+
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+
+validate_hostname() {
+  local value="$1"
+  test -n "$value" || fail "Новое имя компьютера не задано."
+  test "${#value}" -le 63 || fail "Имя компьютера не должно быть длиннее 63 символов."
+  case "$value" in
+    -*|*-|*[^A-Za-z0-9-]*)
+      fail "Используйте латинские буквы, цифры и дефис; дефис не может быть первым или последним."
+      ;;
+  esac
+}
+
+update_hosts() {
+  local old_name="$1" new_name="$2" temp_file
+  temp_file="$(mktemp)"
+  awk -v old="$old_name" -v new="$new_name" '
+    /^[[:space:]]*#/ { print; next }
+    {
+      for (i = 2; i <= NF; i++) if ($i == old) $i = new
+      print
+    }
+  ' /etc/hosts > "$temp_file"
+  if ! awk -v name="$new_name" '{for (i=2; i<=NF; i++) if ($i==name) found=1} END {exit !found}' "$temp_file"; then
+    printf '127.0.1.1\t%s\n' "$new_name" >> "$temp_file"
+  fi
+  install -m 0644 "$temp_file" /etc/hosts
+  rm -f -- "$temp_file"
+}
+
+main() {
+  local old_name new_name
+  test "$(id -u)" -eq 0 || fail "Запустите утилиту через pkexec или sudo."
+  test "$#" -eq 1 || fail "Использование: recorderlnx-set-hostname НОВОЕ_ИМЯ"
+  new_name="$1"
+  validate_hostname "$new_name"
+  old_name="$(hostname)"
+  hostnamectl set-hostname "$new_name"
+  update_hosts "$old_name" "$new_name"
+  systemctl try-reload-or-restart smbd 2>/dev/null || true
+  printf '%s\n' "$new_name"
+}
+
+main "$@"

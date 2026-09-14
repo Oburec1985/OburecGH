@@ -65,6 +65,21 @@ check_firebird_installation() {
   check_path /etc/profile.d/recorderlnx-sqldb.sh
   check_path /var/opt/mera/SQLdb
   check_path /var/opt/mera/RecorderLnx/sqldb
+  if grep -q '^recorderlnx\.fdb[[:space:]]*=[[:space:]]*/var/opt/mera/SQLdb/recorderlnx\.fdb[[:space:]]*$' \
+    /opt/firebird/databases.conf 2>/dev/null; then
+    echo "OK   Firebird alias recorderlnx.fdb"
+  else
+    echo "FAIL Firebird alias recorderlnx.fdb"
+    status=1
+  fi
+  if [ -x /opt/firebird/bin/gsec ] &&
+     /opt/firebird/bin/gsec -user SYSDBA -password 123 -display SYSDBA \
+       >/dev/null 2>&1; then
+    echo "OK   Firebird login SYSDBA/123"
+  else
+    echo "FAIL Firebird login SYSDBA/123"
+    status=1
+  fi
   if [ -d /var/opt/mera/SQLdb ]; then
     echo "INFO $(ls -ld /var/opt/mera/SQLdb)"
   fi

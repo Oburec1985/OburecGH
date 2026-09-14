@@ -20,6 +20,7 @@ function RecorderMeraFilesPath: string;
 procedure SetRecorderMeraFilesPath(const APath: string);
 function RecorderSystemPathsFileName: string;
 function RecorderConfigPath: string;
+function RecorderAppConfigFileName: string;
 function RecorderPluginsPath: string;
 function RecorderBiosPath: string;
 function RecorderSysComPath: string;
@@ -214,6 +215,17 @@ function RecorderConfigPath: string;
 begin
   EnsureRecorderSystemPathsLoaded;
   Result := g_ConfigPath;
+end;
+
+function RecorderAppConfigFileName: string;
+var
+  lConfigPath: string;
+begin
+  lConfigPath := RecorderConfigPath;
+  if lConfigPath = '' then
+    lConfigPath := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config';
+  Result := IncludeTrailingPathDelimiter(ExpandFileName(lConfigPath)) +
+    'app.ini';
 end;
 
 function RecorderPluginsPath: string;

@@ -256,8 +256,10 @@ begin
       lValues.Sigma1, '0.###');
     fGrid.Cells[CColSigma2, I + 1] := FormatMaybe(lValues.HasSigma2,
       lValues.Sigma2, '0.###');
-    fGrid.Cells[CColAngle, I + 1] := FormatMaybe(lValues.HasAngle,
-      lValues.AngleDeg, '0.###');
+    if lValues.HasAngle then
+      fGrid.Cells[CColAngle, I + 1] := FormatFloat('0.###', lValues.AngleDeg)
+    else
+      fGrid.Cells[CColAngle, I + 1] := FormatFloat('0.###', lRow.PositionDeg);
     if lBadTemp then
       MarkBadCell(CColTemp, I + 1);
     if lBadE1 then
@@ -266,12 +268,10 @@ begin
       MarkBadCell(CColE2, I + 1);
     if lBadE3 then
       MarkBadCell(CColE3, I + 1);
-    if lBadTemp or lBadE1 or lBadE2 or lBadE3 then
-    begin
+    if not lValues.HasSigma1 then
       MarkBadCell(CColSigma1, I + 1);
+    if not lValues.HasSigma2 then
       MarkBadCell(CColSigma2, I + 1);
-      MarkBadCell(CColAngle, I + 1);
-    end;
   end;
 end;
 
@@ -300,9 +300,8 @@ function TRecorderMeasurementSectionTableForm.TagValueOutOfTolerance(
 var
   lValue: Double;
 begin
-  Result := False;
-  if (ATag = nil) or (ATag.SignalBuffer.Count = 0) or
-    (ATag.RangeMax <= ATag.RangeMin) then
+  Result := (ATag = nil) or (ATag.SignalBuffer.Count = 0);
+  if Result or (ATag.RangeMax <= ATag.RangeMin) then
     Exit;
   lValue := ATag.SignalBuffer.LatestValue;
   Result := (lValue < ATag.RangeMin) or (lValue > ATag.RangeMax);
@@ -383,31 +382,43 @@ function TRecorderMeasurementSectionView.BuildSummaryText: string;
 var
   I: Integer;
   lBestPoint: Integer;
+  lBestSigma: Integer;
   lBestStress: Double;
   lStress: Double;
+  lSigma: Integer;
   lValues: TRecorderMeasurementSectionValues;
 begin
   Result := '';
   if fComponent = nil then
     Exit;
   lBestPoint := 0;
+  lBestSigma := 0;
   lBestStress := -1.0;
   for I := 0 to fComponent.RowCount - 1 do
   begin
     fComponent.CalculateRow(fRegistry, fComponent.Rows[I], lValues);
     lStress := -1.0;
+    lSigma := 0;
     if lValues.HasSigma1 then
+    begin
       lStress := Abs(lValues.Sigma1);
-    if lValues.HasSigma2 then
-      lStress := Max(lStress, Abs(lValues.Sigma2));
+      lSigma := 1;
+    end;
+    if lValues.HasSigma2 and (Abs(lValues.Sigma2) > lStress) then
+    begin
+      lStress := Abs(lValues.Sigma2);
+      lSigma := 2;
+    end;
     if lStress > lBestStress then
     begin
       lBestStress := lStress;
       lBestPoint := fComponent.Rows[I].PointNo;
+      lBestSigma := lSigma;
     end;
   end;
   if lBestPoint > 0 then
-    Result := Format('Точка %d: sigma=%.3f МПа', [lBestPoint, lBestStress]);
+    Result := Format('Точка %d: S%d=%.3f МПа',
+      [lBestPoint, lBestSigma, lBestStress]);
 end;
 
 procedure TRecorderMeasurementSectionView.ApplyFont(

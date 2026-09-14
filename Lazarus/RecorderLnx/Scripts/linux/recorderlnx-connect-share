@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -eu
+
+readonly REGISTRY_DIR="/etc/recorderlnx/network-shares.d"
+readonly MOUNT_ROOT="/home/user/Сеть/MeraFiles"
+readonly CREDENTIALS="/etc/samba/kip-obmen.credentials"
+
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+safe_name() { printf '%s' "$1" | tr -cs '[:alnum:]_.-' '_'; }
+
+validate_name() {
+  test -n "$1" || fail "Локальное название не задано."
+  case "$1" in */*|*\\*) fail "Название не должно содержать разделители пути.";; esac
+}
+
+mount_resource() {
+  local host="$1" share="$2" local_name="$3" config_name mount_point
+  test -n "$host" || fail "Хост не задан."
+  test -n "$share" || fail "Имя SMB-ресурса не задано."
+  validate_name "$local_name"
+  test -f "$CREDENTIALS" || fail "Не найден файл SMB-учётных данных: $CREDENTIALS"
+  config_name="$(safe_name "$local_name")"
+  mount_point="${MOUNT_ROOT}/${local_name}"
+  install -d -m 0755 "$REGISTRY_DIR"
+  install -d -o user -g user "$mount_point"
+  printf '[Share]\nHost=%s\nName=%s\nLocalName=%s\nMountPoint=%s\n' \
+    "$host" "$share" "$local_name" "$mount_point" > "${REGISTRY_DIR}/${config_name}.ini"
+  if ! mountpoint -q "$mount_point"; then
+    mount -t cifs "//${host}/${share}" "$mount_point" \
+      -o credentials="$CREDENTIALS",uid="$(id -u user)",gid="$(id -g user)",iocharset=utf8,vers=3.0,noperm || \
+    mount -t cifs "//${host}/${share}" "$mount_point" \
+      -o credentials="$CREDENTIALS",uid="$(id -u user)",gid="$(id -g user)",iocharset=utf8,vers=2.1,noperm
+  fi
+}
+
+unmount_resource() {
+  local local_name="$1" config_name mount_point
+  validate_name "$local_name"
+  config_name="$(safe_name "$local_name")"
+  mount_point="${MOUNT_ROOT}/${local_name}"
+  if mountpoint -q "$mount_point"; then umount "$mount_point"; fi
+  rm -f -- "${REGISTRY_DIR}/${config_name}.ini"
+  rmdir -- "$mount_point" 2>/dev/null || true
+}
+
+main() {
+  local action="${1:-}"
+  test "$(id -u)" -eq 0 || fail "Запустите утилиту через pkexec или sudo."
+  test "$#" -eq 4 || fail "Использование: recorderlnx-connect-share connect|disconnect ХОСТ РЕСУРС НАЗВАНИЕ"
+  case "$action" in
+    connect) mount_resource "$2" "$3" "$4";;
+    disconnect) unmount_resource "$4";;
+    *) fail "Неизвестное действие: $action";;
+  esac
+}
+
+main "$@"

@@ -34,6 +34,10 @@ type
     CreateRecordingEvents: Boolean;
     StartAllOnAnyRecording: Boolean;
     SqlDbConfigFile: string;
+    HostAgentPort: Word;
+    HostAgentToken: string;
+    SdbPrimaryHostId: string;
+    SdbShareName: string;
     constructor Create(const AFileName: string);
     destructor Destroy; override;
     procedure Load;
@@ -43,6 +47,9 @@ type
     function Storage(AIndex: Integer): TStorageConfig;
     function TestStorage(AStorage: TStorageConfig; out AMessage: string): Boolean;
     procedure AddHost(const AInstanceId, ADisplayName: string);
+    procedure SetHostName(const AInstanceId, AAddress,
+      ADisplayName: string);
+    procedure RemoveHost(const AInstanceId, AAddress: string);
     function HostCount: Integer;
     function HostId(AIndex: Integer): string;
     function HostName(AIndex: Integer): string;
@@ -106,6 +113,10 @@ begin
   EventWindowSec := 30;
   CreateRecordingEvents := True;
   StartAllOnAnyRecording := False;
+  HostAgentPort := 8766;
+  HostAgentToken := '';
+  SdbPrimaryHostId := '';
+  SdbShareName := 'MeraFiles';
   { By default the Coordinator's adjacent INI also contains [SQLdb]. A
     separate SQL config can be selected through events/sql_db_config. }
   {$IFDEF UNIX}
@@ -151,7 +162,7 @@ end;
 procedure TCoordinatorConfig.Load;
 var
   lIni: TIniFile;
-  lCount, lIndex: Integer;
+  lAgentPort, lCount, lIndex: Integer;
   lStorage: TStorageConfig;
   lSection, lCandidate, lStoredSqlConfig: string;
   lSqlConfigChanged: Boolean;
@@ -174,6 +185,15 @@ begin
       CreateRecordingEvents);
     StartAllOnAnyRecording := lIni.ReadBool('commands',
       'start_all_on_any_recording', StartAllOnAnyRecording);
+    lAgentPort := lIni.ReadInteger('host_agent', 'port', HostAgentPort);
+    if (lAgentPort >= 1) and (lAgentPort <= High(Word)) then
+      HostAgentPort := lAgentPort;
+    HostAgentToken := lIni.ReadString('host_agent', 'token', HostAgentToken);
+    SdbPrimaryHostId := lIni.ReadString('sdb_sync', 'primary_host_id',
+      SdbPrimaryHostId);
+    SdbShareName := Trim(lIni.ReadString('sdb_sync', 'share_name',
+      SdbShareName));
+    if SdbShareName = '' then SdbShareName := 'MeraFiles';
     lStoredSqlConfig := Trim(lIni.ReadString('events', 'sql_db_config',
       SqlDbConfigFile));
     SqlDbConfigFile := RepairLegacySqlConfigPath(lStoredSqlConfig);
@@ -265,6 +285,10 @@ begin
     lIni.WriteBool('events', 'create_recording_events', CreateRecordingEvents);
     lIni.WriteBool('commands', 'start_all_on_any_recording',
       StartAllOnAnyRecording);
+    lIni.WriteInteger('host_agent', 'port', HostAgentPort);
+    lIni.WriteString('host_agent', 'token', HostAgentToken);
+    lIni.WriteString('sdb_sync', 'primary_host_id', SdbPrimaryHostId);
+    lIni.WriteString('sdb_sync', 'share_name', SdbShareName);
     lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
     lIni.WriteInteger('hosts', 'count', HostCount);
     for lIndex := 0 to HostCount - 1 do
@@ -300,6 +324,38 @@ begin
     fHosts.Add(AInstanceId + '=' + ADisplayName)
   else
     fHosts.ValueFromIndex[lIndex] := ADisplayName;
+end;
+
+procedure TCoordinatorConfig.SetHostName(const AInstanceId, AAddress,
+  ADisplayName: string);
+var
+  lIndex, lInstanceIndex: Integer;
+begin
+  lInstanceIndex := fHosts.IndexOfName(AInstanceId);
+  if lInstanceIndex < 0 then
+  begin
+    AddHost(AInstanceId, ADisplayName);
+    lInstanceIndex := fHosts.IndexOfName(AInstanceId);
+  end;
+  if lInstanceIndex >= 0 then
+    fHosts.ValueFromIndex[lInstanceIndex] := ADisplayName;
+
+  { A manually configured IP is an alias of the selected Recorder UUID.
+    Keeping both keys recreates the duplicate during the next config load. }
+  if SameText(AInstanceId, AAddress) then Exit;
+  for lIndex := fHosts.Count - 1 downto 0 do
+    if SameText(fHosts.Names[lIndex], AAddress) then
+      fHosts.Delete(lIndex);
+end;
+
+procedure TCoordinatorConfig.RemoveHost(const AInstanceId, AAddress: string);
+var
+  lIndex: Integer;
+begin
+  for lIndex := fHosts.Count - 1 downto 0 do
+    if SameText(fHosts.Names[lIndex], AInstanceId) or
+      SameText(fHosts.Names[lIndex], AAddress) then
+      fHosts.Delete(lIndex);
 end;
 
 function TCoordinatorConfig.HostCount: Integer;

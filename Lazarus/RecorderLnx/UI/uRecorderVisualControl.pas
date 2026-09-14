@@ -95,6 +95,22 @@ type
     property EditMode: Boolean read fEditMode write fEditMode;
   end;
 
+  TRecorderInputFieldView = class(TEdit, IVForm)
+  private
+    fComponent: TRecorderInputFieldComponent;
+    fTagRegistry: TRecorderTagRegistry;
+    fLastRevision: QWord;
+    fEditing: Boolean;
+    procedure CommitValue(Sender: TObject);
+    procedure EditChange(Sender: TObject);
+  public
+    procedure Configure(AComponent: TRecorderVisualComponent;
+      ATagRegistry: TRecorderTagRegistry);
+    procedure RefreshControl(ATagRegistry: TRecorderTagRegistry;
+      ADisplaySeconds: Double);
+    function GetChartControl: TOglChart;
+  end;
+
   { TRecorderTagValueView
     Визуальное представление цифрового индикатора значения тега }
   TRecorderTagValueView = class(TPanel, IVForm)
@@ -274,6 +290,61 @@ function TRecorderButtonView.TagIsPressed: Boolean;
 begin
   if not TryReadTagPressed(Result) then
     Result := False;
+end;
+
+procedure TRecorderInputFieldView.Configure(
+  AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+begin
+  fComponent := TRecorderInputFieldComponent(AComponent);
+  fTagRegistry := ATagRegistry;
+  fLastRevision := 0;
+  fEditing := False;
+  OnChange := @EditChange;
+  OnEditingDone := @CommitValue;
+  RefreshControl(ATagRegistry, 0.0);
+end;
+
+procedure TRecorderInputFieldView.EditChange(Sender: TObject);
+begin
+  if Focused then
+    fEditing := True;
+end;
+
+procedure TRecorderInputFieldView.CommitValue(Sender: TObject);
+var
+  lTag: TRecorderTag;
+  lValue: Double;
+begin
+  if not fEditing or (fComponent = nil) or (fTagRegistry = nil) or
+    not TryStrToFloat(Text, lValue) then
+    Exit;
+  lTag := RecorderResolveTag(fTagRegistry, fComponent.TagId,
+    fComponent.TagName);
+  if (lTag <> nil) and lTag.ExternalWriteAllowed then
+    fTagRegistry.PublishValue(lTag, lValue);
+  fEditing := False;
+end;
+
+procedure TRecorderInputFieldView.RefreshControl(
+  ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
+var
+  lTag: TRecorderTag;
+begin
+  if fEditing or (fComponent = nil) then
+    Exit;
+  lTag := RecorderResolveTag(ATagRegistry, fComponent.TagId,
+    fComponent.TagName);
+  Enabled := (lTag <> nil) and lTag.ExternalWriteAllowed;
+  if (lTag = nil) or (lTag.SignalBuffer.Count = 0) or
+    (lTag.SignalBuffer.Revision = fLastRevision) then
+    Exit;
+  fLastRevision := lTag.SignalBuffer.Revision;
+  Text := FormatFloat(fComponent.DisplayFormat, lTag.SignalBuffer.LatestValue);
+end;
+
+function TRecorderInputFieldView.GetChartControl: TOglChart;
+begin
+  Result := nil;
 end;
 
 procedure TRecorderButtonView.SetVisualPressed(AValue: Boolean);
@@ -808,6 +879,8 @@ initialization
   // Регистрация визуальных контролов мнемосхем
   TRecorderVisualControlRegistry.RegisterControl(TRecorderStaticTextComponent, TRecorderStaticTextView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderButtonComponent, TRecorderButtonView);
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderInputFieldComponent,
+    TRecorderInputFieldView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTagValueComponent, TRecorderTagValueView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderImageComponent, TRecorderImageView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTrendComponent, TRecorderTrendView);

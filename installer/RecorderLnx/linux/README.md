@@ -1,11 +1,15 @@
 # RecorderLnx Linux installer
 
-This directory builds a Debian package directly from Windows.
-
-The builder does not compile the Linux executable. It packages the already
-built binary:
+This directory builds a Debian package from Windows. Before packaging, the
+builder connects to the first available Linux computer from
+`..\deploy-linux-hosts.local.txt`, compiles both Linux programs in the shared
+repository, and then packages:
 
 `Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx`
+
+and the host-control agent built on Linux:
+
+`Lazarus/RecorderLnx/lib/x86_64-linux/RecorderHostAgent`
 
 The build fails if that executable is older than production Pascal/LFM sources,
 is not an ELF binary, does not contain the SQL schema markers expected by the
@@ -18,6 +22,19 @@ package. The successful build prints SHA-256 for both input and `.deb`.
 .\build-installer.ps1
 ```
 
+The host list format is `user@host|password`. By default the shared repository
+must be mounted on Linux as `/mnt/win_share/OburecGH`. Override it when needed:
+
+```powershell
+.\build-installer.ps1 -LinuxRepoRoot /another/mount/OburecGH
+```
+
+For an intentional package-only run with already verified ELF files:
+
+```powershell
+.\build-installer.ps1 -SkipLinuxBuild
+```
+
 or from `cmd.exe`, Explorer, Total Commander:
 
 ```bat
@@ -26,12 +43,12 @@ build-installer.bat
 
 Output:
 
-`Output/recorderlnx_0.1.0_amd64.deb`
+`Output/recorderlnx_0.1.9_amd64.deb`
 
 ## Install On Linux
 
 ```bash
-sudo dpkg -i recorderlnx_0.1.0_amd64.deb
+sudo dpkg -i recorderlnx_0.1.9_amd64.deb
 ```
 
 Do not run `RecorderLnx` from the package preview/extraction directory such as
@@ -39,7 +56,7 @@ Do not run `RecorderLnx` from the package preview/extraction directory such as
 copy and it can disappear after reboot. After installation run:
 
 ```bash
-/opt/mera/RecorderLnx/RecorderLnx
+/usr/bin/recorderlnx
 ```
 
 or use the created desktop/menu shortcut.
@@ -55,16 +72,41 @@ The package installs the Firebird **client** runtime (`libfbclient2`) as a
 dependency. A local Firebird server is not required when `sql-db.ini` points to
 a database on another computer. The client runtime is still required by SQL
 trend components. `recorderlnx-install-check` reports it separately as
-`Firebird client library`.
+`Firebird client library`. The launcher exposes the modern
+`libfbclient.so.2` under the unversioned name expected by FPC 3.2.2; therefore
+start the installed application through `/usr/bin/recorderlnx` or its desktop
+shortcut.
 
 Installed application files:
 
 - `/opt/mera/RecorderLnx`
+- `/opt/mera/RecorderLnx/RecorderHostAgent`
+- `/opt/mera/RecorderLnx/RecorderHostAgent.ini`
+- `/usr/lib/systemd/user/recorder-host-agent.service`
+- `/etc/xdg/autostart/recorder-host-agent.desktop`
 - `/usr/bin/recorderlnx`
 - `/usr/share/applications/recorderlnx.desktop`
 - `/usr/bin/recorderlnx-install-check`
 - `~/Desktop/RecorderLnx.desktop` or `~/Рабочий стол/RecorderLnx.desktop`
   for existing users when such desktop directories exist
+
+`RecorderHostAgent` is registered in system-wide XDG Autostart and starts at
+graphical login for every desktop user. This method is used on Astra so the
+agent inherits the DISPLAY/Wayland environment needed to launch RecorderLnx.
+It intentionally does not run as a root system service. After installation
+into an already active session, log out and back in, or start it once as that
+user:
+
+```bash
+/opt/mera/RecorderLnx/RecorderHostAgent
+```
+
+For remote control the installer allows inbound TCP `8766` when an active
+`ufw` or `firewalld` is detected. Verify access from the rcPanel computer with:
+
+```bash
+curl http://RECORDER_PC_IP:8766/api/v1/status
+```
 
 Writable data/configuration directories:
 
@@ -96,5 +138,18 @@ application search/favorites.
 
 ## Notes
 
-If the Linux executable is stale, rebuild it on Linux first. This Windows
-builder only creates the installer package.
+If one build computer is unavailable, the builder tries the next active entry
+from the host list. Packaging starts only after both forced Linux builds finish
+successfully.
+
+## Network share manager
+
+The package installs `/opt/mera/RecorderLnx/NetworkShareManager`, the
+root-owned `/usr/local/sbin/recorderlnx-connect-share` helper, and a desktop
+and menu shortcut named `Сетевые ресурсы RecorderLnx`. SMB mounting is supplied
+by the `cifs-utils` package dependency.
+
+The settings button beside `Каталог замеров` uses
+`/usr/local/sbin/recorderlnx-share-folder` and publishes the selected directory
+as the read-only `MeraFiles` Samba share. The package installs this helper and
+the Samba server dependency.

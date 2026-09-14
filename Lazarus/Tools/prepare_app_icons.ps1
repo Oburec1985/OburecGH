@@ -51,10 +51,48 @@ function New-MultiSizeIcon {
             } finally {
                 $graphics.Dispose()
             }
+            $colorBytes = $size * $size * 4
+            $maskStride = [int]([Math]::Ceiling($size / 32.0) * 4)
+            $maskBytes = $maskStride * $size
             $stream = [System.IO.MemoryStream]::new()
-            $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
-            $frames += ,$stream.ToArray()
-            $stream.Dispose()
+            $frameWriter = [System.IO.BinaryWriter]::new($stream)
+            $bits = $null
+            try {
+                # Old Lazarus/FPC icon readers expect a BITMAPINFOHEADER here.
+                # PNG-compressed ICO frames can be mistaken for a DIB and raise
+                # FPImageException before the main form is created.
+                $frameWriter.Write([uint32]40)
+                $frameWriter.Write([int32]$size)
+                $frameWriter.Write([int32]($size * 2))
+                $frameWriter.Write([uint16]1)
+                $frameWriter.Write([uint16]32)
+                $frameWriter.Write([uint32]0)
+                $frameWriter.Write([uint32]($colorBytes + $maskBytes))
+                $frameWriter.Write([int32]0)
+                $frameWriter.Write([int32]0)
+                $frameWriter.Write([uint32]0)
+                $frameWriter.Write([uint32]0)
+
+                $rect = [System.Drawing.Rectangle]::new(0, 0, $size, $size)
+                $bits = $bitmap.LockBits($rect,
+                    [System.Drawing.Imaging.ImageLockMode]::ReadOnly,
+                    [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+                $row = [byte[]]::new($size * 4)
+                for ($y = $size - 1; $y -ge 0; $y--) {
+                    $source = [System.IntPtr]::Add($bits.Scan0, $y * $bits.Stride)
+                    [System.Runtime.InteropServices.Marshal]::Copy($source, $row, 0, $row.Length)
+                    $frameWriter.Write($row)
+                }
+                $frameWriter.Write([byte[]]::new($maskBytes))
+                $frameWriter.Flush()
+                $frames += ,$stream.ToArray()
+            } finally {
+                if ($null -ne $bits) {
+                    $bitmap.UnlockBits($bits)
+                }
+                $frameWriter.Dispose()
+                $stream.Dispose()
+            }
         } finally {
             $bitmap.Dispose()
         }

@@ -186,8 +186,8 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Left = 10
             Height = 15
             Top = 154
-            Width = 93
-            Caption = 'Рабочий каталог'
+            Width = 112
+            Caption = 'Каталог замеров'
             ParentColor = False
           end
           object fModifyNameCheck: TCheckBox
@@ -245,9 +245,20 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Left = 10
             Height = 23
             Top = 172
-            Width = 526
+            Width = 486
             TabOrder = 6
             Text = 'C:\USML\'
+          end
+          object btnPublishRecordDir: TButton
+            Left = 502
+            Height = 26
+            Top = 170
+            Width = 34
+            Caption = '⇧'
+            Hint = 'Опубликовать каталог замеров в сети'
+            ShowHint = True
+            TabOrder = 7
+            OnClick = PublishRecordDirClick
           end
           object btnWorkDirBrowse: TButton
             Left = 548
@@ -255,7 +266,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Top = 170
             Width = 54
             Caption = '...'
-            TabOrder = 7
+            TabOrder = 8
             OnClick = WorkDirBrowseClick
           end
           object fTemplateCheck: TCheckBox

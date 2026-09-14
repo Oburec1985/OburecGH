@@ -275,6 +275,7 @@ var
   lConfig: TRecorderSqlDbConfig;
   lRepository: TRecorderSqlDbRepository;
   lLoadedConfigFileName: string;
+  lCredentialsError: string;
   lLoadedConfigAge, lConfigAge: LongInt;
 begin
   lConfig := nil;
@@ -307,13 +308,21 @@ begin
           FreeAndNil(lConfig);
           lConfig := TRecorderSqlDbConfig.Create;
           lConfig.LoadFromFile(fConfigFileName);
-          lRepository := TRecorderSqlDbRepository.Create(lConfig);
-          lLoadedConfigFileName := fConfigFileName;
-          lLoadedConfigAge := lConfigAge;
+          if lConfig.ConnectionConfigurationReady(lCredentialsError) then
+          begin
+            lRepository := TRecorderSqlDbRepository.Create(lConfig);
+            lLoadedConfigFileName := fConfigFileName;
+            lLoadedConfigAge := lConfigAge;
+          end
+          else
+            fErrorText := lCredentialsError;
         end;
-        lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
-          fMaxPoints, fPoints, False);
-        lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
+        if lRepository <> nil then
+        begin
+          lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
+            fMaxPoints, fPoints, False);
+          lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
+        end;
       except
         on E: Exception do
         begin

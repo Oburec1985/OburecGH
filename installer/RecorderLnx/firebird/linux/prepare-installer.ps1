@@ -15,6 +15,21 @@ $sourceIcon = Join-Path $repoRoot 'Lazarus\RecorderCoordinator\resources\app\rcP
 $payloadIcon = Join-Path $payloadDir 'rcpanel.png'
 $checksumFile = Join-Path $payloadDir 'RecorderCoordinator.sha256'
 
+$coordinatorRoot = Join-Path $repoRoot 'Lazarus\RecorderCoordinator'
+$coordinatorSources = @(
+    Get-Item (Join-Path $coordinatorRoot 'RecorderCoordinator.lpi')
+    Get-Item (Join-Path $coordinatorRoot 'RecorderCoordinator.lpr')
+    Get-ChildItem -Path (Join-Path $coordinatorRoot 'Core\*.pas') -File
+    Get-ChildItem -Path (Join-Path $coordinatorRoot 'Service\*.pas') -File
+    Get-ChildItem -Path (Join-Path $coordinatorRoot 'UI\*.pas') -File
+    Get-ChildItem -Path (Join-Path $coordinatorRoot 'UI\*.lfm') -File
+)
+$newestSource = $coordinatorSources | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+if (($null -ne $newestSource) -and
+    ($newestSource.LastWriteTimeUtc -gt (Get-Item -LiteralPath $CoordinatorBinary).LastWriteTimeUtc)) {
+    throw "Linux RecorderCoordinator is older than source: $($newestSource.FullName). Build it on Linux first."
+}
+
 function Get-Sha256Hex {
     param([string]$Path)
 

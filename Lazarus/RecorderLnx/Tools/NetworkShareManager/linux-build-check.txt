@@ -1,0 +1,31 @@
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/lib/x86_64-linux/NetworkShareManager: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.4.0, with debug_info, not stripped
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/units/x86_64-linux/gtk2
+TProject.DoLoadStateFile Statefile not found: /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/lib/x86_64-linux/NetworkShareManager.compiled
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling NetworkShareManager.lpr
+(3104) Compiling uNetworkShareManagerMain.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(20,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(21,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(155,59) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(155,76) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(22,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(23,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/uNetworkShareManagerMain.pas(168,62) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "RawByteString"
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/lib/x86_64-linux/NetworkShareManager.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/NetworkShareManager/lib/x86_64-linux/NetworkShareManager
+(1008) 193 lines compiled, 2.5 sec
+(1021) 3 warning(s) issued
+(1022) 6 hint(s) issued

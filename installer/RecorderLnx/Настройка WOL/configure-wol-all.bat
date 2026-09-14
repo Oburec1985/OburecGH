@@ -1,0 +1,9 @@
+# One SSH destination and its plain-text password per line.
+# Format: user@host|password
+# coordinator=http://192.168.9.66:8765
+user@192.168.9.66|12345678
+user@192.168.9.85|12345678
+user@192.168.9.45|12345678
+user@192.168.9.17|12345678
+user@192.168.9.200|12345678
+user@192.168.9.92|12345678

@@ -147,7 +147,12 @@ function LatestTagValue(ATag: TRecorderTag; out AValue: Double): Boolean;
 begin
   Result := (ATag <> nil) and (ATag.SignalBuffer.Count > 0);
   if Result then
-    AValue := ATag.SignalBuffer.LatestValue
+  begin
+    AValue := ATag.SignalBuffer.LatestValue;
+    if (ATag.RangeMax > ATag.RangeMin) and
+      ((AValue < ATag.RangeMin) or (AValue > ATag.RangeMax)) then
+      Result := False;
+  end
   else
     AValue := 0.0;
 end;
@@ -497,25 +502,15 @@ begin
   begin
     if Abs(lDen) <= 1E-12 then
       Exit;
-    if AValues.HasE1 and AValues.HasE3 then
+    if AValues.HasE1 and AValues.HasE2 then
     begin
       lFactor := fYoungModulusMPa / lDen * 1E-6;
-      AValues.Sigma1 := lFactor * (lE1 + fPoissonRatio * lE3);
-      AValues.Sigma2 := lFactor * (lE3 + fPoissonRatio * lE1);
+      AValues.Sigma1 := lFactor * (lE1 + fPoissonRatio * lE2);
+      AValues.Sigma2 := lFactor * (lE2 + fPoissonRatio * lE1);
       AValues.HasSigma1 := True;
       AValues.HasSigma2 := True;
       AValues.AngleDeg := 0.0;
       AValues.HasAngle := True;
-    end
-    else if AValues.HasE1 then
-    begin
-      AValues.Sigma1 := fYoungModulusMPa * lE1 * 1E-6;
-      AValues.HasSigma1 := True;
-    end
-    else if AValues.HasE3 then
-    begin
-      AValues.Sigma2 := fYoungModulusMPa * lE3 * 1E-6;
-      AValues.HasSigma2 := True;
     end;
     AValues.Valid := AValues.HasSigma1 or AValues.HasSigma2;
     Exit;
@@ -539,24 +534,6 @@ begin
     AValues.HasSigma1 := True;
     AValues.HasSigma2 := True;
     AValues.HasAngle := True;
-  end
-  else if AValues.HasE1 and AValues.HasE3 then
-  begin
-    lFactor := fYoungModulusMPa / lDen * 1E-6;
-    AValues.Sigma1 := lFactor * (lE1 + fPoissonRatio * lE3);
-    AValues.Sigma2 := lFactor * (lE3 + fPoissonRatio * lE1);
-    AValues.HasSigma1 := True;
-    AValues.HasSigma2 := True;
-  end
-  else if AValues.HasE1 then
-  begin
-    AValues.Sigma1 := fYoungModulusMPa * lE1 * 1E-6;
-    AValues.HasSigma1 := True;
-  end
-  else if AValues.HasE3 then
-  begin
-    AValues.Sigma2 := fYoungModulusMPa * lE3 * 1E-6;
-    AValues.HasSigma2 := True;
   end;
   AValues.Valid := AValues.HasSigma1 or AValues.HasSigma2;
 end;

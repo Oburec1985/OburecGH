@@ -1159,6 +1159,7 @@ begin
   try
     if not RecorderSdbLoadScaleCalibration(AKey, lCalibration) then
       Exit;
+    lCalibration.SdbKey := RecorderSdbNormalizeKey(AKey);
     lName := Trim(lCalibration.Name);
     if lName = '' then
       lName := lKeyName;

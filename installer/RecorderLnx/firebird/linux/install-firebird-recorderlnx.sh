@@ -6,12 +6,15 @@ LOG_FILE="${RECORDERLNX_FIREBIRD_LOG:-/tmp/recorderlnx-firebird-install.log}"
 FIREBIRD_PREFIX="/opt/firebird"
 PROFILE_FILE="/etc/profile.d/recorderlnx-sqldb.sh"
 RECORDERLNX_SQLDB_CONFIG="/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini"
+RECORDERLNX_APP_CONFIG="/var/opt/mera/RecorderLnx/config/app.ini"
 RECORDERLNX_SQLDB_DIR="/var/opt/mera/SQLdb"
 RECORDERLNX_LEGACY_SQLDB_DIR="/var/opt/mera/RecorderLnx/sqldb"
+RECORDERLNX_FIREBIRD_PASSWORD="123"
 ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
 INSTALL_FIREBIRD=0
 INSTALL_RCPANEL=0
 NO_GUI=0
+INSTALL_USER=""
 
 usage() {
   cat <<'EOF'
@@ -27,6 +30,11 @@ parse_args() {
       --rcpanel) INSTALL_RCPANEL=1 ;;
       --all) INSTALL_FIREBIRD=1; INSTALL_RCPANEL=1 ;;
       --no-gui) NO_GUI=1 ;;
+      --install-user)
+        shift
+        [ "$#" -gt 0 ] || { echo "Missing value for --install-user" >&2; exit 2; }
+        INSTALL_USER="$1"
+        ;;
       -h|--help) usage; exit 0 ;;
       *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -72,11 +80,27 @@ echo "Log: $LOG_FILE"
 echo
 
 if [ "$(id -u)" -ne 0 ]; then
+  reexec_args=(--no-gui)
+  [ "$INSTALL_FIREBIRD" = 1 ] && reexec_args+=(--firebird)
+  [ "$INSTALL_RCPANEL" = 1 ] && reexec_args+=(--rcpanel)
+  if [ "$NO_GUI" = 0 ] && command -v pkexec >/dev/null 2>&1; then
+    echo "Requesting administrator permissions..."
+    install_user="$(id -un)"
+    reexec_args+=(--install-user "$install_user")
+    if pkexec /bin/bash "$SCRIPT_DIR/install-firebird-recorderlnx.sh" \
+      "${reexec_args[@]}"; then
+      exit 0
+    else
+      elevate_status=$?
+      echo "Administrator launch failed with exit code $elevate_status."
+      echo "See log: $LOG_FILE"
+      echo "Press Enter to close this window."
+      read -r _
+      exit "$elevate_status"
+    fi
+  fi
   if command -v sudo >/dev/null 2>&1; then
     echo "Requesting administrator permissions..."
-    reexec_args=(--no-gui)
-    [ "$INSTALL_FIREBIRD" = 1 ] && reexec_args+=(--firebird)
-    [ "$INSTALL_RCPANEL" = 1 ] && reexec_args+=(--rcpanel)
     exec sudo -E bash "$0" "${reexec_args[@]}"
   fi
   echo "Run this script as root or install sudo first."
@@ -206,9 +230,28 @@ prepare_recorderlnx_sqldb_dirs() {
   echo "OK   $RECORDERLNX_LEGACY_SQLDB_DIR owner target: $fb_user:$fb_group"
 }
 
+configure_recorderlnx_database_alias() {
+  local config_file="$FIREBIRD_PREFIX/databases.conf"
+  local alias_line="recorderlnx.fdb = $RECORDERLNX_SQLDB_DIR/recorderlnx.fdb"
+
+  if [ ! -f "$config_file" ]; then
+    echo "Firebird databases.conf was not found: $config_file"
+    exit 1
+  fi
+  if grep -q '^recorderlnx\.fdb[[:space:]]*=' "$config_file"; then
+    sed -i "s|^recorderlnx\.fdb[[:space:]]*=.*$|$alias_line|" "$config_file"
+  else
+    printf '\n%s\n' "$alias_line" >> "$config_file"
+  fi
+  echo "OK   Firebird alias recorderlnx.fdb -> $RECORDERLNX_SQLDB_DIR/recorderlnx.fdb"
+}
+
 desktop_user() {
   local candidate
-  candidate="${SUDO_USER:-}"
+  candidate="$INSTALL_USER"
+  if [ -z "$candidate" ]; then
+    candidate="${SUDO_USER:-}"
+  fi
   if [ -n "$candidate" ] && [ "$candidate" != root ] &&
      id "$candidate" >/dev/null 2>&1; then
     printf '%s\n' "$candidate"
@@ -398,7 +441,23 @@ EOF
 
 write_recorderlnx_password_env() {
   local password
-  local escaped_password
+  local candidate
+  local password_file
+  local password_changed=0
+  local -a password_candidates=()
+
+  set_sql_config_value() {
+    local key="$1"
+    local value="$2"
+    local escaped_value
+    escaped_value="$(printf '%s' "$value" | sed 's/[\\&|]/\\&/g')"
+    if grep -q "^${key}=" "$RECORDERLNX_SQLDB_CONFIG"; then
+      sed -i "s|^${key}=.*$|${key}=${escaped_value}|" \
+        "$RECORDERLNX_SQLDB_CONFIG"
+    else
+      printf '%s=%s\n' "$key" "$value" >> "$RECORDERLNX_SQLDB_CONFIG"
+    fi
+  }
 
   if [ ! -f "$FIREBIRD_PREFIX/SYSDBA.password" ]; then
     echo "SYSDBA password file was not found: $FIREBIRD_PREFIX/SYSDBA.password"
@@ -412,6 +471,37 @@ write_recorderlnx_password_env() {
     return
   fi
 
+  password_candidates+=("$password" "$RECORDERLNX_FIREBIRD_PASSWORD")
+  while IFS= read -r password_file; do
+    candidate="$(awk -F= '/^Password=/{sub(/^[^=]*=/, ""); print; exit}' \
+      "$password_file")"
+    [ -z "$candidate" ] || password_candidates+=("$candidate")
+  done < <(find /var/opt/mera /home -type f -path \
+    '*/RecorderLnx/config/projects/*/sql-db.ini' -print 2>/dev/null || true)
+
+  for candidate in "${password_candidates[@]}"; do
+    if "$FIREBIRD_PREFIX/bin/gsec" -user SYSDBA -password "$candidate" \
+      -modify SYSDBA -pw "$RECORDERLNX_FIREBIRD_PASSWORD" >/dev/null 2>&1; then
+      password_changed=1
+      break
+    fi
+  done
+  if [ "$password_changed" != 1 ]; then
+    echo "Cannot authenticate as SYSDBA with the Firebird password file or legacy RecorderLnx configs."
+    echo "The SYSDBA password was not changed; RecorderLnx configuration was left untouched."
+    exit 1
+  fi
+  if ! "$FIREBIRD_PREFIX/bin/gsec" -user SYSDBA \
+    -password "$RECORDERLNX_FIREBIRD_PASSWORD" -display SYSDBA \
+    >/dev/null 2>&1; then
+    echo "Firebird rejected SYSDBA with the required RecorderLnx password after synchronization."
+    exit 1
+  fi
+  sed -i "s|^ISC_PASSWORD=.*$|ISC_PASSWORD=$RECORDERLNX_FIREBIRD_PASSWORD|" \
+    "$FIREBIRD_PREFIX/SYSDBA.password"
+  password="$RECORDERLNX_FIREBIRD_PASSWORD"
+  echo "Firebird SYSDBA login verified with RecorderLnx password."
+
   cat > "$PROFILE_FILE" <<EOF
 # Created by install-firebird-recorderlnx.sh.
 export RECORDERLNX_SQLDB_ROOT='$RECORDERLNX_SQLDB_DIR'
@@ -419,23 +509,24 @@ EOF
   chmod 0644 "$PROFILE_FILE"
   echo "RecorderLnx SQL root environment file created: $PROFILE_FILE"
 
-  if [ -f "$RECORDERLNX_SQLDB_CONFIG" ]; then
+  if [ -f "$RECORDERLNX_APP_CONFIG" ]; then
     config_owner="${SUDO_USER:-}"
     if [ -z "$config_owner" ] || [ "$config_owner" = "root" ]; then
-      config_owner="$(stat -c '%U' "$RECORDERLNX_SQLDB_CONFIG" 2>/dev/null || true)"
+      config_owner="$(stat -c '%U' "$RECORDERLNX_APP_CONFIG" 2>/dev/null || true)"
     fi
     if [ -z "$config_owner" ] || [ "$config_owner" = "root" ]; then
       echo "Cannot determine RecorderLnx desktop user. Run this installer via sudo from that user."
       exit 1
     fi
-    escaped_password="$(printf '%s' "$password" | sed 's/[\\&|]/\\&/g')"
-    if grep -q '^Password=' "$RECORDERLNX_SQLDB_CONFIG"; then
-      sed -i "s|^Password=.*$|Password=$escaped_password|" \
-        "$RECORDERLNX_SQLDB_CONFIG"
-    else
-      printf '\nPassword=%s\n' "$password" >> "$RECORDERLNX_SQLDB_CONFIG"
+    if ! grep -q '^\[SQLdbConnection\]$' "$RECORDERLNX_APP_CONFIG"; then
+      printf '\n[SQLdbConnection]\nBackend=firebird\n' >> "$RECORDERLNX_APP_CONFIG"
     fi
-    chmod 0600 "$RECORDERLNX_SQLDB_CONFIG"
+    RECORDERLNX_SQLDB_CONFIG="$RECORDERLNX_APP_CONFIG"
+    set_sql_config_value Host 192.168.9.66
+    set_sql_config_value Port 3050
+    set_sql_config_value Database "$RECORDERLNX_SQLDB_DIR/recorderlnx.fdb"
+    set_sql_config_value RootDirectory "$RECORDERLNX_SQLDB_DIR"
+    chmod 0600 "$RECORDERLNX_APP_CONFIG"
     config_group="$(id -gn "$config_owner")"
     config_root="$(dirname "$(dirname "$(dirname "$RECORDERLNX_SQLDB_CONFIG")")")"
     chown -R "$config_owner:$config_group" "$config_root"
@@ -443,7 +534,7 @@ EOF
     find "$config_root" -type f -exec chmod 0600 {} +
     install -d -m 0700 -o "$config_owner" -g "$config_group" \
       "$RECORDERLNX_SQLDB_DIR/data"
-    echo "RecorderLnx SQL password stored in: $RECORDERLNX_SQLDB_CONFIG"
+    echo "RecorderLnx SQL connection stored in: $RECORDERLNX_APP_CONFIG"
   else
     echo "RecorderLnx SQL config not found. Install RecorderLnx and repeat this installer."
   fi
@@ -522,6 +613,7 @@ main() {
     install_firebird "$archive"
     enable_firebird_service
     prepare_recorderlnx_sqldb_dirs
+    configure_recorderlnx_database_alias
     write_recorderlnx_password_env
     check_firebird
   fi

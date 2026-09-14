@@ -641,6 +641,8 @@ var
   lDstTagValue: TRecorderTagValueComponent;
   lSrcButton: TRecorderButtonComponent;
   lDstButton: TRecorderButtonComponent;
+  lSrcInput: TRecorderInputFieldComponent;
+  lDstInput: TRecorderInputFieldComponent;
 begin
   if (ASource = nil) or (ADest = nil) then
     Exit;
@@ -691,6 +693,15 @@ begin
     lDstButton.PulseDurationMs := lSrcButton.PulseDurationMs;
     lDstButton.PressedImageFileName := lSrcButton.PressedImageFileName;
     lDstButton.ReleasedImageFileName := lSrcButton.ReleasedImageFileName;
+  end
+  else if (ASource is TRecorderInputFieldComponent) and
+    (ADest is TRecorderInputFieldComponent) then
+  begin
+    lSrcInput := TRecorderInputFieldComponent(ASource);
+    lDstInput := TRecorderInputFieldComponent(ADest);
+    lDstInput.TagId := lSrcInput.TagId;
+    lDstInput.TagName := lSrcInput.TagName;
+    lDstInput.DisplayFormat := lSrcInput.DisplayFormat;
   end
   else if (ASource is TRecorderImageComponent) and
     (ADest is TRecorderImageComponent) then
@@ -2761,7 +2772,6 @@ end;
 
 
 function TFormEditorController.NormalizeRect(X1, Y1, X2, Y2: Integer): TRect;
-
 begin
   Result.Left := Min(X1, X2);
   Result.Top := Min(Y1, Y2);
@@ -2772,12 +2782,10 @@ end;
 
 
 function TFormEditorController.RecorderRectToRect(
-
-  const ABounds: TRecorderRect): TRect;
-
+const
+     ABounds: TRecorderRect): TRect;
 begin
-  Result := Rect(ABounds.Left, ABounds.Top, ABounds.Left + ABounds.Width,
-    ABounds.Top + ABounds.Height);
+  Result := Rect(ABounds.Left, ABounds.Top, ABounds.Left + ABounds.Width,ABounds.Top + ABounds.Height);
 end;
 
 

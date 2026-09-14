@@ -53,6 +53,10 @@ begin
     D.Add('message_type', AType);
     D.Add('instance_id', CInstance);
     D.Add('correlation_id', CCorrelation);
+    { Production Recorder envelopes always carry sent_at_utc.  Coordinator
+      uses it to compensate a remote clock skew while keeping started and
+      finished times in one corrected timebase. }
+    D.Add('sent_at_utc', '2026-09-09T10:00:06.000Z');
     P := TJSONObject.Create;
     P.Add('recording_id', CRecording);
     P.Add('local_path', 'C:\Mera Files\codex-firebird');
@@ -167,6 +171,8 @@ begin
           'fresh repository cannot read persisted event');
         Check(SnapshotCount = 1,
           'fresh repository returned unexpected recording count');
+        Check(SnapshotFinishedUtc >= SnapshotStartedUtc,
+          'corrected lifecycle interval is inverted');
         Writeln('SNAPSHOT event=', SnapshotUtc:0:8, ' started=',
           SnapshotStartedUtc:0:8, ' finished=', SnapshotFinishedUtc:0:8);
         Check(Repository.DatabaseAttachmentName(AttachmentName),

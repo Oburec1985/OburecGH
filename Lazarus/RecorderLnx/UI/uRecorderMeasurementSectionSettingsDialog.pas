@@ -10,11 +10,16 @@ unit uRecorderMeasurementSectionSettingsDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Dialogs, ExtCtrls,
-  Graphics,
+  Classes, SysUtils, Contnrs, Forms, Controls, StdCtrls, Grids, Dialogs, ExtCtrls,
+  Graphics, fpspreadsheet,
   Math, uRecorderFormModel, uRecorderTags, uRecorderMeasurementSectionModel;
 
 type
+  TSectionColumn = (scolTagName, scolSection, scolPoint, scolRole,
+    scolRosette, scolPosition, scolDescription, scolAddress, scolSource,
+    scolModuleType, scolTagId, scolUnit, scolPollFrequency, scolSqlRecord,
+    scolGroup);
+  TSectionColumnMap = array[TSectionColumn] of Integer;
 
   { TRecorderMeasurementSectionSettingsDialog }
 
@@ -41,6 +46,7 @@ type
     fAddButton: TButton;
     fDeleteButton: TButton;
     fImportButton: TButton;
+    fImportAllButton: TButton;
     fExportButton: TButton;
     lblCaption: TLabel;
     lblCaptionFont: TLabel;
@@ -61,6 +67,7 @@ type
     procedure GridDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ImportClick(Sender: TObject);
+    procedure ImportAllClick(Sender: TObject);
     procedure ChooseFontClick(Sender: TObject);
     procedure ColorPanelDblClick(Sender: TObject);
     procedure FontNameChange(Sender: TObject);
@@ -73,10 +80,12 @@ type
     fComponent: TRecorderMeasurementSectionComponent;
     fDraft: TRecorderMeasurementSectionComponent;
     fFormatAllRequested: Boolean;
+    fImportAllDrafts: TObjectList;
     fRegistry: TRecorderTagRegistry;
     fStressFont: TRecorderFontSnapshot;
     procedure AssignSelectedTagToGrid;
     procedure ApplyFontsToFactory;
+    procedure ApplyImportedSections;
     procedure LoadFromComponent;
     procedure PopulateTagList(const AFilter: string);
     procedure RefreshGrid;
@@ -94,7 +103,16 @@ type
     function TagByName(const AName: string): TRecorderTag;
     procedure ExportToFile(const AFileName: string);
     procedure ImportFromFile(const AFileName: string;
+      out APointCount, ABindingCount: Integer; out AFormatError: string);
+    procedure ImportAllFromFile(const AFileName: string;
+      out AComponentCount, APointCount, ABindingCount: Integer;
+      out AFormatError: string);
+    procedure ImportComponentFromSheet(ASheet: TsWorksheet;
+      const AMap: TSectionColumnMap;
+      ATarget: TRecorderMeasurementSectionComponent;
       out APointCount, ABindingCount: Integer);
+    function SheetContainsSection(ASheet: TsWorksheet;
+      const AMap: TSectionColumnMap; const ASectionId: string): Boolean;
     procedure InitGrid;
   public
     constructor CreateDialog(AOwner: TComponent;
@@ -112,7 +130,7 @@ implementation
 {$R *.lfm}
 
 uses
-  fpspreadsheet, fpstypes, fpsopendocument, fpscsv, uRecorderMeraPaths;
+  fpstypes, fpsopendocument, fpscsv, uRecorderMeraPaths;
 
 const
   CColPoint = 0;
@@ -126,13 +144,6 @@ const
 
   CSheetName = 'Recorder_Tags';
   CMaxHeaderColumn = 255;
-
-type
-  TSectionColumn = (scolTagName, scolSection, scolPoint, scolRole,
-    scolRosette, scolPosition, scolDescription, scolAddress, scolSource,
-    scolModuleType, scolTagId, scolUnit, scolPollFrequency, scolSqlRecord,
-    scolGroup);
-  TSectionColumnMap = array[TSectionColumn] of Integer;
 
 const
   CHeaders: array[TSectionColumn] of string = (
@@ -152,6 +163,30 @@ const
     'Запись SQL',
     'Группа'
   );
+
+type
+  TMeasurementSectionImportDraft = class
+  public
+    Target: TRecorderMeasurementSectionComponent;
+    Draft: TRecorderMeasurementSectionComponent;
+    constructor Create(ATarget: TRecorderMeasurementSectionComponent);
+    destructor Destroy; override;
+  end;
+
+constructor TMeasurementSectionImportDraft.Create(
+  ATarget: TRecorderMeasurementSectionComponent);
+begin
+  inherited Create;
+  Target := ATarget;
+  Draft := TRecorderMeasurementSectionComponent.Create;
+  Draft.AssignSection(ATarget);
+end;
+
+destructor TMeasurementSectionImportDraft.Destroy;
+begin
+  Draft.Free;
+  inherited Destroy;
+end;
 
 function ShowRecorderMeasurementSectionSettingsDialog(AOwner: TComponent;
   AComponent: TRecorderMeasurementSectionComponent;
@@ -212,6 +247,50 @@ begin
       Exit(I);
 end;
 
+function FoundHeadersText(ASheet: TsWorksheet): string;
+var
+  I, lLastCol: Integer;
+  lHeader: string;
+begin
+  Result := '';
+  if ASheet = nil then
+    Exit;
+  lLastCol := Min(Max(Integer(ASheet.GetLastColIndex(True)), 0),
+    CMaxHeaderColumn);
+  for I := 0 to lLastCol do
+  begin
+    lHeader := Trim(ReadCell(ASheet, 0, I));
+    if lHeader = '' then
+      Continue;
+    if Result <> '' then
+      Result := Result + ', ';
+    Result := Result + '"' + lHeader + '"';
+  end;
+end;
+
+function ImportFormatError(ASheet: TsWorksheet;
+  const AMap: TSectionColumnMap): string;
+const
+  CRequired: array[0..4] of TSectionColumn = (scolTagName, scolSection,
+    scolRole, scolRosette, scolPosition);
+var
+  I: Integer;
+  lMissing: string;
+begin
+  lMissing := '';
+  for I := Low(CRequired) to High(CRequired) do
+    if AMap[CRequired[I]] < 0 then
+    begin
+      if lMissing <> '' then
+        lMissing := lMissing + ', ';
+      lMissing := lMissing + '"' + CHeaders[CRequired[I]] + '"';
+    end;
+  if lMissing = '' then
+    Exit('');
+  Result := 'Не найдены обязательные столбцы: ' + lMissing + LineEnding +
+    LineEnding + 'Найдены столбцы: ' + FoundHeadersText(ASheet);
+end;
+
 procedure BuildColumnMap(ASheet: TsWorksheet; AAllowDefault: Boolean;
   out AMap: TSectionColumnMap);
 var
@@ -220,8 +299,18 @@ begin
   for lCol := Low(TSectionColumn) to High(TSectionColumn) do
   begin
     AMap[lCol] := HeaderIndex(ASheet, CHeaders[lCol]);
+    if lCol = scolTagName then
+    begin
+      // В общей таблице имя тега хранится в «Имя датчика», а «Имя канала»
+      // является технологическим обозначением вроде 1E1.
+      if HeaderIndex(ASheet, 'Имя датчика') >= 0 then
+        AMap[lCol] := HeaderIndex(ASheet, 'Имя датчика');
+    end;
     if (AMap[lCol] < 0) and (lCol = scolSection) then
       AMap[lCol] := HeaderIndex(ASheet, 'Сечение');
+    if (AMap[lCol] < 0) and (lCol = scolPosition) then
+      AMap[lCol] := HeaderIndex(ASheet,
+        'Расположение точки контроля в сечении');
     if (AMap[lCol] < 0) and AAllowDefault then
       AMap[lCol] := Ord(lCol);
   end;
@@ -271,6 +360,7 @@ begin
   fComponent := AComponent;
   fRegistry := ATagRegistry;
   fDraft := TRecorderMeasurementSectionComponent.Create;
+  fImportAllDrafts := TObjectList.Create(True);
   fFormatAllRequested := False;
   InitGrid;
   FillFontCombo(fCaptionFontCombo);
@@ -300,6 +390,7 @@ end;
 
 destructor TRecorderMeasurementSectionSettingsDialog.Destroy;
 begin
+  fImportAllDrafts.Free;
   fDraft.Free;
   inherited Destroy;
 end;
@@ -310,6 +401,8 @@ var
   lText: string;
 begin
   lText := Trim(AText);
+  lText := StringReplace(lText, '°', '', [rfReplaceAll]);
+  lText := StringReplace(lText, '''', '', [rfReplaceAll]);
   lText := StringReplace(lText, '.', DecimalSeparator, [rfReplaceAll]);
   lText := StringReplace(lText, ',', DecimalSeparator, [rfReplaceAll]);
   Result := StrToFloatDef(lText, ADefault);
@@ -475,6 +568,19 @@ begin
       lItem.StressNamedFontName := fComponent.StressNamedFontName;
       lItem.StressFont := fComponent.StressFont;
     end;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ApplyImportedSections;
+var
+  I: Integer;
+  lImport: TMeasurementSectionImportDraft;
+begin
+  for I := 0 to fImportAllDrafts.Count - 1 do
+  begin
+    lImport := TMeasurementSectionImportDraft(fImportAllDrafts[I]);
+    if lImport.Target <> fComponent then
+      lImport.Target.AssignSection(lImport.Draft);
+  end;
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.FontNameChange(
@@ -723,6 +829,7 @@ end;
 procedure TRecorderMeasurementSectionSettingsDialog.OkClick(Sender: TObject);
 begin
   StoreToComponent;
+  ApplyImportedSections;
   ModalResult := mrOk;
 end;
 
@@ -760,6 +867,7 @@ procedure TRecorderMeasurementSectionSettingsDialog.ImportClick(Sender: TObject)
 var
   lDialog: TOpenDialog;
   lPointCount, lBindingCount: Integer;
+  lFormatError: string;
 begin
   lDialog := TOpenDialog.Create(Self);
   try
@@ -768,11 +876,52 @@ begin
     lDialog.InitialDir := RecorderMeraFilesPath;
     if lDialog.Execute then
     begin
-      ImportFromFile(lDialog.FileName, lPointCount, lBindingCount);
+      fImportAllDrafts.Clear;
+      ImportFromFile(lDialog.FileName, lPointCount, lBindingCount,
+        lFormatError);
+      if lFormatError <> '' then
+      begin
+        MessageDlg('Импорт измерительного сечения', lFormatError,
+          mtWarning, [mbOK], 0);
+        Exit;
+      end;
       RefreshGrid;
       MessageDlg('Импорт измерительного сечения', Format(
         'Импортировано точек: %d, привязок каналов: %d.',
         [lPointCount, lBindingCount]), mtInformation, [mbOK], 0);
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ImportAllClick(
+  Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lComponentCount, lPointCount, lBindingCount: Integer;
+  lFormatError: string;
+begin
+  lDialog := TOpenDialog.Create(Self);
+  try
+    lDialog.Title := 'Импорт всех измерительных сечений';
+    lDialog.Filter := 'OpenDocument (*.ods)|*.ods|CSV (*.csv)|*.csv|Все файлы|*.*';
+    lDialog.InitialDir := RecorderMeraFilesPath;
+    if lDialog.Execute then
+    begin
+      ImportAllFromFile(lDialog.FileName, lComponentCount, lPointCount,
+        lBindingCount, lFormatError);
+      if lFormatError <> '' then
+      begin
+        MessageDlg('Импорт всех измерительных сечений', lFormatError,
+          mtWarning, [mbOK], 0);
+        Exit;
+      end;
+      RefreshGrid;
+      MessageDlg('Импорт всех измерительных сечений', Format(
+        'Обновлено компонентов: %d, точек: %d, привязок каналов: %d.',
+        [lComponentCount, lPointCount, lBindingCount]), mtInformation,
+        [mbOK], 0);
     end;
   finally
     lDialog.Free;
@@ -848,22 +997,16 @@ begin
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.ImportFromFile(
-  const AFileName: string; out APointCount, ABindingCount: Integer);
+  const AFileName: string; out APointCount, ABindingCount: Integer;
+  out AFormatError: string);
 var
   lBook: TsWorkbook;
   lSheet: TsWorksheet;
   lMap: TSectionColumnMap;
-  lLastRow, lRowIndex: Cardinal;
-  lPoint: Integer;
-  lRole: TRecorderRosetteRole;
-  lRow: TRecorderMeasurementSectionRow;
-  lTag: TRecorderTag;
-  lTagId: TRecorderTagId;
-  lSectionId, lTagName, lText: string;
-  I: Integer;
 begin
   APointCount := 0;
   ABindingCount := 0;
+  AFormatError := '';
   lBook := TsWorkbook.Create;
   try
     lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
@@ -873,61 +1016,171 @@ begin
     if lSheet = nil then
       lSheet := lBook.GetWorksheetByIndex(0);
     BuildColumnMap(lSheet, False, lMap);
-    if (lMap[scolTagName] < 0) or (lMap[scolSection] < 0) or
-      (lMap[scolPoint] < 0) or (lMap[scolRole] < 0) or
-      (lMap[scolRosette] < 0) or (lMap[scolPosition] < 0) then
-      raise Exception.Create('В таблице отсутствуют обязательные колонки ' +
-        'измерительного сечения.');
+    AFormatError := ImportFormatError(lSheet, lMap);
+    if AFormatError <> '' then
+      Exit;
     fDraft.SectionId := CurrentSectionId;
-    fDraft.ClearRows;
-    lLastRow := lSheet.GetLastRowIndex(True);
-    for lRowIndex := 1 to lLastRow do
+    ImportComponentFromSheet(lSheet, lMap, fDraft, APointCount,
+      ABindingCount);
+  finally
+    lBook.Free;
+  end;
+end;
+
+function TRecorderMeasurementSectionSettingsDialog.SheetContainsSection(
+  ASheet: TsWorksheet; const AMap: TSectionColumnMap;
+  const ASectionId: string): Boolean;
+var
+  lLastRow, lRowIndex: Cardinal;
+begin
+  Result := False;
+  lLastRow := ASheet.GetLastRowIndex(True);
+  for lRowIndex := 1 to lLastRow do
+    if SameSectionId(ReadCell(ASheet, lRowIndex, AMap[scolSection]),
+      ASectionId) then
+      Exit(True);
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ImportComponentFromSheet(
+  ASheet: TsWorksheet; const AMap: TSectionColumnMap;
+  ATarget: TRecorderMeasurementSectionComponent;
+  out APointCount, ABindingCount: Integer);
+var
+  lLastRow, lRowIndex: Cardinal;
+  lPoint: Integer;
+  lRole: TRecorderRosetteRole;
+  lRow: TRecorderMeasurementSectionRow;
+  lTag: TRecorderTag;
+  lTagId: TRecorderTagId;
+  lSectionId, lTagName, lText: string;
+  I, lGeneratedPoint: Integer;
+  lPosition: Double;
+begin
+  APointCount := 0;
+  ABindingCount := 0;
+  ATarget.ClearRows;
+  lGeneratedPoint := 0;
+  lLastRow := ASheet.GetLastRowIndex(True);
+  for lRowIndex := 1 to lLastRow do
+  begin
+    lSectionId := ReadCell(ASheet, lRowIndex, AMap[scolSection]);
+    if not SameSectionId(lSectionId, ATarget.SectionId) then
+      Continue;
+    if not RecorderRosetteRoleFromText(ReadCell(ASheet, lRowIndex,
+      AMap[scolRole]), lRole) then
+      Continue;
+    lPosition := ParseFloatText(ReadCell(ASheet, lRowIndex,
+      AMap[scolPosition]), 0.0);
+    if AMap[scolPoint] >= 0 then
+      lPoint := StrToIntDef(ReadCell(ASheet, lRowIndex, AMap[scolPoint]),
+        0)
+    else
+      lPoint := 0;
+    lRow := nil;
+    for I := 0 to ATarget.RowCount - 1 do
+      if ((AMap[scolPoint] >= 0) and (ATarget.Rows[I].PointNo = lPoint)) or
+        ((AMap[scolPoint] < 0) and
+        SameValue(ATarget.Rows[I].PositionDeg, lPosition, 0.000001)) then
+      begin
+        lRow := ATarget.Rows[I];
+        Break;
+      end;
+    if lRow = nil then
     begin
-      lSectionId := ReadCell(lSheet, lRowIndex, lMap[scolSection]);
-      if (lSectionId <> '') and
-        (not SameSectionId(lSectionId, fDraft.SectionId)) then
-        Continue;
-      if not RecorderRosetteRoleFromText(ReadCell(lSheet, lRowIndex,
-        lMap[scolRole]), lRole) then
-        Continue;
-      lPoint := StrToIntDef(ReadCell(lSheet, lRowIndex, lMap[scolPoint]),
-        Integer(lRowIndex));
-      lRow := nil;
-      for I := 0 to fDraft.RowCount - 1 do
-        if fDraft.Rows[I].PointNo = lPoint then
-        begin
-          lRow := fDraft.Rows[I];
-          Break;
-        end;
-      if lRow = nil then
-      begin
-        lRow := fDraft.AddRow;
-        lRow.PointNo := lPoint;
-        Inc(APointCount);
-      end;
-      lText := ReadCell(lSheet, lRowIndex, lMap[scolRosette]);
-      if lText <> '' then
-        lRow.RosetteType := RecorderRosetteTypeFromText(lText);
-      lRow.PositionDeg := ParseFloatText(ReadCell(lSheet, lRowIndex,
-        lMap[scolPosition]), lRow.PositionDeg);
-      lTag := nil;
-      lText := ReadMappedCell(lSheet, lRowIndex, lMap[scolTagId]);
-      if (fRegistry <> nil) and TryStrToInt64(lText, lTagId) then
-        lTag := fRegistry.FindById(lTagId);
-      lTagName := ReadCell(lSheet, lRowIndex, lMap[scolTagName]);
-      if (lTag = nil) and (fRegistry <> nil) and (lTagName <> '') then
-        lTag := fRegistry.FindByName(lTagName);
-      if lTag <> nil then
-      begin
-        lRow.BindTag(lRole, lTag);
-        Inc(ABindingCount);
-      end
+      Inc(lGeneratedPoint);
+      lRow := ATarget.AddRow;
+      if (AMap[scolPoint] >= 0) and (lPoint > 0) then
+        lRow.PointNo := lPoint
       else
-      begin
-        lRow.TagNames[lRole] := lTagName;
-        if lTagName <> '' then
-          Inc(ABindingCount);
+        lRow.PointNo := lGeneratedPoint;
+      lRow.PositionDeg := lPosition;
+      Inc(APointCount);
+    end;
+    lText := ReadCell(ASheet, lRowIndex, AMap[scolRosette]);
+    if lText <> '' then
+      lRow.RosetteType := RecorderRosetteTypeFromText(lText);
+    lRow.PositionDeg := lPosition;
+    lTag := nil;
+    lText := ReadMappedCell(ASheet, lRowIndex, AMap[scolTagId]);
+    if (fRegistry <> nil) and TryStrToInt64(lText, lTagId) then
+      lTag := fRegistry.FindById(lTagId);
+    lTagName := ReadCell(ASheet, lRowIndex, AMap[scolTagName]);
+    if (lTag = nil) and (fRegistry <> nil) and (lTagName <> '') then
+      lTag := fRegistry.FindByName(lTagName);
+    if lTag <> nil then
+    begin
+      lRow.BindTag(lRole, lTag);
+      Inc(ABindingCount);
+    end
+    else
+    begin
+      lRow.TagNames[lRole] := lTagName;
+      if lTagName <> '' then
+        Inc(ABindingCount);
+    end;
+  end;
+end;
+
+procedure TRecorderMeasurementSectionSettingsDialog.ImportAllFromFile(
+  const AFileName: string;
+  out AComponentCount, APointCount, ABindingCount: Integer;
+  out AFormatError: string);
+var
+  lBook: TsWorkbook;
+  lSheet: TsWorksheet;
+  lMap: TSectionColumnMap;
+  lFactory: TRecorderComponentFactoryBase;
+  lTarget: TRecorderMeasurementSectionComponent;
+  lImport: TMeasurementSectionImportDraft;
+  lPoints, lBindings, I: Integer;
+begin
+  AComponentCount := 0;
+  APointCount := 0;
+  ABindingCount := 0;
+  AFormatError := '';
+  lFactory := fComponent.Factory;
+  if not (lFactory is TRecorderMeasurementSectionFactory) then
+    raise Exception.Create('Фабрика измерительных сечений недоступна.');
+  lBook := TsWorkbook.Create;
+  try
+    lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
+    if lBook.GetWorksheetCount = 0 then
+      Exit;
+    lSheet := lBook.GetWorksheetByName(CSheetName);
+    if lSheet = nil then
+      lSheet := lBook.GetWorksheetByIndex(0);
+    BuildColumnMap(lSheet, False, lMap);
+    AFormatError := ImportFormatError(lSheet, lMap);
+    if AFormatError <> '' then
+      Exit;
+    fDraft.SectionId := CurrentSectionId;
+    fImportAllDrafts.Clear;
+    for I := 0 to lFactory.ChildCount - 1 do
+    begin
+      lTarget := TRecorderMeasurementSectionComponent(lFactory.Children[I]);
+      if lTarget = fComponent then
+        lTarget := fDraft;
+      if not SheetContainsSection(lSheet, lMap, lTarget.SectionId) then
+        Continue;
+      if lTarget = fDraft then
+        lImport := TMeasurementSectionImportDraft.Create(fComponent)
+      else
+        lImport := TMeasurementSectionImportDraft.Create(lTarget);
+      try
+        if lTarget = fDraft then
+          lImport.Draft.AssignSection(fDraft);
+        ImportComponentFromSheet(lSheet, lMap, lImport.Draft, lPoints,
+          lBindings);
+        fImportAllDrafts.Add(lImport);
+      except
+        lImport.Free;
+        raise;
       end;
+      if lTarget = fDraft then
+        fDraft.AssignSection(lImport.Draft);
+      Inc(AComponentCount);
+      Inc(APointCount, lPoints);
+      Inc(ABindingCount, lBindings);
     end;
   finally
     lBook.Free;

@@ -40,6 +40,7 @@ type
     function StoreDataFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
     property Config: TRecorderSqlDbConfig read fConfig;
+    property ConfigFileName: string read fConfigFileName;
     property Runtime: TRecorderSqlDbRuntime read fRuntime;
     property RecordingEnabled: Boolean read GetRecordingEnabled;
   end;
@@ -83,17 +84,19 @@ begin
 end;
 
 procedure TRecorderSqlDbManager.Reload;
+var
+  lConfigurationError: string;
 begin
   SetRecordingActive(False, 'SQLdb settings reload');
   FreeAndNil(fRuntime);
   fConfig.LoadFromFile(fConfigFileName);
-  if fConfig.Enabled and (fConfig.Backend = rsbFirebird) and
-     ((Trim(fConfig.UserName) = '') or (fConfig.Password = '')) then
+  if fConfig.Enabled and
+     (not fConfig.ConnectionConfigurationReady(lConfigurationError)) then
   begin
-    { Не вызываем TIBConnection.Open с пустыми credentials: в Lazarus debugger
-      даже обработанная ошибка Firebird показывается как first-chance exception. }
+    { Expected incomplete runtime configuration must not reach a native SQL
+      connection: the debugger stops on its first-chance exception. }
     fConfig.Enabled := False;
-    RecorderDebugLog('SQL database disabled: Firebird login is not configured');
+    RecorderDebugLog('SQL database disabled: ' + lConfigurationError);
     Exit;
   end;
   if fConfig.Enabled then

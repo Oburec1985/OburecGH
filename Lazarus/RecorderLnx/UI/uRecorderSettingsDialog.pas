@@ -98,6 +98,7 @@ type
     fWriteWithPausesCheck: TCheckBox;           // Флаг разрешения записи с паузами
     fSaveConfigWithDataCheck: TCheckBox;        // Флаг сохранения файла конфигурации вместе с данными
     fWorkDirEdit: TEdit;                        // Рабочий каталог сохранения файлов
+    btnPublishRecordDir: TButton;               // Публикация каталога замеров в SMB
     fMeraFilesPathEdit: TEdit;                  // Каталог Mera Files (SDB, калибровки)
     fTemplateCheck: TCheckBox;                  // Флаг использования шаблона имени файла
     fTemplateButton: TButton;                   // Кнопка настройки шаблона
@@ -183,6 +184,7 @@ type
     procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure fAlgorithmFftSizeUpDownClick(Sender: TObject; Button: TUDBtnType);
     procedure WorkDirBrowseClick(Sender: TObject);
+    procedure PublishRecordDirClick(Sender: TObject);
     procedure MeraFilesPathBrowseClick(Sender: TObject);
     procedure NetworkTestClick(Sender: TObject);
   private
@@ -363,7 +365,7 @@ function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
 implementation
 
 uses
-  StrUtils, ssockets,
+  StrUtils, ssockets, Process,
   uSharedAsync,
   uRecorderConfiguredDataSources, uRecorderConfiguredSourceEditor,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig,
@@ -379,6 +381,7 @@ uses
 
 const
   CMeraSourcePrefix = 'Mera file: ';
+  CShareFolderHelper = '/usr/local/sbin/recorderlnx-share-folder';
 
 function AddMic185PowerCycleHint(const ASourceId, AErrorText: string): string; forward;
 
@@ -436,7 +439,6 @@ end;
 procedure TRecorderHardwareResetTask.Execute;
 var
   lHost: string;
-  lCleanupError: string;
   lPort: Word;
 begin
   fSucceeded := False;
@@ -465,16 +467,11 @@ begin
         RecorderMic185RuntimeDetach(lHost, lPort);
         RecorderMic185LifecycleLog(fTraceId, fSourceId, 'reset-release', 'OK',
           Format('endpoint=%s:%d', [lHost, lPort]));
-        if RecorderMic185CleanupEndpoint(lHost, lPort, lCleanupError) then
-          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'cleanup', 'OK',
-            '')
-        else
-          RecorderMic185LifecycleLog(fTraceId, fSourceId, 'cleanup', 'FAIL',
-            lCleanupError);
       end;
     end;
-    { Переподключение выполняет штатный источник данных. Временный клиент
-      здесь приводил к двойному программированию одного прибора. }
+    { Оригинальный ForceResetDevice после Disconnect не открывает отдельную
+      cleanup-сессию: следующий Connect и Program выполняет тот же объект.
+      Переподключение здесь выполняет штатный источник данных. }
     fSucceeded := True;
   except
     on E: Exception do
@@ -4894,8 +4891,15 @@ begin
   fWriteWithPausesCheck := AddCheck(Self, lGroup, 12, 100, 'Запись с паузами');
   fSaveConfigWithDataCheck := AddCheck(Self, lGroup, 12, 126,
     'Сохранять файл конфигурации вместе с записью данных');
-  AddLabel(Self, lGroup, 10, 154, 'Рабочий каталог');
-  fWorkDirEdit := AddEdit(Self, lGroup, 10, 172, 526, 'C:\USML\');
+  AddLabel(Self, lGroup, 10, 154, 'Каталог замеров');
+  fWorkDirEdit := AddEdit(Self, lGroup, 10, 172, 486, 'C:\USML\');
+  btnPublishRecordDir := TButton.Create(Self);
+  btnPublishRecordDir.Parent := lGroup;
+  btnPublishRecordDir.SetBounds(502, 170, 34, 26);
+  btnPublishRecordDir.Caption := '⇧';
+  btnPublishRecordDir.Hint := 'Опубликовать каталог замеров в сети';
+  btnPublishRecordDir.ShowHint := True;
+  btnPublishRecordDir.OnClick := @PublishRecordDirClick;
   lButton := TButton.Create(Self);
   lButton.Parent := lGroup;
   lButton.Left := 548;
@@ -5466,11 +5470,90 @@ begin
   OpenSelectedChannelTagSettings;
 end;
 
-function TagTableDialogInitialDir: string;
+function TagTableDialogInitialDir(ARecorder: TRecorder): string;
+var
+  lProjectDir: string;
 begin
+  Result := '';
+  if (ARecorder <> nil) and (ARecorder.SqlDbManager <> nil) then
+  begin
+    lProjectDir := ExtractFileDir(
+      ARecorder.SqlDbManager.ConfigFileName);
+    Result := ExtractFileDir(ExcludeTrailingPathDelimiter(lProjectDir));
+  end;
+  if (Result <> '') and DirectoryExists(Result) then
+    Exit;
+
   Result := ExcludeTrailingPathDelimiter(RecorderMeraFilesPath);
   if (Result = '') or (not DirectoryExists(Result)) then
     Result := ExcludeTrailingPathDelimiter(GetUserDir);
+end;
+
+procedure TRecorderSettingsDialog.PublishRecordDirClick(Sender: TObject);
+var
+  lDirectory: string;
+  lProcess: TProcess;
+begin
+  lDirectory := ExcludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
+  if not DirectoryExists(lDirectory) then
+  begin
+    MessageDlg('Публикация каталога', 'Каталог замеров не существует: ' +
+      lDirectory, mtError, [mbOK], 0);
+    Exit;
+  end;
+  {$IFDEF UNIX}
+  if not FileExists(CShareFolderHelper) then
+  begin
+    MessageDlg('Публикация каталога', 'Не установлена системная утилита ' +
+      CShareFolderHelper, mtError, [mbOK], 0);
+    Exit;
+  end;
+  lProcess := TProcess.Create(nil);
+  try
+    lProcess.Executable := 'pkexec';
+    lProcess.Parameters.Add(CShareFolderHelper);
+    lProcess.Parameters.Add(lDirectory);
+    lProcess.Options := [poWaitOnExit];
+    lProcess.Execute;
+    if lProcess.ExitStatus = 0 then
+      MessageDlg('Публикация каталога',
+        'Каталог доступен как сетевой ресурс MeraFiles.', mtInformation,
+        [mbOK], 0)
+    else
+      MessageDlg('Публикация каталога',
+        'Не удалось опубликовать каталог. Код ошибки: ' +
+        IntToStr(lProcess.ExitStatus), mtError, [mbOK], 0);
+  finally
+    lProcess.Free;
+  end;
+  {$ELSE}
+  MessageDlg('Публикация каталога',
+    'В Windows укажите готовый UNC-путь опубликованного каталога.',
+    mtInformation, [mbOK], 0);
+  {$ENDIF}
+end;
+
+function TagTableImportSummary(
+  const AResult: TRecorderTagTableExchangeResult): string;
+const
+  CVisibleWarningCount = 5;
+var
+  I, lCount: Integer;
+begin
+  Result := Format(
+    'Обновлено тегов: %d'#13#10 +
+    'Пропущено строк: %d (нет на этом Recorder: %d)',
+    [AResult.UpdatedTags, AResult.SkippedRows, AResult.MissingTags]);
+  if AResult.Warnings.Count = 0 then
+    Exit;
+
+  Result := Result + #13#10#13#10 + 'Предупреждения:';
+  lCount := Min(AResult.Warnings.Count, CVisibleWarningCount);
+  for I := 0 to lCount - 1 do
+    Result := Result + #13#10 + AResult.Warnings[I];
+  if AResult.Warnings.Count > lCount then
+    Result := Result + #13#10 + Format('Ещё предупреждений: %d',
+      [AResult.Warnings.Count - lCount]);
 end;
 
 procedure TRecorderSettingsDialog.btnChannelImportClick(Sender: TObject);
@@ -5488,7 +5571,7 @@ begin
       lDialog.Title := 'Импорт списка тегов';
       lDialog.Filter := 'Таблицы LibreOffice/OpenOffice (*.ods;*.csv)|*.ods;*.csv|Все файлы|*.*';
       lDialog.DefaultExt := 'ods';
-      lDialog.InitialDir := TagTableDialogInitialDir;
+      lDialog.InitialDir := TagTableDialogInitialDir(fRecorder);
       if not lDialog.Execute then
         Exit;
 
@@ -5502,10 +5585,7 @@ begin
         PopulateChannelGrids;
         PopulateAlgorithmsTree;
         fDataSourcesChanged := fDataSourcesChanged or (lResult.UpdatedTags > 0);
-        lMessage := Format('Обновлено тегов: %d'#13#10'Пропущено строк: %d',
-          [lResult.UpdatedTags, lResult.SkippedRows]);
-        if lResult.Warnings.Count > 0 then
-          lMessage := lMessage + #13#10#13#10 + lResult.Warnings.Text;
+        lMessage := TagTableImportSummary(lResult);
         MessageDlg('Импорт списка тегов', lMessage, mtInformation, [mbOK], 0);
       finally
         RecorderTagTableExchangeResultDone(lResult);
@@ -5534,7 +5614,7 @@ begin
       lDialog.Filter := 'OpenDocument Calc (*.ods)|*.ods|CSV (*.csv)|*.csv|Все файлы|*.*';
       lDialog.DefaultExt := 'ods';
       lDialog.FileName := 'recorder_tags.ods';
-      lDialog.InitialDir := TagTableDialogInitialDir;
+      lDialog.InitialDir := TagTableDialogInitialDir(fRecorder);
       if not lDialog.Execute then
         Exit;
 

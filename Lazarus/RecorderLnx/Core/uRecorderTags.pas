@@ -203,6 +203,7 @@ type
     fCalibrationNames: TStringList;                          { Цепочка имен канальных ГХ }
     fId: TRecorderTagId;                                       { Уникальный ID тега }
     fIsVirtual: Boolean;                                      { Тег создан программным, а не аппаратным источником }
+    fExternalWriteAllowed: Boolean;                           { Значение разрешено задавать из UI/внешнего клиента }
     fIsVector: Boolean;                                       { Тег принимает блоки отсчётов с заданной частотой }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fEstimateCache: array[TRecorderTagEstimateKind] of TRecorderTagEstimate;
@@ -271,6 +272,8 @@ type
 
     property Id: TRecorderTagId read fId;
     property IsVirtual: Boolean read fIsVirtual write fIsVirtual;
+    property ExternalWriteAllowed: Boolean read fExternalWriteAllowed
+      write fExternalWriteAllowed;
     property IsVector: Boolean read fIsVector write fIsVector;
     property Name: string read fName write fName;
     property Address: string read fAddress write fAddress;
@@ -364,6 +367,7 @@ type
     fK1: Double;
     fK2: Double;
     fModuleData: string;
+    fSdbKey: string;
     fPoints: TList; // List of TRecorderCalibrationPoint
     function GetPoint(AIndex: Integer): TRecorderCalibrationPoint;
     function GetPointCount: Integer;
@@ -388,6 +392,7 @@ type
     property K1: Double read fK1 write fK1;
     property K2: Double read fK2 write fK2;
     property ModuleData: string read fModuleData write fModuleData;
+    property SdbKey: string read fSdbKey write fSdbKey;
     property PointCount: Integer read GetPointCount;
   end;
 
@@ -471,6 +476,7 @@ type
     function ContainsTag(ATag: TRecorderTag): Boolean;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
+    function RemoveUnusedCalibrations: Integer;
     function CommitCalibrationEdit(ATarget, ADraft: TRecorderCalibration): Boolean;
     function AddCalibrationCopyForTag(ATag: TRecorderTag;
       APipelineIndex: Integer; ADraft: TRecorderCalibration): TRecorderCalibration;
@@ -1402,6 +1408,7 @@ begin
   fId := AId;
   fName := AName;
   fIsVirtual := AIsVirtual;
+  fExternalWriteAllowed := AIsVirtual;
   fIsVector := False;
   fAutoRange := True;
   fAutoUnit := True;
@@ -1885,6 +1892,50 @@ begin
       Exit(fCalibrations[I]);
 end;
 
+function TRecorderTagRegistry.RemoveUnusedCalibrations: Integer;
+var
+  I: Integer;
+  J: Integer;
+  lName: string;
+  lReferencedNames: TStringList;
+  lTag: TRecorderTag;
+begin
+  Result := 0;
+  lReferencedNames := TStringList.Create;
+  try
+    lReferencedNames.CaseSensitive := False;
+    lReferencedNames.Sorted := True;
+    lReferencedNames.Duplicates := dupIgnore;
+    for I := 0 to TagCount - 1 do
+    begin
+      lTag := Tags[I];
+      if lTag = nil then
+        Continue;
+      lName := Trim(lTag.HardwareCalibrationName);
+      if lName <> '' then
+        lReferencedNames.Add(lName);
+      if lTag.CalibrationNames = nil then
+        Continue;
+      for J := 0 to lTag.CalibrationNames.Count - 1 do
+      begin
+        lName := Trim(lTag.CalibrationNames[J]);
+        if lName <> '' then
+          lReferencedNames.Add(lName);
+      end;
+    end;
+
+    for I := fCalibrations.Count - 1 downto 0 do
+      if (fCalibrations[I] = nil) or
+        (lReferencedNames.IndexOf(Trim(fCalibrations[I].Name)) < 0) then
+      begin
+        fCalibrations.Delete(I);
+        Inc(Result);
+      end;
+  finally
+    lReferencedNames.Free;
+  end;
+end;
+
 function TRecorderTagRegistry.CommitCalibrationEdit(ATarget,
   ADraft: TRecorderCalibration): Boolean;
 var
@@ -1907,6 +1958,8 @@ begin
     raise ERecorderTagError.Create('Calibration name already exists: ' + lNewName);
 
   ATarget.Assign(ADraft);
+  // После редактирования проектная ГХ уже не обязана совпадать с БДГХ.
+  ATarget.SdbKey := '';
   ATarget.Name := lNewName;
   if SameText(lOldName, lNewName) then
     Exit(True);
@@ -1950,6 +2003,7 @@ begin
   end;
 
   Result := ADraft.Clone;
+  Result.SdbKey := '';
   Result.Name := lName;
   fCalibrations.Add(Result);
   ATag.CalibrationNames[APipelineIndex] := lName;
@@ -2563,6 +2617,7 @@ begin
   fK1 := ASource.K1;
   fK2 := ASource.K2;
   fModuleData := ASource.ModuleData;
+  fSdbKey := ASource.SdbKey;
   ClearPoints;
   for I := 0 to ASource.PointCount - 1 do
   begin

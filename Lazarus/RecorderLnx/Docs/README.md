@@ -29,3 +29,4 @@
 - [SQL БД](sql/sql-recording-module-tz.md)
 - [События MERA-записи и распределённый архив](sql/mera-record-events-and-archive.md)
 - [Автоматическое обнаружение RecorderLnx и Coordinator в локальной сети](setup/lan-discovery.md)
+- [Файлообмен между компьютерами Astra Linux через Samba](setup/samba-file-exchange.md)

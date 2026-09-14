@@ -95,7 +95,8 @@ implementation
 {$R *.lfm}
 
 uses
-  DateUtils, LCLIntf, Dialogs, uRecorderSqlDbRepository;
+  DateUtils, LCLIntf, Dialogs, uRecorderSqlDbRepository,
+  uRecorderNetworkPathResolver;
 
 function ShowRecorderMeraEventDialog(AOwner: TComponent;
   const AConfigFileName: string; const AEvent: TRecorderSqlDbMeraEvent;
@@ -157,7 +158,8 @@ begin
               if SameText(lLocations[K].State, 'ready') and
                  (Trim(lLocations[K].PathKey) <> '') then
               begin
-                lEntryPath := lLocations[K].PathKey;
+                lEntryPath := ResolveRecorderNetworkPath(
+                  lLocations[K].PathKey);
                 if fEntryPaths[I] = '' then
                 begin
                   fEntryPaths[I] := lEntryPath;
@@ -390,6 +392,7 @@ end;
 procedure TRecorderMeraEventDialog.OpenPackages(ASelectedOnly: Boolean);
 var
   I, lOpened, lRequested: Integer;
+  lOpenPath: string;
 begin
   lOpened := 0;
   lRequested := 0;
@@ -397,9 +400,10 @@ begin
   begin
     if ASelectedOnly and (grdPackages.Cells[0, I + 1] <> 'Да') then Continue;
     Inc(lRequested);
-    if (Trim(grdPackages.Cells[6, I + 1]) <> '') and
-      FileExists(Trim(grdPackages.Cells[6, I + 1])) and
-      OpenDocument(Trim(grdPackages.Cells[6, I + 1])) then
+    lOpenPath := ResolveRecorderNetworkPath(
+      Trim(grdPackages.Cells[6, I + 1]));
+    if (lOpenPath <> '') and FileExists(lOpenPath) and
+      OpenDocument(lOpenPath) then
       Inc(lOpened);
   end;
   lblStatus.Caption := Format('Открыто в WinПОС: %d; недоступно: %d',

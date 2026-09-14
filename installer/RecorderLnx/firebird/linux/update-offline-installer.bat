@@ -4,6 +4,8 @@ setlocal EnableExtensions
 pushd "%~dp0"
 if errorlevel 1 goto :failed_directory
 
+>"NOT_READY.txt" echo rcPanel Linux binary has not passed the freshness check. Run update-offline-installer.bat successfully.
+
 echo Updating rcPanel payload...
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0prepare-installer.ps1"
 if errorlevel 1 goto :failed_prepare
@@ -38,6 +40,7 @@ if errorlevel 1 (
 )
 
 echo.
+del /q "NOT_READY.txt" >nul 2>&1
 echo READY: copy this entire folder to the USB drive.
 popd
 if /i not "%~1"=="--no-pause" pause

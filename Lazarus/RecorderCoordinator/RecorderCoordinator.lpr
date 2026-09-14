@@ -8,7 +8,8 @@ program RecorderCoordinator;
 uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   Interfaces, Forms, SysUtils,
-  uCoordinatorCli, uCoordinatorMainForm, uSharedFileLogger;
+  uCoordinatorCli, uCoordinatorMainForm, uSharedFileLogger,
+  uCoordinatorSingleInstance;
 
 function WantsCommandLine: Boolean;
 var
@@ -26,17 +27,35 @@ begin
   end;
 end;
 
+procedure RunCoordinatorGui;
+var
+  lInstanceGuard: TCoordinatorSingleInstance;
+begin
+  lInstanceGuard := TCoordinatorSingleInstance.Create;
+  try
+    if not lInstanceGuard.Acquired then
+    begin
+      SharedLogger.Info('GUI start skipped: RCPanel is already running');
+      Exit;
+    end;
+
+    RequireDerivedFormResource := True;
+    Application.Scaled := True;
+    Application.Initialize;
+    Application.CreateForm(TCoordinatorMainForm, CoordinatorMainForm);
+    CoordinatorMainForm.Show;
+    Application.Run;
+  finally
+    lInstanceGuard.Free;
+  end;
+end;
+
 begin
   SharedLogger.Configure(ChangeFileExt(ParamStr(0), '.log'));
   SharedLogger.Info('Coordinator process started');
   if WantsCommandLine then
     Halt(RunCoordinatorCli);
 
-  RequireDerivedFormResource := True;
-  Application.Scaled := True;
-  Application.Initialize;
-  Application.CreateForm(TCoordinatorMainForm, CoordinatorMainForm);
-  CoordinatorMainForm.Show;
-  Application.Run;
+  RunCoordinatorGui;
   SharedLogger.Info('Coordinator process stopped');
 end.

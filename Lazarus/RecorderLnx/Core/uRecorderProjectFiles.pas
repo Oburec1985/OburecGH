@@ -74,7 +74,7 @@ implementation
 uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
-  uRecorderMeasurementSectionModel;
+  uRecorderMeasurementSectionModel, uRecorderSdbStore;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -203,6 +203,8 @@ begin
     Result := TRecorderStaticTextComponent.TypeId
   else if AComponent is TRecorderButtonComponent then
     Result := TRecorderButtonComponent.TypeId
+  else if AComponent is TRecorderInputFieldComponent then
+    Result := TRecorderInputFieldComponent.TypeId
   else if AComponent is TRecorderTagValueComponent then
     Result := TRecorderTagValueComponent.TypeId
   else if AComponent is TRecorderImageComponent then
@@ -299,6 +301,11 @@ begin
     AJson.Add(lItem);
     lItem.Add('type', CalibrationKindToConfigName(lCalibration.Kind));
     lItem.Add('name', lCalibration.Name);
+    if Trim(lCalibration.SdbKey) <> '' then
+    begin
+      lItem.Add('sdbKey', lCalibration.SdbKey);
+      Continue;
+    end;
     lItem.Add('description', lCalibration.Description);
     lItem.Add('unitIn', lCalibration.UnitIn);
     lItem.Add('unitOut', lCalibration.UnitOut);
@@ -346,6 +353,17 @@ begin
       lItem.Get('type', 'piecewiseLinear')));
     try
       lCalibration.Name := lItem.Get('name', lCalibration.Name);
+      lCalibration.SdbKey := lItem.Get('sdbKey', '');
+      if lCalibration.SdbKey <> '' then
+      begin
+        if RecorderSdbLoadScaleCalibration(lCalibration.SdbKey,
+          lCalibration) then
+          lCalibration.SdbKey := lItem.Get('sdbKey', '');
+        lCalibration.Name := lItem.Get('name', lCalibration.Name);
+        AList.Add(lCalibration);
+        lCalibration := nil;
+        Continue;
+      end;
       lCalibration.Description := lItem.Get('description', '');
       lCalibration.UnitIn := lItem.Get('unitIn', '');
       lCalibration.UnitOut := lItem.Get('unitOut', '');
@@ -681,6 +699,7 @@ begin
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].BeforeSaveProc) then
         g_ProjectConfigExtensions[J].BeforeSaveProc(lRoot, ATags);
+    ATags.RemoveUnusedCalibrations;
     SaveDataSources(lRoot, ATags);
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].SaveProc) then
@@ -711,6 +730,7 @@ begin
       lTagJson.Add('groupPath', lTag.GroupPath);
       lTagJson.Add('sourceId', lTag.SourceId);
       lTagJson.Add('isVirtual', lTag.IsVirtual);
+      lTagJson.Add('externalWriteAllowed', lTag.ExternalWriteAllowed);
       lTagJson.Add('isVector', lTag.IsVector);
       lTagJson.Add('sourceValueMode', lTag.SourceValueMode);
       lTagJson.Add('moduleType', lTag.ModuleType);
@@ -805,6 +825,8 @@ begin
           RecorderIsVirtualTagSource(lTag.SourceId) or
           SameText(RecorderNormalizeTagSourceId(lTag.SourceId), 'debug.diagnostics') or
           (Pos('spectrum:', RecorderNormalizeTagSourceId(lTag.SourceId)) = 1));
+        lTag.ExternalWriteAllowed := lTagJson.Get('externalWriteAllowed',
+          lTag.IsVirtual);
         lTag.SourceValueMode := lTagJson.Get('sourceValueMode', lTag.SourceValueMode);
         lTag.ModuleType := lTagJson.Get('moduleType', lTag.ModuleType);
         lTag.PollFrequencyHz := lTagJson.Get('pollFrequencyHz',
@@ -908,6 +930,7 @@ begin
   ForceDirectories(ExtractFileDir(AFileName));
   lIni := TIniFile.Create(AFileName);
   try
+    lIni.CacheUpdates := True;
     lIni.EraseSection('Project');
     lIni.WriteInteger('Project', 'Version', 1);
     lIni.WriteInteger('Project', 'PageCount', AForms.PageCount);
@@ -985,6 +1008,9 @@ begin
           lIni.WriteInteger(lSection, 'PulseDurationMs', TRecorderButtonComponent(lComponent).PulseDurationMs);
           lIni.WriteString(lSection, 'PressedImage', TRecorderButtonComponent(lComponent).PressedImageFileName);
           lIni.WriteString(lSection, 'ReleasedImage', TRecorderButtonComponent(lComponent).ReleasedImageFileName);
+        if lComponent is TRecorderInputFieldComponent then
+          lIni.WriteString(lSection, 'DisplayFormat',
+            TRecorderInputFieldComponent(lComponent).DisplayFormat);
         end;
         if lComponent is TRecorderTagValueComponent then
         begin
@@ -1152,9 +1178,7 @@ begin
           end;
           if lComponent is TRecorderSqlTrendComponent then
           begin
-            lIni.WriteString(lSection, 'SqlConfigFile',
-              StoreGuiResourceFileName(AFileName,
-                TRecorderSqlTrendComponent(lComponent).ConfigFileName));
+            lIni.WriteString(lSection, 'SqlConfigFile', 'sql-db.ini');
             lIni.WriteInteger(lSection, 'SqlTimeMode',
               Ord(TRecorderSqlTrendComponent(lComponent).TimeMode));
             lIni.WriteFloat(lSection, 'SqlFromUtc',
@@ -1199,6 +1223,7 @@ begin
           end;
         end;      end;
     end;
+    lIni.UpdateFile;
   finally
     lIni.Free;
   end;
@@ -1335,6 +1360,9 @@ begin
             TRecorderButtonComponent(lComponent).PulseDurationMs := lIni.ReadInteger(lSection, 'PulseDurationMs', 250);
             TRecorderButtonComponent(lComponent).PressedImageFileName := lIni.ReadString(lSection, 'PressedImage', '');
             TRecorderButtonComponent(lComponent).ReleasedImageFileName := lIni.ReadString(lSection, 'ReleasedImage', '');
+          if lComponent is TRecorderInputFieldComponent then
+            TRecorderInputFieldComponent(lComponent).DisplayFormat :=
+              lIni.ReadString(lSection, 'DisplayFormat', '0.###');
           end;
           if lComponent is TRecorderTagValueComponent then
           begin
@@ -1539,8 +1567,8 @@ begin
             if lComponent is TRecorderSqlTrendComponent then
             begin
               TRecorderSqlTrendComponent(lComponent).ConfigFileName :=
-                LoadGuiResourceFileName(AFileName,
-                  lIni.ReadString(lSection, 'SqlConfigFile', 'sql-db.ini'));
+                IncludeTrailingPathDelimiter(ExtractFileDir(AFileName)) +
+                'sql-db.ini';
               lItemCount := lIni.ReadInteger(lSection, 'SqlTimeMode',
                 Ord(sttmLatestWindow));
               if (lItemCount < Ord(Low(TRecorderSqlTrendTimeMode))) or

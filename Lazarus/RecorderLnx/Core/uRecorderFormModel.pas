@@ -232,6 +232,16 @@ type
     property ReleasedImageFileName: string read fReleasedImageFileName write fReleasedImageFileName;
   end;
 
+  TRecorderInputFieldComponent = class(TRecorderVisualComponent)
+  private
+    fDisplayFormat: string;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
+  end;
+
   { Картинка на мнемосхеме. Каждая строка Images хранится как
     "значение тега=имя файла". Если тег не задан, всегда используется
     первая строка списка. }
@@ -975,6 +985,17 @@ end;
 class function TRecorderButtonComponent.GetTypeId: string;
 begin
   Result := 'Button';
+end;
+
+class function TRecorderInputFieldComponent.GetTypeId: string;
+begin
+  Result := 'InputField';
+end;
+
+constructor TRecorderInputFieldComponent.Create;
+begin
+  inherited Create;
+  fDisplayFormat := '0.###';
 end;
 
 constructor TRecorderButtonComponent.Create;
@@ -1905,6 +1926,9 @@ procedure TRecorderComponentFactory.RegisterDefaultComponents;
 begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
   RegisterFactory(TRecorderButtonFactory.Create);
+  RegisterFactory(TRecorderComponentFactoryBase.Create(
+    TRecorderInputFieldComponent.TypeId, 'Поле ввода',
+    TRecorderInputFieldComponent, 120, 28, False));
   RegisterFactory(TRecorderTagValueFactory.Create);
   RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);

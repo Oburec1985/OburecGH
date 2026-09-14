@@ -15,7 +15,7 @@ const
 type
   TRecorderDiscoveryRole = (rdrCoordinator, rdrRecorder);
   TRecorderDiscoveryFoundEvent = procedure(const AInstanceId, ADisplayName,
-    AAddress, ABaseUrl: string) of object;
+    AAddress, ABaseUrl, AMacAddresses: string) of object;
 
   { UDP discovery is deliberately independent from HTTP. It only advertises
     endpoints; authentication and all commands remain in the HTTP contract. }
@@ -35,12 +35,15 @@ type
     fRole: TRecorderDiscoveryRole;
     fInstanceId: string;
     fDisplayName: string;
+    fMacAddresses: string;
     fHttpPort: Word;
     fThread: TRecorderLanDiscoveryThread;
     fSocket: cint;
     fLock: TCriticalSection;
     fCoordinatorUrl: string;
+    fSearchRequested: Boolean;
     fOnFound: TRecorderDiscoveryFoundEvent;
+    function ConsumeSearchRequest: Boolean;
     procedure Run;
     procedure SendPacket(const AKind: string; const AAddress: TInetSockAddr);
     procedure SendBroadcast(const AKind: string; APort: Word);
@@ -48,10 +51,12 @@ type
       const ASource: TInetSockAddr);
   public
     constructor Create(ARole: TRecorderDiscoveryRole;
-      const AInstanceId, ADisplayName: string; AHttpPort: Word);
+      const AInstanceId, ADisplayName: string; AHttpPort: Word;
+      const AMacAddresses: string = '');
     destructor Destroy; override;
     procedure Start;
     procedure Stop;
+    procedure RequestSearch;
     function TakeCoordinatorUrl(out AUrl: string): Boolean;
     property OnFound: TRecorderDiscoveryFoundEvent read fOnFound write fOnFound;
   end;
@@ -80,12 +85,14 @@ begin
 end;
 
 constructor TRecorderLanDiscovery.Create(ARole: TRecorderDiscoveryRole;
-  const AInstanceId, ADisplayName: string; AHttpPort: Word);
+  const AInstanceId, ADisplayName: string; AHttpPort: Word;
+  const AMacAddresses: string);
 begin
   inherited Create;
   fRole := ARole;
   fInstanceId := AInstanceId;
   fDisplayName := ADisplayName;
+  fMacAddresses := AMacAddresses;
   fHttpPort := AHttpPort;
   fSocket := -1;
   fLock := TCriticalSection.Create;
@@ -111,8 +118,31 @@ begin
   fThread.Terminate;
   if fSocket >= 0 then
     fpShutdown(fSocket, SHUT_RDWR);
+  { fpShutdown above wakes the blocking fpRecvFrom in Run. WaitFor is used
+    only as the ownership barrier before the thread object is released. }
   fThread.WaitFor;
   FreeAndNil(fThread);
+end;
+
+procedure TRecorderLanDiscovery.RequestSearch;
+begin
+  fLock.Acquire;
+  try
+    fSearchRequested := True;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TRecorderLanDiscovery.ConsumeSearchRequest: Boolean;
+begin
+  fLock.Acquire;
+  try
+    Result := fSearchRequested;
+    fSearchRequested := False;
+  finally
+    fLock.Release;
+  end;
 end;
 
 function TRecorderLanDiscovery.TakeCoordinatorUrl(out AUrl: string): Boolean;
@@ -141,6 +171,8 @@ begin
     lJson.Add('kind', AKind);
     lJson.Add('instance_id', fInstanceId);
     lJson.Add('display_name', fDisplayName);
+    if fMacAddresses <> '' then
+      lJson.Add('mac_addresses', fMacAddresses);
     lJson.Add('http_port', Integer(fHttpPort));
     lText := UTF8Encode(lJson.AsJSON);
     fpSendTo(fSocket, @lText[1], Length(lText), 0, @AAddress, SizeOf(AAddress));
@@ -165,7 +197,7 @@ procedure TRecorderLanDiscovery.HandlePacket(const AText, ASourceAddress: string
 var
   lData: TJSONData;
   lJson: TJSONObject;
-  lKind, lInstanceId, lDisplayName, lUrl: string;
+  lKind, lInstanceId, lDisplayName, lUrl, lMacAddresses: string;
   lPort: Integer;
   lReply: TInetSockAddr;
 begin
@@ -179,6 +211,7 @@ begin
     lKind := lJson.Get('kind', '');
     lInstanceId := lJson.Get('instance_id', '');
     lDisplayName := lJson.Get('display_name', '');
+    lMacAddresses := lJson.Get('mac_addresses', '');
     lPort := lJson.Get('http_port', 0);
     if fRole = rdrCoordinator then
     begin
@@ -194,7 +227,8 @@ begin
         SharedLogger.Info('Discovery recorder found: ' + lDisplayName +
           ' ' + ASourceAddress);
         if Assigned(fOnFound) then
-          fOnFound(lInstanceId, lDisplayName, ASourceAddress, lUrl);
+          fOnFound(lInstanceId, lDisplayName, ASourceAddress, lUrl,
+            lMacAddresses);
       end;
     end
     else if (lKind = 'coordinator.available') and (lPort > 0) then
@@ -207,6 +241,11 @@ begin
         fLock.Release;
       end;
       SharedLogger.Info('Discovery coordinator found: ' + lUrl);
+      { Reply immediately so an explicit Coordinator search does not wait for
+        the Recorder's periodic announcement. }
+      lReply := ASource;
+      lReply.sin_port := htons(CRecorderDiscoveryCoordinatorPort);
+      SendPacket('recorder.available', lReply);
     end;
   except
     on E: Exception do
@@ -267,7 +306,7 @@ begin
   lLastAnnounce := 0;
   while not fThread.Terminated do
   begin
-    if (lLastAnnounce = 0) or
+    if ConsumeSearchRequest or (lLastAnnounce = 0) or
        (GetTickCount64 - lLastAnnounce >= CAnnounceIntervalMs) then
     begin
       if fRole = rdrCoordinator then

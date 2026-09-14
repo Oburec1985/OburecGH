@@ -1,5 +1,20 @@
 # MIC-185: IoControl timeout после успешного TCP connect
 
+## 2026-09-14 — Reset создавал лишнюю cleanup-сессию
+
+После аварийного завершения RecorderLnx ручной Reset не восстанавливал MIC-185.
+Свежий `LogWindows.log` показал успешные Connect и Initialize с чтением SN, но
+первый `ProgramDeviceBin` получал посторонний код `8BAC07D9`.
+
+Оригинальный `MebDaqWrap/IsMebiusDaqDevice.cpp::ForceResetDevice` выполняет
+только `Disconnect`, 300 мс, `Connect`, 1000 мс и `Program(false)`. В
+RecorderLnx Reset дополнительно открывал временный TCP/Mebius-клиент и отправлял
+`CleanupMeasurementTask` перед штатным Connect/Initialize/Program. Эта ветка
+удалена; программирование MIC-185 и его параметры не изменялись.
+
+Forced Win64-сборка `RecorderLnx.lpi` завершилась с exit code 0. Аппаратный
+сценарий `kill -> restart -> Reset` остаётся проверить на стенде.
+
 ## 2026-08-10 — исключение чтения ошибочно считалось отсутствием данных
 
 Свежий журнал показал постепенное исчезновение пакетов разных MIC-185 без единой

@@ -34,5 +34,6 @@ Lazarus/RecorderLnx/Tools/Mic185TrafficCapture/captures.zip
 *.pcapng
 *_pktmon.txt
 *_packets.csv
+installer/RecorderLnx/deploy-linux-hosts.local.txt
 *.exe
 *.exe

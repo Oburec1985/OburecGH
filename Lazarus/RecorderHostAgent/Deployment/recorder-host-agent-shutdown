@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+# Root-owned, argument-free privileged operation for RecorderHostAgent.
+if command -v systemd-run >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
+  exec systemd-run --unit=recorder-host-agent-poweroff --on-active=3s \
+    systemctl poweroff --no-wall
+fi
+exec /sbin/shutdown -h +1

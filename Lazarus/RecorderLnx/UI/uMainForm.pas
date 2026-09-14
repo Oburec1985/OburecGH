@@ -39,7 +39,8 @@ uses
   Classes, SysUtils, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   StrUtils, DateUtils, fpjson, jsonparser,
-  uRecorderStateMachine, uRecorderRunControlSettings, uRecorderFormModel,
+  uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
+  uRecorderFormModel,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
@@ -64,7 +65,7 @@ type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
   TRecorderAddTool = (ratNone, ratText, ratValue, ratOscillogram, ratTrend,
     ratSqlTrend,
-    ratSpectrum, ratImage, ratButton, ratMeasurementSection);
+    ratSpectrum, ratImage, ratButton, ratInputField, ratMeasurementSection);
 
   { TMainForm }
 
@@ -145,6 +146,7 @@ type
     fAddImageButton: TSpeedButton;                // Кнопка добавления картинки
     fAddTagTableButton: TSpeedButton;             // Кнопка добавления таблицы тегов
     fAddButtonButton: TSpeedButton;               // Кнопка добавления управляющей кнопки
+    fAddInputFieldButton: TSpeedButton;
     fAddComboBoxButton: TSpeedButton;             // Кнопка добавления выпадающего списка
     fDeleteComponentButton: TSpeedButton;         // Кнопка удаления выбранного компонента мнемосхемы
     fPendingAddTool: TRecorderAddTool;
@@ -298,7 +300,9 @@ type
     procedure AddTagValueComponentToActivePage;
     procedure AddImageComponentToActivePage;
     procedure AddButtonComponentToActivePage;
+    procedure AddInputFieldComponentToActivePage;
     procedure AddButtonClick(Sender: TObject);
+    procedure AddInputFieldClick(Sender: TObject);
     procedure SelectAddTool(Sender: TObject; ATool: TRecorderAddTool);
     procedure PlaceSelectedTool(const APoint: TPoint);
     procedure ReleaseAddTool;
@@ -476,7 +480,7 @@ var
   lStageStartedAt: QWord;
 begin
   RegisterThreadName(GetThreadID, 'UIThread');
-  Caption := 'RecorderLnx';
+  Caption := CRecorderLnxCaption;
   KeyPreview := True;
   OnKeyDown := @FormKeyDown;
 
@@ -1101,6 +1105,8 @@ var
   lText, lPayload: string;
   lCommandPayload: TJSONData;
   lFirebirdHost: string;
+  lFirebirdDatabase: string;
+  lFirebirdUserName: string;
 begin
   if (ACommand.ExecuteAtUtc > 0) and
     (ACommand.ExecuteAtUtc > RecorderCoordinatorUtcNow) then
@@ -1179,7 +1185,8 @@ begin
         fApplicationController.Stop;
     end
     else if SameText(ACommand.CommandType, 'config.get') then
-      lPayload := Format('{"project_dir":%s}', [JsonQuoted(fProjectConfigDir)])
+      lPayload := Format('{"project_dir":%s,"mera_files_path":%s}',
+        [JsonQuoted(fProjectConfigDir), JsonQuoted(RecorderMeraFilesPath)])
     else if SameText(ACommand.CommandType, 'config.sql_database.set') then
     begin
       { This is a deliberately narrow managed action: it changes only the
@@ -1199,11 +1206,23 @@ begin
           lFirebirdHost := Trim(TJSONObject(lCommandPayload).Get('host', ''));
           if lFirebirdHost = '' then
             raise Exception.Create('Firebird host is empty');
+          lFirebirdDatabase := Trim(TJSONObject(lCommandPayload).Get(
+            'database', CRecorderFirebirdDefaultDatabase));
+          lFirebirdUserName := Trim(TJSONObject(lCommandPayload).Get(
+            'username', CRecorderFirebirdDefaultUserName));
           fRecorder.SqlDbManager.Config.Host := lFirebirdHost;
+          fRecorder.SqlDbManager.Config.Port :=
+            TJSONObject(lCommandPayload).Get('port', 3050);
+          fRecorder.SqlDbManager.Config.Database := lFirebirdDatabase;
+          fRecorder.SqlDbManager.Config.UserName := lFirebirdUserName;
+          fRecorder.SqlDbManager.Config.StoredPassword :=
+            TJSONObject(lCommandPayload).Get('password',
+              CRecorderFirebirdDefaultPassword);
           fRecorder.SqlDbManager.SaveConfig;
           fRecorder.SqlDbManager.Reload;
           lPayload := Format('{"host":%s}', [JsonQuoted(lFirebirdHost)]);
-          AddLog('Сервер SQL БД изменён координатором: ' + lFirebirdHost);
+          AddLog('Настройки SQL БД изменены координатором: ' +
+            lFirebirdHost + ':3050');
         finally
           lCommandPayload.Free;
         end;
@@ -1513,7 +1532,8 @@ procedure TMainForm.UpdateMainCaption;
 var
   lCaption: string;
 begin
-  lCaption := 'RecorderLnx - ' + fProjectConfigDir + ' - MERA: ' + CurrentMeasureDir;
+  lCaption := CRecorderLnxCaption + ' - ' + fProjectConfigDir +
+    ' - MERA: ' + CurrentMeasureDir;
   if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) then
     lCaption := lCaption + ' - ' + fFormManager.ActivePage.Title;
   Caption := lCaption;
@@ -2167,6 +2187,36 @@ begin
   AddLog('Form component added: ' + lComponent.Id);
 end;
 
+procedure TMainForm.AddInputFieldComponentToActivePage;
+var
+  lPage: TRecorderFormPage;
+  lComponent: TRecorderInputFieldComponent;
+begin
+  lPage := fFormManager.ActivePage;
+  if (lPage = nil) or not IsUserMnemonicPage(lPage) then
+    raise ERecorderFormError.Create(
+      'Input field can be added only to a user mnemonic page');
+  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
+  Inc(fNextComponentNo);
+  lComponent := TRecorderInputFieldComponent(
+    fComponentFactory.CreateComponent(TRecorderInputFieldComponent.TypeId));
+  try
+    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
+    lComponent.Name := Format('InputField%d', [fNextComponentNo]);
+    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 32, 120, 28);
+    lPage.AddComponent(lComponent);
+  except
+    lComponent.Free;
+    raise;
+  end;
+  AddLog('Form component added: ' + lComponent.Id);
+end;
+
+procedure TMainForm.AddInputFieldClick(Sender: TObject);
+begin
+  SelectAddTool(Sender, ratInputField);
+end;
+
 procedure TMainForm.AddImageClick(Sender: TObject);
 begin
   SelectAddTool(Sender, ratImage);
@@ -2312,7 +2362,9 @@ begin
     'Добавить картинку', @AddImageClick, 2, True, True);
   fAddTagTableButton := AddEditMnemoToolBarButton(180, CIconTagTable, 'Add tag table', nil, 0, False, False);
   fAddButtonButton := AddEditMnemoToolBarButton(214, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
-  fAddComboBoxButton := AddEditMnemoToolBarButton(248, CIconComboBox, 'Add combo box', nil, 0, False, False);
+  fAddInputFieldButton := AddEditMnemoToolBarButton(248, CIconButton,
+    'Поле ввода', @AddInputFieldClick, 2, True, True);
+  fAddComboBoxButton := nil;
   fAddMeasurementSectionButton.Left := 282;
   fDeleteComponentButton := AddEditMnemoToolBarButton(316, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
@@ -2539,6 +2591,8 @@ begin
     fAddTagTableButton.Visible := lCanEdit;
   if fAddButtonButton <> nil then
     fAddButtonButton.Visible := lCanEdit;
+  if fAddInputFieldButton <> nil then
+    fAddInputFieldButton.Visible := lCanEdit;
   if fAddComboBoxButton <> nil then
     fAddComboBoxButton.Visible := lCanEdit;
   if fDeleteComponentButton <> nil then
@@ -4034,6 +4088,7 @@ begin
   if fAddMeasurementSectionButton <> nil then fAddMeasurementSectionButton.Down := False;
   if fAddImageButton <> nil then fAddImageButton.Down := False;
   if fAddButtonButton <> nil then fAddButtonButton.Down := False;
+  if fAddInputFieldButton <> nil then fAddInputFieldButton.Down := False;
 end;
 
 procedure TMainForm.PlaceSelectedTool(const APoint: TPoint);
@@ -4060,6 +4115,7 @@ begin
       ratSpectrum: AddSpectrumComponentToActivePage;
       ratImage: AddImageComponentToActivePage;
       ratButton: AddButtonComponentToActivePage;
+      ratInputField: AddInputFieldComponentToActivePage;
     end;
     if (lPage.ComponentCount > lOldCount) and (fFormEditor <> nil) then
       fFormEditor.PositionComponentAt(lPage.Components[lOldCount], APoint);

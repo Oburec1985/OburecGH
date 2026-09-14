@@ -1,9 +1,9 @@
 BUILD_EXIT=0
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(429,38) Hint: (5024) Parameter "Data" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(442,31) Hint: (5024) Parameter "AOldState" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(442,42) Hint: (5024) Parameter "ANewState" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(468,3) Hint: (5028) Local const "CDeviceHealthProbeTimeoutMs" is not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(49,3) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in uMainForm
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(430,38) Hint: (5024) Parameter "Data" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(443,31) Hint: (5024) Parameter "AOldState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(443,42) Hint: (5024) Parameter "ANewState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(469,3) Hint: (5028) Local const "CDeviceHealthProbeTimeoutMs" is not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uMainForm.pas(50,3) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in uMainForm
 (3104) Compiling ./UI/uRecorderUserGuideCapture.pas
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,11) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,37) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
@@ -35,12 +35,12 @@ BUILD_EXIT=0
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(35,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
 (9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
 (9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
-(1008) 134978 lines compiled, 16.6 sec
-(1021) 228 warning(s) issued
-(1022) 791 hint(s) issued
-(1023) 128 note(s) issued
+(1008) 135189 lines compiled, 321.5 sec
+(1021) 230 warning(s) issued
+(1022) 792 hint(s) issued
+(1023) 129 note(s) issued
 ARTIFACT
-2026-09-09 20:35:04.000000000 +0300|60593352|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+2026-09-11 16:05:30.000000000 +0300|60608024|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.4.0, with debug_info, not stripped
 MISSING_LIBS
 none

@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, Sockets, fphttpserver, httpdefs, fpjson, jsonparser,
-  uCoordinatorModel, uSharedFileLogger, uRecorderLanDiscovery;
+  uCoordinatorModel, uCoordinatorHostMonitor, uSharedFileLogger,
+  uRecorderLanDiscovery;
 
 type
   TCoordinatorFpHttpServer = class(TFPHTTPServer)
@@ -34,11 +35,12 @@ type
     fThread: TCoordinatorListenerThread;
     fModel: TCoordinatorModel;
     fDiscovery: TRecorderLanDiscovery;
+    fHostMonitor: TCoordinatorHostMonitor;
     fLastError: string;
     procedure ReleaseFinishedThread;
     function PortAvailable(APort: Word): Boolean;
     procedure DiscoveryRecorderFound(const AInstanceId, ADisplayName,
-      AAddress, ABaseUrl: string);
+      AAddress, ABaseUrl, AMacAddresses: string);
     procedure HandleRequest(Sender: TObject;
       var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
@@ -50,6 +52,7 @@ type
     destructor Destroy; override;
     procedure Start(const AAddress: string; APort: Word);
     procedure Stop;
+    procedure SearchRecorders;
     function Active: Boolean;
     function Stopping: Boolean;
     function LastError: string;
@@ -119,6 +122,7 @@ constructor TCoordinatorHttpServer.Create(AModel: TCoordinatorModel);
 begin
   inherited Create;
   fModel := AModel;
+  fModel.EnableHostPersistence;
   fServer := TCoordinatorFpHttpServer.Create(nil);
   fServer.Threaded := True;
   { A nonzero timeout keeps accept in a bounded select loop. StopAccepting
@@ -126,10 +130,12 @@ begin
     needed to make the loop observe that state. }
   fServer.AcceptIdleTimeout := 50;
   fServer.OnRequest := @HandleRequest;
+  fHostMonitor := TCoordinatorHostMonitor.Create(fModel);
+  fHostMonitor.Start;
 end;
 
 procedure TCoordinatorHttpServer.DiscoveryRecorderFound(const AInstanceId,
-  ADisplayName, AAddress, ABaseUrl: string);
+  ADisplayName, AAddress, ABaseUrl, AMacAddresses: string);
 var
   lHost, lResult: TJSONObject;
 begin
@@ -139,6 +145,7 @@ begin
     lHost.Add('instance_id', AInstanceId);
     lHost.Add('host_name', ADisplayName);
     lHost.Add('remote_address', AAddress);
+    lHost.Add('mac_addresses', AMacAddresses);
     lHost.Add('state', 'discovered');
     lResult := fModel.RegisterDiscovery(lHost);
     lResult.Free;
@@ -170,6 +177,11 @@ destructor TCoordinatorHttpServer.Destroy;
 begin
   FreeAndNil(fDiscovery);
   Stop;
+  fHostMonitor.Terminate;
+  { Execute sets Finished after observing Terminated. The current OS ping is
+    bounded to one second, so destruction cannot wait on an unbounded probe. }
+  while not fHostMonitor.Finished do Sleep(1);
+  FreeAndNil(fHostMonitor);
   { Object destruction is the ownership barrier: the server cannot be freed
     while Execute still uses it. AcceptIdleTimeout bounds the time until the
     accept loop observes StopAccepting's state. }
@@ -222,6 +234,12 @@ begin
   fThread.Terminate;
   if fServer.Active then
     fServer.Active := False;
+end;
+
+procedure TCoordinatorHttpServer.SearchRecorders;
+begin
+  if fDiscovery <> nil then
+    fDiscovery.RequestSearch;
 end;
 
 function TCoordinatorHttpServer.Active: Boolean;

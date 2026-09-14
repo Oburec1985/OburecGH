@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -eu
+
+readonly INTERFACE="enp3s0"
+readonly SERVICE_FILE="/etc/systemd/system/recorderlnx-wol.service"
+
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+
+main() {
+  test "$(id -u)" -eq 0 || fail "Запустите утилиту через pkexec или sudo."
+  command -v ethtool >/dev/null 2>&1 || fail "Не установлена утилита ethtool."
+  test -d "/sys/class/net/$INTERFACE" || fail "Сетевой интерфейс $INTERFACE не найден."
+  ethtool -s "$INTERFACE" wol g
+  {
+    printf '%s\n' '[Unit]'
+    printf '%s\n' 'Description=Enable Wake-on-LAN for RecorderLnx host'
+    printf '%s\n' 'After=network.target'
+    printf '\n%s\n' '[Service]'
+    printf '%s\n' 'Type=oneshot'
+    printf '%s\n' "ExecStart=$(command -v ethtool) -s $INTERFACE wol g"
+    printf '%s\n' 'RemainAfterExit=yes'
+    printf '\n%s\n' '[Install]'
+    printf '%s\n' 'WantedBy=multi-user.target'
+  } > "$SERVICE_FILE"
+  chmod 0644 "$SERVICE_FILE"
+  systemctl daemon-reload
+  systemctl enable recorderlnx-wol.service >/dev/null
+  systemctl restart recorderlnx-wol.service
+  ethtool "$INTERFACE" | grep 'Wake-on:'
+}
+
+main "$@"

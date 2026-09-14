@@ -144,6 +144,16 @@ begin
       [AConfig.Host, AConfig.Port, AConfig.DatabaseFileName, AMessage]);
 end;
 
+function FirebirdDatabaseFileIsMissing(const AMessage: string): Boolean;
+var
+  lMessage: string;
+begin
+  lMessage := LowerCase(AMessage);
+  Result := (Pos('no such file or directory', lMessage) > 0) or
+    (Pos('cannot attach to password database', lMessage) = 0) and
+    ((Pos('database', lMessage) > 0) and (Pos('does not exist', lMessage) > 0));
+end;
+
 constructor TRecorderSqlDbRepository.Create(AConfig: TRecorderSqlDbConfig);
 begin
   inherited Create;
@@ -203,8 +213,11 @@ procedure TRecorderSqlDbRepository.Open;
 var
   lDir: string;
   lIb: TIBConnection;
+  lConfigurationError: string;
 begin
   if fConnection <> nil then Exit;
+  if not fConfig.ConnectionConfigurationReady(lConfigurationError) then
+    raise ERecorderSqlDbError.Create(lConfigurationError);
   fConfig.RequireValid;
   if fConfig.Backend = rsbSQLite then
   begin
@@ -224,6 +237,19 @@ begin
         raise ERecorderSqlDbError.CreateFmt('Cannot create Firebird directory: %s', [lDir]);
       lIb := TIBConnection(fConnection);
       lIb.CreateDB;
+    end
+    else if fConfig.Backend = rsbFirebird then
+    begin
+      lIb := TIBConnection(fConnection);
+      try
+        fConnection.Open;
+      except
+        on E: Exception do
+          if FirebirdDatabaseFileIsMissing(E.Message) then
+            lIb.CreateDB
+          else
+            raise;
+      end;
     end
     else
       fConnection.Open;

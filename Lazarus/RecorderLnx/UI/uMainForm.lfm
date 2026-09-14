@@ -306,8 +306,8 @@ object MainForm: TMainForm
   object ilCommandButtons: TImageList
     Height = 42
     Width = 42
-    Left = 293
-    Top = 133
+    Left = 408
+    Top = 96
     Bitmap = {
       4C7A3D0000002A0000002A0000003E7701000000000078DAEC7D075C1757D6F6
       ECB7D9776BCA6E92DDF46A4DEC1505152CA858B020BD37419A8AD80B62C78A05

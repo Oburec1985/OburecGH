@@ -1,0 +1,9 @@
+1789125482.0000000000|2026-09-11 14:18:02.0000000000|3020808|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderHostAgent
+1789123112.0000000000|2026-09-11 13:38:32.0000000000|60608032|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1789115180.0000000000|2026-09-11 11:26:20.0000000000|3011200|/mnt/win_share/OburecGH/Lazarus/RecorderHostAgent/lib/x86_64-linux/RecorderHostAgent
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/014/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/013/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/012/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/011/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/010/RecorderLnx/lib/x86_64-linux/RecorderLnx
+1784648290.0000000000|2026-07-21 18:38:10.0000000000|50791888|/mnt/win_share/bu/recorder_lnx/009_сбой/RecorderLnx/lib/x86_64-linux/RecorderLnx

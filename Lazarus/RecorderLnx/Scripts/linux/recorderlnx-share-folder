@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -eu
+
+readonly SHARE_NAME="MeraFiles"
+readonly SHARE_ROOT="/srv/recorderlnx/MeraFiles"
+readonly CONFIG_FILE="/etc/samba/smb.conf"
+readonly BEGIN_MARKER="# RECORDERLNX-MERAFILES-BEGIN"
+readonly END_MARKER="# RECORDERLNX-MERAFILES-END"
+
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+
+validate_source() {
+  local source_path="$1"
+  test -n "$source_path" || fail "Каталог замеров не задан."
+  test -d "$source_path" || fail "Каталог не существует: $source_path"
+  source_path="$(readlink -f -- "$source_path")"
+  test "$source_path" != "/" || fail "Публикация корня файловой системы запрещена."
+  printf '%s' "$source_path"
+}
+
+replace_share_config() {
+  local temp_file
+  temp_file="$(mktemp)"
+  awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+    $0 == begin { skip=1; next }
+    $0 == end { skip=0; next }
+    !skip { print }
+  ' "$CONFIG_FILE" > "$temp_file"
+  printf '\n%s\n[%s]\n' "$BEGIN_MARKER" "$SHARE_NAME" >> "$temp_file"
+  printf '   path = %s\n' "$SHARE_ROOT" >> "$temp_file"
+  printf '   browseable = yes\n   read only = yes\n' >> "$temp_file"
+  printf '   guest ok = no\n   valid users = user\n%s\n' "$END_MARKER" >> "$temp_file"
+  testparm -s "$temp_file" >/dev/null
+  install -m 0644 "$temp_file" "$CONFIG_FILE"
+  rm -f -- "$temp_file"
+}
+
+bind_source() {
+  local source_path="$1"
+  install -d -m 0755 "$SHARE_ROOT"
+  if mountpoint -q "$SHARE_ROOT"; then umount "$SHARE_ROOT"; fi
+  mount --bind "$source_path" "$SHARE_ROOT"
+}
+
+main() {
+  local source_path
+  test "$(id -u)" -eq 0 || fail "Утилита должна быть запущена через pkexec."
+  test "$#" -eq 1 || fail "Использование: recorderlnx-share-folder КАТАЛОГ"
+  source_path="$(validate_source "$1")"
+  bind_source "$source_path"
+  replace_share_config
+  systemctl reload smbd 2>/dev/null || systemctl restart smbd
+  printf 'smb://%s/%s\n' "$(hostname -f 2>/dev/null || hostname)" "$SHARE_NAME"
+}
+
+main "$@"

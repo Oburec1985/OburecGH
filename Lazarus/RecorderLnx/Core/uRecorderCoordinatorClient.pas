@@ -128,6 +128,30 @@ begin
   end;
 end;
 
+function RecorderHostInfoJson: string;
+var
+  lMacAddresses: TStringList;
+  lHostName, lPlatform: string;
+begin
+  lHostName := GetEnvironmentVariable('COMPUTERNAME');
+  if lHostName = '' then lHostName := GetEnvironmentVariable('HOSTNAME');
+{$ifdef windows}
+  lPlatform := 'windows';
+{$else}
+  lPlatform := 'linux';
+{$endif}
+  lMacAddresses := TStringList.Create;
+  try
+    RecorderEnumerateLocalMacAddresses(lMacAddresses);
+    Result := Format('"host_name":%s,"mac_addresses":%s,' +
+      '"executable_path":%s,"os":%s',
+      [JsonQuote(lHostName), JsonQuote(lMacAddresses.CommaText),
+       JsonQuote(ExpandFileName(ParamStr(0))), JsonQuote(lPlatform)]);
+  finally
+    lMacAddresses.Free;
+  end;
+end;
+
 constructor TRecorderCoordinatorClientConfig.Create;
 begin
   inherited Create;
@@ -192,6 +216,8 @@ end;
 
 constructor TRecorderCoordinatorClient.Create(
   AConfig: TRecorderCoordinatorClientConfig);
+var
+  lMacAddresses: TStringList;
 begin
   inherited Create;
   fConfig := AConfig;
@@ -206,8 +232,17 @@ begin
   fRecordingJson := '{}';
   fState := rccsDisabled;
   if fConfig <> nil then
-    fDiscovery := TRecorderLanDiscovery.Create(rdrRecorder,
-      fConfig.InstanceId, fConfig.DisplayName, 0);
+  begin
+    lMacAddresses := TStringList.Create;
+    try
+      RecorderEnumerateLocalMacAddresses(lMacAddresses);
+      fDiscovery := TRecorderLanDiscovery.Create(rdrRecorder,
+        fConfig.InstanceId, fConfig.DisplayName, 0,
+        lMacAddresses.CommaText);
+    finally
+      lMacAddresses.Free;
+    end;
+  end;
 end;
 
 procedure TRecorderCoordinatorClient.LoadEventOutbox;
@@ -655,9 +690,9 @@ procedure TRecorderCoordinatorClientThread.SendHello;
 var
   lPayload, lResponse: string;
 begin
-  lPayload := Format('{"display_name":%s,"protocol_version":%d}',
+  lPayload := Format('{"display_name":%s,"protocol_version":%d,%s}',
     [JsonQuote(fOwner.fConfig.DisplayName),
-     CRecorderCoordinatorProtocolVersion]);
+     CRecorderCoordinatorProtocolVersion, RecorderHostInfoJson]);
   PostJson('/api/v1/clients/hello', RecorderCoordinatorEnvelope('client.hello',
     RecorderCoordinatorNewId, fOwner.fConfig.InstanceId, '', '', lPayload),
     lResponse);
@@ -671,7 +706,7 @@ begin
   fOwner.fSnapshotLock.Acquire;
   try
     lPayload := '{"state":' + fOwner.fStateJson + ',"recording":' +
-      fOwner.fRecordingJson + '}';
+      fOwner.fRecordingJson + ',' + RecorderHostInfoJson + '}';
     lSnapshotGeneration := fOwner.fSnapshotGeneration;
   finally
     fOwner.fSnapshotLock.Release;

@@ -22,6 +22,7 @@ type
     ExportedTags: Integer;
     UpdatedTags: Integer;
     SkippedRows: Integer;
+    MissingTags: Integer;
     RenamedTags: Integer;
     Warnings: TStringList;
   end;
@@ -42,7 +43,8 @@ implementation
 
 uses
   Math, StrUtils,
-  fpspreadsheet, fpstypes, fpsopendocument, fpscsv;
+  fpspreadsheet, fpstypes, fpsopendocument, fpscsv,
+  uRecorderSdbStore, uRecorderSdbTypes;
 
 const
   CSheetName = 'Recorder_Tags';
@@ -62,7 +64,8 @@ const
   CColIsVirtual = 12;
   CColSqlRecord = 13;
   CColGroupPath = 14;
-  CColumnCount = 15;
+  CColScales = 15;
+  CColumnCount = 16;
 
   CHeaders: array[0..CColumnCount - 1] of string = (
     'Имя канала',
@@ -79,7 +82,8 @@ const
     'Макс. шкалы',
     'Виртуальный',
     'Запись SQL',
-    'Группа'
+    'Группа',
+    'Scales'
   );
 
 type
@@ -108,10 +112,63 @@ type
     HasSqlRecordEnabled: Boolean;
     GroupPath: string;
     HasGroupPath: Boolean;
+    Scales: string;
+    HasScales: Boolean;
     TargetTag: TRecorderTag;
   end;
 
   TTagImportRows = array of TTagImportRow;
+
+  TScaleLookup = class
+  private
+    fKeys: TStringList;
+    fNames: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Find(const AName: string; out AKey: string): Boolean;
+  end;
+
+constructor TScaleLookup.Create;
+var
+  I: Integer;
+  lInfo: TSdbScaleInfo;
+  lName: string;
+begin
+  inherited Create;
+  fKeys := TStringList.Create;
+  fNames := TStringList.Create;
+  fNames.CaseSensitive := False;
+  RecorderSdbListScaleKeys('', fKeys);
+  for I := 0 to fKeys.Count - 1 do
+    if RecorderSdbTryLoadScale(fKeys[I], lInfo) then
+    begin
+      lName := Trim(lInfo.Name);
+      if lName = '' then
+        lName := ExtractFileName(StringReplace(fKeys[I], '\', PathDelim,
+          [rfReplaceAll]));
+      if fNames.IndexOf(lName) < 0 then
+        fNames.AddObject(lName, TObject(PtrInt(I)));
+    end;
+end;
+
+destructor TScaleLookup.Destroy;
+begin
+  fNames.Free;
+  fKeys.Free;
+  inherited Destroy;
+end;
+
+function TScaleLookup.Find(const AName: string; out AKey: string): Boolean;
+var
+  lIndex: Integer;
+begin
+  AKey := '';
+  lIndex := fNames.IndexOf(Trim(AName));
+  Result := lIndex >= 0;
+  if Result then
+    AKey := fKeys[PtrInt(fNames.Objects[lIndex])];
+end;
 
 procedure RecorderTagTableExchangeResultInit(
   out AResult: TRecorderTagTableExchangeResult);
@@ -147,6 +204,152 @@ begin
   lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator,
     [rfReplaceAll]);
   Result := TryStrToFloat(lText, AValue);
+end;
+
+function ScaleName(AValue: Double): string;
+begin
+  Result := '__rlnx_scale_' + FormatValue(AValue);
+end;
+
+function LineName(AK, AB: Double): string;
+begin
+  Result := '__rlnx_line_' + FormatValue(AK) + '_' + FormatValue(AB);
+end;
+
+function EnsureScale(ARegistry: TRecorderTagRegistry;
+  AValue: Double): string;
+var
+  lScale: TRecorderCalibration;
+begin
+  Result := ScaleName(AValue);
+  lScale := ARegistry.FindCalibrationByName(Result);
+  if lScale <> nil then
+    Exit;
+  lScale := TRecorderCalibration.Create(rckScale);
+  lScale.Name := Result;
+  lScale.Scale := AValue;
+  ARegistry.Calibrations.Add(lScale);
+end;
+
+function EnsureLine(ARegistry: TRecorderTagRegistry; AK, AB: Double): string;
+var
+  lLine: TRecorderCalibration;
+begin
+  Result := LineName(AK, AB);
+  lLine := ARegistry.FindCalibrationByName(Result);
+  if lLine <> nil then
+    Exit;
+  lLine := TRecorderCalibration.Create(rckPiecewiseLinear);
+  lLine.Name := Result;
+  lLine.Extrapolation := True;
+  lLine.AddPoint(0, AB);
+  lLine.AddPoint(1, AK + AB);
+  ARegistry.Calibrations.Add(lLine);
+end;
+
+function TryParseLine(const AText: string; out AK, AB: Double): Boolean;
+var
+  lPos: Integer;
+begin
+  lPos := Pos(';', AText);
+  Result := (lPos > 1) and (PosEx(';', AText, lPos + 1) = 0) and
+    TryParseFloatValue(Copy(AText, 1, lPos - 1), AK) and
+    TryParseFloatValue(Copy(AText, lPos + 1, MaxInt), AB);
+end;
+
+function TryGetLine(ACalibration: TRecorderCalibration;
+  out AK, AB: Double): Boolean;
+var
+  lA: TRecorderCalibrationPoint;
+  lB: TRecorderCalibrationPoint;
+begin
+  Result := (ACalibration <> nil) and
+    (ACalibration.Kind = rckPiecewiseLinear) and
+    (ACalibration.PointCount = 2);
+  if not Result then
+    Exit;
+  lA := ACalibration.PointAt(0);
+  lB := ACalibration.PointAt(1);
+  Result := (lA <> nil) and (lB <> nil) and not SameValue(lA.X, lB.X);
+  if Result then
+  begin
+    AK := (lB.Y - lA.Y) / (lB.X - lA.X);
+    AB := lA.Y - AK * lA.X;
+  end;
+end;
+
+function ExportScales(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ALookup: TScaleLookup): string;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lB: Double;
+  lKey: string;
+  lK: Double;
+  lLines: TStringList;
+begin
+  Result := '';
+  if (ARegistry = nil) or (ATag = nil) or
+    (not ATag.ChannelCalibrationEnabled) then
+    Exit;
+  lLines := TStringList.Create;
+  try
+    for I := 0 to ATag.CalibrationNames.Count - 1 do
+    begin
+      lCalibration := ARegistry.FindCalibrationByName(
+        ATag.CalibrationNames[I]);
+      if lCalibration = nil then
+        Continue;
+      if ALookup.Find(lCalibration.Name, lKey) then
+        lLines.Add(lCalibration.Name)
+      else if lCalibration.Kind = rckScale then
+        lLines.Add(FormatValue(lCalibration.Scale))
+      else if TryGetLine(lCalibration, lK, lB) then
+        lLines.Add(FormatValue(lK) + ';' + FormatValue(lB));
+    end;
+    Result := TrimRight(lLines.Text);
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure ImportScales(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ALookup: TScaleLookup; const AText: string; ARow: Integer;
+  AWarnings: TStrings);
+var
+  I: Integer;
+  lKey: string;
+  lB: Double;
+  lK: Double;
+  lName: string;
+  lLines: TStringList;
+  lValue: Double;
+begin
+  ATag.CalibrationNames.Clear;
+  lLines := TStringList.Create;
+  try
+    lLines.Text := StringReplace(StringReplace(AText, #13#10, #10,
+      [rfReplaceAll]), #13, #10, [rfReplaceAll]);
+    for I := 0 to lLines.Count - 1 do
+    begin
+      lName := Trim(lLines[I]);
+      if lName = '' then
+        Continue;
+      if TryParseLine(lName, lK, lB) then
+        ATag.CalibrationNames.Add(EnsureLine(ARegistry, lK, lB))
+      else if TryParseFloatValue(lName, lValue) then
+        ATag.CalibrationNames.Add(EnsureScale(ARegistry, lValue))
+      else if ALookup.Find(lName, lKey) and
+        RecorderSdbImportCalibration(ARegistry.Calibrations, lKey, lName) then
+        ATag.CalibrationNames.Add(lName)
+      else
+        AWarnings.Add(Format('Строка %d: ГХ "%s" не найдена в БДГХ',
+          [ARow, lName]));
+    end;
+  finally
+    lLines.Free;
+  end;
+  ATag.ChannelCalibrationEnabled := ATag.CalibrationNames.Count > 0;
 end;
 
 function BoolToTableText(AValue: Boolean): string;
@@ -439,6 +642,46 @@ begin
   Result := ATag.Name + '__RecorderLnxImportTmp_' + IntToStr(ATag.Id);
 end;
 
+function ImportNameIsDuplicated(const ARows: TTagImportRows;
+  ARowIndex: Integer): Boolean;
+var
+  I: Integer;
+  lName: string;
+begin
+  Result := False;
+  if (ARowIndex < Low(ARows)) or (ARowIndex > High(ARows)) then
+    Exit;
+  lName := Trim(ARows[ARowIndex].Name);
+  if lName = '' then
+    Exit;
+  for I := 0 to High(ARows) do
+    if (I <> ARowIndex) and SameText(Trim(ARows[I].Name), lName) then
+      Exit(True);
+end;
+
+procedure RemoveRowsWithDuplicateNames(var ARows: TTagImportRows;
+  var AResult: TRecorderTagTableExchangeResult);
+var
+  I: Integer;
+  lUniqueRows: TTagImportRows;
+begin
+  SetLength(lUniqueRows, 0);
+  for I := 0 to High(ARows) do
+  begin
+    if ImportNameIsDuplicated(ARows, I) then
+    begin
+      Inc(AResult.SkippedRows);
+      AResult.Warnings.Add(Format(
+        'Строка %d: имя канала "%s" повторяется в таблице; канал не изменён',
+        [ARows[I].RowNumber, Trim(ARows[I].Name)]));
+      Continue;
+    end;
+    SetLength(lUniqueRows, Length(lUniqueRows) + 1);
+    lUniqueRows[High(lUniqueRows)] := ARows[I];
+  end;
+  ARows := lUniqueRows;
+end;
+
 procedure RenameTargetsToTemporaryNames(ARegistry: TRecorderTagRegistry;
   var ARows: TTagImportRows; var AResult: TRecorderTagTableExchangeResult);
 var
@@ -458,8 +701,8 @@ begin
 end;
 
 procedure ApplyImportRows(ARegistry: TRecorderTagRegistry;
-  ASqlDbConfig: TRecorderSqlDbConfig; const ARows: TTagImportRows;
-  var AResult: TRecorderTagTableExchangeResult);
+  ASqlDbConfig: TRecorderSqlDbConfig; ALookup: TScaleLookup;
+  const ARows: TTagImportRows; var AResult: TRecorderTagTableExchangeResult);
 var
   I: Integer;
   lTag: TRecorderTag;
@@ -497,6 +740,9 @@ begin
       if Trim(lTag.GroupPath) <> '' then
         ARegistry.TagGroupPaths.Add(Trim(lTag.GroupPath));
     end;
+    if ARows[I].HasScales then
+      ImportScales(ARegistry, lTag, ALookup, ARows[I].Scales,
+        ARows[I].RowNumber, AResult.Warnings);
     Inc(AResult.UpdatedTags);
   end;
 end;
@@ -527,11 +773,13 @@ var
   lTag: TRecorderTag;
   lMap: TTagTableColumnMap;
   lIncludeGroupPath: Boolean;
+  lLookup: TScaleLookup;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
 
   lBook := TsWorkbook.Create;
+  lLookup := TScaleLookup.Create;
   try
     if FileExists(AFileName) then
       lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
@@ -566,11 +814,14 @@ begin
       WriteCell(lSheet, lRow, lMap[CColSqlRecord],
         BoolToTableText(SqlRecordEnabled(ASqlDbConfig, lTag)));
       WriteMappedCell(lSheet, lMap, CColGroupPath, lRow, lTag.GroupPath);
+      WriteMappedCell(lSheet, lMap, CColScales, lRow,
+        ExportScales(ARegistry, lTag, lLookup));
       Inc(AResult.ExportedTags);
     end;
     AResult.TotalRows := ARegistry.TagCount;
     lBook.WriteToFile(AFileName, TableFormatByFileName(AFileName), True);
   finally
+    lLookup.Free;
     lBook.Free;
   end;
 end;
@@ -586,12 +837,14 @@ var
   lRows: TTagImportRows;
   lRow: TTagImportRow;
   lMap: TTagTableColumnMap;
+  lLookup: TScaleLookup;
   lText: string;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
 
   lBook := TsWorkbook.Create;
+  lLookup := TScaleLookup.Create;
   try
     lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
     if lBook.GetWorksheetCount = 0 then
@@ -630,6 +883,9 @@ begin
       lRow.HasGroupPath := lMap[CColGroupPath] >= 0;
       if lRow.HasGroupPath then
         lRow.GroupPath := ReadMappedCell(lSheet, lMap, CColGroupPath, lRowIndex);
+      lRow.HasScales := HeaderIndex(lSheet, CHeaders[CColScales]) >= 0;
+      if lRow.HasScales then
+        lRow.Scales := ReadMappedCell(lSheet, lMap, CColScales, lRowIndex);
 
       if (lRow.Name = '') and (lRow.Address = '') and (not lRow.HasTagId) then
         Continue;
@@ -638,16 +894,21 @@ begin
       if lRow.TargetTag = nil then
       begin
         Inc(AResult.SkippedRows);
-        AResult.Warnings.Add(Format('Строка %d: тег не найден', [lRow.RowNumber]));
+        { A shared setup table may intentionally contain channels assigned to
+          other Recorder hosts. Count those rows, but do not turn each one into
+          a warning shown to the operator. }
+        Inc(AResult.MissingTags);
         Continue;
       end;
       SetLength(lRows, Length(lRows) + 1);
       lRows[High(lRows)] := lRow;
     end;
 
+    RemoveRowsWithDuplicateNames(lRows, AResult);
     RenameTargetsToTemporaryNames(ARegistry, lRows, AResult);
-    ApplyImportRows(ARegistry, ASqlDbConfig, lRows, AResult);
+    ApplyImportRows(ARegistry, ASqlDbConfig, lLookup, lRows, AResult);
   finally
+    lLookup.Free;
     lBook.Free;
   end;
 end;

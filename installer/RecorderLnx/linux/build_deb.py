@@ -12,6 +12,7 @@ from pathlib import Path
 
 
 APP_NAME = "RecorderLnx"
+AGENT_NAME = "RecorderHostAgent"
 PACKAGE_NAME = "recorderlnx"
 
 
@@ -25,7 +26,7 @@ def newest_source(repo_root):
         repo_root / "Lazarus" / "SharedUtils",
     ]
     suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr"}
-    excluded = {"lib", "_buildverify", "backup", "cach", "errors", "tmp", ".git"}
+    excluded = {"lib", "tools", "_buildverify", "backup", "cach", "errors", "tmp", ".git"}
     newest = None
     for source_root in roots:
         for path in source_root.rglob("*"):
@@ -35,6 +36,20 @@ def newest_source(repo_root):
                 continue
             if newest is None or path.stat().st_mtime > newest.stat().st_mtime:
                 newest = path
+    return newest
+
+
+def newest_tree_source(source_root):
+    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr"}
+    excluded = {"lib", "_buildverify", "backup", "tmp", ".git"}
+    newest = None
+    for path in source_root.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in suffixes:
+            continue
+        if any(part.lower() in excluded for part in path.parts):
+            continue
+        if newest is None or path.stat().st_mtime > newest.stat().st_mtime:
+            newest = path
     return newest
 
 
@@ -79,12 +94,12 @@ def validate_linux_binary(repo_root, linux_exe):
     return binary, schema_version
 
 
-def verify_packaged_binary(data_tar, expected_binary):
+def verify_packaged_binary(data_tar, member_name, expected_binary):
     with gzip.GzipFile(fileobj=io.BytesIO(data_tar), mode="rb") as gz:
         with tarfile.open(fileobj=gz, mode="r") as tar:
-            member = tar.extractfile("opt/mera/RecorderLnx/RecorderLnx")
+            member = tar.extractfile(member_name)
             if member is None:
-                raise SystemExit("Packaged RecorderLnx binary is missing")
+                raise SystemExit(f"Packaged binary is missing: {member_name}")
             packaged_binary = member.read()
     if packaged_binary != expected_binary:
         raise SystemExit(
@@ -216,22 +231,34 @@ check_writable_dir() {
 }
 
 check_path /opt/mera/RecorderLnx/RecorderLnx
+check_path /opt/mera/RecorderLnx/RecorderHostAgent
+check_path /opt/mera/RecorderLnx/NetworkShareManager
+check_path /opt/mera/RecorderLnx/RecorderHostAgent.ini
+check_path /usr/local/sbin/recorder-host-agent-shutdown
+check_path /usr/local/sbin/recorderlnx-connect-share
+check_path /usr/local/sbin/recorderlnx-share-folder
+check_path /usr/lib/systemd/user/recorder-host-agent.service
+check_path /etc/xdg/autostart/recorder-host-agent.desktop
+check_path /opt/mera/RecorderLnx/lib/libfbclient.so
 check_path /opt/mera/RecorderLnx/RecorderLnx.paths.ini
 check_path /opt/mera/RecorderLnx/bios/devices/mc201/mc_201a.bio
 check_path /opt/mera/RecorderLnx/res/sdb/Scales.ico
 check_path /usr/share/applications/recorderlnx.desktop
+check_path /usr/share/applications/recorderlnx-network-share-manager.desktop
 check_path /usr/share/icons/hicolor/256x256/apps/recorderlnx.png
 check_path /usr/bin/recorderlnx
 check_path /var/opt/mera/RecorderLnx/config/app.ini
 check_path /var/opt/mera/RecorderLnx/config/projects/default/default.config.json
-if ldconfig -p 2>/dev/null | grep -q 'libfbclient[.]so'; then
+if { command -v ldconfig >/dev/null 2>&1 && ldconfig -p 2>/dev/null ||
+     [ -x /sbin/ldconfig ] && /sbin/ldconfig -p 2>/dev/null; } |
+   grep -q 'libfbclient[.]so'; then
   echo "OK   Firebird client library"
 else
   echo "MISS Firebird client library (install libfbclient2)"
   status=1
 fi
 check_writable_dir /var/opt/mera
-check_writable_dir /var/opt/mera/SQLdb
+check_path /var/opt/mera/SQLdb
 check_writable_dir /var/opt/mera/RecorderLnx/config
 check_writable_dir /var/opt/mera/Calibr
 check_writable_dir /var/opt/mera/Resources
@@ -248,7 +275,7 @@ Section: science
 Priority: optional
 Architecture: {architecture}
 Maintainer: Mera
-Depends: libc6, libgtk2.0-0, libfbclient2
+Depends: libc6, libgtk2.0-0, libfbclient2, sudo, cifs-utils, policykit-1, samba
 Installed-Size: {installed_size_kb}
 Description: RecorderLnx measurement recorder
  Cross-platform RecorderLnx measurement recorder.
@@ -265,6 +292,66 @@ log() {
   fi
 }
 
+configure_host_agent_firewall() {
+  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+    ufw allow 8766/tcp comment 'Mera RecorderHostAgent API' >/dev/null 2>&1 || \
+      log "failed to allow TCP 8766 in ufw"
+    log "HostAgent firewall rule checked: ufw TCP 8766"
+    return
+  fi
+
+  if command -v firewall-cmd >/dev/null 2>&1 && \
+     firewall-cmd --state >/dev/null 2>&1; then
+    firewall-cmd --permanent --add-port=8766/tcp >/dev/null 2>&1 || \
+      log "failed to allow TCP 8766 in firewalld"
+    firewall-cmd --reload >/dev/null 2>&1 || \
+      log "failed to reload firewalld"
+    log "HostAgent firewall rule checked: firewalld TCP 8766"
+  fi
+}
+
+configure_host_agent_shutdown() {
+  runtime_user="$1"
+  sudoers_file=/etc/sudoers.d/recorder-host-agent
+  if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
+    log "shutdown helper installed; no desktop user selected for sudoers"
+    return 1
+  fi
+  printf '%s ALL=(root) NOPASSWD: /usr/local/sbin/recorder-host-agent-shutdown\n' \
+    "$runtime_user" > "$sudoers_file"
+  chmod 0440 "$sudoers_file"
+  if command -v visudo >/dev/null 2>&1 && ! visudo -cf "$sudoers_file" >/dev/null 2>&1; then
+    rm -f "$sudoers_file"
+    log "shutdown sudoers validation failed; shutdown remains disabled"
+    return 1
+  fi
+  sed -i 's/^allow_shutdown=.*/allow_shutdown=1/' \
+    /opt/mera/RecorderLnx/RecorderHostAgent.ini
+  log "shutdown helper enabled for user: $runtime_user"
+  return 0
+}
+
+start_host_agent_for_logged_in_users() {
+  command -v loginctl >/dev/null 2>&1 || return 0
+  command -v runuser >/dev/null 2>&1 || return 0
+
+  loginctl list-users --no-legend 2>/dev/null | while read -r uid user rest; do
+    [ -n "$uid" ] || continue
+    [ -n "$user" ] || continue
+    [ "$uid" -ge 1000 ] 2>/dev/null || continue
+    runtime_dir="/run/user/$uid"
+    [ -S "$runtime_dir/bus" ] || continue
+    if runuser -u "$user" -- env \
+      XDG_RUNTIME_DIR="$runtime_dir" \
+      DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus" \
+      systemctl --user restart recorder-host-agent.service >/dev/null 2>&1; then
+      log "RecorderHostAgent restarted for logged-in user: $user"
+    else
+      log "RecorderHostAgent restart deferred until next graphical login: $user"
+    fi
+  done
+}
+
 desktop_dir_from_user_dirs() {
   user_home="$1"
   user_dirs="$user_home/.config/user-dirs.dirs"
@@ -279,8 +366,6 @@ desktop_dir_from_user_dirs() {
 }
 
 install_desktop_shortcuts() {
-  src=/usr/share/applications/recorderlnx.desktop
-  [ -f "$src" ] || { log "desktop source not found: $src"; return 0; }
   for home in /home/*; do
     [ -d "$home" ] || continue
     user=$(basename "$home")
@@ -290,16 +375,20 @@ install_desktop_shortcuts() {
       candidates="$xdg_desktop
 $candidates"
     fi
-    printf '%s\\n' "$candidates" | while IFS= read -r desktop; do
-      [ -n "$desktop" ] || continue
-      [ -d "$desktop" ] || continue
-      cp "$src" "$desktop/RecorderLnx.desktop" || {
-        log "failed to copy desktop shortcut to $desktop"
-        continue
-      }
-      chmod 755 "$desktop/RecorderLnx.desktop" || true
-      chown "$user:$user" "$desktop/RecorderLnx.desktop" 2>/dev/null || true
-      log "desktop shortcut created: $desktop/RecorderLnx.desktop"
+    for shortcut in RecorderLnx.desktop NetworkShareManager.desktop; do
+      case "$shortcut" in
+        RecorderLnx.desktop) src=/usr/share/applications/recorderlnx.desktop ;;
+        NetworkShareManager.desktop) src=/usr/share/applications/recorderlnx-network-share-manager.desktop ;;
+      esac
+      [ -f "$src" ] || continue
+      printf '%s\\n' "$candidates" | while IFS= read -r desktop; do
+        [ -n "$desktop" ] || continue
+        [ -d "$desktop" ] || continue
+        cp "$src" "$desktop/$shortcut" || continue
+        chmod 755 "$desktop/$shortcut" || true
+        chown "$user:$user" "$desktop/$shortcut" 2>/dev/null || true
+        log "desktop shortcut created: $desktop/$shortcut"
+      done
     done
   done
 }
@@ -307,17 +396,45 @@ $candidates"
 mkdir -p /var/opt/mera/RecorderLnx/config/projects/default
 mkdir -p /var/opt/mera/SQLdb
 mkdir -p /var/opt/mera/Calibr /var/opt/mera/Resources /var/opt/mera/SDB
+mkdir -p /opt/mera/RecorderLnx/lib
 touch "$LOG" 2>/dev/null || true
 log "RecorderLnx postinst started"
+fbclient_path=$(ldconfig -p 2>/dev/null | awk '/libfbclient[.]so[.]2([[:space:]]|$)/ {print $NF; exit}')
+if [ -z "$fbclient_path" ]; then
+  fbclient_path=$(find /usr/lib /lib \\( -type f -o -type l \\) \\
+    -name 'libfbclient.so.2' -print 2>/dev/null | head -n 1 || true)
+fi
+if [ -n "$fbclient_path" ] && [ -e "$fbclient_path" ]; then
+  ln -sfn "$fbclient_path" /opt/mera/RecorderLnx/lib/libfbclient.so
+  log "Firebird client compatibility link: /opt/mera/RecorderLnx/lib/libfbclient.so -> $fbclient_path"
+else
+  log "ERROR libfbclient.so.2 was not found after package dependency installation"
+fi
 if [ ! -f /var/opt/mera/RecorderLnx/config/app.ini ]; then
   cp /usr/share/recorderlnx/config/app.ini /var/opt/mera/RecorderLnx/config/app.ini
   log "app.ini copied"
+fi
+if ! grep -q '^\\[SQLdbConnection\\]$' /var/opt/mera/RecorderLnx/config/app.ini; then
+  printf '\n' >> /var/opt/mera/RecorderLnx/config/app.ini
+  sed -n '/^\\[SQLdbConnection\\]$/,$p' /usr/share/recorderlnx/config/app.ini \
+    >> /var/opt/mera/RecorderLnx/config/app.ini
+  log "SQLdbConnection added to app.ini"
 fi
 if [ ! -f /var/opt/mera/RecorderLnx/config/projects/default/default.config.json ]; then
   cp -a /usr/share/recorderlnx/config/projects/default/. /var/opt/mera/RecorderLnx/config/projects/default/
   log "default project copied"
 fi
 chmod 755 /opt/mera/RecorderLnx/RecorderLnx
+chmod 755 /opt/mera/RecorderLnx/RecorderHostAgent
+if command -v systemctl >/dev/null 2>&1; then
+  # An older package enabled this as a systemd user unit.  Disable that link
+  # to avoid two agents competing for TCP 8766.  XDG Autostart below is the
+  # authoritative launcher because it inherits DISPLAY/Wayland on Astra.
+  systemctl --global disable recorder-host-agent.service >/dev/null 2>&1 || true
+fi
+log "RecorderHostAgent registered in XDG Autostart; it starts at graphical login"
+start_host_agent_for_logged_in_users
+configure_host_agent_firewall
 config_root=/var/opt/mera/RecorderLnx/config
 runtime_user="${SUDO_USER:-}"
 if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
@@ -340,6 +457,7 @@ if [ -n "$runtime_user" ] && [ "$runtime_user" != root ] && id "$runtime_user" >
     /var/opt/mera/SDB -type d -exec chmod 0700 {} +
   find "$config_root" /var/opt/mera/Calibr /var/opt/mera/Resources \
     /var/opt/mera/SDB -type f -exec chmod 0600 {} +
+  configure_host_agent_shutdown "$runtime_user" || true
 else
   log "runtime user is unknown; writable config permissions were not broadened"
 fi
@@ -351,8 +469,31 @@ fi
 log "RecorderLnx postinst finished"
 exit 0
 """
+    prerm = """#!/bin/sh
+set -e
+
+# dpkg replaces executable files without terminating processes that still map
+# the old inode.  Stop only instances launched from this package, before files
+# are unpacked, so an upgrade cannot leave an old RecorderLnx or HostAgent alive.
+if [ "${1:-}" = upgrade ] || [ "${1:-}" = remove ] || [ "${1:-}" = deconfigure ]; then
+  if command -v pkill >/dev/null 2>&1; then
+    pkill -TERM -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' 2>/dev/null || true
+    pkill -TERM -f '^/opt/mera/RecorderLnx/RecorderHostAgent([[:space:]]|$)' 2>/dev/null || true
+    sleep 1
+    pkill -KILL -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' 2>/dev/null || true
+    pkill -KILL -f '^/opt/mera/RecorderLnx/RecorderHostAgent([[:space:]]|$)' 2>/dev/null || true
+  fi
+fi
+exit 0
+"""
     postrm = """#!/bin/sh
 set -e
+if [ "${1:-}" = remove ] || [ "${1:-}" = purge ]; then
+  rm -f /etc/sudoers.d/recorder-host-agent
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --global disable recorder-host-agent.service >/dev/null 2>&1 || true
+  fi
+fi
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
 fi
@@ -362,6 +503,7 @@ exit 0
     def build(tar):
         add_bytes(tar, "control", control)
         add_bytes(tar, "postinst", postinst, 0o755)
+        add_bytes(tar, "prerm", prerm, 0o755)
         add_bytes(tar, "postrm", postrm, 0o755)
 
     return gzip_tar(build)
@@ -370,6 +512,10 @@ exit 0
 def make_data_tar(repo_root):
     project_root = repo_root / "Lazarus" / "RecorderLnx"
     linux_lib = project_root / "lib" / "x86_64-linux"
+    agent_exe = linux_lib / AGENT_NAME
+    share_manager_exe = project_root / "Tools" / "NetworkShareManager" / "lib" / "x86_64-linux" / "NetworkShareManager"
+    share_helper = project_root / "Scripts" / "linux" / "recorderlnx-connect-share"
+    publish_helper = project_root / "Scripts" / "linux" / "recorderlnx-share-folder"
     app_ini = project_root / "config" / "app.ini"
     default_project = project_root / "config" / "projects" / "default"
     bios_file = project_root / "Device" / "MCbus" / "resources" / "devices" / "mc201" / "mc_201a.bio"
@@ -395,12 +541,64 @@ Keywords=RecorderLnx;Mera;Recorder;Measurements;
 StartupNotify=false
 NoDisplay=false
 """
+    share_manager_desktop = """[Desktop Entry]
+Type=Application
+Name=Сетевые ресурсы RecorderLnx
+Comment=Подключение общих каталогов измерений
+Exec=/opt/mera/RecorderLnx/NetworkShareManager
+Path=/opt/mera/RecorderLnx
+Terminal=false
+Icon=folder-remote
+Categories=Utility;Network;
+Keywords=RecorderLnx;Mera;SMB;Network;
+StartupNotify=true
+NoDisplay=false
+"""
+    agent_config = """[agent]
+listen=0.0.0.0
+port=8766
+recorder_path=/usr/bin/recorderlnx
+allow_shutdown=0
+api_token=
+"""
+    shutdown_helper = """#!/bin/sh
+set -eu
+
+# This root-owned, argument-free helper is the only command granted through
+# sudoers. The network-facing agent cannot choose another privileged command.
+if command -v systemd-run >/dev/null 2>&1 && command -v systemctl >/dev/null 2>&1; then
+  exec systemd-run --unit=recorder-host-agent-poweroff --on-active=3s \\
+    systemctl poweroff --no-wall
+fi
+exec /sbin/shutdown -h +1
+"""
+    agent_service = """[Unit]
+Description=Mera RecorderLnx remote start agent
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mera/RecorderLnx
+ExecStart=/opt/mera/RecorderLnx/RecorderHostAgent
+SyslogIdentifier=RecorderHostAgent
+StandardOutput=journal
+StandardError=journal
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+"""
 
     def build(tar):
         for directory in [
+            "etc",
+            "etc/xdg",
+            "etc/xdg/autostart",
             "opt",
             "opt/mera",
             "opt/mera/RecorderLnx",
+            "opt/mera/RecorderLnx/lib",
             "opt/mera/RecorderLnx/plugins",
             "opt/mera/RecorderLnx/res",
             "opt/mera/RecorderLnx/bios",
@@ -409,6 +607,8 @@ NoDisplay=false
             "opt/mera/RecorderLnx/syscom",
             "usr",
             "usr/bin",
+            "usr/local",
+            "usr/local/sbin",
             "usr/share",
             "usr/share/applications",
             "usr/share/icons",
@@ -419,6 +619,9 @@ NoDisplay=false
             "usr/share/recorderlnx/config",
             "usr/share/recorderlnx/config/projects",
             "usr/share/recorderlnx/config/projects/default",
+            "usr/lib",
+            "usr/lib/systemd",
+            "usr/lib/systemd/user",
             "var",
             "var/opt",
             "var/opt/mera",
@@ -433,16 +636,42 @@ NoDisplay=false
         ]:
             add_dir(tar, directory)
         add_file(tar, linux_lib / APP_NAME, "opt/mera/RecorderLnx/RecorderLnx", 0o755)
+        add_file(tar, agent_exe, "opt/mera/RecorderLnx/RecorderHostAgent", 0o755)
+        add_file(tar, share_manager_exe, "opt/mera/RecorderLnx/NetworkShareManager", 0o755)
+        add_bytes(tar, "opt/mera/RecorderLnx/RecorderHostAgent.ini", agent_config)
+        add_bytes(tar, "usr/local/sbin/recorder-host-agent-shutdown",
+                  shutdown_helper, 0o755)
+        add_file(tar, share_helper, "usr/local/sbin/recorderlnx-connect-share", 0o755)
+        add_file(tar, publish_helper, "usr/local/sbin/recorderlnx-share-folder", 0o755)
+        add_bytes(tar, "usr/lib/systemd/user/recorder-host-agent.service",
+                  agent_service)
+        agent_autostart = """[Desktop Entry]
+Type=Application
+Name=RecorderLnx Host Agent
+Comment=Remote launcher for RecorderLnx
+Exec=/opt/mera/RecorderLnx/RecorderHostAgent
+TryExec=/opt/mera/RecorderLnx/RecorderHostAgent
+Path=/opt/mera/RecorderLnx
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+"""
+        add_bytes(tar, "etc/xdg/autostart/recorder-host-agent.desktop",
+                  agent_autostart)
         add_tree(tar, linux_lib / "res", "opt/mera/RecorderLnx/res")
         if bios_file.exists():
             add_file(tar, bios_file, "opt/mera/RecorderLnx/bios/devices/mc201/mc_201a.bio")
         add_bytes(tar, "opt/mera/RecorderLnx/RecorderLnx.paths.ini", paths_ini)
         add_bytes(tar, "usr/share/applications/recorderlnx.desktop", desktop)
+        add_bytes(tar, "usr/share/applications/recorderlnx-network-share-manager.desktop",
+                  share_manager_desktop)
         add_file(tar, app_icon, "usr/share/icons/hicolor/256x256/apps/recorderlnx.png")
         launcher = """#!/bin/sh
 if [ -r /etc/profile.d/recorderlnx-sqldb.sh ]; then
   . /etc/profile.d/recorderlnx-sqldb.sh
 fi
+export LD_LIBRARY_PATH="/opt/mera/RecorderLnx/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 exec /opt/mera/RecorderLnx/RecorderLnx "$@"
 """
         add_bytes(tar, "usr/bin/recorderlnx", launcher, 0o755)
@@ -476,13 +705,51 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     linux_exe = repo_root / "Lazarus" / "RecorderLnx" / "lib" / "x86_64-linux" / APP_NAME
+    agent_exe = repo_root / "Lazarus" / "RecorderLnx" / "lib" / "x86_64-linux" / AGENT_NAME
+    share_manager_exe = (repo_root / "Lazarus" / "RecorderLnx" / "Tools" /
+                         "NetworkShareManager" / "lib" / "x86_64-linux" /
+                         "NetworkShareManager")
     if not linux_exe.exists():
         raise SystemExit(f"Linux binary not found: {linux_exe}")
+    if not agent_exe.exists():
+        raise SystemExit(
+            f"Linux host agent binary not found: {agent_exe}. "
+            "Build RecorderHostAgent.lpi on Linux before packaging."
+        )
+    if not share_manager_exe.exists():
+        raise SystemExit(
+            f"Linux NetworkShareManager binary not found: {share_manager_exe}. "
+            "Build NetworkShareManager.lpi on Linux before packaging."
+        )
 
     binary, schema_version = validate_linux_binary(repo_root, linux_exe)
+    agent_binary = agent_exe.read_bytes()
+    if not agent_binary.startswith(b"\x7fELF"):
+        raise SystemExit(f"Not a Linux ELF executable: {agent_exe}")
+    share_manager_binary = share_manager_exe.read_bytes()
+    if not share_manager_binary.startswith(b"\x7fELF"):
+        raise SystemExit(f"Not a Linux ELF executable: {share_manager_exe}")
+    latest_share_manager_source = newest_tree_source(share_manager_exe.parents[2])
+    if (latest_share_manager_source is not None and
+            share_manager_exe.stat().st_mtime <
+            latest_share_manager_source.stat().st_mtime):
+        raise SystemExit(
+            "Linux NetworkShareManager is older than its sources. "
+            f"Binary: {share_manager_exe} "
+            f"({time.ctime(share_manager_exe.stat().st_mtime)}); "
+            f"newest source: {latest_share_manager_source} "
+            f"({time.ctime(latest_share_manager_source.stat().st_mtime)}). "
+            "Run lazbuild -B NetworkShareManager.lpi on Linux before packaging."
+        )
 
     data_tar = make_data_tar(repo_root)
-    verify_packaged_binary(data_tar, binary)
+    verify_packaged_binary(
+        data_tar, "opt/mera/RecorderLnx/RecorderLnx", binary)
+    verify_packaged_binary(
+        data_tar, "opt/mera/RecorderLnx/RecorderHostAgent", agent_binary)
+    verify_packaged_binary(
+        data_tar, "opt/mera/RecorderLnx/NetworkShareManager",
+        share_manager_binary)
     installed_size_kb = max(1, len(data_tar) // 1024)
     control_tar = make_control_tar(args.version, args.architecture, installed_size_kb)
     output_file = output_dir / f"{PACKAGE_NAME}_{args.version}_{args.architecture}.deb"
@@ -491,6 +758,16 @@ def main():
         f"Linux input: {linux_exe} size={len(binary)} "
         f"mtime={time.ctime(linux_exe.stat().st_mtime)} "
         f"schema={schema_version} SHA256={sha256_bytes(binary)}"
+    )
+    print(
+        f"Linux agent input: {agent_exe} size={len(agent_binary)} "
+        f"mtime={time.ctime(agent_exe.stat().st_mtime)} "
+        f"SHA256={sha256_bytes(agent_binary)}"
+    )
+    print(
+        f"Linux share manager input: {share_manager_exe} "
+        f"size={len(share_manager_binary)} "
+        f"SHA256={sha256_bytes(share_manager_binary)}"
     )
     print(f"DEB SHA256={sha256_bytes(output_file.read_bytes())}")
     print(output_file)
