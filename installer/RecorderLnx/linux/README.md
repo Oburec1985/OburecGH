@@ -142,14 +142,23 @@ If one build computer is unavailable, the builder tries the next active entry
 from the host list. Packaging starts only after both forced Linux builds finish
 successfully.
 
-## Network share manager
+## Linux setup manager
 
-The package installs `/opt/mera/RecorderLnx/NetworkShareManager`, the
-root-owned `/usr/local/sbin/recorderlnx-connect-share` helper, and a desktop
-and menu shortcut named `Сетевые ресурсы RecorderLnx`. SMB mounting is supplied
-by the `cifs-utils` package dependency.
+The package installs the expandable `/opt/mera/RecorderLnx/LinuxSetupManager`
+and a desktop/menu shortcut named `Настройка Linux`. Its sections configure the
+computer name, Wake-on-LAN, publication of a local directory and connection of
+SMB resources. Each section includes an explanation and equivalent console
+commands. Narrow root-owned helpers live under `/usr/local/sbin`; dependencies
+include Samba, `cifs-utils`, PolicyKit and `ethtool`.
 
 The settings button beside `Каталог замеров` uses
 `/usr/local/sbin/recorderlnx-share-folder` and publishes the selected directory
 as the read-only `MeraFiles` Samba share. The package installs this helper and
 the Samba server dependency.
+# Обязательная сборка перед упаковкой
+
+`build-installer.ps1` упаковывает уже собранные Linux ELF и намеренно не
+запускает Lazarus. Перед выпуском критического исправления выполните в Atra VM
+`Lazarus/Tools/build_recorderlnx_linux.sh`: скрипт принудительно собирает
+RecorderLnx, RecorderHostAgent, LinuxSetupManager и LinuxSetupManagerCli и
+пишет результат в `Lazarus/RecorderLnx/linux_build_report.txt`.

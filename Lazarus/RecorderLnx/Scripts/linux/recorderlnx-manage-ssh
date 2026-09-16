@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+usage() {
+  cat <<'EOF'
+Управление SSH-доступом.
+
+Команды:
+  status | start | stop | enable | disable
+  firewall status|allow|delete
+  install-key --user USER --key-file PUBLIC_KEY_FILE
+  command --user USER [--host HOST] [--port PORT]
+
+Изменяющие команды требуют sudo. install-key принимает только публичный ключ,
+не читает и не копирует приватные ключи, повторный запуск не создаёт дубликат.
+EOF
+}
+
+service_name() {
+  if systemctl list-unit-files ssh.service --no-legend 2>/dev/null | grep -q '^ssh\.service'; then printf ssh; else printf sshd; fi
+}
+need_root() { (( EUID == 0 )) || die 'команда требует sudo'; }
+valid_user() { [[ $1 =~ ^[a-z_][a-z0-9_-]*[$]?$ ]] && getent passwd "$1" >/dev/null; }
+
+service_action() {
+  local action=$1 service; service=$(service_name)
+  [[ $action == status ]] || need_root
+  systemctl "$action" "$service"
+}
+
+firewall_action() {
+  local action=${1:-status}; command -v ufw >/dev/null || die 'ufw не установлен; правило не изменялось'
+  case "$action" in
+    status) ufw status verbose ;;
+    allow) need_root; ufw allow OpenSSH ;;
+    delete) need_root; ufw --force delete allow OpenSSH ;;
+    *) die "неизвестное действие firewall: $action" ;;
+  esac
+}
+
+parse_common() {
+  user_name=''; key_file=''; host_name=''; port=22
+  while (($#)); do
+    case "$1" in
+      --user) user_name=${2:-}; shift 2 ;;
+      --key-file) key_file=${2:-}; shift 2 ;;
+      --host) host_name=${2:-}; shift 2 ;;
+      --port) port=${2:-}; shift 2 ;;
+      *) die "неизвестный параметр: $1" ;;
+    esac
+  done
+  valid_user "$user_name" || die 'пользователь не найден или не указан'
+  [[ $port =~ ^[0-9]+$ ]] && ((port >= 1 && port <= 65535)) || die 'неверный TCP-порт'
+}
+
+install_key() {
+  parse_common "$@"; need_root
+  [[ -f $key_file ]] || die 'файл публичного ключа не найден'
+  local key; key=$(tr -d '\r\n' < "$key_file")
+  [[ $key =~ ^(ssh-(rsa|ed25519)|ecdsa-sha2-nistp(256|384|521))[[:space:]]+[A-Za-z0-9+/=]+([[:space:]].*)?$ ]] || die 'файл не похож на OpenSSH public key'
+  local home group ssh_dir auth
+  home=$(getent passwd "$user_name" | cut -d: -f6); group=$(id -gn "$user_name")
+  [[ -n $home && $home == /* && -d $home ]] || die 'домашний каталог пользователя не найден'
+  ssh_dir="$home/.ssh"; auth="$ssh_dir/authorized_keys"
+  install -d -m 700 -o "$user_name" -g "$group" "$ssh_dir"
+  touch "$auth"; chown "$user_name:$group" "$auth"; chmod 600 "$auth"
+  grep -Fxq "$key" "$auth" || printf '%s\n' "$key" >> "$auth"
+  printf 'Публичный ключ установлен для %s.\n' "$user_name"
+}
+
+print_command() {
+  parse_common "$@"
+  [[ -n $host_name ]] || host_name=$(hostname -f 2>/dev/null || hostname)
+  printf 'ssh -p %q %q@%q\n' "$port" "$user_name" "$host_name"
+}
+
+command_name=${1:-help}; [[ $# -gt 0 ]] && shift
+case "$command_name" in
+  status|start|stop|enable|disable) service_action "$command_name" ;;
+  firewall) firewall_action "$@" ;;
+  install-key) install_key "$@" ;;
+  command) print_command "$@" ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

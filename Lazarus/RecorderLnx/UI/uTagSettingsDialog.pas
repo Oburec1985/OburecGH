@@ -685,6 +685,12 @@ var
   lMic185Settings: TMic185ChannelProgramSettings;
   lSettings: TRecorderMic140ChannelSettings;
 begin
+  { При множественном выборе cbGrayed означает разные исходные значения.
+    Первый явный щелчок должен стать общей командой «включить», иначе LCL
+    оставляет промежуточное состояние и StoreToTags пропускает все теги. }
+  if fHardwareCurveCheck.State = cbGrayed then
+    fHardwareCurveCheck.State := cbChecked;
+  fHardwareCurveCheck.AllowGrayed := False;
   if fTags.Count <> 1 then
     Exit;
   if Pos('MIC-185:', TagAt(0).SourceId) = 1 then

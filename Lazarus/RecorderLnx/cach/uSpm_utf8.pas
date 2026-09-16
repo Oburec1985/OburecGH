@@ -350,7 +350,7 @@ begin
   begin
     // копируем входные данные в выходной буфер
     // source dest count
-    /// Error???
+    /// TODO: проверить корректность смещения source/dest перед копированием.
     move(m_tag.m_ReadData[fShift * procBlock], m_EvalBlock.p^,
       copycount * sizeof(double));
 

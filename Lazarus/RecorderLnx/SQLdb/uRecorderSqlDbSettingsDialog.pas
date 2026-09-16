@@ -25,6 +25,7 @@ type
     btnTestFirebird: TButton;
     btnSelectAll: TButton;
     btnSelectNone: TButton;
+    btnImportSqlSelection: TButton;
     btnAssignEstimate: TButton;
     cbBackend: TComboBox;
     cbControlTag: TComboBox;
@@ -78,6 +79,7 @@ type
     procedure btnTestFirebirdClick(Sender: TObject);
     procedure btnSelectAllClick(Sender: TObject);
     procedure btnSelectNoneClick(Sender: TObject);
+    procedure btnImportSqlSelectionClick(Sender: TObject);
     procedure btnAssignEstimateClick(Sender: TObject);
     procedure cbBackendChange(Sender: TObject);
     procedure edDbSignalSearchChange(Sender: TObject);
@@ -127,7 +129,8 @@ function ShowRecorderSqlDbSettings(AOwner: TComponent;
 implementation
 
 uses
-  uRecorderSqlDbFirebirdTools, uRecorderSqlDbProjectManager;
+  uRecorderSqlDbFirebirdTools, uRecorderSqlDbProjectManager,
+  uRecorderTagTableExchange, uRecorderSqlSelectionImportDialog;
 
 {$R *.lfm}
 
@@ -203,10 +206,13 @@ begin
 
   btnSelectAll.Top := lBottomTop;
   btnSelectNone.Top := lBottomTop;
-  btnSelectAll.Width := Max(100, (gbSignals.ClientWidth - 24) div 2);
+  btnSelectAll.Width := Max(90, (gbSignals.ClientWidth - 32) div 3);
   btnSelectNone.Left := btnSelectAll.Left + btnSelectAll.Width + 8;
-  btnSelectNone.Width := Max(100,
-    gbSignals.ClientWidth - btnSelectNone.Left - 8);
+  btnSelectNone.Width := btnSelectAll.Width;
+  btnImportSqlSelection.Top := lBottomTop;
+  btnImportSqlSelection.Left := btnSelectNone.Left + btnSelectNone.Width + 8;
+  btnImportSqlSelection.Width := Max(90,
+    gbSignals.ClientWidth - btnImportSqlSelection.Left - 8);
 end;
 
 procedure TRecorderSqlDbSettingsDialog.LayoutDbChannelControls;
@@ -788,6 +794,108 @@ begin
     lFirstError + LineEnding + LineEnding + 'После попытки запуска Firebird:' +
     LineEnding + lMessage,
     mtError, [mbOK], 0);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnImportSqlSelectionClick(
+  Sender: TObject);
+var
+  I, lIndex: Integer;
+  lFileName, lInitialDir: string;
+  lDisableUnmarked, lDeleteUnmarked: Boolean;
+  lSelected, lPresent, lDeleteNames: TStringList;
+  lResult: TRecorderSqlSelectionTableResult;
+  lInfos: TRecorderSqlDbSignalInfos;
+  lRepository: TRecorderSqlDbRepository;
+  lSignalsDeleted, lValuesDeleted: Int64;
+begin
+  with TOpenDialog.Create(Self) do
+  try
+    Filter := 'Таблицы (*.xlsx;*.ods;*.csv)|*.xlsx;*.ods;*.csv|Все файлы|*.*';
+    lInitialDir := ExtractFileDir(ExcludeTrailingPathDelimiter(
+      ExtractFileDir(fFileName)));
+    InitialDir := lInitialDir;
+    if not Execute then Exit;
+    lFileName := FileName;
+  finally
+    Free;
+  end;
+  if not ShowRecorderSqlSelectionImportDialog(Self, lDisableUnmarked,
+    lDeleteUnmarked) then Exit;
+
+  lSelected := TStringList.Create;
+  lPresent := TStringList.Create;
+  lDeleteNames := TStringList.Create;
+  try
+    lSelected.CaseSensitive := False;
+    lSelected.Sorted := True;
+    lSelected.Duplicates := dupIgnore;
+    lPresent.CaseSensitive := False;
+    lPresent.Sorted := True;
+    lPresent.Duplicates := dupIgnore;
+    lDeleteNames.CaseSensitive := False;
+    lDeleteNames.Sorted := True;
+    lDeleteNames.Duplicates := dupIgnore;
+
+    ReadRecorderSqlSelectionFromTable(fRegistry, lFileName, lSelected,
+      lPresent, lResult);
+    SyncVisibleSignalChecks;
+    for I := 0 to lSelected.Count - 1 do
+      if fCheckedSignals.IndexOf(lSelected[I]) < 0 then
+        fCheckedSignals.Add(lSelected[I]);
+    if lDisableUnmarked then
+      for I := 0 to lPresent.Count - 1 do
+        if lSelected.IndexOf(lPresent[I]) < 0 then
+        begin
+          lIndex := fCheckedSignals.IndexOf(lPresent[I]);
+          if lIndex >= 0 then fCheckedSignals.Delete(lIndex);
+        end;
+    ApplySignalFilter;
+
+    lSignalsDeleted := 0;
+    lValuesDeleted := 0;
+    if lDeleteUnmarked then
+    begin
+      StoreControls;
+      lRepository := TRecorderSqlDbRepository.Create(fConfig);
+      try
+        lRepository.ListSignalInfos(lInfos, False);
+        for I := 0 to High(lInfos) do
+          if (lPresent.IndexOf(lInfos[I].Name) >= 0) and
+            (lSelected.IndexOf(lInfos[I].Name) < 0) then
+            lDeleteNames.Add(lInfos[I].Name);
+        if (lDeleteNames.Count > 0) and
+          (MessageDlg('SQL БД', Format(
+            'Удалить из БД невыбранные каналы таблицы: %d?',
+            [lDeleteNames.Count]), mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+          lRepository.DeleteSignalsByName(lDeleteNames, lSignalsDeleted,
+            lValuesDeleted)
+        else
+          lDeleteNames.Clear;
+      finally
+        lRepository.Free;
+      end;
+      if lDeleteNames.Count > 0 then
+      begin
+        TRecorderSqlDbProjectManager.RemoveSignals(fConfig, nil, lDeleteNames);
+        fConfig.SaveToFile(fFileName);
+        if Assigned(fOnSignalsDeleted) then fOnSignalsDeleted(lDeleteNames);
+        btnReadDbSignalsClick(nil);
+      end;
+    end;
+
+    MessageDlg('Импорт SQL', Format(
+      'Строк: %d; найдено каналов: %d; отмечено SQLdb: %d; '+
+      'не найдено на этом Recorder: %d.%sУдалено из БД каналов: %d, точек: %d.',
+      [lResult.TotalRows, lResult.MatchedRows, lResult.MarkedRows,
+       lResult.MissingRows, LineEnding, lSignalsDeleted, lValuesDeleted]),
+      mtInformation, [mbOK], 0);
+  except
+    on E: Exception do
+      MessageDlg('Ошибка импорта SQL', E.Message, mtError, [mbOK], 0);
+  end;
+  lDeleteNames.Free;
+  lPresent.Free;
+  lSelected.Free;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnSelectAllClick(Sender: TObject);

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+usage() {
+  cat <<'EOF'
+Управление пользователями, группами и ACL каталогов без смены владельца.
+
+Команды:
+  list-users
+  show --user USER [--path DIR ...]
+  validate --config FILE
+  plan --config FILE
+  apply --config FILE
+
+Формат FILE (повторяющиеся ACL_* разрешены):
+  USER=user
+  GROUPS=sudo,dialout,plugdev,sambashare
+  ACL_READ=/srv/read-only
+  ACL_RW=/srv/read-write
+
+apply требует root. Несуществующие системные группы пропускаются с предупреждением.
+ACL ставятся рекурсивно и как default ACL для новых объектов; владелец не меняется.
+EOF
+}
+
+config=''; user_name=''; declare -a paths=()
+parse_args() {
+  while (($#)); do
+    case "$1" in
+      --config) (($# >= 2)) || die 'после --config нужен файл'; config=$2; shift 2 ;;
+      --user) (($# >= 2)) || die 'после --user нужно имя'; user_name=$2; shift 2 ;;
+      --path) (($# >= 2)) || die 'после --path нужен каталог'; paths+=("$2"); shift 2 ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "неизвестный параметр: $1" ;;
+    esac
+  done
+}
+
+valid_user() { [[ $1 =~ ^[a-z_][a-z0-9_-]*[$]?$ ]]; }
+trim() { local v=$1; v="${v#"${v%%[![:space:]]*}"}"; v="${v%"${v##*[![:space:]]}"}"; printf '%s' "$v"; }
+
+load_config() {
+  [[ -f $config ]] || die "файл не найден: $config"
+  cfg_user=''; cfg_groups=''; cfg_read=(); cfg_rw=()
+  local line key value line_no=0
+  while IFS= read -r line || [[ -n $line ]]; do
+    ((line_no+=1)); line=${line%$'\r'}
+    [[ $line =~ ^[[:space:]]*(#|$) ]] && continue
+    [[ $line == *=* ]] || die "строка $line_no: ожидается KEY=VALUE"
+    key=$(trim "${line%%=*}"); value=$(trim "${line#*=}")
+    case "$key" in
+      USER) cfg_user=$value ;;
+      GROUPS) cfg_groups=$value ;;
+      ACL_READ) cfg_read+=("$value") ;;
+      ACL_RW) cfg_rw+=("$value") ;;
+      *) die "строка $line_no: неизвестный ключ $key" ;;
+    esac
+  done < "$config"
+  valid_user "$cfg_user" || die 'USER отсутствует или имеет неверный формат'
+  getent passwd "$cfg_user" >/dev/null || die "пользователь не найден: $cfg_user"
+  local path
+  for path in "${cfg_read[@]}" "${cfg_rw[@]}"; do
+    [[ -n $path && $path == /* ]] || die "ACL-каталог должен быть абсолютным: $path"
+    [[ -d $path ]] || die "каталог не найден: $path"
+  done
+}
+
+list_users() { getent passwd | awk -F: '$3 >= 1000 && $1 != "nobody" {print $1 "\t" $6 "\t" $7}'; }
+
+show_access() {
+  valid_user "$user_name" || die 'укажите --user USER'
+  id "$user_name"
+  local path
+  for path in "${paths[@]}"; do
+    printf '\n[%s]\n' "$path"
+    if command -v getfacl >/dev/null; then getfacl -p "$path"; else ls -ld "$path"; fi
+  done
+}
+
+existing_groups() {
+  local group
+  IFS=',' read -r -a requested <<< "$cfg_groups"
+  for group in "${requested[@]}"; do
+    group=$(trim "$group"); [[ -z $group ]] && continue
+    if getent group "$group" >/dev/null; then printf '%s\n' "$group"; else printf 'Предупреждение: группы %s нет, она будет пропущена.\n' "$group" >&2; fi
+  done
+}
+
+show_plan() {
+  local group path
+  while IFS= read -r group; do printf 'Добавить %s в группу %s\n' "$cfg_user" "$group"; done < <(existing_groups)
+  for path in "${cfg_read[@]}"; do printf 'ACL read: %s -> %s (recursive + default)\n' "$cfg_user" "$path"; done
+  for path in "${cfg_rw[@]}"; do printf 'ACL rw:   %s -> %s (recursive + default)\n' "$cfg_user" "$path"; done
+  printf 'Владелец и основная группа файлов не изменяются.\n'
+}
+
+apply_acl() {
+  local mode=$1 path=$2 access default
+  [[ $mode == read ]] && { access="u:${cfg_user}:r-X"; default="u:${cfg_user}:r-X"; } || { access="u:${cfg_user}:rwX"; default="u:${cfg_user}:rwX"; }
+  setfacl -R -m "$access" "$path"
+  find "$path" -type d -exec setfacl -m "d:${default}" {} +
+}
+
+apply_config() {
+  (( EUID == 0 )) || die 'apply нужно запускать через sudo'
+  command -v setfacl >/dev/null || die 'не установлена утилита setfacl (пакет acl)'
+  local group path
+  while IFS= read -r group; do usermod -aG "$group" "$cfg_user"; done < <(existing_groups)
+  for path in "${cfg_read[@]}"; do apply_acl read "$path"; done
+  for path in "${cfg_rw[@]}"; do apply_acl rw "$path"; done
+  printf 'Готово. Членство в группах применится при следующем входе пользователя.\n'
+}
+
+command_name=${1:-help}; [[ $# -gt 0 ]] && shift
+parse_args "$@"
+case "$command_name" in
+  list-users) list_users ;;
+  show) show_access ;;
+  validate) load_config; printf 'Конфигурация корректна.\n' ;;
+  plan) load_config; show_plan ;;
+  apply) load_config; show_plan; apply_config ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

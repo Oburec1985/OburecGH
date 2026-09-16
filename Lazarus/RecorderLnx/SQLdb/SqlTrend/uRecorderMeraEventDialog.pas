@@ -73,6 +73,9 @@ type
     procedure AcceptPackages(AWorker: TRecorderMeraPackageLoadThread);
     procedure FillPackages;
     procedure OpenPackages(ASelectedOnly: Boolean);
+    procedure OpenPackage(AIndex: Integer);
+    function RepairMissingPaths(const ARootDirectory,
+      AHostName: string): Integer;
     procedure RequestTransfer(ASelectedOnly: Boolean);
     function SaveChanges: Boolean;
     procedure UpdateButtons;
@@ -385,8 +388,122 @@ procedure TRecorderMeraEventDialog.grdPackagesDblClick(Sender: TObject);
 begin
   if grdPackages.Col = 6 then
     grdPackages.EditorMode := True
+  else if (grdPackages.Row > 0) and
+    (grdPackages.Row <= Length(fPackages)) then
+    OpenPackage(grdPackages.Row - 1);
+end;
+
+function FindNamedFileRecursive(const ARoot, AFileName: string;
+  out AFound: string): Boolean;
+var
+  lInfo: TSearchRec;
+  lPath: string;
+begin
+  Result := False;
+  AFound := '';
+  if FindFirst(IncludeTrailingPathDelimiter(ARoot) + '*', faAnyFile,
+    lInfo) <> 0 then Exit;
+  try
+    repeat
+      if (lInfo.Name = '.') or (lInfo.Name = '..') then Continue;
+      lPath := IncludeTrailingPathDelimiter(ARoot) + lInfo.Name;
+      if (lInfo.Attr and faDirectory) <> 0 then
+      begin
+        if FindNamedFileRecursive(lPath, AFileName, AFound) then Exit(True);
+      end
+      else if SameText(lInfo.Name, AFileName) then
+      begin
+        AFound := lPath;
+        Exit(True);
+      end;
+    until FindNext(lInfo) <> 0;
+  finally
+    FindClose(lInfo);
+  end;
+end;
+
+function TRecorderMeraEventDialog.RepairMissingPaths(
+  const ARootDirectory, AHostName: string): Integer;
+var
+  I: Integer;
+  lConfig: TRecorderSqlDbConfig;
+  lExpectedName, lFound, lRawPath, lResolved: string;
+  lRepository: TRecorderSqlDbRepository;
+begin
+  Result := 0;
+  lConfig := TRecorderSqlDbConfig.Create;
+  lRepository := nil;
+  try
+    lConfig.LoadFromFile(fConfigFileName);
+    lRepository := TRecorderSqlDbRepository.Create(lConfig);
+    for I := 0 to High(fPackages) do
+    begin
+      if not SameText(Trim(fPackages[I].HostName), Trim(AHostName)) then Continue;
+      lRawPath := Trim(grdPackages.Cells[6, I + 1]);
+      lResolved := ResolveRecorderNetworkPath(lRawPath);
+      if (lResolved <> '') and FileExists(lResolved) then Continue;
+      if (I > High(fLocationIds)) or (fLocationIds[I] = '') then Continue;
+      lExpectedName := ExtractFileName(StringReplace(lRawPath, '\', '/',
+        [rfReplaceAll]));
+      if (lExpectedName = '') or (ExtractFileExt(lExpectedName) = '') then
+        lExpectedName := fPackages[I].Recording.DisplayName + '.mera';
+      if FindNamedFileRecursive(ARootDirectory, lExpectedName, lFound) and
+        lRepository.UpdateDataFileLocationPath(fEvent.EventId,
+          fLocationIds[I], lFound) then
+      begin
+        fEntryPaths[I] := lFound;
+        grdPackages.Cells[6, I + 1] := lFound;
+        Inc(Result);
+      end;
+    end;
+  finally
+    lRepository.Free;
+    lConfig.Free;
+  end;
+end;
+
+procedure TRecorderMeraEventDialog.OpenPackage(AIndex: Integer);
+var
+  lDirectory, lExpectedName, lFound, lOpenPath, lRawPath: string;
+  lRepaired: Integer;
+begin
+  if (AIndex < 0) or (AIndex > High(fPackages)) then Exit;
+  lOpenPath := ResolveRecorderNetworkPath(
+    Trim(grdPackages.Cells[6, AIndex + 1]));
+  if (lOpenPath <> '') and FileExists(lOpenPath) and OpenDocument(lOpenPath) then
+  begin
+    lblStatus.Caption := 'Открыт выбранный замер.';
+    Exit;
+  end;
+  lDirectory := '';
+  if not SelectDirectory(
+    'Сетевой путь недоступен. Укажите каталог, где искать замеры события',
+    '', lDirectory) then
+  begin
+    lblStatus.Caption := 'Путь выбранного замера недоступен.';
+    Exit;
+  end;
+  lRawPath := Trim(grdPackages.Cells[6, AIndex + 1]);
+  lExpectedName := ExtractFileName(StringReplace(lRawPath, '\', '/',
+    [rfReplaceAll]));
+  if (lExpectedName = '') or (ExtractFileExt(lExpectedName) = '') then
+    lExpectedName := fPackages[AIndex].Recording.DisplayName + '.mera';
+  if not FindNamedFileRecursive(lDirectory, lExpectedName, lFound) then
+  begin
+    MessageDlg('Замер не найден', 'В выбранном каталоге нет файла ' +
+      lExpectedName + '. Пути в SQL не изменены.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lRepaired := RepairMissingPaths(lDirectory, fPackages[AIndex].HostName);
+  lOpenPath := ResolveRecorderNetworkPath(
+    Trim(grdPackages.Cells[6, AIndex + 1]));
+  if (lOpenPath <> '') and FileExists(lOpenPath) and OpenDocument(lOpenPath) then
+    lblStatus.Caption := Format('Открыт выбранный замер; исправлено путей: %d',
+      [lRepaired])
   else
-    OpenPackages(True);
+    MessageDlg('Замер не найден',
+      'В выбранном каталоге файл выбранного замера не найден. Исправлено других путей: ' +
+      IntToStr(lRepaired), mtWarning, [mbOK], 0);
 end;
 
 procedure TRecorderMeraEventDialog.OpenPackages(ASelectedOnly: Boolean);

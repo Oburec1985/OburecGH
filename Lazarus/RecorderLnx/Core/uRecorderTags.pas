@@ -434,7 +434,6 @@ type
     fFallbackStartTickMs: QWord;
     fTimeSystem: TRecorderTimeSystem;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
-    fNextId: TRecorderTagId;                          { Счетчик следующего ID }
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTagGroupPaths: TStringList;                      { Пользовательские группы дерева тегов }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
@@ -1705,7 +1704,6 @@ begin
   fTagGroupPaths.Sorted := True;
   fTagGroupPaths.Duplicates := dupIgnore;
   fTags := TList.Create;
-  fNextId := 1;
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -1782,11 +1780,23 @@ end;
 
 function TRecorderTagRegistry.CreateTag(const AName: string;
   ACapacity: Integer; AIsVirtual: Boolean): TRecorderTag;
+var
+  lGuid: TGUID;
+  lId: QWord;
+  I: Integer;
 begin
-  Result := TRecorderTag.Create(fNextId, AName, ACapacity, AIsVirtual);
+  repeat
+    if CreateGUID(lGuid) <> 0 then
+      raise ERecorderTagError.Create('Cannot generate tag id');
+    lId := 0;
+    for I := 0 to High(lGuid.Data4) do
+      lId := (lId shl 8) or lGuid.Data4[I];
+    lId := lId and QWord(High(TRecorderTagId));
+  until (lId <> 0) and (FindById(TRecorderTagId(lId)) = nil);
+  Result := TRecorderTag.Create(TRecorderTagId(lId), AName,
+    ACapacity, AIsVirtual);
   try
     AddTag(Result);
-    Inc(fNextId);
   except
     Result.Free;
     raise;
@@ -1828,8 +1838,6 @@ begin
 
   fTags.Add(ATag);
   RecorderLogTagAddTrace('added', ATag);
-  if ATag.Id >= fNextId then
-    fNextId := ATag.Id + 1;
   Result := ATag;
 end;
 
@@ -2560,7 +2568,6 @@ begin
   fConfiguredDataSources.Clear;
   fTagGroupPaths.Clear;
   fSelectedTagName := '';
-  fNextId := 1;
 end;
 
 

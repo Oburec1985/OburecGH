@@ -40,7 +40,8 @@ uses
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
   StrUtils, DateUtils, fpjson, jsonparser,
   uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
-  uRecorderFormModel,
+  uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
+  uRecorderPluginApi,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
@@ -54,7 +55,8 @@ uses
   uRecorderRecordChannelMetadata, uRecorderDeviceRecordChannelMetadata,
   uRecorderRecordTimebase,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
-  uRecorderSqlDbTypes, uRecorderSqlTrendModel, uRecorderSqlTrendView,
+  uRecorderSqlDbTypes, uRecorderSqlDbRuntime,
+  uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionView, uRecorderTrendView,
   uRecorderApplicationController, uRecorderConfigurationService,
@@ -63,9 +65,6 @@ uses
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
-  TRecorderAddTool = (ratNone, ratText, ratValue, ratOscillogram, ratTrend,
-    ratSqlTrend,
-    ratSpectrum, ratImage, ratButton, ratInputField, ratMeasurementSection);
 
   { TMainForm }
 
@@ -101,7 +100,6 @@ type
 
     // Обработчики стандартных действий и событий UI элементов формы
     procedure btnClearSearchClick(Sender: TObject);
-    procedure btnAddComponentClick(Sender: TObject);
     procedure btnDeleteComponentClick(Sender: TObject);
     procedure btnFormPagesClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
@@ -127,6 +125,7 @@ type
   private
     // Фабрики и менеджеры управления графическими элементами мнемосхем
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
+    fPluginRuntime: TRecorderPluginRuntime;
     fFormFactory: TRecorderFormFactory;           // Фабрика создания шаблонов страниц
     fFormManager: TRecorderFormManager;           // Менеджер набора страниц/формуляров проекта
     fDetachedForms: TStringList;                  // Отдельные окна пользовательских формуляров
@@ -139,17 +138,9 @@ type
     fEditorToolbar: TPanel;                       // Панель инструментов редактора
     fFormEditor: TFormEditorController;           // Контроллер логики перетаскивания и редактирования
     fEditModeButton: TSpeedButton;                // Кнопка включения режима конструктора
-    fChartToolGroup: TRecorderComponentToolGroup; // Осциллограмма, тренды и спектр
-    fAddMeasurementSectionButton: TSpeedButton;
-    fAddTextButton: TSpeedButton;                 // Кнопка добавления текстового поля
-    fAddDigitalButton: TSpeedButton;              // Кнопка добавления цифрового индикатора
-    fAddImageButton: TSpeedButton;                // Кнопка добавления картинки
-    fAddTagTableButton: TSpeedButton;             // Кнопка добавления таблицы тегов
-    fAddButtonButton: TSpeedButton;               // Кнопка добавления управляющей кнопки
-    fAddInputFieldButton: TSpeedButton;
-    fAddComboBoxButton: TSpeedButton;             // Кнопка добавления выпадающего списка
+    fComponentPalette: TRecorderComponentPalette;
     fDeleteComponentButton: TSpeedButton;         // Кнопка удаления выбранного компонента мнемосхемы
-    fPendingAddTool: TRecorderAddTool;
+    fPendingFactory: TRecorderComponentFactoryBase;
     
     // Элементы базового формуляра графиков (Base Page)
     fBaseToolbar: TPanel;                         // Тулбар управления графиками
@@ -294,38 +285,14 @@ type
     procedure OscillogramCountChange(Sender: TObject);
     { Пересчитывает габариты осциллограмм при изменении размера базовой страницы. }
     procedure BaseChartsPanelResize(Sender: TObject);
-    { Добавляет на активную страницу тестовую текстовую метку. }
-    procedure AddStaticTextComponentToActivePage;
-    { Добавляет на активную страницу тестовый цифровой индикатор TagValue. }
-    procedure AddTagValueComponentToActivePage;
-    procedure AddImageComponentToActivePage;
-    procedure AddButtonComponentToActivePage;
-    procedure AddInputFieldComponentToActivePage;
-    procedure AddButtonClick(Sender: TObject);
-    procedure AddInputFieldClick(Sender: TObject);
-    procedure SelectAddTool(Sender: TObject; ATool: TRecorderAddTool);
+    function PaletteIconIndex(const AIconId: string): Integer;
+    procedure PaletteFactorySelected(AFactory: TRecorderComponentFactoryBase;
+      AButton: TSpeedButton);
+    procedure PaletteGroupOpening(Sender: TObject);
+    procedure SelectAddFactory(AFactory: TRecorderComponentFactoryBase;
+      AButton: TSpeedButton);
     procedure PlaceSelectedTool(const APoint: TPoint);
     procedure ReleaseAddTool;
-    { Добавляет на активную страницу осциллограмму OpenGL. }
-    procedure AddOscillogramComponentToActivePage;
-    { Добавляет на активную страницу компонент тренда. }
-    procedure AddTrendComponentToActivePage;
-    procedure AddSqlTrendComponentToActivePage;
-    procedure AddMeasurementSectionComponentToActivePage;
-    { Добавляет на активную страницу спектр. }
-    procedure AddSpectrumComponentToActivePage;
-    { Обработчик кнопки добавления осциллограммы на полотне. }
-    procedure AddOscillogramClick(Sender: TObject);
-    { Обработчик кнопки добавления тренда на полотне. }
-    procedure AddTrendClick(Sender: TObject);
-    procedure AddSqlTrendClick(Sender: TObject);
-    procedure AddMeasurementSectionClick(Sender: TObject);
-    { Обработчик кнопки добавления спектра на полотне. }
-    procedure AddSpectrumClick(Sender: TObject);
-    procedure ChartToolGroupOpening(Sender: TObject);
-    { Обработчик кнопки добавления цифрового индикатора на полотне. }
-    procedure AddDigitalIndicatorClick(Sender: TObject);
-    procedure AddImageClick(Sender: TObject);
     { Переключает режим редактирования мнемосхемы. }
     procedure EditModeClick(Sender: TObject);
     { Создает dev-структуру config/projects/default и дефолтный run-control.ini. }
@@ -509,6 +476,7 @@ begin
   fComponentFactory.RegisterDefaultComponents;
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
+  fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory);
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
@@ -516,6 +484,10 @@ begin
   fDetachedForms.Sorted := True;
   fDetachedForms.Duplicates := dupError;
   SetProjectConfigDir(LoadDefaultProjectConfigDir);
+  EnsureDevConfig;
+  MigrateRecorderPluginConfig(fProjectConfigDir);
+  fPluginRuntime.LoadConfigured(RecorderPluginConfigFileName);
+  fPluginRuntime.NotifyAll(PN_RCINITIALIZED);
   ConfigureCoordinatorClient;
 
   LoadRecorderCommandImages(ilCommandButtons);
@@ -542,7 +514,6 @@ begin
   lPopupMenu.Items.Add(lMenuItem);
   lbTags.PopupMenu := lPopupMenu;
 
-  EnsureDevConfig;
   InitializeFormPages;
   LoadRunSettings;
   UpdateWinposButtonAction;
@@ -706,6 +677,7 @@ begin
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
   FreeAndNil(fComponentFactory);
+  FreeAndNil(fPluginRuntime);
   CloseRecordFrame;
   FreeAndNil(fMeraWriter);
   FreeAndNil(fRecordFrameManager);
@@ -905,11 +877,6 @@ begin
   end;
 end;
 
-procedure TMainForm.btnAddComponentClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratText);
-end;
-
 procedure TMainForm.btnDeleteComponentClick(Sender: TObject);
 begin
   try
@@ -1054,7 +1021,8 @@ end;
 
 function TMainForm.CoordinatorRecordingJson(ACompleted: Boolean): string;
 var
-  lDir, lMera, lMeasureName, lStarted, lFinished, lProject: string;
+  lDir, lMera, lMeasureName, lStarted, lFinished, lProject, lHost,
+  lShareName: string;
   lActive: Boolean;
 begin
   lActive := (fRecorder <> nil) and
@@ -1071,6 +1039,13 @@ begin
     lMera := '';
     lMeasureName := 'Запись RecorderLnx';
   end;
+  {$IFDEF UNIX}
+  lShareName := Trim(fRecorder.RunSettings.RecordShareName);
+  lHost := Trim(GetEnvironmentVariable('HOSTNAME'));
+  if (lMera <> '') and (lHost <> '') and (lShareName <> '') then
+    lMera := 'smb://' + lHost + '/' + lShareName + '/' +
+      lMeasureName + '/' + lMeasureName + '.mera';
+  {$ENDIF}
   if fCoordinatorRecordingStartedUtc > 0 then
     lStarted := DateToISO8601(fCoordinatorRecordingStartedUtc, True)
   else
@@ -1249,6 +1224,7 @@ var
   lCommand: TRecorderCoordinatorCommand;
 begin
   UpdateCoordinatorSnapshot;
+  ReportSqlDbError;
   if (fScheduledCoordinatorCommand <> nil) and
     (fScheduledCoordinatorCommand.ExecuteAtUtc <= RecorderCoordinatorUtcNow) then
   begin
@@ -1318,6 +1294,7 @@ begin
         AddLog('Configuration mode requested: recording stopped before settings.');
       end;
       AddLog('Configuration mode: settings dialog opened.');
+      fPluginRuntime.NotifyAll(PN_ENTERRCCONFIG);
       lSourcesWereRunning := fRecorder.DataSources.Running;
       lDataSourcesChanged := False;
       if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
@@ -1366,6 +1343,7 @@ begin
         else
           EnsureTagSignalBufferCapacities;
         AddLog('Project settings applied.');
+        fPluginRuntime.NotifyAll(PN_LEAVERCCONFIG);
       end
       else
         AddLog('Configuration mode: settings dialog closed without applying OK.');
@@ -1885,408 +1863,6 @@ begin
     TDetachedMnemonicForm(fDetachedForms.Objects[I]).SavePlacement;
 end;
 
-procedure TMainForm.AddStaticTextComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderStaticTextComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
-
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderStaticTextComponent(
-    fComponentFactory.CreateComponent(TRecorderStaticTextComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('TextLabel%d', [fNextComponentNo]);
-    lComponent.Text := 'Text label';
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 28);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddOscillogramClick(Sender: TObject);
-begin
-  fChartToolGroup.Button.Down := True;
-  SelectAddTool(fChartToolGroup.Button, ratOscillogram);
-end;
-
-procedure TMainForm.AddOscillogramComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderOscillogramComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
-
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderOscillogramComponent(
-    fComponentFactory.CreateComponent(TRecorderOscillogramComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Oscillogram%d', [fNextComponentNo]);
-    if (fRecorder.TagRegistry <> nil) and (fRecorder.TagRegistry.SelectedTag <> nil) then
-      RecorderBindComponentTag(lComponent, fRecorder.TagRegistry.SelectedTag);
-    lComponent.BindingMode := rtbmRelativeSelectedTag;
-    lComponent.TagOffset := 0;
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 360, 220);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddTrendClick(Sender: TObject);
-begin
-  fChartToolGroup.Button.Down := True;
-  SelectAddTool(fChartToolGroup.Button, ratTrend);
-end;
-
-procedure TMainForm.AddSqlTrendClick(Sender: TObject);
-begin
-  fChartToolGroup.Button.Down := True;
-  SelectAddTool(fChartToolGroup.Button, ratSqlTrend);
-end;
-
-procedure TMainForm.AddMeasurementSectionClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratMeasurementSection);
-end;
-
-procedure TMainForm.AddSqlTrendComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderSqlTrendComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if (lPage = nil) or (not IsUserMnemonicPage(lPage)) then
-    raise ERecorderFormError.Create(
-      'SQL trend can be added only to a user mnemonic page');
-  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
-  Inc(fNextComponentNo);
-  lComponent := TRecorderSqlTrendComponent(
-    fComponentFactory.CreateComponent(TRecorderSqlTrendComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('SqlTrend%d', [fNextComponentNo]);
-    lComponent.ConfigFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) +
-      'sql-db.ini';
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 520, 320);
-    if fFormEditor <> nil then fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-  AddLog('SQL trend component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddMeasurementSectionComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderMeasurementSectionComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if (lPage = nil) or (not IsUserMnemonicPage(lPage)) then
-    raise ERecorderFormError.Create(
-      'Measurement section can be added only to a user mnemonic page');
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderMeasurementSectionComponent(
-    fComponentFactory.CreateComponent(TRecorderMeasurementSectionComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Section%d', [fNextComponentNo]);
-    lComponent.Caption := 'Измерительное сечение';
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 220, 80);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Measurement section component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddTrendComponentToActivePage;
-var
-  lAxis: TRecorderTrendAxis;
-  lLine: TRecorderTrendLine;
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderTrendComponent;
-  lTag: TRecorderTag;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
-
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderTrendComponent(
-    fComponentFactory.CreateComponent(TRecorderTrendComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Trend%d', [fNextComponentNo]);
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-
-    lTag := nil;
-    if fRecorder.TagRegistry <> nil then
-    begin
-      lTag := fRecorder.TagRegistry.SelectedTag;
-      if (lTag = nil) and (fRecorder.TagRegistry.TagCount > 0) then
-        lTag := fRecorder.TagRegistry.Tags[0];
-    end;
-
-    if lTag <> nil then
-    begin
-      RecorderBindComponentTag(lComponent, lTag);
-      if lComponent.AxisCount > 0 then
-      begin
-        lAxis := lComponent.Axes[0];
-        lAxis.Name := lTag.UnitName;
-        if lAxis.Name = '' then
-          lAxis.Name := 'Y';
-        if lTag.RangeMax > lTag.RangeMin then
-        begin
-          lAxis.RangeMin := lTag.RangeMin;
-          lAxis.RangeMax := lTag.RangeMax;
-        end;
-      end;
-      lLine := lComponent.AddLine;
-      RecorderBindTrendLineTag(lLine, lTag);
-      lLine.EstimateKind := tekMean;
-      lLine.AxisIndex := 0;
-    end;
-
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddSpectrumClick(Sender: TObject);
-begin
-  fChartToolGroup.Button.Down := True;
-  SelectAddTool(fChartToolGroup.Button, ratSpectrum);
-end;
-
-procedure TMainForm.ChartToolGroupOpening(Sender: TObject);
-begin
-  ReleaseAddTool;
-end;
-
-procedure TMainForm.AddSpectrumComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderSpectrumComponent;
-  lTag: TRecorderTag;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
-
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderSpectrumComponent(
-    fComponentFactory.CreateComponent(TRecorderSpectrumComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Spectrum%d', [fNextComponentNo]);
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 400, 300);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-
-    lTag := nil;
-    if fRecorder.TagRegistry <> nil then
-    begin
-      lTag := fRecorder.TagRegistry.SelectedTag;
-      if (lTag = nil) and (fRecorder.TagRegistry.TagCount > 0) then
-        lTag := fRecorder.TagRegistry.Tags[0];
-    end;
-
-    if lTag <> nil then
-      lComponent.SetTagRefAt(lComponent.TagNames.Count, lTag);
-
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddDigitalIndicatorClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratValue);
-end;
-
-procedure TMainForm.AddButtonComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderButtonComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if (lPage = nil) or not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Button can be added only to a user mnemonic page');
-  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
-  Inc(fNextComponentNo);
-  lComponent := TRecorderButtonComponent(
-    fComponentFactory.CreateComponent(TRecorderButtonComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Button%d', [fNextComponentNo]);
-    lComponent.Caption := 'Button';
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 120, 32);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddInputFieldComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderInputFieldComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if (lPage = nil) or not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create(
-      'Input field can be added only to a user mnemonic page');
-  if fFormEditor <> nil then fFormEditor.RememberUndoStep;
-  Inc(fNextComponentNo);
-  lComponent := TRecorderInputFieldComponent(
-    fComponentFactory.CreateComponent(TRecorderInputFieldComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('InputField%d', [fNextComponentNo]);
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 32, 120, 28);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddInputFieldClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratInputField);
-end;
-
-procedure TMainForm.AddImageClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratImage);
-end;
-
-procedure TMainForm.AddImageComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderImageComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create(
-      'Components can be added only to user mnemonic pages');
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderImageComponent(
-    fComponentFactory.CreateComponent(TRecorderImageComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('Image%d', [fNextComponentNo]);
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 200, 140);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
-procedure TMainForm.AddTagValueComponentToActivePage;
-var
-  lPage: TRecorderFormPage;
-  lComponent: TRecorderTagValueComponent;
-begin
-  lPage := fFormManager.ActivePage;
-  if lPage = nil then
-    raise ERecorderFormError.Create('Cannot add component without active page');
-  if not IsUserMnemonicPage(lPage) then
-    raise ERecorderFormError.Create('Components can be added only to user mnemonic pages');
-
-  if fFormEditor <> nil then
-    fFormEditor.RememberUndoStep;
-
-  Inc(fNextComponentNo);
-  lComponent := TRecorderTagValueComponent(
-    fComponentFactory.CreateComponent(TRecorderTagValueComponent.TypeId));
-  try
-    lComponent.Id := Format('%s.component%d', [lPage.Id, fNextComponentNo]);
-    lComponent.Name := Format('DigitalIndicator%d', [fNextComponentNo]);
-    lComponent.TagName := 'MemTag';
-    lComponent.DisplayFormat := '0.0';
-    lComponent.SetBounds(16, 16 + lPage.ComponentCount * 36, 180, 32);
-    if fFormEditor <> nil then
-      fFormEditor.PositionNewComponent(lComponent);
-    lPage.AddComponent(lComponent);
-  except
-    lComponent.Free;
-    raise;
-  end;
-
-  AddLog('Form component added: ' + lComponent.Id);
-end;
-
 procedure TMainForm.EditModeClick(Sender: TObject);
 begin
   if fFormEditor <> nil then
@@ -2327,6 +1903,10 @@ begin
 end;
 
 procedure TMainForm.EnsureEditorSurface;
+var
+  I: Integer;
+  lNextLeft: Integer;
+  lButton: TSpeedButton;
 begin
   if fEditorShell <> nil then
     Exit;
@@ -2344,29 +1924,23 @@ begin
   fEditorToolbar.BevelOuter := bvLowered;
 
   fEditModeButton := AddEditMnemoToolBarButton(4, CIconEditForm, 'Edit mnemonic', @EditModeClick, 1, True);
-  fChartToolGroup := TRecorderComponentToolGroup.Create(Self, fEditorToolbar,
-    ilCommandButtons, 38, CIconTrends, 'Графики', 2, True,
-    @ChartToolGroupOpening);
-  fChartToolGroup.AddCommand('Осциллограмма', CIconOscillogram,
-    @AddOscillogramClick);
-  fChartToolGroup.AddCommand('Тренд', CIconTrends, @AddTrendClick);
-  fChartToolGroup.AddCommand('SQL-тренд', CIconTrends, @AddSqlTrendClick);
-  fChartToolGroup.AddCommand('Спектр', CIconSpectrum, @AddSpectrumClick);
-  fAddMeasurementSectionButton := AddEditMnemoToolBarButton(356,
-    CIconMeasurementSection,
-    'Добавить измерительное сечение', @AddMeasurementSectionClick, 2, True,
-    True);
-  fAddTextButton := AddEditMnemoToolBarButton(72, CIconTextLabel, 'Add text label', @btnAddComponentClick, 2, True);
-  fAddDigitalButton := AddEditMnemoToolBarButton(106, CIconDigitalIndicator, 'Add digital indicator', @AddDigitalIndicatorClick, 2, True);
-  fAddImageButton := AddEditMnemoToolBarButton(140, CIconImageComponent,
-    'Добавить картинку', @AddImageClick, 2, True, True);
-  fAddTagTableButton := AddEditMnemoToolBarButton(180, CIconTagTable, 'Add tag table', nil, 0, False, False);
-  fAddButtonButton := AddEditMnemoToolBarButton(214, CIconButton, 'Add button', @AddButtonClick, 2, True, True);
-  fAddInputFieldButton := AddEditMnemoToolBarButton(248, CIconButton,
-    'Поле ввода', @AddInputFieldClick, 2, True, True);
-  fAddComboBoxButton := nil;
-  fAddMeasurementSectionButton.Left := 282;
-  fDeleteComponentButton := AddEditMnemoToolBarButton(316, -1, 'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+  fComponentPalette := TRecorderComponentPalette.Create(Self,
+    fComponentFactory, fEditorToolbar, ilCommandButtons, @PaletteIconIndex,
+    @PaletteFactorySelected);
+  fComponentPalette.GroupIndex := 2;
+  fComponentPalette.AllowAllUp := True;
+  fComponentPalette.ConfigureGroup(CRecorderPaletteGroupCharts, 'Графики',
+    'Графики', 'trend');
+  lNextLeft := fComponentPalette.Build(38);
+  for I := 0 to fEditorToolbar.ControlCount - 1 do
+    if fEditorToolbar.Controls[I] is TSpeedButton then
+    begin
+      lButton := TSpeedButton(fEditorToolbar.Controls[I]);
+      if lButton.PopupMenu <> nil then
+        lButton.PopupMenu.OnPopup := @PaletteGroupOpening;
+    end;
+  fDeleteComponentButton := AddEditMnemoToolBarButton(lNextLeft, -1,
+    'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -2577,24 +2151,6 @@ begin
       fEditModeButton.Down := False;
   end;
 
-  if fChartToolGroup <> nil then
-    fChartToolGroup.Button.Visible := lCanEdit;
-  if fAddMeasurementSectionButton <> nil then
-    fAddMeasurementSectionButton.Visible := lCanEdit;
-  if fAddTextButton <> nil then
-    fAddTextButton.Visible := lCanEdit;
-  if fAddDigitalButton <> nil then
-    fAddDigitalButton.Visible := lCanEdit;
-  if fAddImageButton <> nil then
-    fAddImageButton.Visible := lCanEdit;
-  if fAddTagTableButton <> nil then
-    fAddTagTableButton.Visible := lCanEdit;
-  if fAddButtonButton <> nil then
-    fAddButtonButton.Visible := lCanEdit;
-  if fAddInputFieldButton <> nil then
-    fAddInputFieldButton.Visible := lCanEdit;
-  if fAddComboBoxButton <> nil then
-    fAddComboBoxButton.Visible := lCanEdit;
   if fDeleteComponentButton <> nil then
     fDeleteComponentButton.Visible := lCanEdit;
 
@@ -2745,6 +2301,7 @@ begin
     AddLog('Project main config loaded: ' + lFiles.MainConfigFileName);
 
   LoadRecorderGuiConfig(lFiles.GuiFileName, fFormManager, fComponentFactory);
+  fPluginRuntime.NotifyAll(PN_RCLOADCONFIG);
   RecorderResolveTagIdsInManager(fRecorder.TagRegistry, fFormManager);
   RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
   if FileExists(lFiles.GuiFileName) then
@@ -2774,6 +2331,7 @@ begin
   SaveRunSettings;
   SaveRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
   SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
+  fPluginRuntime.NotifyAll(PN_RCSAVECONFIG);
 
   AddLog('Project package saved: ' + lFiles.BaseName);
   AddLog('  main config: ' + lFiles.MainConfigFileName);
@@ -3523,6 +3081,7 @@ begin
   begin
     fLastUiDataRevisionSignature := lRevisionSignature;
     fRuntimeViewDirty := True;
+    fPluginRuntime.NotifyAll(PN_UPDATEDATA);
   end;
 
   { Полный обход колец нужен только при открытой записи. В Preview UI читает
@@ -3944,11 +3503,19 @@ end;
 procedure TMainForm.ReportSqlDbError;
 var
   lError: string;
+  lNotice: string;
 begin
   lError := '';
   if (fRecorder.SqlDbManager <> nil) and
      (fRecorder.SqlDbManager.Runtime <> nil) then
     lError := fRecorder.SqlDbManager.Runtime.LastError;
+  lNotice := RecorderSqlTakeConnectivityNotice;
+  if lNotice <> '' then
+  begin
+    AddLog(lNotice);
+    fLastSqlDbError := lError;
+    Exit;
+  end;
   if (lError = '') or (lError = fLastSqlDbError) then
     Exit;
   fLastSqlDbError := lError;
@@ -4065,11 +3632,48 @@ begin
   PublishSqlDbControlState(fRecorder.SqlDbManager.RecordingEnabled);
 end;
 
-procedure TMainForm.SelectAddTool(Sender: TObject; ATool: TRecorderAddTool);
+function TMainForm.PaletteIconIndex(const AIconId: string): Integer;
 begin
-  if not (Sender is TSpeedButton) then Exit;
-  if not TSpeedButton(Sender).Down then begin ReleaseAddTool; Exit; end;
-  fPendingAddTool := ATool;
+  if SameText(AIconId, 'text-label') then Result := CIconTextLabel
+  else if SameText(AIconId, 'digital-indicator') then Result := CIconDigitalIndicator
+  else if SameText(AIconId, 'oscillogram') then Result := CIconOscillogram
+  else if SameText(AIconId, 'trend') then Result := CIconTrends
+  else if SameText(AIconId, 'spectrum') then Result := CIconSpectrum
+  else if SameText(AIconId, 'image') then Result := CIconImageComponent
+  else if SameText(AIconId, 'button') then Result := CIconButton
+  else if SameText(AIconId, 'input-field') then Result := CIconButton
+  else if SameText(AIconId, 'measurement-section') then Result := CIconMeasurementSection
+  else Result := -1;
+end;
+
+procedure TMainForm.PaletteFactorySelected(
+  AFactory: TRecorderComponentFactoryBase; AButton: TSpeedButton);
+begin
+  if (AFactory = nil) or (AButton = nil) then
+  begin
+    ReleaseAddTool;
+    Exit;
+  end;
+  if (fPendingFactory = AFactory) and (not AButton.Down) then
+  begin
+    ReleaseAddTool;
+    Exit;
+  end;
+  AButton.Down := True;
+  SelectAddFactory(AFactory, AButton);
+end;
+
+procedure TMainForm.PaletteGroupOpening(Sender: TObject);
+begin
+  ReleaseAddTool;
+end;
+
+procedure TMainForm.SelectAddFactory(AFactory: TRecorderComponentFactoryBase;
+  AButton: TSpeedButton);
+begin
+  if (AFactory = nil) or (AButton = nil) then
+    Exit;
+  fPendingFactory := AFactory;
   if fEditModeButton <> nil then fEditModeButton.Down := True;
   if fFormEditor <> nil then
   begin
@@ -4080,59 +3684,61 @@ end;
 
 procedure TMainForm.ReleaseAddTool;
 begin
-  fPendingAddTool := ratNone;
+  fPendingFactory := nil;
   if fFormEditor <> nil then fFormEditor.CancelComponentPlacement;
-  if fAddTextButton <> nil then fAddTextButton.Down := False;
-  if fAddDigitalButton <> nil then fAddDigitalButton.Down := False;
-  if fChartToolGroup <> nil then fChartToolGroup.Button.Down := False;
-  if fAddMeasurementSectionButton <> nil then fAddMeasurementSectionButton.Down := False;
-  if fAddImageButton <> nil then fAddImageButton.Down := False;
-  if fAddButtonButton <> nil then fAddButtonButton.Down := False;
-  if fAddInputFieldButton <> nil then fAddInputFieldButton.Down := False;
+  if fComponentPalette <> nil then
+    fComponentPalette.ResetSelection;
 end;
 
 procedure TMainForm.PlaceSelectedTool(const APoint: TPoint);
 var
   lPage: TRecorderFormPage;
-  lOldCount: Integer;
+  lComponent: TRecorderVisualComponent;
+  lContext: TRecorderComponentCreateContext;
   lStartedAt: QWord;
   lElapsedMs: QWord;
-  lTool: TRecorderAddTool;
+  lFactory: TRecorderComponentFactoryBase;
 begin
   lPage := GetActiveEditorPage;
-  if (lPage = nil) or (fPendingAddTool = ratNone) then begin ReleaseAddTool; Exit; end;
-  lTool := fPendingAddTool;
+  if (lPage = nil) or (fPendingFactory = nil) then begin ReleaseAddTool; Exit; end;
+  lFactory := fPendingFactory;
   lStartedAt := GetTickCount64;
-  lOldCount := lPage.ComponentCount;
   try
-    case lTool of
-      ratText: AddStaticTextComponentToActivePage;
-      ratValue: AddTagValueComponentToActivePage;
-      ratOscillogram: AddOscillogramComponentToActivePage;
-      ratTrend: AddTrendComponentToActivePage;
-      ratSqlTrend: AddSqlTrendComponentToActivePage;
-      ratMeasurementSection: AddMeasurementSectionComponentToActivePage;
-      ratSpectrum: AddSpectrumComponentToActivePage;
-      ratImage: AddImageComponentToActivePage;
-      ratButton: AddButtonComponentToActivePage;
-      ratInputField: AddInputFieldComponentToActivePage;
+    if not IsUserMnemonicPage(lPage) then
+      raise ERecorderFormError.Create(
+        'Components can be added only to user mnemonic pages');
+    if fFormEditor <> nil then
+      fFormEditor.RememberUndoStep;
+    Inc(fNextComponentNo);
+    lContext := Default(TRecorderComponentCreateContext);
+    lContext.Page := lPage;
+    lContext.ProjectConfigDir := fProjectConfigDir;
+    lContext.ComponentNo := fNextComponentNo;
+    if fRecorder.TagRegistry <> nil then
+    begin
+      lContext.SelectedTag := fRecorder.TagRegistry.SelectedTag;
+      if fRecorder.TagRegistry.TagCount > 0 then
+        lContext.DefaultTag := fRecorder.TagRegistry.Tags[0];
     end;
-    if (lPage.ComponentCount > lOldCount) and (fFormEditor <> nil) then
-      fFormEditor.PositionComponentAt(lPage.Components[lOldCount], APoint);
+    lComponent := lFactory.CreateComponentForPage(lContext);
+    try
+      lPage.AddComponent(lComponent);
+    except
+      lComponent.Free;
+      raise;
+    end;
+    if fFormEditor <> nil then
+      fFormEditor.PositionComponentAt(lComponent, APoint);
+    AddLog('Form component added: ' + lComponent.Id);
     RenderActivePage;
     lElapsedMs := GetTickCount64 - lStartedAt;
     if lElapsedMs >= 50 then
-      RecorderDebugLog(Format('[MNEMO-PERF] place tool=%d components=%d elapsed=%dms',
-        [Ord(lTool), lPage.ComponentCount, lElapsedMs]));
+      RecorderDebugLog(Format('[MNEMO-PERF] place factory=%s components=%d elapsed=%dms',
+        [lFactory.TypeId, lPage.ComponentCount, lElapsedMs]));
   except
     on E: Exception do LogCommandError('Add mnemonic component', E);
   end;
   ReleaseAddTool;
-end;
-
-procedure TMainForm.AddButtonClick(Sender: TObject);
-begin
-  SelectAddTool(Sender, ratButton);
 end;
 
 procedure TMainForm.DeferredPrepareRuntime(Data: PtrInt);
@@ -4178,6 +3784,13 @@ end;
 
 procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState);
 begin
+  if fPluginRuntime <> nil then
+  begin
+    if (ANewState = rsRecord) and (AOldState <> rsRecord) then
+      fPluginRuntime.NotifyAll(PN_RCSTART)
+    else if (AOldState = rsRecord) and (ANewState <> rsRecord) then
+      fPluginRuntime.NotifyAll(PN_RCSTOP);
+  end;
   UpdateStateView;
   UpdateCoordinatorSnapshot;
 end;

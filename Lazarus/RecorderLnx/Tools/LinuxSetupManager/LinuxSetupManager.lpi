@@ -3,21 +3,106 @@
   <ProjectOptions>
     <Version Value="12"/>
     <General>
-      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <Flags>
+        <MainUnitHasTitleStatement Value="False"/>
+      </Flags>
       <Title Value="Настройка Linux"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
-    <RequiredPackages><Item><PackageName Value="LCL"/></Item></RequiredPackages>
+    <BuildModes Active="Default">
+      <Item Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPackages>
     <Units>
-      <Unit><Filename Value="LinuxSetupManager.lpr"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="uLinuxSetupManagerMain.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit>
+        <Filename Value="LinuxSetupManager.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <CursorPos X="26"/>
+        <UsageCount Value="36"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="323"/>
+        <CursorPos X="74" Y="333"/>
+        <UsageCount Value="36"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uLinuxSetupManagerCli.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UsageCount Value="36"/>
+      </Unit>
     </Units>
+    <JumpHistory HistoryIndex="9">
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="400" Column="35" TopLine="391"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="72" Column="25" TopLine="52"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="402" Column="38" TopLine="382"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="72" Column="25" TopLine="60"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="402" Column="36" TopLine="382"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="51" Column="14" TopLine="41"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="676" Column="3" TopLine="671"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+        <Caret Line="72" Column="25" TopLine="60"/>
+      </Position>
+      <Position>
+        <Filename Value="uLinuxSetupManagerMain.pas"/>
+      </Position>
+    </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
-    <SearchPaths><UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/></SearchPaths>
-    <Linking><Options><Win32><GraphicApplication Value="True"/></Win32></Options></Linking>
+    <SearchPaths>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf2Set"/>
+      </Debugging>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
   </CompilerOptions>
 </CONFIG>

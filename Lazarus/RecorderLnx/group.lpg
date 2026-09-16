@@ -7,7 +7,17 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
-      <Target FileName="Tools\NetworkShareManager\NetworkShareManager.lpi">
+      <Target FileName="Plugins\SampleInfoPlugin\SampleInfoPlugin.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Plugins\SampleInfoPlugin\Tests\SamplePluginProbe.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="Tests\PluginInfo\PluginInfoProbe.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

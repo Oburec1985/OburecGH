@@ -82,7 +82,7 @@ type
   }
   TRecorderDeviceSampleBlock = TRecorderAcquisitionBlock;
 
-  // Добавить OnStart/ OnStop??? возможно в другом интерфейсе это будет
+  // OnStart/OnStop при необходимости вынести в отдельный интерфейс.
   IRecorderDevice = interface
     ['{39D2026D-851C-4EE4-97C7-3C86A02962A6}']
     function GetDeviceId: string;

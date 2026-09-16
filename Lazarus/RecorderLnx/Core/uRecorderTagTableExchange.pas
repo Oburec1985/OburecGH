@@ -27,6 +27,13 @@ type
     Warnings: TStringList;
   end;
 
+  TRecorderSqlSelectionTableResult = record
+    TotalRows: Integer;
+    MarkedRows: Integer;
+    MatchedRows: Integer;
+    MissingRows: Integer;
+  end;
+
 procedure RecorderTagTableExchangeResultInit(
   out AResult: TRecorderTagTableExchangeResult);
 procedure RecorderTagTableExchangeResultDone(
@@ -38,12 +45,15 @@ procedure ExportRecorderTagsToTable(ARegistry: TRecorderTagRegistry;
 procedure ImportRecorderTagsFromTable(ARegistry: TRecorderTagRegistry;
   ASqlDbConfig: TRecorderSqlDbConfig; const AFileName: string;
   var AResult: TRecorderTagTableExchangeResult);
+procedure ReadRecorderSqlSelectionFromTable(ARegistry: TRecorderTagRegistry;
+  const AFileName: string; ASelectedNames, APresentNames: TStrings;
+  out AResult: TRecorderSqlSelectionTableResult);
 
 implementation
 
 uses
   Math, StrUtils,
-  fpspreadsheet, fpstypes, fpsopendocument, fpscsv,
+  fpspreadsheet, fpstypes, fpsopendocument, fpscsv, xlsxooxml,
   uRecorderSdbStore, uRecorderSdbTypes;
 
 const
@@ -118,6 +128,18 @@ type
   end;
 
   TTagImportRows = array of TTagImportRow;
+
+  TTagImportLookup = class
+  private
+    fNames: TStringList;
+    fAddresses: TStringList;
+    procedure AddAddress(const AKey: string; ATag: TRecorderTag);
+    function FindAddress(const AKey: string): TRecorderTag;
+  public
+    constructor Create(ARegistry: TRecorderTagRegistry);
+    destructor Destroy; override;
+    function Resolve(const ARow: TTagImportRow): TRecorderTag;
+  end;
 
   TScaleLookup = class
   private
@@ -383,6 +405,8 @@ begin
   lExt := LowerCase(ExtractFileExt(AFileName));
   if lExt = '.csv' then
     Result := sfCSV
+  else if lExt = '.xlsx' then
+    Result := sfOOXML
   else
     Result := sfOpenDocument;
 end;
@@ -426,6 +450,13 @@ begin
       Exit(I);
 end;
 
+function SqlRecordHeaderIndex(ASheet: TsWorksheet): Integer;
+begin
+  Result := HeaderIndex(ASheet, CHeaders[CColSqlRecord]);
+  if Result < 0 then Result := HeaderIndex(ASheet, 'SQLdb');
+  if Result < 0 then Result := HeaderIndex(ASheet, 'SQL DB');
+end;
+
 function ColumnIndex(ASheet: TsWorksheet; ADefaultIndex: Integer;
   const AHeader: string): Integer;
 begin
@@ -445,6 +476,7 @@ begin
     if (AMap[I] < 0) and AAllowDefaultColumns then
       AMap[I] := I;
   end;
+  AMap[CColSqlRecord] := SqlRecordHeaderIndex(ASheet);
 end;
 
 function NextAppendColumn(ASheet: TsWorksheet): Integer;
@@ -506,28 +538,6 @@ begin
     Result := ABook.AddWorksheet(CSheetName);
 end;
 
-function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
-  const ASourceId, AAddress: string): TRecorderTag;
-var
-  I: Integer;
-  lTag: TRecorderTag;
-begin
-  Result := nil;
-  if (ARegistry = nil) or (Trim(AAddress) = '') then
-    Exit;
-  for I := 0 to ARegistry.TagCount - 1 do
-  begin
-    lTag := ARegistry.Tags[I];
-    if SameText(lTag.Address, AAddress) and
-      ((Trim(ASourceId) = '') or SameText(lTag.SourceId, ASourceId)) then
-    begin
-      if Result <> nil then
-        Exit(nil);
-      Result := lTag;
-    end;
-  end;
-end;
-
 function FindExportRowForTag(ASheet: TsWorksheet; const AMap: TTagTableColumnMap;
   ATag: TRecorderTag): Integer;
 var
@@ -566,18 +576,69 @@ begin
     Result := 1;
 end;
 
-function ResolveImportTarget(ARegistry: TRecorderTagRegistry;
-  const ARow: TTagImportRow): TRecorderTag;
+constructor TTagImportLookup.Create(ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  inherited Create;
+  fNames := TStringList.Create;
+  fAddresses := TStringList.Create;
+  fNames.Sorted := True;
+  fNames.CaseSensitive := False;
+  fAddresses.Sorted := True;
+  fAddresses.CaseSensitive := False;
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    fNames.AddObject(lTag.Name, lTag);
+    if Trim(lTag.Address) <> '' then
+    begin
+      AddAddress('E' + lTag.SourceId + #1 + lTag.Address, lTag);
+      AddAddress('B' + lTag.Address, lTag);
+    end;
+  end;
+end;
+
+destructor TTagImportLookup.Destroy;
+begin
+  fAddresses.Free;
+  fNames.Free;
+  inherited Destroy;
+end;
+
+procedure TTagImportLookup.AddAddress(const AKey: string; ATag: TRecorderTag);
+var
+  lIndex: Integer;
+begin
+  if fAddresses.Find(AKey, lIndex) then
+    fAddresses.Objects[lIndex] := nil
+  else
+    fAddresses.AddObject(AKey, ATag);
+end;
+
+function TTagImportLookup.FindAddress(const AKey: string): TRecorderTag;
+var
+  lIndex: Integer;
 begin
   Result := nil;
-  if ARegistry = nil then
-    Exit;
-  if ARow.HasTagId then
-    Result := ARegistry.FindById(ARow.TagId);
-  if Result = nil then
-    Result := FindTagBySourceAddress(ARegistry, ARow.SourceId, ARow.Address);
-  if (Result = nil) and (ARow.Name <> '') then
-    Result := ARegistry.FindByName(ARow.Name);
+  if fAddresses.Find(AKey, lIndex) then
+    Result := TRecorderTag(fAddresses.Objects[lIndex]);
+end;
+
+function TTagImportLookup.Resolve(const ARow: TTagImportRow): TRecorderTag;
+var
+  lIndex: Integer;
+begin
+  Result := nil;
+  if fNames.Find(ARow.Name, lIndex) then
+    Exit(TRecorderTag(fNames.Objects[lIndex]));
+  if Trim(ARow.Address) <> '' then
+  begin
+    if Trim(ARow.SourceId) <> '' then
+      Exit(FindAddress('E' + ARow.SourceId + #1 + ARow.Address));
+    Exit(FindAddress('B' + ARow.Address));
+  end;
 end;
 
 function SqlRecordEnabled(ASqlDbConfig: TRecorderSqlDbConfig;
@@ -642,44 +703,48 @@ begin
   Result := ATag.Name + '__RecorderLnxImportTmp_' + IntToStr(ATag.Id);
 end;
 
-function ImportNameIsDuplicated(const ARows: TTagImportRows;
-  ARowIndex: Integer): Boolean;
-var
-  I: Integer;
-  lName: string;
-begin
-  Result := False;
-  if (ARowIndex < Low(ARows)) or (ARowIndex > High(ARows)) then
-    Exit;
-  lName := Trim(ARows[ARowIndex].Name);
-  if lName = '' then
-    Exit;
-  for I := 0 to High(ARows) do
-    if (I <> ARowIndex) and SameText(Trim(ARows[I].Name), lName) then
-      Exit(True);
-end;
-
 procedure RemoveRowsWithDuplicateNames(var ARows: TTagImportRows;
   var AResult: TRecorderTagTableExchangeResult);
 var
   I: Integer;
+  lIndex: Integer;
+  lCount: Integer;
   lUniqueRows: TTagImportRows;
+  lNameCounts: TStringList;
 begin
-  SetLength(lUniqueRows, 0);
-  for I := 0 to High(ARows) do
-  begin
-    if ImportNameIsDuplicated(ARows, I) then
+  lNameCounts := TStringList.Create;
+  try
+    lNameCounts.Sorted := True;
+    lNameCounts.CaseSensitive := False;
+    for I := 0 to High(ARows) do
     begin
-      Inc(AResult.SkippedRows);
-      AResult.Warnings.Add(Format(
-        'Строка %d: имя канала "%s" повторяется в таблице; канал не изменён',
-        [ARows[I].RowNumber, Trim(ARows[I].Name)]));
-      Continue;
+      if lNameCounts.Find(ARows[I].Name, lIndex) then
+        lNameCounts.Objects[lIndex] := TObject(
+          PtrInt(lNameCounts.Objects[lIndex]) + 1)
+      else
+        lNameCounts.AddObject(ARows[I].Name, TObject(PtrInt(1)));
     end;
-    SetLength(lUniqueRows, Length(lUniqueRows) + 1);
-    lUniqueRows[High(lUniqueRows)] := ARows[I];
+    SetLength(lUniqueRows, Length(ARows));
+    lCount := 0;
+    for I := 0 to High(ARows) do
+    begin
+      lNameCounts.Find(ARows[I].Name, lIndex);
+      if PtrInt(lNameCounts.Objects[lIndex]) > 1 then
+      begin
+        Inc(AResult.SkippedRows);
+        AResult.Warnings.Add(Format(
+          'Строка %d: имя канала "%s" повторяется в таблице; канал не изменён',
+          [ARows[I].RowNumber, Trim(ARows[I].Name)]));
+        Continue;
+      end;
+      lUniqueRows[lCount] := ARows[I];
+      Inc(lCount);
+    end;
+    SetLength(lUniqueRows, lCount);
+    ARows := lUniqueRows;
+  finally
+    lNameCounts.Free;
   end;
-  ARows := lUniqueRows;
 end;
 
 procedure RenameTargetsToTemporaryNames(ARegistry: TRecorderTagRegistry;
@@ -838,13 +903,17 @@ var
   lRow: TTagImportRow;
   lMap: TTagTableColumnMap;
   lLookup: TScaleLookup;
+  lTagLookup: TTagImportLookup;
   lText: string;
+  lMatchCount: Integer;
+  lHasScales: Boolean;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
 
   lBook := TsWorkbook.Create;
   lLookup := TScaleLookup.Create;
+  lTagLookup := TTagImportLookup.Create(ARegistry);
   try
     lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
     if lBook.GetWorksheetCount = 0 then
@@ -852,9 +921,11 @@ begin
     lSheet := lBook.GetWorksheetByIndex(0);
 
     BuildColumnMap(lSheet, True, lMap);
+    lHasScales := HeaderIndex(lSheet, CHeaders[CColScales]) >= 0;
 
     lLastRow := lSheet.GetLastRowIndex(True);
-    SetLength(lRows, 0);
+    SetLength(lRows, lLastRow);
+    lMatchCount := 0;
     for lRowIndex := 1 to lLastRow do
     begin
       lRow := Default(TTagImportRow);
@@ -883,14 +954,15 @@ begin
       lRow.HasGroupPath := lMap[CColGroupPath] >= 0;
       if lRow.HasGroupPath then
         lRow.GroupPath := ReadMappedCell(lSheet, lMap, CColGroupPath, lRowIndex);
-      lRow.HasScales := HeaderIndex(lSheet, CHeaders[CColScales]) >= 0;
+      lRow.HasScales := lHasScales;
       if lRow.HasScales then
         lRow.Scales := ReadMappedCell(lSheet, lMap, CColScales, lRowIndex);
 
-      if (lRow.Name = '') and (lRow.Address = '') and (not lRow.HasTagId) then
+      { An unnamed row in a shared channel table must not change a tag. }
+      if lRow.Name = '' then
         Continue;
       Inc(AResult.TotalRows);
-      lRow.TargetTag := ResolveImportTarget(ARegistry, lRow);
+      lRow.TargetTag := lTagLookup.Resolve(lRow);
       if lRow.TargetTag = nil then
       begin
         Inc(AResult.SkippedRows);
@@ -900,15 +972,86 @@ begin
         Inc(AResult.MissingTags);
         Continue;
       end;
-      SetLength(lRows, Length(lRows) + 1);
-      lRows[High(lRows)] := lRow;
+      lRows[lMatchCount] := lRow;
+      Inc(lMatchCount);
     end;
 
+    SetLength(lRows, lMatchCount);
     RemoveRowsWithDuplicateNames(lRows, AResult);
     RenameTargetsToTemporaryNames(ARegistry, lRows, AResult);
     ApplyImportRows(ARegistry, ASqlDbConfig, lLookup, lRows, AResult);
   finally
+    lTagLookup.Free;
     lLookup.Free;
+    lBook.Free;
+  end;
+end;
+
+procedure ReadRecorderSqlSelectionFromTable(ARegistry: TRecorderTagRegistry;
+  const AFileName: string; ASelectedNames, APresentNames: TStrings;
+  out AResult: TRecorderSqlSelectionTableResult);
+var
+  lBook: TsWorkbook;
+  lSheet: TsWorksheet;
+  lMap: TTagTableColumnMap;
+  lLastRow, lRowIndex: Cardinal;
+  lRow: TTagImportRow;
+  lText: string;
+  lTagLookup: TTagImportLookup;
+begin
+  AResult := Default(TRecorderSqlSelectionTableResult);
+  if (ARegistry = nil) or (ASelectedNames = nil) or (APresentNames = nil) then
+    raise ERecorderTagError.Create('SQL selection import arguments are not assigned');
+  ASelectedNames.Clear;
+  APresentNames.Clear;
+
+  lBook := TsWorkbook.Create;
+  lTagLookup := TTagImportLookup.Create(ARegistry);
+  try
+    lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
+    if lBook.GetWorksheetCount = 0 then
+      raise ERecorderTagError.Create('Spreadsheet does not contain worksheets');
+    lSheet := lBook.GetWorksheetByIndex(0);
+    BuildColumnMap(lSheet, False, lMap);
+    if lMap[CColSqlRecord] < 0 then
+      raise ERecorderTagError.Create(
+        'Не найдена колонка SQLdb (или Запись SQL)');
+    if (lMap[CColName] < 0) and (lMap[CColTagId] < 0) and
+      (lMap[CColAddress] < 0) then
+      raise ERecorderTagError.Create('Не найдены колонки идентификации канала');
+
+    lLastRow := lSheet.GetLastRowIndex(True);
+    for lRowIndex := 1 to lLastRow do
+    begin
+      lRow := Default(TTagImportRow);
+      lRow.Name := ReadMappedCell(lSheet, lMap, CColName, lRowIndex);
+      lRow.Address := ReadMappedCell(lSheet, lMap, CColAddress, lRowIndex);
+      lRow.SourceId := ReadMappedCell(lSheet, lMap, CColSourceId, lRowIndex);
+      lText := ReadMappedCell(lSheet, lMap, CColTagId, lRowIndex);
+      lRow.HasTagId := TryStrToInt64(lText, lRow.TagId);
+      if (lRow.Name = '') and (lRow.Address = '') and (not lRow.HasTagId) then
+        Continue;
+      Inc(AResult.TotalRows);
+      lText := ReadMappedCell(lSheet, lMap, CColSqlRecord, lRowIndex);
+      lRow.HasSqlRecordEnabled := TryParseBoolValue(lText,
+        lRow.SqlRecordEnabled);
+      if lRow.HasSqlRecordEnabled and lRow.SqlRecordEnabled then
+        Inc(AResult.MarkedRows);
+      lRow.TargetTag := lTagLookup.Resolve(lRow);
+      if lRow.TargetTag = nil then
+      begin
+        Inc(AResult.MissingRows);
+        Continue;
+      end;
+      Inc(AResult.MatchedRows);
+      APresentNames.Add(lRow.TargetTag.Name);
+      if lRow.HasSqlRecordEnabled and lRow.SqlRecordEnabled then
+      begin
+        ASelectedNames.Add(lRow.TargetTag.Name);
+      end;
+    end;
+  finally
+    lTagLookup.Free;
     lBook.Free;
   end;
 end;

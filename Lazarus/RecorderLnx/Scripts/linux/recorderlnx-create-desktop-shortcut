@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+set -eu
+
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+
+target_user() {
+  local candidate
+  if [ -n "${PKEXEC_UID:-}" ]; then
+    candidate="$(getent passwd "$PKEXEC_UID" | cut -d: -f1)"
+  else
+    candidate="${SUDO_USER:-user}"
+  fi
+  test -n "$candidate" || fail "Не удалось определить пользователя рабочего стола."
+  printf '%s' "$candidate"
+}
+
+desktop_directory() {
+  local user_name="$1" user_home="$2" result
+  result="$(runuser -u "$user_name" -- env HOME="$user_home" \
+    XDG_CONFIG_HOME="$user_home/.config" xdg-user-dir DESKTOP 2>/dev/null || true)"
+  if [ -z "$result" ] || [ "$result" = "$user_home" ]; then
+    if [ -d "$user_home/Рабочий стол" ]; then
+      result="$user_home/Рабочий стол"
+    else
+      result="$user_home/Desktop"
+    fi
+  fi
+  printf '%s' "$result"
+}
+
+desktop_quote() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//\`/\\\`}"
+  value="${value//\$/\\\$}"
+  printf '"%s"' "$value"
+}
+
+safe_shortcut_name() {
+  local name="$1"
+  name="${name%.desktop}"
+  name="${name%.exe}"
+  name="${name//[^[:alnum:]_. -]/_}"
+  test -n "$name" || name="Программа"
+  printf '%s' "$name"
+}
+
+validate_line() {
+  local caption="$1" value="$2"
+  case "$value" in
+    *$'\n'*|*$'\r'*) fail "$caption не должна содержать перевод строки." ;;
+  esac
+}
+
+bool_value() {
+  case "$1" in true|false) printf '%s' "$1" ;; *) fail "Ожидалось true или false." ;; esac
+}
+
+build_exec() {
+  local command="$1" arguments="$2" elevated="$3" result
+  validate_line "Команда Exec" "$command"
+  validate_line "Строка параметров" "$arguments"
+  case "$arguments" in *%*) fail "Символ % зарезервирован Desktop Entry." ;; esac
+  if [ -f "$command" ]; then
+    test -x "$command" || fail "Файл не имеет права на выполнение: $command"
+    result="$(desktop_quote "$command")"
+  else
+    result="$command"
+  fi
+  test -n "$result" || fail "Команда Exec не задана."
+  if [ "$elevated" = "true" ]; then result="/usr/bin/pkexec $result"; fi
+  if [ -n "$arguments" ]; then result="$result $arguments"; fi
+  printf '%s' "$result"
+}
+
+write_entry() {
+  local user_name="$1" destination="$2" display_name="$3" exec_line="$4"
+  runuser -u "$user_name" -- tee "$destination" >/dev/null <<EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=$display_name
+Exec=$exec_line
+Terminal=false
+StartupNotify=true
+Categories=Utility;
+EOF
+  runuser -u "$user_name" -- chmod 0755 "$destination"
+}
+
+mark_trusted() {
+  local user_name="$1" user_home="$2" shortcut="$3"
+  runuser -u "$user_name" -- env HOME="$user_home" \
+    gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
+}
+
+apply_settings() {
+  local command="$1" arguments="$2" create_desktop="$3" create_autostart="$4"
+  local elevated="$5" requested_name="$6" user_name user_home user_group
+  local desktop_dir autostart_dir shortcut_name exec_line destination
+  create_desktop="$(bool_value "$create_desktop")"
+  create_autostart="$(bool_value "$create_autostart")"
+  elevated="$(bool_value "$elevated")"
+  validate_line "Имя ярлыка" "$requested_name"
+  shortcut_name="$(safe_shortcut_name "$requested_name")"
+  exec_line="$(build_exec "$command" "$arguments" "$elevated")"
+  user_name="$(target_user)"
+  user_home="$(getent passwd "$user_name" | cut -d: -f6)"
+  user_group="$(id -gn "$user_name")"
+  if [ "$create_desktop" = "true" ]; then
+    desktop_dir="$(desktop_directory "$user_name" "$user_home")"
+    install -d -o "$user_name" -g "$user_group" "$desktop_dir"
+    destination="$desktop_dir/$shortcut_name.desktop"
+    write_entry "$user_name" "$destination" "$shortcut_name" "$exec_line"
+    mark_trusted "$user_name" "$user_home" "$destination"
+    printf 'Создан ярлык: %s\n' "$destination"
+  fi
+  if [ "$create_autostart" = "true" ]; then
+    autostart_dir="$user_home/.config/autostart"
+    install -d -o "$user_name" -g "$user_group" "$autostart_dir"
+    destination="$autostart_dir/$shortcut_name.desktop"
+    write_entry "$user_name" "$destination" "$shortcut_name" "$exec_line"
+    printf 'Добавлен автозапуск: %s\n' "$destination"
+  fi
+}
+
+remove_autostart() {
+  local entry="$1" user_name user_home target
+  case "$entry" in ''|*/*|*'..'*) fail "Недопустимое имя записи автозапуска." ;; esac
+  case "$entry" in *.desktop) ;; *) fail "Ожидался файл .desktop." ;; esac
+  user_name="$(target_user)"
+  user_home="$(getent passwd "$user_name" | cut -d: -f6)"
+  target="$user_home/.config/autostart/$entry"
+  test -e "$target" || fail "Запись автозапуска не найдена: $entry"
+  runuser -u "$user_name" -- rm -f -- "$target"
+  printf 'Удалён автозапуск: %s\n' "$entry"
+}
+
+main() {
+  test "$(id -u)" -eq 0 || fail "Запустите утилиту через pkexec или sudo."
+  test "$#" -ge 1 || fail "Не указано действие apply или remove-autostart."
+  case "$1" in
+    apply)
+      test "$#" -eq 7 || fail \
+        "Использование: ... apply EXEC ПАРАМЕТРЫ DESKTOP AUTOSTART PKEXEC ИМЯ"
+      apply_settings "$2" "$3" "$4" "$5" "$6" "$7"
+      ;;
+    remove-autostart)
+      test "$#" -eq 2 || fail "Использование: ... remove-autostart ФАЙЛ.desktop"
+      remove_autostart "$2"
+      ;;
+    *) fail "Неизвестное действие: $1" ;;
+  esac
+}
+
+main "$@"

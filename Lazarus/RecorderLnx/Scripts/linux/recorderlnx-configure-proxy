@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly APT_FILE="/etc/apt/apt.conf.d/90recorderlnx-proxy"
+readonly SYSTEM_ENV="/etc/environment"
+readonly USER_ENV_REL=".config/environment.d/90-recorderlnx-proxy.conf"
+readonly BEGIN_MARK="# BEGIN RECORDERLNX PROXY"
+readonly END_MARK="# END RECORDERLNX PROXY"
+
+fail() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+need_root() { test "$(id -u)" -eq 0 || fail "Для системной настройки используйте sudo или pkexec."; }
+usage() { cat <<'EOF'
+Настройка HTTP/HTTPS-прокси для APT и окружения.
+
+  recorderlnx-configure-proxy show [--scope system|user|both] [--user ИМЯ]
+  printf '%s' 'ПАРОЛЬ' | recorderlnx-configure-proxy apply --host ХОСТ --port ПОРТ
+       [--login ЛОГИН] [--password-stdin] [--scope system|user|both] [--user ИМЯ]
+  recorderlnx-configure-proxy remove [--scope system|user|both] [--user ИМЯ]
+  recorderlnx-configure-proxy export [--scope system|user|both] [--user ИМЯ]
+
+Пароль рекомендуется передавать только через stdin. show/export всегда скрывают
+секрет. system изменяет /etc/apt/apt.conf.d/90recorderlnx-proxy и /etc/environment.
+user изменяет ~/.config/environment.d/90-recorderlnx-proxy.conf.
+EOF
+}
+redact() { sed -E 's#(https?://)([^/@:]+):([^/@]+)@#\1\2:***@#g'; }
+valid_host() { [[ "$1" =~ ^[[:alnum:]._-]+$ ]] || fail "Недопустимый хост."; }
+valid_port() { [[ "$1" =~ ^[0-9]{1,5}$ ]] && ((10#$1 >= 1 && 10#$1 <= 65535)) || fail "Недопустимый порт."; }
+urlencode() { local s="$1" out="" c i; for ((i=0;i<${#s};i++)); do c="${s:i:1}"; case "$c" in [a-zA-Z0-9.~_-]) out+="$c";; *) printf -v c '%%%02X' "'$c"; out+="$c";; esac; done; printf %s "$out"; }
+target_home() { getent passwd "$TARGET_USER" | cut -d: -f6; }
+parse_common() {
+  SCOPE=both; TARGET_USER="${SUDO_USER:-${USER:-user}}"; HOST= PORT= LOGIN= PASSWORD= READ_PASSWORD=0
+  while test "$#" -gt 0; do case "$1" in
+    --scope) SCOPE="$2"; shift 2;; --user) TARGET_USER="$2"; shift 2;; --host) HOST="$2"; shift 2;;
+    --port) PORT="$2"; shift 2;; --login) LOGIN="$2"; shift 2;; --password-stdin) READ_PASSWORD=1; shift;;
+    *) fail "Неизвестный параметр: $1";; esac; done
+  case "$SCOPE" in system|user|both) ;; *) fail "scope: system, user или both";; esac
+  id "$TARGET_USER" >/dev/null 2>&1 || fail "Пользователь $TARGET_USER не найден."
+}
+strip_block() {
+  local file="$1" tmp; test -f "$file" || return 0; tmp="$(mktemp)"
+  awk -v b="$BEGIN_MARK" -v e="$END_MARK" '$0==b {skip=1; next} $0==e {skip=0; next} !skip' "$file" > "$tmp"
+  cat "$tmp" > "$file"; rm -f "$tmp"
+}
+show_file() { local title="$1" file="$2"; printf '[%s] %s\n' "$title" "$file"; test -f "$file" && redact < "$file" || printf '(не настроено)\n'; }
+show_system_env() {
+  printf '[SYSTEM] %s\n' "$SYSTEM_ENV"
+  if test -f "$SYSTEM_ENV"; then
+    awk -v b="$BEGIN_MARK" -v e="$END_MARK" '$0==b {print; show=1; next} $0==e {print; show=0; next} show' "$SYSTEM_ENV" | redact
+  else printf '(не настроено)\n'; fi
+}
+show_config() {
+  local home; home="$(target_home)"; case "$SCOPE" in system|both) show_file APT "$APT_FILE"; show_system_env;; esac
+  case "$SCOPE" in user|both) show_file USER "$home/$USER_ENV_REL";; esac
+}
+apply_system() {
+  need_root; install -d -m 0755 "$(dirname "$APT_FILE")"; umask 077
+  printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$PROXY_URL" "$PROXY_URL" > "$APT_FILE"
+  touch "$SYSTEM_ENV"; strip_block "$SYSTEM_ENV"; { printf '%s\n' "$BEGIN_MARK"; printf 'http_proxy="%s"\nhttps_proxy="%s"\nHTTP_PROXY="%s"\nHTTPS_PROXY="%s"\n' "$PROXY_URL" "$PROXY_URL" "$PROXY_URL" "$PROXY_URL"; printf '%s\n' "$END_MARK"; } >> "$SYSTEM_ENV"; chmod 0600 "$APT_FILE" "$SYSTEM_ENV"
+}
+apply_user() {
+  local home file; home="$(target_home)"; file="$home/$USER_ENV_REL"; install -d -m 0700 -o "$TARGET_USER" -g "$(id -gn "$TARGET_USER")" "$(dirname "$file")"
+  umask 077; printf 'http_proxy=%s\nhttps_proxy=%s\nHTTP_PROXY=%s\nHTTPS_PROXY=%s\n' "$PROXY_URL" "$PROXY_URL" "$PROXY_URL" "$PROXY_URL" > "$file"; chown "$TARGET_USER:$(id -gn "$TARGET_USER")" "$file"
+}
+remove_system() { need_root; rm -f -- "$APT_FILE"; test -f "$SYSTEM_ENV" && strip_block "$SYSTEM_ENV"; }
+remove_user() { local file; file="$(target_home)/$USER_ENV_REL"; test "$(id -u)" -eq 0 || test "$TARGET_USER" = "${USER:-}" || fail "Чужой профиль требует sudo."; rm -f -- "$file"; }
+main() {
+  local action="${1:---help}"; shift || true; case "$action" in
+    --help|-h|help) usage;;
+    show|export) parse_common "$@"; show_config;;
+    apply) parse_common "$@"; valid_host "$HOST"; valid_port "$PORT"; if test "$READ_PASSWORD" -eq 1; then IFS= read -r PASSWORD || true; fi
+      AUTH=""; if test -n "$LOGIN"; then AUTH="$(urlencode "$LOGIN")"; test -z "$PASSWORD" || AUTH+=":$(urlencode "$PASSWORD")"; AUTH+="@"; fi
+      PROXY_URL="http://${AUTH}${HOST}:${PORT}/"; case "$SCOPE" in system) apply_system;; user) apply_user;; both) apply_system; apply_user;; esac; printf 'Прокси настроен: '; printf '%s\n' "$PROXY_URL" | redact;;
+    remove) parse_common "$@"; case "$SCOPE" in system) remove_system;; user) remove_user;; both) remove_system; remove_user;; esac; printf 'Настройки удалены.\n';;
+    *) fail "Неизвестная команда: $action. Используйте --help.";; esac
+}
+main "$@"

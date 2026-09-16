@@ -76,6 +76,7 @@ type
     fDisplayBufferMs: Cardinal;                    { Длина отображаемого окна данных в мс }
     fDataUpdateMs: Cardinal;                       { Период обновления источников данных в мс }
     fRecordRootDir: string;                        { Корневой каталог записи MERA-кадров }
+    fRecordShareName: string;                      { Имя SMB-ресурса каталога замеров }
     fMeraFilesPath: string;                        { Корень Mera Files: SDB и calibr }
     fWinposButtonAction: TRecorderWinposButtonAction;
 
@@ -153,6 +154,7 @@ type
     property DisplayBufferMs: Cardinal read fDisplayBufferMs write fDisplayBufferMs;
     property DataUpdateMs: Cardinal read fDataUpdateMs write fDataUpdateMs;
     property RecordRootDir: string read fRecordRootDir write fRecordRootDir;
+    property RecordShareName: string read fRecordShareName write fRecordShareName;
     property MeraFilesPath: string read fMeraFilesPath write fMeraFilesPath;
     property WinposButtonAction: TRecorderWinposButtonAction
       read fWinposButtonAction write fWinposButtonAction;
@@ -186,6 +188,7 @@ begin
   fDisplayBufferMs := 1000;
   fDataUpdateMs := 300;
   fRecordRootDir := 'C:\USML\';
+  fRecordShareName := 'MeraFiles';
   fMeraFilesPath := RecorderMeraFilesPath;
   fWinposButtonAction := rwbaOpenDirectory;
 end;
@@ -354,6 +357,7 @@ begin
     lIni.WriteInteger('Display', 'DisplayBufferMs', fDisplayBufferMs);
     lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
     lIni.WriteString('Record', 'RootDir', fRecordRootDir);
+    lIni.WriteString('Record', 'ShareName', fRecordShareName);
     lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
     lIni.WriteString('Winpos', 'ButtonAction',
       WinposButtonActionToString(fWinposButtonAction));
@@ -389,6 +393,7 @@ begin
     fDataUpdateMs := lIni.ReadInteger('Display', 'DataUpdateMs',
       fDataUpdateMs);
     fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
+    fRecordShareName := lIni.ReadString('Record', 'ShareName', fRecordShareName);
     fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
     fWinposButtonAction := StringToWinposButtonAction(
       lIni.ReadString('Winpos', 'ButtonAction', ''), fWinposButtonAction);

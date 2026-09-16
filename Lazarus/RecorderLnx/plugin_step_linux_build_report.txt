@@ -1,0 +1,51 @@
+BUILD_EXIT=0
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,41) Hint: (5023) Unit "uRecorderStrainCalibration" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(27,3) Hint: (5023) Unit "uRecorderStrainCalibrationDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(28,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(28,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(32,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(32,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(34,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(37,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(37,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(38,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+(1008) 145205 lines compiled, 19.3 sec
+(1021) 251 warning(s) issued
+(1022) 806 hint(s) issued
+(1023) 139 note(s) issued
+SetPrimaryConfigPath NewValue="/home/user/.lazarus_work" -> "/home/user/.lazarus_work"
+Hint: (lazarus) Build Project: nothing to do.
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling SampleInfoPlugin.lpr
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SDK/uRecorderPluginApi.pas
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/plugins/libsampleinfoplugin.so
+(1008) 65 lines compiled, 0.2 sec
+(1022) 2 hint(s) issued
+SetPrimaryConfigPath NewValue="/home/user/.lazarus_work" -> "/home/user/.lazarus_work"
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling PluginInfoProbe.lpr
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Core/uRecorderPluginInfo.pas
+(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SDK/uRecorderPluginApi.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tests/PluginInfo/PluginInfoProbe.lpr(16,5) Warning: (6018) unreachable code
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/PluginInfoProbe
+(1008) 258 lines compiled, 0.4 sec
+(1021) 1 warning(s) issued
+(1022) 2 hint(s) issued
+libsampleinfoplugin.so: SampleInfoPlugin | 
+RESULT PluginInfo passed

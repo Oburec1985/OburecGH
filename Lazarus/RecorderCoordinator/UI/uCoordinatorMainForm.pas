@@ -25,22 +25,22 @@ type
     btnCommandPreviewAll: TSpeedButton;
     btnCommandStop: TBitBtn;
     btnCommandStopAll: TSpeedButton;
-    btnLaunchAll: TButton;
-    btnLaunchSelected: TButton;
-    btnShutdownAll: TButton;
-    btnShutdownSelected: TButton;
-    btnWakeAll: TButton;
-    btnWakeSelected: TButton;
+    btnLaunchAll: TBitBtn;
+    btnShutdownAll: TBitBtn;
+    btnShutdownSelected: TBitBtn;
+    btnSyncSdb: TButton;
+    btnWakeAll: TBitBtn;
+    btnWakeSelected: TBitBtn;
     btnDeleteEvent: TButton;
     btnSetDatabaseForAll: TButton;
     btnSetPrimarySdb: TButton;
-    btnSyncSdb: TButton;
     btnEditEvent: TButton;
     btnOpenEvent: TButton;
     btnRefreshEvents: TButton;
     btnRefresh: TSpeedButton;
     btnSave: TButton;
     btnTestStorage: TButton;
+    btnLaunchSelected: TBitBtn;
     cbCreateRecordingEvents: TCheckBox;
     cbStartAllOnAnyRecording: TCheckBox;
     cbStorageKind: TComboBox;
@@ -90,7 +90,7 @@ type
     procedure btnCommandStopClick(Sender: TObject);
     procedure btnCommandStopAllClick(Sender: TObject);
     procedure btnLaunchAllClick(Sender: TObject);
-    procedure btnLaunchSelectedClick(Sender: TObject);
+    procedure btnLaunchSelected_Click(Sender: TObject);
     procedure btnShutdownAllClick(Sender: TObject);
     procedure btnShutdownSelectedClick(Sender: TObject);
     procedure btnWakeAllClick(Sender: TObject);
@@ -1162,7 +1162,7 @@ begin
   end;
 end;
 
-procedure TCoordinatorMainForm.btnLaunchSelectedClick(Sender: TObject);
+procedure TCoordinatorMainForm.btnLaunchSelected_Click(Sender: TObject);
 begin
   StartHostAction(edtSelectedHost.Text, haaStartRecorder);
 end;

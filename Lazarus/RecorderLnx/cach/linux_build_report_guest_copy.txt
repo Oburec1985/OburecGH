@@ -1,0 +1,46 @@
+BUILD_EXIT=2
+(3104) Compiling ./UI/uRecorderUserGuideCapture.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,11) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(211,37) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderUserGuideCapture.pas(47,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(142,28) Warning: (4104) Implicit string type conversion from "RawByteString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(143,31) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(17,3) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(18,3) Hint: (5023) Unit "uRecorderVirtualTagDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(19,3) Hint: (5023) Unit "uRecorderButtonSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(20,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(21,3) Hint: (5023) Unit "uRecorderSqlTrendModel" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(22,3) Hint: (5023) Unit "uRecorderSqlTrendSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(23,3) Hint: (5023) Unit "uRecorderMeasurementSectionModel" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(25,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(25,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(26,41) Hint: (5023) Unit "uRecorderStrainCalibration" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(27,3) Hint: (5023) Unit "uRecorderStrainCalibrationDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(28,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(28,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(29,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(30,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(32,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(32,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(34,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(37,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(37,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(38,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
+/usr/bin/ld.bfd: невозможно открыть выходной файл /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx: Отказано в доступе
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(149,1) Error: (9013) Error while linking
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(149,1) Fatal: (10026) There were 1 errors compiling module, stopping
+Fatal: (1018) Compilation aborted
+Error: /usr/bin/ppcx64 returned an error exitcode
+Error: (lazarus) Компиляция проекта, цель: lib/x86_64-linux/RecorderLnx: stopped with exit code 1
+Error: (lazbuild) failed compiling of project /mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpi
+ARTIFACT
+2026-09-16 19:38:56.000000000 +0300|61796592|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.4.0, with debug_info, not stripped
+MISSING_LIBS
+none

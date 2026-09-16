@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly BACKUP_ROOT="/var/backups/recorderlnx/network"
+
+fail() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+need_root() { test "$(id -u)" -eq 0 || fail "Для применения используйте sudo или pkexec."; }
+valid_iface() { [[ "$1" =~ ^[[:alnum:]_.:-]+$ ]] || fail "Недопустимое имя интерфейса: $1"; }
+valid_cidr() { [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$ ]] || fail "Ожидается IPv4/CIDR: $1"; }
+valid_ip() { [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || fail "Ожидается IPv4: $1"; }
+valid_route() {
+  local dst="${1%%=*}" via="${1#*=}"
+  valid_cidr "$dst"; test "$via" = "$1" && fail "Маршрут задаётся СЕТЬ/CIDR=ШЛЮЗ"
+  test "$via" = "-" || valid_ip "$via"
+}
+backend() {
+  if command -v nmcli >/dev/null 2>&1 && systemctl is-active --quiet NetworkManager 2>/dev/null; then printf nmcli
+  elif systemctl is-active --quiet systemd-networkd 2>/dev/null || test -d /etc/systemd/network; then printf networkd
+  elif test -f /etc/network/interfaces; then printf ifupdown
+  else fail "Не найден NetworkManager, systemd-networkd или ifupdown."; fi
+}
+usage() { cat <<'EOF'
+Настройка IPv4 и постоянных маршрутов.
+
+  recorderlnx-configure-network show [--interface ИНТЕРФЕЙС]
+  recorderlnx-configure-network plan  --interface ИНТЕРФЕЙС (--dhcp | --address IP/CIDR)
+       [--gateway IP] [--dns IP[,IP...]] [--route СЕТЬ/CIDR=ШЛЮЗ]...
+  recorderlnx-configure-network apply (те же параметры)
+
+Шлюз маршрута «-» означает маршрут через интерфейс без gateway.
+apply создаёт резервную копию в /var/backups/recorderlnx/network/.
+NetworkManager используется предпочтительно, затем systemd-networkd/ifupdown.
+EOF
+}
+show_state() {
+  local iface="${1:-}"; printf 'Backend: %s\n' "$(backend)"
+  if test -n "$iface"; then valid_iface "$iface"; ip -brief address show dev "$iface"; ip route show dev "$iface"
+  else ip -brief address; ip route show; fi
+}
+backup_file() {
+  local file="$1" dir="$2"
+  test -e "$file" || return 0
+  install -d -m 0700 "$dir$(dirname "$file")"
+  cp -a -- "$file" "$dir$file"
+}
+parse() {
+  IFACE= ADDRESS= GATEWAY= DNS= METHOD=; ROUTES=()
+  while test "$#" -gt 0; do
+    case "$1" in
+      --interface) test "$#" -ge 2 || fail "Нет значения --interface"; IFACE="$2"; shift 2;;
+      --address) test "$#" -ge 2 || fail "Нет значения --address"; ADDRESS="$2"; METHOD=manual; shift 2;;
+      --dhcp) METHOD=dhcp; shift;;
+      --gateway) test "$#" -ge 2 || fail "Нет значения --gateway"; GATEWAY="$2"; shift 2;;
+      --dns) test "$#" -ge 2 || fail "Нет значения --dns"; DNS="$2"; shift 2;;
+      --route) test "$#" -ge 2 || fail "Нет значения --route"; ROUTES+=("$2"); shift 2;;
+      *) fail "Неизвестный параметр: $1";;
+    esac
+  done
+  test -n "$IFACE" || fail "Укажите --interface"; valid_iface "$IFACE"
+  test -d "/sys/class/net/$IFACE" || fail "Интерфейс $IFACE не найден."
+  test -n "$METHOD" || fail "Укажите --dhcp или --address."
+  test "$METHOD" = dhcp || valid_cidr "$ADDRESS"
+  test -z "$GATEWAY" || valid_ip "$GATEWAY"
+  IFS=, read -ra dns_items <<< "$DNS"; for item in "${dns_items[@]}"; do test -z "$item" || valid_ip "$item"; done
+  for item in "${ROUTES[@]}"; do valid_route "$item"; done
+}
+plan() {
+  local be; be="$(backend)"
+  printf 'Backend: %s\nИнтерфейс: %s\nРежим: %s\n' "$be" "$IFACE" "$METHOD"
+  test "$METHOD" = dhcp || printf 'Адрес: %s\n' "$ADDRESS"
+  test -z "$GATEWAY" || printf 'Шлюз: %s\n' "$GATEWAY"
+  test -z "$DNS" || printf 'DNS: %s\n' "$DNS"
+  for item in "${ROUTES[@]}"; do printf 'Маршрут: %s\n' "$item"; done
+  case "$be" in
+    nmcli) printf 'Изменяется профиль NetworkManager, привязанный к %s.\n' "$IFACE";;
+    networkd) printf 'Файл: /etc/systemd/network/90-recorderlnx-%s.network\n' "$IFACE";;
+    ifupdown) printf 'Файл: /etc/network/interfaces.d/90-recorderlnx-%s\n' "$IFACE";;
+  esac
+}
+apply_nmcli() {
+  local con routes="" item dst via
+  con="$(nmcli -g GENERAL.CONNECTION device show "$IFACE" | head -n1)"
+  test -n "$con" && test "$con" != -- || { con="recorderlnx-$IFACE"; nmcli con add type ethernet ifname "$IFACE" con-name "$con" >/dev/null; }
+  nmcli con export "$con" > "$BACKUP_DIR/NetworkManager-${con//\//_}.nmconnection" 2>/dev/null || true
+  if test "$METHOD" = dhcp; then nmcli con mod "$con" ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.dns '' ipv4.routes ''
+  else
+    for item in "${ROUTES[@]}"; do dst="${item%%=*}"; via="${item#*=}"; test "$via" = - && via=""; routes+="${routes:+,}$dst${via:+ $via}"
+    done
+    nmcli con mod "$con" ipv4.method manual ipv4.addresses "$ADDRESS" ipv4.gateway "$GATEWAY" ipv4.dns "${DNS//,/ }" ipv4.routes "$routes"
+  fi
+  nmcli con up "$con"
+}
+apply_networkd() {
+  local file="/etc/systemd/network/90-recorderlnx-$IFACE.network" item dst via
+  backup_file "$file" "$BACKUP_DIR"
+  { printf '[Match]\nName=%s\n\n[Network]\n' "$IFACE"
+    if test "$METHOD" = dhcp; then printf 'DHCP=ipv4\n'; else
+      printf 'Address=%s\n' "$ADDRESS"; test -z "$GATEWAY" || printf 'Gateway=%s\n' "$GATEWAY"
+      IFS=, read -ra dns_items <<< "$DNS"; for item in "${dns_items[@]}"; do test -z "$item" || printf 'DNS=%s\n' "$item"; done
+      for item in "${ROUTES[@]}"; do dst="${item%%=*}"; via="${item#*=}"; printf '\n[Route]\nDestination=%s\n' "$dst"; test "$via" = - || printf 'Gateway=%s\n' "$via"; done
+    fi
+  } > "$file"
+  chmod 0644 "$file"; networkctl reload; networkctl reconfigure "$IFACE"
+}
+apply_ifupdown() {
+  local file="/etc/network/interfaces.d/90-recorderlnx-$IFACE" item dst via
+  backup_file "$file" "$BACKUP_DIR"
+  { printf 'auto %s\niface %s inet %s\n' "$IFACE" "$IFACE" "$METHOD"
+    if test "$METHOD" = manual; then
+      printf '    address %s\n' "$ADDRESS"; test -z "$GATEWAY" || printf '    gateway %s\n' "$GATEWAY"
+      test -z "$DNS" || printf '    dns-nameservers %s\n' "${DNS//,/ }"
+      for item in "${ROUTES[@]}"; do dst="${item%%=*}"; via="${item#*=}"; if test "$via" = -; then printf '    up ip route replace %s dev %s\n' "$dst" "$IFACE"; else printf '    up ip route replace %s via %s dev %s\n' "$dst" "$via" "$IFACE"; fi; done
+    fi
+  } > "$file"
+  chmod 0644 "$file"; ifdown "$IFACE" 2>/dev/null || true; ifup "$IFACE"
+}
+main() {
+  local action="${1:---help}"; shift || true
+  case "$action" in
+    --help|-h|help) usage;;
+    show) if test "${1:-}" = --interface; then test "$#" -eq 2 || fail "Использование show [--interface ИМЯ]"; show_state "$2"; else test "$#" -eq 0 || fail "Лишние параметры"; show_state; fi;;
+    plan) parse "$@"; plan;;
+    apply) parse "$@"; plan; need_root; BACKUP_DIR="$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)"; install -d -m 0700 "$BACKUP_DIR"; case "$(backend)" in nmcli) apply_nmcli;; networkd) apply_networkd;; ifupdown) apply_ifupdown;; esac; printf 'Готово. Резервная копия: %s\n' "$BACKUP_DIR";;
+    *) fail "Неизвестная команда: $action. Используйте --help.";;
+  esac
+}
+main "$@"

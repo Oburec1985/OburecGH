@@ -128,6 +128,9 @@ type
   end;
 
   TRecorderMeasurementSectionFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create;
   end;
@@ -545,6 +548,19 @@ begin
   inherited Create(TRecorderMeasurementSectionComponent.TypeId,
     'Измерительное сечение', TRecorderMeasurementSectionComponent, 220, 80,
     False);
+  ConfigurePalette('Измерительное сечение', 'Добавить измерительное сечение',
+    'measurement-section', 60);
+end;
+
+procedure TRecorderMeasurementSectionFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lSection: TRecorderMeasurementSectionComponent;
+begin
+  lSection := TRecorderMeasurementSectionComponent(AComponent);
+  lSection.Name := Format('Section%d', [AContext.ComponentNo]);
+  lSection.Caption := 'Измерительное сечение';
 end;
 
 procedure RegisterRecorderMeasurementSectionFactory(

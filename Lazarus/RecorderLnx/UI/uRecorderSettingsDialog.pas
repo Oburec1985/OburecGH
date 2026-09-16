@@ -28,7 +28,7 @@ uses
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
   uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
-  uRecorderNetworkBinding;
+  uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig;
 
 type
   { TRecorderSettingsDialog }
@@ -60,6 +60,11 @@ type
     btnCreateVirtualTag: TBitBtn;
     btnChannelImport: TButton;
     btnChannelExport: TButton;
+    pnPluginToolbar: TPanel;
+    btnPluginAdd: TButton;
+    btnPluginDelete: TButton;
+    lbPluginDirectory: TLabel;
+    lvPlugins: TListView;
     spChannelAlgorithms: TSplitter;             // Разделитель между каналами и алгоритмами
     fAlgorithmsTree: TTreeView;                 // Дерево алгоритмов каналов
     fAlgorithmKindCombo: TComboBox;             // Тип создаваемого алгоритма
@@ -98,6 +103,7 @@ type
     fWriteWithPausesCheck: TCheckBox;           // Флаг разрешения записи с паузами
     fSaveConfigWithDataCheck: TCheckBox;        // Флаг сохранения файла конфигурации вместе с данными
     fWorkDirEdit: TEdit;                        // Рабочий каталог сохранения файлов
+    fRecordShareNameEdit: TEdit;                // Имя SMB-ресурса каталога замеров
     btnPublishRecordDir: TButton;               // Публикация каталога замеров в SMB
     fMeraFilesPathEdit: TEdit;                  // Каталог Mera Files (SDB, калибровки)
     fTemplateCheck: TCheckBox;                  // Флаг использования шаблона имени файла
@@ -189,6 +195,9 @@ type
     procedure NetworkTestClick(Sender: TObject);
   private
     fRecorder: TRecorder;
+    fPluginCatalog: TRecorderPluginCatalog;
+    fPluginList: TListView;
+    fPluginConfigFileName: string;
     fSourceProbe: TRecorderSettingsSourceProbe;
     fDeviceImageList: TCustomImageList;
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
@@ -309,6 +318,12 @@ type
     procedure UpdateConfigStr;
     procedure SetGridHeaders;
     procedure SetRecorder(AValue: TRecorder);
+    procedure InitializePluginPage;
+    procedure RefreshPluginList(Sender: TObject);
+    procedure AddPluginClick(Sender: TObject);
+    procedure DeletePluginClick(Sender: TObject);
+    procedure LoadPluginList;
+    procedure SavePluginList;
     procedure SetDeviceImageList(AValue: TCustomImageList);
     procedure SetTagDialogImageList(AValue: TCustomImageList);
     procedure SetDialogButtonImages;
@@ -716,6 +731,14 @@ var
   lSearchButton: TBitBtn;
 begin
   inherited Create(AOwner);
+  fPluginCatalog := TRecorderPluginCatalog.Create;
+  InitializePluginPage;
+  {$IFNDEF UNIX}
+  if btnPublishRecordDir <> nil then
+    btnPublishRecordDir.Visible := False;
+  if fWorkDirEdit <> nil then
+    fWorkDirEdit.Width := 526;
+  {$ENDIF}
   fDataSourcesChanged := False;
   fSelectedChannelTags := TList.Create;
   fAvailableChannelSignals := TList.Create;
@@ -1701,6 +1724,7 @@ end;
 
 destructor TRecorderSettingsDialog.Destroy;
 begin
+  fPluginCatalog.Free;
   if fHardwareTree <> nil then
     RecorderHardwareTreeClearNodes(fHardwareTree);
   fFrequencyBands.Free;
@@ -1723,6 +1747,7 @@ begin
     fSpectrumConfigTree.Assign(fRecorder.TagRegistry.SpectrumConfigs);
     PopulateAlgorithmsTree;
     LoadFromSettings;
+    LoadPluginList;
   end;
   PopulateHardwareTree;
   PopulateChannelGrids;
@@ -4908,10 +4933,12 @@ begin
   lButton.Height := 26;
   lButton.Caption := '...';
   lButton.OnClick := @WorkDirBrowseClick;
-  fTemplateCheck := AddCheck(Self, lGroup, 12, 204, 'Шаблон');
+  AddLabel(Self, lGroup, 10, 204, 'Сетевое имя');
+  fRecordShareNameEdit := AddEdit(Self, lGroup, 100, 200, 180, 'MeraFiles');
+  fTemplateCheck := AddCheck(Self, lGroup, 310, 204, 'Шаблон');
   fTemplateButton := TButton.Create(Self);
   fTemplateButton.Parent := lGroup;
-  fTemplateButton.Left := 84;
+  fTemplateButton.Left := 382;
   fTemplateButton.Top := 200;
   fTemplateButton.Width := 86;
   fTemplateButton.Height := 26;
@@ -5148,6 +5175,8 @@ begin
   fDataUpdateEdit.Text := FormatFloat('0.###', fRecorder.RunSettings.DataUpdateMs / 1000);
   lRecordRootDir := NativeRecordRootOrMeraFiles(fRecorder.RunSettings.RecordRootDir);
   fWorkDirEdit.Text := lRecordRootDir;
+  if fRecordShareNameEdit <> nil then
+    fRecordShareNameEdit.Text := fRecorder.RunSettings.RecordShareName;
   if fMeraFilesPathEdit <> nil then
   begin
     if Trim(fRecorder.RunSettings.MeraFilesPath) <> '' then
@@ -5234,6 +5263,8 @@ begin
   fRecorder.RunSettings.DataUpdateMs := ReadSecondsAsMs(fDataUpdateEdit,
     fRecorder.RunSettings.DataUpdateMs);
   fRecorder.RunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
+  if fRecordShareNameEdit <> nil then
+    fRecorder.RunSettings.RecordShareName := Trim(fRecordShareNameEdit.Text);
   if fMeraFilesPathEdit <> nil then
   begin
     SetRecorderMeraFilesPath(fMeraFilesPathEdit.Text);
@@ -5489,16 +5520,199 @@ begin
     Result := ExcludeTrailingPathDelimiter(GetUserDir);
 end;
 
+procedure TRecorderSettingsDialog.InitializePluginPage;
+begin
+  fPluginList := lvPlugins;
+  btnPluginAdd.OnClick := @AddPluginClick;
+  btnPluginDelete.OnClick := @DeletePluginClick;
+  lbPluginDirectory.Caption := 'Каталог: ' + RecorderPluginDirectory;
+end;
+
+procedure TRecorderSettingsDialog.RefreshPluginList(Sender: TObject);
+var
+  I: Integer;
+  lEntry: TRecorderPluginEntry;
+  lItem: TListItem;
+begin
+  if (fPluginCatalog = nil) or (fPluginList = nil) then
+    Exit;
+  fPluginList.Items.BeginUpdate;
+  try
+    fPluginList.Items.Clear;
+    for I := 0 to fPluginCatalog.Count - 1 do
+    begin
+      lEntry := fPluginCatalog.Entries[I];
+      lItem := fPluginList.Items.Add;
+      lItem.Caption := ExtractFileName(lEntry.FileName);
+      lItem.SubItems.Add(lEntry.Name);
+      if lEntry.IsValid then
+        lItem.SubItems.Add(lEntry.Description)
+      else
+        lItem.SubItems.Add(lEntry.ErrorText);
+      lItem.SubItems.Add(lEntry.Vendor);
+      if lEntry.IsValid then
+        lItem.SubItems.Add(Format('%d.%d.%d.%d', [lEntry.Version,
+          lEntry.SubVersion, lEntry.BugFix, lEntry.BuildNumber]))
+      else
+        lItem.SubItems.Add('—');
+    end;
+  finally
+    fPluginList.Items.EndUpdate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.LoadPluginList;
+var
+  lProjectDir: string;
+begin
+  fPluginConfigFileName := RecorderPluginConfigFileName;
+  if (fRecorder <> nil) and (fRecorder.SqlDbManager <> nil) then
+  begin
+    lProjectDir := ExtractFileDir(fRecorder.SqlDbManager.ConfigFileName);
+    if lProjectDir <> '' then
+      MigrateRecorderPluginConfig(lProjectDir);
+  end;
+  LoadRecorderPluginConfig(fPluginConfigFileName, fPluginCatalog);
+  RefreshPluginList(nil);
+end;
+
+procedure TRecorderSettingsDialog.SavePluginList;
+begin
+  if fPluginConfigFileName <> '' then
+    SaveRecorderPluginConfig(fPluginConfigFileName, fPluginCatalog);
+end;
+
+procedure TRecorderSettingsDialog.AddPluginClick(Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lEntry: TRecorderPluginEntry;
+  lInfo, lFileName: string;
+  I: Integer;
+begin
+  if fPluginConfigFileName = '' then
+  begin
+    MessageDlg('Файл настроек RecorderLnx недоступен.', mtError, [mbOK], 0);
+    Exit;
+  end;
+  lDialog := TOpenDialog.Create(Self);
+  try
+    lDialog.Title := 'Выбор библиотеки плагина';
+    lDialog.InitialDir := RecorderPluginDirectory;
+    {$IFDEF WINDOWS}
+    lDialog.Filter := 'Плагины (*.dll)|*.dll';
+    {$ELSE}
+    lDialog.Filter := 'Плагины (*.so)|*.so';
+    {$ENDIF}
+    if not lDialog.Execute then
+      Exit;
+    lEntry := RecorderReadPluginInfoFile(lDialog.FileName);
+    try
+      if not lEntry.IsValid then
+      begin
+        MessageDlg('Плагин не добавлен: ' + lEntry.ErrorText,
+          mtError, [mbOK], 0);
+        Exit;
+      end;
+      lFileName := ExtractFileName(lEntry.FileName);
+      for I := 0 to fPluginCatalog.Count - 1 do
+        if SameText(ExtractFileName(fPluginCatalog.Entries[I].FileName),
+          lFileName) then
+        begin
+          MessageDlg('Плагин уже добавлен: ' + lFileName,
+            mtInformation, [mbOK], 0);
+          Exit;
+        end;
+      lInfo := 'Файл: ' + lFileName + LineEnding +
+        'Название: ' + lEntry.Name + LineEnding +
+        'Описание: ' + lEntry.Description + LineEnding +
+        'Разработчик: ' + lEntry.Vendor + LineEnding +
+        'Версия: ' + Format('%d.%d.%d.%d', [lEntry.Version,
+          lEntry.SubVersion, lEntry.BugFix, lEntry.BuildNumber]) +
+        LineEnding + LineEnding + 'Добавить этот плагин?';
+      if MessageDlg('Сведения о плагине', lInfo,
+        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+        Exit;
+      try
+        lEntry.FileName := RecorderInstallPluginFile(lEntry.FileName);
+      except
+        on E: Exception do
+        begin
+          MessageDlg('Не удалось добавить плагин: ' + E.Message,
+            mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+      fPluginCatalog.Add(lEntry);
+      lEntry := nil;
+      try
+        SavePluginList;
+      except
+        on E: Exception do
+        begin
+          fPluginCatalog.Delete(fPluginCatalog.Count - 1);
+          MessageDlg('Не удалось сохранить список плагинов: ' + E.Message,
+            mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+      RefreshPluginList(nil);
+    finally
+      lEntry.Free;
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.DeletePluginClick(Sender: TObject);
+var
+  lIndex: Integer;
+begin
+  if (fPluginList = nil) or (fPluginList.Selected = nil) then
+    Exit;
+  lIndex := fPluginList.Selected.Index;
+  if MessageDlg('Удалить плагин из конфигурации?' + LineEnding +
+    'После перезапуска компоненты этого плагина не будут загружены,' +
+    ' пока плагин не будет добавлен снова.',
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  fPluginCatalog.Delete(lIndex);
+  try
+    SavePluginList;
+  except
+    on E: Exception do
+    begin
+      LoadRecorderPluginConfig(fPluginConfigFileName, fPluginCatalog);
+      RefreshPluginList(nil);
+      MessageDlg('Не удалось сохранить список плагинов: ' + E.Message,
+        mtError, [mbOK], 0);
+      Exit;
+    end;
+  end;
+  RefreshPluginList(nil);
+end;
+
 procedure TRecorderSettingsDialog.PublishRecordDirClick(Sender: TObject);
 var
-  lDirectory: string;
+  lDirectory, lShareName: string;
+  lOutput: TStringList;
   lProcess: TProcess;
 begin
   lDirectory := ExcludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
+  if fRecordShareNameEdit <> nil then
+    lShareName := Trim(fRecordShareNameEdit.Text)
+  else
+    lShareName := Trim(fRecorder.RunSettings.RecordShareName);
   if not DirectoryExists(lDirectory) then
   begin
     MessageDlg('Публикация каталога', 'Каталог замеров не существует: ' +
       lDirectory, mtError, [mbOK], 0);
+    Exit;
+  end;
+  if lShareName = '' then
+  begin
+    MessageDlg('Публикация каталога', 'Введите сетевое имя ресурса.',
+      mtWarning, [mbOK], 0);
     Exit;
   end;
   {$IFDEF UNIX}
@@ -5509,21 +5723,35 @@ begin
     Exit;
   end;
   lProcess := TProcess.Create(nil);
+  lOutput := TStringList.Create;
   try
-    lProcess.Executable := 'pkexec';
-    lProcess.Parameters.Add(CShareFolderHelper);
-    lProcess.Parameters.Add(lDirectory);
-    lProcess.Options := [poWaitOnExit];
-    lProcess.Execute;
-    if lProcess.ExitStatus = 0 then
-      MessageDlg('Публикация каталога',
-        'Каталог доступен как сетевой ресурс MeraFiles.', mtInformation,
-        [mbOK], 0)
-    else
-      MessageDlg('Публикация каталога',
-        'Не удалось опубликовать каталог. Код ошибки: ' +
-        IntToStr(lProcess.ExitStatus), mtError, [mbOK], 0);
+    try
+      lProcess.Executable := 'pkexec';
+      lProcess.Parameters.Add(CShareFolderHelper);
+      lProcess.Parameters.Add(lDirectory);
+      lProcess.Parameters.Add(lShareName);
+      lProcess.Options := [poUsePipes, poStderrToOutput, poWaitOnExit];
+      lProcess.Execute;
+      lOutput.LoadFromStream(lProcess.Output);
+      if lProcess.ExitStatus = 0 then
+      begin
+        fRecorder.RunSettings.RecordShareName := lShareName;
+        MessageDlg('Публикация каталога',
+          'Каталог доступен как сетевой ресурс ' + lShareName + '.',
+          mtInformation, [mbOK], 0);
+      end
+      else
+        MessageDlg('Публикация каталога',
+          'Не удалось опубликовать каталог. Код ошибки: ' +
+          IntToStr(lProcess.ExitStatus) + LineEnding + Trim(lOutput.Text),
+          mtError, [mbOK], 0);
+    except
+      on E: Exception do MessageDlg('Публикация каталога',
+        'Не удалось запустить публикацию: ' + E.Message,
+        mtError, [mbOK], 0);
+    end;
   finally
+    lOutput.Free;
     lProcess.Free;
   end;
   {$ELSE}

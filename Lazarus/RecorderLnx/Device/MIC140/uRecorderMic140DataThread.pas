@@ -1,12 +1,12 @@
 unit uRecorderMic140DataThread;
 
 {
-  ����� ����� MIC-140: ��������� TRecorderDeviceDataThread.
+  Рабочий поток MIC-140: наследник TRecorderDeviceDataThread.
 
-  ReadBlockFromDevice �������� callback ��������� (Device), ������� ������
-  ���� ReadBlock �� ��� ��������� MDP-stream (��� Connect/Config � ������).
-  ������ � prealloc � � ������� ������.
-  ��. Docs/devices/mic140/protocol/ � Device/uRecorderDeviceDataThread.pas.
+  ReadBlockFromDevice вызывает callback владельца (Device), который читает
+  один ReadBlock из уже открытого MDP-stream (без Connect/Config в потоке).
+  Память с prealloc и без лишних аллокаций.
+  См. Docs/devices/mic140/protocol/ и Device/uRecorderDeviceDataThread.pas.
 }
 
 {$mode objfpc}{$H+}
@@ -18,7 +18,7 @@ uses
   uRecorderAcquisitionTypes, uRecorderDeviceDataThread;
 
 type
-  { ���� ���� �� �������; True = ���� �����. ����� ������ �� DataThread. }
+  { Один блок из прибора; True = блок готов. Вызов только из DataThread. }
   TMic140DataThreadReadFunc = function(ATimeoutMs: Cardinal;
     var ABlock: TRecorderAcquisitionBlock): Boolean of object;
 
@@ -56,12 +56,12 @@ end;
 
 procedure TRecorderMic140DataThread.OnStart;
 begin
-  { ���� ��� ��������� Device.Start �� StartPlay. }
+  { Место для подготовки Device.Start до StartPlay. }
 end;
 
 procedure TRecorderMic140DataThread.OnStop;
 begin
-  { ������� ����� ������ Device.Stop ����� StopPlay. }
+  { Очистка после вызова Device.Stop после StopPlay. }
 end;
 
 function TRecorderMic140DataThread.ReadBlockFromDevice(

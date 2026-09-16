@@ -167,7 +167,8 @@ type
 implementation
 
 uses
-  uRecorderSqlDbRepository, uRecorderMeraEventDialog, uSharedFileLogger;
+  uRecorderSqlDbRepository, uRecorderSqlDbRuntime,
+  uRecorderMeraEventDialog, uSharedFileLogger;
 
 function SqlTrendConnectionIdentity(const AConfigFileName: string;
   AConfig: TRecorderSqlDbConfig): string;
@@ -276,6 +277,8 @@ var
   lRepository: TRecorderSqlDbRepository;
   lLoadedConfigFileName: string;
   lCredentialsError: string;
+  lConnectionError: string;
+  lSkipDeliver: Boolean;
   lLoadedConfigAge, lConfigAge: LongInt;
 begin
   lConfig := nil;
@@ -297,6 +300,7 @@ begin
         LeaveCriticalSection(fRequestLock);
       end;
       fErrorText := '';
+      lSkipDeliver := False;
       SetLength(fPoints, 0);
       try
         lConfigAge := FileAge(fConfigFileName);
@@ -310,18 +314,27 @@ begin
           lConfig.LoadFromFile(fConfigFileName);
           if lConfig.ConnectionConfigurationReady(lCredentialsError) then
           begin
-            lRepository := TRecorderSqlDbRepository.Create(lConfig);
             lLoadedConfigFileName := fConfigFileName;
             lLoadedConfigAge := lConfigAge;
           end
           else
             fErrorText := lCredentialsError;
         end;
-        if lRepository <> nil then
+        if (lConfig <> nil) and (fErrorText = '') then
         begin
-          lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
-            fMaxPoints, fPoints, False);
-          lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
+          if RecorderSqlServerAvailable(lConfig, lConnectionError) then
+          begin
+            if lRepository = nil then
+              lRepository := TRecorderSqlDbRepository.Create(lConfig);
+            lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
+              fMaxPoints, fPoints, False);
+            lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
+          end
+          else
+          begin
+            lSkipDeliver := True;
+            FreeAndNil(lRepository);
+          end;
         end;
       except
         on E: Exception do
@@ -347,7 +360,7 @@ begin
       finally
         LeaveCriticalSection(fRequestLock);
       end;
-      if not Terminated then Synchronize(@Deliver);
+      if not Terminated and not lSkipDeliver then Synchronize(@Deliver);
     end;
   finally
     lRepository.Free;

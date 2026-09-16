@@ -248,6 +248,15 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       OnClick = btnSelectNoneClick
       TabOrder = 6
     end
+    object btnImportSqlSelection: TButton
+      Left = 312
+      Height = 30
+      Top = 558
+      Width = 134
+      Caption = 'Из таблицы...'
+      OnClick = btnImportSqlSelectionClick
+      TabOrder = 7
+    end
   end
   object btnOk: TButton Left = 916 Height = 34 Top = 674 Width = 90 Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end
   object btnCancel: TButton Left = 1016 Height = 34 Top = 674 Width = 90 Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end

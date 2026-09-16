@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+set -eu
+
+readonly TARGET_USER="user"
+readonly TARGET_HOME="/home/user"
+readonly CREDENTIALS_FILE="/etc/samba/kip-obmen.credentials"
+readonly FSTAB_FILE="/etc/fstab"
+readonly FSTAB_BEGIN="# RECORDERLNX-KIP-OBMEN-BEGIN"
+readonly FSTAB_END="# RECORDERLNX-KIP-OBMEN-END"
+readonly KIP_HOSTS=(
+  "KIP-1:192.168.9.17"
+  "KIP-2:192.168.9.45"
+  "KIP-3:192.168.9.66"
+  "KIP-4:192.168.9.85"
+)
+
+fstab_path() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/ /\\040/g; s/\t/\\011/g'
+}
+
+write_fstab_block() {
+  local temp_file host_entry kip_name ip_address mount_point escaped_mount
+  local uid gid
+  uid="$(id -u "$TARGET_USER")"
+  gid="$(id -g "$TARGET_USER")"
+  temp_file="$(mktemp)"
+  awk -v begin="$FSTAB_BEGIN" -v end="$FSTAB_END" '
+    $0 == begin { skip=1; next }
+    $0 == end { skip=0; next }
+    !skip { print }
+  ' "$FSTAB_FILE" > "$temp_file"
+  printf '\n%s\n' "$FSTAB_BEGIN" >> "$temp_file"
+  for host_entry in "${KIP_HOSTS[@]}"; do
+    kip_name="${host_entry%%:*}"
+    ip_address="${host_entry#*:}"
+    mount_point="${TARGET_HOME}/Сеть/${kip_name}"
+    escaped_mount="$(fstab_path "$mount_point")"
+    printf '//%s/Obmen %s cifs credentials=%s,uid=%s,gid=%s,iocharset=utf8,vers=3.0,noperm,_netdev,nofail,x-systemd.automount,x-systemd.idle-timeout=0 0 0\n' \
+      "$ip_address" "$escaped_mount" "$CREDENTIALS_FILE" "$uid" "$gid" \
+      >> "$temp_file"
+  done
+  printf '%s\n' "$FSTAB_END" >> "$temp_file"
+  install -m 0644 "$temp_file" "$FSTAB_FILE"
+  rm -f -- "$temp_file"
+}
+
+prepare_mount_point() {
+  local kip_name="$1"
+  local mount_point="${TARGET_HOME}/Сеть/${kip_name}"
+
+  install -d -o "$TARGET_USER" -g "$TARGET_USER" "$mount_point"
+  if mountpoint -q "$mount_point"; then
+    umount "$mount_point" 2>/dev/null || umount -l "$mount_point"
+  fi
+}
+
+start_automount() {
+  local kip_name="$1" mount_point automount_unit
+  mount_point="${TARGET_HOME}/Сеть/${kip_name}"
+  automount_unit="$(systemd-escape --path --suffix=automount "$mount_point")"
+  systemctl restart "$automount_unit"
+}
+
+main() {
+  local host_entry
+  local kip_name
+  local failed=0
+
+  test "$(id -u)" -eq 0 || {
+    printf 'Запустите скрипт через sudo.\n' >&2
+    exit 1
+  }
+  test -f "$CREDENTIALS_FILE" || {
+    printf 'Не найден файл учётных данных: %s\n' "$CREDENTIALS_FILE" >&2
+    exit 1
+  }
+
+  for host_entry in "${KIP_HOSTS[@]}"; do
+    kip_name="${host_entry%%:*}"
+    if ! prepare_mount_point "$kip_name"; then
+      printf 'Не удалось подготовить каталог %s.\n' "$kip_name" >&2
+      failed=1
+    fi
+  done
+
+  write_fstab_block
+  systemctl daemon-reload
+
+  for host_entry in "${KIP_HOSTS[@]}"; do
+    kip_name="${host_entry%%:*}"
+    if ! start_automount "$kip_name"; then
+      printf 'Не удалось включить automount для %s.\n' "$kip_name" >&2
+      failed=1
+    fi
+  done
+
+  printf 'Постоянные подключения записаны в %s.\n' "$FSTAB_FILE"
+
+  exit "$failed"
+}
+
+main "$@"

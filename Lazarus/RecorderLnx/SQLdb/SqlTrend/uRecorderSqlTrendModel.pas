@@ -81,6 +81,9 @@ type
   end;
 
   TRecorderSqlTrendFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create;
   end;
@@ -262,6 +265,20 @@ constructor TRecorderSqlTrendFactory.Create;
 begin
   inherited Create(TRecorderSqlTrendComponent.TypeId, 'SQL trend',
     TRecorderSqlTrendComponent, 520, 320, False);
+  ConfigurePalette('SQL-тренд', 'Добавить SQL-тренд', 'trend', 30,
+    rppGroup, CRecorderPaletteGroupCharts);
+end;
+
+procedure TRecorderSqlTrendFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lTrend: TRecorderSqlTrendComponent;
+begin
+  lTrend := TRecorderSqlTrendComponent(AComponent);
+  lTrend.Name := Format('SqlTrend%d', [AContext.ComponentNo]);
+  lTrend.ConfigFileName := IncludeTrailingPathDelimiter(
+    AContext.ProjectConfigDir) + 'sql-db.ini';
 end;
 
 procedure RegisterRecorderSqlTrendFactory(AFactory: TRecorderComponentFactory);

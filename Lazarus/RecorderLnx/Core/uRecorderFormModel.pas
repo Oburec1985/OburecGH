@@ -61,10 +61,19 @@ type
   ERecorderFormError = class(Exception);
 
   TRecorderComponentFactoryBase = class;
+  TRecorderFormPage = class;
   TRecorderNamedFont = class;
   TRecorderNamedFontManager = class;
   TRecorderVisualComponent = class;
   TRecorderVisualComponentClass = class of TRecorderVisualComponent;
+
+  TRecorderComponentCreateContext = record
+    Page: TRecorderFormPage;
+    SelectedTag: TRecorderTag;
+    DefaultTag: TRecorderTag;
+    ProjectConfigDir: string;
+    ComponentNo: Integer;
+  end;
 
   { TRecorderTagBindingMode
     Режим привязки тега для компонента, который может опираться на выбранный
@@ -417,6 +426,12 @@ type
     property ProfileName: string read fProfileName write fProfileName;
   end;
 
+  TRecorderPalettePlacement = (rppHidden, rppStandalone, rppGroup);
+
+const
+  CRecorderPaletteGroupCharts = 'charts';
+
+type
   { TRecorderComponentFactoryBase
     Базовый класс фабрики визуальных компонентов. Для каждого экземпляра и типа
     фабрика хранит ссылки компонентов, чтобы при удалении палитры/редактора не
@@ -430,11 +445,19 @@ type
     fSingleTag: Boolean;                           { true — компонент с одним тегом }
     fTypeId: string;                               { машинный ID типа }
     fTypeName: string;                             { человекочитаемое имя типа }
+    fPaletteCaption: string;
+    fPaletteHint: string;
+    fPaletteIconId: string;
+    fPaletteOrder: Integer;
+    fPalettePlacement: TRecorderPalettePlacement;
+    fPaletteGroupId: string;
     function GetChild(AIndex: Integer): TRecorderVisualComponent;
     function GetChildCount: Integer;
   protected
     { Убирает компонент из списка детей при уничтожении объекта. }
     procedure ExcludeComponent(AComponent: TRecorderVisualComponent);
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); virtual;
   public
     { Конструктор базовой фабрики.
       ATypeId - машинный id типа для сериализации.
@@ -450,6 +473,8 @@ type
 
     { Создаёт компонент с размерами и типом по умолчанию. }
     function CreateComponent: TRecorderVisualComponent; virtual;
+    function CreateComponentForPage(
+      const AContext: TRecorderComponentCreateContext): TRecorderVisualComponent;
 
     { Удаляет компонент, когда уничтожает сам объект. }
     procedure ReleaseComponent(AComponent: TRecorderVisualComponent); virtual;
@@ -457,49 +482,90 @@ type
     { Проверяет, что компонент всё ещё числится среди созданных фабрикой. }
     function ContainsComponent(AComponent: TRecorderVisualComponent): Boolean;
 
+    { Объявляет, как фабрика представлена в палитре компонентов. Строковый ID
+      иконки разрешается UI-слоем и не связывает Core с LCL/ImageList. }
+    procedure ConfigurePalette(const ACaption, AHint, AIconId: string;
+      AOrder: Integer; APlacement: TRecorderPalettePlacement = rppStandalone;
+      const AGroupId: string = '');
+
     property TypeId: string read fTypeId;
     property TypeName: string read fTypeName;
     property DefaultWidth: Integer read fDefaultWidth;
     property DefaultHeight: Integer read fDefaultHeight;
     property SingleTag: Boolean read fSingleTag;
+    property PaletteCaption: string read fPaletteCaption;
+    property PaletteHint: string read fPaletteHint;
+    property PaletteIconId: string read fPaletteIconId;
+    property PaletteOrder: Integer read fPaletteOrder;
+    property PalettePlacement: TRecorderPalettePlacement read fPalettePlacement;
+    property PaletteGroupId: string read fPaletteGroupId;
     property ChildCount: Integer read GetChildCount;
     property Children[AIndex: Integer]: TRecorderVisualComponent read GetChild;
   end;
 
   { Фабрика статического текста компонентов }
   TRecorderStaticTextFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;
 
   { Фабрика компонента значения тега }
   TRecorderTagValueFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;
 
   TRecorderButtonFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
+  public
+    constructor Create; reintroduce;
+  end;
+
+  TRecorderInputFieldFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;
 
   TRecorderImageFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create;
   end;
 
   { Фабрика компонента осциллограммы }
   TRecorderOscillogramFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;
 
   TRecorderTrendFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;
 
   TRecorderSpectrumFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create;
   end;
@@ -1434,6 +1500,24 @@ constructor TRecorderSpectrumFactory.Create;
 begin
   inherited Create(TRecorderSpectrumComponent.TypeId, 'Spectrum',
     TRecorderSpectrumComponent, 400, 300, False);
+  ConfigurePalette('Спектр', 'Добавить спектр', 'spectrum', 40, rppGroup,
+    CRecorderPaletteGroupCharts);
+end;
+
+procedure TRecorderSpectrumFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lSpectrum: TRecorderSpectrumComponent;
+  lTag: TRecorderTag;
+begin
+  lSpectrum := TRecorderSpectrumComponent(AComponent);
+  lSpectrum.Name := Format('Spectrum%d', [AContext.ComponentNo]);
+  lTag := AContext.SelectedTag;
+  if lTag = nil then
+    lTag := AContext.DefaultTag;
+  if lTag <> nil then
+    lSpectrum.SetTagRefAt(lSpectrum.TagNames.Count, lTag);
 end;
 
 procedure TRecorderTrendComponent.DeleteAxis(AIndex: Integer);
@@ -1469,6 +1553,12 @@ begin
   fDefaultWidth := ADefaultWidth;
   fDefaultHeight := ADefaultHeight;
   fSingleTag := ASingleTag;
+  fPaletteCaption := ATypeName;
+  fPaletteHint := ATypeName;
+  fPaletteIconId := '';
+  fPaletteOrder := 0;
+  fPalettePlacement := rppStandalone;
+  fPaletteGroupId := '';
 end;
 
 destructor TRecorderComponentFactoryBase.Destroy;
@@ -1530,12 +1620,62 @@ begin
   Result := fChildren.IndexOf(AComponent) >= 0;
 end;
 
+procedure TRecorderComponentFactoryBase.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('%s%d', [TypeName, AContext.ComponentNo]);
+end;
+
+function TRecorderComponentFactoryBase.CreateComponentForPage(
+  const AContext: TRecorderComponentCreateContext): TRecorderVisualComponent;
+begin
+  if AContext.Page = nil then
+    raise ERecorderFormError.Create('Cannot create component without page');
+  Result := CreateComponent;
+  try
+    Result.Id := Format('%s.component%d',
+      [AContext.Page.Id, AContext.ComponentNo]);
+    Result.SetBounds(16, 16 + AContext.Page.ComponentCount * 36,
+      DefaultWidth, DefaultHeight);
+    ConfigureNewComponent(Result, AContext);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure TRecorderComponentFactoryBase.ConfigurePalette(const ACaption, AHint,
+  AIconId: string; AOrder: Integer; APlacement: TRecorderPalettePlacement;
+  const AGroupId: string);
+begin
+  fPaletteCaption := ACaption;
+  fPaletteHint := AHint;
+  fPaletteIconId := AIconId;
+  fPaletteOrder := AOrder;
+  fPalettePlacement := APlacement;
+  if APlacement = rppGroup then
+    fPaletteGroupId := AGroupId
+  else
+    fPaletteGroupId := '';
+end;
+
 { TRecorderStaticTextFactory }
 
 constructor TRecorderStaticTextFactory.Create;
 begin
   inherited Create(TRecorderStaticTextComponent.TypeId, 'Static text',
     TRecorderStaticTextComponent, 160, 24, False);
+  ConfigurePalette('Текст', 'Добавить текст', 'text-label', 10);
+end;
+
+procedure TRecorderStaticTextFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('TextLabel%d', [AContext.ComponentNo]);
+  TRecorderStaticTextComponent(AComponent).Text := 'Text label';
+  AComponent.SetBounds(AComponent.Bounds.Left, AComponent.Bounds.Top, 180, 28);
 end;
 
 { TRecorderTagValueFactory }
@@ -1544,12 +1684,50 @@ constructor TRecorderButtonFactory.Create;
 begin
   inherited Create(TRecorderButtonComponent.TypeId, 'Button',
     TRecorderButtonComponent, 120, 32, False);
+  ConfigurePalette('Кнопка', 'Добавить кнопку', 'button', 40);
+end;
+
+procedure TRecorderButtonFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('Button%d', [AContext.ComponentNo]);
+  TRecorderButtonComponent(AComponent).Caption := 'Button';
+end;
+
+constructor TRecorderInputFieldFactory.Create;
+begin
+  inherited Create(TRecorderInputFieldComponent.TypeId, 'Поле ввода',
+    TRecorderInputFieldComponent, 120, 28, False);
+  ConfigurePalette('Поле ввода', 'Добавить поле ввода', 'input-field', 50);
+end;
+
+procedure TRecorderInputFieldFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('InputField%d', [AContext.ComponentNo]);
 end;
 
 constructor TRecorderTagValueFactory.Create;
 begin
   inherited Create(TRecorderTagValueComponent.TypeId, 'Tag value',
     TRecorderTagValueComponent, 160, 24, True);
+  ConfigurePalette('Цифровой индикатор', 'Добавить цифровой индикатор',
+    'digital-indicator', 20);
+end;
+
+procedure TRecorderTagValueFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lValue: TRecorderTagValueComponent;
+begin
+  lValue := TRecorderTagValueComponent(AComponent);
+  lValue.Name := Format('DigitalIndicator%d', [AContext.ComponentNo]);
+  lValue.TagName := 'MemTag';
+  lValue.DisplayFormat := '0.0';
+  lValue.SetBounds(lValue.Bounds.Left, lValue.Bounds.Top, 180, 32);
 end;
 
 { TRecorderImageFactory }
@@ -1558,6 +1736,14 @@ constructor TRecorderImageFactory.Create;
 begin
   inherited Create(TRecorderImageComponent.TypeId, 'Картинка',
     TRecorderImageComponent, 200, 140, True);
+  ConfigurePalette('Картинка', 'Добавить картинку', 'image', 30);
+end;
+
+procedure TRecorderImageFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('Image%d', [AContext.ComponentNo]);
 end;
 
 { TRecorderOscillogramFactory }
@@ -1566,6 +1752,8 @@ constructor TRecorderOscillogramFactory.Create;
 begin
   inherited Create(TRecorderOscillogramComponent.TypeId, 'Oscillogram',
     TRecorderOscillogramComponent, 360, 220, True);
+  ConfigurePalette('Осциллограмма', 'Добавить осциллограмму', 'oscillogram',
+    10, rppGroup, CRecorderPaletteGroupCharts);
 end;
 
 
@@ -1575,6 +1763,45 @@ constructor TRecorderTrendFactory.Create;
 begin
   inherited Create(TRecorderTrendComponent.TypeId, 'Trend',
     TRecorderTrendComponent, 400, 300, False);
+  ConfigurePalette('Тренд', 'Добавить тренд', 'trend', 20, rppGroup,
+    CRecorderPaletteGroupCharts);
+end;
+
+procedure TRecorderTrendFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lAxis: TRecorderTrendAxis;
+  lLine: TRecorderTrendLine;
+  lTag: TRecorderTag;
+  lTrend: TRecorderTrendComponent;
+begin
+  lTrend := TRecorderTrendComponent(AComponent);
+  lTrend.Name := Format('Trend%d', [AContext.ComponentNo]);
+  lTag := AContext.SelectedTag;
+  if lTag = nil then
+    lTag := AContext.DefaultTag;
+  if lTag = nil then
+    Exit;
+  lTrend.TagId := lTag.Id;
+  lTrend.TagName := lTag.Name;
+  if lTrend.AxisCount > 0 then
+  begin
+    lAxis := lTrend.Axes[0];
+    lAxis.Name := lTag.UnitName;
+    if lAxis.Name = '' then
+      lAxis.Name := 'Y';
+    if lTag.RangeMax > lTag.RangeMin then
+    begin
+      lAxis.RangeMin := lTag.RangeMin;
+      lAxis.RangeMax := lTag.RangeMax;
+    end;
+  end;
+  lLine := lTrend.AddLine;
+  lLine.TagId := lTag.Id;
+  lLine.TagName := lTag.Name;
+  lLine.EstimateKind := tekMean;
+  lLine.AxisIndex := 0;
 end;
 
 { TRecorderFormPage }
@@ -1597,6 +1824,23 @@ begin
   fDetachedHeight := 650;
   fDetachedMonitor := 0;
   fDetachedMaximized := False;
+end;
+
+procedure TRecorderOscillogramFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lOscillogram: TRecorderOscillogramComponent;
+begin
+  lOscillogram := TRecorderOscillogramComponent(AComponent);
+  lOscillogram.Name := Format('Oscillogram%d', [AContext.ComponentNo]);
+  if AContext.SelectedTag <> nil then
+  begin
+    lOscillogram.TagId := AContext.SelectedTag.Id;
+    lOscillogram.TagName := AContext.SelectedTag.Name;
+  end;
+  lOscillogram.BindingMode := rtbmRelativeSelectedTag;
+  lOscillogram.TagOffset := 0;
 end;
 
 destructor TRecorderFormPage.Destroy;
@@ -1926,9 +2170,7 @@ procedure TRecorderComponentFactory.RegisterDefaultComponents;
 begin
   RegisterFactory(TRecorderStaticTextFactory.Create);
   RegisterFactory(TRecorderButtonFactory.Create);
-  RegisterFactory(TRecorderComponentFactoryBase.Create(
-    TRecorderInputFieldComponent.TypeId, 'Поле ввода',
-    TRecorderInputFieldComponent, 120, 28, False));
+  RegisterFactory(TRecorderInputFieldFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
   RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);

@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-readonly SHARE_NAME="MeraFiles"
-readonly SHARE_ROOT="/srv/recorderlnx/MeraFiles"
 readonly CONFIG_FILE="/etc/samba/smb.conf"
-readonly BEGIN_MARKER="# RECORDERLNX-MERAFILES-BEGIN"
-readonly END_MARKER="# RECORDERLNX-MERAFILES-END"
 
 fail() { printf '%s\n' "$1" >&2; exit 1; }
 
@@ -18,39 +14,73 @@ validate_source() {
   printf '%s' "$source_path"
 }
 
+validate_share_name() {
+  local share_name="$1"
+  test -n "$share_name" || fail "Сетевое имя не задано."
+  case "$share_name" in
+    *[!A-Za-z0-9._-]*) fail "Сетевое имя может содержать только латинские буквы, цифры, точку, дефис и подчёркивание." ;;
+  esac
+  printf '%s' "$share_name"
+}
+
 replace_share_config() {
-  local temp_file
+  local share_name="$1" share_root="$2" begin_marker="$3" end_marker="$4" temp_file
   temp_file="$(mktemp)"
-  awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
-    $0 == begin { skip=1; next }
-    $0 == end { skip=0; next }
+  awk -v begin="$begin_marker" -v end="$end_marker" '
+    ($0 == begin) || ($0 == "# RECORDERLNX-MERAFILES-BEGIN" && begin ~ /-MeraFiles-BEGIN$/) { skip=1; next }
+    ($0 == end) || ($0 == "# RECORDERLNX-MERAFILES-END" && end ~ /-MeraFiles-END$/) { skip=0; next }
     !skip { print }
   ' "$CONFIG_FILE" > "$temp_file"
-  printf '\n%s\n[%s]\n' "$BEGIN_MARKER" "$SHARE_NAME" >> "$temp_file"
-  printf '   path = %s\n' "$SHARE_ROOT" >> "$temp_file"
+  printf '\n%s\n[%s]\n' "$begin_marker" "$share_name" >> "$temp_file"
+  printf '   path = %s\n' "$share_root" >> "$temp_file"
   printf '   browseable = yes\n   read only = yes\n' >> "$temp_file"
-  printf '   guest ok = no\n   valid users = user\n%s\n' "$END_MARKER" >> "$temp_file"
+  printf '   guest ok = no\n   valid users = user\n%s\n' "$end_marker" >> "$temp_file"
   testparm -s "$temp_file" >/dev/null
   install -m 0644 "$temp_file" "$CONFIG_FILE"
   rm -f -- "$temp_file"
 }
 
 bind_source() {
-  local source_path="$1"
-  install -d -m 0755 "$SHARE_ROOT"
-  if mountpoint -q "$SHARE_ROOT"; then umount "$SHARE_ROOT"; fi
-  mount --bind "$source_path" "$SHARE_ROOT"
+  local source_path="$1" share_root="$2"
+  install -d -m 0755 "$share_root"
+  if mountpoint -q "$share_root"; then
+    if [ "$(findmnt -n -o SOURCE --target "$share_root" 2>/dev/null || true)" = "$source_path" ]; then
+      return
+    fi
+    umount "$share_root" 2>/dev/null || umount -l "$share_root"
+  fi
+  mount --bind "$source_path" "$share_root" ||
+    fail "Не удалось подключить $source_path к $share_root. Проверьте права и состояние mount."
+}
+
+persist_bind() {
+  local source_path="$1" share_root="$2" fstab_marker="$3" escaped_source temp_file
+  escaped_source="$(printf '%s' "$source_path" | sed 's/\\/\\\\/g; s/ /\\040/g; s/\t/\\011/g')"
+  temp_file="$(mktemp)"
+  awk -v marker="$fstab_marker" 'index($0, marker) == 0 && !(marker ~ /-MeraFiles-bind$/ && index($0, "# recorderlnx-merafiles-bind") != 0) { print }' \
+    /etc/fstab > "$temp_file"
+  printf '%s %s none bind,nofail 0 0 %s\n' \
+    "$escaped_source" "$share_root" "$fstab_marker" >> "$temp_file"
+  install -m 0644 "$temp_file" /etc/fstab
+  rm -f -- "$temp_file"
+  systemctl daemon-reload 2>/dev/null || true
 }
 
 main() {
-  local source_path
+  local source_path share_name share_root begin_marker end_marker fstab_marker
   test "$(id -u)" -eq 0 || fail "Утилита должна быть запущена через pkexec."
-  test "$#" -eq 1 || fail "Использование: recorderlnx-share-folder КАТАЛОГ"
+  test "$#" -ge 1 -a "$#" -le 2 || fail "Использование: recorderlnx-share-folder КАТАЛОГ [СЕТЕВОЕ_ИМЯ]"
   source_path="$(validate_source "$1")"
-  bind_source "$source_path"
-  replace_share_config
+  share_name="$(validate_share_name "${2:-MeraFiles}")"
+  share_root="/srv/recorderlnx/$share_name"
+  begin_marker="# RECORDERLNX-SHARE-$share_name-BEGIN"
+  end_marker="# RECORDERLNX-SHARE-$share_name-END"
+  fstab_marker="# recorderlnx-share-$share_name-bind"
+  bind_source "$source_path" "$share_root"
+  persist_bind "$source_path" "$share_root" "$fstab_marker"
+  replace_share_config "$share_name" "$share_root" "$begin_marker" "$end_marker"
   systemctl reload smbd 2>/dev/null || systemctl restart smbd
-  printf 'smb://%s/%s\n' "$(hostname -f 2>/dev/null || hostname)" "$SHARE_NAME"
+  printf 'smb://%s/%s\n' "$(hostname -f 2>/dev/null || hostname)" "$share_name"
 }
 
 main "$@"

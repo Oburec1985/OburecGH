@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+# Safe, opt-in disk preparation for LinuxSetupManager. Never formats implicitly.
+set -euo pipefail
+
+MARKER='recorderlnx-manage-disks'
+FSTAB=/etc/fstab
+
+usage() {
+  cat <<'EOF'
+Использование: recorderlnx-manage-disks КОМАНДА [параметры]
+
+  list                 Показать блочные устройства (lsblk JSON с FSUSED/FSAVAIL/FSUSE%).
+  inspect DEVICE       Показать устройство, потомков, сигнатуры и занятость.
+  plan DEVICE --filesystem ext4|xfs --mount-point /путь [--label МЕТКА]
+                       Только проверить и показать план, ничего не меняя.
+  format-and-mount DEVICE --filesystem ext4|xfs --mount-point /путь
+      [--label МЕТКА] --confirm-device /dev/ТОЧНОЕ_УСТРОЙСТВО
+      --confirm-erase ERASE-ALL-DATA
+                       УНИЧТОЖИТ данные выбранного диска/раздела.
+  unmount DEVICE       Размонтировать только ресурс, добавленный этой утилитой.
+  remove-fstab DEVICE  Удалить только свою запись из /etc/fstab; данные не трогать.
+  detect-tools         Показать доступные графические менеджеры дисков.
+
+Для форматирования требуются root, полный путь к устройству и ДВА подтверждения.
+Для целого пустого диска создаются GPT и один раздел. Существующую таблицу
+разделов утилита не перезаписывает: выберите нужный пустой раздел явно.
+Монтаж постоянный, по UUID, с опциями defaults,nosuid,nodev. Команды plan,
+list и inspect не требуют root. Проверяйте устройство по MODEL/SERIAL.
+Для уже размеченного раздела с данными дополнительно требуется
+--confirm-existing-data DESTROY-EXISTING-FILESYSTEM.
+EOF
+}
+
+die() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+need() { command -v "$1" >/dev/null 2>&1 || die "Не найдена утилита $1"; }
+root_only() { [[ $EUID -eq 0 ]] || die 'Требуются права root'; }
+field() { lsblk -dnro "$2" "$1" | head -n 1 | sed 's/[[:space:]]*$//'; }
+uuid_of() { blkid -s UUID -o value "$1" 2>/dev/null || true; }
+
+resolve_device() {
+  [[ $DEVICE == /dev/* ]] || die 'Нужен полный путь /dev/...';
+  [[ -b $DEVICE ]] || die "Не найдено блочное устройство: $DEVICE";
+  DEVICE=$(readlink -f -- "$DEVICE")
+  [[ $DEVICE == /dev/* ]] || die 'Устройство вышло за пределы /dev';
+  TYPE=$(field "$DEVICE" TYPE)
+  [[ $TYPE == disk || $TYPE == part ]] || die "Тип $TYPE не допускается (только disk/part)";
+  [[ $DEVICE != /dev/loop* && $DEVICE != /dev/sr* && $DEVICE != /dev/ram* ]] || die 'Виртуальные/оптические устройства запрещены';
+}
+
+is_system_related() {
+  local source node backing root_parent candidate_parent
+  for source in / /boot /boot/efi /var /home; do
+    node=$(findmnt -n -o SOURCE --target "$source" 2>/dev/null || true)
+    [[ -n $node ]] || continue
+    backing=$(readlink -f -- "$node" 2>/dev/null || true)
+    [[ $backing == "$DEVICE" ]] && return 0
+    if [[ -b $backing ]]; then
+      root_parent=$(lsblk -dnro PKNAME "$backing" | head -n 1)
+      candidate_parent=$(lsblk -dnro PKNAME "$DEVICE" | head -n 1)
+      [[ -n $root_parent && ( ${DEVICE##*/} == "$root_parent" || $candidate_parent == "$root_parent" ) ]] && return 0
+    fi
+    if [[ -b $backing ]] && lsblk -nro PKNAME "$backing" | grep -Fxq "${DEVICE##*/}"; then return 0; fi
+    if [[ -b $backing ]] && [[ $(lsblk -nro PKNAME "$DEVICE" | head -n 1) == "${backing##*/}" ]]; then return 0; fi
+  done
+  # findmnt may expose /dev/mapper; lsblk MOUNTPOINTS catches underlying ancestry.
+  lsblk -nro MOUNTPOINTS "$DEVICE" | grep -Eq '^(/|/boot|/var|/home)(/|$)' && return 0
+  # If root resides on LVM/crypt/RAID, reject every ancestor and sibling
+  # partition of the physical device containing that stack.
+  if command -v lsblk >/dev/null 2>&1; then
+    node=$(findmnt -n -o SOURCE --target / 2>/dev/null || true)
+    while [[ -n $node && -b $node ]]; do
+      backing=$(readlink -f -- "$node")
+      [[ $backing == "$DEVICE" ]] && return 0
+      root_parent=$(lsblk -dnro PKNAME "$backing" | head -n 1)
+      [[ -n $root_parent ]] || break
+      candidate_parent=$(lsblk -dnro PKNAME "$DEVICE" | head -n 1)
+      [[ ${DEVICE##*/} == "$root_parent" || $candidate_parent == "$root_parent" ]] && return 0
+      node="/dev/$root_parent"
+    done
+  fi
+  return 1
+}
+
+assert_unused() {
+  local node typ
+  is_system_related && die 'Системный диск/раздел запрещён';
+  while read -r node typ; do
+    [[ -n $node ]] || continue
+    [[ $typ == disk || $typ == part ]] || die "Обнаружен зависимый том $node ($typ): LVM/RAID/crypt запрещены";
+    [[ -z $(lsblk -dnro MOUNTPOINTS "$node" | tr -d '[:space:]') ]] || die "Устройство $node смонтировано";
+    [[ -z $(swapon --noheadings --raw --output NAME 2>/dev/null | grep -Fx "$node" || true) ]] || die "Устройство $node используется как swap";
+  done < <(lsblk -nrpo NAME,TYPE "$DEVICE")
+  if [[ $TYPE == disk ]]; then
+    [[ $(lsblk -nrpo TYPE "$DEVICE" | wc -l) -eq 1 ]] || die 'На диске есть разделы; выберите раздел явно';
+    [[ -z $(wipefs -n --noheadings "$DEVICE" 2>/dev/null) ]] || die 'Диск содержит сигнатуры/таблицу разделов';
+  else
+    if [[ -n $(wipefs -n --noheadings "$DEVICE" 2>/dev/null) || -n $(field "$DEVICE" FSTYPE) ]]; then
+      EXISTING_DATA=1
+      if [[ ${COMMAND:-} == format-and-mount ]]; then
+        [[ $CONFIRM_EXISTING == DESTROY-EXISTING-FILESYSTEM ]] || die 'Раздел содержит данные. Нужен --confirm-existing-data DESTROY-EXISTING-FILESYSTEM';
+      fi
+    fi
+  fi
+}
+
+parse_options() {
+  FILESYSTEM= MOUNT_POINT= LABEL= CONFIRM_DEVICE= CONFIRM_ERASE= CONFIRM_EXISTING= EXISTING_DATA=0
+  while (($#)); do
+    case $1 in
+      --filesystem|--mount-point|--label|--confirm-device|--confirm-erase|--confirm-existing-data)
+        (($# >= 2)) || die "Нет значения для $1";
+        case $1 in
+          --filesystem) FILESYSTEM=$2;; --mount-point) MOUNT_POINT=$2;;
+          --label) LABEL=$2;; --confirm-device) CONFIRM_DEVICE=$2;;
+          --confirm-erase) CONFIRM_ERASE=$2;;
+          --confirm-existing-data) CONFIRM_EXISTING=$2;;
+        esac
+        shift 2;;
+      *) die "Неизвестный параметр: $1";;
+    esac
+  done
+  [[ $FILESYSTEM == ext4 || $FILESYSTEM == xfs ]] || die 'Разрешены только ext4 и xfs';
+  [[ $MOUNT_POINT == /* && $MOUNT_POINT != / ]] || die 'Укажите абсолютный каталог монтирования, отличный от /';
+  [[ $MOUNT_POINT != *$'\n'* && $MOUNT_POINT != *$'\t'* && $MOUNT_POINT != *' '* && $MOUNT_POINT != *'..'* ]] || die 'В пути запрещены пробелы, управляющие символы и ..';
+  [[ $MOUNT_POINT =~ ^/[A-Za-z0-9_./-]+$ ]] || die 'В пути разрешены только латиница, цифры, _, -, / и точка';
+  [[ $MOUNT_POINT != */ && $MOUNT_POINT != *//* ]] || die 'Точка монтирования должна быть нормализована'
+  [[ -z $LABEL || $LABEL =~ ^[A-Za-z0-9_-]{1,12}$ ]] || die 'Метка: 1–12 латинских букв, цифр, _ или -';
+  [[ ! -e $MOUNT_POINT || -d $MOUNT_POINT ]] || die 'Точка монтирования существует и не является каталогом';
+  [[ ! -d $MOUNT_POINT || -z $(ls -A -- "$MOUNT_POINT") ]] || die 'Точка монтирования не пуста';
+  [[ -z $(findmnt -n --target "$MOUNT_POINT" 2>/dev/null | awk -v p="$MOUNT_POINT" '$2==p {print}') ]] || die 'Точка уже смонтирована';
+}
+
+show_plan() {
+  printf 'Устройство: %s\nТип: %s\nРазмер: %s\nМодель: %s\nСерийный номер: %s\nФС: %s\nТочка: %s\n' \
+    "$DEVICE" "$TYPE" "$(field "$DEVICE" SIZE)" "$(field "$DEVICE" MODEL)" "$(field "$DEVICE" SERIAL)" "$FILESYSTEM" "$MOUNT_POINT"
+  if [[ $TYPE == disk ]]; then printf 'Действие: создать GPT + один раздел, затем форматировать раздел.\n';
+  else printf 'Действие: форматировать ТОЛЬКО выбранный раздел.\n'; fi
+  printf 'ВНИМАНИЕ: все данные выбранного устройства будут уничтожены.\n'
+  [[ $EXISTING_DATA == 1 ]] && printf 'ОБНАРУЖЕНЫ СУЩЕСТВУЮЩИЕ ДАННЫЕ: нужно третье подтверждение.\n'
+  return 0
+}
+
+partition_name() {
+  local tries result
+  partprobe "$DEVICE"
+  udevadm settle
+  for tries in 1 2 3 4 5; do
+    result=$(lsblk -nrpo NAME,TYPE "$DEVICE" | awk '$2=="part" {print $1; exit}')
+    [[ -n $result && -b $result ]] && { printf '%s\n' "$result"; return; }
+    sleep 1
+  done
+  die 'Новый раздел не появился; дальнейшие действия остановлены'
+}
+
+save_fstab() {
+  local backup
+  backup="${FSTAB}.recorderlnx-$(date +%Y%m%d-%H%M%S).bak"
+  cp -a -- "$FSTAB" "$backup"
+  printf 'Копия /etc/fstab: %s\n' "$backup"
+}
+
+format_and_mount() {
+  local target uuid entry
+  root_only
+  [[ $CONFIRM_DEVICE == "$DEVICE" ]] || die "Первое подтверждение должно точно совпадать с $DEVICE";
+  [[ $CONFIRM_ERASE == ERASE-ALL-DATA ]] || die 'Второе подтверждение: --confirm-erase ERASE-ALL-DATA';
+  assert_unused
+  [[ ! -e $MOUNT_POINT ]] || [[ -z $(ls -A -- "$MOUNT_POINT") ]] || die 'Точка монтирования не пуста';
+  grep -Fq " $MOUNT_POINT " "$FSTAB" && die 'Точка уже присутствует в /etc/fstab';
+  show_plan
+  if [[ $FILESYSTEM == ext4 ]]; then need mkfs.ext4; else need mkfs.xfs; fi
+  if [[ $TYPE == disk ]]; then
+    need parted; need partprobe; need udevadm
+    parted --script "$DEVICE" mklabel gpt
+    parted --script "$DEVICE" mkpart primary 1MiB 100%
+    target=$(partition_name)
+  else target=$DEVICE; fi
+  if [[ $FILESYSTEM == ext4 ]]; then
+    if [[ -n $LABEL ]]; then mkfs.ext4 -F -L "$LABEL" -- "$target"; else mkfs.ext4 -F -- "$target"; fi
+  else
+    if [[ -n $LABEL ]]; then mkfs.xfs -f -L "$LABEL" -- "$target"; else mkfs.xfs -f -- "$target"; fi
+  fi
+  uuid=$(uuid_of "$target")
+  [[ -n $uuid ]] || die 'ФС создана, но UUID не найден; fstab не изменён'
+  mkdir -p -- "$MOUNT_POINT"
+  save_fstab
+  entry="UUID=$uuid $MOUNT_POINT $FILESYSTEM defaults,nosuid,nodev 0 2 # $MARKER device=$target"
+  printf '%s\n' "$entry" >> "$FSTAB"
+  if ! mount -- "$MOUNT_POINT"; then
+    sed -i "\\|^UUID=$uuid $MOUNT_POINT |d" "$FSTAB"
+    die 'Монтаж не удался; запись fstab отменена, файловая система сохранена'
+  fi
+  printf 'Смонтировано: %s -> %s (UUID=%s)\n' "$target" "$MOUNT_POINT" "$uuid"
+}
+
+managed_entry() {
+  local uuid
+  uuid=$(uuid_of "$DEVICE")
+  [[ -n $uuid ]] || die 'UUID не найден'
+  ENTRY=$(grep -F "UUID=$uuid " "$FSTAB" | grep -F "# $MARKER device=$DEVICE" || true)
+  [[ -n $ENTRY ]] || die 'Устройство не найдено в записях этой утилиты'
+  MOUNT_POINT=$(awk '{print $2}' <<< "$ENTRY")
+}
+
+main() {
+  local command=${1:-}
+  COMMAND=$command
+  case $command in
+    -h|--help|help|'') usage;;
+    list) need lsblk; lsblk -J -b -o PATH,TYPE,SIZE,MODEL,SERIAL,FSTYPE,UUID,MOUNTPOINTS,FSUSED,FSAVAIL,FSUSE%;;
+    detect-tools)
+      local app
+      for app in gnome-disks partitionmanager gparted; do
+        if command -v "$app" >/dev/null 2>&1; then printf '%s\t%s\n' "$app" "$(command -v "$app")"; fi
+      done;;
+    inspect)
+      (($# == 2)) || die 'inspect DEVICE'; DEVICE=$2; resolve_device
+      lsblk -b -o PATH,TYPE,SIZE,MODEL,SERIAL,FSTYPE,UUID,MOUNTPOINTS,FSUSED,FSAVAIL,FSUSE% "$DEVICE"
+      df -hT -P
+      wipefs -n "$DEVICE" || true;;
+    plan|format-and-mount)
+      (($# >= 3)) || die "$command DEVICE --filesystem ... --mount-point ..."
+      DEVICE=$2; resolve_device; shift 2; parse_options "$@"; assert_unused
+      if [[ $command == plan ]]; then show_plan; else format_and_mount; fi;;
+    unmount|remove-fstab)
+      (($# == 2)) || die "$command DEVICE"
+      root_only; DEVICE=$2; resolve_device; managed_entry
+      if [[ $command == unmount ]]; then
+        [[ $(findmnt -n -o UUID --mountpoint "$MOUNT_POINT" 2>/dev/null) == "$(uuid_of "$DEVICE")" ]] || die 'По этой точке смонтировано другое устройство или она не смонтирована'
+        umount -- "$MOUNT_POINT"
+      else
+        mountpoint -q -- "$MOUNT_POINT" && die 'Сначала размонтируйте устройство'
+        save_fstab
+        local uuid; uuid=$(uuid_of "$DEVICE")
+        sed -i "\\|^UUID=$uuid $MOUNT_POINT |d" "$FSTAB"
+      fi;;
+    *) die "Неизвестная команда: $command";;
+  esac
+}
+main "$@"

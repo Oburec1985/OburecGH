@@ -8,6 +8,10 @@ interface
 uses
   Classes, SysUtils, uRecorderSqlDbTypes;
 
+function RecorderSqlServerAvailable(AConfig: TRecorderSqlDbConfig;
+  out AError: string): Boolean;
+function RecorderSqlTakeConnectivityNotice: string;
+
 type
   TRecorderSqlDbRuntime = class;
 
@@ -101,6 +105,44 @@ uses
   ssockets, uRecorderSqlDbRepository, uRecorderSqlDbFileStore,
   uRecorderNetworkBinding, uRecorderDebugLog;
 
+var
+  gSqlNoticeLock: TRTLCriticalSection;
+  gSqlPendingNotice: string;
+  gSqlLastNotice: string;
+
+procedure QueueSqlConnectivityNotice(const AMessage: string);
+var
+  lChanged: Boolean;
+begin
+  lChanged := False;
+  EnterCriticalSection(gSqlNoticeLock);
+  try
+    if AMessage = '' then
+      gSqlLastNotice := ''
+    else if AMessage <> gSqlLastNotice then
+    begin
+      gSqlLastNotice := AMessage;
+      gSqlPendingNotice := AMessage;
+      lChanged := True;
+    end;
+  finally
+    LeaveCriticalSection(gSqlNoticeLock);
+  end;
+  if lChanged and (AMessage <> '') then
+    RecorderDebugLog('[SQLdb] ' + AMessage);
+end;
+
+function RecorderSqlTakeConnectivityNotice: string;
+begin
+  EnterCriticalSection(gSqlNoticeLock);
+  try
+    Result := gSqlPendingNotice;
+    gSqlPendingNotice := '';
+  finally
+    LeaveCriticalSection(gSqlNoticeLock);
+  end;
+end;
+
 { Ключ локального кэша signal_id внутри writer-потока.
   Если есть адрес, имя тега не участвует в ключе: переименование не должно
   создавать новый сигнал в текущем сеансе. }
@@ -114,7 +156,7 @@ end;
 
 { Лёгкая предварительная проверка удалённого SQL-сервера. Для локальных
   файловых баз TCP-проверка не нужна: доступность проверит само открытие БД. }
-function SqlServerAvailable(AConfig: TRecorderSqlDbConfig;
+function RecorderSqlServerAvailable(AConfig: TRecorderSqlDbConfig;
   out AError: string): Boolean;
 var
   lStream: TSocketStream;
@@ -122,9 +164,23 @@ begin
   AError := '';
   if AConfig.IsLocalFileDatabase then
     Exit(True);
-  Result := RecorderOpenBoundTcpStream(AConfig.Host, AConfig.Port, 700,
-    lStream, AError, False);
+  lStream := nil;
+  try
+    Result := RecorderOpenBoundTcpStream(AConfig.Host, AConfig.Port, 700,
+      lStream, AError, False);
+  except
+    on E: Exception do
+    begin
+      Result := False;
+      AError := E.Message;
+    end;
+  end;
   lStream.Free;
+  if Result then
+    QueueSqlConnectivityNotice('')
+  else
+    QueueSqlConnectivityNotice('Нет соединения с БД ' + AConfig.Host + ':' +
+      IntToStr(AConfig.Port) + ' (' + AError + ')');
 end;
 
 constructor TRecorderSqlDbWriterThread.Create(AOwner: TRecorderSqlDbRuntime);
@@ -290,7 +346,7 @@ begin
     lSequence := 0;
     lSignals.NameValueSeparator := '=';
     try
-      if not SqlServerAvailable(fConfig, fLastError) then
+      if not RecorderSqlServerAvailable(fConfig, fLastError) then
       begin
         fLastError := 'SQL server not found: ' + fConfig.Host + ':' +
           IntToStr(fConfig.Port) + ' (' + fLastError + ')';
@@ -367,5 +423,11 @@ begin
     R.Free;
   end;
 end;
+
+initialization
+  InitCriticalSection(gSqlNoticeLock);
+
+finalization
+  DoneCriticalSection(gSqlNoticeLock);
 
 end.

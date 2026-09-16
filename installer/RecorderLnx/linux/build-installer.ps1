@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '0.1.10',
+    [string]$Version = '0.1.27',
     [string]$Architecture = 'amd64',
     [string]$Python = 'python'
 )
@@ -10,7 +10,7 @@ $repoRoot = (Resolve-Path (Join-Path $installerDir '..\..\..')).Path
 $builder = Join-Path $installerDir 'build_deb.py'
 $linuxExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-linux\RecorderLnx'
 $linuxAgentExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-linux\RecorderHostAgent'
-$linuxShareManagerExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\Tools\NetworkShareManager\lib\x86_64-linux\NetworkShareManager'
+$linuxSetupManagerExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\Tools\LinuxSetupManager\lib\x86_64-linux\LinuxSetupManager'
 $outputDir = Join-Path $installerDir 'Output'
 $outputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.deb"
 $previousOutputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.previous.deb"
@@ -39,8 +39,8 @@ if (Select-String -LiteralPath $projectSqlConfig -Pattern '^(Host|Port|Database|
 if (-not (Test-Path -LiteralPath $linuxAgentExe)) {
     throw "Linux RecorderHostAgent build output not found beside RecorderLnx: $linuxAgentExe"
 }
-if (-not (Test-Path -LiteralPath $linuxShareManagerExe)) {
-    throw "Linux NetworkShareManager build output not found: $linuxShareManagerExe"
+if (-not (Test-Path -LiteralPath $linuxSetupManagerExe)) {
+    throw "Linux LinuxSetupManager build output not found: $linuxSetupManagerExe"
 }
 
 $agentRoot = Join-Path $repoRoot 'Lazarus\RecorderHostAgent'

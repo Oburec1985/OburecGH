@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly TIMESYNCD_FILE="/etc/systemd/timesyncd.conf.d/90-recorderlnx.conf"
+fail() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+need_root() { test "$(id -u)" -eq 0 || fail "Для изменения используйте sudo или pkexec."; }
+usage() { cat <<'EOF'
+Настройка часового пояса и синхронизации времени.
+
+  recorderlnx-configure-time show
+  recorderlnx-configure-time list-timezones [ФИЛЬТР]
+  recorderlnx-configure-time set-timezone ЗОНА
+  recorderlnx-configure-time ntp enable|disable
+  recorderlnx-configure-time ntp-servers СЕРВЕР[,СЕРВЕР...] [--fallback СПИСОК]
+  recorderlnx-configure-time ntp-servers remove
+
+Часовые пояса берутся из timedatectl. Пользовательские серверы записываются в
+/etc/systemd/timesyncd.conf.d/90-recorderlnx.conf, если доступен timesyncd.
+EOF
+}
+show_state() {
+  timedatectl status; printf '\n'
+  if test -f "$TIMESYNCD_FILE"; then printf 'Пользовательские серверы (%s):\n' "$TIMESYNCD_FILE"; sed -n '/^[[:space:]]*\(NTP\|FallbackNTP\)=/p' "$TIMESYNCD_FILE"; else printf 'Пользовательские NTP-серверы не заданы.\n'; fi
+  systemctl --no-pager --full status systemd-timesyncd.service 2>/dev/null | sed -n '1,8p' || true
+}
+valid_zone() { timedatectl list-timezones | grep -Fxq -- "$1" || fail "Неизвестный часовой пояс: $1"; }
+valid_servers() { [[ "$1" =~ ^[[:alnum:].:_,-]+$ ]] || fail "Недопустимый список NTP-серверов."; }
+set_servers() {
+  local servers="$1" fallback="$2"; need_root; valid_servers "$servers"; test -z "$fallback" || valid_servers "$fallback"
+  systemctl list-unit-files systemd-timesyncd.service >/dev/null 2>&1 || fail "systemd-timesyncd не установлен."
+  install -d -m 0755 "$(dirname "$TIMESYNCD_FILE")"
+  { printf '[Time]\nNTP=%s\n' "${servers//,/ }"; test -z "$fallback" || printf 'FallbackNTP=%s\n' "${fallback//,/ }"; } > "$TIMESYNCD_FILE"
+  chmod 0644 "$TIMESYNCD_FILE"; systemctl restart systemd-timesyncd.service; timedatectl set-ntp true
+}
+main() {
+  local action="${1:---help}" fallback=""; shift || true
+  case "$action" in
+    --help|-h|help) usage;; show) test "$#" -eq 0 || fail "Лишние параметры"; show_state;;
+    list-timezones) if test "$#" -eq 0; then timedatectl list-timezones; elif test "$#" -eq 1; then timedatectl list-timezones | grep -i -- "$1" || true; else fail "Укажите один фильтр"; fi;;
+    set-timezone) test "$#" -eq 1 || fail "Укажите часовой пояс"; valid_zone "$1"; need_root; timedatectl set-timezone "$1";;
+    ntp) test "$#" -eq 1 || fail "Укажите enable или disable"; need_root; case "$1" in enable) timedatectl set-ntp true;; disable) timedatectl set-ntp false;; *) fail "Ожидается enable или disable";; esac;;
+    ntp-servers)
+      test "$#" -ge 1 || fail "Укажите список серверов или remove"; if test "$1" = remove; then test "$#" -eq 1 || fail "Лишние параметры"; need_root; rm -f -- "$TIMESYNCD_FILE"; systemctl restart systemd-timesyncd.service 2>/dev/null || true; exit 0; fi
+      servers="$1"; shift; if test "${1:-}" = --fallback; then test "$#" -eq 2 || fail "Нет значения --fallback"; fallback="$2"; shift 2; fi; test "$#" -eq 0 || fail "Лишние параметры"; set_servers "$servers" "$fallback";;
+    *) fail "Неизвестная команда: $action. Используйте --help.";;
+  esac
+}
+main "$@"

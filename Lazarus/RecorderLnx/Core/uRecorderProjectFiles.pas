@@ -199,7 +199,9 @@ end;
 
 function ComponentTypeOf(AComponent: TRecorderVisualComponent): string;
 begin
-  if AComponent is TRecorderStaticTextComponent then
+  if AComponent.Factory <> nil then
+    Result := AComponent.Factory.TypeId
+  else if AComponent is TRecorderStaticTextComponent then
     Result := TRecorderStaticTextComponent.TypeId
   else if AComponent is TRecorderButtonComponent then
     Result := TRecorderButtonComponent.TypeId

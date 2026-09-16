@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+usage() {
+  cat <<'EOF'
+Экспорт и выборочное применение универсального профиля LinuxSetupManager.
+
+Команды:
+  export --output DIR [--acl-root DIR ...]
+  validate --profile DIR
+  plan --profile DIR [--sections LIST]
+  apply --profile DIR --sections LIST
+
+LIST: hostname,network,routes,proxy,time,users,acl,shares,autostart,ssh или all.
+Профиль — обычный каталог с читаемыми TSV/INI/desktop-файлами. Пароли,
+приватные ключи и shadow не экспортируются. apply требует root, создаёт backup
+заменяемых системных файлов и применяет только явно выбранные разделы.
+EOF
+}
+
+profile=''; output=''; sections=''; declare -a acl_roots=()
+parse_args() {
+  while (($#)); do
+    case "$1" in
+      --profile) profile=${2:-}; shift 2 ;;
+      --output) output=${2:-}; shift 2 ;;
+      --sections) sections=${2:-}; shift 2 ;;
+      --acl-root) acl_roots+=("${2:-}"); shift 2 ;;
+      *) die "неизвестный параметр: $1" ;;
+    esac
+  done
+}
+
+safe_url() { sed -E 's#(https?://)[^/@[:space:]]+:[^/@[:space:]]+@#\1#Ig'; }
+write_meta() {
+  cat > "$output/profile.ini" <<EOF
+FORMAT=recorderlnx-linux-profile
+VERSION=1
+CREATED_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+SOURCE_HOST=$(hostname)
+SECRETS_INCLUDED=no
+EOF
+}
+
+export_network() {
+  mkdir -p "$output/network"
+  command -v nmcli >/dev/null || { printf 'NetworkManager/nmcli не найден.\n' > "$output/network/README.txt"; return; }
+  printf 'NAME_BASE64\tMETHOD\tADDRESSES\tGATEWAY\tDNS\tROUTES\n' > "$output/network/connections.tsv"
+  local name method addresses gateway dns routes encoded
+  while IFS= read -r name; do
+    [[ -n $name ]] || continue; encoded=$(printf '%s' "$name" | base64 -w0)
+    method=$(nmcli -g ipv4.method connection show "$name" 2>/dev/null || true)
+    addresses=$(nmcli -g ipv4.addresses connection show "$name" 2>/dev/null || true)
+    gateway=$(nmcli -g ipv4.gateway connection show "$name" 2>/dev/null || true)
+    dns=$(nmcli -g ipv4.dns connection show "$name" 2>/dev/null || true)
+    routes=$(nmcli -g ipv4.routes connection show "$name" 2>/dev/null || true)
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$encoded" "$method" "$addresses" "$gateway" "$dns" "$routes" >> "$output/network/connections.tsv"
+  done < <(nmcli -t -f NAME connection show)
+  ip -4 route show > "$output/network/routes.txt" 2>/dev/null || true
+}
+
+export_proxy() {
+  mkdir -p "$output/proxy"; : > "$output/proxy/environment.txt"
+  if [[ -f /etc/environment ]]; then
+    grep -iE '^[[:space:]]*(http_proxy|https_proxy|ftp_proxy|no_proxy)=' /etc/environment | safe_url > "$output/proxy/environment.txt" || true
+  fi
+  if [[ -d /etc/apt/apt.conf.d ]]; then
+    grep -RhiE 'Acquire::(http|https)::Proxy' /etc/apt/apt.conf.d 2>/dev/null | safe_url > "$output/proxy/apt-proxy.conf" || true
+  fi
+}
+
+export_users() {
+  mkdir -p "$output/users"
+  getent passwd | awk -F: '$3 >= 1000 && $1 != "nobody" {print $1 "\t" $3 "\t" $4 "\t" $6 "\t" $7}' > "$output/users/users.tsv"
+  : > "$output/users/groups.tsv"
+  local user; while IFS=$'\t' read -r user _; do printf '%s\t%s\n' "$user" "$(id -nG "$user" | tr ' ' ',')"; done < "$output/users/users.tsv" >> "$output/users/groups.tsv"
+  : > "$output/users/acl.paths"
+  local root; for root in "${acl_roots[@]}"; do
+    [[ -d $root ]] || die "ACL-каталог не найден: $root"
+    printf '%s\n' "$root" >> "$output/users/acl.paths"
+    # Удаляем owner/group из dump: восстановление ACL не должно менять владельца.
+    command -v getfacl >/dev/null && getfacl -R -p "$root" | sed -E '/^# (owner|group):/d' >> "$output/users/acl.dump"
+  done
+}
+
+copy_if_exists() { local source=$1 target=$2; [[ -f $source ]] && install -D -m 600 "$source" "$target"; }
+sanitize_samba_config() {
+  local source=$1 target=$2
+  mkdir -p "$(dirname "$target")"
+  sed -E '/^[[:space:]]*(password|passwd|credentials|username)[[:space:]]*=/Id' \
+    "$source" > "$target"
+  chmod 0600 "$target"
+}
+safe_copy_desktop_dir() {
+  local source=$1 target=$2 file name
+  [[ -d $source ]] || return 0
+  mkdir -p "$target"
+  for file in "$source"/*.desktop; do
+    [[ -f $file ]] || continue
+    name=${file##*/}
+    if grep -Eiq '(password|passwd|token|secret|api[_-]?key)[[:space:]]*=|https?://[^/@[:space:]]+:[^/@[:space:]]+@|sudo[[:space:]]+-S' "$file"; then
+      printf 'Пропущен потенциально секретный autostart-файл: %s\n' "$file" >&2
+      continue
+    fi
+    install -m 0600 "$file" "$target/$name"
+  done
+}
+export_misc() {
+  printf '%s\n' "$(hostname)" > "$output/hostname.txt"
+  timedatectl show -p Timezone -p NTP --value 2>/dev/null > "$output/time.txt" || true
+  copy_if_exists /etc/systemd/timesyncd.conf "$output/time/timesyncd.conf"
+  [[ -f /etc/samba/smb.conf ]] && \
+    sanitize_samba_config /etc/samba/smb.conf "$output/shares/smb.conf"
+  mkdir -p "$output/autostart/system" "$output/autostart/users"
+  safe_copy_desktop_dir /etc/xdg/autostart "$output/autostart/system"
+  local home user; while IFS=$'\t' read -r user _ _ home _; do
+    safe_copy_desktop_dir "$home/.config/autostart" "$output/autostart/users/$user"
+  done < "$output/users/users.tsv"
+  mkdir -p "$output/ssh"
+  local service=sshd; systemctl list-unit-files ssh.service --no-legend 2>/dev/null | grep -q '^ssh\.service' && service=ssh
+  printf 'SERVICE=%s\nENABLED=%s\nACTIVE=%s\n' "$service" "$(systemctl is-enabled "$service" 2>/dev/null || true)" "$(systemctl is-active "$service" 2>/dev/null || true)" > "$output/ssh/state.ini"
+}
+
+export_profile() {
+  [[ -n $output && $output == /* ]] || die '--output должен быть абсолютным каталогом'
+  [[ ! -e $output ]] || die "каталог уже существует: $output"
+  mkdir -p "$output"; write_meta; export_network; export_proxy; export_users; export_misc
+  printf 'Профиль создан: %s\n' "$output"
+}
+
+validate_profile() {
+  [[ -d $profile ]] || die 'каталог профиля не найден'
+  [[ -f $profile/profile.ini ]] || die 'нет profile.ini'
+  grep -qx 'FORMAT=recorderlnx-linux-profile' "$profile/profile.ini" || die 'неподдерживаемый формат'
+  grep -qx 'VERSION=1' "$profile/profile.ini" || die 'неподдерживаемая версия'
+  [[ -f $profile/hostname.txt && -f $profile/users/groups.tsv ]] || die 'профиль неполный'
+}
+
+selected() { [[ ,$sections, == *,all,* || ,$sections, == *,$1,* ]]; }
+show_plan() {
+  [[ -n $sections ]] || sections=all
+  local item; for item in hostname network routes proxy time users acl shares autostart ssh; do selected "$item" && printf 'Будет применён раздел: %s\n' "$item"; done
+  selected network && printf 'Внимание: изменение NetworkManager может разорвать текущее подключение.\n'
+  selected users && printf 'Новые пользователи не создаются: меняется членство только существующих пользователей в существующих группах.\n'
+  selected acl && printf 'ACL восстанавливаются без смены владельцев.\n'
+}
+
+backup_file() { local path=$1; [[ -e $path ]] && cp -a "$path" "$path.recorderlnx-profile.$(date +%Y%m%d%H%M%S).bak"; }
+apply_hostname() { local value; value=$(head -n1 "$profile/hostname.txt"); [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9.-]{0,62}$ ]] || die 'неверный hostname'; hostnamectl set-hostname "$value"; }
+apply_network() {
+  command -v nmcli >/dev/null || die 'nmcli не установлен'
+  local encoded method addresses gateway dns routes name
+  tail -n +2 "$profile/network/connections.tsv" | while IFS=$'\t' read -r encoded method addresses gateway dns routes; do
+    name=$(printf '%s' "$encoded" | base64 -d); nmcli connection show "$name" >/dev/null 2>&1 || { printf 'Пропуск отсутствующего подключения: %s\n' "$name" >&2; continue; }
+    if selected network; then
+      nmcli connection modify "$name" ipv4.method "$method" ipv4.addresses "$addresses" ipv4.gateway "$gateway" ipv4.dns "$dns"
+    fi
+    if selected routes; then
+      nmcli connection modify "$name" ipv4.routes "$routes"
+    fi
+  done
+}
+apply_proxy() {
+  local target=/etc/environment begin='# BEGIN LinuxSetupManager proxy' end='# END LinuxSetupManager proxy' tmp
+  tmp=$(mktemp); awk -v b="$begin" -v e="$end" '$0==b{skip=1;next}$0==e{skip=0;next}!skip{print}' "$target" 2>/dev/null > "$tmp" || true
+  { printf '%s\n' "$begin"; cat "$profile/proxy/environment.txt"; printf '%s\n' "$end"; } >> "$tmp"
+  backup_file "$target"; install -m 644 "$tmp" "$target"; rm -f "$tmp"
+  if [[ -f $profile/proxy/apt-proxy.conf ]]; then backup_file /etc/apt/apt.conf.d/90linuxsetupmanager-proxy; install -m 644 "$profile/proxy/apt-proxy.conf" /etc/apt/apt.conf.d/90linuxsetupmanager-proxy; fi
+}
+apply_time() {
+  local timezone ntp; timezone=$(sed -n '1p' "$profile/time.txt"); ntp=$(sed -n '2p' "$profile/time.txt")
+  [[ -n $timezone ]] && timedatectl set-timezone "$timezone"; [[ $ntp == yes ]] && timedatectl set-ntp true || timedatectl set-ntp false
+  if [[ -f $profile/time/timesyncd.conf ]]; then backup_file /etc/systemd/timesyncd.conf; install -m 644 "$profile/time/timesyncd.conf" /etc/systemd/timesyncd.conf; systemctl restart systemd-timesyncd || true; fi
+}
+apply_users() { local user groups group; while IFS=$'\t' read -r user groups; do getent passwd "$user" >/dev/null || continue; IFS=',' read -r -a gs <<< "$groups"; for group in "${gs[@]}"; do getent group "$group" >/dev/null && usermod -aG "$group" "$user"; done; done < "$profile/users/groups.tsv"; }
+apply_acl() { [[ -s $profile/users/acl.dump ]] || return 0; command -v setfacl >/dev/null || die 'setfacl не установлен'; setfacl --restore="$profile/users/acl.dump"; }
+apply_shares() { [[ -f $profile/shares/smb.conf ]] || return 0; backup_file /etc/samba/smb.conf; install -m 644 "$profile/shares/smb.conf" /etc/samba/smb.conf; command -v testparm >/dev/null && testparm -s; systemctl reload smbd 2>/dev/null || true; }
+apply_autostart() { [[ -d $profile/autostart/system ]] && cp -a "$profile/autostart/system/." /etc/xdg/autostart/; local dir user home group; for dir in "$profile"/autostart/users/*; do [[ -d $dir ]] || continue; user=${dir##*/}; home=$(getent passwd "$user" | cut -d: -f6); [[ -n $home ]] || continue; group=$(id -gn "$user"); install -d -o "$user" -g "$group" "$home/.config/autostart"; cp -a "$dir/." "$home/.config/autostart/"; chown -R "$user:$group" "$home/.config/autostart"; done; }
+apply_ssh() { local service enabled active; service=$(sed -n 's/^SERVICE=//p' "$profile/ssh/state.ini"); enabled=$(sed -n 's/^ENABLED=//p' "$profile/ssh/state.ini"); active=$(sed -n 's/^ACTIVE=//p' "$profile/ssh/state.ini"); [[ $enabled == enabled ]] && systemctl enable "$service" || systemctl disable "$service"; [[ $active == active ]] && systemctl start "$service" || systemctl stop "$service"; }
+
+apply_profile() {
+  (( EUID == 0 )) || die 'apply нужно запускать через sudo'; [[ -n $sections ]] || die 'для apply обязателен --sections'
+  selected hostname && apply_hostname
+  { selected network || selected routes; } && apply_network
+  selected proxy && apply_proxy; selected time && apply_time; selected users && apply_users; selected acl && apply_acl
+  selected shares && apply_shares; selected autostart && apply_autostart; selected ssh && apply_ssh
+}
+
+command_name=${1:-help}; [[ $# -gt 0 ]] && shift; parse_args "$@"
+case "$command_name" in
+  export) export_profile ;;
+  validate) validate_profile; printf 'Профиль корректен.\n' ;;
+  plan) validate_profile; show_plan ;;
+  apply) validate_profile; show_plan; apply_profile ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

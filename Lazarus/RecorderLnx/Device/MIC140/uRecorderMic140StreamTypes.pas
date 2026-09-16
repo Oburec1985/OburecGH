@@ -1,8 +1,8 @@
 unit uRecorderMic140StreamTypes;
 
 {
-  ������� ���� ������ ������ MIC-140 (Lazarus/RecorderLnx).
-  ������ ��������� ����������� �� legacy-�������.
+  Общие типы потока данных MIC-140 (Lazarus/RecorderLnx).
+  Общие структуры совместимости с legacy-драйвером.
 }
 
 {$mode objfpc}{$H+}

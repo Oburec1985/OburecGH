@@ -205,7 +205,7 @@ var
 implementation
 
 uses
-  variants, fileutil, strutils, math, lazutf8, uriparser,
+  variants, fileutil, LazFileUtils, strutils, math, lazutf8, uriparser,
   {%H-}fpsPatches, fpsStrings, fpsStreams, fpsNumFormatParser, fpsClasses;
 
 const

@@ -34,22 +34,118 @@ mount_resource() {
 }
 
 unmount_resource() {
-  local local_name="$1" config_name mount_point
+  local local_name="$1" config_name config_file mount_point
   validate_name "$local_name"
   config_name="$(safe_name "$local_name")"
+  config_file="${REGISTRY_DIR}/${config_name}.ini"
+  for candidate in "${REGISTRY_DIR}"/*.ini; do
+    test -f "$candidate" || continue
+    if test "$(sed -n 's/^LocalName=//p' "$candidate" | head -n 1)" = "$local_name"; then
+      config_file="$candidate"
+      break
+    fi
+  done
   mount_point="${MOUNT_ROOT}/${local_name}"
-  if mountpoint -q "$mount_point"; then umount "$mount_point"; fi
-  rm -f -- "${REGISTRY_DIR}/${config_name}.ini"
+  if test -f "$config_file"; then
+    mount_point="$(sed -n 's/^MountPoint=//p' "$config_file" | head -n 1)"
+    test -n "$mount_point" || mount_point="${MOUNT_ROOT}/${local_name}"
+  fi
+  if mountpoint -q "$mount_point"; then
+    umount "$mount_point" 2>/dev/null || umount -l "$mount_point" ||
+      fail "Не удалось отключить занятый ресурс: $mount_point"
+  fi
+  rm -f -- "$config_file"
   rmdir -- "$mount_point" 2>/dev/null || true
+}
+
+restore_resources() {
+  local config_file host share local_name failed
+  failed=0
+  install -d -m 0755 "$REGISTRY_DIR"
+  for config_file in "$REGISTRY_DIR"/*.ini; do
+    test -f "$config_file" || continue
+    host="$(sed -n 's/^Host=//p' "$config_file" | head -n 1)"
+    share="$(sed -n 's/^Name=//p' "$config_file" | head -n 1)"
+    local_name="$(sed -n 's/^LocalName=//p' "$config_file" | head -n 1)"
+    if ! mount_resource "$host" "$share" "$local_name"; then
+      printf 'Не удалось восстановить //%s/%s как %s.\n' \
+        "$host" "$share" "$local_name" >&2
+      failed=1
+    fi
+  done
+  return "$failed"
+}
+
+find_config() {
+  local local_name="$1" candidate
+  validate_name "$local_name"
+  for candidate in "${REGISTRY_DIR}"/*.ini; do
+    test -f "$candidate" || continue
+    if test "$(sed -n 's/^LocalName=//p' "$candidate" | head -n 1)" = "$local_name"; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+list_resources() {
+  local config_file host share local_name mount_point state
+  printf 'HOST\tSHARE\tLOCAL_NAME\tMOUNT_POINT\tSTATE\n'
+  for config_file in "${REGISTRY_DIR}"/*.ini; do
+    test -f "$config_file" || continue
+    host="$(sed -n 's/^Host=//p' "$config_file" | head -n 1)"
+    share="$(sed -n 's/^Name=//p' "$config_file" | head -n 1)"
+    local_name="$(sed -n 's/^LocalName=//p' "$config_file" | head -n 1)"
+    mount_point="$(sed -n 's/^MountPoint=//p' "$config_file" | head -n 1)"
+    state=disconnected
+    mountpoint -q "$mount_point" && state=mounted
+    printf '%s\t%s\t%s\t%s\t%s\n' \
+      "$host" "$share" "$local_name" "$mount_point" "$state"
+  done
+}
+
+reconnect_resource() {
+  local local_name="$1" config_file host share mount_point
+  config_file="$(find_config "$local_name")" || \
+    fail "Подключение с названием $local_name не найдено."
+  host="$(sed -n 's/^Host=//p' "$config_file" | head -n 1)"
+  share="$(sed -n 's/^Name=//p' "$config_file" | head -n 1)"
+  mount_point="$(sed -n 's/^MountPoint=//p' "$config_file" | head -n 1)"
+  if mountpoint -q "$mount_point"; then
+    umount "$mount_point" 2>/dev/null || umount -l "$mount_point" || \
+      fail "Не удалось отключить занятый ресурс: $mount_point"
+  fi
+  mount_resource "$host" "$share" "$local_name"
 }
 
 main() {
   local action="${1:-}"
   test "$(id -u)" -eq 0 || fail "Запустите утилиту через pkexec или sudo."
-  test "$#" -eq 4 || fail "Использование: recorderlnx-connect-share connect|disconnect ХОСТ РЕСУРС НАЗВАНИЕ"
+  install -d -m 0755 /run/lock
+  exec 9>/run/lock/recorderlnx-network-shares.lock
+  flock 9
   case "$action" in
-    connect) mount_resource "$2" "$3" "$4";;
-    disconnect) unmount_resource "$4";;
+    connect)
+      test "$#" -eq 4 || fail "Использование: recorderlnx-connect-share connect ХОСТ РЕСУРС НАЗВАНИЕ"
+      mount_resource "$2" "$3" "$4";;
+    disconnect)
+      test "$#" -eq 4 || fail "Использование: recorderlnx-connect-share disconnect - - НАЗВАНИЕ"
+      unmount_resource "$4";;
+    restore)
+      test "$#" -eq 1 || fail "Использование: recorderlnx-connect-share restore"
+      restore_resources;;
+    list)
+      test "$#" -eq 1 || fail "Использование: recorderlnx-connect-share list"
+      list_resources;;
+    reconnect)
+      if test "$#" -eq 2; then
+        reconnect_resource "$2"
+      elif test "$#" -eq 4; then
+        reconnect_resource "$4"
+      else
+        fail "Использование: recorderlnx-connect-share reconnect НАЗВАНИЕ"
+      fi;;
     *) fail "Неизвестное действие: $action";;
   esac
 }
