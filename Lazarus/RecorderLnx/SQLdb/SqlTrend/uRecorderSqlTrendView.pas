@@ -55,6 +55,7 @@ type
     fCursorButton: TSpeedButton;
     fCursorModeCombo: TComboBox;
     fDeleteIntervalButton: TButton;
+    fExportButton: TButton;
     fOpenMeraEventButton: TButton;
     fDisplayCombo: TComboBox;
     fDisplayNextButton: TSpeedButton;
@@ -103,6 +104,7 @@ type
     procedure CursorButtonClick(Sender: TObject);
     procedure CursorModeChange(Sender: TObject);
     procedure DeleteIntervalButtonClick(Sender: TObject);
+    procedure ExportButtonClick(Sender: TObject);
     procedure OpenMeraEventButtonClick(Sender: TObject);
     procedure DisplayComboChange(Sender: TObject);
     procedure DisplayNextClick(Sender: TObject);
@@ -168,7 +170,8 @@ implementation
 
 uses
   uRecorderSqlDbRepository, uRecorderSqlDbRuntime,
-  uRecorderMeraEventDialog, uSharedFileLogger;
+  uRecorderMeraEventDialog, uRecorderSqlTrendExportDialog,
+  uSharedFileLogger;
 
 function SqlTrendConnectionIdentity(const AConfigFileName: string;
   AConfig: TRecorderSqlDbConfig): string;
@@ -504,6 +507,11 @@ begin
   fDisplayNextButton.SetBounds(386, 34, 28, 24);
   fDisplayNextButton.Caption := '>';
   fDisplayNextButton.OnClick := @DisplayNextClick;
+  fExportButton := TButton.Create(fAxisPanel);
+  fExportButton.Parent := fAxisPanel;
+  fExportButton.SetBounds(424, 34, 110, 24);
+  fExportButton.Caption := 'Экспорт';
+  fExportButton.OnClick := @ExportButtonClick;
   fReloadTimer := TTimer.Create(Self);
   fReloadTimer.Enabled := False;
   fReloadTimer.Interval := 50;
@@ -514,6 +522,27 @@ begin
   fLiveReloadTimer.OnTimer := @LiveReloadTimerTimer;
   fHoveredEventIndex := -1;
   fPinnedEventIndex := -1;
+end;
+
+procedure TRecorderSqlTrendView.ExportButtonClick(Sender: TObject);
+var
+  lFromUtc, lToUtc: TDateTime;
+begin
+  if fComponent = nil then Exit;
+  lFromUtc := fFromUtc;
+  lToUtc := fToUtc;
+  if lToUtc <= lFromUtc then
+  begin
+    lFromUtc := fComponent.FromUtc;
+    lToUtc := fComponent.ToUtc;
+  end;
+  if lToUtc <= lFromUtc then
+  begin
+    lToUtc := LocalTimeToUniversal(Now);
+    lFromUtc := lToUtc - 1.0;
+  end;
+  ShowRecorderSqlTrendExportDialog(GetParentForm(Self), fComponent,
+    lFromUtc, lToUtc);
 end;
 
 procedure TRecorderSqlTrendView.OpenMeraEventButtonClick(Sender: TObject);

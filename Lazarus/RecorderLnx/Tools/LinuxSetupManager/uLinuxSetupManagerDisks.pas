@@ -719,9 +719,9 @@ begin
   if lWasMounted and (lOldPoint = lPoint) and (lReadOnly = 'no') and
     NtfsMountedReadOnly(ADevice, lType, lPoint) then
   begin
-    AOutput := 'NTFS_REPAIR_AVAILABLE: раздел уже подключён только для чтения: ' +
-      ADevice + ' -> ' + lPoint + '. Повторное монтирование не устранит ' +
-      'ошибку NTFS; ремонт требует отдельного подтверждения риска потери данных.';
+    AOutput := UTF8String('NTFS_REPAIR_AVAILABLE: раздел уже подключён только для чтения: ') +
+      ADevice + ' -> ' + lPoint + UTF8String('. Повторное монтирование не устранит ') +
+      UTF8String('ошибку NTFS; ремонт требует отдельного подтверждения риска потери данных.');
     Exit;
   end;
   if lWasMounted and not RunWith('umount', [lOldPoint], lCheck) then
@@ -742,9 +742,9 @@ begin
   begin
     if NtfsMountedReadOnly(ADevice, lType, lPoint) then
     begin
-      AOutput := 'NTFS_REPAIR_AVAILABLE: раздел подключён только для чтения: ' +
-        ADevice + ' -> ' + lPoint + '. Возможна ошибка NTFS или незавершённая ' +
-        'работа Windows. Ремонт требует отдельного подтверждения риска потери данных. ' + lCheck;
+      AOutput := UTF8String('NTFS_REPAIR_AVAILABLE: раздел подключён только для чтения: ') +
+        ADevice + ' -> ' + lPoint + UTF8String('. Возможна ошибка NTFS или незавершённая ') +
+        UTF8String('работа Windows. Ремонт требует отдельного подтверждения риска потери данных. ') + lCheck;
       Exit;
     end;
     if not SaveFstab(lFstab, lRollback) then
@@ -759,9 +759,9 @@ begin
   end;
   if NtfsMountedReadOnly(ADevice, lType, lPoint) then
   begin
-    AOutput := 'NTFS_REPAIR_AVAILABLE: раздел подключён только для чтения: ' +
-      ADevice + ' -> ' + lPoint + '. Возможна ошибка NTFS или незавершённая ' +
-      'работа Windows. Ремонт требует отдельного подтверждения риска потери данных.';
+    AOutput := UTF8String('NTFS_REPAIR_AVAILABLE: раздел подключён только для чтения: ') +
+      ADevice + ' -> ' + lPoint + UTF8String('. Возможна ошибка NTFS или незавершённая ') +
+      UTF8String('работа Windows. Ремонт требует отдельного подтверждения риска потери данных.');
     Exit;
   end;
   AOutput := 'Смонтировано: ' + ADevice + ' -> ' + lPoint +
@@ -811,30 +811,30 @@ var
 begin
   Result := False;
   if not ManagedLine(ADevice, AUUID, lLine, APoint) then
-  begin AError := 'Восстановление разрешено только для раздела с управляемой записью /etc/fstab.'; Exit; end;
+  begin AError := UTF8String('Восстановление разрешено только для раздела с управляемой записью /etc/fstab.'); Exit; end;
   if not RunWith('findmnt', ['-rn', '-o', 'TARGET', '--source', ADevice], lTargets) or
     (Trim(lTargets) <> APoint) then
-  begin AError := 'Раздел используется более чем одним подключением; восстановление отменено.'; Exit; end;
+  begin AError := UTF8String('Раздел используется более чем одним подключением; восстановление отменено.'); Exit; end;
   if not RunWith('findmnt', ['-rn', '-o', 'SOURCE'], lAllSources) or
     (Pos(ADevice + '[', lAllSources) > 0) then
-  begin AError := 'Есть bind-монтирования каталогов этого раздела; восстановление отменено.'; Exit; end;
+  begin AError := UTF8String('Есть bind-монтирования каталогов этого раздела; восстановление отменено.'); Exit; end;
   if not RunWith('findmnt', ['-rn', '-o', 'TARGET', '--submounts', '--target', APoint], lSubmounts) then
-  begin AError := 'Не удалось проверить дочерние монтирования.'; Exit; end;
+  begin AError := UTF8String('Не удалось проверить дочерние монтирования.'); Exit; end;
   lRows := TStringList.Create;
   try
     lRows.Text := lSubmounts;
     if lRows.Count = 0 then
-    begin AError := 'Точка монтирования не найдена.'; Exit; end;
+    begin AError := UTF8String('Точка монтирования не найдена.'); Exit; end;
     for lIndex := 0 to lRows.Count - 1 do
       if Trim(lRows[lIndex]) <> APoint then
-      begin AError := 'Внутри точки есть дочерние монтирования; восстановление отменено.'; Exit; end;
+      begin AError := UTF8String('Внутри точки есть дочерние монтирования; восстановление отменено.'); Exit; end;
   finally
     lRows.Free;
   end;
   if not RunWith('findmnt', ['-rn', '-o', 'OPTIONS', '--source', ADevice], lOptions) then
-  begin AError := 'Не удалось проверить режим монтирования.'; Exit; end;
+  begin AError := UTF8String('Не удалось проверить режим монтирования.'); Exit; end;
   if not MountOptionPresent(FirstLine(lOptions), 'ro') then
-  begin AError := 'Раздел не смонтирован только для чтения; ремонт не требуется.'; Exit; end;
+  begin AError := UTF8String('Раздел не смонтирован только для чтения; ремонт не требуется.'); Exit; end;
   AError := '';
   Result := True;
 end;
@@ -856,7 +856,7 @@ begin
     if not Result then Exit;
     // Accessing the path triggers the filesystem behind the automount layer.
     Result := RunWith('stat', ['-c', '%F', APoint + '/.'], lTrigger);
-    if not Result then AError := 'Автоподключение запущено, но том недоступен: ' + lTrigger;
+    if not Result then AError := UTF8String('Автоподключение запущено, но том недоступен: ') + lTrigger;
   end
   else
     Result := RunWith('mount', [APoint], AError);
@@ -873,12 +873,12 @@ begin
   if not CheckExistingDevice(ADevice, lUuid, lType, lParent, lError, True) then
   begin AOutput := lError; Exit; end;
   if not SameText(lType, 'ntfs') then
-  begin AOutput := 'Восстановление разрешено только для NTFS-раздела.'; Exit; end;
+  begin AOutput := UTF8String('Восстановление разрешено только для NTFS-раздела.'); Exit; end;
   if (OptionValue(AArgs, '--confirm-device') <> ADevice) or
     (OptionValue(AArgs, '--confirm-uuid') <> lUuid) or
     (OptionValue(AArgs, '--accept-data-risk') <> 'yes') then
   begin
-    AOutput := 'Подтвердите точные DEVICE и UUID, а также риск изменения данных: ' +
+    AOutput := UTF8String('Подтвердите точные DEVICE и UUID, а также риск изменения данных: ') +
       '--confirm-device ' + ADevice + ' --confirm-uuid ' + lUuid +
       ' --accept-data-risk yes.';
     Exit;
@@ -886,31 +886,31 @@ begin
   if not CheckRepairMount(ADevice, lUuid, lPoint, lError) then
   begin AOutput := lError; Exit; end;
   if not AutomountUnit(lPoint, lUnit) then
-  begin AOutput := 'Не удалось определить имя службы автоподключения.'; Exit; end;
+  begin AOutput := UTF8String('Не удалось определить имя службы автоподключения.'); Exit; end;
   lAutomountActive := RunWith('systemctl', ['is-active', '--quiet', lUnit], lError);
   if lAutomountActive and not RunWith('systemctl', ['stop', lUnit], lError) then
-  begin AOutput := 'Автоподключение не остановлено; ntfsfix не запускался: ' + lError; Exit; end;
+  begin AOutput := UTF8String('Автоподключение не остановлено; ntfsfix не запускался: ') + lError; Exit; end;
   if RunWith('findmnt', ['-rn', '-o', 'TARGET', '--source', ADevice], lTargets) then
   begin
     if Trim(lTargets) <> lPoint then
     begin
       RestoreRepairMount(lPoint, lUnit, lAutomountActive, lMountOutput);
-      AOutput := 'После остановки автомонтирования источник изменился; ntfsfix не запускался.';
+      AOutput := UTF8String('После остановки автомонтирования источник изменился; ntfsfix не запускался.');
       Exit;
     end;
     if not RunWith('umount', [lPoint], lError) then
     begin
       RestoreRepairMount(lPoint, lUnit, lAutomountActive, lMountOutput);
-      AOutput := 'Раздел занят; обычное размонтирование не удалось. ntfsfix не запускался: ' +
-        lError + LineEnding + 'Восстановление подключения: ' + lMountOutput;
+      AOutput := UTF8String('Раздел занят; обычное размонтирование не удалось. ntfsfix не запускался: ') +
+        lError + LineEnding + UTF8String('Восстановление подключения: ') + lMountOutput;
       Exit;
     end;
   end;
   if RunWith('findmnt', ['-rn', '-o', 'TARGET', '--source', ADevice], lTargets) then
   begin
     RestoreRepairMount(lPoint, lUnit, lAutomountActive, lMountOutput);
-    AOutput := 'Раздел всё ещё смонтирован; ntfsfix не запускался. ' +
-      'Восстановление подключения: ' + lMountOutput;
+    AOutput := UTF8String('Раздел всё ещё смонтирован; ntfsfix не запускался. ') +
+      UTF8String('Восстановление подключения: ') + lMountOutput;
     Exit;
   end;
   lFixed := RunWith('ntfsfix', [ADevice], lFixOutput);
@@ -918,20 +918,20 @@ begin
   lMounted := RestoreRepairMount(lPoint, lUnit, lAutomountActive, lMountOutput);
   if not lMounted then
   begin
-    AOutput := 'ВНИМАНИЕ: раздел остался размонтирован. ' +
-      'ntfsfix: ' + lFixOutput + LineEnding + 'Повторное монтирование: ' + lMountOutput;
+    AOutput := UTF8String('ВНИМАНИЕ: раздел остался размонтирован. ') +
+      'ntfsfix: ' + lFixOutput + LineEnding + UTF8String('Повторное монтирование: ') + lMountOutput;
     Exit;
   end;
   if not lFixed then
-  begin AOutput := 'ntfsfix завершился ошибкой; исходная точка восстановлена: ' + lFixOutput; Exit; end;
+  begin AOutput := UTF8String('ntfsfix завершился ошибкой; исходная точка восстановлена: ') + lFixOutput; Exit; end;
   if not RunWith('findmnt', ['-rn', '-o', 'OPTIONS', '--source', ADevice], lOptions) or
     not MountOptionPresent(FirstLine(lOptions), 'rw') then
   begin
-    AOutput := 'ntfsfix выполнен, но раздел по-прежнему доступен только для чтения ' +
-      'в ' + lPoint + '. Проверьте вывод: ' + lFixOutput;
+    AOutput := UTF8String('ntfsfix выполнен, но раздел по-прежнему доступен только для чтения ') +
+      UTF8String('в ') + lPoint + UTF8String('. Проверьте вывод: ') + lFixOutput;
     Exit;
   end;
-  AOutput := 'NTFS восстановлена и вновь подключена для записи: ' +
+  AOutput := UTF8String('NTFS восстановлена и вновь подключена для записи: ') +
     ADevice + ' -> ' + lPoint + '.' + LineEnding + lFixOutput;
   Result := 0;
 end;

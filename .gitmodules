@@ -1,0 +1,6 @@
+[submodule "Lazarus/third_party/bgrabitmap"]
+	path = Lazarus/third_party/bgrabitmap
+	url = https://github.com/bgrabitmap/bgrabitmap.git
+[submodule "Lazarus/third_party/bgracontrols"]
+	path = Lazarus/third_party/bgracontrols
+	url = https://github.com/bgrabitmap/bgracontrols.git

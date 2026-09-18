@@ -101,14 +101,18 @@ type
     fTagRegistry: TRecorderTagRegistry;
     fLastRevision: QWord;
     fEditing: Boolean;
+    fUpdatingText: Boolean;
+    fEditMode: Boolean;
     procedure CommitValue(Sender: TObject);
     procedure EditChange(Sender: TObject);
+    procedure NumericKeyPress(Sender: TObject; var Key: Char);
   public
     procedure Configure(AComponent: TRecorderVisualComponent;
       ATagRegistry: TRecorderTagRegistry);
     procedure RefreshControl(ATagRegistry: TRecorderTagRegistry;
       ADisplaySeconds: Double);
     function GetChartControl: TOglChart;
+    property EditMode: Boolean read fEditMode write fEditMode;
   end;
 
   { TRecorderTagValueView
@@ -166,6 +170,7 @@ uses
   uRecorderOglOscillogramView,
   uRecorderTrendView,
   uRecorderSpectrumView,
+  uRecorderDonutView,
   uRecorderTagRefs,
   uRecorderDebugLog;
 
@@ -301,28 +306,71 @@ begin
   fEditing := False;
   OnChange := @EditChange;
   OnEditingDone := @CommitValue;
+  OnKeyPress := @NumericKeyPress;
   RefreshControl(ATagRegistry, 0.0);
 end;
 
 procedure TRecorderInputFieldView.EditChange(Sender: TObject);
 begin
-  if Focused then
+  if Focused and not fUpdatingText then
     fEditing := True;
+end;
+
+procedure TRecorderInputFieldView.NumericKeyPress(Sender: TObject;
+  var Key: Char);
+var
+  I: Integer;
+  lCandidate: string;
+  lHasSeparator: Boolean;
+begin
+  if Key < #32 then
+    Exit;
+  lCandidate := Copy(Text, 1, SelStart) + Key +
+    Copy(Text, SelStart + SelLength + 1, MaxInt);
+  lHasSeparator := False;
+  for I := 1 to Length(lCandidate) do
+    case lCandidate[I] of
+      '0'..'9': ;
+      '+', '-': if I <> 1 then Key := #0;
+      '.', ',': if lHasSeparator then Key := #0
+        else lHasSeparator := True;
+    else
+      Key := #0;
+    end;
 end;
 
 procedure TRecorderInputFieldView.CommitValue(Sender: TObject);
 var
   lTag: TRecorderTag;
   lValue: Double;
+  lText: string;
 begin
-  if not fEditing or (fComponent = nil) or (fTagRegistry = nil) or
-    not TryStrToFloat(Text, lValue) then
+  if not fEditing or (fComponent = nil) or (fTagRegistry = nil) then
     Exit;
+  lText := Trim(Text);
+  lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator,
+    [rfReplaceAll]);
+  fEditing := False;
+  if not TryStrToFloat(lText, lValue) then
+  begin
+    fUpdatingText := True;
+    try
+      Text := '';
+    finally
+      fUpdatingText := False;
+    end;
+    fLastRevision := 0;
+    RefreshControl(fTagRegistry, 0.0);
+    Exit;
+  end;
   lTag := RecorderResolveTag(fTagRegistry, fComponent.TagId,
     fComponent.TagName);
   if (lTag <> nil) and lTag.ExternalWriteAllowed then
     fTagRegistry.PublishValue(lTag, lValue);
-  fEditing := False;
+  fLastRevision := 0;
+  RefreshControl(fTagRegistry, 0.0);
 end;
 
 procedure TRecorderInputFieldView.RefreshControl(
@@ -334,12 +382,18 @@ begin
     Exit;
   lTag := RecorderResolveTag(ATagRegistry, fComponent.TagId,
     fComponent.TagName);
-  Enabled := (lTag <> nil) and lTag.ExternalWriteAllowed;
+  Enabled := fEditMode or ((lTag <> nil) and lTag.ExternalWriteAllowed);
+  ReadOnly := fEditMode;
   if (lTag = nil) or (lTag.SignalBuffer.Count = 0) or
     (lTag.SignalBuffer.Revision = fLastRevision) then
     Exit;
   fLastRevision := lTag.SignalBuffer.Revision;
-  Text := FormatFloat(fComponent.DisplayFormat, lTag.SignalBuffer.LatestValue);
+  fUpdatingText := True;
+  try
+    Text := FormatFloat(fComponent.DisplayFormat, lTag.SignalBuffer.LatestValue);
+  finally
+    fUpdatingText := False;
+  end;
 end;
 
 function TRecorderInputFieldView.GetChartControl: TOglChart;
@@ -886,6 +940,7 @@ initialization
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTrendComponent, TRecorderTrendView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderOscillogramComponent, TRecorderOglOscillogram);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderSpectrumComponent, TRecorderSpectrumView);
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderDonutComponent, TRecorderDonutView);
 
 finalization
   TRecorderVisualControlRegistry.ClearRegistry;

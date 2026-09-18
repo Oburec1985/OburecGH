@@ -293,27 +293,71 @@ type
   { TRecorderOscillogramComponent
     Компонент осциллограммы на пользовательской мнемосхеме. По умолчанию поддерживает
     синхронизацию: основной привязанный тег и набор дополнительных линий. }
+  TRecorderTrendAxis = class;
+
   TRecorderOscillogramComponent = class(TRecorderVisualComponent)
   private
+    fAxes: TList;
     fBindingMode: TRecorderTagBindingMode;
+    fClosedInput: Boolean;
+    fAutoRangeEnabled: Boolean;
+    fXCursorEnabled: Boolean;
+    fXCursorCount: Integer;
+    fLegendVisible: Boolean;
+    fLevelCursorVisible: Boolean;
     fLines: TList;
+    fPrimaryAxisIndex: Integer;
     fTagOffset: Integer;
+    fXScale: Double;
+    fYScale: Double;
+    fYOffset: Double;
+    fTriggerTagName: string;
+    fTriggerEnabled: Boolean;
+    fTriggerLevel: Double;
+    fTriggerPreRollPercent: Double;
     function GetLine(AIndex: Integer): TRecorderTrendLine;
     function GetLineCount: Integer;
+    function GetAxis(AIndex: Integer): TRecorderTrendAxis;
+    function GetAxisCount: Integer;
+    function GetYScale: Double;
+    function GetYOffset: Double;
+    procedure SetYScale(AValue: Double);
+    procedure SetYOffset(AValue: Double);
+    procedure SetTriggerPreRollPercent(AValue: Double);
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
     destructor Destroy; override;
     function AddLine: TRecorderTrendLine;
+    function AddAxis: TRecorderTrendAxis;
     procedure AssignOscillogram(ASource: TRecorderOscillogramComponent);
+    procedure ClearAxes;
     procedure ClearLines;
     procedure DeleteLine(AIndex: Integer);
     property BindingMode: TRecorderTagBindingMode read fBindingMode
       write fBindingMode;
+    property AxisCount: Integer read GetAxisCount;
+    property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
+    property PrimaryAxisIndex: Integer read fPrimaryAxisIndex
+      write fPrimaryAxisIndex;
+    property ClosedInput: Boolean read fClosedInput write fClosedInput;
+    property AutoRangeEnabled: Boolean read fAutoRangeEnabled write fAutoRangeEnabled;
+    property XCursorEnabled: Boolean read fXCursorEnabled write fXCursorEnabled;
+    property XCursorCount: Integer read fXCursorCount write fXCursorCount;
+    property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
+    property LevelCursorVisible: Boolean read fLevelCursorVisible write fLevelCursorVisible;
     property LineCount: Integer read GetLineCount;
     property Lines[AIndex: Integer]: TRecorderTrendLine read GetLine;
     property TagOffset: Integer read fTagOffset write fTagOffset;
+    property XScale: Double read fXScale write fXScale;
+    property YScale: Double read GetYScale write SetYScale;
+    property YOffset: Double read GetYOffset write SetYOffset;
+    property TriggerTagName: string read fTriggerTagName write fTriggerTagName;
+    property TriggerEnabled: Boolean read fTriggerEnabled write fTriggerEnabled;
+    property TriggerLevel: Double read fTriggerLevel write fTriggerLevel;
+    property TriggerPreRollPercent: Double read fTriggerPreRollPercent
+      write SetTriggerPreRollPercent;
   end;
 
 
@@ -323,6 +367,8 @@ type
     fName: string;
     fRangeMax: Double;
     fRangeMin: Double;
+    fYScale: Double;
+    fYOffset: Double;
   public
     constructor Create;
     procedure Assign(ASource: TRecorderTrendAxis);
@@ -330,6 +376,8 @@ type
     property Color: LongInt read fColor write fColor;
     property RangeMin: Double read fRangeMin write fRangeMin;
     property RangeMax: Double read fRangeMax write fRangeMax;
+    property YScale: Double read fYScale write fYScale;
+    property YOffset: Double read fYOffset write fYOffset;
   end;
 
   TRecorderTrendYAxisMode = (
@@ -430,6 +478,7 @@ type
 
 const
   CRecorderPaletteGroupCharts = 'charts';
+  CRecorderPaletteGroupIndicators = 'indicators';
 
 type
   { TRecorderComponentFactoryBase
@@ -474,7 +523,7 @@ type
     { Создаёт компонент с размерами и типом по умолчанию. }
     function CreateComponent: TRecorderVisualComponent; virtual;
     function CreateComponentForPage(
-      const AContext: TRecorderComponentCreateContext): TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext): TRecorderVisualComponent; virtual;
 
     { Удаляет компонент, когда уничтожает сам объект. }
     procedure ReleaseComponent(AComponent: TRecorderVisualComponent); virtual;
@@ -521,6 +570,33 @@ type
     constructor Create; reintroduce;
   end;
 
+  TRecorderDonutComponent = class(TRecorderVisualComponent)
+  private
+    fTagNames: TStringList;
+    fTagIds: array of TRecorderTagId;
+    fTitle: string;
+    fHolePercent: Integer;
+    fSingleValueMode: Boolean;
+    fRangeMin: Double;
+    fRangeMax: Double;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure AssignDonut(ASource: TRecorderDonutComponent);
+    function TagIdAt(AIndex: Integer): TRecorderTagId;
+    procedure SetTagIdAt(AIndex: Integer; AId: TRecorderTagId);
+    function ResolveTagAt(ARegistry: TRecorderTagRegistry;
+      AIndex: Integer): TRecorderTag;
+    property TagNames: TStringList read fTagNames;
+    property Title: string read fTitle write fTitle;
+    property HolePercent: Integer read fHolePercent write fHolePercent;
+    property SingleValueMode: Boolean read fSingleValueMode write fSingleValueMode;
+    property RangeMin: Double read fRangeMin write fRangeMin;
+    property RangeMax: Double read fRangeMax write fRangeMax;
+  end;
+
   TRecorderButtonFactory = class(TRecorderComponentFactoryBase)
   protected
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
@@ -547,6 +623,14 @@ type
 
   { Фабрика компонента осциллограммы }
   TRecorderOscillogramFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
+  public
+    constructor Create; reintroduce;
+  end;
+
+  TRecorderDonutFactory = class(TRecorderComponentFactoryBase)
   protected
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
@@ -1116,7 +1200,23 @@ constructor TRecorderOscillogramComponent.Create;
 begin
   inherited Create;
   fBindingMode := rtbmRelativeSelectedTag;
+  fClosedInput := False;
+  fAutoRangeEnabled := False;
+  fXCursorEnabled := False;
+  fXCursorCount := 1;
+  fLegendVisible := True;
+  fLevelCursorVisible := False;
+  fPrimaryAxisIndex := 0;
   fTagOffset := 0;
+  fXScale := 0.0; { 0 = recorder-wide time window for existing components }
+  fYScale := 1.0;
+  fYOffset := 0.0;
+  fTriggerTagName := '';
+  fTriggerEnabled := False;
+  fTriggerLevel := 0.0;
+  fTriggerPreRollPercent := 25.0;
+  fAxes := TList.Create;
+  AddAxis;
   fLines := TList.Create;
 end;
 
@@ -1124,7 +1224,74 @@ destructor TRecorderOscillogramComponent.Destroy;
 begin
   ClearLines;
   fLines.Free;
+  ClearAxes;
+  fAxes.Free;
   inherited Destroy;
+end;
+
+function TRecorderOscillogramComponent.GetAxis(AIndex: Integer): TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis(fAxes[AIndex]);
+end;
+
+function TRecorderOscillogramComponent.GetAxisCount: Integer;
+begin
+  Result := fAxes.Count;
+end;
+
+function TRecorderOscillogramComponent.AddAxis: TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis.Create;
+  Result.Name := 'Y' + IntToStr(fAxes.Count + 1);
+  fAxes.Add(Result);
+end;
+
+procedure TRecorderOscillogramComponent.ClearAxes;
+var
+  I: Integer;
+begin
+  for I := fAxes.Count - 1 downto 0 do
+    TObject(fAxes[I]).Free;
+  fAxes.Clear;
+end;
+
+function TRecorderOscillogramComponent.GetYScale: Double;
+begin
+  if fAxes.Count > 0 then
+    Result := Axes[0].YScale
+  else
+    Result := fYScale;
+end;
+
+function TRecorderOscillogramComponent.GetYOffset: Double;
+begin
+  if fAxes.Count > 0 then
+    Result := Axes[0].YOffset
+  else
+    Result := fYOffset;
+end;
+
+procedure TRecorderOscillogramComponent.SetYScale(AValue: Double);
+begin
+  fYScale := AValue;
+  if fAxes.Count > 0 then
+    Axes[0].YScale := AValue;
+end;
+
+procedure TRecorderOscillogramComponent.SetYOffset(AValue: Double);
+begin
+  fYOffset := AValue;
+  if fAxes.Count > 0 then
+    Axes[0].YOffset := AValue;
+end;
+
+procedure TRecorderOscillogramComponent.SetTriggerPreRollPercent(AValue: Double);
+begin
+  if AValue < 0.0 then
+    AValue := 0.0
+  else if AValue > 50.0 then
+    AValue := 50.0;
+  fTriggerPreRollPercent := AValue;
 end;
 
 function TRecorderOscillogramComponent.GetLine(AIndex: Integer): TRecorderTrendLine;
@@ -1177,7 +1344,26 @@ begin
   if ASource = nil then
     Exit;
   fBindingMode := ASource.BindingMode;
+  fClosedInput := ASource.ClosedInput;
+  fAutoRangeEnabled := ASource.AutoRangeEnabled;
+  fXCursorEnabled := ASource.XCursorEnabled;
+  fXCursorCount := ASource.XCursorCount;
+  fLegendVisible := ASource.LegendVisible;
+  fLevelCursorVisible := ASource.LevelCursorVisible;
+  fPrimaryAxisIndex := ASource.PrimaryAxisIndex;
   fTagOffset := ASource.TagOffset;
+  fXScale := ASource.XScale;
+  ClearAxes;
+  for I := 0 to ASource.AxisCount - 1 do
+    AddAxis.Assign(ASource.Axes[I]);
+  if AxisCount = 0 then
+    AddAxis;
+  YScale := ASource.YScale;
+  YOffset := ASource.YOffset;
+  fTriggerTagName := ASource.TriggerTagName;
+  fTriggerEnabled := ASource.TriggerEnabled;
+  fTriggerLevel := ASource.TriggerLevel;
+  TriggerPreRollPercent := ASource.TriggerPreRollPercent;
   fTagName := ASource.TagName;
   fTagId := ASource.TagId;
   ClearLines;
@@ -1198,6 +1384,8 @@ begin
   fColor := $00808080;
   fRangeMin := 0;
   fRangeMax := 1;
+  fYScale := 1;
+  fYOffset := 0;
 end;
 
 procedure TRecorderTrendAxis.Assign(ASource: TRecorderTrendAxis);
@@ -1208,6 +1396,8 @@ begin
   fColor := ASource.Color;
   fRangeMin := ASource.RangeMin;
   fRangeMax := ASource.RangeMax;
+  fYScale := ASource.YScale;
+  fYOffset := ASource.YOffset;
 end;
 
 { TRecorderTrendLine }
@@ -1345,6 +1535,76 @@ begin
     TObject(fLines[0]).Free;
     fLines.Delete(0);
   end;
+end;
+
+{ TRecorderDonutComponent }
+
+class function TRecorderDonutComponent.GetTypeId: string;
+begin
+  Result := 'donut';
+end;
+
+constructor TRecorderDonutComponent.Create;
+begin
+  inherited Create;
+  fTagNames := TStringList.Create;
+  fTitle := 'Круговая гистограмма';
+  fHolePercent := 55;
+  fSingleValueMode := True;
+  fRangeMin := 0;
+  fRangeMax := 100;
+end;
+
+destructor TRecorderDonutComponent.Destroy;
+begin
+  fTagNames.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderDonutComponent.AssignDonut(ASource: TRecorderDonutComponent);
+begin
+  fTagNames.Assign(ASource.TagNames);
+  fTagIds := Copy(ASource.fTagIds, 0, Length(ASource.fTagIds));
+  fTitle := ASource.Title;
+  fHolePercent := ASource.HolePercent;
+  fSingleValueMode := ASource.SingleValueMode;
+  fRangeMin := ASource.RangeMin;
+  fRangeMax := ASource.RangeMax;
+  TagName := ASource.TagName;
+  TagId := ASource.TagId;
+end;
+
+function TRecorderDonutComponent.TagIdAt(AIndex: Integer): TRecorderTagId;
+begin
+  Result := 0;
+  if (AIndex >= 0) and (AIndex < Length(fTagIds)) then
+    Result := fTagIds[AIndex];
+end;
+
+procedure TRecorderDonutComponent.SetTagIdAt(AIndex: Integer;
+  AId: TRecorderTagId);
+begin
+  if AIndex < 0 then Exit;
+  if AIndex >= Length(fTagIds) then
+    SetLength(fTagIds, AIndex + 1);
+  fTagIds[AIndex] := AId;
+end;
+
+function TRecorderDonutComponent.ResolveTagAt(ARegistry: TRecorderTagRegistry;
+  AIndex: Integer): TRecorderTag;
+begin
+  Result := nil;
+  if (ARegistry = nil) or (AIndex < 0) or
+    (AIndex >= fTagNames.Count) then Exit;
+  if TagIdAt(AIndex) <> 0 then
+    Result := ARegistry.FindById(TagIdAt(AIndex));
+  if Result = nil then
+  begin
+    Result := ARegistry.FindByName(fTagNames[AIndex]);
+    if Result <> nil then SetTagIdAt(AIndex, Result.Id);
+  end;
+  if Result <> nil then
+    fTagNames[AIndex] := Result.Name;
 end;
 
 { TRecorderSpectrumComponent }
@@ -1714,7 +1974,7 @@ begin
   inherited Create(TRecorderTagValueComponent.TypeId, 'Tag value',
     TRecorderTagValueComponent, 160, 24, True);
   ConfigurePalette('Цифровой индикатор', 'Добавить цифровой индикатор',
-    'digital-indicator', 20);
+    'digital-indicator', 20, rppGroup, CRecorderPaletteGroupIndicators);
 end;
 
 procedure TRecorderTagValueFactory.ConfigureNewComponent(
@@ -1756,6 +2016,31 @@ begin
     10, rppGroup, CRecorderPaletteGroupCharts);
 end;
 
+
+{ TRecorderDonutFactory }
+
+constructor TRecorderDonutFactory.Create;
+begin
+  inherited Create(TRecorderDonutComponent.TypeId, 'Круговая гистограмма',
+    TRecorderDonutComponent, 300, 260, False);
+  ConfigurePalette('Круговая гистограмма',
+    'Добавить круговую гистограмму текущего значения', 'donut',
+    25, rppGroup, CRecorderPaletteGroupIndicators);
+end;
+
+procedure TRecorderDonutFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  AComponent.Name := Format('Donut%d', [AContext.ComponentNo]);
+  if AContext.SelectedTag <> nil then
+  begin
+    AComponent.TagName := AContext.SelectedTag.Name;
+    AComponent.TagId := AContext.SelectedTag.Id;
+    TRecorderDonutComponent(AComponent).TagNames.Add(AContext.SelectedTag.Name);
+    TRecorderDonutComponent(AComponent).SetTagIdAt(0, AContext.SelectedTag.Id);
+  end;
+end;
 
 { TRecorderTrendFactory }
 
@@ -2175,6 +2460,7 @@ begin
   RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);
   RegisterFactory(TRecorderTrendFactory.Create);
+  RegisterFactory(TRecorderDonutFactory.Create);
   RegisterFactory(TRecorderSpectrumFactory.Create);
 end;
 

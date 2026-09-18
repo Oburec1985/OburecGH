@@ -1678,6 +1678,8 @@ var
   lAutoUnitName: string;
   lPreviousUnitName: string;
   lSourceId: string;
+  lHardwareChanged: Boolean;
+  lChannelChanged: Boolean;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
@@ -1694,6 +1696,8 @@ begin
     for I := 0 to fTags.Count - 1 do
     begin
       lTag := TagAt(I);
+      lHardwareChanged := False;
+      lChannelChanged := False;
       lPreviousUnitName := lTag.UnitName;
     if fSelectedMeraFileName <> '' then
     begin
@@ -1719,12 +1723,17 @@ begin
           RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat);
       end
       else if Pos('MC-032:', lTag.SourceId) = 1 then
-        RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
-          lTag.Address, lFloat)
+      begin
+        if not SameValue(lTag.PollFrequencyHz, lFloat, 1E-9) then
+          RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
+            lTag.Address, lFloat);
+      end
       else if Pos('MIC-185:', lTag.SourceId) = 1 then
       begin
         lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
-        if lAppliedMic185Sources.IndexOf(lSourceId) < 0 then
+        if (not SameValue(lTag.PollFrequencyHz,
+          RecorderMic185NormalizeFrequency(lFloat), 1E-9)) and
+          (lAppliedMic185Sources.IndexOf(lSourceId) < 0) then
         begin
           lAppliedMic185Sources.Add(lSourceId);
           RecorderMic185ApplySourceFrequency(fTagRegistry, lSourceId, lFloat,
@@ -1752,10 +1761,12 @@ begin
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
     begin
-      if lTag.HardwareCalibrationEnabled <> fHardwareCurveCheck.Checked then
+      lHardwareChanged := lTag.HardwareCalibrationEnabled <>
+        fHardwareCurveCheck.Checked;
+      if lHardwareChanged then
         lTag.ClearSignalHistory;
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
-      if lTag.HardwareCalibrationEnabled and
+      if lHardwareChanged and lTag.HardwareCalibrationEnabled and
         (Pos('MIC-185:', lTag.SourceId) = 1) then
       begin
         EnsureMic185HardwareCalibrationAssigned(lTag, True);
@@ -1768,14 +1779,15 @@ begin
           lTag, lMic185Settings, lTag.UnitName);
         lTag.RangeMin := -lTag.RangeMax;
       end;
-      if (not lTag.HardwareCalibrationEnabled) and
+      if lHardwareChanged and (not lTag.HardwareCalibrationEnabled) and
         (Pos('MIC-185:', lTag.SourceId) = 1) then
       begin
         RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
           lTag.Address, lTag.PollFrequencyHz, lPreviousUnitName);
         lTag.UnitName := 'код';
       end;
-      if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+      if lHardwareChanged and
+        (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
       begin
         lSettings.ChannelAddress := '';
         if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,
@@ -1793,13 +1805,16 @@ begin
       itself is changed only by explicit read/select actions. }
     if fChannelCurveCheck.State <> cbGrayed then
     begin
-      if lTag.ChannelCalibrationEnabled <> fChannelCurveCheck.Checked then
+      lChannelChanged := lTag.ChannelCalibrationEnabled <>
+        fChannelCurveCheck.Checked;
+      if lChannelChanged then
         lTag.ClearSignalHistory;
       lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
       if lTag.ChannelCalibrationEnabled and
         ((lTag.CalibrationNames = nil) or (lTag.CalibrationNames.Count = 0)) then
         lTag.ChannelCalibrationEnabled := False;
-      if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+      if lChannelChanged and
+        (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
       begin
         if fChannelCurveCheck.Checked then
         begin
@@ -1829,7 +1844,8 @@ begin
         end;
       end;
     end;
-    if Pos(CMic140SourcePrefix, lTag.SourceId) = 1 then
+    if (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) and
+      (lHardwareChanged or lChannelChanged) then
     begin
       lSettings.ChannelAddress := '';
       if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,

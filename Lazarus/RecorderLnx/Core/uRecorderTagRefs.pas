@@ -176,7 +176,7 @@ end;
 procedure RecorderSyncTagNamesInManager(ARegistry: TRecorderTagRegistry;
   AManager: TRecorderFormManager);
 var
-  I, J: Integer;
+  I, J, K: Integer;
   lPage: TRecorderFormPage;
   lComponent: TRecorderVisualComponent;
 begin
@@ -194,6 +194,12 @@ begin
         RecorderSyncTrendComponentTagNames(ARegistry, TRecorderTrendComponent(lComponent))
       else if lComponent is TRecorderSpectrumComponent then
         RecorderSyncSpectrumComponentTagNames(ARegistry, TRecorderSpectrumComponent(lComponent))
+      else if lComponent is TRecorderDonutComponent then
+      begin
+        RecorderSyncVisualComponentTagName(ARegistry, lComponent);
+        for K := 0 to TRecorderDonutComponent(lComponent).TagNames.Count - 1 do
+          TRecorderDonutComponent(lComponent).ResolveTagAt(ARegistry, K);
+      end
       else
         RecorderSyncVisualComponentTagName(ARegistry, lComponent);
     end;
@@ -247,6 +253,11 @@ begin
   begin
     lSpectrum := TRecorderSpectrumComponent(AComponent);
     lSpectrum.ResolveTagIdsFromNames(ARegistry);
+  end
+  else if AComponent is TRecorderDonutComponent then
+  begin
+    for I := 0 to TRecorderDonutComponent(AComponent).TagNames.Count - 1 do
+      TRecorderDonutComponent(AComponent).ResolveTagAt(ARegistry, I);
   end;
 end;
 

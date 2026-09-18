@@ -284,7 +284,7 @@ Section: science
 Priority: optional
 Architecture: {architecture}
 Maintainer: Mera
-Depends: libc6, libgtk2.0-0, libfbclient2, sudo, cifs-utils, policykit-1, samba, ethtool, util-linux, xdg-utils, shared-mime-info
+Depends: libc6, libgtk2.0-0, libfbclient2, sudo, cifs-utils, policykit-1, samba, ethtool, util-linux, xdg-utils, shared-mime-info, libcap2, libgnutls30, libnettle8, libseccomp2
 Installed-Size: {installed_size_kb}
 Description: RecorderLnx measurement recorder
  Cross-platform RecorderLnx measurement recorder.
@@ -453,7 +453,6 @@ if command -v systemctl >/dev/null 2>&1; then
   fi
 fi
 log "RecorderHostAgent registered in XDG Autostart; it starts at graphical login"
-start_host_agent_for_logged_in_users
 configure_host_agent_firewall
 config_root=/var/opt/mera/RecorderLnx/config
 runtime_user="${SUDO_USER:-}"
@@ -481,6 +480,9 @@ if [ -n "$runtime_user" ] && [ "$runtime_user" != root ] && id "$runtime_user" >
 else
   log "runtime user is unknown; writable config permissions were not broadened"
 fi
+# HostAgent reads allow_shutdown and api_token only at startup. Restart it
+# after the final config/sudoers update, never before configure_host_agent_shutdown.
+start_host_agent_for_logged_in_users
 install_desktop_shortcuts
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
@@ -511,6 +513,7 @@ set -e
 if [ "${1:-}" = remove ] || [ "${1:-}" = purge ]; then
   rm -f /etc/sudoers.d/recorder-host-agent
   if command -v systemctl >/dev/null 2>&1; then
+    systemctl disable --now recorderlnx-ntp-server.service >/dev/null 2>&1 || true
     systemctl --global disable recorder-host-agent.service >/dev/null 2>&1 || true
   fi
 fi
@@ -535,6 +538,7 @@ def make_data_tar(repo_root):
     agent_exe = linux_lib / AGENT_NAME
     linux_setup_exe = project_root / "Tools" / "LinuxSetupManager" / "lib" / "x86_64-linux" / "LinuxSetupManager"
     linux_setup_cli_exe = project_root / "Tools" / "LinuxSetupManager" / "lib" / "x86_64-linux" / "LinuxSetupManagerCli"
+    private_chronyd = Path(__file__).resolve().parent / "chronyd-private"
     share_helper = project_root / "Scripts" / "linux" / "recorderlnx-connect-share"
     publish_helper = project_root / "Scripts" / "linux" / "recorderlnx-share-folder"
     hostname_helper = project_root / "Scripts" / "linux" / "recorderlnx-set-hostname"
@@ -552,6 +556,19 @@ Config=/var/opt/mera/RecorderLnx/config
 Plugins=plugins
 Bios=bios
 SysCom=syscom
+"""
+    ntp_server_service = """[Unit]
+Description=RecorderLnx private NTP server
+After=network-online.target systemd-timesyncd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/mera/RecorderLnx/chronyd-private -n -x -u root -f /opt/mera/RecorderLnx/chrony-server.conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
 """
     desktop = """[Desktop Entry]
 Type=Application
@@ -690,6 +707,9 @@ WantedBy=timers.target
         add_file(tar, agent_exe, "opt/mera/RecorderLnx/RecorderHostAgent", 0o755)
         add_file(tar, linux_setup_exe, "opt/mera/RecorderLnx/LinuxSetupManager", 0o755)
         add_file(tar, linux_setup_cli_exe, "opt/mera/RecorderLnx/LinuxSetupManagerCli", 0o755)
+        add_file(tar, private_chronyd, "opt/mera/RecorderLnx/chronyd-private", 0o755)
+        add_bytes(tar, "lib/systemd/system/recorderlnx-ntp-server.service",
+                  ntp_server_service)
         add_bytes(tar, "opt/mera/RecorderLnx/RecorderHostAgent.ini", agent_config)
         add_bytes(tar, "usr/local/sbin/recorder-host-agent-shutdown",
                   shutdown_helper, 0o755)

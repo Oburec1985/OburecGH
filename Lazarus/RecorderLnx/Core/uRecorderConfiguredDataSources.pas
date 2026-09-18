@@ -20,6 +20,7 @@ type
   TRecorderConfiguredDataSource = class(TPersistent)
   private
     fSourceId: string;
+    fSourceAddress: string;
     fModuleType: string;
     fDefaultPollFrequencyHz: Double;
     fSpecificConfigText: string;
@@ -30,6 +31,8 @@ type
   public
     constructor Create;
     property SourceId: string read GetSourceId write SetSourceId;
+    { Пустая строка означает прежнюю автоматическую адресацию. }
+    property SourceAddress: string read fSourceAddress write fSourceAddress;
     property ModuleType: string read fModuleType write fModuleType;
     property Enabled: Boolean read fEnabled write fEnabled;
     property DefaultPollFrequencyHz: Double
@@ -55,6 +58,10 @@ procedure RecorderEnumerateConfiguredSourceIds(ARegistry: TRecorderTagRegistry;
   ASourceIds: TStrings; AHardwareTreeOnly: Boolean = False);
 function RecorderConfiguredSourceTreeIndex(ARegistry: TRecorderTagRegistry;
   const ASourceId: string): Integer;
+function RecorderConfiguredSourceAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
+function RecorderSetConfiguredSourceAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ANewAddress: string; out AError: string): Boolean;
 function RecorderTreeIndexedAddress(ARegistry: TRecorderTagRegistry;
   const ASourceId, ANativeAddress: string; AReplaceLeadingIndex: Boolean): string;
 
@@ -222,25 +229,192 @@ begin
   end;
 end;
 
+function RecorderAutoSourceAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
+var
+  lEntry: TRecorderConfiguredDataSource;
+  lHost, lText: string;
+  lDot, lColon, I, lDash: Integer;
+  lTag: TRecorderTag;
+begin
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  if (lEntry <> nil) and (Pos('MIC183/185', UpperCase(lEntry.ModuleType)) > 0) then
+  begin
+    lText := Trim(Copy(ASourceId, Pos(':', ASourceId) + 1, MaxInt));
+    lColon := LastDelimiter(':', lText);
+    lHost := Copy(lText, 1, lColon - 1);
+    lDot := LastDelimiter('.', lHost);
+    if (lDot > 0) and (StrToIntDef(Copy(lHost, lDot + 1, MaxInt), -1) >= 0) then
+      Exit(Copy(lHost, lDot + 1, MaxInt));
+  end;
+  if (lEntry <> nil) and (Pos('MIC-140', UpperCase(lEntry.ModuleType)) > 0) then
+    for I := 0 to ARegistry.TagCount - 1 do
+    begin
+      lTag := ARegistry.Tags[I];
+      if not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+        RecorderNormalizeTagSourceId(ASourceId)) then
+        Continue;
+      lDash := Pos('-', lTag.Address);
+      if (lDash > 1) and
+        (StrToIntDef(Copy(lTag.Address, 1, lDash - 1), -1) >= 0) then
+        Exit(Copy(lTag.Address, 1, lDash - 1));
+    end;
+  Result := IntToStr(RecorderConfiguredSourceTreeIndex(ARegistry, ASourceId));
+end;
+
+function RecorderConfiguredSourceAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId: string): string;
+var
+  lEntry: TRecorderConfiguredDataSource;
+begin
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  if (lEntry <> nil) and (Trim(lEntry.SourceAddress) <> '') then
+    Exit(Trim(lEntry.SourceAddress));
+  Result := RecorderAutoSourceAddress(ARegistry, ASourceId);
+end;
+
+function RecorderTagUsesSourceAddress(const ATagAddress, ASourceAddress: string;
+  AIsMic185: Boolean): Boolean;
+begin
+  Result := SameText(Copy(ATagAddress, 1, Length(ASourceAddress) + 1),
+    ASourceAddress + '-');
+  if not Result and AIsMic185 then
+    Result := Pos('{' + ASourceAddress + '-', ATagAddress) > 0;
+end;
+
+function RecorderRemappedTagAddress(const ATagAddress, AOldAddress,
+  ANewAddress: string; AIsMic185: Boolean): string;
+var
+  lDash: Integer;
+  lSuffix: string;
+begin
+  if AIsMic185 then
+  begin
+    lDash := LastDelimiter('-', ATagAddress);
+    lSuffix := Copy(ATagAddress, lDash + 1, MaxInt);
+    if (lSuffix <> '') and (lSuffix[Length(lSuffix)] = '}') then
+      Delete(lSuffix, Length(lSuffix), 1);
+    Result := ANewAddress + '-' + lSuffix;
+  end
+  else
+    Result := ANewAddress + Copy(ATagAddress, Length(AOldAddress) + 1,
+      MaxInt);
+end;
+
+function RecorderSetConfiguredSourceAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ANewAddress: string; out AError: string): Boolean;
+var
+  I, J: Integer;
+  lEntry, lOtherEntry: TRecorderConfiguredDataSource;
+  lOldAddress, lNewAddress: string;
+  lTag, lOther: TRecorderTag;
+  lNewTagAddress, lOtherNewAddress: string;
+  lIsMic185: Boolean;
+begin
+  Result := False;
+  AError := '';
+  lEntry := RecorderConfiguredDataSourcesFind(ARegistry, ASourceId);
+  if lEntry = nil then
+  begin
+    AError := 'Источник не найден';
+    Exit;
+  end;
+  lOldAddress := RecorderConfiguredSourceAddress(ARegistry, ASourceId);
+  lNewAddress := Trim(ANewAddress);
+  if lNewAddress = '' then
+    lNewAddress := RecorderAutoSourceAddress(ARegistry, ASourceId);
+  if (lNewAddress = '') or (lNewAddress = '0') then
+  begin
+    AError := 'Адрес источника должен быть непустым';
+    Exit;
+  end;
+  if SameText(lOldAddress, lNewAddress) then
+  begin
+    lEntry.SourceAddress := Trim(ANewAddress);
+    Exit(True);
+  end;
+  { MIC-140 пока использует номер узла внутри аппаратного драйвера. }
+  if Pos('MIC-140', UpperCase(lEntry.ModuleType)) > 0 then
+  begin
+    AError := 'Для MIC-140 адрес пока задаётся аппаратным драйвером';
+    Exit;
+  end;
+  lIsMic185 := (Pos('MIC183/185', UpperCase(lEntry.ModuleType)) > 0) or
+    (Pos('MIC-185', UpperCase(lEntry.ModuleType)) > 0);
+  for I := 0 to RecorderConfiguredDataSourceList(ARegistry).Count - 1 do
+  begin
+    lOtherEntry := TRecorderConfiguredDataSource(
+      RecorderConfiguredDataSourceList(ARegistry)[I]);
+    if (lOtherEntry <> lEntry) and
+      SameText(RecorderConfiguredSourceAddress(ARegistry, lOtherEntry.SourceId),
+        lNewAddress) then
+    begin
+      AError := 'Адрес источника уже занят: ' + lNewAddress;
+      Exit;
+    end;
+  end;
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+      RecorderNormalizeTagSourceId(ASourceId)) or
+      not RecorderTagUsesSourceAddress(lTag.Address, lOldAddress,
+        lIsMic185) then
+      Continue;
+    lNewTagAddress := RecorderRemappedTagAddress(lTag.Address,
+      lOldAddress, lNewAddress, lIsMic185);
+    for J := 0 to ARegistry.TagCount - 1 do
+    begin
+      lOther := ARegistry.Tags[J];
+      if (lOther = lTag) or
+        not SameText(RecorderNormalizeTagSourceId(lOther.SourceId),
+          RecorderNormalizeTagSourceId(ASourceId)) then
+        Continue;
+      lOtherNewAddress := lOther.Address;
+      if RecorderTagUsesSourceAddress(lOther.Address, lOldAddress,
+        lIsMic185) then
+        lOtherNewAddress := RecorderRemappedTagAddress(lOther.Address,
+          lOldAddress, lNewAddress, lIsMic185);
+      if SameText(lOtherNewAddress, lNewTagAddress) then
+      begin
+        AError := 'Адрес тега уже занят: ' + lNewTagAddress;
+        Exit;
+      end;
+    end;
+  end;
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+      RecorderNormalizeTagSourceId(ASourceId)) and
+      RecorderTagUsesSourceAddress(lTag.Address, lOldAddress,
+        lIsMic185) then
+      lTag.Address := RecorderRemappedTagAddress(lTag.Address,
+        lOldAddress, lNewAddress, lIsMic185);
+  end;
+  lEntry.SourceAddress := Trim(ANewAddress);
+  Result := True;
+end;
+
 function RecorderTreeIndexedAddress(ARegistry: TRecorderTagRegistry;
   const ASourceId, ANativeAddress: string; AReplaceLeadingIndex: Boolean): string;
 var
   lDash: SizeInt;
-  lIndex: Integer;
+  lSourceAddress: string;
 begin
   Result := Trim(ANativeAddress);
-  lIndex := RecorderConfiguredSourceTreeIndex(ARegistry, ASourceId);
-  if (lIndex <= 0) or (Result = '') then Exit;
+  lSourceAddress := RecorderConfiguredSourceAddress(ARegistry, ASourceId);
+  if (lSourceAddress = '') or (lSourceAddress = '0') or (Result = '') then Exit;
   if AReplaceLeadingIndex then
   begin
     lDash := Pos('-', Result);
     if lDash > 0 then
-      Result := IntToStr(lIndex) + Copy(Result, lDash, MaxInt)
+      Result := lSourceAddress + Copy(Result, lDash, MaxInt)
     else
-      Result := IntToStr(lIndex) + '-' + Result;
+      Result := lSourceAddress + '-' + Result;
   end
   else
-    Result := IntToStr(lIndex) + '-' + Result;
+    Result := lSourceAddress + '-' + Result;
 end;
 
 procedure LoadRecorderConfiguredDataSources(AJson: TJSONObject;
@@ -268,6 +442,7 @@ begin
       Continue;
     lEntry := TRecorderConfiguredDataSource.Create;
     lEntry.SourceId := RecorderNormalizeTagSourceId(lItem.Get('sourceId', ''));
+    lEntry.SourceAddress := Trim(lItem.Get('sourceAddress', ''));
     lEntry.ModuleType := lItem.Get('moduleType', '');
     lEntry.Enabled := lItem.Get('enabled', True);
     lEntry.DefaultPollFrequencyHz := lItem.Get('defaultPollFrequencyHz', 0.0);
@@ -308,6 +483,7 @@ begin
     lItem := TJSONObject.Create;
     lArray.Add(lItem);
     lItem.Add('sourceId', lEntry.SourceId);
+    lItem.Add('sourceAddress', lEntry.SourceAddress);
     lItem.Add('moduleType', lEntry.ModuleType);
     lItem.Add('enabled', lEntry.Enabled);
     lItem.Add('defaultPollFrequencyHz', lEntry.DefaultPollFrequencyHz);

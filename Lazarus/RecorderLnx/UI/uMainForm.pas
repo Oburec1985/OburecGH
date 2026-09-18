@@ -36,9 +36,10 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Classes, SysUtils, Types, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
-  StrUtils, DateUtils, fpjson, jsonparser,
+  StrUtils, DateUtils, fpjson, jsonparser, LMessages,
+  {$IFDEF MSWINDOWS}Windows,{$ENDIF}
   uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
   uRecorderPluginApi,
@@ -61,7 +62,8 @@ uses
   uRecorderMeasurementSectionView, uRecorderTrendView,
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
-  uRecorderCoordinatorProtocol, uRecorderCoordinatorClient;
+  uRecorderCoordinatorProtocol, uRecorderCoordinatorClient,
+  uRecorderWindowDragTrace;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
@@ -79,7 +81,7 @@ type
     btnSaveConfig: TSpeedButton;
     btnSqlDb: TSpeedButton;
     cbSqlDbRecording: TCheckBox;
-    btnSaveConfigAs: TSpeedButton;                 // Кнопка сохранения текущей конфигурации проекта
+    btnSaveConfigAs: TSpeedButton;               // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
     edTagSearch: TEdit;                          // Поле поиска (фильтрации) тегов
@@ -123,6 +125,8 @@ type
     procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
   private
+    fWindowDragTrace: TRecorderWindowDragTrace;
+    fWindowDragPausedTimers: Boolean;
     // Фабрики и менеджеры управления графическими элементами мнемосхем
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
     fPluginRuntime: TRecorderPluginRuntime;
@@ -213,6 +217,7 @@ type
       const ACaption: string = ''; AImageWidth: Integer = 25): TSpeedButton;
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
+    procedure AddPluginLog(const AMessage: string);
     procedure LogStartupPaths;
     procedure ReportSqlDbError;
     procedure SqlDbSignalsDeleted(ASignalNames: TStrings);
@@ -404,6 +409,8 @@ type
       ATags: TList);
     procedure UpdateActiveSourceIds;
     procedure LogConfigurationResult(AResult: TRecorderConfigurationResult);
+  protected
+    procedure WndProc(var TheMessage: TLMessage); override;
   public
     procedure OpenRecordSession;
     procedure CloseRecordSession;
@@ -440,12 +447,49 @@ const
 
 { TMainForm }
 
+procedure TMainForm.WndProc(var TheMessage: TLMessage);
+begin
+  {$IFDEF MSWINDOWS}
+  if TheMessage.msg = WM_ENTERSIZEMOVE then
+  begin
+    { Windows enters a nested move loop while the form is dragged. Do not let
+      periodic rendering and plugin work compete with that loop: stale frames
+      are what appear as a second, slowly following window. Data acquisition
+      threads continue; only GUI timers are paused. }
+    fWindowDragPausedTimers := True;
+    if fUiUpdateTimer <> nil then fUiUpdateTimer.Enabled := False;
+    if fDataConsumeTimer <> nil then fDataConsumeTimer.Enabled := False;
+    if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := False;
+    if fAutoPreviewTimer <> nil then fAutoPreviewTimer.Enabled := False;
+  end;
+  {$ENDIF}
+  if fWindowDragTrace <> nil then
+    fWindowDragTrace.HandleMessage(Self, TheMessage);
+  inherited WndProc(TheMessage);
+  {$IFDEF MSWINDOWS}
+  if (TheMessage.msg = WM_EXITSIZEMOVE) and fWindowDragPausedTimers then
+  begin
+    fWindowDragPausedTimers := False;
+    if (fRecorder <> nil) and (fRecorder.DataSources <> nil) and
+      fRecorder.DataSources.Running then
+    begin
+      if fDataConsumeTimer <> nil then fDataConsumeTimer.Enabled := True;
+      if fUiUpdateTimer <> nil then fUiUpdateTimer.Enabled := True;
+    end;
+    if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := True;
+    if fAutoPreviewTimer <> nil then fAutoPreviewTimer.Enabled := True;
+    if fBaseChartsPanel <> nil then fBaseChartsPanel.Invalidate;
+  end;
+  {$ENDIF}
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   lPopupMenu: TPopupMenu;
   lMenuItem: TMenuItem;
   lStageStartedAt: QWord;
 begin
+  fWindowDragTrace := TRecorderWindowDragTrace.Create('main');
   RegisterThreadName(GetThreadID, 'UIThread');
   Caption := CRecorderLnxCaption;
   KeyPreview := True;
@@ -476,7 +520,9 @@ begin
   fComponentFactory.RegisterDefaultComponents;
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
-  fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory);
+  fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory,
+    fRecorder.TagRegistry);
+  fPluginRuntime.OnLogMessage := @AddPluginLog;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
   fFormManager := TRecorderFormManager.Create;
@@ -659,6 +705,7 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(fWindowDragTrace);
   if fCoordinatorTimer <> nil then
     fCoordinatorTimer.Enabled := False;
   FreeAndNil(fScheduledCoordinatorCommand);
@@ -1298,7 +1345,7 @@ begin
       lSourcesWereRunning := fRecorder.DataSources.Running;
       lDataSourcesChanged := False;
       if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
-        ilTagDialogButtons, lDataSourcesChanged) then
+        ilTagDialogButtons, lDataSourcesChanged, fPluginRuntime) then
       begin
         lDataUpdateChanged := lOldDataUpdateMs <>
           fRecorder.RunSettings.DataUpdateMs;
@@ -1540,6 +1587,11 @@ begin
   if (mmLog <> nil) and LogKindVisible(AKind) then
     mmLog.Lines.Add(lLine);
   RecorderDebugLog(lLine);
+end;
+
+procedure TMainForm.AddPluginLog(const AMessage: string);
+begin
+  AddLog(AMessage, rlkSystem);
 end;
 
 procedure TMainForm.EnsureLogFilterPanel;
@@ -1931,6 +1983,8 @@ begin
   fComponentPalette.AllowAllUp := True;
   fComponentPalette.ConfigureGroup(CRecorderPaletteGroupCharts, 'Графики',
     'Графики', 'trend');
+  fComponentPalette.ConfigureGroup(CRecorderPaletteGroupIndicators,
+    'Индикаторы', 'Индикаторы', 'digital-indicator');
   lNextLeft := fComponentPalette.Build(38);
   for I := 0 to fEditorToolbar.ControlCount - 1 do
     if fEditorToolbar.Controls[I] is TSpeedButton then
@@ -2424,6 +2478,8 @@ var
   lFiles: TRecorderProjectFileSet;
 begin
   fProjectConfigDir := IncludeTrailingPathDelimiter(ExpandFileName(ADirectoryName));
+  if fPluginRuntime <> nil then
+    fPluginRuntime.ProjectDirectory := fProjectConfigDir;
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
   fRunControlFileName := lFiles.RunControlFileName;
 
@@ -2523,7 +2579,7 @@ var
   lPoint: TPoint;
 begin
   EnsureConfigPopupMenu;
-  lPoint := btnSaveConfigAs.ClientToScreen(Point(0, btnSaveConfigAs.Height));
+  lPoint := btnSaveConfigAs.ClientToScreen(Types.Point(0, btnSaveConfigAs.Height));
   fConfigPopupMenu.PopUp(lPoint.X, lPoint.Y);
 end;
 
@@ -2914,7 +2970,9 @@ begin
         fRecorder.AlarmEngine.Reset;
       lChanges.AfterState := fConfigurationService.CaptureState;
       lChanges.AfterPrimarySourceId := lTag.SourceId;
-      lChanges.SourcesChanged := True;
+      lChanges.SourcesChanged :=
+        lChanges.BeforeState.Signature(lChanges.BeforePrimarySourceId) <>
+        lChanges.AfterState.Signature(lChanges.AfterPrimarySourceId);
       lChanges.EnsureRuntimeSources := True;
       lResult := fConfigurationService.Apply(lChanges);
       try
@@ -3638,6 +3696,7 @@ begin
   else if SameText(AIconId, 'digital-indicator') then Result := CIconDigitalIndicator
   else if SameText(AIconId, 'oscillogram') then Result := CIconOscillogram
   else if SameText(AIconId, 'trend') then Result := CIconTrends
+  else if SameText(AIconId, 'donut') then Result := CIconDonut
   else if SameText(AIconId, 'spectrum') then Result := CIconSpectrum
   else if SameText(AIconId, 'image') then Result := CIconImageComponent
   else if SameText(AIconId, 'button') then Result := CIconButton

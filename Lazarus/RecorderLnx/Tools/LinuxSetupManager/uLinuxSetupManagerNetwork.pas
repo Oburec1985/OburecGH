@@ -30,6 +30,9 @@ const
   CSystemProxy = '/etc/environment.d/90-recorderlnx-proxy.conf';
   CUserProxy = '.config/environment.d/90-recorderlnx-proxy.conf';
   CTimeServers = '/etc/systemd/timesyncd.conf.d/90-recorderlnx.conf';
+  CChronySetup = '/etc/chrony/conf.d/90-linuxsetupmanager.conf';
+  CPrivateChrony = '/opt/mera/RecorderLnx/chronyd-private';
+  CPrivateChronyConfig = '/opt/mera/RecorderLnx/chrony-server.conf';
 
 type
   TNetworkConfig = record
@@ -541,12 +544,23 @@ begin
 end;
 
 function ExecuteTimeSetup(AArgs: TStrings; out AOutput: string): Integer;
-var lAction, lSub, lServers, lFallback, lText, lError: string;
+var lAction, lSub, lServers, lFallback, lText, lError, lConfig: string;
 begin
   Result := 2; AOutput := '';
   if AArgs.Count = 0 then begin AOutput := 'Нужна команда времени.'; Exit; end;
   lAction := AArgs[0];
-  if lAction = 'show' then Exit(RunCommand('timedatectl', ['status'], AOutput));
+  if lAction = 'show' then
+  begin
+    Result := RunCommand('timedatectl', ['status'], AOutput);
+    if RunCommand('systemctl', ['is-active', '--quiet', 'chrony.service'], lText) = 0 then
+    begin
+      if RunCommand('chronyc', ['tracking'], lText) = 0 then
+        AOutput := AOutput + LineEnding + lText;
+      if RunCommand('chronyc', ['sources', '-v'], lText) = 0 then
+        AOutput := AOutput + LineEnding + lText;
+    end;
+    Exit;
+  end;
   if lAction = 'list-timezones' then
     Exit(RunCommand('timedatectl', ['list-timezones'], AOutput));
   {$IFDEF UNIX}
@@ -567,6 +581,71 @@ begin
     else begin AOutput := 'Укажите enable или disable.'; Exit; end;
     Exit(RunCommand('timedatectl', ['set-ntp', lSub], AOutput));
   end;
+  if (lAction = 'ntp-server') or (lAction = 'ntp-client') then
+  begin
+    if AArgs.Count <> 2 then
+    begin AOutput := 'Укажите подсеть клиентов или хост NTP-сервера.'; Exit; end;
+    if lAction = 'ntp-server' then
+    begin
+      if not IsCidr(AArgs[1]) then
+      begin AOutput := 'Укажите подсеть IPv4/CIDR, например 192.168.1.0/24.'; Exit; end;
+      lConfig := 'allow ' + AArgs[1] + LineEnding +
+        'local stratum 10' + LineEnding;
+    end
+    else
+    begin
+      if not IsSafeName(AArgs[1]) then
+      begin AOutput := 'Недопустимый хост NTP-сервера.'; Exit; end;
+      lText := '[Time]' + LineEnding + 'NTP=' + LineEnding +
+        'NTP=' + AArgs[1] + LineEnding + 'FallbackNTP=' + LineEnding;
+      if not SaveFile(CTimeServers, lText, 420, lError) then
+      begin AOutput := lError; Exit; end;
+      Result := RunCommand('systemctl',
+        ['restart', 'systemd-timesyncd.service'], AOutput);
+      if Result = 0 then
+        Result := RunCommand('timedatectl', ['set-ntp', 'true'], AOutput);
+      if Result = 0 then AOutput := 'NTP-клиент настроен: ' + AArgs[1];
+      Exit;
+    end;
+    if (lAction = 'ntp-server') and FileExists(CPrivateChrony) then
+    begin
+      lConfig := lConfig + 'cmdport 0' + LineEnding +
+        'pidfile /run/recorderlnx-ntp-server.pid' + LineEnding;
+      if not SaveFile(CPrivateChronyConfig, lConfig, 420, lError) then
+      begin AOutput := lError; Exit; end;
+      Result := RunCommand(CPrivateChrony,
+        ['-p', '-f', CPrivateChronyConfig], AOutput);
+      if Result <> 0 then Exit;
+      Result := RunCommand('systemctl',
+        ['enable', '--now', 'recorderlnx-ntp-server.service'], AOutput);
+      if Result <> 0 then Exit;
+      Result := RunCommand('systemctl',
+        ['restart', 'recorderlnx-ntp-server.service'], AOutput);
+      if Result = 0 then AOutput := 'NTP-сервер настроен: ' + AArgs[1];
+      Exit;
+    end;
+    if not FileExists('/usr/sbin/chronyd') and not FileExists('/usr/bin/chronyd') then
+    begin AOutput := 'Chrony не установлен. Установите пакет chrony.'; Exit; end;
+    if not SaveFile(CChronySetup, lConfig, 420, lError) then
+    begin AOutput := lError; Exit; end;
+    RunCommand('systemctl', ['disable', '--now', 'systemd-timesyncd.service'], lText);
+    Result := RunCommand('systemctl', ['enable', '--now', 'chrony.service'], AOutput);
+    if Result <> 0 then Exit;
+    Result := RunCommand('systemctl', ['restart', 'chrony.service'], AOutput);
+    if Result <> 0 then Exit;
+    if lAction = 'ntp-server' then
+    begin
+      if RunCommand('ufw', ['status'], lText) = 0 then
+        if Pos('Status: active', lText) > 0 then
+        begin
+          Result := RunCommand('ufw', ['allow', 'from', AArgs[1],
+            'to', 'any', 'port', '123', 'proto', 'udp'], AOutput);
+          if Result <> 0 then Exit;
+        end;
+    end;
+    AOutput := 'Chrony настроен: ' + lConfig;
+    Exit;
+  end;
   if lAction = 'ntp-servers' then
   begin
     if AArgs.Count < 2 then begin AOutput := 'Укажите список серверов.'; Exit; end;
@@ -581,8 +660,9 @@ begin
     if not IsSafeServerList(lServers) or
       ((lFallback <> '') and not IsSafeServerList(lFallback)) then
     begin AOutput := 'Недопустимый NTP-сервер.'; Exit; end;
-    lText := '[Time]' + LineEnding + 'NTP=' +
+    lText := '[Time]' + LineEnding + 'NTP=' + LineEnding + 'NTP=' +
       StringReplace(lServers, ',', ' ', [rfReplaceAll]) + LineEnding;
+    lText := lText + 'FallbackNTP=' + LineEnding;
     if lFallback <> '' then lText := lText + 'FallbackNTP=' +
       StringReplace(lFallback, ',', ' ', [rfReplaceAll]) + LineEnding;
     if not SaveFile(CTimeServers, lText, 420, lError) then

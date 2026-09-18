@@ -31,6 +31,7 @@ type
     fProjectConfigDir: string;
     fEditButton: TSpeedButton;
     fChartToolGroup: TRecorderComponentToolGroup;
+    fIndicatorToolGroup: TRecorderComponentToolGroup;
     fDeleteButton: TSpeedButton;
     fOnAttach: TNotifyEvent;
     fOnChanged: TNotifyEvent;
@@ -50,6 +51,7 @@ type
     procedure AddSqlTrendClick(Sender: TObject);
     procedure AddSectionClick(Sender: TObject);
     procedure AddSpectrumClick(Sender: TObject);
+    procedure AddDonutClick(Sender: TObject);
     procedure AddImageClick(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
     procedure EditClick(Sender: TObject);
@@ -107,11 +109,15 @@ begin
   fChartToolGroup.AddCommand('Тренд', CIconTrends, @AddTrendClick);
   fChartToolGroup.AddCommand('SQL-тренд', CIconTrends, @AddSqlTrendClick);
   fChartToolGroup.AddCommand('Спектр', CIconSpectrum, @AddSpectrumClick);
+  fIndicatorToolGroup := TRecorderComponentToolGroup.Create(Self, fToolbar,
+    fImages, 106, CIconDigitalIndicator, 'Индикаторы');
+  fIndicatorToolGroup.AddCommand('Цифровой индикатор',
+    CIconDigitalIndicator, @AddValueClick);
+  fIndicatorToolGroup.AddCommand('Круговая гистограмма', CIconDonut,
+    @AddDonutClick);
   AddToolButton(282, CIconMeasurementSection,
     'Добавить измерительное сечение', @AddSectionClick);
   AddToolButton(72, CIconTextLabel, 'Add text label', @AddTextClick);
-  AddToolButton(106, CIconDigitalIndicator, 'Add digital indicator',
-    @AddValueClick);
   AddToolButton(140, CIconImageComponent, 'Добавить картинку',
     @AddImageClick);
   AddToolButton(180, CIconTagTable, 'Add tag table', nil, 0, False, False);
@@ -264,6 +270,11 @@ end;
 procedure TDetachedMnemonicForm.AddSpectrumClick(Sender: TObject);
 begin
   AddComponent(TRecorderSpectrumComponent.TypeId, 'Spectrum', 400, 300);
+end;
+
+procedure TDetachedMnemonicForm.AddDonutClick(Sender: TObject);
+begin
+  AddComponent(TRecorderDonutComponent.TypeId, 'Donut', 300, 260);
 end;
 
 procedure TDetachedMnemonicForm.AddImageClick(Sender: TObject);

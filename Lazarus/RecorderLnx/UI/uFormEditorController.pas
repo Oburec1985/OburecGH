@@ -724,7 +724,10 @@ begin
     TRecorderTrendComponent(ADest).AssignTrend(TRecorderTrendComponent(ASource))
   else if (ASource is TRecorderSpectrumComponent) and
     (ADest is TRecorderSpectrumComponent) then
-    TRecorderSpectrumComponent(ADest).Assign(TRecorderSpectrumComponent(ASource));
+    TRecorderSpectrumComponent(ADest).Assign(TRecorderSpectrumComponent(ASource))
+  else if (ASource is TRecorderDonutComponent) and
+    (ADest is TRecorderDonutComponent) then
+    TRecorderDonutComponent(ADest).AssignDonut(TRecorderDonutComponent(ASource));
 end;
 
 
@@ -1112,6 +1115,8 @@ begin
         lControl.Visible := True;
         if lControl is TRecorderImageView then
           TRecorderImageView(lControl).EditMode := fEnabled;
+        if lControl is TRecorderInputFieldView then
+          TRecorderInputFieldView(lControl).EditMode := fEnabled;
         if lControl is TRecorderButtonView then
           TRecorderButtonView(lControl).EditMode := fEnabled;
         if lControl is TRecorderMeasurementSectionView then
@@ -1134,9 +1139,14 @@ begin
           if lChart <> nil then
           begin
             lChart.Tag := I;
-            lChart.OnMouseDown := @ComponentMouseDown;
-            lChart.OnMouseMove := @ChildMouseMove;
-            lChart.OnMouseUp := @ComponentMouseUp;
+            { В режиме просмотра осциллограмма сама обрабатывает мышь:
+              захват курсора уровня нельзя подменять обработчиками редактора. }
+            if fEnabled or not (lControl is TRecorderOglOscillogram) then
+            begin
+              lChart.OnMouseDown := @ComponentMouseDown;
+              lChart.OnMouseMove := @ChildMouseMove;
+              lChart.OnMouseUp := @ComponentMouseUp;
+            end;
             lChart.MouseInputEnabled := not fEnabled;
           end;
 
@@ -1148,6 +1158,14 @@ begin
               '[MNEMO-PERF] component=%s class=%s create=%dms configure=%dms refresh=%dms',
               [lComponent.Name, lControlClass.ClassName, lCreateMs,
                lConfigureMs, lRefreshMs]));
+        end;
+
+        if fEnabled and (lControl is TRecorderInputFieldView) then
+        begin
+          { The existing component panel owns the editor mouse handlers.
+            Hide the native edit so GTK cannot capture a text-selection drag. }
+          lPanel.Caption := TRecorderInputFieldView(lControl).Text;
+          lControl.Visible := False;
         end;
 
         lPanel.Hint := lComponent.Factory.TypeName + ': ' + lComponent.Name;
@@ -1192,7 +1210,8 @@ begin
         begin
           lCtrl := lPanel.Controls[0];
           lCtrl.Enabled := True;
-          lCtrl.Visible := True;
+          lCtrl.Visible := not (fEnabled and
+            (lCtrl is TRecorderInputFieldView));
           if not fEnabled then
           begin
             lPanel.Cursor := crDefault;
@@ -1208,6 +1227,8 @@ begin
           end;
           if lCtrl is TRecorderButtonView then
             TRecorderButtonView(lCtrl).EditMode := fEnabled;
+          if lCtrl is TRecorderInputFieldView then
+            TRecorderInputFieldView(lCtrl).EditMode := fEnabled;
           if lCtrl is TRecorderMeasurementSectionView then
             TRecorderMeasurementSectionView(lCtrl).EditMode := fEnabled;
           if Supports(lCtrl, IVForm, lVisualCtrl) then
@@ -1224,6 +1245,8 @@ begin
             if lCtrl is TRecorderTagValueView then
               TRecorderTagValueView(lCtrl).AlarmEngine := fAlarmEngine;
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
+            if fEnabled and (lCtrl is TRecorderInputFieldView) then
+              lPanel.Caption := TRecorderInputFieldView(lCtrl).Text;
           end;
 
         end;

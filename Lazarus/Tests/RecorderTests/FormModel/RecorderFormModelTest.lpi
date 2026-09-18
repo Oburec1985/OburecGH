@@ -35,7 +35,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../SharedUtils;../../../SharedUtils/components/chart_lzr"/>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../SharedUtils;../../../SharedUtils/components/chart_lzr"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

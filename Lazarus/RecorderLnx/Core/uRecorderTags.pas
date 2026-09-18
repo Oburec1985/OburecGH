@@ -437,6 +437,8 @@ type
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTagGroupPaths: TStringList;                      { Пользовательские группы дерева тегов }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
+    fLoadedTagIdAliases: TStringList;
+    fLoadedTagNameAliases: TStringList;
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
     fFrequencyBands: TRecorderFrequencyBandList;
@@ -451,6 +453,7 @@ type
     function GetTagCount: Integer;
     procedure MarkRuntimeDataUpdated(ATimeSec: Double);
     procedure RemoveTagReferences(ATag: TRecorderTag);
+    procedure RemoveLoadedTagAliases(ATag: TRecorderTag);
     function ResolvePublishTime(ATimeSec: Double): Double;
   public
     { AEventBus - шина событий. Владение не передается, может быть nil. }
@@ -472,6 +475,10 @@ type
 
     { Ищет тег по имени без учета регистра. Возвращает nil, если тег не найден. }
     function FindByName(const AName: string): TRecorderTag;
+    { Resolves saved references to a duplicate omitted during project loading.
+      Aliases are runtime-only and do not own the target tag. }
+    procedure RegisterLoadedTagAlias(AOldId: TRecorderTagId;
+      const AOldName: string; ATarget: TRecorderTag);
     function ContainsTag(ATag: TRecorderTag): Boolean;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
@@ -1704,6 +1711,9 @@ begin
   fTagGroupPaths.Sorted := True;
   fTagGroupPaths.Duplicates := dupIgnore;
   fTags := TList.Create;
+  fLoadedTagIdAliases := TStringList.Create;
+  fLoadedTagNameAliases := TStringList.Create;
+  fLoadedTagNameAliases.CaseSensitive := False;
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
@@ -1725,6 +1735,8 @@ begin
   fTagGroupPaths.Free;
   fActiveSourceIds.Free;
   fTags.Free;
+  fLoadedTagNameAliases.Free;
+  fLoadedTagIdAliases.Free;
   DoneCriticalSection(fRuntimeDataLock);
   inherited Destroy;
 end;
@@ -1849,6 +1861,9 @@ begin
   for I := 0 to fTags.Count - 1 do
     if GetTag(I).Id = AId then
       Exit(GetTag(I));
+  I := fLoadedTagIdAliases.IndexOf(IntToStr(AId));
+  if I >= 0 then
+    Result := TRecorderTag(fLoadedTagIdAliases.Objects[I]);
 end;
 
 function TRecorderTagRegistry.FindByName(const AName: string): TRecorderTag;
@@ -1859,6 +1874,40 @@ begin
   for I := 0 to fTags.Count - 1 do
     if SameText(GetTag(I).Name, AName) then
       Exit(GetTag(I));
+  I := fLoadedTagNameAliases.IndexOf(AName);
+  if I >= 0 then
+    Result := TRecorderTag(fLoadedTagNameAliases.Objects[I]);
+end;
+
+procedure TRecorderTagRegistry.RegisterLoadedTagAlias(
+  AOldId: TRecorderTagId; const AOldName: string; ATarget: TRecorderTag);
+var
+  lIndex: Integer;
+  lIdText: string;
+  lName: string;
+begin
+  if not ContainsTag(ATarget) then
+    raise ERecorderTagError.Create('Loaded tag alias target is not registered');
+
+  if AOldId <> ATarget.Id then
+  begin
+    lIdText := IntToStr(AOldId);
+    lIndex := fLoadedTagIdAliases.IndexOf(lIdText);
+    if lIndex < 0 then
+      fLoadedTagIdAliases.AddObject(lIdText, ATarget)
+    else
+      fLoadedTagIdAliases.Objects[lIndex] := ATarget;
+  end;
+
+  lName := Trim(AOldName);
+  if (lName <> '') and not SameText(lName, ATarget.Name) then
+  begin
+    lIndex := fLoadedTagNameAliases.IndexOf(lName);
+    if lIndex < 0 then
+      fLoadedTagNameAliases.AddObject(lName, ATarget)
+    else
+      fLoadedTagNameAliases.Objects[lIndex] := ATarget;
+  end;
 end;
 
 function TRecorderTagRegistry.ContainsTag(ATag: TRecorderTag): Boolean;
@@ -2518,9 +2567,22 @@ begin
   if ATag <> nil then
   begin
     RemoveTagReferences(ATag);
+    RemoveLoadedTagAliases(ATag);
     fTags.Remove(ATag);
     ATag.Free;
   end;
+end;
+
+procedure TRecorderTagRegistry.RemoveLoadedTagAliases(ATag: TRecorderTag);
+var
+  I: Integer;
+begin
+  for I := fLoadedTagIdAliases.Count - 1 downto 0 do
+    if fLoadedTagIdAliases.Objects[I] = ATag then
+      fLoadedTagIdAliases.Delete(I);
+  for I := fLoadedTagNameAliases.Count - 1 downto 0 do
+    if fLoadedTagNameAliases.Objects[I] = ATag then
+      fLoadedTagNameAliases.Delete(I);
 end;
 
 procedure TRecorderTagRegistry.RemoveTagsBySourceId(const ASourceId: string);
@@ -2561,6 +2623,8 @@ procedure TRecorderTagRegistry.Clear;
 var
   I: Integer;
 begin
+  fLoadedTagIdAliases.Clear;
+  fLoadedTagNameAliases.Clear;
   for I := 0 to fTags.Count - 1 do
     TObject(fTags[I]).Free;
   fTags.Clear;

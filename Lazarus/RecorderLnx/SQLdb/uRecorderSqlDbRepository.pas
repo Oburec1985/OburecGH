@@ -106,6 +106,8 @@ type
     procedure ReadTrendPoints(ASignalNames: TStrings; AFromUtc, AToUtc: Double;
       AMaxPointsPerSignal: Integer; out APoints: TRecorderSqlTrendPoints;
       AExcludeFrom: Boolean = False);
+    procedure ReadAllTrendPoints(ASignalNames: TStrings; AFromUtc, AToUtc: Double;
+      out APoints: TRecorderSqlTrendPoints);
     function CountRows(const ATableName: string): Int64;
     property Connection: TSQLConnection read fConnection;
   end;
@@ -492,6 +494,86 @@ begin
     end;
   finally
     lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ReadAllTrendPoints(ASignalNames: TStrings;
+  AFromUtc, AToUtc: Double; out APoints: TRecorderSqlTrendPoints);
+var
+  lQuery: TSQLQuery;
+  lName: string;
+  lCount, lCapacity, lIndex: Integer;
+
+  procedure AppendPoint;
+  begin
+    if lCount = lCapacity then
+    begin
+      if lCapacity = 0 then lCapacity := 1024
+      else if lCapacity > High(Integer) div 2 then
+        raise ERecorderSqlDbError.Create('Too many SQL trend points to export')
+      else lCapacity := lCapacity * 2;
+      SetLength(APoints, lCapacity);
+    end;
+    APoints[lCount].RowId := lQuery.Fields[0].AsString;
+    APoints[lCount].SignalName := lName;
+    APoints[lCount].TimestampUtc := lQuery.Fields[1].AsFloat;
+    APoints[lCount].Value := lQuery.Fields[2].AsFloat;
+    Inc(lCount);
+  end;
+
+  procedure ReadQuery(const ASql: string; ATime: Double;
+    AStopAfterFirst: Boolean);
+  begin
+    lQuery.Close;
+    lQuery.SQL.Text := ASql;
+    lQuery.ParamByName('signal_name').AsString := lName;
+    lQuery.ParamByName('time_limit').AsFloat := ATime;
+    if lQuery.Params.FindParam('time_to') <> nil then
+      lQuery.ParamByName('time_to').AsFloat := AToUtc;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      AppendPoint;
+      if AStopAfterFirst then Break;
+      lQuery.Next;
+    end;
+  end;
+
+begin
+  SetLength(APoints, 0);
+  if (ASignalNames = nil) or (ASignalNames.Count = 0) or
+    (AToUtc < AFromUtc) then Exit;
+  EnsureDatabase;
+  CommitAndRestart;
+  lCount := 0;
+  lCapacity := 0;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    for lIndex := 0 to ASignalNames.Count - 1 do
+    begin
+      lName := ASignalNames[lIndex];
+      ReadQuery('select v.id,v.timestamp_utc,v.measured_value ' +
+        'from signal_values v join signals s on s.id=v.signal_id ' +
+        'where s.name=:signal_name and v.measured_value is not null ' +
+        'and v.timestamp_utc<:time_limit ' +
+        'order by v.timestamp_utc desc,v.id desc', AFromUtc, True);
+      ReadQuery('select v.id,v.timestamp_utc,v.measured_value ' +
+        'from signal_values v join signals s on s.id=v.signal_id ' +
+        'where s.name=:signal_name and v.measured_value is not null ' +
+        'and v.timestamp_utc>=:time_limit ' +
+        'and v.timestamp_utc<=:time_to order by v.timestamp_utc,v.id',
+        AFromUtc, False);
+      ReadQuery('select v.id,v.timestamp_utc,v.measured_value ' +
+        'from signal_values v join signals s on s.id=v.signal_id ' +
+        'where s.name=:signal_name and v.measured_value is not null ' +
+        'and v.timestamp_utc>:time_limit ' +
+        'order by v.timestamp_utc,v.id', AToUtc, True);
+    end;
+  finally
+    lQuery.Free;
+    SetLength(APoints, lCount);
   end;
 end;
 

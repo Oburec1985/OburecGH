@@ -13,7 +13,8 @@ interface
 uses
   Classes, SysUtils, Math, gl, glext, uOglChartTypes, uOglChartBaseObj,
   uOglChartDrawObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
-  uOglChartChart, uOglChartFontMng, uOglChartLineHelper, uOglChartTextLabel, uOglChartCursor, LConvEncoding;
+  uOglChartChart, uOglChartFontMng, uOglChartLineHelper, uOglChartTextLabel, uOglChartCursor, LConvEncoding,
+  uSharedNumberFormat;
 
 type
   // Тип редактируемой интерактивной текстовой метки на графике
@@ -650,21 +651,8 @@ begin
 end;
 
 function TOpenGLChartRenderer.FormatTick(AValue, AStep: Double): string;
-
-var
-  lDigits: Integer;
 begin
-  if AStep >= 1 then
-    Result := FormatFloat('0', AValue)
-  else
-  begin
-    lDigits := Min(6, Max(0, Ceil(-Log10(AStep))));
-    if lDigits = 0 then
-      Result := FormatFloat('0', AValue)
-    else
-      Result := FormatFloat('0.' + StringOfChar('0', lDigits), AValue);
-  end;
-
+  Result := FormatSignificant(AValue);
 end;
 
 procedure TOpenGLChartRenderer.BuildLinearTicks(AMin, AMax: Double; ATargetCount: Integer; out ATicks: TChartTickArray);
@@ -740,10 +728,7 @@ begin
   // Добавляем минимальное значение в качестве первого тика
   SetLength(ATicks, 1);
   ATicks[0].Value := lOriginalMin;
-  if lOriginalMin >= 1e-5 then
-    ATicks[0].Text := FormatFloat('0.#######', lOriginalMin)
-  else
-    ATicks[0].Text := FormatFloat('0.E+0', lOriginalMin);
+  ATicks[0].Text := FormatSignificant(lOriginalMin);
   lIndex := 1;
   lMinPow := Floor(Log10(lMinVal));
   lMaxPow := Ceil(Log10(AMax));
@@ -757,12 +742,8 @@ begin
       ATicks[lIndex].Value := lValue;
       if (lOriginalMin <= 0) and (lValue <= 1.01e-10) then
         ATicks[lIndex].Text := '0'
-      else if (lValue >= 1) and (lValue < 1e6) then
-        ATicks[lIndex].Text := FormatFloat('0', lValue)
-      else if (lValue < 1) and (lValue >= 1e-5) then
-        ATicks[lIndex].Text := FormatFloat('0.#######', lValue)
       else
-        ATicks[lIndex].Text := FormatFloat('0.E+0', lValue);
+        ATicks[lIndex].Text := FormatSignificant(lValue);
       Inc(lIndex);
     end;
 
@@ -773,10 +754,7 @@ begin
   begin
     SetLength(ATicks, lIndex + 1);
     ATicks[lIndex].Value := lOriginalMax;
-    if lOriginalMax >= 1e-5 then
-      ATicks[lIndex].Text := FormatFloat('0.#######', lOriginalMax)
-    else
-      ATicks[lIndex].Text := FormatFloat('0.E+0', lOriginalMax);
+    ATicks[lIndex].Text := FormatSignificant(lOriginalMax);
   end;
 
 end;
@@ -1589,6 +1567,7 @@ var
   lMaxTextWidth, lTextWidth: Single;
   lLabelTop, lMinLabelTop, lMaxLabelTop: Single;
   lIsMinTick, lIsMaxTick, lHideTickText: Boolean;
+  lOriginalFontColor: Cardinal;
 
   function ClampYLabelTop(AY: Single; AFont: cOglFont): Single;
   var
@@ -1682,6 +1661,8 @@ begin
         lFont := fFontMng.Font(cfAxisSelected)
       else
         lFont := fFontMng.Font(cfGridTick);
+      lOriginalFontColor := lFont.Color;
+      lFont.Color := lYAxis.Color;
       lMinLabelTop := ClampYLabelTop(AxisValueToPixel(lYAxis, lYAxis.MinValue, ARect.Bottom, ARect.Top), lFont);
       lMaxLabelTop := ClampYLabelTop(AxisValueToPixel(lYAxis, lYAxis.MaxValue, ARect.Bottom, ARect.Top), lFont);
       lMaxTextWidth := 0;
@@ -1689,7 +1670,7 @@ begin
       begin
         lText := lYTicks[lIndex].Text;
         lY := AxisValueToPixel(lYAxis, lYTicks[lIndex].Value, ARect.Bottom, ARect.Top);
-        SetGLColor($FF404040);
+        SetGLColor(lYAxis.Color);
         glLineWidth(1);
         DrawLine(lX, lY, lX - CTick, lY);
         lTextWidth := lFont.TextPixelWidth(lText);
@@ -1712,6 +1693,7 @@ begin
       if lMaxTextWidth < 30.0 then
         lMaxTextWidth := 30.0;
       lAxisOffset := lAxisOffset + lMaxTextWidth + 15;
+      lFont.Color := lOriginalFontColor;
     end;
 
 end;

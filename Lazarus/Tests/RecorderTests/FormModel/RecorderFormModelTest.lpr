@@ -196,6 +196,13 @@ begin
     lOsc.TagName := 'AbsTag';
     lOsc.BindingMode := rtbmAbsoluteTag;
     lOsc.TagOffset := 3;
+    lOsc.ClosedInput := True;
+    lOsc.AddAxis.Name := 'Y2';
+    lOsc.Axes[1].YScale := 2.5;
+    lOsc.Axes[1].YOffset := 4.0;
+    lOsc.PrimaryAxisIndex := 1;
+    lOsc.AddLine.TagName := 'OtherSourceTag';
+    lOsc.Lines[0].AxisIndex := 1;
     lOsc.SetBounds(10, 20, 300, 180);
     lPage.AddComponent(lOsc);
 
@@ -211,6 +218,16 @@ begin
     AssertEquals(Ord(lLoadedOsc.BindingMode), Ord(rtbmAbsoluteTag),
       'loaded osc binding mode');
     AssertEquals(lLoadedOsc.TagOffset, 3, 'loaded osc tag offset');
+    AssertTrue(lLoadedOsc.ClosedInput, 'loaded osc closed input');
+    AssertEquals(lLoadedOsc.AxisCount, 2, 'loaded osc axis count');
+    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 1, 'loaded osc primary axis');
+    AssertTrue(Abs(lLoadedOsc.Axes[1].YScale - 2.5) < 1E-9,
+      'loaded osc second axis scale');
+    AssertTrue(Abs(lLoadedOsc.Axes[1].YOffset - 4.0) < 1E-9,
+      'loaded osc second axis offset');
+    AssertEquals(lLoadedOsc.LineCount, 1, 'loaded osc line count');
+    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 1,
+      'loaded osc line axis');
     Writeln('GUI config oscillogram binding test passed.');
   finally
     lManager.Free;

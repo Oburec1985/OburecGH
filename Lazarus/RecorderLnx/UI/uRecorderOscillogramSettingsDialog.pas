@@ -4,8 +4,7 @@ unit uRecorderOscillogramSettingsDialog;
   Диалог настройки осциллограммы на пользовательской мнемосхеме.
 
   UI показывает единый список каналов: первый добавленный канал — синяя линия,
-  второй — зелёная, третий — красная. Ограничение выбора каналами того же
-  аппаратного модуля выполняется существующей фильтрацией реестра тегов.
+  второй — зелёная, третий — красная. Каналы разных устройств допустимы.
 
   Для совместимости проекта первая линия хранится в TagName компонента, а
   остальные — в Lines[]. Это внутренняя деталь модели: отдельной пользовательской
@@ -39,6 +38,7 @@ type
     fDraft: TRecorderOscillogramComponent;
     fTagRegistry: TRecorderTagRegistry;
     fSelectedLine: Integer;
+    fSelectedAxis: Integer;
     fUpdating: Boolean;
 
     fTagSearchEdit: TEdit;
@@ -50,6 +50,14 @@ type
     fDeleteLineButton: TButton;
     fLineColorSwatch: TRecorderColorSwatch;
     fLineVisibleCheck: TCheckBox;
+    fAxisCombo: TComboBox;
+    fNewAxisButton: TButton;
+    fXScaleEdit: TEdit;
+    fYScaleEdit: TEdit;
+    fYOffsetEdit: TEdit;
+    fTriggerCombo: TComboBox;
+    fTriggerCheck: TCheckBox;
+    fTriggerLevelEdit: TEdit;
     fOkButton: TButton;
     fCancelButton: TButton;
 
@@ -59,6 +67,11 @@ type
     procedure DeleteLineClick(Sender: TObject);
     procedure FillPrimaryTagCombo(const AFilter: string);
     procedure LineSelectionChange(Sender: TObject);
+    procedure AxisComboChange(Sender: TObject);
+    procedure NewAxisClick(Sender: TObject);
+    procedure RefreshAxisCombo;
+    procedure LoadAxisControls(AIndex: Integer);
+    procedure StoreAxisControls;
     procedure SelectPrimaryTag(const ATagName: string);
     procedure SyncDraftLineNames;
     procedure LoadFromComponent;
@@ -69,7 +82,7 @@ type
     procedure StoreLineControls;
     procedure StoreToComponent;
     procedure RefreshLineList;
-    function ValidateSourceIds: Boolean;
+    function ValidateChannels: Boolean;
     procedure UpdatePrimaryTagVisibility;
   public
     constructor CreateDialog(AOwner: TComponent;
@@ -102,11 +115,12 @@ begin
   fTagRegistry := ATagRegistry;
   fDraft := TRecorderOscillogramComponent.Create;
   fSelectedLine := -1;
+  fSelectedAxis := 0;
   Caption := 'Настройка осциллограммы - ' + AComponent.Name;
   BorderStyle := bsDialog;
   Position := poOwnerFormCenter;
   ClientWidth := 560;
-  ClientHeight := 456;
+  ClientHeight := 630;
   BuildUi;
   LoadFromComponent;
 end;
@@ -207,7 +221,67 @@ begin
   fLineVisibleCheck.Parent := Self;
   fLineVisibleCheck.SetBounds(130, lTop + 2, 120, 20);
   fLineVisibleCheck.Caption := 'Видимая';
-  Inc(lTop, 44);
+  Inc(lTop, 34);
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(12, lTop + 4, 80, 16);
+  lLabel.Caption := 'Ось канала:';
+  fAxisCombo := TComboBox.Create(Self);
+  fAxisCombo.Parent := Self;
+  fAxisCombo.SetBounds(130, lTop, 160, 23);
+  fAxisCombo.Style := csDropDownList;
+  fAxisCombo.OnChange := @AxisComboChange;
+  fNewAxisButton := TButton.Create(Self);
+  fNewAxisButton.Parent := Self;
+  fNewAxisButton.SetBounds(300, lTop, 130, 25);
+  fNewAxisButton.Caption := 'В новую ось';
+  fNewAxisButton.OnClick := @NewAxisClick;
+  Inc(lTop, 34);
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(12, lTop + 4, 120, 16);
+  lLabel.Caption := 'XScale, с:';
+  fXScaleEdit := TEdit.Create(Self);
+  fXScaleEdit.Parent := Self;
+  fXScaleEdit.SetBounds(130, lTop, 90, 23);
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(260, lTop + 4, 105, 16);
+  lLabel.Caption := 'Масштаб оси:';
+  fYScaleEdit := TEdit.Create(Self);
+  fYScaleEdit.Parent := Self;
+  fYScaleEdit.SetBounds(370, lTop, 80, 23);
+  Inc(lTop, 32);
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(12, lTop + 4, 120, 16);
+  lLabel.Caption := 'Сдвиг оси Y:';
+  fYOffsetEdit := TEdit.Create(Self);
+  fYOffsetEdit.Parent := Self;
+  fYOffsetEdit.SetBounds(130, lTop, 90, 23);
+  Inc(lTop, 32);
+
+  fTriggerCheck := TCheckBox.Create(Self);
+  fTriggerCheck.Parent := Self;
+  fTriggerCheck.SetBounds(12, lTop + 2, 120, 20);
+  fTriggerCheck.Caption := 'Триггер';
+  fTriggerCombo := TComboBox.Create(Self);
+  fTriggerCombo.Parent := Self;
+  fTriggerCombo.SetBounds(130, lTop, 310, 23);
+  fTriggerCombo.Style := csDropDownList;
+  Inc(lTop, 32);
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(12, lTop + 4, 120, 16);
+  lLabel.Caption := 'Уровень:';
+  fTriggerLevelEdit := TEdit.Create(Self);
+  fTriggerLevelEdit.Parent := Self;
+  fTriggerLevelEdit.SetBounds(130, lTop, 90, 23);
+  Inc(lTop, 35);
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
@@ -228,7 +302,6 @@ procedure TRecorderOscillogramSettingsDialog.FillPrimaryTagCombo(
 var
   I: Integer;
   lFilter: string;
-  lPrimary: TRecorderTag;
   lTag: TRecorderTag;
   lCurrent: string;
   lSearchText: string;
@@ -237,7 +310,6 @@ begin
   if fTagCombo = nil then
     Exit;
   lCurrent := fDraft.TagName;
-  lPrimary := fTagRegistry.FindByName(fDraft.TagName);
   lWasUpdating := fUpdating;
   fUpdating := True;
   fTagCombo.Items.BeginUpdate;
@@ -248,8 +320,7 @@ begin
     begin
       lTag := fTagRegistry.Tags[I];
       lSearchText := LowerCase(lTag.Name + ' ' + lTag.Address + ' ' + lTag.Description);
-      if ((lPrimary = nil) or SameText(lTag.SourceId, lPrimary.SourceId)) and
-        ((lFilter = '') or (Pos(lFilter, lSearchText) > 0)) then
+      if (lFilter = '') or (Pos(lFilter, lSearchText) > 0) then
         fTagCombo.Items.AddObject(lTag.Name, lTag);
     end;
     fTagCombo.ItemIndex := -1;
@@ -314,13 +385,26 @@ begin
 end;
 
 procedure TRecorderOscillogramSettingsDialog.LoadFromComponent;
+var
+  I: Integer;
 begin
   fDraft.AssignOscillogram(fComponent);
   fDraft.TagName := fComponent.TagName;
   SyncDraftLineNames;
   fBindingModeCombo.ItemIndex := Ord(fDraft.BindingMode);
   fTagOffsetEdit.Text := IntToStr(fDraft.TagOffset);
+  fXScaleEdit.Text := FloatToStr(fDraft.XScale);
+  fTriggerCheck.Checked := fDraft.TriggerEnabled;
+  fTriggerLevelEdit.Text := FloatToStr(fDraft.TriggerLevel);
+  fTriggerCombo.Items.Clear;
+  fTriggerCombo.Items.Add('');
+  for I := 0 to fTagRegistry.TagCount - 1 do
+    fTriggerCombo.Items.Add(fTagRegistry.Tags[I].Name);
+  fTriggerCombo.ItemIndex := fTriggerCombo.Items.IndexOf(fDraft.TriggerTagName);
+  if fTriggerCombo.ItemIndex < 0 then
+    fTriggerCombo.ItemIndex := 0;
   FillPrimaryTagCombo('');
+  RefreshAxisCombo;
   RefreshLineList;
   UpdatePrimaryTagVisibility;
 end;
@@ -335,10 +419,12 @@ begin
   try
     fLineList.Items.Clear;
     if Trim(fDraft.TagName) <> '' then
-      fLineList.Items.Add(OglChartLinePaletteName(0) + ' - ' + fDraft.TagName);
+      fLineList.Items.Add(Format('[Y%d] %s - %s',
+        [fDraft.PrimaryAxisIndex + 1, OglChartLinePaletteName(0), fDraft.TagName]));
     for I := 0 to fDraft.LineCount - 1 do
-      fLineList.Items.Add(fDraft.Lines[I].Name + ' - ' +
-        fDraft.Lines[I].TagName);
+      fLineList.Items.Add(Format('[Y%d] %s - %s',
+        [fDraft.Lines[I].AxisIndex + 1, fDraft.Lines[I].Name,
+        fDraft.Lines[I].TagName]));
     if (fSelectedLine >= 0) and (fSelectedLine < fLineList.Items.Count) then
       fLineList.ItemIndex := fSelectedLine
     else if fLineList.Items.Count > 0 then
@@ -364,9 +450,12 @@ begin
   fLineColorSwatch.Enabled := lEnabled;
   fLineVisibleCheck.Enabled := lEnabled;
   fDeleteLineButton.Enabled := lEnabled;
+  fAxisCombo.Enabled := lEnabled;
+  fNewAxisButton.Enabled := lEnabled and (fDraft.AxisCount < 16);
   if not lEnabled then
   begin
     fLineVisibleCheck.Checked := True;
+    LoadAxisControls(0);
     Exit;
   end;
   if AIndex = 0 then
@@ -376,6 +465,7 @@ begin
     fLineColorSwatch.Enabled := False;
     fLineVisibleCheck.Checked := True;
     fLineVisibleCheck.Enabled := False;
+    LoadAxisControls(fDraft.PrimaryAxisIndex);
   end
   else
   begin
@@ -383,7 +473,81 @@ begin
     SelectPrimaryTag(lLine.TagName);
     fLineColorSwatch.LineColor := TColor(lLine.Color);
     fLineVisibleCheck.Checked := lLine.Visible;
+    LoadAxisControls(lLine.AxisIndex);
   end;
+end;
+
+procedure TRecorderOscillogramSettingsDialog.RefreshAxisCombo;
+var
+  I: Integer;
+begin
+  fAxisCombo.Items.Clear;
+  for I := 0 to fDraft.AxisCount - 1 do
+    fAxisCombo.Items.Add(Format('Y%d — %s', [I + 1, fDraft.Axes[I].Name]));
+end;
+
+procedure TRecorderOscillogramSettingsDialog.LoadAxisControls(AIndex: Integer);
+var
+  lWasUpdating: Boolean;
+begin
+  if (AIndex < 0) or (AIndex >= fDraft.AxisCount) then
+    AIndex := 0;
+  fSelectedAxis := AIndex;
+  lWasUpdating := fUpdating;
+  fUpdating := True;
+  try
+    fAxisCombo.ItemIndex := AIndex;
+    fYScaleEdit.Text := FloatToStr(fDraft.Axes[AIndex].YScale);
+    fYOffsetEdit.Text := FloatToStr(fDraft.Axes[AIndex].YOffset);
+  finally
+    fUpdating := lWasUpdating;
+  end;
+end;
+
+procedure TRecorderOscillogramSettingsDialog.StoreAxisControls;
+var
+  lValue: Double;
+begin
+  if (fSelectedAxis < 0) or (fSelectedAxis >= fDraft.AxisCount) then
+    Exit;
+  if TryStrToFloat(fYScaleEdit.Text, lValue) and (lValue > 0) then
+    fDraft.Axes[fSelectedAxis].YScale := lValue;
+  if TryStrToFloat(fYOffsetEdit.Text, lValue) then
+    fDraft.Axes[fSelectedAxis].YOffset := lValue;
+end;
+
+procedure TRecorderOscillogramSettingsDialog.AxisComboChange(Sender: TObject);
+var
+  lAxis: Integer;
+begin
+  if fUpdating or (fSelectedLine < 0) or
+    (fAxisCombo.ItemIndex < 0) then
+    Exit;
+  StoreAxisControls;
+  lAxis := fAxisCombo.ItemIndex;
+  if fSelectedLine = 0 then
+    fDraft.PrimaryAxisIndex := lAxis
+  else
+    fDraft.Lines[fSelectedLine - 1].AxisIndex := lAxis;
+  LoadAxisControls(lAxis);
+  RefreshLineList;
+end;
+
+procedure TRecorderOscillogramSettingsDialog.NewAxisClick(Sender: TObject);
+var
+  lAxis: Integer;
+begin
+  if (fSelectedLine < 0) or (fDraft.AxisCount >= 16) then
+    Exit;
+  StoreLineControls;
+  lAxis := fDraft.AxisCount;
+  fDraft.AddAxis;
+  if fSelectedLine = 0 then
+    fDraft.PrimaryAxisIndex := lAxis
+  else
+    fDraft.Lines[fSelectedLine - 1].AxisIndex := lAxis;
+  RefreshAxisCombo;
+  RefreshLineList;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.StoreLineControls;
@@ -391,6 +555,7 @@ var
   lLine: TRecorderTrendLine;
   lName: string;
 begin
+  StoreAxisControls;
   { Привязка канала меняется непосредственно в PrimaryTagChange. Здесь
     сохраняются остальные свойства выбранной строки. }
   if (fSelectedLine < 0) or (fSelectedLine > fDraft.LineCount) then
@@ -409,6 +574,10 @@ procedure TRecorderOscillogramSettingsDialog.StoreToComponent;
 begin
   fDraft.BindingMode := TRecorderTagBindingMode(fBindingModeCombo.ItemIndex);
   fDraft.TagOffset := StrToIntDef(fTagOffsetEdit.Text, 0);
+  fDraft.XScale := StrToFloat(fXScaleEdit.Text);
+  fDraft.TriggerTagName := fTriggerCombo.Text;
+  fDraft.TriggerEnabled := fTriggerCheck.Checked;
+  fDraft.TriggerLevel := StrToFloat(fTriggerLevelEdit.Text);
   StoreLineControls;
   SyncDraftLineNames;
   fComponent.AssignOscillogram(fDraft);
@@ -416,45 +585,33 @@ begin
   fComponent.TagName := fDraft.TagName;
 end;
 
-function TRecorderOscillogramSettingsDialog.ValidateSourceIds: Boolean;
-var
-  I: Integer;
-  lNames: array of string;
-  lCount: Integer;
+function TRecorderOscillogramSettingsDialog.ValidateChannels: Boolean;
 begin
-  Result := False;
-  if fDraft.TagName = '' then
-  begin
+  Result := fDraft.TagName <> '';
+  if not Result then
     ShowMessage('Добавьте хотя бы один канал.');
-    Exit;
-  end;
-  lCount := 1;
-  for I := 0 to fDraft.LineCount - 1 do
-    if Trim(fDraft.Lines[I].TagName) <> '' then
-      Inc(lCount);
-  SetLength(lNames, lCount);
-  lCount := 0;
-  lNames[lCount] := fDraft.TagName;
-  Inc(lCount);
-  for I := 0 to fDraft.LineCount - 1 do
-    if Trim(fDraft.Lines[I].TagName) <> '' then
-    begin
-      lNames[lCount] := fDraft.Lines[I].TagName;
-      Inc(lCount);
-    end;
-  if not RecorderTagsShareSourceId(fTagRegistry, lNames) then
-  begin
-    ShowMessage('Все каналы осциллограммы должны принадлежать одному устройству (SourceId).');
-    Exit;
-  end;
-  Result := True;
 end;
 
 procedure TRecorderOscillogramSettingsDialog.OkButtonClick(Sender: TObject);
+var
+  lXScale, lYScale, lYOffset, lTriggerLevel: Double;
 begin
-  StoreToComponent;
-  if not ValidateSourceIds then
+  if (not TryStrToFloat(fXScaleEdit.Text, lXScale)) or (lXScale < 0) or
+    (not TryStrToFloat(fYScaleEdit.Text, lYScale)) or (lYScale <= 0) or
+    (not TryStrToFloat(fYOffsetEdit.Text, lYOffset)) or
+    (not TryStrToFloat(fTriggerLevelEdit.Text, lTriggerLevel)) then
+  begin
+    ShowMessage('Укажите XScale не меньше нуля (0 — общее окно), масштаб оси больше нуля и корректные сдвиг/уровень.');
     Exit;
+  end;
+  if fTriggerCheck.Checked and (fTriggerCombo.ItemIndex <= 0) then
+  begin
+    ShowMessage('Выберите тег для триггера.');
+    Exit;
+  end;
+  if not ValidateChannels then
+    Exit;
+  StoreToComponent;
   ModalResult := mrOk;
 end;
 

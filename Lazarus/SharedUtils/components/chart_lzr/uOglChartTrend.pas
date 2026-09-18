@@ -14,7 +14,7 @@ unit uOglChartTrend;
 interface
 
 uses
-  Classes, SysUtils, uOglChartTypes, uOglChartDrawObj, uOglChartAxis,
+  Classes, SysUtils, Math, uOglChartTypes, uOglChartDrawObj, uOglChartAxis,
   uSharedQueue;
 
 type
@@ -63,6 +63,7 @@ type
   cLineSeries = class(cBaseTrend)
   private
     fPoints: array of TChartPoint;       // Внутренний динамический массив точек серии
+    fPointCount: Integer;
 
     function GetPoint(AIndex: Integer): TChartPoint;
     function GetPointCount: Integer;
@@ -74,6 +75,7 @@ type
     procedure AddPoint(AX, AY: Double);
     // Пакетное добавление массива точек
     procedure AddPoints(const APoints: array of TChartPoint);
+    procedure ReplacePoints(const APoints: array of TChartPoint; ACount: Integer);
 
     property Points[AIndex: Integer]: TChartPoint read GetPoint;
     property PointCount: Integer read GetPointCount;
@@ -215,6 +217,7 @@ begin
   Caption := 'Line series';
   Color := $FFFF0000;
   SetLength(fPoints, 0);
+  fPointCount := 0;
 end;
 
 function cLineSeries.GetPoint(AIndex: Integer): TChartPoint;
@@ -224,12 +227,12 @@ end;
 
 function cLineSeries.GetPointCount: Integer;
 begin
-  Result := Length(fPoints);
+  Result := fPointCount;
 end;
 
 procedure cLineSeries.ClearPoints;
 begin
-  SetLength(fPoints, 0);
+  fPointCount := 0;
   GLListID := 0;
 end;
 
@@ -237,10 +240,12 @@ procedure cLineSeries.AddPoint(AX, AY: Double);
 var
   lIndex: Integer;
 begin
-  lIndex := Length(fPoints);
-  SetLength(fPoints, lIndex + 1);
+  lIndex := fPointCount;
+  if lIndex >= Length(fPoints) then
+    SetLength(fPoints, Max(16, Length(fPoints) * 2));
   fPoints[lIndex].X := AX;
   fPoints[lIndex].Y := AY;
+  Inc(fPointCount);
   GLListID := 0;
 end;
 
@@ -248,11 +253,28 @@ procedure cLineSeries.AddPoints(const APoints: array of TChartPoint);
 var
   lOldLen, lNewLen, i: Integer;
 begin
-  lOldLen := Length(fPoints);
+  lOldLen := fPointCount;
   lNewLen := lOldLen + Length(APoints);
-  SetLength(fPoints, lNewLen);
+  if lNewLen > Length(fPoints) then
+    SetLength(fPoints, Max(lNewLen, Length(fPoints) * 2));
   for i := 0 to High(APoints) do
     fPoints[lOldLen + i] := APoints[i];
+  fPointCount := lNewLen;
+  GLListID := 0;
+end;
+
+procedure cLineSeries.ReplacePoints(const APoints: array of TChartPoint;
+  ACount: Integer);
+begin
+  if ACount < 0 then
+    ACount := 0;
+  if ACount > Length(APoints) then
+    ACount := Length(APoints);
+  if ACount > Length(fPoints) then
+    SetLength(fPoints, Max(ACount, Length(fPoints) * 2));
+  if ACount > 0 then
+    Move(APoints[0], fPoints[0], ACount * SizeOf(TChartPoint));
+  fPointCount := ACount;
   GLListID := 0;
 end;
 

@@ -1,0 +1,196 @@
+object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
+  Left = 400
+  Height = 452
+  Top = 240
+  Width = 540
+  BorderStyle = bsDialog
+  Caption = 'Настройка кнопки'
+  ClientHeight = 452
+  ClientWidth = 540
+  Position = poOwnerFormCenter
+  LCLVersion = '4.2.0.0'
+  object lblCaption: TLabel
+    Left = 16
+    Height = 15
+    Top = 20
+    Width = 120
+    Caption = 'Надпись:'
+  end
+  object edCaption: TEdit
+    Left = 168
+    Height = 23
+    Top = 16
+    Width = 352
+    TabOrder = 0
+  end
+  object lblTagSearch: TLabel
+    Left = 16
+    Height = 15
+    Top = 56
+    Width = 120
+    Caption = 'Поиск тега:'
+  end
+  object edTagSearch: TEdit
+    Left = 168
+    Height = 23
+    Top = 52
+    Width = 352
+    OnChange = edTagSearchChange
+    TabOrder = 1
+  end
+  object lblTag: TLabel
+    Left = 16
+    Height = 15
+    Top = 92
+    Width = 120
+    Caption = 'Изменяемый тег:'
+  end
+  object cbTag: TComboBox
+    Left = 168
+    Height = 23
+    Top = 88
+    Width = 352
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 2
+  end
+  object lblTagHint: TLabel
+    Left = 168
+    Height = 30
+    Top = 116
+    Width = 352
+    AutoSize = False
+    Caption = 'Кнопку можно привязать только к виртуальному тегу.'
+    WordWrap = True
+  end
+  object lblBehavior: TLabel
+    Left = 16
+    Height = 15
+    Top = 158
+    Width = 120
+    Caption = 'Поведение:'
+  end
+  object cbBehavior: TComboBox
+    Left = 168
+    Height = 23
+    Top = 154
+    Width = 352
+    ItemHeight = 15
+    Items.Strings = (
+      'С фиксацией (переключатель)'
+      'Пока удерживается'
+      'Импульс'
+    )
+    OnChange = cbBehaviorChange
+    Style = csDropDownList
+    TabOrder = 3
+  end
+  object lblPressedValue: TLabel
+    Left = 16
+    Height = 15
+    Top = 194
+    Width = 140
+    Caption = 'Значение при нажатии:'
+  end
+  object edPressedValue: TEdit
+    Left = 168
+    Height = 23
+    Top = 190
+    Width = 128
+    TabOrder = 4
+  end
+  object lblReleasedValue: TLabel
+    Left = 16
+    Height = 15
+    Top = 230
+    Width = 140
+    Caption = 'Значение отпускания:'
+  end
+  object edReleasedValue: TEdit
+    Left = 168
+    Height = 23
+    Top = 226
+    Width = 128
+    TabOrder = 5
+  end
+  object lblPulseDuration: TLabel
+    Left = 16
+    Height = 15
+    Top = 266
+    Width = 140
+    Caption = 'Длительность, мс:'
+  end
+  object edPulseDuration: TEdit
+    Left = 168
+    Height = 23
+    Top = 262
+    Width = 128
+    TabOrder = 6
+  end
+  object lblPressedImage: TLabel
+    Left = 16
+    Height = 15
+    Top = 302
+    Width = 140
+    Caption = 'Картинка нажата:'
+  end
+  object edPressedImage: TEdit
+    Left = 168
+    Height = 23
+    Top = 298
+    Width = 304
+    TabOrder = 7
+  end
+  object btnPressedImage: TButton
+    Left = 480
+    Height = 23
+    Top = 298
+    Width = 40
+    Caption = '...'
+    OnClick = btnPressedImageClick
+    TabOrder = 8
+  end
+  object lblReleasedImage: TLabel
+    Left = 16
+    Height = 15
+    Top = 338
+    Width = 140
+    Caption = 'Картинка отжата:'
+  end
+  object edReleasedImage: TEdit
+    Left = 168
+    Height = 23
+    Top = 334
+    Width = 304
+    TabOrder = 9
+  end
+  object btnReleasedImage: TButton
+    Left = 480
+    Height = 23
+    Top = 334
+    Width = 40
+    Caption = '...'
+    OnClick = btnReleasedImageClick
+    TabOrder = 10
+  end
+  object btnOk: TButton
+    Left = 328
+    Height = 27
+    Top = 408
+    Width = 92
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOkClick
+    TabOrder = 11
+  end
+  object btnCancel: TButton
+    Left = 428
+    Height = 27
+    Top = 408
+    Width = 92
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 12
+  end
+end

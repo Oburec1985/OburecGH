@@ -7,6 +7,8 @@ uses
 
 var
   g_RegisterCount: Integer;
+  g_ComponentContext: Pointer;
+  g_ComponentClose: TRecorderPluginOscillogramClose;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
@@ -20,6 +22,8 @@ function RegisterOscillogram(AHostContext: Pointer;
   APluginContext: Pointer): LongBool; cdecl;
 var
   lSpec: TRecorderPluginComponentSpec;
+  lFrame: TRecorderPluginOscillogramFrame;
+  lValues: array[0..2] of Double;
 begin
   Check(AHostContext = Pointer(1), 'wrong host context');
   Check(StrPas(ATypeId) = 'sample.oscillogram', 'wrong type id');
@@ -29,8 +33,23 @@ begin
   FillChar(lSpec, SizeOf(lSpec), 0);
   lSpec.Size := SizeOf(lSpec);
   Check(ACreate(APluginContext, @lSpec), 'factory callback failed');
-  Check((lSpec.Width = 480) and (lSpec.Height = 260), 'wrong component size');
-  Check(StrPas(@lSpec.Name[0]) = 'Sample oscillogram', 'wrong component name');
+  Check((lSpec.Width = 650) and (lSpec.Height = 350), 'wrong component size');
+  Check(lSpec.ComponentContext <> nil, 'missing component context');
+  Check(Assigned(lSpec.DoRepaint) and Assigned(lSpec.DoClose),
+    'missing visual lifecycle callbacks');
+  lValues[0] := -3;
+  lValues[1] := 0;
+  lValues[2] := 4;
+  lFrame := Default(TRecorderPluginOscillogramFrame);
+  lFrame.Size := SizeOf(lFrame);
+  lFrame.SampleCount := Length(lValues);
+  lFrame.Values := @lValues[0];
+  Check(lSpec.DoRepaint(lSpec.ComponentContext, @lFrame), 'doRepaint failed');
+  Check((lFrame.MinValue = -3) and (lFrame.MaxValue = 4) and
+    (Abs(lFrame.RmsValue - Sqrt(25 / 3)) < 1E-9),
+    'wrong Peak/RMS calculations');
+  g_ComponentContext := lSpec.ComponentContext;
+  g_ComponentClose := lSpec.DoClose;
   Inc(g_RegisterCount);
   Result := True;
 end;
@@ -68,6 +87,8 @@ begin
     FillChar(lInfo, SizeOf(lInfo), 0);
     lGetInfo(lInfo);
     Check(StrPas(@lInfo.Name[0]) = 'SampleInfoPlugin', 'wrong plugin name');
+    Check((lInfo.Version = 1) and (lInfo.SubVersion = 1),
+      'wrong plugin version');
 
     FillChar(lHostApi, SizeOf(lHostApi), 0);
     lHostApi.Size := SizeOf(lHostApi);
@@ -79,6 +100,7 @@ begin
       Check(lCreate(lInstance, @lHostApi), 'PluginCreate failed');
       Check(g_RegisterCount = 1, 'factory was not registered once');
       Check(lNotify(lInstance, 42, nil), 'PluginNotify failed');
+      g_ComponentClose(g_ComponentContext);
       Check(lClose(lInstance), 'PluginClose failed');
     finally
       Check(lDestroyClass(lInstance) = 0, 'DestroyPluginClass failed');

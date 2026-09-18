@@ -67,6 +67,7 @@ implementation
 
 uses
   uRecorderTrendSettingsDialog, uRecorderSpectrumSettingsDialog,
+  uRecorderDonutSettingsDialog,
   uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
   uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
@@ -101,6 +102,9 @@ begin
   if AComponent is TRecorderSpectrumComponent then
     Exit(ShowRecorderSpectrumSettingsDialog(AOwner,
       TRecorderSpectrumComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderDonutComponent then
+    Exit(ShowRecorderDonutSettingsDialog(AOwner,
+      TRecorderDonutComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderOscillogramComponent then
     Exit(ShowRecorderOscillogramSettingsDialog(AOwner,
       TRecorderOscillogramComponent(AComponent), ATagRegistry));

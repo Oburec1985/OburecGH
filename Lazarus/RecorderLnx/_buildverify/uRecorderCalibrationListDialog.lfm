@@ -1,0 +1,98 @@
+object RecorderCalibrationListDialog: TRecorderCalibrationListDialog
+  Left = 360
+  Height = 430
+  Top = 180
+  Width = 360
+  BorderStyle = bsSizeable
+  Caption = 'Настройка Мульти ГХ'
+  ClientHeight = 430
+  ClientWidth = 360
+  OnCreate = FormCreate
+  OnResize = FormResize
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6'
+  object gridList: TStringGrid
+    Left = 8
+    Height = 310
+    Top = 8
+    Width = 270
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ColCount = 2
+    FixedCols = 0
+    OnDblClick = gridListDblClick
+    RowCount = 2
+    TabOrder = 0
+  end
+  object btnUp: TButton
+    Left = 292
+    Height = 36
+    Top = 82
+    Width = 44
+    Anchors = [akTop, akRight]
+    Caption = '↑'
+    OnClick = btnUpClick
+    TabOrder = 1
+  end
+  object btnDown: TButton
+    Left = 292
+    Height = 36
+    Top = 132
+    Width = 44
+    Anchors = [akTop, akRight]
+    Caption = '↓'
+    OnClick = btnDownClick
+    TabOrder = 2
+  end
+  object btnAdd: TButton
+    Left = 8
+    Height = 27
+    Top = 330
+    Width = 80
+    Anchors = [akLeft, akBottom]
+    Caption = 'Добавить'
+    OnClick = btnAddClick
+    TabOrder = 3
+  end
+  object btnDelete: TButton
+    Left = 98
+    Height = 27
+    Top = 330
+    Width = 80
+    Anchors = [akLeft, akBottom]
+    Caption = 'Удалить'
+    OnClick = btnDeleteClick
+    TabOrder = 4
+  end
+  object btnProperties: TButton
+    Left = 190
+    Height = 27
+    Top = 330
+    Width = 90
+    Anchors = [akLeft, akBottom]
+    Caption = 'Свойства'
+    OnClick = btnPropertiesClick
+    TabOrder = 5
+  end
+  object btnOk: TButton
+    Left = 8
+    Height = 27
+    Top = 386
+    Width = 80
+    Anchors = [akLeft, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 6
+  end
+  object btnCancel: TButton
+    Left = 100
+    Height = 27
+    Top = 386
+    Width = 80
+    Anchors = [akLeft, akBottom]
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 7
+  end
+end

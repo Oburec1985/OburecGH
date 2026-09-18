@@ -101,6 +101,11 @@ user:
 /opt/mera/RecorderLnx/RecorderHostAgent
 ```
 
+When changing `RecorderHostAgent.ini` during an upgrade, finish the config and
+sudoers changes before restarting HostAgent. The agent reads `allow_shutdown`
+and `api_token` only at startup. Verify the generated DEB `postinst` order and
+check `/api/v1/status` reports `shutdown_enabled=true` after deployment.
+
 For remote control the installer allows inbound TCP `8766` when an active
 `ufw` or `firewalld` is detected. Verify access from the rcPanel computer with:
 
@@ -155,6 +160,23 @@ The settings button beside `Каталог замеров` uses
 `/usr/local/sbin/recorderlnx-share-folder` and publishes the selected directory
 as the read-only `MeraFiles` Samba share. The package installs this helper and
 the Samba server dependency.
+
+## NTP for the KIP network
+
+The package includes a private Chrony executable and a systemd unit. The
+optional-component installer offers an unchecked `NTP-сервер` selection;
+choosing it enables the service without replacing Astra's
+`systemd-timesyncd`. The server runs with `-x` and does not set the system
+clock. LinuxSetupManager calculates the default allowed subnet from the
+adapter's IPv4 address and mask. Its client mode uses `systemd-timesyncd`
+directly and clears previous external NTP server lists. For the current KIPs,
+the server is `192.168.9.66`; `192.168.9.0/24` allows the three clients.
+
+For installation without internet access, build the bundle on matching Astra
+Linux 1.8 amd64 with `build-offline-bundle.sh`. On a target, extract the bundle
+and run `sudo bash install-offline.sh`. The installer verifies hashes and
+refuses a plan that would remove or upgrade installed system packages.
+
 # Обязательная сборка перед упаковкой
 
 `build-installer.ps1` упаковывает уже собранные Linux ELF и намеренно не

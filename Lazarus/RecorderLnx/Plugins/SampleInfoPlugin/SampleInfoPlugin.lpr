@@ -1,12 +1,13 @@
 library SampleInfoPlugin;
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 uses
   SysUtils, uRecorderPluginApi, PluginClass;
 
 const
-  PluginDescription: PAnsiChar = 'Cross-platform RecorderLnx oscillogram sample';
+  PluginDescription: PAnsiChar = 'RecorderLnx plugin oscillogram (DoRepaint ABI)';
 
 function GetPluginType: LongInt; cdecl;
 begin
@@ -21,10 +22,11 @@ end;
 procedure GetPluginInfo(var AInfo: TRecorderPluginInfo); cdecl;
 begin
   FillChar(AInfo, SizeOf(AInfo), 0);
-  StrPLCopy(@AInfo.name[0], 'SampleInfoPlugin', High(AInfo.name));
+  StrPLCopy(@AInfo.name[0], 'Осциллограмма', High(AInfo.name));
   StrPLCopy(@AInfo.describe[0], PluginDescription, High(AInfo.describe));
   StrPLCopy(@AInfo.vendor[0], 'Mera', High(AInfo.vendor));
   AInfo.version := 1;
+  AInfo.SubVersion := 1;
 end;
 
 function CreatePluginClass: Pointer; cdecl;

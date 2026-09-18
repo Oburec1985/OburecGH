@@ -51,6 +51,8 @@ begin
   WriteLn('  network ...                  Настройка сети и маршрутов');
   WriteLn('  proxy ...                    Настройка системного прокси');
   WriteLn('  time ...                     Часовой пояс и NTP');
+  WriteLn('  time ntp-server ПОДСЕТЬ      Раздавать время через NTP (например, 192.168.1.0/24)');
+  WriteLn('  time ntp-client ХОСТ         Синхронизировать время с указанным NTP-сервером');
   WriteLn('  access ...                   Пользователи, группы и ACL');
   WriteLn('  ssh ...                      OpenSSH, firewall и публичные ключи');
   WriteLn('  profile ...                  Импорт и экспорт профиля ПК');

@@ -13,13 +13,16 @@ RECORDERLNX_FIREBIRD_PASSWORD="123"
 ALLOW_ONLINE_DEPS="${RECORDERLNX_FIREBIRD_ONLINE_DEPS:-0}"
 INSTALL_FIREBIRD=0
 INSTALL_RCPANEL=0
+INSTALL_NTP_SERVER=0
+NTP_SUBNET=192.168.9.0/24
 NO_GUI=0
 INSTALL_USER=""
 
 usage() {
   cat <<'EOF'
-Usage: install-firebird-recorderlnx.sh [--firebird] [--rcpanel] [--all] [--no-gui]
+Usage: install-firebird-recorderlnx.sh [--firebird] [--rcpanel] [--ntp-server] [--ntp-subnet IPv4/CIDR] [--all] [--no-gui]
 With no component flags, a Zenity checklist is shown.
+--all retains the existing Firebird + rcPanel selection; NTP is selected separately.
 EOF
 }
 
@@ -28,6 +31,12 @@ parse_args() {
     case "$1" in
       --firebird) INSTALL_FIREBIRD=1 ;;
       --rcpanel) INSTALL_RCPANEL=1 ;;
+      --ntp-server) INSTALL_NTP_SERVER=1 ;;
+      --ntp-subnet)
+        shift
+        [ "$#" -gt 0 ] || { echo "Missing value for --ntp-subnet" >&2; exit 2; }
+        NTP_SUBNET="$1"
+        ;;
       --all) INSTALL_FIREBIRD=1; INSTALL_RCPANEL=1 ;;
       --no-gui) NO_GUI=1 ;;
       --install-user)
@@ -44,15 +53,16 @@ parse_args() {
 
 choose_components() {
   local selected
-  if [ "$INSTALL_FIREBIRD" = 1 ] || [ "$INSTALL_RCPANEL" = 1 ]; then
+  if [ "$INSTALL_FIREBIRD" = 1 ] || [ "$INSTALL_RCPANEL" = 1 ] ||
+     [ "$INSTALL_NTP_SERVER" = 1 ]; then
     return
   fi
   if [ "$NO_GUI" = 1 ]; then
-    echo "No component selected. Use --firebird, --rcpanel, or --all." >&2
+    echo "No component selected. Use --firebird, --rcpanel, --ntp-server, or --all." >&2
     exit 2
   fi
   if ! command -v zenity >/dev/null 2>&1; then
-    echo "Zenity was not found. Run with --firebird, --rcpanel, or --all." >&2
+    echo "Zenity was not found. Run with --firebird, --rcpanel, --ntp-server, or --all." >&2
     exit 2
   fi
   selected="$(zenity --list --checklist \
@@ -61,10 +71,18 @@ choose_components() {
     --column='Установить' --column='Компонент' --column='Назначение' \
     TRUE Firebird 'Локальная SQL база данных' \
     TRUE rcPanel 'Панель управления RecorderLnx' \
+    FALSE 'NTP-сервер' 'Раздавать время КИПам через Chrony' \
     --separator='|' --width=650 --height=300)" || exit 0
   case "|$selected|" in *'|Firebird|'*) INSTALL_FIREBIRD=1 ;; esac
   case "|$selected|" in *'|rcPanel|'*) INSTALL_RCPANEL=1 ;; esac
-  if [ "$INSTALL_FIREBIRD" = 0 ] && [ "$INSTALL_RCPANEL" = 0 ]; then
+  case "|$selected|" in *'|NTP-сервер|'*) INSTALL_NTP_SERVER=1 ;; esac
+  if [ "$INSTALL_NTP_SERVER" = 1 ]; then
+    NTP_SUBNET="$(zenity --entry --title='Подсеть NTP-клиентов' \
+      --text='Каким компьютерам разрешить получать время?' \
+      --entry-text="$NTP_SUBNET")" || exit 0
+  fi
+  if [ "$INSTALL_FIREBIRD" = 0 ] && [ "$INSTALL_RCPANEL" = 0 ] &&
+     [ "$INSTALL_NTP_SERVER" = 0 ]; then
     echo "No component selected."
     exit 0
   fi
@@ -75,7 +93,7 @@ choose_components
 
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-echo "RecorderLnx Firebird installer"
+echo "RecorderLnx optional components installer"
 echo "Log: $LOG_FILE"
 echo
 
@@ -83,6 +101,9 @@ if [ "$(id -u)" -ne 0 ]; then
   reexec_args=(--no-gui)
   [ "$INSTALL_FIREBIRD" = 1 ] && reexec_args+=(--firebird)
   [ "$INSTALL_RCPANEL" = 1 ] && reexec_args+=(--rcpanel)
+  if [ "$INSTALL_NTP_SERVER" = 1 ]; then
+    reexec_args+=(--ntp-server --ntp-subnet "$NTP_SUBNET")
+  fi
   if [ "$NO_GUI" = 0 ] && command -v pkexec >/dev/null 2>&1; then
     echo "Requesting administrator permissions..."
     install_user="$(id -un)"
@@ -130,6 +151,10 @@ install_local_dependencies() {
 
   if [ -d "$dep_dir" ]; then
     while IFS= read -r -d '' package; do
+      if [ "$(dpkg-deb -f "$package" Package 2>/dev/null || true)" = recorderlnx ]; then
+        echo "Skipping RecorderLnx package in deps/: $package"
+        continue
+      fi
       packages+=("$package")
     done < <(find "$dep_dir" -maxdepth 1 -type f -name '*.deb' -print0 | sort -z)
   fi
@@ -601,8 +626,30 @@ check_firebird() {
   fi
 }
 
+install_ntp_server() {
+  local manager=/opt/mera/RecorderLnx/LinuxSetupManagerCli
+  local chronyd=/opt/mera/RecorderLnx/chronyd-private
+  [ -x "$manager" ] && [ -x "$chronyd" ] || {
+    echo 'Install the RecorderLnx package with the NTP component first.' >&2
+    return 1
+  }
+  systemctl cat recorderlnx-ntp-server.service >/dev/null || {
+    echo 'RecorderLnx NTP service unit is missing.' >&2
+    return 1
+  }
+  "$manager" --internal time ntp-server "$NTP_SUBNET"
+  systemctl is-active --quiet recorderlnx-ntp-server.service || {
+    echo 'RecorderLnx NTP service did not start.' >&2
+    return 1
+  }
+  echo "OK   NTP server serves clients in $NTP_SUBNET"
+}
+
 main() {
   local archive
+  if [ "$INSTALL_NTP_SERVER" = 1 ]; then
+    install_ntp_server
+  fi
   if [ "$INSTALL_RCPANEL" = 1 ]; then
     install_rcpanel
   fi

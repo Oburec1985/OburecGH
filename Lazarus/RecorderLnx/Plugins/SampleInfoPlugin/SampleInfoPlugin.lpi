@@ -7,7 +7,7 @@
         <MainUnitHasTitleStatement Value="False"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="SampleInfoPlugin"/>
+      <Title Value="Осциллограмма"/>
       <UseAppBundle Value="False"/>
     </General>
     <BuildModes>

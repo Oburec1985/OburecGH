@@ -1,0 +1,36 @@
+object RecorderStrainCalibrationFrame: TRecorderStrainCalibrationFrame
+  Height = 480
+  Width = 640
+  object lblName: TLabel Left = 8 Top = 10 Caption = 'Наименование' end
+  object edName: TEdit Left = 172 Height = 25 Top = 6 Width = 450 end
+  object lblScheme: TLabel Left = 8 Top = 48 Caption = 'Схема включения' end
+  object cbScheme: TComboBox Left = 172 Height = 25 Top = 44 Width = 450 Style = csDropDownList end
+  object lblInput: TLabel Left = 8 Top = 86 Caption = 'Входные единицы' end
+  object cbInputUnit: TComboBox Left = 172 Height = 25 Top = 82 Width = 170 Style = csDropDownList end
+  object lblOutput: TLabel Left = 354 Top = 86 Caption = 'Результат' end
+  object cbOutputUnit: TComboBox Left = 442 Height = 25 Top = 82 Width = 180 Style = csDropDownList end
+  object lblExcitationKind: TLabel Left = 8 Top = 128 Caption = 'Тип питания' end
+  object cbExcitationKind: TComboBox Left = 172 Height = 25 Top = 124 Width = 140 Style = csDropDownList OnChange = cbExcitationKindChange end
+  object lblExcitation: TLabel Left = 326 Top = 128 Caption = 'Напряжение, В' end
+  object edExcitation: TEdit Left = 482 Height = 25 Top = 124 Width = 140 end
+  object lblPoisson: TLabel Left = 8 Top = 168 Caption = 'Коэффициент Пуассона' end
+  object edPoisson: TEdit Left = 172 Height = 25 Top = 164 Width = 140 end
+  object lblGauge: TLabel Left = 326 Top = 168 Caption = 'Коэффициент S' end
+  object edGaugeFactor: TEdit Left = 482 Height = 25 Top = 164 Width = 140 end
+  object lblResistance: TLabel Left = 8 Top = 208 Caption = 'Сопротивление R0, Ом' end
+  object edResistance: TEdit Left = 172 Height = 25 Top = 204 Width = 140 end
+  object lblYoung: TLabel Left = 326 Top = 208 Caption = 'Модуль Юнга, МПа' end
+  object edYoung: TEdit Left = 482 Height = 25 Top = 204 Width = 140 end
+  object lblTcr: TLabel Left = 8 Top = 248 Caption = 'ТКСО датчика, 1/°C' end
+  object edTcr: TEdit Left = 172 Height = 25 Top = 244 Width = 140 end
+  object lblDeltaT: TLabel Left = 326 Top = 248 Caption = 'Изменение T, °C' end
+  object edDeltaT: TEdit Left = 482 Height = 25 Top = 244 Width = 140 end
+  object lblMax: TLabel Left = 8 Top = 288 Caption = 'Диапазон ±, мкстр' end
+  object edMaxStrain: TEdit Left = 172 Height = 25 Top = 284 Width = 140 end
+  object lblExpansion: TLabel Left = 326 Top = 288 Caption = 'ТКЛР детали, 1/°C' end
+  object edExpansion: TEdit Left = 482 Height = 25 Top = 284 Width = 140 end
+  object gbResult: TGroupBox Left = 8 Height = 120 Top = 330 Width = 614 Caption = 'Скомпилированная формула runtime'
+    object lblCoefficients: TLabel Left = 12 Top = 30 Width = 580 Caption = 'y = Offset + K·x' end
+    object lblError: TLabel Left = 12 Top = 64 Width = 580 Caption = '' end
+  end
+end

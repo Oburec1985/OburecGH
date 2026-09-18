@@ -48,9 +48,10 @@ const
   CIconTrends = 5;
   CIconImageComponent = 59;
   CIconMeasurementSection = 60;
+  CIconDonut = 61;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 61;
+  CRecorderCommandImageCount = 62;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -62,7 +63,7 @@ procedure EnsureRecorderTagDialogImages(AImages: TCustomImageList);
 implementation
 
 uses
-  Types;
+  Types, LResources;
 
 const
   CRecorderImagesDir = 'D:\works\windev-v3.9\images';
@@ -352,6 +353,8 @@ begin
 end;
 
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
+var
+  lDonut: TPortableNetworkGraphic;
 begin
   if AImages = nil then
     Exit;
@@ -392,10 +395,20 @@ begin
   end;
 
   EnsureImageListSize(AImages, CRecorderCommandImageCount);
+  lDonut := TPortableNetworkGraphic.Create;
+  try
+    lDonut.LoadFromLazarusResource('donut');
+    AImages.Replace(CIconDonut, lDonut, nil);
+  finally
+    lDonut.Free;
+  end;
 
   { Save и Save As берутся непосредственно из встроенного ilCommandButtons
     (индексы 58 и 48). Внешняя платформенная подмена здесь недопустима: иначе
     Windows и Linux получают разные изображения и маски прозрачности. }
 end;
+
+initialization
+  {$I uRecorderDonutIcon.lrs}
 
 end.

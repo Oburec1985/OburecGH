@@ -1,7 +1,8 @@
 param(
     [string]$Version = '0.1.27',
     [string]$Architecture = 'amd64',
-    [string]$Python = 'python'
+    [string]$Python = 'python',
+    [string]$OfflineBundleHost = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -79,3 +80,32 @@ if (-not (Test-Path $outputFile)) {
 $item = Get-Item -LiteralPath $outputFile
 Write-Host ("Created package: {0}" -f $item.FullName)
 Write-Host ("Package timestamp: {0}" -f $item.LastWriteTime)
+
+if ($OfflineBundleHost -ne '') {
+    if ($OfflineBundleHost -notmatch '^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$') {
+        throw 'OfflineBundleHost must be user@hostname or user@IPv4.'
+    }
+    $remoteDir = '/tmp/recorderlnx-offline-' + [guid]::NewGuid().ToString('N')
+    $bundleFile = Join-Path $outputDir "recorderlnx-offline_${Version}_${Architecture}.tar.gz"
+    $pendingBundleFile = "$bundleFile.pending"
+    & ssh -o BatchMode=yes $OfflineBundleHost "mkdir -m 700 -- $remoteDir"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create remote offline staging directory.' }
+    try {
+        & scp -q $outputFile `
+            (Join-Path $installerDir 'offline-deps.sh') `
+            (Join-Path $installerDir 'install-offline.sh') `
+            (Join-Path $installerDir 'build-offline-bundle.sh') `
+            "${OfflineBundleHost}:${remoteDir}/"
+        if ($LASTEXITCODE -ne 0) { throw 'Could not copy offline bundle inputs to Linux.' }
+        & ssh -o BatchMode=yes $OfflineBundleHost `
+            "cd $remoteDir && sh build-offline-bundle.sh $(Split-Path -Leaf $outputFile) bundle.tar.gz"
+        if ($LASTEXITCODE -ne 0) { throw 'Offline dependency collection failed on Linux.' }
+        & scp -q "${OfflineBundleHost}:${remoteDir}/bundle.tar.gz" $pendingBundleFile
+        if ($LASTEXITCODE -ne 0) { throw 'Could not copy offline installer back from Linux.' }
+        Move-Item -LiteralPath $pendingBundleFile -Destination $bundleFile -Force
+        Write-Host "Created offline installer: $bundleFile"
+    }
+    finally {
+        & ssh -o BatchMode=yes $OfflineBundleHost "rm -rf -- $remoteDir" | Out-Null
+    }
+}

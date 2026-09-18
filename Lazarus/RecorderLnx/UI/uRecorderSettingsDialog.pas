@@ -21,14 +21,16 @@ unit uRecorderSettingsDialog;
 interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  ComCtrls, ImgList, Grids, Buttons, Menus, LCLType,
+  ComCtrls, ImgList, Grids, Buttons, Menus, LCLType, LMessages,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
   uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
-  uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig;
+  uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig,
+  uRecorderPluginRuntime, uRecorderPluginApi, uLuaCalcSettingsDialog,
+  uRecorderWindowDragTrace;
 
 type
   { TRecorderSettingsDialog }
@@ -39,6 +41,8 @@ type
     fPageControl: TPageControl;                 // Контейнер вкладок настроек
     fApplyButton: TButton;                     // Кнопка "Применить"
     fHardwareTree: TTreeView;                   // Дерево аппаратной конфигурации/устройств
+    edHardwareSourceAddress: TEdit;
+    btnHardwareSourceAddressApply: TButton;
     cbNetworkInterface: TComboBox;
     edNetworkTestHost: TEdit;
     edNetworkTestPort: TEdit;
@@ -179,6 +183,7 @@ type
     procedure fAlgorithmOverlapComboChange(Sender: TObject);
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeChange(Sender: TObject; Node: TTreeNode);
+    procedure HardwareSourceAddressApplyClick(Sender: TObject);
     procedure fHardwareTreeMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
     procedure fHardwareTreeMouseDown(Sender: TObject; Button: TMouseButton;
@@ -194,12 +199,16 @@ type
     procedure MeraFilesPathBrowseClick(Sender: TObject);
     procedure NetworkTestClick(Sender: TObject);
   private
+    fWindowDragTrace: TRecorderWindowDragTrace;
     fRecorder: TRecorder;
     fPluginCatalog: TRecorderPluginCatalog;
     fPluginList: TListView;
     fPluginConfigFileName: string;
+    fPluginRuntime: TRecorderPluginRuntime;
     fSourceProbe: TRecorderSettingsSourceProbe;
     fDeviceImageList: TCustomImageList;
+    fVirtualTagIcon: TBitmap;
+    fInactiveTagIcon: TBitmap;
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fAvailableChannelSignals: TList;            // Row-map доступных каналов
@@ -285,6 +294,7 @@ type
     procedure AddMic140Source(const APresetHost: string = '');
     procedure EditMc032Source(const ASourceId: string = '');
     function SelectedHardwareSourceId: string;
+    procedure ShowSelectedHardwareSourceAddress;
     procedure EditHardwareSource(const ASourceId: string;
       const AModuleTypeHint: string = '');
     procedure EditMeraFileSource(const ASourceId: string);
@@ -322,6 +332,8 @@ type
     procedure RefreshPluginList(Sender: TObject);
     procedure AddPluginClick(Sender: TObject);
     procedure DeletePluginClick(Sender: TObject);
+    procedure PluginDblClick(Sender: TObject);
+    procedure ConfigureLuaCalcClick(Sender: TObject);
     procedure LoadPluginList;
     procedure SavePluginList;
     procedure SetDeviceImageList(AValue: TCustomImageList);
@@ -345,12 +357,16 @@ type
     procedure UpdateConditionControls;
     function ReadFloatEdit(AEdit: TEdit; ADefault: Double): Double;
     function ReadSecondsAsMs(AEdit: TEdit; ADefaultMs: Cardinal): Cardinal;
+  protected
+    procedure WndProc(var TheMessage: TLMessage); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     
     // Свойства доступа к зависимостям
     property Recorder: TRecorder read fRecorder write SetRecorder;
+    property PluginRuntime: TRecorderPluginRuntime read fPluginRuntime
+      write fPluginRuntime;
     property DeviceImageList: TCustomImageList read fDeviceImageList write SetDeviceImageList;
     property TagDialogImageList: TCustomImageList read fTagDialogImageList
       write SetTagDialogImageList;
@@ -369,7 +385,8 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARecorder: TRecorder;
   ADeviceImageList: TCustomImageList;
   ATagDialogImageList: TCustomImageList;
-  out ADataSourcesChanged: Boolean): Boolean;
+  out ADataSourcesChanged: Boolean;
+  APluginRuntime: TRecorderPluginRuntime = nil): Boolean;
 
 { Opens settings dialog internals and invokes MIC185 edit (no full settings modal). }
 function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
@@ -561,7 +578,8 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ARecorder: TRecorder;
   ADeviceImageList: TCustomImageList;
   ATagDialogImageList: TCustomImageList;
-  out ADataSourcesChanged: Boolean): Boolean;
+  out ADataSourcesChanged: Boolean;
+  APluginRuntime: TRecorderPluginRuntime): Boolean;
 var
   lDialog: TRecorderSettingsDialog;
 begin
@@ -570,9 +588,19 @@ begin
   try
     lDialog.DeviceImageList := ADeviceImageList;
     lDialog.TagDialogImageList := ATagDialogImageList;
+    lDialog.PluginRuntime := APluginRuntime;
     lDialog.Recorder := ARecorder;
     { Вход в конфигурацию проверяет существующие сессии, но не программирует приборы. }
     RecorderHardwareRefreshLiveSourceWarnings;
+    { Создаём первый полный кадр до показа модального окна. Иначе Windows
+      успевает показать прозрачный слой формы, пока LCL впервые рисует
+      большую страницу настроек. DoubleBuffered убирает промежуточный кадр
+      при последующих перестроениях страниц. }
+    lDialog.DoubleBuffered := True;
+    lDialog.HandleNeeded;
+    lDialog.Show;
+    lDialog.Update;
+    lDialog.Hide;
     Result := lDialog.ShowModal = mrOk;
     ADataSourcesChanged := lDialog.DataSourcesChanged;
   finally
@@ -726,11 +754,19 @@ const
   CTagGroupAuxiliary = 'Вспомогательные каналы';
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
+procedure TRecorderSettingsDialog.WndProc(var TheMessage: TLMessage);
+begin
+  if fWindowDragTrace <> nil then
+    fWindowDragTrace.HandleMessage(Self, TheMessage);
+  inherited WndProc(TheMessage);
+end;
+
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
 var
   lSearchButton: TBitBtn;
 begin
   inherited Create(AOwner);
+  fWindowDragTrace := TRecorderWindowDragTrace.Create('settings');
   fPluginCatalog := TRecorderPluginCatalog.Create;
   InitializePluginPage;
   {$IFNDEF UNIX}
@@ -1724,7 +1760,10 @@ end;
 
 destructor TRecorderSettingsDialog.Destroy;
 begin
+  FreeAndNil(fWindowDragTrace);
   fPluginCatalog.Free;
+  fVirtualTagIcon.Free;
+  fInactiveTagIcon.Free;
   if fHardwareTree <> nil then
     RecorderHardwareTreeClearNodes(fHardwareTree);
   fFrequencyBands.Free;
@@ -1758,6 +1797,21 @@ end;
 procedure TRecorderSettingsDialog.SetDeviceImageList(AValue: TCustomImageList);
 begin
   fDeviceImageList := AValue;
+  FreeAndNil(fVirtualTagIcon);
+  FreeAndNil(fInactiveTagIcon);
+  if fDeviceImageList <> nil then
+  begin
+    if CDeviceVirtualTagImageIndex < fDeviceImageList.Count then
+    begin
+      fVirtualTagIcon := TBitmap.Create;
+      fDeviceImageList.GetBitmap(CDeviceVirtualTagImageIndex, fVirtualTagIcon);
+    end;
+    if CDeviceInactiveTagImageIndex < fDeviceImageList.Count then
+    begin
+      fInactiveTagIcon := TBitmap.Create;
+      fDeviceImageList.GetBitmap(CDeviceInactiveTagImageIndex, fInactiveTagIcon);
+    end;
+  end;
   if fHardwareTree <> nil then
   begin
     fHardwareTree.Images := fDeviceImageList;
@@ -3877,6 +3931,7 @@ var
   lPort: Word;
   lSourceId: string;
 begin
+  ShowSelectedHardwareSourceAddress;
   if (Node = nil) or (edNetworkTestHost = nil) or
     (edNetworkTestPort = nil) then
     Exit;
@@ -4463,6 +4518,10 @@ begin
       begin
         lEntry := lEntries[I];
         lNodeCaption := lEntry.NodeCaption;
+        if not RecorderIsVirtualTagSource(lEntry.SourceId) then
+          lNodeCaption := lNodeCaption + ' [адрес: ' +
+            RecorderConfiguredSourceAddress(fRecorder.TagRegistry,
+              lEntry.SourceId) + ']';
         if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) then
         begin
           if not (RecorderMic185TryGetLiveDeviceInfo(lHost, lPort,
@@ -5003,6 +5062,8 @@ end;
 procedure TRecorderSettingsDialog.BuildHardwareTab(ATab: TTabSheet);
 var
   lGroup: TGroupBox;
+  lAddressPanel: TPanel;
+  lAddressLabel: TLabel;
   lRootNode: TTreeNode;
   lControllerNode: TTreeNode;
   lButtonPanel: TPanel;
@@ -5020,6 +5081,35 @@ begin
   lButtonPanel.Align := alBottom;
   lButtonPanel.Height := 52;
   lButtonPanel.BevelOuter := bvNone;
+
+  lAddressPanel := TPanel.Create(Self);
+  lAddressPanel.Parent := lGroup;
+  lAddressPanel.Align := alTop;
+  lAddressPanel.Height := 36;
+  lAddressPanel.BevelOuter := bvNone;
+
+  lAddressLabel := TLabel.Create(Self);
+  lAddressLabel.Parent := lAddressPanel;
+  lAddressLabel.Left := 8;
+  lAddressLabel.Top := 10;
+  lAddressLabel.Caption := 'Адрес источника:';
+
+  edHardwareSourceAddress := TEdit.Create(Self);
+  edHardwareSourceAddress.Parent := lAddressPanel;
+  edHardwareSourceAddress.Left := 122;
+  edHardwareSourceAddress.Top := 6;
+  edHardwareSourceAddress.Width := 180;
+  edHardwareSourceAddress.Enabled := False;
+
+  btnHardwareSourceAddressApply := TButton.Create(Self);
+  btnHardwareSourceAddressApply.Parent := lAddressPanel;
+  btnHardwareSourceAddressApply.Left := 310;
+  btnHardwareSourceAddressApply.Top := 5;
+  btnHardwareSourceAddressApply.Width := 90;
+  btnHardwareSourceAddressApply.Height := 25;
+  btnHardwareSourceAddressApply.Caption := 'Применить';
+  btnHardwareSourceAddressApply.Enabled := False;
+  btnHardwareSourceAddressApply.OnClick := @HardwareSourceAddressApplyClick;
 
   fHardwareTree := TTreeView.Create(Self);
   fHardwareTree.Parent := lGroup;
@@ -5358,6 +5448,59 @@ begin
   ApplySpectrumConfiguration;
 end;
 
+procedure TRecorderSettingsDialog.ShowSelectedHardwareSourceAddress;
+var
+  lSourceId: string;
+  lCanEdit: Boolean;
+begin
+  if (edHardwareSourceAddress = nil) or
+    (btnHardwareSourceAddressApply = nil) then
+    Exit;
+  lSourceId := SelectedHardwareSourceId;
+  lCanEdit := (lSourceId <> '') and
+    (not RecorderIsVirtualTagSource(lSourceId)) and
+    (fRecorder <> nil) and (fRecorder.TagRegistry <> nil);
+  edHardwareSourceAddress.Enabled := lCanEdit;
+  btnHardwareSourceAddressApply.Enabled := lCanEdit;
+  if not lCanEdit then
+    edHardwareSourceAddress.Text := ''
+  else
+    edHardwareSourceAddress.Text := RecorderConfiguredSourceAddress(
+      fRecorder.TagRegistry, lSourceId);
+end;
+
+procedure TRecorderSettingsDialog.HardwareSourceAddressApplyClick(
+  Sender: TObject);
+var
+  I: Integer;
+  lSourceId: string;
+  lError: string;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
+    (edHardwareSourceAddress = nil) then
+    Exit;
+  lSourceId := SelectedHardwareSourceId;
+  if lSourceId = '' then
+    Exit;
+  if not RecorderSetConfiguredSourceAddress(fRecorder.TagRegistry, lSourceId,
+    Trim(edHardwareSourceAddress.Text), lError) then
+  begin
+    MessageDlg('Адрес источника', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  fDataSourcesChanged := True;
+  PopulateHardwareTree;
+  for I := 0 to fHardwareTree.Items.Count - 1 do
+    if SameText(RecorderHardwareTreeSourceId(fHardwareTree.Items[I]),
+      lSourceId) then
+    begin
+      fHardwareTree.Selected := fHardwareTree.Items[I];
+      Break;
+    end;
+  PopulateChannelGrids;
+  ShowSelectedHardwareSourceAddress;
+end;
+
 
 
 procedure TRecorderSettingsDialog.OkButtonClick(Sender: TObject);
@@ -5525,7 +5668,42 @@ begin
   fPluginList := lvPlugins;
   btnPluginAdd.OnClick := @AddPluginClick;
   btnPluginDelete.OnClick := @DeletePluginClick;
+  fPluginList.OnDblClick := @PluginDblClick;
+  fPluginList.Hint := 'Двойной щелчок по LuaCalcPlugin открывает расчётные скрипты';
+  fPluginList.ShowHint := True;
   lbPluginDirectory.Caption := 'Каталог: ' + RecorderPluginDirectory;
+end;
+
+procedure TRecorderSettingsDialog.PluginDblClick(Sender: TObject);
+var
+  lFileName: string;
+begin
+  if (fPluginList.Selected = nil) or
+    (fPluginList.Selected.Index >= fPluginCatalog.Count) then Exit;
+  lFileName := ChangeFileExt(ExtractFileName(
+    fPluginCatalog.Entries[fPluginList.Selected.Index].FileName), '');
+  if SameText(lFileName, 'LuaCalcPlugin') then
+    ConfigureLuaCalcClick(Sender);
+end;
+
+procedure TRecorderSettingsDialog.ConfigureLuaCalcClick(Sender: TObject);
+var
+  lOldTagCount: Integer;
+begin
+  if (fPluginRuntime = nil) or (fPluginRuntime.ProjectDirectory = '') then
+  begin
+    MessageDlg('Сначала сохраните проект.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  lOldTagCount := fRecorder.TagRegistry.TagCount;
+  ShowLuaCalcSettings(Self, fPluginRuntime.ProjectDirectory,
+    fRecorder.TagRegistry);
+  if fRecorder.TagRegistry.TagCount <> lOldTagCount then
+  begin
+    fDataSourcesChanged := True;
+    PopulateChannelGrids;
+  end;
+  fPluginRuntime.NotifyAll(PN_RCLOADCONFIG);
 end;
 
 procedure TRecorderSettingsDialog.RefreshPluginList(Sender: TObject);
@@ -5533,6 +5711,9 @@ var
   I: Integer;
   lEntry: TRecorderPluginEntry;
   lItem: TListItem;
+  lLoadedPath: string;
+  lLoadedVersion: string;
+  lExpectedPath: string;
 begin
   if (fPluginCatalog = nil) or (fPluginList = nil) then
     Exit;
@@ -5544,7 +5725,11 @@ begin
       lEntry := fPluginCatalog.Entries[I];
       lItem := fPluginList.Items.Add;
       lItem.Caption := ExtractFileName(lEntry.FileName);
-      lItem.SubItems.Add(lEntry.Name);
+      if SameText(ChangeFileExt(ExtractFileName(lEntry.FileName), ''),
+        'SampleInfoPlugin') then
+        lItem.SubItems.Add('Осциллограмма')
+      else
+        lItem.SubItems.Add(lEntry.Name);
       if lEntry.IsValid then
         lItem.SubItems.Add(lEntry.Description)
       else
@@ -5555,6 +5740,20 @@ begin
           lEntry.SubVersion, lEntry.BugFix, lEntry.BuildNumber]))
       else
         lItem.SubItems.Add('—');
+      lExpectedPath := ExpandFileName(IncludeTrailingPathDelimiter(
+        RecorderPluginDirectory) + ExtractFileName(lEntry.FileName));
+      if (fPluginRuntime <> nil) and
+        fPluginRuntime.LoadedPluginDetails(lEntry.FileName,
+          lLoadedPath, lLoadedVersion) then
+      begin
+        lItem.SubItems.Add(lLoadedVersion);
+        lItem.SubItems.Add(lLoadedPath);
+      end
+      else
+      begin
+        lItem.SubItems.Add('не загружен');
+        lItem.SubItems.Add(lExpectedPath);
+      end;
     end;
   finally
     fPluginList.Items.EndUpdate;
@@ -5622,7 +5821,10 @@ begin
             mtInformation, [mbOK], 0);
           Exit;
         end;
-      lInfo := 'Файл: ' + lFileName + LineEnding +
+      lInfo := 'Выбранный файл: ' + lEntry.FileName + LineEnding +
+        'Путь после добавления: ' + ExpandFileName(
+          IncludeTrailingPathDelimiter(RecorderPluginDirectory) +
+          lFileName) + LineEnding +
         'Название: ' + lEntry.Name + LineEnding +
         'Описание: ' + lEntry.Description + LineEnding +
         'Разработчик: ' + lEntry.Vendor + LineEnding +
@@ -5789,6 +5991,30 @@ var
   lDialog: TOpenDialog;
   lResult: TRecorderTagTableExchangeResult;
   lMessage: string;
+  lBeforeProgramming: string;
+
+  function ProgrammingState: string;
+  var
+    I: Integer;
+    lIds: TStringList;
+  begin
+    Result := '';
+    lIds := TStringList.Create;
+    try
+      lIds.CaseSensitive := False;
+      lIds.Sorted := True;
+      lIds.Duplicates := dupIgnore;
+      for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+        lIds.Add(RecorderNormalizeTagSourceId(
+          fRecorder.TagRegistry.Tags[I].SourceId));
+      for I := 0 to lIds.Count - 1 do
+        Result := Result + lIds[I] + '=' +
+          RecorderSourceProgrammingSignatureById(fRecorder.TagRegistry,
+            lIds[I]) + #10;
+    finally
+      lIds.Free;
+    end;
+  end;
 begin
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then
     Exit;
@@ -5805,6 +6031,7 @@ begin
 
       RecorderTagTableExchangeResultInit(lResult);
       try
+        lBeforeProgramming := ProgrammingState;
         ImportRecorderTagsFromTable(fRecorder.TagRegistry,
           fRecorder.SqlDbManager.Config, lDialog.FileName, lResult);
         fRecorder.SqlDbManager.SaveConfig;
@@ -5812,7 +6039,8 @@ begin
         PopulateHardwareTree;
         PopulateChannelGrids;
         PopulateAlgorithmsTree;
-        fDataSourcesChanged := fDataSourcesChanged or (lResult.UpdatedTags > 0);
+        fDataSourcesChanged := fDataSourcesChanged or
+          (lBeforeProgramming <> ProgrammingState);
         lMessage := TagTableImportSummary(lResult);
         MessageDlg('Импорт списка тегов', lMessage, mtInformation, [mbOK], 0);
       finally
@@ -6050,7 +6278,11 @@ begin
   else
     Exit;
 
-  if (lImageIndex < 0) or (lImageIndex >= fDeviceImageList.Count) then
+  if lImageIndex = CDeviceVirtualTagImageIndex then
+    lBitmap := fVirtualTagIcon
+  else
+    lBitmap := fInactiveTagIcon;
+  if lBitmap = nil then
     Exit;
 
   if gdSelected in aState then
@@ -6074,13 +6306,7 @@ begin
   lIconRect := Rect(lIconLeft, lIconTop, lIconLeft + CDeviceInactiveTagIconSize,
     lIconTop + CDeviceInactiveTagIconSize);
 
-  lBitmap := TBitmap.Create;
-  try
-    fDeviceImageList.GetBitmap(lImageIndex, lBitmap);
-    fSelectedChannelsGrid.Canvas.StretchDraw(lIconRect, lBitmap);
-  finally
-    lBitmap.Free;
-  end;
+  fSelectedChannelsGrid.Canvas.StretchDraw(lIconRect, lBitmap);
 
   if gdFocused in aState then
     fSelectedChannelsGrid.Canvas.DrawFocusRect(aRect);

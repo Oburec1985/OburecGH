@@ -368,7 +368,6 @@ function Mic185CanonicalAddress(const AAddress: string): string;
 var
   lStart: Integer;
   lDash: Integer;
-  lDeviceIndex: Integer;
   lChannelNumber: Integer;
   lTail: string;
 begin
@@ -382,17 +381,28 @@ begin
     Delete(Result, lStart, 1);
   if (Result <> '') and (Result[Length(Result)] = '}') then
     Delete(Result, Length(Result), 1);
-  lDash := Pos('-', Result);
+  lDash := RPos('-', Result);
   if lDash <= 0 then
     Exit;
   lTail := Copy(Result, lDash + 1, MaxInt);
   if (lTail = '') or (Pos('t', LowerCase(lTail)) > 0) or
     SameText(lTail, 'uts') then
     Exit;
-  if TryStrToInt(Copy(Result, 1, lDash - 1), lDeviceIndex) and
-    TryStrToInt(lTail, lChannelNumber) then
-    Result := RecorderMic185MeasurementAddressText(lDeviceIndex,
-      lChannelNumber);
+  if TryStrToInt(lTail, lChannelNumber) then
+    Result := Copy(Result, 1, lDash) + Format('%2.2d', [lChannelNumber]);
+end;
+
+function Mic185ConfiguredChannelAddress(ARegistry: TRecorderTagRegistry;
+  const ASourceId, ANativeAddress: string): string;
+var
+  lDash: Integer;
+  lPrefix: string;
+begin
+  Result := Mic185CanonicalAddress(ANativeAddress);
+  lPrefix := RecorderConfiguredSourceAddress(ARegistry, ASourceId);
+  lDash := RPos('-', Result);
+  if (lPrefix <> '') and (lDash > 0) then
+    Result := lPrefix + Copy(Result, lDash, MaxInt);
 end;
 
 function RecorderMic185MeasurementAddressText(ADeviceIndex,
@@ -413,14 +423,23 @@ begin
 end;
 
 function SameMic185Address(const ALeft, ARight: string): Boolean;
+var
+  lLeft: string;
+  lRight: string;
+  lLeftDash: Integer;
+  lRightDash: Integer;
 begin
-  Result := SameText(Mic185CanonicalAddress(ALeft),
-    Mic185CanonicalAddress(ARight));
-  if not Result then
-    Result := SameText(Copy(Mic185CanonicalAddress(ALeft),
-      Pos('-', Mic185CanonicalAddress(ALeft)) + 1, MaxInt),
-      Copy(Mic185CanonicalAddress(ARight),
-      Pos('-', Mic185CanonicalAddress(ARight)) + 1, MaxInt));
+  lLeft := Mic185CanonicalAddress(ALeft);
+  lRight := Mic185CanonicalAddress(ARight);
+  Result := SameText(lLeft, lRight);
+  if Result then
+    Exit;
+  lLeftDash := RPos('-', lLeft);
+  lRightDash := RPos('-', lRight);
+  if (lLeftDash <= 0) or (lRightDash <= 0) then
+    Exit(False);
+  Result := SameText(Copy(lLeft, lLeftDash + 1, MaxInt),
+    Copy(lRight, lRightDash + 1, MaxInt));
 end;
 
 function RecorderMic185SourceDeviceIndex(ARegistry: TRecorderTagRegistry;
@@ -2442,9 +2461,6 @@ begin
       lLink := TJSONObject(lLinks.Items[J]);
       lOriginalAddress := lLink.Get('address', '');
       lAddress := Mic185CanonicalAddress(lOriginalAddress);
-      if Pos('-', lAddress) > 0 then
-        lAddress := IntToStr(RecorderMic185SourceDeviceIndex(ARegistry,
-          lSourceId)) + Copy(lAddress, Pos('-', lAddress), MaxInt);
       if lAddress = '' then
         Continue;
       if not SameText(Trim(lOriginalAddress), lAddress) then
@@ -2457,7 +2473,7 @@ begin
       lTag := nil;
       for K := 0 to ARegistry.TagCount - 1 do
         if SameText(ARegistry.Tags[K].SourceId, lSourceId) and
-          SameText(ARegistry.Tags[K].Address, lAddress) then
+          SameMic185Address(ARegistry.Tags[K].Address, lAddress) then
         begin
           lTag := ARegistry.Tags[K];
           Break;
@@ -2470,8 +2486,11 @@ begin
         lCapacity := Ceil(Max(4096, lPollHz * 4));
         lTag := ARegistry.CreateTag(lTagName, lCapacity);
       end;
+      if lCreated or (not SameText(lTag.SourceId, lSourceId)) or
+        (not SameMic185Address(lTag.Address, lAddress)) then
+        lTag.Address := Mic185ConfiguredChannelAddress(ARegistry,
+          lSourceId, lAddress);
       lTag.SourceId := lSourceId;
-      lTag.Address := lAddress;
       lTag.ModuleType := CMic185ModuleName;
       lTag.PollFrequencyHz := lLink.Get('pollFrequencyHz', lPollHz);
       lMode := lLink.Get('sourceValueMode', '');
@@ -2801,8 +2820,8 @@ begin
     if SameText(lTag.SourceId, SourceId) and
       SameMic185Address(lTag.Address, AAddress) then
     begin
-      { Миграция адреса, зависевшего от порядка обнаружения, на IP-адрес. }
-      lTag.Address := Mic185CanonicalAddress(AAddress);
+      { Сохраняем заданный источнику префикс, нормализуя только номер канала. }
+      lTag.Address := Mic185CanonicalAddress(lTag.Address);
       Exit(lTag);
     end;
   end;
@@ -3075,8 +3094,13 @@ begin
       lTag := ARegistry.CreateTag(lChannels[I].Name, lCapacity);
     end;
 
+    if lCreated or (not SameText(lTag.SourceId, SourceId)) or
+      (not SameMic185Address(lTag.Address, lChannels[I].Address)) then
+      lTag.Address := Mic185ConfiguredChannelAddress(ARegistry, SourceId,
+        lChannels[I].Address)
+    else
+      lTag.Address := Mic185CanonicalAddress(lTag.Address);
     lTag.SourceId := SourceId;
-    lTag.Address := lChannels[I].Address;
     lTag.ModuleType := CMic185ModuleName;
     lTag.PollFrequencyHz := lChannels[I].PollFrequencyHz;
     lTag.SourceValueMode := '';
@@ -3602,9 +3626,6 @@ begin
     Exit;
 
   lAddress := Mic185CanonicalAddress(ATag.Address);
-  if Pos('-', lAddress) > 0 then
-    lAddress := IntToStr(RecorderMic185SourceDeviceIndex(ARegistry,
-      lSourceId)) + Copy(lAddress, Pos('-', lAddress), MaxInt);
   if (lAddress <> '') and (not SameText(lAddress, Trim(ATag.Address))) then
   begin
     RecorderMic185Log(Format(

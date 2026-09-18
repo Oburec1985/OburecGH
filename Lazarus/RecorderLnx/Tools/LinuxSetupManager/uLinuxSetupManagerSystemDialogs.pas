@@ -57,6 +57,7 @@ type
     fDragStartY: Integer;
     fDragStartHeight: Integer;
     fDiskFsCombo: TComboBox;
+    fTimeMode: TComboBox;
     fDiskProcess: TProcess;
     fDiskTimer: TTimer;
     fDiskOutput: UTF8String;
@@ -471,18 +472,74 @@ begin
   end;
 end;
 
+function DefaultNtpSubnet: string;
+var
+  lOutput, lAddressText, lIp: string;
+  lParts: TStringList;
+  lStart, lEnd, lSlash, lPrefix, lIndex, lOctet: Integer;
+  lAddress, lMask, lNetwork: LongWord;
+begin
+  Result := '';
+  if not RunCommand('ip', ['-4', '-o', 'addr', 'show', 'scope', 'global'],
+    lOutput) then Exit;
+  lStart := Pos(' inet ', lOutput);
+  if lStart = 0 then Exit;
+  Inc(lStart, Length(' inet '));
+  lEnd := lStart;
+  while (lEnd <= Length(lOutput)) and (lOutput[lEnd] > ' ') do Inc(lEnd);
+  lAddressText := Copy(lOutput, lStart, lEnd - lStart);
+  lSlash := Pos('/', lAddressText);
+  if (lSlash = 0) or not TryStrToInt(Copy(lAddressText, lSlash + 1,
+    MaxInt), lPrefix) or (lPrefix < 1) or (lPrefix > 32) then Exit;
+  lIp := Copy(lAddressText, 1, lSlash - 1);
+  lParts := TStringList.Create;
+  try
+    lParts.StrictDelimiter := True;
+    lParts.Delimiter := '.';
+    lParts.DelimitedText := lIp;
+    if lParts.Count <> 4 then Exit;
+    lAddress := 0;
+    for lIndex := 0 to 3 do
+    begin
+      if not TryStrToInt(lParts[lIndex], lOctet) or
+        (lOctet < 0) or (lOctet > 255) then Exit;
+      lAddress := (lAddress shl 8) or LongWord(lOctet);
+    end;
+    lMask := not ((LongWord(1) shl (32 - lPrefix)) - 1);
+    lNetwork := lAddress and lMask;
+    Result := IntToStr((lNetwork shr 24) and 255) + '.' +
+      IntToStr((lNetwork shr 16) and 255) + '.' +
+      IntToStr((lNetwork shr 8) and 255) + '.' +
+      IntToStr(lNetwork and 255) + '/' + IntToStr(lPrefix);
+  finally
+    lParts.Free;
+  end;
+end;
+
 procedure TSetupDialog.BuildTime;
 var
   lExample: TLabel;
 begin
   Caption := 'Время и NTP';
   AddField('Часовой пояс', 'Europe/Moscow');
-  AddCheck('Включить синхронизацию NTP', True);
-  AddField('NTP-серверы (через пробел)', '');
+  lExample := TLabel.Create(Self);
+  lExample.Parent := fPage;
+  lExample.SetBounds(12, fNextY + 4, 200, 22);
+  lExample.Caption := 'Режим NTP';
+  fTimeMode := TComboBox.Create(Self);
+  fTimeMode.Parent := fPage;
+  fTimeMode.SetBounds(220, fNextY, 535, 28);
+  fTimeMode.Style := csDropDownList;
+  fTimeMode.Items.Add('Настроить как NTP-сервер');
+  fTimeMode.Items.Add('Назначить NTP-сервер');
+  fTimeMode.ItemIndex := 0;
+  Inc(fNextY, 38);
+  AddField('Хост NTP-сервера', '192.168.9.66');
+  AddField('Подсеть клиентов сервера (IPv4/CIDR)', DefaultNtpSubnet);
   lExample := TLabel.Create(Self);
   lExample.Parent := fPage;
   lExample.SetBounds(220, fNextY, 535, 22);
-  lExample.Caption := 'Например: pool.ntp.org 192.168.9.92';
+  lExample.Caption := 'Подсеть рассчитана по IPv4-адресу и маске адаптера';
   Inc(fNextY, 24);
 end;
 
@@ -1410,8 +1467,9 @@ begin
       if AAction = 'plan' then
       begin
         fOutputMemo.Text := 'Часовой пояс: ' + FieldValue(0) + LineEnding +
-          'NTP: ' + Checked(0) + LineEnding +
-          'Серверы: ' + FieldValue(1);
+          'Режим: ' + fTimeMode.Text + LineEnding +
+          'Хост: ' + FieldValue(1) + LineEnding +
+          'Подсеть клиентов: ' + FieldValue(2);
         Exit;
       end;
       if AAction = 'show' then lArgs.Add('show')
@@ -1421,19 +1479,14 @@ begin
         if not RunHelper(CTimeHelper, lArgs, True, '', lExtra) then
         begin fOutputMemo.Text := lExtra; Exit; end;
         lArgs.Clear;
-        lArgs.Add('ntp');
-        if fChecks[0].Checked then lArgs.Add('enable')
-        else lArgs.Add('disable');
-        if not RunHelper(CTimeHelper, lArgs, True, '', lExtra) then
-        begin fOutputMemo.Text := lExtra; Exit; end;
-        if FieldValue(1) <> '' then
+        if fTimeMode.ItemIndex = 0 then
         begin
-          lArgs.Clear;
-          lArgs.Add('ntp-servers');
-          lArgs.Add(StringReplace(FieldValue(1), ' ', ',', [rfReplaceAll]));
+          lArgs.Add('ntp-server'); lArgs.Add(FieldValue(2));
         end
         else
-        begin fOutputMemo.Text := lExtra; Exit; end;
+        begin
+          lArgs.Add('ntp-client'); lArgs.Add(FieldValue(1));
+        end;
       end;
     end
     else if fKind = skAccess then

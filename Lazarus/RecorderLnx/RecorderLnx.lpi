@@ -22,6 +22,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="bgracontrols"/>
+      </Item>
+      <Item>
         <PackageName Value="DateTimeCtrls"/>
       </Item>
       <Item>
@@ -665,6 +668,9 @@
       </Item>
       <Item>
         <Name Value="ERecorderStateError"/>
+      </Item>
+      <Item>
+        <Name Value="EIBDatabaseError"/>
       </Item>
       <Item>
         <Name Value="EResNotFound"/>

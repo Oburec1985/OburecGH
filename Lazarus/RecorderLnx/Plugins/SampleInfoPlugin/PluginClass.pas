@@ -29,6 +29,7 @@ type
   TPluginClass = class
   private
     fEvents: TPluginEventList;
+    fOscillograms: TList;
     fLastEvent: LongInt;
     fNotifyCount: LongInt;
     fClosed: Boolean;
@@ -51,6 +52,8 @@ type
       const AValue: Variant): LongBool;
     function CanClose: LongBool;
     function Close: LongBool;
+    procedure AddOscillogram(AOscillogram: TObject);
+    procedure RemoveOscillogram(AOscillogram: TObject);
     procedure AddPlgEvent(const AName: string; AEventType: LongInt;
       AHandler: TPluginEventHandler);
     procedure RemovePlgEvent(AHandler: TPluginEventHandler;
@@ -61,7 +64,7 @@ type
 implementation
 
 uses
-  uCreateComponents;
+  uCreateComponents, uSampleOscillogram;
 
 procedure TPluginEventList.AddEvent(const AName: string; AEventType: LongInt;
   AHandler: TPluginEventHandler);
@@ -108,11 +111,14 @@ constructor TPluginClass.Create;
 begin
   inherited Create;
   fEvents := TPluginEventList.Create;
+  fOscillograms := TList.Create;
   AddPlgEvent('recorder', -1, @HandleRecorderEvent);
 end;
 
 destructor TPluginClass.Destroy;
 begin
+  Close;
+  fOscillograms.Free;
   fEvents.Free;
   inherited Destroy;
 end;
@@ -182,9 +188,25 @@ end;
 
 function TPluginClass.Close: LongBool;
 begin
+  while fOscillograms.Count > 0 do
+  begin
+    TObject(fOscillograms[0]).Free;
+    fOscillograms.Delete(0);
+  end;
   fEvents.Clear;
   fClosed := True;
   Result := True;
+end;
+
+procedure TPluginClass.AddOscillogram(AOscillogram: TObject);
+begin
+  if (AOscillogram <> nil) and not fClosed then
+    fOscillograms.Add(AOscillogram);
+end;
+
+procedure TPluginClass.RemoveOscillogram(AOscillogram: TObject);
+begin
+  fOscillograms.Remove(AOscillogram);
 end;
 
 procedure TPluginClass.AddPlgEvent(const AName: string; AEventType: LongInt;
@@ -205,9 +227,17 @@ begin
 end;
 
 procedure TPluginClass.HandleRecorderEvent(AEvent: LongInt; AData: Pointer);
+var
+  I: Integer;
 begin
   fLastEvent := AEvent;
   Inc(fNotifyCount);
+  if AEvent = PN_RCSTART then
+    for I := 0 to fOscillograms.Count - 1 do
+      TSampleOscillogram(fOscillograms[I]).doStart
+  else if AEvent = PN_RCSTOP then
+    for I := 0 to fOscillograms.Count - 1 do
+      TSampleOscillogram(fOscillograms[I]).doStop;
 end;
 
 end.

@@ -53,7 +53,6 @@ function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
 { Загружает конфигурацию тегов из JSON-файла }
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
-{ Загружает конфигурацию тегов из JSON-файла }
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 
@@ -74,7 +73,7 @@ implementation
 uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
-  uRecorderMeasurementSectionModel, uRecorderSdbStore;
+  uRecorderMeasurementSectionModel, uRecorderSdbStore, uRecorderDebugLog;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -221,6 +220,8 @@ begin
     Result := TRecorderTrendComponent.TypeId
   else if AComponent is TRecorderSpectrumComponent then
     Result := TRecorderSpectrumComponent.TypeId
+  else if AComponent is TRecorderDonutComponent then
+    Result := TRecorderDonutComponent.TypeId
   else
     Result := AComponent.ClassName;
 end;
@@ -762,10 +763,56 @@ begin
   end;
 end;
 
+function HasLaterPhysicalTagAtAddress(ATagItems: TJSONArray;
+  AIndex: Integer): Boolean;
+var
+  I: Integer;
+  lTag, lOther: TJSONObject;
+  lSourceId, lAddress: string;
+begin
+  Result := False;
+  if not (ATagItems.Items[AIndex] is TJSONObject) then
+    Exit;
+  lTag := TJSONObject(ATagItems.Items[AIndex]);
+  lSourceId := Trim(lTag.Get('sourceId', ''));
+  lAddress := Trim(lTag.Get('address', ''));
+  if (lSourceId = '') or (lAddress = '') or
+    lTag.Get('isVirtual', False) or RecorderIsDetachedTagSource(lSourceId) then
+    Exit;
+  for I := AIndex + 1 to ATagItems.Count - 1 do
+  begin
+    if not (ATagItems.Items[I] is TJSONObject) then
+      Continue;
+    lOther := TJSONObject(ATagItems.Items[I]);
+    if lOther.Get('isVirtual', False) then
+      Continue;
+    if SameText(Trim(lOther.Get('sourceId', '')), lSourceId) and
+      SameText(Trim(lOther.Get('address', '')), lAddress) then
+      Exit(True);
+  end;
+end;
+
+function FindPhysicalTagAtAddress(ATags: TRecorderTagRegistry;
+  const ASourceId, AAddress: string): TRecorderTag;
+var
+  I: Integer;
+  lTag: TRecorderTag;
+begin
+  Result := nil;
+  for I := 0 to ATags.TagCount - 1 do
+  begin
+    lTag := ATags.Tags[I];
+    if (not lTag.IsVirtual) and SameText(lTag.SourceId, ASourceId) and
+      SameText(lTag.Address, AAddress) then
+      Exit(lTag);
+  end;
+end;
+
 procedure LoadRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
 var
   I, J: Integer;
+  lSkippedDuplicateCount: Integer;
   lData: TJSONData;
   lRoot: TJSONObject;
   lTag: TRecorderTag;
@@ -807,10 +854,17 @@ begin
       for I := 0 to lGroups.Count - 1 do
         if Trim(lGroups.Strings[I]) <> '' then
           ATags.TagGroupPaths.Add(Trim(lGroups.Strings[I]));
+    lSkippedDuplicateCount := 0;
     for I := 0 to lTags.Count - 1 do
     begin
       if not (lTags.Items[I] is TJSONObject) then
         Continue;
+
+      if HasLaterPhysicalTagAtAddress(lTags, I) then
+      begin
+        Inc(lSkippedDuplicateCount);
+        Continue;
+      end;
 
       lTagJson := TJSONObject(lTags.Items[I]);
       lTag := TRecorderTag.Create(lTagJson.Get('id', Int64(I + 1)),
@@ -860,6 +914,22 @@ begin
         lTag.Free;
       end;
     end;
+    for I := 0 to lTags.Count - 1 do
+    begin
+      if not HasLaterPhysicalTagAtAddress(lTags, I) then
+        Continue;
+      lTagJson := TJSONObject(lTags.Items[I]);
+      lTag := FindPhysicalTagAtAddress(ATags,
+        Trim(lTagJson.Get('sourceId', '')),
+        Trim(lTagJson.Get('address', '')));
+      if lTag <> nil then
+        ATags.RegisterLoadedTagAlias(lTagJson.Get('id', Int64(I + 1)),
+          lTagJson.Get('name', ''), lTag);
+    end;
+    if lSkippedDuplicateCount > 0 then
+      RecorderDebugLog(Format(
+        '[Project] Ignored %d duplicate physical tags by source and address',
+        [lSkippedDuplicateCount]));
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].LoadProc) then
         g_ProjectConfigExtensions[J].LoadProc(lRoot, ATags);
@@ -1111,6 +1181,43 @@ begin
             Ord(TRecorderOscillogramComponent(lComponent).BindingMode));
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
+          lIni.WriteFloat(lSection, 'OscXScale',
+            TRecorderOscillogramComponent(lComponent).XScale);
+          lIni.WriteFloat(lSection, 'OscYScale',
+            TRecorderOscillogramComponent(lComponent).YScale);
+          lIni.WriteFloat(lSection, 'OscYOffset',
+            TRecorderOscillogramComponent(lComponent).YOffset);
+          lIni.WriteBool(lSection, 'OscClosedInput',
+            TRecorderOscillogramComponent(lComponent).ClosedInput);
+          lIni.WriteBool(lSection, 'OscAutoRangeEnabled',
+            TRecorderOscillogramComponent(lComponent).AutoRangeEnabled);
+          lIni.WriteBool(lSection, 'OscXCursorEnabled',
+            TRecorderOscillogramComponent(lComponent).XCursorEnabled);
+          lIni.WriteInteger(lSection, 'OscXCursorCount',
+            TRecorderOscillogramComponent(lComponent).XCursorCount);
+          lIni.WriteBool(lSection, 'OscLegendVisible',
+            TRecorderOscillogramComponent(lComponent).LegendVisible);
+          lIni.WriteBool(lSection, 'OscLevelCursorVisible',
+            TRecorderOscillogramComponent(lComponent).LevelCursorVisible);
+          lIni.WriteInteger(lSection, 'OscPrimaryAxisIndex',
+            TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex);
+          lIni.WriteInteger(lSection, 'OscAxisCount',
+            TRecorderOscillogramComponent(lComponent).AxisCount);
+          for K := 0 to TRecorderOscillogramComponent(lComponent).AxisCount - 1 do
+          begin
+            lAxis := TRecorderOscillogramComponent(lComponent).Axes[K];
+            lIni.WriteString(lSection, Format('OscAxis%dName', [K]), lAxis.Name);
+            lIni.WriteFloat(lSection, Format('OscAxis%dYScale', [K]), lAxis.YScale);
+            lIni.WriteFloat(lSection, Format('OscAxis%dYOffset', [K]), lAxis.YOffset);
+          end;
+          lIni.WriteString(lSection, 'OscTriggerTag',
+            TRecorderOscillogramComponent(lComponent).TriggerTagName);
+          lIni.WriteBool(lSection, 'OscTriggerEnabled',
+            TRecorderOscillogramComponent(lComponent).TriggerEnabled);
+          lIni.WriteFloat(lSection, 'OscTriggerLevel',
+            TRecorderOscillogramComponent(lComponent).TriggerLevel);
+          lIni.WriteFloat(lSection, 'OscTriggerPreRollPercent',
+            TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent);
           lIni.WriteInteger(lSection, 'OscLineCount',
             TRecorderOscillogramComponent(lComponent).LineCount);
           for K := 0 to TRecorderOscillogramComponent(lComponent).LineCount - 1 do
@@ -1121,6 +1228,29 @@ begin
             lIni.WriteInt64(lSection, Format('OscLine%dTagId', [K]), lLine.TagId);
             lIni.WriteInteger(lSection, Format('OscLine%dColor', [K]), lLine.Color);
             lIni.WriteBool(lSection, Format('OscLine%dVisible', [K]), lLine.Visible);
+            lIni.WriteInteger(lSection, Format('OscLine%dAxisIndex', [K]), lLine.AxisIndex);
+          end;
+        end;
+        if lComponent is TRecorderDonutComponent then
+        begin
+          lIni.WriteString(lSection, 'DonutTitle',
+            TRecorderDonutComponent(lComponent).Title);
+          lIni.WriteInteger(lSection, 'DonutHolePercent',
+            TRecorderDonutComponent(lComponent).HolePercent);
+          lIni.WriteBool(lSection, 'DonutSingleValueMode',
+            TRecorderDonutComponent(lComponent).SingleValueMode);
+          lIni.WriteFloat(lSection, 'DonutRangeMin',
+            TRecorderDonutComponent(lComponent).RangeMin);
+          lIni.WriteFloat(lSection, 'DonutRangeMax',
+            TRecorderDonutComponent(lComponent).RangeMax);
+          lIni.WriteInteger(lSection, 'DonutTagCount',
+            TRecorderDonutComponent(lComponent).TagNames.Count);
+          for K := 0 to TRecorderDonutComponent(lComponent).TagNames.Count - 1 do
+          begin
+            lIni.WriteString(lSection, Format('DonutTag%d', [K]),
+              TRecorderDonutComponent(lComponent).TagNames[K]);
+            lIni.WriteInt64(lSection, Format('DonutTag%dId', [K]),
+              TRecorderDonutComponent(lComponent).TagIdAt(K));
           end;
         end;
         if lComponent is TRecorderSpectrumComponent then
@@ -1477,6 +1607,64 @@ begin
                 Ord(rtbmRelativeSelectedTag)));
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
+            TRecorderOscillogramComponent(lComponent).XScale :=
+              lIni.ReadFloat(lSection, 'OscXScale', 0.0);
+            if TRecorderOscillogramComponent(lComponent).XScale < 0 then
+              TRecorderOscillogramComponent(lComponent).XScale := 0.0;
+            TRecorderOscillogramComponent(lComponent).YScale :=
+              lIni.ReadFloat(lSection, 'OscYScale', 1.0);
+            if TRecorderOscillogramComponent(lComponent).YScale <= 0 then
+              TRecorderOscillogramComponent(lComponent).YScale := 1.0;
+            TRecorderOscillogramComponent(lComponent).YOffset :=
+              lIni.ReadFloat(lSection, 'OscYOffset', 0.0);
+            TRecorderOscillogramComponent(lComponent).ClosedInput :=
+              lIni.ReadBool(lSection, 'OscClosedInput', False);
+            TRecorderOscillogramComponent(lComponent).AutoRangeEnabled :=
+              lIni.ReadBool(lSection, 'OscAutoRangeEnabled', False);
+            TRecorderOscillogramComponent(lComponent).XCursorEnabled :=
+              lIni.ReadBool(lSection, 'OscXCursorEnabled', False);
+            TRecorderOscillogramComponent(lComponent).XCursorCount :=
+              lIni.ReadInteger(lSection, 'OscXCursorCount', 1);
+            if (TRecorderOscillogramComponent(lComponent).XCursorCount < 1) or
+              (TRecorderOscillogramComponent(lComponent).XCursorCount > 2) then
+              TRecorderOscillogramComponent(lComponent).XCursorCount := 1;
+            TRecorderOscillogramComponent(lComponent).LegendVisible :=
+              lIni.ReadBool(lSection, 'OscLegendVisible', True);
+            TRecorderOscillogramComponent(lComponent).LevelCursorVisible :=
+              lIni.ReadBool(lSection, 'OscLevelCursorVisible', False);
+            lItemCount := lIni.ReadInteger(lSection, 'OscAxisCount', 1);
+            if lItemCount < 1 then
+              lItemCount := 1;
+            if lItemCount > 16 then
+              lItemCount := 16;
+            TRecorderOscillogramComponent(lComponent).ClearAxes;
+            for K := 0 to lItemCount - 1 do
+            begin
+              lAxis := TRecorderOscillogramComponent(lComponent).AddAxis;
+              lAxis.Name := lIni.ReadString(lSection,
+                Format('OscAxis%dName', [K]), lAxis.Name);
+              lAxis.YScale := lIni.ReadFloat(lSection,
+                Format('OscAxis%dYScale', [K]),
+                TRecorderOscillogramComponent(lComponent).YScale);
+              if lAxis.YScale <= 0 then
+                lAxis.YScale := 1;
+              lAxis.YOffset := lIni.ReadFloat(lSection,
+                Format('OscAxis%dYOffset', [K]),
+                TRecorderOscillogramComponent(lComponent).YOffset);
+            end;
+            TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex :=
+              lIni.ReadInteger(lSection, 'OscPrimaryAxisIndex', 0);
+            if (TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex < 0) or
+              (TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex >= lItemCount) then
+              TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex := 0;
+            TRecorderOscillogramComponent(lComponent).TriggerTagName :=
+              lIni.ReadString(lSection, 'OscTriggerTag', '');
+            TRecorderOscillogramComponent(lComponent).TriggerEnabled :=
+              lIni.ReadBool(lSection, 'OscTriggerEnabled', False);
+            TRecorderOscillogramComponent(lComponent).TriggerLevel :=
+              lIni.ReadFloat(lSection, 'OscTriggerLevel', 0.0);
+            TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent :=
+              lIni.ReadFloat(lSection, 'OscTriggerPreRollPercent', 25.0);
             lItemCount := lIni.ReadInteger(lSection, 'OscLineCount', 0);
             TRecorderOscillogramComponent(lComponent).ClearLines;
             for K := 0 to lItemCount - 1 do
@@ -1496,6 +1684,33 @@ begin
                 lLine.Color := lPaletteColor;
               end;
               lLine.Visible := lIni.ReadBool(lSection, Format('OscLine%dVisible', [K]), True);
+              lLine.AxisIndex := lIni.ReadInteger(lSection,
+                Format('OscLine%dAxisIndex', [K]), 0);
+              if (lLine.AxisIndex < 0) or (lLine.AxisIndex >=
+                TRecorderOscillogramComponent(lComponent).AxisCount) then
+                lLine.AxisIndex := 0;
+            end;
+          end;
+          if lComponent is TRecorderDonutComponent then
+          begin
+            TRecorderDonutComponent(lComponent).Title :=
+              lIni.ReadString(lSection, 'DonutTitle', 'Круговая гистограмма');
+            TRecorderDonutComponent(lComponent).HolePercent :=
+              lIni.ReadInteger(lSection, 'DonutHolePercent', 55);
+            TRecorderDonutComponent(lComponent).SingleValueMode :=
+              lIni.ReadBool(lSection, 'DonutSingleValueMode', False);
+            TRecorderDonutComponent(lComponent).RangeMin :=
+              lIni.ReadFloat(lSection, 'DonutRangeMin', 0);
+            TRecorderDonutComponent(lComponent).RangeMax :=
+              lIni.ReadFloat(lSection, 'DonutRangeMax', 100);
+            TRecorderDonutComponent(lComponent).TagNames.Clear;
+            lItemCount := lIni.ReadInteger(lSection, 'DonutTagCount', 0);
+            for K := 0 to lItemCount - 1 do
+            begin
+              TRecorderDonutComponent(lComponent).TagNames.Add(
+                lIni.ReadString(lSection, Format('DonutTag%d', [K]), ''));
+              TRecorderDonutComponent(lComponent).SetTagIdAt(K,
+                lIni.ReadInt64(lSection, Format('DonutTag%dId', [K]), 0));
             end;
           end;
           if lComponent is TRecorderSpectrumComponent then

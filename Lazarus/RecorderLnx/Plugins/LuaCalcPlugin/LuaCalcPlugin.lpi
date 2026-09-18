@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="LuaCalcPlugin"/>
+      <UseAppBundle Value="False"/>
+    </General>
+    <Units>
+      <Unit><Filename Value="LuaCalcPlugin.lpr"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="uLuaCalcPlugin.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="uLuaCalcEngine.pas"/><IsPartOfProject Value="True"/></Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target><Filename Value="../../lib/$(TargetCPU)-$(TargetOS)/plugins/LuaCalcPlugin"/></Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="../SDK"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <CodeGeneration><RelocatableUnit Value="True"/></CodeGeneration>
+    <Linking><Options><ExecutableType Value="Library"/></Options></Linking>
+  </CompilerOptions>
+</CONFIG>

@@ -5,7 +5,7 @@ unit uRecorderAppVersion;
 interface
 
 const
-  CRecorderLnxVersion = '0.1.36';
+  CRecorderLnxVersion = '0.1.46';
   CRecorderLnxCaption = 'RecorderLnx ' + CRecorderLnxVersion;
 
 implementation

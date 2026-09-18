@@ -35,12 +35,12 @@ BUILD_EXIT=0
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/LinuxSetupManager/uLinuxSetupManagerEmbedded.pas(63,81) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/LinuxSetupManager/uLinuxSetupManagerEmbedded.pas(63,79) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
 (9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/LinuxSetupManager/lib/x86_64-linux/LinuxSetupManagerCli
-(1008) 4369 lines compiled, 0.8 sec
-(1021) 279 warning(s) issued
+(1008) 4454 lines compiled, 0.7 sec
+(1021) 251 warning(s) issued
 (1022) 12 hint(s) issued
 (1023) 2 note(s) issued
 ARTIFACT
-2026-09-16 21:23:12.000000000 +0300|61796592|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+2026-09-17 19:07:05.000000000 +0300|73460200|/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
 /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.4.0, with debug_info, not stripped
 MISSING_LIBS
 none

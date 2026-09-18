@@ -62,7 +62,10 @@ begin
     else
       lOutput := 'Неизвестный встроенный раздел: ' + lSection;
     if lOutput <> '' then
-      if Result = 0 then WriteLn(lOutput) else WriteLn(StdErr, lOutput);
+      if Result = 0 then
+        WriteLn(UTF8String(lOutput))
+      else
+        WriteLn(StdErr, UTF8String(lOutput));
   finally
     lArgs.Free;
   end;
