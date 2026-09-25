@@ -1,11 +1,11 @@
 object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
   Left = 420
-  Height = 440
+  Height = 650
   Top = 220
   Width = 760
   BorderStyle = bsDialog
   Caption = 'Настройка картинки'
-  ClientHeight = 440
+  ClientHeight = 650
   ClientWidth = 760
   Position = poOwnerFormCenter
   LCLVersion = '3.6.0.0'
@@ -60,6 +60,71 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     OnDblClick = ImagesGridDblClick
     OnDrawCell = ImagesGridDrawCell
   end
+  object BindingsGroup: TGroupBox
+    Left = 12
+    Height = 205
+    Top = 366
+    Width = 736
+    Caption = 'Параметры SVG (обозначение в файле: {{ИмяПараметра}})'
+    TabOrder = 5
+    object BindingsGrid: TStringGrid
+      Left = 10
+      Height = 118
+      Top = 24
+      Width = 716
+      ColCount = 3
+      Columns = <
+        item
+          Title.Caption = 'Параметр SVG'
+          Width = 180
+        end
+        item
+          Title.Caption = 'Тег Recorder'
+          Width = 230
+        end
+        item
+          Title.Caption = 'Передавать'
+          Width = 270
+        end>
+      FixedCols = 0
+      RowCount = 2
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+      OnSelectCell = BindingsGridSelectCell
+      TabOrder = 0
+    end
+    object BindingTagLabel: TLabel
+      Left = 10
+      Height = 17
+      Top = 153
+      Width = 82
+      Caption = 'Тег Recorder:'
+    end
+    object BindingTagCombo: TComboBox
+      Left = 98
+      Height = 25
+      Top = 148
+      Width = 280
+      Style = csDropDownList
+      OnChange = BindingTagComboChange
+      TabOrder = 1
+    end
+    object BindingSourceLabel: TLabel
+      Left = 390
+      Height = 17
+      Top = 153
+      Width = 65
+      Caption = 'Источник:'
+    end
+    object BindingSourceCombo: TComboBox
+      Left = 461
+      Height = 25
+      Top = 148
+      Width = 265
+      Style = csDropDownList
+      OnChange = BindingSourceComboChange
+      TabOrder = 2
+    end
+  end
   object AddButton: TButton
     Left = 644
     Height = 27
@@ -90,22 +155,22 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
   object OkButton: TButton
     Left = 552
     Height = 27
-    Top = 397
+    Top = 610
     Width = 94
     Caption = 'OK'
     Default = True
     OnClick = OkButtonClick
-    TabOrder = 5
+    TabOrder = 6
   end
   object CancelButton: TButton
     Left = 654
     Height = 27
-    Top = 397
+    Top = 610
     Width = 94
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2
-    TabOrder = 6
+    TabOrder = 7
   end
   object ImageDialog: TOpenPictureDialog
     Filter = 'Изображения|*.png;*.bmp;*.jpg;*.jpeg;*.gif|Все файлы|*.*'

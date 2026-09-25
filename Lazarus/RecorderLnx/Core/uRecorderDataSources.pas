@@ -1369,9 +1369,13 @@ var
   procedure UpdateTag(ATag: TRecorderTag);
   begin
     ATag.Address := lDisplayAddress;
-    ATag.UnitName := lSignal.UnitsName;
+    if ATag.AutoUnit then
+      ATag.UnitName := lSignal.UnitsName;
     ATag.ModuleType := lSignal.ModuleName;
     ATag.PollFrequencyHz := lSignal.FrequencyHz;
+    { Канал файла с частотой дискретизации публикует блоки, даже если старый
+      проект был сохранён до появления признака IsVector. }
+    ATag.IsVector := lSignal.FrequencyHz > 0.0;
     ATag.SensorCalibrationName := lSignal.SensorCalibrationName;
     ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
     ATag.SourceId := lSourceId;

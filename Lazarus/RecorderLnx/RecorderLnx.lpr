@@ -35,7 +35,11 @@ uses
   uRecorderMeraPaths, uOglChartLog,
   uRecorderUserGuideCapture,
   uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
-  uMc032Device, uRecorderMcbusDevice;
+  uMc032Device, uRecorderMcbusDevice,
+  uRecorderOpcUaSourceEditor;
+
+const
+  CUserGuideDirectoryName: UTF8String = 'Руководство пользователя';
 
 function HasSwitch(const AName: string): Boolean;
 var
@@ -74,10 +78,8 @@ begin
   lBind := SwitchValue('--bind', '');
   lHint := SwitchValue('--hint', '');
   lTimeout := StrToIntDef(SwitchValue('--timeout-ms', '5200'), 5200);
-  lReportFile := ExtractFilePath(ParamStr(0)) +
-    'hardware-search-main-summary.log';
-  lNetworkLogFile := ExtractFilePath(ParamStr(0)) +
-    'hardware-search-main-net.log';
+  lReportFile := ExtractFilePath(ParamStr(0)) + 'hardware-search-main-summary.log';
+  lNetworkLogFile := ExtractFilePath(ParamStr(0)) + 'hardware-search-main-net.log';
   RecorderSetNetworkDebugLogFile(lNetworkLogFile);
   SetRecorderNetworkBindAddress(lBind);
   RecorderClearDiscoveryHints;
@@ -88,9 +90,10 @@ begin
     lReport.Add(Format('hardware-search-test exe="%s" bind="%s" effective="%s" hint="%s" timeout=%d',
       [ParamStr(0), lBind, RecorderNetworkBindAddress, lHint, lTimeout]));
     RecorderDiscoverMeraBroadcast(lFound, lTimeout);
-    if (lFound.Count = 0) and RecorderProbeMeraLegacyHost(lHint, lKind,
-      lSerial, 600) then
+    if (lFound.Count = 0) and RecorderProbeMeraLegacyHost(lHint, lKind,  lSerial, 600) then
+    begin
       lFound.Add(lHint + '=' + lKind + '|' + lSerial);
+    end;
     lReport.Add(Format('found=%d', [lFound.Count]));
     for I := 0 to lFound.Count - 1 do
       lReport.Add(lFound[I]);
@@ -139,7 +142,7 @@ begin
   if HasSwitch('--capture-user-guide') then
     StartRecorderUserGuideCapture(MainForm, SwitchValue('--guide-output',
       ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
-        PathDelim + 'Docs' + PathDelim + 'Руководство пользователя' +
+        PathDelim + 'Docs' + PathDelim + CUserGuideDirectoryName +
         PathDelim + 'screens')));
   try
     Application.Run;

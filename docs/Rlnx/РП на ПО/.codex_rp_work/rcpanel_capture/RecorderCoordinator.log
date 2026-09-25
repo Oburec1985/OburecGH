@@ -1,0 +1,110 @@
+2026-09-21 16:43:27.606 [INFO] [TID:21236] Coordinator process started
+2026-09-21 16:43:27.658 [INFO] [TID:21236] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:43:27.658 [INFO] [TID:21236] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:43:27.658 [INFO] [TID:23756] Discovery listening on UDP/38765
+2026-09-21 16:43:27.658 [INFO] [TID:11684|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:43:32.742 [INFO] [TID:21236] Coordinator process stopped
+2026-09-21 16:43:32.917 [INFO] [TID:23756] Discovery stopped
+2026-09-21 16:43:32.917 [INFO] [TID:21236] HTTP stop requested
+2026-09-21 16:43:32.932 [INFO] [TID:11684|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:44:41.206 [INFO] [TID:20704] Coordinator process started
+2026-09-21 16:44:41.235 [INFO] [TID:20704] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:44:41.235 [INFO] [TID:20704] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:44:41.235 [INFO] [TID:17800] Discovery listening on UDP/38765
+2026-09-21 16:44:41.235 [INFO] [TID:22080|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:44:41.600 [INFO] [TID:17800] Discovery recorder found:  192.168.5.244
+2026-09-21 16:44:41.622 [INFO] [TID:17800] Discovery recorder found:  192.168.5.244
+2026-09-21 16:44:43.567 [INFO] [TID:20704] Coordinator process stopped
+2026-09-21 16:44:43.728 [INFO] [TID:17800] Discovery stopped
+2026-09-21 16:44:43.728 [INFO] [TID:20704] HTTP stop requested
+2026-09-21 16:44:43.775 [INFO] [TID:22080|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:45:40.188 [INFO] [TID:6288] Coordinator process started
+2026-09-21 16:45:40.222 [INFO] [TID:6288] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:45:40.222 [INFO] [TID:6288] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:45:40.222 [INFO] [TID:22712|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:45:40.223 [INFO] [TID:19340] Discovery listening on UDP/38765
+2026-09-21 16:45:40.816 [INFO] [TID:19340] Discovery recorder found:  192.168.5.244
+2026-09-21 16:45:40.819 [INFO] [TID:19340] Discovery recorder found:  192.168.5.244
+2026-09-21 16:45:42.502 [INFO] [TID:6288] Coordinator process stopped
+2026-09-21 16:45:42.657 [INFO] [TID:19340] Discovery stopped
+2026-09-21 16:45:42.657 [INFO] [TID:6288] HTTP stop requested
+2026-09-21 16:45:42.688 [INFO] [TID:22712|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:46:29.608 [INFO] [TID:24244] Coordinator process started
+2026-09-21 16:46:29.642 [INFO] [TID:24244] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:46:29.642 [INFO] [TID:24244] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:46:29.642 [INFO] [TID:21788] Discovery listening on UDP/38765
+2026-09-21 16:46:29.642 [INFO] [TID:19916|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:46:31.022 [INFO] [TID:21788] Discovery recorder found:  192.168.5.244
+2026-09-21 16:46:31.023 [INFO] [TID:21788] Discovery recorder found:  192.168.5.244
+2026-09-21 16:46:34.131 [INFO] [TID:21788] Discovery recorder found:  192.168.5.244
+2026-09-21 16:46:34.131 [INFO] [TID:21788] Discovery recorder found:  192.168.5.244
+2026-09-21 16:46:35.942 [INFO] [TID:24244] Coordinator process stopped
+2026-09-21 16:46:36.189 [INFO] [TID:21788] Discovery stopped
+2026-09-21 16:46:36.189 [INFO] [TID:24244] HTTP stop requested
+2026-09-21 16:46:36.252 [INFO] [TID:19916|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:47:51.840 [INFO] [TID:15812] Coordinator process started
+2026-09-21 16:47:51.875 [INFO] [TID:15812] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:47:51.876 [INFO] [TID:15812] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:47:51.876 [INFO] [TID:22964|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:47:51.876 [INFO] [TID:21912] Discovery listening on UDP/38765
+2026-09-21 16:47:52.878 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:47:52.879 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:47:55.985 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:47:55.986 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:47:59.149 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:47:59.150 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:02.317 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:02.318 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:05.429 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:05.430 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:08.558 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:08.559 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:11.693 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:11.694 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:14.830 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:14.831 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:17.933 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:17.934 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:21.022 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:21.022 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:24.093 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:24.094 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:27.181 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:27.182 [INFO] [TID:21912] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:55.498 [INFO] [TID:24536] Coordinator process started
+2026-09-21 16:48:55.532 [INFO] [TID:24536] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:48:55.532 [INFO] [TID:24536] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:48:55.533 [INFO] [TID:22008|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:48:55.533 [INFO] [TID:23224] Discovery listening on UDP/38765
+2026-09-21 16:48:58.413 [INFO] [TID:23224] Discovery recorder found:  192.168.5.244
+2026-09-21 16:48:58.413 [INFO] [TID:23224] Discovery recorder found:  192.168.5.244
+2026-09-21 16:49:01.517 [INFO] [TID:23224] Discovery recorder found:  192.168.5.244
+2026-09-21 16:49:01.518 [INFO] [TID:23224] Discovery recorder found:  192.168.5.244
+2026-09-21 16:49:01.882 [INFO] [TID:24536] Coordinator process stopped
+2026-09-21 16:49:02.035 [INFO] [TID:23224] Discovery stopped
+2026-09-21 16:49:02.035 [INFO] [TID:24536] HTTP stop requested
+2026-09-21 16:49:02.066 [INFO] [TID:22008|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:50:02.458 [INFO] [TID:22868] Coordinator process started
+2026-09-21 16:50:02.491 [INFO] [TID:22868] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:50:02.492 [INFO] [TID:22868] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:50:02.492 [INFO] [TID:23692|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:50:02.492 [INFO] [TID:16244] Discovery listening on UDP/38765
+2026-09-21 16:50:04.460 [INFO] [TID:16244] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:04.461 [INFO] [TID:16244] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:07.600 [INFO] [TID:16244] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:07.601 [INFO] [TID:16244] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:08.833 [INFO] [TID:22868] Coordinator process stopped
+2026-09-21 16:50:08.907 [INFO] [TID:16244] Discovery stopped
+2026-09-21 16:50:08.907 [INFO] [TID:22868] HTTP stop requested
+2026-09-21 16:50:08.939 [INFO] [TID:23692|CoordinatorHttpListener] HTTP listener stopped
+2026-09-21 16:50:49.458 [INFO] [TID:22984] Coordinator process started
+2026-09-21 16:50:49.491 [INFO] [TID:22984] HTTP start requested address=127.0.0.1 port=18765
+2026-09-21 16:50:49.492 [INFO] [TID:22984] GUI Запуск HTTP API: 127.0.0.1:18765
+2026-09-21 16:50:49.492 [INFO] [TID:19536] Discovery listening on UDP/38765
+2026-09-21 16:50:49.492 [INFO] [TID:14856|CoordinatorHttpListener] HTTP listener starting
+2026-09-21 16:50:51.755 [INFO] [TID:19536] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:51.756 [INFO] [TID:19536] Discovery recorder found:  192.168.5.244
+2026-09-21 16:50:51.769 [INFO] [TID:22984] Coordinator process stopped
+2026-09-21 16:50:52.010 [INFO] [TID:19536] Discovery stopped
+2026-09-21 16:50:52.010 [INFO] [TID:22984] HTTP stop requested
+2026-09-21 16:50:52.041 [INFO] [TID:14856|CoordinatorHttpListener] HTTP listener stopped

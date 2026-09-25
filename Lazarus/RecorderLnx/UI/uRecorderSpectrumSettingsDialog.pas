@@ -58,6 +58,7 @@ type
     function IsSpectrumTagSelectable(const ATagName: string): Boolean;
     function TagDisplayText(const ATagName: string): string;
     function DisplayItemTagName(AList: TListBox; AIndex: Integer): string;
+    function UsedContainsTag(const ATagName: string): Boolean;
 
     procedure FilterEditChange(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -99,10 +100,12 @@ begin
   fDraft.Assign(fComponent);
 
   Caption := 'Настройка спектрального графика - ' + AComponent.Name;
-  BorderStyle := bsDialog;
+  BorderStyle := bsSizeable;
   Position := poOwnerFormCenter;
   ClientWidth := 710;
   ClientHeight := 555;
+  Constraints.MinWidth := 710;
+  Constraints.MinHeight := 555;
 
   BuildUi;
   LoadFromComponent;
@@ -162,6 +165,18 @@ begin
   else
     Result := AList.Items[AIndex];
 end;
+
+function TRecorderSpectrumSettingsDialog.UsedContainsTag(
+  const ATagName: string): Boolean;
+var
+  I: Integer;
+begin
+  for I := 0 to fUsedList.Items.Count - 1 do
+    if SameText(DisplayItemTagName(fUsedList, I), ATagName) then
+      Exit(True);
+  Result := False;
+end;
+
 procedure TRecorderSpectrumSettingsDialog.BuildUi;
 var
   lLabel: TLabel;
@@ -190,11 +205,13 @@ begin
   fFilterEdit := TEdit.Create(Self);
   fFilterEdit.Parent := Self;
   fFilterEdit.SetBounds(12, 30, 200, 23);
+  fFilterEdit.Anchors := [akLeft, akTop, akRight];
   fFilterEdit.OnChange := @FilterEditChange;
 
   fAvailableList := TListBox.Create(Self);
   fAvailableList.Parent := Self;
   fAvailableList.SetBounds(12, 60, 200, 400);
+  fAvailableList.Anchors := [akLeft, akTop, akRight, akBottom];
   fAvailableList.MultiSelect := True;
   fAvailableList.OnDblClick := @AvailableListDblClick;
 
@@ -202,12 +219,14 @@ begin
   fAddButton := TButton.Create(Self);
   fAddButton.Parent := Self;
   fAddButton.SetBounds(220, 180, 36, 25);
+  fAddButton.Anchors := [akTop, akRight];
   fAddButton.Caption := '>>';
   fAddButton.OnClick := @AddButtonClick;
 
   fRemoveButton := TButton.Create(Self);
   fRemoveButton.Parent := Self;
   fRemoveButton.SetBounds(220, 215, 36, 25);
+  fRemoveButton.Anchors := [akTop, akRight];
   fRemoveButton.Caption := '<<';
   fRemoveButton.OnClick := @RemoveButtonClick;
 
@@ -220,6 +239,7 @@ begin
   fUsedList := TListBox.Create(Self);
   fUsedList.Parent := Self;
   fUsedList.SetBounds(262, 60, 200, 400);
+  fUsedList.Anchors := [akTop, akRight, akBottom];
   fUsedList.MultiSelect := True;
   fUsedList.OnDblClick := @UsedListDblClick;
 
@@ -227,6 +247,7 @@ begin
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 24, 220, 180);
+  lGroupBox.Anchors := [akTop, akRight];
   lGroupBox.Caption := 'Настройка осей';
 
   lLabel := TLabel.Create(lGroupBox);
@@ -279,6 +300,7 @@ begin
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
   lGroupBox.SetBounds(478, 215, 220, 225);
+  lGroupBox.Anchors := [akTop, akRight, akBottom];
   lGroupBox.Caption := 'Отображение';
 
   fShowAlarmsCheck := TCheckBox.Create(lGroupBox);
@@ -332,6 +354,7 @@ begin
   fTahoCombo := TComboBox.Create(Self);
   fTahoCombo.Parent := Self;
   fTahoCombo.SetBounds(563, 449, 135, 23);
+  fTahoCombo.Anchors := [akRight, akBottom];
   fTahoCombo.Style := csDropDownList;
   fTahoCombo.Items.Add('');
   if fTagRegistry <> nil then
@@ -344,6 +367,7 @@ begin
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
   fOkButton.SetBounds(520, 515, 80, 25);
+  fOkButton.Anchors := [akRight, akBottom];
   fOkButton.Caption := 'ОК';
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
@@ -351,6 +375,7 @@ begin
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(615, 515, 80, 25);
+  fCancelButton.Anchors := [akRight, akBottom];
   fCancelButton.Caption := 'Отмена';
   fCancelButton.Cancel := True;
   fCancelButton.ModalResult := mrCancel;
@@ -398,6 +423,7 @@ end;
 procedure TRecorderSpectrumSettingsDialog.StoreToComponent;
 var
   I: Integer;
+  lTag: TRecorderTag;
 begin
   fDraft.RangeMinX := ParseFloatText(fMinXEdit.Text, fDraft.RangeMinX);
   fDraft.RangeMaxX := ParseFloatText(fMaxXEdit.Text, fDraft.RangeMaxX);
@@ -416,9 +442,21 @@ begin
   fDraft.ResultType := fResultTypeCombo.ItemIndex;
   fDraft.TahoTagName := fTahoCombo.Text;
 
+  { Имя в строке списка содержит частоту только для показа. Ссылку сохраняем
+    одной операцией как согласованную пару TagId + TagName; иначе старый TagId
+    (обычно MemTag) оставался на том же индексе после замены имени. }
   fDraft.TagNames.Clear;
+  fDraft.ClearTagRefs;
   for I := 0 to fUsedList.Count - 1 do
-    fDraft.TagNames.Add(DisplayItemTagName(fUsedList, I));
+  begin
+    lTag := nil;
+    if fUsedList.Items.Objects[I] is TRecorderTag then
+      lTag := TRecorderTag(fUsedList.Items.Objects[I]);
+    if (lTag = nil) and (fTagRegistry <> nil) then
+      lTag := fTagRegistry.FindByName(DisplayItemTagName(fUsedList, I));
+    if lTag <> nil then
+      fDraft.SetTagRefAt(fDraft.TagNames.Count, lTag);
+  end;
 end;
 
 procedure TRecorderSpectrumSettingsDialog.OkButtonClick(Sender: TObject);
@@ -445,7 +483,7 @@ begin
     if fAvailableList.Selected[I] then
     begin
       lTagName := DisplayItemTagName(fAvailableList, I);
-      if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) < 0 then
+      if not UsedContainsTag(lTagName) then
       begin
         fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
         lChanged := True;
@@ -483,7 +521,7 @@ begin
   if lIdx >= 0 then
   begin
     lTagName := DisplayItemTagName(fAvailableList, lIdx);
-    if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) < 0 then
+    if not UsedContainsTag(lTagName) then
     begin
       fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
       UpdateAvailableList;
@@ -518,7 +556,7 @@ begin
       lTagName := fAllAvailableTags[I];
       
       // Исключаем те, что уже выбраны
-      if fUsedList.Items.IndexOf(TagDisplayText(lTagName)) >= 0 then
+      if UsedContainsTag(lTagName) then
         Continue;
         
       // Фильтруем по подстроке

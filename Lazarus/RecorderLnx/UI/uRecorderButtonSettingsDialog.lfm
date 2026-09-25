@@ -3,7 +3,9 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
   Height = 452
   Top = 240
   Width = 540
-  BorderStyle = bsDialog
+  BorderStyle = bsSizeable
+  Constraints.MinHeight = 452
+  Constraints.MinWidth = 540
   Caption = 'Настройка кнопки'
   ClientHeight = 452
   ClientWidth = 540
@@ -21,6 +23,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 16
     Width = 352
+    Anchors = [akTop, akLeft, akRight]
     TabOrder = 0
   end
   object lblTagSearch: TLabel
@@ -35,6 +38,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 52
     Width = 352
+    Anchors = [akTop, akLeft, akRight]
     OnChange = edTagSearchChange
     TabOrder = 1
   end
@@ -50,6 +54,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 88
     Width = 352
+    Anchors = [akTop, akLeft, akRight]
     ItemHeight = 15
     Style = csDropDownList
     TabOrder = 2
@@ -59,6 +64,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 30
     Top = 116
     Width = 352
+    Anchors = [akTop, akLeft, akRight]
     AutoSize = False
     Caption = 'Кнопку можно привязать только к виртуальному тегу.'
     WordWrap = True
@@ -75,6 +81,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 154
     Width = 352
+    Anchors = [akTop, akLeft, akRight]
     ItemHeight = 15
     Items.Strings = (
       'С фиксацией (переключатель)'
@@ -139,6 +146,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 298
     Width = 304
+    Anchors = [akTop, akLeft, akRight]
     TabOrder = 7
   end
   object btnPressedImage: TButton
@@ -146,6 +154,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 298
     Width = 40
+    Anchors = [akTop, akRight]
     Caption = '...'
     OnClick = btnPressedImageClick
     TabOrder = 8
@@ -162,6 +171,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 334
     Width = 304
+    Anchors = [akTop, akLeft, akRight]
     TabOrder = 9
   end
   object btnReleasedImage: TButton
@@ -169,6 +179,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 23
     Top = 334
     Width = 40
+    Anchors = [akTop, akRight]
     Caption = '...'
     OnClick = btnReleasedImageClick
     TabOrder = 10
@@ -178,6 +189,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 27
     Top = 408
     Width = 92
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     OnClick = btnOkClick
@@ -188,6 +200,7 @@ object RecorderButtonSettingsDialog: TRecorderButtonSettingsDialog
     Height = 27
     Top = 408
     Width = 92
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2

@@ -14,6 +14,10 @@ from pathlib import Path
 APP_NAME = "RecorderLnx"
 AGENT_NAME = "RecorderHostAgent"
 PACKAGE_NAME = "recorderlnx"
+PLUGIN_FILES = (
+    "libluacalcplugin.so",
+    "libsampleinfoplugin.so",
+)
 
 
 def sha256_bytes(data):
@@ -235,6 +239,9 @@ check_path /opt/mera/RecorderLnx/RecorderHostAgent
 check_path /opt/mera/RecorderLnx/LinuxSetupManager
 check_path /opt/mera/RecorderLnx/LinuxSetupManagerCli
 check_path /opt/mera/RecorderLnx/RecorderHostAgent.ini
+check_path /opt/mera/RecorderLnx/plugins/libluacalcplugin.so
+check_path /opt/mera/RecorderLnx/plugins/libsampleinfoplugin.so
+check_path /opt/mera/RecorderLnx/lib/liblua5.4.so.0
 check_path /usr/local/sbin/recorder-host-agent-shutdown
 check_path /usr/local/sbin/recorderlnx-connect-share
 check_path /usr/local/sbin/recorderlnx-share-folder
@@ -243,6 +250,7 @@ check_path /usr/local/sbin/recorderlnx-configure-wol
 check_path /usr/local/sbin/recorderlnx-mount-kip-obmen
 check_path /usr/local/sbin/recorderlnx-associate-mera-winpos
 check_path /usr/local/sbin/recorderlnx-associate-file
+check_path /usr/local/sbin/recorderlnx-current-screen-rdp
 check_path /usr/lib/systemd/user/recorder-host-agent.service
 check_path /usr/lib/systemd/system/recorderlnx-network-shares.service
 check_path /usr/lib/systemd/system/recorderlnx-network-shares.timer
@@ -284,7 +292,7 @@ Section: science
 Priority: optional
 Architecture: {architecture}
 Maintainer: Mera
-Depends: libc6, libgtk2.0-0, libfbclient2, sudo, cifs-utils, policykit-1, samba, ethtool, util-linux, xdg-utils, shared-mime-info, libcap2, libgnutls30, libnettle8, libseccomp2
+Depends: libc6, libgtk2.0-0, libfbclient2, sudo, cifs-utils, policykit-1, samba, acl, ethtool, util-linux, xdg-utils, shared-mime-info, libcap2, libgnutls30, libnettle8, libseccomp2
 Installed-Size: {installed_size_kb}
 Description: RecorderLnx measurement recorder
  Cross-platform RecorderLnx measurement recorder.
@@ -378,26 +386,26 @@ install_desktop_shortcuts() {
   for home in /home/*; do
     [ -d "$home" ] || continue
     user=$(basename "$home")
-    candidates="$home/Desktop"
     xdg_desktop=$(desktop_dir_from_user_dirs "$home" || true)
-    if [ -n "$xdg_desktop" ] && [ "$xdg_desktop" != "$home/Desktop" ]; then
-      candidates="$xdg_desktop
-$candidates"
+    if [ -n "$xdg_desktop" ]; then
+      desktop="$xdg_desktop"
+    elif [ -d "$home/Рабочий стол" ]; then
+      desktop="$home/Рабочий стол"
+    else
+      desktop="$home/Desktop"
     fi
+    mkdir -p "$desktop" || continue
+    chown "$user:$user" "$desktop" 2>/dev/null || true
     for shortcut in RecorderLnx.desktop LinuxSetupManager.desktop; do
       case "$shortcut" in
         RecorderLnx.desktop) src=/usr/share/applications/recorderlnx.desktop ;;
         LinuxSetupManager.desktop) src=/usr/share/applications/recorderlnx-linux-setup-manager.desktop ;;
       esac
       [ -f "$src" ] || continue
-      printf '%s\\n' "$candidates" | while IFS= read -r desktop; do
-        [ -n "$desktop" ] || continue
-        [ -d "$desktop" ] || continue
-        cp "$src" "$desktop/$shortcut" || continue
-        chmod 755 "$desktop/$shortcut" || true
-        chown "$user:$user" "$desktop/$shortcut" 2>/dev/null || true
-        log "desktop shortcut created: $desktop/$shortcut"
-      done
+      cp "$src" "$desktop/$shortcut" || continue
+      chmod 755 "$desktop/$shortcut" || true
+      chown "$user:$user" "$desktop/$shortcut" 2>/dev/null || true
+      log "desktop shortcut created: $desktop/$shortcut"
     done
   done
 }
@@ -435,6 +443,9 @@ if [ ! -f /var/opt/mera/RecorderLnx/config/projects/default/default.config.json 
 fi
 chmod 755 /opt/mera/RecorderLnx/RecorderLnx
 chmod 755 /opt/mera/RecorderLnx/RecorderHostAgent
+chmod 0644 /opt/mera/RecorderLnx/plugins/libluacalcplugin.so
+chmod 0644 /opt/mera/RecorderLnx/plugins/libsampleinfoplugin.so
+chmod 0644 /opt/mera/RecorderLnx/lib/liblua5.4.so.0
 if command -v systemctl >/dev/null 2>&1; then
   # An older package enabled this as a systemd user unit.  Disable that link
   # to avoid two agents competing for TCP 8766.  XDG Autostart below is the
@@ -535,6 +546,8 @@ exit 0
 def make_data_tar(repo_root):
     project_root = repo_root / "Lazarus" / "RecorderLnx"
     linux_lib = project_root / "lib" / "x86_64-linux"
+    plugins_dir = linux_lib / "plugins"
+    lua_runtime = repo_root / "installer" / "RecorderLnx" / "linux" / "runtime" / "liblua5.4.so.0"
     agent_exe = linux_lib / AGENT_NAME
     linux_setup_exe = project_root / "Tools" / "LinuxSetupManager" / "lib" / "x86_64-linux" / "LinuxSetupManager"
     linux_setup_cli_exe = project_root / "Tools" / "LinuxSetupManager" / "lib" / "x86_64-linux" / "LinuxSetupManagerCli"
@@ -546,6 +559,7 @@ def make_data_tar(repo_root):
     kip_obmen_helper = project_root / "Scripts" / "linux" / "recorderlnx-mount-kip-obmen"
     mera_winpos_helper = project_root / "Scripts" / "linux" / "recorderlnx-associate-mera-winpos"
     file_association_helper = project_root / "Scripts" / "linux" / "recorderlnx-associate-file"
+    current_screen_helper = project_root / "Scripts" / "linux" / "recorderlnx-current-screen-rdp"
     app_ini = project_root / "config" / "app.ini"
     default_project = project_root / "config" / "projects" / "default"
     bios_file = project_root / "Device" / "MCbus" / "resources" / "devices" / "mc201" / "mc_201a.bio"
@@ -589,6 +603,7 @@ Type=Application
 Name=Настройка Linux
 Comment=Настройка имени компьютера, Wake-on-LAN и сетевых каталогов
 Exec=/opt/mera/RecorderLnx/LinuxSetupManager
+TryExec=/opt/mera/RecorderLnx/LinuxSetupManager
 Path=/opt/mera/RecorderLnx
 Terminal=false
 Icon=preferences-system
@@ -708,6 +723,10 @@ WantedBy=timers.target
         add_file(tar, linux_setup_exe, "opt/mera/RecorderLnx/LinuxSetupManager", 0o755)
         add_file(tar, linux_setup_cli_exe, "opt/mera/RecorderLnx/LinuxSetupManagerCli", 0o755)
         add_file(tar, private_chronyd, "opt/mera/RecorderLnx/chronyd-private", 0o755)
+        for plugin_file in PLUGIN_FILES:
+            add_file(tar, plugins_dir / plugin_file,
+                     f"opt/mera/RecorderLnx/plugins/{plugin_file}", 0o644)
+        add_file(tar, lua_runtime, "opt/mera/RecorderLnx/lib/liblua5.4.so.0", 0o644)
         add_bytes(tar, "lib/systemd/system/recorderlnx-ntp-server.service",
                   ntp_server_service)
         add_bytes(tar, "opt/mera/RecorderLnx/RecorderHostAgent.ini", agent_config)
@@ -720,6 +739,7 @@ WantedBy=timers.target
         add_file(tar, kip_obmen_helper, "usr/local/sbin/recorderlnx-mount-kip-obmen", 0o755)
         add_file(tar, mera_winpos_helper, "usr/local/sbin/recorderlnx-associate-mera-winpos", 0o755)
         add_file(tar, file_association_helper, "usr/local/sbin/recorderlnx-associate-file", 0o755)
+        add_file(tar, current_screen_helper, "usr/local/sbin/recorderlnx-current-screen-rdp", 0o755)
         add_bytes(tar, "usr/lib/systemd/user/recorder-host-agent.service",
                   agent_service)
         add_bytes(tar, "usr/lib/systemd/system/recorderlnx-network-shares.service",
@@ -797,6 +817,10 @@ def main():
     linux_setup_cli_exe = (repo_root / "Lazarus" / "RecorderLnx" / "Tools" /
                            "LinuxSetupManager" / "lib" / "x86_64-linux" /
                            "LinuxSetupManagerCli")
+    plugins_dir = linux_exe.parent / "plugins"
+    plugin_paths = [plugins_dir / name for name in PLUGIN_FILES]
+    lua_runtime = (repo_root / "installer" / "RecorderLnx" / "linux" /
+                   "runtime" / "liblua5.4.so.0")
     if not linux_exe.exists():
         raise SystemExit(f"Linux binary not found: {linux_exe}")
     if not agent_exe.exists():
@@ -814,6 +838,15 @@ def main():
             f"Linux LinuxSetupManager CLI binary not found: {linux_setup_cli_exe}. "
             "Build LinuxSetupManagerCli.lpi on Linux before packaging."
         )
+    missing_plugins = [str(path) for path in plugin_paths if not path.exists()]
+    if missing_plugins:
+        raise SystemExit(
+            "Linux plugin build output is missing: " + ", ".join(missing_plugins) +
+            ". Build LuaCalcPlugin.lpi and SampleInfoPlugin.lpi on Linux "
+            "before packaging."
+        )
+    if not lua_runtime.exists():
+        raise SystemExit(f"Bundled Linux Lua runtime is missing: {lua_runtime}")
 
     binary, schema_version = validate_linux_binary(repo_root, linux_exe)
     agent_binary = agent_exe.read_bytes()
@@ -825,6 +858,15 @@ def main():
     linux_setup_cli_binary = linux_setup_cli_exe.read_bytes()
     if not linux_setup_cli_binary.startswith(b"\x7fELF"):
         raise SystemExit(f"Not a Linux ELF executable: {linux_setup_cli_exe}")
+    plugin_binaries = {}
+    for plugin_path in plugin_paths:
+        plugin_binary = plugin_path.read_bytes()
+        if not plugin_binary.startswith(b"\x7fELF"):
+            raise SystemExit(f"Not a Linux ELF shared library: {plugin_path}")
+        plugin_binaries[plugin_path.name] = plugin_binary
+    lua_runtime_binary = lua_runtime.read_bytes()
+    if not lua_runtime_binary.startswith(b"\x7fELF"):
+        raise SystemExit(f"Not a Linux ELF shared library: {lua_runtime}")
     latest_linux_setup_source = newest_tree_source(linux_setup_exe.parents[2])
     if (latest_linux_setup_source is not None and
             linux_setup_exe.stat().st_mtime < latest_linux_setup_source.stat().st_mtime):
@@ -842,6 +884,11 @@ def main():
         data_tar, "opt/mera/RecorderLnx/LinuxSetupManager", linux_setup_binary)
     verify_packaged_binary(
         data_tar, "opt/mera/RecorderLnx/LinuxSetupManagerCli", linux_setup_cli_binary)
+    for plugin_name, plugin_binary in plugin_binaries.items():
+        verify_packaged_binary(
+            data_tar, f"opt/mera/RecorderLnx/plugins/{plugin_name}", plugin_binary)
+    verify_packaged_binary(
+        data_tar, "opt/mera/RecorderLnx/lib/liblua5.4.so.0", lua_runtime_binary)
     installed_size_kb = max(1, len(data_tar) // 1024)
     control_tar = make_control_tar(args.version, args.architecture, installed_size_kb)
     output_file = output_dir / f"{PACKAGE_NAME}_{args.version}_{args.architecture}.deb"
@@ -861,6 +908,12 @@ def main():
         f"size={len(linux_setup_binary)} "
         f"SHA256={sha256_bytes(linux_setup_binary)}"
     )
+    for plugin_path in plugin_paths:
+        plugin_binary = plugin_binaries[plugin_path.name]
+        print(
+            f"Linux plugin input: {plugin_path} size={len(plugin_binary)} "
+            f"SHA256={sha256_bytes(plugin_binary)}"
+        )
     print(f"DEB SHA256={sha256_bytes(output_file.read_bytes())}")
     print(output_file)
 

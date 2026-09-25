@@ -22,7 +22,7 @@ unit uRecorderSpectrumEngine;
 interface
 
 uses
-  Classes, SysUtils, Math, SyncObjs
+  Classes, SysUtils, Math, SyncObjs, uCommonTypes
   {$IFDEF MSWINDOWS}, Windows{$ENDIF};
 
 type
@@ -78,6 +78,7 @@ type
     CalculateBandMaximum: Boolean;
     CalculateBandMaximumFrequency: Boolean;
     WriteEstimatesToTags: Boolean;
+    ParallelChannels: Boolean;
     WindowKind: TRecorderSpectrumWindowKind;
     NormalizeMode: TRecorderSpectrumNormalizeMode;
     KeepPhase: Boolean;
@@ -154,6 +155,9 @@ type
     Rms: Double;
     MaxRms: Double;
     MaxFrequencyHz: Double;
+    CalculateRms: Boolean;
+    CalculateMaximum: Boolean;
+    CalculateMaximumFrequency: Boolean;
   end;
 
   TRecorderSpectrumFrame = record
@@ -165,7 +169,10 @@ type
     FFTSize: Integer;
     Bins: Integer;
     FrequencyStepHz: Double;
+    WindowKind: TRecorderSpectrumWindowKind;
+    NormalizeMode: TRecorderSpectrumNormalizeMode;
     Rms: array of Double;
+    RectRms: array of Double;
     PhaseRad: array of Double;
     Bands: array of TRecorderSpectrumBandResult;
     MaxIndex: Integer;
@@ -297,10 +304,6 @@ begin
   Result := (AFirstBin < ABinCount) and (ALastBin >= 0) and
     (AFirstBin <= ALastBin);
 end;
-
-const
-  CTwoPi = 2.0 * Pi;
-  CSqrt2 = 1.4142135623730950488;
 
 var
   gSpectrumComputeManager: TRecorderSpectrumComputeManager = nil;
@@ -460,7 +463,11 @@ begin
   CalculateBandMaximum := False;
   CalculateBandMaximumFrequency := False;
   WriteEstimatesToTags := False;
-  WindowKind := swkHann;
+  ParallelChannels := False;
+  { Rectangular is the neutral default. Window amplitude corrections are
+    useful for individual spectral lines, but must not silently become the
+    default for energy/band estimates. }
+  WindowKind := swkRect;
   NormalizeMode := snmNone;
   KeepPhase := True;
 end;
@@ -474,12 +481,12 @@ begin
   Result := Format(
     'FFTSize=%d,Overlap=%d,OverlapMode=%d,SampleRateHz=%s,AverageBlockCount=%d,ZeroPad=%d,' +
     'AhCorrectionEnabled=%d,AhCorrectionProfileName=%s,IntegrationMode=%d,WindowKind=%d,NormalizeMode=%d,KeepPhase=%d,' +
-    'CalculateBandRms=%d,CalculateBandMaximum=%d,CalculateBandMaximumFrequency=%d,WriteEstimatesToTags=%d',
+    'CalculateBandRms=%d,CalculateBandMaximum=%d,CalculateBandMaximumFrequency=%d,WriteEstimatesToTags=%d,ParallelChannels=%d',
     [FFTSize, Overlap, Ord(OverlapMode), FloatToStr(SampleRateHz, lFS), AverageBlockCount, Ord(ZeroPad),
      Ord(AhCorrectionEnabled), AhCorrectionProfileName, Ord(IntegrationMode),
      Ord(WindowKind), Ord(NormalizeMode), Ord(KeepPhase), Ord(CalculateBandRms),
      Ord(CalculateBandMaximum), Ord(CalculateBandMaximumFrequency),
-     Ord(WriteEstimatesToTags)]);
+     Ord(WriteEstimatesToTags), Ord(ParallelChannels)]);
 end;
 
 procedure TRecorderSpectrumSettings.FromString(const AValue: string);
@@ -552,7 +559,9 @@ begin
       else if SameText(lKey, 'CalculateBandMaximumFrequency') then
         CalculateBandMaximumFrequency := StrToIntDef(lVal, 0) <> 0
       else if SameText(lKey, 'WriteEstimatesToTags') then
-        WriteEstimatesToTags := StrToIntDef(lVal, 0) <> 0;
+        WriteEstimatesToTags := StrToIntDef(lVal, 0) <> 0
+      else if SameText(lKey, 'ParallelChannels') then
+        ParallelChannels := StrToIntDef(lVal, 0) <> 0;
     end;
   finally
     lList.Free;
@@ -907,7 +916,7 @@ begin
   SetLength(fTwiddle, AFFTSize div 2);
   for I := 0 to (AFFTSize div 2) - 1 do
   begin
-    lAngle := -CTwoPi * I / AFFTSize;
+    lAngle := -SHARED_TWO_PI * I / AFFTSize;
     SinCos(lAngle, lSin, lCos);
     fTwiddle[I].Re := lCos;
     fTwiddle[I].Im := lSin;
@@ -1123,7 +1132,7 @@ begin
 
   for I := 0 to fSettings.FFTSize - 1 do
   begin
-    X := CTwoPi * I / (fSettings.FFTSize - 1);
+    X := SHARED_TWO_PI * I / (fSettings.FFTSize - 1);
     case fSettings.WindowKind of
       swkRect:
         fWindow[I] := 1.0;
@@ -1168,13 +1177,20 @@ begin
   AFrame.Bins := fSettings.FFTSize div 2;
   AFrame.SampleRateHz := fSettings.SampleRateHz;
   AFrame.FrequencyStepHz := fSettings.FrequencyStepHz;
+  AFrame.WindowKind := fSettings.WindowKind;
+  AFrame.NormalizeMode := fSettings.NormalizeMode;
   SetLength(AFrame.Rms, AFrame.Bins);
+  if fSettings.CalculateBandRms or
+    (fSettings.IntegrationMode <> simNone) then
+    SetLength(AFrame.RectRms, AFrame.Bins)
+  else
+    SetLength(AFrame.RectRms, 0);
   if fSettings.KeepPhase then
     SetLength(AFrame.PhaseRad, AFrame.Bins)
   else
     SetLength(AFrame.PhaseRad, 0);
 
-  lScale := CSqrt2 / fSettings.FFTSize;
+  lScale := SHARED_SQRT_TWO / fSettings.FFTSize;
   lNorm := 0.0;
   for I := 0 to AFrame.Bins - 1 do
   begin
@@ -1196,6 +1212,25 @@ begin
   if lNorm > 0.0 then
     for I := 0 to AFrame.Bins - 1 do
       AFrame.Rms[I] := AFrame.Rms[I] / lNorm;
+
+  if Length(AFrame.RectRms) > 0 then
+  begin
+    if fSettings.WindowKind = swkRect then
+      for I := 0 to AFrame.Bins - 1 do
+        AFrame.RectRms[I] := Sqrt(Sqr(fWork[I].Re) + Sqr(fWork[I].Im)) * lScale
+    else
+    begin
+      for I := 0 to fSettings.FFTSize - 1 do
+      begin
+        J := fPlan.BitReverse[I];
+        fWork[J].Re := AInput[I];
+        fWork[J].Im := 0.0;
+      end;
+      fPlan.ExecuteForward(fWork);
+      for I := 0 to AFrame.Bins - 1 do
+        AFrame.RectRms[I] := Sqrt(Sqr(fWork[I].Re) + Sqr(fWork[I].Im)) * lScale;
+    end;
+  end;
 
   AFrame.MaxIndex := -1;
   AFrame.MaxFrequencyHz := 0.0;

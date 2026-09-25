@@ -13,7 +13,7 @@ uses
   Classes, SysUtils, uLinuxSetupManagerNetwork, uLinuxSetupManagerAccess,
   uLinuxSetupManagerDisks, uLinuxSetupManagerSsh,
   uLinuxSetupManagerProfile, uLinuxSetupManagerPrograms,
-  uLinuxSetupManagerLegacy;
+  uLinuxSetupManagerLegacy, uLinuxSetupManagerSmb;
 
 function RunEmbedded(const AFirstArgument: Integer): Integer;
 var
@@ -54,6 +54,18 @@ begin
       Result := ExecuteProfileSetup(lArgs, lOutput)
     else if lSection = 'programs' then
       Result := ExecuteProgramsSetup(lArgs, lOutput)
+    else if lSection = 'smb' then
+    begin
+      lPassword := '';
+      lIndex := lArgs.IndexOf('--password-stdin');
+      if lIndex >= 0 then
+      begin
+        lArgs.Delete(lIndex);
+        ReadLn(Input, lPassword);
+      end;
+      Result := ExecuteSmbSetup(lArgs, UTF8String(lPassword), lOutput);
+      lPassword := '';
+    end
     else if (lSection = 'hostname') or (lSection = 'wol') or
       (lSection = 'shares') or (lSection = 'publish') or
       (lSection = 'associate-mera') or (lSection = 'associate-file') or

@@ -27,10 +27,13 @@ type
     FFTSize: Integer;
     Bins: Integer;
     FrequencyStepHz: Double;
+    WindowKind: TRecorderSpectrumWindowKind;
+    NormalizeMode: TRecorderSpectrumNormalizeMode;
     MaxIndex: Integer;
     MaxFrequencyHz: Double;
     MaxRms: Double;
     Rms: array of Double;
+    RectRms: array of Double;
     PhaseRad: array of Double;
     Bands: array of TRecorderSpectrumBandResult;
     constructor Create(const AFrame: TRecorderSpectrumFrame);
@@ -48,13 +51,28 @@ type
   end;
 
   TRecorderSpectrumInputBlock = class(TObject)
+  private
+    fQueueTimes: TRecorderDoubleArray;
+    fQueueValues: TRecorderDoubleArray;
+    fWorkTimes: TRecorderDoubleArray;
+    fWorkValues: TRecorderDoubleArray;
+    fHead: Integer;
+    fCount: Integer;
+    fWorkCount: Integer;
+    fQueued: Boolean;
+    fProcessing: Boolean;
   public
     TagName: string;
-    Times: TRecorderDoubleArray;
-    Values: TRecorderDoubleArray;
-    constructor Create(const ATagName: string; const ATimes, AValues: array of Double;
-      ACount: Integer);
-    procedure AssignSamples(const ATimes, AValues: array of Double; ACount: Integer);
+    constructor Create(const ATagName: string; ACapacity: Integer);
+    procedure Clear;
+    procedure AppendSamples(const ATimes, AValues: array of Double; ACount: Integer);
+    function TakePending: Integer;
+    function HasPending: Boolean;
+    property WorkTimes: TRecorderDoubleArray read fWorkTimes;
+    property WorkValues: TRecorderDoubleArray read fWorkValues;
+    property WorkCount: Integer read fWorkCount;
+    property Queued: Boolean read fQueued write fQueued;
+    property Processing: Boolean read fProcessing write fProcessing;
   end;
 
   { TRecorderSpectrumRuntimeManager
@@ -70,17 +88,25 @@ type
     fProcessLock: TCriticalSection;
     fInputLock: TCriticalSection;
     fInputQueue: TList;
+    fInputBlocks: TList;
     fInputEvent: TEvent;
-    fWorker: TThread;
+    fWorkers: TList;
+    fPublishLock: TCriticalSection;
     fPrepared: Boolean;
     procedure HandleChannelFrame(ASender: TObject; const AFrame: TRecorderSpectrumFrame);
     function FindChannel(const ATagName: string): TRecorderSpectrumChannel;
     procedure UpdateCache(const AFrame: TRecorderSpectrumFrame);
     procedure ClearCache;
     procedure ClearInputQueue;
+    procedure ClearInputBlocks;
+    function FindInputBlock(const ATagName: string): TRecorderSpectrumInputBlock;
     procedure QueueInput(const ATagName: string; const ATimes, AValues: array of Double;
       ACount: Integer);
-    procedure ProcessQueuedInputs;
+    function ProcessOneQueuedInput: Boolean;
+    procedure StartWorkers(AWorkerCount: Integer);
+    procedure StopWorkers;
+    function ConfiguredWorkerCount: Integer;
+    function GetWorkerCount: Integer;
     function FindBindingSettings(const ATagName: string;
       out ASettings: TRecorderSpectrumSettings; out AOutputPrefix: string): Boolean;
     function EstimateTagName(const APrefix, ABandName, ASuffix: string): string;
@@ -103,12 +129,14 @@ type
       ACount: Integer);
     function HasInputTag(const ATagName: string): Boolean;
     property IsPrepared: Boolean read fPrepared;
+    property WorkerCount: Integer read GetWorkerCount;
   end;
 
 implementation
 
 uses
-  uRecorderDebugLog;
+  uRecorderDebugLog
+  {$IFDEF WINDOWS}, Windows{$ENDIF};
 
 type
   TRecorderSpectrumWorker = class(TThread)
@@ -120,26 +148,191 @@ type
     constructor Create(AManager: TRecorderSpectrumRuntimeManager);
   end;
 
+{$IFDEF WINDOWS}
+type
+  TLogicalProcessorInfoExHeader = packed record
+    Relationship: DWORD;
+    Size: DWORD;
+  end;
+  PLogicalProcessorInfoExHeader = ^TLogicalProcessorInfoExHeader;
+
+function GetLogicalProcessorInformationEx(RelationshipType: DWORD;
+  Buffer: Pointer; var ReturnedLength: DWORD): BOOL; stdcall;
+  external kernel32 name 'GetLogicalProcessorInformationEx';
+{$ENDIF}
+
+function PhysicalProcessorCoreCount: Integer;
+{$IFDEF WINDOWS}
+const
+  RelationProcessorCore = 0;
+var
+  lBuffer, lCursor: PByte;
+  lHeader: PLogicalProcessorInfoExHeader;
+  lSize, lOffset: DWORD;
+begin
+  Result := 0;
+  lSize := 0;
+  GetLogicalProcessorInformationEx(RelationProcessorCore, nil, lSize);
+  if lSize > 0 then
+  begin
+    GetMem(lBuffer, lSize);
+    try
+      if GetLogicalProcessorInformationEx(RelationProcessorCore, lBuffer, lSize) then
+      begin
+        lCursor := lBuffer;
+        lOffset := 0;
+        while lOffset + SizeOf(TLogicalProcessorInfoExHeader) <= lSize do
+        begin
+          lHeader := PLogicalProcessorInfoExHeader(lCursor);
+          if lHeader^.Size < SizeOf(TLogicalProcessorInfoExHeader) then
+            Break;
+          if lHeader^.Relationship = RelationProcessorCore then
+            Inc(Result);
+          Inc(lCursor, lHeader^.Size);
+          Inc(lOffset, lHeader^.Size);
+        end;
+      end;
+    finally
+      FreeMem(lBuffer);
+    end;
+  end;
+  if Result < 1 then
+    Result := TThread.ProcessorCount;
+end;
+{$ELSE}
+var
+  lLines, lCores: TStringList;
+  lLine, lPhysicalId, lCoreId: string;
+  I, lColon: Integer;
+
+  procedure AddCurrentCore;
+  begin
+    if (lPhysicalId <> '') and (lCoreId <> '') then
+      lCores.Add(lPhysicalId + ':' + lCoreId);
+    lPhysicalId := '';
+    lCoreId := '';
+  end;
+
+begin
+  Result := 0;
+  lLines := TStringList.Create;
+  lCores := TStringList.Create;
+  try
+    lCores.Sorted := True;
+    lCores.Duplicates := dupIgnore;
+    try
+      lLines.LoadFromFile('/proc/cpuinfo');
+      for I := 0 to lLines.Count - 1 do
+      begin
+        lLine := Trim(lLines[I]);
+        if lLine = '' then
+          AddCurrentCore
+        else
+        begin
+          lColon := Pos(':', lLine);
+          if lColon > 0 then
+          begin
+            if SameText(Trim(Copy(lLine, 1, lColon - 1)), 'physical id') then
+              lPhysicalId := Trim(Copy(lLine, lColon + 1, MaxInt))
+            else if SameText(Trim(Copy(lLine, 1, lColon - 1)), 'core id') then
+              lCoreId := Trim(Copy(lLine, lColon + 1, MaxInt));
+          end;
+        end;
+      end;
+      AddCurrentCore;
+      Result := lCores.Count;
+    except
+      Result := 0;
+    end;
+  finally
+    lCores.Free;
+    lLines.Free;
+  end;
+  { Some ARM and virtualized Linux systems omit physical/core ids. }
+  if Result < 1 then
+    Result := TThread.ProcessorCount;
+end;
+{$ENDIF}
+
 constructor TRecorderSpectrumInputBlock.Create(const ATagName: string;
-  const ATimes, AValues: array of Double; ACount: Integer);
+  ACapacity: Integer);
 begin
   inherited Create;
   TagName := ATagName;
-  AssignSamples(ATimes, AValues, ACount);
+  if ACapacity < 1 then
+    ACapacity := 1;
+  SetLength(fQueueTimes, ACapacity);
+  SetLength(fQueueValues, ACapacity);
+  SetLength(fWorkTimes, ACapacity);
+  SetLength(fWorkValues, ACapacity);
 end;
 
-procedure TRecorderSpectrumInputBlock.AssignSamples(const ATimes,
-  AValues: array of Double; ACount: Integer);
+procedure TRecorderSpectrumInputBlock.Clear;
 begin
-  if ACount < 0 then
-    ACount := 0;
-  SetLength(Times, ACount);
-  SetLength(Values, ACount);
-  if ACount > 0 then
+  fHead := 0;
+  fCount := 0;
+  fWorkCount := 0;
+  fQueued := False;
+  fProcessing := False;
+end;
+
+procedure TRecorderSpectrumInputBlock.AppendSamples(const ATimes,
+  AValues: array of Double; ACount: Integer);
+var
+  I, lTail, lCapacity: Integer;
+begin
+  lCapacity := Length(fQueueValues);
+  for I := 0 to ACount - 1 do
   begin
-    Move(ATimes[0], Times[0], ACount * SizeOf(Double));
-    Move(AValues[0], Values[0], ACount * SizeOf(Double));
+    if fCount = lCapacity then
+    begin
+      { Runtime overload protection. The normal capacity holds several full
+        FFT portions; if the worker nevertheless falls behind, discard only
+        the oldest sample while preserving the newest continuous window. }
+      Inc(fHead);
+      if fHead = lCapacity then
+        fHead := 0;
+      Dec(fCount);
+    end;
+    lTail := fHead + fCount;
+    if lTail >= lCapacity then
+      Dec(lTail, lCapacity);
+    fQueueTimes[lTail] := ATimes[I];
+    fQueueValues[lTail] := AValues[I];
+    Inc(fCount);
   end;
+end;
+
+function TRecorderSpectrumInputBlock.TakePending: Integer;
+var
+  lFirstCount, lCapacity: Integer;
+begin
+  lCapacity := Length(fQueueValues);
+  fWorkCount := fCount;
+  lFirstCount := fWorkCount;
+  if lFirstCount > lCapacity - fHead then
+    lFirstCount := lCapacity - fHead;
+  if lFirstCount > 0 then
+  begin
+    Move(fQueueTimes[fHead], fWorkTimes[0], lFirstCount * SizeOf(Double));
+    Move(fQueueValues[fHead], fWorkValues[0], lFirstCount * SizeOf(Double));
+  end;
+  if fWorkCount > lFirstCount then
+  begin
+    Move(fQueueTimes[0], fWorkTimes[lFirstCount],
+      (fWorkCount - lFirstCount) * SizeOf(Double));
+    Move(fQueueValues[0], fWorkValues[lFirstCount],
+      (fWorkCount - lFirstCount) * SizeOf(Double));
+  end;
+  fHead := 0;
+  fCount := 0;
+  fQueued := False;
+  Result := fWorkCount;
+end;
+
+function TRecorderSpectrumInputBlock.HasPending: Boolean;
+begin
+  Result := fCount > 0;
 end;
 
 constructor TRecorderSpectrumWorker.Create(AManager: TRecorderSpectrumRuntimeManager);
@@ -155,20 +348,14 @@ begin
   while not Terminated do
   begin
     try
-      fManager.ProcessQueuedInputs;
+      if fManager.ProcessOneQueuedInput then
+        Continue;
     except
       on E: Exception do
         { Streaming debug: spectrum worker errors suppressed.
         RecorderDebugLog('Spectrum worker failed: ' + E.ClassName + ': ' + E.Message); }
     end;
     fManager.fInputEvent.WaitFor(50);
-  end;
-  try
-    fManager.ProcessQueuedInputs;
-  except
-    on E: Exception do
-      { Streaming debug: spectrum worker shutdown errors suppressed.
-      RecorderDebugLog('Spectrum worker shutdown failed: ' + E.ClassName + ': ' + E.Message); }
   end;
 end;
 
@@ -192,6 +379,8 @@ begin
   FFTSize := AFrame.FFTSize;
   Bins := AFrame.Bins;
   FrequencyStepHz := AFrame.FrequencyStepHz;
+  WindowKind := AFrame.WindowKind;
+  NormalizeMode := AFrame.NormalizeMode;
   MaxIndex := AFrame.MaxIndex;
   MaxFrequencyHz := AFrame.MaxFrequencyHz;
   MaxRms := AFrame.MaxRms;
@@ -199,6 +388,11 @@ begin
   SetLength(Rms, Length(AFrame.Rms));
   if Length(AFrame.Rms) > 0 then
     Move(AFrame.Rms[0], Rms[0], Length(AFrame.Rms) * SizeOf(Double));
+
+  SetLength(RectRms, Length(AFrame.RectRms));
+  if Length(AFrame.RectRms) > 0 then
+    Move(AFrame.RectRms[0], RectRms[0],
+      Length(AFrame.RectRms) * SizeOf(Double));
     
   SetLength(PhaseRad, Length(AFrame.PhaseRad));
   if Length(AFrame.PhaseRad) > 0 then
@@ -213,6 +407,10 @@ begin
     Bands[I].Rms := AFrame.Bands[I].Rms;
     Bands[I].MaxRms := AFrame.Bands[I].MaxRms;
     Bands[I].MaxFrequencyHz := AFrame.Bands[I].MaxFrequencyHz;
+    Bands[I].CalculateRms := AFrame.Bands[I].CalculateRms;
+    Bands[I].CalculateMaximum := AFrame.Bands[I].CalculateMaximum;
+    Bands[I].CalculateMaximumFrequency :=
+      AFrame.Bands[I].CalculateMaximumFrequency;
   end;
 end;
 
@@ -238,31 +436,29 @@ begin
   fTagRegistry := ATagRegistry;
   fChannels := TList.Create;
   fCache := TList.Create;
-  fLock := TCriticalSection.Create;
-  fChannelLock := TCriticalSection.Create;
-  fProcessLock := TCriticalSection.Create;
-  fInputLock := TCriticalSection.Create;
+  fLock := SyncObjs.TCriticalSection.Create;
+  fChannelLock := SyncObjs.TCriticalSection.Create;
+  fProcessLock := SyncObjs.TCriticalSection.Create;
+  fInputLock := SyncObjs.TCriticalSection.Create;
   fInputQueue := TList.Create;
+  fInputBlocks := TList.Create;
+  fWorkers := TList.Create;
+  fPublishLock := SyncObjs.TCriticalSection.Create;
   fInputEvent := TEvent.Create(nil, False, False, '');
   fInstance := Self;
-  fWorker := TRecorderSpectrumWorker.Create(Self);
 end;
 
 destructor TRecorderSpectrumRuntimeManager.Destroy;
 begin
   if fInstance = Self then
     fInstance := nil;
-  if fWorker <> nil then
-  begin
-    fWorker.Terminate;
-    fInputEvent.SetEvent;
-    fWorker.WaitFor;
-    FreeAndNil(fWorker);
-  end;
+  StopWorkers;
   ClearChannels;
-  ClearInputQueue;
   fInputEvent.Free;
   fInputQueue.Free;
+  fInputBlocks.Free;
+  fWorkers.Free;
+  fPublishLock.Free;
   fInputLock.Free;
   fProcessLock.Free;
   fChannels.Free;
@@ -334,6 +530,8 @@ begin
         AFrame.FFTSize := lCached.FFTSize;
         AFrame.Bins := lCached.Bins;
         AFrame.FrequencyStepHz := lCached.FrequencyStepHz;
+        AFrame.WindowKind := lCached.WindowKind;
+        AFrame.NormalizeMode := lCached.NormalizeMode;
         AFrame.MaxIndex := lCached.MaxIndex;
         AFrame.MaxFrequencyHz := lCached.MaxFrequencyHz;
         AFrame.MaxRms := lCached.MaxRms;
@@ -341,6 +539,11 @@ begin
         SetLength(AFrame.Rms, Length(lCached.Rms));
         if Length(lCached.Rms) > 0 then
           Move(lCached.Rms[0], AFrame.Rms[0], Length(lCached.Rms) * SizeOf(Double));
+
+        SetLength(AFrame.RectRms, Length(lCached.RectRms));
+        if Length(lCached.RectRms) > 0 then
+          Move(lCached.RectRms[0], AFrame.RectRms[0],
+            Length(lCached.RectRms) * SizeOf(Double));
           
         SetLength(AFrame.PhaseRad, Length(lCached.PhaseRad));
         if Length(lCached.PhaseRad) > 0 then
@@ -355,6 +558,11 @@ begin
           AFrame.Bands[J].Rms := lCached.Bands[J].Rms;
           AFrame.Bands[J].MaxRms := lCached.Bands[J].MaxRms;
           AFrame.Bands[J].MaxFrequencyHz := lCached.Bands[J].MaxFrequencyHz;
+          AFrame.Bands[J].CalculateRms := lCached.Bands[J].CalculateRms;
+          AFrame.Bands[J].CalculateMaximum :=
+            lCached.Bands[J].CalculateMaximum;
+          AFrame.Bands[J].CalculateMaximumFrequency :=
+            lCached.Bands[J].CalculateMaximumFrequency;
         end;
           
         Result := True;
@@ -385,9 +593,11 @@ var
   I: Integer;
 begin
   fPrepared := False;
-  ClearInputQueue;
+  StopWorkers;
   fProcessLock.Acquire;
   try
+    ClearInputQueue;
+    ClearInputBlocks;
     fChannelLock.Acquire;
     try
       for I := 0 to fChannels.Count - 1 do
@@ -408,81 +618,185 @@ begin
   fInputLock.Acquire;
   try
     for I := 0 to fInputQueue.Count - 1 do
-      TObject(fInputQueue[I]).Free;
+      TRecorderSpectrumInputBlock(fInputQueue[I]).Queued := False;
     fInputQueue.Clear;
+    for I := 0 to fInputBlocks.Count - 1 do
+      TRecorderSpectrumInputBlock(fInputBlocks[I]).Clear;
   finally
     fInputLock.Release;
   end;
+end;
+
+procedure TRecorderSpectrumRuntimeManager.ClearInputBlocks;
+var
+  I: Integer;
+begin
+  fInputLock.Acquire;
+  try
+    fInputQueue.Clear;
+    for I := 0 to fInputBlocks.Count - 1 do
+      TObject(fInputBlocks[I]).Free;
+    fInputBlocks.Clear;
+  finally
+    fInputLock.Release;
+  end;
+end;
+
+function TRecorderSpectrumRuntimeManager.FindInputBlock(
+  const ATagName: string): TRecorderSpectrumInputBlock;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to fInputBlocks.Count - 1 do
+    if SameText(TRecorderSpectrumInputBlock(fInputBlocks[I]).TagName,
+      ATagName) then
+      Exit(TRecorderSpectrumInputBlock(fInputBlocks[I]));
 end;
 
 procedure TRecorderSpectrumRuntimeManager.QueueInput(const ATagName: string;
   const ATimes, AValues: array of Double; ACount: Integer);
 var
   lInput: TRecorderSpectrumInputBlock;
-  I: Integer;
 begin
   if ACount <= 0 then
     Exit;
   fInputLock.Acquire;
   try
-    for I := 0 to fInputQueue.Count - 1 do
+    lInput := FindInputBlock(ATagName);
+    if lInput = nil then
+      Exit;
+    lInput.AppendSamples(ATimes, AValues, ACount);
+    if (not lInput.Queued) and (not lInput.Processing) then
     begin
-      lInput := TRecorderSpectrumInputBlock(fInputQueue[I]);
-      if SameText(lInput.TagName, ATagName) then
-      begin
-        // Spectrum is derived real-time output. Coalescing preserves the
-        // newest input without allowing a slow FFT to backlog source blocks.
-        lInput.AssignSamples(ATimes, AValues, ACount);
-        fInputEvent.SetEvent;
-        Exit;
-      end;
+      lInput.Queued := True;
+      fInputQueue.Add(lInput);
     end;
-    lInput := TRecorderSpectrumInputBlock.Create(ATagName, ATimes, AValues, ACount);
-    fInputQueue.Add(lInput);
   finally
     fInputLock.Release;
   end;
   fInputEvent.SetEvent;
 end;
 
-procedure TRecorderSpectrumRuntimeManager.ProcessQueuedInputs;
+function TRecorderSpectrumRuntimeManager.ProcessOneQueuedInput: Boolean;
 var
   lInput: TRecorderSpectrumInputBlock;
   lChannel: TRecorderSpectrumChannel;
+  lCount: Integer;
 begin
-  repeat
-    lInput := nil;
+  Result := False;
+  lInput := nil;
+  fInputLock.Acquire;
+  try
+    if fInputQueue.Count > 0 then
+    begin
+      lInput := TRecorderSpectrumInputBlock(fInputQueue[0]);
+      fInputQueue.Delete(0);
+      lInput.Queued := False;
+      lInput.Processing := True;
+      lCount := lInput.TakePending;
+    end;
+  finally
+    fInputLock.Release;
+  end;
+  if lInput = nil then
+    Exit;
+
+  try
+    fChannelLock.Acquire;
+    try
+      lChannel := FindChannel(lInput.TagName);
+    finally
+      fChannelLock.Release;
+    end;
+    if (lChannel <> nil) and (lCount > 0) then
+      lChannel.FeedSamples(lInput.WorkTimes, lInput.WorkValues, lCount);
+    Result := True;
+  finally
     fInputLock.Acquire;
     try
-      if fInputQueue.Count > 0 then
+      lInput.Processing := False;
+      if lInput.HasPending and (not lInput.Queued) then
       begin
-        lInput := TRecorderSpectrumInputBlock(fInputQueue[0]);
-        fInputQueue.Delete(0);
+        lInput.Queued := True;
+        fInputQueue.Add(lInput);
+        fInputEvent.SetEvent;
       end;
     finally
       fInputLock.Release;
     end;
-    if lInput = nil then
-      Exit;
+  end;
+end;
 
-    try
-      fProcessLock.Acquire;
-      try
-        fChannelLock.Acquire;
-        try
-          lChannel := FindChannel(lInput.TagName);
-        finally
-          fChannelLock.Release;
+procedure TRecorderSpectrumRuntimeManager.StartWorkers(AWorkerCount: Integer);
+var
+  I: Integer;
+begin
+  StopWorkers;
+  if AWorkerCount < 1 then
+    AWorkerCount := 1;
+  for I := 1 to AWorkerCount do
+    fWorkers.Add(TRecorderSpectrumWorker.Create(Self));
+end;
+
+procedure TRecorderSpectrumRuntimeManager.StopWorkers;
+var
+  I: Integer;
+begin
+  if fWorkers = nil then
+    Exit;
+  for I := 0 to fWorkers.Count - 1 do
+    TThread(fWorkers[I]).Terminate;
+  fInputEvent.SetEvent;
+  for I := 0 to fWorkers.Count - 1 do
+  begin
+    TThread(fWorkers[I]).WaitFor;
+    TObject(fWorkers[I]).Free;
+  end;
+  fWorkers.Clear;
+end;
+
+function TRecorderSpectrumRuntimeManager.ConfiguredWorkerCount: Integer;
+var
+  I, J: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+  lParallel: Boolean;
+begin
+  Result := 1;
+  lParallel := False;
+  if (fTagRegistry <> nil) and (fTagRegistry.SpectrumConfigs <> nil) then
+    for I := 0 to fTagRegistry.SpectrumConfigs.NodeCount - 1 do
+    begin
+      lNode := fTagRegistry.SpectrumConfigs.Nodes[I];
+      for J := 0 to lNode.BindingCount - 1 do
+      begin
+        lSettings := lNode.Bindings[J].ResolveSettings(lNode.Settings);
+        if lSettings.ParallelChannels then
+        begin
+          lParallel := True;
+          Break;
         end;
-        if lChannel <> nil then
-          lChannel.FeedSamples(lInput.Times, lInput.Values, Length(lInput.Values));
-      finally
-        fProcessLock.Release;
       end;
-    finally
-      lInput.Free;
+      if lParallel then
+        Break;
     end;
-  until False;
+  if lParallel then
+  begin
+    Result := PhysicalProcessorCoreCount;
+    if Result > fChannels.Count then
+      Result := fChannels.Count;
+    if Result < 1 then
+      Result := 1;
+  end;
+end;
+
+function TRecorderSpectrumRuntimeManager.GetWorkerCount: Integer;
+begin
+  if fWorkers <> nil then
+    Result := fWorkers.Count
+  else
+    Result := 0;
 end;
 
 procedure TRecorderSpectrumRuntimeManager.PrepareConfiguredPlans;
@@ -526,6 +840,7 @@ begin
   PrepareConfiguredPlans;
   EnsureEstimateTags;
   RebuildChannels;
+  StartWorkers(ConfiguredWorkerCount);
   fPrepared := True;
 end;
 
@@ -708,6 +1023,10 @@ begin
     begin
       lBinding := lNode.Bindings[J];
       lTagName := lBinding.SourceTagName;
+      { Один физический вход имеет один runtime-канал. Конфликтующие дубли
+        привязок не должны молча создавать недостижимые каналы с иной сеткой. }
+      if FindChannel(lTagName) <> nil then
+        Continue;
       lSettings := lBinding.ResolveSettings(lNode.Settings);
 
       { FFT/окно/полосы могут быть общими для узла, но частотная сетка всегда
@@ -730,6 +1049,10 @@ begin
       lChannel := TRecorderSpectrumChannel.Create(lTagName, lSettings);
       lChannel.OnFrame := @HandleChannelFrame;
       fChannels.Add(lChannel);
+      { Four full FFT portions absorb ordinary UI/acquisition jitter while all
+        storage remains fixed for the whole configured runtime session. }
+      fInputBlocks.Add(TRecorderSpectrumInputBlock.Create(lTagName,
+        lSettings.FFTSize * 4));
     end;
   end;
 end;
@@ -739,6 +1062,7 @@ var
   I: Integer;
 begin
   { Keep configured channels and their allocations alive between runs. }
+  StopWorkers;
   ClearInputQueue;
   fProcessLock.Acquire;
   try
@@ -753,6 +1077,7 @@ begin
     fProcessLock.Release;
   end;
   ClearCache;
+  StartWorkers(ConfiguredWorkerCount);
 end;
 
 procedure TRecorderSpectrumRuntimeManager.FeedTagSamples(const ATagName: string;
@@ -797,9 +1122,14 @@ var
   lSettings: TRecorderSpectrumSettings;
   lOutputPrefix: string;
 begin
-  lFrame := AFrame;
-  if not FindBindingSettings(lFrame.SourceTagName, lSettings, lOutputPrefix) then
-    Exit;
+  { Independent FFT channels may finish concurrently. Cache/tag/event
+    publication remains a single ordered critical section so consumers never
+    observe overlapping updates from worker threads. }
+  fPublishLock.Acquire;
+  try
+    lFrame := AFrame;
+    if not FindBindingSettings(lFrame.SourceTagName, lSettings, lOutputPrefix) then
+      Exit;
   
   if (fTagRegistry <> nil) and (fTagRegistry.FrequencyBands <> nil) and (fTagRegistry.FrequencyBands.BandCount > 0) then
   begin
@@ -812,6 +1142,10 @@ begin
       lFrame.Bands[I].BandName := lBand.Name;
       lFrame.Bands[I].F1 := lF1;
       lFrame.Bands[I].F2 := lF2;
+      lFrame.Bands[I].CalculateRms := lSettings.CalculateBandRms;
+      lFrame.Bands[I].CalculateMaximum := lSettings.CalculateBandMaximum;
+      lFrame.Bands[I].CalculateMaximumFrequency :=
+        lSettings.CalculateBandMaximumFrequency;
       
       RecorderSpectrumBandBinRange(lF1, lF2, lFrame.FrequencyStepHz,
         lFrame.Bins, lIdx1, lIdx2);
@@ -825,8 +1159,9 @@ begin
       begin
         for K := lIdx1 to lIdx2 do
         begin
-          if lSettings.CalculateBandRms then
-            lSumSq := lSumSq + Sqr(lFrame.Rms[K]);
+          if lSettings.CalculateBandRms and
+            (K < Length(lFrame.RectRms)) then
+            lSumSq := lSumSq + Sqr(lFrame.RectRms[K]);
           if (lSettings.CalculateBandMaximum or
             lSettings.CalculateBandMaximumFrequency) and
             (lFrame.Rms[K] > lMaxVal) then
@@ -856,15 +1191,18 @@ begin
   else
     SetLength(lFrame.Bands, 0);
 
-  UpdateCache(lFrame);
-  PublishBandEstimates(lFrame, lSettings, lOutputPrefix);
-  if fEventBus = nil then Exit;
-  lEventData := TRecorderSpectrumFrameEventData.Create(lFrame);
-  try
-    lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self, lFrame.SourceTagName, '', 0, lEventData);
-    fEventBus.Publish(lEvent);
+    UpdateCache(lFrame);
+    PublishBandEstimates(lFrame, lSettings, lOutputPrefix);
+    if fEventBus = nil then Exit;
+    lEventData := TRecorderSpectrumFrameEventData.Create(lFrame);
+    try
+      lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self, lFrame.SourceTagName, '', 0, lEventData);
+      fEventBus.Publish(lEvent);
+    finally
+      lEventData.Free;
+    end;
   finally
-    lEventData.Free;
+    fPublishLock.Release;
   end;
 end;
 

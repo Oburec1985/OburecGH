@@ -36,7 +36,9 @@ begin
   lbTypes.Items.AddObject('Загрузить из БД ГХ', TObject(PtrInt(-1)));
   lbTypes.Items.AddObject('Импорт из файла', TObject(PtrInt(-1)));
   lbTypes.Items.AddObject('Масштабный множитель (чувствительность)', TObject(PtrInt(Ord(rckScale))));
+  lbTypes.Items.AddObject('Прямая k*x+b', TObject(PtrInt(Ord(rckLinear))));
   lbTypes.Items.AddObject('Таблица линейной интерполяции первого порядка', TObject(PtrInt(Ord(rckPiecewiseLinear))));
+  lbTypes.Items.AddObject('Полином', TObject(PtrInt(Ord(rckPolynomial))));
   lbTypes.Items.AddObject('A(x-B)', TObject(PtrInt(-1)));
   lbTypes.Items.AddObject('Тензометрическая ГХ (встроенный калькулятор)',
     TObject(PtrInt(Ord(rckStrain))));

@@ -132,7 +132,7 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
 procedure RegisterRecorderMeasurementSectionFactory(

@@ -11,7 +11,7 @@ unit uRecorderComponentToolGroup;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Buttons, Menus, ImgList,
+  Classes, SysUtils, Types, Forms, Controls, Buttons, Menus, ImgList,
   uRecorderFormModel;
 
 type
@@ -33,11 +33,12 @@ type
     fMenu: TPopupMenu;
     fOnBeforePopup: TNotifyEvent;
     procedure ShowMenu(Sender: TObject);
+    procedure ShowMenuAsync(Data: PtrInt);
   public
     constructor Create(AOwner: TComponent; AParent: TWinControl;
       AImages: TCustomImageList; ALeft, AImageIndex: Integer;
       const AHint: string; AGroupIndex: Integer = 0;
-      AAllowAllUp: Boolean = False; AOnBeforePopup: TNotifyEvent = nil);
+      AAllowAllUp: Boolean = False; AOnBeforePopup: TNotifyEvent = nil); reintroduce;
     function AddCommand(const ACaption: string; AImageIndex: Integer;
       AOnClick: TNotifyEvent): TMenuItem;
     property Button: TSpeedButton read fButton;
@@ -69,6 +70,7 @@ type
     procedure GroupItemClick(Sender: TObject);
     procedure GroupOpening(Sender: TObject);
     procedure ShowGroupMenu(Sender: TObject);
+    procedure ShowGroupMenuAsync(Data: PtrInt);
   public
     constructor Create(AOwner: TComponent; ARegistry: TRecorderComponentFactory;
       AParent: TWinControl; AImages: TCustomImageList;
@@ -134,9 +136,18 @@ begin
 end;
 
 procedure TRecorderComponentToolGroup.ShowMenu(Sender: TObject);
+begin
+  { GTK may deliver OnClick before the mouse button is released. Showing the
+    popup synchronously makes that release close it immediately. }
+  Application.QueueAsyncCall(@ShowMenuAsync, PtrInt(Self));
+end;
+
+procedure TRecorderComponentToolGroup.ShowMenuAsync(Data: PtrInt);
 var
   lPoint: TPoint;
 begin
+  if TObject(Pointer(Data)) <> Self then
+    Exit;
   if Assigned(fOnBeforePopup) then
     fOnBeforePopup(Self);
   lPoint := fButton.ClientToScreen(Point(0, fButton.Height));
@@ -270,14 +281,18 @@ begin
 end;
 
 procedure TRecorderComponentPalette.ShowGroupMenu(Sender: TObject);
+begin
+  if Sender is TSpeedButton then
+    Application.QueueAsyncCall(@ShowGroupMenuAsync, PtrInt(Sender));
+end;
+
+procedure TRecorderComponentPalette.ShowGroupMenuAsync(Data: PtrInt);
 var
   lButton: TSpeedButton;
   lPoint: TPoint;
 begin
-  if not (Sender is TSpeedButton) then
-    Exit;
-  lButton := TSpeedButton(Sender);
-  if lButton.PopupMenu = nil then
+  lButton := TSpeedButton(Pointer(Data));
+  if (lButton = nil) or (lButton.PopupMenu = nil) then
     Exit;
   lPoint := lButton.ClientToScreen(Point(0, lButton.Height));
   lButton.PopupMenu.PopUp(lPoint.X, lPoint.Y);

@@ -208,7 +208,7 @@ begin
       on E: Exception do
       begin
         fIndex.Add('| Генератор | — | критическая ошибка: ' +
-          SafeText(E.Message) + ' |');
+          SafeText(UTF8Encode(E.Message)) + ' |');
         SaveIndex;
       end;
     end;

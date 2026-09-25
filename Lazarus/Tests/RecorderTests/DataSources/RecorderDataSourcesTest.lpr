@@ -408,7 +408,19 @@ begin
     AssertTrue(lTag <> nil, 'MERA source creates selected tag');
     AssertTrue(lTag.SensorCalibrationName = 'SensorGX', 'MERA source preserves sensor GX');
     AssertTrue(lTag.AmplifierCalibrationName = 'AmplifierGX', 'MERA source preserves amplifier GX');
+    AssertTrue(lTag.UnitName = 'mm', 'MERA source assigns file unit to an automatic tag');
     AssertEquals(lRegistry.TagCount, 1, 'MERA selected tag count');
+
+    lTag.AutoUnit := False;
+    lTag.UnitName := 'g';
+    lSource.ConfigureTags(lRegistry);
+    AssertTrue(lTag.UnitName = 'g',
+      'MERA source preserves a saved manual tag unit on reconfigure');
+
+    lTag.AutoUnit := True;
+    lSource.ConfigureTags(lRegistry);
+    AssertTrue(lTag.UnitName = 'mm',
+      'MERA source refreshes the unit when automatic units are enabled');
 
     lSource.Start;
     lSource.Tick;

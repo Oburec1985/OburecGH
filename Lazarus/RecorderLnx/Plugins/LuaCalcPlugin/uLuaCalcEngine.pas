@@ -10,19 +10,36 @@ uses
 type
   TLuaGetValue = function(Context: Pointer; const Name: UTF8String;
     out Value: Double): Boolean; cdecl;
+  TLuaGetSample = function(Context: Pointer; const Name: UTF8String;
+    out Value, Time: Double): Boolean; cdecl;
   TLuaSetValue = function(Context: Pointer; const Name: UTF8String;
     Value, Time: Double; Status: LongInt): Boolean; cdecl;
+  TLuaSetDelayedValue = function(Context: Pointer; const Name: UTF8String;
+    Value, DelaySeconds: Double): Boolean; cdecl;
   TLuaGetTime = function(Context: Pointer): Double; cdecl;
   TLuaLogMessage = procedure(Context: Pointer; const Message: UTF8String); cdecl;
   TLuaGetEstimate = function(Context: Pointer; const Name, Kind: UTF8String;
     out Value, Time: Double; out Status: LongInt): Boolean; cdecl;
+  TLuaTagExists = function(Context: Pointer; const Name: UTF8String): Boolean; cdecl;
+  TLuaGetAlarmLevel = function(Context: Pointer; const Name: UTF8String;
+    out Level: LongInt): Boolean; cdecl;
+  TLuaGetSetpoint = function(Context: Pointer; const Name, Kind: UTF8String;
+    out Threshold: Double; out Enabled: Boolean): Boolean; cdecl;
+  TLuaSetSetpoint = function(Context: Pointer; const Name, Kind: UTF8String;
+    Threshold: Double; Enabled: Boolean): Boolean; cdecl;
 
   TLuaCalcCallbacks = record
     Context: Pointer;
     OnGetValue: TLuaGetValue;
+    OnGetSample: TLuaGetSample;
     OnSetValue: TLuaSetValue;
+    OnSetDelayedValue: TLuaSetDelayedValue;
     OnGetTime: TLuaGetTime;
     OnGetEstimate: TLuaGetEstimate;
+    OnTagExists: TLuaTagExists;
+    OnGetAlarmLevel: TLuaGetAlarmLevel;
+    OnGetSetpoint: TLuaGetSetpoint;
+    OnSetSetpoint: TLuaSetSetpoint;
     OnLogMessage: TLuaLogMessage;
   end;
 
@@ -41,6 +58,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure SetCallbacks(const Callbacks: TLuaCalcCallbacks);
+    function Validate(const Script: UTF8String): Boolean;
     function Execute(const Script: UTF8String): Boolean;
     function RunMain: Boolean;
     property LastError: string read fLastError;
@@ -152,6 +170,149 @@ begin
   Result := 0;
 end;
 
+function SetTagValueCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  IsValue, IsDelay: LongInt;
+  Value, DelaySeconds: Double;
+begin
+  Engine := CurrentEngine(L);
+  IsValue := 0;
+  IsDelay := 0;
+  Value := LuaToNumber(L, 2, @IsValue);
+  DelaySeconds := LuaToNumber(L, 3, @IsDelay);
+  if (IsValue <> 0) and (IsDelay <> 0) and
+    Assigned(Engine.fCallbacks.OnSetDelayedValue) then
+  begin
+    try
+      Engine.fCallbacks.OnSetDelayedValue(Engine.fCallbacks.Context,
+        LuaName(L, 1), Value, DelaySeconds);
+    except
+      on Error: Exception do Engine.fLastError := Error.Message;
+    end;
+  end;
+  Result := 0;
+end;
+
+function GetTagTimeCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  Value, Time: Double;
+begin
+  Engine := CurrentEngine(L);
+  Value := 0;
+  Time := 0;
+  try
+    if Assigned(Engine.fCallbacks.OnGetSample) then
+      Engine.fCallbacks.OnGetSample(Engine.fCallbacks.Context,
+        LuaName(L, 1), Value, Time);
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Time);
+  Result := 1;
+end;
+
+function GetTagSampleCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  Value, Time: Double;
+begin
+  Engine := CurrentEngine(L);
+  Value := 0;
+  Time := 0;
+  try
+    if Assigned(Engine.fCallbacks.OnGetSample) then
+      Engine.fCallbacks.OnGetSample(Engine.fCallbacks.Context,
+        LuaName(L, 1), Value, Time);
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Value);
+  LuaPushNumber(L, Time);
+  Result := 2;
+end;
+
+function TagExistsCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  Exists: Boolean;
+begin
+  Engine := CurrentEngine(L);
+  Exists := False;
+  try
+    if Assigned(Engine.fCallbacks.OnTagExists) then
+      Exists := Engine.fCallbacks.OnTagExists(Engine.fCallbacks.Context,
+        LuaName(L, 1));
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Ord(Exists));
+  Result := 1;
+end;
+
+function GetTagAlarmLevelCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  Level: LongInt;
+begin
+  Engine := CurrentEngine(L);
+  Level := -1;
+  try
+    if Assigned(Engine.fCallbacks.OnGetAlarmLevel) then
+      Engine.fCallbacks.OnGetAlarmLevel(Engine.fCallbacks.Context,
+        LuaName(L, 1), Level);
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Level);
+  Result := 1;
+end;
+
+function GetTagSetpointCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  Threshold: Double;
+  Enabled: Boolean;
+begin
+  Engine := CurrentEngine(L);
+  Threshold := 0;
+  Enabled := False;
+  try
+    if Assigned(Engine.fCallbacks.OnGetSetpoint) then
+      Engine.fCallbacks.OnGetSetpoint(Engine.fCallbacks.Context,
+        LuaName(L, 1), LuaName(L, 2), Threshold, Enabled);
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Threshold);
+  LuaPushNumber(L, Ord(Enabled));
+  Result := 2;
+end;
+
+function SetTagSetpointCall(L: Pointer): LongInt; cdecl;
+var
+  Engine: TLuaCalcEngine;
+  IsNumber: LongInt;
+  Threshold: Double;
+  Enabled, Success: Boolean;
+begin
+  Engine := CurrentEngine(L);
+  IsNumber := 0;
+  Threshold := LuaToNumber(L, 3, @IsNumber);
+  Enabled := (LuaGetTop(L) < 4) or (LuaToNumber(L, 4, nil) <> 0);
+  Success := False;
+  try
+    if (IsNumber <> 0) and Assigned(Engine.fCallbacks.OnSetSetpoint) then
+      Success := Engine.fCallbacks.OnSetSetpoint(Engine.fCallbacks.Context,
+        LuaName(L, 1), LuaName(L, 2), Threshold, Enabled);
+  except
+    on Error: Exception do Engine.fLastError := Error.Message;
+  end;
+  LuaPushNumber(L, Ord(Success));
+  Result := 1;
+end;
+
 function GetTimeCall(L: Pointer): LongInt; cdecl;
 var
   Engine: TLuaCalcEngine;
@@ -241,6 +402,11 @@ const
 var
   Name: string;
 begin
+{$ifndef Windows}
+  if fLibrary = NilHandle then
+    fLibrary := LoadLibrary(IncludeTrailingPathDelimiter(
+      ExtractFilePath(ParamStr(0)) + 'lib') + 'liblua5.4.so.0');
+{$endif}
   if fLibrary = NilHandle then
     for Name in Names do
     begin
@@ -291,6 +457,14 @@ begin
   RegisterOne('getValue', @GetValueCall);
   RegisterOne('setValue', @SetValueCall);
   RegisterOne('setValueEx', @SetValueCall);
+  RegisterOne('setTagValue', @SetTagValueCall);
+  RegisterOne('SetTagValue', @SetTagValueCall);
+  RegisterOne('getTagTime', @GetTagTimeCall);
+  RegisterOne('getTagSample', @GetTagSampleCall);
+  RegisterOne('tagExists', @TagExistsCall);
+  RegisterOne('getTagAlarmLevel', @GetTagAlarmLevelCall);
+  RegisterOne('getTagSetpoint', @GetTagSetpointCall);
+  RegisterOne('setTagSetpoint', @SetTagSetpointCall);
   RegisterOne('getRecorderTime', @GetTimeCall);
   RegisterOne('getEstimate', @GetEstimateCall);
   RegisterOne('logMessage', @LogMessageCall);
@@ -450,6 +624,29 @@ begin
     Exit;
   end;
   Result := RunMain;
+end;
+
+function TLuaCalcEngine.Validate(const Script: UTF8String): Boolean;
+var
+  Expanded: UTF8String;
+begin
+  fLastError := '';
+  Result := NewState;
+  if not Result then Exit;
+  Expanded := ExpandTagReferences(Script);
+  Result := LuaLoadBuffer(fState, PChar(Expanded), Length(Expanded),
+    'calculation', nil) = LUA_OK;
+  if Result then
+    Result := LuaPCall(fState, 0, 0, 0, nil, nil) = LUA_OK;
+  if not Result then
+  begin
+    fLastError := ReadLuaError;
+    Exit;
+  end;
+  Result := LuaGetGlobal(fState, 'lua_main') = LUA_TFUNCTION;
+  LuaSetTop(fState, 0);
+  if not Result then
+    fLastError := 'Lua function lua_main() is missing';
 end;
 
 function TLuaCalcEngine.RunMain: Boolean;

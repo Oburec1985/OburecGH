@@ -332,7 +332,8 @@ begin
     Exit;
   lFlag := TChartFlagLabel(fMaxFlags[AIndex]);
   if (ASeries = nil) or (AIndex >= Length(fBufferedFrames)) or
-    (fComponent = nil) or (fComponent.ResultType <> 0) then
+    (fComponent = nil) or (fComponent.ResultType <> 0) or
+    (not fComponent.ShowLabels) then
   begin
     lFlag.Visible := False;
     Exit;
@@ -596,6 +597,13 @@ begin
   fPage.PresetMinXValue := fComponent.RangeMinX;
   fPage.PresetMaxXValue := fComponent.RangeMaxX;
   fPage.HasPresetXRange := True;
+  { Ручной zoom/pan остаётся действующим при обновлении спектральных кадров.
+    Обратная рамка только расширяет текущий диапазон, а двойной щелчок
+    восстанавливает заданные в настройках компонента диапазоны X/Y. }
+  fPage.AutoScaleOnZoomReset := False;
+  fPage.ResetZoomOnDoubleClick := True;
+  fPage.ReverseDragZoomOut := True;
+  fPage.PreserveAutoFitZoomY := True;
   if fComponent.LgX then
     fPage.XScale := casLog10
   else
@@ -730,10 +738,21 @@ begin
       for K := 0 to Length(fBufferedFrames[lBandFrameIndex].Bands) - 1 do
       begin
         lBand := TChartFrequencyBand(fBandObjects[K]);
-        lBand.Caption := CP1251ToUTF8(Format('%s'#13'RMS: %.4f', [
-          fBufferedFrames[lBandFrameIndex].Bands[K].BandName,
-          fBufferedFrames[lBandFrameIndex].Bands[K].Rms
-        ]));
+        lBand.Visible :=
+          fBufferedFrames[lBandFrameIndex].Bands[K].CalculateRms or
+          fBufferedFrames[lBandFrameIndex].Bands[K].CalculateMaximum or
+          fBufferedFrames[lBandFrameIndex].Bands[K].CalculateMaximumFrequency;
+        if fBufferedFrames[lBandFrameIndex].Bands[K].CalculateRms then
+          lBand.Caption := CP1251ToUTF8(Format('%s'#13'RMS: %.4f', [
+            fBufferedFrames[lBandFrameIndex].Bands[K].BandName,
+            fBufferedFrames[lBandFrameIndex].Bands[K].Rms
+          ]))
+        else
+          lBand.Caption := CP1251ToUTF8(
+            fBufferedFrames[lBandFrameIndex].Bands[K].BandName);
+        lBand.ShowPeak := fComponent.ShowLabels and
+          (fBufferedFrames[lBandFrameIndex].Bands[K].CalculateMaximum or
+           fBufferedFrames[lBandFrameIndex].Bands[K].CalculateMaximumFrequency);
         lBand.X1 := fBufferedFrames[lBandFrameIndex].Bands[K].F1;
         lBand.X2 := fBufferedFrames[lBandFrameIndex].Bands[K].F2;
         lBand.PeakX := fBufferedFrames[lBandFrameIndex].Bands[K].MaxFrequencyHz;

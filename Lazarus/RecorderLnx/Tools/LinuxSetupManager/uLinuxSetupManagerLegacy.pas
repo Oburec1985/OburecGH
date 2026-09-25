@@ -20,6 +20,26 @@ const
   CMountRoot = '/home/user/Сеть/MeraFiles';
   CCredentials = '/etc/samba/kip-obmen.credentials';
   CWolService = '/etc/systemd/system/recorderlnx-wol.service';
+  CSmbSettings = '/etc/recorderlnx/smb-server.conf';
+
+function PublishedUsers: string;
+var lSettings: TStringList;
+begin
+  Result := '@sambashare';
+  if not FileExists(CSmbSettings) then Exit;
+  lSettings := TStringList.Create;
+  try
+    try
+      lSettings.LoadFromFile(CSmbSettings);
+      if Trim(lSettings.Values['User']) <> '' then
+        Result := Trim(lSettings.Values['User']);
+    except
+      Result := '@sambashare';
+    end;
+  finally
+    lSettings.Free;
+  end;
+end;
 
 function Run(const ProgramName: string; const Arguments: array of string;
   out Text: string; const WorkingDir: string = ''): Boolean;
@@ -366,6 +386,31 @@ function Mounted(const MountPoint: string): Boolean;
 var Text: string;
 begin Result := Run('mountpoint', ['-q', MountPoint], Text); end;
 
+function UnmountPublishedRoot(const MountPoint: string;
+  out ErrorText: string): Boolean;
+var
+  lNormalError: string;
+begin
+  ErrorText := '';
+  if not Mounted(MountPoint) then
+    Exit(True);
+  if Run('umount', [MountPoint], ErrorText) then
+    Exit(True);
+  lNormalError := Trim(ErrorText);
+  { Активный SMB-клиент может удерживать старый bind-mount. Lazy detach
+    немедленно освобождает стабильную точку публикации для нового источника,
+    а старые открытые дескрипторы закрываются ядром после отключения клиента. }
+  if Run('umount', ['-l', MountPoint], ErrorText) then
+  begin
+    ErrorText := '';
+    Exit(True);
+  end;
+  ErrorText := 'Не удалось отключить опубликованный ресурс ' + MountPoint +
+    '. Обычное размонтирование: ' + lNormalError +
+    '; lazy detach: ' + Trim(ErrorText);
+  Result := False;
+end;
+
 function ShareMarker(const Name, Suffix: string): string;
 begin
   Result := '# RECORDERLNX-SHARE-' + Name + '-' + Suffix;
@@ -410,7 +455,7 @@ end;
 
 function ManagedShareList(out Output: string): Integer;
 var Lines: TStringList; Items: TJSONArray; Item: TJSONObject;
-    I, First, Last: Integer; Name: string;
+    I, J, First, Last: Integer; Name: string; Writable: Boolean;
 begin
   Result := 1;
   Lines := TStringList.Create;
@@ -430,6 +475,11 @@ begin
       Item.Add('name', Name);
       Item.Add('path', ShareSource(Name));
       Item.Add('mount', '/srv/recorderlnx/' + Name);
+      Writable := False;
+      for J := First to Last do
+        if Pos('read only =', LowerCase(Trim(Lines[J]))) = 1 then
+          Writable := SameText(Trim(Copy(Lines[J], Pos('=', Lines[J]) + 1, MaxInt)), 'no');
+      Item.Add('writable', Writable);
       Items.Add(Item);
     end;
     Output := Items.AsJSON;
@@ -521,7 +571,7 @@ begin
   if WasMounted and ((NewSource = '') or
      not SameDirectory(OldSource, NewSource)) then
   begin
-    if not NeedRun('umount', [Root], Output) then goto Rollback;
+    if not UnmountPublishedRoot(Root, Output) then goto Rollback;
     ChangedMount := True;
   end;
   if (NewSource <> '') and not Mounted(Root) then
@@ -540,7 +590,7 @@ Rollback:
   ErrorText := Output;
   if ChangedMount then
   begin
-    if Mounted(Root) then Run('umount', [Root], Current);
+    if Mounted(Root) then UnmountPublishedRoot(Root, Current);
     if WasMounted and not Run('mount', ['--bind', OldSource, Root], Current) then
       ErrorText := ErrorText + '; прежнее монтирование не восстановлено: ' + Current;
   end;
@@ -664,15 +714,102 @@ end;
 
 function PublishFolder(const Args: TStrings; out Output: string): Integer;
 var Source, ShareName, Root, Marker, Fstab, Smb, TestFile, Current,
-    OldSource: string;
-    Lines: TStringList; I, First, Last: Integer;
+    OldSource, ShareUsers, PublishUser: string;
+    Lines: TStringList; I, First, Last: Integer; Writable: Boolean;
+
+  function ExistingUsers(const AFirst, ALast: Integer): string;
+  var lIndex, lSeparator: Integer;
+  begin
+    Result := '';
+    if (AFirst < 0) or (ALast < AFirst) then Exit;
+    for lIndex := AFirst to ALast do
+      if Pos('valid users =', LowerCase(Trim(Lines[lIndex]))) = 1 then
+      begin
+        lSeparator := Pos('=', Lines[lIndex]);
+        Result := Trim(Copy(Lines[lIndex], lSeparator + 1, MaxInt));
+        Exit;
+      end;
+  end;
+
+  function ExistingWritable(const AFirst, ALast: Integer): Boolean;
+  var lIndex, lSeparator: Integer; lValue: string;
+  begin
+    Result := False;
+    if (AFirst < 0) or (ALast < AFirst) then Exit;
+    for lIndex := AFirst to ALast do
+      if Pos('read only =', LowerCase(Trim(Lines[lIndex]))) = 1 then
+      begin
+        lSeparator := Pos('=', Lines[lIndex]);
+        lValue := Trim(Copy(Lines[lIndex], lSeparator + 1, MaxInt));
+        Exit(SameText(lValue, 'no'));
+      end;
+  end;
+
+  function SambaUserExists(const AUser: string): Boolean;
+  var lText: string;
+  begin
+    Result := Run('/usr/bin/pdbedit', ['-L', '-u', AUser], lText) and
+      (Pos(LowerCase(AUser) + ':', LowerCase(lText)) > 0);
+  end;
+
+  function EnsureAclTool(out AError: string): Boolean;
+  begin
+    if FileExists('/usr/bin/setfacl') then Exit(True);
+    Result := NeedRun('/usr/bin/apt-get', ['install', '-y', 'acl'], AError);
+    if Result then Result := FileExists('/usr/bin/setfacl');
+    if not Result and (Trim(AError) = '') then
+      AError := 'Не удалось установить пакет acl.';
+  end;
+
+  function UserCanAccess(const AUser, APath: string; AWrite: Boolean): Boolean;
+  var lText: string;
+  begin
+    Result := Run('/usr/sbin/runuser',
+      ['-u', AUser, '--', '/usr/bin/test', '-r', APath], lText) and
+      Run('/usr/sbin/runuser',
+      ['-u', AUser, '--', '/usr/bin/test', '-x', APath], lText);
+    if Result and AWrite then
+      Result := Run('/usr/sbin/runuser',
+        ['-u', AUser, '--', '/usr/bin/test', '-w', APath], lText);
+  end;
+
+  function GrantAccess(const AUser, APath: string; AWrite: Boolean;
+    out AError: string): Boolean;
+  var lParent, lText, lPermissions: string;
+  begin
+    Result := False;
+    if UserCanAccess(AUser, APath, AWrite) then Exit(True);
+    if not EnsureAclTool(AError) then Exit;
+    lParent := ExcludeTrailingPathDelimiter(APath);
+    repeat
+      lParent := ExtractFileDir(lParent);
+      if lParent = '' then lParent := PathDelim;
+      if not Run('/usr/sbin/runuser',
+        ['-u', AUser, '--', '/usr/bin/test', '-x', lParent], lText) then
+        if not Run('/usr/bin/setfacl', ['-m', 'u:' + AUser + ':x', lParent], AError) then Exit;
+    until lParent = PathDelim;
+    if AWrite then lPermissions := 'rwX' else lPermissions := 'rX';
+    if not Run('/usr/bin/setfacl', ['-R', '-m', 'u:' + AUser + ':' + lPermissions, APath], AError) then Exit;
+    if not Run('/usr/bin/find', [APath, '-type', 'd', '-exec', '/usr/bin/setfacl',
+      '-m', 'd:u:' + AUser + ':' + lPermissions, '{}', '+'], AError) then Exit;
+    if not UserCanAccess(AUser, APath, AWrite) then
+    begin AError := 'После изменения ACL пользователь не получил требуемый доступ.'; Exit; end;
+    Result := True;
+  end;
 begin
   Result := 1;
-  if (Args.Count < 1) or (Args.Count > 2) then
-  begin Output := 'publish КАТАЛОГ [СЕТЕВОЕ_ИМЯ]'; Exit; end;
+  if (Args.Count < 1) or (Args.Count > 4) then
+  begin Output := 'publish КАТАЛОГ [СЕТЕВОЕ_ИМЯ] [ПОЛЬЗОВАТЕЛЬ] [ro|rw]'; Exit; end;
   if not ValidPublishedSource(Args[0], Source, Output) then Exit;
   ShareName := 'MeraFiles';
-  if Args.Count = 2 then ShareName := Args[1];
+  if Args.Count >= 2 then ShareName := Args[1];
+  PublishUser := '';
+  if Args.Count >= 3 then PublishUser := Trim(Args[2]);
+  Writable := (Args.Count = 4) and SameText(Trim(Args[3]), 'rw');
+  if (Args.Count = 4) and not (Writable or SameText(Trim(Args[3]), 'ro')) then
+  begin Output := 'Режим публикации должен быть ro или rw.'; Exit; end;
+  if (PublishUser <> '') and not SambaUserExists(PublishUser) then
+  begin Output := 'Пользователь Samba не настроен: ' + PublishUser; Exit; end;
   if not SafeToken(ShareName) then
   begin Output := 'Недопустимое сетевое имя.'; Exit; end;
   Lines := TStringList.Create;
@@ -680,6 +817,8 @@ begin
     Lines.LoadFromFile('/etc/samba/smb.conf');
     if not ManagedShareRange(Lines, ShareName, First, Last) then
     begin First := -1; Last := -1; end;
+    ShareUsers := ExistingUsers(First, Last);
+    if Args.Count < 4 then Writable := ExistingWritable(First, Last);
     for I := 0 to Lines.Count - 1 do
       if (Trim(Lines[I]) = '[' + ShareName + ']') and
          ((I <= First) or (I >= Last) or (First < 0)) then
@@ -723,15 +862,26 @@ begin
     Lines.Add('[' + ShareName + ']');
     Lines.Add('   path = ' + Root);
     Lines.Add('   browseable = yes');
-    Lines.Add('   read only = yes');
+    if Writable then
+    begin
+      Lines.Add('   read only = no');
+      Lines.Add('   inherit acls = yes');
+      Lines.Add('   create mask = 0660');
+      Lines.Add('   directory mask = 0770');
+    end
+    else Lines.Add('   read only = yes');
     Lines.Add('   guest ok = no');
-    Lines.Add('   valid users = user');
+    if PublishUser <> '' then ShareUsers := PublishUser;
+    if ShareUsers = '' then ShareUsers := PublishedUsers;
+    Lines.Add('   valid users = ' + ShareUsers);
     Lines.Add(Fstab);
     TestFile := GetTempFileName('/tmp', 'smb');
     try
       Lines.SaveToFile(TestFile);
       if not NeedRun('testparm', ['-s', TestFile], Output) then Exit;
     finally DeleteFile(TestFile); end;
+    if (PublishUser <> '') and not GrantAccess(PublishUser, Source, Writable, Output) then
+    begin Output := 'Не удалось настроить доступ к каталогу: ' + Trim(Output); Exit; end;
     if not ApplyPublishedChange(Root, OldSource, Source,
       Lines.Text, Current, Output) then Exit;
   finally Lines.Free; end;
@@ -782,7 +932,7 @@ begin
     Exit(ManagedShareList(Output));
   if (Args.Count = 2) and (Args[0] = 'delete') then
     Exit(DeletePublishedShare(Args[1], Output));
-  if (Args.Count = 3) and (Args[0] = 'update') then
+  if (Args.Count in [3, 4, 5]) and (Args[0] = 'update') then
   begin
     Name := Args[1];
     if not SafeToken(Name) or (ShareSource(Name) = '') then
@@ -797,6 +947,8 @@ begin
     try
       Params.Add(Args[2]);
       Params.Add(Name);
+      if Args.Count >= 4 then Params.Add(Args[3]);
+      if Args.Count = 5 then Params.Add(Args[4]);
       Exit(PublishFolder(Params, Output));
     finally Params.Free; end;
   end;

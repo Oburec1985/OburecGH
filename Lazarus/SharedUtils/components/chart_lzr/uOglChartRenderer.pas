@@ -14,7 +14,7 @@ uses
   Classes, SysUtils, Math, gl, glext, uOglChartTypes, uOglChartBaseObj,
   uOglChartDrawObj, uOglChartPage, uOglChartAxis, uOglChartTrend,
   uOglChartChart, uOglChartFontMng, uOglChartLineHelper, uOglChartTextLabel, uOglChartCursor, LConvEncoding,
-  uSharedNumberFormat;
+  uSharedNumberFormat, uOglChartLog;
 
 type
   // Тип редактируемой интерактивной текстовой метки на графике
@@ -228,8 +228,9 @@ type
 
 implementation
 
-uses
-  uOglChartLog;
+const
+  CAxisMinLabelWidth = 30;
+  CAxisColumnGap = 8;
 
 procedure LogToFile(const AMsg: string);
 
@@ -477,6 +478,11 @@ begin
     fUseShader := True;
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  { MSAA сглаживает весь кадр, когда хост получил multisample framebuffer.
+    GL_LINE_SMOOTH остаётся резервом для контекстов без MSAA. }
+  glEnable(GL_MULTISAMPLE);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glEnable(GL_LINE_SMOOTH);
 end;
 
 procedure TOpenGLChartRenderer.Resize(AWidth, AHeight: Integer);
@@ -510,52 +516,73 @@ end;
 function TOpenGLChartRenderer.PageContentRect(APage: TChartPage): TChartPixelRect;
 
 var
-  lTotalOffset: Single;
-  lYTicks: TChartTickArray;
-  lAxisFont: cOglFont;
+  lLeftOffset, lRightOffset, lBottomOffset: Single;
+  lYTicks, lXTicks: TChartTickArray;
+  lAxisFont, lTickFont: cOglFont;
   lYAxis: TChartAxis;
-  lText: string;
+  lPrimaryAxis: TChartAxis;
   lMaxTextWidth, lTextWidth: Single;
-  I, J, lYAxisIdx: Integer;
+  I, J, lAxisCount: Integer;
 begin
-  lTotalOffset := 0;
-  lYAxisIdx := 0;
-  if Assigned(APage) then
+  if not Assigned(APage) then
   begin
+    Result := fPageRect;
+    Exit;
+  end;
+  lLeftOffset := APage.PixelTabSpace.Left;
+  lRightOffset := APage.PixelTabSpace.Right;
+  lBottomOffset := APage.PixelTabSpace.Bottom;
+  lAxisCount := 0;
+  begin
+    { Every Y scale is drawn to the left of the plot.  Reserve the measured
+      width of all its labels instead of assuming that the default 38 pixels
+      fit the current font, DPI and numeric format. }
     for I := 0 to APage.ChildCount - 1 do
       if APage.Children[I] is TChartAxis then
       begin
         lYAxis := TChartAxis(APage.Children[I]);
-        if lYAxisIdx > 0 then
+        BuildAxisTicks(lYAxis, 8, lYTicks);
+        if lYAxis = fSelectedObject then
+          lAxisFont := fFontMng.Font(cfAxisSelected)
+        else
+          lAxisFont := fFontMng.Font(cfGridTick);
+        lMaxTextWidth := 0;
+        for J := 0 to High(lYTicks) do
         begin
-          BuildAxisTicks(lYAxis, 8, lYTicks);
-          if lYAxis = fSelectedObject then
-            lAxisFont := fFontMng.Font(cfAxisSelected)
-          else
-            lAxisFont := fFontMng.Font(cfAxisLabel);
-          lMaxTextWidth := 0;
-          for J := 0 to High(lYTicks) do
-          begin
-            lText := lYTicks[J].Text;
-            lTextWidth := lAxisFont.TextPixelWidth(lText);
-            if lTextWidth > lMaxTextWidth then
-              lMaxTextWidth := lTextWidth;
-          end;
-
-          if lMaxTextWidth < 30.0 then
-            lMaxTextWidth := 30.0;
-          lTotalOffset := lTotalOffset + lMaxTextWidth + 15;
+          lTextWidth := lAxisFont.TextPixelWidth(lYTicks[J].Text);
+          if lTextWidth > lMaxTextWidth then
+            lMaxTextWidth := lTextWidth;
         end;
-
-        Inc(lYAxisIdx);
+        if lMaxTextWidth < CAxisMinLabelWidth then
+          lMaxTextWidth := CAxisMinLabelWidth;
+        if lAxisCount = 0 then
+          lLeftOffset := Max(lLeftOffset, lMaxTextWidth + 7)
+        else
+          lLeftOffset := lLeftOffset + lMaxTextWidth + CAxisColumnGap;
+        Inc(lAxisCount);
       end;
+
+    { X labels are centred on their tick, including the two end ticks.  Keep
+      half of the actual end-label width inside the page and reserve the full
+      font height below the plot, so GTK scaling cannot clip them. }
+    lPrimaryAxis := GetPrimaryXAxis(APage);
+    BuildXTicks(APage, lPrimaryAxis, 8, lXTicks);
+    lTickFont := fFontMng.Font(cfGridTick);
+    if Length(lXTicks) > 0 then
+    begin
+      lTextWidth := lTickFont.TextPixelWidth(lXTicks[0].Text) / 2 + 2;
+      lLeftOffset := Max(lLeftOffset, lTextWidth);
+      lTextWidth := lTickFont.TextPixelWidth(lXTicks[High(lXTicks)].Text) / 2 + 2;
+      lRightOffset := Max(lRightOffset, lTextWidth);
+    end;
+    lBottomOffset := Max(lBottomOffset, lTickFont.TextPixelHeight + 9);
 
   end;
 
-  Result.Left := fPageRect.Left + APage.PixelTabSpace.Left + Round(lTotalOffset);
+  Result.Left := fPageRect.Left + Round(lLeftOffset);
   Result.Top := fPageRect.Top + APage.PixelTabSpace.Top;
-  Result.Right := fPageRect.Right - APage.PixelTabSpace.Right;
-  Result.Bottom := fPageRect.Bottom - APage.PixelTabSpace.Bottom;
+  Result.Right := fPageRect.Right - Round(lRightOffset);
+  Result.Bottom := fPageRect.Bottom - Round(lBottomOffset);
   if Result.Right < Result.Left + 20 then
     Result.Right := Result.Left + 20;
   if Result.Bottom < Result.Top + 20 then
@@ -1347,25 +1374,28 @@ begin
       end;
     end;
 
-    // 3. Draw peak markers/labels for each visible trend! (NO vertical red line)
-    lOffsetCount := 0;
-    for I := 0 to APage.ChildCount - 1 do
+    // 3. Draw peak markers/labels only when the owning algorithm/component
+    // explicitly enables them. Band shading and RMS caption remain visible.
+    if ABand.ShowPeak then
     begin
-      if APage.Children[I] is TChartAxis then
+      lOffsetCount := 0;
+      for I := 0 to APage.ChildCount - 1 do
       begin
-        lAxis := TChartAxis(APage.Children[I]);
-        for J := 0 to lAxis.ChildCount - 1 do
+        if APage.Children[I] is TChartAxis then
         begin
-          if lAxis.Children[J] is cBuffTrend1d then
+          lAxis := TChartAxis(APage.Children[I]);
+          for J := 0 to lAxis.ChildCount - 1 do
           begin
-            lTrend := cBaseTrend(lAxis.Children[J]);
-            if lTrend.Visible then
+            if lAxis.Children[J] is cBuffTrend1d then
             begin
-              lHasPeak := FindTrendPeak(cBuffTrend1d(lTrend), ABand.X1, ABand.X2, lPeakX, lPeakY);
-              if lHasPeak then
+              lTrend := cBaseTrend(lAxis.Children[J]);
+              if lTrend.Visible then
               begin
-                lPixelPeakX := XValueToPixel(APage, nil, lPeakX, ARect.Left, ARect.Right);
-                lPixelY := AxisValueToPixel(lAxis, lPeakY, ARect.Bottom, ARect.Top);
+                lHasPeak := FindTrendPeak(cBuffTrend1d(lTrend), ABand.X1, ABand.X2, lPeakX, lPeakY);
+                if lHasPeak then
+                begin
+                  lPixelPeakX := XValueToPixel(APage, nil, lPeakX, ARect.Left, ARect.Right);
+                  lPixelY := AxisValueToPixel(lAxis, lPeakY, ARect.Bottom, ARect.Top);
 
                 // Black dot
                 if (lPixelPeakX >= ARect.Left) and (lPixelPeakX <= ARect.Right) and
@@ -1441,7 +1471,8 @@ begin
                     lFont.Color := lTrend.Color;
                     DrawText(lLabelText, lTextRect.Left + 4, lTextRect.Top + 3, lFont);
                   end;
-                  Inc(lOffsetCount);
+                    Inc(lOffsetCount);
+                  end;
                 end;
               end;
             end;
@@ -1690,9 +1721,9 @@ begin
           DrawText(lText, lX - lTextWidth - 7, lLabelTop, lFont);
       end;
 
-      if lMaxTextWidth < 30.0 then
-        lMaxTextWidth := 30.0;
-      lAxisOffset := lAxisOffset + lMaxTextWidth + 15;
+      if lMaxTextWidth < CAxisMinLabelWidth then
+        lMaxTextWidth := CAxisMinLabelWidth;
+      lAxisOffset := lAxisOffset + lMaxTextWidth + CAxisColumnGap;
       lFont.Color := lOriginalFontColor;
     end;
 
@@ -2496,9 +2527,9 @@ begin
                 lMaxTextWidth := lTextWidth;
             end;
 
-            if lMaxTextWidth < 30 then
-              lMaxTextWidth := 30;
-            lAxisOffset := lAxisOffset + lMaxTextWidth + 15;
+            if lMaxTextWidth < CAxisMinLabelWidth then
+              lMaxTextWidth := CAxisMinLabelWidth;
+            lAxisOffset := lAxisOffset + lMaxTextWidth + CAxisColumnGap;
           end;
 
       end;

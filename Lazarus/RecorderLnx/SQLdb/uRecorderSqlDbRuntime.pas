@@ -51,6 +51,7 @@ type
       UnitText: string;                             { Единицы измерения тега на момент записи. Не UnitName: конфликтует с FPC. }
       Text: string;                                 { Причина регистрации или текст события. }
       Extra: string;                                { Дополнительный тип данных, сейчас формат/тип файла. }
+      Severity: string;                             { Нормализованная важность события: info/warning/alarm. }
       TimeUtc: Double;                              { Астрономическое UTC-время события/значения. }
       Value: Double;                                { Числовое значение или числовая нагрузка события. }
       Quality: Integer;                             { Качество значения; 0 = штатное значение. }
@@ -91,6 +92,12 @@ type
     { Ставит в очередь диагностическое/аварийное событие. }
     function SubmitEvent(const AEventType, AText: string; ATimeUtc: Double;
       AValue: Double = 0): Boolean;
+    { Ставит в очередь событие конкретного тега. Writer связывает его с тем же
+      signal_id, который используется для значений этого канала. }
+    function SubmitTagEvent(const AEventType, ASeverity, AText,
+      ATagName: string; ATimeUtc, AValue: Double;
+      const ASourceId: string = ''; const AAddress: string = '';
+      const AUnitName: string = ''): Boolean;
     { Копирует внешний файл в SQLdb file store и связывает его с регистрацией. }
     function SubmitFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
@@ -179,8 +186,8 @@ begin
   if Result then
     QueueSqlConnectivityNotice('')
   else
-    QueueSqlConnectivityNotice('Нет соединения с БД ' + AConfig.Host + ':' +
-      IntToStr(AConfig.Port) + ' (' + AError + ')');
+    QueueSqlConnectivityNotice(UTF8Encode('Нет соединения с БД ') +
+      AConfig.Host + ':' + IntToStr(AConfig.Port) + ' (' + AError + ')');
 end;
 
 constructor TRecorderSqlDbWriterThread.Create(AOwner: TRecorderSqlDbRuntime);
@@ -321,6 +328,27 @@ begin
   J.TimeUtc := ATimeUtc; J.Value := AValue; Result := Enqueue(J);
 end;
 
+function TRecorderSqlDbRuntime.SubmitTagEvent(const AEventType, ASeverity,
+  AText, ATagName: string; ATimeUtc, AValue: Double;
+  const ASourceId: string; const AAddress: string;
+  const AUnitName: string): Boolean;
+var
+  J: TJob;
+begin
+  J := TJob.Create;
+  J.Kind := jkEvent;
+  J.Name := AEventType;
+  J.Severity := ASeverity;
+  J.Text := AText;
+  J.Extra := ATagName;
+  J.SourceId := ASourceId;
+  J.Address := AAddress;
+  J.UnitText := AUnitName;
+  J.TimeUtc := ATimeUtc;
+  J.Value := AValue;
+  Result := Enqueue(J);
+end;
+
 function TRecorderSqlDbRuntime.SubmitFile(const AFileName, ADataType: string;
   AAnchorUtc: Double): Boolean;
 var J: TJob;
@@ -394,8 +422,24 @@ begin
                 J.Value, J.Quality, lSequence);
             end;
           jkEvent:
-            R.InsertEvent(lRegistrationId, lObjectId, '', J.TimeUtc, J.Name,
-              'info', J.Text, J.Value, '');
+            begin
+              lSignalId := '';
+              if J.Extra <> '' then
+              begin
+                lSignalKey := SqlSignalCacheKey(J.Extra, J.SourceId, J.Address);
+                lSignalId := lSignals.Values[lSignalKey];
+                if lSignalId = '' then
+                begin
+                  lSignalId := R.EnsureSignal(lObjectId, J.Extra, 'double',
+                    J.UnitText, J.Extra, J.SourceId, J.Address);
+                  lSignals.Values[lSignalKey] := lSignalId;
+                end;
+              end;
+              if J.Severity = '' then
+                J.Severity := 'info';
+              R.InsertEvent(lRegistrationId, lObjectId, lSignalId, J.TimeUtc,
+                J.Name, J.Severity, J.Text, J.Value, '');
+            end;
           jkFile:
             begin
               lStored := S.StoreFile(J.Name, J.Extra, J.TimeUtc);

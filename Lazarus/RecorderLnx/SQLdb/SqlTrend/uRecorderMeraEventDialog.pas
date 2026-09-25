@@ -51,15 +51,15 @@ type
     lblStatus: TLabel;
     memDescription: TMemo;
     pnlEvent: TPanel;
-    procedure btnDeleteEventClick(Sender: TObject);
-    procedure btnOpenAllClick(Sender: TObject);
-    procedure btnOpenSelectedClick(Sender: TObject);
-    procedure btnTransferAllClick(Sender: TObject);
-    procedure btnTransferSelectedClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-    procedure grdPackagesDblClick(Sender: TObject);
-    procedure grdPackagesSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
+    procedure btnDeleteEventClick({%H-}Sender: TObject);
+    procedure btnOpenAllClick({%H-}Sender: TObject);
+    procedure btnOpenSelectedClick({%H-}Sender: TObject);
+    procedure btnTransferAllClick({%H-}Sender: TObject);
+    procedure btnTransferSelectedClick({%H-}Sender: TObject);
+    procedure btnSaveClick({%H-}Sender: TObject);
+    procedure grdPackagesDblClick({%H-}Sender: TObject);
+    procedure grdPackagesSelectCell({%H-}Sender: TObject; ACol, ARow: Integer;
+      var {%H-}CanSelect: Boolean);
   private
     fEvent: TRecorderSqlDbMeraEvent;
     fConfigFileName: string;
@@ -246,7 +246,7 @@ begin
   fEntryPaths := AWorker.fEntryPaths;
   fLocationIds := AWorker.fLocationIds;
   if AWorker.fErrorText <> '' then
-    lblStatus.Caption := 'Ошибка чтения: ' + AWorker.fErrorText
+    lblStatus.Caption := UTF8Encode('Ошибка чтения: ') + AWorker.fErrorText
   else
     lblStatus.Caption := Format('Загружено пакетов: %d', [Length(fPackages)]);
   FillPackages;
@@ -295,7 +295,8 @@ begin
       Result := True;
     except
       on E: Exception do
-        MessageDlg('Ошибка сохранения события: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(UTF8Encode('Ошибка сохранения события: ') + E.Message,
+          mtError, [mbOK], 0);
     end;
   finally
     lRepository.Free;
@@ -313,9 +314,9 @@ var
   lConfig: TRecorderSqlDbConfig;
   lRepository: TRecorderSqlDbRepository;
 begin
-  if MessageDlg('Удалить событие «' + edDisplayName.Text + '» от ' +
-    lblEventTime.Caption + '?' + LineEnding + LineEnding +
-    'Будут удалены только записи SQL. Физические MERA-файлы останутся на дисках.',
+  if MessageDlg(UTF8Encode('Удалить событие «') + edDisplayName.Text +
+    UTF8Encode('» от ') + lblEventTime.Caption + '?' + LineEnding + LineEnding +
+    UTF8Encode('Будут удалены только записи SQL. Физические MERA-файлы останутся на дисках.'),
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   lConfig := TRecorderSqlDbConfig.Create;
   lRepository := nil;
@@ -329,7 +330,8 @@ begin
       ModalResult := mrOK;
     except
       on E: Exception do
-        MessageDlg('Ошибка удаления события: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(UTF8Encode('Ошибка удаления события: ') + E.Message,
+          mtError, [mbOK], 0);
     end;
   finally
     lRepository.Free;
@@ -346,7 +348,7 @@ begin
     grdPackages.Rows[I].Clear;
   for I := 0 to High(fPackages) do
   begin
-    grdPackages.Cells[0, I + 1] := 'Да';
+    grdPackages.Cells[0, I + 1] := UTF8Encode('Да');
     grdPackages.Cells[1, I + 1] := fPackages[I].Recording.DisplayName;
     grdPackages.Cells[2, I + 1] := fPackages[I].HostName;
     grdPackages.Cells[3, I + 1] := fPackages[I].Recording.State;
@@ -377,10 +379,10 @@ begin
     grdPackages.Options := grdPackages.Options - [goEditing];
   if (ACol = 0) and (ARow > 0) and (ARow <= Length(fPackages)) then
   begin
-    if grdPackages.Cells[0, ARow] = 'Да' then
-      grdPackages.Cells[0, ARow] := 'Нет'
+    if grdPackages.Cells[0, ARow] = UTF8Encode('Да') then
+      grdPackages.Cells[0, ARow] := UTF8Encode('Нет')
     else
-      grdPackages.Cells[0, ARow] := 'Да';
+      grdPackages.Cells[0, ARow] := UTF8Encode('Да');
   end;
 end;
 
@@ -490,7 +492,8 @@ begin
     lExpectedName := fPackages[AIndex].Recording.DisplayName + '.mera';
   if not FindNamedFileRecursive(lDirectory, lExpectedName, lFound) then
   begin
-    MessageDlg('Замер не найден', 'В выбранном каталоге нет файла ' +
+    MessageDlg(UTF8Encode('Замер не найден'),
+      UTF8Encode('В выбранном каталоге нет файла ') +
       lExpectedName + '. Пути в SQL не изменены.', mtWarning, [mbOK], 0);
     Exit;
   end;
@@ -501,8 +504,8 @@ begin
     lblStatus.Caption := Format('Открыт выбранный замер; исправлено путей: %d',
       [lRepaired])
   else
-    MessageDlg('Замер не найден',
-      'В выбранном каталоге файл выбранного замера не найден. Исправлено других путей: ' +
+    MessageDlg(UTF8Encode('Замер не найден'),
+      UTF8Encode('В выбранном каталоге файл выбранного замера не найден. Исправлено других путей: ') +
       IntToStr(lRepaired), mtWarning, [mbOK], 0);
 end;
 
@@ -515,7 +518,8 @@ begin
   lRequested := 0;
   for I := 0 to High(fPackages) do
   begin
-    if ASelectedOnly and (grdPackages.Cells[0, I + 1] <> 'Да') then Continue;
+    if ASelectedOnly and
+      (grdPackages.Cells[0, I + 1] <> UTF8Encode('Да')) then Continue;
     Inc(lRequested);
     lOpenPath := ResolveRecorderNetworkPath(
       Trim(grdPackages.Cells[6, I + 1]));
@@ -535,7 +539,8 @@ begin
   lCount := 0;
   SetLength(lIds, Length(fPackages));
   for I := 0 to High(fPackages) do
-    if (not ASelectedOnly) or (grdPackages.Cells[0, I + 1] = 'Да') then
+    if (not ASelectedOnly) or
+      (grdPackages.Cells[0, I + 1] = UTF8Encode('Да')) then
     begin
       lIds[lCount] := fPackages[I].Recording.Id;
       Inc(lCount);

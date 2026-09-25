@@ -24,7 +24,8 @@ unit uRecorderFormModel;
 interface
 
 uses
-  Classes, SysUtils, uRecorderTags, uOglChartColors;
+  Classes, SysUtils, Contnrs, uRecorderTags, uOglChartColors,
+  uRecorderVibrationEstimate;
 
 type
   { TRecorderRect
@@ -196,6 +197,8 @@ type
     fFontStyleBold: Boolean;
     fFontStyleItalic: Boolean;
     fShowNameMode: TRecorderTagValueNameMode;
+    fCaption: string;
+    fUseSourceTagName: Boolean;
     fEstimateKind: TRecorderTagEstimateKind;
     fUseDefaultEstimate: Boolean;
     function GetFontName: string;
@@ -215,8 +218,41 @@ type
     property FontStyleBold: Boolean read GetFontStyleBold write fFontStyleBold;
     property FontStyleItalic: Boolean read GetFontStyleItalic write fFontStyleItalic;
     property ShowNameMode: TRecorderTagValueNameMode read fShowNameMode write fShowNameMode;
+    property Caption: string read fCaption write fCaption;
+    property UseSourceTagName: Boolean read fUseSourceTagName write fUseSourceTagName;
     property EstimateKind: TRecorderTagEstimateKind read fEstimateKind write fEstimateKind;
     property UseDefaultEstimate: Boolean read fUseDefaultEstimate write fUseDefaultEstimate;
+  end;
+
+  TRecorderVibrationEstimateComponent = class(TRecorderVisualComponent)
+  private
+    fCaption: string;
+    fUseSourceTagName: Boolean;
+    fQuantity: TRecorderVibrationQuantity;
+    fBandName: string;
+    fOutputUnit: string;
+    fDisplayFormat: string;
+    fFontName: string;
+    fFontSize: Integer;
+    fFontColor: LongInt;
+    fFontStyleBold: Boolean;
+    fFontStyleItalic: Boolean;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    procedure GetFontSnapshot(out AFont: TRecorderFontSnapshot);
+    property Caption: string read fCaption write fCaption;
+    property UseSourceTagName: Boolean read fUseSourceTagName write fUseSourceTagName;
+    property Quantity: TRecorderVibrationQuantity read fQuantity write fQuantity;
+    property BandName: string read fBandName write fBandName;
+    property OutputUnit: string read fOutputUnit write fOutputUnit;
+    property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
+    property FontName: string read fFontName write fFontName;
+    property FontSize: Integer read fFontSize write fFontSize;
+    property FontColor: LongInt read fFontColor write fFontColor;
+    property FontStyleBold: Boolean read fFontStyleBold write fFontStyleBold;
+    property FontStyleItalic: Boolean read fFontStyleItalic write fFontStyleItalic;
   end;
 
   TRecorderButtonComponent = class(TRecorderVisualComponent)
@@ -251,19 +287,51 @@ type
     property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
   end;
 
+  TRecorderSvgValueKind = (rsvCurrentValue, rsvHighAlarm,
+    rsvHighWarning, rsvLowWarning, rsvLowAlarm, rsvHighAlarmColor,
+    rsvHighWarningColor, rsvLowWarningColor, rsvLowAlarmColor,
+    rsvActiveAlarmColorWhite, rsvActiveAlarmColorTransparent,
+    rsvActiveAlarmColorCurrent);
+
+  TRecorderSvgTagBinding = class
+  private
+    fParameterName: string;
+    fTagId: TRecorderTagId;
+    fTagName: string;
+    fValueKind: TRecorderSvgValueKind;
+  public
+    procedure Assign(ASource: TRecorderSvgTagBinding);
+    property ParameterName: string read fParameterName write fParameterName;
+    property TagId: TRecorderTagId read fTagId write fTagId;
+    property TagName: string read fTagName write fTagName;
+    property ValueKind: TRecorderSvgValueKind read fValueKind write fValueKind;
+  end;
+
   { Картинка на мнемосхеме. Каждая строка Images хранится как
     "значение тега=имя файла". Если тег не задан, всегда используется
     первая строка списка. }
   TRecorderImageComponent = class(TRecorderVisualComponent)
   private
     fImages: TStringList;
+    fSvgBindings: TObjectList;
+    fImageRevision: QWord;
+    function GetSvgBinding(AIndex: Integer): TRecorderSvgTagBinding;
+    function GetSvgBindingCount: Integer;
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
     destructor Destroy; override;
     procedure AssignImage(ASource: TRecorderImageComponent);
+    function AddSvgBinding: TRecorderSvgTagBinding;
+    procedure ClearSvgBindings;
+    function FindSvgBinding(const AParameterName: string): TRecorderSvgTagBinding;
+    procedure MarkImagesChanged;
     property Images: TStringList read fImages;
+    property SvgBindingCount: Integer read GetSvgBindingCount;
+    property SvgBindings[AIndex: Integer]: TRecorderSvgTagBinding
+      read GetSvgBinding;
+    property ImageRevision: QWord read fImageRevision;
   end;
 
   TRecorderTrendLine = class
@@ -299,6 +367,7 @@ type
   private
     fAxes: TList;
     fBindingMode: TRecorderTagBindingMode;
+    fDisplayFormat: string;
     fClosedInput: Boolean;
     fAutoRangeEnabled: Boolean;
     fXCursorEnabled: Boolean;
@@ -337,6 +406,8 @@ type
     procedure DeleteLine(AIndex: Integer);
     property BindingMode: TRecorderTagBindingMode read fBindingMode
       write fBindingMode;
+    { Число значащих цифр (например, "4") либо маска FormatFloat. }
+    property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
     property AxisCount: Integer read GetAxisCount;
     property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
     property PrimaryAxisIndex: Integer read fPrimaryAxisIndex
@@ -570,6 +641,14 @@ type
     constructor Create; reintroduce;
   end;
 
+  TRecorderVibrationEstimateFactory = class(TRecorderComponentFactoryBase)
+  protected
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
+  public
+    constructor Create; reintroduce;
+  end;
+
   TRecorderDonutComponent = class(TRecorderVisualComponent)
   private
     fTagNames: TStringList;
@@ -690,6 +769,13 @@ type
     { Добавляет компонент на страницу и возвращает тот же экземпляр.
       AComponent - компонент, который становится дочерним для страницы. }
     function AddComponent(AComponent: TRecorderVisualComponent): TRecorderVisualComponent;
+
+    { Добавляет компонент на самый нижний слой страницы. }
+    function AddComponentToBack(
+      AComponent: TRecorderVisualComponent): TRecorderVisualComponent;
+
+    { Перемещает компонент между слоями, сохраняя его экземпляр. }
+    procedure MoveComponent(AFromIndex, AToIndex: Integer);
 
     { Ищет компонент по Id. Возвращает nil, если компонент не найден. }
     function FindComponentById(const AId: string): TRecorderVisualComponent;
@@ -835,7 +921,30 @@ type
       ATagName: string): TRecorderFormPage;
   end;
 
+function RecorderIsBuiltInOscillogram(
+  AComponent: TRecorderVisualComponent): Boolean;
+function RecorderIsPluginOscillograph(
+  AComponent: TRecorderVisualComponent): Boolean;
+
 implementation
+
+function RecorderIsBuiltInOscillogram(
+  AComponent: TRecorderVisualComponent): Boolean;
+begin
+  Result := AComponent is TRecorderOscillogramComponent;
+  if not Result then
+    Exit;
+  Result := (AComponent.Factory = nil) or SameText(
+    AComponent.Factory.TypeId, TRecorderOscillogramComponent.TypeId);
+end;
+
+function RecorderIsPluginOscillograph(
+  AComponent: TRecorderVisualComponent): Boolean;
+begin
+  Result := (AComponent is TRecorderOscillogramComponent) and
+    (AComponent.Factory <> nil) and
+    not RecorderIsBuiltInOscillogram(AComponent);
+end;
 
 { TRecorderVisualComponent }
 
@@ -1004,6 +1113,40 @@ end;
 
 { TRecorderTagValueComponent }
 
+class function TRecorderVibrationEstimateComponent.GetTypeId: string;
+begin
+  Result := 'VibrationEstimate';
+end;
+
+constructor TRecorderVibrationEstimateComponent.Create;
+begin
+  inherited Create;
+  fCaption := 'Виброоценка';
+  fUseSourceTagName := True;
+  fQuantity := rvqAcceleration;
+  fBandName := '';
+  fOutputUnit := RecorderVibrationDefaultUnit(fQuantity);
+  fDisplayFormat := '0.###';
+  fFontName := 'Tahoma';
+  fFontSize := 10;
+  fFontColor := 0;
+  fFontStyleBold := False;
+  fFontStyleItalic := False;
+end;
+
+procedure TRecorderVibrationEstimateComponent.GetFontSnapshot(
+  out AFont: TRecorderFontSnapshot);
+var
+  lLocal: TRecorderFontSnapshot;
+begin
+  lLocal.Name := fFontName;
+  lLocal.Size := fFontSize;
+  lLocal.Color := fFontColor;
+  lLocal.Bold := fFontStyleBold;
+  lLocal.Italic := fFontStyleItalic;
+  GetEffectiveFont(lLocal, AFont);
+end;
+
 class function TRecorderTagValueComponent.GetTypeId: string;
 begin
   Result := 'TagValue';
@@ -1078,6 +1221,8 @@ begin
   fFontStyleBold := True;
   fFontStyleItalic := False;
   fShowNameMode := tvnmTop;
+  fCaption := '';
+  fUseSourceTagName := True;
   fEstimateKind := tekMean;
   fUseDefaultEstimate := True;
 end;
@@ -1162,6 +1307,16 @@ end;
 
 { TRecorderImageComponent }
 
+procedure TRecorderSvgTagBinding.Assign(ASource: TRecorderSvgTagBinding);
+begin
+  if ASource = nil then
+    Exit;
+  fParameterName := ASource.ParameterName;
+  fTagId := ASource.TagId;
+  fTagName := ASource.TagName;
+  fValueKind := ASource.ValueKind;
+end;
+
 class function TRecorderImageComponent.GetTypeId: string;
 begin
   Result := 'Image';
@@ -1172,21 +1327,66 @@ begin
   inherited Create;
   fImages := TStringList.Create;
   fImages.NameValueSeparator := '=';
+  fSvgBindings := TObjectList.Create(True);
 end;
 
 destructor TRecorderImageComponent.Destroy;
 begin
+  fSvgBindings.Free;
   fImages.Free;
   inherited Destroy;
 end;
 
 procedure TRecorderImageComponent.AssignImage(ASource: TRecorderImageComponent);
+var
+  I: Integer;
 begin
   if ASource = nil then
     Exit;
   TagId := ASource.TagId;
   TagName := ASource.TagName;
   fImages.Assign(ASource.Images);
+  ClearSvgBindings;
+  for I := 0 to ASource.SvgBindingCount - 1 do
+    AddSvgBinding.Assign(ASource.SvgBindings[I]);
+  MarkImagesChanged;
+end;
+
+function TRecorderImageComponent.GetSvgBinding(AIndex: Integer): TRecorderSvgTagBinding;
+begin
+  Result := TRecorderSvgTagBinding(fSvgBindings[AIndex]);
+end;
+
+function TRecorderImageComponent.GetSvgBindingCount: Integer;
+begin
+  Result := fSvgBindings.Count;
+end;
+
+function TRecorderImageComponent.AddSvgBinding: TRecorderSvgTagBinding;
+begin
+  Result := TRecorderSvgTagBinding.Create;
+  fSvgBindings.Add(Result);
+end;
+
+procedure TRecorderImageComponent.ClearSvgBindings;
+begin
+  fSvgBindings.Clear;
+end;
+
+function TRecorderImageComponent.FindSvgBinding(
+  const AParameterName: string): TRecorderSvgTagBinding;
+var
+  I: Integer;
+begin
+  for I := 0 to SvgBindingCount - 1 do
+    if SameText(SvgBindings[I].ParameterName, AParameterName) then
+      Exit(SvgBindings[I]);
+  Result := nil;
+end;
+
+procedure TRecorderImageComponent.MarkImagesChanged;
+begin
+  Inc(fImageRevision);
 end;
 
 { TRecorderOscillogramComponent }
@@ -1200,6 +1400,7 @@ constructor TRecorderOscillogramComponent.Create;
 begin
   inherited Create;
   fBindingMode := rtbmRelativeSelectedTag;
+  fDisplayFormat := '4';
   fClosedInput := False;
   fAutoRangeEnabled := False;
   fXCursorEnabled := False;
@@ -1344,6 +1545,7 @@ begin
   if ASource = nil then
     Exit;
   fBindingMode := ASource.BindingMode;
+  fDisplayFormat := ASource.DisplayFormat;
   fClosedInput := ASource.ClosedInput;
   fAutoRangeEnabled := ASource.AutoRangeEnabled;
   fXCursorEnabled := ASource.XCursorEnabled;
@@ -1990,6 +2192,31 @@ begin
   lValue.SetBounds(lValue.Bounds.Left, lValue.Bounds.Top, 180, 32);
 end;
 
+constructor TRecorderVibrationEstimateFactory.Create;
+begin
+  inherited Create(TRecorderVibrationEstimateComponent.TypeId,
+    'Виброоценка', TRecorderVibrationEstimateComponent, 210, 64, True);
+  ConfigurePalette('Виброоценка', 'Добавить показометр виброоценки',
+    'digital-indicator', 21, rppGroup, CRecorderPaletteGroupIndicators);
+end;
+
+procedure TRecorderVibrationEstimateFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+var
+  lEstimate: TRecorderVibrationEstimateComponent;
+begin
+  lEstimate := TRecorderVibrationEstimateComponent(AComponent);
+  lEstimate.Name := Format('VibrationEstimate%d', [AContext.ComponentNo]);
+  if AContext.SelectedTag <> nil then
+  begin
+    lEstimate.TagName := AContext.SelectedTag.Name;
+    lEstimate.TagId := AContext.SelectedTag.Id;
+    lEstimate.Caption := AContext.SelectedTag.Name;
+  end;
+  lEstimate.SetBounds(lEstimate.Bounds.Left, lEstimate.Bounds.Top, 210, 64);
+end;
+
 { TRecorderImageFactory }
 
 constructor TRecorderImageFactory.Create;
@@ -2171,6 +2398,26 @@ begin
   AComponent.fNamedFonts := fNamedFonts;
   AComponent.fResolvedFontRevision := High(QWord);
   Result := AComponent;
+end;
+
+function TRecorderFormPage.AddComponentToBack(
+  AComponent: TRecorderVisualComponent): TRecorderVisualComponent;
+begin
+  Result := AddComponent(AComponent);
+  if fComponents.Count > 1 then
+    fComponents.Move(fComponents.Count - 1, 0);
+end;
+
+procedure TRecorderFormPage.MoveComponent(AFromIndex, AToIndex: Integer);
+begin
+  if (AFromIndex < 0) or (AFromIndex >= fComponents.Count) then
+    raise ERecorderFormError.CreateFmt('Component index out of range: %d',
+      [AFromIndex]);
+  if (AToIndex < 0) or (AToIndex >= fComponents.Count) then
+    raise ERecorderFormError.CreateFmt('Component index out of range: %d',
+      [AToIndex]);
+  if AFromIndex <> AToIndex then
+    fComponents.Move(AFromIndex, AToIndex);
 end;
 
 function TRecorderFormPage.FindComponentById(
@@ -2457,6 +2704,7 @@ begin
   RegisterFactory(TRecorderButtonFactory.Create);
   RegisterFactory(TRecorderInputFieldFactory.Create);
   RegisterFactory(TRecorderTagValueFactory.Create);
+  RegisterFactory(TRecorderVibrationEstimateFactory.Create);
   RegisterFactory(TRecorderImageFactory.Create);
   RegisterFactory(TRecorderOscillogramFactory.Create);
   RegisterFactory(TRecorderTrendFactory.Create);

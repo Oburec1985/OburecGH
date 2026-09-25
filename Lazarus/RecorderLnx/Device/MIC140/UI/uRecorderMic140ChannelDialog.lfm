@@ -3,7 +3,9 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
   Height = 280
   Top = 200
   Width = 360
-  BorderStyle = bsDialog
+  BorderStyle = bsSizeable
+  Constraints.MinHeight = 280
+  Constraints.MinWidth = 360
   Caption = 'Свойства канала'
   ClientHeight = 280
   ClientWidth = 360
@@ -21,6 +23,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 12
     Width = 120
+    Anchors = [akTop, akLeft, akRight]
     ItemHeight = 15
     OnChange = RangeChange
     Style = csDropDownList
@@ -38,6 +41,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 44
     Width = 168
+    Anchors = [akTop, akLeft, akRight]
     ItemHeight = 15
     OnChange = ThermocoupleChange
     OnDblClick = ThermocoupleDblClick
@@ -49,6 +53,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 44
     Width = 24
+    Anchors = [akTop, akRight]
     Caption = '...'
     OnClick = SelectThermocoupleClick
     TabOrder = 2
@@ -58,6 +63,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 44
     Width = 24
+    Anchors = [akTop, akRight]
     Caption = 'X'
     OnClick = ClearThermocoupleClick
     TabOrder = 3
@@ -83,6 +89,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 19
     Top = 78
     Width = 136
+    Anchors = [akTop, akRight]
     Caption = 'КХС по умолчанию'
     OnChange = DefaultCjcChange
     TabOrder = 5
@@ -99,6 +106,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 108
     Width = 200
+    Anchors = [akTop, akLeft, akRight]
     ReadOnly = True
     TabOrder = 6
   end
@@ -114,6 +122,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     Height = 23
     Top = 140
     Width = 100
+    Anchors = [akTop, akLeft, akRight]
     TabOrder = 7
   end
   object pnButtons: TPanel
@@ -131,6 +140,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
       Height = 28
       Top = 8
       Width = 75
+      Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
       ModalResult = 1
@@ -141,6 +151,7 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
       Height = 28
       Top = 8
       Width = 75
+      Anchors = [akTop, akRight]
       Cancel = True
       Caption = 'Отмена'
       ModalResult = 2

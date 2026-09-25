@@ -235,6 +235,72 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
           ClientHeight = 374
           ClientWidth = 673
           TabVisible = False
+          object pnFormulaDetails: TPanel
+            Left = 0
+            Height = 374
+            Top = 0
+            Width = 673
+            Align = alClient
+            BevelOuter = bvNone
+            TabOrder = 2
+            Visible = False
+            object lbFormulaKind: TLabel
+              Left = 20
+              Height = 15
+              Top = 24
+              Width = 87
+              Caption = 'Тип ГХ:'
+            end
+            object lbFormulaKindValue: TLabel
+              Left = 160
+              Height = 15
+              Top = 24
+              Width = 180
+              Caption = '-'
+            end
+            object lbFormulaSensitivity: TLabel
+              Left = 20
+              Height = 15
+              Top = 64
+              Width = 116
+              Caption = 'Чувствительность:'
+            end
+            object lbFormulaSensitivityValue: TLabel
+              Left = 160
+              Height = 15
+              Top = 64
+              Width = 180
+              Caption = '-'
+            end
+            object lbFormulaScale: TLabel
+              Left = 20
+              Height = 15
+              Top = 104
+              Width = 61
+              Caption = 'Масштаб:'
+            end
+            object lbFormulaScaleValue: TLabel
+              Left = 160
+              Height = 15
+              Top = 104
+              Width = 180
+              Caption = '-'
+            end
+            object lbFormulaOffset: TLabel
+              Left = 20
+              Height = 15
+              Top = 144
+              Width = 67
+              Caption = 'Смещение:'
+            end
+            object lbFormulaOffsetValue: TLabel
+              Left = 160
+              Height = 15
+              Top = 144
+              Width = 180
+              Caption = '-'
+            end
+          end
           object sbStrainEditor: TScrollBox
             Left = 0
             Height = 332

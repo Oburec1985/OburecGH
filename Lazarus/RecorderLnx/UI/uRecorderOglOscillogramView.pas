@@ -16,7 +16,8 @@ unit uRecorderOglOscillogramView;
 interface
 
 uses
-  Classes, Controls, ExtCtrls, StdCtrls, Graphics, Forms, ComCtrls, Menus, ImgList,
+  Classes, Controls, ExtCtrls, StdCtrls, Graphics, Forms, ComCtrls, Menus,
+  ImgList, Grids,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartDrawObj,
   uOglChartTrend, uOglChartTypes, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
@@ -34,7 +35,13 @@ type
     fChart: TOglChart;
     fCurrentTagName: string;
     fComponent: TRecorderOscillogramComponent;
+    fPluginMode: Boolean;
     fControlPanel: TScrollBox;
+    fSignalPanel: TPanel;
+    fSignalLabel: TLabel;
+    fSignalSplitter: TSplitter;
+    fSignalGrid: TStringGrid;
+    fActiveSeriesIndex: Integer;
     fToolBar: TToolBar;
     fToolImages: TImageList;
     fLevelButton: TToolButton;
@@ -46,6 +53,7 @@ type
     fXCursorMenu: TPopupMenu;
     fXCursorCount: Integer;
     fXCursors: array[0..1] of Double;
+    fXCursorsInitialized: Boolean;
     fDraggingXCursor: Integer;
     fAutoRange: Boolean;
     fAutoRangeApplied: Boolean;
@@ -98,6 +106,10 @@ type
     fAxis: TObject;
     fAxes: array of TChartAxis;
     fSeries: array of cLineSeries;
+    fMaximaIndices: array of array of Integer;
+    fMinimaIndices: array of array of Integer;
+    fMaximaCounts: array of Integer;
+    fMinimaCounts: array of Integer;
     fAxisRangeInitialized: array of Boolean;
     fAxisHasRange: array of Boolean;
     fAxisMin: array of Double;
@@ -113,9 +125,16 @@ type
     procedure PaintToolButton(Sender: TToolButton; State: Integer);
     procedure ToolButtonClick(Sender: TObject);
     procedure XCursorModeClick(Sender: TObject);
+    procedure EnsureXCursorsInitialized;
     procedure DrawXCursors;
     function XCursorHit(AX, AY: Integer): Integer;
-    procedure SetXCursorFromPixel(AIndex, AX: Integer);
+    procedure SetXCursorFromPixel(AIndex, AX: Integer; AShift: TShiftState);
+    procedure RebuildExtremaCaches;
+    function SnapCursorX(AX, AMaxDistance: Double; AUseMaximum: Boolean;
+      out ASnappedX: Double): Boolean;
+    procedure SignalGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure UpdateSignalGrid;
     procedure DetectManualRange;
     procedure ControlValueEdited(Sender: TObject);
     procedure TriggerChanged(Sender: TObject);
@@ -208,6 +227,7 @@ type
     fLastRevisionDisplaySeconds: Double;
     fSnapshots: array of TRecorderSignalSnapshot;
     fModel: TChartModel;
+    procedure InitializeChart;
     function GetFpsText: string;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
     function GetAxis(AIndex: Integer): TChartAxis;
@@ -364,7 +384,37 @@ begin
   end;
 end;
 
-function FormatEnabledEstimateCaption(ATag: TRecorderTag): string;
+function FormatOscillogramValue(const AValue, AYMaxAbs: Double;
+  const ADisplayFormat: string): string;
+var
+  lDigits: Integer;
+  lFormat: string;
+  lResolution: Double;
+  lRoundedValue: Double;
+begin
+  lRoundedValue := AValue;
+  { Не показываем разряды мельче 0,01 % максимального модуля шкалы. }
+  if AYMaxAbs > 0 then
+  begin
+    lResolution := Abs(AYMaxAbs) * 0.0001;
+    if lResolution > 0 then
+      lRoundedValue := Round(AValue / lResolution) * lResolution;
+  end;
+  lFormat := Trim(ADisplayFormat);
+  lDigits := StrToIntDef(lFormat, 0);
+  if (lDigits >= 1) and (lDigits <= 15) then
+    Exit(FormatSignificant(lRoundedValue, lDigits));
+  if lFormat <> '' then
+    try
+      Exit(FormatFloat(lFormat, lRoundedValue));
+    except
+      { Некорректная пользовательская маска не должна ломать отрисовку. }
+    end;
+  Result := FormatSignificant(lRoundedValue, 4);
+end;
+
+function FormatEnabledEstimateCaption(ATag: TRecorderTag;
+  const AYRange: Double; const ADisplayFormat: string): string;
 var
   lEstimate: TRecorderTagEstimate;
   lKind: TRecorderTagEstimateKind;
@@ -386,7 +436,8 @@ begin
         if lEstimate.Valid then
           lParts.Add(Format('%s=%s',
             [OscillogramEstimateShortName(lKind),
-            FormatSignificant(lEstimate.Value)]))
+            FormatOscillogramValue(lEstimate.Value, AYRange,
+              ADisplayFormat)]))
         else
           lParts.Add(OscillogramEstimateShortName(lKind) + '=-');
       end;
@@ -397,7 +448,8 @@ begin
       if lEstimate.Valid then
         lParts.Add(Format('%s=%s',
           [OscillogramEstimateShortName(lSettings.DefaultKind),
-          FormatSignificant(lEstimate.Value)]))
+          FormatOscillogramValue(lEstimate.Value, AYRange,
+            ADisplayFormat)]))
       else
         lParts.Add(OscillogramEstimateShortName(lSettings.DefaultKind) +
           '=-');
@@ -420,12 +472,11 @@ begin
   fBindingMode := rtbmRelativeSelectedTag;
   fTagOffset := 0;
   fTagSlotIndex := 0;
-    fExtraLines := TList.Create;
+  fExtraLines := TList.Create;
+  fActiveSeriesIndex := 0;
   fDraggingXCursor := -1;
   fXCursorCount := 1;
-  fXCursors[0] := 0.33;
-  fXCursors[1] := 0.67;
-  ConfigureDefault;
+  fXCursorsInitialized := False;
 end;
 
 destructor TRecorderOglOscillogram.Destroy;
@@ -443,13 +494,18 @@ procedure TRecorderOglOscillogram.Configure(AComponent: TRecorderVisualComponent
 var
   I: Integer;
 begin
+  fComponent := TRecorderOscillogramComponent(AComponent);
+  fPluginMode := RecorderIsPluginOscillograph(fComponent);
   if fChart = nil then
     ConfigureDefault;
   fBindingMode := TRecorderOscillogramComponent(AComponent).BindingMode;
-  fComponent := TRecorderOscillogramComponent(AComponent);
   fTagRegistry := ATagRegistry;
-  if (fComponent.Factory <> nil) and
-    (fComponent.Factory.TypeId <> 'oscillogram') then
+  { The built-in Oscillogram is intentionally a simple chart.  Advanced
+    controls belong only to oscillogram components registered by plugins.
+    TypeId comparison must be case-insensitive: the built-in factory exposes
+    "Oscillogram", while older code compared it with lowercase text and
+    mistakenly enabled the plugin UI on the base component. }
+  if fPluginMode then
   begin
     if fControlPanel = nil then
       BuildPluginControls;
@@ -502,6 +558,7 @@ var
   lChart: TOglChart;
   lModel: TChartModel;
   lPageArea: TChartFloatRect;
+  lTabSpace: TChartPixelRect;
   lPage: TChartPage;
   lAxis: TChartAxis;
   lTrend: cLineSeries;
@@ -529,9 +586,12 @@ begin
   lChart.Align := alClient;
   lChart.AutoResizeViewport := True;
   lChart.OnAfterRender := @ChartAfterRender;
-  lChart.OnMouseDown := @ChartMouseDown;
-  lChart.OnMouseMove := @ChartMouseMove;
-  lChart.OnMouseUp := @ChartMouseUp;
+  if fPluginMode then
+  begin
+    lChart.OnMouseDown := @ChartMouseDown;
+    lChart.OnMouseMove := @ChartMouseMove;
+    lChart.OnMouseUp := @ChartMouseUp;
+  end;
   lModel := TChartModel.Create;
   lModel.Title := '';
   lModel.BackgroundColor := $FFFFFFFF;
@@ -546,6 +606,11 @@ begin
   lPage.Align := cpaClient;
   lPage.FillColor := $FFFFFFFF;
   lPage.BorderColor := $FF707070;
+  lTabSpace := lPage.PixelTabSpace;
+  { X labels are drawn below the plot rectangle. Reserve their full height so
+    the bottom legend never covers or clips the labels. }
+  lTabSpace.Bottom := 24;
+  lPage.PixelTabSpace := lTabSpace;
   lPage.XMinValue := 0;
   lPage.XMaxValue := 1;
   { Обратная рамка масштабирует по точкам текущего кадра. Общий FitZoomY
@@ -590,10 +655,13 @@ var
   lDyText: string;
 begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
-  DrawTriggerLevelCursor;
-  DrawXCursors;
-  DetectManualRange;
-  SyncViewportControls;
+  if fPluginMode then
+  begin
+    DrawTriggerLevelCursor;
+    DrawXCursors;
+    DetectManualRange;
+    SyncViewportControls;
+  end;
   if (fDyLabel <> nil) and (fAxis <> nil) then
   begin
     lDyText := Format('; dY=%s', [FormatSignificant(
@@ -731,7 +799,13 @@ begin
         AppendInfoPart('; ', clGray);
       lTagName := lShownTags[I];
       lLineTag := ATagRegistry.FindByName(lTagName);
-      lEstimateText := FormatEnabledEstimateCaption(lLineTag);
+      if (fAxis <> nil) and (fComponent <> nil) then
+        lEstimateText := FormatEnabledEstimateCaption(lLineTag,
+          Max(Abs(TChartAxis(fAxis).MinValue),
+            Abs(TChartAxis(fAxis).MaxValue)),
+          fComponent.DisplayFormat)
+      else
+        lEstimateText := FormatEnabledEstimateCaption(lLineTag, 0, '4');
       if lEstimateText <> '' then
         AppendInfoPart(Format('%s | %s', [lTagName, lEstimateText]), lTagColors[I])
       else
@@ -870,7 +944,7 @@ begin
   if fAxis = nil then
     Exit;
   lAxisCount := 1;
-  if fComponent <> nil then
+  if fPluginMode and (fComponent <> nil) then
     lAxisCount := Max(1, fComponent.AxisCount);
   if Length(fAxes) > lAxisCount then
   begin
@@ -918,7 +992,7 @@ begin
   for I := 0 to lNeed - 1 do
   begin
     lAxisIndex := 0;
-    if fComponent <> nil then
+    if fPluginMode and (fComponent <> nil) then
       if I = 0 then
         lAxisIndex := fComponent.PrimaryAxisIndex
       else
@@ -961,6 +1035,22 @@ begin
       end;
   end;
   fTrend := GetTrendByIndex(0);
+  fActiveSeriesIndex := EnsureRange(fActiveSeriesIndex, 0,
+    Max(0, Length(fSeries) - 1));
+  { The extrema indices belong to the previous series layout.  Channel
+    removal can return from Refresh before RebuildExtremaCaches (for example
+    when the primary tag is offline), so stale indices must not remain usable
+    by the cursor handlers. }
+  SetLength(fMaximaIndices, Length(fSeries));
+  SetLength(fMinimaIndices, Length(fSeries));
+  SetLength(fMaximaCounts, Length(fSeries));
+  SetLength(fMinimaCounts, Length(fSeries));
+  for I := 0 to High(fSeries) do
+  begin
+    fMaximaCounts[I] := 0;
+    fMinimaCounts[I] := 0;
+  end;
+  UpdateSignalGrid;
 end;
 
 function TRecorderOglOscillogram.GetTrendByIndex(AIndex: Integer): cLineSeries;
@@ -968,6 +1058,64 @@ begin
   Result := nil;
   if (AIndex >= 0) and (AIndex < Length(fSeries)) then
     Result := fSeries[AIndex];
+end;
+
+procedure TRecorderOglOscillogram.SignalGridSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  CanSelect := (ARow > 0) and (ARow <= Length(fSeries));
+  if CanSelect then
+    fActiveSeriesIndex := ARow - 1;
+end;
+
+procedure TRecorderOglOscillogram.UpdateSignalGrid;
+var
+  I, lAxisIndex: Integer;
+  lLine: TRecorderTrendLine;
+  lName, lAxisText: string;
+  lTag: TRecorderTag;
+begin
+  if fSignalGrid = nil then
+    Exit;
+  fSignalGrid.RowCount := Max(2, Length(fSeries) + 1);
+  for I := 0 to High(fSeries) do
+  begin
+    lAxisIndex := 0;
+    if I = 0 then
+    begin
+      lTag := ResolveTag(fTagRegistry);
+      if lTag <> nil then
+        lName := lTag.Name
+      else if fComponent <> nil then
+        lName := fComponent.TagName
+      else
+        lName := '';
+      if fComponent <> nil then
+        lAxisIndex := fComponent.PrimaryAxisIndex;
+    end
+    else
+    begin
+      lLine := TRecorderTrendLine(fExtraLines[I - 1]);
+      lTag := RecorderResolveTag(fTagRegistry, lLine.TagId, lLine.TagName);
+      if lTag <> nil then
+        lName := lTag.Name
+      else if Trim(lLine.TagName) <> '' then
+        lName := lLine.TagName
+      else
+        lName := lLine.Name;
+      lAxisIndex := lLine.AxisIndex;
+    end;
+    if Trim(lName) = '' then
+      lName := Format('Сигнал %d', [I + 1]);
+    lAxisText := IntToStr(lAxisIndex + 1);
+    if fSignalGrid.Cells[0, I + 1] <> lName then
+      fSignalGrid.Cells[0, I + 1] := lName;
+    if fSignalGrid.Cells[1, I + 1] <> lAxisText then
+      fSignalGrid.Cells[1, I + 1] := lAxisText;
+  end;
+  fActiveSeriesIndex := EnsureRange(fActiveSeriesIndex, 0,
+    Max(0, Length(fSeries) - 1));
+  fSignalGrid.Row := fActiveSeriesIndex + 1;
 end;
 
 procedure TRecorderOglOscillogram.AccumulateAxisRange(AAxisIndex: Integer;
@@ -1112,7 +1260,7 @@ begin
   fControlPanel := TScrollBox.Create(Self);
   fControlPanel.Parent := Self;
   fControlPanel.Align := alRight;
-  fControlPanel.Width := 152;
+  fControlPanel.Width := 182;
   fControlPanel.BorderStyle := bsSingle;
   fControlPanel.AutoScroll := True;
   fControlPanel.Color := clBtnFace;
@@ -1151,6 +1299,42 @@ begin
   fClosedInputCheck.OnChange := @ClosedInputChanged;
   AddLabel('До триггера, % окна', 263);
   fPreRollEdit := AddEdit(282);
+  { The splitter must resize the whole signal block.  Keep the caption and
+    grid inside one aligned container so neither can become its resize target. }
+  fSignalSplitter := TSplitter.Create(Self);
+  fSignalSplitter.Parent := fControlPanel;
+  fSignalSplitter.Align := alBottom;
+  fSignalSplitter.Height := 5;
+  fSignalSplitter.Cursor := crVSplit;
+  fSignalPanel := TPanel.Create(Self);
+  fSignalPanel.Parent := fControlPanel;
+  fSignalPanel.Align := alBottom;
+  fSignalPanel.BevelOuter := bvNone;
+  fSignalLabel := TLabel.Create(Self);
+  fSignalLabel.Parent := fSignalPanel;
+  fSignalLabel.Align := alTop;
+  fSignalLabel.AutoSize := True;
+  fSignalLabel.BorderSpacing.Left := 8;
+  fSignalLabel.BorderSpacing.Top := 2;
+  fSignalLabel.BorderSpacing.Bottom := 2;
+  fSignalLabel.Caption := 'Активный сигнал';
+  fSignalGrid := TStringGrid.Create(Self);
+  fSignalGrid.Parent := fSignalPanel;
+  fSignalGrid.Align := alClient;
+  fSignalGrid.ColCount := 2;
+  fSignalGrid.FixedCols := 0;
+  fSignalGrid.FixedRows := 1;
+  fSignalGrid.RowCount := 2;
+  fSignalGrid.ColWidths[0] := 116;
+  fSignalGrid.ColWidths[1] := 42;
+  fSignalGrid.Cells[0, 0] := 'Сигнал';
+  fSignalGrid.Cells[1, 0] := 'Ось';
+  fSignalGrid.Options := fSignalGrid.Options + [goRowSelect] - [goEditing];
+  fSignalGrid.OnSelectCell := @SignalGridSelectCell;
+  fSignalPanel.Height := fSignalLabel.Height +
+    6 * fSignalGrid.DefaultRowHeight;
+  fSignalSplitter.MinSize := fSignalLabel.Height +
+    2 * fSignalGrid.DefaultRowHeight;
 end;
 
 procedure TRecorderOglOscillogram.BuildToolBar;
@@ -1309,12 +1493,20 @@ var
   lSeries: cLineSeries;
   lCaption, lName: string;
   lX, lValue1, lValue2: Double;
+  lYRange: Double;
+  lDisplayFormat: string;
   lHas1, lHas2: Boolean;
-  lPage: TChartPage;
 begin
   if (fLegendPanel = nil) or not fLegendPanel.Visible or
      (fPage = nil) then Exit;
-  lPage := TChartPage(fPage);
+  EnsureXCursorsInitialized;
+  lYRange := 0;
+  if fAxis <> nil then
+    lYRange := Max(Abs(TChartAxis(fAxis).MinValue),
+      Abs(TChartAxis(fAxis).MaxValue));
+  lDisplayFormat := '4';
+  if fComponent <> nil then
+    lDisplayFormat := fComponent.DisplayFormat;
   lLeft := 8;
   for I := 0 to High(fLegendLabels) do
   begin
@@ -1327,32 +1519,35 @@ begin
     else
       lName := lSeries.Caption;
     lCaption := '■ ' + lName;
-    if (fXCursorButton <> nil) and fXCursorButton.Down then
+    if (fXCursorButton <> nil) and fXCursorButton.Down and
+       fXCursorsInitialized then
     begin
-      lX := lPage.XMinValue + fXCursors[0] *
-        (lPage.XMaxValue - lPage.XMinValue);
+      lX := fXCursors[0];
       lHas1 := LegendValueAt(lSeries, lX, lValue1);
       if lHas1 then
-        lCaption := lCaption + '  Y1=' + FormatSignificant(lValue1)
+        lCaption := lCaption + '  Y1=' +
+          FormatOscillogramValue(lValue1, lYRange, lDisplayFormat)
       else
         lCaption := lCaption + '  Y1=-';
       if fXCursorCount = 2 then
       begin
-        lX := lPage.XMinValue + fXCursors[1] *
-          (lPage.XMaxValue - lPage.XMinValue);
+        lX := fXCursors[1];
         lHas2 := LegendValueAt(lSeries, lX, lValue2);
         if lHas2 then
-          lCaption := lCaption + '  Y2=' + FormatSignificant(lValue2)
+          lCaption := lCaption + '  Y2=' +
+            FormatOscillogramValue(lValue2, lYRange, lDisplayFormat)
         else
           lCaption := lCaption + '  Y2=-';
         if lHas1 and lHas2 then
           lCaption := lCaption + '  Δ=' +
-            FormatSignificant(lValue2 - lValue1);
+            FormatOscillogramValue(lValue2 - lValue1, lYRange,
+              lDisplayFormat);
       end;
     end
     else if lSeries.PointCount > 0 then
       lCaption := lCaption + '  Y=' +
-        FormatSignificant(lSeries.Points[lSeries.PointCount - 1].Y)
+        FormatOscillogramValue(lSeries.Points[lSeries.PointCount - 1].Y,
+          lYRange, lDisplayFormat)
     else
       lCaption := lCaption + '  Y=-';
     if fLegendLabels[I].Caption <> lCaption then
@@ -1427,11 +1622,33 @@ end;
 
 procedure TRecorderOglOscillogram.XCursorModeClick(Sender: TObject);
 begin
+  EnsureXCursorsInitialized;
   fXCursorCount := TMenuItem(Sender).Tag;
   if fComponent <> nil then fComponent.XCursorCount := fXCursorCount;
   TMenuItem(Sender).Checked := True;
   RefreshLegendValues;
   fChart.Invalidate;
+end;
+
+procedure TRecorderOglOscillogram.EnsureXCursorsInitialized;
+var
+  lPage: TChartPage;
+  lRange: Double;
+begin
+  if fXCursorsInitialized or (fPage = nil) then
+    Exit;
+  { Начальную треть диапазона выбираем только после появления реального
+    кадра, а не из временного диапазона 0..1, заданного при создании chart. }
+  if (Length(fSeries) = 0) or (fSeries[0] = nil) or
+     (fSeries[0].PointCount = 0) then
+    Exit;
+  lPage := TChartPage(fPage);
+  lRange := lPage.XMaxValue - lPage.XMinValue;
+  if lRange <= 0 then
+    Exit;
+  fXCursors[0] := lPage.XMinValue + 0.33 * lRange;
+  fXCursors[1] := lPage.XMinValue + 0.67 * lRange;
+  fXCursorsInitialized := True;
 end;
 
 procedure TRecorderOglOscillogram.RefreshControlValues;
@@ -1593,10 +1810,15 @@ begin
   lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
   if lRenderer = nil then Exit;
   lPage := TChartPage(fPage);
+  EnsureXCursorsInitialized;
+  if not fXCursorsInitialized then Exit;
   lRect := lRenderer.GetPageContentRect(lPage);
   for I := 0 to fXCursorCount - 1 do
   begin
-    lX := lRect.Left + fXCursors[I] * (lRect.Right - lRect.Left);
+    lX := lRenderer.XValueToPixel(lPage, nil, fXCursors[I],
+      lRect.Left, lRect.Right);
+    if (lX < lRect.Left) or (lX > lRect.Right) then
+      Continue;
     glColor3f(0.8, 0.1, 0.1);
     glLineWidth(1.5);
     glLineStipple(1, $00FF);
@@ -1621,29 +1843,152 @@ begin
      (fChart = nil) or (fPage = nil) then Exit;
   lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
   if lRenderer = nil then Exit;
+  EnsureXCursorsInitialized;
+  if not fXCursorsInitialized then Exit;
   lRect := lRenderer.GetPageContentRect(TChartPage(fPage));
   if (AY < lRect.Top) or (AY > lRect.Bottom) then Exit;
   for I := 0 to fXCursorCount - 1 do
-    if Abs(AX - (lRect.Left + fXCursors[I] *
-      (lRect.Right - lRect.Left))) <= 6 then Exit(I);
+    if Abs(AX - lRenderer.XValueToPixel(TChartPage(fPage), nil,
+      fXCursors[I], lRect.Left, lRect.Right)) <= 6 then Exit(I);
 end;
 
-procedure TRecorderOglOscillogram.SetXCursorFromPixel(AIndex, AX: Integer);
+procedure TRecorderOglOscillogram.RebuildExtremaCaches;
+var
+  I, J, lPointCount: Integer;
+  lPrevious, lValue, lNext: Double;
+  lSeries: cLineSeries;
+begin
+  SetLength(fMaximaIndices, Length(fSeries));
+  SetLength(fMinimaIndices, Length(fSeries));
+  SetLength(fMaximaCounts, Length(fSeries));
+  SetLength(fMinimaCounts, Length(fSeries));
+  for I := 0 to High(fSeries) do
+  begin
+    fMaximaCounts[I] := 0;
+    fMinimaCounts[I] := 0;
+    lSeries := fSeries[I];
+    if (lSeries = nil) or not lSeries.Visible then
+      Continue;
+    lPointCount := lSeries.PointCount;
+    if lPointCount < 3 then
+      Continue;
+    if Length(fMaximaIndices[I]) < lPointCount then
+      SetLength(fMaximaIndices[I], lPointCount);
+    if Length(fMinimaIndices[I]) < lPointCount then
+      SetLength(fMinimaIndices[I], lPointCount);
+    for J := 1 to lPointCount - 2 do
+    begin
+      lPrevious := lSeries.Points[J - 1].Y;
+      lValue := lSeries.Points[J].Y;
+      lNext := lSeries.Points[J + 1].Y;
+      if IsNan(lPrevious) or IsNan(lValue) or IsNan(lNext) then
+        Continue;
+      if ((lValue >= lPrevious) and (lValue > lNext)) or
+         ((lValue > lPrevious) and (lValue >= lNext)) then
+      begin
+        fMaximaIndices[I][fMaximaCounts[I]] := J;
+        Inc(fMaximaCounts[I]);
+      end;
+      if ((lValue <= lPrevious) and (lValue < lNext)) or
+         ((lValue < lPrevious) and (lValue <= lNext)) then
+      begin
+        fMinimaIndices[I][fMinimaCounts[I]] := J;
+        Inc(fMinimaCounts[I]);
+      end;
+    end;
+  end;
+end;
+
+function TRecorderOglOscillogram.SnapCursorX(AX, AMaxDistance: Double;
+  AUseMaximum: Boolean; out ASnappedX: Double): Boolean;
+var
+  lCount, lLeft, lRight, lMiddle, lCandidate, lPointIndex: Integer;
+  lDistance, lBestDistance: Double;
+  lIndices: array of Integer;
+  lSeries: cLineSeries;
+
+  procedure CheckCandidate(AIndex: Integer);
+  begin
+    if (AIndex < 0) or (AIndex >= lCount) then
+      Exit;
+    lPointIndex := lIndices[AIndex];
+    lDistance := Abs(lSeries.Points[lPointIndex].X - AX);
+    if lDistance < lBestDistance then
+    begin
+      lBestDistance := lDistance;
+      ASnappedX := lSeries.Points[lPointIndex].X;
+    end;
+  end;
+
+begin
+  Result := False;
+  if (fActiveSeriesIndex < 0) or
+     (fActiveSeriesIndex >= Length(fSeries)) or
+     (fActiveSeriesIndex >= Length(fMaximaCounts)) or
+     (fActiveSeriesIndex >= Length(fMinimaCounts)) then
+    Exit;
+  lSeries := fSeries[fActiveSeriesIndex];
+  if (lSeries = nil) or not lSeries.Visible then
+    Exit;
+  if AUseMaximum then
+  begin
+    lCount := fMaximaCounts[fActiveSeriesIndex];
+    lIndices := fMaximaIndices[fActiveSeriesIndex];
+  end
+  else
+  begin
+    lCount := fMinimaCounts[fActiveSeriesIndex];
+    lIndices := fMinimaIndices[fActiveSeriesIndex];
+  end;
+  if lCount = 0 then
+    Exit;
+  lLeft := 0;
+  lRight := lCount;
+  while lLeft < lRight do
+  begin
+    lMiddle := (lLeft + lRight) div 2;
+    if lSeries.Points[lIndices[lMiddle]].X < AX then
+      lLeft := lMiddle + 1
+    else
+      lRight := lMiddle;
+  end;
+  lCandidate := lLeft;
+  lBestDistance := AMaxDistance + 1.0;
+  CheckCandidate(lCandidate - 1);
+  CheckCandidate(lCandidate);
+  Result := lBestDistance <= AMaxDistance;
+end;
+
+procedure TRecorderOglOscillogram.SetXCursorFromPixel(AIndex, AX: Integer;
+  AShift: TShiftState);
 var
   lRenderer: TOpenGLChartRenderer;
   lRect: TChartPixelRect;
+  lPage: TChartPage;
+  lX, lSnappedX, lSnapDistance: Double;
 begin
   if (AIndex < 0) or (AIndex > 1) or (fChart = nil) then Exit;
   lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
   if lRenderer = nil then Exit;
-  lRect := lRenderer.GetPageContentRect(TChartPage(fPage));
+  lPage := TChartPage(fPage);
+  lRect := lRenderer.GetPageContentRect(lPage);
   if lRect.Right <= lRect.Left then Exit;
-  fXCursors[AIndex] := EnsureRange((AX - lRect.Left) /
-    (lRect.Right - lRect.Left), 0.0, 1.0);
+  lX := lPage.XMinValue + EnsureRange((AX - lRect.Left) /
+    (lRect.Right - lRect.Left), 0.0, 1.0) *
+    (lPage.XMaxValue - lPage.XMinValue);
+  lSnapDistance := 12.0 * (lPage.XMaxValue - lPage.XMinValue) /
+    (lRect.Right - lRect.Left);
+  if (ssCtrl in AShift) and
+     SnapCursorX(lX, lSnapDistance, False, lSnappedX) then
+    lX := lSnappedX
+  else if (ssShift in AShift) and
+     SnapCursorX(lX, lSnapDistance, True, lSnappedX) then
+    lX := lSnappedX;
+  fXCursors[AIndex] := lX;
+  fXCursorsInitialized := True;
   if fXCursorButton <> nil then
     fXCursorButton.Hint := Format('X%d = %s с', [AIndex + 1,
-      FormatSignificant(TChartPage(fPage).XMinValue + fXCursors[AIndex] *
-        (TChartPage(fPage).XMaxValue - TChartPage(fPage).XMinValue))]);
+      FormatSignificant(lX)]);
   RefreshLegendValues;
   fChart.Invalidate;
 end;
@@ -1789,13 +2134,13 @@ end;
 procedure TRecorderOglOscillogram.ChartMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if (Button = mbLeft) and not (ssCtrl in Shift) then
+  if Button = mbLeft then
   begin
     fDraggingXCursor := XCursorHit(X, Y);
     if fDraggingXCursor >= 0 then
     begin
       fChart.MouseInputEnabled := False;
-      SetXCursorFromPixel(fDraggingXCursor, X);
+      SetXCursorFromPixel(fDraggingXCursor, X, Shift);
       Exit;
     end;
   end;
@@ -1810,7 +2155,7 @@ procedure TRecorderOglOscillogram.ChartMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   if (fDraggingXCursor >= 0) and (ssLeft in Shift) then
-    SetXCursorFromPixel(fDraggingXCursor, X);
+    SetXCursorFromPixel(fDraggingXCursor, X, Shift);
   if (fDraggingXCursor >= 0) or (XCursorHit(X, Y) >= 0) then
   begin
     fChart.Cursor := crSizeWE;
@@ -1827,7 +2172,7 @@ procedure TRecorderOglOscillogram.ChartMouseUp(Sender: TObject;
 begin
   if (Button = mbLeft) and (fDraggingXCursor >= 0) then
   begin
-    SetXCursorFromPixel(fDraggingXCursor, X);
+    SetXCursorFromPixel(fDraggingXCursor, X, Shift);
     fDraggingXCursor := -1;
     fChart.MouseInputEnabled := True;
     Exit;
@@ -1894,23 +2239,24 @@ var
 begin
   { The chart applies pan/zoom after our OnMouseUp handler, so inspect the
     viewport again before the next data update can apply automatic ranges. }
-  DetectManualRange;
-  if (fComponent <> nil) and (fComponent.XScale > 0) then
+  if fPluginMode then
+    DetectManualRange;
+  if fPluginMode and (fComponent <> nil) and (fComponent.XScale > 0) then
     ADisplaySeconds := fComponent.XScale;
-  if fAutoRange then
+  if fPluginMode and fAutoRange then
     for I := 0 to High(fAxisRangeInitialized) do
       fAxisRangeInitialized[I] := False;
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
   lWindowSeconds := ADisplaySeconds;
-  if (fComponent <> nil) and fComponent.TriggerEnabled and
+  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled and
     TChartPage(fPage).ZoomedX then
     lWindowSeconds := TChartPage(fPage).XMaxValue -
       TChartPage(fPage).XMinValue;
   if (lWindowSeconds <= 0) or (lWindowSeconds > ADisplaySeconds) then
     lWindowSeconds := ADisplaySeconds;
   lPreRollSeconds := 0;
-  if (fComponent <> nil) and fComponent.TriggerEnabled then
+  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
     lPreRollSeconds := lWindowSeconds *
       fComponent.TriggerPreRollPercent / 100.0;
   if fFpsMeasureEnabled <> AMeasureFps then
@@ -1935,7 +2281,7 @@ begin
         (lDataSignature shr 59)) xor
         (QWord(lSignatureTag.Id) + lSignatureTag.SignalBuffer.Revision);
   end;
-  if (fComponent <> nil) and fComponent.TriggerEnabled then
+  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
   begin
     lSignatureTag := ResolveTagByName(ATagRegistry,
       fComponent.TriggerTagName);
@@ -1970,7 +2316,7 @@ begin
   lTag := ResolveTag(ATagRegistry);
   if lTag = nil then
   begin
-    if fComponent <> nil then
+    if fPluginMode and (fComponent <> nil) then
     begin
       lPluginFrame := Default(TRecorderPluginOscillogramFrame);
       lPluginFrame.Size := SizeOf(lPluginFrame);
@@ -2040,7 +2386,7 @@ begin
   end;
   lTag := lPrimaryTag;
   lTriggered := False;
-  if (fComponent <> nil) and fComponent.TriggerEnabled then
+  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
   begin
     if Trim(fComponent.TriggerTagName) = '' then
       lTriggerTag := lPrimaryTag
@@ -2110,7 +2456,7 @@ begin
       lDisplayStart + lWindowSeconds) do
     Dec(fLineSnapshots[0].Count);
   lSnapshot := fLineSnapshots[0];
-  if fComponent <> nil then
+  if fPluginMode and (fComponent <> nil) then
   begin
     lPluginFrame := Default(TRecorderPluginOscillogramFrame);
     lPluginFrame.Size := SizeOf(lPluginFrame);
@@ -2155,7 +2501,7 @@ begin
   begin
     lHasRange := True;
     lAxisIndex := 0;
-    if fComponent <> nil then
+    if fPluginMode and (fComponent <> nil) then
       lAxisIndex := fComponent.PrimaryAxisIndex;
     AccumulateAxisRange(Max(0, Min(lAxisIndex, High(fAxes))),
       lMinValue, lMaxValue, lPointCount);
@@ -2207,14 +2553,21 @@ begin
     Inc(lPointCount, lLinePoints);
   end;
 
+  if fPluginMode then
+  begin
+    RebuildExtremaCaches;
+    UpdateSignalGrid;
+  end;
+
   for I := 0 to High(fAxes) do
   begin
     if fAxisHasRange[I] and not fAxisRangeInitialized[I] then
     begin
       lTag := nil;
-      if (fComponent <> nil) and (fComponent.PrimaryAxisIndex = I) then
+      if fPluginMode and (fComponent <> nil) and
+        (fComponent.PrimaryAxisIndex = I) then
         lTag := lPrimaryTag;
-      if fAutoRange then
+    if fPluginMode and fAutoRange then
       begin
         fAxes[I].HasPresetRange := False;
         ApplyOscillogramTagYRange(fAxes[I], nil,
@@ -2225,8 +2578,9 @@ begin
           fAxisMin[I], fAxisMax[I]);
       fAxisRangeInitialized[I] := True;
     end;
-    if fAutoRange then Continue;
-    if (fComponent = nil) or (I >= fComponent.AxisCount) or
+    if fPluginMode and fAutoRange then Continue;
+    if (not fPluginMode) or (fComponent = nil) or
+      (I >= fComponent.AxisCount) or
       (fComponent.Axes[I].YScale <= 0) or fAxes[I].HasPresetRange then
       Continue;
     lAxisBaseMin := fAxes[I].PresetMinValue;
@@ -2239,7 +2593,7 @@ begin
     fAxes[I].MaxValue := lAxisCenter + lAxisHalfRange;
   end;
   fYRangeInitialized := fAxisRangeInitialized[0];
-  if fAutoRange then
+  if fPluginMode and fAutoRange then
   begin
     if Length(fAppliedYMin) <> Length(fAxes) then
       SetLength(fAppliedYMin, Length(fAxes));
@@ -2316,14 +2670,23 @@ end;
 
 { TRecorderOglOscillogramSurface }
 constructor TRecorderOglOscillogramSurface.Create(AOwner: TComponent);
-var
-  lPageArea: TChartFloatRect;
 begin
   inherited Create(AOwner);
   BevelOuter := bvNone;
   Caption := '';
   ParentBackground := False;
   Color := clWhite;
+  fPageCaptionFontSize := 10;
+end;
+
+procedure TRecorderOglOscillogramSurface.InitializeChart;
+var
+  lPageArea: TChartFloatRect;
+begin
+  if fChart <> nil then
+    Exit;
+  if Parent = nil then
+    Exit;
   fChart := TOglChart.Create(Self);
   fChart.Parent := Self;
   fChart.Align := alClient;
@@ -2338,7 +2701,7 @@ begin
   fModel.PageArea := lPageArea;
   fModel.PageGapX := 0.004;
   fModel.PageGapY := 0.006;
-  SetPageCaptionFontSize(10);
+  SetPageCaptionFontSize(fPageCaptionFontSize);
 end;
 
 function TRecorderOglOscillogramSurface.GetPageCaptionFontSize: Integer;
@@ -2563,7 +2926,11 @@ begin
     lTagName := ATag.Name
   else
     lTagName := 'None';
-  lEstimateText := FormatEnabledEstimateCaption(ATag);
+  if AAxis <> nil then
+    lEstimateText := FormatEnabledEstimateCaption(ATag,
+      Max(Abs(AAxis.MinValue), Abs(AAxis.MaxValue)), '4')
+  else
+    lEstimateText := FormatEnabledEstimateCaption(ATag, 0, '4');
   if AAxis <> nil then
     lDeltaText := Format('dY=%s', [FormatSignificant(
       AAxis.MaxValue - AAxis.MinValue)])
@@ -2585,6 +2952,9 @@ var
   lTabSpace: TChartPixelRect;
   lTrend: cBuffTrend1d;
 begin
+  InitializeChart;
+  if fChart = nil then
+    Exit;
   if ACount < 1 then
     ACount := 1;
   if ACount > 16 then

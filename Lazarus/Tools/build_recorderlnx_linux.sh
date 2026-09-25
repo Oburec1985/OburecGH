@@ -13,6 +13,8 @@ cd "$project" || exit 2
   lazbuild --pcp=/home/user/.lazarus_work -B RecorderLnx.lpi &&
   cd "$project/Plugins/SampleInfoPlugin" &&
   lazbuild --pcp=/home/user/.lazarus_work -B SampleInfoPlugin.lpi &&
+  cd "$project/Plugins/LuaCalcPlugin" &&
+  lazbuild --pcp=/home/user/.lazarus_work -B LuaCalcPlugin.lpi &&
   cd "$project/Tests/PluginInfo" &&
   lazbuild --pcp=/home/user/.lazarus_work -B PluginInfoProbe.lpi &&
   "$project/lib/x86_64-linux/PluginInfoProbe" \

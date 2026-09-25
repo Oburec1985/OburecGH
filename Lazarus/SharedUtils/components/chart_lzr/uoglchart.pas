@@ -31,6 +31,7 @@ type
     fOnAfterRender: TChartAfterRenderEvent; // Событие после отрисовки кадра
     fOnCursorChanged: TChartCursorChangedEvent; // Событие изменения измерительного курсора
 
+    function CanUseOpenGLContext: Boolean;
     function GetModel: TChartModel;
 
     procedure SetModel(AValue: TChartModel);
@@ -170,6 +171,10 @@ end;
 constructor TOglChart.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  { Запрашиваем multisample framebuffer до создания OpenGL-контекста.
+    LCL сам откатывается к обычному framebuffer, если драйвер не поддерживает
+    запрошенное число образцов. }
+  MultiSampling := 4;
   AutoResizeViewport := True;
   fMouseInputEnabled := True;
   TabStop := True;
@@ -219,6 +224,8 @@ end;
 procedure TOglChart.Resize;
 begin
   inherited Resize;
+  if not CanUseOpenGLContext then
+    Exit;
   if Assigned(fRenderer) and fIsRendererInitialized then
   begin
     inherited MakeCurrent;
@@ -410,6 +417,8 @@ var
   lPaintTimeMs: Double;
   lRenderTimeMs: Double;
 begin
+  if not CanUseOpenGLContext then
+    Exit;
   lFreq := 0;
   lPaintStart := 0;
   lPaintEnd := 0;
@@ -477,7 +486,14 @@ end;
 
 procedure TOglChart.Redraw;
 begin
-  Invalidate;
+  if CanUseOpenGLContext then
+    Invalidate;
+end;
+
+function TOglChart.CanUseOpenGLContext: Boolean;
+begin
+  Result := (Parent <> nil) and Parent.HandleAllocated and HandleAllocated and
+    not (csDestroying in ComponentState);
 end;
 
 procedure TOglChart.NotifyCursorChanged(ACursor: TObject);
@@ -488,12 +504,14 @@ end;
 
 procedure TOglChart.MakeCurrent;
 begin
-  inherited MakeCurrent;
+  if CanUseOpenGLContext then
+    inherited MakeCurrent;
 end;
 
 procedure TOglChart.SwapBuffers;
 begin
-  inherited SwapBuffers;
+  if CanUseOpenGLContext then
+    inherited SwapBuffers;
 end;
 
 function TOglChart.GetWidth: Integer;

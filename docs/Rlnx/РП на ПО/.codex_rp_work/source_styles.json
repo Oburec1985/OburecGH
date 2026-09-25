@@ -1,0 +1,105 @@
+{
+  "input": "D:\\works\\OburecGH\\docs\\Rlnx\\\u0420\u041f \u043d\u0430 \u041f\u041e\\\u0411\u041b\u0418\u0416.409801.100.236-01 34_v01.docx",
+  "fonts_by_char_count": {
+    "Times New Roman": 797
+  },
+  "direct_run_formatting_runs": 225,
+  "direct_paragraph_formatting_paragraphs": 127,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 13,
+      "text": "\u041f\u0420\u041e\u0413\u0420\u0410\u041c\u041c\u041d\u041e\u0415 \u041e\u0411\u0415\u0421\u041f\u0415\u0427\u0415\u041d\u0418\u0415",
+      "style": "Normal"
+    },
+    {
+      "para_index": 14,
+      "text": "\u00ab\u041f\u041b\u0410\u0413\u0418\u041d \u0423\u041f\u0420\u0410\u0412\u041b\u0415\u041d\u0418\u042f MIC \u00abRECORDER\u00bb \u0413\u0426\u041a \u0421\u0422\u0422\u00bb",
+      "style": "Normal"
+    },
+    {
+      "para_index": 16,
+      "text": "\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0430",
+      "style": "Normal"
+    },
+    {
+      "para_index": 17,
+      "text": "\u0411\u041b\u0418\u0416.409801.100.236-01 34",
+      "style": "Normal"
+    },
+    {
+      "para_index": 18,
+      "text": "45 \u043b\u0438\u0441\u0442\u043e\u0432",
+      "style": "Normal"
+    },
+    {
+      "para_index": 20,
+      "text": "\u0421\u043e\u0434\u0435\u0440\u0436\u0430\u043d\u0438\u0435",
+      "style": "Normal"
+    },
+    {
+      "para_index": 357,
+      "text": "\u041b\u0438\u0441\u0442 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0439",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 13,
+        "text": "\u041f\u0420\u041e\u0413\u0420\u0410\u041c\u041c\u041d\u041e\u0415 \u041e\u0411\u0415\u0421\u041f\u0415\u0427\u0415\u041d\u0418\u0415",
+        "style": "Normal"
+      },
+      {
+        "para_index": 14,
+        "text": "\u00ab\u041f\u041b\u0410\u0413\u0418\u041d \u0423\u041f\u0420\u0410\u0412\u041b\u0415\u041d\u0418\u042f MIC \u00abRECORDER\u00bb \u0413\u0426\u041a \u0421\u0422\u0422\u00bb",
+        "style": "Normal"
+      },
+      {
+        "para_index": 15,
+        "text": "",
+        "style": "Normal"
+      },
+      {
+        "para_index": 16,
+        "text": "\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0430",
+        "style": "Normal"
+      },
+      {
+        "para_index": 17,
+        "text": "\u0411\u041b\u0418\u0416.409801.100.236-01 34",
+        "style": "Normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 13,
+        "run_text": "\u041f\u0420\u041e\u0413\u0420\u0410\u041c\u041c\u041d\u041e\u0415 \u041e\u0411\u0415\u0421\u041f\u0415\u0427\u0415\u041d\u0418\u0415",
+        "style": "Normal"
+      },
+      {
+        "para_index": 14,
+        "run_text": "\u00ab\u041f\u041b\u0410\u0413\u0418\u041d \u0423\u041f\u0420\u0410\u0412\u041b\u0415\u041d\u0418\u042f MIC \u00abRECORDER\u00bb \u0413\u0426\u041a \u0421\u0422\u0422\u00bb",
+        "style": "Normal"
+      },
+      {
+        "para_index": 16,
+        "run_text": "\u0420\u0443\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u0430",
+        "style": "Normal"
+      },
+      {
+        "para_index": 17,
+        "run_text": "\u0411\u041b\u0418\u0416.",
+        "style": "Normal"
+      },
+      {
+        "para_index": 17,
+        "run_text": "409801.100.236-01 34",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

@@ -3,7 +3,9 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
   Height = 440
   Top = 220
   Width = 760
-  BorderStyle = bsDialog
+  BorderStyle = bsSizeable
+  Constraints.MinHeight = 440
+  Constraints.MinWidth = 760
   Caption = 'Настройка картинки'
   ClientHeight = 440
   ClientWidth = 760
@@ -21,6 +23,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 34
     Top = 50
     Width = 736
+    Anchors = [akTop, akLeft, akRight]
     AutoSize = False
     Caption = 'Для каждого значения тега задайте файл. Если тег не выбран, всегда отображается первая картинка.'
     WordWrap = True
@@ -30,6 +33,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 25
     Top = 12
     Width = 604
+    Anchors = [akTop, akLeft, akRight]
     ItemHeight = 0
     Style = csDropDownList
     TabOrder = 0
@@ -39,6 +43,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 274
     Top = 84
     Width = 620
+    Anchors = [akTop, akLeft, akRight, akBottom]
     ColCount = 3
     Columns = <
       item
@@ -65,6 +70,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 27
     Top = 84
     Width = 104
+    Anchors = [akTop, akRight]
     Caption = 'Добавить'
     OnClick = AddButtonClick
     TabOrder = 2
@@ -74,6 +80,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 27
     Top = 119
     Width = 104
+    Anchors = [akTop, akRight]
     Caption = 'Удалить'
     OnClick = DeleteButtonClick
     TabOrder = 3
@@ -83,6 +90,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 27
     Top = 154
     Width = 104
+    Anchors = [akTop, akRight]
     Caption = 'Выбрать файл...'
     OnClick = BrowseButtonClick
     TabOrder = 4
@@ -92,6 +100,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 27
     Top = 397
     Width = 94
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     OnClick = OkButtonClick
@@ -102,6 +111,7 @@ object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
     Height = 27
     Top = 397
     Width = 94
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2

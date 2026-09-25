@@ -1,0 +1,351 @@
+# Архитектура поддержки OPC UA в RecorderLnx
+
+## 1. Назначение и границы реализации
+
+Модули в этом каталоге реализуют интеграцию OPC UA с RecorderLnx на Object
+Pascal/Lazarus. Рабочие исходники находятся в `Device/OPC`, а этот каталог
+содержит их копию для изучения и документирования.
+
+Основные архитектурные требования:
+
+- один источник данных OPC UA добавляется в дерево приборов RecorderLnx;
+- выбранные узлы OPC UA публикуются как обычные теги Recorder;
+- протокольный код не зависит от формы настройки и реестра тегов;
+- сетевой обмен выполняется без `open62541`, C/C++ и внешней DLL;
+- код должен собираться FPC и оставаться переносимым между Windows и Linux;
+- пароль не сохраняется в конфигурации, а читается из переменной окружения;
+- обрыв кабеля или перезапуск ПЛК не требует пересоздания источника вручную.
+
+Сейчас полноценно реализован клиентский режим с SecurityPolicy `None`, поиском
+узлов и циклическим чтением скалярных значений. Интерфейс серверного режима уже
+выделен, но его протокольная реализация пока является заглушкой.
+
+## 2. Общая схема
+
+```text
+Диалог настройки
+TRecorderOpcUaEditorForm
+        │ JSON
+        ▼
+TRecorderOpcUaConfig ──► RecorderCreateOpcUaDataSource
+                              │
+                              ▼
+                    TRecorderOpcUaDevice
+                    жизненный цикл сессии
+                              │
+                              ▼
+                 uRecorderOpcUaApi (фасад)
+                              │
+                              ▼
+              TRecorderOpcUaBinaryClient
+              OPC UA Binary / opc.tcp
+                              │
+                              ▼
+                   uRecorderNetworkBinding
+                              │
+                              ▼
+                         OPC UA server
+
+TRecorderOpcUaDataSource
+        │ связывает NodeId с тегами
+        ▼
+TRecorderTagRegistry ──► компоненты, запись и визуализация RecorderLnx
+```
+
+Разделение `Device` и `DataSource` принципиально:
+
+- `Device` знает про подключение, сессию OPC UA и каналы устройства;
+- `DataSource` знает про рабочий поток Recorder и публикацию значений в теги;
+- бинарный клиент ничего не знает о Recorder, формах и дереве приборов;
+- форма настройки использует тот же протокольный фасад, но не запускает
+  рабочий источник данных.
+
+## 3. Жизненный цикл клиентского источника
+
+```text
+Create
+  → CreateTags
+  → Connect
+  → InitializeDevice
+  → ConfigureDevice
+  → Start / OPC UA handshake
+  → DoTick: Read → PublishValue
+  → Stop
+  → CloseSession + CloseSecureChannel + TCP close
+```
+
+`TRecorderOpcUaDataSource.PrepareHardware` последовательно выполняет стадии
+прибора. При ошибке сессия закрывается, причина записывается в журнал, а новая
+попытка выполняется через 5 секунд. Поэтому после восстановления сети источник
+подключается снова автоматически. Параллельный вызов `Iterate` и `Disconnect`
+не допускается: сначала должен быть остановлен рабочий поток источника.
+
+Значение `sessionTimeoutMs` по умолчанию равно 15000 мс. Это запрашиваемое время
+жизни OPC UA-сессии, а не период чтения. Период рабочего цикла задаётся
+`publishingIntervalMs`, но текущая реализация использует синхронный `Read`, а не
+OPC UA Subscription/Publish.
+
+## 4. Установление OPC UA-соединения
+
+`TRecorderOpcUaBinaryClient.Connect` выполняет:
+
+1. разбор `opc.tcp://host:port`;
+2. создание TCP-соединения через сетевой слой RecorderLnx;
+3. `HEL/ACK`;
+4. `OpenSecureChannel` с SecurityPolicy `None`;
+5. `CreateSession`;
+6. `ActivateSession` с анонимным токеном либо именем и паролем.
+
+При штатной остановке клиент делает best-effort `CloseSession`, затем
+`CloseSecureChannel` и закрывает TCP-поток. Отдельной стандартной команды
+«reset OPC» в OPC UA нет: корректное завершение сессии и повторное полное
+подключение являются предусмотренным способом восстановления.
+
+## 5. Поиск узлов и права доступа
+
+Поиск начинается с стандартного узла `Objects` (`ns=0;i=85`) и рекурсивно
+обходит иерархические ссылки. Для переменных дополнительно читаются атрибуты:
+
+- `DataType` (14);
+- `ValueRank` (15);
+- `AccessLevel` (17);
+- `UserAccessLevel` (18);
+- `Historizing` (20).
+
+Фактические права текущего пользователя определяются пересечением
+`AccessLevel AND UserAccessLevel`:
+
+- бит 0 — текущее значение можно читать;
+- бит 1 — текущее значение можно писать;
+- бит 2 — можно читать историю;
+- бит 3 — можно изменять историю.
+
+Поэтому цвет и группа узла в упрощённом дереве означают права, объявленные
+сервером для активной сессии, а не догадку по имени тега. Узел `WriteOnly`
+может быть выбран и опубликован как управляемый тег, но не включается в цикл
+чтения.
+
+Свойства объектов отделяются от каналов по типу ссылки `HasProperty`. Их
+значения читаются при поиске и показываются непосредственно в дереве.
+
+## 6. Поток данных
+
+### 6.1 Чтение
+
+1. Пользователь выбирает переменные в диалоге.
+2. В конфигурацию сохраняются `NodeId`, имя тега и признаки read/write.
+3. `DoCreateTags` создаёт или находит соответствующие `TRecorderTag`.
+4. Для каждого читаемого узла бинарный клиент выполняет OPC UA `Read` атрибута
+   `Value` (13).
+5. Принятый `DataValue` проверяется по `StatusCode`.
+6. `ReadChanged` отдаёт новое значение адаптеру источника.
+7. `Registry.PublishValue` публикует его по внутренней шкале времени Recorder.
+
+Чтение сейчас последовательное: на каждый узел отправляется отдельный
+`ReadRequest`, batch Read не используется. Ошибка чтения любого выбранного
+узла завершает текущий `Iterate` и запускает переподключение всей сессии.
+
+Абсолютный OPC UA `SourceTimestamp` используется в диагностике, но не
+подставляется вместо внутреннего elapsed-time Recorder.
+
+### 6.2 Запись
+
+Признак `Writable` публикуется в `TRecorderTag.ExternalWriteAllowed`, поэтому
+такой тег виден компонентам управления, например кнопке. Однако отправка OPC UA
+`WriteRequest` клиентом пока не реализована. До появления этого сервиса право
+записи означает корректную классификацию и доступность тега в UI, но не
+гарантирует передачу команды в ПЛК.
+
+### 6.3 Качество
+
+Значения с OPC UA `Bad StatusCode` не публикуются. Полное преобразование
+`Good/Uncertain/Bad` в модель качества Recorder пока не завершено: текущий
+путь публикации передаёт только принятое значение.
+
+## 7. Конфигурация
+
+`TRecorderOpcUaConfig` сериализуется в JSON внутри конфигурации источника.
+
+| Поле | Назначение |
+|---|---|
+| `mode` | `client` или `server` |
+| `endpoint` | адрес вида `opc.tcp://192.168.15.130:4840` |
+| `authentication` | `anonymous` или `userPassword` |
+| `userName` | имя пользователя |
+| `passwordEnv` | имя переменной окружения с паролем |
+| `publishingIntervalMs` | период рабочего чтения, минимум 10 мс |
+| `sessionTimeoutMs` | запрашиваемый таймаут сессии, минимум 1000 мс |
+| `simplifiedTree` | режим отображения дерева поиска |
+| `nodes` | массив выбранных узлов |
+| `nodes[].nodeId` | полный OPC UA NodeId |
+| `nodes[].tagName` | имя тега Recorder |
+| `nodes[].readable` | включать узел в чтение |
+| `nodes[].writable` | разрешить внешний выбор тега для управления |
+
+Пример:
+
+```json
+{
+  "mode": "client",
+  "endpoint": "opc.tcp://192.168.15.130:4840",
+  "authentication": "anonymous",
+  "userName": "",
+  "passwordEnv": "",
+  "publishingIntervalMs": 100,
+  "sessionTimeoutMs": 15000,
+  "simplifiedTree": true,
+  "nodes": [
+    {
+      "nodeId": "ns=4;s=|var|PLC210 OPC-UA.Application.GVL.blinkerplc",
+      "tagName": "blinkerplc",
+      "readable": true,
+      "writable": false
+    }
+  ]
+}
+```
+
+## 8. Модули и назначение классов
+
+### `uRecorderOpcUaTypes.pas`
+
+- `TRecorderOpcUaMode` — роль источника: client/server.
+- `TRecorderOpcUaAuthenticationMode` — anonymous/user+password.
+- `TRecorderOpcUaNode` — сохраняемая привязка NodeId к тегу Recorder и права.
+- `TRecorderOpcUaConfig` — владелец настроек и списка узлов; загрузка и
+  сохранение JSON.
+- `RecorderOpcUaSourceId` — формирует стабильное отображаемое имя источника.
+- `RecorderIsOpcUaSource` — распознаёт OPC UA-источник в общей архитектуре.
+
+### `uRecorderOpcUaBinaryClient.pas`
+
+- `TRecorderOpcUaBinaryClient` — транспорт, secure channel, session, Browse и
+  Read для OPC UA Binary поверх `opc.tcp`.
+- `TRecorderOpcUaDiscoveredNode` — результат поиска: путь, NodeId, класс,
+  тип данных, права, размерность и значение свойства.
+- `TOpcUaWriter` — внутренний кодировщик примитивов и структур OPC UA Binary.
+- `TOpcUaReader` — внутренний безопасный декодировщик ответов сервера.
+
+Этот модуль не должен зависеть от LCL, реестра тегов и классов DataSource.
+TCP-поток создаётся через общий `uRecorderNetworkBinding`, чтобы выбор сетевого
+интерфейса и платформенные особенности сокетов оставались вне OPC UA-клиента.
+
+### `uRecorderOpcUaApi.pas`
+
+Фасад между жизненным циклом Recorder и конкретной протокольной реализацией.
+Наружу выдаёт непрозрачный `TRecorderOpcUaHandle` и функции create/connect/
+browse/iterate/read/destroy. `TRecorderOpcUaClientHandle` владеет бинарным
+клиентом, списком настроенных узлов и последними значениями.
+
+`TRecorderOpcUaServerHandle` и функции server API пока оставлены как граница
+будущей реализации; они не являются работающим OPC UA-сервером.
+
+### `uRecorderOpcUaDevice.pas`
+
+- `TRecorderOpcUaDevice` — адаптер протокольной сессии к
+  `TRecorderDevice`.
+
+Класс владеет `TRecorderOpcUaConfig` и протокольным handle, реализует стадии
+`Connect`, `InitializeDevice`, `ConfigureDevice`, `Start`, `Stop`,
+`Disconnect`, предоставляет каналы и не обращается напрямую к реестру тегов.
+
+### `uRecorderOpcUaDataSource.pas`
+
+- `TRecorderOpcUaDataSource` — адаптер устройства к рабочему потоку и тегам.
+
+Он создаёт/связывает теги, запускает жизненный цикл прибора, выполняет
+`Iterate`, публикует новые значения и планирует переподключение после ошибки.
+Протокольными пакетами этот класс не занимается.
+
+### `uRecorderOpcUaFactory.pas`
+
+- `RecorderCreateOpcUaDataSource` — единая точка сборки пары
+  `TRecorderOpcUaDevice` + `TRecorderOpcUaDataSource` из SourceId и JSON.
+
+Фабрика не содержит сетевой логики и не редактирует конфигурацию.
+
+### `uRecorderOpcUaSourceEditor.pas`
+
+- `TRecorderOpcUaEditorForm` — диалог конфигурации, дерево найденных узлов,
+  таблица выбранных каналов, чтение значений и диагностика.
+- `TRecorderOpcUaProbeThread` — выполняет test/browse/read вне GUI-потока.
+- `TRecorderOpcUaTreeItem` — модель одной строки результата Browse для дерева.
+- `TRecorderOpcUaSourceEditor` — реализация общего интерфейса редактора
+  источников RecorderLnx и публикация выбранных узлов в реестр тегов.
+
+### `uRecorderOpcUaSourceEditor.lfm`
+
+LCL-разметка формы. Здесь находятся визуальные компоненты и их начальные
+свойства; логика и владение данными остаются в `.pas`.
+
+## 9. Соответствие свойствам OPC-клиента поставщика
+
+| Свойство поставщика | Источник в OPC UA / RecorderLnx |
+|---|---|
+| Идентификатор OPC UA тега | `NodeId` |
+| Тип данных в сервере | атрибут `DataType`; `same` у поставщика — его локальная настройка конвертации |
+| Тип доступа | `AccessLevel AND UserAccessLevel` |
+| HDA доступ | биты HistoryRead/HistoryWrite уровней доступа |
+| Массив | `ValueRank`; `ArrayDimensions` ещё не читается |
+| Архивные данные | `Historizing` |
+| Чтение после записи | поведение клиента; пока не реализовано |
+| Включен в работу | наличие узла в `nodes` и запуск источника |
+| Комментарий | атрибут `Description`; пока не читается |
+
+## 10. Потоки и владение объектами
+
+- форма владеет `TRecorderOpcUaProbeThread` и не закрывается до его завершения;
+- probe thread владеет временным handle и уничтожает его после операции;
+- `TRecorderOpcUaDevice` владеет конфигурацией и активным handle;
+- `TRecorderOpcUaDataSource` хранит интерфейс устройства и ссылки на теги, но
+  не уничтожает объекты реестра;
+- `TRecorderOpcUaBinaryClient` владеет TCP-потоком и состоянием сессии;
+- списки найденных узлов создаются как `TObjectList` с владением элементами.
+
+UI и рабочий поток не должны одновременно использовать один протокольный
+handle. Диагностика формы создаёт отдельную краткоживущую сессию.
+
+## 11. Реализовано и запланировано
+
+Реализовано:
+
+- OPC UA Binary client на чистом Pascal;
+- anonymous и username/password для SecurityPolicy `None`;
+- Browse дерева и чтение атрибутов переменных;
+- синхронное чтение основных скалярных числовых типов и Boolean;
+- публикация выбранных узлов в теги Recorder;
+- диагностика, чтение свойств и тест связи в диалоге;
+- корректное завершение и автоматическое переподключение.
+
+Ограничения текущей версии:
+
+- OPC UA server API — заглушка;
+- клиентский `WriteRequest` не реализован;
+- Subscription/MonitoredItem/Publish не реализованы;
+- продолжение Browse через `BrowseNext` не реализовано;
+- массивы и `ArrayDimensions` не поддержаны в рабочем чтении;
+- SecurityPolicy с подписью и шифрованием не реализованы;
+- `Description` и `MinimumSamplingInterval` пока не загружаются;
+- качество `Uncertain` ещё не передаётся в модель качества Recorder.
+
+Имя и пароль при SecurityPolicy `None` не защищены шифрованием OPC UA. Такой
+режим допустим только в доверенной изолированной сети; для защищённого обмена
+нужна реализация сертификатов и подписываемой/шифруемой политики безопасности.
+
+## 12. Проверка
+
+Основная сборка:
+
+```text
+C:\lazarus\lazbuild.exe -B D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi
+```
+
+Тестовый ПЛК:
+
+```text
+opc.tcp://192.168.15.130:4840
+```
+
+Доступность IP по ICMP не означает доступность OPC UA: для подключения порт
+4840 должен принимать TCP, а endpoint и политика безопасности должны совпадать
+с настройками сервера.

@@ -585,6 +585,10 @@ begin
     try
       Check(lHost.Get('pc_connection_state', '') = 'unreachable',
         'failed ping did not set unreachable state');
+      Check(lHost.Get('state', '') = 'offline',
+        'failed ping did not set Recorder state to offline');
+      Check(lHost.Get('recorder_state', '') = 'offline',
+        'failed ping did not update stored Recorder runtime state');
     finally
       lHost.Free;
     end;

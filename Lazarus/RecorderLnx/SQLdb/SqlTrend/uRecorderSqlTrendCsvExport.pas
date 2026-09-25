@@ -97,6 +97,8 @@ procedure BuildRangesAndAxis(const APoints: TRecorderSqlTrendPoints;
 var
   lSignal, lPoint, lAxisCount: Integer;
 begin
+  ARanges := nil;
+  AAxis := nil;
   SetLength(ARanges, ASignalNames.Count);
   SetLength(AAxis, Length(APoints));
   lPoint := 0;

@@ -11,6 +11,7 @@ exit /b %DEPLOY_EXIT%
 set "SCRIPT_DIR=%~dp0"
 set "HOSTS_FILE=%~1"
 set "DEFAULT_USER=%~2"
+set "HOST_FILTER=%~3"
 set "ASKPASS_SCRIPT=%TEMP%\recorderlnx-askpass-%RANDOM%-%RANDOM%.exe"
 set "ASKPASS_BUILDER=%SCRIPT_DIR%Tools\create-ssh-askpass.ps1"
 set "SUMMARY_FILE=%TEMP%\recorderlnx-deploy-%RANDOM%-%RANDOM%.txt"
@@ -28,7 +29,7 @@ call :ReadHostCount
 if errorlevel 1 exit /b 1
 call :ReadCoordinatorUrl
 if errorlevel 1 exit /b 1
-if not "%HOST_COUNT%"=="4" echo WARNING: expected four hosts, deploying the %HOST_COUNT% configured entries.
+echo Hosts configured: %HOST_COUNT%
 echo Coordinator: %COORDINATOR_URL%
 
 call :ResolveOpenSshTool "ssh.exe" SSH_EXE
@@ -42,14 +43,14 @@ set "DISPLAY=recorderlnx-deploy"
 
 call :FindNewestDeb
 if errorlevel 1 exit /b 1
-if defined RECORDER_DEPLOY_PREPARE_ONLY (
-  echo PREPARE ONLY: package found; remote computers were not changed.
-  exit /b 0
-)
-
 call :CreateAskPass
 if errorlevel 1 exit /b 1
 set "SSH_ASKPASS=%ASKPASS_SCRIPT%"
+if defined RECORDER_DEPLOY_PREPARE_ONLY (
+  del /q "%ASKPASS_SCRIPT%" >nul 2>&1
+  echo PREPARE ONLY: package and SSH helper are ready; remote computers were not changed.
+  exit /b 0
+)
 >"%SUMMARY_FILE%" echo RecorderLnx deployment summary
 for /f "usebackq eol=# tokens=* delims=" %%H in ("%HOSTS_FILE%") do call :DeployHost "%%H"
 
@@ -67,6 +68,10 @@ if not "%FAILED%"=="0" exit /b 1
 exit /b 0
 
 :CreateAskPass
+if exist "%SCRIPT_DIR%Tools\recorder-ssh-askpass.exe" (
+  copy /y "%SCRIPT_DIR%Tools\recorder-ssh-askpass.exe" "%ASKPASS_SCRIPT%" >nul
+  if exist "%ASKPASS_SCRIPT%" exit /b 0
+)
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%ASKPASS_BUILDER%" -OutputPath "%ASKPASS_SCRIPT%"
 if errorlevel 1 (
   echo ERROR: could not build the temporary SSH password helper.
@@ -101,13 +106,20 @@ exit /b 1
 
 :FindNewestDeb
 set "DEB_FILE="
-for /f "usebackq delims=" %%F in (`powershell.exe -NoLogo -NoProfile -Command "$f = Get-ChildItem -LiteralPath '%SCRIPT_DIR%linux\Output' -Filter 'recorderlnx_*_amd64.deb' -File | Where-Object Name -NotLike '*.previous.deb' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1; if ($f) { $f.FullName }"`) do set "DEB_FILE=%%F"
+set "APP_VERSION="
+for /f "usebackq delims=" %%V in (`powershell.exe -NoLogo -NoProfile -Command "$p = Join-Path '%SCRIPT_DIR%' '..\..\Lazarus\RecorderLnx\Core\uRecorderAppVersion.pas'; $m = [regex]::Match([IO.File]::ReadAllText((Resolve-Path $p)), 'CRecorderLnxVersion\s*=\s*''([^'']+)'''); if ($m.Success) { $m.Groups[1].Value }"`) do set "APP_VERSION=%%V"
+if not defined APP_VERSION (
+  echo ERROR: could not read CRecorderLnxVersion from source.
+  exit /b 1
+)
+set "DEB_FILE=%SCRIPT_DIR%linux\Output\recorderlnx_%APP_VERSION%_amd64.deb"
 if not defined DEB_FILE (
   echo ERROR: build completed without a recorderlnx_*_amd64.deb file.
   exit /b 1
 )
 if not exist "%DEB_FILE%" (
-  echo ERROR: selected DEB does not exist: "%DEB_FILE%"
+  echo ERROR: package for RecorderLnx %APP_VERSION% does not exist: "%DEB_FILE%"
+  echo Run linux\build-installer.bat first.
   exit /b 1
 )
 echo Package: "%DEB_FILE%"
@@ -116,29 +128,34 @@ exit /b 0
 :DeployHost
 set "HOST_ENTRY=%~1"
 if not defined HOST_ENTRY exit /b 0
-set /a TOTAL+=1
 
 call :ResolveInventoryEntry "%HOST_ENTRY%"
 if errorlevel 1 (
+  set /a TOTAL+=1
   call :RecordFailure "inventory entry %TOTAL%" "invalid target or password"
   exit /b 0
 )
+if defined HOST_FILTER if /i not "%SSH_TARGET%"=="%HOST_FILTER%" (
+  set "RECORDER_DEPLOY_PASSWORD="
+  exit /b 0
+)
+set /a TOTAL+=1
 
 set "REMOTE_DEB=/tmp/recorderlnx-deploy-%RANDOM%-%RANDOM%.deb"
 echo.
 echo [%TOTAL%] Updating %SSH_TARGET%...
 
-"%SCP_EXE%" -q -o BatchMode=no -o NumberOfPasswordPrompts=1 -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "%DEB_FILE%" "%SSH_TARGET%:%REMOTE_DEB%"
+"%SCP_EXE%" -O -q -o StrictHostKeyChecking=accept-new -o BatchMode=no -o NumberOfPasswordPrompts=1 -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "%DEB_FILE%" "%SSH_TARGET%:%REMOTE_DEB%"
 if errorlevel 1 (
   call :RecordFailure "%SSH_TARGET%" "copy failed"
   set "RECORDER_DEPLOY_PASSWORD="
   exit /b 0
 )
 
-powershell.exe -NoLogo -NoProfile -Command "[Console]::Out.WriteLine($env:RECORDER_DEPLOY_PASSWORD)" | "%SSH_EXE%" -T -o BatchMode=no -o NumberOfPasswordPrompts=1 -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "%SSH_TARGET%" "sudo -S -p '' sh -c 'if ! dpkg -i %REMOTE_DEB%; then apt-get -f install -y && dpkg -i %REMOTE_DEB%; fi; dpkg -s recorderlnx | grep -q ^Status:.*installed$ || exit 1; config=/var/opt/mera/RecorderLnx/config/coordinator-client.ini; if grep -q ^BaseUrl= \"$config\"; then sed -i \"s#^BaseUrl=.*#BaseUrl=%COORDINATOR_URL%#\" \"$config\"; else printf \"\\n[Coordinator]\\nBaseUrl=%COORDINATOR_URL%\\n\" >>\"$config\"; fi' && dpkg-query -W -f='package=${Package} version=${Version} status=${db:Status-Status}\n' recorderlnx && test -x /opt/mera/RecorderLnx/RecorderLnx && test -x /opt/mera/RecorderLnx/RecorderHostAgent && test -x /opt/mera/RecorderLnx/LinuxSetupManager && test -x /opt/mera/RecorderLnx/LinuxSetupManagerCli && test -x /usr/bin/recorderlnx-linux-setup && test -x /usr/local/sbin/recorderlnx-connect-share && test -x /usr/local/sbin/recorderlnx-share-folder && test -x /usr/local/sbin/recorderlnx-set-hostname && test -x /usr/local/sbin/recorderlnx-configure-wol && test -f /etc/xdg/autostart/recorder-host-agent.desktop && grep -F 'BaseUrl=%COORDINATOR_URL%' /var/opt/mera/RecorderLnx/config/coordinator-client.ini"
+powershell.exe -NoLogo -NoProfile -Command "[Console]::Out.WriteLine($env:RECORDER_DEPLOY_PASSWORD)" | "%SSH_EXE%" -T -o StrictHostKeyChecking=accept-new -o BatchMode=no -o NumberOfPasswordPrompts=1 -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "%SSH_TARGET%" "sudo -S -p '' sh -c 'if ! dpkg -i %REMOTE_DEB%; then apt-get -f install -y && dpkg -i %REMOTE_DEB%; fi; dpkg -s recorderlnx | grep -q ^Status:.*installed$ || exit 1; config=/var/opt/mera/RecorderLnx/config/coordinator-client.ini; if grep -q ^BaseUrl= \"$config\"; then sed -i \"s#^BaseUrl=.*#BaseUrl=%COORDINATOR_URL%#\" \"$config\"; else printf \"\\n[Coordinator]\\nBaseUrl=%COORDINATOR_URL%\\n\" >>\"$config\"; fi' && dpkg-query -W -f='package=${Package} version=${Version} status=${db:Status-Status}\n' recorderlnx && test -x /opt/mera/RecorderLnx/RecorderLnx && test -x /opt/mera/RecorderLnx/RecorderHostAgent && test -x /opt/mera/RecorderLnx/LinuxSetupManager && test -x /opt/mera/RecorderLnx/LinuxSetupManagerCli && test -r /opt/mera/RecorderLnx/plugins/libluacalcplugin.so && test -r /opt/mera/RecorderLnx/plugins/libsampleinfoplugin.so && test -r /opt/mera/RecorderLnx/lib/liblua5.4.so.0 && test -x /usr/bin/recorderlnx-linux-setup && test -x /usr/local/sbin/recorderlnx-connect-share && test -x /usr/local/sbin/recorderlnx-share-folder && test -x /usr/local/sbin/recorderlnx-set-hostname && test -x /usr/local/sbin/recorderlnx-configure-wol && test -f /etc/xdg/autostart/recorder-host-agent.desktop && grep -F 'BaseUrl=%COORDINATOR_URL%' /var/opt/mera/RecorderLnx/config/coordinator-client.ini"
 set "INSTALL_RESULT=%ERRORLEVEL%"
 
-"%SSH_EXE%" -o ConnectTimeout=10 "%SSH_TARGET%" "rm -f %REMOTE_DEB%" >nul 2>&1
+"%SSH_EXE%" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "%SSH_TARGET%" "rm -f %REMOTE_DEB%" >nul 2>&1
 set "RECORDER_DEPLOY_PASSWORD="
 
 if not "%INSTALL_RESULT%"=="0" (

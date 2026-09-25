@@ -9,7 +9,7 @@ var
   lCatalog: TRecorderPluginCatalog;
   lDirectory: string;
   I: Integer;
-  lFound: Boolean;
+  lOscillogramFound, lLuaFound: Boolean;
   lLog: TStringList;
 begin
   if SizeOf(TRecorderPluginInfo) <> 512 then
@@ -22,7 +22,8 @@ begin
   lLog := TStringList.Create;
   try
     lCatalog.Scan(lDirectory);
-    lFound := False;
+    lOscillogramFound := False;
+    lLuaFound := False;
     for I := 0 to lCatalog.Count - 1 do
     begin
       lLog.Add(ExtractFileName(lCatalog.Entries[I].FileName) + ': ' +
@@ -31,19 +32,27 @@ begin
       WriteLn(ExtractFileName(lCatalog.Entries[I].FileName), ': ',
         lCatalog.Entries[I].Name, ' | ',
         lCatalog.Entries[I].ErrorText);
-      if SameText(lCatalog.Entries[I].Name, 'SampleInfoPlugin') and
+      if (SameText(ExtractFileName(lCatalog.Entries[I].FileName),
+          'libsampleinfoplugin.so') or
+          SameText(ExtractFileName(lCatalog.Entries[I].FileName),
+          'SampleInfoPlugin.dll')) and
         lCatalog.Entries[I].IsValid and
         (lCatalog.Entries[I].PluginType = PLUGIN_CLASS) and
         (lCatalog.Entries[I].Version = 1) then
-        lFound := True;
+        lOscillogramFound := True;
+      if SameText(lCatalog.Entries[I].Name, 'LuaCalcPlugin') and
+        lCatalog.Entries[I].IsValid and
+        (lCatalog.Entries[I].PluginType = PLUGIN_CLASS) and
+        (lCatalog.Entries[I].Version = 1) then
+        lLuaFound := True;
     end;
-    if lFound then
+    if lOscillogramFound and lLuaFound then
       lLog.Add('RESULT PluginInfo passed')
     else
       lLog.Add('RESULT PluginInfo failed');
     lLog.SaveToFile(ChangeFileExt(ParamStr(0), '.log'));
     WriteLn(lLog[lLog.Count - 1]);
-    if not lFound then
+    if not (lOscillogramFound and lLuaFound) then
       Halt(1);
   finally
     lLog.Free;

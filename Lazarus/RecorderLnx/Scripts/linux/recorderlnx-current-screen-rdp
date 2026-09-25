@@ -1,0 +1,244 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICE=recorderlnx-current-screen.service
+INI=/etc/xrdp/xrdp.ini
+STATE=/var/lib/recorderlnx/current-screen-rdp
+usage() {
+  echo 'Usage: recorderlnx-current-screen-rdp status|diagnostics|enable|disable|password [USER]' >&2
+  exit 2
+}
+
+require_root() {
+  if (( EUID != 0 )); then
+    echo 'Root privileges are required.' >&2
+    exit 1
+  fi
+}
+
+status() {
+  if [[ ! -x /usr/sbin/xrdp || ! -x /usr/bin/x11vnc ]]; then
+    echo unavailable
+  elif systemctl is-enabled --quiet "$SERVICE" 2>/dev/null &&
+       systemctl is-active --quiet "$SERVICE" &&
+       grep -q '^\[CurrentScreen\]$' "$INI"; then
+    echo enabled
+  else
+    echo disabled
+  fi
+}
+
+package_installed() {
+  dpkg-query -W -f='${db:Status-Abbrev}' "$1" 2>/dev/null | grep -q '^ii '
+}
+
+port_listens() {
+  ss -ltnH 2>/dev/null | awk '{print $4}' | grep -Eq "$1"
+}
+
+print_check() {
+  local name=$1
+  shift
+  if "$@"; then
+    echo "$name=ok"
+  else
+    echo "$name=failed"
+    diagnostics_failed=1
+  fi
+}
+
+diagnostics() {
+  local diagnostics_failed=0
+  command -v dpkg-query >/dev/null || { echo 'dpkg-query=failed'; diagnostics_failed=1; }
+  command -v ss >/dev/null || { echo 'ss=failed'; diagnostics_failed=1; }
+  if command -v dpkg-query >/dev/null; then
+    print_check package_xrdp package_installed xrdp
+    print_check package_x11vnc package_installed x11vnc
+  fi
+  print_check service_xrdp systemctl is-active --quiet xrdp
+  print_check service_current_screen systemctl is-active --quiet "$SERVICE"
+  print_check enabled_current_screen systemctl is-enabled --quiet "$SERVICE"
+  print_check profile_current_screen grep -q '^\[CurrentScreen\]$' "$INI"
+  if command -v ss >/dev/null; then
+    print_check port_3389 port_listens '(^|:|\])3389$'
+    print_check port_5900_loopback port_listens '^(127\.0\.0\.1|\[::1\]):5900$'
+    if port_listens '^(0\.0\.0\.0|\[::\]|\*):5900$'; then
+      echo port_5900_external=failed
+      diagnostics_failed=1
+    else
+      echo port_5900_external=closed
+    fi
+  fi
+  return "$diagnostics_failed"
+}
+
+check_prerequisites() {
+  for executable in systemctl python3; do
+    command -v "$executable" >/dev/null || { echo "Missing: $executable" >&2; exit 1; }
+  done
+  [[ -x /usr/sbin/xrdp && -x /usr/bin/x11vnc ]] || { echo 'Install xrdp and x11vnc first.' >&2; exit 1; }
+  [[ -f $INI ]] || { echo "Missing: $INI" >&2; exit 1; }
+  [[ $desktop_user =~ ^[a-z_][a-z0-9_-]*$ ]] || usage
+  getent passwd "$desktop_user" >/dev/null || { echo "Unknown user: $desktop_user" >&2; exit 1; }
+  desktop_home=$(getent passwd "$desktop_user" | cut -d: -f6)
+  [[ -d $desktop_home ]] || { echo "Missing home: $desktop_home" >&2; exit 1; }
+  password_file="$desktop_home/.vnc/rdp-current.pass"
+}
+
+write_service() {
+  cat >"/etc/systemd/system/$SERVICE" <<EOF
+[Unit]
+Description=Share the current Fly screen with local xrdp
+After=display-manager.service
+Wants=display-manager.service
+
+[Service]
+Type=simple
+User=$desktop_user
+Group=$(id -gn "$desktop_user")
+ExecStart=/usr/bin/x11vnc -display :0 -auth $desktop_home/.Xauthority -localhost -rfbport 5900 -rfbauth $desktop_home/.vnc/rdp-current.pass -forever -shared -noxdamage
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  chmod 0644 "/etc/systemd/system/$SERVICE"
+}
+
+edit_ini() {
+  python3 - "$INI" "$STATE/autorun" "$1" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+ini, saved_autorun, action = map(Path, sys.argv[1:])
+text = ini.read_text()
+autorun = re.compile(r'(?m)^(autorun=)(.*)$')
+if action.name == 'enable':
+    if not autorun.search(text):
+        raise SystemExit('Missing autorun setting in xrdp.ini')
+    original_sessions = saved_autorun.with_name('sessions.original')
+    current = re.search(r'(?m)^\[CurrentScreen\]\s*$', text)
+    if current:
+        text = text[:current.start()]
+    else:
+        first_session = re.search(r'(?m)^\[Xorg\]\s*$', text)
+        if not first_session:
+            raise SystemExit('Missing Xorg profile in xrdp.ini')
+        original_sessions.write_text(text[first_session.start():])
+        text = text[:first_session.start()]
+        match = autorun.search(text)
+        saved_autorun.write_text(match.group(2) if match else '')
+    text = autorun.sub(r'\g<1>CurrentScreen', text, count=1)
+    text += '\n[CurrentScreen]\nname=CurrentScreen\nlib=libvnc.so\nip=127.0.0.1\nport=5900\nusername=ask\npassword=ask\n'
+else:
+    current = re.search(r'(?m)^\[CurrentScreen\]\s*$', text)
+    if current:
+        text = text[:current.start()]
+        original_sessions = saved_autorun.with_name('sessions.original')
+        if not original_sessions.exists():
+            raise SystemExit('Cannot restore xrdp profiles: saved profiles missing')
+        text += original_sessions.read_text()
+    if saved_autorun.exists():
+        original = saved_autorun.read_text()
+        text = autorun.sub(lambda m: m.group(1) + original if m.group(2) == 'CurrentScreen' else m.group(0), text, count=1)
+temp = ini.with_name(ini.name + '.recorderlnx.tmp')
+temp.write_text(text)
+temp.chmod(ini.stat().st_mode & 0o777)
+temp.replace(ini)
+PY
+}
+
+enable() {
+  require_root
+  check_prerequisites
+  install -d -m 0700 "$STATE"
+  if [[ ! -f $STATE/xrdp.ini.original ]]; then
+    cp -p "$INI" "$STATE/xrdp.ini.original"
+  fi
+  install -d -m 0700 -o "$desktop_user" -g "$(id -gn "$desktop_user")" "$desktop_home/.vnc"
+  if [[ ! -f $password_file ]]; then
+    secret=$(python3 -c 'import secrets,string; a=string.ascii_letters+string.digits; print("".join(secrets.choice(a) for _ in range(8)))')
+    store_password "$secret"
+  fi
+  write_service
+  edit_ini enable
+  systemctl daemon-reload
+  systemctl enable "$SERVICE"
+  systemctl restart "$SERVICE"
+  systemctl restart xrdp
+  systemctl is-active --quiet "$SERVICE"
+  systemctl is-active --quiet xrdp
+  if [[ -n ${secret:-} ]]; then
+    echo "VNC_PASSWORD=$secret"
+    unset secret
+  fi
+  diagnostics >/dev/null
+  status
+}
+
+store_password() {
+  local new_password=$1 password_temp
+  umask 077
+  password_temp=$(mktemp "$desktop_home/.vnc/.rdp-current.XXXXXXXX")
+  # x11vnc reads the password and confirmation from stdin. Never put it in argv.
+  if ! printf '%s\n%s\n\n' "$new_password" "$new_password" | \
+       /usr/bin/x11vnc -storepasswd "$password_temp" >/dev/null 2>&1; then
+    rm -f -- "$password_temp"
+    echo 'Could not write VNC password.' >&2
+    return 1
+  fi
+  chown "$desktop_user:$(id -gn "$desktop_user")" "$password_temp"
+  chmod 0600 "$password_temp"
+  mv -f -- "$password_temp" "$password_file"
+}
+
+change_password() {
+  local secret
+  require_root
+  check_prerequisites
+  [[ -f $desktop_home/.vnc/rdp-current.pass ]] || {
+    echo 'Current-screen sharing is not configured.' >&2
+    exit 1
+  }
+  IFS= read -rs secret || { echo 'Read one password line from stdin.' >&2; exit 1; }
+  secret=${secret%$'\r'}
+  LC_ALL=C
+  if (( ${#secret} < 1 || ${#secret} > 8 )) || [[ $secret == *[^[:graph:]]* ]]; then
+    echo 'Password must contain 1 to 8 printable ASCII characters.' >&2
+    exit 1
+  fi
+  store_password "$secret"
+  unset secret
+  if systemctl is-active --quiet "$SERVICE"; then
+    systemctl restart "$SERVICE"
+    systemctl is-active --quiet "$SERVICE"
+  fi
+  echo password-updated
+}
+
+disable() {
+  require_root
+  systemctl disable --now "$SERVICE" >/dev/null 2>&1 || true
+  if [[ -f $INI ]]; then
+    install -d -m 0700 "$STATE"
+    edit_ini disable
+    systemctl restart xrdp
+    rm -f -- "$STATE/autorun" "$STATE/sessions.original"
+  fi
+  status
+}
+
+(( $# >= 1 && $# <= 2 )) || usage
+action=$1
+desktop_user=${2:-user}
+case $action in
+  status) status ;;
+  diagnostics) diagnostics ;;
+  enable) enable ;;
+  disable) disable ;;
+  password) change_password ;;
+  *) usage ;;
+esac

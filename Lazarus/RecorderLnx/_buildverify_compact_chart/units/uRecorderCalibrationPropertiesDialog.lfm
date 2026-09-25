@@ -1,0 +1,252 @@
+object RecorderCalibrationPropertiesDialog: TRecorderCalibrationPropertiesDialog
+  Left = 300
+  Height = 720
+  Top = 160
+  Width = 720
+  BorderStyle = bsSizeable
+  Caption = 'Свойства градуировочной характеристики'
+  ClientHeight = 720
+  ClientWidth = 720
+  OnCreate = FormCreate
+  OnResize = FormResize
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6'
+  object pcMain: TPageControl
+    Left = 8
+    Height = 630
+    Top = 8
+    Width = 704
+    ActivePage = tsCommon
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    TabIndex = 0
+    TabOrder = 0
+    object tsCommon: TTabSheet
+      Caption = 'Общие'
+      ClientHeight = 602
+      ClientWidth = 700
+      object lbName: TLabel
+        Left = 8
+        Height = 15
+        Top = 10
+        Width = 90
+        Caption = 'Наименование:'
+      end
+      object edName: TEdit
+        Left = 8
+        Height = 23
+        Top = 28
+        Width = 530
+        Anchors = [akTop, akLeft, akRight]
+        TabOrder = 0
+      end
+      object lbChanged: TLabel
+        Left = 550
+        Anchors = [akTop, akRight]
+        Height = 15
+        Top = 10
+        Width = 112
+        Caption = 'Время изменения:'
+      end
+      object lbDescription: TLabel
+        Left = 8
+        Height = 15
+        Top = 58
+        Width = 65
+        Caption = 'Описание:'
+      end
+      object edDescription: TEdit
+        Left = 8
+        Height = 23
+        Top = 76
+        Width = 680
+        Anchors = [akTop, akLeft, akRight]
+        TabOrder = 1
+      end
+      object gridProps: TStringGrid
+        Left = 8
+        Height = 96
+        Top = 108
+        Width = 680
+        Anchors = [akTop, akLeft, akRight]
+        ColCount = 2
+        FixedCols = 0
+        RowCount = 2
+        TabOrder = 2
+      end
+      object lbUnitIn: TLabel
+        Left = 8
+        Height = 15
+        Top = 214
+        Width = 32
+        Caption = 'Вход'
+      end
+      object edUnitIn: TEdit
+        Left = 8
+        Height = 23
+        Top = 234
+        Width = 150
+        TabOrder = 3
+      end
+      object lbUnitOut: TLabel
+        Left = 344
+        Height = 15
+        Top = 214
+        Width = 40
+        Caption = 'Выход'
+      end
+      object edUnitOut: TEdit
+        Left = 244
+        Height = 23
+        Top = 234
+        Width = 150
+        TabOrder = 4
+      end
+      object lbType: TLabel
+        Left = 8
+        Height = 15
+        Top = 270
+        Width = 103
+        Caption = 'Тип характеристики:'
+      end
+      object cbType: TComboBox
+        Left = 8
+        Height = 23
+        Top = 290
+        Width = 290
+        Style = csDropDownList
+        OnChange = cbTypeChange
+        TabOrder = 5
+      end
+      object cbExtrapolation: TCheckBox
+        Left = 540
+        Anchors = [akTop, akRight]
+        Height = 19
+        Top = 292
+        Width = 110
+        Caption = 'Экстраполяция'
+        TabOrder = 6
+      end
+      object gridPoints: TStringGrid
+        Left = 8
+        Height = 264
+        Top = 326
+        Width = 560
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        ColCount = 3
+        FixedCols = 1
+        RowCount = 2
+        TabOrder = 7
+      end
+      object btnAddPoint: TButton
+        Left = 586
+        Height = 27
+        Top = 326
+        Width = 90
+        Anchors = [akTop, akRight]
+        Caption = 'Добавить'
+        OnClick = btnAddPointClick
+        TabOrder = 8
+      end
+      object btnDeletePoint: TButton
+        Left = 586
+        Height = 27
+        Top = 360
+        Width = 90
+        Anchors = [akTop, akRight]
+        Caption = 'Удалить'
+        OnClick = btnDeletePointClick
+        TabOrder = 9
+      end
+      object pnScale: TPanel
+        Left = 8
+        Height = 92
+        Top = 326
+        Width = 680
+        Anchors = [akTop, akLeft, akRight]
+        BevelOuter = bvLowered
+        TabOrder = 10
+        object lbScale: TLabel
+          Left = 16
+          Height = 15
+          Top = 18
+          Width = 78
+          Caption = 'Масштаб (a):'
+        end
+        object edScale: TEdit
+          Left = 104
+          Height = 23
+          Top = 14
+          Width = 100
+          OnChange = edScaleChange
+          TabOrder = 0
+        end
+        object lbScaleInv: TLabel
+          Left = 224
+          Height = 15
+          Top = 18
+          Width = 22
+          Caption = '1/a:'
+        end
+        object edScaleInv: TEdit
+          Left = 252
+          Height = 23
+          Top = 14
+          Width = 100
+          OnChange = edScaleInvChange
+          TabOrder = 1
+        end
+        object lbScaleResult: TLabel
+          Left = 16
+          Height = 15
+          Top = 52
+          Width = 110
+          Caption = 'Результат: y'' = a * y'
+        end
+      end
+    end
+    object tsGraph: TTabSheet
+      Caption = 'График'
+    end
+    object tsData: TTabSheet
+      Caption = 'Данные'
+    end
+  end
+  object pnButtons: TPanel
+    Left = 0
+    Height = 48
+    Top = 672
+    Width = 720
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object btnOk: TButton
+      Left = 8
+      Height = 27
+      Top = 10
+      Width = 80
+      Caption = 'OK'
+      Default = True
+      OnClick = btnOkClick
+      TabOrder = 0
+    end
+    object btnCancel: TButton
+      Left = 100
+      Height = 27
+      Top = 10
+      Width = 80
+      Cancel = True
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+    end
+    object btnApply: TButton
+      Left = 196
+      Height = 27
+      Top = 10
+      Width = 90
+      Caption = 'Применить'
+      OnClick = btnApplyClick
+      TabOrder = 2
+    end
+  end
+end

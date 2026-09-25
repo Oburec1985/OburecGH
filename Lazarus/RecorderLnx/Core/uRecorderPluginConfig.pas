@@ -144,9 +144,9 @@ var
 begin
   lSource := ExpandFileName(ASourceFileName);
   if not FileExists(lSource) then
-    raise Exception.Create('Файл плагина не найден: ' + lSource);
+    raise Exception.Create(UTF8Encode('Файл плагина не найден: ') + lSource);
   if not ForceDirectories(RecorderPluginDirectory) then
-    raise Exception.Create('Не удалось создать каталог плагинов: ' +
+    raise Exception.Create(UTF8Encode('Не удалось создать каталог плагинов: ') +
       RecorderPluginDirectory);
   lTarget := ExpandFileName(IncludeTrailingPathDelimiter(
     RecorderPluginDirectory) + ExtractFileName(lSource));
@@ -157,7 +157,7 @@ begin
   {$ENDIF}
     Exit(ExtractFileName(lTarget));
   if FileExists(lTarget) then
-    raise Exception.Create('В каталоге plugins уже есть файл с таким именем: ' +
+    raise Exception.Create(UTF8Encode('В каталоге plugins уже есть файл с таким именем: ') +
       lTarget);
   lInput := TFileStream.Create(lSource, fmOpenRead or fmShareDenyNone);
   try

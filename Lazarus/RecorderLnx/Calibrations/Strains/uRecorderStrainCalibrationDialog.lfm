@@ -3,10 +3,12 @@ object RecorderStrainCalibrationDialog: TRecorderStrainCalibrationDialog
   Height = 560
   Top = 180
   Width = 650
-  BorderStyle = bsDialog
+  BorderStyle = bsSizeable
   Caption = 'Тензометрическая градуировка'
   ClientHeight = 560
   ClientWidth = 650
+  Constraints.MinHeight = 560
+  Constraints.MinWidth = 650
   OnCreate = FormCreate
   Position = poOwnerFormCenter
   object pnEditor: TPanel

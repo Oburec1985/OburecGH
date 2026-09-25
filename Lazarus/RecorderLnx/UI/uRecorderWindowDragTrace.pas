@@ -53,6 +53,7 @@ procedure TRecorderWindowDragTrace.Capture(AForm: TForm; AEventKind: Char);
 var
   lCursor: TPoint;
   lRect: TRect;
+  lWindowHandle: HWND;
   lSample: ^TRecorderWindowDragSample;
 {$ENDIF}
 begin
@@ -68,7 +69,10 @@ begin
   GetLocalTime(lSample^.Clock);
   lSample^.Tick := GetTickCount64;
   GetCursorPos(lCursor);
-  GetWindowRect(AForm.Handle, lRect);
+  lWindowHandle := GetAncestor(AForm.Handle, GA_ROOT);
+  if lWindowHandle = 0 then
+    lWindowHandle := AForm.Handle;
+  GetWindowRect(lWindowHandle, lRect);
   lSample^.CursorX := lCursor.X;
   lSample^.CursorY := lCursor.Y;
   lSample^.Left := lRect.Left;
@@ -134,8 +138,36 @@ begin
         fLastTick := GetTickCount64;
         Capture(AForm, 'I');
       end;
-    WM_MOVING, WM_SIZING: Capture(AForm, 'P');
-    WM_MOVE, WM_SIZE: Capture(AForm, 'A');
+    WM_MOVING, WM_SIZING:
+      begin
+        if not fActive then
+        begin
+          fActive := True;
+          fCount := 0;
+          fDropped := 0;
+          fLastTick := GetTickCount64;
+        end;
+        Capture(AForm, 'P');
+      end;
+    WM_MOVE, WM_SIZE:
+      begin
+        if not fActive then
+        begin
+          fActive := True;
+          fCount := 0;
+          fDropped := 0;
+          fLastTick := GetTickCount64;
+        end;
+        Capture(AForm, 'A');
+        { WM_MOVE can be delivered without WM_EXITSIZEMOVE in an LCL modal
+          move loop. Keep a bounded diagnostic record in that case. }
+        if fCount >= 256 then
+        begin
+          Flush;
+          fCount := 0;
+          fDropped := 0;
+        end;
+      end;
     WM_EXITSIZEMOVE:
       if fActive then
       begin

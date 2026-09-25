@@ -109,8 +109,11 @@ type
     procedure FillDiskInventory(const AOutput, AWarning: string);
     procedure StopDiskInventory;
     procedure AccessUsersClick(Sender: TObject);
+    procedure AccessPasswordClick(Sender: TObject);
     procedure AccessUserExit(Sender: TObject);
     procedure RefreshAccessState;
+    function ChangeUserPassword(const AUser, APassword: UTF8String;
+      ASyncFlyDm: Boolean; out AError: string): Boolean;
     function SelectedDisk: string;
     function DiskIsProtected: Boolean;
     function DiskHasFilesystem: Boolean;
@@ -202,10 +205,12 @@ constructor TSetupDialog.CreateFor(AOwner: TComponent; AKind: TSetupKind);
 begin
   inherited CreateNew(AOwner, 1);
   fKind := AKind;
-  Width := 800;
+  Width := 900;
+  Constraints.MinWidth := 760;
+  Constraints.MinHeight := 560;
   if fKind = skDisk then
   begin
-    Width := 1100;
+    Width := 1200;
     Constraints.MinWidth := 1030;
   end;
   Height := 680;
@@ -269,7 +274,11 @@ begin
     if fKind = skProxy then AddButton('Удалить', 344, @RemoveClick);
     if (fKind = skProfile) or (fKind = skSsh) then
       AddButton('Обзор…', 456, @BrowseClick);
-    if fKind = skAccess then AddButton('Пользователи…', 344, @AccessUsersClick);
+    if fKind = skAccess then
+    begin
+      AddButton('Пользователи…', 344, @AccessUsersClick);
+      AddButton('Пароль…', 456, @AccessPasswordClick);
+    end;
   end;
   fOutputMemo := TMemo.Create(Self);
   fOutputMemo.Parent := Self;
@@ -299,6 +308,7 @@ begin
   lButton := TButton.Create(Self);
   lButton.Parent := fButtons;
   lButton.SetBounds(ALeft, 8, 105, 30);
+  lButton.Anchors := [akLeft, akTop];
   lButton.Caption := ACaption;
   lButton.OnClick := AClick;
 end;
@@ -311,10 +321,12 @@ begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := fPage;
   lLabel.SetBounds(12, fNextY + 4, 200, 24);
+  lLabel.AutoSize := False;
   lLabel.Caption := ACaption;
   Result := TEdit.Create(Self);
   Result.Parent := fPage;
-  Result.SetBounds(220, fNextY, 535, 26);
+  Result.SetBounds(220, fNextY, fPage.ClientWidth - 232, 28);
+  Result.Anchors := [akLeft, akTop, akRight];
   Result.Text := ADefault;
   if APassword then Result.PasswordChar := '*';
   SetLength(fFields, Length(fFields) + 1);
@@ -327,7 +339,8 @@ function TSetupDialog.AddCheck(const ACaption: string;
 begin
   Result := TCheckBox.Create(Self);
   Result.Parent := fPage;
-  Result.SetBounds(14, fNextY, 740, 26);
+  Result.SetBounds(14, fNextY, fPage.ClientWidth - 28, 28);
+  Result.Anchors := [akLeft, akTop, akRight];
   Result.Caption := ACaption;
   Result.Checked := AChecked;
   SetLength(fChecks, Length(fChecks) + 1);
@@ -347,7 +360,8 @@ begin
   Inc(fNextY, 22);
   Result := TMemo.Create(Self);
   Result.Parent := fPage;
-  Result.SetBounds(12, fNextY, 743, 84);
+  Result.SetBounds(12, fNextY, fPage.ClientWidth - 24, 84);
+  Result.Anchors := [akLeft, akTop, akRight];
   Result.ScrollBars := ssVertical;
   Inc(fNextY, 92);
 end;
@@ -407,14 +421,18 @@ begin
       lDialog.Caption := 'Выберите пользователя';
       lDialog.Position := poScreenCenter;
       lDialog.SetBounds(0, 0, 600, 360);
+      lDialog.Constraints.MinWidth := 460;
+      lDialog.Constraints.MinHeight := 280;
       lList := TListBox.Create(lDialog);
       lList.Parent := lDialog;
       lList.SetBounds(12, 12, 560, 265);
+      lList.Anchors := [akLeft, akTop, akRight, akBottom];
       for lIndex := 0 to lLines.Count - 1 do
         if Trim(lLines[lIndex]) <> '' then lList.Items.Add(lLines[lIndex]);
       lButton := TButton.Create(lDialog);
       lButton.Parent := lDialog;
       lButton.SetBounds(475, 286, 96, 30);
+      lButton.Anchors := [akRight, akBottom];
       lButton.Caption := 'Выбрать';
       lButton.ModalResult := mrOK;
       if (lDialog.ShowModal = mrOK) and (lList.ItemIndex >= 0) then
@@ -437,6 +455,172 @@ end;
 procedure TSetupDialog.AccessUserExit(Sender: TObject);
 begin
   RefreshAccessState;
+end;
+
+function TSetupDialog.ChangeUserPassword(const AUser,
+  APassword: UTF8String; ASyncFlyDm: Boolean; out AError: string): Boolean;
+var
+  lCli, lInput: UTF8String;
+  lOutput: TStringList;
+  lProcess: TProcess;
+begin
+  Result := False;
+  AError := '';
+  lCli := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+    'LinuxSetupManagerCli' + ExtractFileExt(ParamStr(0));
+  lOutput := TStringList.Create;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := lCli;
+      lProcess.Parameters.Add('password');
+      lProcess.Parameters.Add(AUser);
+      if ASyncFlyDm then lProcess.Parameters.Add('--sync-flydm');
+      lProcess.Options := [poUsePipes, poStderrToOutput];
+      lProcess.Execute;
+      lInput := APassword + LineEnding + APassword + LineEnding;
+      lProcess.Input.WriteBuffer(lInput[1], Length(lInput));
+      lProcess.CloseInput;
+      lInput := '';
+      lProcess.WaitOnExit;
+      lOutput.LoadFromStream(lProcess.Output);
+      Result := lProcess.ExitStatus = 0;
+      if not Result then AError := Trim(lOutput.Text);
+    except
+      on E: Exception do AError := E.Message;
+    end;
+  finally
+    lInput := '';
+    lProcess.Free;
+    lOutput.Free;
+  end;
+end;
+
+procedure TSetupDialog.AccessPasswordClick(Sender: TObject);
+var
+  lDialog: TForm;
+  lUserLabel, lPasswordLabel, lConfirmLabel: TLabel;
+  lUserEdit, lPasswordEdit, lConfirmEdit: TEdit;
+  lSyncFlyDm: TCheckBox;
+  lHelp: TMemo;
+  lApply, lCancel: TButton;
+  lError, lUser: string;
+  lPassword: UTF8String;
+begin
+  lUser := Trim(FieldValue(0));
+  if lUser = '' then
+  begin
+    MessageDlg('Сначала выберите или введите пользователя.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  lDialog := TForm.CreateNew(Self, 1);
+  try
+    lDialog.Caption := 'Смена пароля пользователя';
+    lDialog.Position := poScreenCenter;
+    lDialog.SetBounds(0, 0, 690, 440);
+    lDialog.Constraints.MinWidth := 590;
+    lDialog.Constraints.MinHeight := 390;
+    lUserLabel := TLabel.Create(lDialog);
+    lUserLabel.Parent := lDialog;
+    lUserLabel.SetBounds(16, 20, 180, 24);
+    lUserLabel.AutoSize := False;
+    lUserLabel.Caption := 'Пользователь';
+    lUserEdit := TEdit.Create(lDialog);
+    lUserEdit.Parent := lDialog;
+    lUserEdit.SetBounds(205, 16, 450, 28);
+    lUserEdit.Anchors := [akLeft, akTop, akRight];
+    lUserEdit.Text := lUser;
+    lPasswordLabel := TLabel.Create(lDialog);
+    lPasswordLabel.Parent := lDialog;
+    lPasswordLabel.SetBounds(16, 60, 180, 24);
+    lPasswordLabel.AutoSize := False;
+    lPasswordLabel.Caption := 'Новый пароль';
+    lPasswordEdit := TEdit.Create(lDialog);
+    lPasswordEdit.Parent := lDialog;
+    lPasswordEdit.SetBounds(205, 56, 450, 28);
+    lPasswordEdit.Anchors := [akLeft, akTop, akRight];
+    lPasswordEdit.PasswordChar := '*';
+    lConfirmLabel := TLabel.Create(lDialog);
+    lConfirmLabel.Parent := lDialog;
+    lConfirmLabel.SetBounds(16, 100, 180, 24);
+    lConfirmLabel.AutoSize := False;
+    lConfirmLabel.Caption := 'Повторите пароль';
+    lConfirmEdit := TEdit.Create(lDialog);
+    lConfirmEdit.Parent := lDialog;
+    lConfirmEdit.SetBounds(205, 96, 450, 28);
+    lConfirmEdit.Anchors := [akLeft, akTop, akRight];
+    lConfirmEdit.PasswordChar := '*';
+    lSyncFlyDm := TCheckBox.Create(lDialog);
+    lSyncFlyDm.Parent := lDialog;
+    lSyncFlyDm.SetBounds(16, 138, 640, 30);
+    lSyncFlyDm.Anchors := [akLeft, akTop, akRight];
+    lSyncFlyDm.Caption :=
+      'Также обновить пароль автологина Fly-DM (файл доступен только root)';
+    lHelp := TMemo.Create(lDialog);
+    lHelp.Parent := lDialog;
+    lHelp.SetBounds(16, 178, 639, 150);
+    lHelp.Anchors := [akLeft, akTop, akRight, akBottom];
+    lHelp.ReadOnly := True;
+    lHelp.WordWrap := True;
+    lHelp.ScrollBars := ssVertical;
+    lHelp.Text :=
+      'Системный пароль изменяется через chpasswd и хранится в /etc/shadow. ' +
+      'Пароль передаётся только через stdin и не попадает в командную строку.' +
+      LineEnding + LineEnding +
+      'При установленной галочке AutoLoginPass обновляется в ' +
+      '/etc/X11/fly-dm/fly-dmrc. Fly-DM хранит его открытым текстом, поэтому ' +
+      'файл получает права 0600.' + LineEnding + LineEnding +
+      'Пароль GNOME Keyring автоматически не меняется. Если он отличается, ' +
+      'связку нужно изменить интерактивно либо после резервного копирования ' +
+      'пересоздать.';
+    lApply := TButton.Create(lDialog);
+    lApply.Parent := lDialog;
+    lApply.SetBounds(429, 345, 108, 32);
+    lApply.Anchors := [akRight, akBottom];
+    lApply.Caption := 'Изменить';
+    lApply.ModalResult := mrOK;
+    lCancel := TButton.Create(lDialog);
+    lCancel.Parent := lDialog;
+    lCancel.SetBounds(547, 345, 108, 32);
+    lCancel.Anchors := [akRight, akBottom];
+    lCancel.Caption := 'Отмена';
+    lCancel.ModalResult := mrCancel;
+    if lDialog.ShowModal <> mrOK then Exit;
+    lUser := Trim(lUserEdit.Text);
+    lPassword := UTF8String(lPasswordEdit.Text);
+    if lUser = '' then
+    begin
+      MessageDlg('Введите имя пользователя.', mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    if lPassword = '' then
+    begin
+      MessageDlg('Новый пароль не может быть пустым.', mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    if lPasswordEdit.Text <> lConfirmEdit.Text then
+    begin
+      MessageDlg('Пароли не совпадают.', mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    if lSyncFlyDm.Checked and
+      (MessageDlg('Fly-DM сохранит новый пароль открытым текстом в ' +
+        '/etc/X11/fly-dm/fly-dmrc с правами 0600. Продолжить?',
+        mtWarning, [mbYes, mbNo], 0) <> mrYes) then Exit;
+    if ChangeUserPassword(UTF8String(lUser), lPassword,
+      lSyncFlyDm.Checked, lError) then
+    begin
+      fFields[0].Text := lUser;
+      fOutputMemo.Text := 'Пароль пользователя ' + lUser + ' изменён.';
+    end
+    else
+      MessageDlg('Не удалось изменить пароль: ' + lError,
+        mtError, [mbOK], 0);
+  finally
+    lPassword := '';
+    lDialog.Free;
+  end;
 end;
 
 procedure TSetupDialog.RefreshAccessState;

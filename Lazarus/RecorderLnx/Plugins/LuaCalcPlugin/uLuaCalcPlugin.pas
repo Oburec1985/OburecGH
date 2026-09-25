@@ -6,7 +6,8 @@ unit uLuaCalcPlugin;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, uRecorderPluginApi, uLuaCalcEngine;
+  Classes, SysUtils, Math, SyncObjs, IniFiles, uRecorderPluginApi,
+  uLuaCalcEngine;
 
 type
   TLuaCalcPlugin = class
@@ -15,10 +16,19 @@ type
     fScripts: TList;
     fDirectory: string;
     fProjectDirectory: string;
+    fDelayedWorkers: TList;
+    fDelayedWorkersLock: TCriticalSection;
+    fClosing: Boolean;
     procedure UpdateDirectory;
     procedure LogError(const AMessage: string);
     procedure ReloadScripts;
     procedure RunScripts;
+    procedure ReapDelayedWorkers;
+    procedure StopDelayedWorkers;
+    function ScheduleTagValue(const AName: UTF8String; AValue,
+      ADelaySeconds: Double): Boolean;
+    function PublishDelayedValue(const AName: UTF8String;
+      AValue: Double): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -30,6 +40,22 @@ type
 implementation
 
 type
+  TDelayedTagValueWorker = class(TThread)
+  private
+    fOwner: TLuaCalcPlugin;
+    fWakeEvent: TEvent;
+    fName: UTF8String;
+    fValue: Double;
+    fDelayMilliseconds: Cardinal;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(AOwner: TLuaCalcPlugin; const AName: UTF8String;
+      AValue: Double; ADelayMilliseconds: Cardinal);
+    destructor Destroy; override;
+    procedure Stop;
+  end;
+
   TLoadedScript = class
     Name: string;
     Engine: TLuaCalcEngine;
@@ -43,6 +69,37 @@ begin
   inherited Destroy;
 end;
 
+constructor TDelayedTagValueWorker.Create(AOwner: TLuaCalcPlugin;
+  const AName: UTF8String; AValue: Double; ADelayMilliseconds: Cardinal);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fOwner := AOwner;
+  fName := AName;
+  fValue := AValue;
+  fDelayMilliseconds := ADelayMilliseconds;
+  fWakeEvent := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TDelayedTagValueWorker.Destroy;
+begin
+  fWakeEvent.Free;
+  inherited Destroy;
+end;
+
+procedure TDelayedTagValueWorker.Execute;
+begin
+  if (fWakeEvent.WaitFor(fDelayMilliseconds) = wrTimeout) and
+    not Terminated then
+    fOwner.PublishDelayedValue(fName, fValue);
+end;
+
+procedure TDelayedTagValueWorker.Stop;
+begin
+  Terminate;
+  fWakeEvent.SetEvent;
+end;
+
 function ReadValue(AContext: Pointer; const AName: UTF8String;
   out AValue: Double): Boolean; cdecl;
 var
@@ -52,6 +109,82 @@ begin
   lHost := @TLuaCalcPlugin(AContext).fHost;
   Result := Assigned(lHost^.ReadTagValue) and
     lHost^.ReadTagValue(lHost^.HostContext, PAnsiChar(AName), lTime, AValue);
+end;
+
+function ReadSample(AContext: Pointer; const AName: UTF8String;
+  out AValue, ATime: Double): Boolean; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+begin
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  Result := Assigned(lHost^.ReadTagValue) and
+    lHost^.ReadTagValue(lHost^.HostContext, PAnsiChar(AName), ATime, AValue);
+end;
+
+function TagExists(AContext: Pointer; const AName: UTF8String): Boolean; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+begin
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  Result := Assigned(lHost^.TagExists) and
+    lHost^.TagExists(lHost^.HostContext, PAnsiChar(AName));
+end;
+
+function ReadAlarmLevel(AContext: Pointer; const AName: UTF8String;
+  out ALevel: LongInt): Boolean; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+begin
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  Result := Assigned(lHost^.GetTagAlarmLevel) and
+    lHost^.GetTagAlarmLevel(lHost^.HostContext, PAnsiChar(AName), ALevel);
+end;
+
+function SetpointKind(const AKind: UTF8String; out AValue: LongInt): Boolean;
+begin
+  Result := True;
+  if SameText(string(AKind), 'highAlarm') then AValue := 0
+  else if SameText(string(AKind), 'highWarning') then AValue := 1
+  else if SameText(string(AKind), 'lowWarning') then AValue := 2
+  else if SameText(string(AKind), 'lowAlarm') then AValue := 3
+  else Result := False;
+end;
+
+function ReadSetpoint(AContext: Pointer; const AName, AKind: UTF8String;
+  out AThreshold: Double; out AEnabled: Boolean): Boolean; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+  lKind: LongInt;
+  lEnabled: LongBool;
+begin
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  lEnabled := False;
+  Result := SetpointKind(AKind, lKind) and Assigned(lHost^.GetTagSetpoint) and
+    lHost^.GetTagSetpoint(lHost^.HostContext, PAnsiChar(AName), lKind,
+      AThreshold, lEnabled);
+  AEnabled := lEnabled;
+end;
+
+function WriteSetpoint(AContext: Pointer; const AName, AKind: UTF8String;
+  AThreshold: Double; AEnabled: Boolean): Boolean; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+  lKind: LongInt;
+begin
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  Result := SetpointKind(AKind, lKind) and Assigned(lHost^.SetTagSetpoint) and
+    lHost^.SetTagSetpoint(lHost^.HostContext, PAnsiChar(AName), lKind,
+      AThreshold, AEnabled);
+end;
+
+function RecorderTime(AContext: Pointer): Double; cdecl;
+var
+  lHost: ^TRecorderPluginHostApi;
+begin
+  Result := 0;
+  lHost := @TLuaCalcPlugin(AContext).fHost;
+  if Assigned(lHost^.GetRecorderTime) then
+    lHost^.GetRecorderTime(lHost^.HostContext, Result);
 end;
 
 function WriteValue(AContext: Pointer; const AName: UTF8String;
@@ -64,25 +197,45 @@ begin
     lHost^.PublishTagValue(lHost^.HostContext, PAnsiChar(AName), AValue);
 end;
 
+function WriteDelayedValue(AContext: Pointer; const AName: UTF8String;
+  AValue, ADelaySeconds: Double): Boolean; cdecl;
+begin
+  Result := TLuaCalcPlugin(AContext).ScheduleTagValue(AName, AValue,
+    ADelaySeconds);
+end;
+
 constructor TLuaCalcPlugin.Create;
 begin
   inherited Create;
   fScripts := TList.Create;
+  fDelayedWorkers := TList.Create;
+  fDelayedWorkersLock := TCriticalSection.Create;
 end;
 
 destructor TLuaCalcPlugin.Destroy;
 begin
   Close;
+  fDelayedWorkersLock.Free;
+  fDelayedWorkers.Free;
   fScripts.Free;
   inherited Destroy;
 end;
 
 function TLuaCalcPlugin.Initialize(AHostApi: PRecorderPluginHostApi): Boolean;
+var
+  lRequiredSize, lCopySize: SizeUInt;
 begin
-  Result := (AHostApi <> nil) and
-    (AHostApi^.Size >= SizeOf(TRecorderPluginHostApi));
+  Result := AHostApi <> nil;
   if not Result then Exit;
-  fHost := AHostApi^;
+  lRequiredSize := PtrUInt(@AHostApi^.LogMessage) - PtrUInt(AHostApi) +
+    SizeOf(AHostApi^.LogMessage);
+  Result := AHostApi^.Size >= lRequiredSize;
+  if not Result then Exit;
+  FillChar(fHost, SizeOf(fHost), 0);
+  lCopySize := AHostApi^.Size;
+  if lCopySize > SizeOf(fHost) then lCopySize := SizeOf(fHost);
+  Move(AHostApi^, fHost, lCopySize);
+  fClosing := False;
   UpdateDirectory;
   ReloadScripts;
 end;
@@ -120,9 +273,98 @@ procedure TLuaCalcPlugin.Close;
 var
   I: Integer;
 begin
+  StopDelayedWorkers;
   for I := 0 to fScripts.Count - 1 do
     TLoadedScript(fScripts[I]).Free;
   fScripts.Clear;
+end;
+
+procedure TLuaCalcPlugin.ReapDelayedWorkers;
+var
+  I: Integer;
+  lWorker: TDelayedTagValueWorker;
+begin
+  fDelayedWorkersLock.Acquire;
+  try
+    for I := fDelayedWorkers.Count - 1 downto 0 do
+    begin
+      lWorker := TDelayedTagValueWorker(fDelayedWorkers[I]);
+      if not lWorker.Finished then Continue;
+      fDelayedWorkers.Delete(I);
+      lWorker.WaitFor;
+      lWorker.Free;
+    end;
+  finally
+    fDelayedWorkersLock.Release;
+  end;
+end;
+
+procedure TLuaCalcPlugin.StopDelayedWorkers;
+var
+  I: Integer;
+  lWorkers: array of TDelayedTagValueWorker;
+begin
+  fDelayedWorkersLock.Acquire;
+  try
+    fClosing := True;
+    SetLength(lWorkers, fDelayedWorkers.Count);
+    for I := 0 to fDelayedWorkers.Count - 1 do
+    begin
+      lWorkers[I] := TDelayedTagValueWorker(fDelayedWorkers[I]);
+      lWorkers[I].Stop;
+    end;
+    fDelayedWorkers.Clear;
+  finally
+    fDelayedWorkersLock.Release;
+  end;
+  for I := 0 to High(lWorkers) do
+  begin
+    lWorkers[I].WaitFor;
+    lWorkers[I].Free;
+  end;
+end;
+
+function TLuaCalcPlugin.ScheduleTagValue(const AName: UTF8String; AValue,
+  ADelaySeconds: Double): Boolean;
+var
+  lDelayMilliseconds: Cardinal;
+  lWorker: TDelayedTagValueWorker;
+begin
+  Result := (AName <> '') and not IsNan(ADelaySeconds) and
+    not IsInfinite(ADelaySeconds) and (ADelaySeconds >= 0) and
+    (ADelaySeconds <= High(Cardinal) / 1000.0);
+  if not Result then Exit;
+  ReapDelayedWorkers;
+  lDelayMilliseconds := Round(ADelaySeconds * 1000.0);
+  lWorker := TDelayedTagValueWorker.Create(Self, AName, AValue,
+    lDelayMilliseconds);
+  fDelayedWorkersLock.Acquire;
+  try
+    if fClosing then
+    begin
+      lWorker.Free;
+      Exit(False);
+    end;
+    fDelayedWorkers.Add(lWorker);
+    lWorker.Start;
+  finally
+    fDelayedWorkersLock.Release;
+  end;
+  Result := True;
+end;
+
+function TLuaCalcPlugin.PublishDelayedValue(const AName: UTF8String;
+  AValue: Double): Boolean;
+begin
+  fDelayedWorkersLock.Acquire;
+  try
+    Result := not fClosing and Assigned(fHost.PublishTagValue);
+    if Result then
+      Result := fHost.PublishTagValue(fHost.HostContext, PAnsiChar(AName),
+        AValue);
+  finally
+    fDelayedWorkersLock.Release;
+  end;
 end;
 
 procedure TLuaCalcPlugin.LogError(const AMessage: string);
@@ -183,12 +425,20 @@ var
   end;
 begin
   Close;
+  fClosing := False;
   UpdateDirectory;
   if (fDirectory = '') or not DirectoryExists(fDirectory) then Exit;
   lCallbacks := Default(TLuaCalcCallbacks);
   lCallbacks.Context := Self;
   lCallbacks.OnGetValue := @ReadValue;
+  lCallbacks.OnGetSample := @ReadSample;
   lCallbacks.OnSetValue := @WriteValue;
+  lCallbacks.OnSetDelayedValue := @WriteDelayedValue;
+  lCallbacks.OnGetTime := @RecorderTime;
+  lCallbacks.OnTagExists := @TagExists;
+  lCallbacks.OnGetAlarmLevel := @ReadAlarmLevel;
+  lCallbacks.OnGetSetpoint := @ReadSetpoint;
+  lCallbacks.OnSetSetpoint := @WriteSetpoint;
   lCallbacks.OnLogMessage := @LogValue;
   lConfigName := IncludeTrailingPathDelimiter(fProjectDirectory) + 'LuaCalc.ini';
   if FileExists(lConfigName) then

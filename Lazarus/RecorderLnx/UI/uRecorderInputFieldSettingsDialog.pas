@@ -21,19 +21,31 @@ var
   lForm: TForm;
   lTags: TComboBox;
   lFormat: TEdit;
+  lLabel: TLabel;
+  lOkButton, lCancelButton: TButton;
   lTag: TRecorderTag;
-  I: Integer;
+  I, lRowHeight, lEditHeight: Integer;
 begin
   Result := False;
   lForm := TForm.CreateNew(AOwner, 1);
   try
     lForm.Caption := 'Настройка поля ввода';
     lForm.Position := poScreenCenter;
-    lForm.SetBounds(0, 0, 430, 155);
-    with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Тег'; SetBounds(12, 16, 80, 22); end;
+    lForm.BorderStyle := bsSizeable;
+    lForm.Constraints.MinWidth := 430;
+    lRowHeight := lForm.Canvas.TextHeight('Ag') + 14;
+    if lRowHeight < 32 then lRowHeight := 32;
+    lEditHeight := lForm.Canvas.TextHeight('Ag') + 10;
+    if lEditHeight < 27 then lEditHeight := 27;
+    lForm.SetBounds(0, 0, 430, 3 * lRowHeight + 64);
+    lForm.Constraints.MinHeight := lForm.Height;
+    lLabel := TLabel.Create(lForm);
+    lLabel.Parent := lForm; lLabel.Caption := 'Тег'; lLabel.AutoSize := True;
+    lLabel.SetBounds(12, 12 + (lEditHeight - lLabel.Height) div 2, 80, lLabel.Height);
     lTags := TComboBox.Create(lForm);
     lTags.Parent := lForm; lTags.Style := csDropDownList;
-    lTags.SetBounds(95, 12, 315, 27);
+    lTags.SetBounds(95, 12, lForm.ClientWidth - 107, lEditHeight);
+    lTags.Anchors := [akLeft, akTop, akRight];
     if ARegistry <> nil then
       for I := 0 to ARegistry.TagCount - 1 do
       begin
@@ -45,11 +57,24 @@ begin
             lTags.ItemIndex := lTags.Items.Count - 1;
         end;
       end;
-    with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Формат'; SetBounds(12, 53, 80, 22); end;
+    lLabel := TLabel.Create(lForm);
+    lLabel.Parent := lForm; lLabel.Caption := 'Формат'; lLabel.AutoSize := True;
+    lLabel.SetBounds(12, 12 + lRowHeight + (lEditHeight - lLabel.Height) div 2,
+      80, lLabel.Height);
     lFormat := TEdit.Create(lForm); lFormat.Parent := lForm;
-    lFormat.SetBounds(95, 49, 315, 27); lFormat.Text := AField.DisplayFormat;
-    with TButton.Create(lForm) do begin Parent := lForm; Caption := 'OK'; ModalResult := mrOk; Default := True; SetBounds(245, 90, 80, 28); end;
-    with TButton.Create(lForm) do begin Parent := lForm; Caption := 'Отмена'; ModalResult := mrCancel; Cancel := True; SetBounds(330, 90, 80, 28); end;
+    lFormat.SetBounds(95, 12 + lRowHeight, lForm.ClientWidth - 107, lEditHeight);
+    lFormat.Anchors := [akLeft, akTop, akRight];
+    lFormat.Text := AField.DisplayFormat;
+    lCancelButton := TButton.Create(lForm);
+    lCancelButton.Parent := lForm; lCancelButton.Caption := 'Отмена';
+    lCancelButton.ModalResult := mrCancel; lCancelButton.Cancel := True;
+    lCancelButton.SetBounds(lForm.ClientWidth - 100, lForm.ClientHeight - 40, 88, 28);
+    lCancelButton.Anchors := [akRight, akBottom];
+    lOkButton := TButton.Create(lForm);
+    lOkButton.Parent := lForm; lOkButton.Caption := 'OK'; lOkButton.ModalResult := mrOk;
+    lOkButton.Default := True;
+    lOkButton.SetBounds(lCancelButton.Left - 96, lCancelButton.Top, 88, 28);
+    lOkButton.Anchors := [akRight, akBottom];
     if lForm.ShowModal <> mrOk then Exit;
     if lTags.ItemIndex < 0 then
     begin

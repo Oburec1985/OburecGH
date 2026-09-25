@@ -2,11 +2,13 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
   Left = 377
   Height = 362
   Top = 189
-  Width = 354
-  BorderStyle = bsDialog
+  Width = 470
+  BorderStyle = bsSizeable
   Caption = 'Дополнительные свойства'
   ClientHeight = 362
-  ClientWidth = 354
+  ClientWidth = 470
+  Constraints.MinHeight = 362
+  Constraints.MinWidth = 470
   Position = poOwnerFormCenter
   object Label1: TLabel
     Left = 20
@@ -44,42 +46,47 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     Caption = 'Количество сэмплов для балансировки'
   end
   object cbAverageCount: TComboBox
-    Left = 256
+    Left = 356
     Height = 23
     Top = 18
-    Width = 86
+    Width = 102
+    Anchors = [akTop, akRight]
     Style = csDropDownList
     TabOrder = 0
     OnChange = cbAverageCountChange
   end
   object edGroundCommutUs: TEdit
-    Left = 256
+    Left = 356
     Height = 23
     Top = 50
-    Width = 86
+    Width = 102
+    Anchors = [akTop, akRight]
     TabOrder = 1
     OnEditingDone = edTimingEditingDone
   end
   object edChannelCommutUs: TEdit
-    Left = 256
+    Left = 356
     Height = 23
     Top = 82
-    Width = 86
+    Width = 102
+    Anchors = [akTop, akRight]
     TabOrder = 2
     OnEditingDone = edTimingEditingDone
   end
   object edMaxFrequencyHz: TEdit
-    Left = 256
+    Left = 356
     Height = 23
     Top = 114
-    Width = 86
+    Width = 102
+    Anchors = [akTop, akRight]
     TabOrder = 3
   end
   object edBalanceSamples: TEdit
-    Left = 256
+    Left = 356
     Height = 23
     Top = 146
-    Width = 86
+    Width = 102
+    Anchors = [akTop, akRight]
     TabOrder = 4
   end
   object chkBreakSensor: TCheckBox
@@ -87,6 +94,7 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     Height = 19
     Top = 184
     Width = 210
+    Anchors = [akLeft, akBottom]
     Caption = 'Определение Обрыва/КЗ датчика'
     TabOrder = 5
   end
@@ -123,20 +131,22 @@ object RecorderMic185AdditionalForm: TRecorderMic185AdditionalForm
     TabOrder = 9
   end
   object btnApply: TButton
-    Left = 166
+    Left = 282
     Height = 25
     Top = 330
     Width = 84
+    Anchors = [akRight, akBottom]
     Caption = 'Применить'
     Default = True
     ModalResult = 1
     TabOrder = 10
   end
   object btnCancel: TButton
-    Left = 260
+    Left = 376
     Height = 25
     Top = 330
     Width = 84
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2

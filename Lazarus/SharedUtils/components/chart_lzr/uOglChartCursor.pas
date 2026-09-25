@@ -50,6 +50,7 @@ type
     fPeakX: Double;
     fPeakY: Double;
     fRms: Double;
+    fShowPeak: Boolean;
   public
     constructor Create; override;
     procedure AssignDefaultProperties; override;
@@ -61,6 +62,7 @@ type
     property PeakX: Double read fPeakX write fPeakX;
     property PeakY: Double read fPeakY write fPeakY;
     property Rms: Double read fRms write fRms;
+    property ShowPeak: Boolean read fShowPeak write fShowPeak;
   end;
 // Возвращает существующий или создаёт новый курсор для страницы.
 function GetOrCreatePageCursor(APage: TChartBaseObject): TChartCursor;
@@ -144,6 +146,7 @@ begin
   fPeakX := 0.0;
   fPeakY := 0.0;
   fRms := 0.0;
+  fShowPeak := True;
 end;
 function TChartFrequencyBand.NotSaveToJson: Boolean;
 begin

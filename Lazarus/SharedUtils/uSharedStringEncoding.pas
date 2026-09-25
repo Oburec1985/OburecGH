@@ -11,8 +11,8 @@ unit uSharedStringEncoding;
   - XML с декларацией encoding="windows-1251" (FPC XMLRead не принимает cp1251 напрямую);
   - проверки, что текст пригоден для отображения в LCL (нет «?» от битой перекодировки).
 
-  Для литералов в {$codepage UTF8} модулях — обычные UTF-8 строки без обёрток.
-  Для cp1251-литералов в {$codepage cp1251} — CP1251ToUTF8 или LclText из uComponentServices.
+  Для литералов в модулях с codepage UTF8 — обычные UTF-8 строки без обёрток.
+  Для cp1251-литералов в модулях с codepage cp1251 — CP1251ToUTF8 или LclText из uComponentServices.
 
   Документация: SharedUtils/Docs/string-encoding.md
 }

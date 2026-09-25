@@ -7,6 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Buttons, Grids, Graphics,
+  Menus,
   Math, DateUtils, Dialogs,
   uOglChart, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
   uRecorderSqlDbTypes, uRecorderSqlTrendModel;
@@ -22,6 +23,8 @@ type
     fFromUtc, fToUtc: Double;
     fMaxPoints: Integer;
     fAppendLoad: Boolean;
+    fIncludeRecordingEvents: Boolean;
+    fIncludeTagAlarmEvents: Boolean;
     fOwner: TRecorderSqlTrendView;
     fPoints: TRecorderSqlTrendPoints;
     fEvents: TRecorderSqlDbMeraEvents;
@@ -38,7 +41,8 @@ type
     destructor Destroy; override;
     function RequestLoad(const AConfigFileName: string; ASignalNames: TStrings;
       AFromUtc, AToUtc: Double; AMaxPoints: Integer;
-      AAppendLoad: Boolean): Boolean;
+      AAppendLoad, AIncludeRecordingEvents,
+      AIncludeTagAlarmEvents: Boolean): Boolean;
   end;
 
   TRecorderSqlTrendView = class(TPanel, IVForm)
@@ -68,6 +72,10 @@ type
     fCursorPoint: TPoint;
     fCursorVisible: Boolean;
     fErrorText: string;
+    fEventPopup: TPopupMenu;
+    fRecordingEventsMenuItem: TMenuItem;
+    fTagAlarmEventsMenuItem: TMenuItem;
+    fAllEventsMenuItem: TMenuItem;
     fForceFullReload: Boolean;
     fFullAxisMax: array of Double;
     fFullAxisMin: array of Double;
@@ -80,6 +88,7 @@ type
     fLegendSplitter: TSplitter;
     fMouseAnchor: TPoint;
     fMouseCurrent: TPoint;
+    fManualXRange: Boolean;
     fZoomMode: TRecorderSqlTrendZoomMode;
     fPanAxisMax: array of Double;
     fPanAxisMin: array of Double;
@@ -99,16 +108,19 @@ type
     fMergeOutput: TRecorderSqlTrendPoints;
     fMergeRowIds: TStringList;
     fZoomSelecting: Boolean;
-    procedure AxisRangeEditChange(Sender: TObject);
-    procedure AxisComboChange(Sender: TObject);
-    procedure CursorButtonClick(Sender: TObject);
-    procedure CursorModeChange(Sender: TObject);
-    procedure DeleteIntervalButtonClick(Sender: TObject);
-    procedure ExportButtonClick(Sender: TObject);
-    procedure OpenMeraEventButtonClick(Sender: TObject);
-    procedure DisplayComboChange(Sender: TObject);
-    procedure DisplayNextClick(Sender: TObject);
-    procedure DisplayPrevClick(Sender: TObject);
+    procedure AxisRangeEditChange({%H-}Sender: TObject);
+    procedure AxisComboChange({%H-}Sender: TObject);
+    procedure CursorButtonClick({%H-}Sender: TObject);
+    procedure CursorModeChange({%H-}Sender: TObject);
+    procedure DeleteIntervalButtonClick({%H-}Sender: TObject);
+    procedure ExportButtonClick({%H-}Sender: TObject);
+    procedure EventFilterClick(Sender: TObject);
+    procedure UpdateEventFilterMenu;
+    procedure RequestEventReload;
+    procedure OpenMeraEventButtonClick({%H-}Sender: TObject);
+    procedure DisplayComboChange({%H-}Sender: TObject);
+    procedure DisplayNextClick({%H-}Sender: TObject);
+    procedure DisplayPrevClick({%H-}Sender: TObject);
     procedure FillDisplayControls;
     function BuildAxisSignature: string;
     function AxisCaption(AIndex: Integer): string;
@@ -120,16 +132,16 @@ type
     function DoubleCursorReady: Boolean;
     procedure EnsureCursorDefaults;
     function GetPlotRect: TRect;
-    procedure LegendGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+    procedure LegendGridDrawCell({%H-}Sender: TObject; ACol, ARow: Integer;
       ARect: TRect; AState: TGridDrawState);
-    procedure LegendGridSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
-    procedure LegendGridDblClick(Sender: TObject);
+    procedure LegendGridSelectCell({%H-}Sender: TObject; {%H-}ACol,
+      ARow: Integer; var {%H-}CanSelect: Boolean);
+    procedure LegendGridDblClick({%H-}Sender: TObject);
     function LegendLineIndex(ARow: Integer): Integer;
     procedure LoadAxisControls;
-    procedure ResetZoomClick(Sender: TObject);
-    procedure ReloadTimerTimer(Sender: TObject);
-    procedure LiveReloadTimerTimer(Sender: TObject);
+    procedure ResetZoomClick({%H-}Sender: TObject);
+    procedure ReloadTimerTimer({%H-}Sender: TObject);
+    procedure LiveReloadTimerTimer({%H-}Sender: TObject);
     procedure ConfigureLiveReload;
     procedure StartLoad;
     procedure ClampCurrentDateXRange;
@@ -146,6 +158,8 @@ type
     procedure AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
     function LineIndex(const ASignalName: string): Integer;
     function EventIndexAtX(AX: Integer; const APlot: TRect): Integer;
+    function IsRecordingEvent(AIndex: Integer): Boolean;
+    function EventCaption(AIndex: Integer): string;
     procedure UpdateMeraEventButton;
   protected
     procedure Paint; override;
@@ -160,9 +174,9 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Configure(AComponent: TRecorderVisualComponent;
-      ATagRegistry: TRecorderTagRegistry);
-    procedure RefreshControl(ATagRegistry: TRecorderTagRegistry;
-      ADisplaySeconds: Double);
+      {%H-}ATagRegistry: TRecorderTagRegistry);
+    procedure RefreshControl({%H-}ATagRegistry: TRecorderTagRegistry;
+      {%H-}ADisplaySeconds: Double);
     function GetChartControl: TOglChart;
   end;
 
@@ -254,7 +268,8 @@ end;
 
 function TRecorderSqlTrendLoadThread.RequestLoad(
   const AConfigFileName: string; ASignalNames: TStrings; AFromUtc,
-  AToUtc: Double; AMaxPoints: Integer; AAppendLoad: Boolean): Boolean;
+  AToUtc: Double; AMaxPoints: Integer; AAppendLoad,
+  AIncludeRecordingEvents, AIncludeTagAlarmEvents: Boolean): Boolean;
 begin
   Result := False;
   EnterCriticalSection(fRequestLock);
@@ -266,6 +281,8 @@ begin
     fToUtc := AToUtc;
     fMaxPoints := AMaxPoints;
     fAppendLoad := AAppendLoad;
+    fIncludeRecordingEvents := AIncludeRecordingEvents;
+    fIncludeTagAlarmEvents := AIncludeTagAlarmEvents;
     fRequestPending := True;
     Result := True;
   finally
@@ -281,7 +298,6 @@ var
   lLoadedConfigFileName: string;
   lCredentialsError: string;
   lConnectionError: string;
-  lSkipDeliver: Boolean;
   lLoadedConfigAge, lConfigAge: LongInt;
 begin
   lConfig := nil;
@@ -303,7 +319,6 @@ begin
         LeaveCriticalSection(fRequestLock);
       end;
       fErrorText := '';
-      lSkipDeliver := False;
       SetLength(fPoints, 0);
       try
         lConfigAge := FileAge(fConfigFileName);
@@ -331,11 +346,15 @@ begin
               lRepository := TRecorderSqlDbRepository.Create(lConfig);
             lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
               fMaxPoints, fPoints, False);
-            lRepository.ListMeraRecordingEvents(fFromUtc, fToUtc, fEvents);
+            lRepository.ListTimelineEvents(fFromUtc, fToUtc,
+              fIncludeRecordingEvents, fIncludeTagAlarmEvents, fEvents);
           end
           else
           begin
-            lSkipDeliver := True;
+            fErrorText := 'Сервер SQL выключен или недоступен';
+            SharedLogger.Error('SQL trend server unavailable: ' +
+              lConnectionError + ' [' +
+              SqlTrendConnectionIdentity(fConfigFileName, lConfig) + ']');
             FreeAndNil(lRepository);
           end;
         end;
@@ -363,7 +382,7 @@ begin
       finally
         LeaveCriticalSection(fRequestLock);
       end;
-      if not Terminated and not lSkipDeliver then Synchronize(@Deliver);
+      if not Terminated then Synchronize(@Deliver);
     end;
   finally
     lRepository.Free;
@@ -522,6 +541,55 @@ begin
   fLiveReloadTimer.OnTimer := @LiveReloadTimerTimer;
   fHoveredEventIndex := -1;
   fPinnedEventIndex := -1;
+  fEventPopup := TPopupMenu.Create(Self);
+  fRecordingEventsMenuItem := TMenuItem.Create(fEventPopup);
+  fRecordingEventsMenuItem.Caption := 'Записи';
+  fRecordingEventsMenuItem.AutoCheck := False;
+  fRecordingEventsMenuItem.OnClick := @EventFilterClick;
+  fEventPopup.Items.Add(fRecordingEventsMenuItem);
+  fTagAlarmEventsMenuItem := TMenuItem.Create(fEventPopup);
+  fTagAlarmEventsMenuItem.Caption := 'Аварийные по тегам';
+  fTagAlarmEventsMenuItem.AutoCheck := False;
+  fTagAlarmEventsMenuItem.OnClick := @EventFilterClick;
+  fEventPopup.Items.Add(fTagAlarmEventsMenuItem);
+  fAllEventsMenuItem := TMenuItem.Create(fEventPopup);
+  fAllEventsMenuItem.Caption := 'Выбрать все';
+  fAllEventsMenuItem.OnClick := @EventFilterClick;
+  fEventPopup.Items.Add(fAllEventsMenuItem);
+end;
+
+procedure TRecorderSqlTrendView.EventFilterClick(Sender: TObject);
+begin
+  if fComponent = nil then Exit;
+  if Sender = fRecordingEventsMenuItem then
+    fComponent.ShowRecordingEvents := not fComponent.ShowRecordingEvents
+  else if Sender = fTagAlarmEventsMenuItem then
+    fComponent.ShowTagAlarmEvents := not fComponent.ShowTagAlarmEvents
+  else if Sender = fAllEventsMenuItem then
+  begin
+    fComponent.ShowRecordingEvents := True;
+    fComponent.ShowTagAlarmEvents := True;
+  end;
+  UpdateEventFilterMenu;
+  RequestEventReload;
+end;
+
+procedure TRecorderSqlTrendView.UpdateEventFilterMenu;
+begin
+  if fComponent = nil then Exit;
+  fRecordingEventsMenuItem.Checked := fComponent.ShowRecordingEvents;
+  fTagAlarmEventsMenuItem.Checked := fComponent.ShowTagAlarmEvents;
+end;
+
+procedure TRecorderSqlTrendView.RequestEventReload;
+begin
+  fHoveredEventIndex := -1;
+  fPinnedEventIndex := -1;
+  fForceFullReload := True;
+  fLoadPending := True;
+  fReloadTimer.Enabled := True;
+  UpdateMeraEventButton;
+  Invalidate;
 end;
 
 procedure TRecorderSqlTrendView.ExportButtonClick(Sender: TObject);
@@ -552,7 +620,8 @@ var
 begin
   lIndex := fPinnedEventIndex;
   if lIndex < 0 then lIndex := fHoveredEventIndex;
-  if (lIndex < 0) or (lIndex > High(fEvents)) or (fComponent = nil) then Exit;
+  if (lIndex < 0) or (lIndex > High(fEvents)) or (fComponent = nil) or
+    (not IsRecordingEvent(lIndex)) then Exit;
   lResult := ShowRecorderMeraEventDialog(GetParentForm(Self),
     fComponent.ConfigFileName, fEvents[lIndex]);
   if lResult <> medrUnchanged then
@@ -570,12 +639,47 @@ begin
 end;
 
 procedure TRecorderSqlTrendView.UpdateMeraEventButton;
+var
+  lIndex: Integer;
 begin
+  lIndex := fPinnedEventIndex;
+  if lIndex < 0 then lIndex := fHoveredEventIndex;
   if fOpenMeraEventButton <> nil then
     fOpenMeraEventButton.Enabled := (fComponent <> nil) and
-      fComponent.ShowEvents and
-      (((fPinnedEventIndex >= 0) and (fPinnedEventIndex <= High(fEvents))) or
-       ((fHoveredEventIndex >= 0) and (fHoveredEventIndex <= High(fEvents))));
+      fComponent.ShowEvents and IsRecordingEvent(lIndex);
+end;
+
+function TRecorderSqlTrendView.IsRecordingEvent(AIndex: Integer): Boolean;
+begin
+  Result := (AIndex >= 0) and (AIndex <= High(fEvents)) and
+    SameText(fEvents[AIndex].EventType, 'mera.recording');
+end;
+
+function TRecorderSqlTrendView.EventCaption(AIndex: Integer): string;
+begin
+  Result := '';
+  if (AIndex < 0) or (AIndex > High(fEvents)) then Exit;
+  if IsRecordingEvent(AIndex) then
+    Result := Format('%s  %s  ПК/пакетов: %d  %s', [
+      FormatDateTime('dd.mm.yyyy hh:nn:ss',
+        UtcDisplayTime(fEvents[AIndex].StartedAtUtc)),
+      fEvents[AIndex].DisplayName,
+      fEvents[AIndex].PackageCount,
+      fEvents[AIndex].State])
+  else
+  begin
+    Result := Trim(fEvents[AIndex].Description);
+    if Result = '' then
+      Result := UTF8Encode(UnicodeString('Сработала уставка: ') +
+        UnicodeString(fEvents[AIndex].DisplayName));
+    Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
+    Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
+    if Length(Result) > 180 then
+      Result := Copy(Result, 1, 177) + '...';
+    Result := Format('%s  %s', [
+      FormatDateTime('dd.mm.yyyy hh:nn:ss',
+        UtcDisplayTime(fEvents[AIndex].StartedAtUtc)), Result]);
+  end;
 end;
 
 procedure TRecorderSqlTrendView.FillDisplayControls;
@@ -970,6 +1074,7 @@ procedure TRecorderSqlTrendView.Configure(AComponent: TRecorderVisualComponent;
 begin
   if not (AComponent is TRecorderSqlTrendComponent) then Exit;
   fComponent := TRecorderSqlTrendComponent(AComponent);
+  UpdateEventFilterMenu;
   if not fComponent.ShowEvents then
   begin
     fHoveredEventIndex := -1;
@@ -981,6 +1086,7 @@ begin
   UpdateLegend;
   UpdateDeleteIntervalButton;
   ConfigureLiveReload;
+  fManualXRange := False;
   fResetViewOnLoad := True;
   fLoadPending := True;
   fReloadTimer.Enabled := True;
@@ -1103,6 +1209,7 @@ var
   lHasAxis: array of Boolean;
   lRange, lPadding: Double;
 begin
+  lHasAxis := nil;
   if (fComponent = nil) or (fComponent.ActiveDisplay = nil) then Exit;
   SetLength(lHasAxis, Length(fAxisMin));
   lHasX := False;
@@ -1162,6 +1269,9 @@ begin
     fToUtc := fFullToUtc;
     if fToUtc <= fFromUtc then
       fToUtc := fFromUtc + 1.0 / SecsPerDay;
+    { Reset zoom is an explicit user viewport too.  Keep it across live SQL
+      reloads just like rectangle zoom and X pan. }
+    fManualXRange := True;
   end;
   for I := 0 to High(fAxisMin) do
   begin
@@ -1247,7 +1357,9 @@ begin
   fErrorText := '';
   if not FileExists(fComponent.ConfigFileName) then
   begin
-    fErrorText := 'Не найден файл настроек SQL БД: ' + fComponent.ConfigFileName;
+    fErrorText := UTF8Encode(UnicodeString(
+      'Не найден файл настроек SQL БД: ') +
+      UnicodeString(fComponent.ConfigFileName));
     Invalidate;
     Exit;
   end;
@@ -1283,7 +1395,9 @@ begin
       lToUtc := fComponent.ToUtc;
     end;
   if fWorker.RequestLoad(fComponent.ConfigFileName, fLoadSignalNames,
-    lFromUtc, lToUtc, fComponent.MaxPointsPerLine, lAppendLoad) then
+    lFromUtc, lToUtc, fComponent.MaxPointsPerLine, lAppendLoad,
+    fComponent.ShowEvents and fComponent.ShowRecordingEvents,
+    fComponent.ShowEvents and fComponent.ShowTagAlarmEvents) then
     fForceFullReload := False
   else
     fLoadPending := True;
@@ -1338,7 +1452,8 @@ begin
       fToUtc := AWorker.fToUtc;
       fResetViewOnLoad := False;
     end
-    else if fComponent.TimeMode = sttmFixedFromToCurrentUtc then
+    else if (fComponent.TimeMode = sttmFixedFromToCurrentUtc) and
+      (not fManualXRange) then
     begin
       { "По текущую дату" means one growing interval from the configured
         start, not a sliding window with the previously visible width. }
@@ -1363,6 +1478,7 @@ var
   lFound: Boolean;
   lMerged: TRecorderSqlDbMeraEvents;
 begin
+  lMerged := nil;
   SetLength(lMerged, Length(fEvents) + Length(ANewEvents));
   lCount := 0;
   for I := 0 to High(fEvents) do
@@ -1527,6 +1643,7 @@ begin
     fFromUtc := lOldFrom - lLeftPart / lSelectedPart * lRange;
     fToUtc := lOldTo + (1.0 - lRightPart) / lSelectedPart * lRange;
   end;
+  fManualXRange := True;
   ClampCurrentDateXRange;
 end;
 
@@ -1690,6 +1807,8 @@ begin
   begin
     lDx := X - fMouseAnchor.X;
     lDy := Y - fMouseAnchor.Y;
+    if lDx <> 0 then
+      fManualXRange := True;
     lShift := -lDx / Max(1, lPlot.Width) * (fPanToUtc - fPanFromUtc);
     fFromUtc := fPanFromUtc + lShift;
     fToUtc := fPanToUtc + lShift;
@@ -1734,6 +1853,8 @@ var
   lLeft, lRight, lTop, lBottom: Integer;
   lPlot: TRect;
   lZoomIn, lHorizontalReady, lVerticalReady: Boolean;
+  lShowEventPopup: Boolean;
+  lPopupPoint: TPoint;
 begin
   inherited MouseUp(Button, Shift, X, Y);
   lPlot := GetPlotRect;
@@ -1775,11 +1896,21 @@ begin
   end
   else if (Button = mbRight) and fPanning then
   begin
+    lShowEventPopup := (Abs(X - fMouseAnchor.X) <= 3) and
+      (Abs(Y - fMouseAnchor.Y) <= 3) and
+      (X >= lPlot.Left) and (X <= lPlot.Right) and
+      (Y >= lPlot.Top) and (Y <= lPlot.Bottom);
     fPanning := False;
     MouseCapture := False;
     Cursor := crDefault;
     LoadAxisControls;
     Invalidate;
+    if lShowEventPopup then
+    begin
+      UpdateEventFilterMenu;
+      lPopupPoint := ClientToScreen(Point(X, Y));
+      fEventPopup.PopUp(lPopupPoint.X, lPopupPoint.Y);
+    end;
   end;
   if (not fZoomSelecting) and (not fCursorDragging) and (not fPanning) then
   begin
@@ -1849,6 +1980,9 @@ var
   lNearestDistance, lNearestValue: array of Double;
   lNearestFound: array of Boolean;
 begin
+  lNearestDistance := nil;
+  lNearestValue := nil;
+  lNearestFound := nil;
   inherited Paint;
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(ClientRect);
@@ -1919,9 +2053,11 @@ begin
       Canvas.Pen.Width := 1;
       Canvas.Pen.Style := psDash;
       if (I = fPinnedEventIndex) or (I = fHoveredEventIndex) then
-        Canvas.Pen.Color := clRed
+        Canvas.Pen.Color := clBlue
+      else if IsRecordingEvent(I) then
+        Canvas.Pen.Color := $008080FF
       else
-        Canvas.Pen.Color := $008080FF;
+        Canvas.Pen.Color := clRed;
       Canvas.Line(EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Top,
         EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Bottom);
       Canvas.Pen.Style := psSolid;
@@ -2089,12 +2225,7 @@ begin
   begin
     lEventX := lPlot.Left + Round((fEvents[lEventIndex].StartedAtUtc - fFromUtc) /
       Max(1E-12, fToUtc - fFromUtc) * (lPlot.Width - 1));
-    lCaption := Format('%s  %s  ПК/пакетов: %d  %s', [
-      FormatDateTime('dd.mm.yyyy hh:nn:ss',
-        UtcDisplayTime(fEvents[lEventIndex].StartedAtUtc)),
-      fEvents[lEventIndex].DisplayName,
-      fEvents[lEventIndex].PackageCount,
-      fEvents[lEventIndex].State]);
+    lCaption := EventCaption(lEventIndex);
     lEventBoxLeft := EnsureRange(lEventX + 8, lPlot.Left,
       Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 12));
     lEventBoxTop := lPlot.Top + 10;

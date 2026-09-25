@@ -45,7 +45,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\Algs;..\..\Core"/>
+      <OtherUnitFiles Value="..\..;..\..\Algs;..\..\Core;..\..\..\SharedUtils"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

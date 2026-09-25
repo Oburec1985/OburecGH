@@ -19,7 +19,7 @@ type
   /// <summary>
   /// Слушатель для реализации интерактивной навигации: масштабирование (Zoom) и панорамирование (Pan).
   /// Управляет перетаскиванием правой кнопкой мыши, масштабированием колесиком над страницами,
-  /// и приближением по выделенной рамке с зажатой клавишей Ctrl.
+  /// и приближением по выделенной рамке: с Ctrl в поле графика и без Ctrl в полосах осей.
   /// </summary>
   TChartPanZoomListener = class(TChartFrameListener)
   private
@@ -726,43 +726,43 @@ begin
           end;
       end;
 
-      // Если зажат Ctrl, то это режим зума по рамке (только внутри plot area)
-      if ssCtrl in Shift then
-      begin
-        for lIndex := 0 to lModel.ChildCount - 1 do
-          if lModel.Children[lIndex] is TChartPage then
+      { В поле графика рамка зума по-прежнему требует Ctrl.
+        В полосах осей само место начала drag однозначно задаёт
+        направление масштаба, поэтому Ctrl там не нужен. }
+      for lIndex := 0 to lModel.ChildCount - 1 do
+        if lModel.Children[lIndex] is TChartPage then
+        begin
+          lPage := TChartPage(lModel.Children[lIndex]);
+          if not lPage.Locked then
           begin
-            lPage := TChartPage(lModel.Children[lIndex]);
-            if not lPage.Locked then
+            lPageRect := lRenderer.GetPageRect(lPage);
+            if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
+               (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
             begin
-              lPageRect := lRenderer.GetPageRect(lPage);
-              if (X >= lPageRect.Left) and (X <= lPageRect.Right) and
-                 (Y >= lPageRect.Top) and (Y <= lPageRect.Bottom) then
+              lContentRect := lRenderer.GetPageContentRect(lPage);
+              if (X >= lContentRect.Left) and (X <= lContentRect.Right) and
+                 (Y >= lContentRect.Top) and (Y <= lContentRect.Bottom) then
               begin
-                lContentRect := lRenderer.GetPageContentRect(lPage);
-                if (X >= lContentRect.Left) and (X <= lContentRect.Right) and
-                   (Y >= lContentRect.Top) and (Y <= lContentRect.Bottom) then
+                if ssCtrl in Shift then
                   fZoomSelectMode := zsmXY
-                else if IsOnYAxisBand(lRenderer, lPage, X, Y) then
-                  fZoomSelectMode := zsmYOnly
-                else if IsOnXAxisBand(lRenderer, lPage, X, Y) then
-                  fZoomSelectMode := zsmXOnly
                 else
                   Continue;
-                fIsZoomSelecting := True;
-                fZoomStartX := X;
-                fZoomStartY := Y;
-                fActivePage := lPage;
-                Handled := True;
-                Exit;
-
-              end;
-
+              end
+              else if IsOnYAxisBand(lRenderer, lPage, X, Y) then
+                fZoomSelectMode := zsmYOnly
+              else if IsOnXAxisBand(lRenderer, lPage, X, Y) then
+                fZoomSelectMode := zsmXOnly
+              else
+                Continue;
+              fIsZoomSelecting := True;
+              fZoomStartX := X;
+              fZoomStartY := Y;
+              fActivePage := lPage;
+              Handled := True;
+              Exit;
             end;
-
           end;
-
-      end;
+        end;
 
     end;
 

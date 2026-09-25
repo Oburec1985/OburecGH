@@ -1,18 +1,21 @@
 object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
   Left = 378
-  Height = 529
+  Height = 553
   Top = 160
-  Width = 450
-  BorderStyle = bsDialog
+  Width = 600
+  BorderStyle = bsSizeable
   Caption = 'Свойства канала'
-  ClientHeight = 529
-  ClientWidth = 450
+  ClientHeight = 553
+  ClientWidth = 600
+  Constraints.MinHeight = 553
+  Constraints.MinWidth = 600
   Position = poOwnerFormCenter
   object gbChannel: TGroupBox
     Left = 8
     Height = 206
     Top = 8
-    Width = 434
+    Width = 584
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Свойства канала'
     ClientHeight = 186
     ClientWidth = 430
@@ -53,7 +56,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Caption = 'Балансировка программная'
     end
     object cbNominalRange: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 18
       Width = 82
@@ -62,31 +65,33 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 0
     end
     object edNominalRangeUnit: TEdit
-      Left = 344
+      Left = 464
       Height = 23
       Top = 18
       Width = 76
+      Anchors = [akTop, akRight]
       ReadOnly = True
       TabOrder = 1
     end
     object edActualRange: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 48
       Width = 82
       TabOrder = 2
     end
     object cbActualRangeUnit: TComboBox
-      Left = 344
+      Left = 464
       Height = 23
       Top = 48
       Width = 76
+      Anchors = [akTop, akRight]
       ItemHeight = 15
       Style = csDropDownList
       TabOrder = 3
     end
     object cbCommutation: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 78
       Width = 82
@@ -95,7 +100,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 4
     end
     object cbThermoChannel: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 108
       Width = 82
@@ -104,14 +109,14 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 5
     end
     object edSoftBalance: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 138
       Width = 82
       TabOrder = 6
     end
     object edSoftBalanceUnit: TEdit
-      Left = 344
+      Left = 464
       Height = 23
       Top = 138
       Width = 76
@@ -119,21 +124,23 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 7
     end
     object chkChannelShunt: TCheckBox
-      Left = 250
+      Left = 370
       Height = 17
       Top = 166
       Width = 176
+      Anchors = [akTop, akRight]
       Caption = 'Калибровочный шунт канала'
       TabOrder = 8
     end
   end
   object gbSensor: TGroupBox
     Left = 8
-    Height = 126
+    Height = 150
     Top = 218
-    Width = 434
+    Width = 584
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Свойства тензорезистора'
-    ClientHeight = 106
+    ClientHeight = 130
     ClientWidth = 430
     TabOrder = 1
     object Label6: TLabel
@@ -165,7 +172,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Caption = 'Номинал внутреннего сопротивления, [Ом]'
     end
     object cbSensorScheme: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 18
       Width = 104
@@ -174,21 +181,21 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 0
     end
     object edStrainSensitivity: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 48
       Width = 104
       TabOrder = 1
     end
     object edOuterResistance: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 78
       Width = 104
       TabOrder = 2
     end
     object edInnerResistance: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 108
       Width = 104
@@ -198,8 +205,9 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
   object gbModule: TGroupBox
     Left = 8
     Height = 124
-    Top = 348
-    Width = 434
+    Top = 372
+    Width = 584
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Свойства модуля'
     ClientHeight = 104
     ClientWidth = 430
@@ -226,14 +234,14 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Caption = 'Балансировка аппаратная общая'
     end
     object Label13: TLabel
-      Left = 344
+      Left = 464
       Height = 15
       Top = 82
       Width = 16
       Caption = 'мВ'
     end
     object cbModulePower: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 18
       Width = 82
@@ -242,7 +250,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 0
     end
     object cbShuntValue: TComboBox
-      Left = 250
+      Left = 370
       Height = 23
       Top = 48
       Width = 82
@@ -251,7 +259,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       TabOrder = 1
     end
     object edHardBalance: TEdit
-      Left = 250
+      Left = 370
       Height = 23
       Top = 78
       Width = 82
@@ -259,10 +267,11 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
     end
   end
   object btnApply: TButton
-    Left = 268
+    Left = 418
     Height = 27
-    Top = 496
+    Top = 520
     Width = 82
+    Anchors = [akRight, akBottom]
     Caption = 'Применить'
     Default = True
     ModalResult = 1
@@ -270,10 +279,11 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
     OnClick = btnApplyClick
   end
   object btnCancel: TButton
-    Left = 360
+    Left = 510
     Height = 27
-    Top = 496
+    Top = 520
     Width = 82
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2

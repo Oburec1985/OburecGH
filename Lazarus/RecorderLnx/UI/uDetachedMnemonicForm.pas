@@ -54,7 +54,12 @@ type
     procedure AddDonutClick(Sender: TObject);
     procedure AddImageClick(Sender: TObject);
     procedure DeleteClick(Sender: TObject);
+    procedure BringForwardClick(Sender: TObject);
+    procedure SendBackwardClick(Sender: TObject);
+    procedure BringToFrontClick(Sender: TObject);
+    procedure SendToBackClick(Sender: TObject);
     procedure EditClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure EditorChanged;
     procedure FormCloseHandler(Sender: TObject; var CloseAction: TCloseAction);
     procedure SaveMonitorAndBounds;
@@ -93,6 +98,7 @@ begin
   Caption := fPage.Title;
   Position := poDesigned;
   KeyPreview := True;
+  OnKeyDown := @FormKeyDown;
   OnClose := @FormCloseHandler;
 
   fToolbar := TPanel.Create(Self);
@@ -125,6 +131,14 @@ begin
   AddToolButton(248, CIconComboBox, 'Add combo box', nil, 0, False, False);
   fDeleteButton := AddToolButton(316, -1, 'Delete selected component',
     @DeleteClick, 0, False, True, '-');
+  AddToolButton(344, -1, 'На задний план (Ctrl+Shift+B)',
+    @SendToBackClick, 0, False, True, '≪');
+  AddToolButton(372, -1, 'На один слой назад (Ctrl+B)',
+    @SendBackwardClick, 0, False, True, '<');
+  AddToolButton(400, -1, 'На один слой вперёд (Ctrl+F)',
+    @BringForwardClick, 0, False, True, '>');
+  AddToolButton(428, -1, 'На передний план (Ctrl+Shift+F)',
+    @BringToFrontClick, 0, False, True, '≫');
 
   fCanvas := TPanel.Create(Self);
   fCanvas.Parent := Self;
@@ -210,7 +224,13 @@ begin
     lComponent.Name := ExtractFileName(lComponent.Id);
     lComponent.SetBounds(16, 16, AWidth, AHeight);
     fEditor.PositionNewComponent(lComponent);
-    fPage.AddComponent(lComponent);
+    if lComponent is TRecorderImageComponent then
+    begin
+      fEditor.ClearSelection;
+      fPage.AddComponentToBack(lComponent);
+    end
+    else
+      fPage.AddComponent(lComponent);
     lComponent := nil;
   finally
     lComponent.Free;
@@ -285,6 +305,32 @@ end;
 procedure TDetachedMnemonicForm.DeleteClick(Sender: TObject);
 begin
   fEditor.DeleteSelected;
+end;
+
+procedure TDetachedMnemonicForm.BringForwardClick(Sender: TObject);
+begin
+  fEditor.BringSelectedForward;
+end;
+
+procedure TDetachedMnemonicForm.SendBackwardClick(Sender: TObject);
+begin
+  fEditor.SendSelectedBackward;
+end;
+
+procedure TDetachedMnemonicForm.BringToFrontClick(Sender: TObject);
+begin
+  fEditor.BringSelectedToFront;
+end;
+
+procedure TDetachedMnemonicForm.SendToBackClick(Sender: TObject);
+begin
+  fEditor.SendSelectedToBack;
+end;
+
+procedure TDetachedMnemonicForm.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  fEditor.HandleKeyDown(Key, Shift);
 end;
 
 procedure TDetachedMnemonicForm.EditClick(Sender: TObject);

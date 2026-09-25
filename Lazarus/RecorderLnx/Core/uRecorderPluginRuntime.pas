@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, DynLibs, uRecorderFormModel, uRecorderPluginApi,
-  uRecorderTags;
+  uRecorderTags, uRecorderAlarms;
 
 type
   TRecorderPluginLogEvent = procedure(const AMessage: string) of object;
@@ -14,6 +14,7 @@ type
   private
     fRegistry: TRecorderComponentFactory;
     fTagRegistry: TRecorderTagRegistry;
+    fAlarmEngine: IRecorderAlarmEngine;
     fProjectDirectory: string;
     fPlugins: TList;
     fPendingFactories: TList;
@@ -21,7 +22,8 @@ type
     function GetLoadedCount: Integer;
   public
     constructor Create(ARegistry: TRecorderComponentFactory;
-      ATagRegistry: TRecorderTagRegistry = nil);
+      ATagRegistry: TRecorderTagRegistry = nil;
+      AAlarmEngine: IRecorderAlarmEngine = nil);
     destructor Destroy; override;
     procedure LoadConfigured(const AConfigFileName: string);
     procedure NotifyAll(AEvent: LongInt);
@@ -74,7 +76,8 @@ type
       const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create(const ATypeId, ACaption, AGroup: string;
-      ACreate: TRecorderPluginCreateComponent; APluginContext: Pointer);
+      ACreate: TRecorderPluginCreateComponent;
+      APluginContext: Pointer); reintroduce;
     destructor Destroy; override;
     function CreateComponent: TRecorderVisualComponent; override;
     function CreateComponentForPage(
@@ -315,7 +318,7 @@ begin
   if (AHostContext = nil) or (AName = nil) then Exit;
   lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
   if lRegistry = nil then Exit;
-  lTag := lRegistry.FindByName(UTF8Decode(StrPas(AName)));
+  lTag := lRegistry.FindByName(StrPas(AName));
   if (lTag = nil) or (lTag.SignalBuffer.Count = 0) then Exit;
   ATimeSec := lTag.SignalBuffer.LatestTime;
   AValue := lTag.SignalBuffer.LatestValue;
@@ -332,9 +335,97 @@ begin
   if (AHostContext = nil) or (AName = nil) then Exit;
   lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
   if lRegistry = nil then Exit;
-  lTag := lRegistry.FindByName(UTF8Decode(StrPas(AName)));
+  lTag := lRegistry.FindByName(StrPas(AName));
   if (lTag = nil) or not lTag.IsVirtual then Exit;
   lRegistry.PublishValue(lTag, AValue);
+  Result := True;
+end;
+
+function PluginTagExists(AHostContext: Pointer; AName: PAnsiChar): LongBool; cdecl;
+var
+  lRegistry: TRecorderTagRegistry;
+begin
+  Result := False;
+  if (AHostContext = nil) or (AName = nil) then Exit;
+  lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
+  Result := (lRegistry <> nil) and
+    (lRegistry.FindByName(StrPas(AName)) <> nil);
+end;
+
+function PluginGetTagAlarmLevel(AHostContext: Pointer; AName: PAnsiChar;
+  out ALevel: LongInt): LongBool; cdecl;
+var
+  lRuntime: TRecorderPluginRuntime;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  ALevel := 0;
+  if (AHostContext = nil) or (AName = nil) then Exit;
+  lRuntime := TRecorderPluginRuntime(AHostContext);
+  if (lRuntime.fTagRegistry = nil) or (lRuntime.fAlarmEngine = nil) then Exit;
+  lTag := lRuntime.fTagRegistry.FindByName(StrPas(AName));
+  if lTag = nil then Exit;
+  ALevel := Ord(lRuntime.fAlarmEngine.GetTagAlarmLevel(lTag));
+  Result := True;
+end;
+
+function PluginGetTagSetpoint(AHostContext: Pointer; AName: PAnsiChar;
+  AKind: LongInt; out AThreshold: Double; out AEnabled: LongBool): LongBool; cdecl;
+var
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+  lSetpoint: TRecorderTagSetpoint;
+begin
+  Result := False;
+  AThreshold := 0;
+  AEnabled := False;
+  if (AHostContext = nil) or (AName = nil) or
+    (AKind < Ord(Low(TRecorderTagSetpointKind))) or
+    (AKind > Ord(High(TRecorderTagSetpointKind))) then Exit;
+  lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
+  if lRegistry = nil then Exit;
+  lTag := lRegistry.FindByName(StrPas(AName));
+  if lTag = nil then Exit;
+  lSetpoint := lTag.Setpoints[TRecorderTagSetpointKind(AKind)];
+  AThreshold := lSetpoint.Threshold;
+  AEnabled := lSetpoint.Enabled;
+  Result := True;
+end;
+
+function PluginSetTagSetpoint(AHostContext: Pointer; AName: PAnsiChar;
+  AKind: LongInt; AThreshold: Double; AEnabled: LongBool): LongBool; cdecl;
+var
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+  lSetpoint: TRecorderTagSetpoint;
+begin
+  Result := False;
+  if (AHostContext = nil) or (AName = nil) or
+    (AKind < Ord(Low(TRecorderTagSetpointKind))) or
+    (AKind > Ord(High(TRecorderTagSetpointKind))) then Exit;
+  lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
+  if lRegistry = nil then Exit;
+  lTag := lRegistry.FindByName(StrPas(AName));
+  if lTag = nil then Exit;
+  lSetpoint := lTag.Setpoints[TRecorderTagSetpointKind(AKind)];
+  lSetpoint.Threshold := AThreshold;
+  lSetpoint.Enabled := AEnabled;
+  lTag.Setpoints[TRecorderTagSetpointKind(AKind)] := lSetpoint;
+  Result := True;
+end;
+
+function PluginGetRecorderTime(AHostContext: Pointer;
+  out ATimeSec: Double): LongBool; cdecl;
+var
+  lRegistry: TRecorderTagRegistry;
+  lRevision: QWord;
+begin
+  Result := False;
+  ATimeSec := 0;
+  if AHostContext = nil then Exit;
+  lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
+  if lRegistry = nil then Exit;
+  lRegistry.GetRuntimeDataState(lRevision, ATimeSec);
   Result := True;
 end;
 
@@ -360,7 +451,7 @@ var
 begin
   if (AHostContext = nil) or (AMessage = nil) then Exit;
   lRuntime := TRecorderPluginRuntime(AHostContext);
-  lMessage := UTF8Decode(StrPas(AMessage));
+  lMessage := StrPas(AMessage);
   if GetCurrentThreadId = MainThreadID then
   begin
     if Assigned(lRuntime.fOnLogMessage) then
@@ -373,11 +464,12 @@ begin
 end;
 
 constructor TRecorderPluginRuntime.Create(ARegistry: TRecorderComponentFactory;
-  ATagRegistry: TRecorderTagRegistry);
+  ATagRegistry: TRecorderTagRegistry; AAlarmEngine: IRecorderAlarmEngine);
 begin
   inherited Create;
   fRegistry := ARegistry;
   fTagRegistry := ATagRegistry;
+  fAlarmEngine := AAlarmEngine;
   fPlugins := TList.Create;
   fPendingFactories := TList.Create;
 end;
@@ -503,6 +595,11 @@ begin
         lApi.PublishTagValue := @PluginPublishTagValue;
         lApi.GetProjectDirectory := @PluginGetProjectDirectory;
         lApi.LogMessage := @PluginLogMessage;
+        lApi.TagExists := @PluginTagExists;
+        lApi.GetTagAlarmLevel := @PluginGetTagAlarmLevel;
+        lApi.GetTagSetpoint := @PluginGetTagSetpoint;
+        lApi.SetTagSetpoint := @PluginSetTagSetpoint;
+        lApi.GetRecorderTime := @PluginGetRecorderTime;
         if not lCreate(lPlugin.Instance, @lApi) then
         begin
           RecorderDebugLog('[Plugin] PluginCreate rejected: ' +

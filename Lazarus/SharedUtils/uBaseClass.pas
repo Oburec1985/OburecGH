@@ -5,7 +5,7 @@ unit uBaseClass;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, uEventTypes, uEventList, fpjson;
+  Classes, SysUtils, Contnrs, uEventList, fpjson;
 
 type
   TBaseObjManager = class; 

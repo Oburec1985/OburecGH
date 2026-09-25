@@ -43,12 +43,13 @@ function RecorderMc201SaveScaleToHardwareFiles(ASerial: Integer;
   ARev2176: Boolean; out ACsvPath, AErrorMessage: string): Boolean;
 
 function RecorderMc201UpsertScaleCalibration(ARegistry: TRecorderTagRegistry;
-  const AName: string; AScaleVoltPerCode: Double): TRecorderCalibration;
+  const AName: string; AScaleVoltPerCode: Double;
+  const ASourceFileName: string = ''): TRecorderCalibration;
 
 function RecorderMc201ApplyScaleToSlotTags(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; ASlot1Based, AChannel0Based, ARangeIndex: Integer;
   ASerial: Integer; AScaleVoltPerCode: Double;
-  out AErrorMessage: string): Boolean;
+  out AErrorMessage: string; const ASourceFileName: string = ''): Boolean;
 
 { Единицы тега: без ГХ — «код», с назначенной аппаратной ГХ — «В». }
 procedure RecorderMc201SyncTagUnitFromHardwareGx(ARegistry: TRecorderTagRegistry;
@@ -210,7 +211,8 @@ begin
 end;
 
 function RecorderMc201UpsertScaleCalibration(ARegistry: TRecorderTagRegistry;
-  const AName: string; AScaleVoltPerCode: Double): TRecorderCalibration;
+  const AName: string; AScaleVoltPerCode: Double;
+  const ASourceFileName: string): TRecorderCalibration;
 var
   lExisting: TRecorderCalibration;
 begin
@@ -227,6 +229,8 @@ begin
       [AScaleVoltPerCode]);
     lExisting.UnitIn := 'codes';
     lExisting.UnitOut := 'V';
+    if Trim(ASourceFileName) <> '' then
+      lExisting.SourceFileName := ASourceFileName;
     Exit(lExisting);
   end;
   Result := TRecorderCalibration.Create(rckScale);
@@ -236,6 +240,7 @@ begin
     [AScaleVoltPerCode]);
   Result.UnitIn := 'codes';
   Result.UnitOut := 'V';
+  Result.SourceFileName := ASourceFileName;
   Result.Extrapolation := True;
   ARegistry.Calibrations.Add(Result);
 end;
@@ -243,7 +248,7 @@ end;
 function RecorderMc201ApplyScaleToSlotTags(ARegistry: TRecorderTagRegistry;
   const ASourceId: string; ASlot1Based, AChannel0Based, ARangeIndex: Integer;
   ASerial: Integer; AScaleVoltPerCode: Double;
-  out AErrorMessage: string): Boolean;
+  out AErrorMessage: string; const ASourceFileName: string): Boolean;
 var
   I: Integer;
   lName: string;
@@ -260,7 +265,8 @@ begin
   end;
   lName := RecorderMc201MakeHardwareCalibrationName(ASerial, ARangeIndex,
     AChannel0Based + 1);
-  RecorderMc201UpsertScaleCalibration(ARegistry, lName, AScaleVoltPerCode);
+  RecorderMc201UpsertScaleCalibration(ARegistry, lName, AScaleVoltPerCode,
+    ASourceFileName);
   lParts := TStringList.Create;
   try
     lParts.Delimiter := '-';
@@ -291,38 +297,37 @@ begin
   begin
     { ГХ сохранена на диск/в реестр даже без привязанного тега. }
     Result := True;
-    AErrorMessage := Format(
-      'scale saved (%s), no tag for slot=%d ch=%d yet',
-      [lName, ASlot1Based, AChannel0Based + 1]);
+    { Отсутствие тега не является ошибкой калибровки: CSV уже записан, а тег
+      может быть создан или импортирован позднее и подхватить файл автоматически. }
+    AErrorMessage := '';
   end;
 end;
 
 procedure RecorderMc201SyncTagUnitFromHardwareGx(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag);
 var
-  lCal: TRecorderCalibration;
   lHasGx: Boolean;
 begin
   if ATag = nil then
     Exit;
+  ATag.InvalidateCalibrationScale;
   lHasGx := False;
   if ATag.HardwareCalibrationEnabled then
   begin
-    if ARegistry <> nil then
-      lCal := ARegistry.FindTagHardwareCalibration(ATag)
-    else
-      lCal := nil;
-    lHasGx := (lCal <> nil) or (Trim(ATag.HardwareCalibrationName) <> '');
+    lHasGx := ((ARegistry <> nil) and
+      (ARegistry.FindTagHardwareCalibration(ATag) <> nil)) or
+      (Trim(ATag.HardwareCalibrationName) <> '');
   end;
   if lHasGx then
   begin
-    if (Trim(ATag.UnitName) = '') or SameText(ATag.UnitName, 'код') or
-      SameText(ATag.UnitName, 'code') then
-      ATag.UnitName := 'В';
+    if ARegistry <> nil then
+      ARegistry.SyncTagAutoUnit(ATag);
   end
   else if (Trim(ATag.UnitName) = '') or SameText(ATag.UnitName, 'В') or
     SameText(ATag.UnitName, 'V') then
     ATag.UnitName := 'код';
+  if ARegistry <> nil then
+    ARegistry.RebuildScales(ATag);
 end;
 
 function Mc201ParseCsvNumber(const AText: string; out AValue: Double): Boolean;
@@ -370,7 +375,10 @@ begin
           Continue;
         if not Mc201ParseCsvNumber(lParts[1], lY) then
           Continue;
-        if (not lHave0) and SameValue(lX, 0.0) and SameValue(lY, 0.0) then
+        { Старые файлы Recorder содержат две произвольные опорные точки,
+          например (4.51,0) и (24864.82,1.6), а не обязательно (0,0).
+          Берём первые две корректные точки и считаем наклон. }
+        if not lHave0 then
         begin
           lHave0 := True;
           lX0 := lX;
@@ -435,7 +443,8 @@ begin
     ACalibrationName := '';
     Exit;
   end;
-  RecorderMc201UpsertScaleCalibration(ARegistry, ACalibrationName, lScale);
+  lExisting := RecorderMc201UpsertScaleCalibration(ARegistry,
+    ACalibrationName, lScale, lCsv);
   Result := True;
 end;
 
@@ -662,7 +671,7 @@ begin
     end;
     lLine := '';
     RecorderMc201ApplyScaleToSlotTags(ARegistry, ASourceId, ASlot1Based, I,
-      lRange, ASerial, lScale, lLine);
+      lRange, ASerial, lScale, lLine, lCsv);
     AReport += Format('ch%d OK K=%.6g V/code → %s' + LineEnding,
       [I + 1, lScale, lCsv]);
     if lLine <> '' then

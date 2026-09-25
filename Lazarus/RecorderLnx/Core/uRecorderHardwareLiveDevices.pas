@@ -41,9 +41,6 @@ function RecorderHardwareSourceWarning(const ASourceId: string): string;
 
 implementation
 
-uses
-  SyncObjs;
-
 type
   TRecorderHardwareLiveEntry = class
   public
@@ -269,6 +266,8 @@ var
   lList: TList;
   lSourceIds: array of string;
 begin
+  lDevices := nil;
+  lSourceIds := nil;
   if gHardwareLiveEntries = nil then
     Exit;
   lList := gHardwareLiveEntries.LockList;
@@ -307,6 +306,8 @@ var
   lList: TList;
   lSourceIds: array of string;
 begin
+  lDevices := nil;
+  lSourceIds := nil;
   if gHardwareLiveEntries = nil then
     Exit;
   lList := gHardwareLiveEntries.LockList;

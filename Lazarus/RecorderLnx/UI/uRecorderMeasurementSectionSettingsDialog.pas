@@ -287,8 +287,9 @@ begin
     end;
   if lMissing = '' then
     Exit('');
-  Result := 'Не найдены обязательные столбцы: ' + lMissing + LineEnding +
-    LineEnding + 'Найдены столбцы: ' + FoundHeadersText(ASheet);
+  Result := UTF8Encode('Не найдены обязательные столбцы: ') + lMissing +
+    LineEnding + LineEnding + UTF8Encode('Найдены столбцы: ') +
+    FoundHeadersText(ASheet);
 end;
 
 procedure BuildColumnMap(ASheet: TsWorksheet; AAllowDefault: Boolean;

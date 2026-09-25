@@ -4,8 +4,15 @@
 #endif
 #define AppPublisher "Mera"
 #define SourceRoot "..\..\..\Lazarus\RecorderLnx"
-#define AppExe SourceRoot + "\lib\x86_64-win64\RecorderLnx.exe"
+#ifndef AppExeOverride
+  #define AppExe SourceRoot + "\lib\x86_64-win64\RecorderLnx.exe"
+#else
+  #define AppExe AppExeOverride
+#endif
 #define HostAgentExe SourceRoot + "\lib\x86_64-win64\RecorderHostAgent.exe"
+#define PluginDir SourceRoot + "\lib\x86_64-win64\plugins"
+#define LuaRuntime SourceRoot + "\lib\x86_64-win64\lua54.dll"
+#define LuaHelp SourceRoot + "\lib\x86_64-win64\help\RecorderLnxLua.chm"
 
 [Setup]
 AppId={{4A88E3C4-8B9E-4B0C-81F7-72D86F1C6143}
@@ -47,9 +54,15 @@ Name: "{code:GetMeraFilesDir}\Resources"
 Name: "{code:GetMeraFilesDir}\SDB"
 
 [Files]
-Source: "{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#AppExe}"; DestDir: "{app}"; DestName: "RecorderLnx.exe"; Flags: ignoreversion
 Source: "{#HostAgentExe}"; DestDir: "{app}"; Flags: ignoreversion; \
   AfterInstall: EnsureHostAgentConfig
+Source: "{#LuaRuntime}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#LuaHelp}"; DestDir: "{app}\help"; Flags: ignoreversion
+Source: "{#PluginDir}\LuaCalcPlugin.dll"; DestDir: "{app}\plugins"; \
+  Flags: ignoreversion
+Source: "{#PluginDir}\SampleInfoPlugin.dll"; DestDir: "{app}\plugins"; \
+  Flags: ignoreversion
 Source: "{#SourceRoot}\lib\x86_64-win64\res\*"; DestDir: "{app}\res"; \
   Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 Source: "{#SourceRoot}\Device\MCbus\resources\devices\mc201\mc_201a.bio"; \

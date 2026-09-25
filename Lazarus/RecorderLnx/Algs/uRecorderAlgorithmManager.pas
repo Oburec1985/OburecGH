@@ -39,6 +39,7 @@ type
     fReady: Boolean;
     fNotReadyReason: string;
   protected
+    function GetReady: Boolean; virtual;
     procedure SetReady(AReady: Boolean; const AReason: string = '');
   public
     constructor Create; virtual;
@@ -64,7 +65,7 @@ type
     property TagProperties: string read fTagProperties write fTagProperties;
     property Id: string read fId write fId;
     property DisplayName: string read fDisplayName write fDisplayName;
-    property Ready: Boolean read fReady;
+    property Ready: Boolean read GetReady;
     property NotReadyReason: string read fNotReadyReason;
   end;
 
@@ -85,6 +86,8 @@ type
   TRecorderAlgorithmTypeRegistration = class(TObject)
   public
     TypeName: string;
+    DisplayName: string;
+    Description: string;
     AlgorithmClass: TRecorderAlgorithmClass;
     SettingsFrameClass: TRecorderAlgorithmSettingsFrameClass;
   end;
@@ -115,6 +118,8 @@ type
     procedure DoEvalBlock(ATag: TRecorderTag; const ATimes, AValues: array of Double;
       ACount: Integer); override;
     property Runtime: TRecorderSpectrumRuntimeManager read fRuntime;
+  protected
+    function GetReady: Boolean; override;
   end;
 
   TRecorderAlgorithmManager = class(TObject)
@@ -129,14 +134,21 @@ type
       const ATimes, AValues: array of Double; ACount: Integer);
     function GetAlgorithm(AIndex: Integer): TRecorderAlgorithm;
     function GetAlgorithmCount: Integer;
+    function GetTypeCount: Integer;
+    function GetTypeDescriptor(AIndex: Integer): TRecorderAlgorithmTypeRegistration;
   public
     constructor Create(ATagRegistry: TRecorderTagRegistry;
       ASpectrumRuntime: TRecorderSpectrumRuntimeManager);
     destructor Destroy; override;
     procedure RegisterType(const ATypeName: string;
       AAlgorithmClass: TRecorderAlgorithmClass;
-      ASettingsFrameClass: TRecorderAlgorithmSettingsFrameClass = nil);
+      ASettingsFrameClass: TRecorderAlgorithmSettingsFrameClass = nil); overload;
+    procedure RegisterType(const ATypeName, ADisplayName, ADescription: string;
+      AAlgorithmClass: TRecorderAlgorithmClass;
+      ASettingsFrameClass: TRecorderAlgorithmSettingsFrameClass = nil); overload;
     function IsTypeRegistered(const ATypeName: string): Boolean;
+    function FindTypeDescriptor(const ATypeName: string):
+      TRecorderAlgorithmTypeRegistration;
     function CreateAlgorithm(const ATypeName: string): TRecorderAlgorithm;
     function CreateAlgorithmFromString(const ASerialized: string): TRecorderAlgorithm;
     function CreateSettingsFrame(const ATypeName: string;
@@ -147,10 +159,18 @@ type
     procedure HandleStateTransition(ATransition: TRecorderStateTransition);
     property AlgorithmCount: Integer read GetAlgorithmCount;
     property Algorithms[AIndex: Integer]: TRecorderAlgorithm read GetAlgorithm;
+    property TypeCount: Integer read GetTypeCount;
+    property TypeDescriptors[AIndex: Integer]: TRecorderAlgorithmTypeRegistration
+      read GetTypeDescriptor;
     property SpectrumAlgorithm: TRecorderSpectrumAlgorithm read fSpectrumAlgorithm;
   end;
 
 implementation
+
+function TRecorderAlgorithm.GetReady: Boolean;
+begin
+  Result := fReady;
+end;
 
 procedure TRecorderSpectrumAlgorithmSettingsFrame.SetProperties(
   const AProperties: string);
@@ -380,6 +400,14 @@ begin
   Result := 'Spectrum';
 end;
 
+function TRecorderSpectrumAlgorithm.GetReady: Boolean;
+begin
+  { Настройки спектра могут быть созданы из визуального компонента уже после
+    первоначальной подготовки Recorder. Runtime в этом случае является
+    актуальным источником состояния готовности. }
+  Result := (fRuntime <> nil) and fRuntime.IsPrepared;
+end;
+
 procedure TRecorderSpectrumAlgorithm.PrepareConfiguration;
 begin
   if fRuntime = nil then
@@ -427,7 +455,8 @@ begin
   fTypes.CaseSensitive := False;
   fTypes.Sorted := True;
   fTypes.Duplicates := dupError;
-  RegisterType(TRecorderSpectrumAlgorithm.AlgorithmTypeName,
+  RegisterType(TRecorderSpectrumAlgorithm.AlgorithmTypeName, 'Спектр',
+    'Спектральный анализ сигнала',
     TRecorderSpectrumAlgorithm, TRecorderSpectrumAlgorithmSettingsFrame);
   fSpectrumAlgorithm := TRecorderSpectrumAlgorithm.CreateWithRuntime(ASpectrumRuntime);
   AddAlgorithm(fSpectrumAlgorithm);
@@ -459,6 +488,13 @@ end;
 procedure TRecorderAlgorithmManager.RegisterType(const ATypeName: string;
   AAlgorithmClass: TRecorderAlgorithmClass;
   ASettingsFrameClass: TRecorderAlgorithmSettingsFrameClass);
+begin
+  RegisterType(ATypeName, ATypeName, '', AAlgorithmClass, ASettingsFrameClass);
+end;
+
+procedure TRecorderAlgorithmManager.RegisterType(const ATypeName, ADisplayName,
+  ADescription: string; AAlgorithmClass: TRecorderAlgorithmClass;
+  ASettingsFrameClass: TRecorderAlgorithmSettingsFrameClass);
 var
   lRegistration: TRecorderAlgorithmTypeRegistration;
 begin
@@ -470,6 +506,10 @@ begin
     raise Exception.CreateFmt('Algorithm type already registered: %s', [ATypeName]);
   lRegistration := TRecorderAlgorithmTypeRegistration.Create;
   lRegistration.TypeName := ATypeName;
+  lRegistration.DisplayName := Trim(ADisplayName);
+  if lRegistration.DisplayName = '' then
+    lRegistration.DisplayName := ATypeName;
+  lRegistration.Description := Trim(ADescription);
   lRegistration.AlgorithmClass := AAlgorithmClass;
   lRegistration.SettingsFrameClass := ASettingsFrameClass;
   fTypes.AddObject(ATypeName, lRegistration);
@@ -478,6 +518,17 @@ end;
 function TRecorderAlgorithmManager.IsTypeRegistered(const ATypeName: string): Boolean;
 begin
   Result := fTypes.IndexOf(ATypeName) >= 0;
+end;
+
+function TRecorderAlgorithmManager.FindTypeDescriptor(const ATypeName: string):
+  TRecorderAlgorithmTypeRegistration;
+var
+  lIndex: Integer;
+begin
+  lIndex := fTypes.IndexOf(ATypeName);
+  if lIndex < 0 then
+    Exit(nil);
+  Result := TRecorderAlgorithmTypeRegistration(fTypes.Objects[lIndex]);
 end;
 
 function TRecorderAlgorithmManager.CreateAlgorithm(const ATypeName: string): TRecorderAlgorithm;
@@ -617,6 +668,17 @@ end;
 function TRecorderAlgorithmManager.GetAlgorithmCount: Integer;
 begin
   Result := fAlgorithms.Count;
+end;
+
+function TRecorderAlgorithmManager.GetTypeCount: Integer;
+begin
+  Result := fTypes.Count;
+end;
+
+function TRecorderAlgorithmManager.GetTypeDescriptor(AIndex: Integer):
+  TRecorderAlgorithmTypeRegistration;
+begin
+  Result := TRecorderAlgorithmTypeRegistration(fTypes.Objects[AIndex]);
 end;
 
 end.

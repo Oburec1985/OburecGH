@@ -72,6 +72,7 @@ var
   lErrors: TStringList;
   lTasks: array of TSharedAsyncTask;
 begin
+  lTasks := nil;
   SetLength(lTasks, Length(AProcedures));
   lErrors := TStringList.Create;
   try

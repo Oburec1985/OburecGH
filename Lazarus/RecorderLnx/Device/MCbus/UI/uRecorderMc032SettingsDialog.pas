@@ -3,7 +3,7 @@ unit uRecorderMc032SettingsDialog;
 {
   Диалог конфигурации Ethernet-контроллера MC-032.
 
-  Автопоиск проверяет адреса подсети 192.169.13.* и принимает устройство только
+  Автопоиск проверяет адреса подсети 192.169.12.* и принимает устройство только
   после успешного TEST_LOAD. Поиск модулей читает слоты и сохраняет найденные
   MC-201 в конфигурации источника; эти данные затем строят дочерние узлы дерева
   и по четыре доступных канала на модуль. SourceId имеет стабильный формат
@@ -32,9 +32,6 @@ implementation
 
 uses
   Math;
-
-const
-  CMc032DiscoverySubnet = '192.169.13.';
 
 type
   TRecorderMc032SettingsForm = class(TForm)
@@ -228,18 +225,19 @@ begin
       lDevice.TimeoutMs := 35;
       for I := 1 to 254 do
       begin
-        lDevice.Host := CMc032DiscoverySubnet + IntToStr(I);
+        lDevice.Host := CMc201DefaultDiscoverySubnet + IntToStr(I);
         if lDevice.TestConnection(lError) then
         begin
           fHostEdit.Text := lDevice.Host;
-          fModulesMemo.Lines.Text := 'Найден MC-032: ' + lDevice.Host +
-            LineEnding + 'Протокольный TEST_LOAD: OK';
+          fModulesMemo.Lines.Text := UTF8Encode('Найден MC-032: ') +
+            lDevice.Host + LineEnding +
+            UTF8Encode('Протокольный TEST_LOAD: OK');
           Exit;
         end;
         Application.ProcessMessages;
       end;
       MessageDlg('MC-032', 'Контроллер с поддерживаемым протоколом не найден в ' +
-        CMc032DiscoverySubnet + '0/24.', mtWarning, [mbOK], 0);
+        CMc201DefaultDiscoverySubnet + '0/24.', mtWarning, [mbOK], 0);
     finally
       lDevice.Free;
     end;
@@ -260,7 +258,8 @@ begin
     if lDevice.TestConnection(lError) then
       fModulesMemo.Lines.Text := 'Протокольный TEST_LOAD: OK'
     else
-      MessageDlg('MC-032', 'Устройство не подтвердило протокол: ' + lError,
+      MessageDlg('MC-032',
+        UTF8Encode('Устройство не подтвердило протокол: ') + lError,
         mtError, [mbOK], 0);
   finally
     Screen.Cursor := crDefault;
@@ -309,7 +308,8 @@ begin
     Screen.Cursor := crHourGlass;
     if not lDevice.TestConnection(lError) then
     begin
-      MessageDlg('MC-032', 'Устройство не подтвердило протокол: ' + lError,
+      MessageDlg('MC-032',
+        UTF8Encode('Устройство не подтвердило протокол: ') + lError,
         mtError, [mbOK], 0);
       Exit;
     end;
@@ -319,7 +319,8 @@ begin
       Exit;
     end;
     if not lDevice.SearchModules(CMc201DefaultMaxSlots, lModules, lError) then
-      MessageDlg('MC-032', 'Ошибка поиска модулей: ' + lError, mtError, [mbOK], 0)
+      MessageDlg('MC-032', UTF8Encode('Ошибка поиска модулей: ') + lError,
+        mtError, [mbOK], 0)
     else
       ShowModules(lModules);
   finally
@@ -358,8 +359,9 @@ begin
       if not lForm.ConfigureDevice(lDevice) then Exit;
       if not lDevice.TestConnection(lError) then
       begin
-        MessageDlg('MC-032', 'Источник не добавлен: устройство не подтвердило ' +
-          'поддерживаемый протокол. ' + lError, mtError, [mbOK], 0);
+        MessageDlg('MC-032',
+          UTF8Encode('Источник не добавлен: устройство не подтвердило ' +
+            'поддерживаемый протокол. ') + lError, mtError, [mbOK], 0);
         Exit;
       end;
     finally

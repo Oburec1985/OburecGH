@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '0.1.27',
+    [string]$Version = '',
     [string]$Architecture = 'amd64',
     [string]$Python = 'python',
     [string]$OfflineBundleHost = ''
@@ -8,10 +8,35 @@ param(
 $ErrorActionPreference = 'Stop'
 $installerDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $installerDir '..\..\..')).Path
+$versionSource = Join-Path $repoRoot 'Lazarus\RecorderLnx\Core\uRecorderAppVersion.pas'
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    if (-not (Test-Path -LiteralPath $versionSource)) {
+        throw "RecorderLnx version source not found: $versionSource"
+    }
+    $versionMatch = [regex]::Match(
+        [IO.File]::ReadAllText($versionSource),
+        "CRecorderLnxVersion\s*=\s*'(?<version>[^']+)'"
+    )
+    if (-not $versionMatch.Success) {
+        throw "Could not read CRecorderLnxVersion from: $versionSource"
+    }
+    $Version = $versionMatch.Groups['version'].Value
+}
+if ($Version -notmatch '^\d+\.\d+\.\d+([+~-][0-9A-Za-z.]+)?$') {
+    throw "Invalid RecorderLnx package version: $Version"
+}
+Write-Host "RecorderLnx package version: $Version"
 $builder = Join-Path $installerDir 'build_deb.py'
 $linuxExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-linux\RecorderLnx'
 $linuxAgentExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-linux\RecorderHostAgent'
 $linuxSetupManagerExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\Tools\LinuxSetupManager\lib\x86_64-linux\LinuxSetupManager'
+$linuxSetupManagerCliExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\Tools\LinuxSetupManager\lib\x86_64-linux\LinuxSetupManagerCli'
+$linuxPluginDir = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-linux\plugins'
+$linuxPluginFiles = @(
+    (Join-Path $linuxPluginDir 'libluacalcplugin.so')
+    (Join-Path $linuxPluginDir 'libsampleinfoplugin.so')
+)
+$linuxLuaRuntime = Join-Path $installerDir 'runtime\liblua5.4.so.0'
 $outputDir = Join-Path $installerDir 'Output'
 $outputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.deb"
 $previousOutputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.previous.deb"
@@ -42,6 +67,17 @@ if (-not (Test-Path -LiteralPath $linuxAgentExe)) {
 }
 if (-not (Test-Path -LiteralPath $linuxSetupManagerExe)) {
     throw "Linux LinuxSetupManager build output not found: $linuxSetupManagerExe"
+}
+if (-not (Test-Path -LiteralPath $linuxSetupManagerCliExe)) {
+    throw "Linux LinuxSetupManager CLI build output not found: $linuxSetupManagerCliExe"
+}
+foreach ($pluginFile in $linuxPluginFiles) {
+    if (-not (Test-Path -LiteralPath $pluginFile)) {
+        throw "Linux plugin build output not found: $pluginFile. Build LuaCalcPlugin.lpi and SampleInfoPlugin.lpi on Linux first."
+    }
+}
+if (-not (Test-Path -LiteralPath $linuxLuaRuntime)) {
+    throw "Bundled Linux Lua runtime not found: $linuxLuaRuntime"
 }
 
 $agentRoot = Join-Path $repoRoot 'Lazarus\RecorderHostAgent'

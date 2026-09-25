@@ -71,6 +71,8 @@ function RecorderSdbExportCalibration(const AFolderKey: string;
   out ACreatedKey, AError: string): Boolean;
 function RecorderSdbUpdateCalibration(const AKey: string;
   ACalibration: TRecorderCalibration; out AError: string): Boolean;
+function RecorderSdbUpdateLinkedCalibration(ALinkedCalibration,
+  AEditedCalibration: TRecorderCalibration; out AError: string): Boolean;
 function RecorderSdbCreateFolder(const AParentKey, AName: string;
   out ACreatedKey, AError: string): Boolean;
 
@@ -230,6 +232,8 @@ function SdbCalibrationKindName(AKind: TRecorderCalibrationKind): string;
 begin
   case AKind of
     rckScale: Result := 'scale';
+    rckLinear: Result := 'linear';
+    rckPolynomial: Result := 'polynomial';
     rckStrain: Result := 'strain';
   else
     Result := 'piecewiseLinear';
@@ -242,6 +246,10 @@ begin
   Result := True;
   if SameText(AName, 'scale') then
     AKind := rckScale
+  else if SameText(AName, 'linear') then
+    AKind := rckLinear
+  else if SameText(AName, 'polynomial') then
+    AKind := rckPolynomial
   else if SameText(AName, 'strain') then
     AKind := rckStrain
   else if SameText(AName, 'piecewiseLinear') then
@@ -379,7 +387,14 @@ begin
     AInfo.SrcUnits := lCalibration.UnitIn;
     AInfo.DstUnits := lCalibration.UnitOut;
     AInfo.JsonPath := APath;
-    if lCalibration.PointCount > 0 then
+    if lCalibration.Kind in [rckScale, rckLinear] then
+    begin
+      AInfo.SrcFrom := 0;
+      AInfo.SrcTo := 1;
+      AInfo.DstFrom := lCalibration.Offset;
+      AInfo.DstTo := lCalibration.Scale + lCalibration.Offset;
+    end
+    else if lCalibration.PointCount > 0 then
     begin
       lPoint := lCalibration.PointAt(0);
       AInfo.SrcFrom := lPoint.X;
@@ -482,21 +497,102 @@ end;
 
 function RecorderSdbUpdateCalibration(const AKey: string;
   ACalibration: TRecorderCalibration; out AError: string): Boolean;
+var
+  lCreatedKey: string;
+  lDraft: TRecorderCalibration;
+  lFolderKey: string;
+  lKey: string;
+  lKeyPath: string;
+  lProps: TSdbPropBag;
+  lXmlPath: string;
 begin
   Result := False;
   AError := '';
-  if (ACalibration = nil) or (ACalibration.Kind <> rckStrain) then
+  if ACalibration = nil then
   begin
-    AError := 'Встроенное редактирование поддерживается только для тензокалькуляторной ГХ.';
+    AError := 'ГХ не выбрана.';
     Exit;
   end;
-  if not FileExistsUTF8(RecorderSdbScaleJsonPath(AKey)) then
+  lKey := RecorderSdbNormalizeKey(AKey);
+  if lKey = '' then
   begin
-    AError := 'JSON-файл выбранной ГХ не найден.';
+    AError := 'Не задан ключ ГХ в БДГХ.';
     Exit;
   end;
-  Result := SdbExportJsonCalibration(RecorderSdbNormalizeKey(AKey),
-    ACalibration, True, AError);
+  if not (FileExistsUTF8(RecorderSdbScaleJsonPath(lKey)) or
+    FileExistsUTF8(RecorderSdbScaleXmlPath(lKey)) or
+    FileExistsUTF8(RecorderSdbScaleCsvPath(lKey))) then
+  begin
+    AError := 'Файлы выбранной ГХ не найдены в БДГХ.';
+    Exit;
+  end;
+  if ACalibration.Kind = rckStrain then
+    Exit(SdbExportJsonCalibration(lKey, ACalibration, True, AError));
+
+  { RecorderSdbExportCalibration forms a key from the folder and calibration
+    name.  For an existing SDB reference the disk key is authoritative: its
+    basename may differ from the display name stored in metadata. }
+  lKeyPath := StringReplace(lKey, '\', PathDelim, [rfReplaceAll]);
+  lFolderKey := ExtractFileDir(lKeyPath);
+  lFolderKey := StringReplace(lFolderKey, PathDelim, '\', [rfReplaceAll]);
+  if lFolderKey = '.' then
+    lFolderKey := '';
+  lDraft := ACalibration.Clone;
+  try
+    lDraft.Name := ExtractFileName(lKeyPath);
+    if not RecorderSdbExportCalibration(lFolderKey, lDraft, True,
+      lCreatedKey, AError) then
+      Exit;
+    if not SameText(RecorderSdbNormalizeKey(lCreatedKey), lKey) then
+    begin
+      AError := 'При обновлении БДГХ получен неверный ключ: ' +
+        lCreatedKey;
+      Exit;
+    end;
+  finally
+    lDraft.Free;
+  end;
+
+  { Restore the user-visible name after writing to the exact existing key. }
+  lXmlPath := RecorderSdbScaleXmlPath(lKey);
+  if FileExistsUTF8(lXmlPath) then
+  begin
+    lProps := TSdbPropBag.Create;
+    try
+      lProps.LoadFromFile(lXmlPath);
+      lProps.SetProp('name', ACalibration.Name);
+      lProps.SaveToFile(lXmlPath);
+    finally
+      lProps.Free;
+    end;
+  end;
+  Result := SdbExportJsonCalibration(lKey, ACalibration, True, AError);
+end;
+
+function RecorderSdbUpdateLinkedCalibration(ALinkedCalibration,
+  AEditedCalibration: TRecorderCalibration; out AError: string): Boolean;
+var
+  lKey: string;
+begin
+  Result := False;
+  AError := '';
+  if (ALinkedCalibration = nil) or (AEditedCalibration = nil) then
+  begin
+    AError := 'ГХ для сохранения не задана.';
+    Exit;
+  end;
+
+  { The live calibration object owns the source link.  Dialogs edit a draft,
+    but must never rediscover the SDB record from a mutable display name. }
+  lKey := Trim(ALinkedCalibration.SdbKey);
+  if lKey = '' then
+    lKey := Trim(AEditedCalibration.SdbKey);
+  if lKey = '' then
+    Exit(True);
+
+  Result := RecorderSdbUpdateCalibration(lKey, AEditedCalibration, AError);
+  if Result then
+    AEditedCalibration.SdbKey := RecorderSdbNormalizeKey(lKey);
 end;
 
 function RecorderSdbExportCalibration(const AFolderKey: string;
@@ -514,12 +610,13 @@ var
   lInfo: TSdbScaleInfo;
   lCsvInstalled: Boolean;
   lKey: string;
-  lJsonBackup: string;
   lJsonPath: string;
   lMaxX: Double;
   lMaxY: Double;
   lMinX: Double;
   lMinY: Double;
+  lY0: Double;
+  lY1: Double;
   lPoint: TRecorderCalibrationPoint;
   lProps: TSdbPropBag;
   lXmlBackup: string;
@@ -578,7 +675,7 @@ begin
   lFolder := ExtractFileDir(lXmlPath);
   if not ForceDirectoriesUTF8(lFolder) then
   begin
-    AError := 'Не удалось создать папку БДГХ: ' + lFolder;
+    AError := UTF8Encode('Не удалось создать папку БДГХ: ') + lFolder;
     Exit;
   end;
   if ACalibration.Kind = rckStrain then
@@ -597,7 +694,6 @@ begin
   lCsvTemp := lCsvPath + '.tmp.' + IntToStr(GetTickCount64);
   lXmlBackup := lXmlPath + lBackupSuffix;
   lCsvBackup := lCsvPath + lBackupSuffix;
-  lJsonBackup := lJsonPath + lBackupSuffix;
   lXmlInstalled := False;
   lCsvInstalled := False;
 
@@ -606,14 +702,19 @@ begin
   try
     if AOverwrite and FileExistsUTF8(lXmlPath) then
       lProps.LoadFromFile(lXmlPath);
-    if ACalibration.Kind = rckScale then
+    if ACalibration.Kind in [rckScale, rckLinear] then
     begin
-      lCsv.Add('0;0');
-      lCsv.Add('1;' + SdbInvariantFloat(ACalibration.Scale));
+      if ACalibration.Kind = rckLinear then
+        lY0 := ACalibration.Offset
+      else
+        lY0 := 0;
+      lY1 := ACalibration.Scale + lY0;
+      lCsv.Add('0;' + SdbInvariantFloat(lY0));
+      lCsv.Add('1;' + SdbInvariantFloat(lY1));
       lMinX := 0;
       lMaxX := 1;
-      lMinY := Min(0, ACalibration.Scale);
-      lMaxY := Max(0, ACalibration.Scale);
+      lMinY := Min(lY0, lY1);
+      lMaxY := Max(lY0, lY1);
     end
     else
     begin
@@ -650,9 +751,6 @@ begin
       raise Exception.Create('Не удалось подготовить замену XML БДГХ.');
     if FileExistsUTF8(lCsvPath) and not RenameFileUTF8(lCsvPath, lCsvBackup) then
       raise Exception.Create('Не удалось подготовить замену CSV БДГХ.');
-    if FileExistsUTF8(lJsonPath) and
-      not RenameFileUTF8(lJsonPath, lJsonBackup) then
-      raise Exception.Create('Не удалось подготовить замену JSON БДГХ.');
     if not RenameFileUTF8(lXmlTemp, lXmlPath) then
       raise Exception.Create('Не удалось записать XML БДГХ.');
     lXmlInstalled := True;
@@ -661,9 +759,13 @@ begin
     lCsvInstalled := True;
     if not RecorderSdbTryLoadScaleFromPaths(lKey, lXmlPath, lCsvPath, lInfo) then
       raise Exception.Create('Записанная ГХ не прошла проверку чтением.');
+    { XML/CSV остаются совместимым представлением для старой БДГХ, а JSON
+      хранит исходный тип. Без него multiplier после импорта выглядит как
+      двухточечная таблица. }
+    if not SdbExportJsonCalibration(lKey, ACalibration, True, AError) then
+      raise Exception.Create(AError);
     DeleteFileUTF8(lXmlBackup);
     DeleteFileUTF8(lCsvBackup);
-    DeleteFileUTF8(lJsonBackup);
     ACreatedKey := lKey;
     Result := True;
   except
@@ -678,8 +780,6 @@ begin
         RenameFileUTF8(lXmlBackup, lXmlPath);
       if FileExistsUTF8(lCsvBackup) then
         RenameFileUTF8(lCsvBackup, lCsvPath);
-      if FileExistsUTF8(lJsonBackup) then
-        RenameFileUTF8(lJsonBackup, lJsonPath);
     end;
   end;
   DeleteFileUTF8(lXmlTemp);
@@ -1083,7 +1183,15 @@ begin
   if ACalibration = nil then
     Exit;
   if Trim(AInfo.JsonPath) <> '' then
-    Exit(SdbLoadJsonCalibration(AInfo.JsonPath, ACalibration));
+  begin
+    Result := SdbLoadJsonCalibration(AInfo.JsonPath, ACalibration);
+    if Result then
+    begin
+      ACalibration.SdbKey := RecorderSdbNormalizeKey(AInfo.Key);
+      ACalibration.SourceFileName := AInfo.JsonPath;
+    end;
+    Exit;
+  end;
   if (Trim(AInfo.CsvPath) = '') or
     not FileExistsUTF8(AInfo.CsvPath) then
     Exit;
@@ -1104,6 +1212,8 @@ begin
     ACalibration.UnitIn := AInfo.SrcUnits;
     ACalibration.UnitOut := AInfo.DstUnits;
     ACalibration.Extrapolation := True;
+    ACalibration.SdbKey := RecorderSdbNormalizeKey(AInfo.Key);
+    ACalibration.SourceFileName := AInfo.CsvPath;
     Result := True;
   finally
     lLines.Free;

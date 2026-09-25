@@ -137,7 +137,6 @@ implementation
 
 constructor TRecorderEventSnapshot.CreateFromEvent(const AEvent: TRecorderEvent);
 var
-  I: Integer;
   lAlarmData: TRecorderAlarmEventData;
   lTagData: TRecorderTagUpdateEventData;
 begin

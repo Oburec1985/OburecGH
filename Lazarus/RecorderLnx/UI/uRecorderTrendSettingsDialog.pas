@@ -115,10 +115,12 @@ begin
   fSelectedLine := -1;
 
   Caption := 'Настройка параметров тренда - ' + AComponent.Name;
-  BorderStyle := bsDialog;
+  BorderStyle := bsSizeable;
   Position := poOwnerFormCenter;
   ClientWidth := 640;
   ClientHeight := 620;
+  Constraints.MinWidth := 640;
+  Constraints.MinHeight := 620;
 
   BuildUi;
   LoadFromComponent;
@@ -145,6 +147,7 @@ procedure TRecorderTrendSettingsDialog.BuildUi;
 var
   lLabel: TLabel;
   lKind: TRecorderTagEstimateKind;
+  I: Integer;
 begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
@@ -154,17 +157,20 @@ begin
   fLineList := TListBox.Create(Self);
   fLineList.Parent := Self;
   fLineList.SetBounds(12, 32, 340, 135);
+  fLineList.Anchors := [akLeft, akTop, akRight];
   fLineList.OnClick := @LineSelectionChange;
 
   fAddLineButton := TButton.Create(Self);
   fAddLineButton.Parent := Self;
   fAddLineButton.SetBounds(360, 32, 80, 25);
+  fAddLineButton.Anchors := [akTop, akRight];
   fAddLineButton.Caption := 'Добавить';
   fAddLineButton.OnClick := @AddLineClick;
 
   fDeleteLineButton := TButton.Create(Self);
   fDeleteLineButton.Parent := Self;
   fDeleteLineButton.SetBounds(360, 62, 80, 25);
+  fDeleteLineButton.Anchors := [akTop, akRight];
   fDeleteLineButton.Caption := 'Удалить';
   fDeleteLineButton.OnClick := @DeleteLineClick;
 
@@ -183,6 +189,7 @@ begin
   fLineTagCombo := TComboBox.Create(Self);
   fLineTagCombo.Parent := Self;
   fLineTagCombo.SetBounds(315, 186, 150, 24);
+  fLineTagCombo.Anchors := [akLeft, akTop, akRight];
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
@@ -202,6 +209,7 @@ begin
   fLineAxisCombo := TComboBox.Create(Self);
   fLineAxisCombo.Parent := Self;
   fLineAxisCombo.SetBounds(315, 216, 150, 24);
+  fLineAxisCombo.Anchors := [akLeft, akTop, akRight];
   fLineAxisCombo.Style := csDropDownList;
   fLineAxisCombo.OnChange := @LineAxisChange;
 
@@ -232,6 +240,7 @@ begin
   fAxisList := TListBox.Create(Self);
   fAxisList.Parent := Self;
   fAxisList.SetBounds(12, 312, 220, 100);
+  fAxisList.Anchors := [akLeft, akTop, akRight];
   fAxisList.OnClick := @AxisSelectionChange;
   fAxisList.OnDblClick := @AxisScaleDblClick;
 
@@ -315,6 +324,7 @@ begin
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
   fOkButton.SetBounds(440, 558, 90, 26);
+  fOkButton.Anchors := [akRight, akBottom];
   fOkButton.Caption := 'OK';
   fOkButton.Default := True;
   fOkButton.OnClick := @OkButtonClick;
@@ -322,8 +332,16 @@ begin
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
   fCancelButton.SetBounds(536, 558, 90, 26);
+  fCancelButton.Anchors := [akRight, akBottom];
   fCancelButton.Caption := 'Отмена';
   fCancelButton.ModalResult := mrCancel;
+  for I := 0 to ControlCount - 1 do
+  begin
+    if Controls[I] is TLabel then
+      TLabel(Controls[I]).AutoSize := True
+    else if Controls[I] is TCheckBox then
+      TCheckBox(Controls[I]).AutoSize := True;
+  end;
 end;
 
 procedure TRecorderTrendSettingsDialog.FillTagCombo;

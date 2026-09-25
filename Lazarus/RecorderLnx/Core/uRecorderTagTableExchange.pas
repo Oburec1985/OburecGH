@@ -75,7 +75,17 @@ const
   CColSqlRecord = 13;
   CColGroupPath = 14;
   CColScales = 15;
-  CColumnCount = 16;
+  CColHighAlarmEnabled = 16;
+  CColHighAlarmMessage = 17;
+  CColHighWarningEnabled = 18;
+  CColHighWarningMessage = 19;
+  CColLowWarningEnabled = 20;
+  CColLowWarningMessage = 21;
+  CColLowAlarmEnabled = 22;
+  CColLowAlarmMessage = 23;
+  CColRangeControlEnabled = 24;
+  CColRangeAlarmMessage = 25;
+  CColumnCount = 26;
 
   CHeaders: array[0..CColumnCount - 1] of string = (
     'Имя канала',
@@ -93,7 +103,17 @@ const
     'Виртуальный',
     'Запись SQL',
     'Группа',
-    'Scales'
+    'Scales',
+    'Вкл. верхнюю аварийную уставку',
+    'Сообщение верхней аварийной уставки',
+    'Вкл. верхнюю предупредительную уставку',
+    'Сообщение верхней предупредительной уставки',
+    'Вкл. нижнюю предупредительную уставку',
+    'Сообщение нижней предупредительной уставки',
+    'Вкл. нижнюю аварийную уставку',
+    'Сообщение нижней аварийной уставки',
+    'Вкл. контроль диапазона',
+    'Сообщение выхода за диапазон'
   );
 
 type
@@ -124,6 +144,14 @@ type
     HasGroupPath: Boolean;
     Scales: string;
     HasScales: Boolean;
+    SetpointEnabled: array[TRecorderTagSetpointKind] of Boolean;
+    HasSetpointEnabled: array[TRecorderTagSetpointKind] of Boolean;
+    SetpointMessage: array[TRecorderTagSetpointKind] of string;
+    HasSetpointMessage: array[TRecorderTagSetpointKind] of Boolean;
+    RangeControlEnabled: Boolean;
+    HasRangeControlEnabled: Boolean;
+    RangeAlarmMessage: string;
+    HasRangeAlarmMessage: Boolean;
     TargetTag: TRecorderTag;
   end;
 
@@ -747,6 +775,28 @@ begin
   end;
 end;
 
+function SetpointEnabledColumn(AKind: TRecorderTagSetpointKind): Integer;
+begin
+  case AKind of
+    tskHighAlarm: Result := CColHighAlarmEnabled;
+    tskHighWarning: Result := CColHighWarningEnabled;
+    tskLowWarning: Result := CColLowWarningEnabled;
+  else
+    Result := CColLowAlarmEnabled;
+  end;
+end;
+
+function SetpointMessageColumn(AKind: TRecorderTagSetpointKind): Integer;
+begin
+  case AKind of
+    tskHighAlarm: Result := CColHighAlarmMessage;
+    tskHighWarning: Result := CColHighWarningMessage;
+    tskLowWarning: Result := CColLowWarningMessage;
+  else
+    Result := CColLowAlarmMessage;
+  end;
+end;
+
 procedure RenameTargetsToTemporaryNames(ARegistry: TRecorderTagRegistry;
   var ARows: TTagImportRows; var AResult: TRecorderTagTableExchangeResult);
 var
@@ -773,6 +823,8 @@ var
   lTag: TRecorderTag;
   lNewName: string;
   lOldName: string;
+  lKind: TRecorderTagSetpointKind;
+  lSetpoint: TRecorderTagSetpoint;
 begin
   for I := 0 to High(ARows) do
   begin
@@ -808,6 +860,23 @@ begin
     if ARows[I].HasScales then
       ImportScales(ARegistry, lTag, ALookup, ARows[I].Scales,
         ARows[I].RowNumber, AResult.Warnings);
+    for lKind := Low(TRecorderTagSetpointKind) to
+      High(TRecorderTagSetpointKind) do
+    begin
+      if (not ARows[I].HasSetpointEnabled[lKind]) and
+        (not ARows[I].HasSetpointMessage[lKind]) then
+        Continue;
+      lSetpoint := lTag.Setpoints[lKind];
+      if ARows[I].HasSetpointEnabled[lKind] then
+        lSetpoint.Enabled := ARows[I].SetpointEnabled[lKind];
+      if ARows[I].HasSetpointMessage[lKind] then
+        lSetpoint.AlarmInfoText := ARows[I].SetpointMessage[lKind];
+      lTag.Setpoints[lKind] := lSetpoint;
+    end;
+    if ARows[I].HasRangeControlEnabled then
+      lTag.SetpointRangeControlEnabled := ARows[I].RangeControlEnabled;
+    if ARows[I].HasRangeAlarmMessage then
+      lTag.SetpointRangeAlarmInfoText := ARows[I].RangeAlarmMessage;
     Inc(AResult.UpdatedTags);
   end;
 end;
@@ -839,6 +908,8 @@ var
   lMap: TTagTableColumnMap;
   lIncludeGroupPath: Boolean;
   lLookup: TScaleLookup;
+  lKind: TRecorderTagSetpointKind;
+  lSetpoint: TRecorderTagSetpoint;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
@@ -881,6 +952,19 @@ begin
       WriteMappedCell(lSheet, lMap, CColGroupPath, lRow, lTag.GroupPath);
       WriteMappedCell(lSheet, lMap, CColScales, lRow,
         ExportScales(ARegistry, lTag, lLookup));
+      for lKind := Low(TRecorderTagSetpointKind) to
+        High(TRecorderTagSetpointKind) do
+      begin
+        lSetpoint := lTag.Setpoints[lKind];
+        WriteMappedCell(lSheet, lMap, SetpointEnabledColumn(lKind), lRow,
+          BoolToTableText(lSetpoint.Enabled));
+        WriteMappedCell(lSheet, lMap, SetpointMessageColumn(lKind), lRow,
+          lSetpoint.AlarmInfoText);
+      end;
+      WriteMappedCell(lSheet, lMap, CColRangeControlEnabled, lRow,
+        BoolToTableText(lTag.SetpointRangeControlEnabled));
+      WriteMappedCell(lSheet, lMap, CColRangeAlarmMessage, lRow,
+        lTag.SetpointRangeAlarmInfoText);
       Inc(AResult.ExportedTags);
     end;
     AResult.TotalRows := ARegistry.TagCount;
@@ -907,6 +991,7 @@ var
   lText: string;
   lMatchCount: Integer;
   lHasScales: Boolean;
+  lKind: TRecorderTagSetpointKind;
 begin
   if ARegistry = nil then
     raise ERecorderTagError.Create('Tag registry is not assigned');
@@ -957,6 +1042,28 @@ begin
       lRow.HasScales := lHasScales;
       if lRow.HasScales then
         lRow.Scales := ReadMappedCell(lSheet, lMap, CColScales, lRowIndex);
+      for lKind := Low(TRecorderTagSetpointKind) to
+        High(TRecorderTagSetpointKind) do
+      begin
+        lText := ReadMappedCell(lSheet, lMap, SetpointEnabledColumn(lKind),
+          lRowIndex);
+        lRow.HasSetpointEnabled[lKind] := TryParseBoolValue(lText,
+          lRow.SetpointEnabled[lKind]);
+        lRow.HasSetpointMessage[lKind] := HeaderIndex(lSheet,
+          CHeaders[SetpointMessageColumn(lKind)]) >= 0;
+        if lRow.HasSetpointMessage[lKind] then
+          lRow.SetpointMessage[lKind] := ReadMappedCell(lSheet, lMap,
+            SetpointMessageColumn(lKind), lRowIndex);
+      end;
+      lText := ReadMappedCell(lSheet, lMap, CColRangeControlEnabled,
+        lRowIndex);
+      lRow.HasRangeControlEnabled := TryParseBoolValue(lText,
+        lRow.RangeControlEnabled);
+      lRow.HasRangeAlarmMessage := HeaderIndex(lSheet,
+        CHeaders[CColRangeAlarmMessage]) >= 0;
+      if lRow.HasRangeAlarmMessage then
+        lRow.RangeAlarmMessage := ReadMappedCell(lSheet, lMap,
+          CColRangeAlarmMessage, lRowIndex);
 
       { An unnamed row in a shared channel table must not change a tag. }
       if lRow.Name = '' then

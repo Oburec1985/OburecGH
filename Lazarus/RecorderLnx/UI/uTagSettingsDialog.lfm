@@ -1,16 +1,18 @@
 object TagSettingsDialog: TTagSettingsDialog
   Left = 0
-  Height = 664
+  Height = 784
   Top = 0
   Width = 716
   Caption = 'Настройка канала'
-  ClientHeight = 664
+  ClientHeight = 784
   ClientWidth = 716
+  Constraints.MinHeight = 784
+  Constraints.MinWidth = 716
   Position = poScreenCenter
   LCLVersion = '4.2.0.0'
   object fPageControl: TPageControl
     Left = 8
-    Height = 560
+    Height = 680
     Top = 8
     Width = 700
     ActivePage = tsParams
@@ -21,7 +23,7 @@ object TagSettingsDialog: TTagSettingsDialog
     TabOrder = 0
     object tsParams: TTabSheet
       Caption = 'Параметры'
-      ClientHeight = 532
+      ClientHeight = 652
       ClientWidth = 692
       object gbGeneral: TGroupBox
         Left = 8
@@ -58,10 +60,10 @@ object TagSettingsDialog: TTagSettingsDialog
           ParentColor = False
         end
         object fUnitCombo: TComboBox
-          Left = 494
+          Left = 462
           Height = 23
           Top = 18
-          Width = 80
+          Width = 112
           Anchors = [akTop, akRight]
           ItemHeight = 15
           Items.Strings = (
@@ -75,10 +77,10 @@ object TagSettingsDialog: TTagSettingsDialog
           TabOrder = 1
         end
         object fAutoUnitCheck: TCheckBox
-          Left = 582
+          Left = 584
           Height = 19
           Top = 20
-          Width = 44
+          Width = 76
           Anchors = [akTop, akRight]
           Caption = 'Авто'
           TabOrder = 2
@@ -187,7 +189,7 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object gbRange: TGroupBox
         Left = 8
-        Height = 78
+        Height = 104
         Top = 204
         Width = 676
         Anchors = [akTop, akLeft, akRight]
@@ -226,10 +228,10 @@ object TagSettingsDialog: TTagSettingsDialog
           TabOrder = 1
         end
         object fAutoRangeCheck: TCheckBox
-          Left = 576
+          Left = 584
           Height = 19
           Top = 22
-          Width = 44
+          Width = 76
           Anchors = [akTop, akRight]
           Caption = 'Авто'
           TabOrder = 2
@@ -398,6 +400,7 @@ object TagSettingsDialog: TTagSettingsDialog
         Height = 250
         Top = 8
         Width = 580
+        Anchors = [akTop, akLeft, akRight]
         Caption = 'Вычисляемые оценки'
         ClientHeight = 230
         ClientWidth = 576
@@ -480,6 +483,7 @@ object TagSettingsDialog: TTagSettingsDialog
         Height = 23
         Top = 270
         Width = 430
+        Anchors = [akTop, akLeft, akRight]
         ItemHeight = 15
         Style = csDropDownList
         TabOrder = 1
@@ -514,6 +518,7 @@ object TagSettingsDialog: TTagSettingsDialog
         Height = 78
         Top = 316
         Width = 316
+        Anchors = [akTop, akLeft, akRight]
         Caption = 'Усреднение y''=kx+(1-k)y'
         ClientHeight = 58
         ClientWidth = 312
@@ -539,6 +544,7 @@ object TagSettingsDialog: TTagSettingsDialog
         Height = 74
         Top = 408
         Width = 580
+        Anchors = [akTop, akLeft, akRight]
         Caption = 'Свойства канала'
         ClientHeight = 54
         ClientWidth = 576
@@ -559,11 +565,12 @@ object TagSettingsDialog: TTagSettingsDialog
       ClientWidth = 692
       object pnSetpoint0: TPanel
         Left = 16
-        Height = 78
+        Height = 104
         Top = 8
         Width = 570
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
-        ClientHeight = 78
+        ClientHeight = 104
         ClientWidth = 570
         TabOrder = 0
         object lbSetpointName0: TLabel
@@ -601,6 +608,21 @@ object TagSettingsDialog: TTagSettingsDialog
           Width = 72
           TabOrder = 2
         end
+        object fSetpointAlarmInfoEdit0: TEdit
+          Left = 112
+          Height = 23
+          Top = 76
+          Width = 442
+          TabOrder = 4
+          TextHint = 'Текст аварийного события'
+        end
+        object lbSetpointAlarmInfo0: TLabel
+          Left = 12
+          Height = 15
+          Top = 80
+          Width = 87
+          Caption = 'Текст события:'
+        end
         object lbSetpointText0_1: TLabel
           Left = 68
           Height = 45
@@ -632,11 +654,12 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object pnSetpoint1: TPanel
         Left = 16
-        Height = 78
-        Top = 90
+        Height = 104
+        Top = 116
         Width = 570
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
-        ClientHeight = 78
+        ClientHeight = 104
         ClientWidth = 570
         TabOrder = 1
         object lbSetpointName1: TLabel
@@ -674,6 +697,21 @@ object TagSettingsDialog: TTagSettingsDialog
           Width = 72
           TabOrder = 2
         end
+        object fSetpointAlarmInfoEdit1: TEdit
+          Left = 112
+          Height = 23
+          Top = 76
+          Width = 442
+          TabOrder = 4
+          TextHint = 'Текст аварийного события'
+        end
+        object lbSetpointAlarmInfo1: TLabel
+          Left = 12
+          Height = 15
+          Top = 80
+          Width = 87
+          Caption = 'Текст события:'
+        end
         object lbSetpointText1_1: TLabel
           Left = 68
           Height = 45
@@ -705,11 +743,12 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object pnSetpoint2: TPanel
         Left = 16
-        Height = 78
-        Top = 172
+        Height = 104
+        Top = 224
         Width = 570
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
-        ClientHeight = 78
+        ClientHeight = 104
         ClientWidth = 570
         TabOrder = 2
         object lbSetpointName2: TLabel
@@ -747,6 +786,21 @@ object TagSettingsDialog: TTagSettingsDialog
           Width = 72
           TabOrder = 2
         end
+        object fSetpointAlarmInfoEdit2: TEdit
+          Left = 112
+          Height = 23
+          Top = 76
+          Width = 442
+          TabOrder = 4
+          TextHint = 'Текст аварийного события'
+        end
+        object lbSetpointAlarmInfo2: TLabel
+          Left = 12
+          Height = 15
+          Top = 80
+          Width = 87
+          Caption = 'Текст события:'
+        end
         object lbSetpointText2_1: TLabel
           Left = 68
           Height = 45
@@ -778,11 +832,12 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object pnSetpoint3: TPanel
         Left = 16
-        Height = 78
-        Top = 254
+        Height = 104
+        Top = 332
         Width = 570
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
-        ClientHeight = 78
+        ClientHeight = 104
         ClientWidth = 570
         TabOrder = 3
         object lbSetpointName3: TLabel
@@ -820,6 +875,21 @@ object TagSettingsDialog: TTagSettingsDialog
           Width = 72
           TabOrder = 2
         end
+        object fSetpointAlarmInfoEdit3: TEdit
+          Left = 112
+          Height = 23
+          Top = 76
+          Width = 442
+          TabOrder = 4
+          TextHint = 'Текст аварийного события'
+        end
+        object lbSetpointAlarmInfo3: TLabel
+          Left = 12
+          Height = 15
+          Top = 80
+          Width = 87
+          Caption = 'Текст события:'
+        end
         object lbSetpointText3_1: TLabel
           Left = 68
           Height = 45
@@ -851,11 +921,12 @@ object TagSettingsDialog: TTagSettingsDialog
       end
       object pnSetpointAdd: TPanel
         Left = 16
-        Height = 86
-        Top = 338
+        Height = 110
+        Top = 440
         Width = 570
+        Anchors = [akTop, akLeft, akRight]
         BevelOuter = bvLowered
-        ClientHeight = 86
+        ClientHeight = 110
         ClientWidth = 570
         TabOrder = 4
         object lbSetpointAddName: TLabel
@@ -906,13 +977,28 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'Прослушать звуковое оповещение до конца'
           TabOrder = 2
         end
+        object fSetpointRangeAlarmInfoEdit: TEdit
+          Left = 198
+          Height = 23
+          Top = 80
+          Width = 356
+          TabOrder = 4
+          TextHint = 'Событие выхода за диапазон (обрыв датчика)'
+        end
+        object lbSetpointRangeAlarmInfo: TLabel
+          Left = 12
+          Height = 15
+          Top = 84
+          Width = 170
+          Caption = 'Событие выхода за диапазон:'
+        end
       end
     end
   end
   object pnBottom: TPanel
     Left = 0
     Height = 42
-    Top = 622
+    Top = 742
     Width = 716
     Align = alBottom
     BevelOuter = bvNone
@@ -924,6 +1010,7 @@ object TagSettingsDialog: TTagSettingsDialog
       Height = 26
       Top = 8
       Width = 74
+      Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
       TabOrder = 0
@@ -933,6 +1020,7 @@ object TagSettingsDialog: TTagSettingsDialog
       Height = 26
       Top = 8
       Width = 74
+      Anchors = [akTop, akRight]
       Cancel = True
       Caption = 'Отмена'
       ModalResult = 2
@@ -943,6 +1031,7 @@ object TagSettingsDialog: TTagSettingsDialog
       Height = 26
       Top = 8
       Width = 74
+      Anchors = [akTop, akRight]
       Caption = 'Применить'
       TabOrder = 2
     end

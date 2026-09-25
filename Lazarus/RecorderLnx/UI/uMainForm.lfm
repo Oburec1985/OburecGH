@@ -1,14 +1,15 @@
 object MainForm: TMainForm
-  Left = 300
+  Left = 91
   Height = 700
-  Top = 21
+  Top = 23
   Width = 1064
   Caption = 'RecorderLnx'
   ClientHeight = 700
   ClientWidth = 1064
-  WindowState = wsMaximized
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  LCLVersion = '2.2.6.0'
+  WindowState = wsMaximized
   object pnToolbar: TPanel
     Left = 0
     Height = 44
@@ -25,8 +26,8 @@ object MainForm: TMainForm
       Top = 5
       Width = 34
       Caption = '[]'
-      TabOrder = 0
       OnClick = btnFormPagesClick
+      TabOrder = 0
     end
   end
   object pnRight: TPanel
@@ -54,7 +55,7 @@ object MainForm: TMainForm
       TabOrder = 0
       object lbState: TLabel
         Left = 0
-        Height = 25
+        Height = 27
         Top = 0
         Width = 188
         Align = alTop
@@ -68,8 +69,8 @@ object MainForm: TMainForm
       end
       object lbTime: TLabel
         Left = 0
-        Height = 47
-        Top = 25
+        Height = 45
+        Top = 27
         Width = 188
         Align = alClient
         Alignment = taCenter
@@ -100,9 +101,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 0
         ImageWidth = 32
+        OnClick = btnSettingsClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnSettingsClick
       end
       object btnSqlDb: TSpeedButton
         Left = 86
@@ -111,21 +112,21 @@ object MainForm: TMainForm
         Top = 146
         Width = 72
         Caption = 'SQL DB'
+        OnClick = btnSqlDbClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnSqlDbClick
       end
       object cbSqlDbRecording: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Hint = 'Независимая запись выбранных каналов в SQL БД'
         Top = 151
-        Width = 57
+        Width = 70
         Caption = 'Запись'
+        OnChange = cbSqlDbRecordingChange
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        OnChange = cbSqlDbRecordingChange
       end
       object btnSaveConfig: TSpeedButton
         Left = 54
@@ -135,9 +136,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 26
         ImageWidth = 32
+        OnClick = btnSaveConfigClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnSaveConfigClick
       end
       object btnSaveConfigAs: TSpeedButton
         Left = 100
@@ -147,9 +148,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 38
         ImageWidth = 32
+        OnClick = btnSaveConfigAsClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnSaveConfigAsClick
       end
       object btnRunWinpos: TSpeedButton
         Left = 146
@@ -159,9 +160,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 37
         ImageWidth = 32
+        OnClick = btnRunWinposClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnRunWinposClick
       end
       object btnStop: TSpeedButton
         Left = 16
@@ -171,9 +172,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 3
         ImageWidth = 32
+        OnClick = btnStopClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnStopClick
       end
       object btnPreview: TSpeedButton
         Left = 66
@@ -183,9 +184,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 2
         ImageWidth = 32
+        OnClick = btnPreviewClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnPreviewClick
       end
       object btnRecord: TSpeedButton
         Left = 116
@@ -195,9 +196,9 @@ object MainForm: TMainForm
         Images = ilCommandButtons
         ImageIndex = 1
         ImageWidth = 32
+        OnClick = btnRecordClick
         ShowHint = True
         ParentShowHint = False
-        OnClick = btnRecordClick
       end
     end
     object pnTagSearch: TPanel
@@ -212,11 +213,11 @@ object MainForm: TMainForm
       TabOrder = 2
       object edTagSearch: TEdit
         Left = 8
-        Height = 23
+        Height = 31
         Top = 4
         Width = 142
-        TabOrder = 0
         OnChange = edTagSearchChange
+        TabOrder = 0
       end
       object btnClearSearch: TButton
         Left = 156
@@ -224,8 +225,8 @@ object MainForm: TMainForm
         Top = 4
         Width = 24
         Caption = 'X'
-        TabOrder = 1
         OnClick = btnClearSearchClick
+        TabOrder = 1
       end
     end
     object lbTags: TListView
@@ -261,6 +262,7 @@ object MainForm: TMainForm
     Top = 44
     Width = 5
     Align = alRight
+    OnMoved = SplitterRightMoved
     ResizeAnchor = akRight
   end
   object pnMain: TPanel

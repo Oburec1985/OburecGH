@@ -80,6 +80,9 @@ type
       out AItems: TRecorderSqlDbFileLocations);
     procedure ListMeraRecordingEvents(AFromUtc, AToUtc: Double;
       out AItems: TRecorderSqlDbMeraEvents);
+    procedure ListTimelineEvents(AFromUtc, AToUtc: Double;
+      AIncludeRecordings, AIncludeTagAlarms: Boolean;
+      out AItems: TRecorderSqlDbMeraEvents);
     function GetMeraEventSnapshot(const AEventId: string;
       out AEventUtc, AFirstStartedUtc, ALastFinishedUtc: Double;
       out ARecordingCount: Integer): Boolean;
@@ -135,11 +138,11 @@ begin
      (Pos('libgds', lMessage) > 0) or
      (Pos('client library', lMessage) > 0) or
      (Pos('client libraries', lMessage) > 0) then
-    Result := ERecorderSqlDbError.Create(
+    Result := ERecorderSqlDbError.Create(UTF8Encode(
       'Не найдена клиентская библиотека Firebird. Сервер Firebird на этом ПК ' +
       'не требуется, но для доступа к удалённой БД нужно установить пакет ' +
       'libfbclient2 (Linux) или fbclient.dll той же разрядности (Windows). ' +
-      'Исходная ошибка: ' + AMessage)
+      'Исходная ошибка: ') + AMessage)
   else
     Result := ERecorderSqlDbError.CreateFmt(
       'Не удалось открыть Firebird %s:%d, БД %s. %s',
@@ -1890,6 +1893,8 @@ begin
       I := Length(AItems);
       SetLength(AItems, I + 1);
       AItems[I].EventId := lQuery.Fields[0].AsString;
+      AItems[I].EventType := 'mera.recording';
+      AItems[I].Severity := 'info';
       AItems[I].CorrelationId := lQuery.Fields[1].AsString;
       AItems[I].DisplayName := lQuery.Fields[2].AsString;
       AItems[I].Description := lQuery.Fields[3].AsString;
@@ -1899,6 +1904,74 @@ begin
       AItems[I].State := lQuery.Fields[6].AsString;
       AItems[I].PackageCount := lQuery.Fields[7].AsInteger;
       AItems[I].TotalSize := lQuery.Fields[8].AsLargeInt;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListTimelineEvents(AFromUtc,
+  AToUtc: Double; AIncludeRecordings, AIncludeTagAlarms: Boolean;
+  out AItems: TRecorderSqlDbMeraEvents);
+var
+  I: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(AItems, 0);
+  if not AIncludeRecordings and not AIncludeTagAlarms then
+    Exit;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select e.id,e.event_type,e.severity,e.signal_id,' +
+      'coalesce(max(s.name),''''),coalesce(max(r.correlation_id),''''),' +
+      'coalesce(e.display_name,coalesce(max(s.name),'''')),' +
+      'coalesce(e.description,e.event_text),e.measured_value,' +
+      'e.timestamp_utc,max(r.finished_at_utc),' +
+      'coalesce(max(r.state),''active''),count(distinct r.id),' +
+      'cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'from events e left join signals s on s.id=e.signal_id ' +
+      'left join mera_recordings r on r.event_id=e.id ' +
+      'left join mera_recording_files m on m.recording_id=r.id ' +
+      'left join data_files f on f.id=m.file_id ' +
+      'where (:recordings=1 and e.event_type=''mera.recording'' and ' +
+      'r.started_at_utc<=:to and (r.finished_at_utc is null or ' +
+      'r.finished_at_utc>=:from)) or (:alarms=1 and ' +
+      'e.event_type in (''tag.alarm'',''tag.range'') and ' +
+      'e.timestamp_utc>=:from and e.timestamp_utc<=:to) ' +
+      'group by e.id,e.event_type,e.severity,e.signal_id,e.display_name,' +
+      'e.description,e.event_text,e.measured_value,e.timestamp_utc ' +
+      'order by e.timestamp_utc';
+    lQuery.ParamByName('from').AsFloat := AFromUtc;
+    lQuery.ParamByName('to').AsFloat := AToUtc;
+    lQuery.ParamByName('recordings').AsInteger := Ord(AIncludeRecordings);
+    lQuery.ParamByName('alarms').AsInteger := Ord(AIncludeTagAlarms);
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      I := Length(AItems);
+      SetLength(AItems, I + 1);
+      AItems[I].EventId := lQuery.Fields[0].AsString;
+      AItems[I].EventType := lQuery.Fields[1].AsString;
+      AItems[I].Severity := lQuery.Fields[2].AsString;
+      AItems[I].SignalId := lQuery.Fields[3].AsString;
+      AItems[I].SignalName := lQuery.Fields[4].AsString;
+      AItems[I].CorrelationId := lQuery.Fields[5].AsString;
+      AItems[I].DisplayName := lQuery.Fields[6].AsString;
+      AItems[I].Description := lQuery.Fields[7].AsString;
+      AItems[I].HasMeasuredValue := not lQuery.Fields[8].IsNull;
+      if AItems[I].HasMeasuredValue then
+        AItems[I].MeasuredValue := lQuery.Fields[8].AsFloat;
+      AItems[I].StartedAtUtc := lQuery.Fields[9].AsFloat;
+      if not lQuery.Fields[10].IsNull then
+        AItems[I].FinishedAtUtc := lQuery.Fields[10].AsFloat;
+      AItems[I].State := lQuery.Fields[11].AsString;
+      AItems[I].PackageCount := lQuery.Fields[12].AsInteger;
+      AItems[I].TotalSize := lQuery.Fields[13].AsLargeInt;
       lQuery.Next;
     end;
   finally

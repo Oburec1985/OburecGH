@@ -22,6 +22,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="SynEdit"/>
+      </Item>
+      <Item>
         <PackageName Value="bgracontrols"/>
       </Item>
       <Item>
@@ -596,6 +599,37 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaApi.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaBinaryClient.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaDataSource.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaDevice.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaFactory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaSourceEditor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderOpcUaEditorForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/OPC/uRecorderOpcUaTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="SQLdb/uRecorderSqlDbTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -636,7 +670,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;../SharedUtils;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -650,6 +684,7 @@
       </Options>
     </Linking>
     <Other>
+      <CustomOptions Value="-vm4104,4105,5024,6058"/>
       <ExecuteAfter>
         <Command Value="$(ProjPath)Scripts/copy_sdb_res.$(TargetOS).bat $(ProjOutDir)"/>
       </ExecuteAfter>
@@ -683,6 +718,9 @@
       </Item>
       <Item>
         <Name Value="EAccessViolation"/>
+      </Item>
+      <Item>
+        <Name Value="EInvalidGraphic"/>
       </Item>
     </Exceptions>
   </Debugging>

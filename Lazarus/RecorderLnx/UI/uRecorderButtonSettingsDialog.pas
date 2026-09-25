@@ -95,7 +95,7 @@ begin
       for I := 0 to fTagRegistry.TagCount - 1 do
       begin
         lTag := fTagRegistry.Tags[I];
-        if not lTag.IsVirtual then
+        if not lTag.ExternalWriteAllowed then
           Continue;
         lText := LowerCase(lTag.Name + ' ' + lTag.Description + ' ' + lTag.Address);
         if (lFilter = '') or (Pos(lFilter, lText) > 0) then

@@ -517,180 +517,167 @@ end;
 
 function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
 var
-  P0: point2;
-  SortedPoints: TPointArray;
-  Stack: TPointArray;
-  i, j, minIndex: Integer;
+  SortedPoints, UniquePoints, Hull: TPointArray;
+  PointCount, UniqueCount, HullCount, I: Integer;
 
-  // Функция для вычисления ориентации
-  function Orientation(p, q, r: point2): single;
+  function ComparePoints(const Left, Right: point2): Integer;
   begin
-    Result := (q.X - p.X) * (r.Y - p.Y) - (q.Y - p.Y) * (r.X - p.X);
+    if Left.X < Right.X then
+      Exit(-1);
+    if Left.X > Right.X then
+      Exit(1);
+    if Left.Y < Right.Y then
+      Exit(-1);
+    if Left.Y > Right.Y then
+      Exit(1);
+    Result := 0;
   end;
 
-  // Ручная сортировка точек по полярному углу
-  procedure SortPoints;
+  procedure QuickSortPoints(var Values: TPointArray; Left, Right: Integer);
   var
-    i, j: Integer;
-    temp: point2;
+    L, R: Integer;
+    Pivot, Temp: point2;
   begin
-    for i := 1 to High(SortedPoints) - 1 do
-    //for i := 1 to length(SortedPoints) - 1 do
-      for j := i + 1 to High(SortedPoints) do
+    L := Left;
+    R := Right;
+    Pivot := Values[(Left + Right) div 2];
+    repeat
+      while ComparePoints(Values[L], Pivot) < 0 do
+        Inc(L);
+      while ComparePoints(Values[R], Pivot) > 0 do
+        Dec(R);
+      if L <= R then
       begin
-        if (Orientation(P0, SortedPoints[i], SortedPoints[j]) < 0) or
-           ((Orientation(P0, SortedPoints[i], SortedPoints[j]) = 0) and
-           (Sqr(SortedPoints[i].X - P0.X) + Sqr(SortedPoints[i].Y - P0.Y) >
-           Sqr(SortedPoints[j].X - P0.X) + Sqr(SortedPoints[j].Y - P0.Y))) then
-        begin
-          temp := SortedPoints[i];
-          SortedPoints[i] := SortedPoints[j];
-          SortedPoints[j] := temp;
-        end;
+        Temp := Values[L];
+        Values[L] := Values[R];
+        Values[R] := Temp;
+        Inc(L);
+        Dec(R);
       end;
+    until L > R;
+    if Left < R then
+      QuickSortPoints(Values, Left, R);
+    if L < Right then
+      QuickSortPoints(Values, L, Right);
+  end;
+
+  function Cross(const Origin, A, B: point2): Double;
+  begin
+    Result := (Double(A.X) - Origin.X) * (Double(B.Y) - Origin.Y) -
+      (Double(A.Y) - Origin.Y) * (Double(B.X) - Origin.X);
   end;
 
 begin
-  if p_size <= 3 then
+  Result := nil;
+  SortedPoints := nil;
+  UniquePoints := nil;
+  Hull := nil;
+  PointCount := p_size;
+  if PointCount < 0 then
+    PointCount := 0;
+  if PointCount > Length(Points) then
+    PointCount := Length(Points);
+  if PointCount = 0 then
+    Exit;
+
+  SortedPoints := Copy(Points, 0, PointCount);
+  if PointCount > 1 then
+    QuickSortPoints(SortedPoints, 0, PointCount - 1);
+
+  SetLength(UniquePoints, PointCount);
+  UniqueCount := 0;
+  for I := 0 to PointCount - 1 do
   begin
-    Result := Copy(Points, 0, p_size);
+    if (UniqueCount = 0) or
+       (ComparePoints(UniquePoints[UniqueCount - 1], SortedPoints[I]) <> 0) then
+    begin
+      UniquePoints[UniqueCount] := SortedPoints[I];
+      Inc(UniqueCount);
+    end;
+  end;
+  SetLength(UniquePoints, UniqueCount);
+  if UniqueCount <= 2 then
+  begin
+    Result := UniquePoints;
     Exit;
   end;
 
-  // Шаг 1: Находим точку P0 с минимальными координатами
-  minIndex := 0;
-  for i := 1 to p_size-1 do
-    if (Points[i].Y < Points[minIndex].Y) or
-      ((Points[i].Y = Points[minIndex].Y) and (Points[i].X < Points[minIndex].X)) then
-      minIndex := i;
-
-  // Перемещаем P0 в начало массива
-  SetLength(SortedPoints, p_size);
-  SortedPoints[0] := Points[minIndex];
-  j := 1;
-  for i := 0 to p_size-1 do
-    if i <> minIndex then
-    begin
-      SortedPoints[j] := Points[i];
-      Inc(j);
-    end;
-
-  // Шаг 2: Сортировка по полярному углу
-  P0 := SortedPoints[0];
-  SortPoints;
-
-  // Шаг 3: Удаление коллинеарных точек
-  j := 1;
-  for i := 2 to p_size-1 do
+  SetLength(Hull, UniqueCount * 2);
+  HullCount := 0;
+  for I := 0 to UniqueCount - 1 do
   begin
-    while (j >= 1) and (Orientation(SortedPoints[0], SortedPoints[j], SortedPoints[i]) = 0) do
-    begin
-      if (Sqr(SortedPoints[i].X - P0.X) + Sqr(SortedPoints[i].Y - P0.Y) >
-         Sqr(SortedPoints[j].X - P0.X) + Sqr(SortedPoints[j].Y - P0.Y)) then
-        SortedPoints[j] := SortedPoints[i];
-      Dec(j);
-    end;
-    Inc(j);
-    if j < i then
-      SortedPoints[j] := SortedPoints[i];
-  end;
-  SetLength(SortedPoints, j + 1);
-  p_size:=j + 1;
-  if Length(SortedPoints) < 3 then
-  begin
-    Result := SortedPoints;
-    Exit;
+    while (HullCount >= 2) and
+      (Cross(Hull[HullCount - 2], Hull[HullCount - 1], UniquePoints[I]) <= 0) do
+      Dec(HullCount);
+    Hull[HullCount] := UniquePoints[I];
+    Inc(HullCount);
   end;
 
-  // Шаг 4: Построение выпуклой оболочки
-  SetLength(Stack, 3);
-  Stack[0] := SortedPoints[0];
-  Stack[1] := SortedPoints[1];
-  Stack[2] := SortedPoints[2];
-
-  for i := 3 to p_size-1 do
+  PointCount := HullCount + 1;
+  for I := UniqueCount - 2 downto 0 do
   begin
-    while (Length(Stack) > 1) and
-      (Orientation(Stack[High(Stack)-2],
-        Stack[High(Stack)-1],
-        SortedPoints[i]) <= 0) do
-      SetLength(Stack, Length(Stack)-1);
-    SetLength(Stack, Length(Stack)+1);
-    Stack[High(Stack)] := SortedPoints[i];
+    while (HullCount >= PointCount) and
+      (Cross(Hull[HullCount - 2], Hull[HullCount - 1], UniquePoints[I]) <= 0) do
+      Dec(HullCount);
+    Hull[HullCount] := UniquePoints[I];
+    Inc(HullCount);
   end;
-  Result := Stack;
+
+  Dec(HullCount); // The first point is repeated by the upper chain.
+  SetLength(Hull, HullCount);
+  Result := Hull;
 end;
 
 procedure FindDiameter(const Hull: TPointArray; var Result: TDiameterResult);
 var
-  n, i, j, nextI, nextJ: Integer;
-  maxDist, currentDist: Double;
-  vecI, vecJ: point2;
-  crossProduct: single;
+  I, J: Integer;
+  DistanceSquared, MaxDistanceSquared: Double;
 begin
-  n := Length(Hull);
-  if n < 2 then
-  begin
-    Result.Distance := 0;
+  Result.Point1.X := 0;
+  Result.Point1.Y := 0;
+  Result.Point2 := Result.Point1;
+  Result.Index1 := -1;
+  Result.Index2 := -1;
+  Result.Distance := 0;
+
+  if Length(Hull) = 0 then
     Exit;
-  end;
-  maxDist := 0;
-  j := 1;
+  Result.Point1 := Hull[0];
+  Result.Point2 := Hull[0];
+  Result.Index1 := 0;
+  Result.Index2 := 0;
+  if Length(Hull) = 1 then
+    Exit;
 
-  // Метод вращающихся калиперов
-  for i := 0 to n-1 do
+  MaxDistanceSquared := -1;
+  for I := 0 to High(Hull) - 1 do
   begin
-    nextI := (i + 1) mod n;
-    nextJ := (j + 1) mod n;
-
-    // Находим следующую антиподную точку
-    vecI.X := Hull[nextI].X - Hull[i].X;
-    vecI.Y := Hull[nextI].Y - Hull[i].Y;
-
-    vecJ.X := Hull[nextJ].X - Hull[j].X;
-    vecJ.Y := Hull[nextJ].Y - Hull[j].Y;
-
-    crossProduct := vecI.X * vecJ.Y - vecI.Y * vecJ.X;
-
-    while (crossProduct > 0) and (j < n + i) do
+    for J := I + 1 to High(Hull) do
     begin
-      j := (j + 1) mod n;
-      nextJ := (j + 1) mod n;
-      vecJ.X := Hull[nextJ].X - Hull[j].X;
-      vecJ.Y := Hull[nextJ].Y - Hull[j].Y;
-      crossProduct := vecI.X * vecJ.Y - vecI.Y * vecJ.X;
-    end;
-
-    // Вычисляем текущее расстояние
-    currentDist := Sqrt(Sqr(Hull[i].X - Hull[j].X) + Sqr(Hull[i].Y - Hull[j].Y));
-    if currentDist > maxDist then
-    begin
-      maxDist := currentDist;
-      Result.Point1 := Hull[i];
-      Result.Point2 := Hull[j];
-      Result.Index1 := i;
-      Result.Index2 := j;
-      Result.Distance := maxDist;
+      DistanceSquared := Sqr(Double(Hull[I].X) - Hull[J].X) +
+        Sqr(Double(Hull[I].Y) - Hull[J].Y);
+      if DistanceSquared > MaxDistanceSquared then
+      begin
+        MaxDistanceSquared := DistanceSquared;
+        Result.Point1 := Hull[I];
+        Result.Point2 := Hull[J];
+        Result.Index1 := I;
+        Result.Index2 := J;
+      end;
     end;
   end;
+  Result.Distance := Sqrt(MaxDistanceSquared);
 end;
 
 function GrahamScanWithDiameter(const Points: TPointArray;
                                 p_size:integer;
                                  out Diameter: TDiameterResult): TPointArray;
 begin
-  // Вызываем оригинальный алгоритм Грэхема
-  Result := GrahamScan(Points,p_size );
-
-  // Находим диаметр для полученной оболочки
-  if Length(Result) >= 2 then
-    FindDiameter(Result, Diameter)
-  else
-  begin
-    Diameter.Distance := 0;
-    Diameter.Index1 := -1;
-    Diameter.Index2 := -1;
-  end;
+  FillChar(Diameter, SizeOf(Diameter), 0);
+  Diameter.Index1 := -1;
+  Diameter.Index2 := -1;
+  Result := GrahamScan(Points, p_size);
+  FindDiameter(Result, Diameter);
 end;
 
 // Вспомогательная функция для вычисления расстояния

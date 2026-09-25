@@ -66,6 +66,9 @@ procedure RenderTrendPoints(
 );
 
 implementation
+
+const
+  CDefaultTrendLineWidth = 1.0;
 /// <summary>
 /// Отрисовывает набор точек TChartLineSeries в виде соединенных линий GL_LINE_STRIP.
 /// Если включен шейдер, передает параметры шкал (линейная/логарифм) в виде униформ-переменных.
@@ -97,7 +100,7 @@ begin
   if not Supports(ARenderer, IChartOffsetHelper, lRendererObj) then
     Exit;
   lRendererObj.SetGLColor(ASeries.Color);
-  glLineWidth(2.3);
+  glLineWidth(CDefaultTrendLineWidth);
   // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
   glUseProgram(0);
   if False and AUseShader and AShaderInitialized then
@@ -217,7 +220,7 @@ begin
   if not Supports(ARenderer, IChartOffsetHelper, lRendererObj) then
     Exit;
   lRendererObj.SetGLColor(ATrend.Color);
-  glLineWidth(2.3);
+  glLineWidth(CDefaultTrendLineWidth);
   // Использование шейдерного рендеринга
   if AUseShader and AShaderInitialized then
   begin
@@ -338,7 +341,7 @@ begin
     Exit;
 
   lRendererObj.SetGLColor(ATrend.Color);
-  glLineWidth(2.3);
+  glLineWidth(CDefaultTrendLineWidth);
 
   if AUseShader and AShaderInitialized then
   begin

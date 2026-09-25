@@ -9,7 +9,7 @@ procedure RunRecorderSpectrumEngineTests;
 implementation
 
 uses
-  SysUtils, Math,
+  Classes, SysUtils, Math,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderTags,
   uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderEventQueue,
   uRecorderCoreServices;
@@ -170,12 +170,19 @@ begin
     lSettings.FFTSize := 16384;
     lSettings.Overlap := 8192;
     lSettings.SampleRateHz := 57600.0;
+    lSettings.ParallelChannels := True;
     lNode.Settings := lSettings;
     lBinding := lNode.AddBinding('1_датчик_X');
 
     lResolved := lBinding.ResolveSettings(lNode.Settings);
     AssertEquals('Inherited FFT size', 16384, lResolved.FFTSize);
     AssertEquals('Inherited overlap', 8192, lResolved.Overlap);
+    if not lResolved.ParallelChannels then
+      raise Exception.Create('ParallelChannels was not inherited');
+
+    lSettings.FromString(lResolved.AsString);
+    if not lSettings.ParallelChannels then
+      raise Exception.Create('ParallelChannels was not persisted in settings string');
 
     lBinding.UseOwnSettings := True;
     lSettings := lBinding.Settings;
@@ -188,6 +195,77 @@ begin
     AssertEquals('Own overlap', 4096, lResolved.Overlap);
   finally
     lNode.Free;
+  end;
+end;
+
+procedure TestRuntimeAccumulatesQueuedPortions;
+var
+  lEventBus: TRecorderEventBus;
+  lRegistry: TRecorderTagRegistry;
+  lManager: TRecorderSpectrumRuntimeManager;
+  lAlgorithmManager: TRecorderAlgorithmManager;
+  lNode: TRecorderSpectrumConfigNode;
+  lSettings: TRecorderSpectrumSettings;
+  lFrame: TRecorderSpectrumFrame;
+  lTimes: array[0..7] of Double;
+  lValues: array[0..7] of Double;
+  lTag: TRecorderTag;
+  I, J: Integer;
+begin
+  lEventBus := TRecorderEventBus.Create;
+  lRegistry := TRecorderTagRegistry.Create(lEventBus);
+  try
+    lTag := lRegistry.CreateTag('QueuedSensor', 64);
+    lTag.PollFrequencyHz := 64.0;
+    lRegistry.CreateTag('QueuedSensor2', 64).PollFrequencyHz := 64.0;
+    lNode := lRegistry.SpectrumConfigs.AddNode('fft-queued', 'Queued FFT');
+    lSettings := lNode.Settings;
+    lSettings.FFTSize := 32;
+    lSettings.SampleRateHz := 64.0;
+    lSettings.WindowKind := swkRect;
+    lSettings.ParallelChannels := True;
+    lNode.Settings := lSettings;
+    lNode.AddBinding(lTag.Name);
+    lNode.AddBinding('QueuedSensor2');
+
+    lManager := TRecorderSpectrumRuntimeManager.Create(lEventBus, lRegistry);
+    lAlgorithmManager := TRecorderAlgorithmManager.Create(lRegistry, lManager);
+    try
+      lAlgorithmManager.PrepareConfiguration;
+      if (TThread.ProcessorCount > 1) and (lManager.WorkerCount < 2) then
+        raise Exception.Create('Parallel spectrum worker pool was not created');
+      for J := 0 to 3 do
+      begin
+        for I := 0 to High(lValues) do
+        begin
+          lTimes[I] := (J * Length(lValues) + I) / 64.0;
+          lValues[I] := Sin(2.0 * Pi * 8.0 * lTimes[I]);
+        end;
+        { All four portions are queued without waiting for the worker. The
+          runtime must retain all 32 samples instead of coalescing to the last
+          eight-sample notification. }
+        lRegistry.PublishBlock(lTag.Name, lTimes, lValues, Length(lValues));
+      end;
+      for I := 1 to 100 do
+      begin
+        if lManager.GetLastFrame(lTag.Name, lFrame) then
+          Break;
+        Sleep(5);
+      end;
+      if not lManager.GetLastFrame(lTag.Name, lFrame) then
+        raise Exception.Create('Queued spectrum portions were not accumulated');
+      AssertEquals('Queued portion FFT size', 32, lFrame.FFTSize);
+      if not SameValue(lFrame.StartTimeSec, 0.0, 1e-12) or
+        not SameValue(lFrame.EndTimeSec, 31.0 / 64.0, 1e-12) then
+        raise Exception.CreateFmt('Queued portion time range mismatch: %.12g..%.12g',
+          [lFrame.StartTimeSec, lFrame.EndTimeSec]);
+    finally
+      lAlgorithmManager.Free;
+      lManager.Free;
+    end;
+  finally
+    lRegistry.Free;
+    lEventBus.Free;
   end;
 end;
 
@@ -362,6 +440,7 @@ begin
   TestMultipleFramesWithoutOverlap;
   TestMultipleFramesWithOverlap;
   TestConfigInheritance;
+  TestRuntimeAccumulatesQueuedPortions;
   TestFrequencyBands;
   Writeln('Recorder spectrum engine tests: PASS');
 end;

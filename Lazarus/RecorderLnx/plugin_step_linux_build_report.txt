@@ -1,51 +1,51 @@
-BUILD_EXIT=0
-Hint: (11031) End of reading config file /etc/fpc.cfg
-Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
-Copyright (c) 1993-2021 by Florian Klaempfl and others
-(1002) Target OS: Linux for x86-64
-(3104) Compiling SampleInfoPlugin.lpr
-(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SDK/uRecorderPluginApi.pas
-(3104) Compiling PluginClass.pas
-(3104) Compiling ./units/uCreateComponents.pas
-(3104) Compiling ./forms/uSampleOscillogram.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/PluginClass.pas(49,32) Hint: (5024) Parameter "APropertyId" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/PluginClass.pas(50,11) Hint: (5024) Parameter "AValue" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/PluginClass.pas(51,32) Hint: (5024) Parameter "APropertyId" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/PluginClass.pas(52,13) Hint: (5024) Parameter "AValue" not used
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/PluginClass.pas(37,52) Hint: (5024) Parameter "AData" not used
-(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/plugins/libsampleinfoplugin.so
-(1008) 558 lines compiled, 2.3 sec
-(1022) 7 hint(s) issued
-SetPrimaryConfigPath NewValue="/home/user/.lazarus_work" -> "/home/user/.lazarus_work"
-TProject.DoLoadStateFile Statefile not found: /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/Tests/lib/x86_64-linux/SamplePluginProbe.compiled
-Hint: (11030) Start of reading config file /etc/fpc.cfg
-Hint: (11031) End of reading config file /etc/fpc.cfg
-Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
-Copyright (c) 1993-2021 by Florian Klaempfl and others
-(1002) Target OS: Linux for x86-64
-(3104) Compiling SamplePluginProbe.lpr
-(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SDK/uRecorderPluginApi.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/Tests/SamplePluginProbe.lpr(33,17) Hint: (5057) Local variable "lSpec" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/Tests/SamplePluginProbe.lpr(87,19) Hint: (5057) Local variable "lInfo" does not seem to be initialized
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/Tests/SamplePluginProbe.lpr(93,22) Hint: (5057) Local variable "lHostApi" does not seem to be initialized
-(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SampleInfoPlugin/Tests/lib/x86_64-linux/SamplePluginProbe
-(1008) 209 lines compiled, 1.6 sec
-(1022) 5 hint(s) issued
-RESULT sample-plugin passed
-SetPrimaryConfigPath NewValue="/home/user/.lazarus_work" -> "/home/user/.lazarus_work"
-Hint: (lazarus) Build Project: nothing to do.
-Hint: (11030) Start of reading config file /etc/fpc.cfg
-Hint: (11031) End of reading config file /etc/fpc.cfg
-Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
-Copyright (c) 1993-2021 by Florian Klaempfl and others
-(1002) Target OS: Linux for x86-64
-(3104) Compiling PluginInfoProbe.lpr
-(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Core/uRecorderPluginInfo.pas
-(3104) Compiling /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Plugins/SDK/uRecorderPluginApi.pas
-/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tests/PluginInfo/PluginInfoProbe.lpr(16,5) Warning: (6018) unreachable code
-(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/PluginInfoProbe
-(1008) 341 lines compiled, 4.7 sec
-(1021) 1 warning(s) issued
-(1022) 2 hint(s) issued
-libsampleinfoplugin.so: SampleInfoPlugin | 
-RESULT PluginInfo passed
+BUILD_EXIT=2
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderTagBalance.pas(15,40) Hint: (5023) Unit "Contnrs" not used in uRecorderTagBalance
+(3104) Compiling ./UI/uRecorderSettingsSourceProbe.pas
+(3104) Compiling ./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(181,85) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(181,92) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(96,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(75,24) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(78,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(76,23) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(692,40) Warning: (2005) Comment level 2 found
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas(692,53) Warning: (2005) Comment level 2 found
+(3104) Compiling ./UI/uRecorderVirtualTagDialog.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVirtualTagDialog.pas(21,30) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uRecorderVirtualTagDialog.pas(20,26) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling ./UI/uLuaCalcSettingsDialog.pas
+(3104) Compiling ./UI/uLuaSyntaxHighlighter.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaSyntaxHighlighter.pas(285,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaSyntaxHighlighter.pas(290,28) Hint: (4055) Conversion between ordinals and pointers is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaSyntaxHighlighter.pas(8,32) Hint: (5023) Unit "SynEditTypes" not used in uLuaSyntaxHighlighter
+(3104) Compiling ./Plugins/LuaCalcPlugin/uLuaCalcEngine.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(37,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(324,16) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(324,39) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(324,43) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(326,7) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(326,12) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(38,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(385,70) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(385,102) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(39,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(40,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(41,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(42,29) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(45,23) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(45,44) Hint: (5024) Parameter "CloseAction" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(46,25) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(504,41) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(505,17) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(506,45) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(536,16) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(536,40) Error: (5038) identifier idents no member "ItemAtPos"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(559,18) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(560,17) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(561,42) Error: (5038) identifier idents no member "ItemIndex"
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./UI/uLuaCalcSettingsDialog.pas(562,29) Error: (5038) identifier idents no member "ItemIndex"
+uLuaCalcSettingsDialog.pas(566) Fatal: (10026) There were 9 errors compiling module, stopping
+Fatal: (1018) Compilation aborted
+Error: /usr/bin/ppcx64 returned an error exitcode
+Error: (lazarus) Компиляция проекта, цель: lib/x86_64-linux/RecorderLnx: stopped with exit code 1
+Error: (lazbuild) failed compiling of project /mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpi

@@ -1,0 +1,1324 @@
+object RecorderSettingsDialog: TRecorderSettingsDialog
+  Left = 322
+  Height = 660
+  Top = 122
+  Width = 925
+  Caption = 'Настройка'
+  ClientHeight = 660
+  ClientWidth = 925
+  Constraints.MinHeight = 590
+  Constraints.MinWidth = 760
+  Position = poOwnerFormCenter
+  object fPageControl: TPageControl
+    Left = 0
+    Height = 618
+    Top = 0
+    Width = 925
+    ActivePage = tsRecorder
+    Align = alClient
+    TabIndex = 0
+    TabOrder = 0
+    object tsRecorder: TTabSheet
+      Caption = 'Рекордер'
+      ClientHeight = 590
+      ClientWidth = 917
+      object pnRecorderLeft: TPanel
+        Left = 0
+        Height = 590
+        Top = 0
+        Width = 679
+        Align = alClient
+        BevelOuter = bvNone
+        ClientHeight = 590
+        ClientWidth = 679
+        TabOrder = 0
+        object gbDisplay: TGroupBox
+          Left = 8
+          Height = 82
+          Top = 8
+          Width = 210
+          Caption = 'Отображение'
+          ClientHeight = 62
+          ClientWidth = 206
+          TabOrder = 0
+          object lbScreenUpdate: TLabel
+            Left = 10
+            Height = 15
+            Top = 22
+            Width = 112
+            Caption = 'Период обновления'
+            ParentColor = False
+          end
+          object lbScreenUpdateSec: TLabel
+            Left = 186
+            Height = 15
+            Top = 22
+            Width = 6
+            Caption = 'с'
+            ParentColor = False
+          end
+          object fScreenUpdateEdit: TEdit
+            Left = 126
+            Height = 23
+            Top = 18
+            Width = 56
+            TabOrder = 0
+            Text = '0.5'
+          end
+        end
+        object gbSignals: TGroupBox
+          Left = 238
+          Height = 82
+          Top = 8
+          Width = 390
+          Caption = 'Сигналы'
+          ClientHeight = 62
+          ClientWidth = 386
+          TabOrder = 1
+          object lbBufferSeconds: TLabel
+            Left = 10
+            Height = 15
+            Top = 18
+            Width = 166
+            Caption = 'Длина отображаемых данных'
+            ParentColor = False
+          end
+          object lbBufferSecondsSec: TLabel
+            Left = 260
+            Height = 15
+            Top = 18
+            Width = 6
+            Caption = 'с'
+            ParentColor = False
+          end
+          object lbDataUpdate: TLabel
+            Left = 10
+            Height = 15
+            Top = 40
+            Width = 156
+            Caption = 'Период обновления данных'
+            ParentColor = False
+          end
+          object lbDataUpdateSec: TLabel
+            Left = 260
+            Height = 15
+            Top = 40
+            Width = 6
+            Caption = 'с'
+            ParentColor = False
+          end
+          object fBufferSecondsEdit: TEdit
+            Left = 190
+            Height = 23
+            Top = 14
+            Width = 64
+            TabOrder = 0
+            Text = '1'
+          end
+          object fDataUpdateEdit: TEdit
+            Left = 190
+            Height = 23
+            Top = 36
+            Width = 64
+            TabOrder = 1
+            Text = '0.3'
+          end
+        end
+        object gbTestInfo: TGroupBox
+          Left = 8
+          Height = 78
+          Top = 102
+          Width = 620
+          ClientHeight = 58
+          ClientWidth = 616
+          TabOrder = 2
+          object lbTestName: TLabel
+            Left = 10
+            Height = 15
+            Top = 18
+            Width = 62
+            Caption = 'Испытание'
+            ParentColor = False
+          end
+          object lbProductName: TLabel
+            Left = 10
+            Height = 15
+            Top = 42
+            Width = 46
+            Caption = 'Изделие'
+            ParentColor = False
+          end
+          object fTestNameEdit: TEdit
+            Left = 130
+            Height = 23
+            Top = 14
+            Width = 470
+            TabOrder = 0
+            Text = 'Испытание'
+          end
+          object fProductNameEdit: TEdit
+            Left = 130
+            Height = 23
+            Top = 42
+            Width = 470
+            TabOrder = 1
+            Text = 'Изделие'
+          end
+        end
+        object gbRecord: TGroupBox
+          Left = 8
+          Height = 284
+          Top = 190
+          Width = 620
+          Caption = 'Запись'
+          ClientHeight = 264
+          ClientWidth = 616
+          TabOrder = 3
+          object lbPrehistorySec: TLabel
+            Left = 206
+            Height = 15
+            Top = 48
+            Width = 18
+            Caption = 'сек'
+            ParentColor = False
+          end
+          object lbWorkDir: TLabel
+            Left = 10
+            Height = 15
+            Top = 154
+            Width = 112
+            Caption = 'Каталог замеров'
+            ParentColor = False
+          end
+          object fModifyNameCheck: TCheckBox
+            Left = 12
+            Height = 19
+            Top = 22
+            Width = 277
+            Caption = 'Модифицировать имя по каждому испытанию'
+            Enabled = False
+            TabOrder = 0
+          end
+          object fPrehistoryCheck: TCheckBox
+            Left = 12
+            Height = 19
+            Top = 48
+            Width = 93
+            Caption = 'Предыстория'
+            TabOrder = 1
+          end
+          object fPrehistoryEdit: TEdit
+            Left = 130
+            Height = 23
+            Top = 44
+            Width = 68
+            TabOrder = 2
+            Text = '10'
+          end
+          object fResetTimeCheck: TCheckBox
+            Left = 12
+            Height = 19
+            Top = 74
+            Width = 211
+            Caption = 'Сброс времени при начале записи'
+            Checked = True
+            State = cbChecked
+            TabOrder = 3
+          end
+          object fWriteWithPausesCheck: TCheckBox
+            Left = 12
+            Height = 19
+            Top = 100
+            Width = 115
+            Caption = 'Запись с паузами'
+            TabOrder = 4
+          end
+          object fSaveConfigWithDataCheck: TCheckBox
+            Left = 12
+            Height = 19
+            Top = 126
+            Width = 336
+            Caption = 'Сохранять файл конфигурации вместе с записью данных'
+            TabOrder = 5
+          end
+          object fWorkDirEdit: TEdit
+            Left = 10
+            Height = 23
+            Top = 172
+            Width = 486
+            TabOrder = 6
+            Text = 'C:\USML\'
+          end
+          object btnPublishRecordDir: TButton
+            Left = 502
+            Height = 26
+            Top = 170
+            Width = 34
+            Caption = '⇧'
+            Hint = 'Опубликовать каталог замеров в сети'
+            ShowHint = True
+            TabOrder = 7
+            OnClick = PublishRecordDirClick
+          end
+          object btnWorkDirBrowse: TButton
+            Left = 548
+            Height = 26
+            Top = 170
+            Width = 54
+            Caption = '...'
+            TabOrder = 8
+            OnClick = WorkDirBrowseClick
+          end
+          object lbRecordShareName: TLabel
+            Left = 10
+            Height = 15
+            Top = 204
+            Width = 84
+            Caption = 'Сетевое имя'
+            ParentColor = False
+          end
+          object fRecordShareNameEdit: TEdit
+            Left = 100
+            Height = 23
+            Top = 200
+            Width = 180
+            TabOrder = 9
+            Text = 'MeraFiles'
+          end
+          object fTemplateCheck: TCheckBox
+            Left = 310
+            Height = 19
+            Top = 204
+            Width = 63
+            Caption = 'Шаблон'
+            TabOrder = 10
+          end
+          object fTemplateButton: TButton
+            Left = 382
+            Height = 26
+            Top = 200
+            Width = 86
+            Caption = 'Настроить'
+            Enabled = False
+            TabOrder = 11
+          end
+          object fFrameDirEdit: TEdit
+            Left = 10
+            Height = 23
+            Top = 232
+            Width = 470
+            TabOrder = 12
+            Text = 'C:\USML\signal0000'
+          end
+        end
+        object gbMeraSdb: TGroupBox
+          Left = 8
+          Height = 86
+          Top = 482
+          Width = 620
+          Caption = 'База градуировочных характеристик'
+          ClientHeight = 66
+          ClientWidth = 616
+          TabOrder = 4
+          object lbMeraFilesPath: TLabel
+            Left = 10
+            Height = 15
+            Top = 18
+            Width = 99
+            Caption = 'Каталог Mera Files'
+            ParentColor = False
+          end
+          object fMeraFilesPathEdit: TEdit
+            Left = 10
+            Height = 23
+            Top = 36
+            Width = 526
+            TabOrder = 0
+          end
+          object btnMeraFilesPathBrowse: TButton
+            Left = 548
+            Height = 26
+            Top = 34
+            Width = 54
+            Caption = '...'
+            TabOrder = 1
+            OnClick = MeraFilesPathBrowseClick
+          end
+        end
+      end
+      object pnRecorderRight: TPanel
+        Left = 679
+        Height = 590
+        Top = 0
+        Width = 238
+        Align = alRight
+        BevelOuter = bvNone
+        ClientHeight = 590
+        ClientWidth = 238
+        TabOrder = 1
+        object gbStartCondition: TGroupBox
+          Left = 8
+          Height = 142
+          Top = 8
+          Width = 210
+          Caption = 'Условия старта записи'
+          ClientHeight = 122
+          ClientWidth = 206
+          TabOrder = 0
+          object lbStartChannel: TLabel
+            Left = 10
+            Height = 15
+            Top = 76
+            Width = 33
+            Caption = 'Канал'
+            ParentColor = False
+          end
+          object fStartManualRadio: TRadioButton
+            Left = 10
+            Height = 19
+            Top = 20
+            Width = 86
+            Caption = 'По клавише'
+            Checked = True
+            TabOrder = 0
+            TabStop = True
+            OnChange = ConditionChanged
+          end
+          object fStartLevelRadio: TRadioButton
+            Left = 104
+            Height = 19
+            Top = 20
+            Width = 80
+            Caption = 'По уровню'
+            TabOrder = 1
+            OnChange = ConditionChanged
+          end
+          object fStartTriggerRadio: TRadioButton
+            Left = 10
+            Height = 19
+            Top = 46
+            Width = 116
+            Caption = 'Триггерный старт'
+            TabOrder = 2
+            OnChange = ConditionChanged
+          end
+          object fStartTriggerEdit: TEdit
+            Left = 140
+            Height = 23
+            Top = 42
+            Width = 48
+            TabOrder = 3
+            Text = '1'
+          end
+          object fStartChannelCombo: TComboBox
+            Left = 52
+            Height = 23
+            Top = 72
+            Width = 136
+            ItemHeight = 15
+            Items.Strings = (
+              'MemTag'
+              'SineTag'
+            )
+            Style = csDropDownList
+            TabOrder = 4
+          end
+          object fStartEdgeCombo: TComboBox
+            Left = 10
+            Height = 23
+            Top = 100
+            Width = 74
+            ItemHeight = 15
+            Items.Strings = (
+              'меньше'
+              'больше'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+          end
+          object fStartLevelEdit: TEdit
+            Left = 92
+            Height = 23
+            Top = 100
+            Width = 72
+            TabOrder = 6
+            Text = '0.0'
+          end
+        end
+        object gbStopCondition: TGroupBox
+          Left = 8
+          Height = 170
+          Top = 160
+          Width = 210
+          Caption = 'Условия останова записи'
+          ClientHeight = 150
+          ClientWidth = 206
+          TabOrder = 1
+          object lbStopDurationSec: TLabel
+            Left = 152
+            Height = 15
+            Top = 46
+            Width = 18
+            Caption = 'сек'
+            ParentColor = False
+          end
+          object lbStopChannel: TLabel
+            Left = 10
+            Height = 15
+            Top = 76
+            Width = 33
+            Caption = 'Канал'
+            ParentColor = False
+          end
+          object fStopManualRadio: TRadioButton
+            Left = 10
+            Height = 19
+            Top = 20
+            Width = 86
+            Caption = 'По клавише'
+            Checked = True
+            TabOrder = 0
+            TabStop = True
+            OnChange = ConditionChanged
+          end
+          object fStopLevelRadio: TRadioButton
+            Left = 104
+            Height = 19
+            Top = 20
+            Width = 80
+            Caption = 'По уровню'
+            TabOrder = 1
+            OnChange = ConditionChanged
+          end
+          object fStopDurationRadio: TRadioButton
+            Left = 10
+            Height = 19
+            Top = 46
+            Width = 50
+            Caption = 'Через'
+            TabOrder = 2
+            OnChange = ConditionChanged
+          end
+          object fStopDurationEdit: TEdit
+            Left = 70
+            Height = 23
+            Top = 42
+            Width = 74
+            TabOrder = 3
+            Text = '1.000000'
+          end
+          object fStopChannelCombo: TComboBox
+            Left = 52
+            Height = 23
+            Top = 72
+            Width = 136
+            ItemHeight = 15
+            Items.Strings = (
+              'MemTag'
+              'SineTag'
+            )
+            Style = csDropDownList
+            TabOrder = 4
+          end
+          object fStopEdgeCombo: TComboBox
+            Left = 10
+            Height = 23
+            Top = 100
+            Width = 74
+            ItemHeight = 15
+            Items.Strings = (
+              'меньше'
+              'больше'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+          end
+          object fStopLevelEdit: TEdit
+            Left = 92
+            Height = 23
+            Top = 100
+            Width = 72
+            TabOrder = 6
+            Text = '0.0'
+          end
+          object fStopReturnToPreviewCheck: TCheckBox
+            Left = 10
+            Height = 19
+            Top = 126
+            Width = 132
+            Caption = 'Переход в просмотр'
+            Enabled = False
+            TabOrder = 7
+          end
+        end
+        object btnSystemTime: TButton
+          Left = 8
+          Height = 28
+          Top = 342
+          Width = 122
+          Caption = 'Системное время'
+          TabOrder = 2
+        end
+      end
+    end
+    object tsHardware: TTabSheet
+      Caption = 'Аппаратные свойства'
+      ClientHeight = 590
+      ClientWidth = 917
+      object gbHardware: TGroupBox
+        Left = 8
+        Height = 560
+        Top = 8
+        Width = 893
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        Caption = 'Устройства'
+        ClientHeight = 540
+        ClientWidth = 889
+        TabOrder = 0
+        object pnHardwareButtons: TPanel
+          Left = 0
+          Height = 52
+          Top = 488
+          Width = 889
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 52
+          ClientWidth = 889
+          TabOrder = 0
+          object btnDeviceAdd: TBitBtn
+            Left = 8
+            Height = 36
+            Hint = 'Добавить устройство вручную'
+            Top = 8
+            Width = 42
+            Caption = '+'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+          end
+          object btnDeviceDelete: TBitBtn
+            Left = 62
+            Height = 36
+            Hint = 'Удалить устройство вручную'
+            Top = 8
+            Width = 42
+            Caption = '-'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+          end
+          object btnDeviceSetup: TBitBtn
+            Left = 116
+            Height = 36
+            Hint = 'Настроить выбранное устройство'
+            Top = 8
+            Width = 42
+            Caption = '...'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 2
+          end
+          object btnDeviceSearch: TBitBtn
+            Left = 170
+            Height = 36
+            Hint = 'Автопоиск подключенных устройств'
+            Top = 8
+            Width = 42
+            Caption = '?'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+          end
+        end
+        object pnNetworkInterface: TPanel
+          Left = 0
+          Height = 76
+          Top = 412
+          Width = 889
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 76
+          ClientWidth = 889
+          TabOrder = 1
+          object lblNetworkInterface: TLabel
+            Left = 8
+            Height = 15
+            Top = 14
+            Width = 111
+            Caption = 'Сетевой интерфейс:'
+          end
+          object cbNetworkInterface: TComboBox
+            Left = 170
+            Height = 23
+            Top = 8
+            Width = 360
+            ItemHeight = 15
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object lblNetworkInterfaceHint: TLabel
+            Left = 542
+            Height = 15
+            Top = 14
+            Width = 306
+            Caption = 'Применяется при следующем подключении приборов'
+          end
+          object edNetworkTestHost: TEdit
+            Left = 170
+            Height = 23
+            Top = 41
+            Width = 160
+            TabOrder = 1
+            Text = '192.168.9.142'
+          end
+          object edNetworkTestPort: TEdit
+            Left = 338
+            Height = 23
+            Top = 41
+            Width = 60
+            TabOrder = 2
+            Text = '4000'
+          end
+          object btnNetworkTest: TButton
+            Left = 406
+            Height = 27
+            Top = 41
+            Width = 124
+            Caption = 'TCP-пинг'
+            TabOrder = 3
+            OnClick = NetworkTestClick
+          end
+          object lblNetworkTestResult: TLabel
+            Left = 542
+            Height = 1
+            Top = 47
+            Width = 1
+          end
+        end
+        object fHardwareTree: TTreeView
+          Left = 0
+          Height = 412
+          Top = 0
+          Width = 889
+          Align = alClient
+          ImagesWidth = 16
+          MultiSelect = True
+          MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+          ReadOnly = True
+          TabOrder = 2
+          Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          OnChange = fHardwareTreeChange
+          OnDblClick = fHardwareTreeDblClick
+        end
+      end
+    end
+    object tsChannels: TTabSheet
+      Caption = 'Каналы'
+      ClientHeight = 590
+      ClientWidth = 917
+      object gbAvailableChannels: TGroupBox
+        Left = 0
+        Height = 590
+        Top = 0
+        Width = 180
+        Align = alLeft
+        Caption = 'Доступные каналы'
+        ClientHeight = 570
+        ClientWidth = 176
+        TabOrder = 0
+        object fAvailableChannelsGrid: TStringGrid
+          Left = 0
+          Height = 570
+          Top = 0
+          Width = 176
+          Align = alClient
+          ColCount = 3
+          FixedCols = 0
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+          RowCount = 2
+          TabOrder = 0
+          OnDblClick = fAvailableChannelsGridDblClick
+          OnMouseDown = fAvailableChannelsGridMouseDown
+        end
+      end
+      object spChannels: TSplitter
+        Left = 180
+        Height = 590
+        Top = 0
+        Width = 5
+      end
+      object pnChannelMoveButtons: TPanel
+        Left = 185
+        Height = 590
+        Top = 0
+        Width = 42
+        Align = alLeft
+        BevelOuter = bvNone
+        ClientHeight = 590
+        ClientWidth = 42
+        TabOrder = 1
+        object btnChannelAdd: TBitBtn
+          Left = 6
+          Height = 30
+          Top = 200
+          Width = 30
+          Caption = '>'
+          Font.Color = clBlue
+          ParentFont = False
+          TabOrder = 0
+          OnClick = btnChannelAddClick
+        end
+        object btnChannelRemove: TBitBtn
+          Left = 6
+          Height = 30
+          Top = 238
+          Width = 30
+          Caption = '<'
+          Font.Color = clBlue
+          ParentFont = False
+          TabOrder = 1
+          OnClick = btnChannelRemoveClick
+        end
+        object btnChannelEdit: TBitBtn
+          Left = 6
+          Height = 30
+          Hint = 'Настроить выбранный канал'
+          Top = 276
+          Width = 30
+          Caption = '...'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+          OnClick = btnChannelEditClick
+        end
+      end
+      object gbSelectedChannels: TGroupBox
+        Left = 227
+        Height = 590
+        Top = 0
+        Width = 307
+        Align = alClient
+        Caption = 'Выбранные каналы'
+        ClientHeight = 570
+        ClientWidth = 303
+        TabOrder = 2
+        object pnFilter: TPanel
+          Left = 0
+          Height = 62
+          Top = 0
+          Width = 303
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 62
+          ClientWidth = 303
+          TabOrder = 0
+          object edSelectedChannelsFilter: TEdit
+            Left = 8
+            Height = 23
+            Top = 6
+            Width = 252
+            Anchors = [akTop, akLeft, akRight]
+            TabOrder = 0
+            Text = 'Filter'
+          end
+          object btnSelectedChannelsClear: TButton
+            Left = 269
+            Height = 24
+            Top = 6
+            Width = 24
+            Anchors = [akTop, akRight]
+            Caption = 'X'
+            TabOrder = 1
+          end
+          object cbHideInactiveSelectedChannels: TCheckBox
+            Left = 8
+            Height = 19
+            Top = 36
+            Width = 127
+            Caption = 'Скрыть неактивные'
+            TabOrder = 2
+          end
+          object cbOnlyVirtualSelectedChannels: TCheckBox
+            Left = 148
+            Height = 19
+            Top = 36
+            Width = 132
+            Caption = 'Только виртуальные'
+            TabOrder = 3
+          end
+        end
+        object fSelectedChannelsGrid: TStringGrid
+          Left = 0
+          Height = 474
+          Top = 62
+          Width = 303
+          Align = alClient
+          ColCount = 7
+          DragMode = dmAutomatic
+          FixedCols = 0
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+          RowCount = 2
+          TabOrder = 1
+          OnDragDrop = fSelectedChannelsGridDragDrop
+          OnDragOver = fSelectedChannelsGridDragOver
+        end
+        object pnCreateVirtualTag: TPanel
+          Left = 0
+          Height = 34
+          Top = 536
+          Width = 303
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 34
+          ClientWidth = 303
+          TabOrder = 2
+          object btnCreateVirtualTag: TBitBtn
+            Left = 4
+            Height = 30
+            Hint = 'Создать виртуальный тег'
+            Top = 2
+            Width = 34
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+            OnClick = btnCreateVirtualTagClick
+          end
+        end
+      end
+      object spChannelAlgorithms: TSplitter
+        Left = 412
+        Height = 590
+        Top = 0
+        Width = 5
+        Align = alRight
+        ResizeAnchor = akRight
+      end
+      object gbChannelAlgorithms: TGroupBox
+        Left = 417
+        Height = 590
+        Top = 0
+        Width = 500
+        Align = alRight
+        Caption = 'Алгоритмы'
+        ClientHeight = 570
+        ClientWidth = 496
+        Constraints.MinWidth = 500
+        TabOrder = 3
+        object pnAlgorithmTop: TPanel
+          Left = 0
+          Height = 38
+          Top = 0
+          Width = 496
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 38
+          ClientWidth = 496
+          TabOrder = 0
+          object fAlgorithmKindCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 8
+            Width = 280
+            ItemHeight = 15
+            Items.Strings = (
+              'Спектр'
+            )
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object btnAlgorithmAdd: TBitBtn
+            Left = 296
+            Height = 26
+            Hint = 'Создать алгоритм для выбранных каналов'
+            Top = 6
+            Width = 30
+            Caption = '+'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+            OnClick = btnAlgorithmAddClick
+          end
+          object btnAlgorithmRemove: TBitBtn
+            Left = 332
+            Height = 26
+            Hint = 'Удалить выбранный алгоритм'
+            Top = 6
+            Width = 30
+            Caption = '-'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 2
+            OnClick = btnAlgorithmRemoveClick
+          end
+          object btnFrequencyBands: TBitBtn
+            Left = 368
+            Height = 26
+            Hint = 'Настроить частотные полосы'
+            Top = 6
+            Width = 30
+            Caption = '...'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+            OnClick = btnFrequencyBandsClick
+          end
+        end
+        object pnAlgorithmSettings: TPanel
+          Left = 0
+          Height = 350
+          Top = 220
+          Width = 496
+          Align = alBottom
+          BevelOuter = bvNone
+          ClientHeight = 350
+          ClientWidth = 496
+          TabOrder = 1
+          object lbAlgorithmFftSize: TLabel
+            Left = 8
+            Height = 15
+            Top = 39
+            Width = 18
+            Caption = 'FFT'
+            ParentColor = False
+          end
+          object lbAlgorithmSampleRate: TLabel
+            Left = 139
+            Height = 15
+            Top = 39
+            Width = 86
+            Caption = 'Частота опроса'
+            ParentColor = False
+          end
+          object fAlgorithmPortionLabel: TLabel
+            Left = 274
+            Height = 15
+            Top = 39
+            Width = 61
+            Caption = 'порция: - с'
+            ParentColor = False
+          end
+          object lbAlgorithmOverlap: TLabel
+            Left = 151
+            Height = 15
+            Top = 79
+            Width = 68
+            Caption = 'Перекрытие'
+            ParentColor = False
+          end
+          object lbAlgorithmWindow: TLabel
+            Left = 8
+            Height = 15
+            Top = 119
+            Width = 29
+            Caption = 'Окно'
+            ParentColor = False
+          end
+          object lbAlgorithmAverage: TLabel
+            Left = 8
+            Height = 15
+            Top = 79
+            Width = 107
+            Caption = 'Блоков усреднения'
+            ParentColor = False
+          end
+          object fAlgorithmFftSizeEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 53
+            Width = 108
+            TabOrder = 0
+            Text = '8192'
+          end
+          object fAlgorithmFftSizeUpDown: TUpDown
+            Left = 116
+            Height = 22
+            Top = 53
+            Width = 15
+            Max = 1000
+            Min = 0
+            Position = 0
+            TabOrder = 15
+            OnClick = fAlgorithmFftSizeUpDownClick
+          end
+          object fAlgorithmSampleRateEdit: TEdit
+            Left = 139
+            Height = 23
+            Top = 53
+            Width = 110
+            TabOrder = 1
+            Text = '0'
+          end
+          object fAlgorithmAverageBlocksEdit: TEdit
+            Left = 8
+            Height = 23
+            Top = 93
+            Width = 116
+            TabOrder = 2
+            Text = '1'
+          end
+          object fAlgorithmOverlapCombo: TComboBox
+            Left = 151
+            Height = 23
+            Top = 93
+            Width = 132
+            ItemHeight = 15
+            Items.Strings = (
+              'без перекрытия'
+              '1/2'
+              '1/4'
+            )
+            Style = csDropDownList
+            TabOrder = 3
+          end
+          object fAlgorithmOverlapEdit: TEdit
+            Left = 291
+            Height = 23
+            Top = 93
+            Width = 82
+            TabOrder = 4
+            Text = '0'
+          end
+          object fAlgorithmWindowCombo: TComboBox
+            Left = 8
+            Height = 23
+            Top = 133
+            Width = 116
+            ItemHeight = 15
+            Items.Strings = (
+              'Rect'
+              'Hann'
+              'Hamming'
+              'Blackman'
+              'FlatTop'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+          end
+          object fAlgorithmZeroPadCheck: TCheckBox
+            Left = 151
+            Height = 19
+            Top = 135
+            Width = 123
+            Caption = 'Дополнять нулями'
+            TabOrder = 6
+          end
+          object fAlgorithmAhCorrectionCheck: TCheckBox
+            Left = 151
+            Height = 19
+            Top = 159
+            Width = 104
+            Caption = 'Коррекция АЧХ'
+            TabOrder = 7
+          end
+          object fAlgorithmIntegrationGroup: TRadioGroup
+            Left = 8
+            Height = 104
+            Top = 197
+            Width = 200
+            AutoFill = True
+            Caption = 'Интегрирование'
+            ChildSizing.LeftRightSpacing = 6
+            ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+            ChildSizing.EnlargeVertical = crsHomogenousChildResize
+            ChildSizing.ShrinkHorizontal = crsScaleChilds
+            ChildSizing.ShrinkVertical = crsScaleChilds
+            ChildSizing.Layout = cclLeftToRightThenTopToBottom
+            ChildSizing.ControlsPerLine = 1
+            ClientHeight = 84
+            ClientWidth = 196
+            Columns = 1
+            Items.Strings = (
+              'без'
+              'x1'
+              'x2'
+            )
+            TabOrder = 8
+          end
+          object fAlgorithmBandRmsCheck: TCheckBox
+            Left = 224
+            Height = 19
+            Top = 198
+            Width = 98
+            Caption = 'СКЗ в полосах'
+            TabOrder = 9
+          end
+          object fAlgorithmBandMaxCheck: TCheckBox
+            Left = 224
+            Height = 19
+            Top = 222
+            Width = 136
+            Caption = 'Максимум в полосах'
+            TabOrder = 10
+          end
+          object fAlgorithmBandMaxFrequencyCheck: TCheckBox
+            Left = 224
+            Height = 19
+            Top = 246
+            Width = 128
+            Caption = 'Частота максимума'
+            TabOrder = 11
+          end
+          object fAlgorithmWriteEstimatesCheck: TCheckBox
+            Left = 224
+            Height = 19
+            Top = 270
+            Width = 87
+            Caption = 'Создать теги'
+            TabOrder = 12
+          end
+          object btnAlgorithmConfig: TBitBtn
+            Left = 224
+            Height = 28
+            Top = 310
+            Width = 88
+            Caption = 'Применить'
+            TabOrder = 13
+            OnClick = btnAlgorithmConfigClick
+          end
+          object Cfg: TEdit
+            Left = 10
+            Height = 23
+            Top = 8
+            Width = 468
+            Anchors = [akTop, akLeft, akRight]
+            TabOrder = 14
+          end
+        end
+        object fAlgorithmsTree: TTreeView
+          Left = 0
+          Height = 182
+          Top = 38
+          Width = 496
+          Align = alClient
+          DragMode = dmAutomatic
+          ReadOnly = True
+          TabOrder = 2
+          Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          OnChange = fAlgorithmsTreeChange
+          OnDragDrop = fAlgorithmsTreeDragDrop
+          OnDragOver = fAlgorithmsTreeDragOver
+        end
+      end
+    end
+    object tsPlugins: TTabSheet
+      Caption = 'Плагины'
+      ClientHeight = 590
+      ClientWidth = 917
+      object pnPluginToolbar: TPanel
+        Left = 0
+        Height = 44
+        Top = 0
+        Width = 917
+        Align = alTop
+        BevelOuter = bvNone
+        ClientHeight = 44
+        ClientWidth = 917
+        TabOrder = 0
+        object btnPluginAdd: TButton
+          Left = 8
+          Height = 28
+          Top = 8
+          Width = 100
+          Caption = 'Добавить...'
+          TabOrder = 0
+        end
+        object btnPluginDelete: TButton
+          Left = 116
+          Height = 28
+          Top = 8
+          Width = 100
+          Caption = 'Удалить'
+          TabOrder = 1
+        end
+        object lbPluginDirectory: TLabel
+          Left = 230
+          Height = 15
+          Top = 15
+          Width = 72
+          Caption = 'Каталог:'
+        end
+      end
+      object lvPlugins: TListView
+        Left = 0
+        Height = 546
+        Top = 44
+        Width = 917
+        Align = alClient
+        Columns = <
+          item
+            Caption = 'Файл'
+            Width = 150
+          end
+          item
+            Caption = 'Название'
+            Width = 160
+          end
+          item
+            Caption = 'Описание / ошибка'
+            Width = 350
+          end
+          item
+            Caption = 'Разработчик'
+            Width = 160
+          end
+          item
+            Caption = 'Версия в списке'
+            Width = 115
+          end
+          item
+            Caption = 'Загружена версия'
+            Width = 130
+          end
+          item
+            Caption = 'Путь DLL'
+            Width = 480
+          end>
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
+      end
+    end
+  end
+  object pnBottomButtons: TPanel
+    Left = 0
+    Height = 42
+    Top = 618
+    Width = 925
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 42
+    ClientWidth = 925
+    TabOrder = 1
+    object btnOk: TButton
+      Left = 655
+      Height = 28
+      Top = 7
+      Width = 82
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      TabOrder = 0
+      OnClick = OkButtonClick
+    end
+    object btnClose: TButton
+      Left = 743
+      Height = 28
+      Top = 7
+      Width = 82
+      Anchors = [akTop, akRight]
+      Caption = 'Закрыть'
+      ModalResult = 2
+      TabOrder = 1
+    end
+    object fApplyButton: TButton
+      Left = 831
+      Height = 28
+      Top = 7
+      Width = 82
+      Anchors = [akTop, akRight]
+      Caption = 'Применить'
+      TabOrder = 2
+      OnClick = ApplyButtonClick
+    end
+  end
+end

@@ -93,7 +93,8 @@ begin
       if GetTickCount64 - lStarted > ATimeoutMs then
       begin
         lProcess.Terminate(1);
-        AOutput := AOutput + LineEnding + 'Команда запуска Firebird превысила таймаут.';
+          AOutput := AOutput + LineEnding +
+            UTF8Encode('Команда запуска Firebird превысила таймаут.');
         Exit(False);
       end;
       Sleep(50);
@@ -224,9 +225,10 @@ begin
     lCandidates.Free;
   end;
   if Result then
-    AMessage := 'Сборка мусора Firebird выполнена.' + LineEnding + lLog
+    AMessage := UTF8Encode('Сборка мусора Firebird выполнена.') +
+      LineEnding + lLog
   else
-    AMessage := 'Не удалось выполнить сборку мусора Firebird.' +
+    AMessage := UTF8Encode('Не удалось выполнить сборку мусора Firebird.') +
       LineEnding + lLog;
 end;
 
@@ -324,6 +326,7 @@ var
   lProcess: TProcess;
 begin
   Result := False;
+  ALog := '';
   lCandidates := WindowsFirebirdExeCandidates;
   try
     if lCandidates.Count = 0 then
@@ -463,10 +466,11 @@ begin
       '/sbin/service', ['firebird', 'start']);
   {$endif}
   if Result then
-    AMessage := 'Команда запуска Firebird выполнена.' + LineEnding + lLog
+    AMessage := UTF8Encode('Команда запуска Firebird выполнена.') +
+      LineEnding + lLog
   else
-    AMessage := 'Не удалось запустить локальный Firebird. ' +
-      'Проверьте, установлен ли сервис и есть ли права администратора/root.' +
+    AMessage := UTF8Encode('Не удалось запустить локальный Firebird. ' +
+      'Проверьте, установлен ли сервис и есть ли права администратора/root.') +
       LineEnding + lLog;
 end;
 

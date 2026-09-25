@@ -6,7 +6,7 @@ unit uLinuxSetupManagerMain;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, Forms, Controls, StdCtrls, ExtCtrls, Process, Dialogs,
+  Classes, SysUtils, StrUtils, IniFiles, Forms, Controls, StdCtrls, ExtCtrls, Process, Dialogs,
   Graphics, LCLIntf, ComCtrls;
 
 type
@@ -22,11 +22,17 @@ type
     fFileAssociationPanel: TPanel;
     fDesktopShortcutPanel: TPanel;
     fAdvancedPanel: TPanel;
+    fCurrentScreenPanel: TPanel;
+    fCurrentScreenState: TLabel;
+    fCurrentScreenPassword: TEdit;
+    fCurrentScreenPasswordConfirm: TEdit;
     fAdvancedOpenButton: TButton;
     fCurrentNameValue: TLabel;
     fNewNameEdit: TEdit;
     fSharePathEdit: TEdit;
     fPublishShareNameEdit: TEdit;
+    fPublishUserEdit: TEdit;
+    fPublishWritableCheck: TCheckBox;
     fPublishedShares: TListView;
     fHostEdit: TEdit;
     fSmbShareEdit: TEdit;
@@ -49,6 +55,7 @@ type
     procedure EnableWolClick(Sender: TObject);
     procedure FunctionSelect(Sender: TObject; User: Boolean);
     procedure BrowseShareClick(Sender: TObject);
+    procedure ConfigureSmbClick(Sender: TObject);
     procedure PublishShareClick(Sender: TObject);
     procedure RefreshPublishedClick(Sender: TObject);
     procedure PublishedShareSelect(Sender: TObject; Item: TListItem;
@@ -72,6 +79,16 @@ type
     procedure RemoveAutostartClick(Sender: TObject);
     procedure ReconnectShareClick(Sender: TObject);
     procedure OpenAdvancedClick(Sender: TObject);
+    procedure RefreshCurrentScreenClick(Sender: TObject);
+    procedure EnableCurrentScreenClick(Sender: TObject);
+    procedure DisableCurrentScreenClick(Sender: TObject);
+    procedure ChangeCurrentScreenPasswordClick(Sender: TObject);
+    procedure RefreshCurrentScreen;
+    procedure ChangeCurrentScreen(const AAction: string);
+    function CaptureProcess(const AExecutable: string;
+      const AArguments: array of string; out AOutput: string): Boolean;
+    function PackageInstalled(const AName: string): Boolean;
+    function ServiceState(const AName: string): string;
     procedure BuildUi;
     function ReadComputerName: string;
     function RunHelper(const AExecutable: string;
@@ -100,7 +117,7 @@ var
 implementation
 
 uses
-  uLinuxSetupManagerSystemDialogs, fpjson, jsonparser;
+  uLinuxSetupManagerSystemDialogs, uLinuxSetupManagerSmbDialog, fpjson, jsonparser;
 
 const
   CHostnameHelper = '/usr/local/sbin/recorderlnx-set-hostname';
@@ -110,6 +127,7 @@ const
   CMeraAssociationHelper = '/usr/local/sbin/recorderlnx-associate-mera-winpos';
   CFileAssociationHelper = '/usr/local/sbin/recorderlnx-associate-file';
   CDesktopShortcutHelper = '/usr/local/sbin/recorderlnx-create-desktop-shortcut';
+  CCurrentScreenHelper = '/usr/local/sbin/recorderlnx-current-screen-rdp';
   CMountRoot = '/home/user/Сеть/MeraFiles';
   CRegistryDir = '/etc/recorderlnx/network-shares.d';
 
@@ -118,7 +136,9 @@ function AddLabel(AOwner: TComponent; AParent: TWinControl; ALeft, ATop,
 begin
   Result := TLabel.Create(AOwner);
   Result.Parent := AParent;
-  Result.SetBounds(ALeft, ATop, AWidth, 24);
+  Result.SetBounds(ALeft, ATop, AWidth, 28);
+  Result.AutoSize := False;
+  Result.Layout := tlCenter;
   Result.Caption := ACaption;
 end;
 
@@ -129,6 +149,8 @@ begin
   Result.Parent := AParent;
   Result.SetBounds(ALeft, ATop, AWidth, 32);
   Result.Caption := ACaption;
+  if ACaption = '...' then
+    Result.Anchors := [akTop, akRight];
   Result.OnClick := AHandler;
 end;
 
@@ -322,14 +344,15 @@ var
   lDescriptionSplitter: TSplitter;
 begin
   Caption := 'Настройка Linux';
-  SetBounds(180, 120, 840, 610);
-  Constraints.MinWidth := 820;
-  Constraints.MinHeight := 480;
+  SetBounds(180, 120, 1000, 700);
+  Constraints.MinWidth := 900;
+  Constraints.MinHeight := 560;
   Position := poScreenCenter;
   fFunctionList := TListBox.Create(Self);
   fFunctionList.Parent := Self;
   fFunctionList.Align := alLeft;
-  fFunctionList.Width := 250;
+  fFunctionList.Width := 290;
+  fFunctionList.Constraints.MinWidth := 250;
   fFunctionList.Items.Add('Имя компьютера');
   fFunctionList.Items.Add('Wake-on-LAN');
   fFunctionList.Items.Add('Опубликовать каталог');
@@ -344,6 +367,7 @@ begin
   fFunctionList.Items.Add('Удалённый доступ SSH');
   fFunctionList.Items.Add('Импорт и экспорт профиля');
   fFunctionList.Items.Add('Диски и монтирование');
+  fFunctionList.Items.Add('Удалённый рабочий стол');
   fFunctionList.OnSelectionChange := @FunctionSelect;
   lRightPanel := TPanel.Create(Self);
   lRightPanel.Parent := Self;
@@ -382,7 +406,7 @@ begin
   fNamePanel := TPanel.Create(Self);
   fNamePanel.Parent := lContentPanel;
   fNamePanel.SetBounds(0, 0, 535, 265);
-  fNamePanel.Anchors := [akLeft, akTop, akRight];
+  fNamePanel.Align := alClient;
   fNamePanel.BevelOuter := bvNone;
   AddLabel(Self, fNamePanel, 16, 28, 170, 'Текущее имя');
   fCurrentNameValue := AddLabel(Self, fNamePanel, 190, 28, 320, '');
@@ -391,6 +415,7 @@ begin
   fNewNameEdit := TEdit.Create(Self);
   fNewNameEdit.Parent := fNamePanel;
   fNewNameEdit.SetBounds(190, 72, 320, 28);
+  fNewNameEdit.Anchors := [akLeft, akTop, akRight];
   fNewNameEdit.Hint := 'Например: KIP-4';
   fNewNameEdit.ShowHint := True;
   AddButton(Self, fNamePanel, 190, 124, 150, 'Переименовать', @ApplyNameClick);
@@ -398,7 +423,7 @@ begin
   fWolPanel := TPanel.Create(Self);
   fWolPanel.Parent := lContentPanel;
   fWolPanel.SetBounds(0, 0, 535, 265);
-  fWolPanel.Anchors := [akLeft, akTop, akRight];
+  fWolPanel.Align := alClient;
   fWolPanel.BevelOuter := bvNone;
   AddLabel(Self, fWolPanel, 16, 28, 490, 'Сетевой интерфейс: enp3s0');
   AddButton(Self, fWolPanel, 190, 72, 180, 'Включить Wake-on-LAN',
@@ -412,24 +437,39 @@ begin
   fSharePathEdit := TEdit.Create(Self);
   fSharePathEdit.Parent := fSharePanel;
   fSharePathEdit.SetBounds(16, 58, 440, 28);
+  fSharePathEdit.Anchors := [akLeft, akTop, akRight];
   AddButton(Self, fSharePanel, 465, 56, 45, '...', @BrowseShareClick);
   AddLabel(Self, fSharePanel, 16, 100, 150, 'Сетевое имя');
   fPublishShareNameEdit := TEdit.Create(Self);
   fPublishShareNameEdit.Parent := fSharePanel;
   fPublishShareNameEdit.SetBounds(170, 96, 340, 28);
+  fPublishShareNameEdit.Anchors := [akLeft, akTop, akRight];
   fPublishShareNameEdit.Text := 'MeraFiles';
-  AddButton(Self, fSharePanel, 16, 142, 118, 'Опубликовать',
+  AddLabel(Self, fSharePanel, 16, 136, 150, 'Пользователь SMB');
+  fPublishUserEdit := TEdit.Create(Self);
+  fPublishUserEdit.Parent := fSharePanel;
+  fPublishUserEdit.SetBounds(170, 132, 340, 28);
+  fPublishUserEdit.Anchors := [akLeft, akTop, akRight];
+  fPublishUserEdit.Text := GetEnvironmentVariable('USER');
+  fPublishWritableCheck := TCheckBox.Create(Self);
+  fPublishWritableCheck.Parent := fSharePanel;
+  fPublishWritableCheck.SetBounds(16, 166, 300, 25);
+  fPublishWritableCheck.Caption := 'Разрешить запись';
+  fPublishWritableCheck.Checked := False;
+  AddButton(Self, fSharePanel, 16, 200, 118, 'Опубликовать',
     @PublishShareClick);
-  AddButton(Self, fSharePanel, 142, 142, 92, 'Обновить',
+  AddButton(Self, fSharePanel, 142, 200, 92, 'Обновить',
     @RefreshPublishedClick);
-  AddButton(Self, fSharePanel, 242, 142, 125, 'Изменить путь',
+  AddButton(Self, fSharePanel, 242, 200, 125, 'Изменить путь',
     @UpdatePublishedClick);
-  AddButton(Self, fSharePanel, 375, 142, 135, 'Удалить ресурс',
+  AddButton(Self, fSharePanel, 375, 200, 135, 'Удалить ресурс',
     @DeletePublishedClick);
-  AddLabel(Self, fSharePanel, 16, 178, 490, 'Опубликованные ресурсы');
+  AddButton(Self, fSharePanel, 375, 234, 135, 'Настроить SMB…',
+    @ConfigureSmbClick);
+  AddLabel(Self, fSharePanel, 16, 270, 490, 'Опубликованные ресурсы');
   fPublishedShares := TListView.Create(Self);
   fPublishedShares.Parent := fSharePanel;
-  fPublishedShares.SetBounds(16, 200, 494, fSharePanel.ClientHeight - 210);
+  fPublishedShares.SetBounds(16, 292, 494, fSharePanel.ClientHeight - 302);
   fPublishedShares.Anchors := [akLeft, akTop, akRight, akBottom];
   fPublishedShares.ViewStyle := vsReport;
   fPublishedShares.RowSelect := True;
@@ -442,17 +482,20 @@ begin
   fConnectPanel := TPanel.Create(Self);
   fConnectPanel.Parent := lContentPanel;
   fConnectPanel.SetBounds(0, 0, 535, 265);
-  fConnectPanel.Anchors := [akLeft, akTop, akRight];
+  fConnectPanel.Align := alClient;
   fConnectPanel.BevelOuter := bvNone;
   AddLabel(Self, fConnectPanel, 16, 12, 150, 'Хост или IP');
   fHostEdit := TEdit.Create(Self); fHostEdit.Parent := fConnectPanel;
   fHostEdit.SetBounds(170, 8, 340, 26);
+  fHostEdit.Anchors := [akLeft, akTop, akRight];
   AddLabel(Self, fConnectPanel, 16, 48, 150, 'SMB-ресурс');
   fSmbShareEdit := TEdit.Create(Self); fSmbShareEdit.Parent := fConnectPanel;
   fSmbShareEdit.SetBounds(170, 44, 340, 26); fSmbShareEdit.Text := 'MeraFiles';
+  fSmbShareEdit.Anchors := [akLeft, akTop, akRight];
   AddLabel(Self, fConnectPanel, 16, 84, 150, 'Локальное имя');
   fLocalNameEdit := TEdit.Create(Self); fLocalNameEdit.Parent := fConnectPanel;
   fLocalNameEdit.SetBounds(170, 80, 340, 26);
+  fLocalNameEdit.Anchors := [akLeft, akTop, akRight];
   AddButton(Self, fConnectPanel, 16, 118, 94, 'Подключить', @ConnectShareClick);
   AddButton(Self, fConnectPanel, 116, 118, 94, 'Отключить', @DisconnectShareClick);
   AddButton(Self, fConnectPanel, 216, 118, 94, 'Переподкл.', @ReconnectShareClick);
@@ -461,11 +504,12 @@ begin
   fResourcesList := TListBox.Create(Self);
   fResourcesList.Parent := fConnectPanel;
   fResourcesList.SetBounds(16, 158, 494, 96);
+  fResourcesList.Anchors := [akLeft, akTop, akRight, akBottom];
   fResourcesList.OnSelectionChange := @ResourceSelect;
   fMeraAssociationPanel := TPanel.Create(Self);
   fMeraAssociationPanel.Parent := lContentPanel;
   fMeraAssociationPanel.SetBounds(0, 0, 535, 265);
-  fMeraAssociationPanel.Anchors := [akLeft, akTop, akRight];
+  fMeraAssociationPanel.Align := alClient;
   fMeraAssociationPanel.BevelOuter := bvNone;
   AddLabel(Self, fMeraAssociationPanel, 16, 28, 490,
     'Программа для файлов *.mera: WinПОС через Wine');
@@ -474,18 +518,20 @@ begin
   fFileAssociationPanel := TPanel.Create(Self);
   fFileAssociationPanel.Parent := lContentPanel;
   fFileAssociationPanel.SetBounds(0, 0, 535, 265);
-  fFileAssociationPanel.Anchors := [akLeft, akTop, akRight];
+  fFileAssociationPanel.Align := alClient;
   fFileAssociationPanel.BevelOuter := bvNone;
   AddLabel(Self, fFileAssociationPanel, 16, 24, 150, 'Файл-пример');
   fAssociationFileEdit := TEdit.Create(Self);
   fAssociationFileEdit.Parent := fFileAssociationPanel;
   fAssociationFileEdit.SetBounds(170, 20, 286, 28);
+  fAssociationFileEdit.Anchors := [akLeft, akTop, akRight];
   AddButton(Self, fFileAssociationPanel, 465, 18, 45, '...',
     @BrowseAssociationFileClick);
   AddLabel(Self, fFileAssociationPanel, 16, 68, 150, 'Программа');
   fAssociationProgramEdit := TEdit.Create(Self);
   fAssociationProgramEdit.Parent := fFileAssociationPanel;
   fAssociationProgramEdit.SetBounds(170, 64, 286, 28);
+  fAssociationProgramEdit.Anchors := [akLeft, akTop, akRight];
   AddButton(Self, fFileAssociationPanel, 465, 62, 45, '...',
     @BrowseAssociationProgramClick);
   AddButton(Self, fFileAssociationPanel, 170, 112, 220,
@@ -493,24 +539,27 @@ begin
   fDesktopShortcutPanel := TPanel.Create(Self);
   fDesktopShortcutPanel.Parent := lContentPanel;
   fDesktopShortcutPanel.SetBounds(0, 0, 535, 280);
-  fDesktopShortcutPanel.Anchors := [akLeft, akTop, akRight];
+  fDesktopShortcutPanel.Align := alClient;
   fDesktopShortcutPanel.BevelOuter := bvNone;
   AddLabel(Self, fDesktopShortcutPanel, 16, 8, 225, 'Установленные программы');
   fProgramsTree := TTreeView.Create(Self);
   fProgramsTree.Parent := fDesktopShortcutPanel;
   fProgramsTree.SetBounds(16, 34, 226, 235);
+  fProgramsTree.Anchors := [akLeft, akTop, akBottom];
   fProgramsTree.ReadOnly := True;
   fProgramsTree.OnSelectionChanged := @ProgramSelect;
   AddLabel(Self, fDesktopShortcutPanel, 252, 8, 250, 'Исполняемый файл / Exec');
   fShortcutExecutableEdit := TEdit.Create(Self);
   fShortcutExecutableEdit.Parent := fDesktopShortcutPanel;
   fShortcutExecutableEdit.SetBounds(252, 32, 204, 28);
+  fShortcutExecutableEdit.Anchors := [akLeft, akTop, akRight];
   AddButton(Self, fDesktopShortcutPanel, 465, 30, 45, '...',
     @BrowseShortcutExecutableClick);
   AddLabel(Self, fDesktopShortcutPanel, 252, 64, 250, 'Параметры запуска');
   fShortcutArgumentsEdit := TEdit.Create(Self);
   fShortcutArgumentsEdit.Parent := fDesktopShortcutPanel;
   fShortcutArgumentsEdit.SetBounds(252, 88, 258, 28);
+  fShortcutArgumentsEdit.Anchors := [akLeft, akTop, akRight];
   fShortcutDesktopCheck := TCheckBox.Create(Self);
   fShortcutDesktopCheck.Parent := fDesktopShortcutPanel;
   fShortcutDesktopCheck.SetBounds(252, 120, 258, 24);
@@ -539,12 +588,45 @@ begin
   fAdvancedPanel := TPanel.Create(Self);
   fAdvancedPanel.Parent := lContentPanel;
   fAdvancedPanel.SetBounds(0, 0, 535, 265);
-  fAdvancedPanel.Anchors := [akLeft, akTop, akRight];
+  fAdvancedPanel.Align := alClient;
   fAdvancedPanel.BevelOuter := bvNone;
   AddLabel(Self, fAdvancedPanel, 16, 36, 495,
     'Откройте диалог настройки выбранного системного раздела.');
   fAdvancedOpenButton := AddButton(Self, fAdvancedPanel, 145, 84, 250,
     'Открыть настройки', @OpenAdvancedClick);
+  fCurrentScreenPanel := TPanel.Create(Self);
+  fCurrentScreenPanel.Parent := lContentPanel;
+  fCurrentScreenPanel.SetBounds(0, 0, 535, 265);
+  fCurrentScreenPanel.Align := alClient;
+  fCurrentScreenPanel.BevelOuter := bvNone;
+  AddLabel(Self, fCurrentScreenPanel, 16, 24, 495,
+    'Доступ к текущему экрану через xrdp и x11vnc');
+  fCurrentScreenState := AddLabel(Self, fCurrentScreenPanel, 16, 52, 495,
+    'Состояние: неизвестно');
+  fCurrentScreenState.AutoSize := False;
+  fCurrentScreenState.WordWrap := True;
+  fCurrentScreenState.Height := 76;
+  fCurrentScreenState.Anchors := [akLeft, akTop, akRight];
+  AddButton(Self, fCurrentScreenPanel, 16, 130, 195,
+    'Включить всё постоянно', @EnableCurrentScreenClick);
+  AddButton(Self, fCurrentScreenPanel, 219, 130, 120,
+    'Отключить', @DisableCurrentScreenClick);
+  AddButton(Self, fCurrentScreenPanel, 347, 130, 145,
+    'Диагностика', @RefreshCurrentScreenClick);
+  AddLabel(Self, fCurrentScreenPanel, 16, 174, 210, 'Новый пароль RDP:');
+  fCurrentScreenPassword := TEdit.Create(Self);
+  fCurrentScreenPassword.Parent := fCurrentScreenPanel;
+  fCurrentScreenPassword.SetBounds(225, 170, 240, 28);
+  fCurrentScreenPassword.Anchors := [akLeft, akTop, akRight];
+  fCurrentScreenPassword.PasswordChar := '*';
+  AddLabel(Self, fCurrentScreenPanel, 16, 207, 210, 'Повторите пароль:');
+  fCurrentScreenPasswordConfirm := TEdit.Create(Self);
+  fCurrentScreenPasswordConfirm.Parent := fCurrentScreenPanel;
+  fCurrentScreenPasswordConfirm.SetBounds(225, 203, 240, 28);
+  fCurrentScreenPasswordConfirm.Anchors := [akLeft, akTop, akRight];
+  fCurrentScreenPasswordConfirm.PasswordChar := '*';
+  AddButton(Self, fCurrentScreenPanel, 16, 238, 225,
+    'Изменить пароль', @ChangeCurrentScreenPasswordClick);
   fStatusLabel.BringToFront;
 end;
 
@@ -564,7 +646,9 @@ begin
   fMeraAssociationPanel.Visible := fFunctionList.ItemIndex = 4;
   fFileAssociationPanel.Visible := fFunctionList.ItemIndex = 5;
   fDesktopShortcutPanel.Visible := fFunctionList.ItemIndex = 6;
-  fAdvancedPanel.Visible := fFunctionList.ItemIndex >= 7;
+  fAdvancedPanel.Visible := (fFunctionList.ItemIndex >= 7) and
+    (fFunctionList.ItemIndex <= 13);
+  fCurrentScreenPanel.Visible := fFunctionList.ItemIndex = 14;
   fStatusLabel.Caption := '';
   case fFunctionList.ItemIndex of
     0: fDescriptionMemo.Text := HostnameHelp;
@@ -587,8 +671,8 @@ begin
       fDescriptionMemo.Text := 'IPv4, DHCP, DNS и постоянные маршруты. Перед применением показывается план, системные файлы резервируются.'; end;
     8: begin fAdvancedOpenButton.Caption := 'Настроить прокси';
       fDescriptionMemo.Text := 'Прокси для APT, системы и пользователя. Пароль не показывается в отчётах и профилях.'; end;
-    9: begin fAdvancedOpenButton.Caption := 'Настроить права';
-      fDescriptionMemo.Text := 'Группы пользователя и ACL чтения/записи для редактируемого списка каталогов без смены владельца.'; end;
+    9: begin fAdvancedOpenButton.Caption := 'Настроить права и пароль';
+      fDescriptionMemo.Text := 'Группы пользователя, ACL чтения/записи и смена системного пароля. В диалоге можно отдельно синхронизировать пароль автологина Fly-DM.'; end;
     10: begin fAdvancedOpenButton.Caption := 'Настроить дату и время';
       fDescriptionMemo.Text := 'Часовой пояс, NTP, серверы синхронизации и текущее состояние systemd-timesyncd.'; end;
     11: begin fAdvancedOpenButton.Caption := 'Настроить SSH';
@@ -608,6 +692,18 @@ begin
         LineEnding + 'Системные данные: параметры постоянного подключения ' +
         'хранятся в /etc/fstab; фактический режим проверяется через findmnt. ' +
         'После ремонта утилита возвращает автомонтирование и проверяет запись.'; end;
+    14: begin
+      fDescriptionMemo.Text :=
+        'Показывает готовность пакетов, служб и портов и управляет доступом ' +
+        'к уже открытому локальному рабочему столу через xrdp. ' +
+        'Служба x11vnc принимает подключения только с этого ПК; ' +
+        'удалённый клиент подключается к xrdp. При включении служба ' +
+        'сохраняется в автозапуске. Если комплект неполный, запустите единый ' +
+        'offline installer и выберите «Удалённый рабочий стол полностью». ' +
+        'Команда: sudo ' + CCurrentScreenHelper +
+        ' enable; состояние: ' + CCurrentScreenHelper + ' status.';
+      RefreshCurrentScreen;
+    end;
   else
     fDescriptionMemo.Clear;
   end;
@@ -623,6 +719,225 @@ begin
     11: ShowSshDialog(Self);
     12: ShowProfileDialog(Self);
     13: ShowDiskDialog(Self);
+  end;
+end;
+
+procedure TLinuxSetupManagerForm.RefreshCurrentScreen;
+var
+  lPorts, lState: string;
+  lCurrentScreen, lPackages, lPort3389, lPort5900, lXrdp: string;
+begin
+  if not FileExists(CCurrentScreenHelper) then
+  begin
+    fCurrentScreenState.Caption :=
+      'Готовность: helper не установлен.' + LineEnding +
+      'Запустите единый offline installer и выберите «Удалённый рабочий стол полностью».';
+    Exit;
+  end;
+  lPackages := 'неполный комплект';
+  if PackageInstalled('xrdp') and PackageInstalled('x11vnc') and
+    PackageInstalled('remmina') and PackageInstalled('remmina-plugin-rdp') then
+    lPackages := 'готовы';
+  if not CaptureProcess(CCurrentScreenHelper, ['status'], lState) then
+    lState := 'ошибка';
+  lXrdp := ServiceState('xrdp');
+  lCurrentScreen := ServiceState('recorderlnx-current-screen.service');
+  lPort3389 := 'закрыт';
+  lPort5900 := 'закрыт';
+  if CaptureProcess('ss', ['-lnt'], lPorts) then
+  begin
+    if Pos(':3389', lPorts) > 0 then lPort3389 := 'слушает';
+    if (Pos('127.0.0.1:5900', lPorts) > 0) or
+      (Pos('[::1]:5900', lPorts) > 0) then lPort5900 := 'только локально';
+  end;
+  fCurrentScreenState.Caption :=
+    'Пакеты xrdp/x11vnc/Remmina RDP: ' + lPackages +
+    '   |   xrdp: ' + lXrdp + LineEnding +
+    'CurrentScreen: ' + Trim(lState) + ' / ' + lCurrentScreen +
+    '   |   порты: 3389 ' + lPort3389 + ', 5900 ' + lPort5900;
+  if lPackages <> 'готовы' then
+    fCurrentScreenState.Caption := fCurrentScreenState.Caption + LineEnding +
+      'Запустите единый offline installer: «Удалённый рабочий стол полностью».';
+end;
+
+function TLinuxSetupManagerForm.CaptureProcess(const AExecutable: string;
+  const AArguments: array of string; out AOutput: string): Boolean;
+var
+  lIndex: Integer;
+  lOutput: TStringList;
+  lProcess: TProcess;
+begin
+  Result := False;
+  AOutput := '';
+  lOutput := TStringList.Create;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := AExecutable;
+      for lIndex := Low(AArguments) to High(AArguments) do
+        lProcess.Parameters.Add(AArguments[lIndex]);
+      lProcess.Options := [poUsePipes, poWaitOnExit];
+      lProcess.Execute;
+      lOutput.LoadFromStream(lProcess.Output);
+      AOutput := Trim(lOutput.Text);
+      Result := lProcess.ExitStatus = 0;
+    except
+      Result := False;
+    end;
+  finally
+    lProcess.Free;
+    lOutput.Free;
+  end;
+end;
+
+function TLinuxSetupManagerForm.PackageInstalled(const AName: string): Boolean;
+var
+  lOutput: string;
+begin
+  Result := CaptureProcess('dpkg-query', ['-W', '-f=${Status}', AName],
+    lOutput) and (Pos('install ok installed', lOutput) > 0);
+end;
+
+function TLinuxSetupManagerForm.ServiceState(const AName: string): string;
+var
+  lOutput: string;
+begin
+  if CaptureProcess('systemctl', ['is-active', AName], lOutput) then
+    Result := 'активен'
+  else if lOutput = 'inactive' then
+    Result := 'остановлен'
+  else if lOutput = 'failed' then
+    Result := 'ошибка'
+  else
+    Result := 'не запущен';
+end;
+
+procedure TLinuxSetupManagerForm.ChangeCurrentScreen(const AAction: string);
+var
+  lOutput: TStringList;
+  lProcess: TProcess;
+begin
+  if not FileExists(CCurrentScreenHelper) then
+  begin
+    MessageDlg('Компонент удалённого рабочего стола не установлен.' +
+      LineEnding + 'Запустите единый offline installer и выберите ' +
+      '«Удалённый рабочий стол полностью».',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  if (AAction = 'enable') and
+    (not PackageInstalled('xrdp') or not PackageInstalled('x11vnc')) then
+  begin
+    MessageDlg('Не установлены xrdp и/или x11vnc.' + LineEnding +
+      'Запустите единый offline installer и выберите ' +
+      '«Удалённый рабочий стол полностью».', mtError, [mbOK], 0);
+    Exit;
+  end;
+  lOutput := TStringList.Create;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := 'pkexec';
+      lProcess.Parameters.Add(CCurrentScreenHelper);
+      lProcess.Parameters.Add(AAction);
+      lProcess.Options := [poUsePipes, poWaitOnExit];
+      lProcess.Execute;
+      lOutput.LoadFromStream(lProcess.Output);
+      if lProcess.ExitStatus <> 0 then
+        MessageDlg('Настройка завершилась с кодом ' +
+          IntToStr(lProcess.ExitStatus) + '.' + LineEnding +
+          Trim(lOutput.Text), mtError, [mbOK], 0)
+      else if (AAction = 'enable') and (Trim(lOutput.Text) <> '') then
+        MessageDlg('Доступ к текущему экрану включён.' + LineEnding +
+          Trim(lOutput.Text), mtInformation, [mbOK], 0);
+    except
+      on E: Exception do
+        MessageDlg('Не удалось изменить настройку: ' + E.Message,
+          mtError, [mbOK], 0);
+    end;
+  finally
+    lProcess.Free;
+    lOutput.Free;
+  end;
+  RefreshCurrentScreen;
+end;
+
+procedure TLinuxSetupManagerForm.RefreshCurrentScreenClick(Sender: TObject);
+begin
+  RefreshCurrentScreen;
+end;
+
+procedure TLinuxSetupManagerForm.EnableCurrentScreenClick(Sender: TObject);
+begin
+  ChangeCurrentScreen('enable');
+end;
+
+procedure TLinuxSetupManagerForm.DisableCurrentScreenClick(Sender: TObject);
+begin
+  ChangeCurrentScreen('disable');
+end;
+
+procedure TLinuxSetupManagerForm.ChangeCurrentScreenPasswordClick(Sender: TObject);
+var
+  lProcess: TProcess;
+  lPassword: UTF8String;
+  lIndex: Integer;
+begin
+  if not FileExists(CCurrentScreenHelper) then
+  begin
+    MessageDlg('Компонент удалённого рабочего стола не установлен.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  if (fCurrentScreenPassword.Text = '') or
+    (fCurrentScreenPassword.Text <> fCurrentScreenPasswordConfirm.Text) then
+  begin
+    MessageDlg('Введите одинаковый непустой пароль в оба поля.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  if Length(fCurrentScreenPassword.Text) > 8 then
+  begin
+    MessageDlg('Пароль должен содержать от 1 до 8 символов ASCII.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  for lIndex := 1 to Length(fCurrentScreenPassword.Text) do
+    if (Ord(fCurrentScreenPassword.Text[lIndex]) < 33) or
+      (Ord(fCurrentScreenPassword.Text[lIndex]) > 126) then
+    begin
+      MessageDlg('Пароль должен содержать от 1 до 8 печатных символов ASCII.',
+        mtError, [mbOK], 0);
+      Exit;
+    end;
+  lPassword := UTF8String(fCurrentScreenPassword.Text + LineEnding);
+  fCurrentScreenPassword.Clear;
+  fCurrentScreenPasswordConfirm.Clear;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := 'pkexec';
+      lProcess.Parameters.Add(CCurrentScreenHelper);
+      lProcess.Parameters.Add('password');
+      lProcess.Options := [poUsePipes];
+      lProcess.Execute;
+      lProcess.Input.WriteBuffer(lPassword[1], Length(lPassword));
+      lProcess.CloseInput;
+      lProcess.WaitOnExit;
+      if lProcess.ExitStatus = 0 then
+        MessageDlg('Пароль удалённого рабочего стола изменён.',
+          mtInformation, [mbOK], 0)
+      else
+        MessageDlg('Не удалось изменить пароль. Код ' +
+          IntToStr(lProcess.ExitStatus) + '.', mtError, [mbOK], 0);
+    except
+      on E: Exception do
+        MessageDlg('Не удалось изменить пароль: ' + E.Message,
+          mtError, [mbOK], 0);
+    end;
+  finally
+    lPassword := '';
+    lProcess.Free;
   end;
 end;
 
@@ -1066,10 +1381,11 @@ end;
 
 procedure TLinuxSetupManagerForm.PublishShareClick(Sender: TObject);
 var
-  lDirectory, lShareName, lOutput: string;
+  lDirectory, lShareName, lUser, lMode, lOutput: string;
 begin
   lDirectory := Trim(fSharePathEdit.Text);
   lShareName := Trim(fPublishShareNameEdit.Text);
+  lUser := Trim(fPublishUserEdit.Text);
   if not DirectoryExists(lDirectory) then
   begin
     MessageDlg('Выбранный каталог не существует.', mtWarning, [mbOK], 0);
@@ -1080,13 +1396,31 @@ begin
     MessageDlg('Введите сетевое имя ресурса.', mtWarning, [mbOK], 0);
     Exit;
   end;
-  if RunPublishAction([lDirectory, lShareName], True, lOutput) then
+  if lUser = '' then
+  begin
+    MessageDlg('Укажите пользователя SMB.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if fPublishWritableCheck.Checked then lMode := 'rw' else lMode := 'ro';
+  if MessageDlg('Опубликовать каталог для пользователя ' + lUser + '?' +
+    LineEnding + LineEnding +
+    'При необходимости будут добавлены ACL. Существующие права не удаляются.' +
+    LineEnding + 'Режим: ' + IfThen(fPublishWritableCheck.Checked,
+      'чтение и запись', 'только чтение') + '.',
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+  if RunPublishAction([lDirectory, lShareName, lUser, lMode], True, lOutput) then
   begin
     fStatusLabel.Caption := 'Каталог опубликован как ' + lShareName + '.';
     RefreshPublishedShares;
   end
   else
     MessageDlg('Ошибка публикации: ' + lOutput, mtError, [mbOK], 0);
+end;
+
+procedure TLinuxSetupManagerForm.ConfigureSmbClick(Sender: TObject);
+begin
+  ShowSmbDialog(Self);
+  RefreshPublishedShares;
 end;
 
 function TLinuxSetupManagerForm.RunPublishAction(
@@ -1161,6 +1495,7 @@ begin
       lItem := fPublishedShares.Items.Add;
       lItem.Caption := TJSONObject(lRow).Get('name', '');
       lItem.SubItems.Add(TJSONObject(lRow).Get('path', ''));
+      lItem.Data := Pointer(PtrInt(Ord(TJSONObject(lRow).Get('writable', False))));
       if lItem.Caption = lName then lItem.Selected := True;
     end;
   except
@@ -1181,11 +1516,12 @@ begin
   if not Selected or (Item = nil) or (Item.SubItems.Count = 0) then Exit;
   fPublishShareNameEdit.Text := Item.Caption;
   fSharePathEdit.Text := Item.SubItems[0];
+  fPublishWritableCheck.Checked := PtrInt(Item.Data) <> 0;
 end;
 
 procedure TLinuxSetupManagerForm.UpdatePublishedClick(Sender: TObject);
 var
-  lName, lPath, lOutput: string;
+  lName, lPath, lUser, lMode, lOutput: string;
 begin
   if fPublishedShares.Selected = nil then
   begin
@@ -1195,6 +1531,7 @@ begin
   end;
   lName := fPublishedShares.Selected.Caption;
   lPath := Trim(fSharePathEdit.Text);
+  lUser := Trim(fPublishUserEdit.Text);
   if not DirectoryExists(lPath) then
   begin
     MessageDlg('Новый каталог не существует.', mtWarning, [mbOK], 0);
@@ -1202,7 +1539,13 @@ begin
   end;
   if MessageDlg('Изменить каталог ресурса ' + lName + ' на ' + lPath + '?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  if RunPublishAction(['update', lName, lPath], True, lOutput) then
+  if lUser = '' then
+  begin
+    MessageDlg('Укажите пользователя SMB.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if fPublishWritableCheck.Checked then lMode := 'rw' else lMode := 'ro';
+  if RunPublishAction(['update', lName, lPath, lUser, lMode], True, lOutput) then
   begin
     fStatusLabel.Caption := 'Путь ресурса ' + lName + ' изменён.';
     RefreshPublishedShares;

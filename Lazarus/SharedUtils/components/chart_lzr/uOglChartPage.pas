@@ -83,8 +83,7 @@ implementation
 
 /// <summary>
 /// Инициализация стандартных свойств страницы: серая рамка, белый фон, тип cpaAuto,
-/// а также стандартные отступы PixelTabSpace под подписи осей координат (левый отступ 42 пикселя
-/// для шкал значений Y, нижний отступ 24 пикселя для шкалы времени X).
+/// а также компактные стандартные отступы PixelTabSpace под подписи осей координат.
 /// </summary>
 procedure cBasePage.AssignDefaultProperties;
 begin
@@ -94,10 +93,10 @@ begin
   fBorderColor := $FF606060;
   fFillColor := $FFFFFFFF;
   fBorderWidth := 2;
-  fPixelTabSpace.Left := 42;
-  fPixelTabSpace.Top := 34;
-  fPixelTabSpace.Right := 12;
-  fPixelTabSpace.Bottom := 24;
+  fPixelTabSpace.Left := 38;
+  fPixelTabSpace.Top := 24;
+  fPixelTabSpace.Right := 6;
+  fPixelTabSpace.Bottom := 20;
   fAlign := cpaAuto;
   fAlignWeight := 1;
   SetFloatRect(0.04, 0.06, 0.96, 0.94);

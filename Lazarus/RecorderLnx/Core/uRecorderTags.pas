@@ -26,7 +26,7 @@ interface
 uses
   Classes, SysUtils, Math, Contnrs,
   uRecorderCoreServices, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uRecorderTimeSystem;
+  uRecorderTimeSystem, uRecorderUnitManager;
 
 type
   { Идентификатор тега }
@@ -91,6 +91,7 @@ type
   TRecorderTagSetpoint = record
     Enabled: Boolean;             { Флаг включения порога }
     Threshold: Double;            { Значение порога }
+    AlarmInfoText: string;        { Пользовательский текст события срабатывания }
     Color: LongInt;               { Цвет отображения порога в UI }
     OutputEnabled: Boolean;       { Флаг вывода (реле/цифровой выход) }
     HysteresisPercent: Double;    { Гистерезис в процентах }
@@ -222,14 +223,20 @@ type
     fSetpointStatusChannelEnabled: Boolean;                    { Формировать канал состояния }
     fSetpointStatusChannelName: string;                        { Имя формируемого канала состояния }
     fSetpointRangeControlEnabled: Boolean;                     { Контроль допустимого диапазона }
+    fSetpointRangeAlarmInfoText: string;                       { Текст события выхода за диапазон }
     fSetpoints: array[TRecorderTagSetpointKind] of TRecorderTagSetpoint; { Уставки тега }
     fSourceValueMode: string;                                  { Режим значения, заданный источником }
     fHardwareCalibrationEnabled: Boolean;                      { Включена аппаратная ГХ с устройства }
     fHardwareCalibrationName: string;                          { Имя аппаратной ГХ в реестре калибровок }
     fChannelCalibrationEnabled: Boolean;                         { Включена канальная ГХ (термопарная/SDB) }
+    fCalibrationScaleBuilt: Boolean;
+    fCalibrationScaleLinear: Boolean;
+    fHardwareScale: Double;
+    fResultScale: Double;
 
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
+    fSourceUnitName: string;                                   { Единица исходного значения до ГХ }
     function GetBlockCounter: QWord;
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
     procedure UpdateEstimateCache(const ATimes, AValues: array of Double;
@@ -237,6 +244,8 @@ type
     procedure ClearEstimateCache;
     procedure SetSetpoint(AKind: TRecorderTagSetpointKind;
       const AValue: TRecorderTagSetpoint);
+    procedure SetUnitName(const AValue: string);
+    procedure SetSourceUnitName(const AValue: string);
   public
     { Создает тег.
       AId       - стабильный числовой id в пределах registry.
@@ -256,6 +265,7 @@ type
     procedure ConfigureBlockBuffer(ABlockSamples, ABlockCount: Integer);
     { Очищает историю сигнала после смены режима/ГХ канала. }
     procedure ClearSignalHistory;
+    procedure InvalidateCalibrationScale;
 
     { Возвращает снимок сигнала тега. }
     function Snapshot: TRecorderSignalSnapshot;
@@ -277,7 +287,8 @@ type
     property IsVector: Boolean read fIsVector write fIsVector;
     property Name: string read fName write fName;
     property Address: string read fAddress write fAddress;
-    property UnitName: string read fUnitName write fUnitName;
+    property UnitName: string read fUnitName write SetUnitName;
+    property SourceUnitName: string read fSourceUnitName write SetSourceUnitName;
     property Description: string read fDescription write fDescription;
     property GroupPath: string read fGroupPath write fGroupPath;
     property PollFrequencyHz: Double read fPollFrequencyHz write fPollFrequencyHz;
@@ -303,6 +314,8 @@ type
       write fSetpointStatusChannelName;
     property SetpointRangeControlEnabled: Boolean
       read fSetpointRangeControlEnabled write fSetpointRangeControlEnabled;
+    property SetpointRangeAlarmInfoText: string
+      read fSetpointRangeAlarmInfoText write fSetpointRangeAlarmInfoText;
     property SourceId: string read fSourceId write fSourceId;
     property SourceValueMode: string read fSourceValueMode write fSourceValueMode;
     property HardwareCalibrationEnabled: Boolean read fHardwareCalibrationEnabled
@@ -313,6 +326,9 @@ type
       write fChannelCalibrationEnabled;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
+    property CalibrationScaleBuilt: Boolean read fCalibrationScaleBuilt;
+    property CalibrationScaleLinear: Boolean read fCalibrationScaleLinear;
+    property ResultScale: Double read fResultScale;
   end;
 
   { TRecorderTagUpdateEventData
@@ -345,7 +361,8 @@ type
     Реестр тегов RecorderLnx. Владеет тегами, обеспечивает уникальность id/name и
     публикует rceDataUpdated при записи значения. }
 
-  TRecorderCalibrationKind = (rckScale, rckPiecewiseLinear, rckStrain);
+  TRecorderCalibrationKind = (rckScale, rckLinear, rckPiecewiseLinear,
+    rckPolynomial, rckStrain);
 
   TRecorderCalibrationPoint = class
   public
@@ -368,6 +385,7 @@ type
     fK2: Double;
     fModuleData: string;
     fSdbKey: string;
+    fSourceFileName: string;
     fPoints: TList; // List of TRecorderCalibrationPoint
     function GetPoint(AIndex: Integer): TRecorderCalibrationPoint;
     function GetPointCount: Integer;
@@ -377,6 +395,8 @@ type
     procedure AddPoint(AX, AY: Double);
     procedure Assign(ASource: TRecorderCalibration);
     function Clone: TRecorderCalibration;
+    function ConvertInputUnit(const AUnitName: string): Boolean;
+    function ConvertOutputUnit(const AUnitName: string): Boolean;
     function Transform(AValue: Double): Double;
     function InverseTransform(AValue: Double; out AInputValue: Double): Boolean;
     procedure ClearPoints;
@@ -393,6 +413,7 @@ type
     property K2: Double read fK2 write fK2;
     property ModuleData: string read fModuleData write fModuleData;
     property SdbKey: string read fSdbKey write fSdbKey;
+    property SourceFileName: string read fSourceFileName write fSourceFileName;
     property PointCount: Integer read GetPointCount;
   end;
 
@@ -487,6 +508,10 @@ type
     function AddCalibrationCopyForTag(ATag: TRecorderTag;
       APipelineIndex: Integer; ADraft: TRecorderCalibration): TRecorderCalibration;
     function FindTagHardwareCalibration(ATag: TRecorderTag): TRecorderCalibration;
+    function TryGetTagAutoUnit(ATag: TRecorderTag;
+      out AUnitName: string): Boolean;
+    procedure SyncTagAutoUnit(ATag: TRecorderTag; AForce: Boolean = False);
+    procedure RebuildScales(ATag: TRecorderTag);
     function FindTagThermocoupleCalibration(ATag: TRecorderTag): TRecorderCalibration;
     function TransformTagHardwareValue(ATag: TRecorderTag; AValue: Double): Double;
     function TransformTagThermocoupleValue(ATag: TRecorderTag; AValue: Double): Double;
@@ -1439,6 +1464,10 @@ begin
   fSetpointSoundUntilEnd := True;
   fSetpointRangeControlEnabled := True;
   fChannelCalibrationEnabled := True;
+  fCalibrationScaleBuilt := False;
+  fCalibrationScaleLinear := False;
+  fHardwareScale := 1.0;
+  fResultScale := 1.0;
   fCalibrationNames := TStringList.Create;
   fCalibrationNames.CaseSensitive := False;
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
@@ -1866,6 +1895,24 @@ begin
     Result := TRecorderTag(fLoadedTagIdAliases.Objects[I]);
 end;
 
+procedure TRecorderTag.InvalidateCalibrationScale;
+begin
+  fCalibrationScaleBuilt := False;
+end;
+
+procedure TRecorderTag.SetUnitName(const AValue: string);
+begin
+  fUnitName := Trim(AValue);
+  fSourceUnitName := fUnitName;
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetSourceUnitName(const AValue: string);
+begin
+  fSourceUnitName := Trim(AValue);
+  InvalidateCalibrationScale;
+end;
+
 function TRecorderTagRegistry.FindByName(const AName: string): TRecorderTag;
 var
   I: Integer;
@@ -2001,12 +2048,16 @@ var
   lExisting: TRecorderCalibration;
   lNewName: string;
   lOldName: string;
+  lSdbKey: string;
+  lSourceFileName: string;
   lTag: TRecorderTag;
 begin
   Result := False;
   if (ATarget = nil) or (ADraft = nil) then
     Exit;
   lOldName := Trim(ATarget.Name);
+  lSdbKey := ATarget.SdbKey;
+  lSourceFileName := ATarget.SourceFileName;
   lNewName := Trim(ADraft.Name);
   if lNewName = '' then
     raise ERecorderTagError.Create('Calibration name cannot be empty');
@@ -2015,22 +2066,26 @@ begin
     raise ERecorderTagError.Create('Calibration name already exists: ' + lNewName);
 
   ATarget.Assign(ADraft);
-  // После редактирования проектная ГХ уже не обязана совпадать с БДГХ.
-  ATarget.SdbKey := '';
+  { A linked calibration remains the same source object after an in-place
+    edit.  Explicit copy creation is the operation that clears this link. }
+  if (ATarget.SdbKey = '') and (lSdbKey <> '') then
+    ATarget.SdbKey := lSdbKey;
+  if (ATarget.SourceFileName = '') and (lSourceFileName <> '') then
+    ATarget.SourceFileName := lSourceFileName;
   ATarget.Name := lNewName;
-  if SameText(lOldName, lNewName) then
-    Exit(True);
 
   for I := 0 to TagCount - 1 do
   begin
     lTag := Tags[I];
     if lTag = nil then
       Continue;
+    lTag.InvalidateCalibrationScale;
     for J := 0 to lTag.CalibrationNames.Count - 1 do
       if SameText(lTag.CalibrationNames[J], lOldName) then
         lTag.CalibrationNames[J] := lNewName;
     if SameText(lTag.HardwareCalibrationName, lOldName) then
       lTag.HardwareCalibrationName := lNewName;
+    RebuildScales(lTag);
   end;
   Result := True;
 end;
@@ -2076,6 +2131,111 @@ begin
     Result := FindCalibrationByName(ATag.HardwareCalibrationName);
 end;
 
+function TRecorderTagRegistry.TryGetTagAutoUnit(ATag: TRecorderTag;
+  out AUnitName: string): Boolean;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lHardwareCalibration: TRecorderCalibration;
+begin
+  AUnitName := '';
+  Result := False;
+  if ATag = nil then
+    Exit;
+
+  lHardwareCalibration := FindTagHardwareCalibration(ATag);
+
+  if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
+    for I := ATag.CalibrationNames.Count - 1 downto 0 do
+    begin
+      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
+      if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
+      begin
+        AUnitName := Trim(lCalibration.UnitOut);
+        Exit(True);
+      end;
+    end;
+
+  if (lHardwareCalibration <> nil) and
+    (Trim(lHardwareCalibration.UnitOut) <> '') then
+  begin
+    AUnitName := Trim(lHardwareCalibration.UnitOut);
+    Result := True;
+  end;
+end;
+
+procedure TRecorderTagRegistry.SyncTagAutoUnit(ATag: TRecorderTag;
+  AForce: Boolean);
+var
+  lUnitName: string;
+begin
+  if (ATag <> nil) and (ATag.AutoUnit or AForce) and
+    TryGetTagAutoUnit(ATag, lUnitName) then
+    ATag.fUnitName := lUnitName;
+end;
+
+procedure TRecorderTagRegistry.RebuildScales(ATag: TRecorderTag);
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lConversion: Double;
+  lCurrentUnit: string;
+
+  function TryInputConversion(ACalibration: TRecorderCalibration;
+    out AFactor: Double): Boolean;
+  begin
+    AFactor := 1.0;
+    Result := True;
+    if (ACalibration = nil) or (lCurrentUnit = '') or
+      (Trim(ACalibration.UnitIn) = '') or
+      SameText(lCurrentUnit, Trim(ACalibration.UnitIn)) then
+      Exit;
+    Result := RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
+      ACalibration.UnitIn, AFactor);
+  end;
+begin
+  if (ATag = nil) or ATag.fCalibrationScaleBuilt then
+    Exit;
+  ATag.fHardwareScale := 1.0;
+  ATag.fResultScale := 1.0;
+  ATag.fCalibrationScaleLinear := True;
+  lCurrentUnit := Trim(ATag.fSourceUnitName);
+  if lCurrentUnit = '' then
+    lCurrentUnit := Trim(ATag.fUnitName);
+
+  lCalibration := FindTagHardwareCalibration(ATag);
+  if lCalibration <> nil then
+  begin
+    if (lCalibration.Kind <> rckScale) or
+      not TryInputConversion(lCalibration, lConversion) then
+      ATag.fCalibrationScaleLinear := False
+    else
+    begin
+      ATag.fHardwareScale := lConversion * lCalibration.Scale;
+      ATag.fResultScale := ATag.fResultScale * ATag.fHardwareScale;
+      lCurrentUnit := Trim(lCalibration.UnitOut);
+    end;
+  end;
+
+  if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
+    for I := 0 to ATag.CalibrationNames.Count - 1 do
+    begin
+      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
+      if lCalibration = nil then
+        Continue;
+      if (lCalibration.Kind <> rckScale) or
+        not TryInputConversion(lCalibration, lConversion) then
+      begin
+        ATag.fCalibrationScaleLinear := False;
+        Break;
+      end;
+      ATag.fResultScale := ATag.fResultScale * lConversion *
+        lCalibration.Scale;
+      lCurrentUnit := Trim(lCalibration.UnitOut);
+    end;
+  ATag.fCalibrationScaleBuilt := True;
+end;
+
 function TRecorderTagRegistry.FindTagThermocoupleCalibration(
   ATag: TRecorderTag): TRecorderCalibration;
 var
@@ -2102,6 +2262,9 @@ begin
   Result := AValue;
   if ATag = nil then
     Exit;
+  RebuildScales(ATag);
+  if ATag.fCalibrationScaleLinear then
+    Exit(AValue * ATag.fHardwareScale);
   lCalibration := FindTagHardwareCalibration(ATag);
   if lCalibration <> nil then
     Result := lCalibration.Transform(Result);
@@ -2158,6 +2321,12 @@ var
   I: Integer;
   lCalibration: TRecorderCalibration;
 begin
+  if ATag <> nil then
+  begin
+    RebuildScales(ATag);
+    if ATag.fCalibrationScaleLinear then
+      Exit(AValue * ATag.fResultScale);
+  end;
   Result := TransformTagHardwareValue(ATag, AValue);
   if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
     (ATag.CalibrationNames = nil) then
@@ -2689,6 +2858,7 @@ begin
   fK2 := ASource.K2;
   fModuleData := ASource.ModuleData;
   fSdbKey := ASource.SdbKey;
+  fSourceFileName := ASource.SourceFileName;
   ClearPoints;
   for I := 0 to ASource.PointCount - 1 do
   begin
@@ -2704,6 +2874,97 @@ begin
   Result.Assign(Self);
 end;
 
+function TRecorderCalibration.ConvertInputUnit(
+  const AUnitName: string): Boolean;
+var
+  I: Integer;
+  lDegree: Integer;
+  lFactor: Double;
+  lPoint: TRecorderCalibrationPoint;
+begin
+  Result := False;
+  if (Trim(fUnitIn) = '') or (Trim(AUnitName) = '') then
+    Exit;
+  if SameText(Trim(fUnitIn), Trim(AUnitName)) then
+    Exit(True);
+  if not RecorderUnitManager.TryGetConversionFactor(fUnitIn, AUnitName,
+    lFactor) then
+    Exit;
+
+  case fKind of
+    rckScale:
+      fScale := fScale / lFactor;
+    rckLinear:
+      fScale := fScale / lFactor;
+    rckStrain:
+      begin
+        fK1 := fK1 / lFactor;
+        fK2 := fK2 / Sqr(lFactor);
+      end;
+    rckPiecewiseLinear:
+      for I := 0 to fPoints.Count - 1 do
+      begin
+        lPoint := PointAt(I);
+        if lPoint <> nil then
+          lPoint.X := lPoint.X * lFactor;
+      end;
+    rckPolynomial:
+      for I := 0 to fPoints.Count - 1 do
+      begin
+        lPoint := PointAt(I);
+        if lPoint <> nil then
+        begin
+          lDegree := Max(0, Round(lPoint.X));
+          lPoint.Y := lPoint.Y / IntPower(lFactor, lDegree);
+        end;
+      end;
+  end;
+  fUnitIn := Trim(AUnitName);
+  Result := True;
+end;
+
+function TRecorderCalibration.ConvertOutputUnit(
+  const AUnitName: string): Boolean;
+var
+  I: Integer;
+  lFactor: Double;
+  lPoint: TRecorderCalibrationPoint;
+begin
+  Result := False;
+  if (Trim(fUnitOut) = '') or (Trim(AUnitName) = '') then
+    Exit;
+  if SameText(Trim(fUnitOut), Trim(AUnitName)) then
+    Exit(True);
+  if not RecorderUnitManager.TryGetConversionFactor(fUnitOut, AUnitName,
+    lFactor) then
+    Exit;
+
+  case fKind of
+    rckScale:
+      fScale := fScale * lFactor;
+    rckLinear:
+      begin
+        fScale := fScale * lFactor;
+        fOffset := fOffset * lFactor;
+      end;
+    rckStrain:
+      begin
+        fOffset := fOffset * lFactor;
+        fK1 := fK1 * lFactor;
+        fK2 := fK2 * lFactor;
+      end;
+    rckPiecewiseLinear, rckPolynomial:
+      for I := 0 to fPoints.Count - 1 do
+      begin
+        lPoint := PointAt(I);
+        if lPoint <> nil then
+          lPoint.Y := lPoint.Y * lFactor;
+      end;
+  end;
+  fUnitOut := Trim(AUnitName);
+  Result := True;
+end;
+
 function TRecorderCalibration.Transform(AValue: Double): Double;
 var
   I: Integer;
@@ -2716,6 +2977,8 @@ begin
   case fKind of
     rckScale:
       Result := AValue * fScale;
+    rckLinear:
+      Result := AValue * fScale + fOffset;
     rckStrain:
       Result := fOffset + fK1 * AValue + fK2 * AValue * AValue;
     rckPiecewiseLinear:
@@ -2774,6 +3037,17 @@ begin
         else
           Result := lA.Y + (AValue - lA.X) * (lB.Y - lA.Y) / (lB.X - lA.X);
       end;
+    rckPolynomial:
+      begin
+        Result := 0.0;
+        for I := 0 to fPoints.Count - 1 do
+        begin
+          lA := PointAt(I);
+          if lA <> nil then
+            Result := Result + lA.Y * IntPower(AValue,
+              Max(0, Round(lA.X)));
+        end;
+      end;
   end;
 end;
 
@@ -2801,6 +3075,13 @@ begin
         if SameValue(fScale, 0.0) then
           Exit;
         AInputValue := AValue / fScale;
+        Exit(True);
+      end;
+    rckLinear:
+      begin
+        if SameValue(fScale, 0.0) then
+          Exit;
+        AInputValue := (AValue - fOffset) / fScale;
         Exit(True);
       end;
     rckStrain:
@@ -2883,6 +3164,8 @@ begin
             (lB.X - lA.X) / (lB.Y - lA.Y);
         Result := True;
       end;
+    rckPolynomial:
+      Exit;
   end;
 end;
 

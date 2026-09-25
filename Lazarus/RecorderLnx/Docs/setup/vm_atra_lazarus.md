@@ -117,6 +117,9 @@ D:\works\OburecGH\Lazarus\Tools\install_lzrobrpack_linux.sh
 & "C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe" -T ws -gu user -gp 11111111 runProgramInGuest "D:\works\VMMachins\Atra\Debian 12.x 64-bit_Astra.vmx" /bin/bash /mnt/win_share/OburecGH/Lazarus/Tools/install_lzrobrpack_linux.sh
 ```
 
+Скрипт по умолчанию работает с профилем ярлыка
+`/home/user/.lazarus_work`. Другой профиль можно передать первым аргументом.
+
 Скрипт делает:
 
 - находит shared folder `/mnt/win_share`, `/mnt/hgfs/works` или `/home/user/win_share`;
@@ -130,16 +133,16 @@ D:\works\OburecGH\Lazarus\Tools\install_lzrobrpack_linux.sh
 
 После успешной установки:
 
-- пользовательская IDE находится в `/home/user/.lazarus/bin/lazarus`;
-- `/home/user/.lazarus/packagefiles.xml` содержит `LzrObrPack`;
-- `/home/user/.lazarus/staticpackages.inc` содержит `lzrObrPack`;
-- `/home/user/.lazarus/idemake.cfg` содержит путь `SharedUtils/components/chart_lzr/lib/x86_64-linux`;
+- пользовательская IDE находится в `/home/user/.lazarus_work/bin/lazarus`;
+- `/home/user/.lazarus_work/packagefiles.xml` содержит `LzrObrPack`;
+- `/home/user/.lazarus_work/staticpackages.inc` содержит `lzrObrPack`;
+- `/home/user/.lazarus_work/idemake.cfg` содержит путь `SharedUtils/components/chart_lzr/lib/x86_64-linux`;
 - `RecorderLnx` собирается в `/mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx`.
 
 Проверка регистрации пакета:
 
 ```powershell
-& "C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe" -T ws -gu user -gp 11111111 runProgramInGuest "D:\works\VMMachins\Atra\Debian 12.x 64-bit_Astra.vmx" /bin/bash -lc "grep -R 'LzrObrPack\|lzrObrPack' /home/user/.lazarus/packagefiles.xml /home/user/.lazarus/staticpackages.inc"
+& "C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe" -T ws -gu user -gp 11111111 runProgramInGuest "D:\works\VMMachins\Atra\Debian 12.x 64-bit_Astra.vmx" /bin/bash -lc "grep -R 'LzrObrPack\|lzrObrPack' /home/user/.lazarus_work/packagefiles.xml /home/user/.lazarus_work/staticpackages.inc"
 ```
 
 ## Важные замечания

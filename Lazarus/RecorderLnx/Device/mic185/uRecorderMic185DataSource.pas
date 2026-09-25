@@ -156,7 +156,7 @@ function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
 { Текст схемы включения датчика для таблицы настройки. }
 function RecorderMic185SensorSchemeText(ASensorScheme: LongWord): string;
 { Возвращает индекс измерительного канала из адресов 155-3,
-  185-{155-3} и старых MIC183_185-{3-3}. }
+  185-(155-3) и старых MIC183_185-(3-3). }
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
 function RecorderMic185MeasurementAddressText(ADeviceIndex,
   AChannelNumber: Integer): string;
@@ -164,7 +164,7 @@ function RecorderMic185TemperatureAddressText(ADeviceIndex,
   ATemperatureIndex: Integer): string;
 function RecorderMic185UtsAddressText(ADeviceIndex: Integer): string;
 { Сравнивает разные допустимые записи одного канала MIC-185, например
-  155-3, 185-{155-3} и старую MIC183_185-{3-3}. Источник данных должен
+  155-3, 185-(155-3) и старую MIC183_185-(3-3). Источник данных должен
   сравниваться вызывающим кодом отдельно. }
 function RecorderMic185SameChannelAddress(const ALeft, ARight: string): Boolean;
 function RecorderMic185SourceDeviceIndex(ARegistry: TRecorderTagRegistry;
@@ -1778,7 +1778,7 @@ end;
 function RecorderMic185EffectiveRangeText(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string): string;
 begin
-  Result := '±' + FormatFloat('0.000', RecorderMic185EffectiveRangeMax(
+  Result := UTF8Encode('±') + FormatFloat('0.000', RecorderMic185EffectiveRangeMax(
     ASettings, AUnitName));
 end;
 
@@ -1786,7 +1786,7 @@ function RecorderMic185EffectiveRangeTextForTag(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
   const AUnitName: string): string;
 begin
-  Result := '±' + FormatFloat('0.000',
+  Result := UTF8Encode('±') + FormatFloat('0.000',
     RecorderMic185EffectiveRangeMaxForTag(ARegistry, ATag, ASettings,
     AUnitName));
 end;
@@ -1902,6 +1902,32 @@ begin
     rckScale:
       begin
         AK := ACalibration.Scale;
+        Exit(True);
+      end;
+    rckLinear:
+      begin
+        AK := ACalibration.Scale;
+        AB := ACalibration.Offset;
+        Exit(True);
+      end;
+    rckPolynomial:
+      begin
+        if ACalibration.PointCount > 2 then
+          Exit;
+        AB := 0.0;
+        AK := 0.0;
+        for I := 0 to ACalibration.PointCount - 1 do
+        begin
+          lPoint := ACalibration.PointAt(I);
+          if lPoint = nil then
+            Exit;
+          case Round(lPoint.X) of
+            0: AB := lPoint.Y;
+            1: AK := lPoint.Y;
+          else
+            Exit;
+          end;
+        end;
         Exit(True);
       end;
     rckStrain:

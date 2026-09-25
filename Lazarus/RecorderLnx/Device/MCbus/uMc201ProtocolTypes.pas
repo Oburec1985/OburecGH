@@ -108,6 +108,7 @@ const
   { Значения по умолчанию соответствуют текущему четырехслотовому стенду MC-201.
     Это настройки теста, а не глобальная политика устройств RecorderLnx. }
   CMc201DefaultHost = '192.169.12.87';
+  CMc201DefaultDiscoverySubnet = '192.169.12.';
   CMc201DefaultPort = 4000;
   CMc201DefaultTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   CMc201DefaultMaxSlots = 4;

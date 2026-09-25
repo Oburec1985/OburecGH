@@ -232,6 +232,8 @@ var
   lEstimate: TRecorderTagEstimate;
   lEstimateKind: TRecorderTagEstimateKind;
   lTimeSec, lValue: Double;
+  lEventType: string;
+  lSeverity: string;
 begin
   if (AEvent.Kind = rceDataUpdated) and
      (AEvent.Data is TRecorderTagUpdateEventData) then
@@ -279,16 +281,32 @@ begin
   else if AEvent.Kind = rceAlarmChanged then
   begin
     if not GetRecordingEnabled or (fRuntime = nil) then Exit;
-    if (AEvent.Data is TRecorderAlarmEventData) and (fTimeSystem <> nil) then
+    if not (AEvent.Data is TRecorderAlarmEventData) then Exit;
+    lAlarmData := TRecorderAlarmEventData(AEvent.Data);
+    if (lAlarmData.Tag = nil) or
+       (not fConfig.AlarmEventEnabled(lAlarmData.Tag.Name)) then Exit;
+    if fTimeSystem <> nil then
     begin
-      lAlarmData := TRecorderAlarmEventData(AEvent.Data);
       lTimeUtc := fTimeSystem.ChannelTimeToUtc(lAlarmData.TimeSec);
     end
-    else if fTimeSystem <> nil then
-      lTimeUtc := fTimeSystem.CurrentUtc
     else
       lTimeUtc := LocalTimeToUniversal(Now);
-    fRuntime.SubmitEvent('alarm', AEvent.Text, lTimeUtc, AEvent.IntValue);
+    case lAlarmData.Level of
+      ralAlarm: lSeverity := 'alarm';
+      ralWarning: lSeverity := 'warning';
+    else
+      lSeverity := 'info';
+    end;
+    if not lAlarmData.Active then
+      lSeverity := 'info';
+    if lAlarmData.IsRange then
+      lEventType := 'tag.range'
+    else
+      lEventType := 'tag.alarm';
+    fRuntime.SubmitTagEvent(lEventType, lSeverity, AEvent.Text,
+      lAlarmData.Tag.Name, lTimeUtc, lAlarmData.Value,
+      lAlarmData.Tag.SourceId, lAlarmData.Tag.Address,
+      lAlarmData.Tag.UnitName);
   end;
 end;
 

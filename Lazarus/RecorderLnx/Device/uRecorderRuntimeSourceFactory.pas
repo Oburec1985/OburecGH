@@ -32,7 +32,8 @@ uses
   SysUtils, Math, uRecorderTags, uRecorderDataSources,
   uRecorderConfiguredDataSources, uRecorderMic140DataSource,
   uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
-  uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource;
+  uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource,
+  uRecorderOpcUaTypes, uRecorderOpcUaFactory;
 
 const
   CMeraSourcePrefix = 'Mera file: ';
@@ -267,6 +268,22 @@ begin
       Log(ALog, Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
         [lHost, lPort, lTagNames.Count]));
     end;
+
+    { OPC UA server sources may export existing Recorder tags and therefore
+      legitimately have no tags owned by their SourceId. Build OPC sources
+      from the canonical configured-source list, not from tag grouping. }
+    for I := 0 to ARecorder.TagRegistry.ConfiguredDataSources.Count - 1 do
+    begin
+      lConfigured := TRecorderConfiguredDataSource(
+        ARecorder.TagRegistry.ConfiguredDataSources[I]);
+      if not RecorderIsOpcUaSource(lConfigured.SourceId,
+        lConfigured.ModuleType) then
+        Continue;
+      lSource := RecorderCreateOpcUaDataSource(lConfigured.SourceId,
+        lConfigured.SpecificConfigText, ADataUpdateMs);
+      ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
+      Log(ALog, 'OPC UA source configured: ' + lConfigured.SourceId);
+    end;
   finally
     FreeGroupedLists(lFiles);
     FreeGroupedLists(lMicSources);
@@ -366,6 +383,17 @@ begin
     end
     else if TryParseRecorderMic185SourceId(ASourceId, lHost, lPort) then
     begin
+      { An empty explicit tag list means that the user removed every MIC-185
+        channel.  Do not instantiate the runtime source: its legacy empty-list
+        convention means "all channels" and ConfigureTags would recreate the
+        tags that have just been deleted.  Keep the configured source itself so
+        it remains available in the hardware tree. }
+      if lTagNames.Count = 0 then
+      begin
+        ARecorder.DataSources.RemoveSource(ASourceId);
+        Log(ALog, 'MIC183/185 runtime source removed: no selected channels.');
+        Exit;
+      end;
       lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
       if lConfigured.DefaultPollFrequencyHz > 0 then
         lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
@@ -386,6 +414,9 @@ begin
       lSource := TRecorderMcbusDataSource.Create(ASourceId, lHost, lPort,
         lPollFrequencyHz, ADataUpdateMs, lTagNames, lSpecificConfigText);
     end
+    else if RecorderIsOpcUaSource(ASourceId, lConfigured.ModuleType) then
+      lSource := RecorderCreateOpcUaDataSource(ASourceId,
+        lConfigured.SpecificConfigText, ADataUpdateMs)
     else
       Exit;
 

@@ -22,7 +22,8 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, Math, fpjson,
-  uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding;
+  uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding,
+  uRecorderVibrationEstimate;
 
 type
   TRecorderProjectConfigExtensionProc = procedure(AJson: TJSONObject;
@@ -208,6 +209,8 @@ begin
     Result := TRecorderInputFieldComponent.TypeId
   else if AComponent is TRecorderTagValueComponent then
     Result := TRecorderTagValueComponent.TypeId
+  else if AComponent is TRecorderVibrationEstimateComponent then
+    Result := TRecorderVibrationEstimateComponent.TypeId
   else if AComponent is TRecorderImageComponent then
     Result := TRecorderImageComponent.TypeId
   else if AComponent is TRecorderOscillogramComponent then
@@ -267,6 +270,8 @@ function CalibrationKindToConfigName(AKind: TRecorderCalibrationKind): string;
 begin
   case AKind of
     rckScale: Result := 'scale';
+    rckLinear: Result := 'linear';
+    rckPolynomial: Result := 'polynomial';
     rckStrain: Result := 'strain';
   else
     Result := 'piecewiseLinear';
@@ -277,6 +282,10 @@ function ConfigNameToCalibrationKind(const AName: string): TRecorderCalibrationK
 begin
   if SameText(AName, 'scale') then
     Result := rckScale
+  else if SameText(AName, 'linear') then
+    Result := rckLinear
+  else if SameText(AName, 'polynomial') then
+    Result := rckPolynomial
   else if SameText(AName, 'strain') then
     Result := rckStrain
   else
@@ -304,6 +313,8 @@ begin
     AJson.Add(lItem);
     lItem.Add('type', CalibrationKindToConfigName(lCalibration.Kind));
     lItem.Add('name', lCalibration.Name);
+    if Trim(lCalibration.SourceFileName) <> '' then
+      lItem.Add('sourceFileName', lCalibration.SourceFileName);
     if Trim(lCalibration.SdbKey) <> '' then
     begin
       lItem.Add('sdbKey', lCalibration.SdbKey);
@@ -357,6 +368,7 @@ begin
     try
       lCalibration.Name := lItem.Get('name', lCalibration.Name);
       lCalibration.SdbKey := lItem.Get('sdbKey', '');
+      lCalibration.SourceFileName := lItem.Get('sourceFileName', '');
       if lCalibration.SdbKey <> '' then
       begin
         if RecorderSdbLoadScaleCalibration(lCalibration.SdbKey,
@@ -476,6 +488,7 @@ begin
   AJson.Add('statusChannelEnabled', ATag.SetpointStatusChannelEnabled);
   AJson.Add('statusChannelName', ATag.SetpointStatusChannelName);
   AJson.Add('rangeControlEnabled', ATag.SetpointRangeControlEnabled);
+  AJson.Add('rangeAlarmInfoText', ATag.SetpointRangeAlarmInfoText);
 
   for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
   begin
@@ -483,6 +496,7 @@ begin
     lItem := JsonObject(AJson, SetpointKindToConfigName(lKind));
     lItem.Add('enabled', lSetpoint.Enabled);
     lItem.Add('threshold', lSetpoint.Threshold);
+    lItem.Add('alarmInfoText', lSetpoint.AlarmInfoText);
     lItem.Add('color', lSetpoint.Color);
     lItem.Add('outputEnabled', lSetpoint.OutputEnabled);
     lItem.Add('hysteresisPercent', lSetpoint.HysteresisPercent);
@@ -508,6 +522,8 @@ begin
     ATag.SetpointStatusChannelName);
   ATag.SetpointRangeControlEnabled := AJson.Get('rangeControlEnabled',
     ATag.SetpointRangeControlEnabled);
+  ATag.SetpointRangeAlarmInfoText := AJson.Get('rangeAlarmInfoText',
+    ATag.SetpointRangeAlarmInfoText);
 
   for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
   begin
@@ -518,6 +534,8 @@ begin
     lSetpoint := ATag.Setpoints[lKind];
     lSetpoint.Enabled := lItem.Get('enabled', lSetpoint.Enabled);
     lSetpoint.Threshold := lItem.Get('threshold', lSetpoint.Threshold);
+    lSetpoint.AlarmInfoText := lItem.Get('alarmInfoText',
+      lSetpoint.AlarmInfoText);
     lSetpoint.Color := lItem.Get('color', Integer(lSetpoint.Color));
     lSetpoint.OutputEnabled := lItem.Get('outputEnabled',
       lSetpoint.OutputEnabled);
@@ -729,6 +747,7 @@ begin
       lTagJson.Add('name', lTag.Name);
       lTagJson.Add('address', lTag.Address);
       lTagJson.Add('unit', lTag.UnitName);
+      lTagJson.Add('sourceUnit', lTag.SourceUnitName);
       lTagJson.Add('description', lTag.Description);
       lTagJson.Add('groupPath', lTag.GroupPath);
       lTagJson.Add('sourceId', lTag.SourceId);
@@ -872,6 +891,7 @@ begin
       try
         lTag.Address := lTagJson.Get('address', lTag.Address);
         lTag.UnitName := lTagJson.Get('unit', lTag.UnitName);
+        lTag.SourceUnitName := lTagJson.Get('sourceUnit', lTag.UnitName);
         lTag.Description := lTagJson.Get('description', lTag.Description);
         lTag.GroupPath := lTagJson.Get('groupPath', lTag.GroupPath);
         lTag.SourceId := lTagJson.Get('sourceId', lTag.SourceId);
@@ -1090,6 +1110,10 @@ begin
             TRecorderTagValueComponent(lComponent).DisplayFormat);
           lIni.WriteInteger(lSection, 'ShowNameMode',
             Ord(TRecorderTagValueComponent(lComponent).ShowNameMode));
+          lIni.WriteString(lSection, 'Caption',
+            TRecorderTagValueComponent(lComponent).Caption);
+          lIni.WriteBool(lSection, 'UseSourceTagName',
+            TRecorderTagValueComponent(lComponent).UseSourceTagName);
           lIni.WriteString(lSection, 'FontName', TRecorderTagValueComponent(lComponent).FontName);
           lIni.WriteInteger(lSection, 'FontSize', TRecorderTagValueComponent(lComponent).FontSize);
           lIni.WriteInteger(lSection, 'FontColor', TRecorderTagValueComponent(lComponent).FontColor);
@@ -1107,6 +1131,19 @@ begin
             lIni.WriteString(lSection, Format('Image%dFile', [K]),
               StoreGuiResourceFileName(AFileName,
                 lImage.Images.ValueFromIndex[K]));
+          end;
+          lIni.WriteInteger(lSection, 'SvgBindingCount',
+            lImage.SvgBindingCount);
+          for K := 0 to lImage.SvgBindingCount - 1 do
+          begin
+            lIni.WriteString(lSection, Format('SvgBinding%dParameter', [K]),
+              lImage.SvgBindings[K].ParameterName);
+            lIni.WriteInt64(lSection, Format('SvgBinding%dTagId', [K]),
+              lImage.SvgBindings[K].TagId);
+            lIni.WriteString(lSection, Format('SvgBinding%dTagName', [K]),
+              lImage.SvgBindings[K].TagName);
+            lIni.WriteInteger(lSection, Format('SvgBinding%dValueKind', [K]),
+              Ord(lImage.SvgBindings[K].ValueKind));
           end;
         end;
         if lComponent is TRecorderMeasurementSectionComponent then
@@ -1177,10 +1214,14 @@ begin
         end;
         if lComponent is TRecorderOscillogramComponent then
         begin
+          lIni.WriteString(lSection, 'DisplayFormat',
+            TRecorderOscillogramComponent(lComponent).DisplayFormat);
           lIni.WriteInteger(lSection, 'BindingMode',
             Ord(TRecorderOscillogramComponent(lComponent).BindingMode));
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
+          if RecorderIsPluginOscillograph(lComponent) then
+          begin
           lIni.WriteFloat(lSection, 'OscXScale',
             TRecorderOscillogramComponent(lComponent).XScale);
           lIni.WriteFloat(lSection, 'OscYScale',
@@ -1218,6 +1259,7 @@ begin
             TRecorderOscillogramComponent(lComponent).TriggerLevel);
           lIni.WriteFloat(lSection, 'OscTriggerPreRollPercent',
             TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent);
+          end;
           lIni.WriteInteger(lSection, 'OscLineCount',
             TRecorderOscillogramComponent(lComponent).LineCount);
           for K := 0 to TRecorderOscillogramComponent(lComponent).LineCount - 1 do
@@ -1252,6 +1294,31 @@ begin
             lIni.WriteInt64(lSection, Format('DonutTag%dId', [K]),
               TRecorderDonutComponent(lComponent).TagIdAt(K));
           end;
+        end;
+        if lComponent is TRecorderVibrationEstimateComponent then
+        begin
+          lIni.WriteString(lSection, 'Caption',
+            TRecorderVibrationEstimateComponent(lComponent).Caption);
+          lIni.WriteBool(lSection, 'UseSourceTagName',
+            TRecorderVibrationEstimateComponent(lComponent).UseSourceTagName);
+          lIni.WriteInteger(lSection, 'Quantity',
+            Ord(TRecorderVibrationEstimateComponent(lComponent).Quantity));
+          lIni.WriteString(lSection, 'BandName',
+            TRecorderVibrationEstimateComponent(lComponent).BandName);
+          lIni.WriteString(lSection, 'OutputUnit',
+            TRecorderVibrationEstimateComponent(lComponent).OutputUnit);
+          lIni.WriteString(lSection, 'DisplayFormat',
+            TRecorderVibrationEstimateComponent(lComponent).DisplayFormat);
+          lIni.WriteString(lSection, 'FontName',
+            TRecorderVibrationEstimateComponent(lComponent).FontName);
+          lIni.WriteInteger(lSection, 'FontSize',
+            TRecorderVibrationEstimateComponent(lComponent).FontSize);
+          lIni.WriteInt64(lSection, 'FontColor',
+            TRecorderVibrationEstimateComponent(lComponent).FontColor);
+          lIni.WriteBool(lSection, 'FontBold',
+            TRecorderVibrationEstimateComponent(lComponent).FontStyleBold);
+          lIni.WriteBool(lSection, 'FontItalic',
+            TRecorderVibrationEstimateComponent(lComponent).FontStyleItalic);
         end;
         if lComponent is TRecorderSpectrumComponent then
         begin
@@ -1321,6 +1388,10 @@ begin
               TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
             lIni.WriteBool(lSection, 'SqlShowEvents',
               TRecorderSqlTrendComponent(lComponent).ShowEvents);
+            lIni.WriteBool(lSection, 'SqlShowRecordingEvents',
+              TRecorderSqlTrendComponent(lComponent).ShowRecordingEvents);
+            lIni.WriteBool(lSection, 'SqlShowTagAlarmEvents',
+              TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents);
             lIni.WriteInteger(lSection, 'SqlDisplayCount',
               TRecorderSqlTrendComponent(lComponent).DisplayCount);
             lIni.WriteInteger(lSection, 'SqlActiveDisplay',
@@ -1506,6 +1577,10 @@ begin
               lItemCount := Ord(tvnmTop);
             TRecorderTagValueComponent(lComponent).ShowNameMode :=
               TRecorderTagValueNameMode(lItemCount);
+            TRecorderTagValueComponent(lComponent).Caption :=
+              lIni.ReadString(lSection, 'Caption', '');
+            TRecorderTagValueComponent(lComponent).UseSourceTagName :=
+              lIni.ReadBool(lSection, 'UseSourceTagName', True);
             TRecorderTagValueComponent(lComponent).FontName :=
               lIni.ReadString(lSection, 'FontName', 'Tahoma');
             TRecorderTagValueComponent(lComponent).FontSize :=
@@ -1526,7 +1601,23 @@ begin
               lImage.Images.Add(
                 lIni.ReadString(lSection, Format('Image%dValue', [K]), '') +
                 '=' + LoadGuiResourceFileName(AFileName,
-                  lIni.ReadString(lSection, Format('Image%dFile', [K]), '')));
+                lIni.ReadString(lSection, Format('Image%dFile', [K]), '')));
+            lImage.ClearSvgBindings;
+            lItemCount := lIni.ReadInteger(lSection, 'SvgBindingCount', 0);
+            for K := 0 to lItemCount - 1 do
+            begin
+              lImage.AddSvgBinding.ParameterName := lIni.ReadString(lSection,
+                Format('SvgBinding%dParameter', [K]), '');
+              lImage.SvgBindings[lImage.SvgBindingCount - 1].TagId :=
+                lIni.ReadInt64(lSection, Format('SvgBinding%dTagId', [K]), 0);
+              lImage.SvgBindings[lImage.SvgBindingCount - 1].TagName :=
+                lIni.ReadString(lSection, Format('SvgBinding%dTagName', [K]), '');
+              lImage.SvgBindings[lImage.SvgBindingCount - 1].ValueKind :=
+                TRecorderSvgValueKind(EnsureRange(lIni.ReadInteger(lSection,
+                  Format('SvgBinding%dValueKind', [K]), 0),
+                  Ord(Low(TRecorderSvgValueKind)),
+                  Ord(High(TRecorderSvgValueKind))));
+            end;
           end;
           if lComponent is TRecorderMeasurementSectionComponent then
           begin
@@ -1602,11 +1693,15 @@ begin
           end;
           if lComponent is TRecorderOscillogramComponent then
           begin
+            TRecorderOscillogramComponent(lComponent).DisplayFormat :=
+              lIni.ReadString(lSection, 'DisplayFormat', '4');
             TRecorderOscillogramComponent(lComponent).BindingMode :=
               TRecorderTagBindingMode(lIni.ReadInteger(lSection, 'BindingMode',
                 Ord(rtbmRelativeSelectedTag)));
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
+            if RecorderIsPluginOscillograph(lComponent) then
+            begin
             TRecorderOscillogramComponent(lComponent).XScale :=
               lIni.ReadFloat(lSection, 'OscXScale', 0.0);
             if TRecorderOscillogramComponent(lComponent).XScale < 0 then
@@ -1665,6 +1760,26 @@ begin
               lIni.ReadFloat(lSection, 'OscTriggerLevel', 0.0);
             TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent :=
               lIni.ReadFloat(lSection, 'OscTriggerPreRollPercent', 25.0);
+            end
+            else
+            begin
+              { Advanced axes, trigger and cursor state belongs to the plugin
+                Oscillograph. Ignore keys accidentally written by affected
+                versions when loading the built-in simple Oscillogram. }
+              TRecorderOscillogramComponent(lComponent).XScale := 0.0;
+              TRecorderOscillogramComponent(lComponent).YScale := 1.0;
+              TRecorderOscillogramComponent(lComponent).YOffset := 0.0;
+              TRecorderOscillogramComponent(lComponent).ClosedInput := False;
+              TRecorderOscillogramComponent(lComponent).AutoRangeEnabled := False;
+              TRecorderOscillogramComponent(lComponent).XCursorEnabled := False;
+              TRecorderOscillogramComponent(lComponent).LegendVisible := True;
+              TRecorderOscillogramComponent(lComponent).LevelCursorVisible := False;
+              TRecorderOscillogramComponent(lComponent).TriggerTagName := '';
+              TRecorderOscillogramComponent(lComponent).TriggerEnabled := False;
+              TRecorderOscillogramComponent(lComponent).ClearAxes;
+              TRecorderOscillogramComponent(lComponent).AddAxis;
+              TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex := 0;
+            end;
             lItemCount := lIni.ReadInteger(lSection, 'OscLineCount', 0);
             TRecorderOscillogramComponent(lComponent).ClearLines;
             for K := 0 to lItemCount - 1 do
@@ -1712,6 +1827,36 @@ begin
               TRecorderDonutComponent(lComponent).SetTagIdAt(K,
                 lIni.ReadInt64(lSection, Format('DonutTag%dId', [K]), 0));
             end;
+          end;
+          if lComponent is TRecorderVibrationEstimateComponent then
+          begin
+            TRecorderVibrationEstimateComponent(lComponent).Caption :=
+              lIni.ReadString(lSection, 'Caption', 'Виброоценка');
+            TRecorderVibrationEstimateComponent(lComponent).UseSourceTagName :=
+              lIni.ReadBool(lSection, 'UseSourceTagName', True);
+            lItemCount := lIni.ReadInteger(lSection, 'Quantity', 0);
+            if (lItemCount < Ord(Low(TRecorderVibrationQuantity))) or
+              (lItemCount > Ord(High(TRecorderVibrationQuantity))) then
+              lItemCount := Ord(rvqAcceleration);
+            TRecorderVibrationEstimateComponent(lComponent).Quantity :=
+              TRecorderVibrationQuantity(lItemCount);
+            TRecorderVibrationEstimateComponent(lComponent).BandName :=
+              lIni.ReadString(lSection, 'BandName', '');
+            TRecorderVibrationEstimateComponent(lComponent).OutputUnit :=
+              lIni.ReadString(lSection, 'OutputUnit',
+                RecorderVibrationDefaultUnit(TRecorderVibrationQuantity(lItemCount)));
+            TRecorderVibrationEstimateComponent(lComponent).DisplayFormat :=
+              lIni.ReadString(lSection, 'DisplayFormat', '0.###');
+            TRecorderVibrationEstimateComponent(lComponent).FontName :=
+              lIni.ReadString(lSection, 'FontName', 'Tahoma');
+            TRecorderVibrationEstimateComponent(lComponent).FontSize :=
+              lIni.ReadInteger(lSection, 'FontSize', 10);
+            TRecorderVibrationEstimateComponent(lComponent).FontColor :=
+              lIni.ReadInt64(lSection, 'FontColor', 0);
+            TRecorderVibrationEstimateComponent(lComponent).FontStyleBold :=
+              lIni.ReadBool(lSection, 'FontBold', False);
+            TRecorderVibrationEstimateComponent(lComponent).FontStyleItalic :=
+              lIni.ReadBool(lSection, 'FontItalic', False);
           end;
           if lComponent is TRecorderSpectrumComponent then
           begin
@@ -1804,6 +1949,10 @@ begin
                   32, 100000);
               TRecorderSqlTrendComponent(lComponent).ShowEvents :=
                 lIni.ReadBool(lSection, 'SqlShowEvents', True);
+              TRecorderSqlTrendComponent(lComponent).ShowRecordingEvents :=
+                lIni.ReadBool(lSection, 'SqlShowRecordingEvents', True);
+              TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents :=
+                lIni.ReadBool(lSection, 'SqlShowTagAlarmEvents', True);
               lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
               if lItemCount < 0 then
                 TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend

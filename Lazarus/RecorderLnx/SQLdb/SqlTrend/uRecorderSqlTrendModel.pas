@@ -49,6 +49,8 @@ type
     fActiveDisplayIndex: Integer;
     fMaxPointsPerLine: Integer;
     fShowEvents: Boolean;
+    fShowRecordingEvents: Boolean;
+    fShowTagAlarmEvents: Boolean;
     fTimeMode: TRecorderSqlTrendTimeMode;
     fToUtc: Double;
     function GetActiveDisplay: TRecorderSqlTrendDisplay;
@@ -73,6 +75,10 @@ type
     property MaxPointsPerLine: Integer read fMaxPointsPerLine
       write fMaxPointsPerLine;
     property ShowEvents: Boolean read fShowEvents write fShowEvents;
+    property ShowRecordingEvents: Boolean read fShowRecordingEvents
+      write fShowRecordingEvents;
+    property ShowTagAlarmEvents: Boolean read fShowTagAlarmEvents
+      write fShowTagAlarmEvents;
     property DisplayCount: Integer read GetDisplayCount;
     property Displays[AIndex: Integer]: TRecorderSqlTrendDisplay read GetDisplay;
     property ActiveDisplayIndex: Integer read fActiveDisplayIndex
@@ -85,7 +91,7 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
 procedure RegisterRecorderSqlTrendFactory(AFactory: TRecorderComponentFactory);
@@ -178,6 +184,8 @@ begin
   fFromUtc := fToUtc - 1.0;
   fMaxPointsPerLine := 4000;
   fShowEvents := True;
+  fShowRecordingEvents := True;
+  fShowTagAlarmEvents := True;
   if AxisCount = 0 then
   begin
     lAxis := AddAxis;
@@ -208,7 +216,7 @@ function TRecorderSqlTrendComponent.AddDisplay(const AName: string): TRecorderSq
 begin
   Result := TRecorderSqlTrendDisplay.Create;
   if Trim(AName) <> '' then Result.Name := Trim(AName)
-  else Result.Name := 'Отображение ' + IntToStr(DisplayCount + 1);
+  else Result.Name := UTF8Encode('Отображение ') + IntToStr(DisplayCount + 1);
   fDisplays.Add(Result);
 end;
 
@@ -259,6 +267,8 @@ begin
   fTimeMode := ASource.fTimeMode;
   fMaxPointsPerLine := ASource.fMaxPointsPerLine;
   fShowEvents := ASource.fShowEvents;
+  fShowRecordingEvents := ASource.fShowRecordingEvents;
+  fShowTagAlarmEvents := ASource.fShowTagAlarmEvents;
 end;
 
 constructor TRecorderSqlTrendFactory.Create;

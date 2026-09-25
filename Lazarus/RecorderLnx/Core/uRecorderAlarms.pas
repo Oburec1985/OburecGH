@@ -39,7 +39,10 @@ type
   private
     fActive: Boolean;
     fKind: TRecorderTagSetpointKind;
+    fIsRange: Boolean;
     fLevel: TRecorderAlarmLevel;
+    fRangeMax: Double;
+    fRangeMin: Double;
     fTag: TRecorderTag;
     fThreshold: Double;
     fTimeSec: Double;
@@ -47,13 +50,17 @@ type
   public
     constructor Create(ATag: TRecorderTag; AKind: TRecorderTagSetpointKind;
       ALevel: TRecorderAlarmLevel; AActive: Boolean; ATimeSec, AValue,
-      AThreshold: Double);
+      AThreshold: Double; AIsRange: Boolean = False; ARangeMin: Double = 0;
+      ARangeMax: Double = 0);
 
     property Active: Boolean read fActive;
     property Kind: TRecorderTagSetpointKind read fKind;
+    property IsRange: Boolean read fIsRange;
     property Level: TRecorderAlarmLevel read fLevel;
     property Tag: TRecorderTag read fTag;
     property Threshold: Double read fThreshold;
+    property RangeMin: Double read fRangeMin;
+    property RangeMax: Double read fRangeMax;
     property TimeSec: Double read fTimeSec;
     property Value: Double read fValue;
   end;
@@ -91,6 +98,8 @@ type
     procedure PublishAlarmChange(ATag: TRecorderTag; AKind: TRecorderTagSetpointKind;
       ALevel: TRecorderAlarmLevel; AActive: Boolean; ATimeSec, AValue,
       AThreshold: Double);
+    procedure PublishRangeChange(ATag: TRecorderTag; AActive: Boolean;
+      ATimeSec, AValue: Double);
   public
     constructor Create(AEventBus: TRecorderEventBus = nil);
     destructor Destroy; override;
@@ -161,15 +170,15 @@ function RecorderSetpointKindToName(AKind: TRecorderTagSetpointKind): string;
 begin
   case AKind of
     tskHighAlarm:
-      Result := 'High alarm';
+      Result := 'верхняя аварийная';
     tskHighWarning:
-      Result := 'High warning';
+      Result := 'верхняя предупредительная';
     tskLowWarning:
-      Result := 'Low warning';
+      Result := 'нижняя предупредительная';
     tskLowAlarm:
-      Result := 'Low alarm';
+      Result := 'нижняя аварийная';
   else
-    Result := 'Unknown';
+    Result := 'неизвестная';
   end;
 end;
 
@@ -182,16 +191,20 @@ end;
     Соответствует передаче параметров тревоги обработчикам IAlarmEventHandler в оригинальном Recorder. }
 constructor TRecorderAlarmEventData.Create(ATag: TRecorderTag;
   AKind: TRecorderTagSetpointKind; ALevel: TRecorderAlarmLevel;
-  AActive: Boolean; ATimeSec, AValue, AThreshold: Double);
+  AActive: Boolean; ATimeSec, AValue, AThreshold: Double; AIsRange: Boolean;
+  ARangeMin, ARangeMax: Double);
 begin
   inherited Create;
   fTag := ATag;
   fKind := AKind;
+  fIsRange := AIsRange;
   fLevel := ALevel;
   fActive := AActive;
   fTimeSec := ATimeSec;
   fValue := AValue;
   fThreshold := AThreshold;
+  fRangeMin := ARangeMin;
+  fRangeMax := ARangeMax;
 end;
 
 { TRecorderAlarmEngine.Create
@@ -308,16 +321,23 @@ procedure TRecorderAlarmEngine.PublishAlarmChange(ATag: TRecorderTag;
   ATimeSec, AValue, AThreshold: Double);
 var
   lEvent: TRecorderEvent;
+  lInfoText: string;
+  lSetpoint: TRecorderTagSetpoint;
   lText: string;
 begin
   if (fEventBus = nil) or (ATag = nil) then
     Exit;
 
-  if AActive then
-    lText := Format('%s: %s entered, value=%.3f threshold=%.3f',
+  lSetpoint := ATag.Setpoints[AKind];
+  lInfoText := Trim(lSetpoint.AlarmInfoText);
+  if AActive and (lInfoText <> '') then
+    lText := Format('%s: %s', [ATag.Name, lInfoText])
+  else if AActive then
+    lText := Format('%s: сработала уставка «%s», значение %.3f, порог %.3f',
       [ATag.Name, RecorderSetpointKindToName(AKind), AValue, AThreshold])
   else
-    lText := Format('%s: %s left, value=%.3f threshold=%.3f',
+    lText := Format('%s: состояние нормализовалось, уставка «%s» снята, '+
+      'значение %.3f, порог %.3f',
       [ATag.Name, RecorderSetpointKindToName(AKind), AValue, AThreshold]);
 
   fLastEventData.Free;
@@ -325,6 +345,37 @@ begin
     AActive, ATimeSec, AValue, AThreshold);
   lEvent := TRecorderEventBus.MakeEvent(rceAlarmChanged, Self, ATag.Name,
     lText, Ord(ALevel), fLastEventData);
+  fEventBus.Publish(lEvent);
+end;
+
+procedure TRecorderAlarmEngine.PublishRangeChange(ATag: TRecorderTag;
+  AActive: Boolean; ATimeSec, AValue: Double);
+var
+  lEvent: TRecorderEvent;
+  lInfoText: string;
+  lText: string;
+begin
+  if (fEventBus = nil) or (ATag = nil) then
+    Exit;
+
+  lInfoText := Trim(ATag.SetpointRangeAlarmInfoText);
+  if AActive and (lInfoText <> '') then
+    lText := Format('%s: %s', [ATag.Name, lInfoText])
+  else if AActive then
+    lText := Format('%s: выход за допустимый диапазон %.3f..%.3f '+
+      '(возможен обрыв датчика), значение %.3f',
+      [ATag.Name, ATag.RangeMin, ATag.RangeMax, AValue])
+  else
+    lText := Format('%s: значение нормализовалось и вернулось в диапазон '+
+      '%.3f..%.3f, значение %.3f',
+      [ATag.Name, ATag.RangeMin, ATag.RangeMax, AValue]);
+
+  fLastEventData.Free;
+  fLastEventData := TRecorderAlarmEventData.Create(ATag, tskHighAlarm,
+    ralAlarm, AActive, ATimeSec, AValue, 0, True, ATag.RangeMin,
+    ATag.RangeMax);
+  lEvent := TRecorderEventBus.MakeEvent(rceAlarmChanged, Self, ATag.Name,
+    lText, Ord(ralAlarm), fLastEventData);
   fEventBus.Publish(lEvent);
 end;
 
@@ -347,7 +398,8 @@ begin
     if lState = nil then
       Exit;
 
-    if lState.Active[tskHighAlarm] or lState.Active[tskLowAlarm] then
+    if lState.OutOfRange or lState.Active[tskHighAlarm] or
+      lState.Active[tskLowAlarm] then
       Result := ralAlarm
     else if lState.Active[tskHighWarning] or lState.Active[tskLowWarning] then
       Result := ralWarning;
@@ -364,8 +416,24 @@ end;
   Аналог в оригинальном Recorder:
     Вспомогательный метод. }
 function TRecorderAlarmEngine.GetTagAlarmText(ATag: TRecorderTag): string;
+var
+  lState: TTagAlarmState;
 begin
-  Result := RecorderAlarmLevelToString(GetTagAlarmLevel(ATag));
+  Result := 'OK';
+  EnterCriticalSection(fLock);
+  try
+    lState := AcquireState(ATag);
+    if lState = nil then
+      Exit;
+    if lState.OutOfRange then
+      Result := 'Выход за диапазон'
+    else if lState.Active[tskHighAlarm] or lState.Active[tskLowAlarm] then
+      Result := RecorderAlarmLevelToString(ralAlarm)
+    else if lState.Active[tskHighWarning] or lState.Active[tskLowWarning] then
+      Result := RecorderAlarmLevelToString(ralWarning);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
 end;
 
 { TRecorderAlarmEngine.GetTagAlarmColor
@@ -419,6 +487,7 @@ var
   lLevel: TRecorderAlarmLevel;
   lSetpoint: TRecorderTagSetpoint;
   lState: TTagAlarmState;
+  lWasOutOfRange: Boolean;
 begin
   EnterCriticalSection(fLock);
   try
@@ -426,9 +495,12 @@ begin
     if lState = nil then
       Exit;
 
+    lWasOutOfRange := lState.OutOfRange;
     lState.OutOfRange := ATag.SetpointRangeControlEnabled and
       (ATag.RangeMax > ATag.RangeMin) and
       ((AValue < ATag.RangeMin) or (AValue > ATag.RangeMax));
+    if lState.OutOfRange <> lWasOutOfRange then
+      PublishRangeChange(ATag, lState.OutOfRange, ATimeSec, AValue);
 
     for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
     begin

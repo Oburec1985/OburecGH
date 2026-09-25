@@ -27,6 +27,7 @@ type
     btnSelectNone: TButton;
     btnImportSqlSelection: TButton;
     btnAssignEstimate: TButton;
+    btnToggleAlarmEvent: TButton;
     cbBackend: TComboBox;
     cbControlTag: TComboBox;
     cbEnabled: TCheckBox;
@@ -81,12 +82,14 @@ type
     procedure btnSelectNoneClick(Sender: TObject);
     procedure btnImportSqlSelectionClick(Sender: TObject);
     procedure btnAssignEstimateClick(Sender: TObject);
+    procedure btnToggleAlarmEventClick(Sender: TObject);
     procedure cbBackendChange(Sender: TObject);
     procedure edDbSignalSearchChange(Sender: TObject);
     procedure edSignalSearchChange(Sender: TObject);
   private
     fAllSignals: TStringList;
     fCheckedSignals: TStringList;
+    fAlarmSignals: TStringList;
     fConfig: TRecorderSqlDbConfig;
     fDbSignals: TRecorderSqlDbSignalInfos;
     fFileName: string;
@@ -144,6 +147,10 @@ begin
   fCheckedSignals.CaseSensitive := False;
   fCheckedSignals.Sorted := True;
   fCheckedSignals.Duplicates := dupIgnore;
+  fAlarmSignals := TStringList.Create;
+  fAlarmSignals.CaseSensitive := False;
+  fAlarmSignals.Sorted := True;
+  fAlarmSignals.Duplicates := dupIgnore;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.BuildChannelPages;
@@ -182,7 +189,7 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.LayoutWriteSignalControls;
 var
-  lBottomTop, lEstimateTop: Integer;
+  lBottomTop, lAlarmTop, lEstimateTop: Integer;
 begin
   if gbSignals = nil then Exit;
 
@@ -190,7 +197,8 @@ begin
   edSignalSearch.Width := Max(120, gbSignals.ClientWidth - edSignalSearch.Left - 8);
 
   lBottomTop := Max(150, gbSignals.ClientHeight - btnSelectAll.Height - 8);
-  lEstimateTop := Max(110, lBottomTop - cbSignalEstimate.Height - 28);
+  lAlarmTop := lBottomTop - btnToggleAlarmEvent.Height - 8;
+  lEstimateTop := Max(110, lAlarmTop - cbSignalEstimate.Height - 8);
 
   lvSignals.SetBounds(8, lvSignals.Top, Max(120, gbSignals.ClientWidth - 16),
     Max(80, lEstimateTop - lvSignals.Top - 6));
@@ -203,6 +211,10 @@ begin
     btnAssignEstimate.Width - 8);
   cbSignalEstimate.Width := Max(120,
     btnAssignEstimate.Left - cbSignalEstimate.Left - 8);
+
+  btnToggleAlarmEvent.SetBounds(Max(8, gbSignals.ClientWidth -
+    btnToggleAlarmEvent.Width - 8), lAlarmTop,
+    btnToggleAlarmEvent.Width, btnToggleAlarmEvent.Height);
 
   btnSelectAll.Top := lBottomTop;
   btnSelectNone.Top := lBottomTop;
@@ -252,6 +264,7 @@ end;
 
 destructor TRecorderSqlDbSettingsDialog.Destroy;
 begin
+  fAlarmSignals.Free;
   fCheckedSignals.Free;
   fAllSignals.Free;
   SetLength(fDbSignals, 0);
@@ -315,6 +328,7 @@ begin
   cbSignalEstimate.ItemIndex := Ord(tekMean);
   fAllSignals.Clear;
   fCheckedSignals.Clear;
+  fAlarmSignals.Clear;
   lvSignals.Clear;
   lvDbSignals.Clear;
   edDbSignalSearch.Clear;
@@ -326,6 +340,8 @@ begin
       if not fConfig.SignalSelectionConfigured or
          (fConfig.SignalNames.IndexOf(fRegistry.Tags[I].Name) >= 0) then
         fCheckedSignals.Add(fRegistry.Tags[I].Name);
+      if fConfig.AlarmEventEnabled(fRegistry.Tags[I].Name) then
+        fAlarmSignals.Add(fRegistry.Tags[I].Name);
     end;
   ApplySignalFilter;
   ApplyDbSignalFilter;
@@ -376,6 +392,10 @@ begin
       lItem.Data := lTag;
       lItem.Checked := fCheckedSignals.IndexOf(lName) >= 0;
       lItem.SubItems.Add(EstimateText(lTag, lKind));
+      if fAlarmSignals.IndexOf(lName) >= 0 then
+        lItem.SubItems.Add('Да')
+      else
+        lItem.SubItems.Add('Нет');
     end;
   finally
     lvSignals.Items.EndUpdate;
@@ -493,6 +513,8 @@ begin
   fConfig.SignalSelectionConfigured := True;
   for I := 0 to fCheckedSignals.Count - 1 do
     fConfig.SignalNames.Add(fCheckedSignals[I]);
+  fConfig.AlarmSignalNames.Assign(fAlarmSignals);
+  fConfig.AlarmSignalSelectionConfigured := True;
   fConfig.RequireValid;
 end;
 
@@ -697,8 +719,8 @@ begin
     else
       lDetails := '';
     MessageDlg('Firebird',
-      lMessage + LineEnding +
-      'Для локального сервера можно попробовать кнопку "Запустить Firebird".' +
+      lMessage + LineEnding + UTF8Encode(
+      'Для локального сервера можно попробовать кнопку "Запустить Firebird".') +
       lDetails,
       mtWarning, [mbOK], 0);
   end;
@@ -791,7 +813,8 @@ begin
     end;
   end;
   MessageDlg('Ошибка SQL БД',
-    lFirstError + LineEnding + LineEnding + 'После попытки запуска Firebird:' +
+    lFirstError + LineEnding + LineEnding +
+      UTF8Encode('После попытки запуска Firebird:') +
     LineEnding + lMessage,
     mtError, [mbOK], 0);
 end;
@@ -1007,6 +1030,39 @@ begin
       fConfig.SetSignalEstimate(lItem.Caption, lKind);
     lItem.SubItems[0] := EstimateText(lTag,
       fConfig.SignalEstimate(lItem.Caption));
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnToggleAlarmEventClick(
+  Sender: TObject);
+var
+  I, lIndex: Integer;
+  lEnable: Boolean;
+  lItem: TListItem;
+begin
+  lEnable := False;
+  for I := 0 to lvSignals.Items.Count - 1 do
+    if lvSignals.Items[I].Selected and
+      (fAlarmSignals.IndexOf(lvSignals.Items[I].Caption) < 0) then
+    begin
+      lEnable := True;
+      Break;
+    end;
+  for I := 0 to lvSignals.Items.Count - 1 do
+  begin
+    lItem := lvSignals.Items[I];
+    if not lItem.Selected then Continue;
+    lIndex := fAlarmSignals.IndexOf(lItem.Caption);
+    if lEnable then
+    begin
+      if lIndex < 0 then fAlarmSignals.Add(lItem.Caption);
+      lItem.SubItems[1] := 'Да';
+    end
+    else
+    begin
+      if lIndex >= 0 then fAlarmSignals.Delete(lIndex);
+      lItem.SubItems[1] := 'Нет';
+    end;
   end;
 end;
 

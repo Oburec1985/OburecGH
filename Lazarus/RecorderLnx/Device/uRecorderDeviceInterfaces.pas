@@ -293,6 +293,7 @@ function TRecorderDevice.GetChannels: TRecorderDeviceChannelArray;
 var
   I: Integer;
 begin
+  Result := nil;
   SetLength(Result, fChannelCount);
   for I := 0 to fChannelCount - 1 do
   begin
@@ -433,7 +434,7 @@ end;
 function TRecorderDevice.ReadBlock(ATimeoutMs: Cardinal;
   out ABlock: TRecorderAcquisitionBlock): Boolean;
 begin
-  ClearRecorderAcquisitionBlock(ABlock);
+  ABlock := Default(TRecorderAcquisitionBlock);
   Result := False;
 end;
 
@@ -455,7 +456,7 @@ function TRecorderDevice.ExecuteDeviceAction(AAction: TRecorderDeviceAction;
   const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
   out AErrorText: string): Boolean;
 begin
-  SetLength(AValues, 0);
+  AValues := nil;
   AErrorText := 'Действие не поддерживается устройством';
   Result := False;
 end;

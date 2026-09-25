@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Обработка аварии</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="path">RecorderLnx/Аварии</div><h1>Обработка аварии</h1>
+<p>Пример обработки предупреждения и аварии тега.</p><h2>Пример использования</h2>
+<pre><code>local уровень = getTagAlarmLevel(&quot;Температура&quot;)
+if уровень == 2 then
+  logMessage(&quot;Авария&quot;)
+elseif уровень == 1 then
+  logMessage(&quot;Предупреждение&quot;)
+end</code></pre>
+<p class="note">Двойной щелчок по функции в редакторе вставляет заготовку кода.</p>
+</body></html>

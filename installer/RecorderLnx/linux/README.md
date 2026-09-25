@@ -11,6 +11,16 @@ and the host-control agent built on Linux:
 
 `Lazarus/RecorderLnx/lib/x86_64-linux/RecorderHostAgent`
 
+The package also requires both Linux plugin builds in
+`Lazarus/RecorderLnx/lib/x86_64-linux/plugins`:
+
+- `libluacalcplugin.so`
+- `libsampleinfoplugin.so`
+
+The DEB bundles the Lua 5.4 runtime in `/opt/mera/RecorderLnx/lib`, so
+isolated KIP computers do not need repository access for the Lua plugin.
+Lua 5.3 remains supported on older Debian/Astra releases.
+
 The build fails if that executable is older than production Pascal/LFM sources,
 is not an ELF binary, does not contain the SQL schema markers expected by the
 current sources, or differs from the executable embedded into the generated
@@ -82,6 +92,8 @@ Installed application files:
 - `/opt/mera/RecorderLnx`
 - `/opt/mera/RecorderLnx/RecorderHostAgent`
 - `/opt/mera/RecorderLnx/RecorderHostAgent.ini`
+- `/opt/mera/RecorderLnx/plugins/libluacalcplugin.so`
+- `/opt/mera/RecorderLnx/plugins/libsampleinfoplugin.so`
 - `/usr/lib/systemd/user/recorder-host-agent.service`
 - `/etc/xdg/autostart/recorder-host-agent.desktop`
 - `/usr/bin/recorderlnx`

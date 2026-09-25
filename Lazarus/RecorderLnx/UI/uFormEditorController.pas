@@ -213,9 +213,13 @@ type
     procedure RenderLive;
     procedure RenderLiveDuringOperation(AForce: Boolean);
     procedure RefreshSelectionVisuals;
+    procedure PositionResizeHandles(APanel: TPanel;
+      const ABounds: TRecorderRect);
     procedure NotifyChanged;
     procedure CopyComponentState(ASource, ADest: TRecorderVisualComponent);
     procedure CopySelected;
+    procedure ChangeSelectedLayer(ABringForward, AMoveToEdge: Boolean);
+    procedure RestoreSelectionByIds(AIds: TStrings);
     procedure PasteClipboard;
     function ClipboardItemFromComponent(
       AComponent: TRecorderVisualComponent): TFormEditorClipboardItem;
@@ -267,6 +271,10 @@ type
     procedure CancelComponentPlacement;
     { Удаляет выбранные компоненты из активной страницы. }
     procedure DeleteSelected;
+    procedure BringSelectedForward;
+    procedure SendSelectedBackward;
+    procedure BringSelectedToFront;
+    procedure SendSelectedToBack;
     { Фиксирует текущую точку отката в Undo }
     procedure RememberUndoStep;
     { Возвращает на один шаг Undo назад }
@@ -639,6 +647,8 @@ var
   lDstStatic: TRecorderStaticTextComponent;
   lSrcTagValue: TRecorderTagValueComponent;
   lDstTagValue: TRecorderTagValueComponent;
+  lSrcVibration: TRecorderVibrationEstimateComponent;
+  lDstVibration: TRecorderVibrationEstimateComponent;
   lSrcButton: TRecorderButtonComponent;
   lDstButton: TRecorderButtonComponent;
   lSrcInput: TRecorderInputFieldComponent;
@@ -678,8 +688,22 @@ begin
     lDstTagValue.FontStyleBold := lSrcTagValue.FontStyleBold;
     lDstTagValue.FontStyleItalic := lSrcTagValue.FontStyleItalic;
     lDstTagValue.ShowNameMode := lSrcTagValue.ShowNameMode;
+    lDstTagValue.Caption := lSrcTagValue.Caption;
+    lDstTagValue.UseSourceTagName := lSrcTagValue.UseSourceTagName;
     lDstTagValue.EstimateKind := lSrcTagValue.EstimateKind;
     lDstTagValue.UseDefaultEstimate := lSrcTagValue.UseDefaultEstimate;
+  end
+  else if (ASource is TRecorderVibrationEstimateComponent) and
+    (ADest is TRecorderVibrationEstimateComponent) then
+  begin
+    lSrcVibration := TRecorderVibrationEstimateComponent(ASource);
+    lDstVibration := TRecorderVibrationEstimateComponent(ADest);
+    lDstVibration.Caption := lSrcVibration.Caption;
+    lDstVibration.UseSourceTagName := lSrcVibration.UseSourceTagName;
+    lDstVibration.Quantity := lSrcVibration.Quantity;
+    lDstVibration.BandName := lSrcVibration.BandName;
+    lDstVibration.OutputUnit := lSrcVibration.OutputUnit;
+    lDstVibration.DisplayFormat := lSrcVibration.DisplayFormat;
   end
   else if (ASource is TRecorderButtonComponent) and
     (ADest is TRecorderButtonComponent) then
@@ -826,6 +850,36 @@ begin
       lGroupBounds.Top + lGroupBounds.Height);
     AddHandle(feoResizeBottomRight, lGroupBounds.Left + lGroupBounds.Width,
       lGroupBounds.Top + lGroupBounds.Height);
+  end;
+end;
+
+procedure TFormEditorController.PositionResizeHandles(APanel: TPanel;
+  const ABounds: TRecorderRect);
+var
+  I: Integer;
+  lControl: TControl;
+  X, Y: Integer;
+begin
+  for I := 0 to APanel.ControlCount - 1 do
+  begin
+    lControl := APanel.Controls[I];
+    if not ((lControl is TPanel) and
+      (lControl.Hint = 'Resize selection')) then
+      Continue;
+
+    X := ABounds.Left + ABounds.Width div 2 - 4;
+    Y := ABounds.Top + ABounds.Height div 2 - 4;
+    case TFormEditorOperation(lControl.Tag) of
+      feoResizeTopLeft: begin X := ABounds.Left - 8; Y := ABounds.Top - 8 end;
+      feoResizeTop: Y := ABounds.Top - 8;
+      feoResizeTopRight: begin X := ABounds.Left + ABounds.Width; Y := ABounds.Top - 8 end;
+      feoResizeLeft: X := ABounds.Left - 8;
+      feoResizeRight: X := ABounds.Left + ABounds.Width;
+      feoResizeBottomLeft: begin X := ABounds.Left - 8; Y := ABounds.Top + ABounds.Height end;
+      feoResizeBottom: Y := ABounds.Top + ABounds.Height;
+      feoResizeBottomRight: begin X := ABounds.Left + ABounds.Width; Y := ABounds.Top + ABounds.Height end;
+    end;
+    lControl.SetBounds(X, Y, CResizeHandleSize, CResizeHandleSize);
   end;
 end;
 
@@ -1108,7 +1162,19 @@ begin
       if lControlClass <> nil then
       begin
         lStepStarted := GetTickCount64;
-        lControl := lControlClass.Create(lPanel);
+        try
+          lControl := lControlClass.Create(lPanel);
+        except
+          on E: Exception do
+          begin
+            RecorderDebugLog(Format(
+              '[MNEMO] component control create failed page=%s component=%s type=%s class=%s: %s',
+              [lPage.Id, lComponent.Name, lComponent.TypeId,
+               lControlClass.ClassName, E.Message]));
+            lPanel.Free;
+            raise;
+          end;
+        end;
         lCreateMs := GetTickCount64 - lStepStarted;
         lControl.Parent := lPanel;
         lControl.Align := alClient;
@@ -1133,6 +1199,8 @@ begin
           lStepStarted := GetTickCount64;
           if lControl is TRecorderTagValueView then
             TRecorderTagValueView(lControl).AlarmEngine := fAlarmEngine;
+          if lControl is TRecorderImageView then
+            TRecorderImageView(lControl).AlarmEngine := fAlarmEngine;
           lVisualCtrl.Configure(lComponent, fTagRegistry);
           lConfigureMs := GetTickCount64 - lStepStarted;
           lChart := lVisualCtrl.GetChartControl;
@@ -1244,6 +1312,8 @@ begin
               lVisualCtrl.Configure(lComponent, fTagRegistry);
             if lCtrl is TRecorderTagValueView then
               TRecorderTagValueView(lCtrl).AlarmEngine := fAlarmEngine;
+            if lCtrl is TRecorderImageView then
+              TRecorderImageView(lCtrl).AlarmEngine := fAlarmEngine;
             lVisualCtrl.RefreshControl(fTagRegistry, fDisplaySeconds);
             if fEnabled and (lCtrl is TRecorderInputFieldView) then
               lPanel.Caption := TRecorderInputFieldView(lCtrl).Text;
@@ -1345,6 +1415,95 @@ begin
   Render;
 end;
 
+procedure TFormEditorController.RestoreSelectionByIds(AIds: TStrings);
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+begin
+  fSelected.Clear;
+  lPage := GetActivePage;
+  if lPage = nil then
+    Exit;
+  for I := 0 to lPage.ComponentCount - 1 do
+    if AIds.IndexOf(lPage.Components[I].Id) >= 0 then
+      fSelected.Add(Pointer(PtrUInt(I)));
+end;
+
+procedure TFormEditorController.ChangeSelectedLayer(ABringForward,
+  AMoveToEdge: Boolean);
+var
+  I: Integer;
+  lPage: TRecorderFormPage;
+  lSelectedIds: TStringList;
+  lMoved: Boolean;
+
+  function SelectedAt(AIndex: Integer): Boolean;
+  begin
+    Result := lSelectedIds.IndexOf(lPage.Components[AIndex].Id) >= 0;
+  end;
+
+begin
+  lPage := GetActivePage;
+  if (lPage = nil) or (fSelected.Count = 0) then
+    Exit;
+
+  lSelectedIds := TStringList.Create;
+  try
+    for I := 0 to fSelected.Count - 1 do
+      lSelectedIds.Add(lPage.Components[Integer(PtrUInt(fSelected[I]))].Id);
+    PushUndoState;
+
+    repeat
+      lMoved := False;
+      if ABringForward then
+      begin
+        for I := lPage.ComponentCount - 2 downto 0 do
+          if SelectedAt(I) and not SelectedAt(I + 1) then
+          begin
+            lPage.MoveComponent(I, I + 1);
+            lMoved := True;
+          end;
+      end
+      else
+      begin
+        for I := 1 to lPage.ComponentCount - 1 do
+          if SelectedAt(I) and not SelectedAt(I - 1) then
+          begin
+            lPage.MoveComponent(I, I - 1);
+            lMoved := True;
+          end;
+      end;
+    until (not AMoveToEdge) or (not lMoved);
+
+    RestoreSelectionByIds(lSelectedIds);
+    fForceRebuild := True;
+    NotifyChanged;
+    Render;
+  finally
+    lSelectedIds.Free;
+  end;
+end;
+
+procedure TFormEditorController.BringSelectedForward;
+begin
+  ChangeSelectedLayer(True, False);
+end;
+
+procedure TFormEditorController.SendSelectedBackward;
+begin
+  ChangeSelectedLayer(False, False);
+end;
+
+procedure TFormEditorController.BringSelectedToFront;
+begin
+  ChangeSelectedLayer(True, True);
+end;
+
+procedure TFormEditorController.SendSelectedToBack;
+begin
+  ChangeSelectedLayer(False, True);
+end;
+
 
 
 procedure TFormEditorController.HandleKeyDown(var Key: Word; Shift: TShiftState);
@@ -1389,6 +1548,26 @@ begin
   if (ssCtrl in Shift) and (Key = VK_Z) then
   begin
     UndoLastStep;
+    Key := 0;
+    Exit;
+  end;
+
+  if (ssCtrl in Shift) and (Key = VK_F) then
+  begin
+    if ssShift in Shift then
+      BringSelectedToFront
+    else
+      BringSelectedForward;
+    Key := 0;
+    Exit;
+  end;
+
+  if (ssCtrl in Shift) and (Key = VK_B) then
+  begin
+    if ssShift in Shift then
+      SendSelectedToBack
+    else
+      SendSelectedBackward;
     Key := 0;
     Exit;
   end;
@@ -2404,6 +2583,11 @@ begin
       end;
 
     end;
+
+  { Win32 edit mode does not use TShape selection frames. Keep resize handles
+    synchronized with the model independently of those legacy frames. }
+  if GetGroupBounds(lGroupBounds) then
+    PositionResizeHandles(lPagePanel, lGroupBounds);
 
 end;
 

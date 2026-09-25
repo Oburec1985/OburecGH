@@ -10,7 +10,8 @@ function RunLinuxSetupCli: Integer;
 implementation
 
 uses
-  Classes, SysUtils, Process, IniFiles;
+  Classes, SysUtils, Process, IniFiles
+  {$IFDEF UNIX}, BaseUnix{$ENDIF};
 
 const
   CHostnameHelper = '/usr/local/sbin/recorderlnx-set-hostname';
@@ -27,7 +28,9 @@ const
   CSshHelper = '/usr/local/sbin/recorderlnx-manage-ssh';
   CProfileHelper = '/usr/local/sbin/recorderlnx-profile';
   CDiskHelper = '/usr/local/sbin/recorderlnx-manage-disks';
+  CCurrentScreenHelper = '/usr/local/sbin/recorderlnx-current-screen-rdp';
   CRegistryDir = '/etc/recorderlnx/network-shares.d';
+  CFlyDmConfig = '/etc/X11/fly-dm/fly-dmrc';
 
 procedure PrintHelp;
 begin
@@ -39,7 +42,10 @@ begin
   WriteLn('  status                       Показать имя ПК и состояние helper-ов');
   WriteLn('  hostname НОВОЕ_ИМЯ           Переименовать этот компьютер');
   WriteLn('  wol                          Включить Wake-on-LAN');
-  WriteLn('  publish КАТАЛОГ [ИМЯ]        Опубликовать каталог (по умолчанию MeraFiles)');
+  WriteLn('  publish КАТАЛОГ [ИМЯ] [ПОЛЬЗОВАТЕЛЬ] [ro|rw]');
+  WriteLn('                               Опубликовать каталог; rw разрешает запись');
+  WriteLn('  smb status|install            Проверить или установить SMB-сервер');
+  WriteLn('  smb configure ПОЛЬЗОВАТЕЛЬ    Настроить Samba-пользователя; пароль и подтверждение через stdin');
   WriteLn('  connect ХОСТ РЕСУРС ИМЯ      Подключить SMB-ресурс');
   WriteLn('  disconnect ИМЯ               Отключить сетевой ресурс');
   WriteLn('  reconnect ИМЯ                Переподключить сетевой ресурс');
@@ -57,6 +63,442 @@ begin
   WriteLn('  ssh ...                      OpenSSH, firewall и публичные ключи');
   WriteLn('  profile ...                  Импорт и экспорт профиля ПК');
   WriteLn('  disks ...                    Просмотр, форматирование и монтаж дисков');
+  WriteLn('  current-screen status|diagnostics|enable|disable|password [USER]');
+  WriteLn('  password ПОЛЬЗОВАТЕЛЬ [--sync-flydm]');
+  WriteLn('                               Сменить пароль: две строки stdin (пароль и подтверждение)');
+  WriteLn('                               Окончание строк LF и CRLF поддерживается');
+end;
+
+function ValidUserName(const AValue: string): Boolean; forward;
+procedure RemoveTrailingCr(var AValue: UTF8String); forward;
+
+function RunSmbChild(const AArgs: array of string; AElevated: Boolean;
+  const AInput: UTF8String): Integer;
+var
+  lBuffer: array[0..4095] of Byte;
+  lCount: Integer;
+  lIndex: Integer;
+  lProcess: TProcess;
+begin
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      if AElevated then
+      begin
+        lProcess.Executable := 'pkexec';
+        lProcess.Parameters.Add(ExpandFileName(ParamStr(0)));
+      end
+      else
+        lProcess.Executable := ExpandFileName(ParamStr(0));
+      lProcess.Parameters.Add('--internal');
+      lProcess.Parameters.Add('smb');
+      for lIndex := Low(AArgs) to High(AArgs) do
+        lProcess.Parameters.Add(AArgs[lIndex]);
+      lProcess.Options := [poUsePipes];
+      lProcess.Execute;
+      if AInput <> '' then
+        lProcess.Input.WriteBuffer(AInput[1], Length(AInput));
+      lProcess.CloseInput;
+      while lProcess.Running do
+      begin
+        if lProcess.Output.NumBytesAvailable > 0 then
+        begin
+          lCount := lProcess.Output.Read(lBuffer, SizeOf(lBuffer));
+          if lCount > 0 then FileWrite(StdOutputHandle, lBuffer, lCount);
+        end;
+        if lProcess.Stderr.NumBytesAvailable > 0 then
+        begin
+          lCount := lProcess.Stderr.Read(lBuffer, SizeOf(lBuffer));
+          if lCount > 0 then FileWrite(StdErrorHandle, lBuffer, lCount);
+        end;
+      end;
+      repeat
+        lCount := lProcess.Output.Read(lBuffer, SizeOf(lBuffer));
+        if lCount > 0 then FileWrite(StdOutputHandle, lBuffer, lCount);
+      until lCount <= 0;
+      repeat
+        lCount := lProcess.Stderr.Read(lBuffer, SizeOf(lBuffer));
+        if lCount > 0 then FileWrite(StdErrorHandle, lBuffer, lCount);
+      until lCount <= 0;
+      lProcess.WaitOnExit;
+      Result := lProcess.ExitStatus;
+    except
+      on E: Exception do
+      begin
+        WriteLn(StdErr, 'Не удалось выполнить настройку SMB: ', E.Message);
+        Result := 3;
+      end;
+    end;
+  finally
+    lProcess.Free;
+  end;
+end;
+
+function RunSmbAction: Integer;
+var
+  lArgs: array of string;
+  lIndex: Integer;
+  lConfirm, lInput, lPassword: UTF8String;
+  lAction, lUser: string;
+begin
+  if ParamCount < 2 then
+  begin
+    WriteLn(StdErr, 'Использование: LinuxSetupManagerCli smb status|install|configure ПОЛЬЗОВАТЕЛЬ');
+    Exit(1);
+  end;
+  lAction := LowerCase(ParamStr(2));
+  if (lAction = 'status') and (ParamCount = 2) then
+    Exit(RunSmbChild(['status'], False, ''));
+  if (lAction = 'install') and (ParamCount = 2) then
+    Exit(RunSmbChild(['install'], True, ''));
+  if (lAction = 'users') and (ParamCount = 2) then
+    Exit(RunSmbChild(['users'], True, ''));
+  if (lAction = 'access') and (ParamCount = 3) then
+    Exit(RunSmbChild(['access', ParamStr(3)], True, ''));
+  if (lAction = 'access-apply') and (ParamCount >= 3) then
+  begin
+    SetLength(lArgs, ParamCount - 1);
+    for lIndex := 2 to ParamCount do lArgs[lIndex - 2] := ParamStr(lIndex);
+    Exit(RunSmbChild(lArgs, True, ''));
+  end;
+  if (lAction <> 'configure') or (ParamCount <> 3) then
+  begin
+    WriteLn(StdErr, 'Использование: LinuxSetupManagerCli smb configure ПОЛЬЗОВАТЕЛЬ');
+    Exit(1);
+  end;
+  lUser := ParamStr(3);
+  if not ValidUserName(lUser) then
+  begin WriteLn(StdErr, 'Недопустимое имя пользователя.'); Exit(1); end;
+  ReadLn(Input, lPassword);
+  ReadLn(Input, lConfirm);
+  RemoveTrailingCr(lPassword);
+  RemoveTrailingCr(lConfirm);
+  if (lPassword = '') or (lPassword <> lConfirm) then
+  begin WriteLn(StdErr, 'Пароль пуст или подтверждение не совпадает.'); Exit(1); end;
+  lInput := lPassword + LineEnding;
+  Result := RunSmbChild(['configure', lUser, '--password-stdin'], True, lInput);
+  lInput := '';
+  lConfirm := '';
+  lPassword := '';
+end;
+
+function ValidUserName(const AValue: string): Boolean;
+var
+  lChar: Char;
+  lIndex: Integer;
+begin
+  Result := (AValue <> '') and (Length(AValue) <= 32) and
+    (AValue[1] in ['a'..'z', 'A'..'Z', '_']);
+  if not Result then Exit;
+  for lIndex := 2 to Length(AValue) do
+  begin
+    lChar := AValue[lIndex];
+    if not (lChar in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) and
+      not ((lChar = '$') and (lIndex = Length(AValue))) then
+      Exit(False);
+  end;
+end;
+
+procedure RemoveTrailingCr(var AValue: UTF8String);
+begin
+  if (Length(AValue) > 0) and (AValue[Length(AValue)] = #13) then
+    SetLength(AValue, Length(AValue) - 1);
+end;
+
+function RequireArgumentCount(AExpected: Integer;
+  const AUsage: string): Boolean; forward;
+
+function SaveFlyDmConfig(const ALines: TStringList): Boolean;
+var
+  lTemp: string;
+begin
+  lTemp := CFlyDmConfig + '.linuxsetupmanager.tmp';
+  try
+    ALines.SaveToFile(lTemp);
+    {$IFDEF UNIX}
+    fpChmod(lTemp, &600);
+    Result := fpRename(PChar(lTemp), PChar(CFlyDmConfig)) = 0;
+    {$ELSE}
+    DeleteFile(CFlyDmConfig);
+    Result := RenameFile(lTemp, CFlyDmConfig);
+    {$ENDIF}
+  except
+    Result := False;
+  end;
+  if not Result then DeleteFile(lTemp);
+end;
+
+function LocalUserExists(const AUser: string): Boolean;
+var
+  lProcess: TProcess;
+begin
+  Result := False;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := '/usr/bin/getent';
+      lProcess.Parameters.Add('passwd');
+      lProcess.Parameters.Add(AUser);
+      lProcess.Options := [poUsePipes, poWaitOnExit];
+      lProcess.Execute;
+      Result := lProcess.ExitStatus = 0;
+    except
+      Result := False;
+    end;
+  finally
+    lProcess.Free;
+  end;
+end;
+
+function UpdateFlyDmPassword(const APassword: UTF8String;
+  out AOriginal: TStringList): Boolean;
+var
+  lFound: Boolean;
+  lIndex: Integer;
+  lUpdated: TStringList;
+begin
+  Result := False;
+  AOriginal := nil;
+  if not FileExists(CFlyDmConfig) then Exit;
+  AOriginal := TStringList.Create;
+  lUpdated := TStringList.Create;
+  try
+    try
+      AOriginal.LoadFromFile(CFlyDmConfig);
+    except
+      Exit;
+    end;
+    lUpdated.Assign(AOriginal);
+    lFound := False;
+    for lIndex := 0 to lUpdated.Count - 1 do
+      if Pos('autologinpass=', LowerCase(TrimLeft(lUpdated[lIndex]))) = 1 then
+      begin
+        lUpdated[lIndex] := 'AutoLoginPass=' + string(APassword);
+        lFound := True;
+        Break;
+      end;
+    if not lFound then
+      lUpdated.Add('AutoLoginPass=' + string(APassword));
+    Result := SaveFlyDmConfig(lUpdated);
+  finally
+    lUpdated.Free;
+  end;
+end;
+
+function RunPasswordApply: Integer;
+var
+  lInput, lPassword: UTF8String;
+  lOriginal: TStringList;
+  lProcess: TProcess;
+  lSyncFlyDm: Boolean;
+  lUser: string;
+begin
+  {$IFDEF UNIX}
+  if fpGetEUID <> 0 then
+  begin
+    WriteLn(StdErr, 'Ошибка: внутреннее действие требует права root.');
+    Exit(3);
+  end;
+  {$ENDIF}
+  if (ParamCount < 2) or (ParamCount > 3) then Exit(1);
+  lUser := ParamStr(2);
+  lSyncFlyDm := (ParamCount = 3) and (ParamStr(3) = '--sync-flydm');
+  if not ValidUserName(lUser) or ((ParamCount = 3) and not lSyncFlyDm) then
+    Exit(1);
+  if not LocalUserExists(lUser) then
+  begin
+    WriteLn(StdErr, 'Локальный пользователь не найден: ', lUser);
+    Exit(1);
+  end;
+  ReadLn(Input, lPassword);
+  RemoveTrailingCr(lPassword);
+  if (lPassword = '') or (Length(lPassword) > 1024) or
+    (Pos(':', lPassword) > 0) then Exit(1);
+  lOriginal := nil;
+  if lSyncFlyDm and not UpdateFlyDmPassword(lPassword, lOriginal) then
+  begin
+    lOriginal.Free;
+    WriteLn(StdErr, 'Не удалось безопасно обновить AutoLoginPass в ',
+      CFlyDmConfig, '.');
+    Exit(4);
+  end;
+  lProcess := TProcess.Create(nil);
+  try
+    lProcess.Executable := '/usr/sbin/chpasswd';
+    lProcess.Options := [poUsePipes];
+    lProcess.Execute;
+    lInput := UTF8String(lUser) + ':' + lPassword + LineEnding;
+    lProcess.Input.WriteBuffer(lInput[1], Length(lInput));
+    lProcess.CloseInput;
+    lInput := '';
+    lProcess.WaitOnExit;
+    Result := lProcess.ExitStatus;
+    if (Result <> 0) and lSyncFlyDm and (lOriginal <> nil) and
+      not SaveFlyDmConfig(lOriginal) then
+      WriteLn(StdErr, 'Не удалось восстановить конфигурацию Fly-DM.');
+  finally
+    {$IFDEF UNIX}if lSyncFlyDm then fpChmod(CFlyDmConfig, &600);{$ENDIF}
+    lInput := '';
+    lPassword := '';
+    lOriginal.Free;
+    lProcess.Free;
+  end;
+end;
+
+function RunPasswordAction: Integer;
+var
+  lConfirm, lInput, lPassword: UTF8String;
+  lProcess: TProcess;
+  lUser: string;
+begin
+  if (ParamCount < 2) or (ParamCount > 3) then
+  begin
+    WriteLn(StdErr, 'Ошибка: использование: LinuxSetupManager password ПОЛЬЗОВАТЕЛЬ [--sync-flydm]');
+    Exit(1);
+  end;
+  lUser := ParamStr(2);
+  if not ValidUserName(lUser) or
+    ((ParamCount = 3) and (ParamStr(3) <> '--sync-flydm')) then
+  begin
+    WriteLn(StdErr, 'Ошибка: недопустимое имя пользователя.');
+    Exit(1);
+  end;
+  ReadLn(Input, lPassword);
+  ReadLn(Input, lConfirm);
+  RemoveTrailingCr(lPassword);
+  RemoveTrailingCr(lConfirm);
+  if (lPassword = '') or (Length(lPassword) > 1024) then
+  begin
+    WriteLn(StdErr, 'Ошибка: пароль должен содержать от 1 до 1024 байт.');
+    Exit(1);
+  end;
+  if Pos(':', lPassword) > 0 then
+  begin
+    WriteLn(StdErr, 'Ошибка: пароль не должен содержать двоеточие.');
+    Exit(1);
+  end;
+  if lPassword <> lConfirm then
+  begin
+    WriteLn(StdErr, 'Ошибка: пароли не совпадают.');
+    Exit(1);
+  end;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      lProcess.Executable := 'pkexec';
+      lProcess.Parameters.Add(ExpandFileName(ParamStr(0)));
+      lProcess.Parameters.Add('--password-apply');
+      lProcess.Parameters.Add(lUser);
+      if ParamCount = 3 then lProcess.Parameters.Add('--sync-flydm');
+      lProcess.Options := [poUsePipes];
+      lProcess.Execute;
+      lInput := lPassword + LineEnding;
+      lProcess.Input.WriteBuffer(lInput[1], Length(lInput));
+      lProcess.CloseInput;
+      lInput := '';
+      lProcess.WaitOnExit;
+      Result := lProcess.ExitStatus;
+      if Result = 0 then WriteLn('Пароль пользователя изменён.')
+      else WriteLn(StdErr, 'Не удалось изменить пароль. Код ', Result, '.');
+    except
+      on E: Exception do
+      begin
+        WriteLn(StdErr, 'Не удалось запустить смену пароля: ', E.Message);
+        Result := 3;
+      end;
+    end;
+  finally
+    lInput := '';
+    lConfirm := '';
+    lPassword := '';
+    lProcess.Free;
+  end;
+end;
+
+function RunCurrentScreenAction: Integer;
+var
+  lProcess: TProcess;
+  lAction: string;
+  lPassword: UTF8String;
+  lIndex: Integer;
+begin
+  if (ParamCount < 2) or (ParamCount > 3) then
+  begin
+    WriteLn(StdErr, 'Использование: LinuxSetupManagerCli current-screen status|diagnostics|enable|disable|password [USER]');
+    Exit(1);
+  end;
+  lAction := LowerCase(ParamStr(2));
+  if (lAction <> 'status') and (lAction <> 'diagnostics') and (lAction <> 'enable') and
+    (lAction <> 'disable') and (lAction <> 'password') then
+  begin
+    WriteLn(StdErr, 'Неизвестное действие: ', ParamStr(2));
+    Exit(1);
+  end;
+  if not FileExists(CCurrentScreenHelper) then
+  begin
+    WriteLn(StdErr, 'Компонент текущего экрана не установлен: ',
+      CCurrentScreenHelper);
+    Exit(3);
+  end;
+  if lAction = 'password' then
+  begin
+    ReadLn(Input, lPassword);
+    if (Length(lPassword) > 0) and (lPassword[Length(lPassword)] = #13) then
+      SetLength(lPassword, Length(lPassword) - 1);
+    if (Length(lPassword) < 1) or (Length(lPassword) > 8) then
+    begin
+      WriteLn(StdErr, 'Пароль должен содержать от 1 до 8 печатных символов ASCII.');
+      Exit(1);
+    end;
+    for lIndex := 1 to Length(lPassword) do
+      if (Ord(lPassword[lIndex]) < 33) or (Ord(lPassword[lIndex]) > 126) then
+      begin
+        WriteLn(StdErr, 'Пароль должен содержать от 1 до 8 печатных символов ASCII.');
+        Exit(1);
+      end;
+  end;
+  lProcess := TProcess.Create(nil);
+  try
+    try
+      if (lAction = 'status') or (lAction = 'diagnostics')
+        {$IFDEF UNIX}or (fpGetEUID = 0){$ENDIF} then
+        lProcess.Executable := CCurrentScreenHelper
+      else
+      begin
+        lProcess.Executable := 'pkexec';
+        lProcess.Parameters.Add(CCurrentScreenHelper);
+      end;
+      lProcess.Parameters.Add(lAction);
+      if ParamCount = 3 then lProcess.Parameters.Add(ParamStr(3));
+      if lAction = 'password' then
+        lProcess.Options := [poUsePipes]
+      else
+        lProcess.Options := [poWaitOnExit];
+      lProcess.Execute;
+      if lAction = 'password' then
+      begin
+        lPassword := lPassword + LineEnding;
+        lProcess.Input.WriteBuffer(lPassword[1], Length(lPassword));
+        lProcess.CloseInput;
+        lProcess.WaitOnExit;
+      end;
+      Result := lProcess.ExitStatus;
+      if lAction = 'password' then
+      begin
+        if Result = 0 then WriteLn('Пароль удалённого рабочего стола изменён.')
+        else WriteLn(StdErr, 'Не удалось изменить пароль. Код ', Result, '.');
+      end;
+    except
+      on E: Exception do
+      begin
+        WriteLn(StdErr, 'Не удалось запустить настройку: ', E.Message);
+        Result := 3;
+      end;
+    end;
+  finally
+    lPassword := '';
+    lProcess.Free;
+  end;
 end;
 
 function RunHelper(const AHelper: string;
@@ -224,6 +666,7 @@ begin
   PrintHelperState('Удалённый доступ SSH', CSshHelper);
   PrintHelperState('Профили настроек', CProfileHelper);
   PrintHelperState('Диски и монтирование', CDiskHelper);
+  PrintHelperState('Текущий экран через RDP', CCurrentScreenHelper);
   WriteLn;
   Result := ListResources;
 end;
@@ -239,6 +682,7 @@ begin
     Exit(0);
   end;
   lCommand := LowerCase(Trim(ParamStr(1)));
+  if lCommand = '--password-apply' then Exit(RunPasswordApply);
   if (lCommand = 'help') or (lCommand = '--help') or (lCommand = '-h') then
   begin
     PrintHelp;
@@ -306,9 +750,9 @@ begin
   end;
   if lCommand = 'publish' then
   begin
-    if (ParamCount < 2) or (ParamCount > 3) then
+    if (ParamCount < 2) or (ParamCount > 5) then
     begin
-      WriteLn(StdErr, 'Ошибка: использование: LinuxSetupManager publish КАТАЛОГ [ИМЯ]');
+      WriteLn(StdErr, 'Ошибка: использование: LinuxSetupManager publish КАТАЛОГ [ИМЯ] [ПОЛЬЗОВАТЕЛЬ] [ro|rw]');
       Exit(1);
     end;
     if not DirectoryExists(ParamStr(2)) then
@@ -316,9 +760,17 @@ begin
       WriteLn(StdErr, 'Ошибка: каталог не существует: ', ParamStr(2));
       Exit(1);
     end;
+    if ParamCount = 5 then
+      Exit(RunHelper('/opt/mera/RecorderLnx/LinuxSetupManager',
+        ['--internal', 'publish', ParamStr(2), ParamStr(3), ParamStr(4), ParamStr(5)]));
+    if ParamCount = 4 then
+      Exit(RunHelper('/opt/mera/RecorderLnx/LinuxSetupManager',
+        ['--internal', 'publish', ParamStr(2), ParamStr(3), ParamStr(4)]));
     if ParamCount = 3 then
-      Exit(RunHelper(CShareHelper, [ParamStr(2), ParamStr(3)]));
-    Exit(RunHelper(CShareHelper, [ParamStr(2), 'MeraFiles']));
+      Exit(RunHelper('/opt/mera/RecorderLnx/LinuxSetupManager',
+        ['--internal', 'publish', ParamStr(2), ParamStr(3)]));
+    Exit(RunHelper('/opt/mera/RecorderLnx/LinuxSetupManager',
+      ['--internal', 'publish', ParamStr(2), 'MeraFiles']));
   end;
   if lCommand = 'connect' then
   begin
@@ -332,6 +784,7 @@ begin
     Exit(RunHelper(CConnectHelper,
       ['disconnect', '-', '-', ParamStr(2)]));
   end;
+  if lCommand = 'smb' then Exit(RunSmbAction);
   if lCommand = 'reconnect' then
   begin
     if not RequireArgumentCount(2, 'reconnect ИМЯ') then Exit(1);
@@ -344,6 +797,8 @@ begin
   if lCommand = 'ssh' then Exit(ForwardArguments(CSshHelper, 2));
   if lCommand = 'profile' then Exit(ForwardArguments(CProfileHelper, 2));
   if lCommand = 'disks' then Exit(ForwardArguments(CDiskHelper, 2));
+  if lCommand = 'current-screen' then Exit(RunCurrentScreenAction);
+  if lCommand = 'password' then Exit(RunPasswordAction);
   WriteLn(StdErr, 'Неизвестная команда: ', ParamStr(1));
   WriteLn(StdErr, 'Выполните LinuxSetupManager help для просмотра команд.');
   Result := 1;

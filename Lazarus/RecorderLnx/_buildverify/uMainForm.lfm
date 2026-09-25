@@ -262,6 +262,7 @@ object MainForm: TMainForm
     Width = 5
     Align = alRight
     ResizeAnchor = akRight
+    OnMoved = SplitterRightMoved
   end
   object pnMain: TPanel
     Left = 0

@@ -61,30 +61,30 @@ type
     lbDbSignals: TListBox;
     lbLines: TListBox;
     pnlLineColor: TPanel;
-    procedure AxisSelectionChange(Sender: TObject; User: Boolean);
-    procedure btnAddAxisClick(Sender: TObject);
-    procedure btnAddLineClick(Sender: TObject);
-    procedure btnColorClick(Sender: TObject);
-    procedure btnDeleteAxisClick(Sender: TObject);
-    procedure btnDeleteDbIntervalClick(Sender: TObject);
-    procedure btnDeleteLineClick(Sender: TObject);
-    procedure btnLoadSignalsClick(Sender: TObject);
-    procedure btnOkClick(Sender: TObject);
-    procedure LineSelectionChange(Sender: TObject; User: Boolean);
-    procedure AxisControlsExit(Sender: TObject);
-    procedure LineControlsExit(Sender: TObject);
-    procedure TimeFromChange(Sender: TObject);
-    procedure CurrentDateChange(Sender: TObject);
-    procedure TimeToChange(Sender: TObject);
-    procedure TimeWindowEditingDone(Sender: TObject);
-    procedure TimeModeChange(Sender: TObject);
-    procedure btnUseDbRangeClick(Sender: TObject);
-    procedure btnAddDisplayClick(Sender: TObject);
-    procedure btnAutoAxesClick(Sender: TObject);
-    procedure btnAutoDisplaysClick(Sender: TObject);
-    procedure btnDeleteDisplayClick(Sender: TObject);
-    procedure DisplayChange(Sender: TObject);
-    procedure DisplayNameExit(Sender: TObject);
+    procedure AxisSelectionChange({%H-}Sender: TObject; {%H-}User: Boolean);
+    procedure btnAddAxisClick({%H-}Sender: TObject);
+    procedure btnAddLineClick({%H-}Sender: TObject);
+    procedure btnColorClick({%H-}Sender: TObject);
+    procedure btnDeleteAxisClick({%H-}Sender: TObject);
+    procedure btnDeleteDbIntervalClick({%H-}Sender: TObject);
+    procedure btnDeleteLineClick({%H-}Sender: TObject);
+    procedure btnLoadSignalsClick({%H-}Sender: TObject);
+    procedure btnOkClick({%H-}Sender: TObject);
+    procedure LineSelectionChange({%H-}Sender: TObject; {%H-}User: Boolean);
+    procedure AxisControlsExit({%H-}Sender: TObject);
+    procedure LineControlsExit({%H-}Sender: TObject);
+    procedure TimeFromChange({%H-}Sender: TObject);
+    procedure CurrentDateChange({%H-}Sender: TObject);
+    procedure TimeToChange({%H-}Sender: TObject);
+    procedure TimeWindowEditingDone({%H-}Sender: TObject);
+    procedure TimeModeChange({%H-}Sender: TObject);
+    procedure btnUseDbRangeClick({%H-}Sender: TObject);
+    procedure btnAddDisplayClick({%H-}Sender: TObject);
+    procedure btnAutoAxesClick({%H-}Sender: TObject);
+    procedure btnAutoDisplaysClick({%H-}Sender: TObject);
+    procedure btnDeleteDisplayClick({%H-}Sender: TObject);
+    procedure DisplayChange({%H-}Sender: TObject);
+    procedure DisplayNameExit({%H-}Sender: TObject);
   private
     fComponent: TRecorderSqlTrendComponent;
     fDraft: TRecorderSqlTrendComponent;
@@ -360,7 +360,8 @@ var I: Integer;
 begin
   lbLines.Clear;
   for I := 0 to CurrentDisplay.LineCount - 1 do
-    lbLines.Items.Add(CurrentDisplay.Lines[I].TagName + ' — ' + CurrentDisplay.Lines[I].Name);
+    lbLines.Items.Add(CurrentDisplay.Lines[I].TagName + UTF8Encode(' — ') +
+      CurrentDisplay.Lines[I].Name);
   if CurrentDisplay.LineCount > 0 then begin lbLines.ItemIndex := 0; LoadLine; end;
 end;
 
@@ -420,7 +421,7 @@ procedure TRecorderSqlTrendSettingsDialog.LineControlsExit(Sender: TObject);
 begin
   StoreLine;
   if lbLines.ItemIndex >= 0 then lbLines.Items[lbLines.ItemIndex] :=
-    CurrentDisplay.Lines[lbLines.ItemIndex].TagName + ' — ' +
+    CurrentDisplay.Lines[lbLines.ItemIndex].TagName + UTF8Encode(' — ') +
     CurrentDisplay.Lines[lbLines.ItemIndex].Name;
 end;
 

@@ -6,8 +6,8 @@ unit uLuaCalcSettingsDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
-  uRecorderTags;
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls,
+  SynEdit, uRecorderTags, uLuaSyntaxHighlighter;
 
 procedure ShowLuaCalcSettings(AOwner: TComponent; const AProjectDir: string;
   ATags: TRecorderTagRegistry);
@@ -15,15 +15,18 @@ procedure ShowLuaCalcSettings(AOwner: TComponent; const AProjectDir: string;
 implementation
 
 uses
-  Dialogs, IniFiles, Menus;
+  Dialogs, IniFiles, Menus, LCLType, LazUTF8, uLuaCalcEngine
+  {$ifdef Windows}, ShellApi{$endif};
 
 type
   TLuaCalcSettingsForm = class(TForm)
   private
     fScripts: TListBox;
-    fEditor: TMemo;
+    fEditor: TSynEdit;
+    fHighlighter: TLuaSyntaxHighlighter;
     fTags: TListBox;
-    fFunctions: TListBox;
+    fTagFilter: TEdit;
+    fFunctions: TTreeView;
     fDirectory: string;
     fConfigFile: string;
     fCurrentFile: string;
@@ -33,16 +36,29 @@ type
     procedure SaveAndCheckCurrent;
     procedure OfferMissingTags;
     procedure RefreshTags;
+    procedure TagFilterChanged(Sender: TObject);
     procedure SelectScript(Sender: TObject);
     procedure AddScript(Sender: TObject);
     procedure DeleteScript(Sender: TObject);
     procedure SaveScript(Sender: TObject);
+    procedure TestScript(Sender: TObject);
+    procedure EditorKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure ChangeSelectionIndent(AOutdent: Boolean);
     procedure Closing(Sender: TObject; var CloseAction: TCloseAction);
     procedure InsertTag(Sender: TObject);
     procedure InsertFunction(Sender: TObject);
+    function FunctionTemplate(AIndex: Integer): string;
+    function FunctionHelpTopic(AIndex: Integer): string;
+    function OpenFunctionHelp(AIndex: Integer): Boolean;
+    procedure InsertEditorTemplate(const ATemplate: string);
     procedure ShowFunctionHelp(Sender: TObject);
     procedure FunctionMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FunctionKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure PopulateFunctionTree;
+    function SelectedTemplateIndex: Integer;
     function ScriptPath(const AName: string): string;
   public
     constructor CreateForProject(AOwner: TComponent;
@@ -66,6 +82,7 @@ constructor TLuaCalcSettingsForm.CreateForProject(AOwner: TComponent;
   const AProjectDir: string; ATags: TRecorderTagRegistry);
 var
   lLeft, lRight, lButtons, lTagPanel, lFunctionPanel: TPanel;
+  lEditorSplitter, lTagFunctionSplitter: TSplitter;
   lButton: TButton;
   lMenu: TPopupMenu;
   lMenuItem: TMenuItem;
@@ -92,7 +109,7 @@ begin
   lButtons := TPanel.Create(Self);
   lButtons.Parent := lLeft;
   lButtons.Align := alBottom;
-  lButtons.Height := 72;
+  lButtons.Height := 103;
   lButtons.Caption := '';
   lButton := TButton.Create(Self);
   lButton.Parent := lButtons;
@@ -109,12 +126,23 @@ begin
   lButton.SetBounds(8, 39, 190, 26);
   lButton.Caption := 'Сохранить код';
   lButton.OnClick := @SaveScript;
+  lButton := TButton.Create(Self);
+  lButton.Parent := lButtons;
+  lButton.SetBounds(8, 70, 190, 26);
+  lButton.Caption := 'Test';
+  lButton.OnClick := @TestScript;
 
   lRight := TPanel.Create(Self);
   lRight.Parent := Self;
   lRight.Align := alRight;
   lRight.Width := 235;
   lRight.Caption := '';
+  lEditorSplitter := TSplitter.Create(Self);
+  lEditorSplitter.Parent := Self;
+  lEditorSplitter.Align := alRight;
+  lEditorSplitter.Width := 5;
+  lEditorSplitter.MinSize := 150;
+  lEditorSplitter.Cursor := crHSplit;
   lFunctionPanel := TPanel.Create(Self);
   lFunctionPanel.Parent := lRight;
   lFunctionPanel.Align := alBottom;
@@ -124,22 +152,29 @@ begin
   lButton.Parent := lFunctionPanel;
   lButton.Align := alTop;
   lButton.Height := 30;
-  lButton.Caption := 'Функции RecorderLnx';
+  lButton.Caption := 'Функции и шаблоны Lua';
   lButton.Enabled := False;
-  fFunctions := TListBox.Create(Self);
+  fFunctions := TTreeView.Create(Self);
   fFunctions.Parent := lFunctionPanel;
   fFunctions.Align := alClient;
-  fFunctions.Items.Add('logMessage');
-  fFunctions.Items.Add('getValue');
-  fFunctions.Items.Add('setValue');
+  fFunctions.ReadOnly := True;
+  fFunctions.HideSelection := False;
+  PopulateFunctionTree;
   fFunctions.OnDblClick := @InsertFunction;
   fFunctions.OnMouseDown := @FunctionMouseDown;
+  fFunctions.OnKeyDown := @FunctionKeyDown;
   lMenu := TPopupMenu.Create(Self);
   lMenuItem := TMenuItem.Create(lMenu);
   lMenuItem.Caption := 'Справка по функции';
   lMenuItem.OnClick := @ShowFunctionHelp;
   lMenu.Items.Add(lMenuItem);
   fFunctions.PopupMenu := lMenu;
+  lTagFunctionSplitter := TSplitter.Create(Self);
+  lTagFunctionSplitter.Parent := lRight;
+  lTagFunctionSplitter.Align := alBottom;
+  lTagFunctionSplitter.Height := 5;
+  lTagFunctionSplitter.MinSize := 80;
+  lTagFunctionSplitter.Cursor := crVSplit;
   lTagPanel := TPanel.Create(Self);
   lTagPanel.Parent := lRight;
   lTagPanel.Align := alClient;
@@ -150,6 +185,11 @@ begin
   lButton.Height := 30;
   lButton.Caption := 'Теги: двойной щелчок вставляет';
   lButton.Enabled := False;
+  fTagFilter := TEdit.Create(Self);
+  fTagFilter.Parent := lTagPanel;
+  fTagFilter.Align := alTop;
+  fTagFilter.TextHint := 'Поиск по тегам';
+  fTagFilter.OnChange := @TagFilterChanged;
   fTags := TListBox.Create(Self);
   fTags.Parent := lTagPanel;
   fTags.Align := alClient;
@@ -157,13 +197,16 @@ begin
   fTags.Sorted := True;
   RefreshTags;
 
-  fEditor := TMemo.Create(Self);
+  fEditor := TSynEdit.Create(Self);
   fEditor.Parent := Self;
   fEditor.Align := alClient;
   fEditor.ScrollBars := ssBoth;
-  fEditor.WordWrap := False;
   fEditor.Font.Name := 'Consolas';
   fEditor.Font.Size := 10;
+  fEditor.TabWidth := 2;
+  fHighlighter := TLuaSyntaxHighlighter.Create(Self);
+  fEditor.Highlighter := fHighlighter;
+  fEditor.OnKeyDown := @EditorKeyDown;
   LoadScripts;
 end;
 
@@ -203,15 +246,15 @@ begin
     end;
     if lConfigured then Exit;
   end;
-  if FindFirst(IncludeTrailingPathDelimiter(fDirectory) + '*.lua',
+  if SysUtils.FindFirst(IncludeTrailingPathDelimiter(fDirectory) + '*.lua',
     faAnyFile, lSearch) = 0 then
   try
     repeat
       if (lSearch.Attr and faDirectory) = 0 then
         fScripts.Items.Add(ChangeFileExt(lSearch.Name, ''));
-    until FindNext(lSearch) <> 0;
+    until SysUtils.FindNext(lSearch) <> 0;
   finally
-    FindClose(lSearch);
+    SysUtils.FindClose(lSearch);
   end;
   SaveConfig;
 end;
@@ -247,16 +290,28 @@ end;
 procedure TLuaCalcSettingsForm.RefreshTags;
 var
   I: Integer;
+  lFilter, lTagName: string;
 begin
+  lFilter := UTF8LowerCase(Trim(fTagFilter.Text));
   fTags.Items.BeginUpdate;
   try
     fTags.Items.Clear;
     if fTagRegistry <> nil then
       for I := 0 to fTagRegistry.TagCount - 1 do
-        fTags.Items.Add(fTagRegistry.Tags[I].Name);
+      begin
+        lTagName := fTagRegistry.Tags[I].Name;
+        if (lFilter = '') or
+          (Pos(lFilter, UTF8LowerCase(lTagName)) > 0) then
+          fTags.Items.Add(lTagName);
+      end;
   finally
     fTags.Items.EndUpdate;
   end;
+end;
+
+procedure TLuaCalcSettingsForm.TagFilterChanged(Sender: TObject);
+begin
+  RefreshTags;
 end;
 
 procedure TLuaCalcSettingsForm.SaveAndCheckCurrent;
@@ -305,8 +360,9 @@ begin
     if lNames.Count = 0 then Exit;
     lList := '';
     for I := 0 to lNames.Count - 1 do
-      lList := lList + '• ' + lNames[I] + LineEnding;
-    if MessageDlg('Создать отсутствующие виртуальные теги?' + LineEnding +
+      lList := lList + UTF8Encode('• ') + lNames[I] + LineEnding;
+    if MessageDlg(UTF8Encode('Создать отсутствующие виртуальные теги?') +
+      LineEnding +
       lList, mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
     for I := 0 to lNames.Count - 1 do
     begin
@@ -349,7 +405,12 @@ begin
   end;
   SaveAndCheckCurrent;
   ForceDirectories(fDirectory);
-  fEditor.Lines.Text := 'function lua_main()' + LineEnding +
+  fEditor.Lines.Text :=
+    '-- Однострочный комментарий: текст после -- не выполняется' + LineEnding +
+    '--[[' + LineEnding +
+    'Многострочный комментарий: весь текст внутри блока не выполняется.' + LineEnding +
+    ']]' + LineEnding + LineEnding +
+    'function lua_main()' + LineEnding +
     '  -- setValue("Result", {Source}.Value)' + LineEnding + 'end';
   fCurrentFile := ScriptPath(lName);
   fEditor.Lines.SaveToFile(fCurrentFile);
@@ -361,7 +422,8 @@ end;
 procedure TLuaCalcSettingsForm.DeleteScript(Sender: TObject);
 begin
   if fScripts.ItemIndex < 0 then Exit;
-  if MessageDlg('Удалить подпрограмму ' + fScripts.Items[fScripts.ItemIndex] + '?',
+  if MessageDlg(UTF8Encode('Удалить подпрограмму ') +
+    fScripts.Items[fScripts.ItemIndex] + '?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   DeleteFile(ScriptPath(fScripts.Items[fScripts.ItemIndex]));
   fScripts.Items.Delete(fScripts.ItemIndex);
@@ -377,6 +439,74 @@ begin
   fEditor.Modified := False;
 end;
 
+procedure TLuaCalcSettingsForm.TestScript(Sender: TObject);
+var
+  lEngine: TLuaCalcEngine;
+begin
+  if fCurrentFile = '' then Exit;
+  lEngine := TLuaCalcEngine.Create;
+  try
+    if lEngine.Validate(UTF8String(fEditor.Text)) then
+      MessageDlg('Проверка Lua', 'OK', mtInformation, [mbOK], 0)
+    else
+      MessageDlg('Ошибка Lua', lEngine.LastError, mtError, [mbOK], 0);
+  finally
+    lEngine.Free;
+  end;
+end;
+
+procedure TLuaCalcSettingsForm.EditorKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key <> VK_TAB then Exit;
+  ChangeSelectionIndent(ssCtrl in Shift);
+  Key := 0;
+end;
+
+procedure TLuaCalcSettingsForm.ChangeSelectionIndent(AOutdent: Boolean);
+var
+  lText, lLine, lResult: string;
+  lLines: TStringList;
+  lSelectionStart, I: Integer;
+begin
+  lSelectionStart := fEditor.SelStart;
+  lText := fEditor.SelText;
+  if lText = '' then
+  begin
+    if not AOutdent then
+      fEditor.SelText := #9;
+    Exit;
+  end;
+  lLines := TStringList.Create;
+  try
+    lLines.Text := lText;
+    lResult := '';
+    for I := 0 to lLines.Count - 1 do
+    begin
+      lLine := lLines[I];
+      if AOutdent then
+      begin
+        if (lLine <> '') and (lLine[1] = #9) then
+          Delete(lLine, 1, 1)
+        else
+        begin
+          if (lLine <> '') and (lLine[1] = ' ') then Delete(lLine, 1, 1);
+          if (lLine <> '') and (lLine[1] = ' ') then Delete(lLine, 1, 1);
+        end;
+      end
+      else
+        lLine := #9 + lLine;
+      if I > 0 then lResult := lResult + LineEnding;
+      lResult := lResult + lLine;
+    end;
+    fEditor.SelText := lResult;
+    fEditor.SelStart := lSelectionStart;
+    fEditor.SelEnd := lSelectionStart + Length(lResult);
+  finally
+    lLines.Free;
+  end;
+end;
+
 procedure TLuaCalcSettingsForm.Closing(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
@@ -390,40 +520,277 @@ begin
   fEditor.SetFocus;
 end;
 
-procedure TLuaCalcSettingsForm.InsertFunction(Sender: TObject);
+function TLuaCalcSettingsForm.FunctionTemplate(AIndex: Integer): string;
 const
-  Templates: array[0..2] of string = (
-    'logMessage("Сообщение")',
+  Templates: array[0..25] of string = (
+    'if условие then' + LineEnding +
+      '  -- действия' + LineEnding +
+      'end',
+    'if условие then' + LineEnding +
+      '  -- действия, если условие истинно' + LineEnding +
+      'else' + LineEnding +
+      '  -- действия, если условие ложно' + LineEnding +
+      'end',
+    'for i = 1, N do' + LineEnding +
+      '  -- действия' + LineEnding +
+      'end',
+    'while условие do' + LineEnding +
+      '  -- действия' + LineEnding +
+      'end',
+    'repeat' + LineEnding +
+      '  -- действия' + LineEnding +
+      'until условие',
+    'local значение = 0',
+    'math.abs(значение)',
+    'math.min(значение1, значение2)',
+    'math.max(значение1, значение2)',
+    'math.sqrt(значение)',
+    'tostring(значение)',
+    'string.format("%.2f", значение)',
+    '{ИмяТега}.Value',
+    '{ИмяТега} = 0',
     'getValue("ИмяТега")',
-    'setValue("ИмяТега", 0)');
+    'setValue("ИмяТега", 0)',
+    'getTagTime("ИмяТега")',
+    'local значение, время = getTagSample("ИмяТега")',
+    'tagExists("ИмяТега")',
+    'local порог, включена = getTagSetpoint("ИмяТега", "highAlarm")',
+    'setTagSetpoint("ИмяТега", "highAlarm", 100, 1)',
+    'getTagAlarmLevel("ИмяТега")',
+    'local уровень = getTagAlarmLevel("ИмяТега")' + LineEnding +
+      'if уровень == 2 then' + LineEnding +
+      '  logMessage("Авария тега ИмяТега")' + LineEnding +
+      'elseif уровень == 1 then' + LineEnding +
+      '  logMessage("Предупреждение тега ИмяТега")' + LineEnding +
+      'end',
+    'logMessage("Сообщение")',
+    'getRecorderTime()',
+    'SetTagValue("ИмяТега", 0, 1.0)');
 begin
-  if (fCurrentFile = '') or (fFunctions.ItemIndex < 0) or
-    (fFunctions.ItemIndex > High(Templates)) then Exit;
-  fEditor.SelText := Templates[fFunctions.ItemIndex];
+  Result := '';
+  if (AIndex >= Low(Templates)) and (AIndex <= High(Templates)) then
+    Result := Templates[AIndex];
+end;
+
+function TLuaCalcSettingsForm.FunctionHelpTopic(AIndex: Integer): string;
+const
+  Topics: array[0..25] of string = (
+    'if_then', 'if_else', 'for', 'while', 'repeat_until', 'local',
+    'math_abs', 'math_min', 'math_max', 'math_sqrt', 'tostring',
+    'string_format', 'tag_value', 'tag_write', 'get_value', 'set_value',
+    'get_tag_time', 'get_tag_sample', 'tag_exists', 'get_tag_setpoint',
+    'set_tag_setpoint', 'get_tag_alarm_level', 'alarm_handling',
+    'log_message', 'get_recorder_time', 'set_tag_value_delayed');
+begin
+  Result := '';
+  if (AIndex >= Low(Topics)) and (AIndex <= High(Topics)) then
+    Result := Topics[AIndex];
+end;
+
+function TLuaCalcSettingsForm.OpenFunctionHelp(AIndex: Integer): Boolean;
+{$ifdef Windows}
+var
+  lHelpFile, lTarget: UnicodeString;
+{$endif}
+begin
+  Result := False;
+  if FunctionHelpTopic(AIndex) = '' then Exit;
+  {$ifdef Windows}
+  lHelpFile := IncludeTrailingPathDelimiter(
+    ExtractFilePath(UTF8Decode(ParamStr(0)))) +
+    'help\RecorderLnxLua.chm';
+  if not FileExists(lHelpFile) then
+    lHelpFile := ExpandFileName(ExtractFilePath(UTF8Decode(ParamStr(0))) +
+      '..\..\Docs\LuaHelp\RecorderLnxLua.chm');
+  if not FileExists(lHelpFile) then
+    lHelpFile := ExpandFileName(ExtractFilePath(UTF8Decode(ParamStr(0))) +
+      '..\Docs\LuaHelp\RecorderLnxLua.chm');
+  if not FileExists(lHelpFile) then Exit;
+  lTarget := '"' + lHelpFile + '::/topics/' +
+    UTF8Decode(FunctionHelpTopic(AIndex)) + '.html"';
+  Result := ShellExecuteW(0, 'open', 'hh.exe', PWideChar(lTarget), nil,
+    1) > 32;
+  {$endif}
+end;
+
+procedure TLuaCalcSettingsForm.InsertFunction(Sender: TObject);
+var
+  lTemplate: string;
+begin
+  if fCurrentFile = '' then Exit;
+  lTemplate := FunctionTemplate(SelectedTemplateIndex);
+  if lTemplate = '' then Exit;
+  InsertEditorTemplate(lTemplate);
   fEditor.SetFocus;
+end;
+
+procedure TLuaCalcSettingsForm.InsertEditorTemplate(const ATemplate: string);
+var
+  lBeforeCaret, lCurrentLine, lIndent, lText: string;
+  lLineStart, I: Integer;
+begin
+  if fEditor.SelStart > 1 then
+    lBeforeCaret := Copy(fEditor.Text, 1, fEditor.SelStart - 1)
+  else
+    lBeforeCaret := '';
+  lLineStart := LastDelimiter(#10, lBeforeCaret) + 1;
+  lCurrentLine := Copy(lBeforeCaret, lLineStart, MaxInt);
+  lIndent := '';
+  for I := 1 to Length(lCurrentLine) do
+    if lCurrentLine[I] in [' ', #9] then
+      lIndent := lIndent + lCurrentLine[I]
+    else
+      Break;
+  lText := StringReplace(ATemplate, LineEnding, LineEnding + lIndent,
+    [rfReplaceAll]);
+  fEditor.SelText := lText;
 end;
 
 procedure TLuaCalcSettingsForm.FunctionMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
 begin
   if Button = mbRight then
-    fFunctions.ItemIndex := fFunctions.ItemAtPos(Point(X, Y), True);
+  begin
+    lNode := fFunctions.GetNodeAt(X, Y);
+    if lNode <> nil then fFunctions.Selected := lNode;
+  end;
+end;
+
+procedure TLuaCalcSettingsForm.FunctionKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key <> VK_F1 then Exit;
+  ShowFunctionHelp(Sender);
+  Key := 0;
+end;
+
+function TLuaCalcSettingsForm.SelectedTemplateIndex: Integer;
+begin
+  Result := -1;
+  if (fFunctions.Selected <> nil) and (fFunctions.Selected.Data <> nil) then
+    Result := PtrInt(fFunctions.Selected.Data) - 1;
+end;
+
+procedure TLuaCalcSettingsForm.PopulateFunctionTree;
+  procedure AddTemplate(AParent: TTreeNode; const ACaption: string;
+    AIndex: Integer);
+  var
+    lNode: TTreeNode;
+  begin
+    lNode := fFunctions.Items.AddChild(AParent, ACaption);
+    lNode.Data := Pointer(PtrInt(AIndex + 1));
+  end;
+var
+  lStandard, lConditions, lLoops, lValues: TTreeNode;
+  lRecorder, lTags, lSetpoints, lAlarms, lSystem: TTreeNode;
+begin
+  fFunctions.Items.BeginUpdate;
+  try
+    fFunctions.Items.Clear;
+    lStandard := fFunctions.Items.Add(nil, 'Стандартные функции Lua');
+    lConditions := fFunctions.Items.AddChild(lStandard, 'Условия');
+    AddTemplate(lConditions, 'if ... then', 0);
+    AddTemplate(lConditions, 'if ... then ... else', 1);
+    lLoops := fFunctions.Items.AddChild(lStandard, 'Циклы');
+    AddTemplate(lLoops, 'for i = 1, N do', 2);
+    AddTemplate(lLoops, 'while ... do', 3);
+    AddTemplate(lLoops, 'repeat ... until', 4);
+    lValues := fFunctions.Items.AddChild(lStandard, 'Переменные и преобразования');
+    AddTemplate(lValues, 'local переменная', 5);
+    AddTemplate(lValues, 'math.abs', 6);
+    AddTemplate(lValues, 'math.min', 7);
+    AddTemplate(lValues, 'math.max', 8);
+    AddTemplate(lValues, 'math.sqrt', 9);
+    AddTemplate(lValues, 'tostring', 10);
+    AddTemplate(lValues, 'string.format', 11);
+
+    lRecorder := fFunctions.Items.Add(nil, 'RecorderLnx');
+    lTags := fFunctions.Items.AddChild(lRecorder, 'Теги');
+    AddTemplate(lTags, '{Тег}.Value — получить значение', 12);
+    AddTemplate(lTags, '{Тег} = значение — записать', 13);
+    AddTemplate(lTags, 'getValue', 14);
+    AddTemplate(lTags, 'setValue', 15);
+    AddTemplate(lTags, 'SetTagValue — отложенная запись', 25);
+    AddTemplate(lTags, 'getTagTime', 16);
+    AddTemplate(lTags, 'getTagSample', 17);
+    AddTemplate(lTags, 'tagExists', 18);
+    lSetpoints := fFunctions.Items.AddChild(lRecorder, 'Уставки');
+    AddTemplate(lSetpoints, 'getTagSetpoint', 19);
+    AddTemplate(lSetpoints, 'setTagSetpoint', 20);
+    lAlarms := fFunctions.Items.AddChild(lRecorder, 'Аварии');
+    AddTemplate(lAlarms, 'getTagAlarmLevel', 21);
+    AddTemplate(lAlarms, 'Обработка аварии', 22);
+    lSystem := fFunctions.Items.AddChild(lRecorder, 'Система');
+    AddTemplate(lSystem, 'logMessage', 23);
+    AddTemplate(lSystem, 'getRecorderTime', 24);
+    lStandard.Expand(False);
+    lRecorder.Expand(False);
+    lTags.Expand(False);
+  finally
+    fFunctions.Items.EndUpdate;
+  end;
 end;
 
 procedure TLuaCalcSettingsForm.ShowFunctionHelp(Sender: TObject);
 const
-  Descriptions: array[0..2] of string = (
+  Descriptions: array[0..25] of string = (
+    'if условие then ... end' + LineEnding +
+      'Выполняет блок, когда условие истинно.',
+    'if условие then ... else ... end' + LineEnding +
+      'Выбирает один из двух блоков по условию.',
+    'for i = 1, N do ... end' + LineEnding +
+      'Повторяет блок N раз. Переменная i содержит номер шага.',
+    'while условие do ... end' + LineEnding +
+      'Повторяет блок, пока условие истинно.',
+    'repeat ... until условие' + LineEnding +
+      'Повторяет блок до выполнения условия.',
+    'local имя = значение' + LineEnding +
+      'Создаёт локальную переменную внутри подпрограммы.',
+    'math.abs(число) — модуль числа.',
+    'math.min(a, b) — меньшее из двух чисел.',
+    'math.max(a, b) — большее из двух чисел.',
+    'math.sqrt(число) — квадратный корень.',
+    'tostring(значение) — преобразует значение в строку.',
+    'string.format(формат, значение) — форматирует строку.',
+    '{ИмяТега}.Value' + LineEnding + 'Читает последнее значение тега.',
+    '{ИмяТега} = значение' + LineEnding +
+      'Записывает значение в существующий виртуальный тег.',
+    'getValue(имяТега)' + LineEnding + 'Читает последнее значение тега.',
+    'setValue(имяТега, значение)' + LineEnding +
+      'Записывает число в существующий виртуальный тег.',
+    'getTagTime(имяТега)' + LineEnding +
+      'Возвращает время последнего значения тега в секундах.',
+    'getTagSample(имяТега)' + LineEnding +
+      'Возвращает два результата: значение и время измерения.',
+    'tagExists(имяТега)' + LineEnding +
+      'Возвращает 1, если тег существует, иначе 0.',
+    'getTagSetpoint(имяТега, тип)' + LineEnding +
+      'Возвращает порог и признак включения (1 или 0).' + LineEnding +
+      'Типы: highAlarm, highWarning, lowWarning, lowAlarm.',
+    'setTagSetpoint(имяТега, тип, порог, включена)' + LineEnding +
+      'Меняет порог и состояние уставки. Включена: 1 или 0.' + LineEnding +
+      'Изменение сохраняется при сохранении проекта.',
+    'getTagAlarmLevel(имяТега)' + LineEnding +
+      'Возвращает 0 — нет аварий, 1 — предупреждение, 2 — авария.',
+    'Пример обработки уровня аварии 0, 1 или 2.',
     'logMessage(текст)' + LineEnding +
       'Добавляет строку в системный журнал RecorderLnx.',
-    'getValue(имяТега)' + LineEnding +
-      'Читает последнее числовое значение тега. Ссылка {Имя}.Value делает то же.',
-    'setValue(имяТега, значение)' + LineEnding +
-      'Записывает число в существующий виртуальный тег.');
+    'getRecorderTime()' + LineEnding +
+      'Возвращает текущее время данных RecorderLnx в секундах.',
+    'SetTagValue(имяТега, значение, задержкаСекунд)' + LineEnding +
+      'Записывает значение в тег из отдельного потока после указанной задержки.');
+var
+  lIndex: Integer;
 begin
-  if (fFunctions.ItemIndex < 0) or
-    (fFunctions.ItemIndex > High(Descriptions)) then Exit;
-  MessageDlg(fFunctions.Items[fFunctions.ItemIndex],
-    Descriptions[fFunctions.ItemIndex], mtInformation, [mbOK], 0);
+  lIndex := SelectedTemplateIndex;
+  if (lIndex < 0) or (lIndex > High(Descriptions)) then Exit;
+  if OpenFunctionHelp(lIndex) then Exit;
+  MessageDlg(fFunctions.Selected.Text, Descriptions[lIndex] +
+    LineEnding + LineEnding + UTF8Encode('Пример использования:') + LineEnding +
+    FunctionTemplate(lIndex),
+    mtInformation, [mbOK], 0);
 end;
 
 end.

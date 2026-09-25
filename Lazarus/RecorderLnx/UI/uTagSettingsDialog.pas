@@ -111,6 +111,7 @@ type
     fSetpointEnabledCheck0: TCheckBox;
     pnSetpointUnit0: TPanel;
     fSetpointThresholdEdit0: TEdit;
+    fSetpointAlarmInfoEdit0: TEdit;
     lbSetpointText0_1: TLabel;
     lbSetpointText0_2: TLabel;
     fSetpointColorPanel0: TPanel;
@@ -119,6 +120,7 @@ type
     fSetpointEnabledCheck1: TCheckBox;
     pnSetpointUnit1: TPanel;
     fSetpointThresholdEdit1: TEdit;
+    fSetpointAlarmInfoEdit1: TEdit;
     lbSetpointText1_1: TLabel;
     lbSetpointText1_2: TLabel;
     fSetpointColorPanel1: TPanel;
@@ -127,6 +129,7 @@ type
     fSetpointEnabledCheck2: TCheckBox;
     pnSetpointUnit2: TPanel;
     fSetpointThresholdEdit2: TEdit;
+    fSetpointAlarmInfoEdit2: TEdit;
     lbSetpointText2_1: TLabel;
     lbSetpointText2_2: TLabel;
     fSetpointColorPanel2: TPanel;
@@ -135,6 +138,7 @@ type
     fSetpointEnabledCheck3: TCheckBox;
     pnSetpointUnit3: TPanel;
     fSetpointThresholdEdit3: TEdit;
+    fSetpointAlarmInfoEdit3: TEdit;
     lbSetpointText3_1: TLabel;
     lbSetpointText3_2: TLabel;
     fSetpointColorPanel3: TPanel;
@@ -144,6 +148,7 @@ type
     fSetpointStatusChannelCheck: TCheckBox;
     fSetpointSoundCheck: TCheckBox;
     fSetpointRangeControlCheck: TCheckBox;
+    fSetpointRangeAlarmInfoEdit: TEdit;
     pnBottom: TPanel;
     btnOk: TButton;
     btnCancel: TButton;
@@ -160,13 +165,16 @@ type
     fDataUpdateMs: Cardinal;                             // Интервал обновления данных (TRecorderTag)
     fEstimateChecks: array[TRecorderTagEstimateKind] of TCheckBox; // Флаги вычисления различных оценок
     fSetpointColorPanels: array[TRecorderTagSetpointKind] of TPanel; // Цвета отображения для каждой уставки
+    fSetpointColorChanged: array[TRecorderTagSetpointKind] of Boolean;
     fSetpointEnabledChecks: array[TRecorderTagSetpointKind] of TCheckBox; // Флаги активности уставок
     fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
+    fSetpointAlarmInfoEdits: array[TRecorderTagSetpointKind] of TEdit; // Тексты событий уставок
     fOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
     fOnZeroBalance: TTagZeroBalanceEvent;
     
     // Внутренние методы обработчиков UI
     procedure ApplyButtonClick(Sender: TObject);
+    procedure SetpointColorDblClick(Sender: TObject);
     procedure AddressButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure SelectCalibrationButtonClick(Sender: TObject);
@@ -178,6 +186,8 @@ type
     procedure ExportCalibrationButtonClick(Sender: TObject);
     procedure SelectHardwareCalibrationButtonClick(Sender: TObject);
     procedure EditHardwareCalibrationButtonClick(Sender: TObject);
+    function EditLinkedHardwareCalibration(
+      ACalibration: TRecorderCalibration): Boolean;
     procedure DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
     procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImages: TCustomImageList;
       AImageIndex: Integer; const AHint: string = ''; ABtnSize: Integer = 0);
@@ -205,6 +215,8 @@ type
     procedure UpdateVirtualChannelInfo;
     function TryGetChannelCalibrationOutputUnit(ATag: TRecorderTag;
       out AUnitName: string): Boolean;
+    function SelectedCalibrationEnabled(ATag: TRecorderTag): Boolean;
+    function BaseUnitName(ATag: TRecorderTag): string;
     procedure ApplyAutoUnitFromChannelCalibration;
     function CanConfigureHardwareSource: Boolean;
     function CanZeroBalance: Boolean;
@@ -231,6 +243,9 @@ type
       AGetter: Integer; out AValue: Boolean): Boolean;
     function AllSetpointFloat(AKind: TRecorderTagSetpointKind;
       AGetter: Integer; out AValue: Double): Boolean;
+    function AllSetpointInfoText(AKind: TRecorderTagSetpointKind;
+      out AValue: string): Boolean;
+    function AllRangeAlarmInfoText(out AValue: string): Boolean;
     function AllSetpointGlobalBool(AGetter: Integer; out AValue: Boolean): Boolean;
     function AllString(AKind: Integer; out AValue: string): Boolean;
     function AllSourceId(out AValue: string): Boolean;
@@ -257,6 +272,9 @@ type
 function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
 
 implementation
+
+const
+  CMixedAlarmInfoText = '<разные значения>';
 
 function RecorderMc201SlotFromAddress(const AAddress: string;
   out ASlot: Integer): Boolean;
@@ -380,6 +398,7 @@ constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
   AOnZeroBalance: TTagZeroBalanceEvent; ACommandImages: TCustomImageList);
 var
   lEstimateKind: TRecorderTagEstimateKind;
+  lSetpointKind: TRecorderTagSetpointKind;
 begin
   inherited Create(AOwner);
   if ATagRegistry = nil then
@@ -427,14 +446,31 @@ begin
   fSetpointThresholdEdits[tskLowWarning] := fSetpointThresholdEdit2;
   fSetpointThresholdEdits[tskLowAlarm] := fSetpointThresholdEdit3;
 
+  fSetpointAlarmInfoEdits[tskHighAlarm] := fSetpointAlarmInfoEdit0;
+  fSetpointAlarmInfoEdits[tskHighWarning] := fSetpointAlarmInfoEdit1;
+  fSetpointAlarmInfoEdits[tskLowWarning] := fSetpointAlarmInfoEdit2;
+  fSetpointAlarmInfoEdits[tskLowAlarm] := fSetpointAlarmInfoEdit3;
+
   fSetpointColorPanels[tskHighAlarm] := fSetpointColorPanel0;
   fSetpointColorPanels[tskHighWarning] := fSetpointColorPanel1;
   fSetpointColorPanels[tskLowWarning] := fSetpointColorPanel2;
   fSetpointColorPanels[tskLowAlarm] := fSetpointColorPanel3;
+  for lSetpointKind := Low(TRecorderTagSetpointKind) to
+    High(TRecorderTagSetpointKind) do
+  begin
+    fSetpointColorPanels[lSetpointKind].Cursor := crHandPoint;
+    fSetpointColorPanels[lSetpointKind].Hint :=
+      'Двойной щелчок — выбрать цвет';
+    fSetpointColorPanels[lSetpointKind].ShowHint := True;
+    fSetpointColorPanels[lSetpointKind].Tag := Ord(lSetpointKind);
+    fSetpointColorPanels[lSetpointKind].OnDblClick := @SetpointColorDblClick;
+    fSetpointColorChanged[lSetpointKind] := False;
+  end;
   fAddressButton.OnClick := @AddressButtonClick;
   fHardwareSourceSetupBtn.OnClick := @HardwareSourceSetupButtonClick;
   fHardwareSourceSetupBtn.Visible := False;
-  fChannelCurveSelectBtn.OnClick := @ChannelCurveNotebookClick;
+  fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
+  fChannelCurveEdit.OnDblClick := @ChannelCurveNotebookClick;
   fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
   fChannelCurveDeleteBtn.OnClick := @DeleteCalibrationButtonClick;
   fChannelCurveEditBtn.OnClick := @ExportCalibrationButtonClick;
@@ -455,7 +491,9 @@ begin
   if (fHardwareCurveDownloadBtn <> nil) and (fHardwareCurveDownloadBtn.Images = nil) then
     AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
   AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty,
-    'Редактировать канальную ГХ');
+    'Настроить цепочку ГХ');
+  fChannelCurveEdit.Hint := 'Двойной щелчок — редактировать выбранную ГХ';
+  fChannelCurveEdit.ShowHint := True;
   AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CTagDialogIconAdd);
   AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CTagDialogIconRemove);
   AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CTagDialogIconChannelCurve,
@@ -1007,6 +1045,29 @@ begin
   Result := True;
 end;
 
+function TTagSettingsDialog.AllSetpointInfoText(
+  AKind: TRecorderTagSetpointKind; out AValue: string): Boolean;
+var
+  I: Integer;
+begin
+  AValue := TagAt(0).Setpoints[AKind].AlarmInfoText;
+  for I := 1 to fTags.Count - 1 do
+    if AValue <> TagAt(I).Setpoints[AKind].AlarmInfoText then
+      Exit(False);
+  Result := True;
+end;
+
+function TTagSettingsDialog.AllRangeAlarmInfoText(out AValue: string): Boolean;
+var
+  I: Integer;
+begin
+  AValue := TagAt(0).SetpointRangeAlarmInfoText;
+  for I := 1 to fTags.Count - 1 do
+    if AValue <> TagAt(I).SetpointRangeAlarmInfoText then
+      Exit(False);
+  Result := True;
+end;
+
 { Совпадение общих настроек модуля уставок (гистерезис, звук, канал состояния) }
 function TTagSettingsDialog.AllSetpointGlobalBool(AGetter: Integer;
   out AValue: Boolean): Boolean;
@@ -1555,6 +1616,7 @@ begin
 
   UpdateChannelCurveText;
   UpdateHardwareCurveText;
+  ApplyAutoUnitFromChannelCalibration;
   UpdateHardwareCurveButtons;
   UpdateHardwareSourceSetupButton;
   UpdateTagDeviceActionButtons;
@@ -1618,8 +1680,14 @@ begin
     else
       fSetpointThresholdEdits[lSetpointKind].Text := '';
 
+    if AllSetpointInfoText(lSetpointKind, lText) then
+      fSetpointAlarmInfoEdits[lSetpointKind].Text := lText
+    else
+      fSetpointAlarmInfoEdits[lSetpointKind].Text := CMixedAlarmInfoText;
+
     fSetpointColorPanels[lSetpointKind].Color :=
       TColor(TagAt(0).Setpoints[lSetpointKind].Color);
+    fSetpointColorChanged[lSetpointKind] := False;
   end;
 
   fSetpointHysteresisCheck.AllowGrayed := fTags.Count > 1;
@@ -1646,6 +1714,10 @@ begin
     fSetpointRangeControlCheck.State := cbGrayed
   else
     fSetpointRangeControlCheck.Checked := lBool > 0;
+  if AllRangeAlarmInfoText(lText) then
+    fSetpointRangeAlarmInfoEdit.Text := lText
+  else
+    fSetpointRangeAlarmInfoEdit.Text := CMixedAlarmInfoText;
 end;
 
 { Безопасное чтение вещественных чисел с заменой точек/запятых }
@@ -1675,7 +1747,6 @@ var
   lChannelNumber: Integer;
   lSettings: TRecorderMic140ChannelSettings;
   lAppliedMic185Sources: TStringList;
-  lAutoUnitName: string;
   lPreviousUnitName: string;
   lSourceId: string;
   lHardwareChanged: Boolean;
@@ -1696,6 +1767,7 @@ begin
     for I := 0 to fTags.Count - 1 do
     begin
       lTag := TagAt(I);
+      lTag.InvalidateCalibrationScale;
       lHardwareChanged := False;
       lChannelChanged := False;
       lPreviousUnitName := lTag.UnitName;
@@ -1706,7 +1778,12 @@ begin
       lTag.IsVirtual := True;
       RecorderTagClearMic140Settings(lTag);
     end;
-    if Trim(fUnitCombo.Text) <> '' then
+    { При Auto единица в combo уже является выходом последней ГХ. Не записываем
+      её обратно как исходную единицу канала: SourceUnitName нужен сборщику
+      коэффициента для перехода, например V -> mV. }
+    if (Trim(fUnitCombo.Text) <> '') and
+      not ((fAutoUnitCheck.State = cbChecked) and
+      SelectedCalibrationEnabled(lTag)) then
       lTag.UnitName := Trim(fUnitCombo.Text);
     if (fTags.Count = 1) or (Trim(fDescriptionEdit.Text) <> '') then
       lTag.Description := Trim(fDescriptionEdit.Text);
@@ -1908,6 +1985,11 @@ begin
           raise ERecorderTagError.Create('Invalid setpoint threshold');
         lSetpoint.Threshold := lFloat;
       end;
+      if fSetpointAlarmInfoEdits[lSetpointKind].Text <> CMixedAlarmInfoText then
+        lSetpoint.AlarmInfoText := Trim(
+          fSetpointAlarmInfoEdits[lSetpointKind].Text);
+      if fSetpointColorChanged[lSetpointKind] then
+        lSetpoint.Color := LongInt(fSetpointColorPanels[lSetpointKind].Color);
       lTag.Setpoints[lSetpointKind] := lSetpoint;
     end;
     if fSetpointHysteresisCheck.State <> cbGrayed then
@@ -1918,12 +2000,14 @@ begin
       lTag.SetpointStatusChannelEnabled := fSetpointStatusChannelCheck.Checked;
     if fSetpointRangeControlCheck.State <> cbGrayed then
       lTag.SetpointRangeControlEnabled := fSetpointRangeControlCheck.Checked;
+    if fSetpointRangeAlarmInfoEdit.Text <> CMixedAlarmInfoText then
+      lTag.SetpointRangeAlarmInfoText := Trim(fSetpointRangeAlarmInfoEdit.Text);
     if (not RecorderTagUsesMic140Settings(lTag)) and
       (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
       RecorderTagClearMic140Settings(lTag);
-    if lTag.AutoUnit and (Pos(CMic140SourcePrefix, lTag.SourceId) <> 1) and
-      TryGetChannelCalibrationOutputUnit(lTag, lAutoUnitName) then
-      lTag.UnitName := lAutoUnitName;
+    if lTag.AutoUnit and (Pos(CMic140SourcePrefix, lTag.SourceId) <> 1) then
+      fTagRegistry.SyncTagAutoUnit(lTag);
+    fTagRegistry.RebuildScales(lTag);
   end;
   finally
     lAppliedMic185Sources.Free;
@@ -1936,6 +2020,32 @@ begin
   LoadFromTags;
 end;
 
+procedure TTagSettingsDialog.SetpointColorDblClick(Sender: TObject);
+var
+  lColorDialog: TColorDialog;
+  lKind: TRecorderTagSetpointKind;
+  lPanel: TPanel;
+begin
+  if not (Sender is TPanel) then
+    Exit;
+  lPanel := TPanel(Sender);
+  if (lPanel.Tag < Ord(Low(TRecorderTagSetpointKind))) or
+    (lPanel.Tag > Ord(High(TRecorderTagSetpointKind))) then
+    Exit;
+  lKind := TRecorderTagSetpointKind(lPanel.Tag);
+  lColorDialog := TColorDialog.Create(Self);
+  try
+    lColorDialog.Color := lPanel.Color;
+    if lColorDialog.Execute then
+    begin
+      lPanel.Color := lColorDialog.Color;
+      fSetpointColorChanged[lKind] := True;
+    end;
+  finally
+    lColorDialog.Free;
+  end;
+end;
+
 procedure TTagSettingsDialog.OkButtonClick(Sender: TObject);
 begin
   StoreToTags;
@@ -1944,6 +2054,8 @@ end;
 
 
 procedure TTagSettingsDialog.SelectCalibrationButtonClick(Sender: TObject);
+var
+  lPipelineEnabled: Boolean;
 begin
   if fTags.Count <> 1 then
   begin
@@ -1962,11 +2074,13 @@ begin
     Exit;
   end;
 
+  lPipelineEnabled := TagAt(0).ChannelCalibrationEnabled;
   if ShowRecorderCalibrationPipelineDialog(Self, fTagRegistry.Calibrations,
-    TagAt(0).CalibrationNames) then
+    TagAt(0).CalibrationNames, lPipelineEnabled) then
   begin
     TagAt(0).ChannelCalibrationEnabled :=
-      TagAt(0).CalibrationNames.Count > 0;
+      lPipelineEnabled and (TagAt(0).CalibrationNames.Count > 0);
+    fChannelCurveCheck.Checked := TagAt(0).ChannelCalibrationEnabled;
     ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
   end;
@@ -1975,35 +2089,65 @@ end;
 function TTagSettingsDialog.TryGetChannelCalibrationOutputUnit(
   ATag: TRecorderTag; out AUnitName: string): Boolean;
 var
+  I: Integer;
   lCalibration: TRecorderCalibration;
-  lLastIndex: Integer;
 begin
   AUnitName := '';
   Result := False;
-  if (ATag = nil) or (ATag.CalibrationNames = nil) or
-    (ATag.CalibrationNames.Count = 0) then
+  if (ATag = nil) or (fTagRegistry = nil) then
     Exit;
-  lLastIndex := ATag.CalibrationNames.Count - 1;
+
+  if (fChannelCurveCheck.State = cbChecked) and
+    (ATag.CalibrationNames <> nil) then
+    for I := ATag.CalibrationNames.Count - 1 downto 0 do
+    begin
+      lCalibration := fTagRegistry.FindCalibrationByName(
+        ATag.CalibrationNames[I]);
+      if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
+      begin
+        AUnitName := Trim(lCalibration.UnitOut);
+        Exit(True);
+      end;
+    end;
+
+  if fHardwareCurveCheck.State <> cbChecked then
+    Exit;
   lCalibration := fTagRegistry.FindCalibrationByName(
-    ATag.CalibrationNames[lLastIndex]);
-  if lCalibration = nil then
+    ATag.HardwareCalibrationName);
+  if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
+  begin
+    AUnitName := Trim(lCalibration.UnitOut);
+    Result := True;
+  end;
+end;
+
+function TTagSettingsDialog.SelectedCalibrationEnabled(
+  ATag: TRecorderTag): Boolean;
+var
+  lUnitName: string;
+begin
+  Result := TryGetChannelCalibrationOutputUnit(ATag, lUnitName);
+end;
+
+function TTagSettingsDialog.BaseUnitName(ATag: TRecorderTag): string;
+begin
+  Result := '';
+  if ATag = nil then
     Exit;
-  AUnitName := Trim(lCalibration.UnitOut);
-  Result := AUnitName <> '';
+  Result := Trim(ATag.SourceUnitName);
+  if Result = '' then
+    Result := Trim(ATag.UnitName);
 end;
 
 procedure TTagSettingsDialog.ApplyAutoUnitFromChannelCalibration;
 var
-  I: Integer;
   lUnitName: string;
 begin
-  if fAutoUnitCheck.State <> cbChecked then
+  if (fAutoUnitCheck.State <> cbChecked) or (fTags.Count <> 1) then
     Exit;
-  for I := 0 to fTags.Count - 1 do
-    if TryGetChannelCalibrationOutputUnit(TagAt(I), lUnitName) then
-      TagAt(I).UnitName := lUnitName;
-  if (fTags.Count = 1) and
-    TryGetChannelCalibrationOutputUnit(TagAt(0), lUnitName) then
+  { Предпросмотр берёт состояние checkbox диалога, ещё не
+    сохранённое в тег. Базовую SourceUnitName не изменяем. }
+  if TryGetChannelCalibrationOutputUnit(TagAt(0), lUnitName) then
     fUnitCombo.Text := lUnitName;
 end;
 
@@ -2012,6 +2156,12 @@ var
   lChannelNumber: Integer;
   lSettings: TRecorderMic140ChannelSettings;
 begin
+  if fAutoUnitCheck.State = cbUnchecked then
+  begin
+    if fTags.Count = 1 then
+      fUnitCombo.Text := BaseUnitName(TagAt(0));
+    Exit;
+  end;
   if (fAutoUnitCheck.State = cbChecked) and (fTags.Count = 1) and
     (Pos(CMic140SourcePrefix, TagAt(0).SourceId) = 1) then
   begin
@@ -2093,11 +2243,7 @@ begin
       Exit;
     for I := 0 to fTags.Count - 1 do
     begin
-      if TagAt(I).CalibrationNames.Count = 0 then
-        TagAt(I).CalibrationNames.Add(lCalibrationName)
-      else
-        TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
-          lCalibrationName;
+      TagAt(I).CalibrationNames.Add(lCalibrationName);
       TagAt(I).ChannelCalibrationEnabled := True;
     end;
     ApplyAutoUnitFromChannelCalibration;
@@ -2108,7 +2254,7 @@ begin
   lCalibration := TRecorderCalibration.Create(lKind);
   try
     lCalibration.Name := 'ГХ ' + IntToStr(fTagRegistry.Calibrations.Count + 1);
-    if lKind = rckPiecewiseLinear then
+    if lKind in [rckPiecewiseLinear, rckPolynomial] then
     begin
       lCalibration.AddPoint(0, 0);
       lCalibration.AddPoint(1, 1);
@@ -2127,11 +2273,7 @@ begin
   fTagRegistry.Calibrations.Add(lCalibration);
   for I := 0 to fTags.Count - 1 do
   begin
-    if TagAt(I).CalibrationNames.Count = 0 then
-      TagAt(I).CalibrationNames.Add(lCalibration.Name)
-    else
-      TagAt(I).CalibrationNames[TagAt(I).CalibrationNames.Count - 1] :=
-        lCalibration.Name;
+    TagAt(I).CalibrationNames.Add(lCalibration.Name);
     TagAt(I).ChannelCalibrationEnabled := True;
   end;
     lCalibration := nil;
@@ -2172,9 +2314,13 @@ procedure TTagSettingsDialog.EditCalibrationAt(APipelineIndex: Integer);
 var
   lCalibration: TRecorderCalibration;
   lDraft: TRecorderCalibration;
+  lError: string;
+  lExisting: TRecorderCalibration;
   lExcitation: string;
   lName: string;
   lChoice: TModalResult;
+  lSavePrompt: string;
+  lSdbKey: string;
 begin
   if fTags.Count <> 1 then
   begin
@@ -2212,15 +2358,48 @@ begin
       ShowRecorderCalibrationPropertiesDialog(Self, lDraft))) then
       Exit;
 
+    if Trim(lCalibration.SdbKey) <> '' then
+      lSavePrompt := 'Да — обновить исходную ГХ в БДГХ и во всех тегах.'
+    else
+      lSavePrompt := 'Да — изменить общую ГХ для всех тегов, которые её используют.';
     lChoice := MessageDlg('Сохранение канальной ГХ',
-      'Да — изменить общую ГХ для всех тегов, которые её используют.' + LineEnding +
+      lSavePrompt + LineEnding +
       'Нет — создать отдельную локальную копию только для текущего тега.' + LineEnding +
       'Отмена — не применять изменения.', mtConfirmation,
       [mbYes, mbNo, mbCancel], 0);
     try
       case lChoice of
         mrYes:
-          fTagRegistry.CommitCalibrationEdit(lCalibration, lDraft);
+          begin
+            if Trim(lDraft.Name) = '' then
+            begin
+              MessageDlg('Сохранение канальной ГХ',
+                'Имя ГХ не может быть пустым.', mtError, [mbOK], 0);
+              Exit;
+            end;
+            lExisting := fTagRegistry.FindCalibrationByName(Trim(lDraft.Name));
+            if (lExisting <> nil) and (lExisting <> lCalibration) then
+            begin
+              MessageDlg('Сохранение канальной ГХ',
+                'ГХ с именем «' + Trim(lDraft.Name) +
+                '» уже существует.', mtError, [mbOK], 0);
+              Exit;
+            end;
+            lSdbKey := Trim(lCalibration.SdbKey);
+            if not RecorderSdbUpdateLinkedCalibration(lCalibration,
+              lDraft, lError) then
+            begin
+              MessageDlg('Сохранение канальной ГХ',
+                'Не удалось обновить ГХ в БДГХ:' + LineEnding + lError,
+                mtError, [mbOK], 0);
+              Exit;
+            end;
+            fTagRegistry.CommitCalibrationEdit(lCalibration, lDraft);
+            { CommitCalibrationEdit normally turns an edited calibration into
+              a local one.  A successful in-place SDB update keeps the link. }
+            if lSdbKey <> '' then
+              lCalibration.SdbKey := lSdbKey;
+          end;
         mrNo:
           fTagRegistry.AddCalibrationCopyForTag(TagAt(0), APipelineIndex, lDraft);
       else
@@ -2338,7 +2517,7 @@ begin
     Trim(TagAt(0).HardwareCalibrationName));
   if lCalibration <> nil then
   begin
-    if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+    if EditLinkedHardwareCalibration(lCalibration) then
       UpdateHardwareCurveText;
   end
   else
@@ -2381,8 +2560,59 @@ begin
     Exit;
   end;
 
-  if ShowRecorderCalibrationPropertiesDialog(Self, lCalibration) then
+  if EditLinkedHardwareCalibration(lCalibration) then
     UpdateHardwareCurveText;
+end;
+
+function TTagSettingsDialog.EditLinkedHardwareCalibration(
+  ACalibration: TRecorderCalibration): Boolean;
+var
+  lDraft: TRecorderCalibration;
+  lError: string;
+  lExisting: TRecorderCalibration;
+begin
+  Result := False;
+  if ACalibration = nil then
+    Exit;
+  lDraft := ACalibration.Clone;
+  try
+    if not (((lDraft.Kind = rckStrain) and
+      ShowRecorderStrainCalibrationDialog(Self, lDraft)) or
+      ((lDraft.Kind <> rckStrain) and
+      ShowRecorderCalibrationPropertiesDialog(Self, lDraft))) then
+      Exit;
+    if Trim(lDraft.Name) = '' then
+    begin
+      MessageDlg('Сохранение аппаратной ГХ',
+        'Имя ГХ не может быть пустым.', mtError, [mbOK], 0);
+      Exit;
+    end;
+    lExisting := fTagRegistry.FindCalibrationByName(Trim(lDraft.Name));
+    if (lExisting <> nil) and (lExisting <> ACalibration) then
+    begin
+      MessageDlg('Сохранение аппаратной ГХ',
+        'ГХ с именем «' + Trim(lDraft.Name) + '» уже существует.',
+        mtError, [mbOK], 0);
+      Exit;
+    end;
+    if not RecorderSdbUpdateLinkedCalibration(ACalibration, lDraft,
+      lError) then
+    begin
+      MessageDlg('Сохранение аппаратной ГХ',
+        'Не удалось обновить связанную ГХ в БДГХ:' + LineEnding +
+        lError, mtError, [mbOK], 0);
+      Exit;
+    end;
+    try
+      Result := fTagRegistry.CommitCalibrationEdit(ACalibration, lDraft);
+    except
+      on E: ERecorderTagError do
+        MessageDlg('Сохранение аппаратной ГХ', E.Message,
+          mtError, [mbOK], 0);
+    end;
+  finally
+    lDraft.Free;
+  end;
 end;
 
 procedure TTagSettingsDialog.AssignDownloadFlashIcon(AButton: TSpeedButton);

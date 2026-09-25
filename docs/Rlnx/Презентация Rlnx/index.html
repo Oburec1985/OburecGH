@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Rlnx — программная платформа регистрации, визуализации и анализа измерений">
+  <title>Rlnx — измерительная система без жёстких рамок</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#s1" aria-label="К началу презентации"><span class="brand-mark">R</span><span>RLNX</span></a>
+    <nav aria-label="Навигация по презентации">
+      <a href="#s2">Возможности</a><a href="#s7">Плагины</a><a href="#s8">Много АРМ</a><a href="#s12">Итог</a>
+    </nav>
+    <div class="slide-counter"><span id="current">01</span><i></i><span>13</span></div>
+  </header>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <main>
+    <section class="slide hero" id="s1" data-label="Rlnx">
+      <div class="hero-copy">
+        <p class="eyebrow">Измерения · регистрация · аналитика</p>
+        <h1>Один проект.<br><em>Весь эксперимент.</em></h1>
+        <p class="lead">Rlnx превращает набор приборов и сигналов в цельную измерительную систему: от поиска оборудования и живой мнемосхемы до файловой записи, SQL-истории и распределённого управления.</p>
+        <div class="hero-pills"><span>Windows + Linux</span><span>СТТ и ВКУ</span><span>Открытая архитектура</span></div>
+      </div>
+      <figure class="hero-screen"><img src="assets/main.png" alt="Главное окно Rlnx с измерительными графиками"><figcaption>Рабочая станция оператора</figcaption></figure>
+      <div class="scroll-hint">Листайте вниз <b>↓</b></div>
+    </section>
+
+    <section class="slide" id="s2" data-label="Возможности">
+      <div class="section-head"><p class="eyebrow">Killer features</p><h2>Не просто регистратор.<br>Среда для измерительного проекта.</h2></div>
+      <div class="feature-grid">
+        <article><b>01</b><h3>Свободные мнемосхемы</h3><p>Экран собирается под объект и методику испытаний, а не под ограничения прибора.</p></article>
+        <article><b>02</b><h3>Непрерывный поток</h3><p>Живое отображение, расчёты и запись работают на одном потоке измерительных данных.</p></article>
+        <article><b>03</b><h3>Файл + SQL</h3><p>Сырые сигналы остаются в измерительных пакетах, оценки и события доступны в общей БД.</p></article>
+        <article><b>04</b><h3>Встроенная аналитика</h3><p>Осциллограммы, спектры, полосовые оценки, интегрирование и тренды — внутри проекта.</p></article>
+        <article><b>05</b><h3>Плагины и Lua</h3><p>Новые алгоритмы, визуальные компоненты и вычисления подключаются без переделки ядра.</p></article>
+        <article><b>06</b><h3>Много АРМ</h3><p>Несколько станций сбора объединяются RCPanel, SQL и распределённым архивом.</p></article>
+      </div>
+    </section>
+
+    <section class="slide split" id="s3" data-label="Мнемосхемы">
+      <div class="copy"><p class="eyebrow">Экран под задачу</p><h2>Мнемосхема становится частью методики</h2><p class="lead">Оператор видит не список каналов, а сам объект испытаний: группы параметров, состояния, тренды, индикаторы и сигналы тревоги в нужной компоновке.</p>
+        <ul class="ticks"><li>несколько формуляров в одном проекте;</li><li>отдельные окна для многомониторного АРМ;</li><li>привязка компонентов к тегам и расчётным величинам;</li><li>сохранение компоновки вместе с проектом.</li></ul>
+        <p class="result"><span>Результат</span> Один взгляд вместо переходов между десятками окон.</p>
+      </div>
+      <figure class="screen-card"><img src="assets/mnemonic.png" alt="Пример мнемосхемы Rlnx с множеством графиков"><figcaption>Пример рабочего формуляра испытательного стенда</figcaption></figure>
+    </section>
+
+    <section class="slide split reverse" id="s4" data-label="Регистрация">
+      <div class="copy"><p class="eyebrow">Регистрация потока</p><h2>От Preview до Record — без смены инструмента</h2><p class="lead">Rlnx принимает потоки от оборудования, синхронизирует их по времени, показывает оператору и пишет в штатный измерительный формат.</p>
+        <div class="metric-row"><div><strong>Stop</strong><span>настройка проекта</span></div><div><strong>Preview</strong><span>проверка данных</span></div><div><strong>Record</strong><span>фиксируем испытание</span></div></div>
+        <ul class="ticks"><li>предыстория и автоматический старт по условию;</li><li>разные частоты и типы каналов в одном проекте;</li><li>файлы измерений не зависят от доступности SQL;</li><li>единая временная шкала для графиков, событий и архива.</li></ul>
+      </div>
+      <figure class="screen-card"><img src="assets/live-trend.png" alt="Оперативный тренд Rlnx"><figcaption>Живой тренд во время измерения</figcaption></figure>
+    </section>
+
+    <section class="slide" id="s5" data-label="Аналитика">
+      <div class="section-head compact"><p class="eyebrow">Анализ без экспорта</p><h2>Сигнал сразу становится инженерной информацией</h2></div>
+      <div class="dual-media">
+        <figure><img src="assets/oscillogram.png" alt="Осциллограмма в Rlnx"><figcaption><b>Осциллограмма</b><span>форма сигнала, курсоры, триггер, временные интервалы</span></figcaption></figure>
+        <figure><img src="assets/spectrum.png" alt="Спектр в Rlnx"><figcaption><b>Спектральный анализ</b><span>БПФ, окна, усреднение, полосы, гармоники и интегралы</span></figcaption></figure>
+      </div>
+      <div class="ribbon"><span>Вибрация</span><span>Температура</span><span>Давление</span><span>Деформация</span><span>Обороты</span><span>Расчётные величины</span></div>
+    </section>
+
+    <section class="slide" id="s5b" data-label="Прикладные задачи">
+      <div class="section-head compact"><p class="eyebrow">От платформы к предметной задаче</p><h2>Один движок — разные классы испытаний</h2></div>
+      <div class="usecase-grid">
+        <article class="usecase stt"><div class="usecase-copy"><span>СТТ</span><h3>Напряжённо-деформированное состояние</h3><p>Тензорозетки, нулевая балансировка, температурная компенсация и расчёт главных напряжений превращают микродеформации в готовую картину нагружения конструкции.</p><ul><li>2- и 3-компонентные розетки</li><li>σ₁ / σ₂ и направление</li><li>поиск наиболее нагруженной точки</li></ul></div><img src="assets/measurement-section.png" alt="Измерительное сечение СТТ в Rlnx"></article>
+        <article class="usecase vku"><div class="usecase-copy"><span>ВКУ</span><h3>Вибрация и частотные признаки</h3><p>Поток акселерометров и тахоканала сразу преобразуется в спектры, полосовые оценки и интегрированные величины для контроля агрегата.</p><ul><li>FFT, гармоники и порядки</li><li>ускорение → скорость → перемещение</li><li>уставки по диагностическим полосам</li></ul></div><img src="assets/mic140.png" alt="Настройка измерительного модуля для ВКУ"></article>
+      </div>
+    </section>
+
+    <section class="slide split" id="s6" data-label="Модель данных">
+      <div class="copy"><p class="eyebrow">Единая модель сигнала</p><h2>Тег связывает прибор, физику и представление</h2><p class="lead">Имя, единицы, диапазон, градуировочная характеристика, уставки и история принадлежат одному измерительному тегу.</p>
+        <ul class="ticks"><li>автоматический поиск совместимых устройств;</li><li>аппаратные и канальные цепочки преобразований;</li><li>общая база утверждённых градуировок;</li><li>виртуальные и вычисляемые теги для методик.</li></ul>
+        <p class="result"><span>Результат</span> Один раз настроенный канал одинаково понимают график, запись, SQL и алгоритмы.</p>
+      </div>
+      <div class="stacked-shots"><img src="assets/device-search.png" alt="Поиск устройств Rlnx"><img src="assets/calibration.png" alt="Выбор градуировочной характеристики"></div>
+    </section>
+
+    <section class="slide" id="s7" data-label="Плагины">
+      <div class="section-head"><p class="eyebrow">Расширяемость</p><h2>Новая методика — не новая программа</h2><p class="lead narrow">Плоский кроссплатформенный ABI позволяет подключать DLL/SO-модули и развивать систему независимо от ядра.</p></div>
+      <div class="plugin-stage">
+        <div class="core"><span>RLNX CORE</span><small>теги · события · время · проект</small></div>
+        <div class="orbit o1"><b>Источники</b><span>новые приборы и протоколы</span></div>
+        <div class="orbit o2"><b>Визуализация</b><span>осциллограммы и специальные компоненты</span></div>
+        <div class="orbit o3"><b>Алгоритмы</b><span>оценки и предметные расчёты</span></div>
+        <div class="orbit o4"><b>Lua</b><span>формулы и сценарии проекта</span></div>
+      </div>
+      <p class="footnote">Один код плагина собирается для Windows и Linux; проект хранит состав и версии расширений.</p>
+    </section>
+
+    <section class="slide architecture" id="s8" data-label="Много АРМ">
+      <div class="section-head compact"><p class="eyebrow">Распределённая система</p><h2>Много АРМ — единый эксперимент</h2><p class="lead narrow">Каждая станция остаётся автономным регистратором, а общий контур даёт синхронный запуск, обзор состояния и общий архив.</p></div>
+      <div class="arch-flow">
+        <div class="node instruments"><small>Оборудование</small><b>МИК · МС · датчики</b></div>
+        <div class="arrow">→</div>
+        <div class="arm-cluster"><div class="node arm"><small>АРМ 01</small><b>Rlnx + HostAgent</b></div><div class="node arm"><small>АРМ 02</small><b>Rlnx + HostAgent</b></div><div class="node arm"><small>АРМ N</small><b>Rlnx + HostAgent</b></div></div>
+        <div class="arrow">→</div>
+        <div class="hub"><div class="node panel"><small>Координация</small><b>RCPanel</b></div><div class="hub-split"><div class="node sql"><small>История</small><b>SQL</b></div><div class="node archive"><small>Исходные данные</small><b>Архив MERA</b></div></div></div>
+      </div>
+      <div class="benefit-row"><span>Групповой Preview / Record / Stop</span><span>Контроль доступности каждого АРМ</span><span>Единые события испытания</span><span>Локальная запись при сбое сети</span></div>
+    </section>
+
+    <section class="slide split reverse" id="s9" data-label="RCPanel">
+      <div class="copy"><p class="eyebrow">Центр управления</p><h2>RCPanel видит установку целиком</h2><p class="lead">Координатор объединяет распределённые регистраторы в один управляемый сеанс, не забирая у них автономность.</p>
+        <ul class="ticks"><li>обнаружение узлов в локальной сети;</li><li>раздельный статус ПК, HostAgent и Rlnx;</li><li>групповые команды запуска и записи;</li><li>Wake-on-LAN и контролируемое завершение работы;</li><li>список событий и связанных пакетов измерений.</li></ul>
+      </div>
+      <div class="panel-visual"><img src="assets/rcpanel.png" alt="Значок RCPanel"><div class="panel-lines"><div><i class="ok"></i><span>АРМ стенда №1</span><b>RECORD</b></div><div><i class="ok"></i><span>АРМ стенда №2</span><b>RECORD</b></div><div><i class="warn"></i><span>АРМ вибрации</span><b>PREVIEW</b></div><div><i></i><span>Резервный АРМ</span><b>OFFLINE</b></div></div><p>Один оператор управляет группой станций как одним комплексом.</p></div>
+    </section>
+
+    <section class="slide split" id="s10" data-label="SQL и архив">
+      <div class="copy"><p class="eyebrow">Данные после испытания</p><h2>SQL отвечает на вопрос «что происходило?»</h2><p class="lead">Оценки, состояния и события становятся доступными по календарному интервалу, а исходные пакеты остаются связаны с конкретным сеансом.</p>
+        <ul class="ticks"><li>исторические тренды по UTC;</li><li>общая база для нескольких RecorderLnx;</li><li>событие связывает время, установку и набор файлов;</li><li>выгрузка выбранного интервала для отчёта;</li><li>SQL-мониторинг не блокирует основную запись.</li></ul>
+      </div>
+      <figure class="screen-card"><img src="assets/sql-trend.png" alt="Исторический SQL-тренд Rlnx"><figcaption>Исторический тренд и события измерительной записи</figcaption></figure>
+    </section>
+
+    <section class="slide" id="s11" data-label="Сценарий">
+      <div class="section-head compact"><p class="eyebrow">Сценарий комплекса</p><h2>Один цикл — от готовности до разбора</h2></div>
+      <ol class="timeline">
+        <li><b>01</b><h3>Подготовка</h3><p>АРМы загружают проект, находят приборы и проверяют каналы в Preview.</p></li>
+        <li><b>02</b><h3>Координация</h3><p>RCPanel подтверждает готовность всех узлов и создаёт единое событие испытания.</p></li>
+        <li><b>03</b><h3>Регистрация</h3><p>Команда Record запускает локальную надёжную запись на каждой станции.</p></li>
+        <li><b>04</b><h3>Мониторинг</h3><p>Операторы видят свои мнемосхемы, центральный АРМ — статусы и ключевые оценки.</p></li>
+        <li><b>05</b><h3>Архив</h3><p>SQL сохраняет историю и событие, пакеты измерений собираются в хранилище.</p></li>
+        <li><b>06</b><h3>Анализ</h3><p>Нужный интервал и исходные файлы открываются по событию, времени или каналу.</p></li>
+      </ol>
+    </section>
+
+    <section class="slide finale" id="s12" data-label="Итог">
+      <div><p class="eyebrow">Rlnx</p><h2>Из приборов — в систему.<br><em>Из потока — в решение.</em></h2><p class="lead narrow">Платформа закрывает весь путь измерения: конфигурацию, визуализацию, регистрацию, анализ, автоматизацию и работу распределённого комплекса.</p>
+        <div class="final-tags"><span>Стендовые испытания</span><span>Виброакустика</span><span>Температурный контроль</span><span>Распределённые измерения</span><span>Долговременный мониторинг</span></div>
+      </div>
+      <div class="final-card"><div class="brand-mark large">R</div><b>RLNX</b><span>Открытая измерительная платформа</span></div>
+    </section>
+  </main>
+  <aside class="dots" aria-label="Слайды"></aside>
+  <button class="nav-button prev" aria-label="Предыдущий слайд">↑</button><button class="nav-button next" aria-label="Следующий слайд">↓</button>
+  <script src="script.js"></script>
+</body>
+</html>

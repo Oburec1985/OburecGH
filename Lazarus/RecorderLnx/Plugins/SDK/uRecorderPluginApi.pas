@@ -84,6 +84,18 @@ type
     ABuffer: PAnsiChar; ABufferSize: LongInt): LongInt; cdecl;
   TRecorderPluginLogMessage = procedure(AHostContext: Pointer;
     AMessage: PAnsiChar); cdecl;
+  TRecorderPluginTagExists = function(AHostContext: Pointer;
+    AName: PAnsiChar): LongBool; cdecl;
+  TRecorderPluginGetTagAlarmLevel = function(AHostContext: Pointer;
+    AName: PAnsiChar; out ALevel: LongInt): LongBool; cdecl;
+  TRecorderPluginGetTagSetpoint = function(AHostContext: Pointer;
+    AName: PAnsiChar; AKind: LongInt; out AThreshold: Double;
+    out AEnabled: LongBool): LongBool; cdecl;
+  TRecorderPluginSetTagSetpoint = function(AHostContext: Pointer;
+    AName: PAnsiChar; AKind: LongInt; AThreshold: Double;
+    AEnabled: LongBool): LongBool; cdecl;
+  TRecorderPluginGetRecorderTime = function(AHostContext: Pointer;
+    out ATimeSec: Double): LongBool; cdecl;
   PRecorderPluginHostApi = ^TRecorderPluginHostApi;
   TRecorderPluginHostApi = record
     Size: LongInt;
@@ -95,6 +107,11 @@ type
     PublishTagValue: TRecorderPluginPublishTagValue;
     GetProjectDirectory: TRecorderPluginGetProjectDirectory;
     LogMessage: TRecorderPluginLogMessage;
+    TagExists: TRecorderPluginTagExists;
+    GetTagAlarmLevel: TRecorderPluginGetTagAlarmLevel;
+    GetTagSetpoint: TRecorderPluginGetTagSetpoint;
+    SetTagSetpoint: TRecorderPluginSetTagSetpoint;
+    GetRecorderTime: TRecorderPluginGetRecorderTime;
   end;
   TRecorderPluginCreateClass = function: Pointer; cdecl;
   TRecorderPluginDestroyClass = function(AInstance: Pointer): LongInt; cdecl;

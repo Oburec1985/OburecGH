@@ -6,7 +6,7 @@ unit uRecorderCoordinatorClient;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, SyncObjs, uRecorderCoordinatorProtocol,
+  Classes, SysUtils, SyncObjs, uRecorderCoordinatorProtocol,
   uRecorderLanDiscovery;
 
 type

@@ -49,7 +49,6 @@ uses
   uRecorderTagRefs,
   uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
-  uRecorderSpectrumRuntime,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
@@ -99,10 +98,15 @@ type
     pnToolbar: TPanel;                           // Верхняя панель вкладок формуляров
     sgFormular: TStringGrid;                     // Таблица отображения цифровых значений (Digital Form)
     SplitterLog: TSplitter;                      // Разделитель лога
+    SplitterRight: TSplitter;                    // Разделитель правой панели управления
 
     // Обработчики стандартных действий и событий UI элементов формы
     procedure btnClearSearchClick(Sender: TObject);
     procedure btnDeleteComponentClick(Sender: TObject);
+    procedure BringForwardClick(Sender: TObject);
+    procedure SendBackwardClick(Sender: TObject);
+    procedure BringToFrontClick(Sender: TObject);
+    procedure SendToBackClick(Sender: TObject);
     procedure btnFormPagesClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
     procedure btnRecordClick(Sender: TObject);
@@ -116,17 +120,23 @@ type
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyDown({%H-}Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure lbTagsClick(Sender: TObject);
     procedure lbTagsDblClick(Sender: TObject);
     procedure pnRightCommandsClick(Sender: TObject);
-    procedure sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer;
+    procedure sgFormularPrepareCanvas({%H-}sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
-    procedure sgFormularSelectCell(Sender: TObject; aCol, aRow: Integer;
-      var CanSelect: Boolean);
+    procedure sgFormularSelectCell({%H-}Sender: TObject;
+      {%H-}aCol, aRow: Integer; var {%H-}CanSelect: Boolean);
+    procedure SplitterRightMoved(Sender: TObject);
   private
     fWindowDragTrace: TRecorderWindowDragTrace;
+    {$IFDEF MSWINDOWS}
     fWindowDragPausedTimers: Boolean;
+    fWindowDragHiddenCharts: Boolean;
+    fWindowDragRedrawDisabled: Boolean;
+    {$ENDIF}
     // Фабрики и менеджеры управления графическими элементами мнемосхем
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
     fPluginRuntime: TRecorderPluginRuntime;
@@ -281,9 +291,9 @@ type
     { Обновляет графики осциллограмм свежими данными }
     procedure RefreshBaseOscillograms;
     { Рисует пользовательскую мнемосхему и включает допустимые команды редактора. }
-    procedure RenderMnemonicPage(APage: TRecorderFormPage);
+    procedure RenderMnemonicPage({%H-}APage: TRecorderFormPage);
     { Рисует прочую встроенную страницу без тулбара компонентов. }
-    procedure RenderBuiltInPage(APage: TRecorderFormPage);
+    procedure RenderBuiltInPage({%H-}APage: TRecorderFormPage);
     { Обновляет доступность редактора и его кнопок для текущей страницы. }
     procedure UpdateEditorAvailability(APage: TRecorderFormPage);
     { Обновляет таблицу осциллограмм при изменении спинбатона. }
@@ -322,6 +332,8 @@ type
     procedure SetProjectConfigDir(const ADirectoryName: string);
     function GetAppConfigDir: string;
     function GetAppConfigFileName: string;
+    procedure LoadMainWindowLayout;
+    procedure SaveMainWindowLayout;
     function LoadDefaultProjectConfigDir: string;
     procedure SaveDefaultProjectConfigDir;
     { Создает popup-меню кнопки конфигурации с Save As/Load. }
@@ -402,7 +414,7 @@ type
     procedure PrepareAlgorithmsForFormConfiguration;
     procedure RecoverOfflineSourcesAfterLoadOnce;
     procedure WarmupHardwareNetwork;
-    procedure DeferredPrepareRuntime(Data: PtrInt);
+    procedure DeferredPrepareRuntime({%H-}Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
@@ -442,8 +454,10 @@ const
   CProjectBaseName = 'default';
   CAppConfigSection = 'Application';
   CDefaultProjectConfigDirKey = 'DefaultProjectConfigDir';
+  CRightPanelWidthKey = 'RightPanelWidth';
+  CRightPanelMinWidth = 160;
+  CMainContentMinWidth = 200;
   COldRunControlFileName = 'run-control.ini';
-  CDeviceHealthProbeTimeoutMs = 1000;
 
 { TMainForm }
 
@@ -457,6 +471,12 @@ begin
       are what appear as a second, slowly following window. Data acquisition
       threads continue; only GUI timers are paused. }
     fWindowDragPausedTimers := True;
+    fWindowDragRedrawDisabled := True;
+    SendMessage(Self.Handle, WM_SETREDRAW, 0, 0);
+    fWindowDragHiddenCharts := (fBaseChartsPanel <> nil) and
+      fBaseChartsPanel.Visible;
+    if fWindowDragHiddenCharts then
+      fBaseChartsPanel.Visible := False;
     if fUiUpdateTimer <> nil then fUiUpdateTimer.Enabled := False;
     if fDataConsumeTimer <> nil then fDataConsumeTimer.Enabled := False;
     if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := False;
@@ -478,7 +498,19 @@ begin
     end;
     if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := True;
     if fAutoPreviewTimer <> nil then fAutoPreviewTimer.Enabled := True;
-    if fBaseChartsPanel <> nil then fBaseChartsPanel.Invalidate;
+    if fWindowDragHiddenCharts and (fBaseChartsPanel <> nil) then
+    begin
+      fBaseChartsPanel.Visible := True;
+      fBaseChartsPanel.Invalidate;
+      fWindowDragHiddenCharts := False;
+    end;
+    if fWindowDragRedrawDisabled then
+    begin
+      fWindowDragRedrawDisabled := False;
+      SendMessage(Self.Handle, WM_SETREDRAW, 1, 0);
+      RedrawWindow(Self.Handle, nil, 0,
+        RDW_INVALIDATE or RDW_ERASE or RDW_ALLCHILDREN or RDW_UPDATENOW);
+    end;
   end;
   {$ENDIF}
 end;
@@ -521,7 +553,7 @@ begin
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
   fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory,
-    fRecorder.TagRegistry);
+    fRecorder.TagRegistry, fRecorder.AlarmEngine);
   fPluginRuntime.OnLogMessage := @AddPluginLog;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
@@ -531,6 +563,7 @@ begin
   fDetachedForms.Duplicates := dupError;
   SetProjectConfigDir(LoadDefaultProjectConfigDir);
   EnsureDevConfig;
+  LoadMainWindowLayout;
   MigrateRecorderPluginConfig(fProjectConfigDir);
   fPluginRuntime.LoadConfigured(RecorderPluginConfigFileName);
   fPluginRuntime.NotifyAll(PN_RCINITIALIZED);
@@ -705,6 +738,7 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  SaveMainWindowLayout;
   FreeAndNil(fWindowDragTrace);
   if fCoordinatorTimer <> nil then
     fCoordinatorTimer.Enabled := False;
@@ -993,7 +1027,7 @@ begin
             AddLog('Нет записанного MERA-файла для запуска Winpos.');
             Exit;
           end;
-          AddLog('Запускаю Winpos для замера: ' + lMeraFileName);
+          AddLog(UTF8Encode('Запускаю Winpos для замера: ') + lMeraFileName);
           if not OpenDocument(lMeraFileName) then
             AddLog('Не удалось открыть MERA-файл. ' +
               'Проверьте системную ассоциацию .mera с Winpos.');
@@ -1005,7 +1039,8 @@ begin
         AddLog('Нет записанного MERA-замера для открытия.');
         Exit;
       end;
-      AddLog('Открываю каталог записанного замера: ' + lMeasureDir);
+        AddLog(UTF8Encode('Открываю каталог записанного замера: ') +
+          lMeasureDir);
       if not OpenDocument(lMeasureDir) then
         AddLog('Не удалось открыть каталог замера.');
     end;
@@ -1243,7 +1278,7 @@ begin
           fRecorder.SqlDbManager.SaveConfig;
           fRecorder.SqlDbManager.Reload;
           lPayload := Format('{"host":%s}', [JsonQuoted(lFirebirdHost)]);
-          AddLog('Настройки SQL БД изменены координатором: ' +
+          AddLog(UTF8Encode('Настройки SQL БД изменены координатором: ') +
             lFirebirdHost + ':3050');
         finally
           lCommandPayload.Free;
@@ -1587,6 +1622,35 @@ begin
   if (mmLog <> nil) and LogKindVisible(AKind) then
     mmLog.Lines.Add(lLine);
   RecorderDebugLog(lLine);
+end;
+
+procedure TMainForm.BringForwardClick(Sender: TObject);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.BringSelectedForward;
+end;
+
+procedure TMainForm.SendBackwardClick(Sender: TObject);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.SendSelectedBackward;
+end;
+
+procedure TMainForm.BringToFrontClick(Sender: TObject);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.BringSelectedToFront;
+end;
+
+procedure TMainForm.SendToBackClick(Sender: TObject);
+begin
+  if fFormEditor <> nil then
+    fFormEditor.SendSelectedToBack;
+end;
+
+procedure TMainForm.SplitterRightMoved(Sender: TObject);
+begin
+  SaveMainWindowLayout;
 end;
 
 procedure TMainForm.AddPluginLog(const AMessage: string);
@@ -1994,7 +2058,19 @@ begin
         lButton.PopupMenu.OnPopup := @PaletteGroupOpening;
     end;
   fDeleteComponentButton := AddEditMnemoToolBarButton(lNextLeft, -1,
-    'Delete selected component', @btnDeleteComponentClick, 0, False, True, '-');
+    'Удалить выбранное (Delete)', @btnDeleteComponentClick, 0, False, True, '-');
+  Inc(lNextLeft, 28);
+  AddEditMnemoToolBarButton(lNextLeft, -1,
+    'На задний план (Ctrl+Shift+B)', @SendToBackClick, 0, False, True, '≪');
+  Inc(lNextLeft, 28);
+  AddEditMnemoToolBarButton(lNextLeft, -1,
+    'На один слой назад (Ctrl+B)', @SendBackwardClick, 0, False, True, '<');
+  Inc(lNextLeft, 28);
+  AddEditMnemoToolBarButton(lNextLeft, -1,
+    'На один слой вперёд (Ctrl+F)', @BringForwardClick, 0, False, True, '>');
+  Inc(lNextLeft, 28);
+  AddEditMnemoToolBarButton(lNextLeft, -1,
+    'На передний план (Ctrl+Shift+F)', @BringToFrontClick, 0, False, True, '≫');
 
   fEditorCanvas := TPanel.Create(Self);
   fEditorCanvas.Parent := fEditorShell;
@@ -2406,6 +2482,42 @@ end;
 function TMainForm.GetAppConfigFileName: string;
 begin
   Result := GetAppConfigDir + 'app.ini';
+end;
+
+procedure TMainForm.LoadMainWindowLayout;
+var
+  lIni: TIniFile;
+  lWidth: Integer;
+  lMaxWidth: Integer;
+begin
+  if pnRight = nil then
+    Exit;
+
+  lIni := TIniFile.Create(GetAppConfigFileName);
+  try
+    lWidth := lIni.ReadInteger(CAppConfigSection, CRightPanelWidthKey,
+      pnRight.Width);
+  finally
+    lIni.Free;
+  end;
+
+  lMaxWidth := Max(CRightPanelMinWidth, ClientWidth - CMainContentMinWidth);
+  pnRight.Width := EnsureRange(lWidth, CRightPanelMinWidth, lMaxWidth);
+end;
+
+procedure TMainForm.SaveMainWindowLayout;
+var
+  lIni: TIniFile;
+begin
+  if pnRight = nil then
+    Exit;
+
+  lIni := TIniFile.Create(GetAppConfigFileName);
+  try
+    lIni.WriteInteger(CAppConfigSection, CRightPanelWidthKey, pnRight.Width);
+  finally
+    lIni.Free;
+  end;
 end;
 
 function TMainForm.LoadDefaultProjectConfigDir: string;
@@ -3700,7 +3812,7 @@ begin
   else if SameText(AIconId, 'spectrum') then Result := CIconSpectrum
   else if SameText(AIconId, 'image') then Result := CIconImageComponent
   else if SameText(AIconId, 'button') then Result := CIconButton
-  else if SameText(AIconId, 'input-field') then Result := CIconButton
+  else if SameText(AIconId, 'input-field') then Result := CIconInputField
   else if SameText(AIconId, 'measurement-section') then Result := CIconMeasurementSection
   else Result := -1;
 end;
@@ -3781,7 +3893,14 @@ begin
     end;
     lComponent := lFactory.CreateComponentForPage(lContext);
     try
-      lPage.AddComponent(lComponent);
+      if lComponent is TRecorderImageComponent then
+      begin
+        if fFormEditor <> nil then
+          fFormEditor.ClearSelection;
+        lPage.AddComponentToBack(lComponent);
+      end
+      else
+        lPage.AddComponent(lComponent);
     except
       lComponent.Free;
       raise;

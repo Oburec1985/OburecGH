@@ -16,6 +16,18 @@ uses
   uRecorderFormModel,
   uRecorderProjectFiles;
 
+type
+  TTestPluginOscillographFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create; reintroduce;
+  end;
+
+constructor TTestPluginOscillographFactory.Create;
+begin
+  inherited Create('test.oscillograph', 'Test Oscillograph',
+    TRecorderOscillogramComponent, 360, 220, True);
+end;
+
 procedure AssertEquals(AActual, AExpected: Integer; const AStep: string);
 begin
   if AActual <> AExpected then
@@ -218,17 +230,14 @@ begin
     AssertEquals(Ord(lLoadedOsc.BindingMode), Ord(rtbmAbsoluteTag),
       'loaded osc binding mode');
     AssertEquals(lLoadedOsc.TagOffset, 3, 'loaded osc tag offset');
-    AssertTrue(lLoadedOsc.ClosedInput, 'loaded osc closed input');
-    AssertEquals(lLoadedOsc.AxisCount, 2, 'loaded osc axis count');
-    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 1, 'loaded osc primary axis');
-    AssertTrue(Abs(lLoadedOsc.Axes[1].YScale - 2.5) < 1E-9,
-      'loaded osc second axis scale');
-    AssertTrue(Abs(lLoadedOsc.Axes[1].YOffset - 4.0) < 1E-9,
-      'loaded osc second axis offset');
+    AssertTrue(not lLoadedOsc.ClosedInput,
+      'base osc ignores plugin closed input');
+    AssertEquals(lLoadedOsc.AxisCount, 1, 'base osc restores one axis');
+    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 0, 'base osc primary axis');
     AssertEquals(lLoadedOsc.LineCount, 1, 'loaded osc line count');
-    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 1,
-      'loaded osc line axis');
-    Writeln('GUI config oscillogram binding test passed.');
+    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 0,
+      'base osc ignores plugin line axis');
+    Writeln('GUI config base oscillogram binding test passed.');
   finally
     lManager.Free;
     lLoaded.Free;
@@ -238,9 +247,72 @@ begin
   end;
 end;
 
+procedure TestGuiConfigSavesPluginOscillographState;
+var
+  lComponentFactory: TRecorderComponentFactory;
+  lFileName: string;
+  lLoaded: TRecorderFormManager;
+  lLoadedOsc: TRecorderOscillogramComponent;
+  lManager: TRecorderFormManager;
+  lOsc: TRecorderOscillogramComponent;
+  lPage: TRecorderFormPage;
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderFormModelPluginOscTest.gui.ini';
+  if FileExists(lFileName) then DeleteFile(lFileName);
+  lComponentFactory := TRecorderComponentFactory.Create;
+  lLoaded := TRecorderFormManager.Create;
+  lManager := TRecorderFormManager.Create;
+  try
+    lComponentFactory.RegisterDefaultComponents;
+    lComponentFactory.RegisterFactory(TTestPluginOscillographFactory.Create);
+    lPage := TRecorderFormPage.Create('Page1', 'Page1', 'Mnemonic');
+    lManager.AddPage(lPage);
+    lOsc := TRecorderOscillogramComponent(
+      lComponentFactory.CreateComponent('test.oscillograph'));
+    lOsc.Id := 'Page1.pluginOsc1';
+    lOsc.Name := 'PluginOsc1';
+    lOsc.TagName := 'AbsTag';
+    lOsc.ClosedInput := True;
+    lOsc.XScale := 0.5;
+    lOsc.AddAxis.Name := 'Y2';
+    lOsc.Axes[1].YScale := 2.5;
+    lOsc.Axes[1].YOffset := 4.0;
+    lOsc.PrimaryAxisIndex := 1;
+    lOsc.AddLine.TagName := 'OtherSourceTag';
+    lOsc.Lines[0].AxisIndex := 1;
+    lPage.AddComponent(lOsc);
+
+    SaveRecorderGuiConfig(lFileName, lManager);
+    LoadRecorderGuiConfig(lFileName, lLoaded, lComponentFactory);
+    lLoadedOsc := TRecorderOscillogramComponent(
+      lLoaded.Pages[0].Components[0]);
+    AssertTrue(RecorderIsPluginOscillograph(lLoadedOsc),
+      'loaded plugin oscillograph capability');
+    AssertTrue(lLoadedOsc.ClosedInput, 'plugin closed input');
+    AssertTrue(Abs(lLoadedOsc.XScale - 0.5) < 1E-9,
+      'plugin X scale');
+    AssertEquals(lLoadedOsc.AxisCount, 2, 'plugin axis count');
+    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 1, 'plugin primary axis');
+    AssertTrue(Abs(lLoadedOsc.Axes[1].YScale - 2.5) < 1E-9,
+      'plugin second axis scale');
+    AssertTrue(Abs(lLoadedOsc.Axes[1].YOffset - 4.0) < 1E-9,
+      'plugin second axis offset');
+    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 1,
+      'plugin line axis');
+    Writeln('GUI config plugin oscillograph state test passed.');
+  finally
+    lManager.Free;
+    lLoaded.Free;
+    lComponentFactory.Free;
+    if FileExists(lFileName) then DeleteFile(lFileName);
+  end;
+end;
+
 begin
   TestComponentFactory;
   TestFormPages;
   TestGuiConfigSavesBaseOscillogramCount;
   TestGuiConfigSavesOscillogramBinding;
+  TestGuiConfigSavesPluginOscillographState;
 end.

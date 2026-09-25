@@ -443,8 +443,9 @@ begin
       fClearBackgroundButton.Enabled := True;
     except
       on E: Exception do
-        MessageDlg('Фоновое изображение',
-          'Не удалось загрузить изображение: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(UTF8Encode('Фоновое изображение'),
+          UTF8Encode('Не удалось загрузить изображение: ') + E.Message,
+          mtError, [mbOK], 0);
     end;
   finally
     lDialog.Free;

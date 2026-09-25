@@ -85,6 +85,8 @@ var
   lTimes, lValues: array of Double;
   lName: string;
 begin
+  lTimes := nil;
+  lValues := nil;
   lPoint := 0;
   for lSignal := 0 to ASignalNames.Count - 1 do
   begin

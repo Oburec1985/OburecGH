@@ -222,7 +222,7 @@ begin
       5, 5, DonutColor(I));
     lText := fComponent.TagNames[I];
     if Length(lText) > 12 then
-      lText := Copy(lText, 1, 11) + '…';
+      lText := Copy(lText, 1, 11) + UTF8Encode('…');
     Bitmap.TextOut(Round(Bitmap.Width * 0.70) + 10, 36 + I * 24,
       lText, BGRA(40, 45, 55));
     if lTotal > 0 then

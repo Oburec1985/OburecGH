@@ -17,6 +17,7 @@ uses
   ImgList, TAGraph, TASeries, TATypes,
   uRecorderSdbStore, uRecorderSdbTypes, uRecorderSdbImages, uRecorderTags,
   uRecorderStrainCalibration, uRecorderStrainCalibrationFrame,
+  uRecorderCalibrationPropertiesDialog,
   uSharedStringEncoding;
 
 function ShowRecorderSdbSelectDialog(AOwner: TComponent; const AInitialKey: string;
@@ -40,6 +41,14 @@ type
     gridPoints: TStringGrid;
     ilSdbTree: TImageList;
     lbDescription: TLabel;
+    lbFormulaKind: TLabel;
+    lbFormulaKindValue: TLabel;
+    lbFormulaOffset: TLabel;
+    lbFormulaOffsetValue: TLabel;
+    lbFormulaScale: TLabel;
+    lbFormulaScaleValue: TLabel;
+    lbFormulaSensitivity: TLabel;
+    lbFormulaSensitivityValue: TLabel;
     lbKey: TLabel;
     lbRange: TLabel;
     lbUnits: TLabel;
@@ -48,6 +57,7 @@ type
     pmSdbTree: TPopupMenu;
     pnBottom: TPanel;
     pnDetails: TPanel;
+    pnFormulaDetails: TPanel;
     pnScale: TPanel;
     pnStrainActions: TPanel;
     sbStrainEditor: TScrollBox;
@@ -73,6 +83,9 @@ type
     fScaleDataActiveTab: TTabSheet;
     fSelectedKey: string;
     fSelectFolders: Boolean;
+    fCalibrationDraft: TRecorderCalibration;
+    fCalibrationEditor: TRecorderCalibrationPropertiesDialog;
+    fCalibrationKey: string;
     fStrainDraft: TRecorderCalibration;
     fStrainEditor: TRecorderStrainCalibrationFrame;
     fStrainKey: string;
@@ -90,9 +103,13 @@ type
     procedure ShowItem(AItem: TRecorderSdbNode);
     procedure ShowNodeCommonInfo(AItem: TRecorderSdbNode);
     procedure ShowScaleDetails(AItem: TRecorderSdbNode);
+    procedure ShowFormulaDetails(ACalibration: TRecorderCalibration);
+    procedure ShowCalibrationEditor(ACalibration: TRecorderCalibration;
+      const AKey: string);
     procedure ShowStrainDetails(ACalibration: TRecorderCalibration;
       const AKey: string);
-    procedure UpdateScaleChart(ACalibration: TRecorderCalibration);
+    procedure UpdateScaleChart(ACalibration: TRecorderCalibration;
+      const AMinX, AMaxX: Double);
     procedure UpdateTreeIcons(ANode: TTreeNode);
   public
     destructor Destroy; override;
@@ -205,6 +222,7 @@ end;
 
 destructor TRecorderSdbSelectDialog.Destroy;
 begin
+  fCalibrationDraft.Free;
   fStrainDraft.Free;
   inherited Destroy;
 end;
@@ -353,6 +371,13 @@ begin
   tsTable.TabVisible := True;
   tsChart.TabVisible := True;
   tsParameters.TabVisible := False;
+  pnFormulaDetails.Visible := False;
+  if fCalibrationEditor <> nil then
+    fCalibrationEditor.Visible := False;
+  if fStrainEditor <> nil then
+    fStrainEditor.Visible := False;
+  sbStrainEditor.Visible := False;
+  pnStrainActions.Visible := False;
   seriesScale.Clear;
   chartScale.Title.Visible := False;
 end;
@@ -369,25 +394,111 @@ begin
 end;
 
 procedure TRecorderSdbSelectDialog.UpdateScaleChart(
-  ACalibration: TRecorderCalibration);
+  ACalibration: TRecorderCalibration; const AMinX, AMaxX: Double);
 var
   I: Integer;
+  lMaxX: Double;
+  lMinX: Double;
 begin
   ConfigureScaleChart;
   ConfigureScaleSeries;
   seriesScale.Clear;
-  if (ACalibration = nil) or (ACalibration.PointCount = 0) then
+  if ACalibration = nil then
   begin
     chartScale.Title.Visible := False;
     Exit;
   end;
-  for I := 0 to ACalibration.PointCount - 1 do
-    seriesScale.AddXY(ACalibration.PointAt(I).X, ACalibration.PointAt(I).Y);
+  if ACalibration.Kind in [rckScale, rckLinear] then
+  begin
+    lMinX := AMinX;
+    lMaxX := AMaxX;
+    if SameValue(lMinX, lMaxX) then
+    begin
+      lMinX := 0;
+      lMaxX := 1;
+    end;
+    seriesScale.AddXY(lMinX, ACalibration.Transform(lMinX));
+    seriesScale.AddXY(lMaxX, ACalibration.Transform(lMaxX));
+  end
+  else
+  begin
+    if ACalibration.PointCount = 0 then
+    begin
+      chartScale.Title.Visible := False;
+      Exit;
+    end;
+    for I := 0 to ACalibration.PointCount - 1 do
+      seriesScale.AddXY(ACalibration.PointAt(I).X, ACalibration.PointAt(I).Y);
+  end;
   chartScale.BottomAxis.Title.Caption := ACalibration.UnitIn;
   chartScale.LeftAxis.Title.Caption := ACalibration.UnitOut;
   chartScale.Title.Text.Clear;
   chartScale.Title.Text.Add('ГХ');
   chartScale.Title.Visible := True;
+end;
+
+procedure TRecorderSdbSelectDialog.ShowCalibrationEditor(
+  ACalibration: TRecorderCalibration; const AKey: string);
+begin
+  FreeAndNil(fCalibrationDraft);
+  fCalibrationDraft := ACalibration.Clone;
+  fCalibrationKey := AKey;
+  if fCalibrationEditor = nil then
+  begin
+    fCalibrationEditor := TRecorderCalibrationPropertiesDialog.Create(Self);
+    fCalibrationEditor.EmbedIn(sbStrainEditor, fCalibrationDraft);
+  end
+  else
+  begin
+    fCalibrationEditor.EditCalibration(fCalibrationDraft);
+    fCalibrationEditor.Visible := True;
+  end;
+  if fStrainEditor <> nil then
+    fStrainEditor.Visible := False;
+  pnFormulaDetails.Visible := False;
+  sbStrainEditor.Visible := True;
+  pnStrainActions.Visible := True;
+  btnSaveStrain.Caption := 'Сохранить ГХ';
+  tsParameters.Caption := 'Настройка';
+  tsTable.TabVisible := False;
+  tsParameters.TabVisible := True;
+  pcScaleData.ActivePage := tsParameters;
+  fScaleDataActiveTab := tsParameters;
+end;
+
+procedure TRecorderSdbSelectDialog.ShowFormulaDetails(
+  ACalibration: TRecorderCalibration);
+var
+  lInputPerOutput: string;
+  lOutputPerInput: string;
+begin
+  tsTable.TabVisible := False;
+  tsParameters.TabVisible := True;
+  tsParameters.Caption := 'Параметры';
+  sbStrainEditor.Visible := False;
+  pnStrainActions.Visible := False;
+  pnFormulaDetails.Visible := True;
+
+  if ACalibration.Kind = rckLinear then
+    lbFormulaKindValue.Caption := 'Прямая kx+b'
+  else
+    lbFormulaKindValue.Caption := 'Масштабный множитель';
+  lInputPerOutput := ACalibration.UnitIn + '/' + ACalibration.UnitOut;
+  lOutputPerInput := ACalibration.UnitOut + '/' + ACalibration.UnitIn;
+  if SameValue(ACalibration.Scale, 0.0) then
+    lbFormulaSensitivityValue.Caption := 'не определена (' + lInputPerOutput + ')'
+  else
+    lbFormulaSensitivityValue.Caption := FormatFloat('0.###############',
+      1.0 / ACalibration.Scale) + ' ' + lInputPerOutput;
+  lbFormulaScaleValue.Caption := FormatFloat('0.###############',
+    ACalibration.Scale) + ' ' + lOutputPerInput;
+  lbFormulaOffset.Visible := ACalibration.Kind = rckLinear;
+  lbFormulaOffsetValue.Visible := lbFormulaOffset.Visible;
+  lbFormulaOffsetValue.Caption := FormatFloat('0.###############',
+    ACalibration.Offset) + ' ' + ACalibration.UnitOut;
+
+  pcScaleData.ActivePage := tsParameters;
+  fScaleDataActiveTab := tsParameters;
 end;
 
 procedure TRecorderSdbSelectDialog.ShowStrainDetails(
@@ -409,6 +520,14 @@ begin
     fStrainEditor.Align := alTop;
   end;
   fStrainEditor.LoadCalibration(fStrainDraft);
+  fStrainEditor.Visible := True;
+  if fCalibrationEditor <> nil then
+    fCalibrationEditor.Visible := False;
+  pnFormulaDetails.Visible := False;
+  sbStrainEditor.Visible := True;
+  pnStrainActions.Visible := True;
+  btnSaveStrain.Caption := 'Сохранить ГХ';
+  tsParameters.Caption := 'Настройка';
   tsTable.TabVisible := False;
   tsParameters.TabVisible := True;
   if pcScaleData.ActivePage <> tsChart then
@@ -420,8 +539,8 @@ begin
   lCfg := TRecorderStrainConfig.Create;
   try
     lCfg.Load(ACalibration.ModuleData);
-    edRange.Text := '±' + FormatFloat('0.###############',
-      lCfg.MaxMicrostrain) + ' мкстр';
+    edRange.Text := UTF8Encode('±') + FormatFloat('0.###############',
+      lCfg.MaxMicrostrain) + UTF8Encode(' мкстр');
     ConfigureScaleChart;
     ConfigureScaleSeries;
     seriesScale.Clear;
@@ -461,11 +580,8 @@ begin
       ShowStrainDetails(lCalibration, lInfo.Key);
       Exit;
     end;
-    if fScaleDataActiveTab = tsParameters then
-    begin
-      fScaleDataActiveTab := tsTable;
-      pcScaleData.ActivePage := tsTable;
-    end;
+    if lCalibration.Kind <> rckStrain then
+      ShowCalibrationEditor(lCalibration, lInfo.Key);
     edRange.Text := FormatFloat('0.######', lInfo.SrcFrom) + ' .. ' +
       FormatFloat('0.######', lInfo.SrcTo) + ' -> ' +
       FormatFloat('0.######', lInfo.DstFrom) + ' .. ' +
@@ -479,7 +595,7 @@ begin
       gridPoints.Cells[2, I + 1] := FormatFloat('0.###############',
         lCalibration.PointAt(I).Y);
     end;
-    UpdateScaleChart(lCalibration);
+    UpdateScaleChart(lCalibration, lInfo.SrcFrom, lInfo.SrcTo);
   finally
     lCalibration.Free;
   end;
@@ -536,20 +652,35 @@ var
   lError: string;
   lKey: string;
 begin
-  if (fStrainEditor = nil) or (fStrainDraft = nil) or (fStrainKey = '') then
-    Exit;
-  if not fStrainEditor.TryApply(fStrainDraft, lError) then
+  if (fStrainEditor <> nil) and fStrainEditor.Visible and
+    (fStrainDraft <> nil) and (fStrainKey <> '') then
   begin
-    if lError <> '' then
-      MessageDlg('Настройка ГХ', lError, mtError, [mbOK], 0);
-    Exit;
-  end;
-  lKey := fStrainKey;
-  if not RecorderSdbUpdateCalibration(lKey, fStrainDraft, lError) then
+    if not fStrainEditor.TryApply(fStrainDraft, lError) then
+    begin
+      if lError <> '' then
+        MessageDlg('Настройка ГХ', lError, mtError, [mbOK], 0);
+      Exit;
+    end;
+    lKey := fStrainKey;
+    if not RecorderSdbUpdateCalibration(lKey, fStrainDraft, lError) then
+    begin
+      MessageDlg('Сохранение ГХ', lError, mtError, [mbOK], 0);
+      Exit;
+    end;
+  end
+  else if (fCalibrationEditor <> nil) and fCalibrationEditor.Visible and
+    (fCalibrationDraft <> nil) and (fCalibrationKey <> '') then
   begin
-    MessageDlg('Сохранение ГХ', lError, mtError, [mbOK], 0);
+    fCalibrationEditor.ApplyChanges;
+    lKey := fCalibrationKey;
+    if not RecorderSdbUpdateCalibration(lKey, fCalibrationDraft, lError) then
+    begin
+      MessageDlg('Сохранение ГХ', lError, mtError, [mbOK], 0);
+      Exit;
+    end;
+  end
+  else
     Exit;
-  end;
   ReloadTree(lKey);
 end;
 

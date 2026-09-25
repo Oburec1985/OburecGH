@@ -21,12 +21,13 @@ unit uRecorderSettingsDialog;
 interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  ComCtrls, ImgList, Grids, Buttons, Menus, LCLType, LMessages,
+  ComCtrls, ImgList, Grids, Buttons, Menus, LCLType, LCLIntf, LMessages,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
   uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
+  uRecorderAlgorithmManager,
   uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
   uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig,
   uRecorderPluginRuntime, uRecorderPluginApi, uLuaCalcSettingsDialog,
@@ -92,6 +93,7 @@ type
     fAlgorithmBandMaxCheck: TCheckBox;
     fAlgorithmBandMaxFrequencyCheck: TCheckBox;
     fAlgorithmWriteEstimatesCheck: TCheckBox;
+    fAlgorithmParallelChannelsCheck: TCheckBox;
     Cfg: TEdit;
 
     // Поля ввода общих настроек
@@ -200,6 +202,7 @@ type
     procedure NetworkTestClick(Sender: TObject);
   private
     fWindowDragTrace: TRecorderWindowDragTrace;
+    fWindowDragRedrawDisabled: Boolean;
     fRecorder: TRecorder;
     fPluginCatalog: TRecorderPluginCatalog;
     fPluginList: TListView;
@@ -209,6 +212,8 @@ type
     fDeviceImageList: TCustomImageList;
     fVirtualTagIcon: TBitmap;
     fInactiveTagIcon: TBitmap;
+    fProtocolTagIcon: TBitmap;
+    fProtocolTagImageIndex: Integer;
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
     fAvailableChannelSignals: TList;            // Row-map доступных каналов
@@ -221,6 +226,7 @@ type
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
+    fAlgorithmDropMenu: TPopupMenu;
     fHardwareSearchPingCheck: TCheckBox;
     fCanDrag: Boolean;
     fDragStartPt: TPoint;
@@ -280,6 +286,10 @@ type
     function CreateSpectrumConfigNode(ATag: TRecorderTag): TRecorderSpectrumConfigNode;
     function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
     function SelectedSpectrumBinding: TRecorderSpectrumTagBinding;
+    procedure FillAvailableAlgorithmKinds(AItems: TStrings);
+    procedure CreateSelectedAlgorithm(AType: TRecorderAlgorithmTypeRegistration);
+    procedure ShowAlgorithmDropMenu(X, Y: Integer);
+    procedure AlgorithmDropMenuClick(Sender: TObject);
     procedure CreateSelectedMeraTags;
     function FindMeraSignalByTagName(const ATagName: string): TMeraSignalInfo;
     function FindMic140SignalBySourceAddress(const ASourceId, AAddress: string): TMeraSignalInfo;
@@ -295,6 +305,8 @@ type
     procedure EditMc032Source(const ASourceId: string = '');
     function SelectedHardwareSourceId: string;
     procedure ShowSelectedHardwareSourceAddress;
+    function TryGetOpcUaNetworkEndpoint(const ASourceId: string;
+      out AHost: string; out APort: Word): Boolean;
     procedure EditHardwareSource(const ASourceId: string;
       const AModuleTypeHint: string = '');
     procedure EditMeraFileSource(const ASourceId: string);
@@ -320,6 +332,8 @@ type
     procedure PopulateHardwareTree;
     procedure PopulateAlgorithmsTree;
     procedure InitializeAlgorithmControls;
+    procedure ArrangeAlgorithmControls;
+    procedure AlgorithmSettingsResize(Sender: TObject);
     procedure LoadSelectedAlgorithmSettings;
     procedure StoreSelectedAlgorithmSettings;
     procedure UpdateAlgorithmDerivedControls;
@@ -340,6 +354,9 @@ type
     procedure SetTagDialogImageList(AValue: TCustomImageList);
     procedure SetDialogButtonImages;
     procedure InitializeHardwareTree;
+    procedure AdjustRecorderTabTextSpacing;
+    procedure RecorderFormShow(Sender: TObject);
+    procedure RecorderFormResize(Sender: TObject);
     
     // Динамическое построение UI (используется при отсутствии lfm-файла формы)
     procedure BuildUi;
@@ -406,8 +423,9 @@ uses
   uRecorderMic185DataSource, uRecorderMic185Runtime, uMic185Constants,
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
-  uRecorderDeviceSearchDialog, uMc032Device, uRecorderDebugLog,
-  uRecorderTagTableExchange;
+  uRecorderDeviceSearchDialog, uMc032Device, uMc201ProtocolTypes,
+  uRecorderDebugLog,
+  uRecorderTagTableExchange, uRecorderOpcUaTypes;
 
 {$R *.lfm}
 
@@ -454,9 +472,9 @@ begin
   Result := AErrorText;
   if RecorderIsHardwareMic185TagSource(ASourceId) and
     (Pos('IoControl timeout', AErrorText) > 0) then
-    Result := Result + LineEnding +
+    Result := Result + LineEnding + UTF8Encode(
       'TCP-порт отвечает, но Mebius-задача прибора не отвечает на команды. ' +
-      'Нужна перезагрузка питания MIC-183/185.';
+      'Нужна перезагрузка питания MIC-183/185.');
 end;
 
 constructor TRecorderHardwareResetTask.Create(const ASourceId, ATraceId: string;
@@ -754,11 +772,80 @@ const
   CTagGroupAuxiliary = 'Вспомогательные каналы';
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
-procedure TRecorderSettingsDialog.WndProc(var TheMessage: TLMessage);
+var
+  g_ProtocolTagImageList: TCustomImageList = nil;
+  g_ProtocolTagImageIndex: Integer = -1;
+
+function AddProtocolTagIcon(AImages: TCustomImageList): Integer;
+var
+  lBitmap: TBitmap;
 begin
+  Result := -1;
+  if AImages = nil then Exit;
+  if (g_ProtocolTagImageList = AImages) and
+    (g_ProtocolTagImageIndex >= 0) and
+    (g_ProtocolTagImageIndex < AImages.Count) then
+    Exit(g_ProtocolTagImageIndex);
+  lBitmap := TBitmap.Create;
+  try
+    lBitmap.SetSize(16, 16);
+    lBitmap.Transparent := True;
+    lBitmap.TransparentColor := clFuchsia;
+    lBitmap.Canvas.Brush.Color := clFuchsia;
+    lBitmap.Canvas.FillRect(0, 0, 16, 16);
+    lBitmap.Canvas.Pen.Color := $00804000;
+    lBitmap.Canvas.Brush.Color := $00C06020;
+    lBitmap.Canvas.Rectangle(1, 5, 6, 11);
+    lBitmap.Canvas.Rectangle(10, 5, 15, 11);
+    lBitmap.Canvas.Pen.Color := $00D08000;
+    lBitmap.Canvas.MoveTo(5, 8);
+    lBitmap.Canvas.LineTo(7, 8);
+    lBitmap.Canvas.LineTo(7, 4);
+    lBitmap.Canvas.LineTo(9, 12);
+    lBitmap.Canvas.LineTo(9, 8);
+    lBitmap.Canvas.LineTo(11, 8);
+    Result := AImages.AddMasked(lBitmap, clFuchsia);
+    g_ProtocolTagImageList := AImages;
+    g_ProtocolTagImageIndex := Result;
+  finally
+    lBitmap.Free;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.WndProc(var TheMessage: TLMessage);
+const
+  CWinWmEnterSizeMove = $0231;
+  CWinWmExitSizeMove = $0232;
+  CWinWmSetRedraw = $000B;
+begin
+  {$IFDEF MSWINDOWS}
+  if TheMessage.msg = CWinWmEnterSizeMove then
+  begin
+    fWindowDragRedrawDisabled := True;
+    LCLIntf.SendMessage(Self.Handle, CWinWmSetRedraw, 0, 0);
+  end;
+  {$ENDIF}
   if fWindowDragTrace <> nil then
     fWindowDragTrace.HandleMessage(Self, TheMessage);
   inherited WndProc(TheMessage);
+  {$IFDEF MSWINDOWS}
+  if (TheMessage.msg = CWinWmExitSizeMove) and fWindowDragRedrawDisabled then
+  begin
+    fWindowDragRedrawDisabled := False;
+    LCLIntf.SendMessage(Self.Handle, CWinWmSetRedraw, 1, 0);
+    Invalidate;
+    Update;
+  end;
+  {$ENDIF}
+end;
+
+procedure PlaceAfter(AReference, AControl: TControl);
+const
+  CControlGap = 8;
+begin
+  if (AReference = nil) or (AControl = nil) then
+    Exit;
+  AControl.Left := AReference.Left + AReference.Width + CControlGap;
 end;
 
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
@@ -766,6 +853,8 @@ var
   lSearchButton: TBitBtn;
 begin
   inherited Create(AOwner);
+  OnShow := @RecorderFormShow;
+  OnResize := @RecorderFormResize;
   fWindowDragTrace := TRecorderWindowDragTrace.Create('settings');
   fPluginCatalog := TRecorderPluginCatalog.Create;
   InitializePluginPage;
@@ -887,6 +976,8 @@ begin
     fAlgorithmBandMaxFrequencyCheck.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmWriteEstimatesCheck <> nil then
     fAlgorithmWriteEstimatesCheck.OnChange := @fAlgorithmFftParamChange;
+  if fAlgorithmParallelChannelsCheck <> nil then
+    fAlgorithmParallelChannelsCheck.OnChange := @fAlgorithmFftParamChange;
   if fAlgorithmIntegrationGroup <> nil then
     fAlgorithmIntegrationGroup.OnClick := @fAlgorithmFftParamChange;
   if Cfg <> nil then
@@ -900,10 +991,71 @@ begin
   if fAlgorithmAhCorrectionCheck <> nil then
     fAlgorithmAhCorrectionCheck.OnChange := @fAlgorithmAhCorrectionCheckChange;
 
+  if FindComponent('pnAlgorithmSettings') is TPanel then
+    TPanel(FindComponent('pnAlgorithmSettings')).OnResize :=
+      @AlgorithmSettingsResize;
+  if FindComponent('pnAlgorithmTop') is TPanel then
+    TPanel(FindComponent('pnAlgorithmTop')).OnResize :=
+      @AlgorithmSettingsResize;
+
   SetGridHeaders;
   InitializeAlgorithmControls;
+  ArrangeAlgorithmControls;
   InitializeHardwareTree;
   UpdateConditionControls;
+  AdjustRecorderTabTextSpacing;
+end;
+
+procedure TRecorderSettingsDialog.AdjustRecorderTabTextSpacing;
+var
+  lControl: TComponent;
+begin
+  lControl := FindComponent('lbScreenUpdate');
+  if lControl is TControl then
+    PlaceAfter(TControl(lControl), fScreenUpdateEdit);
+  lControl := FindComponent('lbScreenUpdateSec');
+  if lControl is TControl then
+    PlaceAfter(fScreenUpdateEdit, TControl(lControl));
+
+  lControl := FindComponent('lbBufferSeconds');
+  if lControl is TControl then
+    PlaceAfter(TControl(lControl), fBufferSecondsEdit);
+  lControl := FindComponent('lbBufferSecondsSec');
+  if lControl is TControl then
+    PlaceAfter(fBufferSecondsEdit, TControl(lControl));
+
+  lControl := FindComponent('lbDataUpdate');
+  if lControl is TControl then
+    PlaceAfter(TControl(lControl), fDataUpdateEdit);
+  lControl := FindComponent('lbDataUpdateSec');
+  if lControl is TControl then
+    PlaceAfter(fDataUpdateEdit, TControl(lControl));
+
+  PlaceAfter(fStartManualRadio, fStartLevelRadio);
+  PlaceAfter(fStartTriggerRadio, fStartTriggerEdit);
+  lControl := FindComponent('lbStartChannel');
+  if lControl is TControl then
+    PlaceAfter(TControl(lControl), fStartChannelCombo);
+
+  PlaceAfter(fStopManualRadio, fStopLevelRadio);
+  PlaceAfter(fStopDurationRadio, fStopDurationEdit);
+  lControl := FindComponent('lbStopDurationSec');
+  if lControl is TControl then
+    PlaceAfter(fStopDurationEdit, TControl(lControl));
+  lControl := FindComponent('lbStopChannel');
+  if lControl is TControl then
+    PlaceAfter(TControl(lControl), fStopChannelCombo);
+end;
+
+procedure TRecorderSettingsDialog.RecorderFormShow(Sender: TObject);
+begin
+  { GTK окончательно вычисляет ширину AutoSize-label только после показа. }
+  AdjustRecorderTabTextSpacing;
+end;
+
+procedure TRecorderSettingsDialog.RecorderFormResize(Sender: TObject);
+begin
+  AdjustRecorderTabTextSpacing;
 end;
 
 procedure TRecorderSettingsDialog.InitializeChannelExchangeButtons;
@@ -1297,6 +1449,12 @@ begin
         begin
           lNode.ImageIndex := CDeviceInactiveTagImageIndex;
           lNode.SelectedIndex := CDeviceInactiveTagImageIndex;
+        end
+        else if SameText(lTag.ModuleType, CRecorderOpcUaModuleType) and
+          (fProtocolTagImageIndex >= 0) then
+        begin
+          lNode.ImageIndex := fProtocolTagImageIndex;
+          lNode.SelectedIndex := fProtocolTagImageIndex;
         end;
       end;
     end;
@@ -1764,6 +1922,7 @@ begin
   fPluginCatalog.Free;
   fVirtualTagIcon.Free;
   fInactiveTagIcon.Free;
+  fProtocolTagIcon.Free;
   if fHardwareTree <> nil then
     RecorderHardwareTreeClearNodes(fHardwareTree);
   fFrequencyBands.Free;
@@ -1779,6 +1938,12 @@ procedure TRecorderSettingsDialog.SetRecorder(AValue: TRecorder);
 begin
   FreeAndNil(fSourceProbe);
   fRecorder := AValue;
+  if fAlgorithmKindCombo <> nil then
+  begin
+    FillAvailableAlgorithmKinds(fAlgorithmKindCombo.Items);
+    if fAlgorithmKindCombo.Items.Count > 0 then
+      fAlgorithmKindCombo.ItemIndex := 0;
+  end;
   if fRecorder <> nil then
   begin
     fSourceProbe := TRecorderSettingsSourceProbe.Create(fRecorder.TagRegistry);
@@ -1799,6 +1964,8 @@ begin
   fDeviceImageList := AValue;
   FreeAndNil(fVirtualTagIcon);
   FreeAndNil(fInactiveTagIcon);
+  FreeAndNil(fProtocolTagIcon);
+  fProtocolTagImageIndex := -1;
   if fDeviceImageList <> nil then
   begin
     if CDeviceVirtualTagImageIndex < fDeviceImageList.Count then
@@ -1810,6 +1977,12 @@ begin
     begin
       fInactiveTagIcon := TBitmap.Create;
       fDeviceImageList.GetBitmap(CDeviceInactiveTagImageIndex, fInactiveTagIcon);
+    end;
+    fProtocolTagImageIndex := AddProtocolTagIcon(fDeviceImageList);
+    if fProtocolTagImageIndex >= 0 then
+    begin
+      fProtocolTagIcon := TBitmap.Create;
+      fDeviceImageList.GetBitmap(fProtocolTagImageIndex, fProtocolTagIcon);
     end;
   end;
   if fHardwareTree <> nil then
@@ -1906,6 +2079,9 @@ begin
   ATag.IsVirtual := RecorderIsVirtualTagSource(lSourceId);
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
+  { Общий контракт: любой нескалярный сигнал с частотой дискретизации
+    публикуется тегом как векторный, независимо от модели устройства. }
+  ATag.IsVector := ASignal.FrequencyHz > 0.0;
   ATag.SourceValueMode := ASignal.SourceValueMode;
   if lFirstMc201Bind then
     ATag.HardwareCalibrationEnabled := True;
@@ -2347,11 +2523,7 @@ var
   lTargetNode: TRecorderSpectrumConfigNode;
   lSettings: TRecorderSpectrumSettings;
 begin
-  if (fSelectedChannelsGrid = nil) or (fAlgorithmKindCombo = nil) then
-    Exit;
-  if fAlgorithmKindCombo.ItemIndex < 0 then
-    fAlgorithmKindCombo.ItemIndex := 0;
-  if fAlgorithmKindCombo.Text <> 'Спектр' then
+  if fSelectedChannelsGrid = nil then
     Exit;
 
   lSelection := fSelectedChannelsGrid.Selection;
@@ -2389,9 +2561,9 @@ procedure TRecorderSettingsDialog.InitializeAlgorithmControls;
 begin
   if fAlgorithmKindCombo <> nil then
   begin
-    fAlgorithmKindCombo.Items.Clear;
-    fAlgorithmKindCombo.Items.Add('Спектр');
-    fAlgorithmKindCombo.ItemIndex := 0;
+    FillAvailableAlgorithmKinds(fAlgorithmKindCombo.Items);
+    if fAlgorithmKindCombo.Items.Count > 0 then
+      fAlgorithmKindCombo.ItemIndex := 0;
   end;
   if fAlgorithmWindowCombo <> nil then
   begin
@@ -2425,6 +2597,264 @@ begin
     fAlgorithmNormalizeCombo.ItemIndex := Ord(snmNone);
   end;
   PopulateAlgorithmsTree;
+end;
+
+procedure TRecorderSettingsDialog.FillAvailableAlgorithmKinds(AItems: TStrings);
+var
+  I: Integer;
+  lType: TRecorderAlgorithmTypeRegistration;
+begin
+  if AItems = nil then
+    Exit;
+  AItems.BeginUpdate;
+  try
+    AItems.Clear;
+    if (fRecorder = nil) or (fRecorder.AlgorithmManager = nil) then
+      Exit;
+    for I := 0 to fRecorder.AlgorithmManager.TypeCount - 1 do
+    begin
+      lType := fRecorder.AlgorithmManager.TypeDescriptors[I];
+      AItems.AddObject(lType.DisplayName, lType);
+    end;
+  finally
+    AItems.EndUpdate;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.CreateSelectedAlgorithm(
+  AType: TRecorderAlgorithmTypeRegistration);
+begin
+  if AType = nil then
+    Exit;
+  if AType.AlgorithmClass.InheritsFrom(TRecorderSpectrumAlgorithm) then
+  begin
+    AddSpectrumAlgorithmsFromSelectedChannels;
+    Exit;
+  end;
+  MessageDlg('Добавление алгоритма',
+    Format('Алгоритм «%s» ещё не подключён к этому редактору.', [AType.DisplayName]),
+    mtInformation, [mbOK], 0);
+end;
+
+procedure TRecorderSettingsDialog.AlgorithmDropMenuClick(Sender: TObject);
+var
+  lIndex: Integer;
+begin
+  if not (Sender is TMenuItem) or (fAlgorithmKindCombo = nil) then
+    Exit;
+  lIndex := TMenuItem(Sender).Tag;
+  if (lIndex < 0) or (lIndex >= fAlgorithmKindCombo.Items.Count) then
+    Exit;
+  fAlgorithmKindCombo.ItemIndex := lIndex;
+  CreateSelectedAlgorithm(TRecorderAlgorithmTypeRegistration(
+    fAlgorithmKindCombo.Items.Objects[lIndex]));
+end;
+
+procedure TRecorderSettingsDialog.ShowAlgorithmDropMenu(X, Y: Integer);
+var
+  I: Integer;
+  lItem: TMenuItem;
+  lPoint: TPoint;
+begin
+  if fAlgorithmKindCombo = nil then
+    Exit;
+  if fAlgorithmDropMenu = nil then
+    fAlgorithmDropMenu := TPopupMenu.Create(Self);
+  fAlgorithmDropMenu.Items.Clear;
+  for I := 0 to fAlgorithmKindCombo.Items.Count - 1 do
+  begin
+    lItem := TMenuItem.Create(fAlgorithmDropMenu);
+    lItem.Caption := fAlgorithmKindCombo.Items[I];
+    lItem.Tag := I;
+    lItem.OnClick := @AlgorithmDropMenuClick;
+    fAlgorithmDropMenu.Items.Add(lItem);
+  end;
+  lPoint := fAlgorithmsTree.ClientToScreen(Point(X, Y));
+  fAlgorithmDropMenu.PopUp(lPoint.X, lPoint.Y);
+end;
+
+procedure TRecorderSettingsDialog.AlgorithmSettingsResize(Sender: TObject);
+begin
+  ArrangeAlgorithmControls;
+end;
+
+procedure TRecorderSettingsDialog.ArrangeAlgorithmControls;
+const
+  COuterGap = 8;
+  CColumnGap = 16;
+  CLabelGap = 4;
+  CRowGap = 8;
+var
+  lPanel: TPanel;
+  lTopPanel: TPanel;
+  lLabelFft: TLabel;
+  lLabelSampleRate: TLabel;
+  lLabelOverlap: TLabel;
+  lLabelWindow: TLabel;
+  lLabelAverage: TLabel;
+  lLabelHeight: Integer;
+  lEditHeight: Integer;
+  lRowTop: Integer;
+  lColumn1: Integer;
+  lColumn2: Integer;
+  lColumn3: Integer;
+  lColumn1Width: Integer;
+  lColumn2Width: Integer;
+  lBottomTop: Integer;
+  lRightColumn: Integer;
+  lCheckHeight: Integer;
+  lRequiredHeight: Integer;
+  lMaxPanelHeight: Integer;
+begin
+  if not (FindComponent('pnAlgorithmSettings') is TPanel) then
+    Exit;
+  lPanel := TPanel(FindComponent('pnAlgorithmSettings'));
+  if lPanel.Tag = 1 then
+    Exit;
+  if FindComponent('pnAlgorithmTop') is TPanel then
+    lTopPanel := TPanel(FindComponent('pnAlgorithmTop'))
+  else
+    lTopPanel := nil;
+
+  lLabelFft := TLabel(FindComponent('lbAlgorithmFftSize'));
+  lLabelSampleRate := TLabel(FindComponent('lbAlgorithmSampleRate'));
+  lLabelOverlap := TLabel(FindComponent('lbAlgorithmOverlap'));
+  lLabelWindow := TLabel(FindComponent('lbAlgorithmWindow'));
+  lLabelAverage := TLabel(FindComponent('lbAlgorithmAverage'));
+  if (lLabelFft = nil) or (lLabelSampleRate = nil) or
+     (lLabelOverlap = nil) or (lLabelWindow = nil) or
+     (lLabelAverage = nil) then
+    Exit;
+
+  lPanel.Tag := 1;
+  try
+    if lTopPanel <> nil then
+    begin
+      btnFrequencyBands.Left := lTopPanel.ClientWidth - COuterGap -
+        btnFrequencyBands.Width;
+      btnAlgorithmRemove.Left := btnFrequencyBands.Left - CLabelGap -
+        btnAlgorithmRemove.Width;
+      btnAlgorithmAdd.Left := btnAlgorithmRemove.Left - CLabelGap -
+        btnAlgorithmAdd.Width;
+      fAlgorithmKindCombo.Width := Max(80, btnAlgorithmAdd.Left -
+        fAlgorithmKindCombo.Left - COuterGap);
+      lTopPanel.Height := Max(fAlgorithmKindCombo.Height,
+        btnAlgorithmAdd.Height) + 2 * CLabelGap;
+      fAlgorithmKindCombo.Top := (lTopPanel.ClientHeight -
+        fAlgorithmKindCombo.Height) div 2;
+      btnAlgorithmAdd.Top := (lTopPanel.ClientHeight -
+        btnAlgorithmAdd.Height) div 2;
+      btnAlgorithmRemove.Top := btnAlgorithmAdd.Top;
+      btnFrequencyBands.Top := btnAlgorithmAdd.Top;
+    end;
+
+    lLabelHeight := Max(lLabelFft.Height, lLabelSampleRate.Height);
+    lLabelHeight := Max(lLabelHeight, lLabelAverage.Height);
+    lEditHeight := Max(fAlgorithmFftSizeEdit.Height,
+      fAlgorithmSampleRateEdit.Height);
+    lEditHeight := Max(lEditHeight, fAlgorithmWindowCombo.Height);
+    lCheckHeight := Max(fAlgorithmZeroPadCheck.Height,
+      fAlgorithmBandMaxCheck.Height);
+
+    lColumn1 := COuterGap;
+    lColumn1Width := Max(fAlgorithmAverageBlocksEdit.Width,
+      fAlgorithmWindowCombo.Width);
+    lColumn2 := lColumn1 + lColumn1Width + CColumnGap;
+    lColumn2Width := Max(fAlgorithmOverlapCombo.Width,
+      fAlgorithmSampleRateEdit.Width);
+    lColumn2Width := Max(lColumn2Width, lLabelSampleRate.Width);
+    lColumn3 := lColumn2 + lColumn2Width + COuterGap;
+
+    Cfg.SetBounds(COuterGap, COuterGap,
+      Max(80, lPanel.ClientWidth - 2 * COuterGap), Cfg.Height);
+    lRowTop := Cfg.Top + Cfg.Height + CRowGap;
+
+    lLabelFft.SetBounds(lColumn1, lRowTop, lLabelFft.Width,
+      lLabelFft.Height);
+    lLabelSampleRate.SetBounds(lColumn2, lRowTop, lLabelSampleRate.Width,
+      lLabelSampleRate.Height);
+    fAlgorithmPortionLabel.Left := Max(lColumn3,
+      lLabelSampleRate.Left + lLabelSampleRate.Width + CColumnGap);
+    fAlgorithmPortionLabel.Top := lRowTop;
+    Inc(lRowTop, lLabelHeight + CLabelGap);
+    fAlgorithmFftSizeEdit.SetBounds(lColumn1, lRowTop,
+      lColumn1Width - fAlgorithmFftSizeUpDown.Width, lEditHeight);
+    fAlgorithmFftSizeUpDown.SetBounds(fAlgorithmFftSizeEdit.Left +
+      fAlgorithmFftSizeEdit.Width, lRowTop,
+      fAlgorithmFftSizeUpDown.Width, lEditHeight);
+    fAlgorithmSampleRateEdit.SetBounds(lColumn2, lRowTop,
+      lColumn2Width, lEditHeight);
+    Inc(lRowTop, lEditHeight + CRowGap);
+
+    lLabelAverage.SetBounds(lColumn1, lRowTop, lLabelAverage.Width,
+      lLabelAverage.Height);
+    lLabelOverlap.SetBounds(lColumn2, lRowTop, lLabelOverlap.Width,
+      lLabelOverlap.Height);
+    Inc(lRowTop, lLabelHeight + CLabelGap);
+    fAlgorithmAverageBlocksEdit.SetBounds(lColumn1, lRowTop,
+      lColumn1Width, lEditHeight);
+    fAlgorithmOverlapCombo.SetBounds(lColumn2, lRowTop,
+      lColumn2Width, lEditHeight);
+    fAlgorithmOverlapEdit.SetBounds(lColumn3, lRowTop,
+      Max(48, lPanel.ClientWidth - lColumn3 - COuterGap), lEditHeight);
+    Inc(lRowTop, lEditHeight + CRowGap);
+
+    lLabelWindow.SetBounds(lColumn1, lRowTop, lLabelWindow.Width,
+      lLabelWindow.Height);
+    Inc(lRowTop, lLabelHeight + CLabelGap);
+    fAlgorithmWindowCombo.SetBounds(lColumn1, lRowTop,
+      lColumn1Width, lEditHeight);
+    fAlgorithmZeroPadCheck.SetBounds(lColumn2, lRowTop,
+      Max(fAlgorithmZeroPadCheck.Width, lLabelSampleRate.Width), lCheckHeight);
+    fAlgorithmAhCorrectionCheck.SetBounds(lColumn2,
+      lRowTop + lCheckHeight + CLabelGap,
+      Max(fAlgorithmAhCorrectionCheck.Width, lLabelSampleRate.Width),
+      lCheckHeight);
+
+    lBottomTop := lRowTop + Max(lEditHeight,
+      2 * lCheckHeight + CLabelGap) + CRowGap;
+    fAlgorithmIntegrationGroup.SetBounds(lColumn1, lBottomTop,
+      Max(200, lColumn2 - lColumn1 + lColumn2Width - CColumnGap),
+      Max(104, 3 * lCheckHeight + 40));
+    lRightColumn := fAlgorithmIntegrationGroup.Left +
+      fAlgorithmIntegrationGroup.Width + CColumnGap;
+    fAlgorithmBandRmsCheck.SetBounds(lRightColumn, lBottomTop,
+      Max(fAlgorithmBandRmsCheck.Width,
+        lPanel.ClientWidth - lRightColumn - COuterGap), lCheckHeight);
+    fAlgorithmBandMaxCheck.SetBounds(lRightColumn,
+      lBottomTop + lCheckHeight + CLabelGap,
+      Max(fAlgorithmBandMaxCheck.Width,
+        lPanel.ClientWidth - lRightColumn - COuterGap), lCheckHeight);
+    fAlgorithmBandMaxFrequencyCheck.SetBounds(lRightColumn,
+      lBottomTop + 2 * (lCheckHeight + CLabelGap),
+      Max(fAlgorithmBandMaxFrequencyCheck.Width,
+        lPanel.ClientWidth - lRightColumn - COuterGap), lCheckHeight);
+    fAlgorithmWriteEstimatesCheck.SetBounds(lRightColumn,
+      lBottomTop + 3 * (lCheckHeight + CLabelGap),
+      Max(fAlgorithmWriteEstimatesCheck.Width,
+        lPanel.ClientWidth - lRightColumn - COuterGap), lCheckHeight);
+    fAlgorithmParallelChannelsCheck.SetBounds(lRightColumn,
+      lBottomTop + 4 * (lCheckHeight + CLabelGap),
+      Max(fAlgorithmParallelChannelsCheck.Width,
+        lPanel.ClientWidth - lRightColumn - COuterGap), lCheckHeight);
+    btnAlgorithmConfig.SetBounds(lRightColumn,
+      fAlgorithmParallelChannelsCheck.Top + lCheckHeight + CRowGap,
+      Max(btnAlgorithmConfig.Width, 88), btnAlgorithmConfig.Height);
+
+    lRequiredHeight := Max(fAlgorithmIntegrationGroup.Top +
+      fAlgorithmIntegrationGroup.Height,
+      btnAlgorithmConfig.Top + btnAlgorithmConfig.Height) + COuterGap;
+    lMaxPanelHeight := lRequiredHeight;
+    if lPanel.Parent <> nil then
+    begin
+      if lTopPanel <> nil then
+        lMaxPanelHeight := Max(200, lPanel.Parent.ClientHeight -
+          lTopPanel.Height - 100);
+    end;
+    lPanel.Height := Min(lRequiredHeight, lMaxPanelHeight);
+  finally
+    lPanel.Tag := 0;
+  end;
 end;
 
 procedure TRecorderSettingsDialog.PopulateAlgorithmsTree;
@@ -2505,6 +2935,7 @@ begin
   fAlgorithmBandMaxCheck.Checked := lSettings.CalculateBandMaximum;
   fAlgorithmBandMaxFrequencyCheck.Checked := lSettings.CalculateBandMaximumFrequency;
   fAlgorithmWriteEstimatesCheck.Checked := lSettings.WriteEstimatesToTags;
+  fAlgorithmParallelChannelsCheck.Checked := lSettings.ParallelChannels;
   if Cfg <> nil then
     Cfg.Text := lSettings.AsString;
   UpdateAlgorithmDerivedControls;
@@ -2559,8 +2990,10 @@ end;
 procedure TRecorderSettingsDialog.UpdateAlgorithmDerivedControls;
 var
   lFftSize: Integer;
+  lEffectiveFftSize: Integer;
   lSampleRate: Double;
   lPortionSec: Double;
+  lFrequencyStepHz: Double;
 begin
   if fAlgorithmPortionLabel = nil then
     Exit;
@@ -2574,11 +3007,18 @@ begin
   if (lFftSize > 0) and (lSampleRate > 0.0) then
   begin
     lPortionSec := lFftSize / lSampleRate;
-    fAlgorithmPortionLabel.Caption := 'порция: ' +
-      FormatFloat('0.###', lPortionSec) + ' с';
+    { ZeroPad is currently a compatibility setting: the spectrum evaluator
+      still transforms exactly FFTSize samples.  Keep this explicit here so
+      the displayed resolution follows the effective transform size if zero
+      padding starts changing it later. }
+    lEffectiveFftSize := lFftSize;
+    lFrequencyStepHz := lSampleRate / lEffectiveFftSize;
+    fAlgorithmPortionLabel.Caption := UTF8Encode('порция: ') +
+      FormatFloat('0.###', lPortionSec) + UTF8Encode(' с;  Δf: ') +
+      FormatFloat('0.######', lFrequencyStepHz) + UTF8Encode(' Гц');
   end
   else
-    fAlgorithmPortionLabel.Caption := 'порция: - с';
+    fAlgorithmPortionLabel.Caption := UTF8Encode('порция: - с;  Δf: - Гц');
 
   UpdateConfigStr;
 end;
@@ -2676,6 +3116,7 @@ begin
   Result.CalculateBandMaximum := fAlgorithmBandMaxCheck.Checked;
   Result.CalculateBandMaximumFrequency := fAlgorithmBandMaxFrequencyCheck.Checked;
   Result.WriteEstimatesToTags := fAlgorithmWriteEstimatesCheck.Checked;
+  Result.ParallelChannels := fAlgorithmParallelChannelsCheck.Checked;
   Result.NormalizeMode := snmNone;
 end;
 
@@ -3047,7 +3488,8 @@ begin
     Exit;
 
   if MessageDlg('Удаление источника данных',
-    'Удалить источник данных "' + ExtractFileName(fSourceProbe.MeraFilePath) + '"?',
+    UTF8Encode('Удалить источник данных "') +
+      ExtractFileName(fSourceProbe.MeraFilePath) + '"?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     Exit;
 
@@ -3076,7 +3518,8 @@ begin
   if not FileExists(fSourceProbe.MeraFilePath) then
   begin
     MessageDlg('Перечитывание источника',
-      'Файл источника данных не найден: ' + fSourceProbe.MeraFilePath,
+      UTF8Encode('Файл источника данных не найден: ') +
+        fSourceProbe.MeraFilePath,
       mtWarning, [mbOK], 0);
     Exit;
   end;
@@ -3110,6 +3553,7 @@ begin
     lCombo.Items.Add('MIC-140');
     lCombo.Items.Add('MIC183/185');
     lCombo.Items.Add('MC-032');
+    lCombo.Items.Add('OPC UA');
     lCombo.Items.Add('Mera file');
     lCombo.ItemIndex := 0;
 
@@ -3141,6 +3585,8 @@ begin
       EditHardwareSource('', 'MIC183/185')
     else if SameText(lCombo.Text, 'MC-032') then
       EditMc032Source
+    else if SameText(lCombo.Text, 'OPC UA') then
+      EditHardwareSource('', 'OPC UA')
     else
       btnDeviceAddClick(Sender);
   finally
@@ -3190,7 +3636,7 @@ begin
     end
     else
     begin
-      lblNetworkTestResult.Caption := 'Нет связи: ' + lErrorText;
+      lblNetworkTestResult.Caption := UTF8Encode('Нет связи: ') + lErrorText;
       lblNetworkTestResult.Font.Color := clRed;
       RecorderMic185LifecycleLog(lTraceId, lSourceId, 'tcp-ping', 'FAIL',
         lErrorText, GetTickCount64 - lStartedAt);
@@ -3381,7 +3827,7 @@ var
     lConfigured := IsConfigured(ASourceId);
     lDisplay := ADisplayText;
     if lConfigured then
-      lDisplay := lDisplay + '  (уже добавлено)';
+      lDisplay := lDisplay + UTF8Encode('  (уже добавлено)');
     lDialog.AddDevice(ADeviceType, ASourceId, lDisplay, lConfigured,
       ASerialNumber);
   end;
@@ -3458,14 +3904,29 @@ var
 
   function ProbeMc032(const AHost: string; APort: Word;
     ATimeoutMs: Cardinal): Boolean;
+  var
+    lMc032Serial: LongWord;
+    lMc032Display: string;
   begin
     lMc032.Host := AHost;
     lMc032.Port := APort;
     lMc032.TimeoutMs := ATimeoutMs;
-    Result := lMc032.TestConnection(lError);
-    if Result then
+    { TryConnect reads the controller BIOS (CMD_REPLY), which identifies the
+      MC-032 and provides its serial number.  TEST_LOAD is a load-path test and
+      is unnecessary for discovery after a valid BIOS reply. }
+    Result := lMc032.TryConnect(lError);
+    try
+      if not Result then
+        Exit;
+      lMc032Serial := lMc032.Bios.DevSerNo;
+      lMc032Display := Format('MC-032 / MIC-200 - %s:%d', [AHost, APort]);
+      if lMc032Serial <> 0 then
+        lMc032Display := lMc032Display + Format(', SN=%d', [lMc032Serial]);
       AddFound('MC-032', RecorderMc032SourceId(AHost, APort),
-        Format('MC-032 — %s:%d', [AHost, APort]));
+        lMc032Display, lMc032Serial);
+    finally
+      lMc032.ForceDisconnect(False);
+    end;
   end;
 begin
   lSearchStartedAt := GetTickCount64;
@@ -3586,9 +4047,17 @@ begin
       lCandidateHosts.Clear;
       lOpenHosts.Clear;
       if lUsePingSearch then
+      begin
         for I := 0 to lConfiguredIds.Count - 1 do
           if TryParseRecorderMc032SourceId(lConfiguredIds[I], lHost, lPort) then
             lCandidateHosts.Add(lHost);
+        { MIC-200 is an MC-032 controller with MC-201 modules.  It does not
+          answer the MIC broadcast, and an unused address is absent from the
+          ARP cache.  Ping mode therefore explicitly checks the production
+          default MC-032 subnet before doing the protocol TEST_LOAD below. }
+        for I := 1 to 254 do
+          lCandidateHosts.Add(CMc201DefaultDiscoverySubnet + IntToStr(I));
+      end;
 
       { Резервный поиск использует настоящую маску выбранного адаптера.
         TCP-порт проверяется пакетами потоков; тяжелый протокольный TestLink
@@ -3603,7 +4072,7 @@ begin
         if lIndex >= 0 then lCandidateHosts.Delete(lIndex);
       end;
       lStageStartedAt := GetTickCount64;
-      RecorderFindOpenTcpHosts(lCandidateHosts, lOpenHosts, 4000, 90);
+      RecorderFindOpenTcpHosts(lCandidateHosts, lOpenHosts, 4000, 35);
       RecorderDebugLog(Format('[HardwareSearch] TCP/MC-032 scan: %d candidate(s), '+
         '%d open, %d ms', [lCandidateHosts.Count, lOpenHosts.Count,
         GetTickCount64 - lStageStartedAt]));
@@ -3724,6 +4193,51 @@ begin
       Exit;
     lNode := lNode.Parent;
   end;
+end;
+
+function TRecorderSettingsDialog.TryGetOpcUaNetworkEndpoint(
+  const ASourceId: string; out AHost: string; out APort: Word): Boolean;
+var
+  lConfig: TRecorderConfiguredDataSource;
+  lError, lEndpoint, lPortText: string;
+  lOpcConfig: TRecorderOpcUaConfig;
+  lPort: Integer;
+  lSeparator, lSlash: Integer;
+begin
+  Result := False;
+  AHost := '';
+  APort := 0;
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then Exit;
+  lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+    ASourceId);
+  if (lConfig = nil) or not RecorderIsOpcUaSource(ASourceId,
+    lConfig.ModuleType) then Exit;
+  lOpcConfig := TRecorderOpcUaConfig.Create;
+  try
+    if not lOpcConfig.LoadJson(lConfig.SpecificConfigText, lError) then Exit;
+    lEndpoint := Trim(lOpcConfig.Endpoint);
+  finally
+    lOpcConfig.Free;
+  end;
+  if Pos('opc.tcp://', LowerCase(lEndpoint)) <> 1 then Exit;
+  Delete(lEndpoint, 1, Length('opc.tcp://'));
+  lSlash := Pos('/', lEndpoint);
+  if lSlash > 0 then lEndpoint := Copy(lEndpoint, 1, lSlash - 1);
+  lSeparator := LastDelimiter(':', lEndpoint);
+  if lSeparator > 0 then
+  begin
+    AHost := Copy(lEndpoint, 1, lSeparator - 1);
+    lPortText := Copy(lEndpoint, lSeparator + 1, MaxInt);
+    if not TryStrToInt(lPortText, lPort) or (lPort < 1) or
+      (lPort > 65535) then Exit;
+    APort := Word(lPort);
+  end
+  else
+  begin
+    AHost := lEndpoint;
+    APort := 4840;
+  end;
+  Result := Trim(AHost) <> '';
 end;
 
 procedure TRecorderSettingsDialog.EditHardwareSource(const ASourceId: string;
@@ -3943,7 +4457,8 @@ begin
   end;
   if TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) or
      TryParseRecorderMic140SourceId(lSourceId, lHost, lPort) or
-     TryParseRecorderMc032SourceId(lSourceId, lHost, lPort) then
+     TryParseRecorderMc032SourceId(lSourceId, lHost, lPort) or
+     TryGetOpcUaNetworkEndpoint(lSourceId, lHost, lPort) then
   begin
     edNetworkTestHost.Text := lHost;
     edNetworkTestPort.Text := IntToStr(lPort);
@@ -3981,7 +4496,8 @@ begin
       lLines.Text := lConfig.SpecificConfigText;
       lCaption := '';
       for I := 0 to lLines.Count - 1 do
-        if Pos('Слот ' + IntToStr(lSlot) + ':', Trim(lLines[I])) = 1 then
+        if Pos(UTF8Encode('Слот ') + IntToStr(lSlot) + ':',
+          Trim(lLines[I])) = 1 then
         begin
           lCaption := Trim(lLines[I]);
           Break;
@@ -4394,7 +4910,7 @@ begin
     PopulateChannelGrids;
     if lErrors.Count > 0 then
       MessageDlg('Сброс устройств',
-        'Не удалось сбросить:' + LineEnding + lErrors.Text,
+        UTF8Encode('Не удалось сбросить:') + LineEnding + lErrors.Text,
         mtWarning, [mbOK], 0);
   finally
     for I := 0 to High(lRetryTasks) do
@@ -4469,7 +4985,7 @@ begin
     lSourceId) then
     fHardwareTree.Hint := 'Источник отключён пользователем'
   else if lReason <> '' then
-    fHardwareTree.Hint := 'Ошибка устройства: ' + lReason
+    fHardwareTree.Hint := UTF8Encode('Ошибка устройства: ') + lReason
   else if (lNode <> nil) and (lNode.ImageIndex = CDeviceControllerImageIndex) then
     fHardwareTree.Hint := 'Устройство доступно'
   else
@@ -4519,7 +5035,7 @@ begin
         lEntry := lEntries[I];
         lNodeCaption := lEntry.NodeCaption;
         if not RecorderIsVirtualTagSource(lEntry.SourceId) then
-          lNodeCaption := lNodeCaption + ' [адрес: ' +
+          lNodeCaption := lNodeCaption + UTF8Encode(' [адрес: ') +
             RecorderConfiguredSourceAddress(fRecorder.TagRegistry,
               lEntry.SourceId) + ']';
         if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) then
@@ -4537,7 +5053,7 @@ begin
             lNodeCaption)
         else
           lSourceNode := fHardwareTree.Items.AddChild(lRootNode,
-            '[ВЫКЛ] ' + lNodeCaption);
+            UTF8Encode('[ВЫКЛ] ') + lNodeCaption);
         RecorderHardwareTreeBindSourceId(lSourceNode, lEntry.SourceId);
       if fRecorder.TagRegistry <> nil then
         if lEntry.Enabled and lEntry.HasLinkedTags and lEntry.LinkOk then
@@ -4941,29 +5457,29 @@ begin
   lRightPanel := TPanel.Create(Self);
   lRightPanel.Parent := ATab;
   lRightPanel.Align := alRight;
-  lRightPanel.Width := 230;
+  lRightPanel.Width := 280;
   lRightPanel.BevelOuter := bvNone;
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 210, 82, 'Отображение');
-  AddLabel(Self, lGroup, 10, 22, 'Период обновления');
-  fScreenUpdateEdit := AddEdit(Self, lGroup, 126, 18, 56, '0.5');
-  AddLabel(Self, lGroup, 186, 22, 'с');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 8, 230, 98, 'Отображение');
+  AddLabel(Self, lGroup, 10, 26, 'Период обновления');
+  fScreenUpdateEdit := AddEdit(Self, lGroup, 126, 20, 56, '0.5');
+  AddLabel(Self, lGroup, 186, 26, 'с');
 
-  lGroup := AddGroup(Self, lLeftPanel, 238, 8, 390, 82, 'Сигналы');
-  AddLabel(Self, lGroup, 10, 18, 'Длина отображаемых данных');
-  fBufferSecondsEdit := AddEdit(Self, lGroup, 190, 14, 64, '1');
-  AddLabel(Self, lGroup, 260, 18, 'с');
-  AddLabel(Self, lGroup, 10, 40, 'Период обновления данных');
-  fDataUpdateEdit := AddEdit(Self, lGroup, 190, 36, 64, '0.3');
-  AddLabel(Self, lGroup, 260, 40, 'с');
+  lGroup := AddGroup(Self, lLeftPanel, 248, 8, 380, 98, 'Сигналы');
+  AddLabel(Self, lGroup, 10, 26, 'Длина отображаемых данных');
+  fBufferSecondsEdit := AddEdit(Self, lGroup, 190, 20, 64, '1');
+  AddLabel(Self, lGroup, 260, 26, 'с');
+  AddLabel(Self, lGroup, 10, 58, 'Период обновления данных');
+  fDataUpdateEdit := AddEdit(Self, lGroup, 190, 52, 64, '0.3');
+  AddLabel(Self, lGroup, 260, 58, 'с');
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 102, 620, 78, '');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 118, 620, 78, '');
   AddLabel(Self, lGroup, 10, 18, 'Испытание');
   fTestNameEdit := AddEdit(Self, lGroup, 130, 14, 470, 'Испытание');
   AddLabel(Self, lGroup, 10, 42, 'Изделие');
   fProductNameEdit := AddEdit(Self, lGroup, 130, 42, 470, 'Изделие');
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 190, 620, 284, 'Запись');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 206, 620, 284, 'Запись');
   fModifyNameCheck := AddCheck(Self, lGroup, 12, 22,
     'Модифицировать имя по каждому испытанию');
   fModifyNameCheck.Enabled := False;
@@ -5005,7 +5521,7 @@ begin
   fTemplateButton.Enabled := False;
   fFrameDirEdit := AddEdit(Self, lGroup, 10, 232, 470, 'C:\USML\signal0000');
 
-  lGroup := AddGroup(Self, lLeftPanel, 8, 482, 620, 66, 'База градуировочных характеристик');
+  lGroup := AddGroup(Self, lLeftPanel, 8, 498, 620, 66, 'База градуировочных характеристик');
   AddLabel(Self, lGroup, 10, 18, 'Каталог Mera Files');
   fMeraFilesPathEdit := AddEdit(Self, lGroup, 10, 36, 526, '');
   lButton := TButton.Create(Self);
@@ -5017,37 +5533,43 @@ begin
   lButton.Caption := '...';
   lButton.OnClick := @MeraFilesPathBrowseClick;
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 8, 210, 142, 'Условия старта записи');
-  fStartManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
-  fStartLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
-  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 46, 'Триггерный старт', @ConditionChanged);
-  fStartTriggerEdit := AddEdit(Self, lGroup, 140, 42, 48, '1');
-  AddLabel(Self, lGroup, 10, 76, 'Канал');
-  fStartChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
-  fStartEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
+  lGroup := AddGroup(Self, lRightPanel, 8, 8, 264, 170, 'Условия старта записи');
+  lGroup.AnchorSideRight.Control := lRightPanel;
+  lGroup.AnchorSideRight.Side := asrRight;
+  lGroup.Anchors := [akLeft, akTop, akRight];
+  fStartManualRadio := AddRadio(Self, lGroup, 10, 26, 'По клавише', @ConditionChanged);
+  fStartLevelRadio := AddRadio(Self, lGroup, 132, 26, 'По уровню', @ConditionChanged);
+  fStartTriggerRadio := AddRadio(Self, lGroup, 10, 58, 'Триггерный старт', @ConditionChanged);
+  fStartTriggerEdit := AddEdit(Self, lGroup, 196, 52, 48, '1');
+  AddLabel(Self, lGroup, 10, 90, 'Канал');
+  fStartChannelCombo := AddCombo(Self, lGroup, 52, 84, 196);
+  fStartEdgeCombo := AddCombo(Self, lGroup, 10, 116, 92);
   fStartEdgeCombo.Items.Add('меньше');
   fStartEdgeCombo.Items.Add('меньше');
-  fStartLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
+  fStartLevelEdit := AddEdit(Self, lGroup, 110, 116, 138, '0.0');
 
-  lGroup := AddGroup(Self, lRightPanel, 8, 160, 210, 170, 'Условия останова записи');
-  fStopManualRadio := AddRadio(Self, lGroup, 10, 20, 'По клавише', @ConditionChanged);
-  fStopLevelRadio := AddRadio(Self, lGroup, 104, 20, 'По уровню', @ConditionChanged);
-  fStopDurationRadio := AddRadio(Self, lGroup, 10, 46, 'Через', @ConditionChanged);
-  fStopDurationEdit := AddEdit(Self, lGroup, 70, 42, 74, '1.000000');
-  AddLabel(Self, lGroup, 152, 46, 'сек');
-  AddLabel(Self, lGroup, 10, 76, 'Канал');
-  fStopChannelCombo := AddCombo(Self, lGroup, 52, 72, 136);
-  fStopEdgeCombo := AddCombo(Self, lGroup, 10, 100, 74);
+  lGroup := AddGroup(Self, lRightPanel, 8, 188, 264, 202, 'Условия останова записи');
+  lGroup.AnchorSideRight.Control := lRightPanel;
+  lGroup.AnchorSideRight.Side := asrRight;
+  lGroup.Anchors := [akLeft, akTop, akRight];
+  fStopManualRadio := AddRadio(Self, lGroup, 10, 26, 'По клавише', @ConditionChanged);
+  fStopLevelRadio := AddRadio(Self, lGroup, 132, 26, 'По уровню', @ConditionChanged);
+  fStopDurationRadio := AddRadio(Self, lGroup, 10, 58, 'Через', @ConditionChanged);
+  fStopDurationEdit := AddEdit(Self, lGroup, 70, 52, 100, '1.000000');
+  AddLabel(Self, lGroup, 178, 58, 'сек');
+  AddLabel(Self, lGroup, 10, 90, 'Канал');
+  fStopChannelCombo := AddCombo(Self, lGroup, 52, 84, 196);
+  fStopEdgeCombo := AddCombo(Self, lGroup, 10, 116, 92);
   fStopEdgeCombo.Items.Add('меньше');
   fStopEdgeCombo.Items.Add('меньше');
-  fStopLevelEdit := AddEdit(Self, lGroup, 92, 100, 72, '0.0');
-  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 126, 'Переход в просмотр');
+  fStopLevelEdit := AddEdit(Self, lGroup, 110, 116, 138, '0.0');
+  fStopReturnToPreviewCheck := AddCheck(Self, lGroup, 10, 152, 'Переход в просмотр');
   fStopReturnToPreviewCheck.Enabled := False;
 
   lButton := TButton.Create(Self);
   lButton.Parent := lRightPanel;
   lButton.Left := 8;
-  lButton.Top := 342;
+  lButton.Top := 402;
   lButton.Width := 122;
   lButton.Height := 28;
   lButton.Caption := 'Системное время';
@@ -5671,7 +6193,8 @@ begin
   fPluginList.OnDblClick := @PluginDblClick;
   fPluginList.Hint := 'Двойной щелчок по LuaCalcPlugin открывает расчётные скрипты';
   fPluginList.ShowHint := True;
-  lbPluginDirectory.Caption := 'Каталог: ' + RecorderPluginDirectory;
+  lbPluginDirectory.Caption := UTF8Encode('Каталог: ') +
+    RecorderPluginDirectory;
 end;
 
 procedure TRecorderSettingsDialog.PluginDblClick(Sender: TObject);
@@ -5808,7 +6331,7 @@ begin
     try
       if not lEntry.IsValid then
       begin
-        MessageDlg('Плагин не добавлен: ' + lEntry.ErrorText,
+        MessageDlg(UTF8Encode('Плагин не добавлен: ') + lEntry.ErrorText,
           mtError, [mbOK], 0);
         Exit;
       end;
@@ -5817,20 +6340,20 @@ begin
         if SameText(ExtractFileName(fPluginCatalog.Entries[I].FileName),
           lFileName) then
         begin
-          MessageDlg('Плагин уже добавлен: ' + lFileName,
+          MessageDlg(UTF8Encode('Плагин уже добавлен: ') + lFileName,
             mtInformation, [mbOK], 0);
           Exit;
         end;
-      lInfo := 'Выбранный файл: ' + lEntry.FileName + LineEnding +
-        'Путь после добавления: ' + ExpandFileName(
+      lInfo := UTF8Encode('Выбранный файл: ') + lEntry.FileName + LineEnding +
+        UTF8Encode('Путь после добавления: ') + ExpandFileName(
           IncludeTrailingPathDelimiter(RecorderPluginDirectory) +
           lFileName) + LineEnding +
-        'Название: ' + lEntry.Name + LineEnding +
-        'Описание: ' + lEntry.Description + LineEnding +
-        'Разработчик: ' + lEntry.Vendor + LineEnding +
-        'Версия: ' + Format('%d.%d.%d.%d', [lEntry.Version,
+        UTF8Encode('Название: ') + lEntry.Name + LineEnding +
+        UTF8Encode('Описание: ') + lEntry.Description + LineEnding +
+        UTF8Encode('Разработчик: ') + lEntry.Vendor + LineEnding +
+        UTF8Encode('Версия: ') + Format('%d.%d.%d.%d', [lEntry.Version,
           lEntry.SubVersion, lEntry.BugFix, lEntry.BuildNumber]) +
-        LineEnding + LineEnding + 'Добавить этот плагин?';
+        LineEnding + LineEnding + UTF8Encode('Добавить этот плагин?');
       if MessageDlg('Сведения о плагине', lInfo,
         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
         Exit;
@@ -5839,7 +6362,7 @@ begin
       except
         on E: Exception do
         begin
-          MessageDlg('Не удалось добавить плагин: ' + E.Message,
+          MessageDlg(UTF8Encode('Не удалось добавить плагин: ') + E.Message,
             mtError, [mbOK], 0);
           Exit;
         end;
@@ -5852,7 +6375,8 @@ begin
         on E: Exception do
         begin
           fPluginCatalog.Delete(fPluginCatalog.Count - 1);
-          MessageDlg('Не удалось сохранить список плагинов: ' + E.Message,
+          MessageDlg(UTF8Encode('Не удалось сохранить список плагинов: ') +
+            E.Message,
             mtError, [mbOK], 0);
           Exit;
         end;
@@ -5886,7 +6410,8 @@ begin
     begin
       LoadRecorderPluginConfig(fPluginConfigFileName, fPluginCatalog);
       RefreshPluginList(nil);
-      MessageDlg('Не удалось сохранить список плагинов: ' + E.Message,
+      MessageDlg(UTF8Encode('Не удалось сохранить список плагинов: ') +
+        E.Message,
         mtError, [mbOK], 0);
       Exit;
     end;
@@ -5907,7 +6432,8 @@ begin
     lShareName := Trim(fRecorder.RunSettings.RecordShareName);
   if not DirectoryExists(lDirectory) then
   begin
-    MessageDlg('Публикация каталога', 'Каталог замеров не существует: ' +
+    MessageDlg('Публикация каталога',
+      UTF8Encode('Каталог замеров не существует: ') +
       lDirectory, mtError, [mbOK], 0);
     Exit;
   end;
@@ -5977,7 +6503,7 @@ begin
   if AResult.Warnings.Count = 0 then
     Exit;
 
-  Result := Result + #13#10#13#10 + 'Предупреждения:';
+  Result := Result + #13#10#13#10 + UTF8Encode('Предупреждения:');
   lCount := Min(AResult.Warnings.Count, CVisibleWarningCount);
   for I := 0 to lCount - 1 do
     Result := Result + #13#10 + AResult.Warnings[I];
@@ -6116,7 +6642,8 @@ begin
   if fRecorder.TagRegistry.FindByName(lName) <> nil then
   begin
     MessageDlg('Создание виртуального тега',
-      'Тег с именем "' + lName + '" уже существует.', mtWarning, [mbOK], 0);
+      UTF8Encode('Тег с именем "') + lName +
+        UTF8Encode('" уже существует.'), mtWarning, [mbOK], 0);
     Exit;
   end;
   lTag := fRecorder.TagRegistry.CreateTag(lName, 4096, True);
@@ -6275,13 +6802,18 @@ begin
     lImageIndex := CDeviceVirtualTagImageIndex
   else if TagLinkedToInactiveHardware(lTag) then
     lImageIndex := CDeviceInactiveTagImageIndex
+  else if (lTag <> nil) and SameText(lTag.ModuleType,
+    CRecorderOpcUaModuleType) then
+    lImageIndex := fProtocolTagImageIndex
   else
     Exit;
 
   if lImageIndex = CDeviceVirtualTagImageIndex then
     lBitmap := fVirtualTagIcon
+  else if lImageIndex = CDeviceInactiveTagImageIndex then
+    lBitmap := fInactiveTagIcon
   else
-    lBitmap := fInactiveTagIcon;
+    lBitmap := fProtocolTagIcon;
   if lBitmap = nil then
     Exit;
 
@@ -6344,13 +6876,15 @@ procedure TRecorderSettingsDialog.fAlgorithmsTreeDragDrop(Sender,
 var
   lDropNode: TTreeNode;
 begin
-  if Source = fSelectedChannelsGrid then
-  begin
-    lDropNode := fAlgorithmsTree.GetNodeAt(X, Y);
-    if lDropNode <> nil then
-      fAlgorithmsTree.Selected := lDropNode;
-    AddSpectrumAlgorithmsFromSelectedChannels;
-  end;
+  if Source <> fSelectedChannelsGrid then
+    Exit;
+  lDropNode := fAlgorithmsTree.GetNodeAt(X, Y);
+  if lDropNode <> nil then
+    fAlgorithmsTree.Selected := lDropNode;
+  if (lDropNode <> nil) and (SelectedSpectrumConfigNode <> nil) then
+    AddSpectrumAlgorithmsFromSelectedChannels
+  else
+    ShowAlgorithmDropMenu(X, Y);
 end;
 
 procedure TRecorderSettingsDialog.fAlgorithmsTreeDragOver(Sender,
@@ -6361,7 +6895,10 @@ end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmAddClick(Sender: TObject);
 begin
-  AddSpectrumAlgorithmsFromSelectedChannels;
+  if (fAlgorithmKindCombo <> nil) and
+    (fAlgorithmKindCombo.ItemIndex >= 0) then
+    CreateSelectedAlgorithm(TRecorderAlgorithmTypeRegistration(
+      fAlgorithmKindCombo.Items.Objects[fAlgorithmKindCombo.ItemIndex]));
 end;
 
 procedure TRecorderSettingsDialog.btnAlgorithmRemoveClick(Sender: TObject);

@@ -35,17 +35,17 @@ type
     fBusy: Boolean;
     procedure AddButton(const ACaption: string; ATop: Integer;
       AClick: TNotifyEvent);
-    procedure SelectAllClick(Sender: TObject);
-    procedure SelectNoneClick(Sender: TObject);
-    procedure SaveListClick(Sender: TObject);
-    procedure LoadListClick(Sender: TObject);
-    procedure ExportClick(Sender: TObject);
+    procedure SelectAllClick({%H-}Sender: TObject);
+    procedure SelectNoneClick({%H-}Sender: TObject);
+    procedure SaveListClick({%H-}Sender: TObject);
+    procedure LoadListClick({%H-}Sender: TObject);
+    procedure ExportClick({%H-}Sender: TObject);
     procedure LoadChannels;
     procedure SelectCurrentLines;
     function SelectedChannels: TStringList;
     function ReadUtcInterval(out AFromUtc, AToUtc: TDateTime): Boolean;
     procedure SaveListDirectory(const AFileName: string);
-    procedure CloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure CloseQuery({%H-}Sender: TObject; var CanClose: Boolean); reintroduce;
     procedure ExportFinished(const AFileName, AError: string);
   public
     constructor CreateDialog(AOwner: TComponent;

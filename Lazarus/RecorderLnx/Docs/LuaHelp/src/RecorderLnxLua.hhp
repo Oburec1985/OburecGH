@@ -1,0 +1,40 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=../RecorderLnxLua.chm
+Contents file=RecorderLnxLua.hhc
+Default topic=index.html
+Display compile progress=No
+Language=0x419 Russian
+Title=RecorderLnx: справка Lua
+
+[FILES]
+index.html
+style.css
+topics/style.css
+RecorderLnxLua.hhc
+topics/if_then.html
+topics/if_else.html
+topics/for.html
+topics/while.html
+topics/repeat_until.html
+topics/local.html
+topics/math_abs.html
+topics/math_min.html
+topics/math_max.html
+topics/math_sqrt.html
+topics/tostring.html
+topics/string_format.html
+topics/tag_value.html
+topics/tag_write.html
+topics/get_value.html
+topics/set_value.html
+topics/get_tag_time.html
+topics/get_tag_sample.html
+topics/tag_exists.html
+topics/get_tag_setpoint.html
+topics/set_tag_setpoint.html
+topics/get_tag_alarm_level.html
+topics/alarm_handling.html
+topics/log_message.html
+topics/get_recorder_time.html
+topics/set_tag_value_delayed.html

@@ -49,9 +49,10 @@ const
   CIconImageComponent = 59;
   CIconMeasurementSection = 60;
   CIconDonut = 61;
+  CIconInputField = 62;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 62;
+  CRecorderCommandImageCount = 63;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -352,6 +353,53 @@ begin
   end;
 end;
 
+procedure ReplaceInputFieldIcon(AImages: TCustomImageList);
+const
+  CSize = 42;
+var
+  lBitmap, lMask: TBitmap;
+begin
+  lBitmap := TBitmap.Create;
+  try
+    lBitmap.SetSize(CSize, CSize);
+    lBitmap.PixelFormat := pf24bit;
+    lBitmap.Transparent := True;
+    lBitmap.TransparentColor := clFuchsia;
+    lBitmap.Canvas.Brush.Color := clFuchsia;
+    lBitmap.Canvas.FillRect(0, 0, CSize, CSize);
+
+    { Рамка редактируемого текста, набранные символы и I-образный курсор
+      отличают поле ввода от объёмной кнопки даже в маленькой палитре. }
+    lBitmap.Canvas.Brush.Color := clWhite;
+    lBitmap.Canvas.Pen.Color := $00606060;
+    lBitmap.Canvas.Rectangle(3, 10, 39, 32);
+    lBitmap.Canvas.Pen.Color := $00D8D8D8;
+    lBitmap.Canvas.MoveTo(4, 11);
+    lBitmap.Canvas.LineTo(38, 11);
+    lBitmap.Canvas.Font.Color := $00303030;
+    lBitmap.Canvas.Font.Size := 9;
+    lBitmap.Canvas.TextOut(7, 13, 'abc');
+    lBitmap.Canvas.Pen.Color := clBlack;
+    lBitmap.Canvas.Pen.Width := 2;
+    lBitmap.Canvas.MoveTo(31, 14);
+    lBitmap.Canvas.LineTo(31, 28);
+    lBitmap.Canvas.MoveTo(28, 14);
+    lBitmap.Canvas.LineTo(34, 14);
+    lBitmap.Canvas.MoveTo(28, 28);
+    lBitmap.Canvas.LineTo(34, 28);
+    lBitmap.Canvas.Pen.Width := 1;
+
+    lMask := CreateMaskFromTransparentBitmap(lBitmap);
+    try
+      AImages.Replace(CIconInputField, lBitmap, lMask);
+    finally
+      lMask.Free;
+    end;
+  finally
+    lBitmap.Free;
+  end;
+end;
+
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
 var
   lDonut: TPortableNetworkGraphic;
@@ -395,6 +443,7 @@ begin
   end;
 
   EnsureImageListSize(AImages, CRecorderCommandImageCount);
+  ReplaceInputFieldIcon(AImages);
   lDonut := TPortableNetworkGraphic.Create;
   try
     lDonut.LoadFromLazarusResource('donut');

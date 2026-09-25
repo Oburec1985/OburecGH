@@ -13,6 +13,17 @@ interface
 uses
   Classes, SysUtils, Types, Math; // Types содержит TPoint, TRect и др. стандартные типы LCL/FPC
 
+const
+  SHARED_PI = 3.1415926535897932384626433832795;
+  SHARED_TWO_PI = 6.283185307179586476925286766559;
+  SHARED_HALF_PI = 1.5707963267948966192313216916398;
+  SHARED_INV_PI = 0.31830988618379067153776752674503;
+  SHARED_INV_TWO_PI = 0.159154943091895335768883763373;
+  SHARED_DEG_TO_RAD = 0.01745329251994329576923690768489;
+  SHARED_RAD_TO_DEG = 57.295779513082320876798154814105;
+  SHARED_SQRT_TWO = 1.4142135623730950488016887242097;
+  SHARED_INV_SQRT_TWO = 0.70710678118654752440084436210485;
+
 type
   { Массивы примитивов }
   TSmallIntArray = array of SmallInt;
@@ -90,8 +101,20 @@ function p2dToP2(p: point2d): point2;   inline;
 
 function getCommonInterval(i1, i2: point2d): point2d;
 function CompareInterval  (i1, i2: point2d): Boolean;
+function HertzToAngularFrequency(AFrequencyHz: Double): Double; inline;
+function HertzToInverseAngularFrequency(AFrequencyHz: Double): Double; inline;
 
 implementation
+
+function HertzToAngularFrequency(AFrequencyHz: Double): Double;
+begin
+  Result := AFrequencyHz * SHARED_TWO_PI;
+end;
+
+function HertzToInverseAngularFrequency(AFrequencyHz: Double): Double;
+begin
+  Result := SHARED_INV_TWO_PI / AFrequencyHz;
+end;
 
 { point2 }
 

@@ -1811,7 +1811,13 @@ begin
     if AReachable then
       lHost.PcConnectionState := 'reachable'
     else
+    begin
       lHost.PcConnectionState := 'unreachable';
+      { If the computer itself is unreachable, Recorder on that computer
+        cannot remain in a live runtime state.  Update the stored state too,
+        so both the RCPanel grid and its HTTP API report offline immediately. }
+      lHost.State := 'offline';
+    end;
     lHost.LastPingUtc := ACheckedUtc;
   finally
     fLock.Release;

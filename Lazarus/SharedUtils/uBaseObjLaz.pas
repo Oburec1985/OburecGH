@@ -361,7 +361,6 @@ end;
 
 procedure TBaseObj.ReadFromXMLNode(Node: TDOMNode);
 var
-  i: Integer;
   ChildNode: TDOMNode;
   NewObj: TBaseObj;
   lClassName: string;

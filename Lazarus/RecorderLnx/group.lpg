@@ -12,7 +12,13 @@
           <Mode Name="Default"/>
         </BuildModes>
       </Target>
-      <Target FileName="Plugins\LuaCalcPlugin\LuaCalcPlugin.lpi">
+      <Target FileName="Plugins\LuaCalcPlugin\LuaCalcPlugin.lpi"/>
+      <Target FileName="..\RecorderCoordinator\RecorderCoordinator.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="..\RecorderHostAgent\RecorderHostAgent.lpi">
         <BuildModes>
           <Mode Name="Default"/>
         </BuildModes>

@@ -2081,13 +2081,14 @@ begin
   try
     if not ResolveIPv4(AHost, lRemoteHost) then
     begin
-      AErrorText := 'Не удалось определить адрес узла ' + AHost;
+      AErrorText := UTF8Encode('Не удалось определить адрес узла ') + AHost;
       Exit;
     end;
     lSocket := fpSocket(AF_INET, SOCK_STREAM, 0);
     if lSocket < 0 then
     begin
-      AErrorText := 'Не удалось создать TCP-сокет: ' + IntToStr(SocketError);
+      AErrorText := UTF8Encode('Не удалось создать TCP-сокет: ') +
+        IntToStr(SocketError);
       Exit;
     end;
     if AUseConfiguredBind and (g_RecorderNetworkBindAddress <> '') then
@@ -2140,7 +2141,8 @@ begin
       if lRes <= 0 then
       begin
         if lRes = 0 then AErrorText := 'Истекло время TCP-подключения'
-        else AErrorText := 'Ошибка ожидания TCP-подключения: ' + IntToStr(SocketError);
+        else AErrorText := UTF8Encode('Ошибка ожидания TCP-подключения: ') +
+          IntToStr(SocketError);
         Exit;
       end;
       lErr := 0;
@@ -2148,7 +2150,7 @@ begin
       fpGetSockOpt(lSocket, SOL_SOCKET, SO_ERROR, @lErr, @lErrLen);
       if lErr <> 0 then
       begin
-        AErrorText := 'Ошибка TCP-подключения: ' + IntToStr(lErr);
+        AErrorText := UTF8Encode('Ошибка TCP-подключения: ') + IntToStr(lErr);
         Exit;
       end;
     end;

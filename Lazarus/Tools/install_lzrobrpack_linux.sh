@@ -2,6 +2,7 @@
 set -euo pipefail
 
 WORKS_ROOT=""
+LAZARUS_PCP="${1:-/home/user/.lazarus_work}"
 for CANDIDATE in /mnt/win_share /mnt/hgfs/works /home/user/win_share; do
   if [ -d "$CANDIDATE/OburecGH/Lazarus" ]; then
     WORKS_ROOT="$CANDIDATE"
@@ -19,6 +20,7 @@ exec >"$LOG" 2>&1
 
 echo "Started at $(date -Is)"
 echo "WORKS_ROOT=$WORKS_ROOT"
+echo "LAZARUS_PCP=$LAZARUS_PCP"
 
 PKG="$WORKS_ROOT/OburecGH/Lazarus/SharedUtils/components/chart_lzr/lzrObrPack.lpk"
 PROJECT="$WORKS_ROOT/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpi"
@@ -35,10 +37,10 @@ if [ ! -f "$PKG" ]; then
   exit 1
 fi
 
-lazbuild -B "$PKG"
-lazbuild --add-package-link "$PKG"
-lazbuild --add-package "$PKG" --build-ide=
-lazbuild -B "$DEMO"
-lazbuild -B "$PROJECT"
+lazbuild --pcp="$LAZARUS_PCP" -B "$PKG"
+lazbuild --pcp="$LAZARUS_PCP" --add-package-link "$PKG"
+lazbuild --pcp="$LAZARUS_PCP" --add-package "$PKG" --build-ide=
+lazbuild --pcp="$LAZARUS_PCP" -B "$DEMO"
+lazbuild --pcp="$LAZARUS_PCP" -B "$PROJECT"
 
 echo "LzrObrPack installed and RecorderLnx build checked."

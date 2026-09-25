@@ -69,9 +69,15 @@ type
 
   TRecorderSqlDbMeraEvent = record
     EventId: string;
+    EventType: string;
+    Severity: string;
+    SignalId: string;
+    SignalName: string;
     CorrelationId: string;
     DisplayName: string;
     Description: string;
+    MeasuredValue: Double;
+    HasMeasuredValue: Boolean;
     StartedAtUtc: Double;
     FinishedAtUtc: Double;
     State: string;
@@ -129,6 +135,8 @@ type
     fSignalNames: TStringList;
     fSignalEstimates: TStringList;
     fSignalSelectionConfigured: Boolean;
+    fAlarmSignalNames: TStringList;
+    fAlarmSignalSelectionConfigured: Boolean;
     fPasswordEnvironment: string;
     fStoredPassword: string;
     fPort: Word;
@@ -155,6 +163,7 @@ type
     function DataDirectory: string;
     function Password: string;
     function SignalEnabled(const ATagName: string): Boolean;
+    function AlarmEventEnabled(const ATagName: string): Boolean;
     function SignalEstimate(const ATagName: string): TRecorderTagEstimateKind;
     procedure SetSignalEstimate(const ATagName: string;
       AKind: TRecorderTagEstimateKind);
@@ -170,6 +179,10 @@ type
     property SignalEstimates: TStringList read fSignalEstimates;
     property SignalSelectionConfigured: Boolean read fSignalSelectionConfigured
       write fSignalSelectionConfigured;
+    property AlarmSignalNames: TStringList read fAlarmSignalNames;
+    property AlarmSignalSelectionConfigured: Boolean
+      read fAlarmSignalSelectionConfigured
+      write fAlarmSignalSelectionConfigured;
     property PasswordEnvironment: string read fPasswordEnvironment write fPasswordEnvironment;
     property StoredPassword: string read fStoredPassword write fStoredPassword;
     property Port: Word read fPort write fPort;
@@ -254,11 +267,16 @@ begin
   fSignalEstimates := TStringList.Create;
   fSignalEstimates.CaseSensitive := False;
   fSignalEstimates.NameValueSeparator := '=';
+  fAlarmSignalNames := TStringList.Create;
+  fAlarmSignalNames.CaseSensitive := False;
+  fAlarmSignalNames.Sorted := True;
+  fAlarmSignalNames.Duplicates := dupIgnore;
   ResetDefaults;
 end;
 
 destructor TRecorderSqlDbConfig.Destroy;
 begin
+  fAlarmSignalNames.Free;
   fSignalEstimates.Free;
   fSignalNames.Free;
   inherited Destroy;
@@ -278,6 +296,9 @@ begin
   fSignalNames.Assign(ASource.fSignalNames);
   fSignalEstimates.Assign(ASource.fSignalEstimates);
   fSignalSelectionConfigured := ASource.fSignalSelectionConfigured;
+  fAlarmSignalNames.Assign(ASource.fAlarmSignalNames);
+  fAlarmSignalSelectionConfigured :=
+    ASource.fAlarmSignalSelectionConfigured;
   fPasswordEnvironment := ASource.fPasswordEnvironment;
   fStoredPassword := ASource.fStoredPassword;
   fPort := ASource.fPort;
@@ -301,6 +322,8 @@ begin
   fSignalNames.Clear;
   fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
+  fAlarmSignalNames.Clear;
+  fAlarmSignalSelectionConfigured := False;
   fPasswordEnvironment := 'RECORDERLNX_SQLDB_PASSWORD';
   fStoredPassword := CRecorderFirebirdDefaultPassword;
   fPort := 3050;
@@ -469,6 +492,16 @@ begin
     (fSignalNames.IndexOf(ATagName) >= 0);
 end;
 
+function TRecorderSqlDbConfig.AlarmEventEnabled(
+  const ATagName: string): Boolean;
+begin
+  if fAlarmSignalSelectionConfigured then
+    Result := fAlarmSignalNames.IndexOf(ATagName) >= 0
+  else
+    { Legacy projects used the value-recording selection for alarm events. }
+    Result := SignalEnabled(ATagName);
+end;
+
 function TRecorderSqlDbConfig.SignalEstimate(
   const ATagName: string): TRecorderTagEstimateKind;
 var
@@ -520,6 +553,9 @@ begin
         'SignalSelectionConfigured', fSignalSelectionConfigured);
       lIni.ReadSection('SQLdbSignals', fSignalNames);
       lIni.ReadSectionValues('SQLdbSignalEstimates', fSignalEstimates);
+      fAlarmSignalSelectionConfigured := lIni.ReadBool('SQLdb',
+        'AlarmSignalSelectionConfigured', fAlarmSignalSelectionConfigured);
+      lIni.ReadSection('SQLdbAlarmSignals', fAlarmSignalNames);
     finally
       lIni.Free;
     end;
@@ -623,6 +659,8 @@ begin
     lIni.WriteInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
     lIni.WriteBool('SQLdb', 'SignalSelectionConfigured',
       fSignalSelectionConfigured);
+    lIni.WriteBool('SQLdb', 'AlarmSignalSelectionConfigured',
+      fAlarmSignalSelectionConfigured);
     lIni.EraseSection('SQLdbSignals');
     for lIndex := 0 to fSignalNames.Count - 1 do
       lIni.WriteBool('SQLdbSignals', fSignalNames[lIndex], True);
@@ -630,6 +668,9 @@ begin
     for lIndex := 0 to fSignalEstimates.Count - 1 do
       lIni.WriteString('SQLdbSignalEstimates',
         fSignalEstimates.Names[lIndex], fSignalEstimates.ValueFromIndex[lIndex]);
+    lIni.EraseSection('SQLdbAlarmSignals');
+    for lIndex := 0 to fAlarmSignalNames.Count - 1 do
+      lIni.WriteBool('SQLdbAlarmSignals', fAlarmSignalNames[lIndex], True);
     lIni.UpdateFile;
   finally
     lIni.Free;

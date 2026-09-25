@@ -33,6 +33,9 @@ type
     fAssignAllRequested: Boolean;
     fTextEdit: TEdit;
     fDisplayFormatEdit: TEdit;
+    fCaptionEdit: TEdit;
+    fUseSourceTagNameCheck: TCheckBox;
+    fLoadingTagValueCaption: Boolean;
     fShowNameCombo: TComboBox;
     fUseDefaultEstimateCheck: TCheckBox;
     fEstimateKindCombo: TComboBox;
@@ -46,6 +49,10 @@ type
     procedure OkButtonClick(Sender: TObject);
     procedure TagSearchEditChange(Sender: TObject);
     procedure UseDefaultEstimateCheckChange(Sender: TObject);
+    procedure CaptionEditChange(Sender: TObject);
+    procedure UseSourceTagNameCheckChange(Sender: TObject);
+    procedure TagComboChange(Sender: TObject);
+    procedure RefreshAutomaticCaption;
     procedure BuildUi;
     procedure AddTagComboItem(ATag: TRecorderTag);
     procedure PopulateInitialTagSelection;
@@ -71,7 +78,8 @@ uses
   uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
   uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
-  uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog;
+  uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog,
+  uRecorderVibrationEstimateSettingsDialog;
 
 const
   CTagComboEmptyFilterLimit = 200;
@@ -81,6 +89,9 @@ function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVi
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderVibrationEstimateComponent then
+    Exit(ShowRecorderVibrationEstimateSettingsDialog(AOwner,
+      TRecorderVibrationEstimateComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderSqlTrendComponent then
     Exit(ShowRecorderSqlTrendSettingsDialog(AOwner,
       TRecorderSqlTrendComponent(AComponent), ATagRegistry));
@@ -124,9 +135,10 @@ begin
   fComponent := AComponent;
   fTagRegistry := ATagRegistry;
   Caption := 'Настройка компонента - ' + AComponent.Name;
-  BorderStyle := bsDialog;
+  BorderStyle := bsSizeable;
   Position := poOwnerFormCenter;
   ClientWidth := 460;
+  Constraints.MinWidth := 460;
   BuildUi;
   LoadFromComponent;
 end;
@@ -150,6 +162,7 @@ begin
     fTagSearchEdit := TEdit.Create(Self);
     fTagSearchEdit.Parent := Self;
     fTagSearchEdit.SetBounds(140, lTop, 300, 23);
+    fTagSearchEdit.Anchors := [akLeft, akTop, akRight];
     fTagSearchEdit.OnChange := @TagSearchEditChange;
     Inc(lTop, 32);
 
@@ -161,7 +174,9 @@ begin
     fTagCombo := TComboBox.Create(Self);
     fTagCombo.Parent := Self;
     fTagCombo.SetBounds(140, lTop, 300, 23);
+    fTagCombo.Anchors := [akLeft, akTop, akRight];
     fTagCombo.Style := csDropDownList;
+    fTagCombo.OnChange := @TagComboChange;
     Inc(lTop, 40);
   end;
 
@@ -175,6 +190,7 @@ begin
     fTextEdit := TEdit.Create(Self);
     fTextEdit.Parent := Self;
     fTextEdit.SetBounds(140, lTop, 300, 23);
+    fTextEdit.Anchors := [akLeft, akTop, akRight];
     Inc(lTop, 40);
   end;
 
@@ -216,6 +232,26 @@ begin
 
   if fComponent is TRecorderTagValueComponent then
   begin
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Подпись:';
+
+    fCaptionEdit := TEdit.Create(Self);
+    fCaptionEdit.Parent := Self;
+    fCaptionEdit.SetBounds(140, lTop, 300, 23);
+    fCaptionEdit.Anchors := [akLeft, akTop, akRight];
+    fCaptionEdit.OnChange := @CaptionEditChange;
+    Inc(lTop, 32);
+
+    fUseSourceTagNameCheck := TCheckBox.Create(Self);
+    fUseSourceTagNameCheck.Parent := Self;
+    fUseSourceTagNameCheck.SetBounds(140, lTop, 300, 20);
+    fUseSourceTagNameCheck.AutoSize := True;
+    fUseSourceTagNameCheck.Caption := 'Использовать имя исходного тега';
+    fUseSourceTagNameCheck.OnChange := @UseSourceTagNameCheckChange;
+    Inc(lTop, 32);
+
     lLabel := TLabel.Create(Self);
     lLabel.Parent := Self;
     lLabel.SetBounds(16, lTop + 4, 120, 16);
@@ -300,6 +336,19 @@ begin
   fOkButton.OnClick := @OkButtonClick;
   fOkButton.Default := True;
   ClientHeight := lTop + 40;
+  Constraints.MinHeight := ClientHeight;
+  { Назначать нижние anchors только после окончательного размера формы.
+    Иначе LCL пересчитывает координаты от начальной высоты CreateNew и
+    уносит кнопки за нижнюю границу при первом изменении ClientHeight. }
+  fCancelButton.Anchors := [akRight, akBottom];
+  fOkButton.Anchors := [akRight, akBottom];
+  for I := 0 to ControlCount - 1 do
+  begin
+    if Controls[I] is TLabel then
+      TLabel(Controls[I]).AutoSize := True
+    else if Controls[I] is TCheckBox then
+      TCheckBox(Controls[I]).AutoSize := True;
+  end;
 end;
 
 procedure TComponentSettingsDialog.AddTagComboItem(ATag: TRecorderTag);
@@ -416,6 +465,17 @@ begin
   end
   else if fComponent is TRecorderTagValueComponent then
   begin
+    fLoadingTagValueCaption := True;
+    try
+      fUseSourceTagNameCheck.Checked :=
+        TRecorderTagValueComponent(fComponent).UseSourceTagName;
+      if fUseSourceTagNameCheck.Checked then
+        RefreshAutomaticCaption
+      else
+        fCaptionEdit.Text := TRecorderTagValueComponent(fComponent).Caption;
+    finally
+      fLoadingTagValueCaption := False;
+    end;
     fDisplayFormatEdit.Text := TRecorderTagValueComponent(fComponent).DisplayFormat;
     fShowNameCombo.ItemIndex := Ord(TRecorderTagValueComponent(fComponent).ShowNameMode);
     fUseDefaultEstimateCheck.Checked := TRecorderTagValueComponent(fComponent).UseDefaultEstimate;
@@ -484,6 +544,9 @@ begin
     DefineSelectedFont;
     fComponent.NamedFontName := Trim(fNamedFontCombo.Text);
     TRecorderTagValueComponent(fComponent).DisplayFormat := fDisplayFormatEdit.Text;
+    TRecorderTagValueComponent(fComponent).Caption := fCaptionEdit.Text;
+    TRecorderTagValueComponent(fComponent).UseSourceTagName :=
+      fUseSourceTagNameCheck.Checked;
     TRecorderTagValueComponent(fComponent).ShowNameMode := TRecorderTagValueNameMode(fShowNameCombo.ItemIndex);
     TRecorderTagValueComponent(fComponent).UseDefaultEstimate := fUseDefaultEstimateCheck.Checked;
     TRecorderTagValueComponent(fComponent).EstimateKind := TRecorderTagEstimateKind(fEstimateKindCombo.ItemIndex);
@@ -598,6 +661,50 @@ procedure TComponentSettingsDialog.UseDefaultEstimateCheckChange(Sender: TObject
 begin
   if fEstimateKindCombo <> nil then
     fEstimateKindCombo.Enabled := not fUseDefaultEstimateCheck.Checked;
+end;
+
+procedure TComponentSettingsDialog.CaptionEditChange(Sender: TObject);
+begin
+  if fLoadingTagValueCaption or (fUseSourceTagNameCheck = nil) then
+    Exit;
+  if fUseSourceTagNameCheck.Checked then
+    fUseSourceTagNameCheck.Checked := False;
+end;
+
+procedure TComponentSettingsDialog.UseSourceTagNameCheckChange(Sender: TObject);
+begin
+  if fLoadingTagValueCaption or (fUseSourceTagNameCheck = nil) or
+    (not fUseSourceTagNameCheck.Checked) then
+    Exit;
+  RefreshAutomaticCaption;
+end;
+
+procedure TComponentSettingsDialog.TagComboChange(Sender: TObject);
+begin
+  if (fUseSourceTagNameCheck <> nil) and fUseSourceTagNameCheck.Checked then
+    RefreshAutomaticCaption;
+end;
+
+procedure TComponentSettingsDialog.RefreshAutomaticCaption;
+var
+  lCaption: string;
+  lWasLoading: Boolean;
+begin
+  if fCaptionEdit = nil then
+    Exit;
+  lCaption := '';
+  if (fTagCombo <> nil) and (fTagCombo.ItemIndex >= 0) and
+    (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
+    lCaption := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]).Name
+  else if fTagCombo <> nil then
+    lCaption := fTagCombo.Text;
+  lWasLoading := fLoadingTagValueCaption;
+  fLoadingTagValueCaption := True;
+  try
+    fCaptionEdit.Text := lCaption;
+  finally
+    fLoadingTagValueCaption := lWasLoading;
+  end;
 end;
 
 procedure TComponentSettingsDialog.BindingModeComboChange(Sender: TObject);
