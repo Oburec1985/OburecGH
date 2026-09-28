@@ -95,6 +95,8 @@ type
     /// <summary> Автоматический выбор алгоритма и построение тиков для оси Y. </summary>
 
     procedure BuildAxisTicks(AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
+    function AxisColumnWidth(AAxis: TChartAxis; AFont: cOglFont;
+      const ATicks: TChartTickArray): Single;
     /// <summary> Автоматический выбор алгоритма и построение тиков для оси X. </summary>
 
     procedure BuildXTicks(APage: TChartPage; AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
@@ -137,6 +139,8 @@ type
     /// <summary> Отрисовка линейного графика TChartLineSeries (через Immediate Mode или шейдеры). </summary>
 
     procedure DrawLineSeries(ASeries: TChartLineSeries; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
+    procedure DrawLineSeriesMarkers(ASeries: TChartLineSeries;
+      const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
     /// <summary> Отрисовка одномерного буферизованного тренда cBuffTrend1d (оптимизировано под шейдеры). </summary>
 
     procedure DrawBuffTrend1d(ATrend: cBuffTrend1d; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
@@ -522,7 +526,7 @@ var
   lYAxis: TChartAxis;
   lPrimaryAxis: TChartAxis;
   lMaxTextWidth, lTextWidth: Single;
-  I, J, lAxisCount: Integer;
+  I, lAxisCount: Integer;
 begin
   if not Assigned(APage) then
   begin
@@ -546,15 +550,7 @@ begin
           lAxisFont := fFontMng.Font(cfAxisSelected)
         else
           lAxisFont := fFontMng.Font(cfGridTick);
-        lMaxTextWidth := 0;
-        for J := 0 to High(lYTicks) do
-        begin
-          lTextWidth := lAxisFont.TextPixelWidth(lYTicks[J].Text);
-          if lTextWidth > lMaxTextWidth then
-            lMaxTextWidth := lTextWidth;
-        end;
-        if lMaxTextWidth < CAxisMinLabelWidth then
-          lMaxTextWidth := CAxisMinLabelWidth;
+        lMaxTextWidth := AxisColumnWidth(lYAxis, lAxisFont, lYTicks);
         if lAxisCount = 0 then
           lLeftOffset := Max(lLeftOffset, lMaxTextWidth + 7)
         else
@@ -787,6 +783,9 @@ begin
 end;
 
 procedure TOpenGLChartRenderer.BuildAxisTicks(AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
+var
+  I: Integer;
+  lScale: Double;
 begin
   if Assigned(AAxis) and (AAxis.Scale = casLog10) then
     BuildLogTicks(AAxis.MinValue, AAxis.MaxValue, ATicks)
@@ -794,6 +793,37 @@ begin
     BuildLinearTicks(AAxis.MinValue, AAxis.MaxValue, ATargetCount, ATicks)
   else
     ATicks := nil;
+  if not Assigned(AAxis) then
+    Exit;
+  lScale := AAxis.DisplayScale;
+  if lScale <= 0 then
+    lScale := 1.0;
+  if (Abs(lScale - 1.0) > 1E-15) or (AAxis.DisplayUnit <> '') then
+    for I := 0 to High(ATicks) do
+      ATicks[I].Text := FormatSignificant(ATicks[I].Value * lScale);
+end;
+
+function TOpenGLChartRenderer.AxisColumnWidth(AAxis: TChartAxis;
+  AFont: cOglFont; const ATicks: TChartTickArray): Single;
+var
+  I: Integer;
+  lWidth: Single;
+begin
+  Result := CAxisMinLabelWidth;
+  if AFont = nil then
+    Exit;
+  for I := 0 to High(ATicks) do
+  begin
+    lWidth := AFont.TextPixelWidth(ATicks[I].Text);
+    if lWidth > Result then
+      Result := lWidth;
+  end;
+  if Assigned(AAxis) and (AAxis.DisplayUnit <> '') then
+  begin
+    lWidth := AFont.TextPixelWidth(AAxis.DisplayUnit);
+    if lWidth > Result then
+      Result := lWidth;
+  end;
 end;
 
 procedure TOpenGLChartRenderer.BuildXTicks(APage: TChartPage; AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
@@ -1721,8 +1751,17 @@ begin
           DrawText(lText, lX - lTextWidth - 7, lLabelTop, lFont);
       end;
 
-      if lMaxTextWidth < CAxisMinLabelWidth then
-        lMaxTextWidth := CAxisMinLabelWidth;
+      lMaxTextWidth := AxisColumnWidth(lYAxis, lFont, lYTicks);
+      { Единица — самостоятельная подпись оси. Она намеренно не входит в
+        editable tick text, поэтому двойной щелчок по Min/Max продолжает
+        редактировать чистое число. Для нескольких осей подпись смещается
+        вместе с собственной колонкой шкалы. }
+      if lYAxis.DisplayUnit <> '' then
+      begin
+        lTextWidth := lFont.TextPixelWidth(lYAxis.DisplayUnit);
+        DrawText(lYAxis.DisplayUnit, lX - lTextWidth - 7,
+          ARect.Top - lFont.TextPixelHeight - 2, lFont);
+      end;
       lAxisOffset := lAxisOffset + lMaxTextWidth + CAxisColumnGap;
       lFont.Color := lOriginalFontColor;
     end;
@@ -1747,6 +1786,26 @@ begin
   RenderLineSeries(Self, ASeries, ARect, APage, AYAxis, fUseShader, fShaderInitialized, fProgram);
 end;
 
+procedure TOpenGLChartRenderer.DrawLineSeriesMarkers(
+  ASeries: TChartLineSeries; const ARect: TChartPixelRect;
+  APage: TChartPage; AYAxis: TChartAxis);
+var
+  I: Integer;
+begin
+  if (ASeries = nil) or (ASeries.PointCount = 0) then Exit;
+  SetGLColor(ASeries.Color);
+  glPointSize(Max(1.0, ASeries.MarkerSize));
+  glBegin(GL_POINTS);
+  for I := 0 to ASeries.PointCount - 1 do
+    glVertex2f(
+      XValueToPixel(APage, AYAxis, ASeries.Points[I].X,
+        ARect.Left, ARect.Right),
+      AxisValueToPixel(AYAxis, ASeries.Points[I].Y,
+        ARect.Bottom, ARect.Top));
+  glEnd;
+  glPointSize(1.0);
+end;
+
 procedure TOpenGLChartRenderer.DrawBaseTrend(ATrend: cBaseTrend; const ARect: TChartPixelRect;
   APage: TChartPage; AYAxis: TChartAxis);
 begin
@@ -1758,7 +1817,10 @@ begin
     DrawBuffTrend1d(cBuffTrend1d(ATrend), ARect, APage, AYAxis)
   else if ATrend is TChartLineSeries then
   begin
-    DrawLineSeries(TChartLineSeries(ATrend), ARect, APage, AYAxis);
+    if TChartLineSeries(ATrend).DrawLine then
+      DrawLineSeries(TChartLineSeries(ATrend), ARect, APage, AYAxis);
+    if TChartLineSeries(ATrend).DrawMarkers then
+      DrawLineSeriesMarkers(TChartLineSeries(ATrend), ARect, APage, AYAxis);
     if ATrend is cTrend then
       DrawTrendPoints(cTrend(ATrend), ARect, APage, AYAxis);
   end;
@@ -1986,7 +2048,9 @@ begin
   lYAxis := AYAxis;
   if AObject is TChartAxis then
     lYAxis := TChartAxis(AObject);
-  if AObject is cBaseTrend then
+  // Активный тренд рисуется отдельным последним проходом в RenderPage,
+  // чтобы он оставался поверх линий всех осей без перестановки модели.
+  if (AObject is cBaseTrend) and (AObject <> fSelectedObject) then
     DrawBaseTrend(cBaseTrend(AObject), ARect, APage, lYAxis);
   // В основном проходе TChartTextLabel пропускается (рисуется позже в RenderLabels)
   // if AObject is TChartTextLabel then
@@ -2099,6 +2163,8 @@ var
   lContentRect: TChartPixelRect;
   lIndex: Integer;
   lYAxis: TChartAxis;
+  lSelectedTrend: cBaseTrend;
+  lSelectedAxis: TChartAxis;
 begin
   if not Assigned(APage) then
     Exit;
@@ -2121,6 +2187,18 @@ begin
     Max(1, lContentRect.Bottom - lContentRect.Top));
   for lIndex := 0 to APage.ChildCount - 1 do
     RenderObject(APage.Children[lIndex], lContentRect, APage, nil);
+  // Выбранная линия выводится после всех обычных линий, в том числе линий
+  // других осей. Порядок дочерних объектов и порядок шкал при этом не меняются.
+  if Assigned(fSelectedObject) and (fSelectedObject is cBaseTrend) and
+     Assigned(fSelectedObject.Parent) and
+     (fSelectedObject.Parent is TChartAxis) and
+     (fSelectedObject.Parent.Parent = APage) then
+  begin
+    lSelectedTrend := cBaseTrend(fSelectedObject);
+    lSelectedAxis := TChartAxis(fSelectedObject.Parent);
+    if lSelectedTrend.Visible and lSelectedAxis.Visible then
+      DrawBaseTrend(lSelectedTrend, lContentRect, APage, lSelectedAxis);
+  end;
   for lIndex := 0 to APage.ChildCount - 1 do
     RenderLabels(APage.Children[lIndex], lContentRect, APage, nil);
   glDisable(GL_SCISSOR_TEST);
@@ -2480,15 +2558,14 @@ end;
 function TOpenGLChartRenderer.GetAxisHitAt(AModel: TChartModel; AX, AY: Integer; out AAxis: TChartAxis): Boolean;
 
 var
-  lIndex, I, J: Integer;
+  lIndex, I: Integer;
   lPage: TChartPage;
   lPageRect, lContentRect: TChartPixelRect;
   lYAxis: TChartAxis;
   lAxisX, lAxisOffset: Single;
   lYTicks: TChartTickArray;
   lAxisFont: cOglFont;
-  lMaxTextWidth, lTextWidth: Integer;
-  lText: string;
+  lMaxTextWidth: Single;
 begin
   AAxis := nil;
   for lIndex := 0 to AModel.ChildCount - 1 do
@@ -2517,18 +2594,8 @@ begin
             if lYAxis = fSelectedObject then
               lAxisFont := fFontMng.Font(cfAxisSelected)
             else
-              lAxisFont := fFontMng.Font(cfAxisLabel);
-            lMaxTextWidth := 0;
-            for J := 0 to High(lYTicks) do
-            begin
-              lText := lYTicks[J].Text;
-              lTextWidth := lAxisFont.TextPixelWidth(lText);
-              if lTextWidth > lMaxTextWidth then
-                lMaxTextWidth := lTextWidth;
-            end;
-
-            if lMaxTextWidth < CAxisMinLabelWidth then
-              lMaxTextWidth := CAxisMinLabelWidth;
+              lAxisFont := fFontMng.Font(cfGridTick);
+            lMaxTextWidth := AxisColumnWidth(lYAxis, lAxisFont, lYTicks);
             lAxisOffset := lAxisOffset + lMaxTextWidth + CAxisColumnGap;
           end;
 

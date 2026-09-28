@@ -4,20 +4,21 @@ program OpcUaReadProbe;
 {$codepage UTF8}
 
 uses
-  SysUtils, uRecorderOpcUaBinaryClient;
+  SysUtils, Contnrs, uRecorderOpcUaBinaryClient;
 
 const
   CEndpoint = 'opc.tcp://192.168.15.130:4840';
   CSessionTimeoutMs = 15000;
-  CNodeIds: array[0..2] of string = (
+  CNodeIds: array[0..1] of string = (
     'ns=4;s=|var|PLC210 OPC-UA.Application.GVL.blinkerplc',
-    'ns=4;s=|var|PLC210 OPC-UA.Application.GVL.count_cmdbut',
-    'ns=4;s=|var|PLC210 OPC-UA.Application.GVL.Tag'
+    'ns=4;s=|var|PLC210 OPC-UA.Application.GVL.count_cmdbut'
   );
 
 var
-  I: Integer;
+  I, J, lTagChildren, lTagsChildren: Integer;
   lClient: TRecorderOpcUaBinaryClient;
+  lNode: TRecorderOpcUaDiscoveredNode;
+  lNodes: TObjectList;
   lQuality: Cardinal;
   lTime, lValue: Double;
 begin
@@ -30,6 +31,52 @@ begin
       Halt(2);
     end;
     WriteLn('CONNECT OK');
+    lNodes := TObjectList.Create(True);
+    try
+      if not lClient.Browse(lNodes) then
+      begin
+        WriteLn('BROWSE FAIL: ', lClient.ErrorText);
+        Halt(4);
+      end;
+      WriteLn('BROWSE OK: nodes=', lNodes.Count);
+      lTagChildren := 0;
+      lTagsChildren := 0;
+      for I := 0 to lNodes.Count - 1 do
+      begin
+        lNode := TRecorderOpcUaDiscoveredNode(lNodes[I]);
+        if Pos('Tag_[', lNode.DisplayName) = 1 then
+        begin
+          Inc(lTagChildren);
+          if lTagChildren <= 3 then
+            WriteLn('TAG CHILD: name=', lNode.DisplayName,
+              ' path=', lNode.BrowsePath, ' nodeId=', lNode.NodeId);
+        end;
+        if Pos('Tags_[', lNode.DisplayName) = 1 then
+        begin
+          Inc(lTagsChildren);
+          if lTagsChildren <= 3 then
+            WriteLn('TAGS CHILD: name=', lNode.DisplayName,
+              ' path=', lNode.BrowsePath, ' nodeId=', lNode.NodeId);
+        end;
+        if lNode.ArrayValues.Count = 0 then Continue;
+        WriteLn('ARRAY: ', lNode.NodeId, ' count=', lNode.ArrayValues.Count,
+          ' timestamp=', lNode.ValueTimestamp);
+        for J := 0 to lNode.ArrayValues.Count - 1 do
+        begin
+          if J = 10 then
+          begin
+            WriteLn('  ... ', lNode.ArrayValues.Count - J,
+              ' more elements');
+            Break;
+          end;
+          WriteLn('  ', J + 1, ' = ', lNode.ArrayValues[J]);
+        end;
+      end;
+      WriteLn('INDEXED COUNTS: Tag_=', lTagChildren,
+        ' Tags_=', lTagsChildren);
+    finally
+      lNodes.Free;
+    end;
     for I := Low(CNodeIds) to High(CNodeIds) do
       if lClient.ReadDouble(CNodeIds[I], lValue, lQuality, lTime) then
         WriteLn('READ OK: ', CNodeIds[I], ' value=', FloatToStr(lValue),

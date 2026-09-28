@@ -100,7 +100,7 @@ begin
   if not Supports(ARenderer, IChartOffsetHelper, lRendererObj) then
     Exit;
   lRendererObj.SetGLColor(ASeries.Color);
-  glLineWidth(CDefaultTrendLineWidth);
+  glLineWidth(Max(CDefaultTrendLineWidth, ASeries.LineWidth));
   // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
   glUseProgram(0);
   if False and AUseShader and AShaderInitialized then

@@ -74,7 +74,8 @@ implementation
 uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
-  uRecorderMeasurementSectionModel, uRecorderSdbStore, uRecorderDebugLog;
+  uRecorderMeasurementSectionModel, uRecorderFrequencyResponseModel,
+  uRecorderFrequencyResponse, uRecorderSdbStore, uRecorderDebugLog;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -223,6 +224,8 @@ begin
     Result := TRecorderTrendComponent.TypeId
   else if AComponent is TRecorderSpectrumComponent then
     Result := TRecorderSpectrumComponent.TypeId
+  else if AComponent is TRecorderLissajousComponent then
+    Result := TRecorderLissajousComponent.TypeId
   else if AComponent is TRecorderDonutComponent then
     Result := TRecorderDonutComponent.TypeId
   else
@@ -407,16 +410,27 @@ end;
 procedure SaveTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
 var
   I: Integer;
+  lItem: TJSONObject;
 begin
   if (ATag = nil) or (ATag.CalibrationNames = nil) then
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
-    AJson.Add(ATag.CalibrationNames[I]);
+    if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      AJson.Add(ATag.CalibrationNames[I])
+    else
+    begin
+      lItem := TJSONObject.Create;
+      lItem.Add('name', ATag.CalibrationNames[I]);
+      lItem.Add('enabled', False);
+      AJson.Add(lItem);
+    end;
 end;
 
 procedure LoadTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
 var
   I: Integer;
+  lItem: TJSONObject;
+  lIndex: Integer;
 begin
   if (ATag = nil) or (ATag.CalibrationNames = nil) then
     Exit;
@@ -424,7 +438,15 @@ begin
   if AJson = nil then
     Exit;
   for I := 0 to AJson.Count - 1 do
-    ATag.CalibrationNames.Add(AJson.Strings[I]);
+    if AJson.Items[I] is TJSONObject then
+    begin
+      lItem := TJSONObject(AJson.Items[I]);
+      lIndex := ATag.CalibrationNames.Add(lItem.Get('name', ''));
+      RecorderSetCalibrationStepEnabled(ATag.CalibrationNames, lIndex,
+        lItem.Get('enabled', True));
+    end
+    else
+      ATag.CalibrationNames.Add(AJson.Strings[I]);
 end;
 procedure SaveTagEstimates(AJson: TJSONObject; ATag: TRecorderTag);
 var
@@ -584,6 +606,29 @@ begin
   end;
 end;
 
+procedure SaveAlgorithmConfigs(AJson: TJSONArray; AConfigs: TStrings);
+var
+  I: Integer;
+begin
+  if (AJson = nil) or (AConfigs = nil) then
+    Exit;
+  for I := 0 to AConfigs.Count - 1 do
+    AJson.Add(AConfigs[I]);
+end;
+
+procedure LoadAlgorithmConfigs(AJson: TJSONArray; AConfigs: TStrings);
+var
+  I: Integer;
+begin
+  if AConfigs = nil then
+    Exit;
+  AConfigs.Clear;
+  if AJson = nil then
+    Exit;
+  for I := 0 to AJson.Count - 1 do
+    AConfigs.Add(AJson.Strings[I]);
+end;
+
 procedure SaveFrequencyBands(AJson: TJSONArray; AList: TRecorderFrequencyBandList);
 var
   I, J: Integer;
@@ -727,6 +772,7 @@ begin
         g_ProjectConfigExtensions[J].SaveProc(lRoot, ATags);
     SaveCalibrationList(JsonArray(lRoot, 'calibrations'), ATags.Calibrations);
     SaveSpectrumConfigs(JsonArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
+    SaveAlgorithmConfigs(JsonArray(lRoot, 'algorithmConfigs'), ATags.AlgorithmConfigs);
     SaveFrequencyBands(JsonArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
     lGroups := JsonArray(lRoot, 'tagGroups');
     for I := 0 to ATags.TagGroupPaths.Count - 1 do
@@ -867,6 +913,7 @@ begin
     LoadRecorderConfiguredDataSources(lRoot, ATags);
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
+    LoadAlgorithmConfigs(FindArray(lRoot, 'algorithmConfigs'), ATags.AlgorithmConfigs);
     LoadFrequencyBands(FindArray(lRoot, 'frequencyBands'), ATags.FrequencyBands);
     lGroups := FindArray(lRoot, 'tagGroups');
     if lGroups <> nil then
@@ -1009,6 +1056,10 @@ var
   lSection: string;
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
+  lFrequencyResponse: TRecorderFrequencyResponseComponent;
+  lFrAxis: TRecorderFrequencyResponseAxis;
+  lFrLine: TRecorderFrequencyResponseLine;
+  lLissajousLine: TRecorderLissajousLine;
   lImage: TRecorderImageComponent;
   lSqlDisplay: TRecorderSqlTrendDisplay;
   lMeasure: TRecorderMeasurementSectionComponent;
@@ -1336,6 +1387,8 @@ begin
           lIni.WriteBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
           lIni.WriteBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
           lIni.WriteInteger(lSection, 'ResultType', lSpectrum.ResultType);
+          lIni.WriteInteger(lSection, 'SpectrumIntegration',
+            lSpectrum.SpectrumIntegration);
           lIni.WriteString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
           lIni.WriteInt64(lSection, 'TahoTagId', lSpectrum.TahoTagId);
           lIni.WriteString(lSection, 'ProfileName', lSpectrum.ProfileName);
@@ -1344,6 +1397,90 @@ begin
             lIni.WriteString(lSection, Format('Tag%d', [K]), lSpectrum.TagNames[K]);
             if lSpectrum.TagIdAt(K) <> 0 then
               lIni.WriteInt64(lSection, Format('Tag%dId', [K]), lSpectrum.TagIdAt(K));
+        end;
+        if lComponent is TRecorderLissajousComponent then
+        begin
+          lIni.WriteString(lSection, 'XTagName', TRecorderLissajousComponent(lComponent).XTagName);
+          lIni.WriteString(lSection, 'YTagName', TRecorderLissajousComponent(lComponent).YTagName);
+          lIni.WriteInt64(lSection, 'XTagId', TRecorderLissajousComponent(lComponent).XTagId);
+          lIni.WriteInt64(lSection, 'YTagId', TRecorderLissajousComponent(lComponent).YTagId);
+          lIni.WriteFloat(lSection, 'DurationSec', TRecorderLissajousComponent(lComponent).DurationSec);
+          lIni.WriteFloat(lSection, 'RangeMinX', TRecorderLissajousComponent(lComponent).RangeMinX);
+          lIni.WriteFloat(lSection, 'RangeMaxX', TRecorderLissajousComponent(lComponent).RangeMaxX);
+          lIni.WriteFloat(lSection, 'RangeMinY', TRecorderLissajousComponent(lComponent).RangeMinY);
+          lIni.WriteFloat(lSection, 'RangeMaxY', TRecorderLissajousComponent(lComponent).RangeMaxY);
+          lIni.WriteInt64(lSection, 'LineColor', TRecorderLissajousComponent(lComponent).LineColor);
+          lIni.WriteInteger(lSection, 'LineWidth', TRecorderLissajousComponent(lComponent).LineWidth);
+          lIni.WriteInteger(lSection, 'LissajousLineCount',
+            TRecorderLissajousComponent(lComponent).LineCount);
+          for K := 0 to TRecorderLissajousComponent(lComponent).LineCount - 1 do
+          begin
+            lLissajousLine := TRecorderLissajousComponent(lComponent).Lines[K];
+            lIni.WriteString(lSection, Format('LissajousLine%dName', [K]), lLissajousLine.Name);
+            lIni.WriteString(lSection, Format('LissajousLine%dXTagName', [K]), lLissajousLine.XTagName);
+            lIni.WriteInt64(lSection, Format('LissajousLine%dXTagId', [K]), lLissajousLine.XTagId);
+            lIni.WriteString(lSection, Format('LissajousLine%dYTagName', [K]), lLissajousLine.YTagName);
+            lIni.WriteInt64(lSection, Format('LissajousLine%dYTagId', [K]), lLissajousLine.YTagId);
+            lIni.WriteInt64(lSection, Format('LissajousLine%dColor', [K]), lLissajousLine.Color);
+            lIni.WriteInt64(lSection, Format('LissajousLine%dDiameterColor', [K]), lLissajousLine.DiameterColor);
+            lIni.WriteInteger(lSection, Format('LissajousLine%dWidth', [K]), lLissajousLine.Width);
+            lIni.WriteBool(lSection, Format('LissajousLine%dDrawPoints', [K]), lLissajousLine.DrawPoints);
+            lIni.WriteBool(lSection, Format('LissajousLine%dDrawLine', [K]), lLissajousLine.DrawLine);
+            lIni.WriteBool(lSection, Format('LissajousLine%dDrawMainDiameter', [K]), lLissajousLine.DrawMainDiameter);
+            lIni.WriteBool(lSection, Format('LissajousLine%dDrawDiameterCenter', [K]), lLissajousLine.DrawDiameterCenter);
+            lIni.WriteBool(lSection, Format('LissajousLine%dShowDiameterValue', [K]), lLissajousLine.ShowDiameterValue);
+          end;
+        end;
+        if lComponent is TRecorderFrequencyResponseComponent then
+        begin
+          lFrequencyResponse := TRecorderFrequencyResponseComponent(lComponent);
+          lIni.WriteString(lSection, 'FrSourceTagName', lFrequencyResponse.SourceTagName);
+          lIni.WriteInt64(lSection, 'FrSourceTagId', lFrequencyResponse.SourceTagId);
+          lIni.WriteString(lSection, 'FrValueTagName', lFrequencyResponse.ValueTagName);
+          lIni.WriteInt64(lSection, 'FrValueTagId', lFrequencyResponse.ValueTagId);
+          lIni.WriteString(lSection, 'FrFrequencyTagName', lFrequencyResponse.FrequencyTagName);
+          lIni.WriteInt64(lSection, 'FrFrequencyTagId', lFrequencyResponse.FrequencyTagId);
+          lIni.WriteInteger(lSection, 'FrKind', Ord(lFrequencyResponse.Kind));
+          lIni.WriteFloat(lSection, 'FrMinFrequencyHz', lFrequencyResponse.MinFrequencyHz);
+          lIni.WriteFloat(lSection, 'FrMaxFrequencyHz', lFrequencyResponse.MaxFrequencyHz);
+          lIni.WriteFloat(lSection, 'FrMinValue', lFrequencyResponse.MinValue);
+          lIni.WriteFloat(lSection, 'FrMaxValue', lFrequencyResponse.MaxValue);
+          lIni.WriteInteger(lSection, 'FrBufferSize', lFrequencyResponse.BufferSize);
+          lIni.WriteBool(lSection, 'FrUniformX', lFrequencyResponse.UniformX);
+          lIni.WriteFloat(lSection, 'FrFrequencyStepHz', lFrequencyResponse.FrequencyStepHz);
+          lIni.WriteInteger(lSection, 'FrMergeMode', Ord(lFrequencyResponse.MergeMode));
+          lIni.WriteBool(lSection, 'FrLegendVisible', lFrequencyResponse.LegendVisible);
+          lIni.WriteInteger(lSection, 'FrAxisCount', lFrequencyResponse.AxisCount);
+          for K := 0 to lFrequencyResponse.AxisCount - 1 do
+          begin
+            lFrAxis := lFrequencyResponse.Axes[K];
+            lIni.WriteString(lSection, Format('FrAxis%dName', [K]), lFrAxis.Name);
+            lIni.WriteFloat(lSection, Format('FrAxis%dMin', [K]), lFrAxis.MinValue);
+            lIni.WriteFloat(lSection, Format('FrAxis%dMax', [K]), lFrAxis.MaxValue);
+            lIni.WriteBool(lSection, Format('FrAxis%dLog', [K]), lFrAxis.Logarithmic);
+          end;
+          lIni.WriteInteger(lSection, 'FrLineCount', lFrequencyResponse.LineCount);
+          for K := 0 to lFrequencyResponse.LineCount - 1 do
+          begin
+            lFrLine := lFrequencyResponse.Lines[K];
+            lIni.WriteString(lSection, Format('FrLine%dName', [K]), lFrLine.Name);
+            lIni.WriteString(lSection, Format('FrLine%dAxis', [K]), lFrLine.AxisName);
+            lIni.WriteString(lSection, Format('FrLine%dSourceName', [K]), lFrLine.SourceTagName);
+            lIni.WriteInt64(lSection, Format('FrLine%dSourceId', [K]), lFrLine.SourceTagId);
+            lIni.WriteString(lSection, Format('FrLine%dValueName', [K]), lFrLine.ValueTagName);
+            lIni.WriteInt64(lSection, Format('FrLine%dValueId', [K]), lFrLine.ValueTagId);
+            lIni.WriteString(lSection, Format('FrLine%dFrequencyName', [K]), lFrLine.FrequencyTagName);
+            lIni.WriteInt64(lSection, Format('FrLine%dFrequencyId', [K]), lFrLine.FrequencyTagId);
+            lIni.WriteInteger(lSection, Format('FrLine%dKind', [K]), Ord(lFrLine.Kind));
+            lIni.WriteInteger(lSection, Format('FrLine%dBuffer', [K]), lFrLine.BufferSize);
+            lIni.WriteBool(lSection, Format('FrLine%dUniform', [K]), lFrLine.UniformX);
+            lIni.WriteFloat(lSection, Format('FrLine%dStep', [K]), lFrLine.FrequencyStepHz);
+            lIni.WriteInteger(lSection, Format('FrLine%dMerge', [K]), Ord(lFrLine.MergeMode));
+            lIni.WriteInt64(lSection, Format('FrLine%dColor', [K]), lFrLine.Color);
+            lIni.WriteInteger(lSection, Format('FrLine%dWidth', [K]), lFrLine.Width);
+            lIni.WriteBool(lSection, Format('FrLine%dDrawLine', [K]), lFrLine.DrawLine);
+            lIni.WriteBool(lSection, Format('FrLine%dDrawPoints', [K]), lFrLine.DrawPoints);
+          end;
         end;
         if lComponent is TRecorderTrendComponent then
         begin
@@ -1450,6 +1587,10 @@ var
   lSection: string;
   lTrend: TRecorderTrendComponent;
   lSpectrum: TRecorderSpectrumComponent;
+  lFrequencyResponse: TRecorderFrequencyResponseComponent;
+  lFrAxis: TRecorderFrequencyResponseAxis;
+  lFrLine: TRecorderFrequencyResponseLine;
+  lLissajousLine: TRecorderLissajousLine;
   lImage: TRecorderImageComponent;
   lSqlDisplay: TRecorderSqlTrendDisplay;
   lMeasure: TRecorderMeasurementSectionComponent;
@@ -1874,6 +2015,8 @@ begin
             lSpectrum.LegendVisible := lIni.ReadBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
             lSpectrum.ZeroY0 := lIni.ReadBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
             lSpectrum.ResultType := lIni.ReadInteger(lSection, 'ResultType', lSpectrum.ResultType);
+            lSpectrum.SpectrumIntegration := lIni.ReadInteger(lSection,
+              'SpectrumIntegration', lSpectrum.SpectrumIntegration);
             lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
             lSpectrum.TahoTagId := lIni.ReadInt64(lSection, 'TahoTagId', 0);
             lSpectrum.ProfileName := lIni.ReadString(lSection, 'ProfileName', lSpectrum.ProfileName);
@@ -1884,6 +2027,162 @@ begin
               lSpectrum.TagNames.Add(lIni.ReadString(lSection, Format('Tag%d', [K]), ''));
               lSpectrum.SetTagIdAt(lSpectrum.TagNames.Count - 1,
                 lIni.ReadInt64(lSection, Format('Tag%dId', [K]), 0));
+            end;
+          end;
+          if lComponent is TRecorderLissajousComponent then
+          begin
+            lCount := lIni.ReadInteger(lSection, 'LissajousLineCount', -1);
+            if lCount >= 0 then
+            begin
+              if lCount = 0 then lCount := 1;
+              TRecorderLissajousComponent(lComponent).ClearLines;
+              for K := 0 to lCount - 1 do
+              begin
+                lLissajousLine := TRecorderLissajousComponent(lComponent).AddLine;
+                lLissajousLine.Name := lIni.ReadString(lSection,
+                  Format('LissajousLine%dName', [K]), Format('Линия %d', [K + 1]));
+                lLissajousLine.XTagName := lIni.ReadString(lSection,
+                  Format('LissajousLine%dXTagName', [K]), '');
+                lLissajousLine.XTagId := lIni.ReadInt64(lSection,
+                  Format('LissajousLine%dXTagId', [K]), 0);
+                lLissajousLine.YTagName := lIni.ReadString(lSection,
+                  Format('LissajousLine%dYTagName', [K]), '');
+                lLissajousLine.YTagId := lIni.ReadInt64(lSection,
+                  Format('LissajousLine%dYTagId', [K]), 0);
+                lLissajousLine.Color := lIni.ReadInt64(lSection,
+                  Format('LissajousLine%dColor', [K]), lLissajousLine.Color);
+                lLissajousLine.DiameterColor := lIni.ReadInt64(lSection,
+                  Format('LissajousLine%dDiameterColor', [K]),
+                  lLissajousLine.Color);
+                lLissajousLine.Width := lIni.ReadInteger(lSection,
+                  Format('LissajousLine%dWidth', [K]), lLissajousLine.Width);
+                lLissajousLine.DrawPoints := lIni.ReadBool(lSection,
+                  Format('LissajousLine%dDrawPoints', [K]), False);
+                lLissajousLine.DrawLine := lIni.ReadBool(lSection,
+                  Format('LissajousLine%dDrawLine', [K]), True);
+                lLissajousLine.DrawMainDiameter := lIni.ReadBool(lSection,
+                  Format('LissajousLine%dDrawMainDiameter', [K]), False);
+                lLissajousLine.DrawDiameterCenter := lIni.ReadBool(lSection,
+                  Format('LissajousLine%dDrawDiameterCenter', [K]), False);
+                lLissajousLine.ShowDiameterValue := lIni.ReadBool(lSection,
+                  Format('LissajousLine%dShowDiameterValue', [K]), False);
+              end;
+            end
+            else
+            begin
+            TRecorderLissajousComponent(lComponent).XTagName := lIni.ReadString(lSection, 'XTagName', '');
+            TRecorderLissajousComponent(lComponent).YTagName := lIni.ReadString(lSection, 'YTagName', '');
+            TRecorderLissajousComponent(lComponent).XTagId := lIni.ReadInt64(lSection, 'XTagId', 0);
+            TRecorderLissajousComponent(lComponent).YTagId := lIni.ReadInt64(lSection, 'YTagId', 0);
+            TRecorderLissajousComponent(lComponent).DurationSec := lIni.ReadFloat(lSection, 'DurationSec', 0.3);
+            TRecorderLissajousComponent(lComponent).RangeMinX := lIni.ReadFloat(lSection, 'RangeMinX', -3);
+            TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
+            TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
+            TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
+            TRecorderLissajousComponent(lComponent).LineColor := lIni.ReadInt64(lSection, 'LineColor', $00FF0000);
+            TRecorderLissajousComponent(lComponent).LineWidth := lIni.ReadInteger(lSection, 'LineWidth', 2);
+            end;
+            { Диапазоны и длительность общие для всех линий. }
+            TRecorderLissajousComponent(lComponent).DurationSec := lIni.ReadFloat(lSection, 'DurationSec', 0.3);
+            TRecorderLissajousComponent(lComponent).RangeMinX := lIni.ReadFloat(lSection, 'RangeMinX', -3);
+            TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
+            TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
+            TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
+          end;
+          if lComponent is TRecorderFrequencyResponseComponent then
+          begin
+            lFrequencyResponse := TRecorderFrequencyResponseComponent(lComponent);
+            lFrequencyResponse.SourceTagName := lIni.ReadString(lSection,
+              'FrSourceTagName', '');
+            lFrequencyResponse.SourceTagId := lIni.ReadInt64(lSection,
+              'FrSourceTagId', 0);
+            lFrequencyResponse.ValueTagName := lIni.ReadString(lSection,
+              'FrValueTagName', '');
+            lFrequencyResponse.ValueTagId := lIni.ReadInt64(lSection,
+              'FrValueTagId', 0);
+            lFrequencyResponse.FrequencyTagName := lIni.ReadString(lSection,
+              'FrFrequencyTagName', '');
+            lFrequencyResponse.FrequencyTagId := lIni.ReadInt64(lSection,
+              'FrFrequencyTagId', 0);
+            lItemCount := EnsureRange(lIni.ReadInteger(lSection, 'FrKind', 0),
+              Ord(Low(TRecorderFrequencyResponseKind)),
+              Ord(High(TRecorderFrequencyResponseKind)));
+            lFrequencyResponse.Kind := TRecorderFrequencyResponseKind(lItemCount);
+            lFrequencyResponse.MinFrequencyHz := lIni.ReadFloat(lSection,
+              'FrMinFrequencyHz', lFrequencyResponse.MinFrequencyHz);
+            lFrequencyResponse.MaxFrequencyHz := lIni.ReadFloat(lSection,
+              'FrMaxFrequencyHz', lFrequencyResponse.MaxFrequencyHz);
+            lFrequencyResponse.MinValue := lIni.ReadFloat(lSection,
+              'FrMinValue', lFrequencyResponse.MinValue);
+            lFrequencyResponse.MaxValue := lIni.ReadFloat(lSection,
+              'FrMaxValue', lFrequencyResponse.MaxValue);
+            lFrequencyResponse.BufferSize := Max(1, lIni.ReadInteger(lSection,
+              'FrBufferSize', lFrequencyResponse.BufferSize));
+            lFrequencyResponse.UniformX := lIni.ReadBool(lSection,
+              'FrUniformX', lFrequencyResponse.UniformX);
+            lFrequencyResponse.FrequencyStepHz := lIni.ReadFloat(lSection,
+              'FrFrequencyStepHz', lFrequencyResponse.FrequencyStepHz);
+            lItemCount := EnsureRange(lIni.ReadInteger(lSection, 'FrMergeMode', 0),
+              Ord(Low(TRecorderFrequencyResponseMergeMode)),
+              Ord(High(TRecorderFrequencyResponseMergeMode)));
+            lFrequencyResponse.MergeMode :=
+              TRecorderFrequencyResponseMergeMode(lItemCount);
+            lFrequencyResponse.LegendVisible := lIni.ReadBool(lSection,
+              'FrLegendVisible', lFrequencyResponse.LegendVisible);
+            lCount := lIni.ReadInteger(lSection, 'FrAxisCount', -1);
+            if lCount >= 0 then
+            begin
+              lFrequencyResponse.ClearAxes;
+              for K := 0 to Max(1, lCount) - 1 do
+              begin
+                lFrAxis := lFrequencyResponse.AddAxis;
+                lFrAxis.Name := lIni.ReadString(lSection, Format('FrAxis%dName', [K]), Format('Ось %d', [K + 1]));
+                lFrAxis.MinValue := lIni.ReadFloat(lSection, Format('FrAxis%dMin', [K]), 0);
+                lFrAxis.MaxValue := lIni.ReadFloat(lSection, Format('FrAxis%dMax', [K]), 10);
+                lFrAxis.Logarithmic := lIni.ReadBool(lSection, Format('FrAxis%dLog', [K]), False);
+              end;
+              lFrequencyResponse.ClearLines;
+              lItemCount := lIni.ReadInteger(lSection, 'FrLineCount', 0);
+              for K := 0 to lItemCount - 1 do
+              begin
+                lFrLine := lFrequencyResponse.AddLine;
+                lFrLine.Name := lIni.ReadString(lSection, Format('FrLine%dName', [K]), Format('Линия %d', [K + 1]));
+                lFrLine.AxisName := lIni.ReadString(lSection, Format('FrLine%dAxis', [K]), lFrequencyResponse.Axes[0].Name);
+                lFrLine.SourceTagName := lIni.ReadString(lSection, Format('FrLine%dSourceName', [K]), '');
+                lFrLine.SourceTagId := lIni.ReadInt64(lSection, Format('FrLine%dSourceId', [K]), 0);
+                lFrLine.ValueTagName := lIni.ReadString(lSection, Format('FrLine%dValueName', [K]), '');
+                lFrLine.ValueTagId := lIni.ReadInt64(lSection, Format('FrLine%dValueId', [K]), 0);
+                lFrLine.FrequencyTagName := lIni.ReadString(lSection, Format('FrLine%dFrequencyName', [K]), '');
+                lFrLine.FrequencyTagId := lIni.ReadInt64(lSection, Format('FrLine%dFrequencyId', [K]), 0);
+                lFrLine.Kind := TRecorderFrequencyResponseKind(EnsureRange(lIni.ReadInteger(lSection, Format('FrLine%dKind', [K]), 0), 0, 2));
+                lFrLine.BufferSize := Max(1, lIni.ReadInteger(lSection, Format('FrLine%dBuffer', [K]), 1024));
+                lFrLine.UniformX := lIni.ReadBool(lSection, Format('FrLine%dUniform', [K]), False);
+                lFrLine.FrequencyStepHz := lIni.ReadFloat(lSection, Format('FrLine%dStep', [K]), 1);
+                lFrLine.MergeMode := TRecorderFrequencyResponseMergeMode(EnsureRange(lIni.ReadInteger(lSection, Format('FrLine%dMerge', [K]), 0), 0, 2));
+                lFrLine.Color := lIni.ReadInt64(lSection, Format('FrLine%dColor', [K]), lFrLine.Color);
+                lFrLine.Width := lIni.ReadInteger(lSection, Format('FrLine%dWidth', [K]), 2);
+                lFrLine.DrawLine := lIni.ReadBool(lSection, Format('FrLine%dDrawLine', [K]), True);
+                lFrLine.DrawPoints := lIni.ReadBool(lSection, Format('FrLine%dDrawPoints', [K]), True);
+              end;
+            end;
+            if (lCount < 0) and (lFrequencyResponse.LineCount > 0) then
+            begin
+              lFrAxis := lFrequencyResponse.Axes[0];
+              lFrAxis.MinValue := lFrequencyResponse.MinValue;
+              lFrAxis.MaxValue := lFrequencyResponse.MaxValue;
+              lFrLine := lFrequencyResponse.Lines[0];
+              lFrLine.Name := lFrequencyResponse.SourceTagName;
+              lFrLine.SourceTagName := lFrequencyResponse.SourceTagName;
+              lFrLine.SourceTagId := lFrequencyResponse.SourceTagId;
+              lFrLine.ValueTagName := lFrequencyResponse.ValueTagName;
+              lFrLine.ValueTagId := lFrequencyResponse.ValueTagId;
+              lFrLine.FrequencyTagName := lFrequencyResponse.FrequencyTagName;
+              lFrLine.FrequencyTagId := lFrequencyResponse.FrequencyTagId;
+              lFrLine.Kind := lFrequencyResponse.Kind;
+              lFrLine.BufferSize := lFrequencyResponse.BufferSize;
+              lFrLine.UniformX := lFrequencyResponse.UniformX;
+              lFrLine.FrequencyStepHz := lFrequencyResponse.FrequencyStepHz;
+              lFrLine.MergeMode := lFrequencyResponse.MergeMode;
             end;
           end;
           if lComponent is TRecorderTrendComponent then

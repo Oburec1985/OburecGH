@@ -20,7 +20,11 @@ binary filename remains stable for existing configurations.
 
 The plugin runs `lua_main()` once when a project is loaded or the editor closes,
 then on each `PN_UPDATEDATA`. `getValue(name)` reads the latest value of an
-existing tag. `setValue(name, value)` writes to an existing **virtual** tag;
+existing tag. `setValue(name, value)` finds the tag by its exact name and writes
+to it when `ExternalWriteAllowed` is enabled; it returns `1` on success and `0`
+on failure. Virtual tags are updated directly, while writable device tags use
+the registry external-write queue. A missing or read-only tag is reported to
+the RecorderLnx system log;
 create it in RecorderLnx first. Errors disable the affected script and are
 written to `<project>/LuaCalc/errors.log`. Other scripts continue running.
 
@@ -40,3 +44,14 @@ RecorderLnx flat ABI. Text `.lua` scripts are the supported migration path.
 The host API appends size-checked callbacks for enumerating tags, reading their
 latest values, writing virtual tags and obtaining the active project directory.
 Only POD records and UTF-8 C strings cross the DLL boundary.
+# Правило пакетной публикации
+
+Один вызов всех Lua-модулей по `PN_UPDATEDATA` образует одну транзакцию
+выходных значений. `setValue` обязан накапливать значения до завершения прохода;
+повторная запись того же тега заменяет предыдущее значение. Ошибка любого
+модуля отменяет публикацию прохода. Чтение тега внутри прохода сначала видит
+накопленное значение.
+
+Выходы расчёта обновляют UI и очередь внешней записи, но не входную ревизию,
+которая запускает `PN_UPDATEDATA`. Проверка: после единственного изменения
+входа Lua выполняется один раз и не запускается повторно собственными выходами.

@@ -33,7 +33,8 @@ uses
   uRecorderMc201Calibration, uRecorderConfiguredDataSources,
   uRecorderCommandImages, uRecorderMc032SettingsDialog,
   uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices,
-  uRecorderFrequencyGrids;
+  uRecorderFrequencyGrids, uRecorderUnitManager,
+  uRecorderTagCalibrationDialog;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
@@ -81,6 +82,7 @@ type
     fChannelCurveAddBtn: TSpeedButton;
     fChannelCurveDeleteBtn: TSpeedButton;
     fChannelCurveEditBtn: TSpeedButton;
+    fChannelCalibrateBtn: TButton;
     pnTagDeviceActions: TPanel;
     fZeroBalanceBtn: TSpeedButton;
     fHardwareDeviceSetupBtn: TSpeedButton;
@@ -154,8 +156,16 @@ type
     btnCancel: TButton;
     fApplyButton: TButton;
     ilTagDialogButtons: TImageList;
+    /// LFM-обработчик OnClick кнопки OK; при создании заменяется на OkButtonClick.
+    procedure btnOkClick(Sender: TObject);
+    /// LFM-обработчик OnChange флага Auto; рабочая логика назначается через OnClick.
+    procedure fAutoUnitCheckChange(Sender: TObject);
+    /// OnClick кнопки балансировки запускает операцию для выбранного канала.
     procedure ZeroBalanceButtonClick(Sender: TObject);
+    /// OnClick кнопки настройки устройства открывает редактор аппаратного источника.
     procedure HardwareDeviceSetupButtonClick(Sender: TObject);
+    /// OnClick кнопки «Градуировка» открывает секундный мастер градуировки тега.
+    procedure TagCalibrationButtonClick(Sender: TObject);
   private
     fImages: TCustomImageList;                           // Список иконок для диалога (ilTagDialogButtons)
     fCommandImages: TCustomImageList;                    // Список иконок устройства (ilCommandButtons)
@@ -173,102 +183,175 @@ type
     fOnZeroBalance: TTagZeroBalanceEvent;
     
     // Внутренние методы обработчиков UI
+    /// OnClick кнопки «Применить» переносит UI в модель, не закрывая диалог.
     procedure ApplyButtonClick(Sender: TObject);
+    /// OnDblClick цветовой панели выбирает цвет и отмечает явное изменение.
     procedure SetpointColorDblClick(Sender: TObject);
+    /// OnClick кнопки адреса выбирает сигнал и проверяет уникальность привязки.
     procedure AddressButtonClick(Sender: TObject);
+    /// OnClick кнопки OK валидирует UI, сохраняет теги и закрывает диалог.
     procedure OkButtonClick(Sender: TObject);
+    /// OnClick кнопки выбора канальной ГХ открывает редактор состава pipeline.
     procedure SelectCalibrationButtonClick(Sender: TObject);
+    /// OnDblClick поля канальной ГХ выбирает ступень и открывает её свойства.
     procedure ChannelCurveNotebookClick(Sender: TObject);
+    /// OnClick кнопки добавления создаёт ГХ и добавляет новую ступень pipeline.
     procedure AddCalibrationButtonClick(Sender: TObject);
+    /// OnClick кнопки удаления очищает канальную цепочку выбранных тегов.
     procedure DeleteCalibrationButtonClick(Sender: TObject);
+    /// Обработчик OnClick редактирования открывает последнюю ступень pipeline.
     procedure EditCalibrationButtonClick(Sender: TObject);
+    /// Редактирует указанную ступень через черновик и фиксирует выбранный вариант.
     procedure EditCalibrationAt(APipelineIndex: Integer);
+    /// OnClick кнопки экспорта сохраняет последнюю канальную ГХ в БДГХ.
     procedure ExportCalibrationButtonClick(Sender: TObject);
+    /// OnClick кнопки просмотра открывает назначенную аппаратную ГХ.
     procedure SelectHardwareCalibrationButtonClick(Sender: TObject);
+    /// OnClick кнопки свойств редактирует назначенную аппаратную ГХ.
     procedure EditHardwareCalibrationButtonClick(Sender: TObject);
+    /// Редактирует связанную ГХ через копию и обновляет БДГХ до commit модели.
     function EditLinkedHardwareCalibration(
       ACalibration: TRecorderCalibration): Boolean;
+    /// OnClick кнопки выгрузки считывает ГХ из устройств и привязывает их к тегам.
     procedure DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
+    /// Назначает кнопке изображение, подсказку и при необходимости квадратный размер.
     procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImages: TCustomImageList;
       AImageIndex: Integer; const AHint: string = ''; ABtnSize: Integer = 0);
+    /// Настраивает кнопку команды, используя изображение или текстовый fallback.
     procedure AssignActionSpeedButton(AButton: TSpeedButton; AImages: TCustomImageList;
       AImageIndex: Integer; const ACaption, AHint: string);
+    /// Раскладывает кнопки действий устройства с учётом видимости и размеров панели.
     procedure LayoutTagDeviceActionButtons;
+    /// Загружает резервную иконку выгрузки ГХ из известных путей исходного Recorder.
     procedure AssignDownloadFlashIcon(AButton: TSpeedButton);
+    /// Обновляет текст и доступность элементов канальной цепочки ГХ.
     procedure UpdateChannelCurveText;
+    /// Обновляет подпись аппаратной ГХ, не меняя флаг её применения.
     procedure UpdateHardwareCurveText;
+    /// Показывает действия аппаратной ГХ только для поддерживаемых источников.
     procedure UpdateHardwareCurveButtons;
+    /// Находит и назначает ГХ MIC-185; применение включает только по явному запросу.
     function EnsureMic185HardwareCalibrationAssigned(ATag: TRecorderTag;
       AEnableOnTag: Boolean): Boolean;
+    /// Определяет исходную единицу MIC-185 по режиму канала и настройкам возбуждения.
     function Mic185SourceUnitName(ATag: TRecorderTag;
       const ASettings: TMic185ChannelProgramSettings): string;
+    /// Возвращает возбуждение тензоканала, если его можно получить из live-устройства.
     function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
       out AExcitation: string): Boolean;
+    /// OnClick галки аппаратной ГХ переносит явный выбор в флаг её применения.
     procedure HardwareCurveCheckClick(Sender: TObject);
+    /// OnClick внешней галки канальной ГХ меняет общий флаг применения pipeline.
+    procedure ChannelCurveCheckClick(Sender: TObject);
+    /// OnClick галки Auto меняет только режим единиц и обновляет их список.
     procedure AutoUnitCheckClick(Sender: TObject);
+    /// OnDropDown комбобокса единиц актуализирует список перед его раскрытием.
+    procedure UnitComboDropDown(Sender: TObject);
+    /// Строит список единиц по выходу реально применяемой цепочки ГХ.
+    procedure RefreshUnitChoices;
+    /// OnClick галки оценки синхронизирует набор расчётов и оценку по умолчанию.
     procedure EstimateCheckClick(Sender: TObject);
+    /// OnChange списка оценки по умолчанию включает выбранную оценку в расчёт.
     procedure DefaultEstimateComboChange(Sender: TObject);
-    procedure DisableEmptyChannelCalibrations;
+    /// OnClick кнопки настройки источника вызывает внешний редактор оборудования.
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
+    /// Обновляет видимость и доступность кнопки настройки аппаратного источника.
     procedure UpdateHardwareSourceSetupButton;
+    /// Обновляет кнопки настройки и балансировки по возможностям выбранных тегов.
     procedure UpdateTagDeviceActionButtons;
+    /// Показывает сведения о выражении только для одиночного виртуального канала.
     procedure UpdateVirtualChannelInfo;
+    /// Возвращает UnitOut последней включённой ступени либо применяемой аппаратной ГХ.
     function TryGetChannelCalibrationOutputUnit(ATag: TRecorderTag;
       out AUnitName: string): Boolean;
+    /// Проверяет наличие применяемой ГХ с определённой выходной единицей.
     function SelectedCalibrationEnabled(ATag: TRecorderTag): Boolean;
+    /// Возвращает исходную единицу тега до автоматического преобразования ГХ.
     function BaseUnitName(ATag: TRecorderTag): string;
+    /// Выбирает AutoUnit по последней применяемой ГХ, не меняя флаги ГХ.
     procedure ApplyAutoUnitFromChannelCalibration;
+    /// Проверяет, можно ли открыть настройку источника для текущего выбора тегов.
     function CanConfigureHardwareSource: Boolean;
+    /// Проверяет поддержку балансировки единственным выбранным тегом.
     function CanZeroBalance: Boolean;
     
     // Обмен данными между UI и тегами
+    /// Заполняет контролы общими значениями тегов, не изменяя модель.
     procedure LoadFromTags;
+    /// Валидирует UI и записывает в теги только явно представленные настройки.
     procedure StoreToTags;
+    /// Привязывает выбранный Mera-сигнал к текущему тегу и копирует его метаданные.
     procedure ApplyMeraSignalToCurrentTag(const ASourceId: string;
       ASignal: TMeraSignalInfo);
+    /// Даёт пользователю выбрать активный Mera-сигнал, ещё не занятый другим тегом.
     function SelectActiveMeraSignal(out ASourceId: string;
       out ASignal: TMeraSignalInfo): Boolean;
     
     // Функции проверки согласованности значений при множественном выборе
+    /// Возвращает общее булево состояние тегов либо -1 для смешанного выбора.
     function AllBool(AGetter: Integer): Integer;
+    /// Возвращает общее состояние применения канальной цепочки либо -1.
     function AllChannelCalibrationEnabled: Integer;
+    /// Читает единое состояние выбранной оценки у всех редактируемых тегов.
     function AllEstimateBool(AKind: TRecorderTagEstimateKind;
       out AValue: Boolean): Boolean;
+    /// Возвращает общую оценку по умолчанию, если она одинакова у всех тегов.
     function AllEstimateDefault(out AValue: TRecorderTagEstimateKind): Boolean;
+    /// Читает общий служебный флаг расчёта оценки по номеру свойства.
     function AllEstimateFlag(AGetter: Integer; out AValue: Boolean): Boolean;
+    /// Читает общее вещественное значение настройки оценки по номеру свойства.
     function AllEstimateFloat(AKind: Integer; out AValue: Double): Boolean;
+    /// Возвращает общий целочисленный параметр оценок для множественного выбора.
     function AllEstimateInt(out AValue: Integer): Boolean;
+    /// Читает общее вещественное свойство тега по номеру свойства.
     function AllFloat(AKind: Integer; out AValue: Double): Boolean;
+    /// Возвращает общий булев параметр указанной уставки.
     function AllSetpointBool(AKind: TRecorderTagSetpointKind;
       AGetter: Integer; out AValue: Boolean): Boolean;
+    /// Возвращает общее вещественное значение указанной уставки.
     function AllSetpointFloat(AKind: TRecorderTagSetpointKind;
       AGetter: Integer; out AValue: Double): Boolean;
+    /// Возвращает общий текст события указанной уставки.
     function AllSetpointInfoText(AKind: TRecorderTagSetpointKind;
       out AValue: string): Boolean;
+    /// Возвращает общий текст тревоги выхода за допустимый диапазон.
     function AllRangeAlarmInfoText(out AValue: string): Boolean;
+    /// Читает общий глобальный флаг уставок по номеру свойства.
     function AllSetpointGlobalBool(AGetter: Integer; out AValue: Boolean): Boolean;
+    /// Возвращает общее строковое свойство тегов по номеру свойства.
     function AllString(AKind: Integer; out AValue: string): Boolean;
+    /// Возвращает общий идентификатор источника выбранных тегов.
     function AllSourceId(out AValue: string): Boolean;
     
     // Дополнительные проверки и чтение чисел
+    /// Разрешает ручную частоту только когда источник не диктует её сам.
     function FrequencyCanBeEdited: Boolean;
+    /// Проверяет наличие тега с отсутствующим или неподключённым источником.
     function HasDetachedSource: Boolean;
+    /// Проверяет, не привязан ли Mera-сигнал к другому тегу реестра.
     function IsSignalAlreadyLinked(const ASourceId: string;
       ASignal: TMeraSignalInfo; AExceptTag: TRecorderTag): Boolean;
+    /// Определяет, требуется ли подтверждать активность выбранного источника.
     function SourceNeedsActiveCheck(const ASourceId: string): Boolean;
+    /// Разбирает число из UI с поддержкой локального десятичного разделителя.
     function ReadFloat(const AText: string; out AValue: Double): Boolean;
     
     { Быстрое приведение к типу TRecorderTag по индексу }
+    /// Возвращает тег из внутреннего нетипизированного списка по индексу.
     function TagAt(AIndex: Integer): TRecorderTag;
   public
+    /// После загрузки визуальной LFM-формы связывает runtime-обработчики,
+    /// реестр и выбранные теги, затем загружает их общее состояние в контролы.
     constructor CreateDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry;
       ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200;
       AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil;
       AOnZeroBalance: TTagZeroBalanceEvent = nil;
       ACommandImages: TCustomImageList = nil); reintroduce;
+    /// Освобождает принадлежащую диалогу копию списка выбранных тегов.
     destructor Destroy; override;
   end;
 
+/// Показывает модальный редактор тегов; True означает подтверждённое сохранение.
 function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
 
 implementation
@@ -276,6 +359,8 @@ implementation
 const
   CMixedAlarmInfoText = '<разные значения>';
 
+/// Извлекает положительный номер слота MC-201 из канального адреса.
+// не должно быть зависимости в диалоге тега от аппаратных реализаций!!! Потом исправить!!!
 function RecorderMc201SlotFromAddress(const AAddress: string;
   out ASlot: Integer): Boolean;
 var
@@ -295,6 +380,10 @@ begin
   end;
 end;
 
+/// Распространяет частоту слота MC-201 на все теги того же источника и слота.
+// не должно быть зависимости в диалоге тега от аппаратных реализаций!!! Потом исправить!!!
+// У датасорса по UpdateSrcConf в перекрытом методе смотрим что поменяли и если менялась частота тега применяем ко всему устройству
+// (например)
 procedure RecorderMc201ApplySlotFrequency(ARegistry: TRecorderTagRegistry;
   const ASourceId, AAddress: string; AFrequencyHz: Double);
 var
@@ -332,6 +421,7 @@ const
     'D:\works\windev-v3.9\images\from_rcguisrv\res\harf_t.ico'
   );
 
+/// Показывает простой модальный список и возвращает подтверждённый индекс строки.
 function ShowSelectSignalDialog(AOwner: TComponent; AList: TStrings; var ASelectedIndex: Integer): Boolean;
 var
   lForm: TForm;
@@ -478,7 +568,9 @@ begin
   fHardwareCurveSetupBtn.OnClick := @EditHardwareCalibrationButtonClick;
   fHardwareCurveDownloadBtn.OnClick := @DownloadHardwareCalibrationFromDeviceClick;
   fHardwareCurveCheck.OnClick := @HardwareCurveCheckClick;
+  fChannelCurveCheck.OnClick := @ChannelCurveCheckClick;
   fAutoUnitCheck.OnClick := @AutoUnitCheckClick;
+  fUnitCombo.OnDropDown := @UnitComboDropDown;
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
 
@@ -572,22 +664,83 @@ end;
 
 procedure TTagSettingsDialog.UpdateChannelCurveText;
 var
+  I: Integer;
   lBool: Integer;
 begin
   if fTags.Count = 0 then
     Exit;
-  DisableEmptyChannelCalibrations;
-  if TagAt(0).CalibrationNames.Count > 0 then
-    fChannelCurveEdit.Text :=
-      TagAt(0).CalibrationNames[TagAt(0).CalibrationNames.Count - 1]
-  else
-    fChannelCurveEdit.Text := '';
+  fChannelCurveEdit.Text := '';
+  for I := TagAt(0).CalibrationNames.Count - 1 downto 0 do
+    if RecorderCalibrationStepEnabled(TagAt(0).CalibrationNames, I) then
+    begin
+      fChannelCurveEdit.Text := TagAt(0).CalibrationNames[I];
+      Break;
+    end;
   lBool := AllChannelCalibrationEnabled;
   fChannelCurveCheck.AllowGrayed := fTags.Count > 1;
   if lBool < 0 then
     fChannelCurveCheck.State := cbGrayed
   else
     fChannelCurveCheck.Checked := lBool > 0;
+  fChannelCalibrateBtn.Enabled := fTags.Count = 1;
+end;
+
+procedure TTagSettingsDialog.TagCalibrationButtonClick(Sender: TObject);
+var
+  lDraft: TRecorderCalibration;
+  lError: string;
+  lOriginal: TRecorderCalibration;
+  lTag: TRecorderTag;
+  lTarget: TRecorderTagCalibrationTarget;
+begin
+  if fTags.Count <> 1 then
+  begin
+    MessageDlg('Градуировка',
+      'Градуировка доступна только для одного выбранного тега.',
+      mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  lTag := TagAt(0);
+  lDraft := nil;
+  if not ShowRecorderTagCalibrationDialog(Self, fTagRegistry, lTag,
+    lDraft, lOriginal, lTarget) then
+    Exit;
+  try
+    if lTarget = rtctLastNode then
+    begin
+      if not RecorderSdbUpdateLinkedCalibration(lOriginal, lDraft, lError) then
+      begin
+        MessageDlg('Градуировка',
+          'Не удалось обновить связанную ГХ в БДГХ:' + LineEnding + lError,
+          mtError, [mbOK], 0);
+        Exit;
+      end;
+      if not fTagRegistry.CommitCalibrationEdit(lOriginal, lDraft) then
+      begin
+        MessageDlg('Градуировка', 'Не удалось сохранить скорректированную ГХ.',
+          mtError, [mbOK], 0);
+        Exit;
+      end;
+    end
+    else
+    begin
+      fTagRegistry.Calibrations.Add(lDraft);
+      lTag.CalibrationNames.Clear;
+      lTag.CalibrationNames.Add(lDraft.Name);
+      { Нажатие пользователем «OK» в мастере является явным включением только
+        что созданной сквозной ГХ; фоновые загрузчики флаг не меняют. }
+      lTag.ChannelCalibrationEnabled := True;
+      lDraft := nil;
+    end;
+    lTag.InvalidateCalibrationScale;
+    fTagRegistry.SyncTagAutoUnit(lTag);
+    fTagRegistry.RebuildScales(lTag);
+    lTag.ClearSignalHistory;
+    UpdateChannelCurveText;
+    RefreshUnitChoices;
+  finally
+    lDraft.Free;
+  end;
 end;
 
 function TTagSettingsDialog.EnsureMic185HardwareCalibrationAssigned(
@@ -730,12 +883,16 @@ begin
     fHardwareCurveCheck.State := cbChecked;
   fHardwareCurveCheck.AllowGrayed := False;
   if fTags.Count <> 1 then
+  begin
+    RefreshUnitChoices;
     Exit;
+  end;
   if Pos('MIC-185:', TagAt(0).SourceId) = 1 then
   begin
     if not fHardwareCurveCheck.Checked then
     begin
       fUnitCombo.Text := 'код';
+      RefreshUnitChoices;
       Exit;
     end;
     RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
@@ -745,17 +902,24 @@ begin
       fUnitCombo.Text := Mic185SourceUnitName(TagAt(0), lMic185Settings);
     fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
       fTagRegistry, TagAt(0), lMic185Settings, fUnitCombo.Text);
+    RefreshUnitChoices;
     Exit;
   end;
   if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
+  begin
+    RefreshUnitChoices;
     Exit;
+  end;
   lSettings.ChannelAddress := '';
   if not RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
     lChannelNumber, lSettings) then
     Exit;
 
   if fAutoUnitCheck.State <> cbChecked then
+  begin
+    RefreshUnitChoices;
     Exit;
+  end;
   if not fHardwareCurveCheck.Checked then
     fUnitCombo.Text := 'code'
   else if lSettings.ChannelCalibrationEnabled and
@@ -763,6 +927,17 @@ begin
     fUnitCombo.Text := RecorderMic140OutputModeUnitName(momTemperatureC)
   else
     fUnitCombo.Text := RecorderMic140OutputModeUnitName(momMillivolts);
+  RefreshUnitChoices;
+end;
+
+procedure TTagSettingsDialog.ChannelCurveCheckClick(Sender: TObject);
+begin
+  if fChannelCurveCheck.State = cbGrayed then
+    fChannelCurveCheck.State := cbChecked;
+  fChannelCurveCheck.AllowGrayed := False;
+  { Внешняя галка — единственное управление всей канальной цепочкой.
+    Сразу перестраиваем категорию и текущее значение combo по её состоянию. }
+  AutoUnitCheckClick(fAutoUnitCheck);
 end;
 
 function TTagSettingsDialog.TagAt(AIndex: Integer): TRecorderTag;
@@ -770,7 +945,6 @@ begin
   Result := TRecorderTag(fTags[AIndex]);
 end;
 
-{ Динамическое создание UI для поддержки автономного существования без DFM }
 function TTagSettingsDialog.AllString(AKind: Integer; out AValue: string): Boolean;
 var
   I: Integer;
@@ -1289,7 +1463,9 @@ begin
   if not fTagRegistry.RenameTag(lTag, lTagName) then
     raise ERecorderTagError.Create('Invalid tag name');
   lTag.Address := ASignal.Address;
-  lTag.UnitName := ASignal.UnitsName;
+  { Сигнал задаёт исходную единицу. Результирующую единицу после ГХ
+    вычисляет registry, не меняя пользовательские галки применения. }
+  lTag.SourceUnitName := ASignal.UnitsName;
   lTag.SourceId := ASourceId;
   lTag.ModuleType := ASignal.ModuleName;
   lTag.PollFrequencyHz := ASignal.FrequencyHz;
@@ -1438,6 +1614,16 @@ begin
     Exit;
   if fOnZeroBalance <> nil then
     fOnZeroBalance(Self, fTagRegistry, fTags);
+end;
+
+procedure TTagSettingsDialog.fAutoUnitCheckChange(Sender: TObject);
+begin
+
+end;
+
+procedure TTagSettingsDialog.btnOkClick(Sender: TObject);
+begin
+
 end;
 
 procedure TTagSettingsDialog.HardwareDeviceSetupButtonClick(Sender: TObject);
@@ -1617,6 +1803,7 @@ begin
   UpdateChannelCurveText;
   UpdateHardwareCurveText;
   ApplyAutoUnitFromChannelCalibration;
+  RefreshUnitChoices;
   UpdateHardwareCurveButtons;
   UpdateHardwareSourceSetupButton;
   UpdateTagDeviceActionButtons;
@@ -1877,6 +2064,8 @@ begin
           RecorderMic140UpdateChannelSettings(fTagRegistry, lTag, lSettings);
         end;
       end;
+      if lHardwareChanged and (Pos('MC-032:', lTag.SourceId) = 1) then
+        RecorderMc201SyncTagUnitFromHardwareGx(fTagRegistry, lTag);
     end;
     { Hardware curve edit may show MIC-185 k,b details; calibration assignment
       itself is changed only by explicit read/select actions. }
@@ -1887,9 +2076,6 @@ begin
       if lChannelChanged then
         lTag.ClearSignalHistory;
       lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
-      if lTag.ChannelCalibrationEnabled and
-        ((lTag.CalibrationNames = nil) or (lTag.CalibrationNames.Count = 0)) then
-        lTag.ChannelCalibrationEnabled := False;
       if lChannelChanged and
         (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
       begin
@@ -2002,9 +2188,6 @@ begin
       lTag.SetpointRangeControlEnabled := fSetpointRangeControlCheck.Checked;
     if fSetpointRangeAlarmInfoEdit.Text <> CMixedAlarmInfoText then
       lTag.SetpointRangeAlarmInfoText := Trim(fSetpointRangeAlarmInfoEdit.Text);
-    if (not RecorderTagUsesMic140Settings(lTag)) and
-      (not RecorderIsHardwareMic185TagSource(lTag.SourceId)) then
-      RecorderTagClearMic140Settings(lTag);
     if lTag.AutoUnit and (Pos(CMic140SourcePrefix, lTag.SourceId) <> 1) then
       fTagRegistry.SyncTagAutoUnit(lTag);
     fTagRegistry.RebuildScales(lTag);
@@ -2054,8 +2237,6 @@ end;
 
 
 procedure TTagSettingsDialog.SelectCalibrationButtonClick(Sender: TObject);
-var
-  lPipelineEnabled: Boolean;
 begin
   if fTags.Count <> 1 then
   begin
@@ -2074,14 +2255,11 @@ begin
     Exit;
   end;
 
-  lPipelineEnabled := TagAt(0).ChannelCalibrationEnabled;
   if ShowRecorderCalibrationPipelineDialog(Self, fTagRegistry.Calibrations,
-    TagAt(0).CalibrationNames, lPipelineEnabled) then
+    TagAt(0).CalibrationNames) then
   begin
-    TagAt(0).ChannelCalibrationEnabled :=
-      lPipelineEnabled and (TagAt(0).CalibrationNames.Count > 0);
-    fChannelCurveCheck.Checked := TagAt(0).ChannelCalibrationEnabled;
-    ApplyAutoUnitFromChannelCalibration;
+    TagAt(0).InvalidateCalibrationScale;
+    AutoUnitCheckClick(fAutoUnitCheck);
     UpdateChannelCurveText;
   end;
 end;
@@ -2101,6 +2279,8 @@ begin
     (ATag.CalibrationNames <> nil) then
     for I := ATag.CalibrationNames.Count - 1 downto 0 do
     begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+        Continue;
       lCalibration := fTagRegistry.FindCalibrationByName(
         ATag.CalibrationNames[I]);
       if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
@@ -2151,15 +2331,82 @@ begin
     fUnitCombo.Text := lUnitName;
 end;
 
+procedure TTagSettingsDialog.RefreshUnitChoices;
+var
+  lAllUnits: TStringList;
+  lOutputUnit: string;
+  lOutputInfo: TRecorderUnitInfo;
+  lCandidateInfo: TRecorderUnitInfo;
+  I: Integer;
+begin
+  if fUnitCombo = nil then
+    Exit;
+
+  lAllUnits := TStringList.Create;
+  try
+    RecorderUnitManager.FillUnitNames(lAllUnits);
+    fUnitCombo.Items.BeginUpdate;
+    try
+      fUnitCombo.Items.Clear;
+      { При включённой ГХ ручная единица описывает уже физический выход
+        цепочки. Категорию задаёт UnitOut последней канальной ГХ; если
+        канальной цепочки нет — UnitOut аппаратной ГХ. }
+      if (fTags.Count = 1) and
+        TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit) and
+        RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
+      begin
+        for I := 0 to lAllUnits.Count - 1 do
+          if RecorderUnitManager.TryGetUnitInfo(lAllUnits[I], lCandidateInfo) and
+            SameText(lCandidateInfo.QuantityId, lOutputInfo.QuantityId) then
+            fUnitCombo.Items.Add(lAllUnits[I]);
+      end
+      else
+      begin
+        { Без активной ГХ сохраняем общий выбор, включая служебные единицы. }
+        fUnitCombo.Items.Add('-');
+        fUnitCombo.Items.Add('a.u.');
+        fUnitCombo.Items.Add('code');
+        fUnitCombo.Items.AddStrings(lAllUnits);
+      end;
+    finally
+      fUnitCombo.Items.EndUpdate;
+    end;
+  finally
+    lAllUnits.Free;
+  end;
+end;
+
+procedure TTagSettingsDialog.UnitComboDropDown(Sender: TObject);
+begin
+  RefreshUnitChoices;
+end;
+
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
 var
   lChannelNumber: Integer;
   lSettings: TRecorderMic140ChannelSettings;
+  lOutputUnit: string;
+  lCurrentInfo: TRecorderUnitInfo;
+  lOutputInfo: TRecorderUnitInfo;
 begin
   if fAutoUnitCheck.State = cbUnchecked then
   begin
     if fTags.Count = 1 then
-      fUnitCombo.Text := BaseUnitName(TagAt(0));
+    begin
+      { Auto управляет только выбором единицы отображения и не переключает ГХ.
+        При активной цепочке оставляем ручной выбор в категории её выхода. }
+      if TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit) and
+        RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
+      begin
+        if not (RecorderUnitManager.TryGetUnitInfo(fUnitCombo.Text,
+          lCurrentInfo) and SameText(lCurrentInfo.QuantityId,
+          lOutputInfo.QuantityId)) then
+          fUnitCombo.Text := lOutputInfo.BaseUnitName;
+      end
+      else
+        fUnitCombo.Text := BaseUnitName(TagAt(0));
+      RefreshUnitChoices;
+    end;
     Exit;
   end;
   if (fAutoUnitCheck.State = cbChecked) and (fTags.Count = 1) and
@@ -2173,9 +2420,11 @@ begin
           RecorderMic140ConfigNameToOutputMode(lSettings.OutputMode))
       else
         fUnitCombo.Text := 'code';
+    RefreshUnitChoices;
     Exit;
   end;
   ApplyAutoUnitFromChannelCalibration;
+  RefreshUnitChoices;
 end;
 
 procedure TTagSettingsDialog.EstimateCheckClick(Sender: TObject);
@@ -2208,20 +2457,6 @@ begin
   lCheck.Checked := True;
 end;
 
-procedure TTagSettingsDialog.DisableEmptyChannelCalibrations;
-var
-  I: Integer;
-  lTag: TRecorderTag;
-begin
-  for I := 0 to fTags.Count - 1 do
-  begin
-    lTag := TagAt(I);
-    if (lTag <> nil) and lTag.ChannelCalibrationEnabled and
-      ((lTag.CalibrationNames = nil) or (lTag.CalibrationNames.Count = 0)) then
-      lTag.ChannelCalibrationEnabled := False;
-  end;
-end;
-
 procedure TTagSettingsDialog.AddCalibrationButtonClick(Sender: TObject);
 var
   lAction: TRecorderCalibrationAddAction;
@@ -2244,7 +2479,6 @@ begin
     for I := 0 to fTags.Count - 1 do
     begin
       TagAt(I).CalibrationNames.Add(lCalibrationName);
-      TagAt(I).ChannelCalibrationEnabled := True;
     end;
     ApplyAutoUnitFromChannelCalibration;
     UpdateChannelCurveText;
@@ -2274,7 +2508,6 @@ begin
   for I := 0 to fTags.Count - 1 do
   begin
     TagAt(I).CalibrationNames.Add(lCalibration.Name);
-    TagAt(I).ChannelCalibrationEnabled := True;
   end;
     lCalibration := nil;
     ApplyAutoUnitFromChannelCalibration;
@@ -2291,7 +2524,6 @@ begin
   for I := 0 to fTags.Count - 1 do
   begin
     TagAt(I).CalibrationNames.Clear;
-    TagAt(I).ChannelCalibrationEnabled := False;
     if Pos(CMic140SourcePrefix, TagAt(I).SourceId) = 1 then
     begin
       TagAt(I).SourceValueMode :=

@@ -150,8 +150,10 @@ var
   IsNumber: LongInt;
   Value, Time: Double;
   Status: LongInt;
+  Success: Boolean;
 begin
   Engine := CurrentEngine(L);
+  Success := False;
   IsNumber := 0;
   Value := LuaToNumber(L, 2, @IsNumber);
   if (IsNumber <> 0) and Assigned(Engine.fCallbacks.OnSetValue) then
@@ -161,13 +163,14 @@ begin
     if LuaGetTop(L) >= 3 then Time := LuaToNumber(L, 3, nil);
     if LuaGetTop(L) >= 4 then Status := Trunc(LuaToNumber(L, 4, nil));
     try
-      Engine.fCallbacks.OnSetValue(Engine.fCallbacks.Context,
+      Success := Engine.fCallbacks.OnSetValue(Engine.fCallbacks.Context,
         LuaName(L, 1), Value, Time, Status);
     except
       on Error: Exception do Engine.fLastError := Error.Message;
     end;
   end;
-  Result := 0;
+  LuaPushNumber(L, Ord(Success));
+  Result := 1;
 end;
 
 function SetTagValueCall(L: Pointer): LongInt; cdecl;

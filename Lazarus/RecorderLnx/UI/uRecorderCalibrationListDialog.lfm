@@ -28,6 +28,7 @@ object RecorderCalibrationListDialog: TRecorderCalibrationListDialog
       Anchors = [akTop, akLeft, akRight, akBottom]
       ColCount = 3
       FixedCols = 0
+      OnClick = gridListClick
       OnDblClick = gridListDblClick
       RowCount = 2
       TabOrder = 0
@@ -119,7 +120,6 @@ object RecorderCalibrationListDialog: TRecorderCalibrationListDialog
       Caption = 'Цепочка ГХ включена'
       Checked = True
       State = cbChecked
-      OnChange = cbPipelineEnabledChange
       TabOrder = 3
     end
     object btnOk: TButton

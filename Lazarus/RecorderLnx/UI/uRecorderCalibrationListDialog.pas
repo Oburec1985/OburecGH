@@ -31,9 +31,9 @@ type
     procedure btnDownClick(Sender: TObject);
     procedure btnPropertiesClick(Sender: TObject);
     procedure btnUpClick(Sender: TObject);
-    procedure cbPipelineEnabledChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure gridListClick(Sender: TObject);
     procedure gridListDblClick(Sender: TObject);
   private
     fList: TRecorderCalibrationList;
@@ -54,7 +54,7 @@ type
     procedure EditList(AList: TRecorderCalibrationList);
     procedure PickListItem(AList: TRecorderCalibrationList);
     procedure EditPipeline(AList: TRecorderCalibrationList;
-      APipelineNames: TStrings; APipelineEnabled: Boolean);
+      APipelineNames: TStrings);
     procedure PickPipelineItem(AList: TRecorderCalibrationList;
       APipelineNames: TStrings);
   end;
@@ -62,8 +62,7 @@ type
 function ShowRecorderCalibrationListDialog(AOwner: TComponent;
   AList: TRecorderCalibrationList; out ASelected: TRecorderCalibration): Boolean;
 function ShowRecorderCalibrationPipelineDialog(AOwner: TComponent;
-  AList: TRecorderCalibrationList; APipelineNames: TStrings;
-  var APipelineEnabled: Boolean): Boolean;
+  AList: TRecorderCalibrationList; APipelineNames: TStrings): Boolean;
 function ShowRecorderCalibrationPipelineItemDialog(AOwner: TComponent;
   AList: TRecorderCalibrationList; APipelineNames: TStrings;
   out ASelectedIndex: Integer): Boolean;
@@ -75,13 +74,14 @@ implementation
 procedure TRecorderCalibrationListDialog.FormCreate(Sender: TObject);
 begin
   cbPipelineEnabled.Visible := False;
-  gridList.ColCount := 3;
+  gridList.ColCount := 4;
   gridList.RowCount := 2;
   gridList.FixedRows := 1;
   gridList.FixedCols := 0;
   gridList.Cells[0, 0] := '№';
   gridList.Cells[1, 0] := 'Имя';
   gridList.Cells[2, 0] := 'ед';
+  gridList.Cells[3, 0] := 'Вкл';
   gridList.Hint := 'ГХ применяются к входу сверху вниз';
   gridList.ShowHint := True;
   UpdateGridColumns;
@@ -99,11 +99,10 @@ begin
     Exit;
   btnOk.Top := pnlBottom.ClientHeight - CMargin - btnOk.Height;
   btnCancel.Top := btnOk.Top;
-  cbPipelineEnabled.Top := btnOk.Top - CGap - cbPipelineEnabled.Height;
   lLabelTop := btnAdd.Top + btnAdd.Height + CGap;
   lbPipelineSensitivity.Top := lLabelTop;
   lbPipelineSensitivity.Height := Max(34,
-    cbPipelineEnabled.Top - CGap - lLabelTop);
+    btnOk.Top - CGap - lLabelTop);
 end;
 
 procedure TRecorderCalibrationListDialog.UpdateGridColumns;
@@ -112,8 +111,13 @@ begin
     Exit;
   gridList.ColWidths[0] := 38;
   gridList.ColWidths[2] := 80;
+  if fPipelineMode then
+    gridList.ColWidths[3] := 46
+  else
+    gridList.ColWidths[3] := 0;
   gridList.ColWidths[1] := Max(100, gridList.ClientWidth -
-    gridList.ColWidths[0] - gridList.ColWidths[2] - 8);
+    gridList.ColWidths[0] - gridList.ColWidths[2] -
+    gridList.ColWidths[3] - 8);
 end;
 
 procedure TRecorderCalibrationListDialog.EditList(AList: TRecorderCalibrationList);
@@ -141,7 +145,7 @@ begin
 end;
 
 procedure TRecorderCalibrationListDialog.EditPipeline(AList: TRecorderCalibrationList;
-  APipelineNames: TStrings; APipelineEnabled: Boolean);
+  APipelineNames: TStrings);
 begin
   fList := AList;
   fPipelineNames := APipelineNames;
@@ -150,8 +154,7 @@ begin
   { Кнопка скрыта для компактности; двойной щелчок открывает свойства
     выбранной ступени pipeline. }
   btnProperties.Visible := False;
-  cbPipelineEnabled.Visible := True;
-  cbPipelineEnabled.Checked := APipelineEnabled;
+  cbPipelineEnabled.Visible := False;
   RefreshGrid;
 end;
 
@@ -203,6 +206,7 @@ begin
       gridList.Cells[0, I] := '';
       gridList.Cells[1, I] := '';
       gridList.Cells[2, I] := '';
+      gridList.Cells[3, I] := '';
     end;
     for I := 0 to fPipelineNames.Count - 1 do
     begin
@@ -211,6 +215,10 @@ begin
       gridList.Cells[1, I + 1] := fPipelineNames[I];
       if lCalibration <> nil then
         gridList.Cells[2, I + 1] := lCalibration.UnitOut;
+      if RecorderCalibrationStepEnabled(fPipelineNames, I) then
+        gridList.Cells[3, I + 1] := 'Да'
+      else
+        gridList.Cells[3, I + 1] := 'Нет';
     end;
     RefreshPipelineSensitivity;
     Exit;
@@ -222,7 +230,8 @@ begin
   begin
     gridList.Cells[0, I] := '';
     gridList.Cells[1, I] := '';
-    gridList.Cells[2, I] := '';
+      gridList.Cells[2, I] := '';
+      gridList.Cells[3, I] := '';
   end;
   for I := 0 to fList.Count - 1 do
   begin
@@ -230,6 +239,7 @@ begin
     gridList.Cells[0, I + 1] := IntToStr(I + 1);
     gridList.Cells[1, I + 1] := lCalibration.Name;
     gridList.Cells[2, I + 1] := lCalibration.UnitOut;
+    gridList.Cells[3, I + 1] := '';
   end;
 end;
 
@@ -401,10 +411,12 @@ begin
 
   for I := 0 to fPipelineNames.Count - 1 do
   begin
+    if not RecorderCalibrationStepEnabled(fPipelineNames, I) then
+      Continue;
     lCalibration := CalibrationByName(fPipelineNames[I]);
     if not TryGetCalibrationScaleFactor(lCalibration, lScale) then
       Exit;
-    if I = 0 then
+    if AUnitIn = '' then
       AUnitIn := Trim(lCalibration.UnitIn)
     else if (lPreviousUnit <> '') and (Trim(lCalibration.UnitIn) <> '') and
       not SameText(lPreviousUnit, Trim(lCalibration.UnitIn)) then
@@ -475,9 +487,7 @@ begin
   lbPipelineSensitivity.Visible := fPipelineMode and not fPickMode;
   if not lbPipelineSensitivity.Visible then
     Exit;
-  if not cbPipelineEnabled.Checked then
-    lbPipelineSensitivity.Caption := 'Сквозная чувствительность: цепочка выключена'
-  else if TryGetPipelineSensitivity(lValue, lUnitIn, lUnitOut) then
+  if TryGetPipelineSensitivity(lValue, lUnitIn, lUnitOut) then
   begin
     if (lUnitIn <> '') and (lUnitOut <> '') then
       lbPipelineSensitivity.Caption := 'Сквозная чувствительность: ' +
@@ -493,9 +503,20 @@ begin
       'Сквозная чувствительность: нелинейная или несовместимые единицы';
 end;
 
-procedure TRecorderCalibrationListDialog.cbPipelineEnabledChange(Sender: TObject);
+procedure TRecorderCalibrationListDialog.gridListClick(Sender: TObject);
+var
+  lIndex: Integer;
 begin
-  RefreshPipelineSensitivity;
+  if (not fPipelineMode) or fPickMode or (gridList.Col <> 3) then
+    Exit;
+  lIndex := CurrentIndex;
+  if lIndex < 0 then
+    Exit;
+  RecorderSetCalibrationStepEnabled(fPipelineNames, lIndex,
+    not RecorderCalibrationStepEnabled(fPipelineNames, lIndex));
+  RefreshGrid;
+  gridList.Row := lIndex + 1;
+  gridList.Col := 3;
 end;
 
 procedure TRecorderCalibrationListDialog.btnUpClick(Sender: TObject);
@@ -539,6 +560,8 @@ end;
 
 procedure TRecorderCalibrationListDialog.gridListDblClick(Sender: TObject);
 begin
+  if fPipelineMode and (gridList.Col = 3) then
+    Exit;
   if fPickMode and (CurrentIndex >= 0) then
     ModalResult := mrOk
   else
@@ -563,8 +586,7 @@ begin
 end;
 
 function ShowRecorderCalibrationPipelineDialog(AOwner: TComponent;
-  AList: TRecorderCalibrationList; APipelineNames: TStrings;
-  var APipelineEnabled: Boolean): Boolean;
+  AList: TRecorderCalibrationList; APipelineNames: TStrings): Boolean;
 var
   lDialog: TRecorderCalibrationListDialog;
   lWorkingNames: TStringList;
@@ -574,12 +596,11 @@ begin
   try
     if APipelineNames <> nil then
       lWorkingNames.Assign(APipelineNames);
-    lDialog.EditPipeline(AList, lWorkingNames, APipelineEnabled);
+    lDialog.EditPipeline(AList, lWorkingNames);
     Result := lDialog.ShowModal = mrOk;
     if Result and (APipelineNames <> nil) then
     begin
       APipelineNames.Assign(lWorkingNames);
-      APipelineEnabled := lDialog.cbPipelineEnabled.Checked;
     end;
   finally
     lDialog.Free;

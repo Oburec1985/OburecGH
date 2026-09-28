@@ -936,7 +936,13 @@ begin
             Max(5, Abs(X - fZoomStartX)));
           lFactorY := Max(1.0, (lContentRect.Bottom - lContentRect.Top) /
             Max(5, Abs(Y - fZoomStartY)));
-          if fZoomSelectMode <> zsmYOnly then
+          if fActivePage.ReverseDragZoomOutBothAxes then
+            case fZoomSelectMode of
+              zsmYOnly: lFactorX := lFactorY;
+              zsmXOnly: lFactorY := lFactorX;
+            end;
+          if (fZoomSelectMode <> zsmYOnly) or
+             fActivePage.ReverseDragZoomOutBothAxes then
           begin
             lCenter := (fActivePage.XMinValue + fActivePage.XMaxValue) * 0.5;
             lSpan := (fActivePage.XMaxValue - fActivePage.XMinValue) * lFactorX;
@@ -969,7 +975,8 @@ begin
             begin
               lAxis := TChartAxis(fActivePage.Children[lIndex]);
               if ((lSelectedAxis = nil) or (lAxis = lSelectedAxis)) and
-                 (fZoomSelectMode <> zsmXOnly) then
+                 ((fZoomSelectMode <> zsmXOnly) or
+                  fActivePage.ReverseDragZoomOutBothAxes) then
               begin
                 lCenter := (lAxis.MinValue + lAxis.MaxValue) * 0.5;
                 lSpan := (lAxis.MaxValue - lAxis.MinValue) * lFactorY;

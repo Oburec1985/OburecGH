@@ -62,9 +62,9 @@ function RecorderMc201EnsureHardwareCalibrationInRegistry(
   ARegistry: TRecorderTagRegistry; ASerial, ARangeIndex, AChannel1Based: Integer;
   ARev2176: Boolean; out ACalibrationName: string): Boolean;
 
-{ Подгрузить ГХ с диска для тега (SN+диапазон из CFG).
-  Если галочку сняли, но имя ГХ оставили — не трогаем.
-  Если имя пустое и файлы есть — подгружаем и включаем галочку. }
+{ Подгрузить ГХ с диска для тега (SN+диапазон из CFG) и связать её с тегом.
+  Флаг HardwareCalibrationEnabled управляет только применением уже загруженной
+  ГХ и не должен мешать её обнаружению или регистрации. }
 function RecorderMc201LoadHardwareCalibrationForTag(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   const AConfigText: string): Boolean;
@@ -286,7 +286,6 @@ begin
       if (lSlot <> ASlot1Based) or (lChan <> AChannel0Based + 1) then
         Continue;
       lTag.HardwareCalibrationName := lName;
-      lTag.HardwareCalibrationEnabled := True;
       RecorderMc201SyncTagUnitFromHardwareGx(ARegistry, lTag);
       Result := True;
     end;
@@ -305,27 +304,16 @@ end;
 
 procedure RecorderMc201SyncTagUnitFromHardwareGx(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag);
-var
-  lHasGx: Boolean;
 begin
   if ATag = nil then
     Exit;
   ATag.InvalidateCalibrationScale;
-  lHasGx := False;
-  if ATag.HardwareCalibrationEnabled then
-  begin
-    lHasGx := ((ARegistry <> nil) and
-      (ARegistry.FindTagHardwareCalibration(ATag) <> nil)) or
-      (Trim(ATag.HardwareCalibrationName) <> '');
-  end;
-  if lHasGx then
-  begin
-    if ARegistry <> nil then
-      ARegistry.SyncTagAutoUnit(ATag);
-  end
-  else if (Trim(ATag.UnitName) = '') or SameText(ATag.UnitName, 'В') or
-    SameText(ATag.UnitName, 'V') then
-    ATag.UnitName := 'код';
+  { Галка ГХ управляет только расчётом. AutoUnit независимо выбирает UnitOut
+    последней включённой ГХ либо исходную единицу, когда цепочка выключена. }
+  if ARegistry <> nil then
+    ARegistry.SyncTagAutoUnit(ATag)
+  else if ATag.AutoUnit then
+    ATag.UnitName := ATag.SourceUnitName;
   if ARegistry <> nil then
     ARegistry.RebuildScales(ATag);
 end;
@@ -563,10 +551,6 @@ begin
   Result := False;
   if (ARegistry = nil) or (ATag = nil) then
     Exit;
-  { Явный отказ: галочку сняли, но имя ГХ оставили — не навязываем диск. }
-  if (not ATag.HardwareCalibrationEnabled) and
-    (Trim(ATag.HardwareCalibrationName) <> '') then
-    Exit;
   lParts := TStringList.Create;
   try
     lParts.Delimiter := '-';
@@ -597,7 +581,6 @@ begin
     lRange, lChan, lRev2176, lName) then
     Exit;
   ATag.HardwareCalibrationName := lName;
-  ATag.HardwareCalibrationEnabled := True;
   RecorderMc201SyncTagUnitFromHardwareGx(ARegistry, ATag);
   Result := True;
 end;

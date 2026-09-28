@@ -27,6 +27,8 @@ type
 
 procedure TFrameCounter.HandleFrame(ASender: TObject;
   const AFrame: TRecorderSpectrumFrame);
+var
+  I: Integer;
 begin
   Inc(Count);
   LastBins := AFrame.Bins;
@@ -37,6 +39,16 @@ begin
     raise Exception.Create('Spectrum frame RMS length mismatch');
   if Length(AFrame.PhaseRad) <> AFrame.Bins then
     raise Exception.Create('Spectrum frame phase length mismatch');
+  if Length(AFrame.RealPart) <> AFrame.Bins then
+    raise Exception.Create('Spectrum frame real-part length mismatch');
+  if Length(AFrame.ImaginaryPart) <> AFrame.Bins then
+    raise Exception.Create('Spectrum frame imaginary-part length mismatch');
+  if AFrame.NormalizeMode = snmNone then
+    for I := 0 to AFrame.Bins - 1 do
+      if not SameValue(Hypot(AFrame.RealPart[I], AFrame.ImaginaryPart[I]),
+        AFrame.Rms[I], 1e-12) then
+        raise Exception.CreateFmt('Spectrum Re/Im magnitude mismatch at bin %d',
+          [I]);
 end;
 
 procedure FillTestBlock(var ATimes, AValues: array of Double; ASampleRateHz: Double);

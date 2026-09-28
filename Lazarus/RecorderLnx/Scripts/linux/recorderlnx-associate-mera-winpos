@@ -61,6 +61,7 @@ install_mime_type() {
     <comment>MERA measurement</comment>
     <comment xml:lang="ru">Замер MERA</comment>
     <glob pattern="*.mera" weight="100"/>
+    <magic priority="100"><match type="string" offset="0" value="[MERA]"/></magic>
   </mime-type>
 </mime-info>
 EOF

@@ -2,7 +2,10 @@
 <html lang="ru"><head><meta charset="utf-8"><title>setValue</title>
 <link rel="stylesheet" href="style.css"></head><body>
 <div class="path">RecorderLnx/Теги</div><h1>setValue</h1>
-<p>Записывает число в существующий виртуальный тег.</p><h2>Пример использования</h2>
-<pre><code>setValue(&quot;Расчёт&quot;, {E1}.Value + {E2}.Value)</code></pre>
+<p>Находит существующий тег по точному имени и записывает значение, если для тега разрешена внешняя запись. Возвращает 1 при успехе и 0 при отказе. При отсутствии тега или запрете записи причина выводится в системный журнал.</p><h2>Пример использования</h2>
+<pre><code>local успешно = setValue(&quot;Tags_[1]&quot;, 25.5)
+if успешно == 0 then
+  logMessage(&quot;Значение не записано&quot;)
+end</code></pre>
 <p class="note">Двойной щелчок по функции в редакторе вставляет заготовку кода.</p>
 </body></html>

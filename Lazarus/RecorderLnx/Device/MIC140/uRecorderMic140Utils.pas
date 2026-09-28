@@ -250,10 +250,10 @@ end;
 
 procedure RecorderTagClearMic140Settings(ATag: TRecorderTag);
 begin
-  if ATag = nil then
-    Exit;
-  ATag.HardwareCalibrationEnabled := False;
-  ATag.HardwareCalibrationName := '';
+  { Исторически эта процедура очищала общие поля аппаратной ГХ тега при
+    смене типа источника. Это ломало MC-201 и снимало пользовательскую галку
+    после OK. Общие поля не являются настройками MIC-140 и здесь намеренно
+    не изменяются: их меняет только UI либо загрузчик конфигурации. }
 end;
 
 function TryParseRecorderMic140SourceId(const ASourceId: string;

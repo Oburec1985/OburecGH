@@ -174,6 +174,8 @@ type
     Rms: array of Double;
     RectRms: array of Double;
     PhaseRad: array of Double;
+    RealPart: array of Double;
+    ImaginaryPart: array of Double;
     Bands: array of TRecorderSpectrumBandResult;
     MaxIndex: Integer;
     MaxFrequencyHz: Double;
@@ -1180,6 +1182,8 @@ begin
   AFrame.WindowKind := fSettings.WindowKind;
   AFrame.NormalizeMode := fSettings.NormalizeMode;
   SetLength(AFrame.Rms, AFrame.Bins);
+  SetLength(AFrame.RealPart, AFrame.Bins);
+  SetLength(AFrame.ImaginaryPart, AFrame.Bins);
   if fSettings.CalculateBandRms or
     (fSettings.IntegrationMode <> simNone) then
     SetLength(AFrame.RectRms, AFrame.Bins)
@@ -1196,6 +1200,8 @@ begin
   begin
     lValue := Sqrt(Sqr(fWork[I].Re) + Sqr(fWork[I].Im)) * lScale;
     AFrame.Rms[I] := lValue;
+    AFrame.RealPart[I] := fWork[I].Re * lScale;
+    AFrame.ImaginaryPart[I] := fWork[I].Im * lScale;
     if fSettings.KeepPhase then
       AFrame.PhaseRad[I] := ArcTan2(fWork[I].Im, fWork[I].Re);
     case fSettings.NormalizeMode of
@@ -1211,7 +1217,11 @@ begin
     lNorm := Sqrt(lNorm);
   if lNorm > 0.0 then
     for I := 0 to AFrame.Bins - 1 do
+    begin
       AFrame.Rms[I] := AFrame.Rms[I] / lNorm;
+      AFrame.RealPart[I] := AFrame.RealPart[I] / lNorm;
+      AFrame.ImaginaryPart[I] := AFrame.ImaginaryPart[I] / lNorm;
+    end;
 
   if Length(AFrame.RectRms) > 0 then
   begin

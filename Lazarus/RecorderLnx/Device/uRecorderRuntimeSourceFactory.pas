@@ -251,7 +251,7 @@ begin
         lMcbusSources[I]);
       if lConfigured <> nil then
         lSpecificConfigText := lConfigured.SpecificConfigText;
-      lPollFrequencyHz := 57600;
+      lPollFrequencyHz := 0;
       for J := 0 to ARecorder.TagRegistry.TagCount - 1 do
       begin
         lTag := ARecorder.TagRegistry.Tags[J];
@@ -259,6 +259,11 @@ begin
           (lTag.PollFrequencyHz > 0) then
           lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
       end;
+      if (lPollFrequencyHz <= 0) and (lConfigured <> nil) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := 57600;
       lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lHost,
         lPort, lPollFrequencyHz, ADataUpdateMs, lTagNames,
         lSpecificConfigText);
@@ -402,15 +407,20 @@ begin
     end
     else if TryParseRecorderMc032SourceId(ASourceId, lHost, lPort) then
     begin
-      lPollFrequencyHz := 57600;
+      lPollFrequencyHz := 0;
       lSpecificConfigText := lConfigured.SpecificConfigText;
       for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
       begin
         lTag := ARecorder.TagRegistry.Tags[I];
         if SameText(lTag.SourceId, ASourceId) and
-          (lTag.PollFrequencyHz > lPollFrequencyHz) then
-          lPollFrequencyHz := lTag.PollFrequencyHz;
+          (lTag.PollFrequencyHz > 0) then
+          lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
       end;
+      if (lPollFrequencyHz <= 0) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := 57600;
       lSource := TRecorderMcbusDataSource.Create(ASourceId, lHost, lPort,
         lPollFrequencyHz, ADataUpdateMs, lTagNames, lSpecificConfigText);
     end

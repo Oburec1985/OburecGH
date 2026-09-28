@@ -49,6 +49,7 @@ type
     fAutoScaleOnZoomReset: Boolean;      // При сбросе зума подгонять диапазон к данным или пресету (мин/макс)
     fResetZoomOnDoubleClick: Boolean;
     fReverseDragZoomOut: Boolean;
+    fReverseDragZoomOutBothAxes: Boolean;
     fPreserveAutoFitZoomY: Boolean;
   public
     // Установка свойств страницы по умолчанию
@@ -70,6 +71,7 @@ type
     property AutoScaleOnZoomReset: Boolean read fAutoScaleOnZoomReset write fAutoScaleOnZoomReset;
     property ResetZoomOnDoubleClick: Boolean read fResetZoomOnDoubleClick write fResetZoomOnDoubleClick;
     property ReverseDragZoomOut: Boolean read fReverseDragZoomOut write fReverseDragZoomOut;
+    property ReverseDragZoomOutBothAxes: Boolean read fReverseDragZoomOutBothAxes write fReverseDragZoomOutBothAxes;
     property PreserveAutoFitZoomY: Boolean read fPreserveAutoFitZoomY write fPreserveAutoFitZoomY;
   end;
 
@@ -110,6 +112,7 @@ begin
   fAutoScaleOnZoomReset := False;
   fResetZoomOnDoubleClick := True;
   fReverseDragZoomOut := False;
+  fReverseDragZoomOutBothAxes := False;
   fPreserveAutoFitZoomY := False;
 end;
 

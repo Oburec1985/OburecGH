@@ -35,6 +35,8 @@ type
     Rms: array of Double;
     RectRms: array of Double;
     PhaseRad: array of Double;
+    RealPart: array of Double;
+    ImaginaryPart: array of Double;
     Bands: array of TRecorderSpectrumBandResult;
     constructor Create(const AFrame: TRecorderSpectrumFrame);
     procedure AssignFrom(const AFrame: TRecorderSpectrumFrame);
@@ -398,6 +400,15 @@ begin
   if Length(AFrame.PhaseRad) > 0 then
     Move(AFrame.PhaseRad[0], PhaseRad[0], Length(AFrame.PhaseRad) * SizeOf(Double));
 
+  SetLength(RealPart, Length(AFrame.RealPart));
+  if Length(AFrame.RealPart) > 0 then
+    Move(AFrame.RealPart[0], RealPart[0], Length(AFrame.RealPart) * SizeOf(Double));
+
+  SetLength(ImaginaryPart, Length(AFrame.ImaginaryPart));
+  if Length(AFrame.ImaginaryPart) > 0 then
+    Move(AFrame.ImaginaryPart[0], ImaginaryPart[0],
+      Length(AFrame.ImaginaryPart) * SizeOf(Double));
+
   SetLength(Bands, Length(AFrame.Bands));
   for I := 0 to Length(AFrame.Bands) - 1 do
   begin
@@ -548,6 +559,16 @@ begin
         SetLength(AFrame.PhaseRad, Length(lCached.PhaseRad));
         if Length(lCached.PhaseRad) > 0 then
           Move(lCached.PhaseRad[0], AFrame.PhaseRad[0], Length(lCached.PhaseRad) * SizeOf(Double));
+
+        SetLength(AFrame.RealPart, Length(lCached.RealPart));
+        if Length(lCached.RealPart) > 0 then
+          Move(lCached.RealPart[0], AFrame.RealPart[0],
+            Length(lCached.RealPart) * SizeOf(Double));
+
+        SetLength(AFrame.ImaginaryPart, Length(lCached.ImaginaryPart));
+        if Length(lCached.ImaginaryPart) > 0 then
+          Move(lCached.ImaginaryPart[0], AFrame.ImaginaryPart[0],
+            Length(lCached.ImaginaryPart) * SizeOf(Double));
 
         SetLength(AFrame.Bands, Length(lCached.Bands));
         for J := 0 to Length(lCached.Bands) - 1 do

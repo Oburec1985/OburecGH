@@ -14,15 +14,20 @@ const
   CRecorderOpcUaDefaultEndpoint = 'opc.tcp://localhost:4840';
   CRecorderOpcUaDefaultPublishingIntervalMs = 100;
   CRecorderOpcUaDefaultSessionTimeoutMs = 15000;
+  CRecorderOpcUaDefaultRequestTimeoutMs = 10000;
+  CRecorderOpcUaDefaultMaxNodesPerRequest = 100;
 
 type
   TRecorderOpcUaMode = (oumClient, oumServer);
   TRecorderOpcUaAuthenticationMode = (ouamAnonymous, ouamUserPassword);
+  TRecorderOpcUaTimestampMode = (outSource, outServer, outBoth, outNeither);
+  TRecorderOpcUaPollingType = (ouptRead, ouptSubscription);
 
   TRecorderOpcUaNode = class
   public
     NodeId: string;
     TagName: string;
+    DataTypeNodeId: string;
     Readable: Boolean;
     Writable: Boolean;
   end;
@@ -38,11 +43,23 @@ type
     PasswordEnvironment: string;
     PublishingIntervalMs: Cardinal;
     SessionTimeoutMs: Cardinal;
+    RequestTimeoutMs: Cardinal;
+    MaxNodesPerRead: Cardinal;
+    MaxNodesPerWrite: Cardinal;
+    MaxNodesPerBrowse: Cardinal;
+    TimestampMode: TRecorderOpcUaTimestampMode;
+    PollingType: TRecorderOpcUaPollingType;
+    ArchiveEnabled: Boolean;
+    ArchiveRecordsPerPoll: Cardinal;
+    ArchiveDepthDays: Cardinal;
+    ArchivePollingRate: Cardinal;
+    ShowAdditionalSettings: Boolean;
     SimplifiedTree: Boolean;
     constructor Create;
     destructor Destroy; override;
     function AddNode(const ANodeId, ATagName: string;
-      AWritable: Boolean = False; AReadable: Boolean = True): TRecorderOpcUaNode;
+      AWritable: Boolean = False; AReadable: Boolean = True;
+      const ADataTypeNodeId: string = ''): TRecorderOpcUaNode;
     function ToJson: string;
     function LoadJson(const AText: string; out AError: string): Boolean;
     property Nodes: TObjectList read fNodes;
@@ -63,6 +80,17 @@ begin
   Endpoint := CRecorderOpcUaDefaultEndpoint;
   PublishingIntervalMs := CRecorderOpcUaDefaultPublishingIntervalMs;
   SessionTimeoutMs := CRecorderOpcUaDefaultSessionTimeoutMs;
+  RequestTimeoutMs := CRecorderOpcUaDefaultRequestTimeoutMs;
+  MaxNodesPerRead := CRecorderOpcUaDefaultMaxNodesPerRequest;
+  MaxNodesPerWrite := CRecorderOpcUaDefaultMaxNodesPerRequest;
+  MaxNodesPerBrowse := CRecorderOpcUaDefaultMaxNodesPerRequest;
+  TimestampMode := outServer;
+  PollingType := ouptRead;
+  ArchiveEnabled := True;
+  ArchiveRecordsPerPoll := 500;
+  ArchiveDepthDays := 1;
+  ArchivePollingRate := 1;
+  ShowAdditionalSettings := True;
   SimplifiedTree := True;
 end;
 
@@ -73,11 +101,13 @@ begin
 end;
 
 function TRecorderOpcUaConfig.AddNode(const ANodeId, ATagName: string;
-  AWritable: Boolean; AReadable: Boolean): TRecorderOpcUaNode;
+  AWritable: Boolean; AReadable: Boolean;
+  const ADataTypeNodeId: string): TRecorderOpcUaNode;
 begin
   Result := TRecorderOpcUaNode.Create;
   Result.NodeId := Trim(ANodeId);
   Result.TagName := Trim(ATagName);
+  Result.DataTypeNodeId := Trim(ADataTypeNodeId);
   Result.Readable := AReadable;
   Result.Writable := AWritable;
   fNodes.Add(Result);
@@ -105,6 +135,26 @@ begin
     lRoot.Add('passwordEnv', PasswordEnvironment);
     lRoot.Add('publishingIntervalMs', Integer(PublishingIntervalMs));
     lRoot.Add('sessionTimeoutMs', Integer(SessionTimeoutMs));
+    lRoot.Add('requestTimeoutMs', Integer(RequestTimeoutMs));
+    lRoot.Add('maxNodesPerRead', Integer(MaxNodesPerRead));
+    lRoot.Add('maxNodesPerWrite', Integer(MaxNodesPerWrite));
+    lRoot.Add('maxNodesPerBrowse', Integer(MaxNodesPerBrowse));
+    case TimestampMode of
+      outSource: lRoot.Add('timestampMode', 'source');
+      outBoth: lRoot.Add('timestampMode', 'both');
+      outNeither: lRoot.Add('timestampMode', 'neither');
+    else
+      lRoot.Add('timestampMode', 'server');
+    end;
+    if PollingType = ouptSubscription then
+      lRoot.Add('pollingType', 'subscription')
+    else
+      lRoot.Add('pollingType', 'read');
+    lRoot.Add('archiveEnabled', ArchiveEnabled);
+    lRoot.Add('archiveRecordsPerPoll', Integer(ArchiveRecordsPerPoll));
+    lRoot.Add('archiveDepthDays', Integer(ArchiveDepthDays));
+    lRoot.Add('archivePollingRate', Integer(ArchivePollingRate));
+    lRoot.Add('showAdditionalSettings', ShowAdditionalSettings);
     lRoot.Add('simplifiedTree', SimplifiedTree);
     lArray := TJSONArray.Create;
     lRoot.Add('nodes', lArray);
@@ -114,6 +164,7 @@ begin
       lObject := TJSONObject.Create;
       lObject.Add('nodeId', lNode.NodeId);
       lObject.Add('tagName', lNode.TagName);
+      lObject.Add('dataTypeNodeId', lNode.DataTypeNodeId);
       lObject.Add('readable', lNode.Readable);
       lObject.Add('writable', lNode.Writable);
       lArray.Add(lObject);
@@ -165,6 +216,35 @@ begin
         CRecorderOpcUaDefaultSessionTimeoutMs));
       if SessionTimeoutMs < 1000 then
         SessionTimeoutMs := 1000;
+      RequestTimeoutMs := Cardinal(lRoot.Get('requestTimeoutMs',
+        CRecorderOpcUaDefaultRequestTimeoutMs));
+      if RequestTimeoutMs < 100 then RequestTimeoutMs := 100;
+      MaxNodesPerRead := Cardinal(lRoot.Get('maxNodesPerRead',
+        CRecorderOpcUaDefaultMaxNodesPerRequest));
+      MaxNodesPerWrite := Cardinal(lRoot.Get('maxNodesPerWrite',
+        CRecorderOpcUaDefaultMaxNodesPerRequest));
+      MaxNodesPerBrowse := Cardinal(lRoot.Get('maxNodesPerBrowse',
+        CRecorderOpcUaDefaultMaxNodesPerRequest));
+      if MaxNodesPerRead < 1 then MaxNodesPerRead := 1;
+      if MaxNodesPerWrite < 1 then MaxNodesPerWrite := 1;
+      if MaxNodesPerBrowse < 1 then MaxNodesPerBrowse := 1;
+      if SameText(lRoot.Get('timestampMode', 'server'), 'source') then
+        TimestampMode := outSource
+      else if SameText(lRoot.Get('timestampMode', 'server'), 'both') then
+        TimestampMode := outBoth
+      else if SameText(lRoot.Get('timestampMode', 'server'), 'neither') then
+        TimestampMode := outNeither
+      else
+        TimestampMode := outServer;
+      if SameText(lRoot.Get('pollingType', 'read'), 'subscription') then
+        PollingType := ouptSubscription
+      else
+        PollingType := ouptRead;
+      ArchiveEnabled := lRoot.Get('archiveEnabled', True);
+      ArchiveRecordsPerPoll := Cardinal(lRoot.Get('archiveRecordsPerPoll', 500));
+      ArchiveDepthDays := Cardinal(lRoot.Get('archiveDepthDays', 1));
+      ArchivePollingRate := Cardinal(lRoot.Get('archivePollingRate', 1));
+      ShowAdditionalSettings := lRoot.Get('showAdditionalSettings', True);
       SimplifiedTree := lRoot.Get('simplifiedTree', True);
       if lRoot.Find('nodes', lNodes) and (lNodes is TJSONArray) then
         for I := 0 to lNodes.Count - 1 do
@@ -173,7 +253,8 @@ begin
             lItem := TJSONObject(lNodes.Items[I]);
             if Trim(lItem.Get('nodeId', '')) <> '' then
               AddNode(lItem.Get('nodeId', ''), lItem.Get('tagName', ''),
-                lItem.Get('writable', False), lItem.Get('readable', True));
+                lItem.Get('writable', False), lItem.Get('readable', True),
+                lItem.Get('dataTypeNodeId', ''));
           end;
       if Endpoint = '' then
       begin

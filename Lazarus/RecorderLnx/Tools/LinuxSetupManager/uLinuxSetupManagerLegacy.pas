@@ -123,12 +123,17 @@ begin
 end;
 
 function XmlPackage(const MimeType, Extension, Comment: string): string;
+var MagicRule: string;
 begin
+  MagicRule := '';
+  if SameText(Extension, 'mera') then
+    MagicRule := '    <magic priority="100"><match type="string" offset="0" value="[MERA]"/></magic>' + LineEnding;
   Result := '<?xml version="1.0" encoding="UTF-8"?>' + LineEnding +
     '<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">' + LineEnding +
     '  <mime-type type="' + MimeType + '">' + LineEnding +
     '    <comment>' + Comment + '</comment>' + LineEnding +
     '    <glob pattern="*.' + Extension + '" weight="100"/>' + LineEnding +
+    MagicRule +
     '  </mime-type>' + LineEnding + '</mime-info>' + LineEnding;
 end;
 
@@ -215,22 +220,98 @@ begin
   Result := 0;
 end;
 
+function FindFileByName(const DirectoryName, FileName: string;
+  MaxDepth: Integer): string;
+var
+  Info: TSearchRec;
+  ItemPath: string;
+begin
+  Result := '';
+  if (MaxDepth < 0) or not DirectoryExists(DirectoryName) then Exit;
+  if FindFirst(IncludeTrailingPathDelimiter(DirectoryName) + '*', faAnyFile,
+    Info) <> 0 then Exit;
+  try
+    repeat
+      if (Info.Name = '.') or (Info.Name = '..') then Continue;
+      ItemPath := IncludeTrailingPathDelimiter(DirectoryName) + Info.Name;
+      if (Info.Attr and faDirectory) <> 0 then
+        Result := FindFileByName(ItemPath, FileName, MaxDepth - 1)
+      else if SameText(Info.Name, FileName) then
+        Result := ItemPath;
+      if Result <> '' then Exit;
+    until FindNext(Info) <> 0;
+  finally
+    FindClose(Info);
+  end;
+end;
+
+function ResolveWinPos(const Prefix: string): string;
+const
+  KnownPaths: array[0..3] of string = (
+    '/drive_c/Program Files (x86)/Mera/WinPOS/WinPos.exe',
+    '/drive_c/Program Files (x86)/MERA/WinPOS/WinPos.exe',
+    '/drive_c/Program Files/Mera/WinPOS/WinPos.exe',
+    '/drive_c/Program Files/MERA/WinPOS/WinPos.exe');
+var
+  I: Integer;
+  ProgramsDir: string;
+begin
+  Result := '';
+  for I := Low(KnownPaths) to High(KnownPaths) do
+    if FileExists(Prefix + KnownPaths[I]) then Exit(Prefix + KnownPaths[I]);
+  ProgramsDir := Prefix + '/drive_c/Program Files (x86)';
+  Result := FindFileByName(ProgramsDir, 'WinPos.exe', 4);
+  if Result <> '' then Exit;
+  ProgramsDir := Prefix + '/drive_c/Program Files';
+  Result := FindFileByName(ProgramsDir, 'WinPos.exe', 4);
+end;
+
+function FindWinPos(const HomeDir: string; out Prefix: string): string;
+var
+  Info: TSearchRec;
+  Candidate: string;
+begin
+  Result := '';
+  Prefix := GetEnvironmentVariable('WINEPREFIX');
+  if Prefix <> '' then
+  begin
+    Result := ResolveWinPos(Prefix);
+    if Result <> '' then Exit;
+  end;
+  Prefix := IncludeTrailingPathDelimiter(HomeDir) + '.wineetersoft';
+  Result := ResolveWinPos(Prefix);
+  if Result <> '' then Exit;
+  Prefix := IncludeTrailingPathDelimiter(HomeDir) + '.wine';
+  Result := ResolveWinPos(Prefix);
+  if Result <> '' then Exit;
+  if FindFirst(IncludeTrailingPathDelimiter(HomeDir) + '.wine*', faDirectory,
+    Info) <> 0 then Exit;
+  try
+    repeat
+      if (Info.Attr and faDirectory) = 0 then Continue;
+      Candidate := IncludeTrailingPathDelimiter(HomeDir) + Info.Name;
+      Prefix := Candidate;
+      Result := ResolveWinPos(Prefix);
+      if Result <> '' then Exit;
+    until FindNext(Info) <> 0;
+  finally
+    FindClose(Info);
+  end;
+  Prefix := '';
+end;
+
 function OpenMera(const Args: TStrings; out Output: string): Integer;
-var Prefix, WinPos, WinDir, WineFile: string;
+var Prefix, WinPos, HomeDir: string;
 begin
   Result := 1;
   if (Args.Count <> 1) or not FileExists(Args[0]) then
   begin Output := 'Файл замера не найден.'; Exit; end;
-  Prefix := GetEnvironmentVariable('HOME') + '/.wine';
-  WinDir := Prefix + '/drive_c/Program Files (x86)/Mera/WinPOS';
-  WinPos := WinDir + '/WinPos.exe';
+  HomeDir := GetEnvironmentVariable('HOME');
+  WinPos := FindWinPos(HomeDir, Prefix);
   if not FileExists(WinPos) then
-  begin Output := 'WinPOS не найден: ' + WinPos; Exit; end;
-  if not NeedRun('env', ['WINEPREFIX=' + Prefix, 'winepath', '-w',
-    ExpandFileName(Args[0])], WineFile) then
-  begin Output := WineFile; Exit; end;
-  if not Run('env', ['WINEPREFIX=' + Prefix, 'wine', WinPos,
-    Trim(WineFile)], Output, WinDir) then Exit;
+  begin Output := 'WinPOS не найден в Wine-префиксах: ' + HomeDir; Exit; end;
+  if not Run('env', ['WINEPREFIX=' + Prefix, 'wine', 'start',
+    '/ProgIDOpen', 'WinPos', ExpandFileName(Args[0])], Output) then Exit;
   Result := 0;
 end;
 

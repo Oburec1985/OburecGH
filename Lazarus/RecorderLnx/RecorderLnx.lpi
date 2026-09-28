@@ -664,13 +664,29 @@
         <Filename Value="SQLdb/uRecorderSqlDbProjectManager.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderFrequencyResponse.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderFrequencyResponseModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderFrequencyResponseView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderFrequencyResponseSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

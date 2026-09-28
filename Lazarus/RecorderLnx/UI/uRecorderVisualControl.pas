@@ -217,6 +217,7 @@ uses
   uRecorderOglOscillogramView,
   uRecorderTrendView,
   uRecorderSpectrumView,
+  uRecorderLissajousView,
   uRecorderSpectrumRuntime,
   uRecorderSpectrumEngine,
   uRecorderVibrationEstimate,
@@ -427,7 +428,7 @@ begin
   lTag := RecorderResolveTag(fTagRegistry, fComponent.TagId,
     fComponent.TagName);
   if (lTag <> nil) and lTag.ExternalWriteAllowed then
-    fTagRegistry.PublishValue(lTag, lValue);
+    fTagRegistry.PublishExternalValue(lTag, lValue);
   fLastRevision := 0;
   RefreshControl(fTagRegistry, 0.0);
 end;
@@ -498,7 +499,7 @@ procedure TRecorderButtonView.Publish(AValue: Double);
 begin
   if fEditMode or (fComponent = nil) or (fTagRegistry = nil) or
     (Trim(fComponent.TagName) = '') then Exit;
-  fTagRegistry.PublishValue(fComponent.TagName, AValue);
+  fTagRegistry.PublishExternalValue(fComponent.TagName, AValue);
 end;
 
 procedure TRecorderButtonView.ButtonClick(Sender: TObject);
@@ -1536,6 +1537,7 @@ initialization
   TRecorderVisualControlRegistry.RegisterControl(TRecorderTrendComponent, TRecorderTrendView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderOscillogramComponent, TRecorderOglOscillogram);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderSpectrumComponent, TRecorderSpectrumView);
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderLissajousComponent, TRecorderLissajousView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderDonutComponent, TRecorderDonutView);
 
 finalization

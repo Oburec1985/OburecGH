@@ -18,6 +18,8 @@ type
     fProjectDirectory: string;
     fDelayedWorkers: TList;
     fDelayedWorkersLock: TCriticalSection;
+    fPendingWrites: TList;
+    fCollectingWrites: Boolean;
     fClosing: Boolean;
     procedure UpdateDirectory;
     procedure LogError(const AMessage: string);
@@ -29,6 +31,11 @@ type
       ADelaySeconds: Double): Boolean;
     function PublishDelayedValue(const AName: UTF8String;
       AValue: Double): Boolean;
+    function StageValue(const AName: UTF8String; AValue: Double): Boolean;
+    function ReadStagedValue(const AName: UTF8String;
+      out AValue: Double): Boolean;
+    function CommitStagedValues: Boolean;
+    procedure ClearStagedValues;
   public
     constructor Create;
     destructor Destroy; override;
@@ -61,6 +68,11 @@ type
     Engine: TLuaCalcEngine;
     Active: Boolean;
     destructor Destroy; override;
+  end;
+
+  TPendingTagWrite = class
+    Name: UTF8String;
+    Value: Double;
   end;
 
 destructor TLoadedScript.Destroy;
@@ -106,6 +118,8 @@ var
   lHost: ^TRecorderPluginHostApi;
   lTime: Double;
 begin
+  if TLuaCalcPlugin(AContext).ReadStagedValue(AName, AValue) then
+    Exit(True);
   lHost := @TLuaCalcPlugin(AContext).fHost;
   Result := Assigned(lHost^.ReadTagValue) and
     lHost^.ReadTagValue(lHost^.HostContext, PAnsiChar(AName), lTime, AValue);
@@ -189,12 +203,8 @@ end;
 
 function WriteValue(AContext: Pointer; const AName: UTF8String;
   AValue, ATime: Double; AStatus: LongInt): Boolean; cdecl;
-var
-  lHost: ^TRecorderPluginHostApi;
 begin
-  lHost := @TLuaCalcPlugin(AContext).fHost;
-  Result := Assigned(lHost^.PublishTagValue) and
-    lHost^.PublishTagValue(lHost^.HostContext, PAnsiChar(AName), AValue);
+  Result := TLuaCalcPlugin(AContext).StageValue(AName, AValue);
 end;
 
 function WriteDelayedValue(AContext: Pointer; const AName: UTF8String;
@@ -208,6 +218,7 @@ constructor TLuaCalcPlugin.Create;
 begin
   inherited Create;
   fScripts := TList.Create;
+  fPendingWrites := TList.Create;
   fDelayedWorkers := TList.Create;
   fDelayedWorkersLock := TCriticalSection.Create;
 end;
@@ -217,8 +228,79 @@ begin
   Close;
   fDelayedWorkersLock.Free;
   fDelayedWorkers.Free;
+  ClearStagedValues;
+  fPendingWrites.Free;
   fScripts.Free;
   inherited Destroy;
+end;
+
+procedure TLuaCalcPlugin.ClearStagedValues;
+var
+  I: Integer;
+begin
+  for I := fPendingWrites.Count - 1 downto 0 do
+    TObject(fPendingWrites[I]).Free;
+  fPendingWrites.Clear;
+end;
+
+function TLuaCalcPlugin.ReadStagedValue(const AName: UTF8String;
+  out AValue: Double): Boolean;
+var
+  I: Integer;
+  lWrite: TPendingTagWrite;
+begin
+  for I := fPendingWrites.Count - 1 downto 0 do
+  begin
+    lWrite := TPendingTagWrite(fPendingWrites[I]);
+    if lWrite.Name <> AName then Continue;
+    AValue := lWrite.Value;
+    Exit(True);
+  end;
+  Result := False;
+end;
+
+function TLuaCalcPlugin.StageValue(const AName: UTF8String;
+  AValue: Double): Boolean;
+var
+  I: Integer;
+  lWrite: TPendingTagWrite;
+begin
+  Result := (AName <> '') and not IsNan(AValue) and not IsInfinite(AValue);
+  if not Result then Exit;
+  if not fCollectingWrites then
+  begin
+    Result := Assigned(fHost.PublishTagValue) and
+      fHost.PublishTagValue(fHost.HostContext, PAnsiChar(AName), AValue);
+    Exit;
+  end;
+  for I := fPendingWrites.Count - 1 downto 0 do
+  begin
+    lWrite := TPendingTagWrite(fPendingWrites[I]);
+    if lWrite.Name <> AName then Continue;
+    lWrite.Value := AValue;
+    Exit(True);
+  end;
+  lWrite := TPendingTagWrite.Create;
+  lWrite.Name := AName;
+  lWrite.Value := AValue;
+  fPendingWrites.Add(lWrite);
+end;
+
+function TLuaCalcPlugin.CommitStagedValues: Boolean;
+var
+  I: Integer;
+  lWrite: TPendingTagWrite;
+begin
+  Result := Assigned(fHost.PublishTagValue);
+  if not Result then Exit;
+  for I := 0 to fPendingWrites.Count - 1 do
+  begin
+    lWrite := TPendingTagWrite(fPendingWrites[I]);
+    if fHost.PublishTagValue(fHost.HostContext, PAnsiChar(lWrite.Name),
+      lWrite.Value) then Continue;
+    LogError('Не удалось применить значение тега: ' + string(lWrite.Name));
+    Result := False;
+  end;
 end;
 
 function TLuaCalcPlugin.Initialize(AHostApi: PRecorderPluginHostApi): Boolean;
@@ -474,15 +556,27 @@ end;
 procedure TLuaCalcPlugin.RunScripts;
 var
   I: Integer;
+  lSucceeded: Boolean;
 begin
-  for I := 0 to fScripts.Count - 1 do
-    if TLoadedScript(fScripts[I]).Active and
-      not TLoadedScript(fScripts[I]).Engine.RunMain then
-    begin
-      TLoadedScript(fScripts[I]).Active := False;
-      LogError(TLoadedScript(fScripts[I]).Name + ': ' +
-        TLoadedScript(fScripts[I]).Engine.LastError);
-    end;
+  ClearStagedValues;
+  fCollectingWrites := True;
+  lSucceeded := True;
+  try
+    for I := 0 to fScripts.Count - 1 do
+      if TLoadedScript(fScripts[I]).Active and
+        not TLoadedScript(fScripts[I]).Engine.RunMain then
+      begin
+        TLoadedScript(fScripts[I]).Active := False;
+        LogError(TLoadedScript(fScripts[I]).Name + ': ' +
+          TLoadedScript(fScripts[I]).Engine.LastError);
+        lSucceeded := False;
+        Break;
+      end;
+    if lSucceeded then CommitStagedValues;
+  finally
+    fCollectingWrites := False;
+    ClearStagedValues;
+  end;
 end;
 
 function TLuaCalcPlugin.Notify(AEvent: LongInt): Boolean;

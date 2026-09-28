@@ -53,6 +53,11 @@ type
   //function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
   function GrahamScanWithDiameter(const Points: TPointArray; p_size:integer;
           out Diameter: TDiameterResult): TPointArray;
+  // Быстрая оценка главного направления облака точек методом PCA.
+  // В отличие от GrahamScanWithDiameter возвращает не максимальную хорду
+  // выпуклой оболочки, а отрезок вдоль главной оси распределения.
+  function PrincipalAxisDiameter(const Points: TPointArray; p_size: Integer;
+          out Diameter: TDiameterResult): Boolean;
 
 
 //px, py — координаты точки, от которой рассчитывается расстояние.
@@ -518,19 +523,33 @@ end;
 function GrahamScan(const Points: TPointArray; p_size:integer): TPointArray;
 var
   SortedPoints, UniquePoints, Hull: TPointArray;
-  PointCount, UniqueCount, HullCount, I: Integer;
+  PointCount, UniqueCount, HullCount, I, BottomIndex: Integer;
+  Bottom, TempPoint: point2;
 
   function ComparePoints(const Left, Right: point2): Integer;
+  var
+    Turn, LeftDistance, RightDistance: Double;
   begin
-    if Left.X < Right.X then
+    Turn := (Double(Left.X) - Bottom.X) * (Double(Right.Y) - Bottom.Y) -
+      (Double(Left.Y) - Bottom.Y) * (Double(Right.X) - Bottom.X);
+    if Turn > 0 then
       Exit(-1);
-    if Left.X > Right.X then
+    if Turn < 0 then
       Exit(1);
-    if Left.Y < Right.Y then
+    LeftDistance := Sqr(Double(Left.X) - Bottom.X) +
+      Sqr(Double(Left.Y) - Bottom.Y);
+    RightDistance := Sqr(Double(Right.X) - Bottom.X) +
+      Sqr(Double(Right.Y) - Bottom.Y);
+    if LeftDistance < RightDistance then
       Exit(-1);
-    if Left.Y > Right.Y then
+    if LeftDistance > RightDistance then
       Exit(1);
     Result := 0;
+  end;
+
+  function SamePoint(const Left, Right: point2): Boolean;
+  begin
+    Result := (Left.X = Right.X) and (Left.Y = Right.Y);
   end;
 
   procedure QuickSortPoints(var Values: TPointArray; Left, Right: Integer);
@@ -581,15 +600,25 @@ begin
     Exit;
 
   SortedPoints := Copy(Points, 0, PointCount);
-  if PointCount > 1 then
-    QuickSortPoints(SortedPoints, 0, PointCount - 1);
+  BottomIndex := 0;
+  for I := 1 to PointCount - 1 do
+    if (SortedPoints[I].Y < SortedPoints[BottomIndex].Y) or
+       ((SortedPoints[I].Y = SortedPoints[BottomIndex].Y) and
+        (SortedPoints[I].X < SortedPoints[BottomIndex].X)) then
+      BottomIndex := I;
+  Bottom := SortedPoints[BottomIndex];
+  TempPoint := SortedPoints[0];
+  SortedPoints[0] := Bottom;
+  SortedPoints[BottomIndex] := TempPoint;
+  if PointCount > 2 then
+    QuickSortPoints(SortedPoints, 1, PointCount - 1);
 
   SetLength(UniquePoints, PointCount);
   UniqueCount := 0;
   for I := 0 to PointCount - 1 do
   begin
     if (UniqueCount = 0) or
-       (ComparePoints(UniquePoints[UniqueCount - 1], SortedPoints[I]) <> 0) then
+       not SamePoint(UniquePoints[UniqueCount - 1], SortedPoints[I]) then
     begin
       UniquePoints[UniqueCount] := SortedPoints[I];
       Inc(UniqueCount);
@@ -602,9 +631,10 @@ begin
     Exit;
   end;
 
-  SetLength(Hull, UniqueCount * 2);
-  HullCount := 0;
-  for I := 0 to UniqueCount - 1 do
+  SetLength(Hull, UniqueCount);
+  Hull[0] := UniquePoints[0];
+  HullCount := 1;
+  for I := 1 to UniqueCount - 1 do
   begin
     while (HullCount >= 2) and
       (Cross(Hull[HullCount - 2], Hull[HullCount - 1], UniquePoints[I]) <= 0) do
@@ -613,17 +643,6 @@ begin
     Inc(HullCount);
   end;
 
-  PointCount := HullCount + 1;
-  for I := UniqueCount - 2 downto 0 do
-  begin
-    while (HullCount >= PointCount) and
-      (Cross(Hull[HullCount - 2], Hull[HullCount - 1], UniquePoints[I]) <= 0) do
-      Dec(HullCount);
-    Hull[HullCount] := UniquePoints[I];
-    Inc(HullCount);
-  end;
-
-  Dec(HullCount); // The first point is repeated by the upper chain.
   SetLength(Hull, HullCount);
   Result := Hull;
 end;
@@ -678,6 +697,68 @@ begin
   Diameter.Index2 := -1;
   Result := GrahamScan(Points, p_size);
   FindDiameter(Result, Diameter);
+end;
+
+function PrincipalAxisDiameter(const Points: TPointArray; p_size: Integer;
+  out Diameter: TDiameterResult): Boolean;
+var
+  I, PointCount: Integer;
+  MeanX, MeanY, DX, DY, XX, XY, YY, Angle: Double;
+  AxisX, AxisY, Projection, MinProjection, MaxProjection: Double;
+begin
+  FillChar(Diameter, SizeOf(Diameter), 0);
+  Diameter.Index1 := -1;
+  Diameter.Index2 := -1;
+  Result := False;
+  PointCount := p_size;
+  if PointCount > Length(Points) then
+    PointCount := Length(Points);
+  if PointCount < 2 then
+    Exit;
+
+  MeanX := 0;
+  MeanY := 0;
+  for I := 0 to PointCount - 1 do
+  begin
+    MeanX := MeanX + Points[I].X;
+    MeanY := MeanY + Points[I].Y;
+  end;
+  MeanX := MeanX / PointCount;
+  MeanY := MeanY / PointCount;
+
+  XX := 0;
+  XY := 0;
+  YY := 0;
+  for I := 0 to PointCount - 1 do
+  begin
+    DX := Points[I].X - MeanX;
+    DY := Points[I].Y - MeanY;
+    XX := XX + DX * DX;
+    XY := XY + DX * DY;
+    YY := YY + DY * DY;
+  end;
+
+  Angle := 0.5 * ArcTan2(2.0 * XY, XX - YY);
+  AxisX := Cos(Angle);
+  AxisY := Sin(Angle);
+  MinProjection := MaxDouble;
+  MaxProjection := -MaxDouble;
+  for I := 0 to PointCount - 1 do
+  begin
+    Projection := (Points[I].X - MeanX) * AxisX +
+      (Points[I].Y - MeanY) * AxisY;
+    if Projection < MinProjection then
+      MinProjection := Projection;
+    if Projection > MaxProjection then
+      MaxProjection := Projection;
+  end;
+
+  Diameter.Point1.X := MeanX + MinProjection * AxisX;
+  Diameter.Point1.Y := MeanY + MinProjection * AxisY;
+  Diameter.Point2.X := MeanX + MaxProjection * AxisX;
+  Diameter.Point2.Y := MeanY + MaxProjection * AxisY;
+  Diameter.Distance := MaxProjection - MinProjection;
+  Result := Diameter.Distance > 0;
 end;
 
 // Вспомогательная функция для вычисления расстояния

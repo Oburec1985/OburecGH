@@ -131,6 +131,37 @@ original. If settings exit is still slow, next checks should measure
 `SyncToRegistry`, `CreateSelectedMeraTags`, `RebuildTagList`, and
 `RenderActivePage` separately.
 
+## 2026-09-28 follow-up: redundant rendering on settings exit
+
+### Confirmed facts
+
+- `btnSettingsClick` always called `RenderActivePage`, including Cancel.
+- For the base page this recreated all oscillogram controls; for a mnemonic it
+  ran `Configure`/`RefreshControl` for every visual component.
+- Settings do not change the form component tree. Existing controls only need
+  fresh tag data and the possibly changed display-window duration.
+- On a changed hardware source `ConfigurationService.Apply` called
+  `PrepareAlgorithms`, then `PrepareHardware`; the latter called
+  `PrepareRuntimeForConfiguration` and prepared algorithms a second time.
+
+### Change
+
+- Added a settings-specific active-page refresh: digital table rebuild, base
+  oscillogram data refresh without recreation, mnemonic `RefreshLive` without
+  component reconfiguration.
+- Split hardware-only preparation from combined startup preparation, removing
+  the duplicate algorithm preparation on settings apply.
+- Added `[SETTINGS-PERF]` timings for apply and post-dialog UI refresh.
+- Removed the first of two consecutive `UpdateActiveSourceIds` scans; the
+  remaining call after apply observes the final runtime/source state.
+
+### Verification
+
+- Forced Windows build: exit code 0.
+- Forced Linux build: exit code 0, `MISSING_LIBS none`.
+- Package 0.1.87 installed on MIC-200; `recorderlnx-manual.service` active,
+  process PID 14825.
+
 ## Follow-up: First Preview was slow after settings/startup
 
 ### Symptom

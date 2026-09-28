@@ -245,6 +245,7 @@ var
   lX: Double;
   lY: Double;
   lScale: Double;
+  lKind: TRecorderCalibrationKind;
 begin
   if fCalibration = nil then
     Exit;
@@ -254,8 +255,10 @@ begin
   fCalibration.Description := Trim(edDescription.Text);
   fCalibration.UnitIn := CanonicalUnit(edUnitIn.Text);
   fCalibration.UnitOut := CanonicalUnit(edUnitOut.Text);
-  fCalibration.Extrapolation := cbExtrapolation.Checked;
-  fCalibration.Kind := ComboCalibrationKind;
+  lKind := ComboCalibrationKind;
+  fCalibration.Kind := lKind;
+  fCalibration.Extrapolation :=
+    (lKind = rckPiecewiseLinear) and cbExtrapolation.Checked;
   if ReadFloat(edScaleInv.Text, lScale) then
     fCalibration.Scale := lScale;
   if ReadFloat(edOffset.Text, lScale) then
@@ -312,6 +315,10 @@ var
 begin
   lKind := ComboCalibrationKind;
   lFormulaMode := lKind in [rckScale, rckLinear];
+  cbExtrapolation.Visible := lKind = rckPiecewiseLinear;
+  cbExtrapolation.Enabled := cbExtrapolation.Visible;
+  if not cbExtrapolation.Visible then
+    cbExtrapolation.Checked := False;
   gridPoints.Visible := not lFormulaMode;
   btnAddPoint.Visible := not lFormulaMode;
   btnDeletePoint.Visible := not lFormulaMode;

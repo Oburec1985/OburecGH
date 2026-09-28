@@ -50,9 +50,13 @@ const
   CIconMeasurementSection = 60;
   CIconDonut = 61;
   CIconInputField = 62;
+  CIconSqlTrend = 63;
+  CIconFrequencyResponse = 64;
+  CIconLissajous = 65;
+  CIconPluginOscillogram = 66;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 63;
+  CRecorderCommandImageCount = 67;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -60,6 +64,7 @@ const
 
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
 procedure EnsureRecorderTagDialogImages(AImages: TCustomImageList);
+procedure RegenerateRecorderDesignerIcons(AImages: TCustomImageList);
 
 implementation
 
@@ -357,15 +362,14 @@ procedure ReplaceInputFieldIcon(AImages: TCustomImageList);
 const
   CSize = 42;
 var
-  lBitmap, lMask: TBitmap;
+  lBitmap: TBitmap;
 begin
   lBitmap := TBitmap.Create;
   try
     lBitmap.SetSize(CSize, CSize);
     lBitmap.PixelFormat := pf24bit;
-    lBitmap.Transparent := True;
-    lBitmap.TransparentColor := clFuchsia;
-    lBitmap.Canvas.Brush.Color := clFuchsia;
+    lBitmap.Transparent := False;
+    lBitmap.Canvas.Brush.Color := clWhite;
     lBitmap.Canvas.FillRect(0, 0, CSize, CSize);
 
     { Рамка редактируемого текста, набранные символы и I-образный курсор
@@ -389,20 +393,149 @@ begin
     lBitmap.Canvas.LineTo(34, 28);
     lBitmap.Canvas.Pen.Width := 1;
 
-    lMask := CreateMaskFromTransparentBitmap(lBitmap);
-    try
-      AImages.Replace(CIconInputField, lBitmap, lMask);
-    finally
-      lMask.Free;
-    end;
+    AImages.Replace(CIconInputField, lBitmap, nil);
   finally
     lBitmap.Free;
   end;
 end;
 
-procedure LoadRecorderCommandImages(AImages: TCustomImageList);
+procedure DrawPaletteFrame(ACanvas: TCanvas);
+begin
+  ACanvas.Brush.Color := clWhite;
+  ACanvas.Pen.Color := $00606060;
+  ACanvas.Rectangle(3, 3, 39, 39);
+  ACanvas.Pen.Color := $00C8C8C8;
+  ACanvas.MoveTo(8, 8);
+  ACanvas.LineTo(8, 35);
+  ACanvas.LineTo(35, 35);
+end;
+
+procedure DrawPaletteGlyph(ACanvas: TCanvas; AKind: Integer);
+const
+  CSpectrumHeights: array[0..6] of Integer = (9, 18, 13, 27, 21, 15, 8);
 var
-  lDonut: TPortableNetworkGraphic;
+  I: Integer;
+begin
+  DrawPaletteFrame(ACanvas);
+  ACanvas.Pen.Width := 2;
+  case AKind of
+    0, 6: begin
+      { Настольный осциллограф: корпус, ЭЛТ-экран и ручки управления. }
+      ACanvas.Brush.Color := $00C8C8C8;
+      ACanvas.Pen.Color := $00404040;
+      ACanvas.Rectangle(3, 7, 39, 36);
+      ACanvas.Brush.Color := $00181818;
+      ACanvas.Rectangle(6, 10, 29, 32);
+      ACanvas.Pen.Color := $00383838;
+      ACanvas.Pen.Width := 1;
+      ACanvas.MoveTo(7, 17); ACanvas.LineTo(28, 17);
+      ACanvas.MoveTo(7, 24); ACanvas.LineTo(28, 24);
+      ACanvas.MoveTo(13, 11); ACanvas.LineTo(13, 31);
+      ACanvas.MoveTo(21, 11); ACanvas.LineTo(21, 31);
+      ACanvas.Pen.Color := clLime;
+      ACanvas.Pen.Width := 2;
+      ACanvas.MoveTo(7, 22); ACanvas.LineTo(10, 22);
+      ACanvas.LineTo(13, 15); ACanvas.LineTo(17, 28);
+      ACanvas.LineTo(21, 14); ACanvas.LineTo(25, 23);
+      ACanvas.LineTo(28, 21);
+      ACanvas.Brush.Color := $00707070;
+      ACanvas.Pen.Color := $00303030;
+      ACanvas.Ellipse(31, 11, 37, 17);
+      ACanvas.Ellipse(31, 21, 37, 27);
+      ACanvas.Brush.Color := $00202020;
+      ACanvas.Rectangle(31, 30, 37, 33);
+      ACanvas.Pen.Width := 1;
+      ACanvas.MoveTo(7, 36); ACanvas.LineTo(7, 39);
+      ACanvas.MoveTo(35, 36); ACanvas.LineTo(35, 39);
+      if AKind = 6 then begin
+        ACanvas.Brush.Color := $00E08020;
+        ACanvas.Pen.Color := $00804010;
+        ACanvas.Ellipse(28, 3, 40, 15);
+        ACanvas.Font.Color := clWhite;
+        ACanvas.Font.Style := [fsBold];
+        ACanvas.Font.Size := 7;
+        ACanvas.TextOut(31, 3, 'P');
+        ACanvas.Font.Style := [];
+      end;
+    end;
+    1, 2: begin
+      ACanvas.Pen.Color := clBlue;
+      ACanvas.MoveTo(5, 29); ACanvas.LineTo(11, 18);
+      ACanvas.LineTo(16, 25); ACanvas.LineTo(22, 11);
+      ACanvas.LineTo(28, 23); ACanvas.LineTo(37, 14);
+      if AKind = 2 then begin
+        ACanvas.Brush.Color := $00D09030;
+        ACanvas.Pen.Color := $00704010;
+        ACanvas.Ellipse(25, 26, 38, 31);
+        ACanvas.Rectangle(25, 28, 38, 36);
+      end;
+    end;
+    3: begin
+      ACanvas.Brush.Color := $0000A020;
+      ACanvas.Pen.Color := $00007010;
+      for I := 0 to High(CSpectrumHeights) do
+        ACanvas.Rectangle(6 + I * 4, 34 - CSpectrumHeights[I],
+          9 + I * 4, 35);
+    end;
+    4: begin
+      ACanvas.Pen.Color := $000080D0;
+      ACanvas.MoveTo(5, 31); ACanvas.LineTo(10, 30);
+      ACanvas.LineTo(15, 27); ACanvas.LineTo(20, 21);
+      ACanvas.LineTo(25, 13); ACanvas.LineTo(31, 10);
+      ACanvas.LineTo(37, 9);
+      ACanvas.Brush.Color := $000080D0;
+      ACanvas.Ellipse(18, 19, 23, 24);
+      ACanvas.Ellipse(29, 8, 34, 13);
+    end;
+    5: begin
+      ACanvas.Pen.Color := $009020B0;
+      ACanvas.MoveTo(21, 21); ACanvas.LineTo(29, 8);
+      ACanvas.LineTo(35, 21); ACanvas.LineTo(29, 34);
+      ACanvas.LineTo(13, 8); ACanvas.LineTo(7, 21);
+      ACanvas.LineTo(13, 34); ACanvas.LineTo(21, 21);
+    end;
+  end;
+  ACanvas.Pen.Width := 1;
+end;
+
+procedure ReplaceComponentPaletteIcon(AImages: TCustomImageList;
+  AIndex, AKind: Integer);
+var
+  lBitmap: TBitmap;
+begin
+  lBitmap := TBitmap.Create;
+  try
+    lBitmap.SetSize(42, 42);
+    lBitmap.PixelFormat := pf24bit;
+    lBitmap.Transparent := False;
+    lBitmap.Canvas.Brush.Color := clWhite;
+    lBitmap.Canvas.FillRect(0, 0, 42, 42);
+    DrawPaletteGlyph(lBitmap.Canvas, AKind);
+    AImages.Replace(AIndex, lBitmap, nil);
+  finally
+    lBitmap.Free;
+  end;
+end;
+
+procedure ReplaceComponentPaletteIcons(AImages: TCustomImageList);
+begin
+  ReplaceComponentPaletteIcon(AImages, CIconTrends, 1);
+  ReplaceComponentPaletteIcon(AImages, CIconSqlTrend, 2);
+  ReplaceComponentPaletteIcon(AImages, CIconFrequencyResponse, 4);
+  ReplaceComponentPaletteIcon(AImages, CIconLissajous, 5);
+  ReplaceComponentPaletteIcon(AImages, CIconPluginOscillogram, 6);
+end;
+
+procedure RegenerateRecorderDesignerIcons(AImages: TCustomImageList);
+begin
+  if AImages = nil then
+    Exit;
+  EnsureImageListSize(AImages, CRecorderCommandImageCount);
+  ReplaceInputFieldIcon(AImages);
+  ReplaceComponentPaletteIcons(AImages);
+end;
+
+procedure LoadRecorderCommandImages(AImages: TCustomImageList);
 begin
   if AImages = nil then
     Exit;
@@ -443,18 +576,9 @@ begin
   end;
 
   EnsureImageListSize(AImages, CRecorderCommandImageCount);
-  ReplaceInputFieldIcon(AImages);
-  lDonut := TPortableNetworkGraphic.Create;
-  try
-    lDonut.LoadFromLazarusResource('donut');
-    AImages.Replace(CIconDonut, lDonut, nil);
-  finally
-    lDonut.Free;
-  end;
-
-  { Save и Save As берутся непосредственно из встроенного ilCommandButtons
-    (индексы 58 и 48). Внешняя платформенная подмена здесь недопустима: иначе
-    Windows и Linux получают разные изображения и маски прозрачности. }
+  { Все штатные пиктограммы, включая 61..66, хранятся непосредственно в
+    ilCommandButtons формы. Runtime не должен подменять дизайнерский список:
+    иначе Lazarus показывает одно изображение, а приложение — другое. }
 end;
 
 initialization

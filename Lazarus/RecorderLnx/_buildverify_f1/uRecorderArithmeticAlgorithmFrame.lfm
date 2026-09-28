@@ -1,0 +1,79 @@
+object RecorderArithmeticAlgorithmFrame: TRecorderArithmeticAlgorithmFrame
+  Left = 0
+  Height = 168
+  Top = 0
+  Width = 584
+  Align = alClient
+  AutoSize = True
+  ClientHeight = 168
+  ClientWidth = 584
+  TabOrder = 0
+  object lbInputA: TLabel
+    Left = 12
+    Height = 15
+    Top = 16
+    Width = 43
+    Caption = 'Тег A:'
+  end
+  object cbInputA: TComboBox
+    Left = 150
+    Height = 23
+    Top = 12
+    Width = 418
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+  end
+  object lbInputB: TLabel
+    Left = 12
+    Height = 15
+    Top = 50
+    Width = 42
+    Caption = 'Тег B:'
+  end
+  object cbInputB: TComboBox
+    Left = 150
+    Height = 23
+    Top = 46
+    Width = 418
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 1
+  end
+  object lbOperation: TLabel
+    Left = 12
+    Height = 15
+    Top = 84
+    Width = 69
+    Caption = 'Операция:'
+  end
+  object cbOperation: TComboBox
+    Left = 150
+    Height = 23
+    Top = 80
+    Width = 418
+    Anchors = [akTop, akLeft, akRight]
+    ItemHeight = 15
+    Items.Strings = (
+      'Сложение (A + B)'
+      'Вычитание (A - B)'
+      'Умножение (A × B)'
+      'Деление (A / B)'
+    )
+    Style = csDropDownList
+    TabOrder = 2
+  end
+  object lbOutput: TLabel
+    Left = 12
+    Height = 15
+    Top = 118
+    Width = 87
+    Caption = 'Выходной тег:'
+  end
+  object edOutput: TEdit
+    Left = 150
+    Height = 23
+    Top = 114
+    Width = 418
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 3
+  end
+end

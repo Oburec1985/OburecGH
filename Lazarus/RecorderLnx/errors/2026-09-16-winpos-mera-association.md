@@ -26,3 +26,22 @@ Launcher использует фактический регистр катало
 SSH-аудитом сопоставлены штатный ярлык WinPOS, установленный desktop-файл,
 launcher, MIME defaults и реальный файл `/home/user/Загрузки/0001.mera`.
 Сборка и проверка после развёртывания фиксируются в журнале итерации.
+
+## Повторное проявление на MIC-200 (2026-09-28)
+
+Встроенная команда `associate-mera` создавала desktop-обработчик, который
+позже вызывал `open-mera`. В нём снова оказался жёсткий путь к `.wine` и
+прямой запуск `WinPos.exe`. На MIC-200 фактический префикс — `.wineetersoft`,
+а рабочая регистрация Wine@Etersoft запускает программу через
+`wine start /ProgIDOpen WinPos`.
+
+Исправлено в самом LinuxSetupManager: он ищет `.wineetersoft`, `.wine` и
+остальные `.wine*`, находит `WinPos.exe` без зависимости от регистра, затем
+открывает замер через зарегистрированный ProgID WinPos. MIME-пакет дополнен
+сигнатурой `[MERA]`; оба MIME (`application/x-mera-measurement` и
+`application/x-wine-extension-mera`) назначаются одному обработчику.
+
+На MIC-200 установлен пакет 0.1.98. Встроенной CLI-командой ассоциация
+применена для пользователя `mera`. Контрольный запуск файла
+`/home/mera/Mera files/usml/0001/0001.mera` создал процесс
+`WINPOS.EXE Z:\\home\\mera\\Mera files\\usml\\0001\\0001.mera`.

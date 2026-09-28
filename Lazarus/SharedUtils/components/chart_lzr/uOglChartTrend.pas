@@ -64,6 +64,10 @@ type
   private
     fPoints: array of TChartPoint;       // Внутренний динамический массив точек серии
     fPointCount: Integer;
+    fLineWidth: Single;
+    fDrawLine: Boolean;
+    fDrawMarkers: Boolean;
+    fMarkerSize: Single;
 
     function GetPoint(AIndex: Integer): TChartPoint;
     function GetPointCount: Integer;
@@ -76,9 +80,14 @@ type
     // Пакетное добавление массива точек
     procedure AddPoints(const APoints: array of TChartPoint);
     procedure ReplacePoints(const APoints: array of TChartPoint; ACount: Integer);
+    procedure ReservePoints(ACapacity: Integer);
 
     property Points[AIndex: Integer]: TChartPoint read GetPoint;
     property PointCount: Integer read GetPointCount;
+    property LineWidth: Single read fLineWidth write fLineWidth;
+    property DrawLine: Boolean read fDrawLine write fDrawLine;
+    property DrawMarkers: Boolean read fDrawMarkers write fDrawMarkers;
+    property MarkerSize: Single read fMarkerSize write fMarkerSize;
   end;
 
   { cTrend }
@@ -216,6 +225,10 @@ begin
   Name := 'LineSeries';
   Caption := 'Line series';
   Color := $FFFF0000;
+  fLineWidth := 1.0;
+  fDrawLine := True;
+  fDrawMarkers := False;
+  fMarkerSize := 3.0;
   SetLength(fPoints, 0);
   fPointCount := 0;
 end;
@@ -276,6 +289,11 @@ begin
     Move(APoints[0], fPoints[0], ACount * SizeOf(TChartPoint));
   fPointCount := ACount;
   GLListID := 0;
+end;
+
+procedure cLineSeries.ReservePoints(ACapacity: Integer);
+begin
+  if ACapacity > Length(fPoints) then SetLength(fPoints, ACapacity);
 end;
 
 { cTrend }

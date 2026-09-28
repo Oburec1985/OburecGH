@@ -7,7 +7,8 @@ interface
 
 uses
   Classes, SysUtils, uRecorderDataSources, uRecorderTags,
-  uRecorderDeviceInterfaces, uRecorderOpcUaDevice, uRecorderOpcUaTypes;
+  uRecorderDeviceInterfaces, uRecorderOpcUaDevice, uRecorderOpcUaTypes,
+  uRecorderOpcUaApi;
 
 type
   { Tag/worker adapter. The protocol session belongs to the device; this class
@@ -16,12 +17,14 @@ type
   private
     fDevice: IRecorderDevice;
     fNodeTags: array of TRecorderTag;
+    fWriteCursors: array of QWord;
     fNextPrepareAtMs: QWord;
     fPrepared: Boolean;
     fPrepareError: string;
     fBindingError: string;
     function OpcDevice: TRecorderOpcUaDevice;
     function BindServerNodes: Boolean;
+    function FlushClientWrites: Boolean;
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -65,6 +68,7 @@ var
 begin
   fBindingError := '';
   SetLength(fNodeTags, OpcDevice.NodeCount);
+  SetLength(fWriteCursors, OpcDevice.NodeCount);
   for I := 0 to OpcDevice.NodeCount - 1 do
   begin
     lNode := OpcDevice.Node(I);
@@ -86,7 +90,66 @@ begin
     fNodeTags[I].ExternalWriteAllowed := lNode.Writable;
     fNodeTags[I].PollFrequencyHz := 1000.0 /
       Max(10, OpcDevice.Config.PublishingIntervalMs);
+    fWriteCursors[I] := fNodeTags[I].ExternalWriteCursor;
   end;
+end;
+
+function TRecorderOpcUaDataSource.FlushClientWrites: Boolean;
+var
+  I, J, lCount, lChunkCount, lChunkStart, lMaxPerRequest: Integer;
+  lCandidateCursor: QWord;
+  lValue: Double;
+  lIndexes, lChunkIndexes: TRecorderOpcUaIntegerArray;
+  lValues, lChunkValues: TRecorderOpcUaDoubleArray;
+  lCursors: array of QWord;
+begin
+  Result := True;
+  if OpcDevice.Config.Mode <> oumClient then Exit;
+  Registry.BeginExternalWriteBatch;
+  try
+    SetLength(lIndexes, Length(fNodeTags));
+    SetLength(lValues, Length(fNodeTags));
+    SetLength(lCursors, Length(fNodeTags));
+    lCount := 0;
+    for I := 0 to High(fNodeTags) do
+    begin
+      if (fNodeTags[I] = nil) or not OpcDevice.Node(I).Writable then Continue;
+      lCandidateCursor := fWriteCursors[I];
+      while fNodeTags[I].ReadExternalWrite(lCandidateCursor, lValue) do
+        ; { Keep only the final desired value for this node in the current cycle. }
+      if lCandidateCursor = fWriteCursors[I] then Continue;
+      lIndexes[lCount] := I;
+      lValues[lCount] := lValue;
+      lCursors[lCount] := lCandidateCursor;
+      Inc(lCount);
+    end;
+    SetLength(lIndexes, lCount);
+    SetLength(lValues, lCount);
+    SetLength(lCursors, lCount);
+  finally
+    Registry.EndExternalWriteBatch;
+  end;
+  if lCount = 0 then Exit;
+  lMaxPerRequest := Max(1, Integer(OpcDevice.Config.MaxNodesPerWrite));
+  lChunkStart := 0;
+  while lChunkStart < lCount do
+  begin
+    lChunkCount := Min(lMaxPerRequest, lCount - lChunkStart);
+    SetLength(lChunkIndexes, lChunkCount);
+    SetLength(lChunkValues, lChunkCount);
+    for J := 0 to lChunkCount - 1 do
+    begin
+      lChunkIndexes[J] := lIndexes[lChunkStart + J];
+      lChunkValues[J] := lValues[lChunkStart + J];
+    end;
+    if not OpcDevice.WriteClientValues(lChunkIndexes, lChunkValues) then
+      Exit(False);
+    for J := 0 to lChunkCount - 1 do
+      fWriteCursors[lIndexes[lChunkStart + J]] := lCursors[lChunkStart + J];
+    Inc(lChunkStart, lChunkCount);
+  end;
+  RecorderDebugLog(Format('[OPC UA] source=%s write batch values=%d requests=%d',
+    [SourceId, lCount, (lCount + lMaxPerRequest - 1) div lMaxPerRequest]));
 end;
 
 function TRecorderOpcUaDataSource.BindServerNodes: Boolean;
@@ -204,6 +267,17 @@ begin
       { OPC UA SourceTimestamp is absolute Unix time. Recorder tags use the
         project elapsed-time scale, which the registry supplies here. }
       Registry.PublishValue(fNodeTags[I], lValue);
+  { Reads are completed first so a write burst cannot starve acquisition. }
+  if not FlushClientWrites then
+  begin
+    fPrepareError := OpcDevice.LastError;
+    fDevice.Disconnect;
+    fPrepared := False;
+    fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
+    RecorderDebugLog(Format(
+      '[OPC UA] source=%s write failed; reconnect in %d ms: %s',
+      [SourceId, CRecorderOpcUaReconnectDelayMs, fPrepareError]));
+  end;
 end;
 
 procedure TRecorderOpcUaDataSource.Stop;

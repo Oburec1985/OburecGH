@@ -62,15 +62,34 @@ type
     procedure SyncEnabledSourceStates;
   end;
 
+  TRecorderRuntimeCoordinator = class;
+
   TRecorderConfigurationService = class
   private
     fRuntime: IRecorderConfigurationRuntime;
+    fRuntimeCoordinator: TRecorderRuntimeCoordinator;
     procedure CollectChangedSources(AChanges: TRecorderConfigurationChangeSet;
       AResult: TRecorderConfigurationResult);
   public
     constructor Create(const ARuntime: IRecorderConfigurationRuntime);
+    destructor Destroy; override;
     function CaptureState: TRecorderSourceProgrammingState;
     function Apply(AChanges: TRecorderConfigurationChangeSet): TRecorderConfigurationResult;
+  end;
+
+  { Owns the stop/reconfigure/restart transaction.  The UI supplies primitive
+    runtime operations, while this coordinator guarantees that an acquisition
+    stopped by the transaction is restarted even when preparation fails. }
+  TRecorderRuntimeCoordinator = class
+  private
+    fRuntime: IRecorderConfigurationRuntime;
+    procedure AppendError(AResult: TRecorderConfigurationResult;
+      const AErrorText: string);
+    procedure RestartAfterFailure(AResult: TRecorderConfigurationResult);
+  public
+    constructor Create(const ARuntime: IRecorderConfigurationRuntime);
+    procedure Apply(AChanges: TRecorderConfigurationChangeSet;
+      AResult: TRecorderConfigurationResult);
   end;
 
 implementation
@@ -139,6 +158,13 @@ begin
   if ARuntime = nil then
     raise EArgumentNilException.Create('Configuration runtime is required');
   fRuntime := ARuntime;
+  fRuntimeCoordinator := TRecorderRuntimeCoordinator.Create(ARuntime);
+end;
+
+destructor TRecorderConfigurationService.Destroy;
+begin
+  fRuntimeCoordinator.Free;
+  inherited Destroy;
 end;
 
 function TRecorderConfigurationService.CaptureState:
@@ -207,44 +233,109 @@ end;
 
 function TRecorderConfigurationService.Apply(
   AChanges: TRecorderConfigurationChangeSet): TRecorderConfigurationResult;
-var
-  I: Integer;
 begin
   Result := TRecorderConfigurationResult.Create;
   try
     if AChanges = nil then
       raise EArgumentNilException.Create('Configuration change set is required');
-    if AChanges.SyncEnabledStates then
-      fRuntime.SyncEnabledSourceStates;
-    if not AChanges.SourcesChanged then
-    begin
-      Result.Messages.Add('Hardware configuration unchanged: initialized devices retained.');
-      Exit;
-    end;
-
-    CollectChangedSources(AChanges, Result);
-    Result.WasRunning := fRuntime.AcquisitionRunning;
-    if (Result.ChangedSourceIds.Count > 0) and Result.WasRunning then
-      fRuntime.StopAcquisitionForConfiguration;
-    for I := 0 to Result.ChangedSourceIds.Count - 1 do
-      fRuntime.ReplaceRuntimeSource(Result.ChangedSourceIds[I]);
-    if AChanges.PrepareAlgorithmRuntime then
-      fRuntime.PrepareAlgorithms;
-    if Result.ChangedSourceIds.Count = 0 then
-    begin
-      Result.Messages.Add('Source programming skipped: hardware settings unchanged.');
-      Exit;
-    end;
-    if AChanges.EnsureRuntimeSources then
-      fRuntime.EnsureRuntimeSources;
-    fRuntime.PrepareHardware;
-    if Result.WasRunning then
-      fRuntime.StartAcquisitionAfterConfiguration;
-    Result.Reconfigured := True;
-    Result.Messages.Add('Changed data sources hardware prepared.');
+    if AChanges.SourcesChanged then
+      CollectChangedSources(AChanges, Result);
+    fRuntimeCoordinator.Apply(AChanges, Result);
   except
     on E: Exception do
       Result.ErrorMessage := E.ClassName + ': ' + E.Message;
+  end;
+end;
+
+constructor TRecorderRuntimeCoordinator.Create(
+  const ARuntime: IRecorderConfigurationRuntime);
+begin
+  inherited Create;
+  if ARuntime = nil then
+    raise EArgumentNilException.Create('Configuration runtime is required');
+  fRuntime := ARuntime;
+end;
+
+procedure TRecorderRuntimeCoordinator.AppendError(
+  AResult: TRecorderConfigurationResult; const AErrorText: string);
+begin
+  if AResult.ErrorMessage = '' then
+    AResult.ErrorMessage := AErrorText
+  else
+    AResult.ErrorMessage := AResult.ErrorMessage + LineEnding + AErrorText;
+end;
+
+procedure TRecorderRuntimeCoordinator.RestartAfterFailure(
+  AResult: TRecorderConfigurationResult);
+begin
+  try
+    fRuntime.StartAcquisitionAfterConfiguration;
+  except
+    on E: Exception do
+      AppendError(AResult, 'Restart failed: ' + E.ClassName + ': ' + E.Message);
+  end;
+end;
+
+procedure TRecorderRuntimeCoordinator.Apply(
+  AChanges: TRecorderConfigurationChangeSet;
+  AResult: TRecorderConfigurationResult);
+var
+  I: Integer;
+  lStoppedByCoordinator: Boolean;
+begin
+  if AChanges = nil then
+    raise EArgumentNilException.Create('Configuration change set is required');
+  if AResult = nil then
+    raise EArgumentNilException.Create('Configuration result is required');
+
+  if AChanges.SyncEnabledStates then
+    fRuntime.SyncEnabledSourceStates;
+
+  AResult.WasRunning := fRuntime.AcquisitionRunning;
+  lStoppedByCoordinator := False;
+  try
+    if (AResult.ChangedSourceIds.Count > 0) and AResult.WasRunning then
+    begin
+      fRuntime.StopAcquisitionForConfiguration;
+      lStoppedByCoordinator := True;
+    end;
+
+    for I := 0 to AResult.ChangedSourceIds.Count - 1 do
+      fRuntime.ReplaceRuntimeSource(AResult.ChangedSourceIds[I]);
+
+    { Algorithm changes are independent from hardware source changes. }
+    if AChanges.PrepareAlgorithmRuntime then
+      fRuntime.PrepareAlgorithms;
+
+    if AResult.ChangedSourceIds.Count = 0 then
+    begin
+      if AChanges.SourcesChanged then
+        AResult.Messages.Add('Source programming skipped: hardware settings unchanged.')
+      else
+        AResult.Messages.Add('Hardware configuration unchanged: initialized devices retained.');
+      Exit;
+    end;
+
+    if AChanges.EnsureRuntimeSources then
+      fRuntime.EnsureRuntimeSources;
+    fRuntime.PrepareHardware;
+    if lStoppedByCoordinator then
+    begin
+      fRuntime.StartAcquisitionAfterConfiguration;
+      lStoppedByCoordinator := False;
+    end;
+    AResult.Reconfigured := True;
+    AResult.Messages.Add('Changed data sources hardware prepared.');
+  except
+    on E: Exception do
+    begin
+      AppendError(AResult, E.ClassName + ': ' + E.Message);
+      if lStoppedByCoordinator then
+      begin
+        RestartAfterFailure(AResult);
+        lStoppedByCoordinator := False;
+      end;
+    end;
   end;
 end;
 

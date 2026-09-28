@@ -39,6 +39,11 @@ procedure RecorderSyncTrendComponentTagNames(ARegistry: TRecorderTagRegistry;
 procedure RecorderSyncSpectrumComponentTagNames(ARegistry: TRecorderTagRegistry;
   ASpectrum: TRecorderSpectrumComponent);
 
+procedure RecorderSyncFrequencyResponseTagNames(ARegistry: TRecorderTagRegistry;
+  AResponse: TObject);
+procedure RecorderSyncLissajousTagNames(ARegistry: TRecorderTagRegistry;
+  AComponent: TRecorderLissajousComponent);
+
 procedure RecorderSyncTagNamesInManager(ARegistry: TRecorderTagRegistry;
   AManager: TRecorderFormManager);
 
@@ -49,6 +54,9 @@ procedure RecorderResolveTagIdsInManager(ARegistry: TRecorderTagRegistry;
   AManager: TRecorderFormManager);
 
 implementation
+
+uses
+  uRecorderFrequencyResponseModel;
 
 function RecorderResolveTag(ARegistry: TRecorderTagRegistry;
   ATagId: TRecorderTagId; const ATagName: string): TRecorderTag;
@@ -173,6 +181,43 @@ begin
   end;
 end;
 
+procedure RecorderSyncFrequencyResponseTagNames(ARegistry: TRecorderTagRegistry;
+  AResponse: TObject);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lResponse: TRecorderFrequencyResponseComponent;
+begin
+  if not (AResponse is TRecorderFrequencyResponseComponent) then
+    Exit;
+  lResponse := TRecorderFrequencyResponseComponent(AResponse);
+  lResponse.ResolveSourceTag(ARegistry);
+  lResponse.ResolveValueTag(ARegistry);
+  lResponse.ResolveFrequencyTag(ARegistry);
+  for I := 0 to lResponse.LineCount - 1 do
+  begin
+    lTag := ARegistry.FindById(lResponse.Lines[I].SourceTagId);
+    if lTag <> nil then lResponse.Lines[I].SetSourceTag(lTag);
+    lTag := ARegistry.FindById(lResponse.Lines[I].ValueTagId);
+    if lTag <> nil then lResponse.Lines[I].SetValueTag(lTag);
+    lTag := ARegistry.FindById(lResponse.Lines[I].FrequencyTagId);
+    if lTag <> nil then lResponse.Lines[I].SetFrequencyTag(lTag);
+  end;
+end;
+
+procedure RecorderSyncLissajousTagNames(ARegistry: TRecorderTagRegistry;
+  AComponent: TRecorderLissajousComponent);
+var
+  I: Integer;
+begin
+  if (ARegistry = nil) or (AComponent = nil) then Exit;
+  for I := 0 to AComponent.LineCount - 1 do
+  begin
+    AComponent.Lines[I].ResolveXTag(ARegistry);
+    AComponent.Lines[I].ResolveYTag(ARegistry);
+  end;
+end;
+
 procedure RecorderSyncTagNamesInManager(ARegistry: TRecorderTagRegistry;
   AManager: TRecorderFormManager);
 var
@@ -194,6 +239,11 @@ begin
         RecorderSyncTrendComponentTagNames(ARegistry, TRecorderTrendComponent(lComponent))
       else if lComponent is TRecorderSpectrumComponent then
         RecorderSyncSpectrumComponentTagNames(ARegistry, TRecorderSpectrumComponent(lComponent))
+      else if lComponent is TRecorderFrequencyResponseComponent then
+        RecorderSyncFrequencyResponseTagNames(ARegistry, lComponent)
+      else if lComponent is TRecorderLissajousComponent then
+        RecorderSyncLissajousTagNames(ARegistry,
+          TRecorderLissajousComponent(lComponent))
       else if lComponent is TRecorderDonutComponent then
       begin
         RecorderSyncVisualComponentTagName(ARegistry, lComponent);
@@ -254,6 +304,11 @@ begin
     lSpectrum := TRecorderSpectrumComponent(AComponent);
     lSpectrum.ResolveTagIdsFromNames(ARegistry);
   end
+  else if AComponent is TRecorderFrequencyResponseComponent then
+    RecorderSyncFrequencyResponseTagNames(ARegistry, AComponent)
+  else if AComponent is TRecorderLissajousComponent then
+    RecorderSyncLissajousTagNames(ARegistry,
+      TRecorderLissajousComponent(AComponent))
   else if AComponent is TRecorderDonutComponent then
   begin
     for I := 0 to TRecorderDonutComponent(AComponent).TagNames.Count - 1 do

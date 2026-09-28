@@ -212,6 +212,10 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
         item
           Caption = 'Оценка (пишем в SQL)'
           Width = 150
+        end
+        item
+          Caption = 'Событие уставки'
+          Width = 120
         end>
       MultiSelect = True
       ReadOnly = True
@@ -246,6 +250,16 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       OnClick = btnAssignEstimateClick
       TabOrder = 4
     end
+    object btnToggleAlarmEvent: TButton
+      Left = 296
+      Height = 30
+      Top = 536
+      Width = 150
+      Anchors = [akRight, akBottom]
+      Caption = 'Событие уставки'
+      OnClick = btnToggleAlarmEventClick
+      TabOrder = 5
+    end
     object btnSelectAll: TButton
       Left = 8
       Height = 30
@@ -254,7 +268,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       Anchors = [akLeft, akBottom]
       Caption = 'Выбрать все'
       OnClick = btnSelectAllClick
-      TabOrder = 5
+      TabOrder = 6
     end
     object btnSelectNone: TButton
       Left = 236
@@ -264,7 +278,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       Anchors = [akLeft, akBottom]
       Caption = 'Изменить выбранные'
       OnClick = btnSelectNoneClick
-      TabOrder = 6
+      TabOrder = 7
     end
     object btnImportSqlSelection: TButton
       Left = 312
@@ -274,7 +288,7 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       Anchors = [akRight, akBottom]
       Caption = 'Из таблицы...'
       OnClick = btnImportSqlSelectionClick
-      TabOrder = 7
+      TabOrder = 8
     end
   end
   object btnOk: TButton Left = 916 Height = 34 Top = 674 Width = 90 Anchors = [akRight, akBottom] Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end

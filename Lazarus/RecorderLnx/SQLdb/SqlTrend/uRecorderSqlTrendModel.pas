@@ -275,7 +275,7 @@ constructor TRecorderSqlTrendFactory.Create;
 begin
   inherited Create(TRecorderSqlTrendComponent.TypeId, 'SQL trend',
     TRecorderSqlTrendComponent, 520, 320, False);
-  ConfigurePalette('SQL-тренд', 'Добавить SQL-тренд', 'trend', 30,
+  ConfigurePalette('SQL-тренд', 'Добавить SQL-тренд', 'sql-trend', 30,
     rppGroup, CRecorderPaletteGroupCharts);
 end;
 

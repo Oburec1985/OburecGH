@@ -507,6 +507,7 @@ type
     fLegendVisible: Boolean;
     fZeroY0: Boolean;
     fResultType: Integer;
+    fSpectrumIntegration: Integer;
     fTagNames: TStringList;
     fTagIds: array of TRecorderTagId;
     fTahoTagName: string;
@@ -539,10 +540,94 @@ type
     property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
     property ZeroY0: Boolean read fZeroY0 write fZeroY0;
     property ResultType: Integer read fResultType write fResultType;
+    { 0 = исходный спектр, 1 = однократное, 2 = двукратное интегрирование.
+      Преобразование применяется представлением только к каналам ускорения. }
+    property SpectrumIntegration: Integer read fSpectrumIntegration
+      write fSpectrumIntegration;
     property TagNames: TStringList read fTagNames;
     property TahoTagName: string read fTahoTagName write fTahoTagName;
     property TahoTagId: TRecorderTagId read fTahoTagId write fTahoTagId;
     property ProfileName: string read fProfileName write fProfileName;
+  end;
+
+  { XY-график последних синхронных отсчётов двух тегов. }
+  TRecorderLissajousLine = class
+  private
+    fName, fXTagName, fYTagName: string;
+    fXTagId, fYTagId: TRecorderTagId;
+    fColor, fDiameterColor: LongInt;
+    fWidth: Integer;
+    fDrawPoints, fDrawLine, fDrawMainDiameter: Boolean;
+    fDrawDiameterCenter, fShowDiameterValue: Boolean;
+  public
+    constructor Create;
+    procedure Assign(ASource: TRecorderLissajousLine);
+    procedure SetXTag(ATag: TRecorderTag);
+    procedure SetYTag(ATag: TRecorderTag);
+    function ResolveXTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+    function ResolveYTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+    property Name: string read fName write fName;
+    property XTagName: string read fXTagName write fXTagName;
+    property YTagName: string read fYTagName write fYTagName;
+    property XTagId: TRecorderTagId read fXTagId write fXTagId;
+    property YTagId: TRecorderTagId read fYTagId write fYTagId;
+    property Color: LongInt read fColor write fColor;
+    property DiameterColor: LongInt read fDiameterColor write fDiameterColor;
+    property Width: Integer read fWidth write fWidth;
+    property DrawPoints: Boolean read fDrawPoints write fDrawPoints;
+    property DrawLine: Boolean read fDrawLine write fDrawLine;
+    property DrawMainDiameter: Boolean read fDrawMainDiameter write fDrawMainDiameter;
+    property DrawDiameterCenter: Boolean read fDrawDiameterCenter write fDrawDiameterCenter;
+    property ShowDiameterValue: Boolean read fShowDiameterValue write fShowDiameterValue;
+  end;
+
+  TRecorderLissajousComponent = class(TRecorderVisualComponent)
+  private
+    fLines: TList;
+    fDurationSec: Double;
+    fRangeMinX, fRangeMaxX, fRangeMinY, fRangeMaxY: Double;
+    function GetLine(AIndex: Integer): TRecorderLissajousLine;
+    function GetLineCount: Integer;
+    function FirstLine: TRecorderLissajousLine;
+    function GetXTagName: string;
+    function GetYTagName: string;
+    function GetXTagId: TRecorderTagId;
+    function GetYTagId: TRecorderTagId;
+    function GetLineColor: LongInt;
+    function GetLineWidth: Integer;
+    procedure SetXTagName(const AValue: string);
+    procedure SetYTagName(const AValue: string);
+    procedure SetXTagId(AValue: TRecorderTagId);
+    procedure SetYTagId(AValue: TRecorderTagId);
+    procedure SetLineColor(AValue: LongInt);
+    procedure SetLineWidth(AValue: Integer);
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure Assign(ASource: TRecorderLissajousComponent);
+    function AddLine: TRecorderLissajousLine;
+    procedure DeleteLine(AIndex: Integer);
+    procedure ClearLines;
+    function ResolveXTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+    function ResolveYTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+    procedure SetXTag(ATag: TRecorderTag);
+    procedure SetYTag(ATag: TRecorderTag);
+    property Lines[AIndex: Integer]: TRecorderLissajousLine read GetLine;
+    property LineCount: Integer read GetLineCount;
+    { Legacy-представление первой линии сохраняет совместимость старых файлов. }
+    property XTagName: string read GetXTagName write SetXTagName;
+    property YTagName: string read GetYTagName write SetYTagName;
+    property XTagId: TRecorderTagId read GetXTagId write SetXTagId;
+    property YTagId: TRecorderTagId read GetYTagId write SetYTagId;
+    property DurationSec: Double read fDurationSec write fDurationSec;
+    property RangeMinX: Double read fRangeMinX write fRangeMinX;
+    property RangeMaxX: Double read fRangeMaxX write fRangeMaxX;
+    property RangeMinY: Double read fRangeMinY write fRangeMinY;
+    property RangeMaxY: Double read fRangeMaxY write fRangeMaxY;
+    property LineColor: LongInt read GetLineColor write SetLineColor;
+    property LineWidth: Integer read GetLineWidth write SetLineWidth;
   end;
 
   TRecorderPalettePlacement = (rppHidden, rppStandalone, rppGroup);
@@ -731,6 +816,13 @@ type
       const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create;
+  end;
+
+  TRecorderLissajousFactory = class(TRecorderComponentFactoryBase)
+  public
+    constructor Create;
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
+      const AContext: TRecorderComponentCreateContext); override;
   end;
 
   { TRecorderFormPage
@@ -1835,6 +1927,7 @@ begin
   fLegendVisible := True;
   fZeroY0 := True;
   fResultType := 0;
+  fSpectrumIntegration := 0;
   fTahoTagId := 0;
   SetLength(fTagIds, 0);
 end;
@@ -1861,6 +1954,7 @@ begin
   fLegendVisible := ASource.LegendVisible;
   fZeroY0 := ASource.ZeroY0;
   fResultType := ASource.ResultType;
+  fSpectrumIntegration := ASource.SpectrumIntegration;
   fTahoTagName := ASource.TahoTagName;
   fTahoTagId := ASource.TahoTagId;
   fProfileName := ASource.ProfileName;
@@ -1954,6 +2048,198 @@ begin
   for I := 0 to fTagNames.Count - 1 do
     ResolveTagAt(ARegistry, I);
   ResolveTahoTag(ARegistry);
+end;
+
+{ TRecorderLissajousComponent }
+
+constructor TRecorderLissajousLine.Create;
+begin
+  inherited Create;
+  fColor := $00FF0000;
+  fDiameterColor := $000080FF;
+  fWidth := 2;
+  fDrawPoints := False;
+  fDrawLine := True;
+  fDrawMainDiameter := False;
+  fDrawDiameterCenter := False;
+  fShowDiameterValue := False;
+end;
+
+procedure TRecorderLissajousLine.Assign(ASource: TRecorderLissajousLine);
+begin
+  if ASource = nil then Exit;
+  fName := ASource.Name;
+  fXTagName := ASource.XTagName; fXTagId := ASource.XTagId;
+  fYTagName := ASource.YTagName; fYTagId := ASource.YTagId;
+  fColor := ASource.Color;
+  fDiameterColor := ASource.DiameterColor;
+  fWidth := ASource.Width;
+  fDrawPoints := ASource.DrawPoints;
+  fDrawLine := ASource.DrawLine;
+  fDrawMainDiameter := ASource.DrawMainDiameter;
+  fDrawDiameterCenter := ASource.DrawDiameterCenter;
+  fShowDiameterValue := ASource.ShowDiameterValue;
+end;
+
+procedure TRecorderLissajousLine.SetXTag(ATag: TRecorderTag);
+begin
+  if ATag = nil then begin fXTagId := 0; fXTagName := ''; end
+  else begin fXTagId := ATag.Id; fXTagName := ATag.Name; end;
+end;
+
+procedure TRecorderLissajousLine.SetYTag(ATag: TRecorderTag);
+begin
+  if ATag = nil then begin fYTagId := 0; fYTagName := ''; end
+  else begin fYTagId := ATag.Id; fYTagName := ATag.Name; end;
+end;
+
+function TRecorderLissajousLine.ResolveXTag(
+  ARegistry: TRecorderTagRegistry): TRecorderTag;
+begin
+  Result := nil; if ARegistry = nil then Exit;
+  if fXTagId <> 0 then Result := ARegistry.FindById(fXTagId);
+  if Result = nil then Result := ARegistry.FindByName(fXTagName);
+  if Result <> nil then SetXTag(Result);
+end;
+
+function TRecorderLissajousLine.ResolveYTag(
+  ARegistry: TRecorderTagRegistry): TRecorderTag;
+begin
+  Result := nil; if ARegistry = nil then Exit;
+  if fYTagId <> 0 then Result := ARegistry.FindById(fYTagId);
+  if Result = nil then Result := ARegistry.FindByName(fYTagName);
+  if Result <> nil then SetYTag(Result);
+end;
+
+class function TRecorderLissajousComponent.GetTypeId: string;
+begin
+  Result := 'Lissajous';
+end;
+
+constructor TRecorderLissajousComponent.Create;
+begin
+  inherited Create;
+  fLines := TList.Create;
+  AddLine;
+  fDurationSec := 0.3;
+  fRangeMinX := -3; fRangeMaxX := 3;
+  fRangeMinY := -3; fRangeMaxY := 3;
+end;
+
+destructor TRecorderLissajousComponent.Destroy;
+begin
+  ClearLines;
+  fLines.Free;
+  inherited Destroy;
+end;
+
+function TRecorderLissajousComponent.AddLine: TRecorderLissajousLine;
+begin
+  Result := TRecorderLissajousLine.Create;
+  Result.Name := Format('Линия %d', [fLines.Count + 1]);
+  case fLines.Count mod 4 of
+    0: Result.Color := $00FF0000;
+    1: Result.Color := $0000A000;
+    2: Result.Color := $000000FF;
+  else
+    Result.Color := $00A020A0;
+  end;
+  fLines.Add(Result);
+end;
+
+procedure TRecorderLissajousComponent.DeleteLine(AIndex: Integer);
+begin
+  if (AIndex < 0) or (AIndex >= fLines.Count) then Exit;
+  TObject(fLines[AIndex]).Free;
+  fLines.Delete(AIndex);
+end;
+
+procedure TRecorderLissajousComponent.ClearLines;
+begin
+  while fLines.Count > 0 do DeleteLine(fLines.Count - 1);
+end;
+
+function TRecorderLissajousComponent.GetLine(AIndex: Integer): TRecorderLissajousLine;
+begin Result := TRecorderLissajousLine(fLines[AIndex]); end;
+function TRecorderLissajousComponent.GetLineCount: Integer;
+begin Result := fLines.Count; end;
+function TRecorderLissajousComponent.FirstLine: TRecorderLissajousLine;
+begin if fLines.Count = 0 then Result := AddLine else Result := Lines[0]; end;
+
+procedure TRecorderLissajousComponent.Assign(ASource: TRecorderLissajousComponent);
+var
+  I: Integer;
+begin
+  if ASource = nil then Exit;
+  ClearLines;
+  for I := 0 to ASource.LineCount - 1 do
+    AddLine.Assign(ASource.Lines[I]);
+  fDurationSec := ASource.DurationSec;
+  fRangeMinX := ASource.RangeMinX; fRangeMaxX := ASource.RangeMaxX;
+  fRangeMinY := ASource.RangeMinY; fRangeMaxY := ASource.RangeMaxY;
+end;
+
+procedure TRecorderLissajousComponent.SetXTag(ATag: TRecorderTag);
+begin
+  FirstLine.SetXTag(ATag);
+end;
+
+procedure TRecorderLissajousComponent.SetYTag(ATag: TRecorderTag);
+begin
+  FirstLine.SetYTag(ATag);
+end;
+
+function TRecorderLissajousComponent.ResolveXTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+begin
+  Result := FirstLine.ResolveXTag(ARegistry);
+end;
+
+function TRecorderLissajousComponent.ResolveYTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
+begin
+  Result := FirstLine.ResolveYTag(ARegistry);
+end;
+
+function TRecorderLissajousComponent.GetXTagName: string;
+begin Result := FirstLine.XTagName; end;
+function TRecorderLissajousComponent.GetYTagName: string;
+begin Result := FirstLine.YTagName; end;
+function TRecorderLissajousComponent.GetXTagId: TRecorderTagId;
+begin Result := FirstLine.XTagId; end;
+function TRecorderLissajousComponent.GetYTagId: TRecorderTagId;
+begin Result := FirstLine.YTagId; end;
+function TRecorderLissajousComponent.GetLineColor: LongInt;
+begin Result := FirstLine.Color; end;
+function TRecorderLissajousComponent.GetLineWidth: Integer;
+begin Result := FirstLine.Width; end;
+procedure TRecorderLissajousComponent.SetXTagName(const AValue: string);
+begin FirstLine.XTagName := AValue; end;
+procedure TRecorderLissajousComponent.SetYTagName(const AValue: string);
+begin FirstLine.YTagName := AValue; end;
+procedure TRecorderLissajousComponent.SetXTagId(AValue: TRecorderTagId);
+begin FirstLine.XTagId := AValue; end;
+procedure TRecorderLissajousComponent.SetYTagId(AValue: TRecorderTagId);
+begin FirstLine.YTagId := AValue; end;
+procedure TRecorderLissajousComponent.SetLineColor(AValue: LongInt);
+begin FirstLine.Color := AValue; end;
+procedure TRecorderLissajousComponent.SetLineWidth(AValue: Integer);
+begin FirstLine.Width := AValue; end;
+
+constructor TRecorderLissajousFactory.Create;
+begin
+  inherited Create(TRecorderLissajousComponent.TypeId, 'Lissajous',
+    TRecorderLissajousComponent, 400, 400, False);
+  ConfigurePalette('Фигура Лиссажу', 'Добавить фигуру Лиссажу', 'lissajous',
+    50, rppGroup, CRecorderPaletteGroupCharts);
+end;
+
+procedure TRecorderLissajousFactory.ConfigureNewComponent(
+  AComponent: TRecorderVisualComponent;
+  const AContext: TRecorderComponentCreateContext);
+begin
+  TRecorderLissajousComponent(AComponent).Name :=
+    Format('Lissajous%d', [AContext.ComponentNo]);
+  TRecorderLissajousComponent(AComponent).SetXTag(AContext.SelectedTag);
+  TRecorderLissajousComponent(AComponent).SetYTag(AContext.DefaultTag);
 end;
 
 { TRecorderSpectrumFactory }
@@ -2710,6 +2996,7 @@ begin
   RegisterFactory(TRecorderTrendFactory.Create);
   RegisterFactory(TRecorderDonutFactory.Create);
   RegisterFactory(TRecorderSpectrumFactory.Create);
+  RegisterFactory(TRecorderLissajousFactory.Create);
 end;
 
 { TRecorderFormFactory }

@@ -99,12 +99,16 @@ type
     fTagOffset: Integer;
     fTagSlotIndex: Integer;
     fExtraLines: TList;
+    fUnitNames: TStringList;
     fLineSnapshots: array of TRecorderSignalSnapshot;
     fLinePoints: array of TChartPoint;
     fModel: TObject;
     fPage: TObject;
     fAxis: TObject;
     fAxes: array of TChartAxis;
+    fAxisSourceUnits: array of string;
+    fAxisHasSourceUnit: array of Boolean;
+    fAxisUnitDirty: array of Boolean;
     fSeries: array of cLineSeries;
     fMaximaIndices: array of array of Integer;
     fMinimaIndices: array of array of Integer;
@@ -134,6 +138,13 @@ type
       out ASnappedX: Double): Boolean;
     procedure SignalGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    function ActiveAxisIndex: Integer;
+    function ActiveChartAxis: TChartAxis;
+    function ActiveModelAxis: TRecorderTrendAxis;
+    procedure UpdateActiveSeriesRenderPriority;
+    function UpdateAxisDisplayUnits: Boolean;
+    procedure UpdateAxisSourceUnits;
+    function TagForAxis(AAxisIndex: Integer): TRecorderTag;
     procedure UpdateSignalGrid;
     procedure DetectManualRange;
     procedure ControlValueEdited(Sender: TObject);
@@ -150,7 +161,7 @@ type
     function TriggerLevelHit(AX, AY: Integer): Boolean;
     procedure RefreshControlValues;
     function CurrentDisplaySeconds: Double;
-    procedure SyncViewportControls;
+    procedure SyncViewportControls(AForceY: Boolean = False);
     procedure EnsureTrendCount;
     procedure AccumulateAxisRange(AAxisIndex: Integer; AMinValue,
       AMaxValue: Double; APointCount: Integer);
@@ -226,6 +237,7 @@ type
     fLastDataRevisions: array of QWord;
     fLastRevisionDisplaySeconds: Double;
     fSnapshots: array of TRecorderSignalSnapshot;
+    fUnitNames: TStringList;
     fModel: TChartModel;
     procedure InitializeChart;
     function GetFpsText: string;
@@ -246,6 +258,7 @@ type
     procedure SetPageCaptionFontSize(AValue: Integer);
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
     { Recreates the internal chart pages only when the count changes. }
     procedure Rebuild(ATagRegistry: TRecorderTagRegistry; ACount: Integer;
@@ -281,7 +294,43 @@ implementation
 
 uses
   SysUtils, Math, uSharedNumberFormat,
-  uRecorderDebugLog, uOglChartRenderer, uOglChartFontMng, GL;
+  uRecorderDebugLog, uRecorderUnitManager, uOglChartRenderer,
+  uOglChartFontMng, GL;
+
+procedure SelectOscillogramDisplayUnit(const ASourceUnit: string;
+  AMaxAbsValue: Double; AUnitNames: TStrings; out ADisplayUnit: string;
+  out ADisplayScale: Double);
+var
+  I: Integer;
+  lCandidateInfo, lSourceInfo: TRecorderUnitInfo;
+  lCandidateValue, lFactor, lScore, lBestScore: Double;
+begin
+  ADisplayUnit := Trim(ASourceUnit);
+  ADisplayScale := 1.0;
+  if (AUnitNames = nil) or (AMaxAbsValue <= 0) or
+    not RecorderUnitManager.TryGetUnitInfo(ASourceUnit, lSourceInfo) then
+    Exit;
+  lBestScore := MaxDouble;
+  for I := 0 to AUnitNames.Count - 1 do
+    if RecorderUnitManager.TryGetUnitInfo(AUnitNames[I], lCandidateInfo) and
+       SameText(lCandidateInfo.QuantityId, lSourceInfo.QuantityId) and
+       RecorderUnitManager.TryGetConversionFactor(ASourceUnit,
+         lCandidateInfo.Name, lFactor) then
+    begin
+      lCandidateValue := AMaxAbsValue * lFactor;
+      { Инженерная шкала должна оставаться читаемой: предпочтительно от 1 до
+        1000, а среди подходящих единиц выбираем значение ближе к 100. }
+      if (lCandidateValue < 1.0) or (lCandidateValue >= 1000.0) then
+        Continue;
+      lScore := Abs(Log10(lCandidateValue) - 2.0);
+      if lScore < lBestScore then
+      begin
+        lBestScore := lScore;
+        ADisplayUnit := lCandidateInfo.Name;
+        ADisplayScale := lFactor;
+      end;
+    end;
+end;
 
 procedure ApplyOscillogramTagYRange(AAxis: TChartAxis; ATag: TRecorderTag;
   ADataMin, ADataMax: Double);
@@ -473,6 +522,8 @@ begin
   fTagOffset := 0;
   fTagSlotIndex := 0;
   fExtraLines := TList.Create;
+  fUnitNames := TStringList.Create;
+  RecorderUnitManager.FillUnitNames(fUnitNames);
   fActiveSeriesIndex := 0;
   fDraggingXCursor := -1;
   fXCursorCount := 1;
@@ -487,6 +538,7 @@ begin
   for I := fExtraLines.Count - 1 downto 0 do
     TObject(fExtraLines[I]).Free;
   fExtraLines.Free;
+  fUnitNames.Free;
   inherited Destroy;
 end;
 
@@ -653,6 +705,7 @@ procedure TRecorderOglOscillogram.ChartAfterRender(Sender: TObject;
 var
   lNowMs: QWord;
   lDyText: string;
+  lActiveAxis: TChartAxis;
 begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
   if fPluginMode then
@@ -661,11 +714,18 @@ begin
     DrawXCursors;
     DetectManualRange;
     SyncViewportControls;
+    if UpdateAxisDisplayUnits and (fChart <> nil) then
+      fChart.Invalidate;
   end;
   if (fDyLabel <> nil) and (fAxis <> nil) then
   begin
-    lDyText := Format('; dY=%s', [FormatSignificant(
-      TChartAxis(fAxis).MaxValue - TChartAxis(fAxis).MinValue)]);
+    lActiveAxis := ActiveChartAxis;
+    if lActiveAxis = nil then
+      lActiveAxis := TChartAxis(fAxis);
+    lDyText := Format('; dY=%s %s', [FormatSignificant(
+      (lActiveAxis.MaxValue - lActiveAxis.MinValue) *
+      lActiveAxis.DisplayScale), lActiveAxis.DisplayUnit]);
+    lDyText := TrimRight(lDyText);
     if fDyLabel.Caption <> lDyText then
       fDyLabel.Caption := lDyText;
   end;
@@ -1065,7 +1125,176 @@ procedure TRecorderOglOscillogram.SignalGridSelectCell(Sender: TObject;
 begin
   CanSelect := (ARow > 0) and (ARow <= Length(fSeries));
   if CanSelect then
+  begin
     fActiveSeriesIndex := ARow - 1;
+    UpdateActiveSeriesRenderPriority;
+    { Масштаб и смещение в правой панели относятся к оси выбранной линии,
+      поэтому сразу показываем параметры новой активной оси. }
+    SyncViewportControls(True);
+    UpdateAxisSourceUnits;
+    UpdateAxisDisplayUnits;
+    if fChart <> nil then
+      fChart.Redraw;
+  end;
+end;
+
+function TRecorderOglOscillogram.TagForAxis(AAxisIndex: Integer): TRecorderTag;
+var
+  I: Integer;
+  lLine: TRecorderTrendLine;
+begin
+  Result := nil;
+  { Для активной оси единицу задаёт выбранный сигнал. }
+  if ActiveAxisIndex = AAxisIndex then
+  begin
+    if fActiveSeriesIndex = 0 then
+      Exit(ResolveTag(fTagRegistry));
+    if (fActiveSeriesIndex - 1 >= 0) and
+       (fActiveSeriesIndex - 1 < fExtraLines.Count) then
+    begin
+      lLine := TRecorderTrendLine(fExtraLines[fActiveSeriesIndex - 1]);
+      Exit(RecorderResolveTag(fTagRegistry, lLine.TagId, lLine.TagName));
+    end;
+  end;
+  if (fComponent <> nil) and (fComponent.PrimaryAxisIndex = AAxisIndex) then
+    Result := ResolveTag(fTagRegistry);
+  if Result <> nil then
+    Exit;
+  for I := 0 to fExtraLines.Count - 1 do
+  begin
+    lLine := TRecorderTrendLine(fExtraLines[I]);
+    if lLine.Visible and (lLine.AxisIndex = AAxisIndex) then
+      Exit(RecorderResolveTag(fTagRegistry, lLine.TagId, lLine.TagName));
+  end;
+end;
+
+function TRecorderOglOscillogram.UpdateAxisDisplayUnits: Boolean;
+var
+  I: Integer;
+  lDisplayScale, lDisplayedSpan, lSpan: Double;
+  lDisplayUnit: string;
+begin
+  Result := False;
+  for I := 0 to High(fAxes) do
+  begin
+    if (I >= Length(fAxisHasSourceUnit)) or
+       (not fAxisHasSourceUnit[I]) then
+    begin
+      if (fAxes[I].DisplayScale <> 1.0) or
+         (fAxes[I].DisplayUnit <> '') then
+        Result := True;
+      fAxes[I].DisplayScale := 1.0;
+      fAxes[I].DisplayUnit := '';
+      if I < Length(fAxisUnitDirty) then
+        fAxisUnitDirty[I] := False;
+      Continue;
+    end;
+    lSpan := Abs(fAxes[I].MaxValue - fAxes[I].MinValue);
+    lDisplayedSpan := lSpan * fAxes[I].DisplayScale;
+    { AfterRender выполняется каждый кадр. Пока исходная единица прежняя и
+      отображаемый диапазон остаётся в широком инженерном коридоре, никаких
+      строковых поисков и обхода UnitManager здесь не требуется. }
+    if (I < Length(fAxisUnitDirty)) and (not fAxisUnitDirty[I]) and
+       (fAxes[I].DisplayScale > 0) and
+       (lDisplayedSpan >= 0.8) and (lDisplayedSpan <= 1200.0) then
+      Continue;
+    SelectOscillogramDisplayUnit(fAxisSourceUnits[I], lSpan, fUnitNames,
+      lDisplayUnit, lDisplayScale);
+    if (Abs(fAxes[I].DisplayScale - lDisplayScale) > 1E-15) or
+       (fAxes[I].DisplayUnit <> lDisplayUnit) then
+    begin
+      fAxes[I].DisplayScale := lDisplayScale;
+      fAxes[I].DisplayUnit := lDisplayUnit;
+      Result := True;
+    end;
+    if I < Length(fAxisUnitDirty) then
+      fAxisUnitDirty[I] := False;
+  end;
+end;
+
+procedure TRecorderOglOscillogram.UpdateAxisSourceUnits;
+var
+  I: Integer;
+  lNewUnit: string;
+  lTag: TRecorderTag;
+begin
+  if Length(fAxisSourceUnits) <> Length(fAxes) then
+  begin
+    SetLength(fAxisSourceUnits, Length(fAxes));
+    SetLength(fAxisHasSourceUnit, Length(fAxes));
+    SetLength(fAxisUnitDirty, Length(fAxes));
+    for I := 0 to High(fAxisUnitDirty) do
+      fAxisUnitDirty[I] := True;
+  end;
+  for I := 0 to High(fAxes) do
+  begin
+    lTag := TagForAxis(I);
+    if lTag <> nil then
+      lNewUnit := lTag.UnitName
+    else
+      lNewUnit := '';
+    { Строковое сравнение выполняется при синхронизации модели, не в Paint. }
+    if fAxisSourceUnits[I] <> lNewUnit then
+    begin
+      fAxisSourceUnits[I] := lNewUnit;
+      fAxisUnitDirty[I] := True;
+    end;
+    fAxisHasSourceUnit[I] := lNewUnit <> '';
+  end;
+end;
+
+{ Returns the Y-axis assigned to the signal selected in the side grid. }
+function TRecorderOglOscillogram.ActiveAxisIndex: Integer;
+begin
+  Result := 0;
+  if not fPluginMode or (fComponent = nil) then
+    Exit;
+  if fActiveSeriesIndex = 0 then
+    Result := fComponent.PrimaryAxisIndex
+  else if (fActiveSeriesIndex - 1 >= 0) and
+          (fActiveSeriesIndex - 1 < fExtraLines.Count) then
+    Result := TRecorderTrendLine(
+      fExtraLines[fActiveSeriesIndex - 1]).AxisIndex;
+  Result := EnsureRange(Result, 0, Max(0, Length(fAxes) - 1));
+end;
+
+{ Returns the chart axis controlled by the Y scale/offset fields. }
+function TRecorderOglOscillogram.ActiveChartAxis: TChartAxis;
+var
+  lIndex: Integer;
+begin
+  Result := nil;
+  lIndex := ActiveAxisIndex;
+  if (lIndex >= 0) and (lIndex < Length(fAxes)) then
+    Result := fAxes[lIndex];
+end;
+
+{ Returns the persisted axis settings controlled by the Y fields. }
+function TRecorderOglOscillogram.ActiveModelAxis: TRecorderTrendAxis;
+var
+  lIndex: Integer;
+begin
+  Result := nil;
+  if (fComponent = nil) or (fComponent.AxisCount = 0) then
+    Exit;
+  lIndex := EnsureRange(ActiveAxisIndex, 0, fComponent.AxisCount - 1);
+  Result := fComponent.Axes[lIndex];
+end;
+
+{ Marks the signal selected in the side grid as the chart's active trend.
+  The renderer uses this reference only for the final overlay pass; the series
+  array, axes and persisted channel order therefore remain unchanged. }
+procedure TRecorderOglOscillogram.UpdateActiveSeriesRenderPriority;
+var
+  lActiveSeries: cLineSeries;
+begin
+  if fChart = nil then
+    Exit;
+  lActiveSeries := GetTrendByIndex(fActiveSeriesIndex);
+  if fChart.SelectedObject = lActiveSeries then
+    Exit;
+  fChart.SelectedObject := lActiveSeries;
+  fChart.Invalidate;
 end;
 
 procedure TRecorderOglOscillogram.UpdateSignalGrid;
@@ -1116,6 +1345,8 @@ begin
   fActiveSeriesIndex := EnsureRange(fActiveSeriesIndex, 0,
     Max(0, Length(fSeries) - 1));
   fSignalGrid.Row := fActiveSeriesIndex + 1;
+  UpdateActiveSeriesRenderPriority;
+  UpdateAxisSourceUnits;
 end;
 
 procedure TRecorderOglOscillogram.AccumulateAxisRange(AAxisIndex: Integer;
@@ -1652,6 +1883,8 @@ begin
 end;
 
 procedure TRecorderOglOscillogram.RefreshControlValues;
+var
+  lAxis: TRecorderTrendAxis;
 begin
   if (fControlPanel = nil) or (fComponent = nil) then
     Exit;
@@ -1659,8 +1892,17 @@ begin
   try
   fControlPanel.Visible := True;
   fXScaleEdit.Text := FormatSignificant(fComponent.XScale);
-  fYScaleEdit.Text := FormatSignificant(fComponent.YScale);
-  fOffsetEdit.Text := FormatSignificant(fComponent.YOffset);
+  lAxis := ActiveModelAxis;
+  if lAxis <> nil then
+  begin
+    fYScaleEdit.Text := FormatSignificant(lAxis.YScale);
+    fOffsetEdit.Text := FormatSignificant(lAxis.YOffset);
+  end
+  else
+  begin
+    fYScaleEdit.Text := FormatSignificant(fComponent.YScale);
+    fOffsetEdit.Text := FormatSignificant(fComponent.YOffset);
+  end;
   fLevelEdit.Text := FormatSignificant(fComponent.TriggerLevel);
   fPreRollEdit.Text := FormatSignificant(fComponent.TriggerPreRollPercent);
   fTriggerCheck.Checked := fComponent.TriggerEnabled;
@@ -1673,19 +1915,21 @@ begin
   end;
 end;
 
-procedure TRecorderOglOscillogram.SyncViewportControls;
+procedure TRecorderOglOscillogram.SyncViewportControls(AForceY: Boolean);
 var
   lAxis: TChartAxis;
+  lModelAxis: TRecorderTrendAxis;
   lPage: TChartPage;
   lBaseRange: Double;
   lScale: Double;
   lOffset: Double;
 
-  procedure SetVisibleValue(AEdit: TEdit; AValue: Double);
+  procedure SetVisibleValue(AEdit: TEdit; AValue: Double;
+    AForce: Boolean = False);
   var
     lText: string;
   begin
-    if AEdit.Focused then
+    if AEdit.Focused and not AForce then
       Exit;
     lText := FormatSignificant(AValue);
     if AEdit.Text <> lText then
@@ -1697,10 +1941,21 @@ begin
     (fComponent = nil) or (fPage = nil) or (fAxis = nil) then
     Exit;
   lPage := TChartPage(fPage);
-  lAxis := TChartAxis(fAxis);
+  lAxis := ActiveChartAxis;
+  if lAxis = nil then
+    Exit;
+  lModelAxis := ActiveModelAxis;
   lBaseRange := lAxis.PresetMaxValue - lAxis.PresetMinValue;
-  lScale := fComponent.YScale;
-  lOffset := fComponent.YOffset;
+  if lModelAxis <> nil then
+  begin
+    lScale := lModelAxis.YScale;
+    lOffset := lModelAxis.YOffset;
+  end
+  else
+  begin
+    lScale := fComponent.YScale;
+    lOffset := fComponent.YOffset;
+  end;
   if lBaseRange > 0 then
   begin
     lScale := (lAxis.MaxValue - lAxis.MinValue) / lBaseRange;
@@ -1711,8 +1966,8 @@ begin
   try
     if lPage.XMaxValue > lPage.XMinValue then
       SetVisibleValue(fXScaleEdit, lPage.XMaxValue - lPage.XMinValue);
-    SetVisibleValue(fYScaleEdit, lScale);
-    SetVisibleValue(fOffsetEdit, lOffset);
+    SetVisibleValue(fYScaleEdit, lScale, AForceY);
+    SetVisibleValue(fOffsetEdit, lOffset, AForceY);
   finally
     fUpdatingControls := False;
   end;
@@ -1729,6 +1984,8 @@ procedure TRecorderOglOscillogram.ControlValueEdited(Sender: TObject);
 var
   lValue: Double;
   lCompanionValue: Double;
+  lChartAxis: TChartAxis;
+  lModelAxis: TRecorderTrendAxis;
 begin
   if (fComponent = nil) or fUpdatingControls then
     Exit;
@@ -1748,21 +2005,39 @@ begin
     fAutoRange := False;
     fComponent.AutoRangeEnabled := False;
     if fAutoRangeButton <> nil then fAutoRangeButton.Down := False;
-    fComponent.YScale := lValue;
+    lModelAxis := ActiveModelAxis;
+    if lModelAxis <> nil then
+      lModelAxis.YScale := lValue
+    else
+      fComponent.YScale := lValue;
     if TryStrToFloat(fOffsetEdit.Text, lCompanionValue) then
-      fComponent.YOffset := lCompanionValue;
-    TChartAxis(fAxis).HasPresetRange := False;
+      if lModelAxis <> nil then
+        lModelAxis.YOffset := lCompanionValue
+      else
+        fComponent.YOffset := lCompanionValue;
+    lChartAxis := ActiveChartAxis;
+    if lChartAxis <> nil then
+      lChartAxis.HasPresetRange := False;
   end
   else if Sender = fOffsetEdit then
   begin
     fAutoRange := False;
     fComponent.AutoRangeEnabled := False;
     if fAutoRangeButton <> nil then fAutoRangeButton.Down := False;
-    fComponent.YOffset := lValue;
+    lModelAxis := ActiveModelAxis;
+    if lModelAxis <> nil then
+      lModelAxis.YOffset := lValue
+    else
+      fComponent.YOffset := lValue;
     if TryStrToFloat(fYScaleEdit.Text, lCompanionValue) and
       (lCompanionValue > 0) then
-      fComponent.YScale := lCompanionValue;
-    TChartAxis(fAxis).HasPresetRange := False;
+      if lModelAxis <> nil then
+        lModelAxis.YScale := lCompanionValue
+      else
+        fComponent.YScale := lCompanionValue;
+    lChartAxis := ActiveChartAxis;
+    if lChartAxis <> nil then
+      lChartAxis.HasPresetRange := False;
   end
   else if Sender = fLevelEdit then
   begin
@@ -2593,6 +2868,7 @@ begin
     fAxes[I].MaxValue := lAxisCenter + lAxisHalfRange;
   end;
   fYRangeInitialized := fAxisRangeInitialized[0];
+  UpdateAxisDisplayUnits;
   if fPluginMode and fAutoRange then
   begin
     if Length(fAppliedYMin) <> Length(fAxes) then
@@ -2677,6 +2953,14 @@ begin
   ParentBackground := False;
   Color := clWhite;
   fPageCaptionFontSize := 10;
+  fUnitNames := TStringList.Create;
+  RecorderUnitManager.FillUnitNames(fUnitNames);
+end;
+
+destructor TRecorderOglOscillogramSurface.Destroy;
+begin
+  fUnitNames.Free;
+  inherited Destroy;
 end;
 
 procedure TRecorderOglOscillogramSurface.InitializeChart;
@@ -3031,6 +3315,8 @@ var
   lDataChanged: Boolean;
   lViewChanged: Boolean;
   lRevision: QWord;
+  lDisplayScale: Double;
+  lDisplayUnit: string;
 begin
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
@@ -3091,6 +3377,8 @@ begin
     if lTag = nil then
     begin
       SetAxisRange(lAxis, -1, 1);
+      lAxis.DisplayScale := 1.0;
+      lAxis.DisplayUnit := '';
       UpdatePageCaption(lPage, lAxis, lTag);
       Continue;
     end;
@@ -3101,6 +3389,11 @@ begin
     if lSnapshot.Count = 0 then
     begin
       SetAxisRange(lAxis, -1, 1);
+      SelectOscillogramDisplayUnit(lTag.UnitName,
+        Abs(lAxis.MaxValue - lAxis.MinValue), fUnitNames,
+        lDisplayUnit, lDisplayScale);
+      lAxis.DisplayScale := lDisplayScale;
+      lAxis.DisplayUnit := lDisplayUnit;
       UpdatePageCaption(lPage, lAxis, lTag);
       Continue;
     end;
@@ -3138,6 +3431,11 @@ begin
       SetAxisRange(lAxis, -1, 1)
     else
       ApplyOscillogramTagYRange(lAxis, lTag, lMinValue, lMaxValue);
+    SelectOscillogramDisplayUnit(lTag.UnitName,
+      Abs(lAxis.MaxValue - lAxis.MinValue), fUnitNames,
+      lDisplayUnit, lDisplayScale);
+    lAxis.DisplayScale := lDisplayScale;
+    lAxis.DisplayUnit := lDisplayUnit;
     UpdatePageCaption(lPage, lAxis, lTag);
   end;
 

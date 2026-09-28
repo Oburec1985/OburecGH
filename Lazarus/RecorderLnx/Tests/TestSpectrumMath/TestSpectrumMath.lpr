@@ -9,11 +9,13 @@ uses
   SysUtils,
   uSpectrumMathBench,
   uBestSpectrumPipeline,
-  uRecorderSpectrumEngineTests;
+  uRecorderSpectrumEngineTests,
+  uRecorderGeneralAlgorithmTests;
 
 begin
   try
     RunRecorderSpectrumEngineTests;
+    RunRecorderGeneralAlgorithmTests;
     RunSpectrumMathBench;
   except
     on E: Exception do

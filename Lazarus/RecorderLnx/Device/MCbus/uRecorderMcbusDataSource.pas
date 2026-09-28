@@ -411,9 +411,11 @@ begin
       if not AddressSlotChannel(lTag.Address, lTagSlot, lTagChannel) then Continue;
       if (lTagSlot = lSlot) and (lTagChannel = lChannel) then
       begin
-        { Источник публикует канал завершёнными блоками с известной частотой. }
-        lTag.PollFrequencyHz := fPollFrequencyHz;
-        lTag.IsVector := fPollFrequencyHz > 0.0;
+        { У MC-201 частота принадлежит слоту, поэтому после программирования
+          берём фактическую частоту именно сопоставленного канала. Общая частота
+          контроллера здесь затёрла бы выбранное пользователем значение слота. }
+        lTag.PollFrequencyHz := lChannels[I].PollFrequencyHz;
+        lTag.IsVector := lChannels[I].PollFrequencyHz > 0.0;
         RecorderMc201SyncTagUnitFromHardwareGx(Registry, lTag);
         fChannelTags[I] := lTag;
         Break;

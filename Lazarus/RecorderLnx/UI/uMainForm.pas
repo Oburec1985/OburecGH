@@ -59,6 +59,7 @@ uses
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionView, uRecorderTrendView,
+  uRecorderFrequencyResponseModel, uRecorderFrequencyResponseView,
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
   uRecorderCoordinatorProtocol, uRecorderCoordinatorClient,
@@ -186,6 +187,7 @@ type
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
+    fLastPluginInputRevision: QWord;              // Только входы источников; выходы расчётов не запускают Lua повторно
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fUpdatingSqlDbRecording: Boolean;
     fLastSqlDbError: string;                      // Последняя уже показанная ошибка необязательной SQLdb
@@ -219,6 +221,7 @@ type
     fAutoPreviewExtraTicks: Integer;              // extra 500 ms ticks for MIC-140 warmup
     fAutoPreviewTicks: Integer;
     fAutoPreviewTimer: TTimer;
+    fRenderActivePageQueued: Boolean;
 
     { Создает и настраивает кнопку тулбара редактора мнемосхем. }
     function AddEditMnemoToolBarButton(ALeft, AImageIndex: Integer;
@@ -263,6 +266,10 @@ type
     procedure PageControlChange(Sender: TObject);
     { Отображает активную страницу: встроенную таблицу или пользовательскую мнемосхему. }
     procedure RenderActivePage;
+    { Обновляет данные активной страницы после настроек без перестройки UI. }
+    procedure RefreshActivePageAfterSettings;
+    { Выполняет отложенную перерисовку после возврата из текущего LCL-события. }
+    procedure DeferredRenderActivePage(Data: PtrInt);
     procedure SyncDetachedForms;
     procedure ClearDetachedForms;
     function FindDetachedForm(const APageId: string): TDetachedMnemonicForm;
@@ -412,6 +419,7 @@ type
     procedure DeviceTestFinished(Sender: TObject);
     procedure PrepareRuntimeForConfiguration;
     procedure PrepareAlgorithmsForFormConfiguration;
+    procedure PrepareHardwareForConfiguration;
     procedure RecoverOfflineSourcesAfterLoadOnce;
     procedure WarmupHardwareNetwork;
     procedure DeferredPrepareRuntime({%H-}Data: PtrInt);
@@ -419,6 +427,10 @@ type
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
       ATags: TList);
+    { Callback registry: обеспечивает штатный Preview перед сбором градуировки. }
+    function EnsureTagCalibrationData(ATag: TRecorderTag;
+      out AStartedByCalibration: Boolean; out AError: string): Boolean;
+    procedure ReleaseTagCalibrationData(ATag: TRecorderTag);
     procedure UpdateActiveSourceIds;
     procedure LogConfigurationResult(AResult: TRecorderConfigurationResult);
   protected
@@ -530,6 +542,8 @@ begin
   fSelectedComponentRow := -1;
   fRecorder := TRecorder.Create;
   fApplicationController := TRecorderApplicationController.Create(fRecorder, Self);
+  fRecorder.TagRegistry.OnEnsureCalibrationData := @EnsureTagCalibrationData;
+  fRecorder.TagRegistry.OnReleaseCalibrationData := @ReleaseTagCalibrationData;
   fConfigurationService := TRecorderConfigurationService.Create(Self);
 
   fLatestTagValues := TStringList.Create;
@@ -550,6 +564,7 @@ begin
 
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
+  RegisterRecorderFrequencyResponseFactory(fComponentFactory);
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
   fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory,
@@ -723,6 +738,42 @@ end;
 procedure TMainForm.DeviceTestStartPreview;
 begin
   btnPreviewClick(nil);
+end;
+
+function TMainForm.EnsureTagCalibrationData(ATag: TRecorderTag;
+  out AStartedByCalibration: Boolean; out AError: string): Boolean;
+begin
+  AStartedByCalibration := False;
+  AError := '';
+  if (ATag = nil) or (fRecorder = nil) or
+    (fApplicationController = nil) then
+  begin
+    AError := 'Recorder не готов к запуску просмотра.';
+    Exit(False);
+  end;
+  try
+    if not AcquisitionRunning then
+    begin
+      fApplicationController.StartPreview;
+      AStartedByCalibration := AcquisitionRunning;
+    end;
+    Result := AcquisitionRunning;
+    if not Result then
+      AError := 'Просмотр запрошен, но источники данных не запустились.';
+  except
+    on E: Exception do
+    begin
+      AError := E.Message;
+      Result := False;
+    end;
+  end;
+end;
+
+procedure TMainForm.ReleaseTagCalibrationData(ATag: TRecorderTag);
+begin
+  if (fApplicationController <> nil) and (fRecorder <> nil) and
+    (fRecorder.StateMachine.State = rsPreview) then
+    fApplicationController.Stop;
 end;
 
 procedure TMainForm.DeviceTestLog(const AMessage: string);
@@ -1363,7 +1414,12 @@ var
   lReconfigureErrors: TStringList;
   lResult: TRecorderConfigurationResult;
   lSourcesWereRunning: Boolean;
+  lSettingsAccepted: Boolean;
+  lPluginConfigEntered: Boolean;
+  lExitStarted: QWord;
+  lStepStarted: QWord;
 begin
+  lPluginConfigEntered := False;
   lOldDataUpdateMs := fRecorder.RunSettings.DataUpdateMs;
   lSourcesWereRunning := False;
   lChanges := TRecorderConfigurationChangeSet.Create(
@@ -1377,10 +1433,14 @@ begin
       end;
       AddLog('Configuration mode: settings dialog opened.');
       fPluginRuntime.NotifyAll(PN_ENTERRCCONFIG);
+      lPluginConfigEntered := True;
       lSourcesWereRunning := fRecorder.DataSources.Running;
       lDataSourcesChanged := False;
-      if ShowRecorderSettingsDialog(Self, fRecorder, ilCommandButtons,
-        ilTagDialogButtons, lDataSourcesChanged, fPluginRuntime) then
+      lSettingsAccepted := ShowRecorderSettingsDialog(Self, fRecorder,
+        ilCommandButtons, ilTagDialogButtons, lDataSourcesChanged,
+        fPluginRuntime);
+      lExitStarted := GetTickCount64;
+      if lSettingsAccepted then
       begin
         lDataUpdateChanged := lOldDataUpdateMs <>
           fRecorder.RunSettings.DataUpdateMs;
@@ -1392,11 +1452,11 @@ begin
               lOldDataUpdateMs, fRecorder.RunSettings.DataUpdateMs);
         ApplyDisplayTimingSettings;
         UpdateRecordFrameManager;
-        UpdateActiveSourceIds;
         lChanges.AfterState := fConfigurationService.CaptureState;
         lChanges.SourcesChanged := lDataSourcesChanged;
         lChanges.PrepareAlgorithmRuntime := True;
         lChanges.SyncEnabledStates := True;
+        lStepStarted := GetTickCount64;
         lResult := fConfigurationService.Apply(lChanges);
         try
           LogConfigurationResult(lResult);
@@ -1405,6 +1465,8 @@ begin
         finally
           lResult.Free;
         end;
+        RecorderDebugLog(Format('[SETTINGS-PERF] apply=%dms',
+          [GetTickCount64 - lStepStarted]));
         UpdateActiveSourceIds;
         if lDataUpdateChanged then
         begin
@@ -1425,19 +1487,30 @@ begin
         else
           EnsureTagSignalBufferCapacities;
         AddLog('Project settings applied.');
-        fPluginRuntime.NotifyAll(PN_LEAVERCCONFIG);
       end
       else
         AddLog('Configuration mode: settings dialog closed without applying OK.');
 
       { Apply inside the dialog may update registry even before it closes. }
+      lStepStarted := GetTickCount64;
       RebuildTagList(edTagSearch.Text);
-      RenderActivePage;
+      RefreshActivePageAfterSettings;
+      RecorderDebugLog(Format(
+        '[SETTINGS-PERF] refresh-list-and-page=%dms accepted=%s total-exit=%dms',
+        [GetTickCount64 - lStepStarted, BoolToStr(lSettingsAccepted, True),
+         GetTickCount64 - lExitStarted]));
     except
       on E: Exception do
         LogCommandError('Settings', E);
     end;
   finally
+    if lPluginConfigEntered then
+      try
+        fPluginRuntime.NotifyAll(PN_LEAVERCCONFIG);
+      except
+        on E: Exception do
+          LogCommandError('Leave settings plugin notification', E);
+      end;
     lChanges.Free;
   end;
 end;
@@ -1883,6 +1956,38 @@ begin
     RenderBuiltInPage(lPage);
 
   RefreshPageButtons;
+end;
+
+procedure TMainForm.RefreshActivePageAfterSettings;
+var
+  lPage: TRecorderFormPage;
+begin
+  lPage := fFormManager.ActivePage;
+  if lPage = nil then
+    Exit;
+
+  if lPage.Id = 'DigitalForm' then
+    RenderDigitalPage(True)
+  else if lPage.Id = 'BasePage' then
+  begin
+    RefreshBaseOscillograms;
+    if fBaseChartsPanel <> nil then
+      fBaseChartsPanel.Invalidate;
+  end
+  else if IsUserMnemonicPage(lPage) and (fFormEditor <> nil) then
+  begin
+    fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine,
+      fRecorder.RunSettings.DisplayBufferMs / 1000);
+    fFormEditor.RefreshLive;
+  end;
+end;
+
+procedure TMainForm.DeferredRenderActivePage(Data: PtrInt);
+begin
+  fRenderActivePageQueued := False;
+  if csDestroying in ComponentState then
+    Exit;
+  RenderActivePage;
 end;
 
 function TMainForm.FindDetachedForm(
@@ -3238,6 +3343,7 @@ var
   I: Integer;
   lLatestTime: Double;
   lRevisionSignature: QWord;
+  lInputRevision: QWord;
   lStartMs: QWord;
   lTag: TRecorderTag;
   lPass: Integer;
@@ -3251,6 +3357,11 @@ begin
   begin
     fLastUiDataRevisionSignature := lRevisionSignature;
     fRuntimeViewDirty := True;
+  end;
+  fRecorder.TagRegistry.GetInputDataRevision(lInputRevision);
+  if lInputRevision <> fLastPluginInputRevision then
+  begin
+    fLastPluginInputRevision := lInputRevision;
     fPluginRuntime.NotifyAll(PN_UPDATEDATA);
   end;
 
@@ -3717,10 +3828,15 @@ end;
 
 { Реакция на смену состояний сбора данных }
 procedure TMainForm.PrepareRuntimeForConfiguration;
+begin
+  PrepareAlgorithmsForFormConfiguration;
+  PrepareHardwareForConfiguration;
+end;
+
+procedure TMainForm.PrepareHardwareForConfiguration;
 var
   I: Integer;
 begin
-  PrepareAlgorithmsForFormConfiguration;
 
   { Источники и теги к этому моменту уже созданы. Подключение, программирование
     модулей и выделение аппаратных буферов выполняются здесь, а не при Preview. }
@@ -3808,6 +3924,10 @@ begin
   else if SameText(AIconId, 'digital-indicator') then Result := CIconDigitalIndicator
   else if SameText(AIconId, 'oscillogram') then Result := CIconOscillogram
   else if SameText(AIconId, 'trend') then Result := CIconTrends
+  else if SameText(AIconId, 'sql-trend') then Result := CIconSqlTrend
+  else if SameText(AIconId, 'frequency-response') then Result := CIconFrequencyResponse
+  else if SameText(AIconId, 'lissajous') then Result := CIconLissajous
+  else if SameText(AIconId, 'plugin-oscillogram') then Result := CIconPluginOscillogram
   else if SameText(AIconId, 'donut') then Result := CIconDonut
   else if SameText(AIconId, 'spectrum') then Result := CIconSpectrum
   else if SameText(AIconId, 'image') then Result := CIconImageComponent
@@ -3908,7 +4028,13 @@ begin
     if fFormEditor <> nil then
       fFormEditor.PositionComponentAt(lComponent, APoint);
     AddLog('Form component added: ' + lComponent.Id);
-    RenderActivePage;
+    { PlaceSelectedTool вызывается из MouseDown панели/дочернего контрола.
+      Синхронный rebuild уничтожил бы Sender до возврата из обработчика. }
+    if not fRenderActivePageQueued then
+    begin
+      fRenderActivePageQueued := True;
+      Application.QueueAsyncCall(@DeferredRenderActivePage, 0);
+    end;
     lElapsedMs := GetTickCount64 - lStartedAt;
     if lElapsedMs >= 50 then
       RecorderDebugLog(Format('[MNEMO-PERF] place factory=%s components=%d elapsed=%dms',
@@ -4032,7 +4158,8 @@ end;
 
 procedure TMainForm.PrepareHardware;
 begin
-  PrepareRuntimeForConfiguration;
+  { ConfigurationService уже вызывает PrepareAlgorithms отдельным шагом. }
+  PrepareHardwareForConfiguration;
 end;
 
 procedure TMainForm.StartAcquisitionAfterConfiguration;

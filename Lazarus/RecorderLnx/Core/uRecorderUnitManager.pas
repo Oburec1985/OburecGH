@@ -16,6 +16,7 @@ const
   RECORDER_QUANTITY_FORCE = 'force';
   RECORDER_QUANTITY_FREQUENCY = 'frequency';
   RECORDER_QUANTITY_ELECTRIC_CHARGE = 'electric_charge';
+  RECORDER_QUANTITY_RAW_CODE = 'raw_code';
 
 type
   ERecorderUnitError = class(Exception);
@@ -341,6 +342,10 @@ end;
 
 procedure TRecorderUnitManager.RegisterDefaults;
 begin
+  { Драйверы исторически публиковали code/codes/код. Это одна безразмерная
+    исходная величина, поэтому все варианты должны давать единичный переход. }
+  RegisterQuantity(RECORDER_QUANTITY_RAW_CODE, 'code', ['codes', 'код', 'коды']);
+
   RegisterQuantity(RECORDER_QUANTITY_VOLTAGE, 'V', ['В', 'volt', 'volts']);
   RegisterUnit(RECORDER_QUANTITY_VOLTAGE, 'mV', 1E-3, ['мВ']);
   RegisterUnit(RECORDER_QUANTITY_VOLTAGE, 'uV', 1E-6, ['мкВ', 'µV', 'μV']);

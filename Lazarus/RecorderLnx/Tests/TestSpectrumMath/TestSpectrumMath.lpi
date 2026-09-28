@@ -35,6 +35,10 @@
         <Filename Value="uRecorderSpectrumEngineTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="uRecorderGeneralAlgorithmTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

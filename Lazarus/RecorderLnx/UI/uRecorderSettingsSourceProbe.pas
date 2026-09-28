@@ -572,10 +572,11 @@ end;
 procedure TRecorderSettingsSourceProbe.BuildMcbus(const ASourceId,
   AModulesText: string; APollFrequencyHz: Double);
 var
-  I, lChannel, lSlot: Integer;
+  I, J, lChannel, lSlot: Integer;
   lCaptions: TStringList;
   lSerial, lVersion: string;
   lSignal: TMeraSignalInfo;
+  lTag: TRecorderTag;
 begin
   RecorderMc201RegisterFrequencyGrid(ASourceId,
     RecorderMc201BackplaneFromConfig(AModulesText));
@@ -600,6 +601,21 @@ begin
         lSignal.DataTypeName := 'R8';
         lSignal.DataType := mvtFloat64;
         lSignal.FrequencyHz := APollFrequencyHz;
+        { При повторном построении дерева тег уже хранит выбранную частоту
+          слота. Не заменяем её устаревшим default источника: затем этот signal
+          снова применяется к существующему тегу при OK общего диалога. }
+        if fRegistry <> nil then
+          for J := 0 to fRegistry.TagCount - 1 do
+          begin
+            lTag := fRegistry.Tags[J];
+            if SameText(lTag.SourceId, ASourceId) and
+              SameText(lTag.Address, lSignal.Address) and
+              (lTag.PollFrequencyHz > 0) then
+            begin
+              lSignal.FrequencyHz := lTag.PollFrequencyHz;
+              Break;
+            end;
+          end;
         { Без аппаратной ГХ публикуются сырые коды АЦП (как MIC-140/185). }
         lSignal.UnitsName := 'код';
         lSignal.Description := Format('MC-201 slot %d channel %d; SN=%s',

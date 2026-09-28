@@ -17,6 +17,7 @@ type
   TBufferedFrame = record
     TagName: string;
     Values: array of Double;
+    SecondaryValues: array of Double;
     FrequencyStepHz: Double;
     MaxIndex: Integer;
     MaxFrequencyHz: Double;
@@ -52,6 +53,7 @@ type
       AState: TGridDrawState);
     procedure LegendSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure BringSelectedSeriesToFront(ASeries: cBuffTrend1d);
     procedure ClearSeries;
     procedure ClearHeader;
     procedure ClearBandObjects;
@@ -67,6 +69,9 @@ type
     procedure ConfigureLegendGrid;
     procedure UpdateMaxFlag(AIndex: Integer; ASeries: cBuffTrend1d);
     procedure UpdateHeader(AForce: Boolean = False);
+    function IsAccelerationTag(const ATagName: string): Boolean;
+    procedure BufferFrameValues(AIndex: Integer;
+      const AFrame: TRecorderSpectrumFrame);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -78,7 +83,94 @@ type
 implementation
 
 uses
-  uRecorderTagRefs;
+  uRecorderTagRefs, uRecorderUnitManager;
+
+function TRecorderSpectrumView.IsAccelerationTag(
+  const ATagName: string): Boolean;
+var
+  lTag: TRecorderTag;
+  lUnit: TRecorderUnitInfo;
+begin
+  Result := False;
+  if fTagRegistry = nil then
+    Exit;
+  lTag := fTagRegistry.FindByName(ATagName);
+  Result := (lTag <> nil) and
+    RecorderUnitManager.TryGetUnitInfo(lTag.UnitName, lUnit) and
+    SameText(lUnit.QuantityId, RECORDER_QUANTITY_ACCELERATION);
+end;
+
+procedure TRecorderSpectrumView.BufferFrameValues(AIndex: Integer;
+  const AFrame: TRecorderSpectrumFrame);
+var
+  I, lIntegration: Integer;
+  lOmega, lReal, lImag, lPhase: Double;
+begin
+  if (AIndex < 0) or (AIndex >= Length(fBufferedFrames)) then
+    Exit;
+  SetLength(fBufferedFrames[AIndex].SecondaryValues, 0);
+  case fComponent.ResultType of
+    1:
+      begin
+        fBufferedFrames[AIndex].Values := Copy(AFrame.PhaseRad);
+      end;
+    2:
+      begin
+        fBufferedFrames[AIndex].Values := Copy(AFrame.RealPart);
+        fBufferedFrames[AIndex].SecondaryValues := Copy(AFrame.ImaginaryPart);
+      end;
+  else
+    fBufferedFrames[AIndex].Values := Copy(AFrame.Rms);
+  end;
+
+  lIntegration := EnsureRange(fComponent.SpectrumIntegration, 0, 2);
+  if (lIntegration = 0) or
+    (not IsAccelerationTag(fBufferedFrames[AIndex].TagName)) then
+    Exit;
+
+  for I := 0 to Length(fBufferedFrames[AIndex].Values) - 1 do
+  begin
+    lOmega := 2.0 * Pi * I * AFrame.FrequencyStepHz;
+    if lOmega <= 0.0 then
+    begin
+      fBufferedFrames[AIndex].Values[I] := 0.0;
+      if I < Length(fBufferedFrames[AIndex].SecondaryValues) then
+        fBufferedFrames[AIndex].SecondaryValues[I] := 0.0;
+      Continue;
+    end;
+    case fComponent.ResultType of
+      1:
+        begin
+          lPhase := fBufferedFrames[AIndex].Values[I] - lIntegration * Pi / 2.0;
+          while lPhase > Pi do lPhase := lPhase - 2.0 * Pi;
+          while lPhase < -Pi do lPhase := lPhase + 2.0 * Pi;
+          fBufferedFrames[AIndex].Values[I] := lPhase;
+        end;
+      2:
+        begin
+          lReal := fBufferedFrames[AIndex].Values[I];
+          lImag := fBufferedFrames[AIndex].SecondaryValues[I];
+          if lIntegration = 1 then
+          begin
+            fBufferedFrames[AIndex].Values[I] := lImag / lOmega;
+            fBufferedFrames[AIndex].SecondaryValues[I] := -lReal / lOmega;
+          end
+          else
+          begin
+            fBufferedFrames[AIndex].Values[I] := -lReal / Sqr(lOmega);
+            fBufferedFrames[AIndex].SecondaryValues[I] := -lImag / Sqr(lOmega);
+          end;
+        end;
+    else
+      if lIntegration = 1 then
+        fBufferedFrames[AIndex].Values[I] :=
+          fBufferedFrames[AIndex].Values[I] / lOmega
+      else
+        fBufferedFrames[AIndex].Values[I] :=
+          fBufferedFrames[AIndex].Values[I] / Sqr(lOmega);
+    end;
+  end;
+end;
 
 constructor TRecorderSpectrumView.Create(AOwner: TComponent);
 begin
@@ -182,14 +274,51 @@ end;
 
 procedure TRecorderSpectrumView.LegendSelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
+var
+  lSeries: cBuffTrend1d;
 begin
   CanSelect := (ARow > 0) and (ARow <= fSeriesList.Count);
   if not CanSelect or (fChart = nil) then
     Exit;
   { Выбор строки легенды является выбором конкретного тренда, а не только его
     общей оси. Этим же выбором пользуются Shift-привязка и одномерный курсор. }
-  fChart.SelectedObject := cBuffTrend1d(fSeriesList[ARow - 1]);
+  lSeries := cBuffTrend1d(fSeriesList[ARow - 1]);
+  fChart.SelectedObject := lSeries;
+  BringSelectedSeriesToFront(lSeries);
   fChart.Invalidate;
+end;
+
+procedure TRecorderSpectrumView.BringSelectedSeriesToFront(
+  ASeries: cBuffTrend1d);
+var
+  I: Integer;
+  lPairSeries: cBuffTrend1d;
+  lBaseName: string;
+begin
+  if (ASeries = nil) or (fAxisY = nil) or (ASeries.Parent <> fAxisY) then
+    Exit;
+
+  { Порядок fSeriesList остаётся логическим порядком каналов и легенды.
+    Меняем только порядок дочерних объектов оси, по которому рендерер рисует линии. }
+  lPairSeries := nil;
+  lBaseName := ASeries.Name;
+  I := Pos('#', lBaseName);
+  if I > 0 then
+    SetLength(lBaseName, I - 1);
+  if fComponent.ResultType = 2 then
+    for I := 0 to fSeriesList.Count - 1 do
+      if (cBuffTrend1d(fSeriesList[I]) <> ASeries) and
+        (Pos(lBaseName + '#', cBuffTrend1d(fSeriesList[I]).Name) = 1) then
+      begin
+        lPairSeries := cBuffTrend1d(fSeriesList[I]);
+        Break;
+      end;
+
+  { В Re/Im-режиме сначала поднимаем вторую линию пары, затем именно
+    выбранную: обе оказываются выше остальных каналов, а активная линия рисуется последней. }
+  if (lPairSeries <> nil) and (lPairSeries.Parent = fAxisY) then
+    fAxisY.MoveChildToEnd(lPairSeries);
+  fAxisY.MoveChildToEnd(ASeries);
 end;
 
 function TRecorderSpectrumView.GetSpectrumColor(AIndex: Integer): TColor;
@@ -333,6 +462,7 @@ begin
   lFlag := TChartFlagLabel(fMaxFlags[AIndex]);
   if (ASeries = nil) or (AIndex >= Length(fBufferedFrames)) or
     (fComponent = nil) or (fComponent.ResultType <> 0) or
+    (fComponent.SpectrumIntegration <> 0) or
     (not fComponent.ShowLabels) then
   begin
     lFlag.Visible := False;
@@ -546,6 +676,7 @@ begin
     begin
       fBufferedFrames[I].TagName := fComponent.TagNames[I];
       SetLength(fBufferedFrames[I].Values, 0);
+      SetLength(fBufferedFrames[I].SecondaryValues, 0);
       fBufferedFrames[I].FrequencyStepHz := 0.0;
       fBufferedFrames[I].MaxIndex := -1;
       fBufferedFrames[I].MaxFrequencyHz := 0.0;
@@ -561,20 +692,7 @@ begin
           fBufferedFrames[I].MaxIndex := lFrame.MaxIndex;
           fBufferedFrames[I].MaxFrequencyHz := lFrame.MaxFrequencyHz;
           fBufferedFrames[I].MaxRms := lFrame.MaxRms;
-          if fComponent.ResultType = 0 then
-          begin
-            SetLength(fBufferedFrames[I].Values, Length(lFrame.Rms));
-            if Length(lFrame.Rms) > 0 then
-              Move(lFrame.Rms[0], fBufferedFrames[I].Values[0],
-                Length(lFrame.Rms) * SizeOf(Double));
-          end
-          else
-          begin
-            SetLength(fBufferedFrames[I].Values, Length(lFrame.PhaseRad));
-            if Length(lFrame.PhaseRad) > 0 then
-              Move(lFrame.PhaseRad[0], fBufferedFrames[I].Values[0],
-                Length(lFrame.PhaseRad) * SizeOf(Double));
-          end;
+          BufferFrameValues(I, lFrame);
           SetLength(fBufferedFrames[I].Bands, Length(lFrame.Bands));
           for J := 0 to Length(lFrame.Bands) - 1 do
             fBufferedFrames[I].Bands[J] := lFrame.Bands[J];
@@ -629,11 +747,17 @@ begin
   for I := 0 to fComponent.TagNames.Count - 1 do
   begin
     lSeries := cBuffTrend1d.Create;
-    lSeries.Name := fComponent.TagNames[I];
-    lSeries.Caption := fComponent.TagNames[I];
+    lSeries.Name := fComponent.TagNames[I] + '#primary';
+    if fComponent.ResultType = 2 then
+      lSeries.Caption := fComponent.TagNames[I] + ' Re'
+    else
+      lSeries.Caption := fComponent.TagNames[I];
     lSeries.X0 := 0.0;
     lSeries.DX := 1.0;
-    lSeries.Color := OglChartLinePaletteGLColor(I);
+    if fComponent.ResultType = 2 then
+      lSeries.Color := OglChartLinePaletteGLColor(I * 2)
+    else
+      lSeries.Color := OglChartLinePaletteGLColor(I);
     lSeries.Visible := True;
     fAxisY.AddChild(lSeries);
     fSeriesList.Add(lSeries);
@@ -647,6 +771,25 @@ begin
     lFlag.Axis := fAxisY;
     fAxisY.AddChild(lFlag);
     fMaxFlags.Add(lFlag);
+    if fComponent.ResultType = 2 then
+    begin
+      lSeries := cBuffTrend1d.Create;
+      lSeries.Name := fComponent.TagNames[I] + '#secondary';
+      lSeries.Caption := fComponent.TagNames[I] + ' Im';
+      lSeries.X0 := 0.0;
+      lSeries.DX := 1.0;
+      lSeries.Color := OglChartLinePaletteGLColor(I * 2 + 1);
+      lSeries.Visible := True;
+      fAxisY.AddChild(lSeries);
+      fSeriesList.Add(lSeries);
+      lFlag := TChartFlagLabel.Create;
+      lFlag.Name := Format('MaxFlagIm%d', [I]);
+      lFlag.Visible := False;
+      lFlag.Trend := lSeries;
+      lFlag.Axis := fAxisY;
+      fAxisY.AddChild(lFlag);
+      fMaxFlags.Add(lFlag);
+    end;
   end;
 
   if fToken = 0 then
@@ -680,7 +823,7 @@ begin
         for J := 0 to fSeriesList.Count - 1 do
         begin
           lSeries := cBuffTrend1d(fSeriesList[J]);
-          if SameText(lSeries.Name, fBufferedFrames[I].TagName) then
+          if SameText(lSeries.Name, fBufferedFrames[I].TagName + '#primary') then
           begin
             lSeries.X0 := 0.0;
             lSeries.DX := fBufferedFrames[I].FrequencyStepHz;
@@ -707,6 +850,21 @@ begin
             Break;
           end;
         end;
+        if (fComponent.ResultType = 2) and
+          (Length(fBufferedFrames[I].SecondaryValues) > 0) then
+          for J := 0 to fSeriesList.Count - 1 do
+          begin
+            lSeries := cBuffTrend1d(fSeriesList[J]);
+            if SameText(lSeries.Name, fBufferedFrames[I].TagName + '#secondary') then
+            begin
+              lSeries.X0 := 0.0;
+              lSeries.DX := fBufferedFrames[I].FrequencyStepHz;
+              lSeries.ReplaceValues(fBufferedFrames[I].SecondaryValues, 0,
+                Length(fBufferedFrames[I].SecondaryValues));
+              lNeedsRedraw := True;
+              Break;
+            end;
+          end;
         
         fBufferedFrames[I].HasNewData := False;
       end;
@@ -732,7 +890,8 @@ begin
     { Полосы зависят только от нового спектрального кадра. Не удаляем и не
       создаём графические объекты на каждом общем UI-такте, когда данные
       этого спектра не менялись. }
-    if lNeedsRedraw and (fPage <> nil) and (lBandFrameIndex >= 0) then
+    if lNeedsRedraw and (fPage <> nil) and (lBandFrameIndex >= 0) and
+      (fComponent.ResultType = 0) and (fComponent.SpectrumIntegration = 0) then
     begin
       EnsureBandObjects(Length(fBufferedFrames[lBandFrameIndex].Bands));
       for K := 0 to Length(fBufferedFrames[lBandFrameIndex].Bands) - 1 do
@@ -844,7 +1003,6 @@ procedure TRecorderSpectrumView.HandleEvent(ASender: TObject; const AEvent: TRec
 var
   lEventData: TRecorderSpectrumFrameEventData;
   I, J: Integer;
-  lSourceValues: TRecorderDoubleArray;
 begin
   if not IsVisible then Exit;
   if (AEvent.Kind <> rceSpectrumFrame) or (not (AEvent.Data is TRecorderSpectrumFrameEventData)) then
@@ -862,14 +1020,7 @@ begin
         fBufferedFrames[I].MaxIndex := lEventData.Frame.MaxIndex;
         fBufferedFrames[I].MaxFrequencyHz := lEventData.Frame.MaxFrequencyHz;
         fBufferedFrames[I].MaxRms := lEventData.Frame.MaxRms;
-        if fComponent.ResultType = 0 then
-          lSourceValues := lEventData.Frame.Rms
-        else
-          lSourceValues := lEventData.Frame.PhaseRad;
-        SetLength(fBufferedFrames[I].Values, Length(lSourceValues));
-        if Length(lSourceValues) > 0 then
-          Move(lSourceValues[0], fBufferedFrames[I].Values[0],
-            Length(lSourceValues) * SizeOf(Double));
+        BufferFrameValues(I, lEventData.Frame);
         SetLength(fBufferedFrames[I].Bands, Length(lEventData.Frame.Bands));
         for J := 0 to Length(lEventData.Frame.Bands) - 1 do
           fBufferedFrames[I].Bands[J] := lEventData.Frame.Bands[J];

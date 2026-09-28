@@ -69,6 +69,7 @@ type
     destructor Destroy; override;
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer = -1): Variant; override;
+    function GetChannels: TRecorderDeviceChannelArray; override;
     function TrySetDeviceProperty(AProperty: TRecorderDeviceProperty;
       const AValue: Variant; AIndex: Integer = -1): Boolean; override;
     procedure Connect; override;
@@ -548,6 +549,15 @@ begin
   if (lModule >= 0) and (lModule <= High(fProgramInfo)) and
     (fProgramInfo[lModule].SampleRateHz > 0) then
     Result := fProgramInfo[lModule].SampleRateHz;
+end;
+
+function TRecorderMcbusDevice.GetChannels: TRecorderDeviceChannelArray;
+var
+  I: Integer;
+begin
+  Result := inherited GetChannels;
+  for I := 0 to High(Result) do
+    Result[I].PollFrequencyHz := ChannelSampleRate(I);
 end;
 
 function TRecorderMcbusDevice.TargetSampleCount(AChannel: Integer): Integer;

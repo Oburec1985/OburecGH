@@ -27,7 +27,7 @@ uses
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
-  uRecorderAlgorithmManager,
+  uRecorderAlgorithmManager, uRecorderAlgorithmEditorFrame,
   uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
   uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig,
   uRecorderPluginRuntime, uRecorderPluginApi, uLuaCalcSettingsDialog,
@@ -236,6 +236,7 @@ type
     fSelectingGrid: TStringGrid;
     fSavedSelection: TGridRect;
     fDataSourcesChanged: Boolean;
+    fRuntimeAlgorithmEditor: TRecorderAlgorithmEditorFrame;
     procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SelectedChannelsFilterChanged(Sender: TObject);
@@ -286,6 +287,9 @@ type
     function CreateSpectrumConfigNode(ATag: TRecorderTag): TRecorderSpectrumConfigNode;
     function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
     function SelectedSpectrumBinding: TRecorderSpectrumTagBinding;
+    function SelectedRuntimeAlgorithm: TRecorderAlgorithm;
+    procedure ShowRuntimeAlgorithmEditor(AAlgorithm: TRecorderAlgorithm);
+    procedure SetSpectrumEditorVisible(AVisible: Boolean);
     procedure FillAvailableAlgorithmKinds(AItems: TStrings);
     procedure CreateSelectedAlgorithm(AType: TRecorderAlgorithmTypeRegistration);
     procedure ShowAlgorithmDropMenu(X, Y: Integer);
@@ -415,6 +419,8 @@ implementation
 
 uses
   StrUtils, ssockets, Process,
+  uRecorderTachoAlgorithmFrame, uRecorderPhaseAlgorithmFrame,
+  uRecorderCounterAlgorithmFrame, uRecorderArithmeticAlgorithmFrame,
   uSharedAsync,
   uRecorderConfiguredDataSources, uRecorderConfiguredSourceEditor,
   uRecorderMic140DataSource, uRecorderMic140DeviceConfig,
@@ -1918,6 +1924,7 @@ end;
 
 destructor TRecorderSettingsDialog.Destroy;
 begin
+  FreeAndNil(fRuntimeAlgorithmEditor);
   FreeAndNil(fWindowDragTrace);
   fPluginCatalog.Free;
   fVirtualTagIcon.Free;
@@ -2064,17 +2071,15 @@ procedure TRecorderSettingsDialog.ApplyMeraSignalToTag(ATag: TRecorderTag;
   ASignal: TMeraSignalInfo);
 var
   lSourceId: string;
-  lFirstMc201Bind: Boolean;
 begin
   if (ATag = nil) or (ASignal = nil) then
     Exit;
 
   lSourceId := SignalSourceId(ASignal);
-  { Первый bind MC-201: галочка аппаратной ГХ по умолчанию включена. }
-  lFirstMc201Bind := SameText(ASignal.ModuleName, 'MC-201') and
-    (not SameText(ATag.ModuleType, 'MC-201'));
   ATag.Address := ASignal.Address;
-  ATag.UnitName := ASignal.UnitsName;
+  { Источник задаёт только свою единицу. Результирующую UnitName вычисляет
+    общий pipeline ГХ; состояние пользовательских галок здесь не меняется. }
+  ATag.SourceUnitName := ASignal.UnitsName;
   ATag.SourceId := lSourceId;
   ATag.IsVirtual := RecorderIsVirtualTagSource(lSourceId);
   ATag.ModuleType := ASignal.ModuleName;
@@ -2083,8 +2088,6 @@ begin
     публикуется тегом как векторный, независимо от модели устройства. }
   ATag.IsVector := ASignal.FrequencyHz > 0.0;
   ATag.SourceValueMode := ASignal.SourceValueMode;
-  if lFirstMc201Bind then
-    ATag.HardwareCalibrationEnabled := True;
   if Trim(ATag.Description) = '' then
     if SameText(ASignal.ModuleName, 'MIC-140') then
       ATag.Description := Format('%s; freq=%s Hz',
@@ -2094,8 +2097,6 @@ begin
         [ASignal.Name, ASignal.DataTypeName,
         FormatFloat('0.######', ASignal.FrequencyHz),
         ExtractFileName(ASignal.FileName)]);
-  if not RecorderTagUsesMic140Settings(ATag) then
-    RecorderTagClearMic140Settings(ATag);
 end;
 
 function TRecorderSettingsDialog.SignalSourceId(ASignal: TMeraSignalInfo): string;
@@ -2599,6 +2600,70 @@ begin
   PopulateAlgorithmsTree;
 end;
 
+function TRecorderSettingsDialog.SelectedRuntimeAlgorithm: TRecorderAlgorithm;
+var
+  I: Integer;
+  lData: Pointer;
+begin
+  Result := nil;
+  if (fAlgorithmsTree = nil) or (fAlgorithmsTree.Selected = nil) or
+    (fRecorder = nil) or (fRecorder.AlgorithmManager = nil) then
+    Exit;
+  lData := fAlgorithmsTree.Selected.Data;
+  for I := 0 to fRecorder.AlgorithmManager.AlgorithmCount - 1 do
+    if Pointer(fRecorder.AlgorithmManager.Algorithms[I]) = lData then
+      Exit(fRecorder.AlgorithmManager.Algorithms[I]);
+end;
+
+procedure TRecorderSettingsDialog.SetSpectrumEditorVisible(AVisible: Boolean);
+var
+  I: Integer;
+  lPanel: TPanel;
+  lControl: TControl;
+begin
+  if not (FindComponent('pnAlgorithmSettings') is TPanel) then
+    Exit;
+  lPanel := TPanel(FindComponent('pnAlgorithmSettings'));
+  for I := 0 to lPanel.ControlCount - 1 do
+  begin
+    lControl := lPanel.Controls[I];
+    if lControl = fRuntimeAlgorithmEditor then
+      Continue;
+    lControl.Visible := AVisible;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.ShowRuntimeAlgorithmEditor(
+  AAlgorithm: TRecorderAlgorithm);
+var
+  lPanel: TPanel;
+begin
+  FreeAndNil(fRuntimeAlgorithmEditor);
+  if AAlgorithm = nil then
+  begin
+    SetSpectrumEditorVisible(True);
+    ArrangeAlgorithmControls;
+    Exit;
+  end;
+  if not (FindComponent('pnAlgorithmSettings') is TPanel) then
+    Exit;
+  lPanel := TPanel(FindComponent('pnAlgorithmSettings'));
+  SetSpectrumEditorVisible(False);
+  fRuntimeAlgorithmEditor := CreateRecorderAlgorithmEditor(
+    AAlgorithm.AlgorithmTypeName, Self);
+  if fRuntimeAlgorithmEditor = nil then
+  begin
+    SetSpectrumEditorVisible(True);
+    Exit;
+  end;
+  fRuntimeAlgorithmEditor.Parent := lPanel;
+  fRuntimeAlgorithmEditor.Align := alClient;
+  fRuntimeAlgorithmEditor.BorderSpacing.Around := 8;
+  fRuntimeAlgorithmEditor.SetContext(AAlgorithm, fRecorder.TagRegistry);
+  fRuntimeAlgorithmEditor.Visible := True;
+  lPanel.Height := Max(300, fRuntimeAlgorithmEditor.Constraints.MinHeight + 16);
+end;
+
 procedure TRecorderSettingsDialog.FillAvailableAlgorithmKinds(AItems: TStrings);
 var
   I: Integer;
@@ -2623,6 +2688,13 @@ end;
 
 procedure TRecorderSettingsDialog.CreateSelectedAlgorithm(
   AType: TRecorderAlgorithmTypeRegistration);
+var
+  lAlgorithm: TRecorderAlgorithm;
+  lSelection: TGridRect;
+  lRow: Integer;
+  lTop: Integer;
+  lBottom: Integer;
+  lTag: TRecorderTag;
 begin
   if AType = nil then
     Exit;
@@ -2631,9 +2703,32 @@ begin
     AddSpectrumAlgorithmsFromSelectedChannels;
     Exit;
   end;
-  MessageDlg('Добавление алгоритма',
-    Format('Алгоритм «%s» ещё не подключён к этому редактору.', [AType.DisplayName]),
-    mtInformation, [mbOK], 0);
+  if (fRecorder = nil) or (fRecorder.AlgorithmManager = nil) then
+    Exit;
+  lAlgorithm := fRecorder.AlgorithmManager.CreateAlgorithm(AType.TypeName);
+  if lAlgorithm = nil then
+    Exit;
+  lAlgorithm.DisplayName := AType.DisplayName + ' ' +
+    IntToStr(fRecorder.AlgorithmManager.AlgorithmCount + 1);
+  if fSelectedChannelsGrid <> nil then
+  begin
+    lSelection := fSelectedChannelsGrid.Selection;
+    lTop := Min(lSelection.Top, lSelection.Bottom);
+    lBottom := Max(lSelection.Top, lSelection.Bottom);
+    for lRow := lTop to lBottom do
+    begin
+      lTag := SelectedTagByGridRow(lRow);
+      if lTag <> nil then
+        lAlgorithm.AddBinding(lTag);
+    end;
+  end;
+  fRecorder.AlgorithmManager.AddAlgorithm(lAlgorithm);
+  fRecorder.AlgorithmManager.SaveConfiguredAlgorithms;
+  PopulateAlgorithmsTree;
+  if fAlgorithmsTree.Items.Count > 0 then
+    fAlgorithmsTree.Selected := fAlgorithmsTree.Items.Item[
+      fAlgorithmsTree.Items.Count - 1];
+  LoadSelectedAlgorithmSettings;
 end;
 
 procedure TRecorderSettingsDialog.AlgorithmDropMenuClick(Sender: TObject);
@@ -2711,6 +2806,11 @@ begin
   lPanel := TPanel(FindComponent('pnAlgorithmSettings'));
   if lPanel.Tag = 1 then
     Exit;
+  if fRuntimeAlgorithmEditor <> nil then
+  begin
+    fRuntimeAlgorithmEditor.Align := alClient;
+    Exit;
+  end;
   if FindComponent('pnAlgorithmTop') is TPanel then
     lTopPanel := TPanel(FindComponent('pnAlgorithmTop'))
   else
@@ -2865,6 +2965,8 @@ var
   lNode: TRecorderSpectrumConfigNode;
   lConfigTreeNode: TTreeNode;
   lBinding: TRecorderSpectrumTagBinding;
+  lAlgorithm: TRecorderAlgorithm;
+  lAlgorithmNode: TTreeNode;
 begin
   if fAlgorithmsTree = nil then
     Exit;
@@ -2891,6 +2993,21 @@ begin
       end;
       lConfigTreeNode.Expand(True);
     end;
+    if (fRecorder <> nil) and (fRecorder.AlgorithmManager <> nil) then
+      for I := 0 to fRecorder.AlgorithmManager.AlgorithmCount - 1 do
+      begin
+        lAlgorithm := fRecorder.AlgorithmManager.Algorithms[I];
+        if lAlgorithm is TRecorderSpectrumAlgorithm then
+          Continue;
+        lAlgorithmNode := fAlgorithmsTree.Items.AddChild(lRoot,
+          lAlgorithm.DisplayName);
+        lAlgorithmNode.Data := lAlgorithm;
+        for J := 0 to lAlgorithm.BindingCount - 1 do
+          with fAlgorithmsTree.Items.AddChild(lAlgorithmNode,
+            lAlgorithm.Binding(J).TagName) do
+            Data := lAlgorithm;
+        lAlgorithmNode.Expand(True);
+      end;
     lRoot.Expand(True);
     if fAlgorithmsTree.Selected = nil then
       fAlgorithmsTree.Selected := lRoot;
@@ -2904,7 +3021,15 @@ var
   lNode: TRecorderSpectrumConfigNode;
   lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
+  lAlgorithm: TRecorderAlgorithm;
 begin
+  lAlgorithm := SelectedRuntimeAlgorithm;
+  if lAlgorithm <> nil then
+  begin
+    ShowRuntimeAlgorithmEditor(lAlgorithm);
+    Exit;
+  end;
+  ShowRuntimeAlgorithmEditor(nil);
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
@@ -2946,7 +3071,21 @@ var
   lNode: TRecorderSpectrumConfigNode;
   lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
+  lAlgorithm: TRecorderAlgorithm;
 begin
+  lAlgorithm := SelectedRuntimeAlgorithm;
+  if lAlgorithm <> nil then
+  begin
+    if fRuntimeAlgorithmEditor <> nil then
+      fRuntimeAlgorithmEditor.Apply;
+    if (fRecorder <> nil) and (fRecorder.AlgorithmManager <> nil) then
+    begin
+      fRecorder.AlgorithmManager.SaveConfiguredAlgorithms;
+      fRecorder.AlgorithmManager.PrepareConfiguration;
+    end;
+    PopulateAlgorithmsTree;
+    Exit;
+  end;
   lNode := SelectedSpectrumConfigNode;
   if lNode = nil then
     Exit;
@@ -3031,6 +3170,8 @@ var
   lObj: TObject;
   lBinding: TRecorderSpectrumTagBinding;
   lParentNode: TRecorderSpectrumConfigNode;
+  lRuntimeAlgorithms: TList;
+  lAlgorithm: TRecorderAlgorithm;
   I, J: Integer;
 begin
   if (fAlgorithmsTree = nil) or (fAlgorithmsTree.SelectionCount = 0) then
@@ -3040,6 +3181,7 @@ begin
     free those objects, therefore TTreeNode.Data must not be read afterwards. }
   lBindings := TList.Create;
   lConfigNodes := TList.Create;
+  lRuntimeAlgorithms := TList.Create;
   try
     for I := 0 to fAlgorithmsTree.SelectionCount - 1 do
     begin
@@ -3047,7 +3189,20 @@ begin
       if lSelectedNode.Data = nil then
         Continue;
       lObj := TObject(lSelectedNode.Data);
-      if lObj is TRecorderSpectrumConfigNode then
+      lAlgorithm := nil;
+      if (fRecorder <> nil) and (fRecorder.AlgorithmManager <> nil) then
+        for J := 0 to fRecorder.AlgorithmManager.AlgorithmCount - 1 do
+          if fRecorder.AlgorithmManager.Algorithms[J] = lObj then
+          begin
+            lAlgorithm := fRecorder.AlgorithmManager.Algorithms[J];
+            Break;
+          end;
+      if lAlgorithm <> nil then
+      begin
+        if lRuntimeAlgorithms.IndexOf(lAlgorithm) < 0 then
+          lRuntimeAlgorithms.Add(lAlgorithm);
+      end
+      else if lObj is TRecorderSpectrumConfigNode then
         lConfigNodes.Add(lObj)
       else if lObj is TRecorderSpectrumTagBinding then
         lBindings.Add(lObj);
@@ -3073,10 +3228,19 @@ begin
       for I := fSpectrumConfigTree.NodeCount - 1 downto 0 do
         if lConfigNodes.IndexOf(fSpectrumConfigTree.Nodes[I]) >= 0 then
           fSpectrumConfigTree.DeleteNode(I);
+      if (fRecorder <> nil) and (fRecorder.AlgorithmManager <> nil) then
+      begin
+        FreeAndNil(fRuntimeAlgorithmEditor);
+        for I := lRuntimeAlgorithms.Count - 1 downto 0 do
+          fRecorder.AlgorithmManager.RemoveAlgorithm(
+            TRecorderAlgorithm(lRuntimeAlgorithms[I]));
+        fRecorder.AlgorithmManager.SaveConfiguredAlgorithms;
+      end;
     finally
       fAlgorithmsTree.Items.EndUpdate;
     end;
   finally
+    lRuntimeAlgorithms.Free;
     lConfigNodes.Free;
     lBindings.Free;
   end;
@@ -5836,7 +6000,8 @@ begin
 
   { Внешние кнопки «Применить» и OK также должны сохранить текущую строку
     алгоритма, даже если внутренняя кнопка спектра не была нажата. }
-  if SelectedSpectrumConfigNode <> nil then
+  if (SelectedSpectrumConfigNode <> nil) or
+    (SelectedRuntimeAlgorithm <> nil) then
     StoreSelectedAlgorithmSettings;
 
   if cbNetworkInterface <> nil then
@@ -6913,7 +7078,7 @@ begin
     ApplySpectrumConfiguration;
   except
     on E: Exception do
-      MessageDlg('Настройка спектра', E.Message, mtError, [mbOK], 0);
+      MessageDlg('Настройка алгоритма', E.Message, mtError, [mbOK], 0);
   end;
 end;
 

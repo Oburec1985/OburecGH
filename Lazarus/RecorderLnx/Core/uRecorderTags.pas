@@ -205,6 +205,9 @@ type
     fId: TRecorderTagId;                                       { Уникальный ID тега }
     fIsVirtual: Boolean;                                      { Тег создан программным, а не аппаратным источником }
     fExternalWriteAllowed: Boolean;                           { Значение разрешено задавать из UI/внешнего клиента }
+    fExternalWriteLock: TRTLCriticalSection;
+    fExternalWriteRevision: QWord;
+    fExternalWriteValues: array[0..15] of Double;
     fIsVector: Boolean;                                       { Тег принимает блоки отсчётов с заданной частотой }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fEstimateCache: array[TRecorderTagEstimateKind] of TRecorderTagEstimate;
@@ -246,6 +249,10 @@ type
       const AValue: TRecorderTagSetpoint);
     procedure SetUnitName(const AValue: string);
     procedure SetSourceUnitName(const AValue: string);
+    procedure SetAutoUnit(AValue: Boolean);
+    procedure SetHardwareCalibrationEnabled(AValue: Boolean);
+    procedure SetHardwareCalibrationName(const AValue: string);
+    procedure SetChannelCalibrationEnabled(AValue: Boolean);
   public
     { Создает тег.
       AId       - стабильный числовой id в пределах registry.
@@ -266,6 +273,12 @@ type
     { Очищает историю сигнала после смены режима/ГХ канала. }
     procedure ClearSignalHistory;
     procedure InvalidateCalibrationScale;
+    { Сохраняет последнюю внешнюю команду отдельно от входящих данных
+      источника. Один consumer считывает её по монотонной ревизии. }
+    procedure QueueExternalWrite(AValue: Double);
+    function ReadExternalWrite(var ARevision: QWord;
+      out AValue: Double): Boolean;
+    function ExternalWriteCursor: QWord;
 
     { Возвращает снимок сигнала тега. }
     function Snapshot: TRecorderSignalSnapshot;
@@ -298,7 +311,7 @@ type
     property RangeMin: Double read fRangeMin write fRangeMin;
     property RangeMax: Double read fRangeMax write fRangeMax;
     property AutoRange: Boolean read fAutoRange write fAutoRange;
-    property AutoUnit: Boolean read fAutoUnit write fAutoUnit;
+    property AutoUnit: Boolean read fAutoUnit write SetAutoUnit;
     property CalibrationNames: TStringList read fCalibrationNames;
     property EstimateSettings: TRecorderTagEstimateSettings read fEstimateSettings
       write fEstimateSettings;
@@ -319,11 +332,11 @@ type
     property SourceId: string read fSourceId write fSourceId;
     property SourceValueMode: string read fSourceValueMode write fSourceValueMode;
     property HardwareCalibrationEnabled: Boolean read fHardwareCalibrationEnabled
-      write fHardwareCalibrationEnabled;
+      write SetHardwareCalibrationEnabled;
     property HardwareCalibrationName: string read fHardwareCalibrationName
-      write fHardwareCalibrationName;
+      write SetHardwareCalibrationName;
     property ChannelCalibrationEnabled: Boolean read fChannelCalibrationEnabled
-      write fChannelCalibrationEnabled;
+      write SetChannelCalibrationEnabled;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
     property CalibrationScaleBuilt: Boolean read fCalibrationScaleBuilt;
@@ -438,6 +451,9 @@ type
     const ATimes, AValues: array of Double; ACount: Integer) of object;
   TRecorderTagValuePublishedEvent = procedure(Sender: TObject; ATag: TRecorderTag;
     ATimeSec, AValue: Double) of object;
+  TRecorderEnsureCalibrationDataEvent = function(ATag: TRecorderTag;
+    out AStartedByCalibration: Boolean; out AError: string): Boolean of object;
+  TRecorderReleaseCalibrationDataEvent = procedure(ATag: TRecorderTag) of object;
 
   TRecorderTagRegistry = class
   private
@@ -451,7 +467,15 @@ type
     fFullBlockEventsEnabled: Boolean;                   { Полные UI-снимки нужны только при записи }
     fRuntimeDataLock: TRTLCriticalSection;
     fRuntimeDataRevision: QWord;
+    fInputDataRevision: QWord;
     fRuntimeLatestTime: Double;
+    fExternalWriteBatchLock: TRTLCriticalSection;
+    fCalibrationCaptureLock: TRTLCriticalSection;
+    fCalibrationCaptureTag: TRecorderTag;
+    fCalibrationCaptureValues: TRecorderDoubleArray;
+    fCalibrationCaptureCount: Integer;
+    fOnEnsureCalibrationData: TRecorderEnsureCalibrationDataEvent;
+    fOnReleaseCalibrationData: TRecorderReleaseCalibrationDataEvent;
     fFallbackStartTickMs: QWord;
     fTimeSystem: TRecorderTimeSystem;
     fEventBus: TRecorderEventBus;                     { Ссылка на шину событий }
@@ -462,6 +486,7 @@ type
     fLoadedTagNameAliases: TStringList;
     fCalibrations: TRecorderCalibrationList;
     fSpectrumConfigs: TRecorderSpectrumConfigTree;
+    fAlgorithmConfigs: TStringList;
     fFrequencyBands: TRecorderFrequencyBandList;
     { Opaque per-source extension objects. Core owns them but does not know
       which device or plugin supplied their concrete types. }
@@ -473,9 +498,14 @@ type
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
     procedure MarkRuntimeDataUpdated(ATimeSec: Double);
+    procedure MarkInputDataUpdated;
+    procedure PublishValueInternal(ATag: TRecorderTag; ATimeSec,
+      AValue: Double; AIsInput: Boolean);
     procedure RemoveTagReferences(ATag: TRecorderTag);
     procedure RemoveLoadedTagAliases(ATag: TRecorderTag);
     function ResolvePublishTime(ATimeSec: Double): Double;
+    function CalibrationCaptureActive(ATag: TRecorderTag): Boolean;
+    procedure CaptureCalibrationValue(ATag: TRecorderTag; AValue: Double);
   public
     { AEventBus - шина событий. Владение не передается, может быть nil. }
     constructor Create(AEventBus: TRecorderEventBus = nil);
@@ -518,6 +548,25 @@ type
     function InvertTagThermocoupleValue(ATag: TRecorderTag; ATemperatureC: Double;
       out AMillivolts: Double): Boolean;
     function TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
+    { Начинает кратковременный захват после аппаратной ГХ и до канальной.
+      Буфер выделяется здесь, до входа acquisition в горячий цикл. }
+    procedure BeginCalibrationCapture(ATag: TRecorderTag;
+      ADurationSec: Double = 1.0);
+    { Запускает штатный источник данных через callback composition root. }
+    function EnsureCalibrationData(ATag: TRecorderTag;
+      out AStartedByCalibration: Boolean; out AError: string): Boolean;
+    { Останавливает Preview, только если мастер сам запустил его для градуировки. }
+    procedure ReleaseCalibrationData(ATag: TRecorderTag);
+    { Возвращает число уже записанных отсчётов без копирования capture-буфера. }
+    function CalibrationCaptureSampleCount(ATag: TRecorderTag): Integer;
+    { Завершает захват и возвращает накопленные значения одним снимком. }
+    function FinishCalibrationCapture(ATag: TRecorderTag;
+      out ASnapshot: TRecorderSignalSnapshot): Boolean;
+    procedure CancelCalibrationCapture(ATag: TRecorderTag);
+    property OnEnsureCalibrationData: TRecorderEnsureCalibrationDataEvent
+      read fOnEnsureCalibrationData write fOnEnsureCalibrationData;
+    property OnReleaseCalibrationData: TRecorderReleaseCalibrationDataEvent
+      read fOnReleaseCalibrationData write fOnReleaseCalibrationData;
 
     procedure RegisterActiveSource(const ASourceId: string);
     procedure UnregisterActiveSource(const ASourceId: string);
@@ -530,6 +579,14 @@ type
     procedure PublishValue(ATag: TRecorderTag; ATimeSec, AValue: Double); overload;
     procedure PublishValue(const ATagName: string; AValue: Double); overload;
     procedure PublishValue(ATag: TRecorderTag; AValue: Double); overload;
+    { Публикует введённое пользователем значение и ставит его в очередь
+      аппаратному источнику, если запись для тега разрешена. }
+    procedure PublishExternalValue(const ATagName: string;
+      AValue: Double); overload;
+    procedure PublishExternalValue(ATag: TRecorderTag;
+      AValue: Double); overload;
+    procedure BeginExternalWriteBatch;
+    procedure EndExternalWriteBatch;
     { Добавляет блок в кольцевой буфер тега без публикации события. }
     procedure AddBlockSamples(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
@@ -545,6 +602,7 @@ type
       AValuesAlreadyTransformed: Boolean = False);
     { Возвращает сводное состояние данных без обхода и блокировки всех тегов. }
     procedure GetRuntimeDataState(out ARevision: QWord; out ALatestTime: Double);
+    procedure GetInputDataRevision(out ARevision: QWord);
     { Явный получатель полного блока до публикации легковесного динамического
       UI/extension-события. Назначается менеджером алгоритмов. }
     procedure SetBlockPublishedHandler(ATarget: TObject;
@@ -580,6 +638,9 @@ type
     property TagCount: Integer read GetTagCount;
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
+    { Serialized configurations of non-spectrum runtime algorithms. Spectrum
+      keeps its structured tree for backward compatibility. }
+    property AlgorithmConfigs: TStringList read fAlgorithmConfigs;
     property FrequencyBands: TRecorderFrequencyBandList read fFrequencyBands;
     property SourceSpecificConfigs: TStringList read fSourceSpecificConfigs;
     property ConfiguredDataSources: TObjectList read fConfiguredDataSources;
@@ -612,6 +673,13 @@ function RecorderTagsShareSourceId(ARegistry: TRecorderTagRegistry;
 function RecorderTagsShareSourceIdList(ARegistry: TRecorderTagRegistry;
   ATagNames: TStrings): Boolean;
 
+{ Состояние отдельной ступени pipeline хранится вместе с её именем.
+  Старые списки без маркера считаются полностью включёнными. }
+function RecorderCalibrationStepEnabled(ANames: TStrings;
+  AIndex: Integer): Boolean;
+procedure RecorderSetCalibrationStepEnabled(ANames: TStrings;
+  AIndex: Integer; AEnabled: Boolean);
+
 const
   CDetachedTagSourcePrefix = 'Detached:';
   CMeraTagSourcePrefix = 'Mera file: ';
@@ -634,6 +702,25 @@ const
   CTagThermocoupleInverseMaxMv = 100.0;
   CTagThermocoupleInverseIterations = 48;
   CTagAddTraceEnabled = True;
+  CCalibrationStepDisabled = PtrInt(1);
+
+function RecorderCalibrationStepEnabled(ANames: TStrings;
+  AIndex: Integer): Boolean;
+begin
+  Result := (ANames <> nil) and (AIndex >= 0) and (AIndex < ANames.Count) and
+    (PtrInt(ANames.Objects[AIndex]) <> CCalibrationStepDisabled);
+end;
+
+procedure RecorderSetCalibrationStepEnabled(ANames: TStrings;
+  AIndex: Integer; AEnabled: Boolean);
+begin
+  if (ANames = nil) or (AIndex < 0) or (AIndex >= ANames.Count) then
+    Exit;
+  if AEnabled then
+    ANames.Objects[AIndex] := nil
+  else
+    ANames.Objects[AIndex] := TObject(CCalibrationStepDisabled);
+end;
 
 procedure RecorderLogTagAddTrace(const AAction: string; ATag: TRecorderTag);
 begin
@@ -1463,7 +1550,9 @@ begin
   fSetpoints[tskLowAlarm].Color := $0000FF;
   fSetpointSoundUntilEnd := True;
   fSetpointRangeControlEnabled := True;
-  fChannelCalibrationEnabled := True;
+  { Применение ГХ по умолчанию выключено. Включать его вправе только
+    пользователь либо загрузчик сохранённой конфигурации. }
+  fChannelCalibrationEnabled := False;
   fCalibrationScaleBuilt := False;
   fCalibrationScaleLinear := False;
   fHardwareScale := 1.0;
@@ -1472,11 +1561,13 @@ begin
   fCalibrationNames.CaseSensitive := False;
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
   InitCriticalSection(fEstimateLock);
+  InitCriticalSection(fExternalWriteLock);
   ClearEstimateCache;
 end;
 
 destructor TRecorderTag.Destroy;
 begin
+  DoneCriticalSection(fExternalWriteLock);
   DoneCriticalSection(fEstimateLock);
   fSignalBuffer.Free;
   fCalibrationNames.Free;
@@ -1731,6 +1822,8 @@ constructor TRecorderTagRegistry.Create(AEventBus: TRecorderEventBus);
 begin
   inherited Create;
   InitCriticalSection(fRuntimeDataLock);
+  InitCriticalSection(fExternalWriteBatchLock);
+  InitCriticalSection(fCalibrationCaptureLock);
   fEventBus := AEventBus;
   fActiveSourceIds := TStringList.Create;
   fActiveSourceIds.CaseSensitive := False;
@@ -1745,6 +1838,7 @@ begin
   fLoadedTagNameAliases.CaseSensitive := False;
   fCalibrations := TRecorderCalibrationList.Create;
   fSpectrumConfigs := TRecorderSpectrumConfigTree.Create;
+  fAlgorithmConfigs := TStringList.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
   fSourceSpecificConfigs := TStringList.Create;
   fSourceSpecificConfigs.OwnsObjects := True;
@@ -1759,6 +1853,7 @@ begin
   fConfiguredDataSources.Free;
   fSourceSpecificConfigs.Free;
   fFrequencyBands.Free;
+  fAlgorithmConfigs.Free;
   fSpectrumConfigs.Free;
   fCalibrations.Free;
   fTagGroupPaths.Free;
@@ -1766,6 +1861,9 @@ begin
   fTags.Free;
   fLoadedTagNameAliases.Free;
   fLoadedTagIdAliases.Free;
+  SetLength(fCalibrationCaptureValues, 0);
+  DoneCriticalSection(fCalibrationCaptureLock);
+  DoneCriticalSection(fExternalWriteBatchLock);
   DoneCriticalSection(fRuntimeDataLock);
   inherited Destroy;
 end;
@@ -1895,6 +1993,70 @@ begin
     Result := TRecorderTag(fLoadedTagIdAliases.Objects[I]);
 end;
 
+procedure TRecorderTag.QueueExternalWrite(AValue: Double);
+begin
+  EnterCriticalSection(fExternalWriteLock);
+  try
+    fExternalWriteValues[fExternalWriteRevision mod
+      QWord(Length(fExternalWriteValues))] := AValue;
+    Inc(fExternalWriteRevision);
+  finally
+    LeaveCriticalSection(fExternalWriteLock);
+  end;
+end;
+
+procedure TRecorderTagRegistry.GetInputDataRevision(out ARevision: QWord);
+begin
+  EnterCriticalSection(fRuntimeDataLock);
+  try
+    ARevision := fInputDataRevision;
+  finally
+    LeaveCriticalSection(fRuntimeDataLock);
+  end;
+end;
+
+procedure TRecorderTagRegistry.MarkInputDataUpdated;
+begin
+  EnterCriticalSection(fRuntimeDataLock);
+  try
+    Inc(fInputDataRevision);
+  finally
+    LeaveCriticalSection(fRuntimeDataLock);
+  end;
+end;
+
+function TRecorderTag.ReadExternalWrite(var ARevision: QWord;
+  out AValue: Double): Boolean;
+begin
+  EnterCriticalSection(fExternalWriteLock);
+  try
+    if ARevision > fExternalWriteRevision then
+      ARevision := fExternalWriteRevision
+    else if fExternalWriteRevision - ARevision >
+      QWord(Length(fExternalWriteValues)) then
+      ARevision := fExternalWriteRevision - QWord(Length(fExternalWriteValues));
+    Result := ARevision < fExternalWriteRevision;
+    if Result then
+    begin
+      AValue := fExternalWriteValues[ARevision mod
+        QWord(Length(fExternalWriteValues))];
+      Inc(ARevision);
+    end;
+  finally
+    LeaveCriticalSection(fExternalWriteLock);
+  end;
+end;
+
+function TRecorderTag.ExternalWriteCursor: QWord;
+begin
+  EnterCriticalSection(fExternalWriteLock);
+  try
+    Result := fExternalWriteRevision;
+  finally
+    LeaveCriticalSection(fExternalWriteLock);
+  end;
+end;
+
 procedure TRecorderTag.InvalidateCalibrationScale;
 begin
   fCalibrationScaleBuilt := False;
@@ -1903,13 +2065,55 @@ end;
 procedure TRecorderTag.SetUnitName(const AValue: string);
 begin
   fUnitName := Trim(AValue);
-  fSourceUnitName := fUnitName;
+  { При активной ГХ UnitName является единицей результата, а исходная единица
+    остаётся самостоятельной. Иначе ручной выбор V/mV затирал бы "код" и
+    аппаратный масштаб начинал собираться от неверного входа. }
+  if not ((fHardwareCalibrationEnabled and
+    (Trim(fHardwareCalibrationName) <> '')) or
+    (fChannelCalibrationEnabled and (fCalibrationNames <> nil) and
+    (fCalibrationNames.Count > 0))) then
+    fSourceUnitName := fUnitName;
   InvalidateCalibrationScale;
 end;
 
 procedure TRecorderTag.SetSourceUnitName(const AValue: string);
 begin
   fSourceUnitName := Trim(AValue);
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetAutoUnit(AValue: Boolean);
+begin
+  if fAutoUnit = AValue then
+    Exit;
+  fAutoUnit := AValue;
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetHardwareCalibrationEnabled(AValue: Boolean);
+begin
+  if fHardwareCalibrationEnabled = AValue then
+    Exit;
+  fHardwareCalibrationEnabled := AValue;
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetHardwareCalibrationName(const AValue: string);
+var
+  lValue: string;
+begin
+  lValue := Trim(AValue);
+  if fHardwareCalibrationName = lValue then
+    Exit;
+  fHardwareCalibrationName := lValue;
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetChannelCalibrationEnabled(AValue: Boolean);
+begin
+  if fChannelCalibrationEnabled = AValue then
+    Exit;
+  fChannelCalibrationEnabled := AValue;
   InvalidateCalibrationScale;
 end;
 
@@ -2148,6 +2352,8 @@ begin
   if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
     for I := ATag.CalibrationNames.Count - 1 downto 0 do
     begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+        Continue;
       lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
       if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
       begin
@@ -2169,9 +2375,13 @@ procedure TRecorderTagRegistry.SyncTagAutoUnit(ATag: TRecorderTag;
 var
   lUnitName: string;
 begin
-  if (ATag <> nil) and (ATag.AutoUnit or AForce) and
-    TryGetTagAutoUnit(ATag, lUnitName) then
-    ATag.fUnitName := lUnitName;
+  if (ATag = nil) or not (ATag.AutoUnit or AForce) then
+    Exit;
+  if TryGetTagAutoUnit(ATag, lUnitName) then
+    ATag.fUnitName := lUnitName
+  else
+    ATag.fUnitName := Trim(ATag.fSourceUnitName);
+  ATag.InvalidateCalibrationScale;
 end;
 
 procedure TRecorderTagRegistry.RebuildScales(ATag: TRecorderTag);
@@ -2180,6 +2390,8 @@ var
   lCalibration: TRecorderCalibration;
   lConversion: Double;
   lCurrentUnit: string;
+  lResultUnit: string;
+  lAutoUnit: string;
 
   function TryInputConversion(ACalibration: TRecorderCalibration;
     out AFactor: Double): Boolean;
@@ -2220,6 +2432,8 @@ begin
   if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
     for I := 0 to ATag.CalibrationNames.Count - 1 do
     begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+        Continue;
       lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
       if lCalibration = nil then
         Continue;
@@ -2233,6 +2447,28 @@ begin
         lCalibration.Scale;
       lCurrentUnit := Trim(lCalibration.UnitOut);
     end;
+
+  { AutoUnit управляет только выбранной единицей результата. Сама цепочка ГХ
+    определяется исключительно флагами Hardware/ChannelCalibrationEnabled.
+    Для ручной совместимой единицы добавляем конечный переход в уже свёрнутый
+    коэффициент (например, V -> mV), не пересчитывая pipeline в runtime. }
+  lResultUnit := lCurrentUnit;
+  { TryGetTagAutoUnit также возвращает UnitOut нелинейной последней ступени,
+    которую линейный свёртыватель намеренно не обходит. }
+  if TryGetTagAutoUnit(ATag, lAutoUnit) then
+    lResultUnit := lAutoUnit;
+  if ATag.AutoUnit then
+    ATag.fUnitName := lResultUnit
+  else if ATag.fCalibrationScaleLinear and (lResultUnit <> '') and
+    (Trim(ATag.fUnitName) <> '') and
+    not SameText(lResultUnit, Trim(ATag.fUnitName)) then
+  begin
+    if RecorderUnitManager.TryGetConversionFactor(lResultUnit,
+      ATag.fUnitName, lConversion) then
+      ATag.fResultScale := ATag.fResultScale * lConversion
+    else
+      ATag.fCalibrationScaleLinear := False;
+  end;
   ATag.fCalibrationScaleBuilt := True;
 end;
 
@@ -2248,6 +2484,8 @@ begin
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
+    if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      Continue;
     lName := Trim(ATag.CalibrationNames[I]);
     if StartsText('TC ', lName) then
       Exit(FindCalibrationByName(lName));
@@ -2320,22 +2558,195 @@ function TRecorderTagRegistry.TransformTagValue(ATag: TRecorderTag; AValue: Doub
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
+  lHardwareCalibration: TRecorderCalibration;
+  lConversion: Double;
+  lCurrentUnit: string;
+  lOutputUnit: string;
 begin
   if ATag <> nil then
   begin
     RebuildScales(ATag);
-    if ATag.fCalibrationScaleLinear then
+    if ATag.fCalibrationScaleLinear and not CalibrationCaptureActive(ATag) then
       Exit(AValue * ATag.fResultScale);
   end;
-  Result := TransformTagHardwareValue(ATag, AValue);
-  if (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
-    (ATag.CalibrationNames = nil) then
-    Exit;
-  for I := 0 to ATag.CalibrationNames.Count - 1 do
+  if ATag = nil then
+    Exit(AValue);
+  Result := AValue;
+  lCurrentUnit := Trim(ATag.SourceUnitName);
+  if lCurrentUnit = '' then
+    lCurrentUnit := Trim(ATag.UnitName);
+
+  lHardwareCalibration := FindTagHardwareCalibration(ATag);
+  if lHardwareCalibration <> nil then
   begin
-    lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
-    if lCalibration <> nil then
-      Result := lCalibration.Transform(Result);
+    if (lCurrentUnit <> '') and
+      (Trim(lHardwareCalibration.UnitIn) <> '') and
+      not SameText(lCurrentUnit, Trim(lHardwareCalibration.UnitIn)) and
+      RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
+        lHardwareCalibration.UnitIn, lConversion) then
+      Result := Result * lConversion;
+    Result := lHardwareCalibration.Transform(Result);
+    lCurrentUnit := Trim(lHardwareCalibration.UnitOut);
+  end;
+  { Интерактивная градуировка видит только вход канальной цепочки. Обычный
+    runtime не платит за снимки и вычисления; активен лишь короткий append в
+    заранее выделенный буфер одной выбранной сессии. }
+  CaptureCalibrationValue(ATag, Result);
+  if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
+    for I := 0 to ATag.CalibrationNames.Count - 1 do
+    begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+        Continue;
+      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
+      if lCalibration <> nil then
+      begin
+        if (lCurrentUnit <> '') and (Trim(lCalibration.UnitIn) <> '') and
+          not SameText(lCurrentUnit, Trim(lCalibration.UnitIn)) and
+          RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
+            lCalibration.UnitIn, lConversion) then
+          Result := Result * lConversion;
+        Result := lCalibration.Transform(Result);
+        lCurrentUnit := Trim(lCalibration.UnitOut);
+      end;
+    end;
+  { Нелинейная цепочка не имеет ResultScale, поэтому совместимый переход от
+    UnitOut последней включённой ГХ к ручной единице выполняется один раз после
+    всех Transform. AutoUnit уже показывает сам UnitOut и перехода не требует. }
+  lOutputUnit := lCurrentUnit;
+  if (not ATag.AutoUnit) and (lOutputUnit <> '') and
+    (Trim(ATag.UnitName) <> '') and
+    not SameText(lOutputUnit, Trim(ATag.UnitName)) and
+    RecorderUnitManager.TryGetConversionFactor(lOutputUnit, ATag.UnitName,
+      lConversion) then
+    Result := Result * lConversion;
+end;
+
+function TRecorderTagRegistry.CalibrationCaptureActive(
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and (fCalibrationCaptureTag = ATag);
+end;
+
+procedure TRecorderTagRegistry.CaptureCalibrationValue(ATag: TRecorderTag;
+  AValue: Double);
+begin
+  if not CalibrationCaptureActive(ATag) then
+    Exit;
+  EnterCriticalSection(fCalibrationCaptureLock);
+  try
+    if (fCalibrationCaptureTag = ATag) and
+      (fCalibrationCaptureCount < Length(fCalibrationCaptureValues)) then
+    begin
+      fCalibrationCaptureValues[fCalibrationCaptureCount] := AValue;
+      Inc(fCalibrationCaptureCount);
+    end;
+  finally
+    LeaveCriticalSection(fCalibrationCaptureLock);
+  end;
+end;
+
+procedure TRecorderTagRegistry.BeginCalibrationCapture(ATag: TRecorderTag;
+  ADurationSec: Double);
+var
+  lCapacity: Integer;
+begin
+  if (ATag = nil) or not ContainsTag(ATag) then
+    raise ERecorderTagError.Create('Calibration capture tag is not registered');
+  if ADurationSec <= 0 then
+    ADurationSec := 1.0;
+  lCapacity := Max(32, Ceil(Max(1.0, ATag.PollFrequencyHz) *
+    ADurationSec * 1.25));
+  EnterCriticalSection(fCalibrationCaptureLock);
+  try
+    fCalibrationCaptureTag := nil;
+    SetLength(fCalibrationCaptureValues, lCapacity);
+    fCalibrationCaptureCount := 0;
+    fCalibrationCaptureTag := ATag;
+  finally
+    LeaveCriticalSection(fCalibrationCaptureLock);
+  end;
+end;
+
+function TRecorderTagRegistry.EnsureCalibrationData(ATag: TRecorderTag;
+  out AStartedByCalibration: Boolean; out AError: string): Boolean;
+begin
+  AStartedByCalibration := False;
+  AError := '';
+  if not ContainsTag(ATag) then
+  begin
+    AError := 'Выбранный тег больше не зарегистрирован.';
+    Exit(False);
+  end;
+  if not Assigned(fOnEnsureCalibrationData) then
+  begin
+    AError := 'Запуск просмотра для градуировки недоступен.';
+    Exit(False);
+  end;
+  Result := fOnEnsureCalibrationData(ATag, AStartedByCalibration, AError);
+  if (not Result) and (Trim(AError) = '') then
+    AError := 'Не удалось запустить просмотр данных.';
+end;
+
+procedure TRecorderTagRegistry.ReleaseCalibrationData(ATag: TRecorderTag);
+begin
+  if ContainsTag(ATag) and Assigned(fOnReleaseCalibrationData) then
+    fOnReleaseCalibrationData(ATag);
+end;
+
+function TRecorderTagRegistry.CalibrationCaptureSampleCount(
+  ATag: TRecorderTag): Integer;
+begin
+  Result := 0;
+  EnterCriticalSection(fCalibrationCaptureLock);
+  try
+    if (ATag <> nil) and (fCalibrationCaptureTag = ATag) then
+      Result := fCalibrationCaptureCount;
+  finally
+    LeaveCriticalSection(fCalibrationCaptureLock);
+  end;
+end;
+
+function TRecorderTagRegistry.FinishCalibrationCapture(ATag: TRecorderTag;
+  out ASnapshot: TRecorderSignalSnapshot): Boolean;
+var
+  I: Integer;
+begin
+  ASnapshot.Count := 0;
+  SetLength(ASnapshot.Times, 0);
+  SetLength(ASnapshot.Values, 0);
+  EnterCriticalSection(fCalibrationCaptureLock);
+  try
+    Result := (ATag <> nil) and (fCalibrationCaptureTag = ATag) and
+      (fCalibrationCaptureCount > 0);
+    fCalibrationCaptureTag := nil;
+    if Result then
+    begin
+      ASnapshot.Count := fCalibrationCaptureCount;
+      SetLength(ASnapshot.Times, ASnapshot.Count);
+      SetLength(ASnapshot.Values, ASnapshot.Count);
+      for I := 0 to ASnapshot.Count - 1 do
+      begin
+        ASnapshot.Times[I] := I;
+        ASnapshot.Values[I] := fCalibrationCaptureValues[I];
+      end;
+    end;
+    fCalibrationCaptureCount := 0;
+  finally
+    LeaveCriticalSection(fCalibrationCaptureLock);
+  end;
+end;
+
+procedure TRecorderTagRegistry.CancelCalibrationCapture(ATag: TRecorderTag);
+begin
+  EnterCriticalSection(fCalibrationCaptureLock);
+  try
+    if (ATag = nil) or (fCalibrationCaptureTag = ATag) then
+    begin
+      fCalibrationCaptureTag := nil;
+      fCalibrationCaptureCount := 0;
+    end;
+  finally
+    LeaveCriticalSection(fCalibrationCaptureLock);
   end;
 end;
 procedure TRecorderTagRegistry.RegisterActiveSource(const ASourceId: string);
@@ -2484,6 +2895,12 @@ end;
 
 procedure TRecorderTagRegistry.PublishValue(ATag: TRecorderTag; ATimeSec,
   AValue: Double);
+begin
+  PublishValueInternal(ATag, ATimeSec, AValue, True);
+end;
+
+procedure TRecorderTagRegistry.PublishValueInternal(ATag: TRecorderTag;
+  ATimeSec, AValue: Double; AIsInput: Boolean);
 var
   lEvent: TRecorderEvent;
   lEventData: TRecorderTagUpdateEventData;
@@ -2498,6 +2915,7 @@ begin
   lValue := TransformTagValue(ATag, AValue);
   ATag.AddSample(ATimeSec, lValue);
   MarkRuntimeDataUpdated(ATimeSec);
+  if AIsInput then MarkInputDataUpdated;
 
   if Assigned(fOnValuePublished) then
     fOnValuePublished(fValuePublishedTarget, ATag, ATimeSec, lValue);
@@ -2577,6 +2995,7 @@ begin
     ATag.AddSamples(ATimes, lValues, ACount);
   end;
   MarkRuntimeDataUpdated(ATimes[ACount - 1]);
+  MarkInputDataUpdated;
 end;
 
 procedure TRecorderTagRegistry.PublishValue(const ATagName: string;
@@ -2588,6 +3007,40 @@ end;
 procedure TRecorderTagRegistry.PublishValue(ATag: TRecorderTag; AValue: Double);
 begin
   PublishValue(ATag, 0.0, AValue);
+end;
+
+procedure TRecorderTagRegistry.PublishExternalValue(const ATagName: string;
+  AValue: Double);
+var
+  lTag: TRecorderTag;
+begin
+  lTag := FindByName(ATagName);
+  if lTag = nil then
+    raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
+  PublishExternalValue(lTag, AValue);
+end;
+
+procedure TRecorderTagRegistry.PublishExternalValue(ATag: TRecorderTag;
+  AValue: Double);
+begin
+  if (ATag = nil) or not ATag.ExternalWriteAllowed then Exit;
+  BeginExternalWriteBatch;
+  try
+    PublishValueInternal(ATag, 0.0, AValue, False);
+    ATag.QueueExternalWrite(AValue);
+  finally
+    EndExternalWriteBatch;
+  end;
+end;
+
+procedure TRecorderTagRegistry.BeginExternalWriteBatch;
+begin
+  EnterCriticalSection(fExternalWriteBatchLock);
+end;
+
+procedure TRecorderTagRegistry.EndExternalWriteBatch;
+begin
+  LeaveCriticalSection(fExternalWriteBatchLock);
 end;
 
 function TRecorderTagRegistry.ResolvePublishTime(ATimeSec: Double): Double;
@@ -2685,6 +3138,7 @@ begin
     lTag.AddSamples(ATimes, lValues, ACount);
   end;
   MarkRuntimeDataUpdated(ATimes[ACount - 1]);
+  MarkInputDataUpdated;
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay
   // the next device read. Device-level diagnostics log block summaries.

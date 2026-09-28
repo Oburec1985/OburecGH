@@ -36,6 +36,8 @@ type
     fPresetMinValue: Double;             // сохранённый минимум оси Y
     fPresetMaxValue: Double;             // сохранённый максимум оси Y
     fHasPresetRange: Boolean;            // признак наличия пользовательского диапазона Y
+    fDisplayScale: Double;               // множитель только для подписей шкалы
+    fDisplayUnit: string;                // единица только для подписей шкалы
   public
     /// <summary>
     /// Устанавливает свойства оси по умолчанию.
@@ -59,6 +61,12 @@ type
     property PresetMinValue: Double read fPresetMinValue write fPresetMinValue;
     property PresetMaxValue: Double read fPresetMaxValue write fPresetMaxValue;
     property HasPresetRange: Boolean read fHasPresetRange write fHasPresetRange;
+    /// <summary>
+    /// Множитель и единица отображения не меняют мировые координаты, zoom и
+    /// значения серий. Renderer применяет их только к тексту делений оси.
+    /// </summary>
+    property DisplayScale: Double read fDisplayScale write fDisplayScale;
+    property DisplayUnit: string read fDisplayUnit write fDisplayUnit;
   end;
 
   TChartAxis = cAxis;
@@ -87,6 +95,8 @@ begin
   fPresetMinValue := fMinValue;
   fPresetMaxValue := fMaxValue;
   fHasPresetRange := False;
+  fDisplayScale := 1.0;
+  fDisplayUnit := '';
 end;
 
 procedure ChartAxisApplyUserValue(AAxis: TChartAxis; AIsMin: Boolean; AValue: Double);

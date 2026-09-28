@@ -68,6 +68,8 @@ type
     procedure AddChild(AChild: cBaseObj);
     // Удаляет дочерний объект без его уничтожения.
     procedure RemoveChild(AChild: cBaseObj);
+    // Перемещает существующий дочерний объект в конец порядка обхода.
+    procedure MoveChildToEnd(AChild: cBaseObj);
     // Уничтожает все дочерние объекты и очищает список.
     procedure ClearChildren;
     // Находит дочерний объект по имени (только на первом уровне).
@@ -182,6 +184,18 @@ begin
   fChildren.Remove(AChild);
   if AChild.fParent = Self then
     AChild.fParent := nil;
+end;
+
+procedure cBaseObj.MoveChildToEnd(AChild: cBaseObj);
+var
+  lIndex: Integer;
+begin
+  if not Assigned(AChild) or (AChild.fParent <> Self) then
+    Exit;
+  lIndex := fChildren.IndexOf(AChild);
+  if (lIndex < 0) or (lIndex = fChildren.Count - 1) then
+    Exit;
+  fChildren.Move(lIndex, fChildren.Count - 1);
 end;
 
 procedure cBaseObj.ClearChildren;

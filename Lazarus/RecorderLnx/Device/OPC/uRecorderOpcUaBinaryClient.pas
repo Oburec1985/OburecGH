@@ -9,6 +9,9 @@ uses
   Classes, SysUtils, Contnrs, ssockets;
 
 type
+  TRecorderOpcUaStringArray = array of string;
+  TRecorderOpcUaDoubleArray = array of Double;
+
   TRecorderOpcUaDiscoveredNode = class
   public
     NodeId: string;
@@ -18,11 +21,15 @@ type
     DataTypeNodeId: string;
     DataTypeName: string;
     ValueText: string;
+    ValueTimestamp: string;
+    ArrayValues: TStringList;
     ValueRank: LongInt;
     Historizing: Boolean;
     NodeClass: Cardinal;
     AccessLevel: Byte;
     UserAccessLevel: Byte;
+    constructor Create;
+    destructor Destroy; override;
     function CanRead: Boolean;
     function CanWrite: Boolean;
     function CanHistoryRead: Boolean;
@@ -48,6 +55,8 @@ type
     fUserName: string;
     fPassword: string;
     fSessionTimeoutMs: Cardinal;
+    fRequestTimeoutMs: Cardinal;
+    fTimestampsToReturn: Cardinal;
     fRevisedSessionTimeoutMs: Double;
     function ActivateSession: Boolean;
     function BrowseNode(const ANodeId, APath: string; ANodes: TObjectList;
@@ -68,13 +77,19 @@ type
     procedure SetError(const AStage, AText: string);
   public
     constructor Create(const AEndpoint, AUserName, APassword: string;
-      ASessionTimeoutMs: Cardinal);
+      ASessionTimeoutMs: Cardinal; ARequestTimeoutMs: Cardinal = 4000;
+      ATimestampsToReturn: Cardinal = 1);
     destructor Destroy; override;
     function Connect: Boolean;
     procedure Disconnect;
     function Browse(ANodes: TObjectList): Boolean;
     function ReadDouble(const ANodeId: string; out AValue: Double;
       out AStatus: Cardinal; out ATimestampSec: Double): Boolean;
+    function WriteScalar(const ANodeId: string; var ADataTypeNodeId: string;
+      AValue: Double): Boolean;
+    function WriteScalars(const ANodeIds: TRecorderOpcUaStringArray;
+      var ADataTypeNodeIds: TRecorderOpcUaStringArray;
+      const AValues: TRecorderOpcUaDoubleArray): Boolean;
     property ErrorText: string read fErrorText;
   end;
 
@@ -92,13 +107,16 @@ const
   COpcUaHierarchicalReferences = 'i=33';
   COpcUaNodeClassObject = 1;
   COpcUaNodeClassVariable = 2;
+  COpcUaNodeClassMethod = 4;
   COpcUaOpenSecureChannelRequest = 446;
   COpcUaCreateSessionRequest = 461;
   COpcUaActivateSessionRequest = 467;
   COpcUaCloseSessionRequest = 473;
   COpcUaCloseSecureChannelRequest = 452;
   COpcUaBrowseRequest = 527;
+  COpcUaBrowseNextRequest = 533;
   COpcUaReadRequest = 631;
+  COpcUaWriteRequest = 673;
   COpcUaAnonymousIdentityToken = 321;
   COpcUaUserNameIdentityToken = 324;
   COpcUaUnixEpochOffsetSeconds = 11644473600;
@@ -119,6 +137,7 @@ type
     procedure Int32(AValue: LongInt);
     procedure UInt64(AValue: QWord);
     procedure DoubleValue(AValue: Double);
+    procedure SingleValue(AValue: Single);
     procedure Raw(const AValue; ACount: Integer);
     procedure UaString(const AValue: string; ANull: Boolean = False);
     procedure ByteString(const AValue: TBytes; ANull: Boolean = False);
@@ -126,7 +145,7 @@ type
     procedure EncodedNodeId(AEncodingId: Word);
     procedure ExtensionObjectNull;
     procedure RequestHeader(const AAuthenticationToken: TBytes;
-      ARequestHandle: Cardinal);
+      ARequestHandle: Cardinal; ATimeoutHintMs: Cardinal = COpcUaTimeoutMs);
   end;
 
   TOpcUaReader = class
@@ -153,6 +172,18 @@ type
     function ResponseHeader: Cardinal;
     procedure SkipApplicationDescription;
   end;
+
+constructor TRecorderOpcUaDiscoveredNode.Create;
+begin
+  inherited Create;
+  ArrayValues := TStringList.Create;
+end;
+
+destructor TRecorderOpcUaDiscoveredNode.Destroy;
+begin
+  ArrayValues.Free;
+  inherited Destroy;
+end;
 
 function TRecorderOpcUaDiscoveredNode.CanRead: Boolean;
 begin
@@ -243,6 +274,10 @@ procedure TOpcUaWriter.DoubleValue(AValue: Double);
 var B: QWord;
 begin Move(AValue, B, 8); UInt64(B); end;
 
+procedure TOpcUaWriter.SingleValue(AValue: Single);
+var B: Cardinal;
+begin Move(AValue, B, 4); UInt32(B); end;
+
 procedure TOpcUaWriter.UaString(const AValue: string; ANull: Boolean);
 var B: TBytes;
 begin
@@ -314,7 +349,7 @@ begin
 end;
 
 procedure TOpcUaWriter.RequestHeader(const AAuthenticationToken: TBytes;
-  ARequestHandle: Cardinal);
+  ARequestHandle: Cardinal; ATimeoutHintMs: Cardinal);
 begin
   if Length(AAuthenticationToken) = 0 then begin ByteValue(0); ByteValue(0); end
   else Raw(AAuthenticationToken[0], Length(AAuthenticationToken));
@@ -322,7 +357,7 @@ begin
   UInt32(ARequestHandle);
   UInt32(0);
   UaString('', True);
-  UInt32(COpcUaTimeoutMs);
+  UInt32(ATimeoutHintMs);
   ExtensionObjectNull;
 end;
 
@@ -481,7 +516,8 @@ begin
 end;
 
 constructor TRecorderOpcUaBinaryClient.Create(const AEndpoint, AUserName,
-  APassword: string; ASessionTimeoutMs: Cardinal);
+  APassword: string; ASessionTimeoutMs: Cardinal; ARequestTimeoutMs: Cardinal;
+  ATimestampsToReturn: Cardinal);
 begin
   inherited Create;
   fEndpoint := Trim(AEndpoint);
@@ -489,6 +525,10 @@ begin
   fPassword := APassword;
   fSessionTimeoutMs := ASessionTimeoutMs;
   if fSessionTimeoutMs < 1000 then fSessionTimeoutMs := 1000;
+  fRequestTimeoutMs := ARequestTimeoutMs;
+  if fRequestTimeoutMs < 100 then fRequestTimeoutMs := 100;
+  if ATimestampsToReturn > 3 then ATimestampsToReturn := 1;
+  fTimestampsToReturn := ATimestampsToReturn;
   fAnonymousPolicyId := 'anonymous';
   fUserPolicyId := 'username';
 end;
@@ -836,10 +876,86 @@ end;
 
 function TRecorderOpcUaBinaryClient.BrowseNode(const ANodeId, APath: string;
   ANodes: TObjectList; AVisited: TStrings; ADepth: Integer): Boolean;
-var B, R: TMemoryStream; W: TOpcUaWriter; Q: TOpcUaReader; D: TBytes; I, J, N, Count: LongInt; NodeClass, Status: Cardinal; NodeId, DisplayName, TypeDefinition, NodePath: string; LocalizedMask: Byte; Item: TRecorderOpcUaDiscoveredNode;
+var
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  lContinuationPoint: TBytes;
+
+  function ProcessBrowseResponse(AResponse: TMemoryStream;
+    out AContinuationPoint: TBytes): Boolean;
+  var
+    Q: TOpcUaReader;
+    D: TBytes;
+    I, J, N, Count: LongInt;
+    NodeClass, Status: Cardinal;
+    NodeId, DisplayName, TypeDefinition, NodePath: string;
+    LocalizedMask: Byte;
+    Item: TRecorderOpcUaDiscoveredNode;
+  begin
+    Result := False;
+    SetLength(AContinuationPoint, 0);
+    Q := TOpcUaReader.Create(AResponse);
+    try
+      Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+      Q.ResponseHeader;
+      N := Q.Int32;
+      for I := 0 to N - 1 do
+      begin
+        Status := Q.UInt32;
+        AContinuationPoint := Q.ByteString;
+        Count := Q.Int32;
+        if Status <> 0 then
+        begin
+          SetError('browse', 'status 0x' + IntToHex(Status, 8));
+          Exit;
+        end;
+        for J := 0 to Count - 1 do
+        begin
+          Q.NodeId(D); Q.BooleanValue; NodeId := Q.ExpandedNodeId;
+          Q.UInt16; Q.UaString;
+          LocalizedMask := Q.ByteValue;
+          if (LocalizedMask and 1) <> 0 then Q.UaString;
+          if (LocalizedMask and 2) <> 0 then DisplayName := Q.UaString
+          else DisplayName := '';
+          NodeClass := Q.UInt32;
+          TypeDefinition := Q.ExpandedNodeId;
+          if APath = '' then NodePath := DisplayName
+          else NodePath := APath + '/' + DisplayName;
+
+          Item := TRecorderOpcUaDiscoveredNode.Create;
+          Item.NodeId := NodeId;
+          Item.DisplayName := DisplayName;
+          Item.BrowsePath := NodePath;
+          Item.TypeDefinition := TypeDefinition;
+          Item.NodeClass := NodeClass;
+          Item.ValueRank := -1;
+          if NodeClass = COpcUaNodeClassVariable then
+          begin
+            if not ReadVariableAttributes(Item) then
+            begin
+              Item.DataTypeName := '<ошибка атрибутов>';
+              fErrorText := '';
+            end;
+          end;
+          ANodes.Add(Item);
+
+          if NodeClass = COpcUaNodeClassObject then
+            if not BrowseNode(NodeId, NodePath, ANodes, AVisited,
+              ADepth + 1) then Exit;
+          if NodeClass = COpcUaNodeClassVariable then
+            if not Item.IsProperty then
+              if not BrowseNode(NodeId, NodePath, ANodes, AVisited,
+                ADepth + 1) then Exit;
+        end;
+      end;
+      Result := True;
+    finally
+      Q.Free;
+    end;
+  end;
 begin
   Result := False;
-  if ADepth > 16 then Exit(True);
+  if ADepth > 64 then Exit(True);
   if AVisited.IndexOf(ANodeId) >= 0 then Exit(True);
   AVisited.Add(ANodeId);
   B := TMemoryStream.Create;
@@ -849,56 +965,33 @@ begin
       Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle);
       W.NodeId('i=0'); W.UInt64(0); W.UInt32(0); W.UInt32(0); W.Int32(1);
       W.NodeId(ANodeId); W.UInt32(0); W.NodeId(COpcUaHierarchicalReferences); W.BooleanValue(True);
-      W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable); W.UInt32(63);
+      W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable or
+        COpcUaNodeClassMethod); W.UInt32(63);
     finally W.Free; end;
     if not ExchangeService(COpcUaBrowseRequest, B, R) then Exit;
     try
-      Q := TOpcUaReader.Create(R);
-      try
-        Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D); Q.ResponseHeader;
-        N := Q.Int32;
-        for I := 0 to N - 1 do
-        begin
-          Status := Q.UInt32; Q.ByteString; Count := Q.Int32;
-          if Status <> 0 then begin SetError('browse', 'status 0x' + IntToHex(Status, 8)); Exit; end;
-          for J := 0 to Count - 1 do
-          begin
-            Q.NodeId(D); Q.BooleanValue; NodeId := Q.ExpandedNodeId; Q.UInt16; Q.UaString;
-            LocalizedMask := Q.ByteValue;
-            if (LocalizedMask and 1) <> 0 then Q.UaString;
-            if (LocalizedMask and 2) <> 0 then DisplayName := Q.UaString
-            else DisplayName := '';
-            NodeClass := Q.UInt32; TypeDefinition := Q.ExpandedNodeId;
-            if APath = '' then NodePath := DisplayName
-            else NodePath := APath + '/' + DisplayName;
-            if NodeClass = COpcUaNodeClassVariable then
-            begin
-              Item := TRecorderOpcUaDiscoveredNode.Create;
-              Item.NodeId := NodeId;
-              Item.DisplayName := DisplayName;
-              Item.BrowsePath := NodePath;
-              Item.TypeDefinition := TypeDefinition;
-              Item.NodeClass := NodeClass;
-              Item.ValueRank := -1;
-              if not ReadVariableAttributes(Item) then
-              begin
-                Item.Free;
-                Exit;
-              end;
-              if Item.IsProperty and not ReadPropertyValue(Item) then
-                Item.ValueText := '<ошибка чтения>';
-              ANodes.Add(Item);
-              if not Item.IsProperty then
-                if not BrowseNode(NodeId, NodePath, ANodes, AVisited,
-                  ADepth + 1) then Exit;
-            end
-            else if NodeClass = COpcUaNodeClassObject then
-              if not BrowseNode(NodeId, NodePath, ANodes, AVisited,
-                ADepth + 1) then Exit;
-          end;
-        end;
-      finally Q.Free; end;
+      if not ProcessBrowseResponse(R, lContinuationPoint) then Exit;
     finally R.Free; end;
+    while Length(lContinuationPoint) > 0 do
+    begin
+      B.Clear;
+      W := TOpcUaWriter.Create(B);
+      try
+        Inc(fRequestHandle);
+        W.RequestHeader(fAuthenticationToken, fRequestHandle);
+        W.BooleanValue(False);
+        W.Int32(1);
+        W.ByteString(lContinuationPoint);
+      finally
+        W.Free;
+      end;
+      if not ExchangeService(COpcUaBrowseNextRequest, B, R) then Exit;
+      try
+        if not ProcessBrowseResponse(R, lContinuationPoint) then Exit;
+      finally
+        R.Free;
+      end;
+    end;
     Result := True;
   finally B.Free; end;
 end;
@@ -982,64 +1075,116 @@ begin
   Result := True;
 end;
 
-function ReadDataValueDisplayText(Q: TOpcUaReader; out AValue: string): Boolean;
+function OpcUaTimestampText(ATicks: QWord): string;
 var
-  lDataValueMask, lLocalizedMask, lVariantMask, lTypeId: Byte;
+  lSeconds: Double;
+begin
+  if ATicks = 0 then Exit('');
+  lSeconds := ATicks / COpcUaTicksPerSecond - COpcUaUnixEpochOffsetSeconds;
+  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',
+    UnixToDateTime(Trunc(lSeconds), False) + Frac(lSeconds) / 86400.0);
+end;
+
+function ReadScalarDisplayText(Q: TOpcUaReader; ATypeId: Byte): string;
+var
+  lEncodedNodeId: TBytes;
+  lLocalizedMask: Byte;
+begin
+  case ATypeId of
+    1: if Q.BooleanValue then Result := 'True' else Result := 'False';
+    2: Result := IntToStr(ShortInt(Q.ByteValue));
+    3: Result := IntToStr(Q.ByteValue);
+    4: Result := IntToStr(SmallInt(Q.UInt16));
+    5: Result := IntToStr(Q.UInt16);
+    6: Result := IntToStr(LongInt(Q.UInt32));
+    7: Result := UIntToStr(Q.UInt32);
+    8: Result := IntToStr(Int64(Q.UInt64));
+    9: Result := UIntToStr(Q.UInt64);
+    10: Result := FloatToStr(Q.SingleValue);
+    11: Result := FloatToStr(Q.DoubleValue);
+    12, 16: Result := Q.UaString;
+    13: Result := IntToStr(Int64(Q.UInt64));
+    14: begin Q.Raw(16); Result := '<Guid>'; end;
+    15: begin Q.ByteString; Result := '<ByteString>'; end;
+    17: Result := Q.NodeId(lEncodedNodeId);
+    18: Result := Q.ExpandedNodeId;
+    19: Result := '0x' + IntToHex(Q.UInt32, 8);
+    20: begin Q.UInt16; Result := Q.UaString; end;
+    21:
+      begin
+        Result := '';
+        lLocalizedMask := Q.ByteValue;
+        if (lLocalizedMask and 1) <> 0 then Q.UaString;
+        if (lLocalizedMask and 2) <> 0 then Result := Q.UaString;
+      end;
+    22: begin Q.SkipExtensionObject; Result := '<Structure>'; end;
+  else
+    raise EOpcUaBinaryError.CreateFmt('Unsupported value type %d', [ATypeId]);
+  end;
+end;
+
+function ReadDataValueDisplayText(Q: TOpcUaReader; out AValue,
+  ATimestamp: string; AArrayValues: TStrings = nil): Boolean;
+var
+  lDataValueMask, lVariantMask, lTypeId: Byte;
+  I, lCount, lDimensions: LongInt;
+  lSourceTicks, lServerTicks: QWord;
 begin
   Result := False;
   AValue := '';
+  ATimestamp := '';
+  if AArrayValues <> nil then AArrayValues.Clear;
   lDataValueMask := Q.ByteValue;
   if (lDataValueMask and 1) = 0 then
   begin
     if (lDataValueMask and 2) <> 0 then
       AValue := 'Status 0x' + IntToHex(Q.UInt32, 8);
+    lSourceTicks := 0;
+    lServerTicks := 0;
+    if (lDataValueMask and 4) <> 0 then lSourceTicks := Q.UInt64;
+    if (lDataValueMask and 8) <> 0 then lServerTicks := Q.UInt64;
+    if (lDataValueMask and 16) <> 0 then Q.UInt16;
+    if (lDataValueMask and 32) <> 0 then Q.UInt16;
+    if lSourceTicks <> 0 then ATimestamp := OpcUaTimestampText(lSourceTicks)
+    else if lServerTicks <> 0 then ATimestamp := OpcUaTimestampText(lServerTicks);
     Exit;
   end;
   lVariantMask := Q.ByteValue;
   if (lVariantMask and $80) <> 0 then
   begin
-    AValue := '<массив>';
-    Result := True;
-    Exit;
-  end;
-  lTypeId := lVariantMask and $3F;
-  case lTypeId of
-    1: if Q.BooleanValue then AValue := 'True' else AValue := 'False';
-    2: AValue := IntToStr(ShortInt(Q.ByteValue));
-    3: AValue := IntToStr(Q.ByteValue);
-    4: AValue := IntToStr(SmallInt(Q.UInt16));
-    5: AValue := IntToStr(Q.UInt16);
-    6: AValue := IntToStr(LongInt(Q.UInt32));
-    7: AValue := UIntToStr(Q.UInt32);
-    8: AValue := IntToStr(Int64(Q.UInt64));
-    9: AValue := UIntToStr(Q.UInt64);
-    10: AValue := FloatToStr(Q.SingleValue);
-    11: AValue := FloatToStr(Q.DoubleValue);
-    12, 16: AValue := Q.UaString;
-    13: AValue := IntToStr(Int64(Q.UInt64));
-    20:
-      begin
-        Q.UInt16;
-        AValue := Q.UaString;
-      end;
-    21:
-      begin
-        lLocalizedMask := Q.ByteValue;
-        if (lLocalizedMask and 1) <> 0 then Q.UaString;
-        if (lLocalizedMask and 2) <> 0 then AValue := Q.UaString;
-      end;
-  else
+    lTypeId := lVariantMask and $3F;
+    lCount := Q.Int32;
+    if lCount < -1 then
+      raise EOpcUaBinaryError.CreateFmt('Invalid array length %d', [lCount]);
+    if lCount > 1000000 then
+      raise EOpcUaBinaryError.CreateFmt('Array is too large: %d', [lCount]);
+    for I := 0 to lCount - 1 do
+      if AArrayValues <> nil then
+        AArrayValues.Add(ReadScalarDisplayText(Q, lTypeId))
+      else
+        AValue := ReadScalarDisplayText(Q, lTypeId);
+    if (lVariantMask and $40) <> 0 then
     begin
-      AValue := '<тип ' + IntToStr(lTypeId) + '>';
-      Result := True;
-      Exit;
+      lDimensions := Q.Int32;
+      for I := 0 to lDimensions - 1 do Q.Int32;
     end;
+    if lCount < 0 then AValue := '<null массив>'
+    else AValue := Format('<массив: %d>', [lCount]);
+  end;
+  if (lVariantMask and $80) = 0 then
+  begin
+    lTypeId := lVariantMask and $3F;
+    AValue := ReadScalarDisplayText(Q, lTypeId);
   end;
   if (lDataValueMask and 2) <> 0 then Q.UInt32;
-  if (lDataValueMask and 4) <> 0 then Q.UInt64;
-  if (lDataValueMask and 8) <> 0 then Q.UInt64;
+  lSourceTicks := 0;
+  lServerTicks := 0;
+  if (lDataValueMask and 4) <> 0 then lSourceTicks := Q.UInt64;
+  if (lDataValueMask and 8) <> 0 then lServerTicks := Q.UInt64;
   if (lDataValueMask and 16) <> 0 then Q.UInt16;
   if (lDataValueMask and 32) <> 0 then Q.UInt16;
+  if lSourceTicks <> 0 then ATimestamp := OpcUaTimestampText(lSourceTicks)
+  else if lServerTicks <> 0 then ATimestamp := OpcUaTimestampText(lServerTicks);
   Result := True;
 end;
 
@@ -1104,7 +1249,8 @@ begin
             SetError('property value', 'unexpected result count');
             Exit;
           end;
-          Result := ReadDataValueDisplayText(Q, ANode.ValueText);
+          Result := ReadDataValueDisplayText(Q, ANode.ValueText,
+            ANode.ValueTimestamp, ANode.ArrayValues);
         finally
           Q.Free;
         end;
@@ -1179,7 +1325,8 @@ begin
       W.RequestHeader(fAuthenticationToken, fRequestHandle);
       W.DoubleValue(0);
       W.UInt32(0);
-      W.Int32(5);
+      W.Int32(6);
+      W.NodeId(ANode.NodeId); W.UInt32(13); W.UaString('', True); W.UInt16(0); W.UaString('', True);
       W.NodeId(ANode.NodeId); W.UInt32(14); W.UaString('', True); W.UInt16(0); W.UaString('', True);
       W.NodeId(ANode.NodeId); W.UInt32(15); W.UaString('', True); W.UInt16(0); W.UaString('', True);
       W.NodeId(ANode.NodeId); W.UInt32(17); W.UaString('', True); W.UInt16(0); W.UaString('', True);
@@ -1194,11 +1341,13 @@ begin
       try
         Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D); Q.ResponseHeader;
         N := Q.Int32;
-        if N <> 5 then
+        if N <> 6 then
         begin
           SetError('attributes', 'unexpected variable attribute result count');
           Exit;
         end;
+        ReadDataValueDisplayText(Q, ANode.ValueText, ANode.ValueTimestamp,
+          ANode.ArrayValues);
         if not ReadDataValueNodeId(Q, ANode.DataTypeNodeId) then Exit;
         ANode.DataTypeName := DataTypeDisplayName(ANode.DataTypeNodeId);
         if not ReadDataValueInt32(Q, ANode.ValueRank) then Exit;
@@ -1225,7 +1374,8 @@ begin
   try
     W := TOpcUaWriter.Create(B);
     try
-      Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle); W.DoubleValue(0); W.UInt32(0); W.Int32(1);
+      Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle);
+      W.DoubleValue(0); W.UInt32(fTimestampsToReturn); W.Int32(1);
       W.NodeId(ANodeId); W.UInt32(13); W.UaString('', True); W.UInt16(0); W.UaString('', True);
     finally W.Free; end;
     if not ExchangeService(COpcUaReadRequest, B, R) then Exit;
@@ -1285,6 +1435,227 @@ begin
       on E: Exception do SetError('read', ANodeId + ': ' + E.Message);
     end;
   finally B.Free; end;
+end;
+
+function BuiltInDataTypeId(const ANodeId: string): Byte;
+var
+  lMarker: SizeInt;
+begin
+  lMarker := Pos('i=', LowerCase(Trim(ANodeId)));
+  if lMarker = 0 then Exit(0);
+  Result := Byte(StrToIntDef(Copy(ANodeId, lMarker + 2, MaxInt), 0));
+  if Result > 11 then Result := 0;
+end;
+
+procedure WriteScalarVariant(AWriter: TOpcUaWriter; ATypeId: Byte;
+  AValue: Double);
+begin
+  AWriter.ByteValue(ATypeId);
+  case ATypeId of
+    1: AWriter.BooleanValue(AValue <> 0);
+    2: AWriter.ByteValue(Byte(ShortInt(Trunc(AValue))));
+    3: AWriter.ByteValue(Byte(Trunc(AValue)));
+    4: AWriter.UInt16(Word(SmallInt(Trunc(AValue))));
+    5: AWriter.UInt16(Word(Trunc(AValue)));
+    6: AWriter.Int32(LongInt(Trunc(AValue)));
+    7: AWriter.UInt32(Cardinal(Trunc(AValue)));
+    8: AWriter.UInt64(QWord(Int64(Trunc(AValue))));
+    9: AWriter.UInt64(QWord(Trunc(AValue)));
+    10: AWriter.SingleValue(Single(AValue));
+    11: AWriter.DoubleValue(AValue);
+  else
+    raise EOpcUaBinaryError.CreateFmt(
+      'unsupported writable scalar data type %d', [ATypeId]);
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.WriteScalar(const ANodeId: string;
+  var ADataTypeNodeId: string; AValue: Double): Boolean;
+var
+  lBody, lResponse: TMemoryStream;
+  lWriter: TOpcUaWriter;
+  lReader: TOpcUaReader;
+  lEncodedNodeId: TBytes;
+  lNode: TRecorderOpcUaDiscoveredNode;
+  lResultCount: LongInt;
+  lStatus: Cardinal;
+  lTypeId: Byte;
+begin
+  Result := False;
+  lResponse := nil;
+  if Trim(ADataTypeNodeId) = '' then
+  begin
+    lNode := TRecorderOpcUaDiscoveredNode.Create;
+    try
+      lNode.NodeId := ANodeId;
+      if not ReadVariableAttributes(lNode) then Exit;
+      ADataTypeNodeId := lNode.DataTypeNodeId;
+    finally
+      lNode.Free;
+    end;
+  end;
+  lTypeId := BuiltInDataTypeId(ADataTypeNodeId);
+  if lTypeId = 0 then
+  begin
+    SetError('write', 'unsupported DataType ' + ADataTypeNodeId +
+      ' for ' + ANodeId);
+    Exit;
+  end;
+  lBody := TMemoryStream.Create;
+  try
+    try
+      lWriter := TOpcUaWriter.Create(lBody);
+      try
+        Inc(fRequestHandle);
+        lWriter.RequestHeader(fAuthenticationToken, fRequestHandle,
+          fRequestTimeoutMs);
+        lWriter.Int32(1);
+        lWriter.NodeId(ANodeId);
+        lWriter.UInt32(13);
+        lWriter.UaString('', True);
+        lWriter.ByteValue(1);
+        WriteScalarVariant(lWriter, lTypeId, AValue);
+      finally
+        lWriter.Free;
+      end;
+      if not ExchangeService(COpcUaWriteRequest, lBody, lResponse) then Exit;
+      lReader := TOpcUaReader.Create(lResponse);
+      try
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.NodeId(lEncodedNodeId);
+        lReader.ResponseHeader;
+        lResultCount := lReader.Int32;
+        if lResultCount < 1 then
+        begin
+          SetError('write', 'server returned no StatusCode for ' + ANodeId);
+          Exit;
+        end;
+        lStatus := lReader.UInt32;
+        if lStatus <> 0 then
+        begin
+          SetError('write', Format('NodeId %s returned status 0x%.8x',
+            [ANodeId, lStatus]));
+          Exit;
+        end;
+        Result := True;
+      finally
+        lReader.Free;
+      end;
+    except
+      on E: Exception do
+        SetError('write', ANodeId + ': ' + E.Message);
+    end;
+  finally
+    lResponse.Free;
+    lBody.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.WriteScalars(
+  const ANodeIds: TRecorderOpcUaStringArray;
+  var ADataTypeNodeIds: TRecorderOpcUaStringArray;
+  const AValues: TRecorderOpcUaDoubleArray): Boolean;
+var
+  I: Integer;
+  lBody, lResponse: TMemoryStream;
+  lWriter: TOpcUaWriter;
+  lReader: TOpcUaReader;
+  lEncodedNodeId: TBytes;
+  lNode: TRecorderOpcUaDiscoveredNode;
+  lResultCount: LongInt;
+  lStatus: Cardinal;
+  lTypeId: Byte;
+begin
+  Result := False;
+  lResponse := nil;
+  if (Length(ANodeIds) = 0) or
+    (Length(ADataTypeNodeIds) <> Length(ANodeIds)) or
+    (Length(AValues) <> Length(ANodeIds)) then
+  begin
+    SetError('write', 'invalid batch dimensions');
+    Exit;
+  end;
+  for I := 0 to High(ANodeIds) do
+  begin
+    if Trim(ADataTypeNodeIds[I]) = '' then
+    begin
+      lNode := TRecorderOpcUaDiscoveredNode.Create;
+      try
+        lNode.NodeId := ANodeIds[I];
+        if not ReadVariableAttributes(lNode) then Exit;
+        ADataTypeNodeIds[I] := lNode.DataTypeNodeId;
+      finally
+        lNode.Free;
+      end;
+    end;
+    if BuiltInDataTypeId(ADataTypeNodeIds[I]) = 0 then
+    begin
+      SetError('write', 'unsupported DataType ' + ADataTypeNodeIds[I] +
+        ' for ' + ANodeIds[I]);
+      Exit;
+    end;
+  end;
+  lBody := TMemoryStream.Create;
+  try
+    try
+      lWriter := TOpcUaWriter.Create(lBody);
+      try
+        Inc(fRequestHandle);
+        lWriter.RequestHeader(fAuthenticationToken, fRequestHandle,
+          fRequestTimeoutMs);
+        lWriter.Int32(Length(ANodeIds));
+        for I := 0 to High(ANodeIds) do
+        begin
+          lWriter.NodeId(ANodeIds[I]);
+          lWriter.UInt32(13);
+          lWriter.UaString('', True);
+          lWriter.ByteValue(1);
+          lTypeId := BuiltInDataTypeId(ADataTypeNodeIds[I]);
+          WriteScalarVariant(lWriter, lTypeId, AValues[I]);
+        end;
+      finally
+        lWriter.Free;
+      end;
+      if not ExchangeService(COpcUaWriteRequest, lBody, lResponse) then Exit;
+      lReader := TOpcUaReader.Create(lResponse);
+      try
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.UInt32;
+        lReader.NodeId(lEncodedNodeId);
+        lReader.ResponseHeader;
+        lResultCount := lReader.Int32;
+        if lResultCount <> Length(ANodeIds) then
+        begin
+          SetError('write', Format('server returned %d StatusCodes for %d values',
+            [lResultCount, Length(ANodeIds)]));
+          Exit;
+        end;
+        for I := 0 to lResultCount - 1 do
+        begin
+          lStatus := lReader.UInt32;
+          if lStatus <> 0 then
+          begin
+            SetError('write', Format('NodeId %s returned status 0x%.8x',
+              [ANodeIds[I], lStatus]));
+            Exit;
+          end;
+        end;
+        Result := True;
+      finally
+        lReader.Free;
+      end;
+    except
+      on E: Exception do SetError('write', 'batch: ' + E.Message);
+    end;
+  finally
+    lResponse.Free;
+    lBody.Free;
+  end;
 end;
 
 end.

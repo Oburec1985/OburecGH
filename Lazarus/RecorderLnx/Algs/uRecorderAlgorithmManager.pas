@@ -154,6 +154,9 @@ type
     function CreateSettingsFrame(const ATypeName: string;
       AOwner: TComponent): TRecorderAlgorithmSettingsFrame;
     procedure AddAlgorithm(AAlgorithm: TRecorderAlgorithm);
+    procedure RemoveAlgorithm(AAlgorithm: TRecorderAlgorithm);
+    procedure ReloadConfiguredAlgorithms;
+    procedure SaveConfiguredAlgorithms;
     procedure PrepareConfiguration;
     procedure ValidateStateTransition(ATransition: TRecorderStateTransition);
     procedure HandleStateTransition(ATransition: TRecorderStateTransition);
@@ -166,6 +169,9 @@ type
   end;
 
 implementation
+
+uses
+  uRecorderTachoPhaseAlgorithms, uRecorderScalarAlgorithms;
 
 function TRecorderAlgorithm.GetReady: Boolean;
 begin
@@ -458,8 +464,18 @@ begin
   RegisterType(TRecorderSpectrumAlgorithm.AlgorithmTypeName, 'Спектр',
     'Спектральный анализ сигнала',
     TRecorderSpectrumAlgorithm, TRecorderSpectrumAlgorithmSettingsFrame);
+  RegisterType(TRecorderTachoAlgorithm.AlgorithmTypeName, 'Тахометр',
+    'Частота вращения по порогам или спектру', TRecorderTachoAlgorithm);
+  RegisterType(TRecorderPhaseAlgorithm.AlgorithmTypeName, 'Фаза',
+    'Разность фаз сигнала и опорного канала', TRecorderPhaseAlgorithm);
+  RegisterType(TRecorderCounterAlgorithm.AlgorithmTypeName, 'Счётчик',
+    'Счёт импульсов по двум порогам', TRecorderCounterAlgorithm);
+  RegisterType(TRecorderArithmeticAlgorithm.AlgorithmTypeName,
+    'Арифметические операции', 'Сложение, вычитание, умножение или деление каналов',
+    TRecorderArithmeticAlgorithm);
   fSpectrumAlgorithm := TRecorderSpectrumAlgorithm.CreateWithRuntime(ASpectrumRuntime);
   AddAlgorithm(fSpectrumAlgorithm);
+  ReloadConfiguredAlgorithms;
   if fTagRegistry <> nil then
   begin
     fTagRegistry.SetValuePublishedHandler(Self, @HandleValuePublished);
@@ -586,6 +602,51 @@ begin
   if AAlgorithm = nil then
     Exit;
   fAlgorithms.Add(AAlgorithm);
+end;
+
+procedure TRecorderAlgorithmManager.RemoveAlgorithm(AAlgorithm: TRecorderAlgorithm);
+begin
+  if (AAlgorithm = nil) or (AAlgorithm = fSpectrumAlgorithm) then
+    Exit;
+  if fAlgorithms.Remove(AAlgorithm) >= 0 then
+    AAlgorithm.Free;
+end;
+
+procedure TRecorderAlgorithmManager.ReloadConfiguredAlgorithms;
+var
+  I: Integer;
+  lAlgorithm: TRecorderAlgorithm;
+begin
+  for I := fAlgorithms.Count - 1 downto 0 do
+    if TObject(fAlgorithms[I]) <> fSpectrumAlgorithm then
+    begin
+      TObject(fAlgorithms[I]).Free;
+      fAlgorithms.Delete(I);
+    end;
+  if (fTagRegistry = nil) or (fTagRegistry.AlgorithmConfigs = nil) then
+    Exit;
+  for I := 0 to fTagRegistry.AlgorithmConfigs.Count - 1 do
+  begin
+    lAlgorithm := CreateAlgorithmFromString(fTagRegistry.AlgorithmConfigs[I]);
+    AddAlgorithm(lAlgorithm);
+  end;
+end;
+
+procedure TRecorderAlgorithmManager.SaveConfiguredAlgorithms;
+var
+  I: Integer;
+begin
+  if (fTagRegistry = nil) or (fTagRegistry.AlgorithmConfigs = nil) then
+    Exit;
+  fTagRegistry.AlgorithmConfigs.BeginUpdate;
+  try
+    fTagRegistry.AlgorithmConfigs.Clear;
+    for I := 0 to fAlgorithms.Count - 1 do
+      if Algorithms[I] <> fSpectrumAlgorithm then
+        fTagRegistry.AlgorithmConfigs.Add(Algorithms[I].Serialize);
+  finally
+    fTagRegistry.AlgorithmConfigs.EndUpdate;
+  end;
 end;
 
 procedure TRecorderAlgorithmManager.PrepareConfiguration;

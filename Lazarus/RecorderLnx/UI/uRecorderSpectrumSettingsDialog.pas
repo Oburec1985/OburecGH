@@ -45,6 +45,7 @@ type
     fShowLegendCheck: TCheckBox;
     fZeroY0Check: TCheckBox;
     fResultTypeCombo: TComboBox;
+    fIntegrationGroup: TRadioGroup;
     fTahoCombo: TComboBox;
 
     fOkButton: TButton;
@@ -103,9 +104,9 @@ begin
   BorderStyle := bsSizeable;
   Position := poOwnerFormCenter;
   ClientWidth := 710;
-  ClientHeight := 555;
+  ClientHeight := 625;
   Constraints.MinWidth := 710;
-  Constraints.MinHeight := 555;
+  Constraints.MinHeight := 625;
 
   BuildUi;
   LoadFromComponent;
@@ -299,7 +300,7 @@ begin
   // 5. Параметры отображения
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
-  lGroupBox.SetBounds(478, 215, 220, 225);
+  lGroupBox.SetBounds(478, 215, 220, 295);
   lGroupBox.Anchors := [akTop, akRight, akBottom];
   lGroupBox.Caption := 'Отображение';
 
@@ -344,16 +345,25 @@ begin
   fResultTypeCombo.Style := csDropDownList;
   fResultTypeCombo.Items.Add('Амплитуда');
   fResultTypeCombo.Items.Add('Фаза');
+  fResultTypeCombo.Items.Add('Re / Im (две линии)');
+
+  fIntegrationGroup := TRadioGroup.Create(lGroupBox);
+  fIntegrationGroup.Parent := lGroupBox;
+  fIntegrationGroup.SetBounds(10, 202, 200, 82);
+  fIntegrationGroup.Caption := 'Интегрирование ускорения';
+  fIntegrationGroup.Items.Add('Без интегрирования');
+  fIntegrationGroup.Items.Add('Однократное (скорость)');
+  fIntegrationGroup.Items.Add('Двукратное (перемещение)');
 
   // 6. Прочее (Тахометр)
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
-  lLabel.SetBounds(478, 452, 80, 15);
+  lLabel.SetBounds(478, 522, 80, 15);
   lLabel.Caption := 'Тахометр:';
 
   fTahoCombo := TComboBox.Create(Self);
   fTahoCombo.Parent := Self;
-  fTahoCombo.SetBounds(563, 449, 135, 23);
+  fTahoCombo.SetBounds(563, 519, 135, 23);
   fTahoCombo.Anchors := [akRight, akBottom];
   fTahoCombo.Style := csDropDownList;
   fTahoCombo.Items.Add('');
@@ -366,7 +376,7 @@ begin
   // 7. Кнопки ОК / Отмена
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
-  fOkButton.SetBounds(520, 515, 80, 25);
+  fOkButton.SetBounds(520, 585, 80, 25);
   fOkButton.Anchors := [akRight, akBottom];
   fOkButton.Caption := 'ОК';
   fOkButton.Default := True;
@@ -374,7 +384,7 @@ begin
 
   fCancelButton := TButton.Create(Self);
   fCancelButton.Parent := Self;
-  fCancelButton.SetBounds(615, 515, 80, 25);
+  fCancelButton.SetBounds(615, 585, 80, 25);
   fCancelButton.Anchors := [akRight, akBottom];
   fCancelButton.Caption := 'Отмена';
   fCancelButton.Cancel := True;
@@ -403,6 +413,12 @@ begin
     fResultTypeCombo.ItemIndex := fDraft.ResultType
   else
     fResultTypeCombo.ItemIndex := 0;
+
+  if (fDraft.SpectrumIntegration >= 0) and
+    (fDraft.SpectrumIntegration < fIntegrationGroup.Items.Count) then
+    fIntegrationGroup.ItemIndex := fDraft.SpectrumIntegration
+  else
+    fIntegrationGroup.ItemIndex := 0;
 
   lIdx := fTahoCombo.Items.IndexOf(fDraft.TahoTagName);
   if lIdx >= 0 then
@@ -440,6 +456,7 @@ begin
   fDraft.ZeroY0 := fZeroY0Check.Checked;
 
   fDraft.ResultType := fResultTypeCombo.ItemIndex;
+  fDraft.SpectrumIntegration := fIntegrationGroup.ItemIndex;
   fDraft.TahoTagName := fTahoCombo.Text;
 
   { Имя в строке списка содержит частоту только для показа. Ссылку сохраняем

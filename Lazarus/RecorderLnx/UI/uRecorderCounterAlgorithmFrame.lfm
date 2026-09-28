@@ -1,0 +1,183 @@
+object RecorderCounterAlgorithmFrame: TRecorderCounterAlgorithmFrame
+  Left = 0
+  Height = 342
+  Top = 0
+  Width = 584
+  Align = alClient
+  AutoSize = True
+  ClientHeight = 342
+  ClientWidth = 584
+  TabOrder = 0
+  object gbSignal: TGroupBox
+    Left = 0
+    Height = 166
+    Top = 0
+    Width = 584
+    Align = alTop
+    Caption = 'Счётный сигнал'
+    ClientHeight = 146
+    ClientWidth = 580
+    TabOrder = 0
+    object lbInput: TLabel
+      Left = 12
+      Height = 15
+      Top = 12
+      Width = 80
+      Caption = 'Входной тег:'
+    end
+    object cbInput: TComboBox
+      Left = 150
+      Height = 23
+      Top = 8
+      Width = 414
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 0
+    end
+    object lbLowThreshold: TLabel
+      Left = 12
+      Height = 15
+      Top = 46
+      Width = 98
+      Caption = 'Нижний порог:'
+    end
+    object fsLowThreshold: TFloatSpinEdit
+      Left = 150
+      Height = 23
+      Top = 42
+      Width = 120
+      DecimalPlaces = 4
+      Increment = 0.1
+      MaxValue = 1000000000
+      MinValue = -1000000000
+      TabOrder = 1
+      Value = 30
+    end
+    object lbHighThreshold: TLabel
+      Left = 292
+      Height = 15
+      Top = 46
+      Width = 101
+      Caption = 'Верхний порог:'
+    end
+    object fsHighThreshold: TFloatSpinEdit
+      Left = 444
+      Height = 23
+      Top = 42
+      Width = 120
+      Anchors = [akTop, akRight]
+      DecimalPlaces = 4
+      Increment = 0.1
+      MaxValue = 1000000000
+      MinValue = -1000000000
+      TabOrder = 2
+      Value = 70
+    end
+    object chkRelative: TCheckBox
+      Left = 150
+      Height = 19
+      Top = 76
+      Width = 290
+      Caption = 'Пороги в процентах от амплитуды'
+      Checked = True
+      State = cbChecked
+      TabOrder = 3
+    end
+    object lbMinimumAmplitude: TLabel
+      Left = 12
+      Height = 15
+      Top = 108
+      Width = 131
+      Caption = 'Мин. амплитуда:'
+    end
+    object fsMinimumAmplitude: TFloatSpinEdit
+      Left = 150
+      Height = 23
+      Top = 104
+      Width = 120
+      DecimalPlaces = 6
+      Increment = 0.1
+      MaxValue = 1000000000
+      MinValue = 0
+      TabOrder = 4
+    end
+    object lbOutput: TLabel
+      Left = 292
+      Height = 15
+      Top = 108
+      Width = 87
+      Caption = 'Выходной тег:'
+    end
+    object edOutput: TEdit
+      Left = 396
+      Height = 23
+      Top = 104
+      Width = 168
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 5
+    end
+  end
+  object gbControl: TGroupBox
+    Left = 0
+    Height = 150
+    Top = 166
+    Width = 584
+    Align = alTop
+    Caption = 'Управление счётчиком (необязательно)'
+    ClientHeight = 130
+    ClientWidth = 580
+    TabOrder = 1
+    object lbGate: TLabel
+      Left = 12
+      Height = 15
+      Top = 12
+      Width = 114
+      Caption = 'Разрешение счёта:'
+    end
+    object cbGate: TComboBox
+      Left = 150
+      Height = 23
+      Top = 8
+      Width = 414
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 0
+    end
+    object lbReset: TLabel
+      Left = 12
+      Height = 15
+      Top = 46
+      Width = 78
+      Caption = 'Сброс счёта:'
+    end
+    object cbReset: TComboBox
+      Left = 150
+      Height = 23
+      Top = 42
+      Width = 414
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 1
+    end
+    object lbShift: TLabel
+      Left = 12
+      Height = 15
+      Top = 80
+      Width = 67
+      Caption = 'Смещение:'
+    end
+    object cbShift: TComboBox
+      Left = 150
+      Height = 23
+      Top = 76
+      Width = 414
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 2
+    end
+    object chkKeepValue: TCheckBox
+      Left = 150
+      Height = 19
+      Top = 108
+      Width = 329
+      Caption = 'Сохранять значение при повторном запуске'
+      TabOrder = 3
+    end
+  end
+end

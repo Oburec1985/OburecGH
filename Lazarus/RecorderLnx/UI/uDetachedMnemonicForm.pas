@@ -113,7 +113,7 @@ begin
     fImages, 38, CIconTrends, 'Графики');
   fChartToolGroup.AddCommand('Осциллограмма', CIconOscillogram, @AddOscClick);
   fChartToolGroup.AddCommand('Тренд', CIconTrends, @AddTrendClick);
-  fChartToolGroup.AddCommand('SQL-тренд', CIconTrends, @AddSqlTrendClick);
+  fChartToolGroup.AddCommand('SQL-тренд', CIconSqlTrend, @AddSqlTrendClick);
   fChartToolGroup.AddCommand('Спектр', CIconSpectrum, @AddSpectrumClick);
   fIndicatorToolGroup := TRecorderComponentToolGroup.Create(Self, fToolbar,
     fImages, 106, CIconDigitalIndicator, 'Индикаторы');

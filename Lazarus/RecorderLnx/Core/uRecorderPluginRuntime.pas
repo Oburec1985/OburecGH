@@ -107,7 +107,7 @@ begin
   fCreate := ACreate;
   fContext := APluginContext;
   fHooks := TList.Create;
-  ConfigurePalette(ACaption, ACaption, 'oscillogram', 90, rppGroup,
+  ConfigurePalette(ACaption, ACaption, 'plugin-oscillogram', 90, rppGroup,
     AGroup);
 end;
 
@@ -325,19 +325,35 @@ begin
   Result := True;
 end;
 
+procedure PluginLogMessage(AHostContext: Pointer; AMessage: PAnsiChar); cdecl;
+  forward;
+
 function PluginPublishTagValue(AHostContext: Pointer; AName: PAnsiChar;
   AValue: Double): LongBool; cdecl;
 var
   lRegistry: TRecorderTagRegistry;
   lTag: TRecorderTag;
+  lMessage: UTF8String;
 begin
   Result := False;
   if (AHostContext = nil) or (AName = nil) then Exit;
   lRegistry := TRecorderPluginRuntime(AHostContext).fTagRegistry;
   if lRegistry = nil then Exit;
   lTag := lRegistry.FindByName(StrPas(AName));
-  if (lTag = nil) or not lTag.IsVirtual then Exit;
-  lRegistry.PublishValue(lTag, AValue);
+  if lTag = nil then
+  begin
+    lMessage := UTF8Encode('setValue: тег "' + StrPas(AName) + '" не найден');
+    PluginLogMessage(AHostContext, PAnsiChar(lMessage));
+    Exit;
+  end;
+  if not lTag.ExternalWriteAllowed then
+  begin
+    lMessage := UTF8Encode('setValue: запись в тег "' + lTag.Name +
+      '" запрещена настройками тега');
+    PluginLogMessage(AHostContext, PAnsiChar(lMessage));
+    Exit;
+  end;
+  lRegistry.PublishExternalValue(lTag, AValue);
   Result := True;
 end;
 
@@ -636,18 +652,25 @@ var
   I: Integer;
   lPlugin: TLoadedPlugin;
 begin
-  for I := 0 to fPlugins.Count - 1 do
-  begin
-    lPlugin := TLoadedPlugin(fPlugins[I]);
-    if not Assigned(lPlugin.NotifyProc) then
-      Continue;
-    try
-      lPlugin.NotifyProc(lPlugin.Instance, AEvent, nil);
-    except
-      on E: Exception do
-        RecorderDebugLog(Format('[Plugin] notify %d failed: %s',
-          [AEvent, E.Message]));
+  if (AEvent = PN_UPDATEDATA) and (fTagRegistry <> nil) then
+    fTagRegistry.BeginExternalWriteBatch;
+  try
+    for I := 0 to fPlugins.Count - 1 do
+    begin
+      lPlugin := TLoadedPlugin(fPlugins[I]);
+      if not Assigned(lPlugin.NotifyProc) then
+        Continue;
+      try
+        lPlugin.NotifyProc(lPlugin.Instance, AEvent, nil);
+      except
+        on E: Exception do
+          RecorderDebugLog(Format('[Plugin] notify %d failed: %s',
+            [AEvent, E.Message]));
+      end;
     end;
+  finally
+    if (AEvent = PN_UPDATEDATA) and (fTagRegistry <> nil) then
+      fTagRegistry.EndExternalWriteBatch;
   end;
 end;
 

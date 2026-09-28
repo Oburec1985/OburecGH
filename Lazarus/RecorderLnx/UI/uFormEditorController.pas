@@ -143,6 +143,15 @@ type
     property SelectedIds: TStringList read fSelectedIds;
   end;
 
+  { Runtime-обработчики мыши, временно заменённые в режиме редактора. }
+  TEditorMouseHandlerState = class
+  public
+    Control: TControl;
+    MouseDown: TMouseEvent;
+    MouseMove: TMouseMoveEvent;
+    MouseUp: TMouseEvent;
+  end;
+
 
 
   { TFormEditorController
@@ -177,6 +186,7 @@ type
     fOnPlaceComponent: TEditorPlaceComponentEvent;
     fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
     fPagePanels: TStringList;                      { Панели отдельных страниц мнемосхем }
+    fEditMouseHandlers: TList;                     { Временно заменённые обработчики дочерних контролов }
 
 
 
@@ -193,6 +203,10 @@ type
     procedure ChildMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure ChildMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure WireEditMouseHandlers(AControl: TControl;
+      AComponentIndex: Integer);
+    procedure RestoreEditMouseHandlers;
+    function ComponentHostControl(AControl: TControl): TControl;
     procedure ResizeHandleMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure SetEnabled(AValue: Boolean);
@@ -301,7 +315,7 @@ type
 implementation
 
 uses
-  uRecorderTrendView;
+  uRecorderTrendView, uRecorderFrequencyResponseModel;
 
 
 
@@ -528,6 +542,7 @@ begin
   fPagePanels := TStringList.Create;
   fPagePanels.Sorted := True;
   fPagePanels.Duplicates := dupIgnore;
+  fEditMouseHandlers := TList.Create;
 
 
   fCanvas.OnMouseDown := @CanvasMouseDown;
@@ -544,6 +559,7 @@ var
 
   I: Integer;
 begin
+  RestoreEditMouseHandlers;
   EndOperation;
   ClearClipboard;
   ClearUndoStack;
@@ -552,6 +568,7 @@ begin
   fDragStartBounds.Free;
   fUndoStack.Free;
   fSelected.Free;
+  fEditMouseHandlers.Free;
   
 
   if fPagePanels <> nil then
@@ -566,6 +583,65 @@ begin
   inherited Destroy;
 end;
 
+procedure TFormEditorController.WireEditMouseHandlers(AControl: TControl;
+  AComponentIndex: Integer);
+var
+  I: Integer;
+  lState: TEditorMouseHandlerState;
+begin
+  if (AControl = nil) or (fEditMouseHandlers = nil) then
+    Exit;
+  lState := TEditorMouseHandlerState.Create;
+  lState.Control := AControl;
+  lState.MouseDown := TControlAccess(AControl).OnMouseDown;
+  lState.MouseMove := TControlAccess(AControl).OnMouseMove;
+  lState.MouseUp := TControlAccess(AControl).OnMouseUp;
+  fEditMouseHandlers.Add(lState);
+
+  AControl.Tag := AComponentIndex;
+  TControlAccess(AControl).OnMouseDown := @ComponentMouseDown;
+  TControlAccess(AControl).OnMouseMove := @ChildMouseMove;
+  TControlAccess(AControl).OnMouseUp := @ComponentMouseUp;
+  if AControl is TWinControl then
+    for I := 0 to TWinControl(AControl).ControlCount - 1 do
+      WireEditMouseHandlers(TWinControl(AControl).Controls[I], AComponentIndex);
+end;
+
+procedure TFormEditorController.RestoreEditMouseHandlers;
+var
+  I: Integer;
+  lState: TEditorMouseHandlerState;
+begin
+  if fEditMouseHandlers = nil then
+    Exit;
+  for I := fEditMouseHandlers.Count - 1 downto 0 do
+  begin
+    lState := TEditorMouseHandlerState(fEditMouseHandlers[I]);
+    if lState.Control <> nil then
+    begin
+      TControlAccess(lState.Control).OnMouseDown := lState.MouseDown;
+      TControlAccess(lState.Control).OnMouseMove := lState.MouseMove;
+      TControlAccess(lState.Control).OnMouseUp := lState.MouseUp;
+    end;
+    lState.Free;
+  end;
+  fEditMouseHandlers.Clear;
+end;
+
+function TFormEditorController.ComponentHostControl(AControl: TControl): TControl;
+var
+  lPagePanel: TPanel;
+begin
+  Result := AControl;
+  lPagePanel := GetActivePagePanel;
+  if lPagePanel = nil then
+    Exit;
+  while (Result <> nil) and (Result.Parent <> lPagePanel) do
+    Result := Result.Parent;
+  if Result = nil then
+    Result := AControl;
+end;
+
 
 
 procedure TFormEditorController.SetEnabled(AValue: Boolean);
@@ -574,9 +650,8 @@ begin
   if fEnabled = AValue then
     Exit;
 
-
+  RestoreEditMouseHandlers;
   fEnabled := AValue;
-  fForceRebuild := True;
   if not fEnabled then
   begin
     ClearSelection;
@@ -749,6 +824,14 @@ begin
   else if (ASource is TRecorderSpectrumComponent) and
     (ADest is TRecorderSpectrumComponent) then
     TRecorderSpectrumComponent(ADest).Assign(TRecorderSpectrumComponent(ASource))
+  else if (ASource is TRecorderFrequencyResponseComponent) and
+    (ADest is TRecorderFrequencyResponseComponent) then
+    TRecorderFrequencyResponseComponent(ADest).Assign(
+      TRecorderFrequencyResponseComponent(ASource))
+  else if (ASource is TRecorderLissajousComponent) and
+    (ADest is TRecorderLissajousComponent) then
+    TRecorderLissajousComponent(ADest).Assign(
+      TRecorderLissajousComponent(ASource))
   else if (ASource is TRecorderDonutComponent) and
     (ADest is TRecorderDonutComponent) then
     TRecorderDonutComponent(ADest).AssignDonut(TRecorderDonutComponent(ASource));
@@ -994,6 +1077,9 @@ var
 
 
 begin
+  { Старые controls ещё живы: сначала возвращаем runtime-обработчики,
+    затем решаем, переиспользовать или перестроить визуальное дерево. }
+  RestoreEditMouseHandlers;
   // Удаляем с fCanvas все элементы, кроме панелей страниц
   lRenderStarted := GetTickCount64;
   I := 0;
@@ -1054,8 +1140,13 @@ begin
   while I < lPagePanel.ControlCount do
   begin
     lCtrl := lPagePanel.Controls[I];
-    if (lCtrl is TShape) or
-      ((lCtrl is TPanel) and (lCtrl.Hint = 'Resize selection')) then
+    if lCtrl is TShape then
+    begin
+      if lCtrl = fSelectionFrame then
+        fSelectionFrame := nil;
+      lCtrl.Free
+    end
+    else if (lCtrl is TPanel) and (lCtrl.Hint = 'Resize selection') then
       lCtrl.Free
     else
       Inc(I);
@@ -1188,9 +1279,6 @@ begin
         if lControl is TRecorderMeasurementSectionView then
           TRecorderMeasurementSectionView(lControl).EditMode := fEnabled;
         lControl.Tag := I;
-        TControlAccess(lControl).OnMouseDown := @ComponentMouseDown;
-        TControlAccess(lControl).OnMouseMove := @ChildMouseMove;
-        TControlAccess(lControl).OnMouseUp := @ComponentMouseUp;
         lControl.Enabled := True;
 
 
@@ -1207,14 +1295,6 @@ begin
           if lChart <> nil then
           begin
             lChart.Tag := I;
-            { В режиме просмотра осциллограмма сама обрабатывает мышь:
-              захват курсора уровня нельзя подменять обработчиками редактора. }
-            if fEnabled or not (lControl is TRecorderOglOscillogram) then
-            begin
-              lChart.OnMouseDown := @ComponentMouseDown;
-              lChart.OnMouseMove := @ChildMouseMove;
-              lChart.OnMouseUp := @ComponentMouseUp;
-            end;
             lChart.MouseInputEnabled := not fEnabled;
           end;
 
@@ -1227,6 +1307,9 @@ begin
               [lComponent.Name, lControlClass.ClassName, lCreateMs,
                lConfigureMs, lRefreshMs]));
         end;
+
+        if fEnabled then
+          WireEditMouseHandlers(lControl, I);
 
         if fEnabled and (lControl is TRecorderInputFieldView) then
         begin
@@ -1308,8 +1391,20 @@ begin
               if not fEnabled then
                 lChart.Cursor := crDefault;
             end;
+            { Смена режима редактор/просмотр не должна уничтожать и заново
+              создавать оконный контрол. Повторная Configure обновляет
+              обработчики, зависящие от режима (кнопка, поле ввода), на уже
+              существующем экземпляре. }
+            lVisualCtrl.Configure(lComponent, fTagRegistry);
             if fEnabled then
-              lVisualCtrl.Configure(lComponent, fTagRegistry);
+            begin
+              { При переходе из просмотра в редактор контрол не пересоздаётся.
+                Кнопка до этого держала runtime-обработчики, поэтому события
+                редактора получала только узкая рамка родительской панели.
+                Возвращаем обработчики всей видимой области дочернего контрола
+                после Configure, которое настраивает его рабочее поведение. }
+              WireEditMouseHandlers(lCtrl, I);
+            end;
             if lCtrl is TRecorderTagValueView then
               TRecorderTagValueView(lCtrl).AlarmEngine := fAlarmEngine;
             if lCtrl is TRecorderImageView then
@@ -1737,6 +1832,8 @@ procedure TFormEditorController.ComponentMouseDown(Sender: TObject;
 var
 
   lPoint: TPoint;
+  lHostPoint: TPoint;
+  lHostControl: TControl;
   lIndex: Integer;
   lOperation: TFormEditorOperation;
   lSelectionChanged: Boolean;
@@ -1753,7 +1850,8 @@ begin
       Exit;
   end;
 
-  lIndex := TControl(Sender).Tag;
+  lHostControl := ComponentHostControl(TControl(Sender));
+  lIndex := lHostControl.Tag;
   lSelectionChanged := False;
   if ssCtrl in Shift then
   begin
@@ -1770,7 +1868,10 @@ begin
     RefreshSelectionVisuals;
 
   lPoint := fCanvas.ScreenToClient(TControl(Sender).ClientToScreen(Point(X, Y)));
-  lOperation := GetResizeOperationAtControlPoint(TControl(Sender), X, Y);
+  lHostPoint := lHostControl.ScreenToClient(
+    TControl(Sender).ClientToScreen(Point(X, Y)));
+  lOperation := GetResizeOperationAtControlPoint(lHostControl,
+    lHostPoint.X, lHostPoint.Y);
   if lOperation = feoNone then
     lOperation := feoDrag;
   BeginOperation(lOperation, lPoint.X, lPoint.Y);

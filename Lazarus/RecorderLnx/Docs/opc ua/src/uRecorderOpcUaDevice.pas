@@ -39,6 +39,9 @@ type
     function Iterate: Boolean;
     function ReadChanged(AIndex: Integer; out AValue,
       ATimestampSec: Double; out AQuality: Cardinal): Boolean;
+    function WriteClientValue(AIndex: Integer; AValue: Double): Boolean;
+    function WriteClientValues(const AIndexes: TRecorderOpcUaIntegerArray;
+      const AValues: TRecorderOpcUaDoubleArray): Boolean;
     function ConfigureServerNode(AIndex: Integer; const ATagName: string;
       AInitialValue: Double): Boolean;
     function WriteServerValue(AIndex: Integer; AValue: Double): Boolean;
@@ -118,10 +121,12 @@ begin
     if fConfig.AuthenticationMode = ouamUserPassword then
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, fConfig.UserName,
         GetEnvironmentVariable(fConfig.PasswordEnvironment),
-        fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs)
+        fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode))
     else
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, '', '',
-        fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs);
+        fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode));
   if fHandle = nil then
   begin
     Fail('connect', 'cannot create OPC UA session');
@@ -161,7 +166,8 @@ begin
       fNodeIndexes[I] := -1
     else
       fNodeIndexes[I] := RecorderOpcUaClientAddNode(fHandle,
-        Node(I).NodeId, Node(I).Readable);
+        Node(I).NodeId, Node(I).Readable, Node(I).Writable,
+        Node(I).DataTypeNodeId);
     if (fConfig.Mode = oumClient) and (fNodeIndexes[I] < 0) then
     begin
       Fail('configure', RecorderOpcUaLastError(fHandle));
@@ -259,6 +265,38 @@ begin
     (AIndex < Length(fNodeIndexes)) and
     RecorderOpcUaClientReadChanged(fHandle, fNodeIndexes[AIndex], AValue,
       ATimestampSec, AQuality);
+end;
+
+function TRecorderOpcUaDevice.WriteClientValue(AIndex: Integer;
+  AValue: Double): Boolean;
+begin
+  Result := (fConfig.Mode = oumClient) and (AIndex >= 0) and
+    (AIndex < Length(fNodeIndexes)) and
+    RecorderOpcUaClientWrite(fHandle, fNodeIndexes[AIndex], AValue);
+  if not Result then
+    Fail('write', RecorderOpcUaLastError(fHandle));
+end;
+
+function TRecorderOpcUaDevice.WriteClientValues(
+  const AIndexes: TRecorderOpcUaIntegerArray;
+  const AValues: TRecorderOpcUaDoubleArray): Boolean;
+var
+  I: Integer;
+  lHandleIndexes: TRecorderOpcUaIntegerArray;
+begin
+  Result := (fConfig.Mode = oumClient) and
+    (Length(AIndexes) > 0) and (Length(AIndexes) = Length(AValues));
+  if not Result then Exit;
+  SetLength(lHandleIndexes, Length(AIndexes));
+  for I := 0 to High(AIndexes) do
+  begin
+    if (AIndexes[I] < 0) or (AIndexes[I] >= Length(fNodeIndexes)) then
+      Exit(False);
+    lHandleIndexes[I] := fNodeIndexes[AIndexes[I]];
+  end;
+  Result := RecorderOpcUaClientWriteBatch(fHandle, lHandleIndexes, AValues);
+  if not Result then
+    Fail('write batch', RecorderOpcUaLastError(fHandle));
 end;
 
 function TRecorderOpcUaDevice.ConfigureServerNode(AIndex: Integer;

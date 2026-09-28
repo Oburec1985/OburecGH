@@ -34,3 +34,20 @@ did not update `LuaTest` when E1/E2 were changed in input fields.
   preserving previous files. The restarted RecorderLnx process (PID 28796)
   has loaded `LuaCalcPlugin.dll`, `SampleInfoPlugin.dll` and `lua54.dll`.
   End-to-end value changes remain to be checked in the GUI.
+
+## 2026-09-28 follow-up: string-based `setValue` for writable device tags
+
+The project script generated names such as `Tags_[1]` and called
+`setValue(name, value)`. These tags existed and had `externalWriteAllowed=true`,
+but the plugin host silently rejected every non-virtual tag by checking only
+`IsVirtual`. The Lua wrapper also discarded the callback result.
+
+The host now accepts any existing tag with `ExternalWriteAllowed`, publishes
+the local value through `PublishExternalValue`, and queues the write for the
+owning source such as OPC UA. Missing and read-only tags are reported to the
+RecorderLnx system log. `setValue` returns `1` for success and `0` for failure.
+
+Prevention rule: every script-facing write API must enforce the tag's explicit
+write permission and use the registry's external-write path. It must expose or
+log rejection; silent Boolean callback failures are not allowed. Verify both a
+writable device tag and a missing tag, in addition to a virtual output tag.

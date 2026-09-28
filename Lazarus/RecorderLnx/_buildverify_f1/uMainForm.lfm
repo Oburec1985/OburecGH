@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 300
+  Left = 91
   Height = 700
-  Top = 21
+  Top = 23
   Width = 1064
   Caption = 'RecorderLnx'
   ClientHeight = 700
@@ -54,7 +54,7 @@ object MainForm: TMainForm
       TabOrder = 0
       object lbState: TLabel
         Left = 0
-        Height = 25
+        Height = 27
         Top = 0
         Width = 188
         Align = alTop
@@ -68,8 +68,8 @@ object MainForm: TMainForm
       end
       object lbTime: TLabel
         Left = 0
-        Height = 47
-        Top = 25
+        Height = 45
+        Top = 27
         Width = 188
         Align = alClient
         Alignment = taCenter
@@ -117,10 +117,10 @@ object MainForm: TMainForm
       end
       object cbSqlDbRecording: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Hint = 'Независимая запись выбранных каналов в SQL БД'
         Top = 151
-        Width = 57
+        Width = 70
         Caption = 'Запись'
         ParentShowHint = False
         ShowHint = True
@@ -212,7 +212,7 @@ object MainForm: TMainForm
       TabOrder = 2
       object edTagSearch: TEdit
         Left = 8
-        Height = 23
+        Height = 31
         Top = 4
         Width = 142
         TabOrder = 0

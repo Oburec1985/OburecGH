@@ -183,123 +183,209 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
     ParentColor = False
     ResizeAnchor = akTop
   end
-  object fTagPanel: TPanel
+  object fDiagnosticsPanel: TPanel
     Left = 0
-    Height = 235
-    Top = 432
+    Height = 90
+    Top = 577
     Width = 920
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 235
+    ClientHeight = 90
     ClientWidth = 920
     TabOrder = 2
-    object lblTags: TLabel
+    object lblDiagnostics: TLabel
       Left = 8
       Height = 19
-      Top = 4
-      Width = 294
-      Caption = 'Выбранные каналы и прочитанные значения'
+      Top = 2
+      Width = 82
+      Caption = 'Диагностика'
       ParentColor = False
     end
-    object fDiagnosticsPanel: TPanel
+    object fDiagnostics: TMemo
       Left = 0
-      Height = 80
-      Top = 155
+      Height = 70
+      Top = 20
       Width = 920
       Align = alBottom
-      BevelOuter = bvNone
-      ClientHeight = 80
-      ClientWidth = 920
-      TabOrder = 1
-      object lblDiagnostics: TLabel
-        Left = 8
-        Height = 19
-        Top = 2
-        Width = 82
-        Caption = 'Диагностика'
-        ParentColor = False
-      end
-      object fDiagnostics: TMemo
-        Left = 0
-        Height = 60
-        Top = 20
-        Width = 920
-        Align = alBottom
-        Anchors = [akTop, akLeft, akRight, akBottom]
-        ReadOnly = True
-        ScrollBars = ssAutoVertical
-        TabOrder = 0
-      end
-    end
-    object fValueGrid: TStringGrid
-      Left = 8
-      Height = 130
-      Top = 23
-      Width = 904
       Anchors = [akTop, akLeft, akRight, akBottom]
-      ColCount = 7
-      DefaultColWidth = 100
-      FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goThumbTracking]
-      RowCount = 1
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
       TabOrder = 0
     end
   end
-  object fTagSplitter: TSplitter
-    Cursor = crVSplit
+  object fWorkspacePanel: TPanel
     Left = 0
-    Height = 6
-    Top = 426
-    Width = 920
-    Align = alBottom
-    AutoSnap = False
-    Color = 14131200
-    MinSize = 100
-    ParentColor = False
-    ResizeAnchor = akBottom
-  end
-  object fTreePanel: TPanel
-    Left = 0
-    Height = 190
+    Height = 341
     Top = 236
     Width = 920
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 190
+    ClientHeight = 341
     ClientWidth = 920
     TabOrder = 1
-    object lblTree: TLabel
-      Left = 8
-      Height = 19
-      Top = 6
-      Width = 397
-      Caption = 'Найденные переменные (двойной щелчок добавляет канал)'
-      ParentColor = False
-    end
-    object fSimplifiedTree: TCheckBox
-      Left = 741
-      Height = 21
-      Top = 1
-      Width = 171
-      Anchors = [akTop, akRight]
-      Caption = 'Упрощённая структура'
-      Checked = True
-      OnChange = SimplifiedTreeChange
-      State = cbChecked
+    object fTreePanel: TPanel
+      Left = 0
+      Height = 341
+      Top = 0
+      Width = 440
+      Align = alLeft
+      BevelOuter = bvNone
+      ClientHeight = 341
+      ClientWidth = 440
       TabOrder = 0
+      object lblTree: TLabel
+        Left = 8
+        Height = 19
+        Top = 6
+        Width = 282
+        Caption = 'Узлы OPC UA (Ctrl/Shift — мультивыбор)'
+        ParentColor = False
+      end
+      object fSimplifiedTree: TCheckBox
+        Left = 261
+        Height = 21
+        Top = 29
+        Width = 171
+        Anchors = [akTop, akRight]
+        Caption = 'Упрощённое дерево'
+        Checked = True
+        OnChange = SimplifiedTreeChange
+        State = cbChecked
+        TabOrder = 0
+      end
+      object lblTreeSearch: TLabel
+        Left = 8
+        Height = 19
+        Top = 32
+        Width = 50
+        Caption = 'Фильтр:'
+        ParentColor = False
+      end
+      object fTreeSearch: TEdit
+        Left = 64
+        Height = 27
+        Top = 27
+        Width = 185
+        Anchors = [akTop, akLeft, akRight]
+        TabOrder = 1
+        OnChange = TreeSearchChange
+      end
+      object fBrowseTree: TTreeView
+        Left = 8
+        Height = 279
+        Top = 58
+        Width = 424
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        DragMode = dmAutomatic
+        HideSelection = False
+        Images = fNodeImages
+        MultiSelect = True
+        MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+        PopupMenu = fBrowsePopup
+        ReadOnly = True
+        TabOrder = 2
+        OnDblClick = BrowseTreeDblClick
+        OnMouseDown = BrowseTreeMouseDown
+        OnSelectionChanged = BrowseTreeSelectionChanged
+        Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+      end
     end
-    object fBrowseTree: TTreeView
-      Left = 8
-      Height = 158
-      Top = 26
-      Width = 904
-      Anchors = [akTop, akLeft, akRight, akBottom]
-      HideSelection = False
-      Images = fNodeImages
-      ReadOnly = True
+    object fBrowserSplitter: TSplitter
+      Cursor = crHSplit
+      Left = 440
+      Height = 341
+      Top = 0
+      Width = 6
+      Align = alLeft
+      AutoSnap = False
+      Color = 14131200
+      MinSize = 260
+      ParentColor = False
+      ResizeAnchor = akLeft
+    end
+    object fDetailsPages: TPageControl
+      Left = 446
+      Height = 341
+      Top = 0
+      Width = 474
+      ActivePage = fPropertiesTab
+      Align = alClient
+      TabIndex = 0
       TabOrder = 1
-      OnDblClick = BrowseTreeDblClick
-      Options = [tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+      object fPropertiesTab: TTabSheet
+        Caption = 'Свойства узла'
+        ClientHeight = 313
+        ClientWidth = 466
+        object fPropertiesGrid: TStringGrid
+          Left = 0
+          Height = 313
+          Top = 0
+          Width = 466
+          Align = alClient
+          ColCount = 2
+          FixedCols = 0
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goThumbTracking]
+          RowCount = 14
+          TabOrder = 0
+        end
+      end
+      object fUsedTab: TTabSheet
+        Caption = 'Используемые каналы'
+        ClientHeight = 313
+        ClientWidth = 466
+        object lblUsedHint: TLabel
+          Left = 8
+          Height = 19
+          Top = 5
+          Width = 350
+          Caption = 'Перетащите каналы слева; Del — удалить выбранные'
+          ParentColor = False
+        end
+        object lblUsedSearch: TLabel
+          Left = 8
+          Height = 19
+          Top = 34
+          Width = 50
+          Caption = 'Фильтр:'
+          ParentColor = False
+        end
+        object fUsedSearch: TEdit
+          Left = 64
+          Height = 27
+          Top = 29
+          Width = 394
+          Anchors = [akTop, akLeft, akRight]
+          TabOrder = 0
+          OnChange = UsedSearchChange
+        end
+        object fUsedTree: TTreeView
+          Left = 0
+          Height = 255
+          Top = 58
+          Width = 466
+          Anchors = [akTop, akLeft, akRight, akBottom]
+          HideSelection = False
+          Images = fNodeImages
+          MultiSelect = True
+          MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+          ReadOnly = True
+          TabOrder = 1
+          OnDragDrop = UsedTreeDragDrop
+          OnDragOver = UsedTreeDragOver
+          OnKeyDown = UsedTreeKeyDown
+          Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+        end
+        object fValueGrid: TStringGrid
+          Left = 0
+          Height = 1
+          Top = 0
+          Width = 1
+          ColCount = 8
+          FixedCols = 0
+          RowCount = 1
+          Visible = False
+        end
+      end
     end
   end
   object buttonPanel: TPanel
@@ -338,5 +424,14 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
   object fNodeImages: TImageList
     Left = 664
     Top = 16
+  end
+  object fBrowsePopup: TPopupMenu
+    OnPopup = BrowsePopupPopup
+    Left = 744
+    Top = 16
+    object fAddSelectedMenuItem: TMenuItem
+      Caption = 'Добавить выбранные в используемые'
+      OnClick = AddSelectedMenuClick
+    end
   end
 end

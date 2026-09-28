@@ -79,7 +79,10 @@ uses
   uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
   uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog,
-  uRecorderVibrationEstimateSettingsDialog;
+  uRecorderVibrationEstimateSettingsDialog, uRecorderLissajousSettingsDialog,
+  uRecorderFrequencyResponseModel, uRecorderFrequencyResponseSettingsDialog;
+
+
 
 const
   CTagComboEmptyFilterLimit = 200;
@@ -89,6 +92,12 @@ function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVi
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderFrequencyResponseComponent then
+    Exit(ShowRecorderFrequencyResponseSettingsDialog(AOwner,
+      TRecorderFrequencyResponseComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderLissajousComponent then
+    Exit(ShowRecorderLissajousSettingsDialog(AOwner,
+      TRecorderLissajousComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderVibrationEstimateComponent then
     Exit(ShowRecorderVibrationEstimateSettingsDialog(AOwner,
       TRecorderVibrationEstimateComponent(AComponent), ATagRegistry));

@@ -14,7 +14,7 @@ program RecorderFormModelTest;
 uses
   SysUtils,
   uRecorderFormModel,
-  uRecorderProjectFiles;
+  uRecorderProjectFiles, uRecorderTags, uRecorderLissajousMath;
 
 type
   TTestPluginOscillographFactory = class(TRecorderComponentFactoryBase)
@@ -22,10 +22,31 @@ type
     constructor Create; reintroduce;
   end;
 
+procedure AssertTrue(ACondition: Boolean; const AStep: string); forward;
+
 constructor TTestPluginOscillographFactory.Create;
 begin
   inherited Create('test.oscillograph', 'Test Oscillograph',
     TRecorderOscillogramComponent, 360, 220, True);
+end;
+
+procedure TestLissajousShiftedTimestamps;
+var
+  lXT, lXV, lYT, lYV, lOutX, lOutY: TRecorderDoubleArray;
+  I, lCount: Integer;
+begin
+  SetLength(lXT, 5); SetLength(lXV, 5);
+  SetLength(lYT, 5); SetLength(lYV, 5);
+  for I := 0 to 4 do
+  begin
+    lXT[I] := I * 0.1; lXV[I] := I;
+    lYT[I] := I * 0.1 + 0.02; lYV[I] := 2 * lYT[I];
+  end;
+  BuildLissajousPairs(lXT, lXV, lYT, lYV, 5, 5, lOutX, lOutY, lCount);
+  AssertTrue(lCount >= 3, 'shifted timestamps produce XY pairs');
+  AssertTrue(Abs(lOutY[0] - 2 * 0.1) < 1E-9,
+    'Y interpolation follows X timestamp');
+  Writeln('Lissajous shifted timestamp test passed.');
 end;
 
 procedure AssertEquals(AActual, AExpected: Integer; const AStep: string);
@@ -315,4 +336,5 @@ begin
   TestGuiConfigSavesBaseOscillogramCount;
   TestGuiConfigSavesOscillogramBinding;
   TestGuiConfigSavesPluginOscillographState;
+  TestLissajousShiftedTimestamps;
 end.
