@@ -37,6 +37,9 @@ type
     procedure StartRegistration(const AReason: string = 'manual');
     procedure StopRegistration;
     procedure SetRecordingEnabled(AValue: Boolean);
+    procedure ApplyRemoteRecordingSettings(AEnabled: Boolean;
+      ARecordPeriodMs: Integer);
+    procedure HandleBlockEvent(ATag: TObject; ATimeSec, AValue: Double);
     function StoreDataFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
     property Config: TRecorderSqlDbConfig read fConfig;
@@ -90,6 +93,12 @@ begin
   SetRecordingActive(False, 'SQLdb settings reload');
   FreeAndNil(fRuntime);
   fConfig.LoadFromFile(fConfigFileName);
+  RecorderInfoLog(Format(
+    '[SQLdb] config=%s enabled=%s selected=%d selection_configured=%s host=%s:%d',
+    [fConfigFileName, BoolToStr(fConfig.Enabled, True),
+     fConfig.SignalNames.Count,
+     BoolToStr(fConfig.SignalSelectionConfigured, True),
+     fConfig.Host, fConfig.Port]));
   if fConfig.Enabled and
      (not fConfig.ConnectionConfigurationReady(lConfigurationError)) then
   begin
@@ -197,6 +206,23 @@ begin
   end;
 end;
 
+procedure TRecorderSqlDbManager.ApplyRemoteRecordingSettings(AEnabled: Boolean;
+  ARecordPeriodMs: Integer);
+begin
+  { The coordinator may have changed app.ini while RecorderLnx was already
+    running. Recreate the runtime from disk so Host/Database and the project
+    SQL settings are applied together, even when Enabled was already True. }
+  SetRecordingActive(False, 'SQLdb remote settings reload');
+  FreeAndNil(fRuntime);
+  fConfig.LoadFromFile(fConfigFileName);
+  fConfig.Enabled := AEnabled;
+  if ARecordPeriodMs > 0 then
+    fConfig.RecordPeriodMs := ARecordPeriodMs;
+  fConfig.SaveToFile(fConfigFileName);
+  if AEnabled then
+    SetRecordingActive(True, 'SQLdb remote settings');
+end;
+
 procedure TRecorderSqlDbManager.StartRegistration(const AReason: string);
 begin
   if fRuntime = nil then Exit;
@@ -231,6 +257,7 @@ var
   lTimeUtc: TDateTime;
   lEstimate: TRecorderTagEstimate;
   lEstimateKind: TRecorderTagEstimateKind;
+  lSnapshot: TRecorderSignalSnapshot;
   lTimeSec, lValue: Double;
   lEventType: string;
   lSeverity: string;
@@ -239,7 +266,10 @@ begin
      (AEvent.Data is TRecorderTagUpdateEventData) then
   begin
     D := TRecorderTagUpdateEventData(AEvent.Data);
-    if (D.Tag = nil) or (D.SampleCount <> 1) then Exit;
+    if D.Tag = nil then Exit;
+    { Scalar tags are written directly. Hardware tags notify with a completed
+      block; for them SQL stores the configured estimate of that block below. }
+    if (D.SampleCount <> 1) and (not D.BlockTailNotify) then Exit;
     if (Trim(fConfig.ControlTagName) <> '') and
        SameText(D.Tag.Name, fConfig.ControlTagName) then
     begin
@@ -250,16 +280,6 @@ begin
     end;
     if not GetRecordingEnabled or (fRuntime = nil) then Exit;
     if not fConfig.SignalEnabled(D.Tag.Name) then Exit;
-    lTimeSec := D.TimeSec;
-    lValue := D.Value;
-    if D.BlockTailNotify then
-    begin
-      lEstimateKind := fConfig.SignalEstimate(D.Tag.Name);
-      lEstimate := D.Tag.Estimate(lEstimateKind);
-      if not lEstimate.Valid then Exit;
-      lTimeSec := lEstimate.EndTimeSec;
-      lValue := lEstimate.Value;
-    end;
     lNowMs := GetTickCount64;
     EnterCriticalSection(fSampleLock);
     try
@@ -271,12 +291,35 @@ begin
     finally
       LeaveCriticalSection(fSampleLock);
     end;
+    lTimeSec := D.TimeSec;
+    lValue := D.Value;
+    if D.BlockTailNotify then
+    begin
+      lSnapshot.Count := 0;
+      lEstimateKind := fConfig.SignalEstimate(D.Tag.Name);
+      lEstimate := D.Tag.Estimate(lEstimateKind);
+      if not lEstimate.Valid then
+      begin
+        { A freshly loaded hardware tag may publish a block before its
+          portion-based estimate cache is complete. Do not silently lose that
+          SQL period: calculate the requested estimate from the completed
+          block that caused this notification. }
+        lSnapshot := D.Tag.LastBlockSnapshot;
+        lEstimate := CalculateRecorderTagEstimate(lSnapshot, lEstimateKind);
+      end;
+      if not lEstimate.Valid then Exit;
+      lTimeSec := lEstimate.EndTimeSec;
+      lValue := lEstimate.Value;
+    end;
     if fTimeSystem <> nil then
       lTimeUtc := fTimeSystem.ChannelTimeToUtc(lTimeSec)
     else
       lTimeUtc := LocalTimeToUniversal(Now);
-    fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0,
-      D.Tag.SourceId, D.Tag.Address, D.Tag.UnitName);
+    if not fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0,
+      D.Tag.SourceId, D.Tag.Address, D.Tag.UnitName) then
+      RecorderInfoLog(Format(
+        '[SQLdb] value queue rejected tag=%s source=%s address=%s',
+        [D.Tag.Name, D.Tag.SourceId, D.Tag.Address]));
   end
   else if AEvent.Kind = rceAlarmChanged then
   begin
@@ -307,6 +350,25 @@ begin
       lAlarmData.Tag.Name, lTimeUtc, lAlarmData.Value,
       lAlarmData.Tag.SourceId, lAlarmData.Tag.Address,
       lAlarmData.Tag.UnitName);
+  end;
+end;
+
+procedure TRecorderSqlDbManager.HandleBlockEvent(ATag: TObject; ATimeSec,
+  AValue: Double);
+var
+  lData: TRecorderTagUpdateEventData;
+  lEvent: TRecorderEvent;
+begin
+  if not (ATag is TRecorderTag) then
+    Exit;
+  lData := TRecorderTagUpdateEventData.CreateBlockTailNotify(
+    TRecorderTag(ATag), ATimeSec, AValue);
+  try
+    lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self,
+      TRecorderTag(ATag).Name, TRecorderTag(ATag).TextValue, 1, lData);
+    HandleEvent(Self, lEvent);
+  finally
+    lData.Free;
   end;
 end;
 

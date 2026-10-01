@@ -85,12 +85,14 @@ type
     property Draft: TRecorderCalibration read fDraft;
     property Original: TRecorderCalibration read fOriginal;
     property Target: TRecorderTagCalibrationTarget read CalibrationTarget;
+    property SelectedEstimateKind: TRecorderTagEstimateKind read EstimateKind;
   end;
 
 function ShowRecorderTagCalibrationDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   out ADraft, AOriginal: TRecorderCalibration;
-  out ATarget: TRecorderTagCalibrationTarget): Boolean;
+  out ATarget: TRecorderTagCalibrationTarget;
+  out AEstimateKind: TRecorderTagEstimateKind): Boolean;
 
 implementation
 
@@ -115,13 +117,15 @@ end;
 function ShowRecorderTagCalibrationDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   out ADraft, AOriginal: TRecorderCalibration;
-  out ATarget: TRecorderTagCalibrationTarget): Boolean;
+  out ATarget: TRecorderTagCalibrationTarget;
+  out AEstimateKind: TRecorderTagEstimateKind): Boolean;
 var
   lDialog: TRecorderTagCalibrationDialog;
 begin
   ADraft := nil;
   AOriginal := nil;
   ATarget := rtctLastNode;
+  AEstimateKind := tekMean;
   lDialog := TRecorderTagCalibrationDialog.CreateDialog(AOwner, ARegistry, ATag);
   try
     Result := lDialog.ShowModal = mrOk;
@@ -131,6 +135,7 @@ begin
       lDialog.fDraft := nil;
       AOriginal := lDialog.Original;
       ATarget := lDialog.Target;
+      AEstimateKind := lDialog.SelectedEstimateKind;
     end;
   finally
     lDialog.Free;

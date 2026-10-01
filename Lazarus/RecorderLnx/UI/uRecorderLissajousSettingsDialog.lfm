@@ -7,7 +7,7 @@ object RecorderLissajousSettingsDialog: TRecorderLissajousSettingsDialog
   Caption = 'Настройка фигуры Лиссажу'
   ClientHeight = 560
   ClientWidth = 820
-  Constraints.MinHeight = 520
+  Constraints.MinHeight = 580
   Constraints.MinWidth = 720
   Position = poOwnerFormCenter
   LCLVersion = '2.2.6.0'

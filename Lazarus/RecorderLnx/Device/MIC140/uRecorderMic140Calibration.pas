@@ -614,6 +614,7 @@ var
   I: Integer;
   lCalName: string;
   lChannelNumber: Integer;
+  lHasSettings: Boolean;
   lRangeIndex: Integer;
   lTag: TRecorderTag;
   lSettings: TRecorderMic140ChannelSettings;
@@ -629,18 +630,32 @@ begin
       (not ParseMic140ChannelNumber(lTag.Address, lChannelNumber)) then
       Continue;
     lRangeIndex := CMic140Range100mV;
-    if RecorderMic140TryGetChannelSettings(ARegistry, lTag, lChannelNumber,
-      lSettings) then
+    lHasSettings := RecorderMic140TryGetChannelSettings(ARegistry, lTag,
+      lChannelNumber, lSettings);
+    if lHasSettings then
       lRangeIndex := lSettings.RangeIndex;
     if lRangeIndex >= CMic140RangeCount then
       lRangeIndex := CMic140Range100mV;
     if not RecorderMic140EnsureHardwareCalibrationInRegistry(ARegistry,
       ADeviceSerial, lRangeIndex, lChannelNumber, lCalName) then
       Continue;
-    if lTag.HardwareCalibrationEnabled then
+    if Trim(lTag.HardwareCalibrationName) = '' then
     begin
-      if Trim(lTag.HardwareCalibrationName) = '' then
-        lTag.HardwareCalibrationName := lCalName;
+      { A calibration found on disk is the default for a channel that has no
+        persisted hardware-GX choice yet. A later user-disabled state keeps
+        the name and therefore is not automatically enabled again. }
+      lTag.HardwareCalibrationName := lCalName;
+      lTag.HardwareCalibrationEnabled := True;
+      if lHasSettings then
+      begin
+        lSettings.HardwareCalibrationName := lCalName;
+        lSettings.HardwareCalibrationEnabled := True;
+        RecorderMic140UpdateChannelSettings(ARegistry, lTag, lSettings);
+      end;
+    end
+    else if lTag.HardwareCalibrationEnabled then
+    begin
+      lTag.HardwareCalibrationName := lCalName;
     end;
   end;
 end;
@@ -667,7 +682,14 @@ begin
       lTag := ARegistry.FindByName(ATemperatureTagNames[I]);
     if lTag = nil then
       Continue;
-    if lTag.HardwareCalibrationEnabled then
+    if Trim(lTag.HardwareCalibrationName) = '' then
+    begin
+      lTag.HardwareCalibrationName := lCalName;
+      lTag.HardwareCalibrationEnabled := True;
+      if lTag.AutoUnit then
+        lTag.UnitName := 'degC';
+    end
+    else if lTag.HardwareCalibrationEnabled then
       lTag.HardwareCalibrationName := lCalName;
   end;
 end;

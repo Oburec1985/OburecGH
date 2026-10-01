@@ -420,6 +420,7 @@ begin
   fLegendGrid.FixedRows := 1;
   fLegendGrid.RowCount := 2;
   fLegendGrid.DefaultRowHeight := 20;
+  fLegendGrid.Cursor := crDefault;
   fLegendGrid.ColWidths[0] := 48;
   fLegendGrid.ColWidths[1] := 166;
   fLegendGrid.Cells[0, 0] := '#';
@@ -1774,6 +1775,12 @@ begin
   end;
   if fPanning then
     Cursor := crSizeAll
+  else if fCursorEnabled and (Y >= lPlot.Top) and (Y <= lPlot.Bottom) and
+    (((fCursorVisible) and
+      (Abs(X - fCursorPoint.X) <= CSqlTrendCursorGrabPixels)) or
+     (DoubleCursorMode and fCursor2Visible and
+      (Abs(X - fCursor2Point.X) <= CSqlTrendCursorGrabPixels))) then
+    Cursor := crSizeWE
   else if fHoveredEventIndex >= 0 then
     Cursor := crHandPoint
   else

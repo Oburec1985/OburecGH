@@ -34,6 +34,8 @@ type
     fSqlDbManager: TRecorderSqlDbManager;
     procedure HandleTagAlarmValue(Sender: TObject; ATag: TRecorderTag;
       ATimeSec, AValue: Double);
+    procedure HandleSqlBlockPublished(Sender: TObject; ATag: TRecorderTag;
+      ATimeSec, AValue: Double);
   public
     constructor Create;
     destructor Destroy; override;
@@ -81,7 +83,16 @@ begin
   fAlgorithmManager := TRecorderAlgorithmManager.Create(fTagRegistry, fSpectrumManager);
   fAlarmEngine := TRecorderAlarmEngine.Create(fEventBus) as IRecorderAlarmEngine;
   fSqlDbManager := TRecorderSqlDbManager.Create(fEventBus, fTimeSystem);
+  fTagRegistry.SetSqlBlockPublishedHandler(Self, @HandleSqlBlockPublished);
   fTagRegistry.SetAlarmValuePublishedHandler(Self, @HandleTagAlarmValue);
+end;
+
+procedure TRecorder.HandleSqlBlockPublished(Sender: TObject;
+  ATag: TRecorderTag; ATimeSec, AValue: Double);
+begin
+  if (fSqlDbManager = nil) or (ATag = nil) then
+    Exit;
+  fSqlDbManager.HandleBlockEvent(ATag, ATimeSec, AValue);
 end;
 
 procedure TRecorder.HandleTagAlarmValue(Sender: TObject; ATag: TRecorderTag;
@@ -103,6 +114,7 @@ end;
 destructor TRecorder.Destroy;
 begin
   fTagRegistry.SetAlarmValuePublishedHandler(nil, nil);
+  fTagRegistry.SetSqlBlockPublishedHandler(nil, nil);
   FreeAndNil(fSqlDbManager);
   fAlarmEngine := nil;
   FreeAndNil(fAlgorithmManager);

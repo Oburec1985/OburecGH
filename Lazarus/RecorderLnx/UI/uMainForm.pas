@@ -55,11 +55,13 @@ uses
   uRecorderRecordChannelMetadata, uRecorderDeviceRecordChannelMetadata,
   uRecorderRecordTimebase,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
-  uRecorderSqlDbTypes, uRecorderSqlDbRuntime,
+  uRecorderSqlDbTypes, uRecorderSqlDbRuntime, uRecorderSqlDataSource,
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionView, uRecorderTrendView,
   uRecorderFrequencyResponseModel, uRecorderFrequencyResponseView,
+  uRecorder3dModel, uRecorder3dView,
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
   uRecorderCoordinatorProtocol, uRecorderCoordinatorClient,
@@ -140,6 +142,7 @@ type
     {$ENDIF}
     // Фабрики и менеджеры управления графическими элементами мнемосхем
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
+    fMeasurementSectionFactory: TRecorderComponentFactoryBase;
     fPluginRuntime: TRecorderPluginRuntime;
     fFormFactory: TRecorderFormFactory;           // Фабрика создания шаблонов страниц
     fFormManager: TRecorderFormManager;           // Менеджер набора страниц/формуляров проекта
@@ -195,6 +198,7 @@ type
     fStartupOfflineRecoveryDone: Boolean;
     fProjectConfigDir: string;                    // Каталог конфигурационных файлов проекта
     fRunControlFileName: string;                  // Путь к файлу настроек сбора/записи
+    fMainMenu: TMainMenu;                         // Главное меню приложения
     fConfigPopupMenu: TPopupMenu;                 // Меню операций сохранения/загрузки конфигурации
     fWinposPopupMenu: TPopupMenu;
     fWinposOpenDirItem: TMenuItem;
@@ -202,8 +206,8 @@ type
     fRecordFrameManager: TRecorderRecordFrameManager; // Менеджер каталогов кадров записи
     fLastRecordFrameDir: string;                  // Последний фактически открытый каталог замера
     fMeraWriter: TRecorderMeraTagWriter;          // Writer MERA files of current record
-    fRecordTagCursors: array of QWord;            // Независимые позиции writer-а в кольцах тегов
-    fRecordTagBlocks: array of TRecorderSignalSnapshot; // Переиспользуемый MERA block на тег
+    fRecordTagCursors: array of QWord;            // Независимые позиции writer-а в отсчётах тегов
+    fRecordTagBlocks: array of TRecorderSignalSnapshot; // Переиспользуемая порция MERA на тег
     fRecordTagMetadata: array of TRecorderRecordChannelMetadata;
     fRecordTagTimeDomains: array of Integer;
     fRecordTimebase: TRecorderRecordTimebase;
@@ -222,6 +226,7 @@ type
     fAutoPreviewTicks: Integer;
     fAutoPreviewTimer: TTimer;
     fRenderActivePageQueued: Boolean;
+    fOnStartupReady: TNotifyEvent;
 
     { Создает и настраивает кнопку тулбара редактора мнемосхем. }
     function AddEditMnemoToolBarButton(ALeft, AImageIndex: Integer;
@@ -231,6 +236,10 @@ type
     { Добавляет строку в журнал с локальным временем. }
     procedure AddLog(const AMessage: string; AKind: TRecorderLogKind = rlkSystem);
     procedure AddPluginLog(const AMessage: string);
+    /// OnClick пункта «О программе» показывает версию и артикул ПО.
+    procedure AboutMenuClick(Sender: TObject);
+    /// Создаёт главное меню «Файл» и его общие команды.
+    procedure EnsureMainMenu;
     procedure LogStartupPaths;
     procedure ReportSqlDbError;
     procedure SqlDbSignalsDeleted(ASignalNames: TStrings);
@@ -397,6 +406,7 @@ type
     procedure ResetRecordTagCursors;
     { Пишет агрегированную диагностику частот UI/data/render. }
     procedure LogUpdateDiagnostics;
+    procedure UpdateMeasurementSectionTags;
     { Применяет один снимок события обновления тега к UI-модели значений. }
     procedure ApplyTagEventSnapshot(ASnapshot: TRecorderEventSnapshot);
     { Настраивает командные кнопки правого пульта как кнопки-символы. }
@@ -436,6 +446,7 @@ type
   protected
     procedure WndProc(var TheMessage: TLMessage); override;
   public
+    property OnStartupReady: TNotifyEvent read fOnStartupReady write fOnStartupReady;
     procedure OpenRecordSession;
     procedure CloseRecordSession;
     procedure ResetDisplaySessions;
@@ -536,6 +547,7 @@ begin
   fWindowDragTrace := TRecorderWindowDragTrace.Create('main');
   RegisterThreadName(GetThreadID, 'UIThread');
   Caption := CRecorderLnxCaption;
+  EnsureMainMenu;
   KeyPreview := True;
   OnKeyDown := @FormKeyDown;
 
@@ -564,9 +576,13 @@ begin
 
   fComponentFactory := TRecorderComponentFactory.Create;
   fComponentFactory.RegisterDefaultComponents;
+  RegisterRecorderSignalGeneratorFactory(fComponentFactory);
   RegisterRecorderFrequencyResponseFactory(fComponentFactory);
+  RegisterRecorder3dFactory(fComponentFactory);
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
+  fMeasurementSectionFactory := fComponentFactory.FindFactory(
+    TRecorderMeasurementSectionComponent.TypeId);
   fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory,
     fRecorder.TagRegistry, fRecorder.AlarmEngine);
   fPluginRuntime.OnLogMessage := @AddPluginLog;
@@ -581,7 +597,6 @@ begin
   LoadMainWindowLayout;
   MigrateRecorderPluginConfig(fProjectConfigDir);
   fPluginRuntime.LoadConfigured(RecorderPluginConfigFileName);
-  fPluginRuntime.NotifyAll(PN_RCINITIALIZED);
   ConfigureCoordinatorClient;
 
   LoadRecorderCommandImages(ilCommandButtons);
@@ -1215,6 +1230,7 @@ var
   lFirebirdHost: string;
   lFirebirdDatabase: string;
   lFirebirdUserName: string;
+  lSqlRecordingEnabled: Boolean;
 begin
   if (ACommand.ExecuteAtUtc > 0) and
     (ACommand.ExecuteAtUtc > RecorderCoordinatorUtcNow) then
@@ -1331,6 +1347,43 @@ begin
           lPayload := Format('{"host":%s}', [JsonQuoted(lFirebirdHost)]);
           AddLog(UTF8Encode('Настройки SQL БД изменены координатором: ') +
             lFirebirdHost + ':3050');
+        finally
+          lCommandPayload.Free;
+        end;
+      end;
+    end
+    else if SameText(ACommand.CommandType, 'config.sql_recording.set') then
+    begin
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote managed actions are disabled';
+      end
+      else
+      begin
+        lCommandPayload := GetJSON(ACommand.PayloadJson);
+        try
+          if not (lCommandPayload is TJSONObject) then
+            raise Exception.Create('Command payload must be a JSON object');
+          lSqlRecordingEnabled := TJSONObject(lCommandPayload).Get(
+            'enabled', False);
+          fRecorder.SqlDbManager.ApplyRemoteRecordingSettings(
+            lSqlRecordingEnabled,
+            TJSONObject(lCommandPayload).Get('record_period_ms', 0));
+          fUpdatingSqlDbRecording := True;
+          try
+            cbSqlDbRecording.Checked := lSqlRecordingEnabled;
+          finally
+            fUpdatingSqlDbRecording := False;
+          end;
+          PublishSqlDbControlState(lSqlRecordingEnabled);
+          lPayload := Format('{"enabled":%s,"record_period_ms":%d}',
+            [LowerCase(BoolToStr(lSqlRecordingEnabled, True)),
+             fRecorder.SqlDbManager.Config.RecordPeriodMs]);
+          if lSqlRecordingEnabled then
+            AddLog(UTF8Encode('SQL-запись включена координатором'))
+          else
+            AddLog(UTF8Encode('SQL-запись выключена координатором'));
         finally
           lCommandPayload.Free;
         end;
@@ -1525,6 +1578,7 @@ begin
       @SqlDbSignalsDeleted) then
     begin
       fRecorder.SqlDbManager.Configure(lFileName);
+      ReplaceRuntimeSource(CRecorderSqlSourceId);
       fUpdatingSqlDbRecording := True;
       try
         cbSqlDbRecording.Checked := fRecorder.SqlDbManager.RecordingEnabled;
@@ -1729,6 +1783,33 @@ end;
 procedure TMainForm.AddPluginLog(const AMessage: string);
 begin
   AddLog(AMessage, rlkSystem);
+end;
+
+procedure TMainForm.AboutMenuClick(Sender: TObject);
+begin
+  MessageDlg('О программе',
+    'RecorderLnx' + LineEnding +
+    'Версия: ' + CRecorderLnxVersion + LineEnding +
+    'Артикул ПО: ' + RecorderSoftwareArticle,
+    mtInformation, [mbOK], 0);
+end;
+
+procedure TMainForm.EnsureMainMenu;
+var
+  lAboutItem: TMenuItem;
+  lFileItem: TMenuItem;
+begin
+  if fMainMenu <> nil then
+    Exit;
+  fMainMenu := TMainMenu.Create(Self);
+  lFileItem := TMenuItem.Create(fMainMenu);
+  lFileItem.Caption := 'Файл';
+  fMainMenu.Items.Add(lFileItem);
+  lAboutItem := TMenuItem.Create(fMainMenu);
+  lAboutItem.Caption := 'О программе...';
+  lAboutItem.OnClick := @AboutMenuClick;
+  lFileItem.Add(lAboutItem);
+  Menu := fMainMenu;
 end;
 
 procedure TMainForm.EnsureLogFilterPanel;
@@ -2154,6 +2235,8 @@ begin
     'Графики', 'trend');
   fComponentPalette.ConfigureGroup(CRecorderPaletteGroupIndicators,
     'Индикаторы', 'Индикаторы', 'digital-indicator');
+  fComponentPalette.ConfigureGroup(CRecorderPaletteGroupImages,
+    'Изображения', 'Изображения и 3D-сцены', '3d-view');
   lNextLeft := fComponentPalette.Build(38);
   for I := 0 to fEditorToolbar.ControlCount - 1 do
     if fEditorToolbar.Controls[I] is TSpeedButton then
@@ -2421,22 +2504,22 @@ var
   lAppConfigDir: string;
   lAppConfigFileName: string;
   lAppConfig: TStringList;
+  lIni: TIniFile;
 begin
   RecorderEnsureMeraDirectories;
   ForceDirectories(fProjectConfigDir);
 
-  lAppConfigDir := RecorderConfigPath;
-  if lAppConfigDir = '' then
-    lAppConfigDir := IncludeTrailingPathDelimiter(GetDevProjectDir) + 'config';
+  lAppConfigFileName := RecorderAppConfigFileName;
+  lAppConfigDir := IncludeTrailingPathDelimiter(ExtractFilePath(
+    lAppConfigFileName));
   ForceDirectories(lAppConfigDir);
-  lAppConfigFileName := IncludeTrailingPathDelimiter(lAppConfigDir) + 'app.ini';
 
   if not FileExists(lAppConfigFileName) then
   begin
     lAppConfig := TStringList.Create;
     try
       lAppConfig.Add('[Application]');
-      lAppConfig.Add('DefaultProjectConfigDir=projects/default');
+      lAppConfig.Add('DefaultProjectConfigDir=config/projects/default');
       lAppConfig.Add('TimeSource=PC');
       lAppConfig.Add('');
       lAppConfig.Add('[Plugins]');
@@ -2445,6 +2528,15 @@ begin
     finally
       lAppConfig.Free;
     end;
+  end;
+
+  lIni := TIniFile.Create(lAppConfigFileName);
+  try
+    if not lIni.ValueExists(CAppConfigSection, 'SoftwareArticle') then
+      lIni.WriteString(CAppConfigSection, 'SoftwareArticle',
+        CRecorderDefaultSoftwareArticle);
+  finally
+    lIni.Free;
   end;
 
   if not FileExists(fRunControlFileName) then
@@ -2577,16 +2669,15 @@ end;
 function TMainForm.GetAppConfigDir: string;
 begin
   RecorderEnsureMeraDirectories;
-  Result := RecorderConfigPath;
-  if Result = '' then
-    Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config';
-  Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
+  Result := IncludeTrailingPathDelimiter(ExtractFilePath(
+    RecorderAppConfigFileName));
   ForceDirectories(Result);
 end;
 
 function TMainForm.GetAppConfigFileName: string;
 begin
-  Result := GetAppConfigDir + 'app.ini';
+  RecorderEnsureMeraDirectories;
+  Result := RecorderAppConfigFileName;
 end;
 
 procedure TMainForm.LoadMainWindowLayout;
@@ -2642,7 +2733,8 @@ var
   lIni: TIniFile;
 begin
   lAppConfigDir := GetAppConfigDir;
-  Result := lAppConfigDir + 'projects' + DirectorySeparator + 'default';
+  Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config' +
+    DirectorySeparator + 'projects' + DirectorySeparator + 'default';
   lAppConfigFileName := GetAppConfigFileName;
   if not FileExists(lAppConfigFileName) then
     Exit;
@@ -2898,7 +2990,6 @@ end;
 procedure TMainForm.ResetRecordTagCursors;
 var
   I: Integer;
-  lBlockCapacity: Integer;
   lDomainKey: string;
   lMetadataService: IRecorderRecordChannelMetadataService;
   lTag: TRecorderTag;
@@ -2922,13 +3013,10 @@ begin
   for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
   begin
     lTag := fRecorder.TagRegistry.Tags[I];
-    fRecordTagCursors[I] := lTag.SignalBuffer.CurrentBlockCursor;
+    { Запись стартует с нового отсчёта. Курсор отсчётов работает
+      одинаково для аппаратных блоков, Mera File и редких OPC-событий. }
+    fRecordTagCursors[I] := lTag.SignalBuffer.CurrentCursor;
     fRecordTagBlocks[I].Count := 0;
-    lBlockCapacity := lTag.SignalBuffer.CurrentBlockSampleCapacity;
-    if Length(fRecordTagBlocks[I].Times) < lBlockCapacity then
-      SetLength(fRecordTagBlocks[I].Times, lBlockCapacity);
-    if Length(fRecordTagBlocks[I].Values) < lBlockCapacity then
-      SetLength(fRecordTagBlocks[I].Values, lBlockCapacity);
     fRecordTagMetadata[I] := lMetadataService.Resolve(
       fRecorder.TagRegistry, lTag);
     if fRecordTagMetadata[I].IsUts then
@@ -3242,7 +3330,7 @@ begin
   if fDataSourcesConfigured then
     Exit;
   RecorderBuildRuntimeSources(fRecorder, fRecorder.RunSettings.DataUpdateMs,
-    @DeviceTestLog);
+    @DeviceTestLog, fFormManager);
   EnsureTagSignalBufferCapacities;
   fDataSourcesConfigured := True;
   AddLog('Diagnostics data source configured: MemTag, CpuUsage.');
@@ -3363,6 +3451,7 @@ begin
   begin
     fLastPluginInputRevision := lInputRevision;
     fPluginRuntime.NotifyAll(PN_UPDATEDATA);
+    UpdateMeasurementSectionTags;
   end;
 
   { Полный обход колец нужен только при открытой записи. В Preview UI читает
@@ -3382,9 +3471,10 @@ begin
           (fRecordTagMetadata[I].UtsChannelName <> '') and
           not fRecordTimebase.OriginReady(fRecordTagTimeDomains[I]) then
           Continue;
-        while lTag.SignalBuffer.SnapshotNextBlockInto(fRecordTagCursors[I],
+        lTag.SignalBuffer.SnapshotSinceInto(fRecordTagCursors[I],
           fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
-          fRecordTagBlocks[I].Count) do
+          fRecordTagBlocks[I].Count);
+        if fRecordTagBlocks[I].Count > 0 then
         begin
           if (fRecordTagBlocks[I].Count > 0) and
             not fRecordTimebase.OriginReady(fRecordTagTimeDomains[I]) then
@@ -3392,7 +3482,7 @@ begin
               fRecordTagBlocks[I].Times[0]);
           if not fRecordTimebase.Normalize(fRecordTagTimeDomains[I],
             fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Count) then
-            Break;
+            Continue;
           fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
             lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
             fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
@@ -3800,7 +3890,21 @@ begin
   if (lError = '') or (lError = fLastSqlDbError) then
     Exit;
   fLastSqlDbError := lError;
+  RecorderDebugLog('SQL database unavailable: ' + lError);
   AddLog('SQL database unavailable: ' + lError);
+end;
+
+procedure TMainForm.UpdateMeasurementSectionTags;
+var
+  I: Integer;
+begin
+  if (fMeasurementSectionFactory = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  for I := 0 to fMeasurementSectionFactory.ChildCount - 1 do
+    TRecorderMeasurementSectionComponent(
+      fMeasurementSectionFactory.Children[I]).PublishGeneratedTags(
+        fRecorder.TagRegistry);
 end;
 
 procedure TMainForm.UpdateTimeView;
@@ -3926,6 +4030,7 @@ begin
   else if SameText(AIconId, 'trend') then Result := CIconTrends
   else if SameText(AIconId, 'sql-trend') then Result := CIconSqlTrend
   else if SameText(AIconId, 'frequency-response') then Result := CIconFrequencyResponse
+  else if SameText(AIconId, '3d-view') then Result := CIcon3dScene
   else if SameText(AIconId, 'lissajous') then Result := CIconLissajous
   else if SameText(AIconId, 'plugin-oscillogram') then Result := CIconPluginOscillogram
   else if SameText(AIconId, 'donut') then Result := CIconDonut
@@ -4048,17 +4153,28 @@ end;
 procedure TMainForm.DeferredPrepareRuntime(Data: PtrInt);
 begin
   if csDestroying in ComponentState then Exit;
-  AddLog('Deferred hardware preparation started.');
-  PrepareRuntimeForConfiguration;
-  { One offline source must not keep the successfully prepared devices hidden
-    until opening the settings dialog rebuilds the views. }
-  UpdateActiveSourceIds;
-  RebuildTagList(edTagSearch.Text);
-  { Rebuild the currently visible page as well. In Stop mode the periodic
-    display cycle is not guaranteed to repaint the digital table after the
-    asynchronous device preparation has changed active source visibility. }
-  RenderActivePage;
-  AddLog('Deferred hardware preparation finished.');
+  try
+    AddLog('Deferred hardware preparation started.');
+    PrepareRuntimeForConfiguration;
+    { One offline source must not keep the successfully prepared devices hidden
+      until opening the settings dialog rebuilds the views. }
+    UpdateActiveSourceIds;
+    RebuildTagList(edTagSearch.Text);
+    { Rebuild the currently visible page as well. In Stop mode the periodic
+      display cycle is not guaranteed to repaint the digital table after the
+      asynchronous device preparation has changed active source visibility. }
+    RenderActivePage;
+    { RCInit означает готовое приложение: GUI создан, проект и GUI-конфиг
+      загружены, плагины созданы и уже получили RCLoadConfig, runtime
+      источников подготовлен. }
+    fPluginRuntime.NotifyAll(PN_RCINITIALIZED);
+    AddLog('Deferred hardware preparation finished.');
+  finally
+    { Заставка закрывается только после загрузки проекта и отложенной
+      подготовки runtime, а не сразу после создания главной формы. }
+    if Assigned(fOnStartupReady) then
+      fOnStartupReady(Self);
+  end;
 end;
 
 procedure TMainForm.OpenRecordSession;

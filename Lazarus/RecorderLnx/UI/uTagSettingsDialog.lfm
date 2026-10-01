@@ -111,16 +111,6 @@ object TagSettingsDialog: TTagSettingsDialog
           Anchors = [akTop, akRight]
           Caption = '...'
         end
-        object fHardwareSourceSetupBtn: TSpeedButton
-          Left = 500
-          Height = 32
-          Hint = 'Настройка аппаратного источника'
-          Top = 44
-          Width = 34
-          Anchors = [akTop, akRight]
-          ShowHint = True
-          ParentShowHint = False
-        end
         object lbDescription: TLabel
           Left = 12
           Height = 15
@@ -259,13 +249,13 @@ object TagSettingsDialog: TTagSettingsDialog
           Left = 30
           Height = 23
           Top = 22
-          Width = 516
+          Width = 508
           Anchors = [akTop, akLeft, akRight]
           ReadOnly = True
           TabOrder = 1
         end
         object fHardwareCurveSelectBtn: TSpeedButton
-          Left = 556
+          Left = 548
           Height = 32
           Top = 16
           Width = 34
@@ -273,7 +263,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = '...'
         end
         object fHardwareCurveSetupBtn: TSpeedButton
-          Left = 594
+          Left = 586
           Height = 32
           Top = 16
           Width = 34
@@ -281,7 +271,7 @@ object TagSettingsDialog: TTagSettingsDialog
           Caption = 'f/c'
         end
         object fHardwareCurveDownloadBtn: TSpeedButton
-          Left = 632
+          Left = 624
           Height = 32
           Hint = 'Выгрузка из памяти ГХ'
           Top = 16

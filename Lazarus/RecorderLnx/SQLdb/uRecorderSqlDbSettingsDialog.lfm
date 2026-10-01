@@ -290,6 +290,16 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       OnClick = btnImportSqlSelectionClick
       TabOrder = 8
     end
+    object btnCreateSqlSource: TButton
+      Left = 8
+      Height = 30
+      Top = 536
+      Width = 270
+      Anchors = [akLeft, akBottom]
+      Caption = 'Импортировать как SQL источник'
+      OnClick = btnCreateSqlSourceClick
+      TabOrder = 9
+    end
   end
   object btnOk: TButton Left = 916 Height = 34 Top = 674 Width = 90 Anchors = [akRight, akBottom] Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 4 end
   object btnCancel: TButton Left = 1016 Height = 34 Top = 674 Width = 90 Anchors = [akRight, akBottom] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end

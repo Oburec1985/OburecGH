@@ -18,13 +18,17 @@ type
     fDevice: IRecorderDevice;
     fNodeTags: array of TRecorderTag;
     fWriteCursors: array of QWord;
+    fLastWrittenValues: array of Double;
+    fHasWrittenValues: array of Boolean;
     fNextPrepareAtMs: QWord;
     fPrepared: Boolean;
     fPrepareError: string;
     fBindingError: string;
+    fLastSlowCycleLogMs: QWord;
     function OpcDevice: TRecorderOpcUaDevice;
     function BindServerNodes: Boolean;
     function FlushClientWrites: Boolean;
+    procedure LogSlowCycle(AWriteMs, AReadMs: QWord);
   protected
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
@@ -69,6 +73,8 @@ begin
   fBindingError := '';
   SetLength(fNodeTags, OpcDevice.NodeCount);
   SetLength(fWriteCursors, OpcDevice.NodeCount);
+  SetLength(fLastWrittenValues, OpcDevice.NodeCount);
+  SetLength(fHasWrittenValues, OpcDevice.NodeCount);
   for I := 0 to OpcDevice.NodeCount - 1 do
   begin
     lNode := OpcDevice.Node(I);
@@ -99,6 +105,7 @@ var
   I, J, lCount, lChunkCount, lChunkStart, lMaxPerRequest: Integer;
   lCandidateCursor: QWord;
   lValue: Double;
+  lHasValue: Boolean;
   lIndexes, lChunkIndexes: TRecorderOpcUaIntegerArray;
   lValues, lChunkValues: TRecorderOpcUaDoubleArray;
   lCursors: array of QWord;
@@ -115,9 +122,20 @@ begin
     begin
       if (fNodeTags[I] = nil) or not OpcDevice.Node(I).Writable then Continue;
       lCandidateCursor := fWriteCursors[I];
+      lHasValue := False;
       while fNodeTags[I].ReadExternalWrite(lCandidateCursor, lValue) do
-        ; { Keep only the final desired value for this node in the current cycle. }
-      if lCandidateCursor = fWriteCursors[I] then Continue;
+      begin
+        if (not fHasWrittenValues[I]) or
+          (not SameValue(fLastWrittenValues[I], lValue)) then
+        begin
+          lHasValue := True;
+          Break;
+        end;
+        { Confirmed duplicates can be discarded immediately. A distinct
+          press/release edge is retained until its WriteResponse succeeds. }
+        fWriteCursors[I] := lCandidateCursor;
+      end;
+      if not lHasValue then Continue;
       lIndexes[lCount] := I;
       lValues[lCount] := lValue;
       lCursors[lCount] := lCandidateCursor;
@@ -145,11 +163,14 @@ begin
     if not OpcDevice.WriteClientValues(lChunkIndexes, lChunkValues) then
       Exit(False);
     for J := 0 to lChunkCount - 1 do
-      fWriteCursors[lIndexes[lChunkStart + J]] := lCursors[lChunkStart + J];
+    begin
+      I := lIndexes[lChunkStart + J];
+      fWriteCursors[I] := lCursors[lChunkStart + J];
+      fLastWrittenValues[I] := lValues[lChunkStart + J];
+      fHasWrittenValues[I] := True;
+    end;
     Inc(lChunkStart, lChunkCount);
   end;
-  RecorderDebugLog(Format('[OPC UA] source=%s write batch values=%d requests=%d',
-    [SourceId, lCount, (lCount + lMaxPerRequest - 1) div lMaxPerRequest]));
 end;
 
 function TRecorderOpcUaDataSource.BindServerNodes: Boolean;
@@ -168,6 +189,22 @@ begin
     if not OpcDevice.ConfigureServerNode(I, fNodeTags[I].Name, lValue) then
       Exit(False);
   end;
+end;
+
+procedure TRecorderOpcUaDataSource.LogSlowCycle(AWriteMs, AReadMs: QWord);
+var
+  lNow, lTotalMs: QWord;
+begin
+  lTotalMs := AWriteMs + AReadMs;
+  if lTotalMs < UpdateTimeMs then Exit;
+  lNow := GetTickCount64;
+  if (fLastSlowCycleLogMs <> 0) and
+    (lNow - fLastSlowCycleLogMs < 5000) then Exit;
+  fLastSlowCycleLogMs := lNow;
+  RecorderDebugLog(Format(
+    '[OPC UA PERF] source=%s write=%d ms read=%d ms total=%d ms period=%d ms nodes=%d',
+    [SourceId, AWriteMs, AReadMs, lTotalMs, UpdateTimeMs,
+    OpcDevice.NodeCount]));
 end;
 
 procedure TRecorderOpcUaDataSource.PrepareHardware;
@@ -236,6 +273,7 @@ var
   I: Integer;
   lQuality: Cardinal;
   lTime, lValue: Double;
+  lReadStartedMs, lWriteMs: QWord;
 begin
   if not fPrepared then
   begin
@@ -243,6 +281,23 @@ begin
     PrepareHardware;
     if not fPrepared then Exit;
   end;
+  { A write is queued by Recorder code, but reaches the network only on this
+    OPC source tick. Flush it before a potentially long multi-chunk read so a
+    control command is not delayed by the complete acquisition scan. }
+  lReadStartedMs := GetTickCount64;
+  if (OpcDevice.Config.Mode = oumClient) and not FlushClientWrites then
+  begin
+    fPrepareError := OpcDevice.LastError;
+    fDevice.Disconnect;
+    fPrepared := False;
+    fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
+    RecorderDebugLog(Format(
+      '[OPC UA] source=%s write failed; reconnect in %d ms: %s',
+      [SourceId, CRecorderOpcUaReconnectDelayMs, fPrepareError]));
+    Exit;
+  end;
+  lWriteMs := GetTickCount64 - lReadStartedMs;
+  lReadStartedMs := GetTickCount64;
   if not OpcDevice.Iterate then
   begin
     fPrepareError := OpcDevice.LastError;
@@ -254,6 +309,7 @@ begin
       [SourceId, CRecorderOpcUaReconnectDelayMs, fPrepareError]));
     Exit;
   end;
+  LogSlowCycle(lWriteMs, GetTickCount64 - lReadStartedMs);
   if OpcDevice.Config.Mode = oumServer then
   begin
     for I := 0 to High(fNodeTags) do
@@ -267,17 +323,6 @@ begin
       { OPC UA SourceTimestamp is absolute Unix time. Recorder tags use the
         project elapsed-time scale, which the registry supplies here. }
       Registry.PublishValue(fNodeTags[I], lValue);
-  { Reads are completed first so a write burst cannot starve acquisition. }
-  if not FlushClientWrites then
-  begin
-    fPrepareError := OpcDevice.LastError;
-    fDevice.Disconnect;
-    fPrepared := False;
-    fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
-    RecorderDebugLog(Format(
-      '[OPC UA] source=%s write failed; reconnect in %d ms: %s',
-      [SourceId, CRecorderOpcUaReconnectDelayMs, fPrepareError]));
-  end;
 end;
 
 procedure TRecorderOpcUaDataSource.Stop;

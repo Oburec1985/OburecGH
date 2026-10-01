@@ -6,7 +6,7 @@ unit uRecorderOpcUaDevice;
 interface
 
 uses
-  Classes, SysUtils, Variants, uRecorderDeviceInterfaces,
+  Classes, SysUtils, Variants, Math, uRecorderDeviceInterfaces,
   uRecorderOpcUaTypes, uRecorderOpcUaApi;
 
 type
@@ -254,7 +254,8 @@ begin
   if fConfig.Mode = oumServer then
     Result := RecorderOpcUaServerIterate(fHandle, False)
   else
-    Result := RecorderOpcUaClientIterate(fHandle, 0);
+    Result := RecorderOpcUaClientIterate(fHandle, 0,
+      Min(fConfig.MaxNodesPerRead, CRecorderOpcUaDefaultMaxNodesPerRequest));
   if not Result then Fail('iterate', RecorderOpcUaLastError(fHandle));
 end;
 

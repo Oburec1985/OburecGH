@@ -92,6 +92,8 @@ procedure TRecorderStrainCalibrationDialog.EditCalibration(
 var
   lCfg: TRecorderStrainConfig;
   lKind: TRecorderStrainExcitationKind;
+  lError: string;
+  lEstimate: Double;
   lUnit: TRecorderStrainInputUnit;
   lValue: Double;
   lView: TRecorderCalibration;
@@ -117,6 +119,10 @@ begin
       if OverrideInputUnit(AInputUnit, lUnit) then
         lCfg.InputUnit := lUnit;
       lView.ModuleData := lCfg.Save;
+      { K1/K2 в сохранённой ГХ могли быть рассчитаны старой версией модели.
+        Для предпросмотра всегда строим формулу заново из показанных настроек,
+        не меняя оригинал до нажатия OK. }
+      RecorderStrainBuildCalibration(lCfg, lView, lEstimate, lError);
       fEditor.LoadCalibration(lView);
     finally
       lView.Free;

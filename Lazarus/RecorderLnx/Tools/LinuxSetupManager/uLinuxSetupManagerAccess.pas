@@ -347,6 +347,68 @@ begin
   WriteLn('groups=', Trim(lOutput));
 end;
 
+procedure ShowRecorderAccess(const AArgs: array of string);
+var
+  lUser, lOutput: string;
+begin
+  lUser := GetOption(AArgs, '--user');
+  if not ValidName(lUser) then
+    raise Exception.Create('Укажите --user USER');
+  if RunTool('id', [lUser], lOutput) <> 0 then
+    raise Exception.Create('Пользователь не найден: ' + lUser);
+  WriteLn(UTF8String('Проверка конфигурации RecorderLnx для пользователя '), lUser);
+  RunTool('namei', ['-l', '/var/opt/mera/RecorderLnx/app.ini'], lOutput);
+  Write(lOutput);
+  if ToolSucceeded('runuser', ['-u', lUser, '--', 'test', '-r',
+      '/var/opt/mera/RecorderLnx/app.ini']) then
+    WriteLn(UTF8String('Чтение app.ini: доступно'))
+  else
+    WriteLn(UTF8String('Чтение app.ini: НЕТ ДОСТУПА'));
+  if ToolSucceeded('runuser', ['-u', lUser, '--', 'test', '-w',
+      '/var/opt/mera/RecorderLnx']) then
+    WriteLn(UTF8String('Создание app.ini в каталоге RecorderLnx: доступно'))
+  else
+    WriteLn(UTF8String('Создание app.ini в каталоге RecorderLnx: НЕТ ДОСТУПА'));
+  if FileExists('/var/opt/mera/RecorderLnx/app.ini') then
+    if ToolSucceeded('runuser', ['-u', lUser, '--', 'test', '-w',
+        '/var/opt/mera/RecorderLnx/app.ini']) then
+      WriteLn(UTF8String('Запись app.ini: доступна'))
+    else
+      WriteLn(UTF8String('Запись app.ini: НЕТ ДОСТУПА'));
+end;
+
+procedure RepairRecorderAccess(const AArgs: array of string);
+var
+  lGroup, lUser, lOutput: string;
+begin
+  {$IFDEF UNIX}
+  if fpGetEUID <> 0 then
+    raise Exception.Create('repair-recorder нужно запускать с правами root');
+  {$ENDIF}
+  lUser := GetOption(AArgs, '--user');
+  if not ValidName(lUser) or
+     (RunTool('id', [lUser], lOutput) <> 0) then
+    raise Exception.Create('Пользователь не найден: ' + lUser);
+  if RunTool('id', ['-gn', lUser], lGroup) <> 0 then
+    raise Exception.Create('Не удалось определить группу пользователя: ' + lUser);
+  lGroup := Trim(lGroup);
+  RunRequired('mkdir', ['-p', '/var/opt/mera/RecorderLnx']);
+  if not FileExists('/var/opt/mera/RecorderLnx/app.ini') then
+  begin
+    if not FileExists('/usr/share/recorderlnx/config/app.ini') then
+      raise Exception.Create('Не найден шаблон /usr/share/recorderlnx/config/app.ini');
+    RunRequired('cp', ['/usr/share/recorderlnx/config/app.ini',
+      '/var/opt/mera/RecorderLnx/app.ini']);
+  end;
+  RunRequired('chown', [lUser + ':' + lGroup,
+    '/var/opt/mera/RecorderLnx/app.ini']);
+  RunRequired('chmod', ['0600', '/var/opt/mera/RecorderLnx/app.ini']);
+  RunRequired('chown', [lUser + ':' + lGroup, '/var/opt/mera/RecorderLnx']);
+  RunRequired('chmod', ['0700', '/var/opt/mera/RecorderLnx']);
+  WriteLn(UTF8String('Права конфигурации RecorderLnx исправлены для пользователя '),
+    lUser, '.');
+end;
+
 function RunAccessAction(const AArgs: array of string): Integer;
 var
   lConfig: TAccessConfig;
@@ -359,6 +421,8 @@ begin
     if lAction = 'list-users' then ListUsers
     else if lAction = 'show' then ShowUser(AArgs)
     else if lAction = 'show-state' then ShowUserState(AArgs)
+    else if lAction = 'recorder-status' then ShowRecorderAccess(AArgs)
+    else if lAction = 'repair-recorder' then RepairRecorderAccess(AArgs)
     else if (lAction = 'validate') or (lAction = 'plan') or
             (lAction = 'apply') then
     begin

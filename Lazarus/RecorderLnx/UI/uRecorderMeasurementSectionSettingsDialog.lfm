@@ -205,6 +205,14 @@ object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSett
       TabOrder = 14
       OnClick = FormatAllClick
     end
+    object fGenerateTagsCheck: TCheckBox
+      Left = 620
+      Height = 19
+      Top = 148
+      Width = 160
+      Caption = 'Формировать теги'
+      TabOrder = 17
+    end
     object lblBackgroundColor: TLabel
       Left = 620
       Height = 15
@@ -212,16 +220,12 @@ object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSett
       Width = 104
       Caption = 'Фон компонента'
     end
-    object fBackgroundColorPanel: TPanel
+    object fBackgroundColorPanel: TColorBox
       Left = 744
       Height = 24
       Top = 76
       Width = 150
-      BevelOuter = bvLowered
-      Caption = 'Двойной щелчок'
-      ParentBackground = False
       TabOrder = 15
-      OnDblClick = ColorPanelDblClick
     end
     object lblTextBackgroundColor: TLabel
       Left = 620
@@ -230,16 +234,12 @@ object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSett
       Width = 115
       Caption = 'Фон текста измерений'
     end
-    object fTextBackgroundColorPanel: TPanel
+    object fTextBackgroundColorPanel: TColorBox
       Left = 744
       Height = 24
       Top = 110
       Width = 150
-      BevelOuter = bvLowered
-      Caption = 'Двойной щелчок'
-      ParentBackground = False
       TabOrder = 16
-      OnDblClick = ColorPanelDblClick
     end
   end
   object pnlButtons: TPanel
@@ -321,7 +321,7 @@ object RecorderMeasurementSectionSettingsDialog: TRecorderMeasurementSectionSett
     Top = 214
     Width = 662
     Align = alClient
-    ColCount = 7
+    ColCount = 8
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect]
     RowCount = 2

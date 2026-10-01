@@ -209,7 +209,7 @@ function ShowRecorderVibrationEstimateSettingsDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
 var
   lForm: TForm;
-  lQuantityCombo, lBandCombo: TComboBox;
+  lQuantityCombo, lBandCombo, lValueModeCombo: TComboBox;
   lTagEdit, lCaptionEdit, lFormatEdit: TEdit;
   lUseTagName: TCheckBox;
   lOk, lCancel: TButton;
@@ -268,9 +268,17 @@ begin
       if SameText(AComponent.BandName, ATagRegistry.FrequencyBands.Bands[I].Name) then
         lBandCombo.ItemIndex := I + 1;
     end;
-    with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Формат'; SetBounds(12, 210, 150, 23); end;
+    with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Представление'; SetBounds(12, 210, 150, 23); end;
+    lValueModeCombo := TComboBox.Create(lForm); lValueModeCombo.Parent := lForm;
+    lValueModeCombo.Style := csDropDownList;
+    lValueModeCombo.SetBounds(175, 204, 160, 28);
+    lValueModeCombo.Items.Add('СКО');
+    lValueModeCombo.Items.Add('Амплитуда');
+    if AComponent.AmplitudeMode then lValueModeCombo.ItemIndex := 1
+    else lValueModeCombo.ItemIndex := 0;
+    with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Формат'; SetBounds(350, 210, 65, 23); end;
     lFormatEdit := TEdit.Create(lForm); lFormatEdit.Parent := lForm;
-    lFormatEdit.SetBounds(175, 204, 160, 28); lFormatEdit.Text := AComponent.DisplayFormat;
+    lFormatEdit.SetBounds(420, 204, 100, 28); lFormatEdit.Text := AComponent.DisplayFormat;
     with TLabel.Create(lForm) do begin Parent := lForm; Caption := 'Преднастроенный шрифт'; SetBounds(12, 250, 158, 23); end;
     lFontPreset := TRecorderVibrationFontPresetCombo.Create(lForm);
     lFontPreset.Parent := lForm;
@@ -323,6 +331,7 @@ begin
     if lBandCombo.ItemIndex <= 0 then AComponent.BandName := ''
     else AComponent.BandName := lBandCombo.Items[lBandCombo.ItemIndex];
     AComponent.DisplayFormat := Trim(lFormatEdit.Text);
+    AComponent.AmplitudeMode := lValueModeCombo.ItemIndex = 1;
     if AComponent.DisplayFormat = '' then AComponent.DisplayFormat := '0.###';
     AComponent.FontName := lSelectFont.SelectedFont.Name;
     AComponent.FontSize := lSelectFont.SelectedFont.Size;

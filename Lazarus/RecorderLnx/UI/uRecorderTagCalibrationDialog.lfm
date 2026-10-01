@@ -99,7 +99,7 @@ object RecorderTagCalibrationDialog: TRecorderTagCalibrationDialog
       Height = 28
       Top = 20
       Width = 264
-      Caption = 'Подать значение и собрать 1 секунду'
+      Caption = 'Сбор данных'
       TabOrder = 1
       OnClick = btnCapture0Click
     end
@@ -139,7 +139,7 @@ object RecorderTagCalibrationDialog: TRecorderTagCalibrationDialog
       Height = 28
       Top = 20
       Width = 264
-      Caption = 'Подать значение и собрать 1 секунду'
+      Caption = 'Сбор данных'
       TabOrder = 1
       OnClick = btnCapture1Click
     end

@@ -1033,11 +1033,15 @@ begin
         fRuntimeChannelTags[I].HardwareCalibrationName)
     else
       fRuntimeHardwareCalibrations[I] := nil;
-    fRuntimeThermocoupleCalibrations[I] :=
-      Registry.FindTagThermocoupleCalibration(fRuntimeChannelTags[I]);
     fRuntimeTemperatureMode[I] :=
       SameText(fRuntimeChannelSettings[I].OutputMode,
         RecorderMic140OutputModeToConfigName(momTemperatureC));
+    if fRuntimeTemperatureMode[I] and
+      (Trim(fRuntimeChannelSettings[I].ThermocoupleScaleName) <> '') then
+      fRuntimeThermocoupleCalibrations[I] := Registry.FindCalibrationByName(
+        'TC ' + fRuntimeChannelSettings[I].ThermocoupleScaleName)
+    else
+      fRuntimeThermocoupleCalibrations[I] := nil;
     fRuntimeCjcChannels[I] := RecorderMic140ChannelCjcNumber(
       fRuntimeChannelSettings[I], I, CMic140Mic140SubRev1);
   end;
@@ -1462,17 +1466,25 @@ begin
     if lTag = nil then
       lTag := ARegistry.CreateTag(fTemperatureTagNames[I], 4096);
     lTag.Address := fTemperatureTagNames[I];
-    lTag.UnitName := 'code';
+    if lCreated then
+      lTag.UnitName := 'code';
     lTag.ModuleType := 'MIC-140';
     lTag.PollFrequencyHz := fPollFrequencyHz;
     lTag.SourceId := SourceId;
     if lCreated or (Trim(lTag.Description) = '') then
       lTag.Description := Format('MIC-140 temperature channel %s',
         [RecorderMic140TemperatureDisplayText(I + 1, CMic140Mic140SubRev1)]);
-    lTag.ChannelCalibrationEnabled := False;
-    lTag.HardwareCalibrationEnabled := False;
-    if lTag.CalibrationNames <> nil then
-      lTag.CalibrationNames.Clear;
+    if lCreated then
+    begin
+      { Defaults belong only to a newly created TIn tag. Re-entering the
+        source dialog recreates runtime sources but must preserve calibration
+        flags, names and the user's sensor-GX pipeline on existing tags. }
+      lTag.ChannelCalibrationEnabled := False;
+      lTag.HardwareCalibrationEnabled := False;
+      lTag.HardwareCalibrationName := '';
+      if lTag.CalibrationNames <> nil then
+        lTag.CalibrationNames.Clear;
+    end;
   end;
 
   lChannels := fDevice.GetChannels;
@@ -1554,27 +1566,22 @@ begin
     Exit;
   fHardwarePrepareAttempted := True;
   PublishDiagnostics(CMic140StatusDisconnected, 'connecting', True);
-  { Недоступное сетевое устройство — штатная конфигурация проекта.
-    Endpoint: mic140.host/port (SourceId может содержать устаревший IP). }
-  if not RecorderMic140IsSourceLinkOk(Registry, SourceId) then
+  { Connect is the link test for the new session. MIC-140 accepts one owner;
+    a separate TCP probe here races with the immediately following working
+    connection and can make an available controller look offline. }
+  fDevice.Connect;
+  if fDevice.State = rdsDisconnected then
   begin
-    lTestError := 'TCP TEST failed';
+    lTestError := 'connection failed';
     if RecorderMic140ResolveEndpoint(Registry, SourceId, lHost, lPort) then
-      lTestError := Format('TCP TEST failed for %s:%d', [lHost, lPort]);
+      lTestError := Format('connection failed for %s:%d', [lHost, lPort]);
     RecorderHardwareMarkSourceOffline(SourceId, lTestError);
-    PublishDiagnostics(CMic140StatusError, 'connection test failed', True);
-    Mic140LogWarning(Format('[DataSource:%s] MIC-140 link test failed: %s',
+    PublishDiagnostics(CMic140StatusError, lTestError, True);
+    Mic140LogWarning(Format('[DataSource:%s] MIC-140 %s',
       [SourceId, lTestError]));
     Exit;
   end;
   RecorderHardwareClearSourceOffline(SourceId);
-  fDevice.Connect;
-  if fDevice.State = rdsDisconnected then
-  begin
-    RecorderHardwareMarkSourceOffline(SourceId, 'connection failed');
-    PublishDiagnostics(CMic140StatusError, 'connection failed', True);
-    Exit;
-  end;
   PublishDiagnostics(CMic140StatusConnected, 'connected', True);
   RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
   fDevice.InitializeDevice;
@@ -1621,8 +1628,6 @@ begin
       RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
       if not RecorderMic140ChannelUsesTemperature(lSettings) then
         Continue;
-      if not lTag.ChannelCalibrationEnabled then
-        Continue;
       RecorderMic140EnsureThermoCompensationForSource(Registry, SourceId);
       lCalibrationName := RecorderMic140EnsureThermocoupleCalibration(Registry,
         lSettings);
@@ -1634,8 +1639,6 @@ begin
            RecorderMeraThermocoupleCsvPath(lSettings.ThermocoupleScalePath)]));
         Continue;
       end;
-      if lTag.CalibrationNames.IndexOf(lCalibrationName) < 0 then
-        lTag.CalibrationNames.Add(lCalibrationName);
       RecorderMic140UpdateChannelSettings(Registry, lTag, lSettings);
       lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
       if lTag.AutoUnit then

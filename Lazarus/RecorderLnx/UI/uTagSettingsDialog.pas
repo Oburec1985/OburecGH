@@ -55,7 +55,6 @@ type
     lbModule: TLabel;
     fModuleEdit: TEdit;
     fAddressButton: TSpeedButton;
-    fHardwareSourceSetupBtn: TSpeedButton;
     lbDescription: TLabel;
     fDescriptionEdit: TEdit;
     fDescriptionEditBtn: TSpeedButton;
@@ -247,6 +246,8 @@ type
     procedure AutoUnitCheckClick(Sender: TObject);
     /// OnDropDown комбобокса единиц актуализирует список перед его раскрытием.
     procedure UnitComboDropDown(Sender: TObject);
+    /// OnSelect единицы в Auto меняет UnitOut выходной ГХ, не снимая AutoUnit.
+    procedure UnitComboSelect(Sender: TObject);
     /// Строит список единиц по выходу реально применяемой цепочки ГХ.
     procedure RefreshUnitChoices;
     /// OnClick галки оценки синхронизирует набор расчётов и оценку по умолчанию.
@@ -255,8 +256,6 @@ type
     procedure DefaultEstimateComboChange(Sender: TObject);
     /// OnClick кнопки настройки источника вызывает внешний редактор оборудования.
     procedure HardwareSourceSetupButtonClick(Sender: TObject);
-    /// Обновляет видимость и доступность кнопки настройки аппаратного источника.
-    procedure UpdateHardwareSourceSetupButton;
     /// Обновляет кнопки настройки и балансировки по возможностям выбранных тегов.
     procedure UpdateTagDeviceActionButtons;
     /// Показывает сведения о выражении только для одиночного виртуального канала.
@@ -264,6 +263,8 @@ type
     /// Возвращает UnitOut последней включённой ступени либо применяемой аппаратной ГХ.
     function TryGetChannelCalibrationOutputUnit(ATag: TRecorderTag;
       out AUnitName: string): Boolean;
+    /// Возвращает последнюю реально применяемую ГХ, задающую выход AutoUnit.
+    function FindOutputCalibration(ATag: TRecorderTag): TRecorderCalibration;
     /// Проверяет наличие применяемой ГХ с определённой выходной единицей.
     function SelectedCalibrationEnabled(ATag: TRecorderTag): Boolean;
     /// Возвращает исходную единицу тега до автоматического преобразования ГХ.
@@ -557,8 +558,6 @@ begin
     fSetpointColorChanged[lSetpointKind] := False;
   end;
   fAddressButton.OnClick := @AddressButtonClick;
-  fHardwareSourceSetupBtn.OnClick := @HardwareSourceSetupButtonClick;
-  fHardwareSourceSetupBtn.Visible := False;
   fChannelCurveSelectBtn.OnClick := @SelectCalibrationButtonClick;
   fChannelCurveEdit.OnDblClick := @ChannelCurveNotebookClick;
   fChannelCurveAddBtn.OnClick := @AddCalibrationButtonClick;
@@ -571,8 +570,13 @@ begin
   fChannelCurveCheck.OnClick := @ChannelCurveCheckClick;
   fAutoUnitCheck.OnClick := @AutoUnitCheckClick;
   fUnitCombo.OnDropDown := @UnitComboDropDown;
+  fUnitCombo.OnSelect := @UnitComboSelect;
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
+  { Назначаем runtime-обработчики явно: кнопки панели устройства могли быть
+    перенесены в LFM, но первый щелчок не должен зависеть от LFM-привязки. }
+  fZeroBalanceBtn.OnClick := @ZeroBalanceButtonClick;
+  fHardwareDeviceSetupBtn.OnClick := @HardwareDeviceSetupButtonClick;
 
   AssignSpeedButtonImage(fAddressButton, fImages, CTagDialogIconAddress);
   AssignSpeedButtonImage(fDescriptionEditBtn, fImages, CTagDialogIconEdit);
@@ -692,6 +696,7 @@ var
   lOriginal: TRecorderCalibration;
   lTag: TRecorderTag;
   lTarget: TRecorderTagCalibrationTarget;
+  lEstimateKind: TRecorderTagEstimateKind;
 begin
   if fTags.Count <> 1 then
   begin
@@ -703,7 +708,7 @@ begin
   lTag := TagAt(0);
   lDraft := nil;
   if not ShowRecorderTagCalibrationDialog(Self, fTagRegistry, lTag,
-    lDraft, lOriginal, lTarget) then
+    lDraft, lOriginal, lTarget, lEstimateKind) then
     Exit;
   try
     if lTarget = rtctLastNode then
@@ -891,7 +896,6 @@ begin
   begin
     if not fHardwareCurveCheck.Checked then
     begin
-      fUnitCombo.Text := 'код';
       RefreshUnitChoices;
       Exit;
     end;
@@ -1519,14 +1523,6 @@ begin
   Result := Pos(CMeraSourcePrefix, lTag.SourceId) = 1;
 end;
 
-procedure TTagSettingsDialog.UpdateHardwareSourceSetupButton;
-begin
-  if fHardwareSourceSetupBtn = nil then
-    Exit;
-  fHardwareSourceSetupBtn.Enabled := CanConfigureHardwareSource;
-  fHardwareSourceSetupBtn.Visible := CanConfigureHardwareSource;
-end;
-
 procedure TTagSettingsDialog.LayoutTagDeviceActionButtons;
 var
   lLeft: Integer;
@@ -1609,9 +1605,31 @@ begin
 end;
 
 procedure TTagSettingsDialog.ZeroBalanceButtonClick(Sender: TObject);
+var
+  lTag: TRecorderTag;
+  lUnitName: string;
 begin
   if not CanZeroBalance then
     Exit;
+  { Балансировка может быть запущена до OK/Apply. Сначала фиксируем выбранные
+    пользователем единицы MIC-185 в datasource, чтобы перепрограммирование
+    прибора не восстановило прежний режим мВ. }
+  if fTags.Count = 1 then
+  begin
+    lTag := TagAt(0);
+    lUnitName := Trim(fUnitCombo.Text);
+    if (Pos('MIC-185:', lTag.SourceId) = 1) and
+      (SameText(lUnitName, 'мВ') or SameText(lUnitName, 'мВ(тензо)') or
+       SameText(lUnitName, 'Ом') or SameText(lUnitName, 'мкстрн') or
+       SameText(lUnitName, 'мкм/м')) then
+    begin
+      RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
+        lTag.Address, lTag.PollFrequencyHz, lUnitName);
+      lTag.SourceUnitName := lUnitName;
+      if not lTag.AutoUnit then
+        lTag.UnitName := lUnitName;
+    end;
+  end;
   if fOnZeroBalance <> nil then
     fOnZeroBalance(Self, fTagRegistry, fTags);
 end;
@@ -1712,6 +1730,7 @@ var
   lSourceActive: Boolean;
   lTagTemp: TRecorderTag;
   lFrequencyGrid: TRecorderFrequencyGrid;
+  lMic185Settings: TMic185ChannelProgramSettings;
 begin
   if fTags.Count = 1 then
   begin
@@ -1734,6 +1753,13 @@ begin
     fUnitCombo.Text := lText
   else
     fUnitCombo.Text := '';
+  if (fTags.Count = 1) and
+    (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+  begin
+    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
+      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
+    fUnitCombo.Text := Mic185SourceUnitName(TagAt(0), lMic185Settings);
+  end;
   if AllString(2, lText) then
     fModuleEdit.Text := lText
   else
@@ -1805,7 +1831,6 @@ begin
   ApplyAutoUnitFromChannelCalibration;
   RefreshUnitChoices;
   UpdateHardwareCurveButtons;
-  UpdateHardwareSourceSetupButton;
   UpdateTagDeviceActionButtons;
   UpdateVirtualChannelInfo;
 
@@ -2021,6 +2046,21 @@ begin
     end;
     if fAutoUnitCheck.State <> cbGrayed then
       lTag.AutoUnit := fAutoUnitCheck.Checked;
+    if (Pos('MIC-185:', lTag.SourceId) = 1) and
+      ((SameText(Trim(fUnitCombo.Text), 'мВ')) or
+       (SameText(Trim(fUnitCombo.Text), 'мВ(тензо)')) or
+       (SameText(Trim(fUnitCombo.Text), 'Ом')) or
+       (SameText(Trim(fUnitCombo.Text), 'мкстрн')) or
+       (SameText(Trim(fUnitCombo.Text), 'мкм/м'))) then
+    begin
+      { Единица источника MIC-185 (мВ/Ом/мкстрн) является отдельной
+        пользовательской настройкой и сохраняется независимо от галки ГХ. }
+      RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
+        lTag.Address, lTag.PollFrequencyHz, Trim(fUnitCombo.Text));
+      lTag.SourceUnitName := Trim(fUnitCombo.Text);
+      if not lTag.AutoUnit then
+        lTag.UnitName := Trim(fUnitCombo.Text);
+    end;
     if fAutoRangeCheck.State <> cbGrayed then
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
@@ -2048,7 +2088,7 @@ begin
       begin
         RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
           lTag.Address, lTag.PollFrequencyHz, lPreviousUnitName);
-        lTag.UnitName := 'код';
+        lTag.UnitName := lPreviousUnitName;
       end;
       if lHardwareChanged and
         (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
@@ -2290,6 +2330,19 @@ begin
       end;
     end;
 
+  { У MIC-185 аппаратная ГХ выдаёт промежуточные мВ, после которых datasource
+    переводит значение в выбранные для канала Ом/мкстрн. Без канальной ГХ
+    Auto должен показывать именно итоговую единицу источника. }
+  if Pos('MIC-185:', ATag.SourceId) = 1 then
+  begin
+    AUnitName := RecorderMic185GetSourceChannelUnitName(fTagRegistry,
+      ATag.SourceId, ATag.Address);
+    if Trim(AUnitName) = '' then
+      AUnitName := Trim(ATag.SourceUnitName);
+    if Trim(AUnitName) <> '' then
+      Exit(True);
+  end;
+
   if fHardwareCurveCheck.State <> cbChecked then
     Exit;
   lCalibration := fTagRegistry.FindCalibrationByName(
@@ -2299,6 +2352,35 @@ begin
     AUnitName := Trim(lCalibration.UnitOut);
     Result := True;
   end;
+end;
+
+function TTagSettingsDialog.FindOutputCalibration(
+  ATag: TRecorderTag): TRecorderCalibration;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if (ATag = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  if (fChannelCurveCheck.State = cbChecked) and
+    (ATag.CalibrationNames <> nil) then
+    for I := ATag.CalibrationNames.Count - 1 downto 0 do
+    begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+        Continue;
+      Result := fTagRegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
+      if Result <> nil then
+        Exit;
+    end;
+
+  { У MIC-185 выход аппаратной ступени дополнительно преобразуется datasource,
+    поэтому его единица не должна переписываться через аппаратную ГХ. }
+  if Pos('MIC-185:', ATag.SourceId) = 1 then
+    Exit(nil);
+  if fHardwareCurveCheck.State = cbChecked then
+    Result := fTagRegistry.FindCalibrationByName(
+      ATag.HardwareCalibrationName);
 end;
 
 function TTagSettingsDialog.SelectedCalibrationEnabled(
@@ -2351,7 +2433,7 @@ begin
       { При включённой ГХ ручная единица описывает уже физический выход
         цепочки. Категорию задаёт UnitOut последней канальной ГХ; если
         канальной цепочки нет — UnitOut аппаратной ГХ. }
-      if (fTags.Count = 1) and
+      if (fTags.Count = 1) and (fAutoUnitCheck.State = cbChecked) and
         TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit) and
         RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
       begin
@@ -2359,6 +2441,13 @@ begin
           if RecorderUnitManager.TryGetUnitInfo(lAllUnits[I], lCandidateInfo) and
             SameText(lCandidateInfo.QuantityId, lOutputInfo.QuantityId) then
             fUnitCombo.Items.Add(lAllUnits[I]);
+      end
+      else if (fTags.Count = 1) and
+        (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+      begin
+        fUnitCombo.Items.Add('мВ');
+        fUnitCombo.Items.Add('Ом');
+        fUnitCombo.Items.Add('мкстрн');
       end
       else
       begin
@@ -2379,6 +2468,53 @@ end;
 procedure TTagSettingsDialog.UnitComboDropDown(Sender: TObject);
 begin
   RefreshUnitChoices;
+end;
+
+procedure TTagSettingsDialog.UnitComboSelect(Sender: TObject);
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lOutputUnit: string;
+  lSelectedInfo: TRecorderUnitInfo;
+  lOutputInfo: TRecorderUnitInfo;
+begin
+  if (fTags.Count <> 1) or (Trim(fUnitCombo.Text) = '') then
+    Exit;
+
+  { При активной ГХ список уже отфильтрован по физической величине;
+    дополнительная проверка не даёт editable-combobox случайно сменить
+    категорию единиц. }
+  if TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit) and
+    RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
+  begin
+    if not RecorderUnitManager.TryGetUnitInfo(fUnitCombo.Text,
+      lSelectedInfo) or not SameText(lSelectedInfo.QuantityId,
+      lOutputInfo.QuantityId) then
+    begin
+      fUnitCombo.Text := lOutputUnit;
+      Exit;
+    end;
+  end;
+
+  if fAutoUnitCheck.State = cbChecked then
+  begin
+    { В Auto выбранная пользователем совместимая единица становится UnitOut
+      выходной ГХ. ConvertOutputUnit одновременно пересчитывает коэффициенты,
+      поэтому физическое преобразование остаётся тем же. }
+    lCalibration := FindOutputCalibration(TagAt(0));
+    if (lCalibration <> nil) and
+      lCalibration.ConvertOutputUnit(Trim(fUnitCombo.Text)) then
+    begin
+      for I := 0 to fTagRegistry.TagCount - 1 do
+        fTagRegistry.RebuildScales(fTagRegistry.Tags[I]);
+      UpdateChannelCurveText;
+      UpdateHardwareCurveText;
+      Exit;
+    end;
+  end;
+
+  fAutoUnitCheck.AllowGrayed := False;
+  fAutoUnitCheck.Checked := False;
 end;
 
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);

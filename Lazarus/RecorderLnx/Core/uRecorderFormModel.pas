@@ -91,6 +91,7 @@ type
   private
     fBounds: TRecorderRect;                        { размер и позиция компонента }
     fFactory: TRecorderComponentFactoryBase;       { фабрика, создавшая этот компонент }
+    fParentPage: TRecorderFormPage;                 { страница-владелец }
     fId: string;                                   { уникальный ID компонента на странице }
     fName: string;                                 { имя компонента }
     fTagName: string;
@@ -127,6 +128,7 @@ type
     property TagId: TRecorderTagId read fTagId write fTagId;
     property Bounds: TRecorderRect read fBounds write fBounds;
     property Factory: TRecorderComponentFactoryBase read fFactory;
+    property ParentPage: TRecorderFormPage read fParentPage;
     property NamedFontName: string read fNamedFontName write SetNamedFontName;
     property NamedFonts: TRecorderNamedFontManager read fNamedFonts;
   end;
@@ -232,6 +234,7 @@ type
     fBandName: string;
     fOutputUnit: string;
     fDisplayFormat: string;
+    fAmplitudeMode: Boolean;
     fFontName: string;
     fFontSize: Integer;
     fFontColor: LongInt;
@@ -248,6 +251,8 @@ type
     property BandName: string read fBandName write fBandName;
     property OutputUnit: string read fOutputUnit write fOutputUnit;
     property DisplayFormat: string read fDisplayFormat write fDisplayFormat;
+    { False = СКО, True = амплитуда (СКО * sqrt(2)). }
+    property AmplitudeMode: Boolean read fAmplitudeMode write fAmplitudeMode;
     property FontName: string read fFontName write fFontName;
     property FontSize: Integer read fFontSize write fFontSize;
     property FontColor: LongInt read fFontColor write fFontColor;
@@ -507,6 +512,7 @@ type
     fLegendVisible: Boolean;
     fZeroY0: Boolean;
     fResultType: Integer;
+    fSpectrumValueMode: Integer;
     fSpectrumIntegration: Integer;
     fTagNames: TStringList;
     fTagIds: array of TRecorderTagId;
@@ -540,6 +546,9 @@ type
     property LegendVisible: Boolean read fLegendVisible write fLegendVisible;
     property ZeroY0: Boolean read fZeroY0 write fZeroY0;
     property ResultType: Integer read fResultType write fResultType;
+    { 0 = действующее значение (RMS), 1 = амплитудное значение. }
+    property SpectrumValueMode: Integer read fSpectrumValueMode
+      write fSpectrumValueMode;
     { 0 = исходный спектр, 1 = однократное, 2 = двукратное интегрирование.
       Преобразование применяется представлением только к каналам ускорения. }
     property SpectrumIntegration: Integer read fSpectrumIntegration
@@ -586,6 +595,7 @@ type
     fLines: TList;
     fDurationSec: Double;
     fRangeMinX, fRangeMaxX, fRangeMinY, fRangeMaxY: Double;
+    fKeepSquare: Boolean;
     function GetLine(AIndex: Integer): TRecorderLissajousLine;
     function GetLineCount: Integer;
     function FirstLine: TRecorderLissajousLine;
@@ -626,6 +636,7 @@ type
     property RangeMaxX: Double read fRangeMaxX write fRangeMaxX;
     property RangeMinY: Double read fRangeMinY write fRangeMinY;
     property RangeMaxY: Double read fRangeMaxY write fRangeMaxY;
+    property KeepSquare: Boolean read fKeepSquare write fKeepSquare;
     property LineColor: LongInt read GetLineColor write SetLineColor;
     property LineWidth: Integer read GetLineWidth write SetLineWidth;
   end;
@@ -635,6 +646,7 @@ type
 const
   CRecorderPaletteGroupCharts = 'charts';
   CRecorderPaletteGroupIndicators = 'indicators';
+  CRecorderPaletteGroupImages = 'images';
 
 type
   { TRecorderComponentFactoryBase
@@ -1219,6 +1231,7 @@ begin
   fBandName := '';
   fOutputUnit := RecorderVibrationDefaultUnit(fQuantity);
   fDisplayFormat := '0.###';
+  fAmplitudeMode := False;
   fFontName := 'Tahoma';
   fFontSize := 10;
   fFontColor := 0;
@@ -1927,6 +1940,7 @@ begin
   fLegendVisible := True;
   fZeroY0 := True;
   fResultType := 0;
+  fSpectrumValueMode := 0;
   fSpectrumIntegration := 0;
   fTahoTagId := 0;
   SetLength(fTagIds, 0);
@@ -1954,6 +1968,7 @@ begin
   fLegendVisible := ASource.LegendVisible;
   fZeroY0 := ASource.ZeroY0;
   fResultType := ASource.ResultType;
+  fSpectrumValueMode := ASource.SpectrumValueMode;
   fSpectrumIntegration := ASource.SpectrumIntegration;
   fTahoTagName := ASource.TahoTagName;
   fTahoTagId := ASource.TahoTagId;
@@ -2124,6 +2139,7 @@ begin
   fDurationSec := 0.3;
   fRangeMinX := -3; fRangeMaxX := 3;
   fRangeMinY := -3; fRangeMaxY := 3;
+  fKeepSquare := False;
 end;
 
 destructor TRecorderLissajousComponent.Destroy;
@@ -2177,6 +2193,7 @@ begin
   fDurationSec := ASource.DurationSec;
   fRangeMinX := ASource.RangeMinX; fRangeMaxX := ASource.RangeMaxX;
   fRangeMinY := ASource.RangeMinY; fRangeMaxY := ASource.RangeMaxY;
+  fKeepSquare := ASource.KeepSquare;
 end;
 
 procedure TRecorderLissajousComponent.SetXTag(ATag: TRecorderTag);
@@ -2509,7 +2526,8 @@ constructor TRecorderImageFactory.Create;
 begin
   inherited Create(TRecorderImageComponent.TypeId, 'Картинка',
     TRecorderImageComponent, 200, 140, True);
-  ConfigurePalette('Картинка', 'Добавить картинку', 'image', 30);
+  ConfigurePalette('Картинка', 'Добавить картинку', 'image', 30,
+    rppGroup, CRecorderPaletteGroupImages);
 end;
 
 procedure TRecorderImageFactory.ConfigureNewComponent(
@@ -2654,6 +2672,9 @@ begin
   if AComponent = nil then
     Exit;
 
+  if AComponent.fParentPage = Self then
+    AComponent.fParentPage := nil;
+
   if AComponent.Factory <> nil then
     AComponent.Factory.ReleaseComponent(AComponent)
   else
@@ -2681,6 +2702,7 @@ begin
       [AComponent.Id]);
 
   fComponents.Add(AComponent);
+  AComponent.fParentPage := Self;
   AComponent.fNamedFonts := fNamedFonts;
   AComponent.fResolvedFontRevision := High(QWord);
   Result := AComponent;

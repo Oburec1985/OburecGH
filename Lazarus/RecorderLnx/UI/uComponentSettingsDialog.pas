@@ -80,7 +80,10 @@ uses
   uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog,
   uRecorderVibrationEstimateSettingsDialog, uRecorderLissajousSettingsDialog,
-  uRecorderFrequencyResponseModel, uRecorderFrequencyResponseSettingsDialog;
+  uRecorderFrequencyResponseModel, uRecorderFrequencyResponseSettingsDialog,
+  uRecorder3dModel, uRecorder3dSettingsDialog, uRecorderSignalGeneratorModel,
+  uRecorderSignalGeneratorSettingsDialog;
+  
 
 
 
@@ -92,6 +95,12 @@ function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVi
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderSignalGeneratorComponent then
+    Exit(ShowRecorderSignalGeneratorSettingsDialog(AOwner,
+      TRecorderSignalGeneratorComponent(AComponent)));
+  if AComponent is TRecorder3dComponent then
+    Exit(ShowRecorder3dSettingsDialog(AOwner,
+      TRecorder3dComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderFrequencyResponseComponent then
     Exit(ShowRecorderFrequencyResponseSettingsDialog(AOwner,
       TRecorderFrequencyResponseComponent(AComponent), ATagRegistry));

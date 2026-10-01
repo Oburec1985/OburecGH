@@ -75,7 +75,9 @@ uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
   uRecorderMeasurementSectionModel, uRecorderFrequencyResponseModel,
-  uRecorderFrequencyResponse, uRecorderSdbStore, uRecorderDebugLog;
+  uRecorder3dModel, uRecorderSignalGeneratorModel,
+  uRecorderFrequencyResponse, uRecorderSdbStore, uRecorderDebugLog,
+  uRecorderStrainCalibration;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
@@ -228,6 +230,8 @@ begin
     Result := TRecorderLissajousComponent.TypeId
   else if AComponent is TRecorderDonutComponent then
     Result := TRecorderDonutComponent.TypeId
+  else if AComponent is TRecorder3dComponent then
+    Result := TRecorder3dComponent.TypeId
   else
     Result := AComponent.ClassName;
 end;
@@ -351,9 +355,12 @@ var
   I: Integer;
   J: Integer;
   lCalibration: TRecorderCalibration;
+  lError: string;
+  lMaxRelativeError: Double;
   lItem: TJSONObject;
   lPoint: TJSONObject;
   lPoints: TJSONArray;
+  lStrainConfig: TRecorderStrainConfig;
 begin
   if AList = nil then
     Exit;
@@ -391,6 +398,24 @@ begin
       lCalibration.K1 := lItem.Get('k1', 1.0);
       lCalibration.K2 := lItem.Get('k2', 0.0);
       lCalibration.ModuleData := lItem.Get('moduleData', '');
+      { Коэффициенты встроенной Strain-ГХ являются производными от ModuleData.
+        Пересобираем их при загрузке, чтобы исправления физической модели
+        применялись и к ранее сохранённым проектам без ручного пересохранения. }
+      if (lCalibration.Kind = rckStrain) and
+        (Trim(lCalibration.ModuleData) <> '') then
+      begin
+        lStrainConfig := TRecorderStrainConfig.Create;
+        try
+          lStrainConfig.Load(lCalibration.ModuleData);
+          if not RecorderStrainBuildCalibration(lStrainConfig, lCalibration,
+            lMaxRelativeError, lError) then
+            RecorderDebugLog(Format(
+              'Strain calibration rebuild skipped name=%s: %s',
+              [lCalibration.Name, lError]));
+        finally
+          lStrainConfig.Free;
+        end;
+      end;
       lPoints := FindArray(lItem, 'points');
       if lPoints <> nil then
         for J := 0 to lPoints.Count - 1 do
@@ -1064,6 +1089,7 @@ var
   lSqlDisplay: TRecorderSqlTrendDisplay;
   lMeasure: TRecorderMeasurementSectionComponent;
   lMeasureRow: TRecorderMeasurementSectionRow;
+  lGeneratedSignal: TRecorderGeneratedSignal;
   lRole: TRecorderRosetteRole;
   lNamedFont: TRecorderNamedFont;
 begin
@@ -1132,6 +1158,74 @@ begin
         lIni.WriteInteger(lSection, 'Width', lComponent.Bounds.Width);
         lIni.WriteInteger(lSection, 'Height', lComponent.Bounds.Height);
         lIni.WriteString(lSection, 'NamedFont', lComponent.NamedFontName);
+        if lComponent is TRecorder3dComponent then
+        begin
+          lIni.WriteString(lSection, 'SceneFileName',
+            TRecorder3dComponent(lComponent).SceneFileName);
+          lIni.WriteBool(lSection, 'ShowAxes',
+            TRecorder3dComponent(lComponent).ShowAxes);
+          lIni.WriteInt64(lSection, 'BackgroundColor',
+            TRecorder3dComponent(lComponent).BackgroundColor);
+          lIni.WriteFloat(lSection, 'CameraYaw',
+            TRecorder3dComponent(lComponent).CameraYaw);
+          lIni.WriteFloat(lSection, 'CameraPitch',
+            TRecorder3dComponent(lComponent).CameraPitch);
+          lIni.WriteFloat(lSection, 'CameraDistance',
+            TRecorder3dComponent(lComponent).CameraDistance);
+          lIni.WriteBool(lSection, 'DrawFill',
+            TRecorder3dComponent(lComponent).DrawFill);
+          lIni.WriteBool(lSection, 'DrawWireframe',
+            TRecorder3dComponent(lComponent).DrawWireframe);
+          lIni.WriteBool(lSection, 'DrawPoints',
+            TRecorder3dComponent(lComponent).DrawPoints);
+          lIni.WriteBool(lSection, 'DrawNormals',
+            TRecorder3dComponent(lComponent).DrawNormals);
+          lIni.WriteFloat(lSection, 'NormalLength',
+            TRecorder3dComponent(lComponent).NormalLength);
+          lIni.WriteInt64(lSection, 'NormalLengthTagId',
+            TRecorder3dComponent(lComponent).NormalLengthTagId);
+          lIni.WriteString(lSection, 'NormalLengthTagName',
+            TRecorder3dComponent(lComponent).NormalLengthTagName);
+          lIni.WriteInt64(lSection, 'BindingTargetNodeId',
+            TRecorder3dComponent(lComponent).BindingTargetNodeId);
+          lIni.WriteInt64(lSection, 'BindingXTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bPointX]);
+          lIni.WriteString(lSection, 'BindingXTagName', TRecorder3dComponent(lComponent).BindingTagNames[r3bPointX]);
+          lIni.WriteInt64(lSection, 'BindingYTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bPointY]);
+          lIni.WriteString(lSection, 'BindingYTagName', TRecorder3dComponent(lComponent).BindingTagNames[r3bPointY]);
+          lIni.WriteInt64(lSection, 'BindingZTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bPointZ]);
+          lIni.WriteString(lSection, 'BindingZTagName', TRecorder3dComponent(lComponent).BindingTagNames[r3bPointZ]);
+          lIni.WriteInt64(lSection, 'BindingColorTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bColor]);
+           lIni.WriteString(lSection, 'BindingColorTagName', TRecorder3dComponent(lComponent).BindingTagNames[r3bColor]);
+           lIni.WriteInteger(lSection,'NodeRenderOverrideCount',
+             TRecorder3dComponent(lComponent).NodeRenderOverrideCount);
+           for K:=0 to TRecorder3dComponent(lComponent).NodeRenderOverrideCount-1 do
+           begin
+             lIni.WriteInt64(lSection,Format('NodeRender%dId',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].NodeId);
+             lIni.WriteBool(lSection,Format('NodeRender%dFill',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawFill);
+             lIni.WriteBool(lSection,Format('NodeRender%dWire',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawWireframe);
+             lIni.WriteBool(lSection,Format('NodeRender%dPoints',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawPoints);
+             lIni.WriteBool(lSection,Format('NodeRender%dNormals',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawNormals);
+           end;
+          lIni.WriteFloat(lSection, 'FrfFrequencyHz', TRecorder3dComponent(lComponent).FrfFrequencyHz);
+          lIni.WriteFloat(lSection, 'FrfAnimationPhase', TRecorder3dComponent(lComponent).FrfAnimationPhaseRadians);
+          lIni.WriteInt64(lSection, 'FrfFrequencyTagId', TRecorder3dComponent(lComponent).FrfFrequencyTagId);
+          lIni.WriteString(lSection, 'FrfFrequencyTagName', TRecorder3dComponent(lComponent).FrfFrequencyTagName);
+          lIni.WriteInt64(lSection, 'FrfAnimationPhaseTagId', TRecorder3dComponent(lComponent).FrfAnimationPhaseTagId);
+          lIni.WriteString(lSection, 'FrfAnimationPhaseTagName', TRecorder3dComponent(lComponent).FrfAnimationPhaseTagName);
+          lIni.WriteInteger(lSection, 'FrfBindingCount', TRecorder3dComponent(lComponent).FrfBindingCount);
+          for K:=0 to TRecorder3dComponent(lComponent).FrfBindingCount-1 do
+          begin
+            lIni.WriteInt64(lSection,Format('Frf%dNodeId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].TargetNodeId);
+            lIni.WriteInteger(lSection,Format('Frf%dAxis',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Axis));
+            lIni.WriteInteger(lSection,Format('Frf%dSpace',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Space));
+            lIni.WriteInt64(lSection,Format('Frf%dAmplitudeTagId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].AmplitudeTagId);
+            lIni.WriteString(lSection,Format('Frf%dAmplitudeTagName',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].AmplitudeTagName);
+            lIni.WriteInt64(lSection,Format('Frf%dPhaseTagId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PhaseTagId);
+            lIni.WriteString(lSection,Format('Frf%dPhaseTagName',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PhaseTagName);
+            lIni.WriteFloat(lSection,Format('Frf%dGain',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Gain);
+            lIni.WriteBool(lSection,Format('Frf%dEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Enabled);
+          end;
+        end;
         if lComponent is TRecorderStaticTextComponent then
         begin
           lIni.WriteString(lSection, 'Text',
@@ -1201,6 +1295,7 @@ begin
         begin
           lMeasure := TRecorderMeasurementSectionComponent(lComponent);
           lIni.WriteString(lSection, 'MeasureCaption', lMeasure.Caption);
+          lIni.WriteBool(lSection, 'MeasureGenerateTags', lMeasure.GenerateTags);
           lIni.WriteInteger(lSection, 'MeasureBackgroundColor',
             lMeasure.BackgroundColor);
           lIni.WriteInteger(lSection, 'MeasureTextBackgroundColor',
@@ -1242,6 +1337,8 @@ begin
             lMeasureRow := lMeasure.Rows[K];
             lIni.WriteInteger(lSection, Format('MeasureRow%dPointNo', [K]),
               lMeasureRow.PointNo);
+            lIni.WriteString(lSection, Format('MeasureRow%dPointInfo', [K]),
+              lMeasureRow.PointInfo);
             lIni.WriteInteger(lSection, Format('MeasureRow%dRosetteType', [K]),
               Ord(lMeasureRow.RosetteType));
             lIni.WriteFloat(lSection, Format('MeasureRow%dPositionDeg', [K]),
@@ -1261,6 +1358,44 @@ begin
                   RecorderRosetteRoleToText(lRole)]),
                 lMeasureRow.Balances[lRole]);
             end;
+          end;
+        end;
+        if lComponent is TRecorderSignalGeneratorComponent then
+        begin
+          lIni.WriteBool(lSection, 'GeneratorEnabled',
+            TRecorderSignalGeneratorComponent(lComponent).Enabled);
+          lIni.WriteInteger(lSection, 'GeneratorSignalCount',
+            TRecorderSignalGeneratorComponent(lComponent).SignalCount);
+          for K := 0 to TRecorderSignalGeneratorComponent(lComponent).SignalCount - 1 do
+          begin
+            lIni.WriteBool(lSection, Format('Generator%dEnabled', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].Enabled);
+            lIni.WriteString(lSection, Format('Generator%dName', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].Name);
+            lIni.WriteInteger(lSection, Format('Generator%dKind', [K]),
+              Ord(TRecorderSignalGeneratorComponent(lComponent).Signals[K].Kind));
+            lIni.WriteFloat(lSection, Format('Generator%dSampleRateHz', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].SampleRateHz);
+            lIni.WriteFloat(lSection, Format('Generator%dAmplitude', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].Amplitude);
+            lIni.WriteFloat(lSection, Format('Generator%dFrequencyHz', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].FrequencyHz);
+            lIni.WriteFloat(lSection, Format('Generator%dPhaseDeg', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].PhaseDeg);
+            lIni.WriteFloat(lSection, Format('Generator%dOffset', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].Offset);
+            lIni.WriteBool(lSection, Format('Generator%dSweepEnabled', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].SweepEnabled);
+            lIni.WriteFloat(lSection, Format('Generator%dSweepEndHz', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].SweepEndFrequencyHz);
+            lIni.WriteFloat(lSection, Format('Generator%dSweepDurationSec', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].SweepDurationSec);
+            lIni.WriteBool(lSection, Format('Generator%dSweepLog', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].SweepLogarithmic);
+            lIni.WriteBool(lSection, Format('Generator%dChangePhase', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].ChangePhase);
+            lIni.WriteFloat(lSection, Format('Generator%dPhaseVelocity', [K]),
+              TRecorderSignalGeneratorComponent(lComponent).Signals[K].PhaseVelocityDegSec);
           end;
         end;
         if lComponent is TRecorderOscillogramComponent then
@@ -1360,6 +1495,8 @@ begin
             TRecorderVibrationEstimateComponent(lComponent).OutputUnit);
           lIni.WriteString(lSection, 'DisplayFormat',
             TRecorderVibrationEstimateComponent(lComponent).DisplayFormat);
+          lIni.WriteBool(lSection, 'AmplitudeMode',
+            TRecorderVibrationEstimateComponent(lComponent).AmplitudeMode);
           lIni.WriteString(lSection, 'FontName',
             TRecorderVibrationEstimateComponent(lComponent).FontName);
           lIni.WriteInteger(lSection, 'FontSize',
@@ -1387,6 +1524,8 @@ begin
           lIni.WriteBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
           lIni.WriteBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
           lIni.WriteInteger(lSection, 'ResultType', lSpectrum.ResultType);
+          lIni.WriteInteger(lSection, 'SpectrumValueMode',
+            lSpectrum.SpectrumValueMode);
           lIni.WriteInteger(lSection, 'SpectrumIntegration',
             lSpectrum.SpectrumIntegration);
           lIni.WriteString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
@@ -1409,6 +1548,8 @@ begin
           lIni.WriteFloat(lSection, 'RangeMaxX', TRecorderLissajousComponent(lComponent).RangeMaxX);
           lIni.WriteFloat(lSection, 'RangeMinY', TRecorderLissajousComponent(lComponent).RangeMinY);
           lIni.WriteFloat(lSection, 'RangeMaxY', TRecorderLissajousComponent(lComponent).RangeMaxY);
+          lIni.WriteBool(lSection, 'KeepSquare',
+            TRecorderLissajousComponent(lComponent).KeepSquare);
           lIni.WriteInt64(lSection, 'LineColor', TRecorderLissajousComponent(lComponent).LineColor);
           lIni.WriteInteger(lSection, 'LineWidth', TRecorderLissajousComponent(lComponent).LineWidth);
           lIni.WriteInteger(lSection, 'LissajousLineCount',
@@ -1595,6 +1736,7 @@ var
   lSqlDisplay: TRecorderSqlTrendDisplay;
   lMeasure: TRecorderMeasurementSectionComponent;
   lMeasureRow: TRecorderMeasurementSectionRow;
+  lGeneratedSignal: TRecorderGeneratedSignal;
   lRole: TRecorderRosetteRole;
   lTypeId: string;
   lIni: TIniFile;
@@ -1676,6 +1818,75 @@ begin
             lIni.ReadInteger(lSection, 'Width', 0),
             lIni.ReadInteger(lSection, 'Height', 0));
           lComponent.NamedFontName := lIni.ReadString(lSection, 'NamedFont', '');
+          if lComponent is TRecorder3dComponent then
+          begin
+            TRecorder3dComponent(lComponent).SceneFileName :=
+              lIni.ReadString(lSection, 'SceneFileName', '');
+            TRecorder3dComponent(lComponent).ShowAxes :=
+              lIni.ReadBool(lSection, 'ShowAxes', True);
+            TRecorder3dComponent(lComponent).BackgroundColor :=
+              lIni.ReadInt64(lSection, 'BackgroundColor', $0033291F);
+            TRecorder3dComponent(lComponent).CameraYaw :=
+              lIni.ReadFloat(lSection, 'CameraYaw', 35);
+            TRecorder3dComponent(lComponent).CameraPitch :=
+              lIni.ReadFloat(lSection, 'CameraPitch', -25);
+            TRecorder3dComponent(lComponent).CameraDistance :=
+              lIni.ReadFloat(lSection, 'CameraDistance', 6);
+            TRecorder3dComponent(lComponent).DrawFill :=
+              lIni.ReadBool(lSection, 'DrawFill', True);
+            TRecorder3dComponent(lComponent).DrawWireframe :=
+              lIni.ReadBool(lSection, 'DrawWireframe', False);
+            TRecorder3dComponent(lComponent).DrawPoints :=
+              lIni.ReadBool(lSection, 'DrawPoints', False);
+            TRecorder3dComponent(lComponent).DrawNormals :=
+              lIni.ReadBool(lSection, 'DrawNormals', False);
+            TRecorder3dComponent(lComponent).NormalLength :=
+              lIni.ReadFloat(lSection, 'NormalLength', 0.25);
+            TRecorder3dComponent(lComponent).NormalLengthTagId :=
+              lIni.ReadInt64(lSection, 'NormalLengthTagId', 0);
+            TRecorder3dComponent(lComponent).NormalLengthTagName :=
+              lIni.ReadString(lSection, 'NormalLengthTagName', '');
+            TRecorder3dComponent(lComponent).BindingTargetNodeId :=
+              lIni.ReadInt64(lSection, 'BindingTargetNodeId', 0);
+            TRecorder3dComponent(lComponent).BindingTagIds[r3bPointX] := lIni.ReadInt64(lSection, 'BindingXTagId', 0);
+            TRecorder3dComponent(lComponent).BindingTagNames[r3bPointX] := lIni.ReadString(lSection, 'BindingXTagName', '');
+            TRecorder3dComponent(lComponent).BindingTagIds[r3bPointY] := lIni.ReadInt64(lSection, 'BindingYTagId', 0);
+            TRecorder3dComponent(lComponent).BindingTagNames[r3bPointY] := lIni.ReadString(lSection, 'BindingYTagName', '');
+            TRecorder3dComponent(lComponent).BindingTagIds[r3bPointZ] := lIni.ReadInt64(lSection, 'BindingZTagId', 0);
+            TRecorder3dComponent(lComponent).BindingTagNames[r3bPointZ] := lIni.ReadString(lSection, 'BindingZTagName', '');
+            TRecorder3dComponent(lComponent).BindingTagIds[r3bColor] := lIni.ReadInt64(lSection, 'BindingColorTagId', 0);
+             TRecorder3dComponent(lComponent).BindingTagNames[r3bColor] := lIni.ReadString(lSection, 'BindingColorTagName', '');
+             TRecorder3dComponent(lComponent).ClearNodeRenderOverrides;
+             lCount:=lIni.ReadInteger(lSection,'NodeRenderOverrideCount',0);
+             for K:=0 to lCount-1 do with TRecorder3dComponent(lComponent).AddNodeRenderOverride do
+             begin
+               NodeId:=lIni.ReadInt64(lSection,Format('NodeRender%dId',[K]),0);
+               DrawFill:=lIni.ReadBool(lSection,Format('NodeRender%dFill',[K]),True);
+               DrawWireframe:=lIni.ReadBool(lSection,Format('NodeRender%dWire',[K]),False);
+               DrawPoints:=lIni.ReadBool(lSection,Format('NodeRender%dPoints',[K]),False);
+               DrawNormals:=lIni.ReadBool(lSection,Format('NodeRender%dNormals',[K]),False);
+             end;
+            TRecorder3dComponent(lComponent).FrfFrequencyHz:=lIni.ReadFloat(lSection,'FrfFrequencyHz',100);
+            TRecorder3dComponent(lComponent).FrfAnimationPhaseRadians:=lIni.ReadFloat(lSection,'FrfAnimationPhase',0);
+            TRecorder3dComponent(lComponent).FrfFrequencyTagId:=lIni.ReadInt64(lSection,'FrfFrequencyTagId',0);
+            TRecorder3dComponent(lComponent).FrfFrequencyTagName:=lIni.ReadString(lSection,'FrfFrequencyTagName','');
+            TRecorder3dComponent(lComponent).FrfAnimationPhaseTagId:=lIni.ReadInt64(lSection,'FrfAnimationPhaseTagId',0);
+            TRecorder3dComponent(lComponent).FrfAnimationPhaseTagName:=lIni.ReadString(lSection,'FrfAnimationPhaseTagName','');
+            TRecorder3dComponent(lComponent).ClearFrfBindings;
+            lCount:=lIni.ReadInteger(lSection,'FrfBindingCount',0);
+            for K:=0 to lCount-1 do with TRecorder3dComponent(lComponent).AddFrfBinding do
+            begin
+              TargetNodeId:=lIni.ReadInt64(lSection,Format('Frf%dNodeId',[K]),0);
+              SetAxisOrdinal(lIni.ReadInteger(lSection,Format('Frf%dAxis',[K]),0));
+              SetSpaceOrdinal(lIni.ReadInteger(lSection,Format('Frf%dSpace',[K]),0));
+              AmplitudeTagId:=lIni.ReadInt64(lSection,Format('Frf%dAmplitudeTagId',[K]),0);
+              AmplitudeTagName:=lIni.ReadString(lSection,Format('Frf%dAmplitudeTagName',[K]),'');
+              PhaseTagId:=lIni.ReadInt64(lSection,Format('Frf%dPhaseTagId',[K]),0);
+              PhaseTagName:=lIni.ReadString(lSection,Format('Frf%dPhaseTagName',[K]),'');
+              Gain:=lIni.ReadFloat(lSection,Format('Frf%dGain',[K]),1);
+              Enabled:=lIni.ReadBool(lSection,Format('Frf%dEnabled',[K]),True);
+            end;
+          end;
           if lComponent is TRecorderStaticTextComponent then
           begin
             TRecorderStaticTextComponent(lComponent).Text :=
@@ -1765,6 +1976,8 @@ begin
             lMeasure := TRecorderMeasurementSectionComponent(lComponent);
             lMeasure.Caption := lIni.ReadString(lSection, 'MeasureCaption',
               lMeasure.Caption);
+            lMeasure.GenerateTags := lIni.ReadBool(lSection,
+              'MeasureGenerateTags', False);
             lMeasure.BackgroundColor := lIni.ReadInteger(lSection,
               'MeasureBackgroundColor', lMeasure.BackgroundColor);
             lMeasure.TextBackgroundColor := lIni.ReadInteger(lSection,
@@ -1810,6 +2023,8 @@ begin
               lMeasureRow := lMeasure.AddRow;
               lMeasureRow.PointNo := lIni.ReadInteger(lSection,
                 Format('MeasureRow%dPointNo', [K]), K + 1);
+              lMeasureRow.PointInfo := lIni.ReadString(lSection,
+                Format('MeasureRow%dPointInfo', [K]), '');
               L := lIni.ReadInteger(lSection,
                 Format('MeasureRow%dRosetteType', [K]), Ord(rrtThreeComponent));
               if (L < Ord(Low(TRecorderRosetteType))) or
@@ -1830,6 +2045,48 @@ begin
                   Format('MeasureRow%d%sBalance', [K,
                     RecorderRosetteRoleToText(lRole)]), 0.0);
               end;
+            end;
+          end;
+          if lComponent is TRecorderSignalGeneratorComponent then
+          begin
+            TRecorderSignalGeneratorComponent(lComponent).Enabled :=
+              lIni.ReadBool(lSection, 'GeneratorEnabled', True);
+            TRecorderSignalGeneratorComponent(lComponent).ClearSignals;
+            lItemCount := lIni.ReadInteger(lSection, 'GeneratorSignalCount', 0);
+            for K := 0 to lItemCount - 1 do
+            begin
+              lGeneratedSignal :=
+                TRecorderSignalGeneratorComponent(lComponent).AddSignal;
+              lGeneratedSignal.Enabled := lIni.ReadBool(lSection,
+                Format('Generator%dEnabled', [K]), True);
+              lGeneratedSignal.Name := lIni.ReadString(lSection,
+                Format('Generator%dName', [K]), Format('GenSignal_%0.3d', [K + 1]));
+              lGeneratedSignal.Kind := TRecorderGeneratedSignalKind(EnsureRange(
+                lIni.ReadInteger(lSection, Format('Generator%dKind', [K]), 0),
+                Ord(Low(TRecorderGeneratedSignalKind)),
+                Ord(High(TRecorderGeneratedSignalKind))));
+              lGeneratedSignal.SampleRateHz := Max(1.0, lIni.ReadFloat(lSection,
+                Format('Generator%dSampleRateHz', [K]), 1000));
+              lGeneratedSignal.Amplitude := lIni.ReadFloat(lSection,
+                Format('Generator%dAmplitude', [K]), 1);
+              lGeneratedSignal.FrequencyHz := Max(0.0, lIni.ReadFloat(lSection,
+                Format('Generator%dFrequencyHz', [K]), 10));
+              lGeneratedSignal.PhaseDeg := lIni.ReadFloat(lSection,
+                Format('Generator%dPhaseDeg', [K]), 0);
+              lGeneratedSignal.Offset := lIni.ReadFloat(lSection,
+                Format('Generator%dOffset', [K]), 0);
+              lGeneratedSignal.SweepEnabled := lIni.ReadBool(lSection,
+                Format('Generator%dSweepEnabled', [K]), False);
+              lGeneratedSignal.SweepEndFrequencyHz := Max(0.0,
+                lIni.ReadFloat(lSection, Format('Generator%dSweepEndHz', [K]), 100));
+              lGeneratedSignal.SweepDurationSec := Max(0.001,
+                lIni.ReadFloat(lSection, Format('Generator%dSweepDurationSec', [K]), 10));
+              lGeneratedSignal.SweepLogarithmic := lIni.ReadBool(lSection,
+                Format('Generator%dSweepLog', [K]), False);
+              lGeneratedSignal.ChangePhase := lIni.ReadBool(lSection,
+                Format('Generator%dChangePhase', [K]), False);
+              lGeneratedSignal.PhaseVelocityDegSec := lIni.ReadFloat(lSection,
+                Format('Generator%dPhaseVelocity', [K]), 0.0);
             end;
           end;
           if lComponent is TRecorderOscillogramComponent then
@@ -1988,6 +2245,8 @@ begin
                 RecorderVibrationDefaultUnit(TRecorderVibrationQuantity(lItemCount)));
             TRecorderVibrationEstimateComponent(lComponent).DisplayFormat :=
               lIni.ReadString(lSection, 'DisplayFormat', '0.###');
+            TRecorderVibrationEstimateComponent(lComponent).AmplitudeMode :=
+              lIni.ReadBool(lSection, 'AmplitudeMode', False);
             TRecorderVibrationEstimateComponent(lComponent).FontName :=
               lIni.ReadString(lSection, 'FontName', 'Tahoma');
             TRecorderVibrationEstimateComponent(lComponent).FontSize :=
@@ -2015,6 +2274,8 @@ begin
             lSpectrum.LegendVisible := lIni.ReadBool(lSection, 'LegendVisible', lSpectrum.LegendVisible);
             lSpectrum.ZeroY0 := lIni.ReadBool(lSection, 'ZeroY0', lSpectrum.ZeroY0);
             lSpectrum.ResultType := lIni.ReadInteger(lSection, 'ResultType', lSpectrum.ResultType);
+            lSpectrum.SpectrumValueMode := lIni.ReadInteger(lSection,
+              'SpectrumValueMode', lSpectrum.SpectrumValueMode);
             lSpectrum.SpectrumIntegration := lIni.ReadInteger(lSection,
               'SpectrumIntegration', lSpectrum.SpectrumIntegration);
             lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
@@ -2079,6 +2340,8 @@ begin
             TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
             TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
             TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
+            TRecorderLissajousComponent(lComponent).KeepSquare :=
+              lIni.ReadBool(lSection, 'KeepSquare', False);
             TRecorderLissajousComponent(lComponent).LineColor := lIni.ReadInt64(lSection, 'LineColor', $00FF0000);
             TRecorderLissajousComponent(lComponent).LineWidth := lIni.ReadInteger(lSection, 'LineWidth', 2);
             end;
@@ -2088,6 +2351,8 @@ begin
             TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
             TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
             TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
+            TRecorderLissajousComponent(lComponent).KeepSquare :=
+              lIni.ReadBool(lSection, 'KeepSquare', False);
           end;
           if lComponent is TRecorderFrequencyResponseComponent then
           begin

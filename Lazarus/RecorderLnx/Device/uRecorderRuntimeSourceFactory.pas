@@ -14,13 +14,14 @@ unit uRecorderRuntimeSourceFactory;
 interface
 
 uses
-  Classes, uRecorder;
+  Classes, uRecorder, uRecorderFormModel;
 
 type
   TRecorderRuntimeSourceLogEvent = procedure(const AMessage: string) of object;
 
 procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
-  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent = nil);
+  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent = nil;
+  AForms: TRecorderFormManager = nil);
 procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
   const ASourceId: string; ADataUpdateMs: Cardinal;
   ALog: TRecorderRuntimeSourceLogEvent = nil;
@@ -33,7 +34,8 @@ uses
   uRecorderConfiguredDataSources, uRecorderMic140DataSource,
   uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
   uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource,
-  uRecorderOpcUaTypes, uRecorderOpcUaFactory;
+  uRecorderOpcUaTypes, uRecorderOpcUaFactory, uRecorderSqlDataSource,
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorSource;
 
 const
   CMeraSourcePrefix = 'Mera file: ';
@@ -81,9 +83,11 @@ begin
 end;
 
 procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
-  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent);
+  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent;
+  AForms: TRecorderFormManager);
 var
   I: Integer;
+  K: Integer;
   lChannelCount: Integer;
   lChannelNumber: Integer;
   lConfigured: TRecorderConfiguredDataSource;
@@ -96,6 +100,8 @@ var
   lMcbusSources: TStringList;
   lPollFrequencyHz: Double;
   lPort: Word;
+  lPage: TRecorderFormPage;
+  lGenerator: TRecorderSignalGeneratorComponent;
   lSource: IRecorderDataSource;
   lSpecificConfigText: string;
   lTag: TRecorderTag;
@@ -126,6 +132,11 @@ begin
     for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
     begin
       lTag := ARecorder.TagRegistry.Tags[I];
+      { Detached tags intentionally preserve the old hardware address for a
+        possible later relink.  They must not recreate a runtime source: the
+        source was explicitly deleted by the user. }
+      if RecorderIsDetachedTagSource(lTag.SourceId) then
+        Continue;
       if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
       begin
         lFileName := Trim(Copy(lTag.SourceId,
@@ -283,11 +294,19 @@ begin
         ARecorder.TagRegistry.ConfiguredDataSources[I]);
       if not RecorderIsOpcUaSource(lConfigured.SourceId,
         lConfigured.ModuleType) then
-        Continue;
-      lSource := RecorderCreateOpcUaDataSource(lConfigured.SourceId,
-        lConfigured.SpecificConfigText, ADataUpdateMs);
+      begin
+        if not SameText(lConfigured.ModuleType,
+          CRecorderSqlSourceModuleType) then Continue;
+        lSource := TRecorderSqlDataSource.Create(
+          ARecorder.SqlDbManager.ConfigFileName,
+          lConfigured.SpecificConfigText, ADataUpdateMs);
+      end
+      else
+        lSource := RecorderCreateOpcUaDataSource(lConfigured.SourceId,
+          lConfigured.SpecificConfigText, ADataUpdateMs);
       ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
-      Log(ALog, 'OPC UA source configured: ' + lConfigured.SourceId);
+      Log(ALog, lConfigured.ModuleType + ' source configured: ' +
+        lConfigured.SourceId);
     end;
   finally
     FreeGroupedLists(lFiles);
@@ -295,6 +314,24 @@ begin
     FreeGroupedLists(lMic185Sources);
     FreeGroupedLists(lMcbusSources);
   end;
+
+  if AForms <> nil then
+    for I := 0 to AForms.PageCount - 1 do
+    begin
+      lPage := AForms.Pages[I];
+      for K := 0 to lPage.ComponentCount - 1 do
+        if lPage.Components[K] is TRecorderSignalGeneratorComponent then
+        begin
+          lGenerator := TRecorderSignalGeneratorComponent(lPage.Components[K]);
+          if not lGenerator.Enabled then Continue;
+          lSource := TRecorderSignalGeneratorSource.Create(
+            'signal-generator:' + lPage.Id + ':' + lGenerator.Id,
+            ADataUpdateMs, lGenerator);
+          ARecorder.DataSources.AddSource(lSource, True);
+          Log(ALog, Format('Signal generator configured: %s (%d signals).',
+            [lGenerator.Name, lGenerator.SignalCount]));
+        end;
+    end;
 
   ARecorder.DataSources.ConfigureTagsAll(ARecorder.TagRegistry);
 end;
@@ -399,9 +436,27 @@ begin
         Log(ALog, 'MIC183/185 runtime source removed: no selected channels.');
         Exit;
       end;
-      lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
-      if lConfigured.DefaultPollFrequencyHz > 0 then
+      { The channel model is authoritative.  A stale configured-source
+        default must not reset an imported/edited MIC185 frequency when the
+        runtime source is rebuilt (notably before a device reset). }
+      lPollFrequencyHz := 0;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+          RecorderNormalizeTagSourceId(ASourceId)) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      if (lPollFrequencyHz <= 0) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
         lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
+      lConfigured.DefaultPollFrequencyHz := lPollFrequencyHz;
       lSource := TRecorderMic185DataSource.Create(ASourceId, lHost, lPort,
         lPollFrequencyHz, ADataUpdateMs, lTagNames);
     end
@@ -426,6 +481,11 @@ begin
     end
     else if RecorderIsOpcUaSource(ASourceId, lConfigured.ModuleType) then
       lSource := RecorderCreateOpcUaDataSource(ASourceId,
+        lConfigured.SpecificConfigText, ADataUpdateMs)
+    else if SameText(lConfigured.ModuleType,
+      CRecorderSqlSourceModuleType) then
+      lSource := TRecorderSqlDataSource.Create(
+        ARecorder.SqlDbManager.ConfigFileName,
         lConfigured.SpecificConfigText, ADataUpdateMs)
     else
       Exit;

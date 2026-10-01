@@ -171,13 +171,54 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnShutdownAllClick
         end
         object cbStartAllOnAnyRecording: TCheckBox
-          Left = 318
+          Left = 454
           Height = 19
           Top = 10
           Width = 239
           Caption = 'При старте одного запускать остальные'
           TabOrder = 3
           OnChange = cbStartAllOnAnyRecordingChange
+        end
+        object cbSqlRecordingAll: TCheckBox
+          Left = 294
+          Height = 19
+          Hint = 'Включить или выключить запись в SQL БД на всех RecorderLnx'
+          Top = 10
+          Width = 152
+          Caption = 'SQL запись у всех'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 4
+          OnChange = cbSqlRecordingAllChange
+        end
+        object lblSqlRecordPeriod: TLabel
+          Left = 696
+          Height = 15
+          Top = 14
+          Width = 70
+          Caption = 'Период SQL, с'
+        end
+        object seSqlRecordPeriod: TSpinEdit
+          Left = 772
+          Height = 23
+          Top = 10
+          Width = 58
+          MaxValue = 86400
+          MinValue = 1
+          TabOrder = 5
+          Value = 1
+        end
+        object btnSetSqlPeriodAll: TButton
+          Left = 836
+          Height = 27
+          Hint = 'Назначить единый период SQL-записи всем RecorderLnx'
+          Top = 8
+          Width = 94
+          Caption = 'Применить'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 6
+          OnClick = btnSetSqlPeriodAllClick
         end
       end
       object gridHosts: TStringGrid

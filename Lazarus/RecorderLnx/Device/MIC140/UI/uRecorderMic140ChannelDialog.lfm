@@ -1,13 +1,13 @@
 object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
   Left = 320
-  Height = 280
+  Height = 312
   Top = 200
   Width = 360
   BorderStyle = bsSizeable
-  Constraints.MinHeight = 280
+  Constraints.MinHeight = 312
   Constraints.MinWidth = 360
   Caption = 'Свойства канала'
-  ClientHeight = 280
+  ClientHeight = 312
   ClientWidth = 360
   Position = poOwnerFormCenter
   OnCreate = FormCreate
@@ -68,73 +68,90 @@ object RecorderMic140ChannelDialog: TRecorderMic140ChannelDialog
     OnClick = ClearThermocoupleClick
     TabOrder = 3
   end
-  object lbCjc: TLabel
+  object lbOutputMode: TLabel
     Left = 12
     Height = 15
     Top = 80
+    Width = 81
+    Caption = 'Единицы выхода'
+  end
+  object fOutputModeCombo: TComboBox
+    Left = 120
+    Height = 23
+    Top = 76
+    Width = 80
+    ItemHeight = 15
+    OnChange = ThermocoupleChange
+    Style = csDropDownList
+    TabOrder = 4
+  end
+  object lbCjc: TLabel
+    Left = 12
+    Height = 15
+    Top = 112
     Width = 56
     Caption = 'Канал ТХС'
   end
   object fCjcCombo: TComboBox
     Left = 120
     Height = 23
-    Top = 76
+    Top = 108
     Width = 80
     ItemHeight = 15
     Style = csDropDownList
-    TabOrder = 4
+    TabOrder = 5
   end
   object fDefaultCjcCheck: TCheckBox
     Left = 216
     Height = 19
-    Top = 78
+    Top = 110
     Width = 136
     Anchors = [akTop, akRight]
     Caption = 'КХС по умолчанию'
     OnChange = DefaultCjcChange
-    TabOrder = 5
+    TabOrder = 6
   end
   object lbTempRange: TLabel
     Left = 12
     Height = 15
-    Top = 112
+    Top = 144
     Width = 88
     Caption = 'Диапазон, град. С'
   end
   object fTempRangeEdit: TEdit
     Left = 120
     Height = 23
-    Top = 108
+    Top = 140
     Width = 200
     Anchors = [akTop, akLeft, akRight]
     ReadOnly = True
-    TabOrder = 6
+    TabOrder = 7
   end
   object lbSoftBalance: TLabel
     Left = 12
     Height = 15
-    Top = 144
+    Top = 176
     Width = 188
     Caption = 'Значение баланс. програм., код'
   end
   object fSoftBalanceEdit: TEdit
     Left = 220
     Height = 23
-    Top = 140
+    Top = 172
     Width = 100
     Anchors = [akTop, akLeft, akRight]
-    TabOrder = 7
+    TabOrder = 8
   end
   object pnButtons: TPanel
     Left = 0
     Height = 44
-    Top = 236
+    Top = 268
     Width = 360
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 44
     ClientWidth = 360
-    TabOrder = 7
+    TabOrder = 9
     object btnOk: TButton
       Left = 188
       Height = 28

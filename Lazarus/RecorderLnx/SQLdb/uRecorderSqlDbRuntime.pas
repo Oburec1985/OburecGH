@@ -367,11 +367,13 @@ var
   lSignals: TStringList;
   lStored: TRecorderStoredFile;
   lSequence: Int64;
+  lPendingValues: Integer;
 begin
   R := nil; S := nil; lSignals := TStringList.Create;
   try
     lRegistrationId := '';
     lSequence := 0;
+    lPendingValues := 0;
     lSignals.NameValueSeparator := '=';
     try
       if not RecorderSqlServerAvailable(fConfig, fLastError) then
@@ -384,7 +386,10 @@ begin
       end;
       R := TRecorderSqlDbRepository.Create(fConfig);
       R.EnsureDatabase;
-      S := TRecorderSqlDbFileStore.Create(fConfig.DataDirectory);
+      { A remote Firebird client does not need a writable local copy of the
+        server's SQLdb/data directory to record scalar values.  Create the
+        file store only when an actual file job arrives; otherwise a harmless
+        missing/root-owned local directory disabled the entire SQL writer. }
       lObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
         fConfig.SerialNumber);
       while not fThread.IsStopping or HasJobs do
@@ -392,6 +397,14 @@ begin
         J := PopJob;
         if J = nil then begin Sleep(10); Continue; end;
         try
+          { Events and registration/file boundaries must be committed in their
+            own logical order. Values accumulated before them are flushed once,
+            instead of committing every individual sample. }
+          if (J.Kind <> jkValue) and (lPendingValues > 0) then
+          begin
+            R.Flush;
+            lPendingValues := 0;
+          end;
           case J.Kind of
           jkStart:
             begin
@@ -419,7 +432,8 @@ begin
               end;
               Inc(lSequence);
               R.InsertSignalValue(lRegistrationId, lSignalId, J.TimeUtc,
-                J.Value, J.Quality, lSequence);
+                J.Value, J.Quality, lSequence, False);
+              Inc(lPendingValues);
             end;
           jkEvent:
             begin
@@ -442,6 +456,8 @@ begin
             end;
           jkFile:
             begin
+              if S = nil then
+                S := TRecorderSqlDbFileStore.Create(fConfig.DataDirectory);
               lStored := S.StoreFile(J.Name, J.Extra, J.TimeUtc);
               R.InsertDataFile(lStored.Id, lStored.StorageKey, J.Extra,
                 Copy(ExtractFileExt(J.Name), 2, MaxInt), lStored.Size,
@@ -449,8 +465,19 @@ begin
                 J.TimeUtc, J.TimeUtc);
             end;
           end;
+          { At the normal one-second recording period this is one commit for
+            the whole group of channels. The size limit also bounds an
+            unusually large transaction when producers continuously enqueue. }
+          if (lPendingValues > 0) and
+             ((lPendingValues >= 512) or (not HasJobs)) then
+          begin
+            R.Flush;
+            lPendingValues := 0;
+          end;
         finally J.Free; end;
       end;
+      if lPendingValues > 0 then
+        R.Flush;
       if lRegistrationId <> '' then
         R.FinishRegistration(lRegistrationId, 'interrupted', Now);
     except

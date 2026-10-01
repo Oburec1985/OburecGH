@@ -686,7 +686,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -719,6 +719,9 @@
       </Item>
       <Item>
         <Name Value="ERecorderStateError"/>
+      </Item>
+      <Item>
+        <Name Value="ERecorderSqlDbError"/>
       </Item>
       <Item>
         <Name Value="EIBDatabaseError"/>

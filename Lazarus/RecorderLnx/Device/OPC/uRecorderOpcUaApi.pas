@@ -27,7 +27,7 @@ function RecorderOpcUaClientConnect(AHandle: TRecorderOpcUaHandle): Boolean;
 function RecorderOpcUaClientBrowse(AHandle: TRecorderOpcUaHandle;
   ALines: TStrings): Boolean;
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
-  ATimeoutMs: Cardinal): Boolean;
+  ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal = 100): Boolean;
 function RecorderOpcUaClientReadChanged(AHandle: TRecorderOpcUaHandle;
   AIndex: Integer; out AValue, ATimestampSec: Double;
   out AQuality: Cardinal): Boolean;
@@ -275,34 +275,57 @@ begin
 end;
 
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
-  ATimeoutMs: Cardinal): Boolean;
+  ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal): Boolean;
 var
-  I: Integer;
+  I, J, lCount, lStart, lChunkCount: Integer;
   lHandle: TRecorderOpcUaClientHandle;
-  lQuality: Cardinal;
-  lTime, lValue: Double;
+  lNodeIds: TRecorderOpcUaStringArray;
+  lValues, lTimes: uRecorderOpcUaBinaryClient.TRecorderOpcUaDoubleArray;
+  lQualities: TRecorderOpcUaCardinalArray;
 begin
   Result := False;
   if AHandle = nil then Exit;
   lHandle := TRecorderOpcUaClientHandle(AHandle);
+  lCount := 0;
   for I := 0 to lHandle.NodeIds.Count - 1 do
+    if lHandle.Readable[I] then Inc(lCount);
+  SetLength(lNodeIds, lCount);
+  J := 0;
+  for I := 0 to lHandle.NodeIds.Count - 1 do
+    if lHandle.Readable[I] then
+    begin
+      lNodeIds[J] := lHandle.NodeIds[I];
+      Inc(J);
+    end;
+  if AMaxNodesPerRead < 1 then AMaxNodesPerRead := 1;
+  lStart := 0;
+  while lStart < lCount do
   begin
-    if not lHandle.Readable[I] then Continue;
-    if not lHandle.Client.ReadDouble(lHandle.NodeIds[I], lValue,
-      lQuality, lTime) then
+    lChunkCount := Min(Integer(AMaxNodesPerRead), lCount - lStart);
+    if not lHandle.Client.ReadDoubles(Copy(lNodeIds, lStart, lChunkCount),
+      lValues, lTimes, lQualities) then
     begin
       lHandle.ErrorText := lHandle.Client.ErrorText;
       if lHandle.ErrorText = '' then
-        lHandle.ErrorText := 'Read failed for NodeId ' + lHandle.NodeIds[I];
+        lHandle.ErrorText := 'OPC UA batch read failed';
       Exit;
     end;
-    lHandle.Changed[I] := (not lHandle.HasValues[I]) or
-      (not SameValue(lHandle.Values[I], lValue)) or
-      (lHandle.Times[I] <> lTime);
-    lHandle.Values[I] := lValue;
-    lHandle.Times[I] := lTime;
-    lHandle.Qualities[I] := lQuality;
-    lHandle.HasValues[I] := True;
+    J := 0;
+    for I := 0 to lHandle.NodeIds.Count - 1 do
+      if lHandle.Readable[I] then
+      begin
+        if (J >= lStart) and (J < lStart + lChunkCount) then
+        begin
+          lHandle.Changed[I] := (not lHandle.HasValues[I]) or
+            (not SameValue(lHandle.Values[I], lValues[J - lStart]));
+          lHandle.Values[I] := lValues[J - lStart];
+          lHandle.Times[I] := lTimes[J - lStart];
+          lHandle.Qualities[I] := lQualities[J - lStart];
+          lHandle.HasValues[I] := True;
+        end;
+        Inc(J);
+      end;
+    Inc(lStart, lChunkCount);
   end;
   if ATimeoutMs > 0 then Sleep(Min(ATimeoutMs, 10));
   Result := True;

@@ -5,6 +5,7 @@ unit uRecorderDebugLog;
 interface
 
 procedure RecorderDebugLog(const AMessage: string);
+procedure RecorderInfoLog(const AMessage: string);
 procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);
 procedure SetDeviceLogEnabled(AEnabled: Boolean);
 function DeviceLogEnabled: Boolean;
@@ -22,6 +23,11 @@ var
 procedure RecorderDebugLog(const AMessage: string);
 begin
   SharedLogger.Debug(AMessage);
+end;
+
+procedure RecorderInfoLog(const AMessage: string);
+begin
+  SharedLogger.Info(AMessage);
 end;
 
 procedure RegisterThreadName(AThreadID: TThreadID; const AName: string);

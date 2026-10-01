@@ -14,6 +14,8 @@ from pathlib import Path
 APP_NAME = "RecorderLnx"
 AGENT_NAME = "RecorderHostAgent"
 PACKAGE_NAME = "recorderlnx"
+MERA_FILES_ROOT = "/srv/recorderlnx/MeraFiles"
+RECORDER_CONFIG_ROOT = f"{MERA_FILES_ROOT}/RecorderLnx/config"
 PLUGIN_FILES = (
     "libluacalcplugin.so",
     "libsampleinfoplugin.so",
@@ -211,7 +213,7 @@ def ar_member(name, data, mode=0o100644):
 
 
 def install_check_script():
-    return """#!/bin/sh
+    script = """#!/bin/sh
 status=0
 
 check_path() {
@@ -264,8 +266,8 @@ check_path /usr/share/applications/recorderlnx-linux-setup-manager.desktop
 check_path /usr/share/icons/hicolor/256x256/apps/recorderlnx.png
 check_path /usr/bin/recorderlnx
 check_path /usr/bin/recorderlnx-linux-setup
-check_path /var/opt/mera/RecorderLnx/config/app.ini
-check_path /var/opt/mera/RecorderLnx/config/projects/default/default.config.json
+check_path @MERA_FILES_ROOT@/RecorderLnx/app.ini
+check_path @MERA_FILES_ROOT@/RecorderLnx/config/projects/default/default.config.json
 if { command -v ldconfig >/dev/null 2>&1 && ldconfig -p 2>/dev/null ||
      [ -x /sbin/ldconfig ] && /sbin/ldconfig -p 2>/dev/null; } |
    grep -q 'libfbclient[.]so'; then
@@ -274,15 +276,16 @@ else
   echo "MISS Firebird client library (install libfbclient2)"
   status=1
 fi
-check_writable_dir /var/opt/mera
 check_path /var/opt/mera/SQLdb
-check_writable_dir /var/opt/mera/RecorderLnx/config
-check_writable_dir /var/opt/mera/Calibr
-check_writable_dir /var/opt/mera/Resources
-check_writable_dir /var/opt/mera/SDB
+check_writable_dir @MERA_FILES_ROOT@
+check_writable_dir @MERA_FILES_ROOT@/RecorderLnx/config
+check_writable_dir @MERA_FILES_ROOT@/Calibr
+check_writable_dir @MERA_FILES_ROOT@/Resources
+check_writable_dir @MERA_FILES_ROOT@/SDB
 
 exit "$status"
 """
+    return script.replace("@MERA_FILES_ROOT@", MERA_FILES_ROOT)
 
 
 def make_control_tar(version, architecture, installed_size_kb):
@@ -410,9 +413,12 @@ install_desktop_shortcuts() {
   done
 }
 
-mkdir -p /var/opt/mera/RecorderLnx/config/projects/default
+mera_files_root=@MERA_FILES_ROOT@
+recorder_data_root="$mera_files_root/RecorderLnx"
+config_root="$recorder_data_root/config"
+mkdir -p "$config_root/projects/default"
 mkdir -p /var/opt/mera/SQLdb
-mkdir -p /var/opt/mera/Calibr /var/opt/mera/Resources /var/opt/mera/SDB
+mkdir -p "$mera_files_root/Calibr" "$mera_files_root/Resources" "$mera_files_root/SDB"
 mkdir -p /opt/mera/RecorderLnx/lib
 touch "$LOG" 2>/dev/null || true
 log "RecorderLnx postinst started"
@@ -427,18 +433,27 @@ if [ -n "$fbclient_path" ] && [ -e "$fbclient_path" ]; then
 else
   log "ERROR libfbclient.so.2 was not found after package dependency installation"
 fi
-if [ ! -f /var/opt/mera/RecorderLnx/config/app.ini ]; then
-  cp /usr/share/recorderlnx/config/app.ini /var/opt/mera/RecorderLnx/config/app.ini
-  log "app.ini copied"
+if [ ! -f "$recorder_data_root/app.ini" ]; then
+  if [ -f /var/opt/mera/RecorderLnx/app.ini ]; then
+    cp /var/opt/mera/RecorderLnx/app.ini "$recorder_data_root/app.ini"
+    log "app.ini migrated from /var/opt/mera"
+  elif [ -f /var/opt/mera/RecorderLnx/config/app.ini ]; then
+    cp /var/opt/mera/RecorderLnx/config/app.ini "$recorder_data_root/app.ini"
+    sed -i 's|^DefaultProjectConfigDir=projects/|DefaultProjectConfigDir=config/projects/|' "$recorder_data_root/app.ini"
+    log "legacy app.ini migrated"
+  else
+    cp /usr/share/recorderlnx/config/app.ini "$recorder_data_root/app.ini"
+    log "app.ini copied"
+  fi
 fi
-if ! grep -q '^\\[SQLdbConnection\\]$' /var/opt/mera/RecorderLnx/config/app.ini; then
-  printf '\n' >> /var/opt/mera/RecorderLnx/config/app.ini
+if ! grep -q '^\\[SQLdbConnection\\]$' "$recorder_data_root/app.ini"; then
+  printf '\n' >> "$recorder_data_root/app.ini"
   sed -n '/^\\[SQLdbConnection\\]$/,$p' /usr/share/recorderlnx/config/app.ini \
-    >> /var/opt/mera/RecorderLnx/config/app.ini
+    >> "$recorder_data_root/app.ini"
   log "SQLdbConnection added to app.ini"
 fi
-if [ ! -f /var/opt/mera/RecorderLnx/config/projects/default/default.config.json ]; then
-  cp -a /usr/share/recorderlnx/config/projects/default/. /var/opt/mera/RecorderLnx/config/projects/default/
+if [ ! -f "$config_root/projects/default/default.config.json" ]; then
+  cp -a /usr/share/recorderlnx/config/projects/default/. "$config_root/projects/default/"
   log "default project copied"
 fi
 chmod 755 /opt/mera/RecorderLnx/RecorderLnx
@@ -465,7 +480,6 @@ if command -v systemctl >/dev/null 2>&1; then
 fi
 log "RecorderHostAgent registered in XDG Autostart; it starts at graphical login"
 configure_host_agent_firewall
-config_root=/var/opt/mera/RecorderLnx/config
 runtime_user="${SUDO_USER:-}"
 if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
   runtime_user=$(stat -c '%U' "$config_root" 2>/dev/null || true)
@@ -481,12 +495,17 @@ if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
 fi
 if [ -n "$runtime_user" ] && [ "$runtime_user" != root ] && id "$runtime_user" >/dev/null 2>&1; then
   runtime_group=$(id -gn "$runtime_user")
+  # app.ini is the system-level Recorder configuration and is written by the
+  # GUI when settings are saved.  Keep it beside the project tree, but give
+  # the actual desktop user ownership just like the project configuration.
+  chown "$runtime_user:$runtime_group" "$recorder_data_root/app.ini"
+  chmod 0660 "$recorder_data_root/app.ini"
   chown -R "$runtime_user:$runtime_group" "$config_root" \
-    /var/opt/mera/Calibr /var/opt/mera/Resources /var/opt/mera/SDB
-  find "$config_root" /var/opt/mera/Calibr /var/opt/mera/Resources \
-    /var/opt/mera/SDB -type d -exec chmod 0700 {} +
-  find "$config_root" /var/opt/mera/Calibr /var/opt/mera/Resources \
-    /var/opt/mera/SDB -type f -exec chmod 0600 {} +
+    "$mera_files_root/Calibr" "$mera_files_root/Resources" "$mera_files_root/SDB"
+  find "$config_root" "$mera_files_root/Calibr" "$mera_files_root/Resources" \
+    "$mera_files_root/SDB" -type d -exec chmod 0700 {} +
+  find "$config_root" "$mera_files_root/Calibr" "$mera_files_root/Resources" \
+    "$mera_files_root/SDB" -type f -exec chmod 0600 {} +
   configure_host_agent_shutdown "$runtime_user" || true
 else
   log "runtime user is unknown; writable config permissions were not broadened"
@@ -502,6 +521,7 @@ fi
 log "RecorderLnx postinst finished"
 exit 0
 """
+    postinst = postinst.replace("@MERA_FILES_ROOT@", MERA_FILES_ROOT)
     prerm = """#!/bin/sh
 set -e
 
@@ -511,9 +531,18 @@ set -e
 if [ "${1:-}" = upgrade ] || [ "${1:-}" = remove ] || [ "${1:-}" = deconfigure ]; then
   if command -v pkill >/dev/null 2>&1; then
     pkill -TERM -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' 2>/dev/null || true
+    # Give Recorder enough time to stop acquisition and close device sessions.
+    # A one-second timeout regularly left MIC-185 sessions occupied until the
+    # instrument was reset.
+    wait_count=0
+    while pgrep -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' >/dev/null 2>&1 && \
+          [ "$wait_count" -lt 10 ]; do
+      sleep 1
+      wait_count=$((wait_count + 1))
+    done
+    pkill -KILL -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' 2>/dev/null || true
     pkill -TERM -f '^/opt/mera/RecorderLnx/RecorderHostAgent([[:space:]]|$)' 2>/dev/null || true
     sleep 1
-    pkill -KILL -f '^/opt/mera/RecorderLnx/RecorderLnx([[:space:]]|$)' 2>/dev/null || true
     pkill -KILL -f '^/opt/mera/RecorderLnx/RecorderHostAgent([[:space:]]|$)' 2>/dev/null || true
   fi
 fi
@@ -564,9 +593,9 @@ def make_data_tar(repo_root):
     default_project = project_root / "config" / "projects" / "default"
     bios_file = project_root / "Device" / "MCbus" / "resources" / "devices" / "mc201" / "mc_201a.bio"
     app_icon = project_root / "resources" / "app" / "RecorderLnx.png"
-    paths_ini = """[Paths]
-MeraFiles=/var/opt/mera
-Config=/var/opt/mera/RecorderLnx/config
+    paths_ini = f"""[Paths]
+MeraFiles={MERA_FILES_ROOT}
+Config={RECORDER_CONFIG_ROOT}
 Plugins=plugins
 Bios=bios
 SysCom=syscom

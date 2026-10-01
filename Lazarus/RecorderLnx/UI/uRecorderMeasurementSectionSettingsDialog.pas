@@ -11,11 +11,12 @@ interface
 
 uses
   Classes, SysUtils, Contnrs, Forms, Controls, StdCtrls, Grids, Dialogs, ExtCtrls,
+  ColorBox,
   Graphics, fpspreadsheet,
   Math, uRecorderFormModel, uRecorderTags, uRecorderMeasurementSectionModel;
 
 type
-  TSectionColumn = (scolTagName, scolSection, scolPoint, scolRole,
+  TSectionColumn = (scolTagName, scolSection, scolPoint, scolPointInfo, scolRole,
     scolRosette, scolPosition, scolDescription, scolAddress, scolSource,
     scolModuleType, scolTagId, scolUnit, scolPollFrequency, scolSqlRecord,
     scolGroup);
@@ -26,10 +27,11 @@ type
   TRecorderMeasurementSectionSettingsDialog = class(TForm)
   published
     fCaptionEdit: TEdit;
-    fBackgroundColorPanel: TPanel;
+    fBackgroundColorPanel: TColorBox;
     fCaptionFontButton: TButton;
     fCaptionFontCombo: TComboBox;
     fFormatAllButton: TButton;
+    fGenerateTagsCheck: TCheckBox;
     fSectionIdEdit: TEdit;
     fGrid: TStringGrid;
     fTagFilterEdit: TEdit;
@@ -40,7 +42,7 @@ type
     fTempRefEdit: TEdit;
     fStressFontButton: TButton;
     fStressFontCombo: TComboBox;
-    fTextBackgroundColorPanel: TPanel;
+    fTextBackgroundColorPanel: TColorBox;
     fOkButton: TButton;
     fCancelButton: TButton;
     fAddButton: TButton;
@@ -69,7 +71,6 @@ type
     procedure ImportClick(Sender: TObject);
     procedure ImportAllClick(Sender: TObject);
     procedure ChooseFontClick(Sender: TObject);
-    procedure ColorPanelDblClick(Sender: TObject);
     procedure FontNameChange(Sender: TObject);
     procedure FormatAllClick(Sender: TObject);
     procedure TagFilterChange(Sender: TObject);
@@ -140,7 +141,8 @@ const
   CColE2 = 4;
   CColE3 = 5;
   CColTemp = 6;
-  CGridCols = 7;
+  CColPointInfo = 7;
+  CGridCols = 8;
 
   CSheetName = 'Recorder_Tags';
   CMaxHeaderColumn = 255;
@@ -150,6 +152,7 @@ const
     'Имя канала',
     'Объект/Сечение',
     'N точки',
+    'Информация о точке',
     'Роль',
     'Тип розетки',
     'Расположение',
@@ -380,6 +383,7 @@ begin
   fGrid.Cells[CColE2, 0] := 'e2';
   fGrid.Cells[CColE3, 0] := 'e3';
   fGrid.Cells[CColTemp, 0] := 't';
+  fGrid.Cells[CColPointInfo, 0] := 'Информация о точке';
   fGrid.ColWidths[CColPoint] := 70;
   fGrid.ColWidths[CColRosette] := 90;
   fGrid.ColWidths[CColPosition] := 90;
@@ -387,6 +391,7 @@ begin
   fGrid.ColWidths[CColE2] := 130;
   fGrid.ColWidths[CColE3] := 130;
   fGrid.ColWidths[CColTemp] := 130;
+  fGrid.ColWidths[CColPointInfo] := 220;
 end;
 
 destructor TRecorderMeasurementSectionSettingsDialog.Destroy;
@@ -440,8 +445,9 @@ begin
   if fDraft.RowCount = 0 then
     fDraft.AddRow;
   fCaptionEdit.Text := fDraft.Caption;
-  fBackgroundColorPanel.Color := TColor(fDraft.BackgroundColor);
-  fTextBackgroundColorPanel.Color := TColor(fDraft.TextBackgroundColor);
+  fGenerateTagsCheck.Checked := fDraft.GenerateTags;
+  fBackgroundColorPanel.Selected := TColor(fDraft.BackgroundColor);
+  fTextBackgroundColorPanel.Selected := TColor(fDraft.TextBackgroundColor);
   fSectionIdEdit.Text := fDraft.SectionId;
   fYoungEdit.Text := FloatToStr(fDraft.YoungModulusMPa);
   fPoissonEdit.Text := FloatToStr(fDraft.PoissonRatio);
@@ -455,25 +461,6 @@ begin
   LoadNamedFont(fStressFontCombo, fStressFont);
   PopulateTagList('');
   RefreshGrid;
-end;
-
-procedure TRecorderMeasurementSectionSettingsDialog.ColorPanelDblClick(
-  Sender: TObject);
-var
-  lDialog: TColorDialog;
-  lPanel: TPanel;
-begin
-  if not (Sender is TPanel) then
-    Exit;
-  lPanel := TPanel(Sender);
-  lDialog := TColorDialog.Create(Self);
-  try
-    lDialog.Color := lPanel.Color;
-    if lDialog.Execute then
-      lPanel.Color := lDialog.Color;
-  finally
-    lDialog.Free;
-  end;
 end;
 
 procedure TRecorderMeasurementSectionSettingsDialog.FillFontCombo(
@@ -688,6 +675,7 @@ begin
     fGrid.Cells[CColE2, I + 1] := lRow.TagNames[rrrE2];
     fGrid.Cells[CColE3, I + 1] := lRow.TagNames[rrrE3];
     fGrid.Cells[CColTemp, I + 1] := lRow.TagNames[rrrTemperature];
+    fGrid.Cells[CColPointInfo, I + 1] := lRow.PointInfo;
   end;
 end;
 
@@ -706,12 +694,14 @@ begin
       (Trim(fGrid.Cells[CColE1, I]) = '') and
       (Trim(fGrid.Cells[CColE2, I]) = '') and
       (Trim(fGrid.Cells[CColE3, I]) = '') and
-      (Trim(fGrid.Cells[CColTemp, I]) = '') then
+      (Trim(fGrid.Cells[CColTemp, I]) = '') and
+      (Trim(fGrid.Cells[CColPointInfo, I]) = '') then
       Continue;
     lRow := fDraft.AddRow;
     lRow.PointNo := StrToIntDef(Trim(fGrid.Cells[CColPoint, I]), I);
     lRow.RosetteType := RecorderRosetteTypeFromText(fGrid.Cells[CColRosette, I]);
     lRow.PositionDeg := ParseFloatText(fGrid.Cells[CColPosition, I], 0.0);
+    lRow.PointInfo := Trim(fGrid.Cells[CColPointInfo, I]);
     lRow.TagNames[rrrE1] := Trim(fGrid.Cells[CColE1, I]);
     lTag := TagByName(lRow.TagNames[rrrE1]);
     if lTag <> nil then lRow.BindTag(rrrE1, lTag);
@@ -733,8 +723,9 @@ begin
   fDraft.Caption := Trim(fCaptionEdit.Text);
   if fDraft.Caption = '' then
     fDraft.Caption := 'Измерительное сечение';
-  fDraft.BackgroundColor := LongInt(fBackgroundColorPanel.Color);
-  fDraft.TextBackgroundColor := LongInt(fTextBackgroundColorPanel.Color);
+  fDraft.GenerateTags := fGenerateTagsCheck.Checked;
+  fDraft.BackgroundColor := LongInt(fBackgroundColorPanel.Selected);
+  fDraft.TextBackgroundColor := LongInt(fTextBackgroundColorPanel.Selected);
   fDraft.SectionId := CurrentSectionId;
   fDraft.YoungModulusMPa := ParseFloatText(fYoungEdit.Text,
     fDraft.YoungModulusMPa);
@@ -752,6 +743,7 @@ begin
   if not SameText(fDraft.NamedFontName, fDraft.StressNamedFontName) then
     DefineNamedFont(fStressFontCombo, fStressFont);
   fComponent.AssignSection(fDraft);
+  fComponent.SyncGeneratedTags(fRegistry);
   if fFormatAllRequested then
     ApplyFontsToFactory;
 end;
@@ -969,6 +961,7 @@ begin
             lRow.TagNames[lRole]);
         WriteCell(lSheet, lRowIndex, lMap[scolSection], fDraft.SectionId);
         WriteCell(lSheet, lRowIndex, lMap[scolPoint], IntToStr(lRow.PointNo));
+        WriteCell(lSheet, lRowIndex, lMap[scolPointInfo], lRow.PointInfo);
         WriteCell(lSheet, lRowIndex, lMap[scolRole],
           RecorderRosetteRoleToText(lRole));
         WriteCell(lSheet, lRowIndex, lMap[scolRosette],
@@ -1101,6 +1094,8 @@ begin
     if lText <> '' then
       lRow.RosetteType := RecorderRosetteTypeFromText(lText);
     lRow.PositionDeg := lPosition;
+    if (lRow.PointInfo = '') and (AMap[scolPointInfo] >= 0) then
+      lRow.PointInfo := ReadCell(ASheet, lRowIndex, AMap[scolPointInfo]);
     lTag := nil;
     lText := ReadMappedCell(ASheet, lRowIndex, AMap[scolTagId]);
     if (fRegistry <> nil) and TryStrToInt64(lText, lTagId) then

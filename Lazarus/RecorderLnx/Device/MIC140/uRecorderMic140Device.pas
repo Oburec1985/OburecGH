@@ -658,12 +658,10 @@ begin
   fScanOn := False;
   fInitialized := False;
 
-  if not Mic140v2TcpProbe(fHost, fPort, 800) then
-  begin
-    Mic140v2Log(Format('[MIC140v2:%s:%d] TCP probe failed', [fHost, fPort]));
-    Exit;
-  end;
-
+  { MIC-140 owns a single TCP session. A short probe immediately before the
+    working connection can leave the controller serving the closing probe
+    socket, so the real Connect fails although the port is reachable. Connect
+    the production transport once and let its error define the offline state. }
   fCli := TMic140v2Tcp.Create(fHost, fPort, CMic140LegacyCommandTimeoutMs);
   try
     fCli.Connect;

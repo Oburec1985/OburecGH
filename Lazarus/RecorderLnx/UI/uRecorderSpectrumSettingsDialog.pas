@@ -45,8 +45,8 @@ type
     fShowLegendCheck: TCheckBox;
     fZeroY0Check: TCheckBox;
     fResultTypeCombo: TComboBox;
+    fValueModeGroup: TRadioGroup;
     fIntegrationGroup: TRadioGroup;
-    fTahoCombo: TComboBox;
 
     fOkButton: TButton;
     fCancelButton: TButton;
@@ -300,7 +300,7 @@ begin
   // 5. Параметры отображения
   lGroupBox := TGroupBox.Create(Self);
   lGroupBox.Parent := Self;
-  lGroupBox.SetBounds(478, 215, 220, 295);
+  lGroupBox.SetBounds(478, 215, 220, 330);
   lGroupBox.Anchors := [akTop, akRight, akBottom];
   lGroupBox.Caption := 'Отображение';
 
@@ -347,33 +347,23 @@ begin
   fResultTypeCombo.Items.Add('Фаза');
   fResultTypeCombo.Items.Add('Re / Im (две линии)');
 
+  fValueModeGroup := TRadioGroup.Create(lGroupBox);
+  fValueModeGroup.Parent := lGroupBox;
+  fValueModeGroup.SetBounds(10, 202, 200, 57);
+  fValueModeGroup.Caption := 'Значения спектра';
+  fValueModeGroup.Columns := 2;
+  fValueModeGroup.Items.Add('RMS');
+  fValueModeGroup.Items.Add('Амплитуда');
+
   fIntegrationGroup := TRadioGroup.Create(lGroupBox);
   fIntegrationGroup.Parent := lGroupBox;
-  fIntegrationGroup.SetBounds(10, 202, 200, 82);
+  fIntegrationGroup.SetBounds(10, 262, 200, 62);
   fIntegrationGroup.Caption := 'Интегрирование ускорения';
   fIntegrationGroup.Items.Add('Без интегрирования');
   fIntegrationGroup.Items.Add('Однократное (скорость)');
   fIntegrationGroup.Items.Add('Двукратное (перемещение)');
 
-  // 6. Прочее (Тахометр)
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := Self;
-  lLabel.SetBounds(478, 522, 80, 15);
-  lLabel.Caption := 'Тахометр:';
-
-  fTahoCombo := TComboBox.Create(Self);
-  fTahoCombo.Parent := Self;
-  fTahoCombo.SetBounds(563, 519, 135, 23);
-  fTahoCombo.Anchors := [akRight, akBottom];
-  fTahoCombo.Style := csDropDownList;
-  fTahoCombo.Items.Add('');
-  if fTagRegistry <> nil then
-  begin
-    for I := 0 to fTagRegistry.TagCount - 1 do
-      fTahoCombo.Items.Add(fTagRegistry.Tags[I].Name);
-  end;
-
-  // 7. Кнопки ОК / Отмена
+  // 6. Кнопки ОК / Отмена
   fOkButton := TButton.Create(Self);
   fOkButton.Parent := Self;
   fOkButton.SetBounds(520, 585, 80, 25);
@@ -393,7 +383,7 @@ end;
 
 procedure TRecorderSpectrumSettingsDialog.LoadFromComponent;
 var
-  I, lIdx: Integer;
+  I: Integer;
 begin
   fMinXEdit.Text := FloatToStr(fDraft.RangeMinX);
   fMaxXEdit.Text := FloatToStr(fDraft.RangeMaxX);
@@ -420,11 +410,11 @@ begin
   else
     fIntegrationGroup.ItemIndex := 0;
 
-  lIdx := fTahoCombo.Items.IndexOf(fDraft.TahoTagName);
-  if lIdx >= 0 then
-    fTahoCombo.ItemIndex := lIdx
+  if (fDraft.SpectrumValueMode >= 0) and
+    (fDraft.SpectrumValueMode < fValueModeGroup.Items.Count) then
+    fValueModeGroup.ItemIndex := fDraft.SpectrumValueMode
   else
-    fTahoCombo.ItemIndex := 0;
+    fValueModeGroup.ItemIndex := 0;
 
   // Заполняем список используемых
   fUsedList.Items.Clear;
@@ -456,8 +446,8 @@ begin
   fDraft.ZeroY0 := fZeroY0Check.Checked;
 
   fDraft.ResultType := fResultTypeCombo.ItemIndex;
+  fDraft.SpectrumValueMode := fValueModeGroup.ItemIndex;
   fDraft.SpectrumIntegration := fIntegrationGroup.ItemIndex;
-  fDraft.TahoTagName := fTahoCombo.Text;
 
   { Имя в строке списка содержит частоту только для показа. Ссылку сохраняем
     одной операцией как согласованную пару TagId + TagName; иначе старый TagId

@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Buttons, ComCtrls,
-  ExtCtrls, Grids, DateTimePicker, fpjson, uCoordinatorModel,
+  ExtCtrls, Grids, DateTimePicker, Spin, fpjson, uCoordinatorModel,
   uCoordinatorConfig, uCoordinatorHttpServer, uCoordinatorSqlEventStore,
   uRecorderSqlDbTypes, uCoordinatorHostAgentClient;
 
@@ -29,6 +29,7 @@ type
     btnShutdownAll: TBitBtn;
     btnShutdownSelected: TBitBtn;
     btnSyncSdb: TButton;
+    btnSetSqlPeriodAll: TButton;
     btnWakeAll: TBitBtn;
     btnWakeSelected: TBitBtn;
     btnDeleteEvent: TButton;
@@ -42,8 +43,10 @@ type
     btnTestStorage: TButton;
     btnLaunchSelected: TBitBtn;
     cbCreateRecordingEvents: TCheckBox;
+    cbSqlRecordingAll: TCheckBox;
     cbStartAllOnAnyRecording: TCheckBox;
     cbStorageKind: TComboBox;
+    seSqlRecordPeriod: TSpinEdit;
     dtpEventsFrom: TDateTimePicker;
     dtpEventsTo: TDateTimePicker;
     edtEventWindow: TEdit;
@@ -69,6 +72,7 @@ type
     lblStorageName: TLabel;
     lblStoragePath: TLabel;
     lblStorageUser: TLabel;
+    lblSqlRecordPeriod: TLabel;
     memoLog: TMemo;
     pageMain: TPageControl;
     pnlHostActions: TPanel;
@@ -99,6 +103,7 @@ type
     procedure btnSetDatabaseForAllClick(Sender: TObject);
     procedure btnSetPrimarySdbClick(Sender: TObject);
     procedure btnSyncSdbClick(Sender: TObject);
+    procedure btnSetSqlPeriodAllClick(Sender: TObject);
     procedure btnEditEventClick(Sender: TObject);
     procedure btnOpenEventClick(Sender: TObject);
     procedure btnRefreshEventsClick(Sender: TObject);
@@ -106,6 +111,7 @@ type
     procedure btnSaveClick(Sender: TObject);
     procedure btnTestStorageClick(Sender: TObject);
     procedure cbCreateRecordingEventsChange(Sender: TObject);
+    procedure cbSqlRecordingAllChange(Sender: TObject);
     procedure cbStartAllOnAnyRecordingChange(Sender: TObject);
     procedure dtpEventsToChange(Sender: TObject);
     procedure edtSelectedHostChange(Sender: TObject);
@@ -1072,6 +1078,41 @@ begin SendCommand('recording.preview'); end;
 
 procedure TCoordinatorMainForm.btnCommandStopClick(Sender: TObject);
 begin SendCommand('recording.stop'); end;
+
+procedure TCoordinatorMainForm.cbSqlRecordingAllChange(Sender: TObject);
+var
+  lPayload: TJSONObject;
+begin
+  if fLoading then Exit;
+  lPayload := TJSONObject.Create;
+  try
+    lPayload.Add('enabled', cbSqlRecordingAll.Checked);
+    lPayload.Add('record_period_ms', seSqlRecordPeriod.Value * 1000);
+    SendCommandTo('*', 'config.sql_recording.set', lPayload.AsJSON);
+    if cbSqlRecordingAll.Checked then
+      AddLog('Всем RecorderLnx отправлено включение SQL-записи')
+    else
+      AddLog('Всем RecorderLnx отправлено выключение SQL-записи');
+  finally
+    lPayload.Free;
+  end;
+end;
+
+procedure TCoordinatorMainForm.btnSetSqlPeriodAllClick(Sender: TObject);
+var
+  lPayload: TJSONObject;
+begin
+  lPayload := TJSONObject.Create;
+  try
+    lPayload.Add('enabled', cbSqlRecordingAll.Checked);
+    lPayload.Add('record_period_ms', seSqlRecordPeriod.Value * 1000);
+    SendCommandTo('*', 'config.sql_recording.set', lPayload.AsJSON);
+    AddLog(Format('Всем RecorderLnx отправлен период SQL-записи %d с',
+      [seSqlRecordPeriod.Value]));
+  finally
+    lPayload.Free;
+  end;
+end;
 
 procedure TCoordinatorMainForm.StartHostAction(const AAddress: string;
   AAction: TCoordinatorHostAgentAction);

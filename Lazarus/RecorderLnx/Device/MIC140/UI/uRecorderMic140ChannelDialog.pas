@@ -30,6 +30,8 @@ type
   TRecorderMic140ChannelDialog = class(TForm)
     lbRange: TLabel;
     fRangeCombo: TComboBox;
+    lbOutputMode: TLabel;
+    fOutputModeCombo: TComboBox;
     lbThermocouple: TLabel;
     fThermocoupleCombo: TComboBox;
     btnSelectThermocouple: TButton;
@@ -104,6 +106,10 @@ begin
   for I := 0 to CMic140RangeCount - 1 do
     fRangeCombo.Items.Add(RecorderMic140RangeComboLabel(I));
 
+  fOutputModeCombo.Items.Clear;
+  fOutputModeCombo.Items.Add('мВ');
+  fOutputModeCombo.Items.Add('°C');
+
   RecorderMeraResetThermocoupleCache;
   fThermocoupleCombo.Items.BeginUpdate;
   try
@@ -129,6 +135,11 @@ begin
     fRangeCombo.ItemIndex := fSettings.RangeIndex
   else
     fRangeCombo.ItemIndex := CMic140Range100mV;
+
+  if RecorderMic140ChannelUsesTemperature(fSettings) then
+    fOutputModeCombo.ItemIndex := 1
+  else
+    fOutputModeCombo.ItemIndex := 0;
 
   if (Trim(fSettings.ThermocoupleScalePath) = '') and
     (Trim(fSettings.ThermocoupleScaleName) <> '') then
@@ -178,8 +189,6 @@ begin
   begin
     fSettings.ThermocoupleScaleName := '';
     fSettings.ThermocoupleScalePath := '';
-    fSettings.OutputMode := 'mV';
-    fSettings.ChannelCalibrationEnabled := False;
   end
   else
   begin
@@ -192,9 +201,12 @@ begin
       lPath := RecorderMeraThermocoupleRelativePath(lName);
     lPath := RecorderMeraResolveThermocoupleScaleKey(lPath, lName);
     fSettings.ThermocoupleScalePath := lPath;
-    fSettings.OutputMode := 'degC';
-    fSettings.ChannelCalibrationEnabled := True;
   end;
+
+  if (fOutputModeCombo.ItemIndex = 1) and (lName <> '') then
+    fSettings.OutputMode := 'degC'
+  else
+    fSettings.OutputMode := 'mV';
 
   fSettings.DefaultCjc := fDefaultCjcCheck.Checked;
   if fCjcCombo.ItemIndex >= 0 then
@@ -233,6 +245,13 @@ end;
 
 procedure TRecorderMic140ChannelDialog.ThermocoupleChange(Sender: TObject);
 begin
+  if Sender = fThermocoupleCombo then
+  begin
+    if Trim(fThermocoupleCombo.Text) <> '' then
+      fOutputModeCombo.ItemIndex := 1
+    else
+      fOutputModeCombo.ItemIndex := 0;
+  end;
   UpdateTempRange;
 end;
 
@@ -260,6 +279,9 @@ begin
     lIndex := fThermocoupleCombo.Items.Count - 1;
   end;
   fThermocoupleCombo.ItemIndex := lIndex;
+  { Programmatic ItemIndex assignment does not fire OnChange in LCL. Keep the
+    explicit source output mode in sync with a curve selected via the button. }
+  fOutputModeCombo.ItemIndex := 1;
   fSettings.ThermocoupleScaleName := lName;
   fSettings.ThermocoupleScalePath := lKey;
   UpdateTempRange;
@@ -268,6 +290,7 @@ end;
 procedure TRecorderMic140ChannelDialog.ClearThermocoupleClick(Sender: TObject);
 begin
   fThermocoupleCombo.ItemIndex := 0;
+  fOutputModeCombo.ItemIndex := 0;
   UpdateTempRange;
 end;
 

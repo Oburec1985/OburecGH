@@ -16,7 +16,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx/SQLdb;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../RecorderLnx;../../../../SharedUtils"/>
+      <OtherUnitFiles Value="../../../RecorderLnx/SQLdb;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../RecorderLnx;../../../SharedUtils"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking><Debugging><DebugInfoType Value="dsDwarf3"/></Debugging></Linking>

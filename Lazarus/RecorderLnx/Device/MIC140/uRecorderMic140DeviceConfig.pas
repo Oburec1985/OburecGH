@@ -188,8 +188,10 @@ end;
 
 function RecorderMic140ChannelUsesTemperature(const ASettings: TRecorderMic140ChannelSettings): Boolean;
 begin
-  Result := (Trim(ASettings.ThermocoupleScaleName) <> '') or
-    SameText(ASettings.OutputMode, 'degC') or SameText(ASettings.OutputMode, 'C');
+  { The selected scale and the source output mode are separate settings. A
+    scale may remain assigned while the operator temporarily requests mV. }
+  Result := SameText(ASettings.OutputMode, 'degC') or
+    SameText(ASettings.OutputMode, 'C');
 end;
 
 procedure RecorderMic140ApplyTagOutputPresentation(ATag: TRecorderTag;
@@ -204,8 +206,7 @@ begin
 
   { OutputMode describes the physical values produced by the source when the
     tag enables hardware calibration. Raw-code selection belongs to the tag. }
-  if ASettings.ChannelCalibrationEnabled and
-    RecorderMic140ChannelUsesTemperature(ASettings) then
+  if RecorderMic140ChannelUsesTemperature(ASettings) then
   begin
     lMode := 'degC';
     lUnit := 'degC';

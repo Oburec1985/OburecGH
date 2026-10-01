@@ -343,7 +343,6 @@ procedure TRecorderOscillogramSettingsDialog.FillPrimaryTagCombo(
 var
   I: Integer;
   lFilter: string;
-  lPrimary: TRecorderTag;
   lTag: TRecorderTag;
   lCurrent: string;
   lSearchText: string;
@@ -352,7 +351,6 @@ begin
   if fTagCombo = nil then
     Exit;
   lCurrent := fDraft.TagName;
-  lPrimary := fTagRegistry.FindByName(fDraft.TagName);
   lWasUpdating := fUpdating;
   fUpdating := True;
   fTagCombo.Items.BeginUpdate;
@@ -363,9 +361,7 @@ begin
     begin
       lTag := fTagRegistry.Tags[I];
       lSearchText := LowerCase(lTag.Name + ' ' + lTag.Address + ' ' + lTag.Description);
-      if (fExtended or (lPrimary = nil) or
-        SameText(lTag.SourceId, lPrimary.SourceId)) and
-        ((lFilter = '') or (Pos(lFilter, lSearchText) > 0)) then
+      if (lFilter = '') or (Pos(lFilter, lSearchText) > 0) then
         fTagCombo.Items.AddObject(lTag.Name, lTag);
     end;
     fTagCombo.ItemIndex := -1;
@@ -668,31 +664,10 @@ begin
 end;
 
 function TRecorderOscillogramSettingsDialog.ValidateChannels: Boolean;
-var
-  I, lCount: Integer;
-  lNames: array of string;
 begin
   Result := fDraft.TagName <> '';
   if not Result then
-  begin
     ShowMessage('Добавьте хотя бы один канал.');
-    Exit;
-  end;
-  if fExtended then
-    Exit;
-  SetLength(lNames, fDraft.LineCount + 1);
-  lNames[0] := fDraft.TagName;
-  lCount := 1;
-  for I := 0 to fDraft.LineCount - 1 do
-    if Trim(fDraft.Lines[I].TagName) <> '' then
-    begin
-      lNames[lCount] := fDraft.Lines[I].TagName;
-      Inc(lCount);
-    end;
-  SetLength(lNames, lCount);
-  Result := RecorderTagsShareSourceId(fTagRegistry, lNames);
-  if not Result then
-    ShowMessage('Все каналы осциллограммы должны принадлежать одному устройству (SourceId).');
 end;
 
 procedure TRecorderOscillogramSettingsDialog.OkButtonClick(Sender: TObject);

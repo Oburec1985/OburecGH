@@ -68,8 +68,8 @@ Source: "{#SourceRoot}\lib\x86_64-win64\res\*"; DestDir: "{app}\res"; \
 Source: "{#SourceRoot}\Device\MCbus\resources\devices\mc201\mc_201a.bio"; \
   DestDir: "{app}\bios\devices\mc201"; Flags: ignoreversion
 Source: "{#SourceRoot}\config\app.ini"; \
-  DestDir: "{code:GetMeraFilesDir}\RecorderLnx\config"; \
-  Flags: onlyifdoesntexist uninsneveruninstall
+  DestDir: "{code:GetMeraFilesDir}\RecorderLnx"; \
+  Flags: onlyifdoesntexist uninsneveruninstall; Check: ShouldInstallAppConfig
 Source: "{#SourceRoot}\config\projects\default\*"; \
   DestDir: "{code:GetMeraFilesDir}\RecorderLnx\config\projects\default"; \
   Flags: onlyifdoesntexist uninsneveruninstall recursesubdirs createallsubdirs
@@ -148,6 +148,15 @@ end;
 function GetMeraFilesDir(Param: string): string;
 begin
   Result := RemoveBackslashUnlessRoot(Trim(MeraFilesPage.Values[0]));
+end;
+
+function ShouldInstallAppConfig: Boolean;
+var
+  ServiceDir: string;
+begin
+  ServiceDir := GetMeraFilesDir('') + '\RecorderLnx';
+  Result := (not FileExists(ServiceDir + '\app.ini')) and
+    (not FileExists(ServiceDir + '\config\app.ini'));
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

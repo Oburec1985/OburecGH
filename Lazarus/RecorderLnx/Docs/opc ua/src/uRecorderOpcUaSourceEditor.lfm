@@ -287,6 +287,7 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
         OnDblClick = BrowseTreeDblClick
         OnMouseDown = BrowseTreeMouseDown
         OnSelectionChanged = BrowseTreeSelectionChanged
+        OnStartDrag = BrowseTreeStartDrag
         Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
       end
     end
@@ -338,7 +339,7 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
           Height = 19
           Top = 5
           Width = 350
-          Caption = 'Перетащите каналы слева; Del — удалить выбранные'
+          Caption = 'Перетащите слева; протяните мышью — выбрать; Del — удалить'
           ParentColor = False
         end
         object lblUsedSearch: TLabel
@@ -373,6 +374,9 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
           OnDragDrop = UsedTreeDragDrop
           OnDragOver = UsedTreeDragOver
           OnKeyDown = UsedTreeKeyDown
+          OnMouseDown = UsedTreeMouseDown
+          OnMouseMove = UsedTreeMouseMove
+          OnMouseUp = UsedTreeMouseUp
           Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
         end
         object fValueGrid: TStringGrid

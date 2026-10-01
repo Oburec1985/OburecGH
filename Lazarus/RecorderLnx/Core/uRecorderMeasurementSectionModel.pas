@@ -22,7 +22,9 @@ type
   TRecorderMeasurementSectionRow = class
   private
     fBalances: array[TRecorderRosetteRole] of Double;
+    fGeneratedSigmaTags: array[1..2] of TRecorderTag;
     fPointNo: Integer;
+    fPointInfo: string;
     fRosetteType: TRecorderRosetteType;
     fPositionDeg: Double;
     fTagIds: array[TRecorderRosetteRole] of TRecorderTagId;
@@ -42,6 +44,7 @@ type
     function ResolveTag(ARegistry: TRecorderTagRegistry;
       ARole: TRecorderRosetteRole): TRecorderTag;
     property PointNo: Integer read fPointNo write fPointNo;
+    property PointInfo: string read fPointInfo write fPointInfo;
     property RosetteType: TRecorderRosetteType read fRosetteType write fRosetteType;
     property PositionDeg: Double read fPositionDeg write fPositionDeg;
     property Balances[ARole: TRecorderRosetteRole]: Double
@@ -76,6 +79,8 @@ type
     fBackgroundColor: LongInt;
     fCaption: string;
     fCaptionFont: TRecorderFontSnapshot;
+    fGenerateTags: Boolean;
+    fLastGeneratedInputTime: Double;
     fSectionId: string;
     fRows: TList;
     fStressFont: TRecorderFontSnapshot;
@@ -87,6 +92,8 @@ type
     fReferenceTemperatureC: Double;
     function GetRow(AIndex: Integer): TRecorderMeasurementSectionRow;
     function GetRowCount: Integer;
+    function EnsureGeneratedTag(ARegistry: TRecorderTagRegistry;
+      ARow: TRecorderMeasurementSectionRow; ASigmaIndex: Integer): TRecorderTag;
   protected
     class function GetTypeId: string; override;
   public
@@ -105,7 +112,13 @@ type
       out AValues: TRecorderMeasurementSectionValues);
     procedure GetCaptionFont(out AFont: TRecorderFontSnapshot);
     procedure GetStressFont(out AFont: TRecorderFontSnapshot);
+    function GeneratedTagName(ARow: TRecorderMeasurementSectionRow;
+      ASigmaIndex: Integer): string;
+    function GeneratedTagSourceId: string;
+    procedure PublishGeneratedTags(ARegistry: TRecorderTagRegistry);
+    procedure SyncGeneratedTags(ARegistry: TRecorderTagRegistry);
     property Caption: string read fCaption write fCaption;
+    property GenerateTags: Boolean read fGenerateTags write fGenerateTags;
     property BackgroundColor: LongInt read fBackgroundColor
       write fBackgroundColor;
     property CaptionFont: TRecorderFontSnapshot read fCaptionFont
@@ -219,8 +232,11 @@ var
 begin
   inherited Create;
   fPointNo := 1;
+  fPointInfo := '';
   fRosetteType := rrtThreeComponent;
   fPositionDeg := 0.0;
+  fGeneratedSigmaTags[1] := nil;
+  fGeneratedSigmaTags[2] := nil;
   for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
   begin
     fBalances[lRole] := 0.0;
@@ -237,8 +253,11 @@ begin
   if ASource = nil then
     Exit;
   fPointNo := ASource.PointNo;
+  fPointInfo := ASource.PointInfo;
   fRosetteType := ASource.RosetteType;
   fPositionDeg := ASource.PositionDeg;
+  fGeneratedSigmaTags[1] := nil;
+  fGeneratedSigmaTags[2] := nil;
   for lRole := Low(TRecorderRosetteRole) to High(TRecorderRosetteRole) do
   begin
     fBalances[lRole] := ASource.Balances[lRole];
@@ -328,6 +347,8 @@ constructor TRecorderMeasurementSectionComponent.Create;
 begin
   inherited Create;
   fRows := TList.Create;
+  fGenerateTags := False;
+  fLastGeneratedInputTime := -MaxDouble;
   fCaption := 'Измерительное сечение';
   fBackgroundColor := $00FFF4E8;
   fCaptionFont.Name := 'Tahoma';
@@ -379,6 +400,8 @@ begin
   if ASource = nil then
     Exit;
   fCaption := ASource.Caption;
+  fGenerateTags := ASource.GenerateTags;
+  fLastGeneratedInputTime := -MaxDouble;
   fBackgroundColor := ASource.BackgroundColor;
   NamedFontName := ASource.NamedFontName;
   fCaptionFont := ASource.CaptionFont;
@@ -419,6 +442,128 @@ begin
   AFont.Color := lFont.FontColor;
   AFont.Bold := lFont.Bold;
   AFont.Italic := lFont.Italic;
+end;
+
+function TRecorderMeasurementSectionComponent.GeneratedTagName(
+  ARow: TRecorderMeasurementSectionRow; ASigmaIndex: Integer): string;
+begin
+  if ARow = nil then
+    Exit('');
+  Result := Trim(fCaption) + '_' + IntToStr(ARow.PointNo) + '_s' +
+    IntToStr(ASigmaIndex);
+end;
+
+function TRecorderMeasurementSectionComponent.GeneratedTagSourceId: string;
+begin
+  Result := 'measurement-section:' + Trim(Id);
+  if Trim(Id) = '' then
+    Result := Result + Trim(fCaption);
+end;
+
+function TRecorderMeasurementSectionComponent.EnsureGeneratedTag(
+  ARegistry: TRecorderTagRegistry; ARow: TRecorderMeasurementSectionRow;
+  ASigmaIndex: Integer): TRecorderTag;
+var
+  lName, lSourceId: string;
+begin
+  Result := nil;
+  if (ARegistry = nil) or (ARow = nil) then
+    Exit;
+  if (ASigmaIndex < 1) or (ASigmaIndex > 2) then
+    Exit;
+  Result := ARow.fGeneratedSigmaTags[ASigmaIndex];
+  if Result <> nil then
+    Exit;
+  lName := GeneratedTagName(ARow, ASigmaIndex);
+  lSourceId := GeneratedTagSourceId;
+  if lName = '' then
+    Exit;
+  Result := ARegistry.FindByName(lName);
+  if (Result <> nil) and not SameText(Result.SourceId, lSourceId) then
+    Exit(nil);
+  if Result = nil then
+    Result := ARegistry.CreateTag(lName, 4096, True);
+  Result.SourceId := lSourceId;
+  Result.IsVirtual := True;
+  Result.ModuleType := 'Измерительное сечение';
+  Result.Address := IntToStr(ARow.PointNo) + '/s' + IntToStr(ASigmaIndex);
+  Result.UnitName := 'МПа';
+  Result.Description := Format('%s, точка %d, sigma%d',
+    [fCaption, ARow.PointNo, ASigmaIndex]);
+  Result.PollFrequencyHz := 0.0;
+  ARow.fGeneratedSigmaTags[ASigmaIndex] := Result;
+end;
+
+procedure TRecorderMeasurementSectionComponent.SyncGeneratedTags(
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+begin
+  if ARegistry = nil then
+    Exit;
+  for I := 0 to RowCount - 1 do
+  begin
+    Rows[I].fGeneratedSigmaTags[1] := nil;
+    Rows[I].fGeneratedSigmaTags[2] := nil;
+  end;
+  ARegistry.RemoveTagsBySourceId(GeneratedTagSourceId);
+  fLastGeneratedInputTime := -MaxDouble;
+  if not fGenerateTags then
+    Exit;
+  for I := 0 to RowCount - 1 do
+  begin
+    EnsureGeneratedTag(ARegistry, Rows[I], 1);
+    EnsureGeneratedTag(ARegistry, Rows[I], 2);
+  end;
+end;
+
+procedure TRecorderMeasurementSectionComponent.PublishGeneratedTags(
+  ARegistry: TRecorderTagRegistry);
+var
+  I: Integer;
+  lInputTime, lNewestInputTime: Double;
+  lRole: TRecorderRosetteRole;
+  lSourceTag, lSigmaTag: TRecorderTag;
+  lValues: TRecorderMeasurementSectionValues;
+begin
+  if (not fGenerateTags) or (ARegistry = nil) then
+    Exit;
+  lNewestInputTime := -MaxDouble;
+  for I := 0 to RowCount - 1 do
+  begin
+    EnsureGeneratedTag(ARegistry, Rows[I], 1);
+    EnsureGeneratedTag(ARegistry, Rows[I], 2);
+    for lRole := rrrE1 to rrrTemperature do
+    begin
+      lSourceTag := Rows[I].ResolveTag(ARegistry, lRole);
+      if (lSourceTag <> nil) and (lSourceTag.SignalBuffer.Count > 0) then
+      begin
+        lInputTime := lSourceTag.SignalBuffer.LatestTime;
+        if lInputTime > lNewestInputTime then
+          lNewestInputTime := lInputTime;
+      end;
+    end;
+  end;
+  if (lNewestInputTime = -MaxDouble) or
+    (lNewestInputTime <= fLastGeneratedInputTime) then
+    Exit;
+  fLastGeneratedInputTime := lNewestInputTime;
+  for I := 0 to RowCount - 1 do
+  begin
+    CalculateRow(ARegistry, Rows[I], lValues);
+    if lValues.HasSigma1 then
+    begin
+      lSigmaTag := EnsureGeneratedTag(ARegistry, Rows[I], 1);
+      if lSigmaTag <> nil then
+        ARegistry.PublishValue(lSigmaTag, lNewestInputTime, lValues.Sigma1);
+    end;
+    if lValues.HasSigma2 then
+    begin
+      lSigmaTag := EnsureGeneratedTag(ARegistry, Rows[I], 2);
+      if lSigmaTag <> nil then
+        ARegistry.PublishValue(lSigmaTag, lNewestInputTime, lValues.Sigma2);
+    end;
+  end;
 end;
 
 procedure TRecorderMeasurementSectionComponent.ClearRows;

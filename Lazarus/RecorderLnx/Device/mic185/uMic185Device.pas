@@ -99,6 +99,7 @@ type
     procedure Start; override;
     function TryStart(out AErrorText: string): Boolean;
     { Останавливает измерительную задачу MIC185V2. }
+    function TryStop(out AErrorText: string): Boolean;
     procedure Stop; override;
     { Читает очередной блок измерений и перекладывает его в acquisition block. }
     function ReadBlock(ATimeoutMs: Cardinal;
@@ -161,6 +162,9 @@ const
     после явного IoControl timeout только задерживает сброс. }
   CMic185ConnectTimeoutMs = CRecorderDeviceCommandTimeoutMs;
   CMic185IdentityTimeoutMs = CRecorderDeviceCommandTimeoutMs;
+  { Аппаратная балансировка на MIC-185 усредняет порцию измерений и штатно
+    может отвечать дольше общего двухсекундного таймаута IoControl. }
+  CMic185ZeroBalanceCommandTimeoutMs = 15000;
   { A successful TCP handshake is earlier than the Mebius transport-ready
     event used by the original driver's WaitConnecting().  Give the device
     service time to attach the new settings client before the first
@@ -622,17 +626,37 @@ begin
   Result := True;
 end;
 
+function TRecorderMic185Device.TryStop(out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  if fState <> rdsStarted then
+    Exit(True);
+  if fClient = nil then
+  begin
+    AErrorText := 'MIC183/185 transport is not connected';
+    Exit(False);
+  end;
+  Result := fClient.TryStopMeasurement(AErrorText);
+  if not Result then
+    Exit;
+  fState := rdsProgrammed;
+  RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), False);
+end;
+
 procedure TRecorderMic185Device.Stop;
 var
   lErrorMessage: string;
 begin
-  if (fClient <> nil) and (fState = rdsStarted) then
-    fClient.TryStopMeasurement(lErrorMessage);
-  if fState = rdsStarted then
-  begin
-    fState := rdsProgrammed;
-    RecorderMic185RuntimeSetAcquiring(fHost, Word(fPort), False);
-  end;
+  if TryStop(lErrorMessage) then
+    Exit;
+
+  { После таймаута STOP состояние измерительной сессии неизвестно. Закрываем
+    транспорт, чтобы следующая операция создала и запрограммировала новую
+    сессию, а не отправляла IoControl в зависшую старую. }
+  RecorderMic185RuntimeLog(Format(
+    'MIC-185 stop failed %s:%d: %s; reconnect required',
+    [fHost, fPort, lErrorMessage]));
+  Disconnect;
 end;
 
 function TRecorderMic185Device.LastTempValue(AIndex: Integer): Double;
@@ -820,6 +844,8 @@ var
   lCh: Integer;
   lIn: TRecorderByteArray;
   lOut: TRecorderByteArray;
+  lSavedTimeoutMs: Cardinal;
+  lStartedAt: QWord;
 begin
   Result := False;
   SetLength(ASoftBalances, 0);
@@ -847,9 +873,30 @@ begin
     Word(Pointer(@lIn[I * SizeOf(Word)])^) := Word(lCh);
   end;
 
-  if not fClient.TryCallCommand(CMic185IoCtlCmdZeroBalance, lIn,
-    Length(AChannelIndices) * SizeOf(SmallInt), lOut, AErrorText) then
-    Exit;
+  lSavedTimeoutMs := fClient.TimeoutMs;
+  lStartedAt := GetTickCount64;
+  fClient.TimeoutMs := Max(lSavedTimeoutMs,
+    CMic185ZeroBalanceCommandTimeoutMs);
+  RecorderMic185RuntimeLog(Format(
+    'MIC-185 ZBalance begin %s:%d channels=%d first=%d timeout=%dms',
+    [fHost, fPort, Length(AChannelIndices), AChannelIndices[0],
+     fClient.TimeoutMs]));
+  try
+    if not fClient.TryCallCommand(CMic185IoCtlCmdZeroBalance, lIn,
+      Length(AChannelIndices) * SizeOf(SmallInt), lOut, AErrorText) then
+    begin
+      RecorderMic185RuntimeLog(Format(
+        'MIC-185 ZBalance failed %s:%d channels=%d elapsed=%dms: %s',
+        [fHost, fPort, Length(AChannelIndices),
+         GetTickCount64 - lStartedAt, AErrorText]));
+      Exit;
+    end;
+  finally
+    fClient.TimeoutMs := lSavedTimeoutMs;
+  end;
+  RecorderMic185RuntimeLog(Format(
+    'MIC-185 ZBalance OK %s:%d channels=%d elapsed=%dms',
+    [fHost, fPort, Length(AChannelIndices), GetTickCount64 - lStartedAt]));
   if Length(lOut) < Length(AChannelIndices) * SizeOf(SmallInt) then
   begin
     AErrorText := 'MIC183/185 zero-balance reply is shorter than expected';

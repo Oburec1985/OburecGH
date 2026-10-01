@@ -11,6 +11,7 @@ uses
 type
   TRecorderOpcUaStringArray = array of string;
   TRecorderOpcUaDoubleArray = array of Double;
+  TRecorderOpcUaCardinalArray = array of Cardinal;
 
   TRecorderOpcUaDiscoveredNode = class
   public
@@ -85,6 +86,9 @@ type
     function Browse(ANodes: TObjectList): Boolean;
     function ReadDouble(const ANodeId: string; out AValue: Double;
       out AStatus: Cardinal; out ATimestampSec: Double): Boolean;
+    function ReadDoubles(const ANodeIds: TRecorderOpcUaStringArray;
+      out AValues, ATimestampsSec: TRecorderOpcUaDoubleArray;
+      out AStatuses: TRecorderOpcUaCardinalArray): Boolean;
     function WriteScalar(const ANodeId: string; var ADataTypeNodeId: string;
       AValue: Double): Boolean;
     function WriteScalars(const ANodeIds: TRecorderOpcUaStringArray;
@@ -96,7 +100,7 @@ type
 implementation
 
 uses
-  Math, DateUtils, uRecorderNetworkBinding;
+  Math, DateUtils, Base64, uRecorderNetworkBinding;
 
 const
   COpcUaMaxMessageSize = 16 * 1024 * 1024;
@@ -295,6 +299,9 @@ end;
 
 procedure TOpcUaWriter.NodeId(const AValue: string);
 var
+  lBytes: TBytes;
+  lDecoded: RawByteString;
+  lGuid: TGuid;
   lId, lNamespace, P, S: Integer;
   lIdentifier, lText: string;
 begin
@@ -332,6 +339,34 @@ begin
     ByteValue(3); UInt16(Word(lNamespace)); UaString(lIdentifier);
     Exit;
   end;
+  if Pos('g=', LowerCase(lText)) = 1 then
+  begin
+    lIdentifier := Copy(lText, 3, MaxInt);
+    if (Length(lIdentifier) = 0) or (lIdentifier[1] <> '{') then
+      lIdentifier := '{' + lIdentifier + '}';
+    try
+      lGuid := StringToGUID(lIdentifier);
+    except
+      raise EOpcUaBinaryError.Create('Invalid GUID NodeId: ' + AValue);
+    end;
+    ByteValue(4); UInt16(Word(lNamespace));
+    UInt32(lGuid.D1); UInt16(lGuid.D2); UInt16(lGuid.D3);
+    Raw(lGuid.D4[0], Length(lGuid.D4));
+    Exit;
+  end;
+  if Pos('b=', LowerCase(lText)) = 1 then
+  begin
+    lIdentifier := Copy(lText, 3, MaxInt);
+    try
+      lDecoded := DecodeStringBase64(lIdentifier);
+    except
+      raise EOpcUaBinaryError.Create('Invalid ByteString NodeId: ' + AValue);
+    end;
+    SetLength(lBytes, Length(lDecoded));
+    if Length(lBytes) > 0 then Move(lDecoded[1], lBytes[0], Length(lBytes));
+    ByteValue(5); UInt16(Word(lNamespace)); ByteString(lBytes);
+    Exit;
+  end;
   S := 0;
   raise EOpcUaBinaryError.Create('Unsupported NodeId: ' + AValue + IntToStr(S));
 end;
@@ -365,9 +400,31 @@ constructor TOpcUaReader.Create(AStream: TStream);
 begin inherited Create; fStream := AStream; end;
 
 procedure TOpcUaReader.Need(ACount: Int64);
+var
+  I, lCount: Integer;
+  lByte: Byte;
+  lHex: string;
+  lSaved, lStart: Int64;
 begin
   if (ACount < 0) or (fStream.Position + ACount > fStream.Size) then
-    raise EOpcUaBinaryError.Create('Truncated OPC UA message');
+  begin
+    lSaved := fStream.Position;
+    lStart := lSaved - 24;
+    if lStart < 0 then lStart := 0;
+    lCount := Integer(lSaved - lStart);
+    lHex := '';
+    fStream.Position := lStart;
+    for I := 0 to lCount - 1 do
+    begin
+      fStream.ReadBuffer(lByte, 1);
+      if lHex <> '' then lHex := lHex + ' ';
+      lHex := lHex + IntToHex(lByte, 2);
+    end;
+    fStream.Position := lSaved;
+    raise EOpcUaBinaryError.CreateFmt(
+      'Truncated OPC UA message: pos=%d need=%d size=%d before=%s',
+      [fStream.Position, ACount, fStream.Size, lHex]);
+  end;
 end;
 
 function TOpcUaReader.Raw(ACount: Integer): TBytes;
@@ -430,10 +487,13 @@ end;
 
 function TOpcUaReader.NodeId(out AEncoded: TBytes): string;
 var
+  I: Integer;
+  lBytes: TBytes;
   lEncoding, lNs: Byte;
   lStart: Int64;
-  lId: Cardinal;
-  lNs16: Word;
+  lId, lGuidD1: Cardinal;
+  lGuidD2, lGuidD3, lNs16: Word;
+  lRaw: RawByteString;
   lText: string;
 begin
   lStart := fStream.Position;
@@ -446,6 +506,22 @@ begin
          Result := Format('ns=%d;i=%d', [lNs16, lId]); end;
     3: begin lNs16 := UInt16; lText := UaString;
          Result := Format('ns=%d;s=%s', [lNs16, lText]); end;
+    4: begin
+         lNs16 := UInt16; lGuidD1 := UInt32; lGuidD2 := UInt16;
+         lGuidD3 := UInt16; lBytes := Raw(8);
+         lText := IntToHex(lGuidD1, 8) + '-' + IntToHex(lGuidD2, 4) + '-' +
+           IntToHex(lGuidD3, 4) + '-' + IntToHex(lBytes[0], 2) +
+           IntToHex(lBytes[1], 2) + '-';
+         for I := 2 to 7 do lText := lText + IntToHex(lBytes[I], 2);
+         Result := Format('ns=%d;g=%s', [lNs16, LowerCase(lText)]);
+       end;
+    5: begin
+         lNs16 := UInt16; lBytes := ByteString;
+         SetLength(lRaw, Length(lBytes));
+         if Length(lBytes) > 0 then Move(lBytes[0], lRaw[1], Length(lBytes));
+         Result := Format('ns=%d;b=%s',
+           [lNs16, EncodeStringBase64(lRaw)]);
+       end;
   else
     raise EOpcUaBinaryError.CreateFmt('Unsupported NodeId encoding %d', [lEncoding]);
   end;
@@ -457,6 +533,8 @@ begin
     1: begin ByteValue; UInt16; end;
     2: begin UInt16; UInt32; end;
     3: begin UInt16; UaString; end;
+    4: begin UInt16; Raw(16); end;
+    5: begin UInt16; ByteString; end;
   end;
   SetLength(AEncoded, fStream.Position - lStart);
   fStream.Position := lStart;
@@ -889,6 +967,7 @@ var
     I, J, N, Count: LongInt;
     NodeClass, Status: Cardinal;
     NodeId, DisplayName, TypeDefinition, NodePath: string;
+    lStage: string;
     LocalizedMask: Byte;
     Item: TRecorderOpcUaDiscoveredNode;
   begin
@@ -896,13 +975,20 @@ var
     SetLength(AContinuationPoint, 0);
     Q := TOpcUaReader.Create(AResponse);
     try
+      try
+        lStage := 'message header';
       Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+      lStage := 'response header';
       Q.ResponseHeader;
+      lStage := 'result count';
       N := Q.Int32;
       for I := 0 to N - 1 do
       begin
+        lStage := Format('result[%d] status', [I]);
         Status := Q.UInt32;
+        lStage := Format('result[%d] continuation', [I]);
         AContinuationPoint := Q.ByteString;
+        lStage := Format('result[%d] reference count', [I]);
         Count := Q.Int32;
         if Status <> 0 then
         begin
@@ -911,13 +997,17 @@ var
         end;
         for J := 0 to Count - 1 do
         begin
+          lStage := Format('reference[%d] referenceTypeId', [J]);
           Q.NodeId(D); Q.BooleanValue; NodeId := Q.ExpandedNodeId;
+          lStage := Format('reference[%d] browseName', [J]);
           Q.UInt16; Q.UaString;
+          lStage := Format('reference[%d] displayName', [J]);
           LocalizedMask := Q.ByteValue;
           if (LocalizedMask and 1) <> 0 then Q.UaString;
           if (LocalizedMask and 2) <> 0 then DisplayName := Q.UaString
           else DisplayName := '';
           NodeClass := Q.UInt32;
+          lStage := Format('reference[%d] typeDefinition', [J]);
           TypeDefinition := Q.ExpandedNodeId;
           if APath = '' then NodePath := DisplayName
           else NodePath := APath + '/' + DisplayName;
@@ -948,7 +1038,12 @@ var
                 ADepth + 1) then Exit;
         end;
       end;
-      Result := True;
+        Result := True;
+      except
+        on E: Exception do
+          raise EOpcUaBinaryError.CreateFmt('%s at pos=%d: %s',
+            [lStage, AResponse.Position, E.Message]);
+      end;
     finally
       Q.Free;
     end;
@@ -963,7 +1058,7 @@ begin
     W := TOpcUaWriter.Create(B);
     try
       Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle);
-      W.NodeId('i=0'); W.UInt64(0); W.UInt32(0); W.UInt32(0); W.Int32(1);
+      W.NodeId('i=0'); W.UInt64(0); W.UInt32(0); W.UInt32(100); W.Int32(1);
       W.NodeId(ANodeId); W.UInt32(0); W.NodeId(COpcUaHierarchicalReferences); W.BooleanValue(True);
       W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable or
         COpcUaNodeClassMethod); W.UInt32(63);
@@ -1362,6 +1457,124 @@ begin
     end;
     Result := True;
   finally
+    B.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.ReadDoubles(
+  const ANodeIds: TRecorderOpcUaStringArray;
+  out AValues, ATimestampsSec: TRecorderOpcUaDoubleArray;
+  out AStatuses: TRecorderOpcUaCardinalArray): Boolean;
+var
+  I: Integer;
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  Q: TOpcUaReader;
+  D: TBytes;
+  Mask, VariantMask, TypeId: Byte;
+  N: LongInt;
+  SourceTicks, ServerTicks, Ticks: QWord;
+begin
+  Result := False;
+  SetLength(AValues, Length(ANodeIds));
+  SetLength(ATimestampsSec, Length(ANodeIds));
+  SetLength(AStatuses, Length(ANodeIds));
+  if Length(ANodeIds) = 0 then Exit(True);
+  R := nil;
+  B := TMemoryStream.Create;
+  try
+    try
+      W := TOpcUaWriter.Create(B);
+    try
+      Inc(fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle, fRequestTimeoutMs);
+      W.DoubleValue(0);
+      W.UInt32(fTimestampsToReturn);
+      W.Int32(Length(ANodeIds));
+      for I := 0 to High(ANodeIds) do
+      begin
+        W.NodeId(ANodeIds[I]);
+        W.UInt32(13);
+        W.UaString('', True);
+        W.UInt16(0);
+        W.UaString('', True);
+      end;
+    finally
+      W.Free;
+    end;
+    if not ExchangeService(COpcUaReadRequest, B, R) then Exit;
+    Q := TOpcUaReader.Create(R);
+    try
+      Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D); Q.ResponseHeader;
+      N := Q.Int32;
+      if N <> Length(ANodeIds) then
+      begin
+        SetError('read', Format('server returned %d values for %d nodes',
+          [N, Length(ANodeIds)]));
+        Exit;
+      end;
+      for I := 0 to N - 1 do
+      begin
+        SourceTicks := 0;
+        ServerTicks := 0;
+        Mask := Q.ByteValue;
+        if (Mask and 1) = 0 then
+        begin
+          if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
+          SetError('read', Format('NodeId %s has no value; status 0x%.8x',
+            [ANodeIds[I], AStatuses[I]]));
+          Exit;
+        end;
+        VariantMask := Q.ByteValue;
+        if (VariantMask and $80) <> 0 then
+        begin
+          SetError('read', 'array values are not supported for ' + ANodeIds[I]);
+          Exit;
+        end;
+        TypeId := VariantMask and $3F;
+        case TypeId of
+          1: AValues[I] := Ord(Q.BooleanValue);
+          2: AValues[I] := ShortInt(Q.ByteValue);
+          3: AValues[I] := Q.ByteValue;
+          4: AValues[I] := SmallInt(Q.UInt16);
+          5: AValues[I] := Q.UInt16;
+          6: AValues[I] := LongInt(Q.UInt32);
+          7: AValues[I] := Q.UInt32;
+          8: AValues[I] := Int64(Q.UInt64);
+          9: AValues[I] := Q.UInt64;
+          10: AValues[I] := Q.SingleValue;
+          11: AValues[I] := Q.DoubleValue;
+        else
+          SetError('read', 'unsupported scalar type ' + IntToStr(TypeId) +
+            ' for ' + ANodeIds[I]);
+          Exit;
+        end;
+        if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
+        if (Mask and 4) <> 0 then SourceTicks := Q.UInt64;
+        if (Mask and 8) <> 0 then ServerTicks := Q.UInt64;
+        if (Mask and 16) <> 0 then Q.UInt16;
+        if (Mask and 32) <> 0 then Q.UInt16;
+        if (AStatuses[I] and $80000000) <> 0 then
+        begin
+          SetError('read', Format('NodeId %s returned bad status 0x%.8x',
+            [ANodeIds[I], AStatuses[I]]));
+          Exit;
+        end;
+        Ticks := SourceTicks;
+        if Ticks = 0 then Ticks := ServerTicks;
+        if Ticks <> 0 then
+          ATimestampsSec[I] := Ticks / COpcUaTicksPerSecond -
+            COpcUaUnixEpochOffsetSeconds;
+      end;
+      Result := True;
+    finally
+      Q.Free;
+      end;
+    except
+      on E: Exception do SetError('read', E.Message);
+    end;
+  finally
+    R.Free;
     B.Free;
   end;
 end;

@@ -27,6 +27,8 @@ type
 
     function GetCursorLabelRect(ACursor: TChartCursor; ALabelIdx: Integer; AXPixel, AYPixel: Single; ARenderer: TOpenGLChartRenderer; APage: TChartPage): TChartPixelRect;
     function GetSnappedX(ATrend: cBaseTrend; AMouseWorldX, AMouseWorldY, ADeltaXWorld: Double; const AMode: string): Double;
+    function SpectrumCursorXAtFraction(APage: TChartPage;
+      AFraction: Double): Double;
 public
       constructor Create; override;
       procedure MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean); override;
@@ -43,6 +45,24 @@ begin
   fActivePage := nil;
   fLastMouseX := 0;
   fLastMouseY := 0;
+end;
+
+function TChartCursorListener.SpectrumCursorXAtFraction(APage: TChartPage;
+  AFraction: Double): Double;
+var
+  lMinX, lMaxX: Double;
+begin
+  Result := 0;
+  if APage = nil then
+    Exit;
+  lMinX := APage.XMinValue;
+  lMaxX := APage.XMaxValue;
+  AFraction := EnsureRange(AFraction, 0.0, 1.0);
+  if (APage.XScale = casLog10) and (lMinX > 0) and (lMaxX > lMinX) then
+    Result := Power(10, Log10(lMinX) +
+      AFraction * (Log10(lMaxX) - Log10(lMinX)))
+  else
+    Result := lMinX + AFraction * (lMaxX - lMinX);
 end;
 function TChartCursorListener.GetCursorLabelRect(ACursor: TChartCursor; ALabelIdx: Integer; AXPixel, AYPixel: Single; ARenderer: TOpenGLChartRenderer; APage: TChartPage): TChartPixelRect;
 var
@@ -538,6 +558,14 @@ begin
         lCursor := GetOrCreatePageCursor(lPage);
         if not lCursor.Visible then
         begin
+          { Спектральный курсор мог остаться за пределами нового zoom/range.
+            При появлении ставим линии в 20% и 80% именно видимой ширины;
+            для логарифмической X это геометрическая интерполяция. }
+          if SameText(lPage.Name, 'SpectrumPage') then
+          begin
+            lCursor.X1 := SpectrumCursorXAtFraction(lPage, 0.2);
+            lCursor.X2 := SpectrumCursorXAtFraction(lPage, 0.8);
+          end;
           lCursor.Visible := True;
           lCursor.CursorType := cctSingle;
         end

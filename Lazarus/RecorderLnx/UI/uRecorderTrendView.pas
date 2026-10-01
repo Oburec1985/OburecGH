@@ -27,6 +27,7 @@ type
     TTrendSeries = record
       LastProcessedTime: Double;
       LastBlockCounter: QWord;
+      SampleCursor: QWord;
       Times: array of Double;
       Values: array of Double;
       Count: Integer;
@@ -55,6 +56,7 @@ end;
     function CalcTrendQueueCapacity: Integer;
     procedure AddPoint(ALineIndex: Integer; ATime, AValue: Double);
     procedure AddScalarPoint(ALineIndex: Integer; const ASnapshot: TRecorderSignalSnapshot);
+    procedure AddScalarChanges(ALineIndex: Integer; ATag: TRecorderTag);
     function EffectivePortionLength(ATag: TRecorderTag;
       ALastBlockCount: Integer): Integer;
     procedure RebuildOglSeries(ALineIndex: Integer);
@@ -340,6 +342,7 @@ begin
       fSeries[I].HasValue := False;
       fSeries[I].LastProcessedTime := 0;
       fSeries[I].LastBlockCounter := 0;
+      fSeries[I].SampleCursor := 0;
       fSeries[I].LastBlockKind := '';
       fSeries[I].LastPortionLength := 0;
       fSeries[I].LastPointsAdded := 0;
@@ -361,6 +364,7 @@ begin
   fSeries[ALineIndex].Count := 0;
   fSeries[ALineIndex].LastProcessedTime := 0;
   fSeries[ALineIndex].LastBlockCounter := ABaselineBlockCounter;
+  fSeries[ALineIndex].SampleCursor := 0;
   fSeries[ALineIndex].LastValue := 0;
   fSeries[ALineIndex].HasValue := False;
   fSeries[ALineIndex].LastBlockKind := '';
@@ -369,6 +373,35 @@ begin
   fSeries[ALineIndex].LastSnapshotCount := 0;
   fSeries[ALineIndex].LastBlockCount := 0;
   fSeries[ALineIndex].LastSnapshotTime := 0;
+end;
+
+procedure TRecorderTrendView.AddScalarChanges(ALineIndex: Integer;
+  ATag: TRecorderTag);
+var
+  I: Integer;
+  lCount: Integer;
+  lSeries: ^TTrendSeries;
+  lValue: Double;
+begin
+  if (ATag = nil) or (ALineIndex < 0) or
+    (ALineIndex >= Length(fSeries)) then
+    Exit;
+  lSeries := @fSeries[ALineIndex];
+  ATag.SignalBuffer.SnapshotSinceInto(lSeries^.SampleCursor,
+    lSeries^.Times, lSeries^.Values, lCount);
+  for I := 0 to lCount - 1 do
+  begin
+    lValue := lSeries^.Values[I];
+    if lSeries^.HasValue and SameValue(lSeries^.LastValue, lValue) then
+      Continue;
+    { Разреженный scalar/change-only поток рисуем ступенью: прежнее состояние
+      действует вплоть до временной метки нового значения. }
+    if lSeries^.HasValue then
+      AddPoint(ALineIndex, lSeries^.Times[I], lSeries^.LastValue);
+    AddPoint(ALineIndex, lSeries^.Times[I], lValue);
+    lSeries^.LastProcessedTime := lSeries^.Times[I];
+    Inc(lSeries^.LastPointsAdded);
+  end;
 end;
 
 procedure TRecorderTrendView.ResetSessionData;
@@ -381,6 +414,7 @@ var
 begin
   for I := 0 to High(fSeries) do
   begin
+    lTag := nil;
     lBaselineBlockCounter := 0;
     if (fComponent <> nil) and (fTagRegistry <> nil) and
       (I < fComponent.LineCount) then
@@ -400,6 +434,8 @@ begin
       end;
     end;
     ResetSeriesRuntime(I, lBaselineBlockCounter);
+    if lTag <> nil then
+      fSeries[I].SampleCursor := lTag.SignalBuffer.CurrentCursor;
   end;
 
   fLastTrendDiagTickMs := 0;
@@ -604,11 +640,9 @@ begin
 
     if lLastBlock.Count <= 1 then
     begin
-      lValue := fSeries[I].Count;
-      AddScalarPoint(I, lLastBlock);
+      AddScalarChanges(I, lTag);
       fSeries[I].LastBlockKind := 'scalar';
       fSeries[I].LastPortionLength := 1;
-      fSeries[I].LastPointsAdded := fSeries[I].Count - Trunc(lValue);
       Continue;
     end;
 

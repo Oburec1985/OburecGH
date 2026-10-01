@@ -211,6 +211,7 @@ type
     UnitMode: TRecorderMic185RuntimeUnit;
     HardwareCalibration: TRecorderCalibration;
     ChannelCalibrations: TRecorderCalibrationArray;
+    ChannelConversions: array of Double;
     PowerMa: Double;
   end;
 
@@ -277,7 +278,8 @@ uses
   jsonparser, uMic185MebiusTcpProtocol, uRecorderMic185Runtime,
   uRecorderHardwareLiveDevices, uRecorderMic140Utils, uRecorderMic185Calibration,
   uRecorderProjectFiles, uRecorderHardwareTree, uRecorderNetworkBinding,
-  uRecorderDebugLog, uRecorderDeviceConfigSignature, uRecorderFrequencyGrids;
+  uRecorderDebugLog, uRecorderDeviceConfigSignature, uRecorderFrequencyGrids,
+  uRecorderUnitManager;
 
 const
   CMic185SourcePrefix = 'MIC-185: ';
@@ -1534,7 +1536,23 @@ begin
     lWasStarted := lLiveNative.State = rdsStarted;
     try
       if lWasStarted then
-        lLiveNative.Stop;
+        if not lLiveNative.TryStop(lError) then
+        begin
+          RecorderMic185Log(Format(
+            'ZeroBalance %s stop failed: %s; reconnecting session',
+            [ASourceId, lError]));
+          lLiveNative.Disconnect;
+          if (not lLiveNative.TryConnect(lError)) or
+            (not lLiveNative.TryInitializeSession(lError)) then
+          begin
+            if AMessages <> nil then
+              AMessages.Add('MIC183/185 stop/reconnect before zero-balance failed: ' +
+                lError);
+            Exit;
+          end;
+          lLiveNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
+            lTemperatureCompensation, lModuleSettings);
+        end;
       if not lLiveNative.TryProgramDevice(lError) then
       begin
         if AMessages <> nil then
@@ -1712,21 +1730,23 @@ begin
     Result := RecorderMic185RangeUnitText(ARangeIndex);
 end;
 
-function Mic185SensorSchemeCoeff(ASensorScheme: LongWord): Double;
-begin
-  case ASensorScheme of
-    CMic185SensorSchemeHalf: Result := 2.0;
-    CMic185SensorSchemeBridge: Result := 1.0;
-  else
-    Result := 4.0;
-  end;
-end;
-
 function Mic185CodeToNominalMv(AValueCode: Double;
   const ASettings: TMic185ChannelProgramSettings): Double;
 begin
   Result := AValueCode * RecorderMic185RangeMax(ASettings.MeasRangeIndex) /
     CMic185NominalAdcFullScale;
+end;
+
+function Mic185StrainSchemeCoeff(ASensorScheme: LongWord): Double;
+begin
+  { Resistance mode already contains the actual dR and is scheme-independent.
+    In strain mode responses of active gauges add, so compensate by 1/N. }
+  case ASensorScheme of
+    CMic185SensorSchemeHalf: Result := 0.5;
+    CMic185SensorSchemeBridge: Result := 0.25;
+  else
+    Result := 1.0;
+  end;
 end;
 
 function Mic185EffectiveRangeMaxWithPower(
@@ -1745,13 +1765,13 @@ begin
   if SameText(lUnit, 'Ом') then
     Exit(lRangeMv / Max(Abs(APowerMa), 1E-9));
 
-  if SameText(lUnit, 'мкм/м') then
+  if SameText(lUnit, 'мкм/м') or SameText(lUnit, 'мкстрн') then
   begin
     lExcitationMv := Max(Abs(APowerMa), 1E-9) *
       Max(Abs(ASettings.Resistance), 1E-9);
     lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
-    Exit((lRangeMv / lExcitationMv) *
-      (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) * 1000000.0);
+    Exit((lRangeMv / lExcitationMv) / lSensitivity *
+      Mic185StrainSchemeCoeff(ASettings.SensorScheme) * 1000000.0);
   end;
 
   Result := lRangeMv;
@@ -1845,13 +1865,13 @@ begin
   if SameText(lUnit, 'Ом') then
     Exit(lMv / lPowerMa);
 
-  if SameText(lUnit, 'мкм/м') then
+  if SameText(lUnit, 'мкм/м') or SameText(lUnit, 'мкстрн') then
   begin
     lExcitationMv := lPowerMa *
       Max(Abs(ASettings.Resistance), 1E-9);
     lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
-    Exit((lMv / lExcitationMv) *
-      (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) * 1000000.0);
+    Exit((lMv / lExcitationMv) / lSensitivity *
+      Mic185StrainSchemeCoeff(ASettings.SensorScheme) * 1000000.0);
   end;
 
   Result := lMv;
@@ -1878,7 +1898,7 @@ begin
   lUnit := Mic185NormalizeUnitName(AUnitName, ARangeIndex);
   if SameText(lUnit, 'Ом') then
     Result := mruOhm
-  else if SameText(lUnit, 'мкм/м') then
+  else if SameText(lUnit, 'мкм/м') or SameText(lUnit, 'мкстрн') then
     Result := mruStrain
   else
     Result := mruMillivolts;
@@ -2009,8 +2029,8 @@ begin
       begin
         lExcitationMv := lPowerMa * Max(Abs(ASettings.Resistance), 1E-9);
         lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
-        lCoeff := (Mic185SensorSchemeCoeff(ASettings.SensorScheme) /
-          lSensitivity) * 1000000.0 / lExcitationMv;
+        lCoeff := Mic185StrainSchemeCoeff(ASettings.SensorScheme) *
+          1000000.0 / (lExcitationMv * lSensitivity);
         AK := AK * lCoeff;
         AB := AB * lCoeff;
       end;
@@ -2035,9 +2055,8 @@ begin
       begin
         lExcitationMv := lPowerMa * Max(Abs(ASettings.Resistance), 1E-9);
         lSensitivity := Max(Abs(ASettings.TensoSensitivity), 1E-9);
-        Result := (AValueMv / lExcitationMv) *
-          (Mic185SensorSchemeCoeff(ASettings.SensorScheme) / lSensitivity) *
-          1000000.0;
+        Result := (AValueMv / lExcitationMv) / lSensitivity *
+          Mic185StrainSchemeCoeff(ASettings.SensorScheme) * 1000000.0;
       end;
   else
     Result := AValueMv;
@@ -2050,6 +2069,9 @@ function Mic185BuildValueTransform(ARegistry: TRecorderTagRegistry;
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
+  lConversion: Double;
+  lCurrentUnit: string;
+  lSourceUnit: string;
   lStepB: Double;
   lStepK: Double;
 begin
@@ -2057,15 +2079,19 @@ begin
   Result.K := 1.0;
   Result.B := 0.0;
   Result.Settings := ASettings;
-  Result.UnitMode := Mic185RuntimeUnitFromName(ATag.UnitName,
+  lSourceUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
+    ATag.SourceId, ATag.Address);
+  if Trim(lSourceUnit) = '' then
+    lSourceUnit := Trim(ATag.SourceUnitName);
+  if Trim(lSourceUnit) = '' then
+    lSourceUnit := Trim(ATag.UnitName);
+  Result.UnitMode := Mic185RuntimeUnitFromName(lSourceUnit,
     ASettings.MeasRangeIndex);
   Result.HardwareCalibration := AHardwareCalibration;
   SetLength(Result.ChannelCalibrations, 0);
+  SetLength(Result.ChannelConversions, 0);
   if not ATag.HardwareCalibrationEnabled then
-  begin
     Result.HardwareCalibration := nil;
-    Exit;
-  end;
   Result.PowerMa := Mic185EffectivePowerMa(ASettings);
   Result.PowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
     Result.PowerMa);
@@ -2089,20 +2115,40 @@ begin
     (ATag.CalibrationNames = nil) then
     Exit;
 
+  lCurrentUnit := lSourceUnit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
+    if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      Continue;
     lCalibration := ARegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
     if lCalibration = nil then
       Continue;
+    lConversion := 1.0;
+    if (Trim(lCurrentUnit) <> '') and
+      (Trim(lCalibration.UnitIn) <> '') and
+      not SameText(Trim(lCurrentUnit), Trim(lCalibration.UnitIn)) and
+      not RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
+        lCalibration.UnitIn, lConversion) then
+    begin
+      RecorderMic185Log(Format(
+        'MIC-185 calibration unit mismatch tag=%s step=%s: %s -> %s',
+        [ATag.Name, lCalibration.Name, lCurrentUnit, lCalibration.UnitIn]));
+      lConversion := 1.0;
+      Result.IsLinear := False;
+    end;
     SetLength(Result.ChannelCalibrations, Length(Result.ChannelCalibrations) + 1);
     Result.ChannelCalibrations[High(Result.ChannelCalibrations)] := lCalibration;
+    SetLength(Result.ChannelConversions, Length(Result.ChannelConversions) + 1);
+    Result.ChannelConversions[High(Result.ChannelConversions)] := lConversion;
     if Result.IsLinear then
     begin
       if Mic185TryGetCalibrationLine(lCalibration, lStepK, lStepB) then
-        Mic185ComposeLine(Result.K, Result.B, lStepK, lStepB)
+        Mic185ComposeLine(Result.K, Result.B, lStepK * lConversion, lStepB)
       else
         Result.IsLinear := False;
     end;
+    if Trim(lCalibration.UnitOut) <> '' then
+      lCurrentUnit := Trim(lCalibration.UnitOut);
   end;
 end;
 
@@ -2123,7 +2169,11 @@ begin
     ATransform.UnitMode, ATransform.PowerMa);
   for I := 0 to High(ATransform.ChannelCalibrations) do
     if ATransform.ChannelCalibrations[I] <> nil then
+    begin
+      if I <= High(ATransform.ChannelConversions) then
+        Result := Result * ATransform.ChannelConversions[I];
       Result := ATransform.ChannelCalibrations[I].Transform(Result);
+    end;
 end;
 
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
@@ -2519,6 +2569,15 @@ begin
       lTag.SourceId := lSourceId;
       lTag.ModuleType := CMic185ModuleName;
       lTag.PollFrequencyHz := lLink.Get('pollFrequencyHz', lPollHz);
+      { MIC-185 uses one frequency for the whole source.  Imported tagLinks
+        can be newer than the legacy summary, so repair the summary during
+        load before the runtime source is created. }
+      if (RecorderMic185ChannelAddressToIndex(lAddress) >= 0) and
+        (lTag.PollFrequencyHz > 0) then
+      begin
+        lPollHz := RecorderMic185NormalizeFrequency(lTag.PollFrequencyHz);
+        lEntry.DefaultPollFrequencyHz := lPollHz;
+      end;
       lMode := lLink.Get('sourceValueMode', '');
       if Trim(lMode) = '' then
         lMode := lTag.SourceValueMode;
@@ -2543,19 +2602,17 @@ begin
         RecorderMic185GetSourceChannelMode(ARegistry, lSourceId, lAddress,
           lTag.PollFrequencyHz, lSettings);
         RecorderMic185LoadHardwareCalibrationForTag(ARegistry, lTag,
-          lTag.HardwareCalibrationEnabled);
-        if lTag.HardwareCalibrationEnabled then
+          lCreated or lTag.HardwareCalibrationEnabled);
+        lMode := RecorderMic185GetSourceChannelUnitName(ARegistry,
+          lSourceId, lAddress);
+        if lMode <> '' then
         begin
-          lMode := RecorderMic185GetSourceChannelUnitName(ARegistry,
-            lSourceId, lAddress);
-          if lMode <> '' then
-            lTag.UnitName := lMode
-          else if Trim(lTag.UnitName) = '' then
-            lTag.UnitName := RecorderMic185RangeUnitText(
-              lSettings.MeasRangeIndex);
+          lTag.SourceUnitName := lMode;
+          lTag.UnitName := lMode;
         end
-        else
-          lTag.UnitName := 'код';
+        else if Trim(lTag.UnitName) = '' then
+          lTag.UnitName := RecorderMic185RangeUnitText(
+            lSettings.MeasRangeIndex);
         lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
           lTag, lSettings, lTag.UnitName);
         lTag.RangeMin := -lTag.RangeMax;
@@ -2794,8 +2851,6 @@ begin
   end;
 
   AErrorText := 'Нет активного подключения MIC183/185';
-  RecorderMic185Log(Format('ReadDeviceInfo %s:%d: no live device (%s)',
-    [Trim(AHost), APort, AErrorText]));
 end;
 
 constructor TRecorderMic185DataSource.Create(const ASourceId, AHost: string;
@@ -2843,7 +2898,8 @@ begin
   for I := 0 to ARegistry.TagCount - 1 do
   begin
     lTag := ARegistry.Tags[I];
-    if SameText(lTag.SourceId, SourceId) and
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+      RecorderNormalizeTagSourceId(SourceId)) and
       SameMic185Address(lTag.Address, AAddress) then
     begin
       { Сохраняем заданный источнику префикс, нормализуя только номер канала. }
@@ -3064,6 +3120,7 @@ begin
   begin
     lTag := fChannelTags[I];
     SetLength(fValueTransforms[I].ChannelCalibrations, 0);
+    SetLength(fValueTransforms[I].ChannelConversions, 0);
     fValueTransforms[I].IsLinear := True;
     fValueTransforms[I].K := 1.0;
     fValueTransforms[I].B := 0.0;
@@ -3107,10 +3164,14 @@ begin
   fUtsTag := nil;
   for I := 0 to High(lChannels) do
   begin
-    if not ChannelSelected(lChannels[I]) then
-      Continue;
-
     lTag := FindTagBySourceAddress(ARegistry, lChannels[I].Address);
+    { A project may rename a hardware channel (for example 185_{149_01} to
+      4Е1). In that case fSelectedNames contains the project tag name, while
+      the freshly enumerated device channel still has its factory name.
+      Preserve the configured channel by matching source+address before the
+      name-based selection filter. }
+    if (lTag = nil) and (not ChannelSelected(lChannels[I])) then
+      Continue;
     if lTag = nil then
       lTag := ARegistry.FindByName(lChannels[I].Name);
     lCreated := lTag = nil;
@@ -3134,18 +3195,16 @@ begin
     begin
       RecorderMic185GetSourceChannelMode(ARegistry, SourceId,
         lChannels[I].Address, lChannels[I].PollFrequencyHz, lChannelSettings);
-      if lTag.HardwareCalibrationEnabled then
+      lUnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
+        SourceId, lChannels[I].Address);
+      if lUnitName <> '' then
       begin
-        lUnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
-          SourceId, lChannels[I].Address);
-        if lUnitName <> '' then
-          lTag.UnitName := lUnitName
-        else if Trim(lTag.UnitName) = '' then
-          lTag.UnitName := RecorderMic185RangeUnitText(
-            lChannelSettings.MeasRangeIndex);
+        lTag.SourceUnitName := lUnitName;
+        lTag.UnitName := lUnitName
       end
-      else
-        lTag.UnitName := 'код';
+      else if Trim(lTag.UnitName) = '' then
+        lTag.UnitName := RecorderMic185RangeUnitText(
+          lChannelSettings.MeasRangeIndex);
       lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
         lTag, lChannelSettings, lTag.UnitName);
       lTag.RangeMin := -lTag.RangeMax;

@@ -91,6 +91,42 @@ begin
     raise Exception.Create('Spectrum compute manager did not retain prepared plans');
 end;
 
+procedure TestTagEstimatePortionAcrossSourceBlocks;
+var
+  lTag: TRecorderTag;
+  lSettings: TRecorderTagEstimateSettings;
+  lEstimate: TRecorderTagEstimate;
+  lTimes1: array[0..1] of Double;
+  lValues1: array[0..1] of Double;
+  lTimes2: array[0..1] of Double;
+  lValues2: array[0..1] of Double;
+begin
+  lTag := TRecorderTag.Create(1, 'EstimatePortion', 32);
+  try
+    lSettings := lTag.EstimateSettings;
+    lSettings.PortionLength := 4;
+    lTag.EstimateSettings := lSettings;
+    lTimes1[0] := 0.0; lTimes1[1] := 0.1;
+    lValues1[0] := 1.0; lValues1[1] := 2.0;
+    lTimes2[0] := 0.2; lTimes2[1] := 0.3;
+    lValues2[0] := 3.0; lValues2[1] := 4.0;
+    lTag.AddSamples(lTimes1, lValues1, 2);
+    lEstimate := lTag.Estimate(tekMean);
+    if lEstimate.Valid then
+      raise Exception.Create('Estimate published before full configured portion');
+    lTag.AddSamples(lTimes2, lValues2, 2);
+    lEstimate := lTag.Estimate(tekMean);
+    if not lEstimate.Valid then
+      raise Exception.Create('Estimate not published for full configured portion');
+    AssertEquals('Estimate portion count', 4, lEstimate.Count);
+    if not SameValue(lEstimate.Value, 2.5, 1e-12) then
+      raise Exception.CreateFmt('Estimate portion mean expected 2.5, got %.12g',
+        [lEstimate.Value]);
+  finally
+    lTag.Free;
+  end;
+end;
+
 procedure TestBandBinRange;
 var
   lFirstBin: Integer;
@@ -448,6 +484,7 @@ procedure RunRecorderSpectrumEngineTests;
 begin
   Writeln('Recorder spectrum engine tests...');
   TestSpectrumComputeManager;
+  TestTagEstimatePortionAcrossSourceBlocks;
   TestBandBinRange;
   TestMultipleFramesWithoutOverlap;
   TestMultipleFramesWithOverlap;

@@ -8,11 +8,10 @@
       <Unit>
         <Filename Value="RecorderLnx.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="112"/>
         <CursorPos Y="149"/>
         <UsageCount Value="200"/>
-        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Calibrations\Strains\uRecorderStrainCalibration.pas"/>
@@ -25,12 +24,10 @@
         <ComponentName Value="RecorderStrainCalibrationDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="116"/>
         <CursorPos Y="151"/>
         <UsageCount Value="200"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uMeraFile.pas"/>
@@ -90,8 +87,9 @@
       <Unit>
         <Filename Value="Core\uRecorderFormModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="1"/>
-        <CursorPos X="56" Y="22"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="43"/>
+        <CursorPos X="106" Y="60"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit>
@@ -176,10 +174,11 @@
       <Unit>
         <Filename Value="Core\uRecorderProjectFiles.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="463"/>
-        <CursorPos X="124" Y="489"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="2471"/>
+        <CursorPos X="73" Y="2492"/>
         <UsageCount Value="200"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderRunControlSettings.pas"/>
@@ -334,8 +333,8 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="28"/>
-        <CursorPos X="60" Y="49"/>
+        <TopLine Value="369"/>
+        <CursorPos X="76" Y="383"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -501,12 +500,10 @@
         <ComponentName Value="RecorderMeasurementSectionSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1145"/>
         <CursorPos X="66" Y="1172"/>
         <UsageCount Value="391"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\SqlTrend\uRecorderSqlTrendModel.pas"/>
@@ -532,7 +529,7 @@
         <ComponentName Value="RecorderMeraEventDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UsageCount Value="199"/>
+        <UsageCount Value="200"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderVisualControl.pas"/>
@@ -657,10 +654,10 @@
       <Unit>
         <Filename Value="Device\mic185\uMic185MebiusTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="141"/>
-        <CursorPos X="69" Y="174"/>
+        <EditorIndex Value="4"/>
+        <CursorPos X="45" Y="27"/>
         <UsageCount Value="200"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Device\mic185\uRecorderMic185DataSource.pas"/>
@@ -929,31 +926,30 @@
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaApi.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="68"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaBinaryClient.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="519"/>
-        <CursorPos X="61" Y="537"/>
-        <UsageCount Value="68"/>
-        <Loaded Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="505"/>
+        <CursorPos X="38" Y="512"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaDataSource.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="68"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaDevice.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="68"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaFactory.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="68"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaSourceEditor.pas"/>
@@ -961,17 +957,15 @@
         <ComponentName Value="RecorderOpcUaEditorForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="6"/>
-        <TopLine Value="1833"/>
-        <CursorPos X="63" Y="1859"/>
-        <UsageCount Value="68"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="245"/>
+        <CursorPos X="62" Y="264"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="Device\OPC\uRecorderOpcUaTypes.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="68"/>
+        <UsageCount Value="105"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbTypes.pas"/>
@@ -981,10 +975,11 @@
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbRepository.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="261"/>
-        <CursorPos X="112" Y="287"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="262"/>
+        <CursorPos X="51" Y="284"/>
         <UsageCount Value="201"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="SQLdb\uRecorderSqlDbFileStore.pas"/>
@@ -1025,244 +1020,244 @@
       <Unit>
         <Filename Value="Core\uRecorderFrequencyResponse.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="25"/>
+        <UsageCount Value="62"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFrequencyResponseModel.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="25"/>
+        <UsageCount Value="62"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderFrequencyResponseView.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="25"/>
+        <UsageCount Value="62"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uRecorderFrequencyResponseSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="25"/>
+        <UsageCount Value="62"/>
       </Unit>
       <Unit>
         <Filename Value="Device\uRecorderMic140DeviceApi.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="12"/>
         <CursorPos X="61" Y="35"/>
-        <UsageCount Value="92"/>
+        <UsageCount Value="89"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140LegacyProtocol.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="171"/>
         <CursorPos X="70" Y="198"/>
-        <UsageCount Value="113"/>
+        <UsageCount Value="110"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Types.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="37"/>
         <CursorPos X="105" Y="30"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2WireTypes.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="110" Y="23"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Consts.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2Protocol.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="650"/>
         <CursorPos X="217" Y="680"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Timing.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2ChanDesc.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="79" Y="52"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Diag.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="86" Y="32"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\utils\uRecorderMic140v2Helper.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="44"/>
         <CursorPos X="40" Y="73"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2Scan.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="13"/>
         <CursorPos X="119" Y="32"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2Stream.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2RawRing.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2Device.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="88" Y="21"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140v2\uRecorderMic140v2Factory.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="98" Y="24"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMebiusTcpProtocol.pas"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="113"/>
+        <UsageCount Value="110"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140DoubleBuffer.pas"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="109"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140ScanConfig.pas"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="109"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140AcquireTiming.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140StreamFsm.pas"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="109"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140ProtocolDriver.pas"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="109"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140LegacyScanDriver.pas"/>
-        <UsageCount Value="112"/>
+        <UsageCount Value="109"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140MebiusTypes.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140LegacyChannelDesc.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140DeviceCore.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="65" Y="22"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MIC140\uRecorderMic140LegacyDevice.pas"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="88"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderSpectrumRuntime.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="521"/>
         <CursorPos X="61" Y="550"/>
-        <UsageCount Value="126"/>
+        <UsageCount Value="123"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderFrequencyBands.pas"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="106"/>
+        <UsageCount Value="103"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderSpectrumEngine.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="202"/>
         <CursorPos X="44" Y="202"/>
-        <UsageCount Value="106"/>
+        <UsageCount Value="103"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderMeraPaths.pas"/>
-        <UsageCount Value="106"/>
+        <UsageCount Value="103"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\mera\uMeraFile.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="129"/>
         <CursorPos X="38" Y="134"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="29"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartFontMng.pas"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="573"/>
-        <CursorPos X="32" Y="585"/>
-        <UsageCount Value="17"/>
+        <TopLine Value="370"/>
+        <CursorPos X="105" Y="396"/>
+        <UsageCount Value="19"/>
       </Unit>
       <Unit>
         <Filename Value="Core\uRecorderCoordinatorClient.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="338"/>
         <CursorPos X="86" Y="349"/>
-        <UsageCount Value="51"/>
+        <UsageCount Value="48"/>
       </Unit>
       <Unit>
         <Filename Value="Device\MCbus\uRecorderMcbusDataSource.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="90"/>
         <CursorPos Y="110"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\lcl\include\control.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="3593"/>
         <CursorPos X="21" Y="3606"/>
-        <UsageCount Value="3"/>
+        <UsageCount Value="10"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\lcl\include\picture.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="792"/>
         <CursorPos X="67" Y="821"/>
-        <UsageCount Value="23"/>
+        <UsageCount Value="20"/>
       </Unit>
       <Unit>
         <Filename Value="UI\uLuaCalcSettingsDialog.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="272"/>
         <CursorPos X="88" Y="285"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="35"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\lcl\include\wincontrol.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="7567"/>
         <CursorPos X="103" Y="7590"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="14"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\lcl\include\customcontrol.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="22"/>
         <CursorPos X="26" Y="47"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="13"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\lcl\grids.pas"/>
@@ -1270,35 +1265,42 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="11365"/>
         <CursorPos X="41" Y="11424"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="..\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2396"/>
+        <CursorPos X="85" Y="2430"/>
+        <UsageCount Value="12"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="71"/>
+        <CursorPos X="67" Y="101"/>
+        <UsageCount Value="29"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\SharedUtils\3d\lcl\u3dLclWidget.pas"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="2414"/>
-        <CursorPos X="48" Y="2436"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="309"/>
+        <CursorPos X="91" Y="337"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI\uRecorderSignalGeneratorSettingsDialog.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="109"/>
+        <CursorPos X="53" Y="134"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="9">
-      <Position>
-        <Filename Value="RecorderLnx.lpr"/>
-        <Caret Line="142" Column="102" TopLine="112"/>
-      </Position>
-      <Position>
-        <Filename Value="RecorderLnx.lpr"/>
-        <Caret Line="149" TopLine="112"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\OPC\uRecorderOpcUaSourceEditor.pas"/>
-        <Caret Line="85" Column="68" TopLine="57"/>
-      </Position>
-      <Position>
-        <Filename Value="Device\OPC\uRecorderOpcUaBinaryClient.pas"/>
-        <Caret Line="473" Column="45" TopLine="445"/>
-      </Position>
+    <JumpHistory HistoryIndex="18">
       <Position>
         <Filename Value="UI\uMainForm.pas"/>
         <Caret Line="83" Column="63" TopLine="67"/>
@@ -1312,16 +1314,68 @@
         <Caret Line="84" Column="101" TopLine="72"/>
       </Position>
       <Position>
-        <Filename Value="Device\OPC\uRecorderOpcUaSourceEditor.pas"/>
-        <Caret Line="75" Column="66" TopLine="49"/>
-      </Position>
-      <Position>
         <Filename Value="Core\uRecorderFormModel.pas"/>
         <Caret Line="22" Column="56"/>
       </Position>
       <Position>
-        <Filename Value="UI\uRecorderMeasurementSectionSettingsDialog.pas"/>
-        <Caret Line="1172" Column="66" TopLine="1145"/>
+        <Filename Value="Core\uRecorderFormModel.pas"/>
+        <Caret Line="26" Column="68"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <Caret Line="295" Column="48" TopLine="274"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <Caret Line="293" Column="10" TopLine="274"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <Caret Line="294" Column="41" TopLine="274"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <Caret Line="304" Column="48" TopLine="274"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderLissajousView.pas"/>
+        <Caret Line="293" Column="10" TopLine="274"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="2290" Column="93" TopLine="2262"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uMainForm.pas"/>
+        <Caret Line="383" Column="76" TopLine="369"/>
+      </Position>
+      <Position>
+        <Filename Value="..\SharedUtils\3d\lcl\u3dLclWidget.pas"/>
+        <Caret Line="218" Column="44" TopLine="190"/>
+      </Position>
+      <Position>
+        <Filename Value="UI\uRecorderSignalGeneratorSettingsDialog.pas"/>
+        <Caret Line="134" Column="53" TopLine="109"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderProjectFiles.pas"/>
+        <Caret Line="16" Column="96"/>
+      </Position>
+      <Position>
+        <Filename Value="..\SharedUtils\3d\lcl\u3dLclWidget.pas"/>
+        <Caret Line="218" Column="74" TopLine="190"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderProjectFiles.pas"/>
+        <Caret Line="698" Column="51" TopLine="681"/>
+      </Position>
+      <Position>
+        <Filename Value="Core\uRecorderProjectFiles.pas"/>
+        <Caret Line="2492" Column="73" TopLine="2471"/>
+      </Position>
+      <Position>
+        <Filename Value="Device\mic185\uMic185MebiusTypes.pas"/>
+        <Caret Line="27" Column="45"/>
       </Position>
     </JumpHistory>
     <RunParams>

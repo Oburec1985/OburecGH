@@ -948,7 +948,8 @@ begin
             lSpan := (fActivePage.XMaxValue - fActivePage.XMinValue) * lFactorX;
             fActivePage.XMinValue := lCenter - lSpan * 0.5;
             fActivePage.XMaxValue := lCenter + lSpan * 0.5;
-            if fActivePage.PresetMaxXValue > fActivePage.PresetMinXValue then
+            if (not fActivePage.ReverseDragZoomOutBothAxes) and
+               (fActivePage.PresetMaxXValue > fActivePage.PresetMinXValue) then
             begin
               fActivePage.XMinValue := Max(fActivePage.XMinValue,
                 fActivePage.PresetMinXValue);

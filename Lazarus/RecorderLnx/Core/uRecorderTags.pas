@@ -171,6 +171,9 @@ type
     { Возвращает только ещё не прочитанные потребителем отсчёты и передвигает его курсор.
       Если потребитель отстал больше ёмкости кольца, возвращается вся доступная история. }
     function SnapshotSince(var ACursor: QWord): TRecorderSignalSnapshot;
+    { Копирует непрочитанные отсчёты в переиспользуемые массивы потребителя. }
+    procedure SnapshotSinceInto(var ACursor: QWord;
+      var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer);
     { Текущая позиция записи. Используется для инициализации нового потребителя без старой истории. }
     function CurrentCursor: QWord;
     { Возвращает следующий целый непрочитанный блок. В уведомления массивы не копируются. }
@@ -212,6 +215,14 @@ type
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fEstimateCache: array[TRecorderTagEstimateKind] of TRecorderTagEstimate;
     fEstimateLock: TRTLCriticalSection;                        { Кэш оценок читается UI-потоком }
+    fEstimatePortionCount: Integer;
+    fEstimatePortionStartTime: Double;
+    fEstimatePortionEndTime: Double;
+    fEstimatePortionLastValue: Double;
+    fEstimatePortionMin: Double;
+    fEstimatePortionMax: Double;
+    fEstimatePortionSum: Extended;
+    fEstimatePortionSquareSum: Extended;
     fModuleType: string;                                       { Тип модуля/устройства }
     fName: string;                                             { Уникальное имя тега }
     fPollFrequencyHz: Double;                                  { Частота опроса в Гц }
@@ -253,6 +264,7 @@ type
     procedure SetHardwareCalibrationEnabled(AValue: Boolean);
     procedure SetHardwareCalibrationName(const AValue: string);
     procedure SetChannelCalibrationEnabled(AValue: Boolean);
+    procedure SetEstimateSettings(const AValue: TRecorderTagEstimateSettings);
   public
     { Создает тег.
       AId       - стабильный числовой id в пределах registry.
@@ -314,7 +326,7 @@ type
     property AutoUnit: Boolean read fAutoUnit write SetAutoUnit;
     property CalibrationNames: TStringList read fCalibrationNames;
     property EstimateSettings: TRecorderTagEstimateSettings read fEstimateSettings
-      write fEstimateSettings;
+      write SetEstimateSettings;
     property Setpoints[AKind: TRecorderTagSetpointKind]: TRecorderTagSetpoint
       read GetSetpoint write SetSetpoint;
     property SetpointHysteresisEnabled: Boolean read fSetpointHysteresisEnabled
@@ -449,6 +461,8 @@ type
 
   TRecorderTagBlockPublishedEvent = procedure(Sender: TObject; const ATagName: string;
     const ATimes, AValues: array of Double; ACount: Integer) of object;
+  TRecorderTagSqlBlockPublishedEvent = procedure(Sender: TObject;
+    ATag: TRecorderTag; ATimeSec, AValue: Double) of object;
   TRecorderTagValuePublishedEvent = procedure(Sender: TObject; ATag: TRecorderTag;
     ATimeSec, AValue: Double) of object;
   TRecorderEnsureCalibrationDataEvent = function(ATag: TRecorderTag;
@@ -460,6 +474,8 @@ type
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fBlockPublishedTarget: TObject;
     fOnBlockPublished: TRecorderTagBlockPublishedEvent;
+    fSqlBlockPublishedTarget: TObject;
+    fOnSqlBlockPublished: TRecorderTagSqlBlockPublishedEvent;
     fValuePublishedTarget: TObject;
     fOnValuePublished: TRecorderTagValuePublishedEvent;
     fAlarmValuePublishedTarget: TObject;
@@ -607,6 +623,10 @@ type
       UI/extension-события. Назначается менеджером алгоритмов. }
     procedure SetBlockPublishedHandler(ATarget: TObject;
       AHandler: TRecorderTagBlockPublishedEvent);
+    { Независимый маршрут блоков в SQL. Ошибка или замена обработчика
+      алгоритмов не должна отключать запись измерений в базу. }
+    procedure SetSqlBlockPublishedHandler(ATarget: TObject;
+      AHandler: TRecorderTagSqlBlockPublishedEvent);
     { Прямой обработчик скалярного обновления для менеджера алгоритмов. }
     procedure SetValuePublishedHandler(ATarget: TObject;
       AHandler: TRecorderTagValuePublishedEvent);
@@ -1366,6 +1386,12 @@ end;
 
 function TRecorderSignalBuffer.SnapshotSince(
   var ACursor: QWord): TRecorderSignalSnapshot;
+begin
+  SnapshotSinceInto(ACursor, Result.Times, Result.Values, Result.Count);
+end;
+
+procedure TRecorderSignalBuffer.SnapshotSinceInto(var ACursor: QWord;
+  var ATimes, AValues: TRecorderDoubleArray; out ACount: Integer);
 var
   lAvailableStart: QWord;
   lFirstCount: Integer;
@@ -1377,22 +1403,24 @@ begin
     lAvailableStart := fTotalSamples - QWord(fCount);
     if (ACursor < lAvailableStart) or (ACursor > fTotalSamples) then
       ACursor := lAvailableStart;
-    Result.Count := Integer(fTotalSamples - ACursor);
-    SetLength(Result.Times, Result.Count);
-    SetLength(Result.Values, Result.Count);
-    if Result.Count > 0 then
+    ACount := Integer(fTotalSamples - ACursor);
+    if Length(ATimes) < ACount then
+      SetLength(ATimes, ACount);
+    if Length(AValues) < ACount then
+      SetLength(AValues, ACount);
+    if ACount > 0 then
     begin
       lOffset := Integer(ACursor - lAvailableStart);
       lReadIndex := (fStart + lOffset) mod fCapacity;
-      lFirstCount := Min(Result.Count, fCapacity - lReadIndex);
-      Move(fTimes[lReadIndex], Result.Times[0], lFirstCount * SizeOf(Double));
-      Move(fValues[lReadIndex], Result.Values[0], lFirstCount * SizeOf(Double));
-      if lFirstCount < Result.Count then
+      lFirstCount := Min(ACount, fCapacity - lReadIndex);
+      Move(fTimes[lReadIndex], ATimes[0], lFirstCount * SizeOf(Double));
+      Move(fValues[lReadIndex], AValues[0], lFirstCount * SizeOf(Double));
+      if lFirstCount < ACount then
       begin
-        Move(fTimes[0], Result.Times[lFirstCount],
-          (Result.Count - lFirstCount) * SizeOf(Double));
-        Move(fValues[0], Result.Values[lFirstCount],
-          (Result.Count - lFirstCount) * SizeOf(Double));
+        Move(fTimes[0], ATimes[lFirstCount],
+          (ACount - lFirstCount) * SizeOf(Double));
+        Move(fValues[0], AValues[lFirstCount],
+          (ACount - lFirstCount) * SizeOf(Double));
       end;
     end;
     ACursor := fTotalSamples;
@@ -1669,6 +1697,14 @@ begin
       FillChar(fEstimateCache[lKind], SizeOf(TRecorderTagEstimate), 0);
       fEstimateCache[lKind].Kind := lKind;
     end;
+    fEstimatePortionCount := 0;
+    fEstimatePortionStartTime := 0.0;
+    fEstimatePortionEndTime := 0.0;
+    fEstimatePortionLastValue := 0.0;
+    fEstimatePortionMin := 0.0;
+    fEstimatePortionMax := 0.0;
+    fEstimatePortionSum := 0.0;
+    fEstimatePortionSquareSum := 0.0;
   finally
     LeaveCriticalSection(fEstimateLock);
   end;
@@ -1679,70 +1715,79 @@ procedure TRecorderTag.UpdateEstimateCache(const ATimes,
 var
   I: Integer;
   lKind: TRecorderTagEstimateKind;
-  lMax: Double;
   lMean: Extended;
-  lMin: Double;
-  lSquareSum: Extended;
-  lSum: Extended;
+  lPortionLength: Integer;
   lVariance: Extended;
 begin
   if (ACount <= 0) or (ACount > Length(ATimes)) or
     (ACount > Length(AValues)) then
     Exit;
 
-  lMin := AValues[0];
-  lMax := AValues[0];
-  lSum := 0.0;
-  lSquareSum := 0.0;
-  for I := 0 to ACount - 1 do
-  begin
-    lSum := lSum + AValues[I];
-    lSquareSum := lSquareSum + AValues[I] * AValues[I];
-    if AValues[I] < lMin then
-      lMin := AValues[I];
-    if AValues[I] > lMax then
-      lMax := AValues[I];
-  end;
-  lMean := lSum / ACount;
-  if ACount > 1 then
-  begin
-    lVariance := (lSquareSum - lSum * lSum / ACount) / (ACount - 1);
-    if lVariance < 0 then
-      lVariance := 0;
-  end
-  else
-    lVariance := 0;
-
   EnterCriticalSection(fEstimateLock);
   try
-    for lKind := Low(TRecorderTagEstimateKind) to
-      High(TRecorderTagEstimateKind) do
+    lPortionLength := fEstimateSettings.PortionLength;
+    if lPortionLength < 1 then
+      lPortionLength := 1;
+    for I := 0 to ACount - 1 do
     begin
-      fEstimateCache[lKind].Kind := lKind;
-      fEstimateCache[lKind].Count := ACount;
-      fEstimateCache[lKind].Valid := True;
-      fEstimateCache[lKind].StartTimeSec := ATimes[0];
-      fEstimateCache[lKind].EndTimeSec := ATimes[ACount - 1];
-      case lKind of
-        tekMean:
-          fEstimateCache[lKind].Value := lMean;
-        tekRmsValue:
-          fEstimateCache[lKind].Value := Sqrt(lSquareSum / ACount);
-        tekRmsDeviation:
-          fEstimateCache[lKind].Value := Sqrt(lVariance);
-        tekPeak:
-          fEstimateCache[lKind].Value := (lMax - lMin) / 2.0;
-        tekPeakToPeak:
-          fEstimateCache[lKind].Value := lMax - lMin;
-        tekMinimum:
-          fEstimateCache[lKind].Value := lMin;
-        tekMaximum:
-          fEstimateCache[lKind].Value := lMax;
-        tekPeakToPeakByRmsDeviation:
-          fEstimateCache[lKind].Value := 2.0 * Sqrt(2.0) * Sqrt(lVariance);
-        tekLastValue:
-          fEstimateCache[lKind].Value := AValues[ACount - 1];
+      if fEstimatePortionCount = 0 then
+      begin
+        fEstimatePortionStartTime := ATimes[I];
+        fEstimatePortionMin := AValues[I];
+        fEstimatePortionMax := AValues[I];
+        fEstimatePortionSum := 0.0;
+        fEstimatePortionSquareSum := 0.0;
       end;
+      Inc(fEstimatePortionCount);
+      fEstimatePortionEndTime := ATimes[I];
+      fEstimatePortionLastValue := AValues[I];
+      fEstimatePortionSum := fEstimatePortionSum + AValues[I];
+      fEstimatePortionSquareSum := fEstimatePortionSquareSum +
+        AValues[I] * AValues[I];
+      if AValues[I] < fEstimatePortionMin then
+        fEstimatePortionMin := AValues[I];
+      if AValues[I] > fEstimatePortionMax then
+        fEstimatePortionMax := AValues[I];
+      if fEstimatePortionCount < lPortionLength then
+        Continue;
+
+      lMean := fEstimatePortionSum / fEstimatePortionCount;
+      if fEstimatePortionCount > 1 then
+      begin
+        lVariance := (fEstimatePortionSquareSum - fEstimatePortionSum *
+          fEstimatePortionSum / fEstimatePortionCount) /
+          (fEstimatePortionCount - 1);
+        if lVariance < 0 then
+          lVariance := 0;
+      end
+      else
+        lVariance := 0;
+      for lKind := Low(TRecorderTagEstimateKind) to
+        High(TRecorderTagEstimateKind) do
+      begin
+        fEstimateCache[lKind].Kind := lKind;
+        fEstimateCache[lKind].Count := fEstimatePortionCount;
+        fEstimateCache[lKind].Valid := True;
+        fEstimateCache[lKind].StartTimeSec := fEstimatePortionStartTime;
+        fEstimateCache[lKind].EndTimeSec := fEstimatePortionEndTime;
+        case lKind of
+          tekMean: fEstimateCache[lKind].Value := lMean;
+          tekRmsValue: fEstimateCache[lKind].Value :=
+            Sqrt(fEstimatePortionSquareSum / fEstimatePortionCount);
+          tekRmsDeviation: fEstimateCache[lKind].Value := Sqrt(lVariance);
+          tekPeak: fEstimateCache[lKind].Value :=
+            (fEstimatePortionMax - fEstimatePortionMin) / 2.0;
+          tekPeakToPeak: fEstimateCache[lKind].Value :=
+            fEstimatePortionMax - fEstimatePortionMin;
+          tekMinimum: fEstimateCache[lKind].Value := fEstimatePortionMin;
+          tekMaximum: fEstimateCache[lKind].Value := fEstimatePortionMax;
+          tekPeakToPeakByRmsDeviation: fEstimateCache[lKind].Value :=
+            2.0 * Sqrt(2.0) * Sqrt(lVariance);
+          tekLastValue: fEstimateCache[lKind].Value :=
+            fEstimatePortionLastValue;
+        end;
+      end;
+      fEstimatePortionCount := 0;
     end;
   finally
     LeaveCriticalSection(fEstimateLock);
@@ -2090,6 +2135,29 @@ begin
   InvalidateCalibrationScale;
 end;
 
+procedure TRecorderTag.SetEstimateSettings(
+  const AValue: TRecorderTagEstimateSettings);
+var
+  lPortionChanged: Boolean;
+begin
+  EnterCriticalSection(fEstimateLock);
+  try
+    lPortionChanged := fEstimateSettings.PortionLength <>
+      AValue.PortionLength;
+    fEstimateSettings := AValue;
+    if lPortionChanged then
+    begin
+      { Не смешиваем остаток старой порции с новым размером. Следующая оценка
+        будет опубликована только после накопления полной новой порции. }
+      fEstimatePortionCount := 0;
+      fEstimatePortionSum := 0.0;
+      fEstimatePortionSquareSum := 0.0;
+    end;
+  finally
+    LeaveCriticalSection(fEstimateLock);
+  end;
+end;
+
 procedure TRecorderTag.SetHardwareCalibrationEnabled(AValue: Boolean);
 begin
   if fHardwareCalibrationEnabled = AValue then
@@ -2361,6 +2429,17 @@ begin
         Exit(True);
       end;
     end;
+
+  { MIC-185 выполняет аппаратную ГХ и последующий пересчёт мВ -> Ом/мкстрн
+    внутри datasource. Поэтому при отсутствии канальной ГХ результатом
+    аппаратной части для пользователя является единица источника, а не
+    промежуточный UnitOut аппаратной ГХ. }
+  if (Pos('MIC-185:', ATag.SourceId) = 1) and
+    (Trim(ATag.SourceUnitName) <> '') then
+  begin
+    AUnitName := Trim(ATag.SourceUnitName);
+    Exit(True);
+  end;
 
   if (lHardwareCalibration <> nil) and
     (Trim(lHardwareCalibration.UnitOut) <> '') then
@@ -3009,6 +3088,13 @@ begin
   PublishValue(ATag, 0.0, AValue);
 end;
 
+procedure TRecorderTagRegistry.SetSqlBlockPublishedHandler(ATarget: TObject;
+  AHandler: TRecorderTagSqlBlockPublishedEvent);
+begin
+  fSqlBlockPublishedTarget := ATarget;
+  fOnSqlBlockPublished := AHandler;
+end;
+
 procedure TRecorderTagRegistry.PublishExternalValue(const ATagName: string;
   AValue: Double);
 var
@@ -3092,11 +3178,39 @@ begin
   if (ATag = nil) or (ACount <= 0) or (ACount > Length(ATimes)) or
     (ACount > Length(AValues)) then
     Exit;
+  { SQL persistence is the first block consumer. Algorithm and alarm handlers
+    are allowed to do substantially more work and must not delay or suppress
+    the measurement that has already been accepted into the tag buffer. }
+  if Assigned(fOnSqlBlockPublished) then
+    try
+      fOnSqlBlockPublished(fSqlBlockPublishedTarget, ATag,
+        ATimes[ACount - 1], AValues[ACount - 1]);
+    except
+      on E: Exception do
+        RecorderDebugLog(Format(
+          '[Tags] SQL block consumer failed for %s: %s: %s',
+          [ATag.Name, E.ClassName, E.Message]));
+    end;
   if Assigned(fOnBlockPublished) then
-    fOnBlockPublished(fBlockPublishedTarget, ATag.Name, ATimes, AValues, ACount);
+    try
+      fOnBlockPublished(fBlockPublishedTarget, ATag.Name, ATimes, AValues,
+        ACount);
+    except
+      on E: Exception do
+        RecorderDebugLog(Format(
+          '[Tags] block consumer failed for %s: %s: %s',
+          [ATag.Name, E.ClassName, E.Message]));
+    end;
   if Assigned(fOnAlarmValuePublished) then
-    fOnAlarmValuePublished(fAlarmValuePublishedTarget, ATag,
-      ATimes[ACount - 1], AValues[ACount - 1]);
+    try
+      fOnAlarmValuePublished(fAlarmValuePublishedTarget, ATag,
+        ATimes[ACount - 1], AValues[ACount - 1]);
+    except
+      on E: Exception do
+        RecorderDebugLog(Format(
+          '[Tags] alarm consumer failed for %s: %s: %s',
+          [ATag.Name, E.ClassName, E.Message]));
+    end;
   { Для медленных потребителей публикуется только хвост блока. Сами массивы
     остаются в буфере тега, поэтому acquisition-путь не получает лишнего копирования. }
   if fEventBus <> nil then
@@ -3106,7 +3220,14 @@ begin
     try
       lEvent := TRecorderEventBus.MakeEvent(rceDataUpdated, Self, ATag.Name,
         ATag.TextValue, 1, lEventData);
-      fEventBus.Publish(lEvent);
+      try
+        fEventBus.Publish(lEvent);
+      except
+        on E: Exception do
+          RecorderDebugLog(Format(
+            '[Tags] event consumer failed for %s: %s: %s',
+            [ATag.Name, E.ClassName, E.Message]));
+      end;
     finally
       lEventData.Free;
     end;

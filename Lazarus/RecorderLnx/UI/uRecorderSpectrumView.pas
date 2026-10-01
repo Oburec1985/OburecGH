@@ -123,6 +123,20 @@ begin
     fBufferedFrames[AIndex].Values := Copy(AFrame.Rms);
   end;
 
+  { FFT-движок хранит действующие значения. Амплитудный режим является
+    линейным представлением того же спектра и потому применяется до
+    интегрирования. }
+  if (fComponent.SpectrumValueMode = 1) and
+    (fComponent.ResultType in [0, 2]) then
+  begin
+    for I := 1 to Length(fBufferedFrames[AIndex].Values) - 1 do
+      fBufferedFrames[AIndex].Values[I] :=
+        fBufferedFrames[AIndex].Values[I] * Sqrt(2.0);
+    for I := 1 to Length(fBufferedFrames[AIndex].SecondaryValues) - 1 do
+      fBufferedFrames[AIndex].SecondaryValues[I] :=
+        fBufferedFrames[AIndex].SecondaryValues[I] * Sqrt(2.0);
+  end;
+
   lIntegration := EnsureRange(fComponent.SpectrumIntegration, 0, 2);
   if (lIntegration = 0) or
     (not IsAccelerationTag(fBufferedFrames[AIndex].TagName)) then
@@ -478,7 +492,7 @@ begin
   lFlag.AnchorX := lFrame.MaxFrequencyHz;
   lFlag.WorldX := lFrame.MaxFrequencyHz;
   lFlag.WorldY := lFrame.MaxRms;
-  lFlag.Text := Format('MAX %d: X=%s'#13#10'Y=%s', [lFrame.MaxIndex,
+  lFlag.Text := Format('F:%s V:%s', [
     FormatFloat('0.######', lFrame.MaxFrequencyHz),
     FormatFloat('0.######', lFrame.MaxRms)]);
 end;
@@ -606,9 +620,11 @@ begin
   end;
 
   SGChange(fLegendGrid, 48, 220, 18);
-  if not fLegendHeightInitialized then
+  lRow := Min(180, Max(44,
+    fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 6));
+  if (not fLegendHeightInitialized) or (fHeaderPanel.Height < lRow) then
   begin
-    fHeaderPanel.Height := Min(180, Max(44, fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 6));
+    fHeaderPanel.Height := lRow;
     fLegendHeightInitialized := True;
   end;
 end;

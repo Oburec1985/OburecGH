@@ -455,8 +455,6 @@ begin
       fChannelSettings[lRow - 1].ThermocoupleScaleName := lSettings.ThermocoupleScaleName;
       fChannelSettings[lRow - 1].ThermocoupleScalePath := lSettings.ThermocoupleScalePath;
       fChannelSettings[lRow - 1].OutputMode := lSettings.OutputMode;
-      fChannelSettings[lRow - 1].ChannelCalibrationEnabled :=
-        lSettings.ChannelCalibrationEnabled;
       fChannelSettings[lRow - 1].DefaultCjc := lSettings.DefaultCjc;
       fChannelSettings[lRow - 1].CjcChannel := lSettings.CjcChannel;
       fChannelSettings[lRow - 1].SoftBalance := lSettings.SoftBalance;
@@ -823,36 +821,11 @@ begin
         lSettings := lResult.ChannelSettings[lChannelNumber - 1];
         lSettings.ChannelAddress := lTag.Address;
         lConfig.SetChannelSettings(lChannelNumber, lTag.Address, lSettings);
+        { The thermocouple curve belongs to the MIC-140 hardware stage. Do not
+          change the independently controlled sensor-GX flag or its pipeline. }
         if RecorderMic140ChannelUsesTemperature(lSettings) then
-        begin
-          if (not lTag.ChannelCalibrationEnabled) or
-            (lTag.SourceValueMode <>
-            RecorderMic140OutputModeToConfigName(momTemperatureC)) then
-            lTag.ClearSignalHistory;
-          lTag.ChannelCalibrationEnabled := True;
-          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momTemperatureC);
-          if lTag.AutoUnit then
-            lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
-          lCalName := RecorderMic140EnsureThermocoupleCalibration(ATagRegistry, lSettings);
-          lTag.CalibrationNames.Clear;
-          if lCalName <> '' then
-            lTag.CalibrationNames.Add(lCalName);
-          if lCalName = '' then
-            lTag.CalibrationNames.Add('TC ' + lSettings.ThermocoupleScaleName);
-        end
-        else
-        begin
-          if lTag.ChannelCalibrationEnabled or
-            (lTag.SourceValueMode <>
-            RecorderMic140OutputModeToConfigName(momMillivolts)) then
-            lTag.ClearSignalHistory;
-          lTag.ChannelCalibrationEnabled := False;
-          lTag.SourceValueMode := RecorderMic140OutputModeToConfigName(momMillivolts);
-          if lTag.AutoUnit then
-            lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
-          if lTag.CalibrationNames <> nil then
-            lTag.CalibrationNames.Clear;
-        end;
+          RecorderMic140EnsureThermocoupleCalibration(ATagRegistry, lSettings);
+        RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
       end;
       RecorderTagClearMic140Settings(lTag);
       if ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and

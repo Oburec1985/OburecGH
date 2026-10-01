@@ -141,6 +141,7 @@ type
     function ActiveAxisIndex: Integer;
     function ActiveChartAxis: TChartAxis;
     function ActiveModelAxis: TRecorderTrendAxis;
+    procedure ActivateFirstSeriesOnAxis(AAxis: TChartAxis);
     procedure UpdateActiveSeriesRenderPriority;
     function UpdateAxisDisplayUnits: Boolean;
     procedure UpdateAxisSourceUnits;
@@ -148,6 +149,7 @@ type
     procedure UpdateSignalGrid;
     procedure DetectManualRange;
     procedure ControlValueEdited(Sender: TObject);
+    procedure ApplyActiveYScale;
     procedure TriggerChanged(Sender: TObject);
     procedure ClosedInputChanged(Sender: TObject);
     procedure ScaleSpinClick(Sender: TObject; Button: TUDBtnType);
@@ -1281,6 +1283,29 @@ begin
   Result := fComponent.Axes[lIndex];
 end;
 
+procedure TRecorderOglOscillogram.ActivateFirstSeriesOnAxis(
+  AAxis: TChartAxis);
+var
+  I: Integer;
+begin
+  if (not fPluginMode) or (AAxis = nil) then
+    Exit;
+  for I := 0 to High(fSeries) do
+    if fSeries[I].Visible and (fSeries[I].Parent = AAxis) then
+    begin
+      if fActiveSeriesIndex = I then
+        Exit;
+      fActiveSeriesIndex := I;
+      if fSignalGrid <> nil then
+        fSignalGrid.Row := I + 1;
+      SyncViewportControls(True);
+      UpdateAxisSourceUnits;
+      UpdateAxisDisplayUnits;
+      UpdateActiveSeriesRenderPriority;
+      Exit;
+    end;
+end;
+
 { Marks the signal selected in the side grid as the chart's active trend.
   The renderer uses this reference only for the final overlay pass; the series
   array, axes and persisted channel order therefore remain unchanged. }
@@ -1442,7 +1467,14 @@ begin
   for I := 0 to ASnapshot.Count - 1 do
   begin
     lTime := ASnapshot.Times[I] - ADisplayStart;
-    if (lTime < 0) or (lTime > ADisplaySeconds) then
+    if lTime < 0 then
+    begin
+      if I = 0 then
+        lTime := 0
+      else
+        Continue;
+    end;
+    if lTime > ADisplaySeconds then
       Continue;
     lValue := ASnapshot.Values[I] - lMean;
     fLinePoints[APointCount].X := lTime;
@@ -1634,6 +1666,8 @@ begin
   end;
   fToolBar := TToolBar.Create(Self);
   fToolBar.Parent := Self;
+  fToolBar.ParentBiDiMode := False;
+  fToolBar.BiDiMode := bdLeftToRight;
   fToolBar.Align := alTop;
   fToolBar.Height := 26;
   fToolBar.Images := fToolImages;
@@ -2018,6 +2052,7 @@ begin
     lChartAxis := ActiveChartAxis;
     if lChartAxis <> nil then
       lChartAxis.HasPresetRange := False;
+    ApplyActiveYScale;
   end
   else if Sender = fOffsetEdit then
   begin
@@ -2038,6 +2073,7 @@ begin
     lChartAxis := ActiveChartAxis;
     if lChartAxis <> nil then
       lChartAxis.HasPresetRange := False;
+    ApplyActiveYScale;
   end
   else if Sender = fLevelEdit then
   begin
@@ -2054,6 +2090,26 @@ begin
   end;
   fHasDataSignature := False;
   Refresh(fTagRegistry, CurrentDisplaySeconds);
+end;
+
+procedure TRecorderOglOscillogram.ApplyActiveYScale;
+var
+  lAxis: TChartAxis;
+  lModelAxis: TRecorderTrendAxis;
+  lBaseMin, lBaseMax, lCenter, lHalfRange: Double;
+begin
+  lAxis := ActiveChartAxis;
+  lModelAxis := ActiveModelAxis;
+  if (lAxis = nil) or (lModelAxis = nil) or (lModelAxis.YScale <= 0) then
+    Exit;
+  lBaseMin := lAxis.PresetMinValue;
+  lBaseMax := lAxis.PresetMaxValue;
+  if lBaseMax <= lBaseMin then Exit;
+  lCenter := (lBaseMin + lBaseMax) * 0.5 + lModelAxis.YOffset;
+  lHalfRange := (lBaseMax - lBaseMin) * lModelAxis.YScale * 0.5;
+  lAxis.MinValue := lCenter - lHalfRange;
+  lAxis.MaxValue := lCenter + lHalfRange;
+  if fChart <> nil then fChart.Redraw;
 end;
 
 procedure TRecorderOglOscillogram.TriggerChanged(Sender: TObject);
@@ -2408,9 +2464,31 @@ end;
 
 procedure TRecorderOglOscillogram.ChartMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lAxis: TChartAxis;
+  lHit: TChartTextHit;
+  lRenderer: TOpenGLChartRenderer;
 begin
   if Button = mbLeft then
   begin
+    { Activate the signal here, from the actual hit result, instead of waiting
+      for MouseUp and relying on SelectedObject. Other chart listeners may
+      replace SelectedObject between the two events. Both the axis line and
+      its captions/tick labels belong to the same selectable axis. }
+    if fPluginMode and (fChart <> nil) then
+    begin
+      lAxis := nil;
+      lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
+      if lRenderer <> nil then
+      begin
+        if lRenderer.GetTextHitAt(X, Y, lHit) and (lHit.Axis <> nil) then
+          lAxis := lHit.Axis
+        else if not lRenderer.GetAxisHitAt(fChart.Model, X, Y, lAxis) then
+          lAxis := nil;
+      end;
+      if lAxis <> nil then
+        ActivateFirstSeriesOnAxis(lAxis);
+    end;
     fDraggingXCursor := XCursorHit(X, Y);
     if fDraggingXCursor >= 0 then
     begin
@@ -2462,6 +2540,9 @@ begin
     fHasDataSignature := False;
     Refresh(fTagRegistry, CurrentDisplaySeconds);
   end;
+  if (Button = mbLeft) and (fChart <> nil) and
+     (fChart.SelectedObject is TChartAxis) then
+    ActivateFirstSeriesOnAxis(TChartAxis(fChart.SelectedObject));
   DetectManualRange;
 end;
 
@@ -2723,7 +2804,9 @@ begin
     TChartPage(fPage).ZoomedX := lWindowSeconds < ADisplaySeconds;
   end;
   Inc(fFrameNo);
-  lTag.SnapshotRangeInto(lDisplayStart, False,
+  { Для разреженного change-only потока нужна точка перед левой границей:
+    её значение остаётся действующим до первого события внутри окна. }
+  lTag.SnapshotRangeInto(lDisplayStart, True,
     fLineSnapshots[0].Times, fLineSnapshots[0].Values,
     fLineSnapshots[0].Count);
   while (fLineSnapshots[0].Count > 0) and
@@ -2798,7 +2881,7 @@ begin
       lTrend.ClearPoints;
       Continue;
     end;
-    lTag.SnapshotRangeInto(lDisplayStart, False,
+    lTag.SnapshotRangeInto(lDisplayStart, True,
       fLineSnapshots[I + 1].Times, fLineSnapshots[I + 1].Values,
       fLineSnapshots[I + 1].Count);
     while (fLineSnapshots[I + 1].Count > 0) and

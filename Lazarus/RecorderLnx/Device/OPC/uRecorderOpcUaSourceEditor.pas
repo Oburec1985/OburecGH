@@ -117,6 +117,7 @@ type
     procedure BrowseTreeSelectionChanged(Sender: TObject);
     procedure BrowseTreeMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure BrowseTreeStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure BrowsePopupPopup(Sender: TObject);
     procedure AddSelectedMenuClick(Sender: TObject);
     procedure AuthChange(Sender: TObject);
@@ -136,6 +137,12 @@ type
       State: TDragState; var Accept: Boolean);
     procedure UsedTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure UsedTreeMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure UsedTreeMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
+    procedure UsedTreeMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure ReadClick(Sender: TObject);
   private
     fProbeThread: TRecorderOpcUaProbeThread;
@@ -143,9 +150,19 @@ type
     fTreeItems: TObjectList;
     fUsedItems: TObjectList;
     fAutoBrowsePending: Boolean;
+    fDragSelectionHasUsableItem: Boolean;
+    fUsedMouseAnchor: TTreeNode;
+    fUsedMouseDownY: Integer;
+    fUsedMouseSelecting: Boolean;
+    function AppendTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
     procedure AddTreeItemToGrid(AItem: TRecorderOpcUaTreeItem);
     procedure AddSelectedTreeNode;
     procedure AddSelectedTreeNodes;
+    procedure CollectUsableTreeItems(ANode: TTreeNode; AItems: TList;
+      ANodeIds: TStrings);
+    procedure BuildSelectedUsableTreeItems(AItems: TList);
+    function TreeNodeContainsUsableItem(ANode: TTreeNode): Boolean;
+    function SelectionContainsUsableItem: Boolean;
     procedure AddDiagnostic(const AText: string);
     function AddOrFindTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
     procedure BuildReadInputs(out ANodeIds, ATagNames: TStringList);
@@ -160,6 +177,13 @@ type
     procedure LinkIndexedArrayItems;
     function FindTreeItemByNodeId(const ANodeId: string): TRecorderOpcUaTreeItem;
     procedure RebuildUsedTree;
+    function UsedTreeNodeKey(ANode: TTreeNode): string;
+    procedure CaptureUsedTreeState(AExpandedKeys, ASelectedKeys: TStrings;
+      out AFocusedKey, ATopKey: string);
+    procedure RestoreUsedTreeState(AExpandedKeys, ASelectedKeys: TStrings;
+      const AFocusedKey, ATopKey: string);
+    procedure CollectUsedNodeIds(ANode: TTreeNode; ANodeIds: TStrings);
+    procedure SelectUsedVisibleRange(AFirst, ALast: TTreeNode);
     procedure RemoveSelectedUsedChannels;
     procedure ShowSelectedNodeProperties;
     function SelectedUsableTreeNodeCount: Integer;
@@ -234,6 +258,21 @@ begin
     Result := Format('%s [OPC UA %d]', [lStem, lIndex]);
     Inc(lIndex);
   end;
+end;
+
+function UniqueOpcUaSourceId(ARegistry: TRecorderTagRegistry;
+  const ARequestedId, AOldSourceId: string): string;
+var
+  lIndex: Integer;
+begin
+  Result := ARequestedId;
+  if SameText(Result, AOldSourceId) or
+    (RecorderConfiguredDataSourcesFind(ARegistry, Result) = nil) then Exit;
+  lIndex := 2;
+  repeat
+    Result := Format('%s [%d]', [ARequestedId, lIndex]);
+    Inc(lIndex);
+  until RecorderConfiguredDataSourcesFind(ARegistry, Result) = nil;
 end;
 
 procedure PublishOpcUaClientTags(ARegistry: TRecorderTagRegistry;
@@ -657,6 +696,7 @@ begin
   fBrowseTree.Anchors := [akLeft, akTop, akRight, akBottom];
   fBrowseTree.ReadOnly := True;
   fBrowseTree.OnDblClick := @BrowseTreeDblClick;
+  fBrowseTree.OnStartDrag := @BrowseTreeStartDrag;
   AddLabel(Self, lNodePanel, 'Выбранные рабочие каналы: NodeId|имя тега',
     16, lNodePanel.Height - 108);
   fNodes := TMemo.Create(Self);
@@ -793,7 +833,13 @@ var
   I: Integer;
 begin
   for I := 1 to fValueGrid.RowCount - 1 do
-    if SameText(fValueGrid.Cells[3, I], AItem.NodeId) then Exit(I);
+    if fValueGrid.Cells[3, I] = AItem.NodeId then Exit(I);
+  Result := AppendTagRow(AItem);
+end;
+
+function TRecorderOpcUaEditorForm.AppendTagRow(
+  AItem: TRecorderOpcUaTreeItem): Integer;
+begin
   Result := fValueGrid.RowCount;
   fValueGrid.RowCount := Result + 1;
   fValueGrid.Cells[0, Result] := AItem.TagName;
@@ -962,6 +1008,28 @@ begin
   if Result = nil then Result := ATree.Items.AddChild(AParent, AText);
 end;
 
+function EnsureTreeItemChild(ATree: TTreeView; AParent: TTreeNode;
+  const AText, ANodeId: string): TTreeNode;
+var
+  lNode: TTreeNode;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  Result := nil;
+  if AParent = nil then lNode := ATree.Items.GetFirstNode
+  else lNode := AParent.GetFirstChild;
+  while lNode <> nil do
+  begin
+    if lNode.Text = AText then
+    begin
+      if lNode.Data = nil then Exit(lNode);
+      lItem := TRecorderOpcUaTreeItem(lNode.Data);
+      if lItem.NodeId = ANodeId then Exit(lNode);
+    end;
+    lNode := lNode.GetNextSibling;
+  end;
+  Result := ATree.Items.AddChild(AParent, AText);
+end;
+
 procedure SetTreeNodeImage(ANode: TTreeNode; AImageIndex: Integer);
 begin
   if ANode = nil then Exit;
@@ -976,7 +1044,7 @@ var
 begin
   Result := nil;
   for I := 0 to fTreeItems.Count - 1 do
-    if SameText(TRecorderOpcUaTreeItem(fTreeItems[I]).NodeId, ANodeId) then
+    if TRecorderOpcUaTreeItem(fTreeItems[I]).NodeId = ANodeId then
       Exit(TRecorderOpcUaTreeItem(fTreeItems[I]));
 end;
 
@@ -987,21 +1055,20 @@ var
   lParent: TTreeNode;
   lPart: string;
   lParts: TStringList;
-  lSelectedNodeIds: TStringList;
+  lExpandedKeys, lSelectedKeys: TStringList;
+  lFocusedKey, lTopKey: string;
   lUsed: TRecorderOpcUaUsedItem;
 begin
-  lSelectedNodeIds := TStringList.Create;
+  lExpandedKeys := TStringList.Create;
+  lSelectedKeys := TStringList.Create;
   try
-    lSelectedNodeIds.CaseSensitive := False;
-    for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
-      if (fUsedTree.Selections[I] <> nil) and
-        (fUsedTree.Selections[I].Data <> nil) then
-        lSelectedNodeIds.Add(
-          TRecorderOpcUaUsedItem(fUsedTree.Selections[I].Data).NodeId);
-    fUsedItems.Clear;
+    lExpandedKeys.CaseSensitive := True;
+    lSelectedKeys.CaseSensitive := True;
+    CaptureUsedTreeState(lExpandedKeys, lSelectedKeys, lFocusedKey, lTopKey);
     fUsedTree.Items.BeginUpdate;
     try
       fUsedTree.Items.Clear;
+      fUsedItems.Clear;
       for I := 1 to fValueGrid.RowCount - 1 do
       begin
         if Trim(fValueGrid.Cells[3, I]) = '' then Continue;
@@ -1039,16 +1106,79 @@ begin
             fValueGrid.Cells[0, I]);
         end;
         lUsed.TreeNode.Data := lUsed;
-        if lSelectedNodeIds.IndexOf(lUsed.NodeId) >= 0 then
-          lUsed.TreeNode.Selected := True;
       end;
     finally
       fUsedTree.Items.EndUpdate;
     end;
-    fUsedTree.FullExpand;
+    RestoreUsedTreeState(lExpandedKeys, lSelectedKeys, lFocusedKey, lTopKey);
   finally
-    lSelectedNodeIds.Free;
+    lSelectedKeys.Free;
+    lExpandedKeys.Free;
   end;
+end;
+
+function TRecorderOpcUaEditorForm.UsedTreeNodeKey(ANode: TTreeNode): string;
+var
+  lPath: string;
+  lUsed: TRecorderOpcUaUsedItem;
+begin
+  Result := '';
+  if ANode = nil then Exit;
+  if ANode.Data <> nil then
+  begin
+    lUsed := TRecorderOpcUaUsedItem(ANode.Data);
+    Exit('id:' + lUsed.NodeId);
+  end;
+  lPath := ANode.Text;
+  ANode := ANode.Parent;
+  while ANode <> nil do
+  begin
+    lPath := ANode.Text + '/' + lPath;
+    ANode := ANode.Parent;
+  end;
+  Result := 'path:' + lPath;
+end;
+
+procedure TRecorderOpcUaEditorForm.CaptureUsedTreeState(AExpandedKeys,
+  ASelectedKeys: TStrings; out AFocusedKey, ATopKey: string);
+var
+  I: Integer;
+  lNode: TTreeNode;
+begin
+  AExpandedKeys.Clear;
+  ASelectedKeys.Clear;
+  lNode := fUsedTree.Items.GetFirstNode;
+  while lNode <> nil do
+  begin
+    if lNode.Expanded then AExpandedKeys.Add(UsedTreeNodeKey(lNode));
+    lNode := lNode.GetNext;
+  end;
+  for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+    ASelectedKeys.Add(UsedTreeNodeKey(fUsedTree.Selections[I]));
+  AFocusedKey := UsedTreeNodeKey(fUsedTree.Selected);
+  ATopKey := UsedTreeNodeKey(fUsedTree.TopItem);
+end;
+
+procedure TRecorderOpcUaEditorForm.RestoreUsedTreeState(AExpandedKeys,
+  ASelectedKeys: TStrings; const AFocusedKey, ATopKey: string);
+var
+  lKey: string;
+  lNode, lFocusedNode, lTopNode: TTreeNode;
+begin
+  lFocusedNode := nil;
+  lTopNode := nil;
+  lNode := fUsedTree.Items.GetFirstNode;
+  while lNode <> nil do
+  begin
+    lKey := UsedTreeNodeKey(lNode);
+    lNode.Expanded := AExpandedKeys.IndexOf(lKey) >= 0;
+    lNode.Selected := ASelectedKeys.IndexOf(lKey) >= 0;
+    if lKey = AFocusedKey then lFocusedNode := lNode;
+    if lKey = ATopKey then lTopNode := lNode;
+    lNode := lNode.GetNext;
+  end;
+  if lFocusedNode <> nil then fUsedTree.Selected := lFocusedNode;
+  if lTopNode <> nil then fUsedTree.TopItem := lTopNode;
 end;
 
 function TRecorderOpcUaEditorForm.UsedItemMatchesSearch(
@@ -1075,18 +1205,14 @@ procedure TRecorderOpcUaEditorForm.RemoveSelectedUsedChannels;
 var
   I, J: Integer;
   lNodeIds: TStringList;
-  lUsed: TRecorderOpcUaUsedItem;
 begin
   lNodeIds := TStringList.Create;
   try
-    lNodeIds.CaseSensitive := False;
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
     for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
-    begin
-      if (fUsedTree.Selections[I] = nil) or
-        (fUsedTree.Selections[I].Data = nil) then Continue;
-      lUsed := TRecorderOpcUaUsedItem(fUsedTree.Selections[I].Data);
-      lNodeIds.Add(lUsed.NodeId);
-    end;
+      CollectUsedNodeIds(fUsedTree.Selections[I], lNodeIds);
     for J := fValueGrid.RowCount - 1 downto 1 do
       if lNodeIds.IndexOf(fValueGrid.Cells[3, J]) >= 0 then
         fValueGrid.DeleteRow(J);
@@ -1096,6 +1222,26 @@ begin
   end;
   RebuildUsedTree;
   UpdateControlState;
+end;
+
+procedure TRecorderOpcUaEditorForm.CollectUsedNodeIds(ANode: TTreeNode;
+  ANodeIds: TStrings);
+var
+  lChild: TTreeNode;
+  lUsed: TRecorderOpcUaUsedItem;
+begin
+  if (ANode = nil) or (ANodeIds = nil) then Exit;
+  if ANode.Data <> nil then
+  begin
+    lUsed := TRecorderOpcUaUsedItem(ANode.Data);
+    if ANodeIds.IndexOf(lUsed.NodeId) < 0 then ANodeIds.Add(lUsed.NodeId);
+  end;
+  lChild := ANode.GetFirstChild;
+  while lChild <> nil do
+  begin
+    CollectUsedNodeIds(lChild, ANodeIds);
+    lChild := lChild.GetNextSibling;
+  end;
 end;
 
 procedure TRecorderOpcUaEditorForm.ShowSelectedNodeProperties;
@@ -1173,43 +1319,129 @@ end;
 
 function TRecorderOpcUaEditorForm.SelectedUsableTreeNodeCount: Integer;
 var
-  I: Integer;
-  lNode: TTreeNode;
+  lItems: TList;
+begin
+  lItems := TList.Create;
+  try
+    BuildSelectedUsableTreeItems(lItems);
+    Result := lItems.Count;
+  finally
+    lItems.Free;
+  end;
+end;
+
+procedure TRecorderOpcUaEditorForm.CollectUsableTreeItems(ANode: TTreeNode;
+  AItems: TList; ANodeIds: TStrings);
+var
+  lChild: TTreeNode;
   lItem: TRecorderOpcUaTreeItem;
 begin
-  Result := 0;
-  for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
+  if (ANode = nil) or (AItems = nil) or (ANodeIds = nil) then Exit;
+  if ANode.Data <> nil then
   begin
-    lNode := fBrowseTree.Selections[I];
-    if (lNode = nil) or (lNode.Data = nil) then Continue;
-    lItem := TRecorderOpcUaTreeItem(lNode.Data);
-    if not lItem.IsProperty and (lItem.Readable or lItem.Writable) then
-      Inc(Result);
+    lItem := TRecorderOpcUaTreeItem(ANode.Data);
+    if not lItem.IsProperty and (lItem.Readable or lItem.Writable) and
+      (ANodeIds.IndexOf(lItem.NodeId) < 0) then
+    begin
+      ANodeIds.Add(lItem.NodeId);
+      AItems.Add(lItem);
+    end;
+  end;
+  lChild := ANode.GetFirstChild;
+  while lChild <> nil do
+  begin
+    CollectUsableTreeItems(lChild, AItems, ANodeIds);
+    lChild := lChild.GetNextSibling;
+  end;
+end;
+
+procedure TRecorderOpcUaEditorForm.BuildSelectedUsableTreeItems(AItems: TList);
+var
+  I: Integer;
+  lNodeIds: TStringList;
+begin
+  if AItems = nil then Exit;
+  AItems.Clear;
+  lNodeIds := TStringList.Create;
+  try
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
+    for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
+      CollectUsableTreeItems(fBrowseTree.Selections[I], AItems, lNodeIds);
+  finally
+    lNodeIds.Free;
   end;
 end;
 
 procedure TRecorderOpcUaEditorForm.AddSelectedTreeNodes;
 var
-  I, lAdded: Integer;
-  lNode: TTreeNode;
+  I, lAdded, lLastRow: Integer;
+  lItems: TList;
+  lExistingNodeIds: TStringList;
   lItem: TRecorderOpcUaTreeItem;
 begin
   lAdded := 0;
-  for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
-  begin
-    lNode := fBrowseTree.Selections[I];
-    if (lNode = nil) or (lNode.Data = nil) then Continue;
-    lItem := TRecorderOpcUaTreeItem(lNode.Data);
-    if lItem.IsProperty or not (lItem.Readable or lItem.Writable) then Continue;
-    AddTreeItemToGrid(lItem);
-    Inc(lAdded);
+  lLastRow := 0;
+  lItems := TList.Create;
+  lExistingNodeIds := TStringList.Create;
+  try
+    BuildSelectedUsableTreeItems(lItems);
+    lExistingNodeIds.CaseSensitive := True;
+    lExistingNodeIds.Sorted := True;
+    lExistingNodeIds.Duplicates := dupIgnore;
+    for I := 1 to fValueGrid.RowCount - 1 do
+      lExistingNodeIds.Add(fValueGrid.Cells[3, I]);
+    for I := 0 to lItems.Count - 1 do
+    begin
+      lItem := TRecorderOpcUaTreeItem(lItems[I]);
+      if lExistingNodeIds.IndexOf(lItem.NodeId) >= 0 then Continue;
+      lLastRow := AppendTagRow(lItem);
+      lExistingNodeIds.Add(lItem.NodeId);
+      Inc(lAdded);
+    end;
+  finally
+    lExistingNodeIds.Free;
+    lItems.Free;
   end;
   if lAdded > 0 then
   begin
+    fValueGrid.Row := lLastRow;
     RebuildUsedTree;
     AddDiagnostic(Format('Добавлено в используемые: %d', [lAdded]));
   end;
   UpdateControlState;
+end;
+
+function TRecorderOpcUaEditorForm.TreeNodeContainsUsableItem(
+  ANode: TTreeNode): Boolean;
+var
+  lChild: TTreeNode;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  Result := False;
+  if ANode = nil then Exit;
+  if ANode.Data <> nil then
+  begin
+    lItem := TRecorderOpcUaTreeItem(ANode.Data);
+    if not lItem.IsProperty and (lItem.Readable or lItem.Writable) then
+      Exit(True);
+  end;
+  lChild := ANode.GetFirstChild;
+  while lChild <> nil do
+  begin
+    if TreeNodeContainsUsableItem(lChild) then Exit(True);
+    lChild := lChild.GetNextSibling;
+  end;
+end;
+
+function TRecorderOpcUaEditorForm.SelectionContainsUsableItem: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
+    if TreeNodeContainsUsableItem(fBrowseTree.Selections[I]) then Exit(True);
 end;
 
 procedure TRecorderOpcUaEditorForm.BrowseTreeDblClick(Sender: TObject);
@@ -1231,6 +1463,12 @@ begin
   lNode := fBrowseTree.GetNodeAt(X, Y);
   if (lNode <> nil) and not lNode.Selected then
     fBrowseTree.Items.SelectOnlyThis(lNode);
+end;
+
+procedure TRecorderOpcUaEditorForm.BrowseTreeStartDrag(Sender: TObject;
+  var DragObject: TDragObject);
+begin
+  fDragSelectionHasUsableItem := SelectionContainsUsableItem;
 end;
 
 procedure TRecorderOpcUaEditorForm.BrowsePopupPopup(Sender: TObject);
@@ -1256,7 +1494,7 @@ procedure TRecorderOpcUaEditorForm.UsedTreeDragOver(Sender, Source: TObject;
   X, Y: Integer; State: TDragState; var Accept: Boolean);
 begin
   Accept := (Source = fBrowseTree) and
-    (SelectedUsableTreeNodeCount > 0);
+    fDragSelectionHasUsableItem;
 end;
 
 procedure TRecorderOpcUaEditorForm.UsedTreeDragDrop(Sender, Source: TObject;
@@ -1271,6 +1509,78 @@ begin
   if Key <> VK_DELETE then Exit;
   RemoveSelectedUsedChannels;
   Key := 0;
+end;
+
+procedure TRecorderOpcUaEditorForm.UsedTreeMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button <> mbLeft then Exit;
+  fUsedMouseAnchor := fUsedTree.GetNodeAt(X, Y);
+  fUsedMouseDownY := Y;
+  fUsedMouseSelecting := False;
+end;
+
+procedure TRecorderOpcUaEditorForm.UsedTreeMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  lNode: TTreeNode;
+begin
+  if not (ssLeft in Shift) or (fUsedMouseAnchor = nil) then Exit;
+  if not fUsedMouseSelecting and (Abs(Y - fUsedMouseDownY) < 4) then Exit;
+  lNode := fUsedTree.GetNodeAt(X, Y);
+  if lNode = nil then Exit;
+  fUsedMouseSelecting := True;
+  SelectUsedVisibleRange(fUsedMouseAnchor, lNode);
+end;
+
+procedure TRecorderOpcUaEditorForm.UsedTreeMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button <> mbLeft then Exit;
+  fUsedMouseAnchor := nil;
+  fUsedMouseSelecting := False;
+end;
+
+procedure TRecorderOpcUaEditorForm.SelectUsedVisibleRange(AFirst,
+  ALast: TTreeNode);
+var
+  lInside, lPassedRange: Boolean;
+  lNode: TTreeNode;
+begin
+  if (AFirst = nil) or (ALast = nil) then Exit;
+  fUsedTree.Items.BeginUpdate;
+  try
+    lNode := fUsedTree.Items.GetFirstNode;
+    while lNode <> nil do
+    begin
+      lNode.Selected := False;
+      lNode := lNode.GetNext;
+    end;
+
+    lInside := False;
+    lPassedRange := False;
+    lNode := fUsedTree.Items.GetFirstNode;
+    while lNode <> nil do
+    begin
+      if (lNode = AFirst) or (lNode = ALast) then
+      begin
+        if AFirst = ALast then
+        begin
+          lNode.Selected := True;
+          Break;
+        end;
+        if lInside then
+          lPassedRange := True
+        else
+          lInside := True;
+      end;
+      if lInside or lPassedRange then lNode.Selected := True;
+      if lPassedRange then Break;
+      lNode := lNode.GetNextVisible;
+    end;
+  finally
+    fUsedTree.Items.EndUpdate;
+  end;
 end;
 
 function CreateTreeItem(AFields: TStrings): TRecorderOpcUaTreeItem;
@@ -1466,7 +1776,7 @@ end;
 procedure AddFullTreeNode(ATree: TTreeView; AItem: TRecorderOpcUaTreeItem);
 var
   I: Integer;
-  lCategory, lPart: string;
+  lCaption, lPart: string;
   lParent: TTreeNode;
   lParts: TStringList;
 begin
@@ -1478,23 +1788,7 @@ begin
   end
   else
   begin
-    if AItem.NodeClass in [1, 4] then
-      lCategory := 'Объекты сервера'
-    else if (Pos('ns=0;', LowerCase(AItem.NodeId)) = 1) or
-       (Pos('objects/server/', LowerCase(AItem.BrowsePath)) = 1) then
-      lCategory := 'Служебные узлы сервера'
-    else if AItem.IsProperty then
-      lCategory := 'Свойства оборудования'
-    else if AItem.Writable and AItem.Readable then
-      lCategory := 'Управляемые каналы (чтение/запись)'
-    else if AItem.Writable then
-      lCategory := 'Управляемые каналы (только запись)'
-    else if AItem.Readable then
-      lCategory := 'Каналы данных (только чтение)'
-    else
-      lCategory := 'Недоступные текущему пользователю';
-    lParent := EnsureTreeChild(ATree, nil, lCategory);
-    SetTreeNodeImage(lParent, CImageGroup);
+    lParent := nil;
     lParts := TStringList.Create;
     try
       lParts.Delimiter := '/';
@@ -1513,13 +1807,17 @@ begin
       lParts.Free;
     end;
   end;
-  if lParent = nil then Exit;
   if AItem.IsProperty and (AItem.ValueText <> '') then
-    AItem.TreeNode := ATree.Items.AddChild(lParent,
-      AItem.TagName + ' = ' + AItem.ValueText + '  [' + AItem.NodeId + ']')
+  begin
+    lCaption := AItem.TagName + ' = ' + AItem.ValueText;
+    AItem.TreeNode := ATree.Items.AddChild(lParent, lCaption);
+  end
   else
-    AItem.TreeNode := ATree.Items.AddChild(lParent,
-      AItem.TagName + '  [' + AItem.NodeId + ']');
+  begin
+    lCaption := AItem.TagName;
+    AItem.TreeNode := EnsureTreeItemChild(ATree, lParent, lCaption,
+      AItem.NodeId);
+  end;
   AItem.TreeNode.Data := AItem;
   if AItem.IsProperty then SetTreeNodeImage(AItem.TreeNode, CImageProperty)
   else SetTreeNodeImage(AItem.TreeNode,
@@ -1620,7 +1918,7 @@ var
 begin
   lSelectedNodeIds := TStringList.Create;
   try
-    lSelectedNodeIds.CaseSensitive := False;
+    lSelectedNodeIds.CaseSensitive := True;
     for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
       if (fBrowseTree.Selections[I] <> nil) and
         (fBrowseTree.Selections[I].Data <> nil) then
@@ -1715,7 +2013,7 @@ begin
     lItem := TRecorderOpcUaTreeItem(fTreeItems[I]);
     if lItem.TreeNode = nil then Continue;
     for J := 1 to fValueGrid.RowCount - 1 do
-      if SameText(fValueGrid.Cells[3, J], lItem.NodeId) then
+      if fValueGrid.Cells[3, J] = lItem.NodeId then
       begin
         fValueGrid.Cells[1, J] := lItem.DataTypeName;
         if lItem.ValueRank >= 0 then
@@ -1785,7 +2083,7 @@ begin
           if lFields.Count < 5 then Continue;
           lRow := 0;
           for J := 1 to fValueGrid.RowCount - 1 do
-            if SameText(fValueGrid.Cells[3, J], lFields[1]) then
+            if fValueGrid.Cells[3, J] = lFields[1] then
             begin
               lRow := J;
               Break;
@@ -1948,7 +2246,8 @@ begin
     try
       if lForm.ShowModal <> mrOk then Exit;
       lForm.SaveToConfig(lConfig);
-      ANewSourceId := RecorderOpcUaSourceId(lConfig.Endpoint, lConfig.Mode);
+      ANewSourceId := UniqueOpcUaSourceId(ARegistry,
+        RecorderOpcUaSourceId(lConfig.Endpoint, lConfig.Mode), ASourceId);
       if (ASourceId <> '') and not SameText(ASourceId, ANewSourceId) then
         RecorderConfiguredDataSourcesRemove(ARegistry, ASourceId);
       lEntry := RecorderConfiguredDataSourcesEnsure(ARegistry, ANewSourceId,

@@ -16,13 +16,17 @@ const
 
 var
   I, J, lTagChildren, lTagsChildren: Integer;
+  lEndpoint: string;
   lClient: TRecorderOpcUaBinaryClient;
   lNode: TRecorderOpcUaDiscoveredNode;
   lNodes: TObjectList;
   lQuality: Cardinal;
   lTime, lValue: Double;
 begin
-  lClient := TRecorderOpcUaBinaryClient.Create(CEndpoint, '', '',
+  if ParamCount > 0 then lEndpoint := ParamStr(1)
+  else lEndpoint := CEndpoint;
+  WriteLn('ENDPOINT: ', lEndpoint);
+  lClient := TRecorderOpcUaBinaryClient.Create(lEndpoint, '', '',
     CSessionTimeoutMs);
   try
     if not lClient.Connect then
@@ -77,6 +81,7 @@ begin
     finally
       lNodes.Free;
     end;
+    if lEndpoint <> CEndpoint then Exit;
     for I := Low(CNodeIds) to High(CNodeIds) do
       if lClient.ReadDouble(CNodeIds[I], lValue, lQuality, lTime) then
         WriteLn('READ OK: ', CNodeIds[I], ' value=', FloatToStr(lValue),

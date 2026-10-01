@@ -40,6 +40,7 @@ type
     Label11: TLabel;
     Label12: TLabel;
     Label13: TLabel;
+    lblActualRangeUnit: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -146,12 +147,10 @@ procedure ApplyMic185HardwareModeFromUnit(ARegistry: TRecorderTagRegistry;
 begin
   if ATag = nil then
     Exit;
-  if Mic185UnitIsRawCode(ATag.UnitName) then
-    ATag.HardwareCalibrationEnabled := False;
+  { Unit selection and hardware calibration are independent settings.  The
+    selected source unit must survive even when the calibration curve is off. }
   if ATag.HardwareCalibrationEnabled then
-    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True)
-  else
-    ATag.UnitName := 'код';
+    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
 end;
 
 procedure TRecorderMic185ChannelForm.btnApplyClick(Sender: TObject);
@@ -220,7 +219,7 @@ begin
   fTag := ATag;
   fModuleSettings := AModuleSettings;
   FillCombo(cbNominalRange, ['±500', '±50', '±5', '±0.5'], 2);
-  FillCombo(cbActualRangeUnit, ['мВ', 'Ом', 'мкм/м', 'мВ(тензо)'], 0);
+  FillCombo(cbActualRangeUnit, ['мВ', 'Ом', 'мкстрн', 'мВ(тензо)'], 0);
   FillCombo(cbCommutation, ['Вход', 'Земля', '49 мВ'], 0);
   FillCombo(cbThermoChannel, ['1', '2', '3', '4', 'выкл'], 0);
   FillCombo(cbSensorScheme, ['Тензометр', 'Полумост', 'Мост'], 0);
@@ -273,6 +272,8 @@ begin
     edOuterResistance.Text := FloatToStr(lSettings.Resistance);
     cbActualRangeUnit.Text := RecorderMic185GetSourceChannelUnitName(
       fRegistry, ATag.SourceId, ATag.Address);
+    if SameText(cbActualRangeUnit.Text, 'мкм/м') then
+      cbActualRangeUnit.ItemIndex := cbActualRangeUnit.Items.IndexOf('мкстрн');
     if cbActualRangeUnit.Text = '' then
     begin
       if not Mic185UnitIsRawCode(ATag.UnitName) then
@@ -306,6 +307,10 @@ begin
     lSettings);
   ReadSettingsFromUi(lSettings);
   ReadModuleSettingsFromUi(AModuleSettings);
+  { Явно выбранная пользователем единица MIC-185 не должна затем заменяться
+    выходной единицей аппаратной ГХ при перестроении шкал. }
+  ATag.AutoUnit := False;
+  ATag.SourceUnitName := cbActualRangeUnit.Text;
   ATag.UnitName := cbActualRangeUnit.Text;
   ATag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
   RecorderMic185SetSourceChannelUnitName(fRegistry, ATag.SourceId,

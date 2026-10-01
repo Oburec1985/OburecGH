@@ -44,10 +44,11 @@ type
     
     // Новые поля для текстурного атласа
     fTextureId: Cardinal;
+    fMetricsReady: Boolean;
     fTextHeight: Integer;
     fCharCoords: array of cOglCharCoord;
     fWideCharsCache: WideString;
-    procedure BuildTextureAtlas;
+    procedure BuildTextureAtlas(AUploadTexture: Boolean);
     function GetSupportedCharIndex(AChar: WideChar): Integer;
     procedure DrawTextSoftware(const AText: string; AX, AY: Single);
     procedure DrawTextHardware(const AText: string; AX, AY: Single);
@@ -199,6 +200,7 @@ begin
   fColor := AColor;
   fBold := ABold;
   fTextureId := 0;
+  fMetricsReady := False;
   fTextHeight := 0;
   
   lWS := '';
@@ -229,6 +231,7 @@ begin
       glDeleteTextures(1, @fTextureId);
       fTextureId := 0;
     end;
+    fMetricsReady := False;
   end;
 end;
 
@@ -242,6 +245,7 @@ begin
       glDeleteTextures(1, @fTextureId);
       fTextureId := 0;
     end;
+    fMetricsReady := False;
   end;
 end;
 
@@ -260,6 +264,7 @@ begin
       glDeleteTextures(1, @fTextureId);
       fTextureId := 0;
     end;
+    fMetricsReady := False;
   end;
 end;
 
@@ -273,7 +278,7 @@ begin
       Exit(I);
 end;
 
-procedure cOglFont.BuildTextureAtlas;
+procedure cOglFont.BuildTextureAtlas(AUploadTexture: Boolean);
 var
   lBitmap: TBitmap;
   lImage: TLazIntfImage;
@@ -290,7 +295,7 @@ var
   lTexWidth, lTexHeight: Integer;
   lRawData: PByte;
 begin
-  if fTextureId <> 0 then
+  if AUploadTexture and (fTextureId <> 0) then
   begin
     glDeleteTextures(1, @fTextureId);
     fTextureId := 0;
@@ -299,11 +304,11 @@ begin
   lBitmap := TBitmap.Create;
   try
     lBitmap.PixelFormat := pf32bit;
-    // РћР±РµСЃРїРµС‡РёРІР°РµРј РЅРµРЅСѓР»РµРІРѕР№ СЂР°Р·РјРµСЂ Р±РёС‚РјР°РїР° РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕР№ СЂР°Р±РѕС‚С‹ GDI / Canvas.TextHeight
+    // Ненулевой размер нужен для корректной работы Canvas.TextHeight.
     lBitmap.Width := 32;
     lBitmap.Height := 32;
     
-    // РџРѕРґРјРµРЅСЏРµРј Р»РѕРіРёС‡РµСЃРєРѕРµ РёРјСЏ С€СЂРёС„С‚Р° РЅР° СЂРµР°Р»СЊРЅС‹Р№ СЃРёСЃС‚РµРјРЅС‹Р№ С€СЂРёС„С‚ РґР»СЏ СЂРёСЃРѕРІР°РЅРёСЏ
+    // Логические имена шрифтов чарта отображаются системным шрифтом Arial.
     if (fName = 'PageCaption') or (fName = 'AxisLabel') or (fName = 'AxisSelected') or
        (fName = 'GridTick') or (fName = 'Legend') or (fName = 'Debug') then
       lBitmap.Canvas.Font.Name := 'Arial'
@@ -358,41 +363,44 @@ begin
 
     { Нормализованный LCL-образ оставляет быстрый доступ в памяти, но скрывает
       различный порядок байтов pf32bit в Windows и Linux. }
-    lImage := TLazIntfImage.Create(0, 0);
-    lImage.LoadFromBitmap(lBitmap.Handle, lBitmap.MaskHandle);
-    lRawData := nil;
-    GetMem(lRawData, lTexWidth * lTexHeight * 4);
-    try
-      lPixelPtr := PDWord(lRawData);
-      for lRow := 0 to lTexHeight - 1 do
-      begin
-        { Colors здесь читает уже скопированный TLazIntfImage и не обращается
-          к виджетному Canvas для каждого пикселя. }
-        for lCol := 0 to lTexWidth - 1 do
+    if AUploadTexture then
+    begin
+      lImage := TLazIntfImage.Create(0, 0);
+      lImage.LoadFromBitmap(lBitmap.Handle, lBitmap.MaskHandle);
+      lRawData := nil;
+      GetMem(lRawData, lTexWidth * lTexHeight * 4);
+      try
+        lPixelPtr := PDWord(lRawData);
+        for lRow := 0 to lTexHeight - 1 do
         begin
-          lPixelColor := lImage.Colors[lCol, lRow];
-          lAlpha := lPixelColor.Red shr 8;
-          lPixelPtr^ := (Cardinal(lAlpha) shl 24) or $00FFFFFF;
-          Inc(lPixelPtr);
+          { Colors здесь читает уже скопированный TLazIntfImage и не обращается
+            к виджетному Canvas для каждого пикселя. }
+          for lCol := 0 to lTexWidth - 1 do
+          begin
+            lPixelColor := lImage.Colors[lCol, lRow];
+            lAlpha := lPixelColor.Red shr 8;
+            lPixelPtr^ := (Cardinal(lAlpha) shl 24) or $00FFFFFF;
+            Inc(lPixelPtr);
+          end;
         end;
-      end;
 
-      glGenTextures(1, @fTextureId);
-      glBindTexture(GL_TEXTURE_2D, fTextureId);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lTexWidth, lTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, lRawData);
-    finally
-      FreeMem(lRawData);
-      lImage.Free;
+        glGenTextures(1, @fTextureId);
+        glBindTexture(GL_TEXTURE_2D, fTextureId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lTexWidth, lTexHeight, 0,
+          GL_RGBA, GL_UNSIGNED_BYTE, lRawData);
+      finally
+        FreeMem(lRawData);
+        lImage.Free;
+      end;
     end;
 
-    // РЎРѕС…СЂР°РЅСЏРµРј Р°С‚Р»Р°СЃ РІ С„Р°Р№Р» РґР»СЏ РІРёР·СѓР°Р»СЊРЅРѕР№ РґРёР°РіРЅРѕСЃС‚РёРєРё
-    // Р›РѕРіРёСЂРѕРІР°РЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ С€СЂРёС„С‚Р° РІ С„Р°Р№Р»
+    // Сохраняем высоту атласа для расчёта геометрии подписей.
     fTextHeight := lHeight;
+    fMetricsReady := True;
   finally
     lBitmap.Free;
   end;
@@ -464,7 +472,7 @@ var
   r, g, b, a: Byte;
 begin
   if fTextureId = 0 then
-    BuildTextureAtlas;
+    BuildTextureAtlas(True);
 
   if fTextureId = 0 then
     Exit;
@@ -536,8 +544,8 @@ begin
     Exit;
   end;
 
-  if fTextureId = 0 then
-    BuildTextureAtlas;
+  if not fMetricsReady then
+    BuildTextureAtlas(False);
 
   lIdx := GetSupportedCharIndex(AChar);
   if lIdx > 0 then
@@ -576,8 +584,8 @@ begin
     Exit;
   end;
 
-  if fTextureId = 0 then
-    BuildTextureAtlas;
+  if not fMetricsReady then
+    BuildTextureAtlas(False);
   Result := fTextHeight;
 end;
 

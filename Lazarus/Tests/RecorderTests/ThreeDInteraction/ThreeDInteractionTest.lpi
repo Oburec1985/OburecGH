@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="ThreeDInteractionTest"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <Units>
+      <Unit><Filename Value="ThreeDInteractionTest.lpr"/><IsPartOfProject Value="True"/></Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../../SharedUtils/3d/core;../../../SharedUtils/3d/interaction"/>
+      <UnitOutputDirectory Value="lib"/>
+    </SearchPaths>
+    <CodeGeneration><Optimizations><OptimizationLevel Value="2"/></Optimizations></CodeGeneration>
+    <Linking><Debugging><DebugInfoType Value="dsDwarf3"/></Debugging></Linking>
+  </CompilerOptions>
+</CONFIG>

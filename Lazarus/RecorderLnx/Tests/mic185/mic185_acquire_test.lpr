@@ -30,6 +30,9 @@ var
   lMeasFs: Double;
   lSniff: Boolean;
   lVerify: Boolean;
+  lBalanceChannel: Integer;
+  lBalanceValues: TRecorderDeviceActionValues;
+  lErrorText: string;
   lArgBase: Integer;
   B: Integer;
   lReport: string;
@@ -40,6 +43,7 @@ procedure Usage;
 begin
   WriteLn('Usage: mic185_acquire_test [options] [host] [port] [meas_fs_hz] [blocks]');
   WriteLn('Options: -sniff  -verify-codes');
+  WriteLn('         -balance <zero-based-channel>');
   WriteLn('Channels fixed: 64 tenzo + 5 temp + 1 UTS (rdpChannelCount=70)');
   WriteLn('Default: 192.168.9.142 4000 100 5');
 end;
@@ -53,6 +57,7 @@ begin
   lBlocks := 5;
   lSniff := False;
   lVerify := False;
+  lBalanceChannel := -1;
   lArgBase := 1;
   lHasBlock := False;
 
@@ -67,6 +72,16 @@ begin
       lSniff := True
     else if ParamStr(lArgBase) = '-verify-codes' then
       lVerify := True
+    else if ParamStr(lArgBase) = '-balance' then
+    begin
+      Inc(lArgBase);
+      if lArgBase > ParamCount then
+      begin
+        WriteLn('-balance requires a zero-based channel number');
+        Halt(1);
+      end;
+      lBalanceChannel := StrToIntDef(ParamStr(lArgBase), -1);
+    end
     else
     begin
       WriteLn('Unknown option: ', ParamStr(lArgBase));
@@ -115,8 +130,22 @@ begin
 
     WriteLn('Connect...');
     Dev.Connect;
+    if not Dev.TryInitializeSession(lErrorText) then
+      raise Exception.Create('Initialize failed: ' + lErrorText);
     WriteLn('Connected. s/n=', Dev.DeviceSerial,
       ' version=', Mic185FormatSoftVersion(Dev.SoftVersion));
+
+    if lBalanceChannel >= 0 then
+    begin
+      WriteLn('ZBalance channel ', lBalanceChannel, '...');
+      if not Dev.TryZeroBalanceChannels([lBalanceChannel], lBalanceValues,
+        lErrorText) then
+        raise Exception.Create('ZBalance failed: ' + lErrorText);
+      WriteLn(Format('ZBalance OK: channel=%d value=%.0f',
+        [lBalanceChannel, lBalanceValues[0]]));
+      Dev.Disconnect;
+      Exit;
+    end;
 
     WriteLn('Program...');
     Dev.ProgramDevice;

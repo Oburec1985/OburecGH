@@ -235,6 +235,7 @@ var
   lSourceId: string;
   lHandledAny: Boolean;
   lUnsupported: Integer;
+  lWasRunning: Boolean;
 begin
   Result := False;
   if (ATags = nil) or (ATags.Count = 0) then
@@ -261,32 +262,44 @@ begin
       Exit;
     end;
 
-    lHandledAny := False;
-    lUnsupported := 0;
-    for I := 0 to lSourceIds.Count - 1 do
-    begin
-      lSourceId := lSourceIds[I];
-      lBalanceTags.Clear;
-      for J := 0 to ATags.Count - 1 do
+    { Балансировка выполняет собственную последовательность stop/program/start
+      и несколько чтений. Сначала гарантированно завершаем runner-ы, чтобы
+      фоновый опрос не читал тот же TCP/MeBius-сеанс одновременно. }
+    lWasRunning := (ADataSources <> nil) and ADataSources.Running;
+    if lWasRunning then
+      ADataSources.StopAll;
+    try
+      lHandledAny := False;
+      lUnsupported := 0;
+      for I := 0 to lSourceIds.Count - 1 do
       begin
-        lTag := TRecorderTag(ATags[J]);
-        if SameText(lTag.SourceId, lSourceId) then
-          lBalanceTags.Add(lTag);
-      end;
-      if lBalanceTags.Count = 0 then
-        Continue;
+        lSourceId := lSourceIds[I];
+        lBalanceTags.Clear;
+        for J := 0 to ATags.Count - 1 do
+        begin
+          lTag := TRecorderTag(ATags[J]);
+          if SameText(lTag.SourceId, lSourceId) then
+            lBalanceTags.Add(lTag);
+        end;
+        if lBalanceTags.Count = 0 then
+          Continue;
 
-      lSource := nil;
-      if (ADataSources <> nil) then
-        lSource := ADataSources.FindSource(lSourceId);
-      if (lSource = nil) or (not Supports(lSource, IRecorderZeroBalanceSupport, lBalance)) then
-      begin
-        Inc(lUnsupported, lBalanceTags.Count);
-        Continue;
-      end;
+        lSource := nil;
+        if (ADataSources <> nil) then
+          lSource := ADataSources.FindSource(lSourceId);
+        if (lSource = nil) or
+          (not Supports(lSource, IRecorderZeroBalanceSupport, lBalance)) then
+        begin
+          Inc(lUnsupported, lBalanceTags.Count);
+          Continue;
+        end;
 
-      if RunZeroBalance(AOwner, lBalance, lBalanceTags, lMessages) then
-        lHandledAny := True;
+        if RunZeroBalance(AOwner, lBalance, lBalanceTags, lMessages) then
+          lHandledAny := True;
+      end;
+    finally
+      if lWasRunning then
+        ADataSources.StartAll;
     end;
 
     { Успех — без MessageDlg (детали уже в LogWindows). Диалог только при ошибке. }

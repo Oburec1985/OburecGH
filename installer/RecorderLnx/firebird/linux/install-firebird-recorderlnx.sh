@@ -5,8 +5,9 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 LOG_FILE="${RECORDERLNX_FIREBIRD_LOG:-/tmp/recorderlnx-firebird-install.log}"
 FIREBIRD_PREFIX="/opt/firebird"
 PROFILE_FILE="/etc/profile.d/recorderlnx-sqldb.sh"
-RECORDERLNX_SQLDB_CONFIG="/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini"
-RECORDERLNX_APP_CONFIG="/var/opt/mera/RecorderLnx/config/app.ini"
+MERA_FILES_ROOT="${MERA_FILES_ROOT:-/srv/recorderlnx/MeraFiles}"
+RECORDERLNX_SQLDB_CONFIG="$MERA_FILES_ROOT/RecorderLnx/config/projects/default/sql-db.ini"
+RECORDERLNX_APP_CONFIG="$MERA_FILES_ROOT/RecorderLnx/app.ini"
 RECORDERLNX_SQLDB_DIR="/var/opt/mera/SQLdb"
 RECORDERLNX_LEGACY_SQLDB_DIR="/var/opt/mera/RecorderLnx/sqldb"
 RECORDERLNX_FIREBIRD_PASSWORD="123"
@@ -402,7 +403,7 @@ event_window_sec=30
 
 [events]
 create_recording_events=1
-sql_db_config=/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini
+sql_db_config=/srv/recorderlnx/MeraFiles/RecorderLnx/config/projects/default/sql-db.ini
 
 [commands]
 start_all_on_any_recording=0

@@ -22,6 +22,12 @@ type
     fBadCells: array of array of Boolean;
     fComponent: TRecorderMeasurementSectionComponent;
     fGrid: TStringGrid;
+    fPointInfoMemo: TMemo;
+    fReportButton: TButton;
+    fReportOptionsPanel: TPanel;
+    fReportPanel: TPanel;
+    fReportScope: TRadioGroup;
+    fReportSplitter: TSplitter;
     fRegistry: TRecorderTagRegistry;
     fTimer: TTimer;
     procedure BalanceClick(Sender: TObject);
@@ -30,10 +36,14 @@ type
       const AFormat: string): string;
     procedure GridPrepareCanvas(Sender: TObject; ACol, ARow: Integer;
       AState: TGridDrawState);
+    procedure GridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
     procedure MarkBadCell(ACol, ARow: Integer);
     function SelectedCellsIncludeColumn(ACol: Integer): Boolean;
     function TagValueOutOfTolerance(ATag: TRecorderTag): Boolean;
     procedure TimerTick(Sender: TObject);
+    procedure ReportClick(Sender: TObject);
+    procedure UpdatePointInfo(ARow: Integer);
   public
     constructor CreateTable(AOwner: TComponent;
       AComponent: TRecorderMeasurementSectionComponent;
@@ -68,6 +78,10 @@ type
 
 implementation
 
+uses
+  Dialogs, IniFiles, fpspreadsheet, fpstypes, fpsopendocument,
+  uRecorderMeraPaths;
+
 const
   CColPoint = 0;
   CColTemp = 1;
@@ -92,7 +106,7 @@ begin
   FormStyle := fsStayOnTop;
   Position := poDesigned;
   Width := 760;
-  Height := 360;
+  Height := 520;
 
   fBalanceButton := TButton.Create(Self);
   fBalanceButton.Parent := Self;
@@ -111,6 +125,7 @@ begin
   fGrid.Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
     goRangeSelect, goColSizing];
   fGrid.OnPrepareCanvas := @GridPrepareCanvas;
+  fGrid.OnSelectCell := @GridSelectCell;
   fGrid.Cells[CColPoint, 0] := 'N точки';
   fGrid.Cells[CColTemp, 0] := 'Температура, °C';
   fGrid.Cells[CColE1, 0] := 'e1, мкстрн';
@@ -128,11 +143,52 @@ begin
   fGrid.ColWidths[CColSigma2] := 100;
   fGrid.ColWidths[CColAngle] := 80;
 
+  fReportPanel := TPanel.Create(Self);
+  fReportPanel.Parent := Self;
+  fReportPanel.Align := alBottom;
+  fReportPanel.Height := 145;
+  fReportPanel.BevelOuter := bvNone;
+
+  fReportOptionsPanel := TPanel.Create(Self);
+  fReportOptionsPanel.Parent := fReportPanel;
+  fReportOptionsPanel.Align := alLeft;
+  fReportOptionsPanel.Width := 230;
+  fReportOptionsPanel.BevelOuter := bvNone;
+
+  fReportButton := TButton.Create(Self);
+  fReportButton.Parent := fReportOptionsPanel;
+  fReportButton.Align := alBottom;
+  fReportButton.Height := 32;
+  fReportButton.Caption := 'Сформировать отчет...';
+  fReportButton.OnClick := @ReportClick;
+
+  fReportScope := TRadioGroup.Create(Self);
+  fReportScope.Parent := fReportOptionsPanel;
+  fReportScope.Align := alClient;
+  fReportScope.Caption := 'Отчет';
+  fReportScope.Items.Add('По текущему сечению');
+  fReportScope.Items.Add('По текущей странице');
+  fReportScope.Items.Add('По всем сечениям');
+  fReportScope.ItemIndex := 0;
+
+  fPointInfoMemo := TMemo.Create(Self);
+  fPointInfoMemo.Parent := fReportPanel;
+  fPointInfoMemo.Align := alClient;
+  fPointInfoMemo.ReadOnly := True;
+  fPointInfoMemo.ScrollBars := ssAutoVertical;
+  fPointInfoMemo.TextHint := 'Информация о выбранной точке';
+
+  fReportSplitter := TSplitter.Create(Self);
+  fReportSplitter.Parent := Self;
+  fReportSplitter.Align := alBottom;
+  fReportSplitter.Height := 5;
+
   fTimer := TTimer.Create(Self);
   fTimer.Interval := 250;
   fTimer.OnTimer := @TimerTick;
   fTimer.Enabled := True;
   RefreshTable;
+  UpdatePointInfo(1);
 end;
 
 procedure TRecorderMeasurementSectionTableForm.BalanceClick(Sender: TObject);
@@ -197,6 +253,249 @@ begin
   begin
     fGrid.Canvas.Brush.Color := clSilver;
     fGrid.Canvas.Font.Color := clBlack;
+  end;
+end;
+
+procedure TRecorderMeasurementSectionTableForm.GridSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  UpdatePointInfo(ARow);
+end;
+
+procedure TRecorderMeasurementSectionTableForm.UpdatePointInfo(ARow: Integer);
+begin
+  if fPointInfoMemo = nil then
+    Exit;
+  if (fComponent <> nil) and (ARow > 0) and
+    (ARow <= fComponent.RowCount) then
+    fPointInfoMemo.Text := fComponent.Rows[ARow - 1].PointInfo
+  else
+    fPointInfoMemo.Clear;
+end;
+
+procedure TRecorderMeasurementSectionTableForm.ReportClick(Sender: TObject);
+const
+  CIniSection = 'MeasurementSectionReport';
+  CIniDirectory = 'LastDirectory';
+var
+  lBook: TsWorkbook;
+  lSheet: TsWorksheet;
+  lDialog: TSaveDialog;
+  lIni: TIniFile;
+  lSections: TList;
+  lSection: TRecorderMeasurementSectionComponent;
+  lRow: TRecorderMeasurementSectionRow;
+  lValues: TRecorderMeasurementSectionValues;
+  lTag: TRecorderTag;
+  lFileName, lDirectory: string;
+  I, J, lLastRow, lOutRow: Integer;
+
+  procedure WriteText(ACol: Integer; const AText: string);
+  begin
+    lSheet.WriteUTF8Text(lOutRow, ACol, AText);
+  end;
+
+  procedure WriteValue(ACol: Integer; AHasValue: Boolean; AValue: Double);
+  begin
+    if AHasValue then
+      lSheet.WriteNumber(lOutRow, ACol, AValue);
+  end;
+
+  function ChannelName(ARole: TRecorderRosetteRole): string;
+  begin
+    lTag := lRow.ResolveTag(fRegistry, ARole);
+    if lTag <> nil then
+      Result := lTag.Name
+    else
+      Result := lRow.TagNames[ARole];
+  end;
+
+  procedure StyleHeaderRow(ARow: Integer);
+  var
+    lCol: Integer;
+  begin
+    for lCol := 0 to 13 do
+    begin
+      lSheet.WriteBackgroundColor(ARow, lCol, scYellow);
+      lSheet.WriteFontStyle(ARow, lCol, [fssBold]);
+      lSheet.WriteBorders(ARow, lCol, [cbNorth, cbWest, cbEast, cbSouth]);
+      lSheet.WriteWordwrap(ARow, lCol, True);
+      lSheet.WriteVertAlignment(ARow, lCol, vaCenter);
+    end;
+  end;
+
+  procedure StyleDataRow(ARow: Integer);
+  var
+    lCol: Integer;
+  begin
+    for lCol := 0 to 13 do
+    begin
+      lSheet.WriteBorders(ARow, lCol, [cbNorth, cbWest, cbEast, cbSouth]);
+      lSheet.WriteVertAlignment(ARow, lCol, vaCenter);
+    end;
+    lSheet.WriteWordwrap(ARow, 0, True);
+    lSheet.WriteWordwrap(ARow, 2, True);
+  end;
+
+  procedure ApplyColumnWidths;
+  const
+    CWidths: array[0..13] of Single =
+      (30, 12, 22, 14, 14, 14, 14, 14, 14, 14, 11, 18, 18, 12);
+  var
+    lCol: Integer;
+  begin
+    for lCol := 0 to 13 do
+      lSheet.WriteColWidth(lCol, CWidths[lCol]);
+  end;
+begin
+  if fComponent = nil then
+    Exit;
+  lDialog := TSaveDialog.Create(Self);
+  lSections := TList.Create;
+  try
+    try
+      lDirectory := RecorderMeraFilesPath;
+    if FileExists(RecorderAppConfigFileName) then
+    begin
+      lIni := TIniFile.Create(RecorderAppConfigFileName);
+      try
+        lDirectory := lIni.ReadString(CIniSection, CIniDirectory, lDirectory);
+      finally
+        lIni.Free;
+      end;
+    end;
+    if not DirectoryExists(lDirectory) then
+      lDirectory := RecorderMeraFilesPath;
+    lDialog.Filter := 'Таблица OpenDocument (*.ods)|*.ods';
+    lDialog.DefaultExt := 'ods';
+    lDialog.InitialDir := lDirectory;
+    lDialog.FileName := 'measurement-sections-' +
+      FormatDateTime('yyyy-mm-dd_hh-nn-ss', Now) + '.ods';
+    if not lDialog.Execute then
+      Exit;
+    lFileName := lDialog.FileName;
+    if ExtractFileExt(lFileName) = '' then
+      lFileName := lFileName + '.ods';
+
+    if (fReportScope.ItemIndex = 2) and (fComponent.Factory <> nil) then
+    begin
+      for I := 0 to fComponent.Factory.ChildCount - 1 do
+        if fComponent.Factory.Children[I] is TRecorderMeasurementSectionComponent then
+          lSections.Add(fComponent.Factory.Children[I]);
+    end
+    else if (fReportScope.ItemIndex = 1) and
+      (fComponent.ParentPage <> nil) then
+    begin
+      for I := 0 to fComponent.ParentPage.ComponentCount - 1 do
+        if fComponent.ParentPage.Components[I] is
+          TRecorderMeasurementSectionComponent then
+          lSections.Add(fComponent.ParentPage.Components[I]);
+    end
+    else
+      lSections.Add(fComponent);
+
+    { The opened table is the authoritative live component.  Some projects
+      created by older builds can have an incomplete page/factory ownership
+      link after loading.  Never let that make a selected or all-pages report
+      silently lose the section the user is currently looking at. }
+    if lSections.IndexOf(fComponent) < 0 then
+      lSections.Insert(0, fComponent);
+    if fComponent.RowCount = 0 then
+    begin
+      MessageDlg('В текущем сечении нет точек для отчета.',
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+
+    lBook := TsWorkbook.Create;
+    try
+      if FileExists(lFileName) then
+        lBook.ReadFromFile(lFileName, sfOpenDocument);
+      lSheet := lBook.GetWorksheetByName('Отчет');
+      if lSheet = nil then
+        if lBook.GetWorksheetCount > 0 then
+          lSheet := lBook.GetWorksheetByIndex(0)
+        else
+          lSheet := lBook.AddWorksheet('Отчет');
+
+      { Append after the last block.  Deliberately inspect column A only:
+        internal spacer rows (between report time and header) remain part of
+        their block, while the first empty A cell after the final data row is
+        the insertion point requested by the operator. }
+      lOutRow := 0;
+      if lSheet.GetCellCount > 0 then
+      begin
+        lLastRow := Integer(lSheet.GetLastRowIndex(True));
+        for I := 0 to lLastRow do
+          if Trim(lSheet.ReadAsUTF8Text(I, 0)) <> '' then
+            lOutRow := I + 1;
+      end;
+      ApplyColumnWidths;
+      WriteText(0, 'Время отчета');
+      WriteText(1, FormatDateTime('dd.mm.yyyy hh:nn:ss', Now));
+      lSheet.WriteFontStyle(lOutRow, 0, [fssBold]);
+      Inc(lOutRow, 2);
+      WriteText(0, 'Сечение'); WriteText(1, 'N точки');
+      WriteText(2, 'Информация о точке'); WriteText(3, 'Канал E1');
+      WriteText(4, 'Канал E2'); WriteText(5, 'Канал E3');
+      WriteText(6, 'Канал t'); WriteText(7, 'e1, мкстрн');
+      WriteText(8, 'e2, мкстрн'); WriteText(9, 'e3, мкстрн');
+      WriteText(10, 't, °C'); WriteText(11, 'sigma1, МПа');
+      WriteText(12, 'sigma2, МПа'); WriteText(13, 'Угол, °');
+      StyleHeaderRow(lOutRow);
+      Inc(lOutRow);
+      for I := 0 to lSections.Count - 1 do
+      begin
+        lSection := TRecorderMeasurementSectionComponent(lSections[I]);
+        for J := 0 to lSection.RowCount - 1 do
+        begin
+          lRow := lSection.Rows[J];
+          lSection.CalculateRow(fRegistry, lRow, lValues);
+          WriteText(0, lSection.Caption);
+          lSheet.WriteNumber(lOutRow, 1, lRow.PointNo);
+          WriteText(2, lRow.PointInfo);
+          WriteText(3, ChannelName(rrrE1)); WriteText(4, ChannelName(rrrE2));
+          WriteText(5, ChannelName(rrrE3)); WriteText(6, ChannelName(rrrTemperature));
+          WriteValue(7, lValues.HasE1, lValues.E1);
+          WriteValue(8, lValues.HasE2, lValues.E2);
+          WriteValue(9, lValues.HasE3, lValues.E3);
+          WriteValue(10, lValues.HasTemperature, lValues.Temperature);
+          WriteValue(11, lValues.HasSigma1, lValues.Sigma1);
+          WriteValue(12, lValues.HasSigma2, lValues.Sigma2);
+          if lValues.HasAngle then
+            lSheet.WriteNumber(lOutRow, 13, lValues.AngleDeg)
+          else
+            lSheet.WriteNumber(lOutRow, 13, lRow.PositionDeg);
+          StyleDataRow(lOutRow);
+          Inc(lOutRow);
+        end;
+      end;
+      lBook.WriteToFile(lFileName, sfOpenDocument, True);
+    finally
+      lBook.Free;
+    end;
+
+    ForceDirectories(ExtractFilePath(RecorderAppConfigFileName));
+    lIni := TIniFile.Create(RecorderAppConfigFileName);
+    try
+      lIni.WriteString(CIniSection, CIniDirectory,
+        ExcludeTrailingPathDelimiter(ExtractFilePath(lFileName)));
+    finally
+      lIni.Free;
+    end;
+    if MessageDlg('Отчет сохранен',
+      'Отчет сохранен.' + LineEnding + 'Открыть его сейчас?',
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      if not OpenDocument(lFileName) then
+        MessageDlg('Не удалось открыть отчет.', mtWarning, [mbOK], 0);
+    except
+      on E: Exception do
+        MessageDlg('Ошибка создания отчета: ' + E.Message,
+          mtError, [mbOK], 0);
+    end;
+  finally
+    lSections.Free;
+    lDialog.Free;
   end;
 end;
 

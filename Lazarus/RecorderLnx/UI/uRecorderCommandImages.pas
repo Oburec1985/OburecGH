@@ -54,9 +54,19 @@ const
   CIconFrequencyResponse = 64;
   CIconLissajous = 65;
   CIconPluginOscillogram = 66;
+  CIcon3dScene = 67;
+  CIcon3dSelect = 68;
+  CIcon3dPan = 69;
+  CIcon3dCameraRotate = 70;
+  CIcon3dZoom = 71;
+  CIcon3dFitScene = 72;
+  CIcon3dRotateFree = 73;
+  CIcon3dRotateX = 74;
+  CIcon3dRotateY = 75;
+  CIcon3dRotateZ = 76;
 
   CRecorderOriginalImageCount = 15;
-  CRecorderCommandImageCount = 67;
+  CRecorderCommandImageCount = 77;
   CTagDialogIconHardwareSource = 42;
   CTagDialogIconZeroBalance = 51;
   CTagDialogIconHardwareCurveRead = 57;
@@ -526,6 +536,125 @@ begin
   ReplaceComponentPaletteIcon(AImages, CIconPluginOscillogram, 6);
 end;
 
+procedure Replace3dSceneIcon(AImages: TCustomImageList);
+var
+  lBitmap: TBitmap;
+begin
+  lBitmap := TBitmap.Create;
+  try
+    lBitmap.SetSize(42, 42);
+    lBitmap.PixelFormat := pf24bit;
+    lBitmap.Transparent := False;
+    lBitmap.Canvas.Brush.Color := clWhite;
+    lBitmap.Canvas.FillRect(0, 0, 42, 42);
+
+    { Перспективная проекция куба в той же строгой линейной стилистике,
+      что и пиктограмма измерительного сечения. }
+    lBitmap.Canvas.Pen.Color := $00404040;
+    lBitmap.Canvas.Pen.Width := 2;
+    lBitmap.Canvas.Brush.Color := $00E8F2F5;
+    lBitmap.Canvas.Polygon([Point(7, 14), Point(23, 7), Point(35, 14),
+      Point(19, 22)]);
+    lBitmap.Canvas.Brush.Color := $00CFE8DC;
+    lBitmap.Canvas.Polygon([Point(7, 14), Point(19, 22), Point(19, 37),
+      Point(7, 29)]);
+    lBitmap.Canvas.Brush.Color := $00B8D8E8;
+    lBitmap.Canvas.Polygon([Point(19, 22), Point(35, 14), Point(35, 29),
+      Point(19, 37)]);
+    lBitmap.Canvas.Pen.Width := 1;
+  finally
+    AImages.Replace(CIcon3dScene, lBitmap, nil);
+    lBitmap.Free;
+  end;
+end;
+
+procedure Draw3dToolbarGlyph(ACanvas: TCanvas; AKind: Integer);
+const
+  CAxisColors: array[0..2] of TColor = (clRed, $0000A000, $00D08020);
+var
+  lAxis: Integer;
+begin
+  ACanvas.Brush.Color := clWhite;
+  ACanvas.FillRect(0, 0, 42, 42);
+  ACanvas.Pen.Color := $00383838;
+  ACanvas.Pen.Width := 2;
+  case AKind of
+    0: begin
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Polygon([Point(7, 5), Point(31, 22), Point(21, 24),
+        Point(27, 36), Point(21, 39), Point(15, 27), Point(7, 34)]);
+      ACanvas.Brush.Style := bsSolid;
+      ACanvas.Pen.Color := clRed; ACanvas.MoveTo(24, 15); ACanvas.LineTo(38, 15);
+      ACanvas.Pen.Color := $0000A000; ACanvas.MoveTo(24, 15); ACanvas.LineTo(24, 3);
+    end;
+    1: begin
+      ACanvas.Brush.Color := $00F0D0A0;
+      ACanvas.Polygon([Point(11, 36), Point(7, 23), Point(10, 20),
+        Point(14, 27), Point(14, 10), Point(18, 8), Point(20, 23),
+        Point(22, 7), Point(26, 8), Point(27, 23), Point(30, 11),
+        Point(34, 13), Point(33, 29), Point(27, 37)]);
+    end;
+    2, 5, 6, 7, 8: begin
+      if AKind >= 6 then lAxis := AKind - 6 else lAxis := -1;
+      if lAxis >= 0 then ACanvas.Pen.Color := CAxisColors[lAxis];
+      ACanvas.Arc(7, 7, 35, 35, 34, 14, 12, 8);
+      ACanvas.Brush.Color := ACanvas.Pen.Color;
+      ACanvas.Polygon([Point(8, 7), Point(16, 8), Point(11, 14)]);
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Ellipse(16, 16, 27, 27);
+      ACanvas.Brush.Style := bsSolid;
+      if AKind = 5 then begin
+        ACanvas.Pen.Color := $00808080;
+        ACanvas.Arc(11, 3, 31, 39, 20, 4, 20, 38);
+      end;
+      if lAxis >= 0 then begin
+        ACanvas.Font.Color := CAxisColors[lAxis];
+        ACanvas.Font.Style := [fsBold]; ACanvas.Font.Size := 10;
+        ACanvas.TextOut(17, 14, Chr(Ord('X') + lAxis));
+        ACanvas.Font.Style := [];
+      end;
+    end;
+    3: begin
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Ellipse(6, 6, 29, 29);
+      ACanvas.MoveTo(25, 25); ACanvas.LineTo(38, 38);
+      ACanvas.MoveTo(11, 18); ACanvas.LineTo(24, 18);
+      ACanvas.MoveTo(18, 11); ACanvas.LineTo(18, 24);
+      ACanvas.Brush.Style := bsSolid;
+    end;
+    4: begin
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Rectangle(8, 8, 34, 34);
+      ACanvas.MoveTo(3, 12); ACanvas.LineTo(3, 3); ACanvas.LineTo(12, 3);
+      ACanvas.MoveTo(30, 3); ACanvas.LineTo(39, 3); ACanvas.LineTo(39, 12);
+      ACanvas.MoveTo(3, 30); ACanvas.LineTo(3, 39); ACanvas.LineTo(12, 39);
+      ACanvas.MoveTo(30, 39); ACanvas.LineTo(39, 39); ACanvas.LineTo(39, 30);
+      ACanvas.Brush.Style := bsSolid;
+    end;
+  end;
+  ACanvas.Pen.Width := 1;
+end;
+
+procedure Replace3dToolbarIcons(AImages: TCustomImageList);
+var
+  lBitmap: TBitmap;
+  lKind: Integer;
+begin
+  for lKind := 0 to 8 do
+  begin
+    lBitmap := TBitmap.Create;
+    try
+      lBitmap.SetSize(42, 42);
+      lBitmap.PixelFormat := pf24bit;
+      lBitmap.Transparent := False;
+      Draw3dToolbarGlyph(lBitmap.Canvas, lKind);
+      AImages.Replace(CIcon3dSelect + lKind, lBitmap, nil);
+    finally
+      lBitmap.Free;
+    end;
+  end;
+end;
+
 procedure RegenerateRecorderDesignerIcons(AImages: TCustomImageList);
 begin
   if AImages = nil then
@@ -533,6 +662,8 @@ begin
   EnsureImageListSize(AImages, CRecorderCommandImageCount);
   ReplaceInputFieldIcon(AImages);
   ReplaceComponentPaletteIcons(AImages);
+  Replace3dSceneIcon(AImages);
+  Replace3dToolbarIcons(AImages);
 end;
 
 procedure LoadRecorderCommandImages(AImages: TCustomImageList);
@@ -576,9 +707,10 @@ begin
   end;
 
   EnsureImageListSize(AImages, CRecorderCommandImageCount);
-  { Все штатные пиктограммы, включая 61..66, хранятся непосредственно в
-    ilCommandButtons формы. Runtime не должен подменять дизайнерский список:
-    иначе Lazarus показывает одно изображение, а приложение — другое. }
+  Replace3dSceneIcon(AImages);
+  Replace3dToolbarIcons(AImages);
+  { Штатные пиктограммы 61..66 хранятся в ilCommandButtons формы. Новая
+    пиктограмма 3D-сцены в позиции 67 строится одинаково на всех платформах. }
 end;
 
 initialization

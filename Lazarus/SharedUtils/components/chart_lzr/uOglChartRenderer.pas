@@ -785,6 +785,7 @@ end;
 procedure TOpenGLChartRenderer.BuildAxisTicks(AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
 var
   I: Integer;
+  lRange, lResolution, lRoundedMin: Double;
   lScale: Double;
 begin
   if Assigned(AAxis) and (AAxis.Scale = casLog10) then
@@ -801,6 +802,16 @@ begin
   if (Abs(lScale - 1.0) > 1E-15) or (AAxis.DisplayUnit <> '') then
     for I := 0 to High(ATicks) do
       ATicks[I].Text := FormatSignificant(ATicks[I].Value * lScale);
+  if (Length(ATicks) > 0) and (AAxis.Scale <> casLog10) then
+  begin
+    lRange := Abs(AAxis.MaxValue - AAxis.MinValue);
+    lResolution := lRange * 0.01;
+    if lResolution > 0 then
+    begin
+      lRoundedMin := Round(ATicks[0].Value / lResolution) * lResolution;
+      ATicks[0].Text := FormatSignificant(lRoundedMin * lScale);
+    end;
+  end;
 end;
 
 function TOpenGLChartRenderer.AxisColumnWidth(AAxis: TChartAxis;
@@ -2442,7 +2453,6 @@ begin
         if fTextHits[lIndex].Axis = lHovered then
           DrawHighlightRect(fTextHits[lIndex].Rect, $80FFCC00);
     end;
-
   end;
 
   // 2. Highlight selected page or axis text hit

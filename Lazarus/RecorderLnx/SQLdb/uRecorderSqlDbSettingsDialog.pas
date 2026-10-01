@@ -26,6 +26,7 @@ type
     btnSelectAll: TButton;
     btnSelectNone: TButton;
     btnImportSqlSelection: TButton;
+    btnCreateSqlSource: TButton;
     btnAssignEstimate: TButton;
     btnToggleAlarmEvent: TButton;
     cbBackend: TComboBox;
@@ -81,6 +82,7 @@ type
     procedure btnSelectAllClick(Sender: TObject);
     procedure btnSelectNoneClick(Sender: TObject);
     procedure btnImportSqlSelectionClick(Sender: TObject);
+    procedure btnCreateSqlSourceClick(Sender: TObject);
     procedure btnAssignEstimateClick(Sender: TObject);
     procedure btnToggleAlarmEventClick(Sender: TObject);
     procedure cbBackendChange(Sender: TObject);
@@ -89,6 +91,7 @@ type
   private
     fAllSignals: TStringList;
     fCheckedSignals: TStringList;
+    fSqlSourceSignals: TStringList;
     fAlarmSignals: TStringList;
     fConfig: TRecorderSqlDbConfig;
     fDbSignals: TRecorderSqlDbSignalInfos;
@@ -110,8 +113,10 @@ type
       const AFilter: string): Boolean;
     procedure FillDbSignalFallback(var AInfo: TRecorderSqlDbSignalInfo);
     procedure SyncVisibleSignalChecks;
+    procedure SyncVisibleDbSignalChecks;
     procedure StoreControls;
     procedure UpdateControls;
+    function TryReadDbSignals(out AError: string): Boolean;
     function TryOpenCurrentDatabase(out AMessage: string): Boolean;
     function TryEnsureCurrentDatabase(out AMessage: string): Boolean;
     function TagIsScalar(ATag: TRecorderTag): Boolean;
@@ -128,12 +133,17 @@ type
 function ShowRecorderSqlDbSettings(AOwner: TComponent;
   const AFileName: string; ARegistry: TRecorderTagRegistry;
   AOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent = nil): Boolean;
+function ShowRecorderSqlDataSourceSettings(AOwner: TComponent;
+  const AFileName: string; ARegistry: TRecorderTagRegistry;
+  out AConnectionError: string): Boolean;
 
 implementation
 
 uses
   uRecorderSqlDbFirebirdTools, uRecorderSqlDbProjectManager,
-  uRecorderTagTableExchange, uRecorderSqlSelectionImportDialog;
+  uRecorderSqlDbRuntime,
+  uRecorderTagTableExchange, uRecorderSqlSelectionImportDialog,
+  fpjson, jsonparser, uRecorderConfiguredDataSources, uRecorderSqlDataSource;
 
 {$R *.lfm}
 
@@ -147,14 +157,105 @@ begin
   fCheckedSignals.CaseSensitive := False;
   fCheckedSignals.Sorted := True;
   fCheckedSignals.Duplicates := dupIgnore;
+  fSqlSourceSignals := TStringList.Create;
+  fSqlSourceSignals.CaseSensitive := False;
+  fSqlSourceSignals.Sorted := True;
+  fSqlSourceSignals.Duplicates := dupIgnore;
   fAlarmSignals := TStringList.Create;
   fAlarmSignals.CaseSensitive := False;
   fAlarmSignals.Sorted := True;
   fAlarmSignals.Duplicates := dupIgnore;
 end;
 
+procedure TRecorderSqlDbSettingsDialog.btnCreateSqlSourceClick(Sender: TObject);
+var
+  I, J: Integer;
+  lArray: TJSONArray;
+  lInfo: TRecorderSqlDbSignalInfo;
+  lRepository: TRecorderSqlDbRepository;
+  lSource: TRecorderConfiguredDataSource;
+  lTag: TRecorderTag;
+  lBaseTagName, lTagName: string;
+  lSuffix: Integer;
+begin
+  if fRegistry = nil then Exit;
+  StoreControls;
+  lRepository := TRecorderSqlDbRepository.Create(fConfig);
+  lArray := TJSONArray.Create;
+  try
+    lRepository.ListSignalInfos(fDbSignals, False);
+    SyncVisibleDbSignalChecks;
+    for I := 0 to fSqlSourceSignals.Count - 1 do
+      for J := 0 to High(fDbSignals) do
+        if SameText(fDbSignals[J].Name, fSqlSourceSignals[I]) then
+        begin
+          lInfo := fDbSignals[J];
+          lTagName := lInfo.Name;
+          { A database signal has one canonical imported tag.  Reuse it by
+            source address before resolving a name conflict; otherwise a
+            repeated import of an already renamed tag would create _sql2,
+            _sql3 and so on. }
+          lTag := nil;
+          for lSuffix := 0 to fRegistry.TagCount - 1 do
+            if SameText(fRegistry.Tags[lSuffix].SourceId,
+              CRecorderSqlSourceId) and
+              SameText(fRegistry.Tags[lSuffix].Address, lInfo.Name) then
+            begin
+              lTag := fRegistry.Tags[lSuffix];
+              lTagName := lTag.Name;
+              Break;
+            end;
+          if lTag <> nil then
+          begin
+            lTag.ModuleType := CRecorderSqlSourceModuleType;
+            lTag.UnitName := lInfo.UnitName;
+            RecorderSqlSourceAddBinding(lArray, lInfo.Name, lTagName,
+              lInfo.UnitName);
+            Break;
+          end;
+          lTag := fRegistry.FindByName(lTagName);
+          if (lTag <> nil) and
+            (not SameText(lTag.SourceId, CRecorderSqlSourceId)) then
+          begin
+            if MessageDlg('Конфликт имени', Format(
+              'Тег "%s" уже существует. Импортировать как "%s_sql"?',
+              [lTagName, lTagName]), mtWarning, [mbYes, mbNo], 0) <> mrYes then
+              Continue;
+            lBaseTagName := lTagName + '_sql';
+            lTagName := lBaseTagName;
+            lSuffix := 2;
+            while fRegistry.FindByName(lTagName) <> nil do
+            begin
+              lTagName := lBaseTagName + IntToStr(lSuffix);
+              Inc(lSuffix);
+            end;
+          end;
+          lTag := fRegistry.FindByName(lTagName);
+          if lTag = nil then lTag := fRegistry.CreateTag(lTagName, 4096);
+          lTag.SourceId := CRecorderSqlSourceId;
+          lTag.ModuleType := CRecorderSqlSourceModuleType;
+          lTag.Address := lInfo.Name;
+          lTag.UnitName := lInfo.UnitName;
+          RecorderSqlSourceAddBinding(lArray, lInfo.Name, lTagName,
+            lInfo.UnitName);
+          Break;
+        end;
+    lSource := RecorderConfiguredDataSourcesEnsure(fRegistry,
+      CRecorderSqlSourceId, CRecorderSqlSourceModuleType, 1);
+    lSource.SpecificConfigText := lArray.AsJSON;
+    fRegistry.RegisterActiveSource(CRecorderSqlSourceId);
+    MessageDlg('SQL источник', Format('Импортировано каналов: %d',
+      [lArray.Count]), mtInformation, [mbOK], 0);
+  finally
+    lArray.Free;
+    lRepository.Free;
+  end;
+end;
+
 procedure TRecorderSqlDbSettingsDialog.BuildChannelPages;
 begin
+  lvDbSignals.CheckBoxes := True;
+  lvDbSignals.MultiSelect := True;
   fChannelPages := TPageControl.Create(Self);
   fChannelPages.Parent := Self;
   fChannelPages.SetBounds(gbSignals.Left, gbSignals.Top, gbSignals.Width,
@@ -216,6 +317,11 @@ begin
     btnToggleAlarmEvent.Width - 8), lAlarmTop,
     btnToggleAlarmEvent.Width, btnToggleAlarmEvent.Height);
 
+  btnCreateSqlSource.SetBounds(8,
+    lBottomTop - btnCreateSqlSource.Height - 8,
+    Min(270, gbSignals.ClientWidth - 16), btnCreateSqlSource.Height);
+  btnCreateSqlSource.Anchors := [akLeft, akBottom];
+
   btnSelectAll.Top := lBottomTop;
   btnSelectNone.Top := lBottomTop;
   btnSelectAll.Width := Max(90, (gbSignals.ClientWidth - 32) div 3);
@@ -265,6 +371,7 @@ end;
 destructor TRecorderSqlDbSettingsDialog.Destroy;
 begin
   fAlarmSignals.Free;
+  fSqlSourceSignals.Free;
   fCheckedSignals.Free;
   fAllSignals.Free;
   SetLength(fDbSignals, 0);
@@ -288,6 +395,8 @@ end;
 procedure TRecorderSqlDbSettingsDialog.LoadControls;
 var
   I: Integer;
+  lData: TJSONData;
+  lSourceConfig: string;
 begin
   cbEnabled.Checked := fConfig.Enabled;
   cbBackend.ItemIndex := Ord(fConfig.Backend);
@@ -328,6 +437,7 @@ begin
   cbSignalEstimate.ItemIndex := Ord(tekMean);
   fAllSignals.Clear;
   fCheckedSignals.Clear;
+  fSqlSourceSignals.Clear;
   fAlarmSignals.Clear;
   lvSignals.Clear;
   lvDbSignals.Clear;
@@ -342,10 +452,52 @@ begin
         fCheckedSignals.Add(fRegistry.Tags[I].Name);
       if fConfig.AlarmEventEnabled(fRegistry.Tags[I].Name) then
         fAlarmSignals.Add(fRegistry.Tags[I].Name);
+      if SameText(fRegistry.Tags[I].SourceId, CRecorderSqlSourceId) then
+        fSqlSourceSignals.Add(fRegistry.Tags[I].Address);
     end;
+  { The configured source is authoritative.  SQL tags can still be referenced
+    by forms after a channel is unchecked, so deriving the selection from all
+    registry tags would silently re-enable a deselected channel next time. }
+  lSourceConfig := RecorderSqlSourceConfig(fRegistry);
+  if Trim(lSourceConfig) <> '' then
+  begin
+    lData := nil;
+    try
+      lData := GetJSON(lSourceConfig);
+      if lData is TJSONArray then
+      begin
+        fSqlSourceSignals.Clear;
+        for I := 0 to TJSONArray(lData).Count - 1 do
+          if TJSONArray(lData)[I] is TJSONObject then
+            fSqlSourceSignals.Add(TJSONObject(TJSONArray(lData)[I]).Get(
+              'signal', ''));
+      end;
+    except
+      { Keep the tag-derived fallback when an old project contains malformed
+        source JSON; the editor can then save a repaired canonical selection. }
+    end;
+    lData.Free;
+  end;
   ApplySignalFilter;
   ApplyDbSignalFilter;
   UpdateControls;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.SyncVisibleDbSignalChecks;
+var
+  I, lIndex: Integer;
+begin
+  for I := 0 to lvDbSignals.Items.Count - 1 do
+    if lvDbSignals.Items[I].Checked then
+    begin
+      if fSqlSourceSignals.IndexOf(lvDbSignals.Items[I].Caption) < 0 then
+        fSqlSourceSignals.Add(lvDbSignals.Items[I].Caption);
+    end
+    else
+    begin
+      lIndex := fSqlSourceSignals.IndexOf(lvDbSignals.Items[I].Caption);
+      if lIndex >= 0 then fSqlSourceSignals.Delete(lIndex);
+    end;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.SyncVisibleSignalChecks;
@@ -457,6 +609,7 @@ begin
         Continue;
       lItem := lvDbSignals.Items.Add;
       lItem.Caption := lInfo.Name;
+      lItem.Checked := fSqlSourceSignals.IndexOf(lInfo.Name) >= 0;
       if lInfo.PointCount > 0 then
         lItem.SubItems.Add(IntToStr(lInfo.PointCount))
       else
@@ -471,6 +624,7 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.edDbSignalSearchChange(Sender: TObject);
 begin
+  SyncVisibleDbSignalChecks;
   ApplyDbSignalFilter;
 end;
 
@@ -610,22 +764,36 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.btnReadDbSignalsClick(Sender: TObject);
 var
+  lError: string;
+begin
+  if not TryReadDbSignals(lError) then
+    MessageDlg('Ошибка SQL БД', lError, mtError, [mbOK], 0);
+end;
+
+function TRecorderSqlDbSettingsDialog.TryReadDbSignals(
+  out AError: string): Boolean;
+var
   lInfos: TRecorderSqlDbSignalInfos;
   lRepository: TRecorderSqlDbRepository;
 begin
+  Result := False;
+  AError := '';
   try
     StoreControls;
+    if not fConfig.ConnectionConfigurationReady(AError) then Exit;
+    if not RecorderSqlServerAvailable(fConfig, AError) then Exit;
     lRepository := TRecorderSqlDbRepository.Create(fConfig);
     try
       lRepository.ListSignalInfos(lInfos, False);
       fDbSignals := lInfos;
       ApplyDbSignalFilter;
+      Result := True;
     finally
       lRepository.Free;
     end;
   except
     on E: Exception do
-      MessageDlg('Ошибка SQL БД', E.Message, mtError, [mbOK], 0);
+      AError := E.Message;
   end;
 end;
 
@@ -826,7 +994,8 @@ var
   lFileName, lInitialDir: string;
   lDisableUnmarked, lDeleteUnmarked: Boolean;
   lSelected, lPresent, lDeleteNames: TStringList;
-  lResult: TRecorderSqlSelectionTableResult;
+  lDbSelected, lDbPresent: TStringList;
+  lResult, lDbResult: TRecorderSqlSelectionTableResult;
   lInfos: TRecorderSqlDbSignalInfos;
   lRepository: TRecorderSqlDbRepository;
   lSignalsDeleted, lValuesDeleted: Int64;
@@ -848,6 +1017,8 @@ begin
   lSelected := TStringList.Create;
   lPresent := TStringList.Create;
   lDeleteNames := TStringList.Create;
+  lDbSelected := TStringList.Create;
+  lDbPresent := TStringList.Create;
   try
     lSelected.CaseSensitive := False;
     lSelected.Sorted := True;
@@ -858,9 +1029,17 @@ begin
     lDeleteNames.CaseSensitive := False;
     lDeleteNames.Sorted := True;
     lDeleteNames.Duplicates := dupIgnore;
+    lDbSelected.CaseSensitive := False;
+    lDbSelected.Sorted := True;
+    lDbSelected.Duplicates := dupIgnore;
+    lDbPresent.CaseSensitive := False;
+    lDbPresent.Sorted := True;
+    lDbPresent.Duplicates := dupIgnore;
 
     ReadRecorderSqlSelectionFromTable(fRegistry, lFileName, lSelected,
       lPresent, lResult);
+    ReadRecorderSqlSignalNamesFromTable(lFileName, lDbSelected, lDbPresent,
+      lDbResult);
     SyncVisibleSignalChecks;
     for I := 0 to lSelected.Count - 1 do
       if fCheckedSignals.IndexOf(lSelected[I]) < 0 then
@@ -873,6 +1052,19 @@ begin
           if lIndex >= 0 then fCheckedSignals.Delete(lIndex);
         end;
     ApplySignalFilter;
+
+    SyncVisibleDbSignalChecks;
+    for I := 0 to lDbSelected.Count - 1 do
+      if fSqlSourceSignals.IndexOf(lDbSelected[I]) < 0 then
+        fSqlSourceSignals.Add(lDbSelected[I]);
+    if lDisableUnmarked then
+      for I := 0 to lDbPresent.Count - 1 do
+        if lDbSelected.IndexOf(lDbPresent[I]) < 0 then
+        begin
+          lIndex := fSqlSourceSignals.IndexOf(lDbPresent[I]);
+          if lIndex >= 0 then fSqlSourceSignals.Delete(lIndex);
+        end;
+    ApplyDbSignalFilter;
 
     lSignalsDeleted := 0;
     lValuesDeleted := 0;
@@ -916,6 +1108,8 @@ begin
     on E: Exception do
       MessageDlg('Ошибка импорта SQL', E.Message, mtError, [mbOK], 0);
   end;
+  lDbPresent.Free;
+  lDbSelected.Free;
   lDeleteNames.Free;
   lPresent.Free;
   lSelected.Free;
@@ -1083,6 +1277,28 @@ begin
     D.LoadConfig(AFileName, ARegistry, AOnSignalsDeleted);
     Result := D.ShowModal = mrOk;
   finally D.Free; end;
+end;
+
+function ShowRecorderSqlDataSourceSettings(AOwner: TComponent;
+  const AFileName: string; ARegistry: TRecorderTagRegistry;
+  out AConnectionError: string): Boolean;
+var
+  D: TRecorderSqlDbSettingsDialog;
+begin
+  AConnectionError := '';
+  D := TRecorderSqlDbSettingsDialog.Create(AOwner);
+  try
+    D.LoadConfig(AFileName, ARegistry);
+    { Initial loading is a status probe, not a user command.  Keep an
+      unavailable SQL source editable and report its state to the device tree
+      instead of opening a modal error dialog. }
+    D.TryReadDbSignals(AConnectionError);
+    D.fChannelPages.ActivePage := D.fDbSignalsTab;
+    Result := D.ShowModal = mrOk;
+    if Result then D.btnCreateSqlSourceClick(nil);
+  finally
+    D.Free;
+  end;
 end;
 
 end.

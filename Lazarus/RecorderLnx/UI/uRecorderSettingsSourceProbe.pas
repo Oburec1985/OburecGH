@@ -516,20 +516,47 @@ var
   I: Integer;
   lDeviceIndex: Integer;
   lAddress: string;
+  lConfigured: TRecorderConfiguredDataSource;
   lDisplayName: string;
   lFreqHz: Double;
+  lMeasurementFrequencyHz: Double;
   lSignal: TMeraSignalInfo;
   lTag: TRecorderTag;
 begin
   RemoveSourceSignals(ASourceId);
   lDeviceIndex := RecorderMic185SourceDeviceIndex(fRegistry, ASourceId);
+  lMeasurementFrequencyHz := 0;
+  if fRegistry <> nil then
+    for I := 0 to fRegistry.TagCount - 1 do
+    begin
+      lTag := fRegistry.Tags[I];
+      if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+        RecorderNormalizeTagSourceId(ASourceId)) and
+        (RecorderMic185ChannelAddressToIndex(lTag.Address) >= 0) and
+        (lTag.PollFrequencyHz > 0) then
+      begin
+        lMeasurementFrequencyHz := RecorderMic185NormalizeFrequency(
+          lTag.PollFrequencyHz);
+        Break;
+      end;
+    end;
+  if lMeasurementFrequencyHz <= 0 then
+  begin
+    lConfigured := RecorderConfiguredDataSourcesFind(fRegistry, ASourceId);
+    if (lConfigured <> nil) and
+      (lConfigured.DefaultPollFrequencyHz > 0) then
+      lMeasurementFrequencyHz := RecorderMic185NormalizeFrequency(
+        lConfigured.DefaultPollFrequencyHz)
+    else
+      lMeasurementFrequencyHz := MIC185DefaultPollFrequencyHz;
+  end;
 
   for I := 1 to CMic185TotalLogicalChannelCount do
   begin
     if I <= CMic185ChannelCountMax then
     begin
       lAddress := RecorderMic185MeasurementAddressText(lDeviceIndex, I);
-      lFreqHz := CMic185DefaultMeasFrequencyHz;
+      lFreqHz := lMeasurementFrequencyHz;
     end
     else if I <= CMic185ChannelCountMax + CMic185TempChannelCount then
     begin
@@ -803,7 +830,9 @@ begin
         else
           lConfigured := RecorderConfiguredDataSourcesEnsure(fRegistry,
             lSourceId, 'MC-032', lPollHz);
-        if (lConfigured <> nil) and (lConfigured.DefaultPollFrequencyHz <= 0) then
+        if (lConfigured <> nil) and (lPollHz > 0) and
+          ((g = rsgMic185) or
+           (lConfigured.DefaultPollFrequencyHz <= 0)) then
           lConfigured.DefaultPollFrequencyHz := lPollHz;
       end;
     end;

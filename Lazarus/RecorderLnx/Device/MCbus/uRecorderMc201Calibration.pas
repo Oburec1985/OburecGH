@@ -580,6 +580,8 @@ begin
   if not RecorderMc201EnsureHardwareCalibrationInRegistry(ARegistry, lSerial,
     lRange, lChan, lRev2176, lName) then
     Exit;
+  if Trim(ATag.HardwareCalibrationName) = '' then
+    ATag.HardwareCalibrationEnabled := True;
   ATag.HardwareCalibrationName := lName;
   RecorderMc201SyncTagUnitFromHardwareGx(ARegistry, ATag);
   Result := True;

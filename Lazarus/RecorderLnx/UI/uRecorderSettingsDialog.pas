@@ -286,6 +286,10 @@ type
       ATargetNode: TRecorderSpectrumConfigNode);
     function CreateSpectrumConfigNode(ATag: TRecorderTag): TRecorderSpectrumConfigNode;
     function SelectedSpectrumConfigNode: TRecorderSpectrumConfigNode;
+    procedure ApplySpectrumSettingsToBindings(
+      ANode: TRecorderSpectrumConfigNode;
+      const ASettings: TRecorderSpectrumSettings);
+    procedure SyncSpectrumSampleRatesFromTags;
     function SelectedSpectrumBinding: TRecorderSpectrumTagBinding;
     function SelectedRuntimeAlgorithm: TRecorderAlgorithm;
     procedure ShowRuntimeAlgorithmEditor(AAlgorithm: TRecorderAlgorithm);
@@ -314,6 +318,7 @@ type
     procedure EditHardwareSource(const ASourceId: string;
       const AModuleTypeHint: string = '');
     procedure EditMeraFileSource(const ASourceId: string);
+    procedure EditSqlDataSource;
     procedure ApplyConfiguredSourceChange(const AOldSourceId, ANewSourceId: string;
       ARefreshUi: Boolean = True);
     procedure DeleteMic185Source(const ASourceId: string);
@@ -323,7 +328,8 @@ type
 
     procedure DeleteMic140Source(const ASourceId: string);
     procedure DeleteSelectedHardwareSources;
-    procedure DeleteHardwareSourceNoRefresh(const ASourceId: string);
+    procedure DeleteHardwareSourceNoRefresh(const ASourceId: string;
+      ADeleteTags: Boolean);
     procedure HardwareDeleteSourceClick(Sender: TObject);
     procedure HardwareReloadSourceClick(Sender: TObject);
     procedure HardwareResetSourceClick(Sender: TObject);
@@ -427,11 +433,13 @@ uses
   uRecorderMic140StreamTypes,
   uRecorderMic140LegacyTiming, uRecorderMic140Utils,
   uRecorderMic185DataSource, uRecorderMic185Runtime, uMic185Constants,
+  uRecorderRuntimeSourceFactory,
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
   uRecorderDeviceSearchDialog, uMc032Device, uMc201ProtocolTypes,
   uRecorderDebugLog,
-  uRecorderTagTableExchange, uRecorderOpcUaTypes;
+  uRecorderTagTableExchange, uRecorderOpcUaTypes,
+  uRecorderSqlDbSettingsDialog, uRecorderSqlDataSource;
 
 {$R *.lfm}
 
@@ -2439,6 +2447,8 @@ begin
     MarkSignalsFromRegistry;
     PopulateHardwareTree;
     PopulateChannelGrids;
+    SyncSpectrumSampleRatesFromTags;
+    LoadSelectedAlgorithmSettings;
   end;
 end;
 
@@ -2492,12 +2502,71 @@ begin
   Result.Settings := lSettings;
 end;
 
+procedure TRecorderSettingsDialog.ApplySpectrumSettingsToBindings(
+  ANode: TRecorderSpectrumConfigNode;
+  const ASettings: TRecorderSpectrumSettings);
+var
+  I: Integer;
+  lBinding: TRecorderSpectrumTagBinding;
+  lSettings: TRecorderSpectrumSettings;
+  lTag: TRecorderTag;
+begin
+  if ANode = nil then
+    Exit;
+  for I := 0 to ANode.BindingCount - 1 do
+  begin
+    lBinding := ANode.Bindings[I];
+    lSettings := ASettings;
+    lTag := nil;
+    if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
+      lTag := fRecorder.TagRegistry.FindByName(lBinding.SourceTagName);
+    { Fs является свойством входного канала. Остальные параметры наследуем
+      из изменённого родительского узла, но частоту всегда берём из тега. }
+    if (lTag <> nil) and (lTag.PollFrequencyHz > 0.0) then
+      lSettings.SampleRateHz := lTag.PollFrequencyHz;
+    lBinding.Settings := lSettings;
+    lBinding.UseOwnSettings := True;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.SyncSpectrumSampleRatesFromTags;
+var
+  I, J: Integer;
+  lNode: TRecorderSpectrumConfigNode;
+  lBinding: TRecorderSpectrumTagBinding;
+  lSettings: TRecorderSpectrumSettings;
+  lTag: TRecorderTag;
+begin
+  if (fSpectrumConfigTree = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+
+  for I := 0 to fSpectrumConfigTree.NodeCount - 1 do
+  begin
+    lNode := fSpectrumConfigTree.Nodes[I];
+    for J := 0 to lNode.BindingCount - 1 do
+    begin
+      lBinding := lNode.Bindings[J];
+      lTag := fRecorder.TagRegistry.FindByName(lBinding.SourceTagName);
+      if (lTag = nil) or (lTag.PollFrequencyHz <= 0.0) then
+        Continue;
+      lSettings := lBinding.ResolveSettings(lNode.Settings);
+      if SameValue(lSettings.SampleRateHz, lTag.PollFrequencyHz) then
+        Continue;
+      lSettings.SampleRateHz := lTag.PollFrequencyHz;
+      lBinding.Settings := lSettings;
+      lBinding.UseOwnSettings := True;
+    end;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.AddSpectrumAlgorithmForTag(ATag: TRecorderTag;
   ATargetNode: TRecorderSpectrumConfigNode);
 var
   I: Integer;
   lNode: TRecorderSpectrumConfigNode;
   lBinding: TRecorderSpectrumTagBinding;
+  lSettings: TRecorderSpectrumSettings;
 begin
   if ATag = nil then
     Exit;
@@ -2512,6 +2581,11 @@ begin
 
   lBinding := lNode.AddBinding(ATag.Name);
   lBinding.OutputPrefix := ATag.Name + '_spm';
+  lSettings := lNode.Settings;
+  if ATag.PollFrequencyHz > 0.0 then
+    lSettings.SampleRateHz := ATag.PollFrequencyHz;
+  lBinding.Settings := lSettings;
+  lBinding.UseOwnSettings := True;
 end;
 
 procedure TRecorderSettingsDialog.AddSpectrumAlgorithmsFromSelectedChannels;
@@ -3022,6 +3096,7 @@ var
   lBinding: TRecorderSpectrumTagBinding;
   lSettings: TRecorderSpectrumSettings;
   lAlgorithm: TRecorderAlgorithm;
+  lTag: TRecorderTag;
 begin
   lAlgorithm := SelectedRuntimeAlgorithm;
   if lAlgorithm <> nil then
@@ -3035,7 +3110,18 @@ begin
     Exit;
   lBinding := SelectedSpectrumBinding;
   if lBinding <> nil then
-    lSettings := lBinding.ResolveSettings(lNode.Settings)
+  begin
+    lSettings := lBinding.ResolveSettings(lNode.Settings);
+    lTag := nil;
+    if (fRecorder <> nil) and (fRecorder.TagRegistry <> nil) then
+      lTag := fRecorder.TagRegistry.FindByName(lBinding.SourceTagName);
+    if (lTag <> nil) and (lTag.PollFrequencyHz > 0.0) then
+    begin
+      lSettings.SampleRateHz := lTag.PollFrequencyHz;
+      lBinding.Settings := lSettings;
+      lBinding.UseOwnSettings := True;
+    end;
+  end
   else
     lSettings := lNode.Settings;
   if fAlgorithmFftSizeEdit <> nil then
@@ -3106,7 +3192,10 @@ begin
         lBinding.UseOwnSettings := True;
       end
       else
+      begin
         lNode.Settings := lSettings;
+        ApplySpectrumSettingsToBindings(lNode, lSettings);
+      end;
       LoadSelectedAlgorithmSettings;
       Exit;
     except
@@ -3122,7 +3211,10 @@ begin
     lBinding.UseOwnSettings := True;
   end
   else
+  begin
     lNode.Settings := lSettings;
+    ApplySpectrumSettingsToBindings(lNode, lSettings);
+  end;
   UpdateAlgorithmDerivedControls;
 end;
 
@@ -3718,6 +3810,7 @@ begin
     lCombo.Items.Add('MIC183/185');
     lCombo.Items.Add('MC-032');
     lCombo.Items.Add('OPC UA');
+    lCombo.Items.Add('SQL database');
     lCombo.Items.Add('Mera file');
     lCombo.ItemIndex := 0;
 
@@ -3751,6 +3844,8 @@ begin
       EditMc032Source
     else if SameText(lCombo.Text, 'OPC UA') then
       EditHardwareSource('', 'OPC UA')
+    else if SameText(lCombo.Text, 'SQL database') then
+      EditSqlDataSource
     else
       btnDeviceAddClick(Sender);
   finally
@@ -4417,6 +4512,12 @@ begin
     EditMc032Source(ASourceId);
     Exit;
   end;
+  if SameText(AModuleTypeHint, CRecorderSqlSourceModuleType) or
+    SameText(ASourceId, CRecorderSqlSourceId) then
+  begin
+    EditSqlDataSource;
+    Exit;
+  end;
   if RecorderIsVirtualTagSource(ASourceId) then
   begin
     EditMeraFileSource(ASourceId);
@@ -4427,6 +4528,27 @@ begin
     lNewSourceId, AModuleTypeHint) then
     Exit;
   ApplyConfiguredSourceChange(ASourceId, lNewSourceId);
+end;
+
+procedure TRecorderSettingsDialog.EditSqlDataSource;
+var
+  lConnectionError: string;
+  lConfigFileName: string;
+  lDialogAccepted: Boolean;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
+    (fRecorder.SqlDbManager = nil) then Exit;
+  lConfigFileName := fRecorder.SqlDbManager.ConfigFileName;
+  lDialogAccepted := ShowRecorderSqlDataSourceSettings(Self, lConfigFileName,
+    fRecorder.TagRegistry, lConnectionError);
+  if lConnectionError <> '' then
+    RecorderHardwareMarkSourceOffline(CRecorderSqlSourceId, lConnectionError)
+  else
+    RecorderHardwareClearSourceOffline(CRecorderSqlSourceId);
+  PopulateHardwareTree;
+  if not lDialogAccepted then Exit;
+  fRecorder.SqlDbManager.Configure(lConfigFileName);
+  ApplyConfiguredSourceChange(CRecorderSqlSourceId, CRecorderSqlSourceId);
 end;
 
 function TRecorderSettingsDialog.SelectedSpectrumBinding:
@@ -4747,7 +4869,7 @@ begin
 end;
 
 procedure TRecorderSettingsDialog.DeleteHardwareSourceNoRefresh(
-  const ASourceId: string);
+  const ASourceId: string; ADeleteTags: Boolean);
 var
   lIdx: Integer;
   lMeraPath: string;
@@ -4762,7 +4884,10 @@ begin
     fRecorder.TagRegistry.SourceSpecificConfigs.Delete(lIdx);
   fRecorder.TagRegistry.UnregisterActiveSource(ASourceId);
   RecorderHardwareClearSourceOffline(ASourceId);
-  fRecorder.TagRegistry.DetachTagsBySourceId(ASourceId);
+  if ADeleteTags then
+    fRecorder.TagRegistry.RemoveTagsBySourceId(ASourceId)
+  else
+    fRecorder.TagRegistry.DetachTagsBySourceId(ASourceId);
   fSourceProbe.RemoveSourceSignals(ASourceId);
 
   if RecorderIsVirtualTagSource(ASourceId) then
@@ -4781,9 +4906,13 @@ end;
 procedure TRecorderSettingsDialog.DeleteSelectedHardwareSources;
 var
   I: Integer;
+  lDeleteTags: Boolean;
   lNode: TTreeNode;
+  lReply: TModalResult;
   lSourceId: string;
   lSourceIds: TStringList;
+  lTag: TRecorderTag;
+  lTagCount: Integer;
 begin
   if (fHardwareTree = nil) or (fRecorder = nil) then
     Exit;
@@ -4813,8 +4942,28 @@ begin
       mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
       Exit;
 
+    lTagCount := 0;
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := fRecorder.TagRegistry.Tags[I];
+      if lSourceIds.IndexOf(RecorderNormalizeTagSourceId(lTag.SourceId)) >= 0 then
+        Inc(lTagCount);
+    end;
+    lDeleteTags := False;
+    if lTagCount > 0 then
+    begin
+      lReply := MessageDlg('Удаление связанных тегов', Format(
+        'У выбранных устройств есть связанные теги: %d.' + LineEnding +
+        'Удалить эти теги вместе с устройствами?' + LineEnding + LineEnding +
+        '«Нет» — оставить теги отвязанными.', [lTagCount]),
+        mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+      if lReply = mrCancel then
+        Exit;
+      lDeleteTags := lReply = mrYes;
+    end;
+
     for I := 0 to lSourceIds.Count - 1 do
-      DeleteHardwareSourceNoRefresh(lSourceIds[I]);
+      DeleteHardwareSourceNoRefresh(lSourceIds[I], lDeleteTags);
     fDataSourcesChanged := True;
     PopulateHardwareTree;
     PopulateChannelGrids;
@@ -4834,7 +4983,9 @@ var
   lDataSourceError: string;
   lErrors: TStringList;
   lFailedPrepareSourceIds: TStringList;
+  lHost: string;
   lNode: TTreeNode;
+  lPort: Word;
   lPrepareSourceIds: TStringList;
   lPrepareStartedAt: QWord;
   lProcedures: array of TThreadMethod;
@@ -4929,6 +5080,16 @@ begin
     end;
     if lSourceIds.Count = 0 then
       Exit;
+
+    { Reset is a transport/lifecycle operation and must not restore frequency
+      defaults kept by an older runtime object.  Rebuild MIC140/MIC185 sources
+      from the current tag model before disconnect/program/prepare. }
+    if not fRecorder.DataSources.Running then
+      for I := 0 to lSourceIds.Count - 1 do
+        if TryParseRecorderMic140SourceId(lSourceIds[I], lHost, lPort) or
+          TryParseRecorderMic185SourceId(lSourceIds[I], lHost, lPort) then
+          RecorderReplaceRuntimeSource(fRecorder, lSourceIds[I],
+            fRecorder.RunSettings.DataUpdateMs, nil, False);
 
     lBatchTraceId := RecorderMic185NewLifecycleTraceId('reset-batch');
     RecorderMic185LifecycleLog(lBatchTraceId, '*', 'reset-batch', 'BEGIN',
@@ -6003,6 +6164,7 @@ begin
   if (SelectedSpectrumConfigNode <> nil) or
     (SelectedRuntimeAlgorithm <> nil) then
     StoreSelectedAlgorithmSettings;
+  SyncSpectrumSampleRatesFromTags;
 
   if cbNetworkInterface <> nil then
     if cbNetworkInterface.ItemIndex <= 0 then
@@ -6677,6 +6839,44 @@ begin
       [AResult.Warnings.Count - lCount]);
 end;
 
+{ Applies an imported MIC-185 frequency through the device-wide configuration.
+  MIC-185 cannot use independent measurement rates for separate channels. }
+procedure ApplyImportedMic185Frequencies(ARecorder: TRecorder;
+  var AResult: TRecorderTagTableExchangeResult);
+var
+  I: Integer;
+  lFormat: TFormatSettings;
+  lFrequencyHz: Double;
+  lHost: string;
+  lPort: Word;
+  lSourceId: string;
+  lValue: string;
+begin
+  if (ARecorder = nil) or (ARecorder.TagRegistry = nil) or
+    (AResult.ImportedPollFrequencies = nil) then
+    Exit;
+  lFormat := DefaultFormatSettings;
+  lFormat.DecimalSeparator := '.';
+  for I := 0 to AResult.ImportedPollFrequencies.Count - 1 do
+  begin
+    lSourceId := AResult.ImportedPollFrequencies.Names[I];
+    if not TryParseRecorderMic185SourceId(lSourceId, lHost, lPort) then
+      Continue;
+    lValue := AResult.ImportedPollFrequencies.ValueFromIndex[I];
+    if lValue = '*' then
+    begin
+      AResult.Warnings.Add(Format(
+        'MIC-185 %s: в таблице указаны разные частоты; частота прибора не изменена.',
+        [lSourceId]));
+      Continue;
+    end;
+    if not TryStrToFloat(lValue, lFrequencyHz, lFormat) then
+      Continue;
+    RecorderMic185ApplySourceFrequency(ARecorder.TagRegistry, lSourceId,
+      lFrequencyHz, ARecorder.RunSettings.DataUpdateMs);
+  end;
+end;
+
 procedure TRecorderSettingsDialog.btnChannelImportClick(Sender: TObject);
 var
   lDialog: TOpenDialog;
@@ -6725,10 +6925,13 @@ begin
         lBeforeProgramming := ProgrammingState;
         ImportRecorderTagsFromTable(fRecorder.TagRegistry,
           fRecorder.SqlDbManager.Config, lDialog.FileName, lResult);
+        ApplyImportedMic185Frequencies(fRecorder, lResult);
         fRecorder.SqlDbManager.SaveConfig;
         MarkSignalsFromRegistry;
         PopulateHardwareTree;
         PopulateChannelGrids;
+        SyncSpectrumSampleRatesFromTags;
+        LoadSelectedAlgorithmSettings;
         PopulateAlgorithmsTree;
         fDataSourcesChanged := fDataSourcesChanged or
           (lBeforeProgramming <> ProgrammingState);

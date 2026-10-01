@@ -6,7 +6,7 @@ unit uRecorderLissajousView;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Math,
+  Classes, SysUtils, Controls, Graphics, Math, Buttons,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartTrend, uOglChartDrawObj, uOglChartTextLabel,
   uRecorderFormModel, uRecorderTags, uRecorderVisualControl;
@@ -14,6 +14,7 @@ uses
 type
   TRecorderLissajousRuntimeLine = class
   public
+    Settings: TRecorderLissajousLine;
     XTag, YTag: TRecorderTag;
     XTimes, XValues, YTimes, YValues: TRecorderDoubleArray;
     PairX, PairY: TRecorderDoubleArray;
@@ -37,6 +38,7 @@ type
     fAxis: TChartAxis;
     fLines: TList;
     fTagRegistry: TRecorderTagRegistry;
+    fSquareButton: TSpeedButton;
     procedure ClearRuntimeLines;
     procedure BuildChart(ATagRegistry: TRecorderTagRegistry);
     function RuntimeLine(AIndex: Integer): TRecorderLissajousRuntimeLine;
@@ -45,6 +47,9 @@ type
     procedure UpdateDiameter(ALine: TRecorderLissajousRuntimeLine;
       ASettings: TRecorderLissajousLine);
     procedure ChartDblClick(Sender: TObject);
+    procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
+    procedure SquareButtonClick(Sender: TObject);
+    function NormalizeSquareRange: Boolean;
     procedure FitToLissajousData;
   public
     constructor Create(AOwner: TComponent); override;
@@ -66,6 +71,16 @@ begin
   inherited Create(AOwner);
   fLines := TList.Create;
   Color := clWhite;
+  fSquareButton := TSpeedButton.Create(Self);
+  fSquareButton.Parent := Self;
+  fSquareButton.SetBounds(Width - 32, 4, 28, 26);
+  fSquareButton.Anchors := [akTop, akRight];
+  fSquareButton.Caption := '□';
+  fSquareButton.Hint := 'Держать квадрат: диапазоны X и Y равны по большему';
+  fSquareButton.ShowHint := True;
+  fSquareButton.AllowAllUp := True;
+  fSquareButton.GroupIndex := 91;
+  fSquareButton.OnClick := @SquareButtonClick;
 end;
 
 destructor TRecorderLissajousView.Destroy;
@@ -104,6 +119,7 @@ begin
     fChart.Parent := Self;
     fChart.Align := alClient;
     fChart.OnDblClick := @ChartDblClick;
+    fChart.OnAfterRender := @ChartAfterRender;
     fChart.AutoResizeViewport := True;
     fModel := TChartModel.Create;
     fChart.Model := fModel;
@@ -155,6 +171,7 @@ begin
   begin
     lLine := fComponent.Lines[I];
     lState := TRecorderLissajousRuntimeLine.Create;
+    lState.Settings := lLine;
     lState.XTag := lLine.ResolveXTag(ATagRegistry);
     lState.YTag := lLine.ResolveYTag(ATagRegistry);
     lState.LastXRevision := High(QWord);
@@ -188,6 +205,7 @@ begin
     lState.CenterSeries.DrawLine := False;
     lState.CenterSeries.DrawMarkers := True;
     lState.CenterSeries.MarkerSize := 4;
+    lState.CenterSeries.ReservePoints(Length(lState.Centers));
     fAxis.AddChild(lState.CenterSeries);
     lState.DiameterSeries := cBuffTrend2d.Create;
     lState.DiameterSeries.Name := lLine.Name + '.diameter';
@@ -196,6 +214,7 @@ begin
       (lLine.DiameterColor and $00FFFFFF) or $FF000000;
     lState.DiameterSeries.LineWidth := Max(1, lLine.Width);
     lState.DiameterSeries.Visible := lLine.DrawMainDiameter;
+    lState.DiameterSeries.ReservePoints(Length(lState.DiameterPoints));
     fAxis.AddChild(lState.DiameterSeries);
     lState.DiameterCenterSeries := cBuffTrend2d.Create;
     lState.DiameterCenterSeries.Name := lLine.Name + '.diameter-center';
@@ -205,6 +224,8 @@ begin
     lState.DiameterCenterSeries.DrawMarkers := True;
     lState.DiameterCenterSeries.MarkerSize := 7;
     lState.DiameterCenterSeries.Visible := lLine.DrawDiameterCenter;
+    lState.DiameterCenterSeries.ReservePoints(
+      Length(lState.DiameterCenterPoint));
     fAxis.AddChild(lState.DiameterCenterSeries);
     lState.DiameterLabel := TChartTextLabel.Create;
     lState.DiameterLabel.Name := lLine.Name + '.diameter-value';
@@ -218,7 +239,53 @@ begin
     fLines.Add(lState);
   end;
   fModel.AlignPagesAuto;
+  fSquareButton.Down := fComponent.KeepSquare;
+  fSquareButton.BringToFront;
+  NormalizeSquareRange;
   fChart.Redraw;
+end;
+
+function TRecorderLissajousView.NormalizeSquareRange: Boolean;
+var
+  lXCenter, lYCenter, lXSpan, lYSpan, lSpan: Double;
+begin
+  Result := False;
+  if (fComponent = nil) or not fComponent.KeepSquare or
+     (fPage = nil) or (fAxis = nil) then
+    Exit;
+  lXSpan := fPage.XMaxValue - fPage.XMinValue;
+  lYSpan := fAxis.MaxValue - fAxis.MinValue;
+  if (lXSpan <= 0) or (lYSpan <= 0) then Exit;
+  lSpan := Max(lXSpan, lYSpan);
+  lXCenter := (fPage.XMinValue + fPage.XMaxValue) * 0.5;
+  lYCenter := (fAxis.MinValue + fAxis.MaxValue) * 0.5;
+  if not SameValue(lXSpan, lSpan) then
+  begin
+    fPage.XMinValue := lXCenter - lSpan * 0.5;
+    fPage.XMaxValue := lXCenter + lSpan * 0.5;
+    Result := True;
+  end;
+  if not SameValue(lYSpan, lSpan) then
+  begin
+    fAxis.MinValue := lYCenter - lSpan * 0.5;
+    fAxis.MaxValue := lYCenter + lSpan * 0.5;
+    Result := True;
+  end;
+end;
+
+procedure TRecorderLissajousView.ChartAfterRender(Sender: TObject;
+  ARenderTimeMs: Double);
+begin
+  if NormalizeSquareRange and (fChart <> nil) then
+    fChart.Invalidate;
+end;
+
+procedure TRecorderLissajousView.SquareButtonClick(Sender: TObject);
+begin
+  if fComponent = nil then Exit;
+  fComponent.KeepSquare := fSquareButton.Down;
+  if NormalizeSquareRange and (fChart <> nil) then
+    fChart.Redraw;
 end;
 
 procedure TRecorderLissajousView.ChartDblClick(Sender: TObject);
@@ -295,6 +362,15 @@ procedure TRecorderLissajousView.UpdateDiameter(
 var
   lX1, lY1, lX2, lY2, lCenterX, lCenterY, lDiameter: Double;
 begin
+  if not ASettings.DrawMainDiameter and
+     not ASettings.DrawDiameterCenter and
+     not ASettings.ShowDiameterValue then
+  begin
+    ALine.DiameterSeries.Visible := False;
+    ALine.DiameterCenterSeries.Visible := False;
+    ALine.DiameterLabel.Visible := False;
+    Exit;
+  end;
   if not CalculateLissajousMainDiameter(ALine.PairX, ALine.PairY,
     ALine.PointCount, lX1, lY1, lX2, lY2, lCenterX, lCenterY,
     lDiameter) then
@@ -316,8 +392,11 @@ begin
   ALine.DiameterCenterSeries.Visible := ASettings.DrawDiameterCenter;
   ALine.DiameterLabel.WorldX := lCenterX;
   ALine.DiameterLabel.WorldY := lCenterY;
-  ALine.DiameterLabel.Text := 'D = ' + FormatFloat('0.####', lDiameter);
   ALine.DiameterLabel.Visible := ASettings.ShowDiameterValue;
+  if ASettings.ShowDiameterValue then
+    ALine.DiameterLabel.Text := 'D = ' + FormatFloat('0.####', lDiameter)
+  else
+    ALine.DiameterLabel.Text := '';
 end;
 
 function TRecorderLissajousView.RefreshLine(
@@ -325,13 +404,8 @@ function TRecorderLissajousView.RefreshLine(
 var
   I, lCapacity: Integer;
   lLatest, lFrom: Double;
-  lSettings: TRecorderLissajousLine;
 begin
   Result := False;
-  if (ALine.XTag = nil) and (fTagRegistry <> nil) then
-    ALine.XTag := fComponent.Lines[fLines.IndexOf(ALine)].ResolveXTag(fTagRegistry);
-  if (ALine.YTag = nil) and (fTagRegistry <> nil) then
-    ALine.YTag := fComponent.Lines[fLines.IndexOf(ALine)].ResolveYTag(fTagRegistry);
   if (ALine.XTag = nil) or (ALine.YTag = nil) then Exit;
   if (ALine.LastXRevision = ALine.XTag.SignalBuffer.Revision) and
     (ALine.LastYRevision = ALine.YTag.SignalBuffer.Revision) then Exit;
@@ -356,8 +430,7 @@ begin
   end;
   ALine.Series.ReplacePoints(ALine.Points, ALine.PointCount);
   UpdateCenter(ALine);
-  lSettings := fComponent.Lines[fLines.IndexOf(ALine)];
-  UpdateDiameter(ALine, lSettings);
+  UpdateDiameter(ALine, ALine.Settings);
   Result := True;
 end;
 

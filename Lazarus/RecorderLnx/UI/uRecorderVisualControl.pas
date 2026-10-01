@@ -372,7 +372,7 @@ end;
 
 procedure TRecorderInputFieldView.EditChange(Sender: TObject);
 begin
-  if Focused and not fUpdatingText then
+  if not fUpdatingText then
     fEditing := True;
 end;
 
@@ -383,6 +383,15 @@ var
   lCandidate: string;
   lHasSeparator: Boolean;
 begin
+  if Key in [#10, #13] then
+  begin
+    { После повторного hide/show GTK может на OnChange кратковременно вернуть
+      Focused=False. Enter всё равно является явным подтверждением текста. }
+    fEditing := True;
+    CommitValue(Sender);
+    Key := #0;
+    Exit;
+  end;
   if Key < #32 then
     Exit;
   lCandidate := Copy(Text, 1, SelStart) + Key +
@@ -428,7 +437,16 @@ begin
   lTag := RecorderResolveTag(fTagRegistry, fComponent.TagId,
     fComponent.TagName);
   if (lTag <> nil) and lTag.ExternalWriteAllowed then
+  begin
     fTagRegistry.PublishExternalValue(lTag, lValue);
+    RecorderDebugLog(Format('[INPUT-FIELD] committed component=%s tag=%s value=%s',
+      [fComponent.Name, lTag.Name, FloatToStr(lValue)]));
+  end
+  else
+    RecorderDebugLog(Format(
+      '[INPUT-FIELD] commit rejected component=%s tag=%s resolved=%s writable=%s',
+      [fComponent.Name, fComponent.TagName, BoolToStr(lTag <> nil, True),
+       BoolToStr((lTag <> nil) and lTag.ExternalWriteAllowed, True)]));
   fLastRevision := 0;
   RefreshControl(fTagRegistry, 0.0);
 end;
@@ -1061,6 +1079,9 @@ begin
   if RecorderTryCalculateVibrationEstimate(lFrame, lSourceUnit,
     fComponent.Quantity, lBandIndex, fComponent.OutputUnit, lValue, lError) then
   begin
+    if fComponent.AmplitudeMode and
+      (fComponent.Quantity <> rvqDominantFrequency) then
+      lValue := lValue * Sqrt(2.0);
     if fComponent.Quantity = rvqDominantFrequency then
       lValueText := FormatSignificant(lValue)
     else
@@ -1074,6 +1095,11 @@ begin
         ValueWithUnit(FormatSignificant(lDominantFrequency), 'Hz');
       lValueText := lValueText + '  ' + lFrequencyText;
     end;
+    if fComponent.Quantity <> rvqDominantFrequency then
+      if fComponent.AmplitudeMode then
+        lValueText := 'A: ' + lValueText
+      else
+        lValueText := 'СКО: ' + lValueText;
     fValueLabel.Caption := lLabelText + LineEnding + lValueText;
     Hint := '';
   end

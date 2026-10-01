@@ -11,7 +11,7 @@ uses
   {$IFDEF UNIX}
   cthreads, BaseUnix,
   {$ENDIF}
-  SysUtils, Classes, Interfaces, Forms, uMainForm,
+  SysUtils, Classes, Interfaces, Forms, uMainForm, uRecorderSplashForm,
   uRecorderSingleInstance, uRecorderNetworkBinding,
   uRecorderDebugLog,
   uComponentSettingsDialog,
@@ -19,6 +19,9 @@ uses
   uRecorderButtonSettingsDialog,
   uRecorderTrendSettingsDialog, uRecorderTrendView,
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
+  uRecorder3dModel, uRecorder3dView,
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
+  uRecorderSignalGeneratorSettingsDialog,
   uRecorderSqlTrendSettingsDialog,
   uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
   uRecorderMeasurementSectionSettingsDialog,
@@ -106,7 +109,10 @@ end;
 
 var
   lSingleInstance: TRecorderSingleInstance;
+  lSplash: TRecorderSplashForm;
 begin
+  { /cfg:... must select application settings before startup subsystems. }
+  RecorderConfigureAppConfigFromCommandLine;
   if HasSwitch('--hardware-search-test') then
   begin
     RunHardwareSearchTest;
@@ -138,15 +144,24 @@ begin
   fpSignal(SIGPIPE, SignalHandler(SIG_IGN));
   {$ENDIF}
   ChartLogSetFileName(RecorderServiceFileName('oglchart_debug.log'));
-  Application.CreateForm(TMainForm, MainForm);
-  if HasSwitch('--capture-user-guide') then
-    StartRecorderUserGuideCapture(MainForm, SwitchValue('--guide-output',
-      ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
-        PathDelim + 'Docs' + PathDelim + CUserGuideDirectoryName +
-        PathDelim + 'screens')));
+  lSplash := TRecorderSplashForm.Create(nil);
   try
+    lSplash.LoadApplicationInfo;
+    lSplash.Show;
+    lSplash.Update;
+    Application.ProcessMessages;
+    Application.CreateForm(TMainForm, MainForm);
+    MainForm.OnStartupReady := @lSplash.StartupReady;
+    if not MainForm.Visible then
+      MainForm.Show;
+    if HasSwitch('--capture-user-guide') then
+      StartRecorderUserGuideCapture(MainForm, SwitchValue('--guide-output',
+        ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+          PathDelim + 'Docs' + PathDelim + CUserGuideDirectoryName +
+          PathDelim + 'screens')));
     Application.Run;
   finally
+    lSplash.Free;
     lSingleInstance.Free;
   end;
 end.

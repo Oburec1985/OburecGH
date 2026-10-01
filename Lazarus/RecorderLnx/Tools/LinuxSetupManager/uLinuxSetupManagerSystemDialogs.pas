@@ -110,6 +110,7 @@ type
     procedure StopDiskInventory;
     procedure AccessUsersClick(Sender: TObject);
     procedure AccessPasswordClick(Sender: TObject);
+    procedure AccessRecorderClick(Sender: TObject);
     procedure AccessUserExit(Sender: TObject);
     procedure RefreshAccessState;
     function ChangeUserPassword(const AUser, APassword: UTF8String;
@@ -278,6 +279,7 @@ begin
     begin
       AddButton('Пользователи…', 344, @AccessUsersClick);
       AddButton('Пароль…', 456, @AccessPasswordClick);
+      AddButton('RecorderLnx…', 568, @AccessRecorderClick);
     end;
   end;
   fOutputMemo := TMemo.Create(Self);
@@ -455,6 +457,40 @@ end;
 procedure TSetupDialog.AccessUserExit(Sender: TObject);
 begin
   RefreshAccessState;
+end;
+
+procedure TSetupDialog.AccessRecorderClick(Sender: TObject);
+var
+  lArgs: TStringList;
+  lOutput: string;
+begin
+  lArgs := TStringList.Create;
+  try
+    lArgs.Add('recorder-status');
+    lArgs.Add('--user');
+    lArgs.Add(FieldValue(0));
+    if not RunHelper(CAccessHelper, lArgs, True, '', lOutput) then
+    begin
+      fOutputMemo.Text := lOutput;
+      Exit;
+    end;
+    fOutputMemo.Text := lOutput;
+    if Pos(UTF8String('НЕТ ДОСТУПА'), UTF8String(lOutput)) = 0 then Exit;
+    if MessageDlg('У конфигурации RecorderLnx неверный владелец или права.' +
+      LineEnding + 'Исправить для пользователя ' + FieldValue(0) + '?',
+      mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+    lArgs[0] := 'repair-recorder';
+    if not RunHelper(CAccessHelper, lArgs, True, '', lOutput) then
+    begin
+      fOutputMemo.Text := lOutput;
+      Exit;
+    end;
+    lArgs[0] := 'recorder-status';
+    RunHelper(CAccessHelper, lArgs, True, '', lOutput);
+    fOutputMemo.Text := lOutput;
+  finally
+    lArgs.Free;
+  end;
 end;
 
 function TSetupDialog.ChangeUserPassword(const AUser,

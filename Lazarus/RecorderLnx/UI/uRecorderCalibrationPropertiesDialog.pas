@@ -401,6 +401,9 @@ end;
 procedure TRecorderCalibrationPropertiesDialog.FilterUnitCombo(
   ACombo: TComboBox);
 var
+  I: Integer;
+  lCandidateInfo: TRecorderUnitInfo;
+  lCurrentInfo: TRecorderUnitInfo;
   lSelectionStart: Integer;
   lText: string;
 begin
@@ -410,7 +413,20 @@ begin
   lSelectionStart := ACombo.SelStart;
   fUpdating := True;
   try
-    RecorderUnitManager.FillUnitNames(ACombo.Items, lText);
+    if RecorderUnitManager.TryGetUnitInfo(CanonicalUnit(lText),
+      lCurrentInfo) then
+    begin
+      { Для уже известной единицы показываем всю физическую категорию, а не
+        только совпадения по набранной строке: например g и m/s2. }
+      ACombo.Items.Clear;
+      for I := 0 to fUnitNames.Count - 1 do
+        if RecorderUnitManager.TryGetUnitInfo(fUnitNames[I],
+          lCandidateInfo) and SameText(lCandidateInfo.QuantityId,
+          lCurrentInfo.QuantityId) then
+          ACombo.Items.Add(lCandidateInfo.Name);
+    end
+    else
+      RecorderUnitManager.FillUnitNames(ACombo.Items, lText);
     ACombo.Text := lText;
     ACombo.SelStart := lSelectionStart;
   finally

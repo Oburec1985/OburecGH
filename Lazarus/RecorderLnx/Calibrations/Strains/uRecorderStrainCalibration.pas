@@ -224,9 +224,18 @@ begin
     rsiRatio: Result := R;
     rsiMilliVoltPerVolt: Result := R * 1000;
     rsiVolt: Result := BridgeOutputVoltage(C, AM);
-    rsiMilliVolt: Result := BridgeOutputVoltage(C, AM) * 1000;
+    rsiMilliVolt:
+      if C.ExcitationKind = rsekCurrent then
+        { При питании током прибор выдаёт изменение падения напряжения на
+          одиночном тензорезисторе: dU[мВ] = I[мА] * dR[Ом]. }
+        Result := C.ExcitationValue * C.NominalResistanceOhm * AM
+      else
+        Result := BridgeOutputVoltage(C, AM) * 1000;
+    { мВ/мА численно равны изменению сопротивления dR в Ом. В обоих режимах
+      вход уже описывает одиночный тензорезистор и не содержит коэффициента
+      схемы моста. }
     rsiMilliVoltPerMilliAmp, rsiOhm:
-      Result := R * BridgeEquivalentResistance(C, AM);
+      Result := C.NominalResistanceOhm * AM;
   end;
 end;
 

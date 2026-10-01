@@ -33,6 +33,13 @@ type
   end;
   TRecorderSqlTrendPoints = array of TRecorderSqlTrendPoint;
 
+  TRecorderSqlLatestValue = record
+    SignalName: string;
+    TimestampUtc: Double;
+    Value: Double;
+  end;
+  TRecorderSqlLatestValues = array of TRecorderSqlLatestValue;
+
   TRecorderSqlDbSignalInfo = record
     Name: string;
     UnitName: string;

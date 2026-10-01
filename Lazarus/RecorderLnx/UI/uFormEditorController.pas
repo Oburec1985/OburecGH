@@ -147,6 +147,7 @@ type
   TEditorMouseHandlerState = class
   public
     Control: TControl;
+    Cursor: TCursor;
     MouseDown: TMouseEvent;
     MouseMove: TMouseMoveEvent;
     MouseUp: TMouseEvent;
@@ -593,6 +594,7 @@ begin
     Exit;
   lState := TEditorMouseHandlerState.Create;
   lState.Control := AControl;
+  lState.Cursor := AControl.Cursor;
   lState.MouseDown := TControlAccess(AControl).OnMouseDown;
   lState.MouseMove := TControlAccess(AControl).OnMouseMove;
   lState.MouseUp := TControlAccess(AControl).OnMouseUp;
@@ -622,6 +624,7 @@ begin
       TControlAccess(lState.Control).OnMouseDown := lState.MouseDown;
       TControlAccess(lState.Control).OnMouseMove := lState.MouseMove;
       TControlAccess(lState.Control).OnMouseUp := lState.MouseUp;
+      lState.Control.Cursor := lState.Cursor;
     end;
     lState.Free;
   end;
@@ -779,6 +782,7 @@ begin
     lDstVibration.BandName := lSrcVibration.BandName;
     lDstVibration.OutputUnit := lSrcVibration.OutputUnit;
     lDstVibration.DisplayFormat := lSrcVibration.DisplayFormat;
+    lDstVibration.AmplitudeMode := lSrcVibration.AmplitudeMode;
   end
   else if (ASource is TRecorderButtonComponent) and
     (ADest is TRecorderButtonComponent) then

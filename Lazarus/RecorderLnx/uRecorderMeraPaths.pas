@@ -20,6 +20,7 @@ function RecorderMeraFilesPath: string;
 procedure SetRecorderMeraFilesPath(const APath: string);
 function RecorderSystemPathsFileName: string;
 function RecorderConfigPath: string;
+procedure RecorderConfigureAppConfigFromCommandLine;
 function RecorderAppConfigFileName: string;
 function RecorderPluginsPath: string;
 function RecorderBiosPath: string;
@@ -37,11 +38,15 @@ procedure RecorderMeraSetThermocoupleLastMeraPath(const APath: string);
 implementation
 
 uses
-  IniFiles
+  Classes, IniFiles
   {$IFDEF MSWINDOWS}, Windows{$ENDIF};
 
 var
   g_SystemPathsLoaded: Boolean;
+  g_AppPathsLoaded: Boolean;
+  g_AppConfigInitialized: Boolean;
+  g_AppConfigIsExplicit: Boolean;
+  g_AppConfigFileName: string;
   g_MeraFilesPath: string;
   g_ConfigPath: string;
   g_PluginsPath: string;
@@ -68,6 +73,14 @@ function RecorderSystemPathsFileName: string;
 begin
   Result := IncludeTrailingPathDelimiter(ExpandFileName(
     ExtractFilePath(ParamStr(0)))) + 'RecorderLnx.paths.ini';
+end;
+
+function IsAbsolutePath(const APath: string): Boolean;
+begin
+  Result := (APath <> '') and
+    (((Length(APath) >= 2) and (APath[2] = ':')) or
+     (APath[1] = PathDelim) or
+     ((Length(APath) >= 2) and (APath[1] = '\') and (APath[2] = '\')));
 end;
 
 function DefaultRecorderMeraFilesPath: string; forward;
@@ -158,7 +171,7 @@ begin
   if SysUtils.GetEnvironmentVariable('MERA_FILES') <> '' then
     Result := SysUtils.GetEnvironmentVariable('MERA_FILES')
   else
-    Result := '/var/opt/mera';
+    Result := '/srv/recorderlnx/MeraFiles';
 {$ENDIF}
 end;
 
@@ -211,38 +224,98 @@ begin
   RecorderMeraResetThermocoupleCache;
 end;
 
-function RecorderConfigPath: string;
+function CommandLineAppConfigValue: string;
+var
+  lArgument: string;
+  lIndex: Integer;
+begin
+  Result := '';
+  for lIndex := 1 to ParamCount do
+  begin
+    lArgument := ParamStr(lIndex);
+    if SameText(Copy(lArgument, 1, 5), '/cfg:') or
+      SameText(Copy(lArgument, 1, 5), '/cfg=') then
+      Exit(Trim(Copy(lArgument, 6, MaxInt)));
+  end;
+end;
+
+procedure RecorderConfigureAppConfigFromCommandLine;
+var
+  lConfiguredFileName: string;
+begin
+  if g_AppConfigInitialized then
+    Exit;
+
+  g_AppConfigInitialized := True;
+  lConfiguredFileName := CommandLineAppConfigValue;
+  g_AppConfigIsExplicit := lConfiguredFileName <> '';
+  if not g_AppConfigIsExplicit then
+    g_AppConfigFileName := RecorderServiceFileName('app.ini')
+  else if IsAbsolutePath(lConfiguredFileName) then
+    g_AppConfigFileName := ExpandFileName(lConfiguredFileName)
+  else
+    g_AppConfigFileName := ExpandFileName(RecorderServiceFileName(
+      lConfiguredFileName));
+end;
+
+procedure EnsureRecorderAppPathsLoaded;
+var
+  lIni: TIniFile;
 begin
   EnsureRecorderSystemPathsLoaded;
+  RecorderConfigureAppConfigFromCommandLine;
+  if g_AppPathsLoaded then
+    Exit;
+  g_AppPathsLoaded := True;
+  if not FileExists(g_AppConfigFileName) then
+    Exit;
+
+  lIni := TIniFile.Create(g_AppConfigFileName);
+  try
+    if lIni.ValueExists('Paths', 'Config') then
+      g_ConfigPath := ResolveSystemPath(
+        lIni.ReadString('Paths', 'Config', ''), '');
+    if lIni.ValueExists('Paths', 'Plugins') then
+      g_PluginsPath := ResolveSystemPath(
+        lIni.ReadString('Paths', 'Plugins', ''), 'plugins');
+    if lIni.ValueExists('Paths', 'Bios') then
+      g_BiosPath := ResolveSystemPath(
+        lIni.ReadString('Paths', 'Bios', ''), 'bios');
+    if lIni.ValueExists('Paths', 'SysCom') then
+      g_SysComPath := ResolveSystemPath(
+        lIni.ReadString('Paths', 'SysCom', ''), 'syscom');
+  finally
+    lIni.Free;
+  end;
+end;
+
+function RecorderConfigPath: string;
+begin
+  EnsureRecorderAppPathsLoaded;
   Result := g_ConfigPath;
 end;
 
 function RecorderAppConfigFileName: string;
-var
-  lConfigPath: string;
 begin
-  lConfigPath := RecorderConfigPath;
-  if lConfigPath = '' then
-    lConfigPath := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config';
-  Result := IncludeTrailingPathDelimiter(ExpandFileName(lConfigPath)) +
-    'app.ini';
+  RecorderConfigureAppConfigFromCommandLine;
+  Result := g_AppConfigFileName;
 end;
 
 function RecorderPluginsPath: string;
 begin
-  EnsureRecorderSystemPathsLoaded;
+  EnsureRecorderAppPathsLoaded;
   Result := g_PluginsPath;
 end;
 
 function RecorderBiosPath: string;
 begin
-  EnsureRecorderSystemPathsLoaded;
+  EnsureRecorderAppPathsLoaded;
   Result := g_BiosPath;
 end;
 
 function RecorderSysComPath: string;
 begin
-  EnsureRecorderSystemPathsLoaded;
+  EnsureRecorderAppPathsLoaded;
   Result := g_SysComPath;
 end;
 
@@ -259,8 +332,13 @@ end;
 
 procedure RecorderEnsureMeraDirectories;
 var
+  lDestinationStream: TFileStream;
+  lIni: TIniFile;
+  lLegacyAppConfigFileName: string;
   lMeraPath: string;
+  lProjectConfigDir: string;
   lServicePath: string;
+  lSourceStream: TFileStream;
 begin
   lMeraPath := IncludeTrailingPathDelimiter(RecorderMeraFilesPath);
   lServicePath := IncludeTrailingPathDelimiter(RecorderServicePath);
@@ -271,6 +349,46 @@ begin
   ForceDirectories(lMeraPath + 'Calibr');
   ForceDirectories(lMeraPath + 'Resources');
   ForceDirectories(lMeraPath + 'SDB');
+
+  RecorderConfigureAppConfigFromCommandLine;
+  lLegacyAppConfigFileName := lServicePath + 'config' + PathDelim + 'app.ini';
+  if (not g_AppConfigIsExplicit) and (not FileExists(g_AppConfigFileName)) and
+    FileExists(lLegacyAppConfigFileName) then
+  begin
+    try
+      lSourceStream := TFileStream.Create(lLegacyAppConfigFileName, fmOpenRead or
+        fmShareDenyWrite);
+      try
+        lDestinationStream := TFileStream.Create(g_AppConfigFileName, fmCreate);
+        try
+          lDestinationStream.CopyFrom(lSourceStream, 0);
+        finally
+          lDestinationStream.Free;
+        end;
+      finally
+        lSourceStream.Free;
+      end;
+
+      lIni := TIniFile.Create(g_AppConfigFileName);
+      try
+        lProjectConfigDir := Trim(lIni.ReadString('Application',
+          'DefaultProjectConfigDir', ''));
+        if (lProjectConfigDir <> '') and not IsAbsolutePath(lProjectConfigDir) then
+          lIni.WriteString('Application', 'DefaultProjectConfigDir',
+            'config' + PathDelim + lProjectConfigDir);
+      finally
+        lIni.Free;
+      end;
+    except
+      on E: Exception do
+        raise Exception.CreateFmt(
+          'RecorderLnx не может создать системную конфигурацию "%s". '+
+          'Причина: %s. В Linux откройте «Настройка Linux» → '+
+          '«Пользователи и права» → «RecorderLnx…» и исправьте права '+
+          'для текущего пользователя.', [g_AppConfigFileName, E.Message]);
+    end;
+    g_AppPathsLoaded := False;
+  end;
 end;
 
 procedure RecorderMeraResetThermocoupleCache;

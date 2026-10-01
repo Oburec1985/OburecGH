@@ -52,7 +52,8 @@ type
     procedure FinishRegistration(const ARegistrationId, AStatus: string;
       AFinishedUtc: Double);
     procedure InsertSignalValue(const ARegistrationId, ASignalId: string;
-      ATimestampUtc, AValue: Double; AQuality: Integer; ASequenceNo: Int64);
+      ATimestampUtc, AValue: Double; AQuality: Integer; ASequenceNo: Int64;
+      ACommit: Boolean = True);
     procedure InsertEvent(const ARegistrationId, AObjectId, ASignalId: string;
       ATimestampUtc: Double; const AEventType, ASeverity, AText: string;
       AValue: Double; const APayloadJson: string);
@@ -99,6 +100,8 @@ type
     procedure ListSignalNames(AItems: TStrings);
     procedure ListSignalInfos(out AItems: TRecorderSqlDbSignalInfos;
       AWithPointCounts: Boolean);
+    procedure ReadLatestSignalValues(ASignalNames: TStrings;
+      out AItems: TRecorderSqlLatestValues);
     function DatabaseAttachmentName(out AName: string): Boolean;
     procedure DeleteSignalsByName(ANames: TStrings; out ASignalCount,
       AValueCount: Int64);
@@ -216,9 +219,11 @@ end;
 
 procedure TRecorderSqlDbRepository.Open;
 var
+  lCleanupError: string;
   lDir: string;
   lIb: TIBConnection;
   lConfigurationError: string;
+  lOpenError: string;
 begin
   if fConnection <> nil then Exit;
   if not fConfig.ConnectionConfigurationReady(lConfigurationError) then
@@ -262,10 +267,23 @@ begin
   except
     on E: Exception do
     begin
-      Close;
+      { Cleanup must never replace the actual connection failure.  SQLDB can
+        leave a partially opened transaction/connection pair, and touching
+        that pair during cleanup may raise a second exception. }
+      lOpenError := E.Message;
+      lCleanupError := '';
+      try
+        Close;
+      except
+        on ECleanup: Exception do
+          lCleanupError := ECleanup.Message;
+      end;
+      if lCleanupError <> '' then
+        lOpenError := lOpenError + ' [ошибка очистки SQLDB: ' +
+          lCleanupError + ']';
       if fConfig.Backend = rsbFirebird then
-        raise FirebirdOpenError(fConfig, E.Message);
-      raise;
+        raise FirebirdOpenError(fConfig, lOpenError);
+      raise ERecorderSqlDbError.Create(lOpenError);
     end;
   end;
 end;
@@ -273,17 +291,26 @@ end;
 procedure TRecorderSqlDbRepository.Close;
 begin
   fDatabaseEnsured := False;
-  if fTransaction <> nil then
-  begin
-    if fTransaction.Active then
-      try fTransaction.Commit except fTransaction.Rollback; end;
-  end;
-  FreeAndNil(fTransaction);
+  { SQLDB keeps a reference from the connection to its transaction.  Close
+    and detach the connection before freeing the transaction; otherwise an
+    error during Open can leave Connection.Transaction pointing to an
+    already freed object and mask the real Firebird error with an access
+    violation. }
+  if (fTransaction <> nil) and fTransaction.Active then
+    try
+      fTransaction.Commit;
+    except
+      fTransaction.Rollback;
+    end;
   if fConnection <> nil then
   begin
-    if fConnection.Connected then fConnection.Close;
+    if fConnection.Connected then
+      fConnection.Close;
+    fConnection.Transaction := nil;
     FreeAndNil(fConnection);
   end;
+  if fTransaction <> nil then
+    FreeAndNil(fTransaction);
 end;
 
 procedure TRecorderSqlDbRepository.ListSignalNames(AItems: TStrings);
@@ -346,6 +373,60 @@ begin
     end;
   finally
     lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ReadLatestSignalValues(
+  ASignalNames: TStrings; out AItems: TRecorderSqlLatestValues);
+var
+  I, lCount: Integer;
+  lQuery: TSQLQuery;
+  lNameFilter, lLatestRowClause: string;
+begin
+  SetLength(AItems, 0);
+  if (ASignalNames = nil) or (ASignalNames.Count = 0) then Exit;
+  EnsureDatabase;
+  CommitAndRestart;
+  SetLength(AItems, ASignalNames.Count);
+  lCount := 0;
+  lNameFilter := '';
+  for I := 0 to ASignalNames.Count - 1 do
+  begin
+    if lNameFilter <> '' then lNameFilter := lNameFilter + ',';
+    lNameFilter := lNameFilter + ':signal_' + IntToStr(I);
+  end;
+  if fConfig.Backend = rsbFirebird then
+    lLatestRowClause :=
+      'v.id=(select first 1 v2.id from signal_values v2 ' +
+      'where v2.signal_id=s.id and v2.measured_value is not null ' +
+      'order by v2.timestamp_utc desc,v2.id desc)'
+  else
+    lLatestRowClause :=
+      'v.id=(select v2.id from signal_values v2 ' +
+      'where v2.signal_id=s.id and v2.measured_value is not null ' +
+      'order by v2.timestamp_utc desc,v2.id desc limit 1)';
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select s.name,v.timestamp_utc,v.measured_value ' +
+      'from signals s join signal_values v on v.signal_id=s.id ' +
+      'where s.name in (' + lNameFilter + ') and ' + lLatestRowClause;
+    for I := 0 to ASignalNames.Count - 1 do
+      lQuery.ParamByName('signal_' + IntToStr(I)).AsString := ASignalNames[I];
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      AItems[lCount].SignalName := lQuery.Fields[0].AsString;
+      AItems[lCount].TimestampUtc := lQuery.Fields[1].AsFloat;
+      AItems[lCount].Value := lQuery.Fields[2].AsFloat;
+      Inc(lCount);
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+    SetLength(AItems, lCount);
   end;
 end;
 
@@ -1304,7 +1385,7 @@ end;
 
 procedure TRecorderSqlDbRepository.InsertSignalValue(const ARegistrationId,
   ASignalId: string; ATimestampUtc, AValue: Double; AQuality: Integer;
-  ASequenceNo: Int64);
+  ASequenceNo: Int64; ACommit: Boolean);
 var lQuery: TSQLQuery;
 begin
   lQuery := TSQLQuery.Create(nil);
@@ -1318,7 +1399,9 @@ begin
     lQuery.Params.ParamByName('measured_value').AsFloat := AValue;
     lQuery.Params.ParamByName('quality').AsInteger := AQuality;
     lQuery.Params.ParamByName('sequence_no').AsLargeInt := ASequenceNo;
-    lQuery.ExecSQL; Commit;
+    lQuery.ExecSQL;
+    if ACommit then
+      Commit;
   finally lQuery.Free; end;
 end;
 

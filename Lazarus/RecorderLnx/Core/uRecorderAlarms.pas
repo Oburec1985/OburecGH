@@ -84,6 +84,7 @@ type
     public
       Active: array[TRecorderTagSetpointKind] of Boolean;
       OutOfRange: Boolean;
+      RangeInitialized: Boolean;
       Tag: TRecorderTag;
     end;
   private
@@ -499,8 +500,14 @@ begin
     lState.OutOfRange := ATag.SetpointRangeControlEnabled and
       (ATag.RangeMax > ATag.RangeMin) and
       ((AValue < ATag.RangeMin) or (AValue > ATag.RangeMax));
-    if lState.OutOfRange <> lWasOutOfRange then
+    { Первое полученное после запуска значение задаёт исходное состояние.
+      Даже если датчик уже находится вне допустимого диапазона, это не переход
+      из нормы и поэтому не должно создавать ложное SQL-событие «выход за
+      диапазон». Дальнейшие реальные переходы публикуются как обычно. }
+    if lState.RangeInitialized and
+       (lState.OutOfRange <> lWasOutOfRange) then
       PublishRangeChange(ATag, lState.OutOfRange, ATimeSec, AValue);
+    lState.RangeInitialized := True;
 
     for lKind := Low(TRecorderTagSetpointKind) to High(TRecorderTagSetpointKind) do
     begin

@@ -25,6 +25,7 @@ type
     MissingTags: Integer;
     RenamedTags: Integer;
     Warnings: TStringList;
+    ImportedPollFrequencies: TStringList;
   end;
 
   TRecorderSqlSelectionTableResult = record
@@ -47,6 +48,9 @@ procedure ImportRecorderTagsFromTable(ARegistry: TRecorderTagRegistry;
   var AResult: TRecorderTagTableExchangeResult);
 procedure ReadRecorderSqlSelectionFromTable(ARegistry: TRecorderTagRegistry;
   const AFileName: string; ASelectedNames, APresentNames: TStrings;
+  out AResult: TRecorderSqlSelectionTableResult);
+procedure ReadRecorderSqlSignalNamesFromTable(const AFileName: string;
+  ASelectedNames, APresentNames: TStrings;
   out AResult: TRecorderSqlSelectionTableResult);
 
 implementation
@@ -173,22 +177,39 @@ type
   private
     fKeys: TStringList;
     fNames: TStringList;
+    fImportedKeys: TStringList;
+    fImportedNames: TStringList;
+    fLoaded: Boolean;
+    procedure EnsureLoaded;
   public
     constructor Create;
     destructor Destroy; override;
     function Find(const AName: string; out AKey: string): Boolean;
+    function ImportCalibration(AList: TRecorderCalibrationList;
+      const AKey: string; out ACalibrationName: string): Boolean;
   end;
 
 constructor TScaleLookup.Create;
-var
-  I: Integer;
-  lInfo: TSdbScaleInfo;
-  lName: string;
 begin
   inherited Create;
   fKeys := TStringList.Create;
   fNames := TStringList.Create;
   fNames.CaseSensitive := False;
+  fImportedKeys := TStringList.Create;
+  fImportedKeys.CaseSensitive := False;
+  fImportedNames := TStringList.Create;
+  fLoaded := False;
+end;
+
+procedure TScaleLookup.EnsureLoaded;
+var
+  I: Integer;
+  lInfo: TSdbScaleInfo;
+  lName: string;
+begin
+  if fLoaded then
+    Exit;
+  fLoaded := True;
   RecorderSdbListScaleKeys('', fKeys);
   for I := 0 to fKeys.Count - 1 do
     if RecorderSdbTryLoadScale(fKeys[I], lInfo) then
@@ -204,6 +225,8 @@ end;
 
 destructor TScaleLookup.Destroy;
 begin
+  fImportedNames.Free;
+  fImportedKeys.Free;
   fNames.Free;
   fKeys.Free;
   inherited Destroy;
@@ -214,6 +237,7 @@ var
   lIndex: Integer;
 begin
   AKey := '';
+  EnsureLoaded;
   lIndex := fNames.IndexOf(Trim(AName));
   Result := lIndex >= 0;
   if Result then
@@ -225,11 +249,15 @@ procedure RecorderTagTableExchangeResultInit(
 begin
   FillChar(AResult, SizeOf(AResult), 0);
   AResult.Warnings := TStringList.Create;
+  AResult.ImportedPollFrequencies := TStringList.Create;
+  AResult.ImportedPollFrequencies.CaseSensitive := False;
+  AResult.ImportedPollFrequencies.NameValueSeparator := '=';
 end;
 
 procedure RecorderTagTableExchangeResultDone(
   var AResult: TRecorderTagTableExchangeResult);
 begin
+  FreeAndNil(AResult.ImportedPollFrequencies);
   FreeAndNil(AResult.Warnings);
 end;
 
@@ -259,6 +287,25 @@ end;
 function ScaleName(AValue: Double): string;
 begin
   Result := '__rlnx_scale_' + FormatValue(AValue);
+end;
+
+function TScaleLookup.ImportCalibration(AList: TRecorderCalibrationList;
+  const AKey: string; out ACalibrationName: string): Boolean;
+var
+  lIndex: Integer;
+begin
+  lIndex := fImportedKeys.IndexOf(AKey);
+  if lIndex >= 0 then
+  begin
+    ACalibrationName := fImportedNames[lIndex];
+    Exit(True);
+  end;
+  Result := RecorderSdbImportCalibration(AList, AKey, ACalibrationName);
+  if Result then
+  begin
+    fImportedKeys.Add(AKey);
+    fImportedNames.Add(ACalibrationName);
+  end;
 end;
 
 function LineName(AK, AB: Double): string;
@@ -390,7 +437,7 @@ begin
       else if TryParseFloatValue(lName, lValue) then
         ATag.CalibrationNames.Add(EnsureScale(ARegistry, lValue))
       else if ALookup.Find(lName, lKey) and
-        RecorderSdbImportCalibration(ARegistry.Calibrations, lKey, lName) then
+        ALookup.ImportCalibration(ARegistry.Calibrations, lKey, lName) then
         ATag.CalibrationNames.Add(lName)
       else
         AWarnings.Add(Format('Строка %d: ГХ "%s" не найдена в БДГХ',
@@ -465,6 +512,8 @@ begin
 end;
 
 function HeaderIndex(ASheet: TsWorksheet; const AHeader: string): Integer;
+const
+  CMaxHeaderColumns = 256;
 var
   I: Integer;
   lLastCol: Integer;
@@ -472,7 +521,11 @@ begin
   Result := -1;
   if ASheet = nil then
     Exit;
-  lLastCol := Max(WorksheetLastUsedCol(ASheet), CColumnCount - 1);
+  { LibreOffice may encode an empty repeated tail up to column 16383.  Header
+    lookup must never traverse that artificial range for every optional
+    column and every imported row. }
+  lLastCol := Min(Max(WorksheetLastUsedCol(ASheet), CColumnCount - 1),
+    CMaxHeaderColumns - 1);
   for I := 0 to lLastCol do
     if SameText(ReadCell(ASheet, 0, I), AHeader) then
       Exit(I);
@@ -825,6 +878,36 @@ var
   lOldName: string;
   lKind: TRecorderTagSetpointKind;
   lSetpoint: TRecorderTagSetpoint;
+
+  procedure NoteImportedPollFrequency(ATag: TRecorderTag; AFrequencyHz: Double);
+  const
+    CConflictValue = '*';
+  var
+    lIndex: Integer;
+    lPreviousHz: Double;
+    lSourceId: string;
+    lValue: string;
+  begin
+    if (ATag = nil) or (AFrequencyHz <= 0) or
+      (AResult.ImportedPollFrequencies = nil) then
+      Exit;
+    lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+    if lSourceId = '' then
+      Exit;
+    lIndex := AResult.ImportedPollFrequencies.IndexOfName(lSourceId);
+    if lIndex < 0 then
+    begin
+      AResult.ImportedPollFrequencies.Add(lSourceId + '=' +
+        FormatValue(AFrequencyHz));
+      Exit;
+    end;
+    lValue := AResult.ImportedPollFrequencies.ValueFromIndex[lIndex];
+    if lValue = CConflictValue then
+      Exit;
+    if (not TryParseFloatValue(lValue, lPreviousHz)) or
+      (not SameValue(lPreviousHz, AFrequencyHz, 1E-9)) then
+      AResult.ImportedPollFrequencies.ValueFromIndex[lIndex] := CConflictValue;
+  end;
 begin
   for I := 0 to High(ARows) do
   begin
@@ -839,7 +922,10 @@ begin
     if ARows[I].UnitName <> '' then
       lTag.UnitName := ARows[I].UnitName;
     if ARows[I].HasPollFrequencyHz then
+    begin
       lTag.PollFrequencyHz := ARows[I].PollFrequencyHz;
+      NoteImportedPollFrequency(lTag, ARows[I].PollFrequencyHz);
+    end;
     if ARows[I].HasAutoUnit then
       lTag.AutoUnit := ARows[I].AutoUnit;
     if ARows[I].HasAutoRange then
@@ -986,6 +1072,7 @@ var
   lRows: TTagImportRows;
   lRow: TTagImportRow;
   lMap: TTagTableColumnMap;
+  lPresentMap: TTagTableColumnMap;
   lLookup: TScaleLookup;
   lTagLookup: TTagImportLookup;
   lText: string;
@@ -1006,7 +1093,11 @@ begin
     lSheet := lBook.GetWorksheetByIndex(0);
 
     BuildColumnMap(lSheet, True, lMap);
-    lHasScales := HeaderIndex(lSheet, CHeaders[CColScales]) >= 0;
+    { lMap keeps positional fallback for legacy tables.  Presence of optional
+      columns must come from a map without fallback, otherwise a missing
+      Scales column would clear existing channel calibrations. }
+    BuildColumnMap(lSheet, False, lPresentMap);
+    lHasScales := lPresentMap[CColScales] >= 0;
 
     lLastRow := lSheet.GetLastRowIndex(True);
     SetLength(lRows, lLastRow);
@@ -1049,8 +1140,8 @@ begin
           lRowIndex);
         lRow.HasSetpointEnabled[lKind] := TryParseBoolValue(lText,
           lRow.SetpointEnabled[lKind]);
-        lRow.HasSetpointMessage[lKind] := HeaderIndex(lSheet,
-          CHeaders[SetpointMessageColumn(lKind)]) >= 0;
+        lRow.HasSetpointMessage[lKind] :=
+          lPresentMap[SetpointMessageColumn(lKind)] >= 0;
         if lRow.HasSetpointMessage[lKind] then
           lRow.SetpointMessage[lKind] := ReadMappedCell(lSheet, lMap,
             SetpointMessageColumn(lKind), lRowIndex);
@@ -1059,8 +1150,8 @@ begin
         lRowIndex);
       lRow.HasRangeControlEnabled := TryParseBoolValue(lText,
         lRow.RangeControlEnabled);
-      lRow.HasRangeAlarmMessage := HeaderIndex(lSheet,
-        CHeaders[CColRangeAlarmMessage]) >= 0;
+      lRow.HasRangeAlarmMessage :=
+        lPresentMap[CColRangeAlarmMessage] >= 0;
       if lRow.HasRangeAlarmMessage then
         lRow.RangeAlarmMessage := ReadMappedCell(lSheet, lMap,
           CColRangeAlarmMessage, lRowIndex);
@@ -1159,6 +1250,52 @@ begin
     end;
   finally
     lTagLookup.Free;
+    lBook.Free;
+  end;
+end;
+
+procedure ReadRecorderSqlSignalNamesFromTable(const AFileName: string;
+  ASelectedNames, APresentNames: TStrings;
+  out AResult: TRecorderSqlSelectionTableResult);
+var
+  lBook: TsWorkbook;
+  lSheet: TsWorksheet;
+  lMap: TTagTableColumnMap;
+  lLastRow, lRowIndex: Cardinal;
+  lName, lText: string;
+  lEnabled: Boolean;
+begin
+  AResult := Default(TRecorderSqlSelectionTableResult);
+  if (ASelectedNames = nil) or (APresentNames = nil) then
+    raise ERecorderTagError.Create('SQL signal import lists are not assigned');
+  ASelectedNames.Clear;
+  APresentNames.Clear;
+  lBook := TsWorkbook.Create;
+  try
+    lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
+    if lBook.GetWorksheetCount = 0 then
+      raise ERecorderTagError.Create('Spreadsheet does not contain worksheets');
+    lSheet := lBook.GetWorksheetByIndex(0);
+    BuildColumnMap(lSheet, False, lMap);
+    if lMap[CColName] < 0 then
+      raise ERecorderTagError.Create('Не найдена колонка имени канала');
+    if lMap[CColSqlRecord] < 0 then
+      raise ERecorderTagError.Create('Не найдена колонка SQLdb (или Запись SQL)');
+    lLastRow := lSheet.GetLastRowIndex(True);
+    for lRowIndex := 1 to lLastRow do
+    begin
+      lName := Trim(ReadMappedCell(lSheet, lMap, CColName, lRowIndex));
+      if lName = '' then Continue;
+      Inc(AResult.TotalRows);
+      APresentNames.Add(lName);
+      lText := ReadMappedCell(lSheet, lMap, CColSqlRecord, lRowIndex);
+      if TryParseBoolValue(lText, lEnabled) and lEnabled then
+      begin
+        ASelectedNames.Add(lName);
+        Inc(AResult.MarkedRows);
+      end;
+    end;
+  finally
     lBook.Free;
   end;
 end;
