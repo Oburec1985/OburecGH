@@ -211,7 +211,6 @@ type
     fExternalWriteLock: TRTLCriticalSection;
     fExternalWriteRevision: QWord;
     fExternalWriteValues: array[0..15] of Double;
-    fIsVector: Boolean;                                       { Тег принимает блоки отсчётов с заданной частотой }
     fEstimateSettings: TRecorderTagEstimateSettings;           { Настройки расчета оценок }
     fEstimateCache: array[TRecorderTagEstimateKind] of TRecorderTagEstimate;
     fEstimateLock: TRTLCriticalSection;                        { Кэш оценок читается UI-потоком }
@@ -252,6 +251,7 @@ type
     fUnitName: string;                                         { Единица измерения }
     fSourceUnitName: string;                                   { Единица исходного значения до ГХ }
     function GetBlockCounter: QWord;
+    function GetIsVector: Boolean;
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
     procedure UpdateEstimateCache(const ATimes, AValues: array of Double;
       ACount: Integer);
@@ -309,7 +309,7 @@ type
     property IsVirtual: Boolean read fIsVirtual write fIsVirtual;
     property ExternalWriteAllowed: Boolean read fExternalWriteAllowed
       write fExternalWriteAllowed;
-    property IsVector: Boolean read fIsVector write fIsVector;
+    property IsVector: Boolean read GetIsVector;
     property Name: string read fName write fName;
     property Address: string read fAddress write fAddress;
     property UnitName: string read fUnitName write SetUnitName;
@@ -549,6 +549,7 @@ type
     function ContainsTag(ATag: TRecorderTag): Boolean;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
+    function FindCalibrationBySdbKey(const AKey: string): TRecorderCalibration;
     function RemoveUnusedCalibrations: Integer;
     function CommitCalibrationEdit(ATarget, ADraft: TRecorderCalibration): Boolean;
     function AddCalibrationCopyForTag(ATag: TRecorderTag;
@@ -1555,7 +1556,6 @@ begin
   fName := AName;
   fIsVirtual := AIsVirtual;
   fExternalWriteAllowed := AIsVirtual;
-  fIsVector := False;
   fAutoRange := True;
   fAutoUnit := True;
   fPollFrequencyHz := 0;
@@ -1667,6 +1667,11 @@ end;
 function TRecorderTag.LastBlockSnapshot: TRecorderSignalSnapshot;
 begin
   Result := fSignalBuffer.LastBlockSnapshot;
+end;
+
+function TRecorderTag.GetIsVector: Boolean;
+begin
+  Result := fPollFrequencyHz > 0;
 end;
 
 function TRecorderTag.GetBlockCounter: QWord;
@@ -2265,6 +2270,22 @@ begin
   Result := nil;
   for I := 0 to fCalibrations.Count - 1 do
     if (fCalibrations[I] <> nil) and SameText(fCalibrations[I].Name, AName) then
+      Exit(fCalibrations[I]);
+end;
+
+function TRecorderTagRegistry.FindCalibrationBySdbKey(
+  const AKey: string): TRecorderCalibration;
+var
+  I: Integer;
+  lKey: string;
+begin
+  Result := nil;
+  lKey := Trim(AKey);
+  if lKey = '' then
+    Exit;
+  for I := 0 to fCalibrations.Count - 1 do
+    if (fCalibrations[I] <> nil) and
+      SameText(Trim(fCalibrations[I].SdbKey), lKey) then
       Exit(fCalibrations[I]);
 end;
 

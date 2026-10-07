@@ -1,0 +1,456 @@
+object RecorderImpactHammerView: TRecorderImpactHammerView
+  Left = 0
+  Height = 620
+  Top = 0
+  Width = 920
+  ClientHeight = 620
+  ClientWidth = 920
+  TabOrder = 0
+  object pnlState: TPanel
+    Left = 0
+    Height = 72
+    Top = 0
+    Width = 920
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 72
+    ClientWidth = 920
+    TabOrder = 0
+    object lblState: TLabel
+      Left = 12
+      Height = 17
+      Top = 8
+      Width = 36
+      Caption = 'Готов'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object lblStatus: TLabel
+      Left = 12
+      Height = 17
+      Top = 31
+      Width = 109
+      Caption = 'Ожидание запуска'
+    end
+    object progressMeasurement: TProgressBar
+      Left = 344
+      Height = 20
+      Top = 26
+      Width = 564
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 0
+    end
+  end
+  object NavigationPan: TScrollBox
+    Left = 0
+    Height = 62
+    Top = 72
+    Width = 920
+    Align = alTop
+    ClientHeight = 62
+    ClientWidth = 920
+    HorzScrollBar.Smooth = True
+    HorzScrollBar.Tracking = True
+    VertScrollBar.Visible = False
+    TabOrder = 1
+    object btnPreviousImpact: TButton
+      Left = 12
+      Height = 30
+      Top = 8
+      Width = 42
+      Caption = '<'
+      Enabled = False
+      OnClick = btnPreviousImpactClick
+      TabOrder = 0
+    end
+    object lblImpactPosition: TLabel
+      Left = 66
+      Height = 17
+      Top = 15
+      Width = 68
+      Caption = 'Ударов нет'
+    end
+    object btnNextImpact: TButton
+      Left = 168
+      Height = 30
+      Top = 8
+      Width = 42
+      Caption = '>'
+      Enabled = False
+      OnClick = btnNextImpactClick
+      TabOrder = 1
+    end
+    object btnHide: TButton
+      Left = 232
+      Height = 30
+      Top = 8
+      Width = 92
+      Caption = 'Скрыть'
+      Enabled = False
+      OnClick = btnHideClick
+      TabOrder = 2
+    end
+    object btnDelete: TButton
+      Left = 332
+      Height = 30
+      Top = 8
+      Width = 92
+      Caption = 'Удалить'
+      Enabled = False
+      OnClick = btnDeleteClick
+      TabOrder = 3
+    end
+    object btnSaveSession: TButton
+      Left = 440
+      Height = 30
+      Top = 8
+      Width = 88
+      Caption = 'Сохранить'
+      OnClick = sessionCommandClick
+      TabOrder = 4
+    end
+    object btnSaveCsv: TButton
+      Left = 534
+      Height = 30
+      Top = 8
+      Width = 64
+      Caption = 'CSV'
+      OnClick = sessionCommandClick
+      TabOrder = 5
+    end
+    object btnSaveMdb: TButton
+      Left = 604
+      Height = 30
+      Top = 8
+      Width = 64
+      Caption = 'MDB'
+      OnClick = sessionCommandClick
+      TabOrder = 6
+    end
+    object btnCompare: TButton
+      Left = 674
+      Height = 30
+      Top = 8
+      Width = 92
+      Caption = 'Сравнить'
+      OnClick = sessionCommandClick
+      TabOrder = 7
+    end
+    object btnWinPos: TButton
+      Left = 772
+      Height = 30
+      Top = 8
+      Width = 82
+      Caption = 'WinPos'
+      OnClick = sessionCommandClick
+      TabOrder = 8
+    end
+  end
+  object pnlCommands: TPanel
+    Left = 0
+    Height = 48
+    Top = 572
+    Width = 920
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 920
+    TabOrder = 3
+    object btnStart: TButton
+      Left = 12
+      Height = 32
+      Top = 8
+      Width = 104
+      Caption = 'Старт'
+      Enabled = False
+      OnClick = btnStartClick
+      TabOrder = 0
+    end
+    object btnArm: TButton
+      Left = 124
+      Height = 32
+      Top = 8
+      Width = 104
+      Caption = 'Взвести'
+      Enabled = False
+      OnClick = btnArmClick
+      TabOrder = 1
+    end
+    object btnStop: TButton
+      Left = 236
+      Height = 32
+      Top = 8
+      Width = 104
+      Caption = 'Стоп'
+      Enabled = False
+      OnClick = btnStopClick
+      TabOrder = 2
+    end
+    object btnSavePoints: TButton
+      Left = 356
+      Height = 32
+      Top = 8
+      Width = 128
+      Caption = 'Сохранить точки'
+      OnClick = btnSavePointsClick
+      TabOrder = 3
+    end
+    object btnPlayModel: TButton
+      Left = 492
+      Height = 32
+      Top = 8
+      Width = 104
+      Caption = 'Анимация'
+      OnClick = btnPlayModelClick
+      TabOrder = 4
+    end
+    object btnStopModel: TButton
+      Left = 604
+      Height = 32
+      Top = 8
+      Width = 104
+      Caption = 'Стоп модели'
+      OnClick = btnStopModelClick
+      TabOrder = 5
+    end
+  end
+  object RightPan: TScrollBox
+    Left = 650
+    Height = 454
+    Top = 118
+    Width = 270
+    Align = alRight
+    ClientHeight = 454
+    ClientWidth = 270
+    BorderSpacing.Around = 4
+    HorzScrollBar.Visible = False
+    VertScrollBar.Smooth = True
+    VertScrollBar.Tracking = True
+    VertScrollBar.Increment = 16
+    TabOrder = 2
+    object cmbFrequencyResult: TComboBox
+      Left = 8
+      Height = 27
+      Top = 8
+      Width = 124
+      ItemIndex = 1
+      Items.Strings = (
+        'Спектр'
+        'FRF'
+        'Фаза'
+        'Когерентность'
+      )
+      OnChange = frequencyResultChange
+      Style = csDropDownList
+      TabOrder = 0
+      Text = 'FRF'
+    end
+    object cmbEstimator: TComboBox
+      Left = 140
+      Height = 27
+      Top = 8
+      Width = 58
+      ItemIndex = 1
+      Items.Strings = ('H0' 'H1' 'H2')
+      OnChange = processingOptionsChange
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'H1'
+    end
+    object cmbWindow: TComboBox
+      Left = 8
+      Height = 27
+      Top = 41
+      Width = 190
+      ItemIndex = 3
+      Items.Strings = (
+        'Прямоугольное'
+        'Hann'
+        'Hamming'
+        'Force'
+        'Exponential'
+      )
+      OnChange = processingOptionsChange
+      Style = csDropDownList
+      TabOrder = 2
+      Text = 'Force'
+    end
+    object chkLogX: TCheckBox
+      Left = 8
+      Height = 23
+      Top = 74
+      Width = 58
+      Caption = 'Log X'
+      OnChange = axisOptionsChange
+      TabOrder = 3
+    end
+    object chkLogY: TCheckBox
+      Left = 72
+      Height = 23
+      Top = 74
+      Width = 58
+      Caption = 'Log Y'
+      OnChange = axisOptionsChange
+      TabOrder = 4
+    end
+    object chkAutoScale: TCheckBox
+      Left = 136
+      Height = 23
+      Top = 74
+      Width = 112
+      Caption = 'Автомасштаб'
+      OnChange = axisOptionsChange
+      TabOrder = 5
+    end
+    object edtXMin: TEdit
+      Left = 8
+      Height = 27
+      Top = 103
+      Width = 58
+      OnEditingDone = axisRangeEditingDone
+      TabOrder = 6
+      Text = '0'
+    end
+    object edtXMax: TEdit
+      Left = 72
+      Height = 27
+      Top = 103
+      Width = 58
+      OnEditingDone = axisRangeEditingDone
+      TabOrder = 7
+      Text = '1'
+    end
+    object edtYMin: TEdit
+      Left = 136
+      Height = 27
+      Top = 103
+      Width = 58
+      OnEditingDone = axisRangeEditingDone
+      TabOrder = 8
+      Text = '0'
+    end
+    object edtYMax: TEdit
+      Left = 200
+      Height = 27
+      Top = 103
+      Width = 58
+      OnEditingDone = axisRangeEditingDone
+      TabOrder = 9
+      Text = '1'
+    end
+    object clbCurves: TCheckListBox
+      Left = 8
+      Height = 92
+      Top = 136
+      Width = 250
+      Anchors = [akTop, akLeft, akRight]
+      OnClickCheck = curveVisibilityClickCheck
+      TabOrder = 10
+    end
+    object lblCursor: TLabel
+      Left = 8
+      Height = 17
+      Top = 234
+      Width = 150
+      Caption = 'X1 —  Ctrl: X2'
+    end
+    object chkFilterWindow: TCheckBox
+      Left = 8
+      Height = 23
+      Top = 258
+      Width = 132
+      Caption = 'Окно фильтрации'
+      OnChange = filterWindowChange
+      TabOrder = 11
+    end
+    object lblWindowStart: TLabel
+      Left = 8
+      Top = 286
+      Caption = 'Начало окна'
+    end
+    object tbWindowStart: TTrackBar
+      Left = 102
+      Height = 28
+      Top = 278
+      Width = 156
+      Anchors = [akTop, akLeft, akRight]
+      Max = 1000
+      OnChange = filterWindowChange
+      TabOrder = 12
+    end
+    object lblWindowEnd: TLabel
+      Left = 8
+      Top = 316
+      Caption = 'Конец окна'
+    end
+    object tbWindowEnd: TTrackBar
+      Left = 102
+      Height = 28
+      Top = 308
+      Width = 156
+      Anchors = [akTop, akLeft, akRight]
+      Max = 1000
+      Position = 1000
+      OnChange = filterWindowChange
+      TabOrder = 13
+    end
+    object lblExponentialStart: TLabel
+      Left = 8
+      Top = 346
+      Caption = 'Начало спада'
+    end
+    object tbExponentialStart: TTrackBar
+      Left = 102
+      Height = 28
+      Top = 338
+      Width = 156
+      Anchors = [akTop, akLeft, akRight]
+      Max = 1000
+      OnChange = filterWindowChange
+      TabOrder = 14
+    end
+    object lblExponentialLevel: TLabel
+      Left = 8
+      Top = 376
+      Caption = 'Уровень спада'
+    end
+    object tbExponentialLevel: TTrackBar
+      Left = 102
+      Height = 28
+      Top = 368
+      Width = 156
+      Anchors = [akTop, akLeft, akRight]
+      Max = 100
+      Position = 50
+      OnChange = filterWindowChange
+      TabOrder = 15
+    end
+  end
+  object RightSplitter: TSplitter
+    Left = 644
+    Height = 454
+    Top = 118
+    Width = 6
+    Align = alRight
+    ResizeAnchor = akRight
+  end
+  object ClientPan: TPanel
+    Left = 0
+    Height = 454
+    Top = 118
+    Width = 644
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 3
+    object ChartHostPan: TPanel
+      Left = 0
+      Height = 454
+      Top = 0
+      Width = 644
+      Align = alClient
+      BevelOuter = bvNone
+      Caption = 'Графики времени и частоты'
+      TabOrder = 0
+    end
+  end
+end

@@ -30,7 +30,8 @@ uses
   uRecorderMic185SettingsDialog, uRecorderMic185ChannelDialog,
   uRecorderMic185AdditionalDialog, uRecorderMic140ChannelDialog,
   uRecorderMic140SettingsDialog, uRecorderStrainCalibrationDialog,
-  uRecorderSdbSelectDialog;
+  uRecorderSdbSelectDialog, uRecorder3dSceneTreeDialog,
+  uRecorder3dSettingsDialog, uRecorder3dModel, uRecorderTags;
 
 type
   TGuideFormSpec = record
@@ -49,6 +50,7 @@ type
     procedure CaptureForm(AForm: TForm; const AFileName: string);
     procedure CaptureClass(AClass: TFormClass; const AFileName: string);
     procedure CaptureCreatedForm(AForm: TForm; const AFileName: string);
+    procedure Capture3dSkinSettings;
     procedure SaveIndex;
   public
     constructor Create(AMainForm: TForm; const AOutputDir: string);
@@ -233,7 +235,9 @@ begin
   lPng := TPortableNetworkGraphic.Create;
   lElements := TStringList.Create;
   try
-    lBitmap.SetSize(Max(1, AForm.ClientWidth), Max(1, AForm.ClientHeight));
+    { PaintTo includes the non-client title area on Windows although control
+      coordinates are client-relative. Keep room for the complete bottom row. }
+    lBitmap.SetSize(Max(1, AForm.Width), Max(1, AForm.Height + 48));
     AForm.PaintTo(lBitmap.Canvas, 0, 0);
     lElements.Add('# ' + AForm.Caption);
     lElements.Add('');
@@ -305,6 +309,61 @@ begin
   Application.ProcessMessages;
 end;
 
+procedure TRecorderUserGuideCapture.Capture3dSkinSettings;
+var
+  lBone:TRecorder3dSkinBone;
+  lComponent:TRecorder3dComponent;
+  lDialog:TRecorder3dSettingsDialog;
+  lInfluence:TRecorder3dSkinBinding;
+  lRegistry:TRecorderTagRegistry;
+  lTag:TRecorderTag;
+begin
+  lRegistry:=TRecorderTagRegistry.Create(nil);
+  lComponent:=TRecorder3dComponent.Create;
+  try
+    lTag:=lRegistry.CreateTag('Перемещение_X',64);
+    lTag.Address:='SIM/skin/x';
+    lTag.Description:='Смещение кости по X';
+    lBone:=lComponent.EnsureSkinBone(101,'Опора корпуса');
+    lBone.TagIds[r3sX]:=lTag.Id;
+    lBone.TagNames[r3sX]:=lTag.Name;
+    lTag:=lRegistry.CreateTag('Перемещение_Y',64);
+    lBone.TagIds[r3sY]:=lTag.Id;
+    lBone.TagNames[r3sY]:=lTag.Name;
+    lComponent.EnsureSkinBone(102,'Патрубок');
+    lInfluence:=lComponent.AddSkinBinding;
+    lInfluence.PointName:='Опора корпуса';
+    lInfluence.MeshNodeId:=1;
+    lInfluence.LogicalVertexId:=12;
+    lInfluence.HelperNodeId:=101;
+    lInfluence.Weight:=1.0;
+    lInfluence:=lComponent.AddSkinBinding;
+    lInfluence.PointName:='Опора корпуса';
+    lInfluence.MeshNodeId:=1;
+    lInfluence.LogicalVertexId:=18;
+    lInfluence.HelperNodeId:=101;
+    lInfluence.Weight:=0.65;
+    lDialog:=TRecorder3dSettingsDialog.CreateDialog(Application,lComponent,
+      lRegistry);
+    lDialog.ShowEditor(0);
+    CaptureCreatedForm(lDialog,'25-3d-skin-modifier');
+    lDialog:=TRecorder3dSettingsDialog.CreateDialog(Application,lComponent,
+      lRegistry);
+    lDialog.SetBounds(lDialog.Left,lDialog.Top,1160,620);
+    lDialog.ShowEditor(0);
+    CaptureCreatedForm(lDialog,'26-3d-skin-modifier-minimum');
+    lDialog:=TRecorder3dSettingsDialog.CreateDialog(Application,lComponent,
+      lRegistry);
+    lDialog.SetBounds(lDialog.Left,lDialog.Top,1160,780);
+    TPanel(lDialog.FindComponent('pnlModifiers')).Width:=320;
+    lDialog.ShowEditor(0);
+    CaptureCreatedForm(lDialog,'27-3d-skin-modifier-narrow');
+  finally
+    lComponent.Free;
+    lRegistry.Free;
+  end;
+end;
+
 procedure TRecorderUserGuideCapture.SaveIndex;
 begin
   fIndex.SaveToFile(fOutputDir + 'index.md');
@@ -312,7 +371,7 @@ end;
 
 procedure TRecorderUserGuideCapture.CaptureAll;
 const
-  CForms: array[0..13] of TGuideFormSpec = (
+  CForms: array[0..14] of TGuideFormSpec = (
     (FileName: '02-recorder-settings'; FormClass: TRecorderSettingsDialog),
     (FileName: '03-tag-settings'; FormClass: TTagSettingsDialog),
     (FileName: '04-virtual-tag'; FormClass: TRecorderVirtualTagDialog),
@@ -326,6 +385,7 @@ const
     (FileName: '13-sql-trend-settings'; FormClass: TRecorderSqlTrendSettingsDialog),
     (FileName: '19-mc201-slot-settings'; FormClass: TRecorderMc201SlotSettingsDialog),
     (FileName: '20-strain-calibration'; FormClass: TRecorderStrainCalibrationDialog),
+    (FileName: '22-3d-scene-editor'; FormClass: TRecorder3dSceneTreeDialog),
     (FileName: ''; FormClass: nil)
   );
 var
@@ -354,6 +414,13 @@ begin
   CaptureCreatedForm(lForm, '15-mic140-channel');
   lForm := CreateRecorderSdbSelectGuideForm(Application);
   CaptureCreatedForm(lForm, '21-sdb-select');
+  lForm := TRecorder3dSceneTreeDialog.Create(Application);
+  TRecorder3dSceneTreeDialog(lForm).PrepareGuidePreview(False);
+  CaptureCreatedForm(lForm, '23-3d-scene-editor-filled');
+  lForm := TRecorder3dSceneTreeDialog.Create(Application);
+  TRecorder3dSceneTreeDialog(lForm).PrepareGuidePreview(True);
+  CaptureCreatedForm(lForm, '24-3d-scene-editor-after-delete');
+  Capture3dSkinSettings;
   SaveIndex;
 end;
 

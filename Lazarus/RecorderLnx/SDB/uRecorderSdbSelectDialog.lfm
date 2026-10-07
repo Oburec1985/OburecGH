@@ -8,7 +8,9 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
   ClientHeight = 620
   ClientWidth = 1040
   Position = poOwnerFormCenter
+  KeyPreview = True
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   object pnBottom: TPanel
     Left = 0
     Height = 48
@@ -87,10 +89,22 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       Left = 12
       Height = 23
       Top = 32
-      Width = 681
+      Width = 575
       Anchors = [akTop, akLeft, akRight]
       ReadOnly = True
+      OnChange = edKeyChange
+      OnKeyDown = edKeyKeyDown
       TabOrder = 0
+    end
+    object btnApplyName: TButton
+      Left = 595
+      Height = 25
+      Top = 31
+      Width = 98
+      Anchors = [akTop, akRight]
+      Caption = 'Применить'
+      OnClick = btnApplyNameClick
+      TabOrder = 1
     end
     object lbDescription: TLabel
       Left = 12
@@ -106,7 +120,7 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       Width = 681
       Anchors = [akTop, akLeft, akRight]
       ReadOnly = True
-      TabOrder = 1
+      TabOrder = 2
     end
     object pnScale: TPanel
       Left = 0
@@ -117,7 +131,7 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
       BevelOuter = bvNone
       ClientHeight = 452
       ClientWidth = 705
-      TabOrder = 2
+      TabOrder = 3
       Visible = False
       object lbUnits: TLabel
         Left = 12
@@ -354,9 +368,23 @@ object RecorderSdbSelectDialog: TRecorderSdbSelectDialog
     OnPopup = pmSdbTreePopup
     Left = 88
     Top = 56
-    object miCreateFolder: TMenuItem
-      Caption = 'Создать каталог...'
-      OnClick = miCreateFolderClick
-    end
+  object miCreateFolder: TMenuItem
+    Caption = 'Создать каталог...'
+    OnClick = miCreateFolderClick
   end
+  object miCreateCalibration: TMenuItem
+    Caption = 'Создать новую ГХ...'
+    OnClick = miCreateCalibrationClick
+  end
+  object miCopyCalibration: TMenuItem
+    Caption = 'Копировать ГХ'
+    ShortCut = 16451
+    OnClick = miCopyCalibrationClick
+  end
+  object miPasteCalibration: TMenuItem
+    Caption = 'Вставить ГХ'
+    ShortCut = 16470
+    OnClick = miPasteCalibrationClick
+  end
+end
 end

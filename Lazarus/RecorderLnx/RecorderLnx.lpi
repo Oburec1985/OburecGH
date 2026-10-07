@@ -210,18 +210,18 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uComponentSettingsDialog.pas"/>
+        <Filename Value="Components/Editor/uComponentSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderButtonSettingsDialog.pas"/>
+        <Filename Value="Components/Standard/uRecorderButtonSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderButtonSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uFormEditorController.pas"/>
+        <Filename Value="Components/Editor/uFormEditorController.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -257,11 +257,15 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderCommandImages.pas"/>
+        <Filename Value="Components/Editor/uRecorderCommandImages.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderDigitalPageView.pas"/>
+        <Filename Value="Components/Editor/uRcIconIds.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/Editor/uRecorderDigitalPageView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -269,11 +273,11 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderOglOscillogramView.pas"/>
+        <Filename Value="Components/Oscillogram/uRecorderOglOscillogramView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderOscillogramPageView.pas"/>
+        <Filename Value="Components/Editor/uRecorderOscillogramPageView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -302,64 +306,64 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderSpectrumSettingsDialog.pas"/>
+        <Filename Value="Components/Spectrum/uRecorderSpectrumSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderSpectrumView.pas"/>
+        <Filename Value="Components/Spectrum/uRecorderSpectrumView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderColorSwatch.pas"/>
+        <Filename Value="Components/Common/uRecorderColorSwatch.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderOscillogramSettingsDialog.pas"/>
+        <Filename Value="Components/Oscillogram/uRecorderOscillogramSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderTrendSettingsDialog.pas"/>
+        <Filename Value="Components/Trend/uRecorderTrendSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderTrendView.pas"/>
+        <Filename Value="Components/Trend/uRecorderTrendView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderMeasurementSectionView.pas"/>
+        <Filename Value="Components/MeasurementSection/uRecorderMeasurementSectionView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderMeasurementSectionSettingsDialog.pas"/>
+        <Filename Value="Components/MeasurementSection/uRecorderMeasurementSectionSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderMeasurementSectionSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="SQLdb/SqlTrend/uRecorderSqlTrendModel.pas"/>
+        <Filename Value="Components/SqlTrend/uRecorderSqlTrendModel.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="SQLdb/SqlTrend/uRecorderSqlTrendView.pas"/>
+        <Filename Value="Components/SqlTrend/uRecorderSqlTrendView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="SQLdb/SqlTrend/uRecorderSqlTrendSettingsDialog.pas"/>
+        <Filename Value="Components/SqlTrend/uRecorderSqlTrendSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderSqlTrendSettingsDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="SQLdb/SqlTrend/uRecorderMeraEventDialog.pas"/>
+        <Filename Value="Components/SqlTrend/uRecorderMeraEventDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderMeraEventDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderVisualControl.pas"/>
+        <Filename Value="Components/Common/uRecorderVisualControl.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -673,11 +677,191 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderFrequencyResponseView.pas"/>
+        <Filename Value="Components/FrequencyResponse/uRecorderFrequencyResponseView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UI/uRecorderFrequencyResponseSettingsDialog.pas"/>
+        <Filename Value="Components/FrequencyResponse/uRcFreqRespDlg.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dBindingAdapter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderFrfContracts.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderFrfRepository.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderImpactHammer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderImpactDsp.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dInteractionTrace.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dImpactBindingController.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dSceneTreeDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dSceneTreeDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dView.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorderFrfMotionAdapter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderImpactHammerSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerView.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderImpactHammerView"/>
+        <HasResources Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerService.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerContracts.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammerPresenter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderImpactSessionContracts.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderImpactSessionValidation.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactSessionJson.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactSessionCsv.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactSessionCommands.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactMeraAdapter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacContracts.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacSession.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacProviders.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacTagMirror.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacRunner.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Audio/uRecorderPortAudioApi.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Audio/uRecorderAudioDacBackend.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Null/uRecorderNullDacBackend.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/PXIe/README.md"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/core/u3dCoreTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/core/u3dScene.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/core/u3dGeometryMath.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/core/u3dTransforms.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/core/u3dCamera.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/interaction/u3dInteractionTypes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/interaction/u3dCameraInteraction.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../SharedUtils/3d/lcl/u3dLclWidget.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
@@ -686,7 +870,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Calibrations;Calibrations/Strains;Device;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Mdb;Components/Common;Components/Donut;Components/Editor;Components/FrequencyResponse;Components/ImpactHammer;Components/Lissajous;Components/MeasurementSection;Components/Oscillogram;Components/SignalGenerator;Components/Spectrum;Components/SqlTrend;Components/Standard;Components/ThreeD;Components/Trend;Calibrations;Calibrations/Strains;Device;Device/DAC/Core;Device/DAC/Audio;Device/DAC/Null;Device/DAC/PXIe;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

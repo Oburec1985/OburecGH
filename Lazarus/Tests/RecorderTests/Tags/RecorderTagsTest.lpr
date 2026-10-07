@@ -347,6 +347,22 @@ begin
   end;
 end;
 
+procedure TestVectorDerivedFromFrequency;
+var
+  lTag: TRecorderTag;
+begin
+  lTag := TRecorderTag.Create(1, 'GeneratedSignal', 8, True);
+  try
+    AssertTrue(not lTag.IsVector, 'zero-frequency tag is scalar');
+    lTag.PollFrequencyHz := 1000;
+    AssertTrue(lTag.IsVector, 'positive-frequency tag is vector');
+    lTag.PollFrequencyHz := 0;
+    AssertTrue(not lTag.IsVector, 'vector status follows frequency changes');
+  finally
+    lTag.Free;
+  end;
+end;
+
 procedure TestTagAlarmEngine;
 var
   lEngine: IRecorderAlarmEngine;
@@ -392,6 +408,11 @@ begin
 end;
 
 begin
+  if (ParamCount > 0) and SameText(ParamStr(1), '--vector-only') then
+  begin
+    TestVectorDerivedFromFrequency;
+    Halt(0);
+  end;
   if (ParamCount > 0) and SameText(ParamStr(1), '--range-only') then
   begin
     TestReusableRangeSnapshot;
@@ -403,6 +424,7 @@ begin
     Halt(0);
   end;
   TestTagRegistryAndSignalBuffer;
+  TestVectorDerivedFromFrequency;
   TestTagBlockEstimates;
   TestReusableRangeSnapshot;
   TestReusableBlockSnapshot;

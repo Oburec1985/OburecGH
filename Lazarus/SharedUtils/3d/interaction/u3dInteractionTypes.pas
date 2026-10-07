@@ -1,5 +1,8 @@
 unit u3dInteractionTypes;
 
+{ Defines input, camera, ray, viewport, and gizmo value types exchanged between
+  platform adapters and pure interaction algorithms. }
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
@@ -21,11 +24,15 @@ type
 
   T3dOrbitCamera = record
     Target: T3dVector;
+    Forward, Right, Up: T3dVector;
+    PoseValid: Boolean;
     YawDegrees: Single;
     PitchDegrees: Single;
     RollDegrees: Single;
     Distance: Single;
     VerticalFovDegrees: Single;
+    ProjectionKind: T3dProjectionKind;
+    OrthographicScale: Single;
   end;
 
   T3dCameraRotationConstraint = (crcFree, crcX, crcY, crcZ);

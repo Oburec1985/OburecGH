@@ -7,16 +7,20 @@ interface
 
 uses
   Classes, SysUtils, uRecorderDataSources, uRecorderTags,
+  uRecorderMessages,
   uRecorderDeviceInterfaces, uRecorderOpcUaDevice, uRecorderOpcUaTypes,
   uRecorderOpcUaApi;
 
 type
   { Tag/worker adapter. The protocol session belongs to the device; this class
     only binds stable Recorder tags to device channels. }
-  TRecorderOpcUaDataSource = class(TRecorderDataSourceBase)
+  TRecorderOpcUaDataSource = class(TRecorderDataSourceBase,
+    IRecorderMessageSource)
   private
     fDevice: IRecorderDevice;
     fNodeTags: array of TRecorderTag;
+    fNodeMessages: array of TRecorderMessage;
+    fMessageRegistry: TRecorderMessageRegistry;
     fWriteCursors: array of QWord;
     fLastWrittenValues: array of Double;
     fHasWrittenValues: array of Boolean;
@@ -37,6 +41,7 @@ type
     procedure PrepareHardware; override;
     procedure Start; override;
     procedure Stop; override;
+    procedure ConfigureMessages(ARegistry: TRecorderMessageRegistry);
     property Device: IRecorderDevice read fDevice;
     property PrepareError: string read fPrepareError;
   end;
@@ -72,12 +77,14 @@ var
 begin
   fBindingError := '';
   SetLength(fNodeTags, OpcDevice.NodeCount);
+  SetLength(fNodeMessages, OpcDevice.NodeCount);
   SetLength(fWriteCursors, OpcDevice.NodeCount);
   SetLength(fLastWrittenValues, OpcDevice.NodeCount);
   SetLength(fHasWrittenValues, OpcDevice.NodeCount);
   for I := 0 to OpcDevice.NodeCount - 1 do
   begin
     lNode := OpcDevice.Node(I);
+    if RecorderOpcUaNodeIsMessage(lNode) then Continue;
     lName := lNode.TagName;
     if lName = '' then lName := lNode.NodeId;
     fNodeTags[I] := ARegistry.FindByName(lName);
@@ -97,6 +104,33 @@ begin
     fNodeTags[I].PollFrequencyHz := 1000.0 /
       Max(10, OpcDevice.Config.PublishingIntervalMs);
     fWriteCursors[I] := fNodeTags[I].ExternalWriteCursor;
+  end;
+end;
+
+procedure TRecorderOpcUaDataSource.ConfigureMessages(
+  ARegistry: TRecorderMessageRegistry);
+var
+  I: Integer;
+  lName: string;
+  lNode: TRecorderOpcUaNode;
+begin
+  fMessageRegistry := ARegistry;
+  SetLength(fNodeMessages, OpcDevice.NodeCount);
+  if fMessageRegistry <> nil then
+    fMessageRegistry.RemoveBySource(SourceId);
+  for I := 0 to OpcDevice.NodeCount - 1 do
+  begin
+    lNode := OpcDevice.Node(I);
+    if not RecorderOpcUaNodeIsMessage(lNode) then Continue;
+    if fMessageRegistry = nil then
+    begin
+      fBindingError := 'OPC UA message registry is not configured';
+      Exit;
+    end;
+    lName := lNode.TagName;
+    if lName = '' then lName := lNode.NodeId;
+    fNodeMessages[I] := fMessageRegistry.Add(lName, SourceId, lNode.NodeId,
+      lNode.MessageKind, lNode.MessageColor);
   end;
 end;
 
@@ -182,7 +216,15 @@ begin
   if OpcDevice.Config.Mode <> oumServer then Exit;
   for I := 0 to High(fNodeTags) do
   begin
-    if fNodeTags[I] = nil then Exit(False);
+    if fNodeTags[I] = nil then
+    begin
+      if RecorderOpcUaNodeIsMessage(OpcDevice.Node(I)) then
+      begin
+        fBindingError := 'OPC UA server mode does not support string messages';
+        Exit(False);
+      end;
+      Exit(False);
+    end;
     lValue := 0;
     if fNodeTags[I].SignalBuffer.Count > 0 then
       lValue := fNodeTags[I].SignalBuffer.LatestValue;
@@ -273,6 +315,7 @@ var
   I: Integer;
   lQuality: Cardinal;
   lTime, lValue: Double;
+  lText: string;
   lReadStartedMs, lWriteMs: QWord;
 begin
   if not fPrepared then
@@ -319,7 +362,13 @@ begin
     Exit;
   end;
   for I := 0 to High(fNodeTags) do
-    if OpcDevice.ReadChanged(I, lValue, lTime, lQuality) then
+    if fNodeMessages[I] <> nil then
+    begin
+      if OpcDevice.ReadMessageChanged(I, lText, lTime, lQuality) then
+        fMessageRegistry.Publish(fNodeMessages[I], lText, lTime, lQuality);
+    end
+    else if (fNodeTags[I] <> nil) and
+      OpcDevice.ReadChanged(I, lValue, lTime, lQuality) then
       { OPC UA SourceTimestamp is absolute Unix time. Recorder tags use the
         project elapsed-time scale, which the registry supplies here. }
       Registry.PublishValue(fNodeTags[I], lValue);

@@ -10,7 +10,7 @@ implementation
 uses
   Classes, SysUtils, Math, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
   ComCtrls, Grids, Contnrs, Graphics, ImgList, Menus, LazUTF8, LCLType,
-  uRecorderTags, uRecorderConfiguredDataSources,
+  uRecorderTags, uRecorderMessages, uRecorderConfiguredDataSources,
   uRecorderConfiguredSourceEditor, uRecorderOpcUaTypes, uRecorderOpcUaApi;
 
 type
@@ -59,6 +59,9 @@ type
     fOperation: TRecorderOpcUaProbeOperation;
     fPassword: string;
     fSessionTimeoutMs: Cardinal;
+    fMaxReferencesPerNode: Cardinal;
+    fRequestTimeoutMs: Cardinal;
+    fTimestampsToReturn: Cardinal;
     fUserName: string;
     fElapsedMs: QWord;
     fSucceeded: Boolean;
@@ -68,7 +71,10 @@ type
     constructor Create(const AEndpoint, AUserName, APassword: string;
       AOperation: TRecorderOpcUaProbeOperation; ANodeIds: TStrings = nil;
       ATagNames: TStrings = nil;
-      ASessionTimeoutMs: Cardinal = CRecorderOpcUaDefaultSessionTimeoutMs);
+      ASessionTimeoutMs: Cardinal = CRecorderOpcUaDefaultSessionTimeoutMs;
+      AMaxReferencesPerNode: Cardinal = CRecorderOpcUaDefaultMaxNodesPerRequest;
+      ARequestTimeoutMs: Cardinal = CRecorderOpcUaDefaultRequestTimeoutMs;
+      ATimestampsToReturn: Cardinal = Ord(outServer));
     destructor Destroy; override;
     property Operation: TRecorderOpcUaProbeOperation read fOperation;
     property ElapsedMs: QWord read fElapsedMs;
@@ -100,6 +106,7 @@ type
     fTreeSearch: TEdit;
     fUsedSearch: TEdit;
     fPropertiesGrid: TStringGrid;
+    fProtocolSettings: TStringGrid;
     fUsedTree: TTreeView;
     fDetailsPages: TPageControl;
     fPropertiesTab: TTabSheet;
@@ -127,6 +134,8 @@ type
     procedure ModeChange(Sender: TObject);
     procedure ProbeClick(Sender: TObject);
     procedure ProbeFinished(Sender: TObject);
+    procedure ProtocolSettingsSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
     procedure RebuildBrowseTree;
     procedure SetProbeRunning(ARunning: Boolean);
     procedure SimplifiedTreeChange(Sender: TObject);
@@ -146,7 +155,6 @@ type
     procedure ReadClick(Sender: TObject);
   private
     fProbeThread: TRecorderOpcUaProbeThread;
-    fProtocolSettings: TStringGrid;
     fTreeItems: TObjectList;
     fUsedItems: TObjectList;
     fAutoBrowsePending: Boolean;
@@ -208,6 +216,21 @@ type
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
       const ASourceId: string; out ANewSourceId: string): Boolean;
   end;
+
+const
+  CProtocolRowReceive = 0;
+  CProtocolRowMode = 1;
+  CProtocolRowInterval = 2;
+  CProtocolRowMaxRead = 3;
+  CProtocolRowTimestamp = 4;
+  CProtocolRowWrite = 5;
+  CProtocolRowMaxWrite = 6;
+  CProtocolRowBrowse = 7;
+  CProtocolRowMaxBrowse = 8;
+  CProtocolRowConnection = 9;
+  CProtocolRowTimeout = 10;
+  CProtocolRowSubscription = 11;
+  CProtocolRowArchive = 12;
 
 constructor TRecorderOpcUaTreeItem.Create;
 begin
@@ -319,7 +342,9 @@ end;
 
 constructor TRecorderOpcUaProbeThread.Create(const AEndpoint, AUserName,
   APassword: string; AOperation: TRecorderOpcUaProbeOperation;
-  ANodeIds, ATagNames: TStrings; ASessionTimeoutMs: Cardinal);
+  ANodeIds, ATagNames: TStrings; ASessionTimeoutMs,
+  AMaxReferencesPerNode, ARequestTimeoutMs,
+  ATimestampsToReturn: Cardinal);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -328,6 +353,9 @@ begin
   fPassword := APassword;
   fOperation := AOperation;
   fSessionTimeoutMs := ASessionTimeoutMs;
+  fMaxReferencesPerNode := Max(1, AMaxReferencesPerNode);
+  fRequestTimeoutMs := Max(100, ARequestTimeoutMs);
+  fTimestampsToReturn := EnsureRange(ATimestampsToReturn, 0, 3);
   fInputNodeIds := TStringList.Create;
   fInputTagNames := TStringList.Create;
   if ANodeIds <> nil then fInputNodeIds.Assign(ANodeIds);
@@ -363,7 +391,8 @@ begin
         Exit;
       end;
       lHandle := RecorderOpcUaClientCreate(fEndpoint, fUserName, fPassword,
-        CRecorderOpcUaDefaultPublishingIntervalMs, fSessionTimeoutMs);
+        CRecorderOpcUaDefaultPublishingIntervalMs, fSessionTimeoutMs,
+        fRequestTimeoutMs, fTimestampsToReturn);
       if lHandle = nil then
       begin
         fErrorText := 'Не удалось создать OPC UA client session';
@@ -377,7 +406,8 @@ begin
         end;
         case fOperation of
           opoBrowse:
-            if not RecorderOpcUaClientBrowse(lHandle, fLines) then
+            if not RecorderOpcUaClientBrowse(lHandle, fLines,
+              fMaxReferencesPerNode) then
             begin
               fErrorText := RecorderOpcUaLastError(lHandle);
               Exit;
@@ -441,54 +471,46 @@ begin
   inherited Create(AOwner);
   fTreeItems := TObjectList.Create(True);
   fUsedItems := TObjectList.Create(True);
-  fConfigPanel.Height := 390;
-  fProtocolSettings := TStringGrid.Create(Self);
-  fProtocolSettings.Parent := fConfigPanel;
-  fProtocolSettings.SetBounds(16, 194, fConfigPanel.Width - 32, 150);
-  fProtocolSettings.Anchors := [akLeft, akTop, akRight];
-  fProtocolSettings.ColCount := 4;
-  fProtocolSettings.RowCount := 6;
-  fProtocolSettings.FixedRows := 0;
-  fProtocolSettings.FixedCols := 0;
-  fProtocolSettings.Options := fProtocolSettings.Options + [goEditing];
-  fProtocolSettings.ColWidths[0] := 220;
-  fProtocolSettings.ColWidths[1] := 85;
-  fProtocolSettings.ColWidths[2] := 220;
-  fProtocolSettings.ColWidths[3] := 85;
-  fProtocolSettings.Cells[0, 0] := 'Макс. тегов чтения';
-  fProtocolSettings.Cells[1, 0] := IntToStr(AConfig.MaxNodesPerRead);
-  fProtocolSettings.Cells[2, 0] := 'Макс. тегов записи';
-  fProtocolSettings.Cells[3, 0] := IntToStr(AConfig.MaxNodesPerWrite);
-  fProtocolSettings.Cells[0, 1] := 'Макс. узлов просмотра';
-  fProtocolSettings.Cells[1, 1] := IntToStr(AConfig.MaxNodesPerBrowse);
-  fProtocolSettings.Cells[2, 1] := 'Таймаут ответа, с';
-  fProtocolSettings.Cells[3, 1] := IntToStr(AConfig.RequestTimeoutMs div 1000);
-  fProtocolSettings.Cells[0, 2] := 'Метка времени';
+  fProtocolSettings.ColWidths[0] := 260;
+  fProtocolSettings.ColWidths[1] := 300;
+  fProtocolSettings.Cells[0, CProtocolRowReceive] := 'Приём текущих данных';
+  fProtocolSettings.Cells[0, CProtocolRowMode] := 'Тип приёма';
+  fProtocolSettings.Cells[1, CProtocolRowMode] := 'Read';
+  fProtocolSettings.Cells[0, CProtocolRowInterval] := 'Период Read, мс';
+  fProtocolSettings.Cells[1, CProtocolRowInterval] :=
+    IntToStr(AConfig.PublishingIntervalMs);
+  fProtocolSettings.Cells[0, CProtocolRowMaxRead] := 'Макс. узлов за ReadRequest';
+  fProtocolSettings.Cells[1, CProtocolRowMaxRead] :=
+    IntToStr(AConfig.MaxNodesPerRead);
+  fProtocolSettings.Cells[0, CProtocolRowTimestamp] := 'Метка времени';
   case AConfig.TimestampMode of
-    outSource: fProtocolSettings.Cells[1, 2] := 'Source';
-    outBoth: fProtocolSettings.Cells[1, 2] := 'Both';
-    outNeither: fProtocolSettings.Cells[1, 2] := 'Neither';
+    outSource: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Source';
+    outBoth: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Both';
+    outNeither: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Neither';
   else
-    fProtocolSettings.Cells[1, 2] := 'Server';
+    fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Server';
   end;
-  fProtocolSettings.Cells[2, 2] := 'Тип опроса';
-  if AConfig.PollingType = ouptSubscription then
-    fProtocolSettings.Cells[3, 2] := 'Subscription'
-  else
-    fProtocolSettings.Cells[3, 2] := 'Read';
-  fProtocolSettings.Cells[0, 3] := 'Получать архив';
-  fProtocolSettings.Cells[1, 3] := BoolToStr(AConfig.ArchiveEnabled, True);
-  fProtocolSettings.Cells[2, 3] := 'Записей архива за опрос';
-  fProtocolSettings.Cells[3, 3] := IntToStr(AConfig.ArchiveRecordsPerPoll);
-  fProtocolSettings.Cells[0, 4] := 'Глубина архива, дней';
-  fProtocolSettings.Cells[1, 4] := IntToStr(AConfig.ArchiveDepthDays);
-  fProtocolSettings.Cells[2, 4] := 'Такт архива';
-  fProtocolSettings.Cells[3, 4] := IntToStr(AConfig.ArchivePollingRate);
-  fProtocolSettings.Cells[0, 5] := 'Дополнительные настройки';
-  fProtocolSettings.Cells[1, 5] := BoolToStr(AConfig.ShowAdditionalSettings, True);
-  fProbeButton.Top := 352;
-  fBrowseButton.Top := 352;
-  fReadButton.Top := 352;
+  fProtocolSettings.Cells[0, CProtocolRowWrite] := 'Запись значений';
+  fProtocolSettings.Cells[0, CProtocolRowMaxWrite] :=
+    'Макс. узлов за WriteRequest';
+  fProtocolSettings.Cells[1, CProtocolRowMaxWrite] :=
+    IntToStr(AConfig.MaxNodesPerWrite);
+  fProtocolSettings.Cells[0, CProtocolRowBrowse] := 'Просмотр адресного пространства';
+  fProtocolSettings.Cells[0, CProtocolRowMaxBrowse] :=
+    'Макс. ссылок на узел за BrowseRequest';
+  fProtocolSettings.Cells[1, CProtocolRowMaxBrowse] :=
+    IntToStr(AConfig.MaxNodesPerBrowse);
+  fProtocolSettings.Cells[0, CProtocolRowConnection] := 'Соединение';
+  fProtocolSettings.Cells[0, CProtocolRowTimeout] :=
+    'OPC UA TimeoutHint запроса, с';
+  fProtocolSettings.Cells[1, CProtocolRowTimeout] :=
+    IntToStr(AConfig.RequestTimeoutMs div 1000);
+  fProtocolSettings.Cells[0, CProtocolRowSubscription] := 'Subscription';
+  fProtocolSettings.Cells[1, CProtocolRowSubscription] :=
+    'Не поддерживается текущим клиентом';
+  fProtocolSettings.Cells[0, CProtocolRowArchive] := 'Архив (HistoryRead)';
+  fProtocolSettings.Cells[1, CProtocolRowArchive] :=
+    'Не поддерживается текущим клиентом';
   InitializeNodeImages;
   fMode.ItemIndex := Ord(AConfig.Mode);
   fEndpoint.Text := AConfig.Endpoint;
@@ -515,6 +537,9 @@ begin
   fValueGrid.Cells[5, 0] := 'Качество';
   fValueGrid.Cells[6, 0] := 'Время';
   fValueGrid.Cells[7, 0] := 'DataType NodeId';
+  fValueGrid.Cells[8, 0] := 'Role';
+  fValueGrid.Cells[9, 0] := 'Message kind';
+  fValueGrid.Cells[10, 0] := 'Message color';
   fValueGrid.ColWidths[0] := 130;
   fValueGrid.ColWidths[1] := 100;
   fValueGrid.ColWidths[2] := 120;
@@ -523,6 +548,9 @@ begin
   fValueGrid.ColWidths[5] := 90;
   fValueGrid.ColWidths[6] := 160;
   fValueGrid.ColWidths[7] := 0;
+  fValueGrid.ColWidths[8] := 0;
+  fValueGrid.ColWidths[9] := 0;
+  fValueGrid.ColWidths[10] := 0;
   fPropertiesGrid.Cells[0, 0] := 'Свойство';
   fPropertiesGrid.Cells[1, 0] := 'Значение';
   fPropertiesGrid.ColWidths[0] := 170;
@@ -539,6 +567,11 @@ begin
     fValueGrid.Cells[2, fValueGrid.RowCount - 1] := lText;
     fValueGrid.Cells[3, fValueGrid.RowCount - 1] := lNode.NodeId;
     fValueGrid.Cells[7, fValueGrid.RowCount - 1] := lNode.DataTypeNodeId;
+    fValueGrid.Cells[8, fValueGrid.RowCount - 1] := IntToStr(Ord(lNode.Role));
+    fValueGrid.Cells[9, fValueGrid.RowCount - 1] :=
+      RecorderMessageKindName(lNode.MessageKind);
+    fValueGrid.Cells[10, fValueGrid.RowCount - 1] :=
+      IntToStr(lNode.MessageColor);
   end;
   RebuildUsedTree;
   AddDiagnostic(UTF8Encode('Готово. Endpoint: ') + AConfig.Endpoint);
@@ -597,7 +630,7 @@ begin
   fValueGrid.Parent := lDiagnosticPanel;
   fValueGrid.SetBounds(16, 91, lDiagnosticPanel.Width - 32, 111);
   fValueGrid.Anchors := [akLeft, akRight, akBottom];
-  fValueGrid.ColCount := 5;
+  fValueGrid.ColCount := 11;
   fValueGrid.FixedRows := 1;
   fValueGrid.RowCount := 1;
   fValueGrid.Cells[0, 0] := 'Тег';
@@ -854,6 +887,9 @@ begin
     fValueGrid.Cells[2, Result] := 'Только чтение';
   fValueGrid.Cells[3, Result] := AItem.NodeId;
   fValueGrid.Cells[7, Result] := AItem.DataTypeNodeId;
+  fValueGrid.Cells[8, Result] := IntToStr(Ord(ounrAuto));
+  fValueGrid.Cells[9, Result] := RecorderMessageKindName(rmkInformation);
+  fValueGrid.Cells[10, Result] := '-1';
 end;
 
 procedure TRecorderOpcUaEditorForm.BuildReadInputs(out ANodeIds,
@@ -913,7 +949,8 @@ end;
 procedure TRecorderOpcUaEditorForm.StartProbe(
   AOperation: TRecorderOpcUaProbeOperation);
 var
-  lSessionTimeoutSeconds: Integer;
+  lRequestTimeoutSeconds, lSessionTimeoutSeconds: Integer;
+  lTimestampsToReturn: Cardinal;
   lPassword, lUserName: string;
   lReadNodeIds, lReadTagNames: TStringList;
 begin
@@ -958,10 +995,24 @@ begin
     CRecorderOpcUaDefaultSessionTimeoutMs div 1000);
   if lSessionTimeoutSeconds < 1 then lSessionTimeoutSeconds := 1;
   if lSessionTimeoutSeconds > 3600 then lSessionTimeoutSeconds := 3600;
+  lRequestTimeoutSeconds := Max(1, StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowTimeout],
+    CRecorderOpcUaDefaultRequestTimeoutMs div 1000));
+  if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Source') then lTimestampsToReturn := Ord(outSource)
+  else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Both') then lTimestampsToReturn := Ord(outBoth)
+  else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Neither') then lTimestampsToReturn := Ord(outNeither)
+  else lTimestampsToReturn := Ord(outServer);
   try
     fProbeThread := TRecorderOpcUaProbeThread.Create(Trim(fEndpoint.Text),
       lUserName, lPassword, AOperation, lReadNodeIds, lReadTagNames,
-      Cardinal(lSessionTimeoutSeconds) * 1000);
+      Cardinal(lSessionTimeoutSeconds) * 1000,
+      Cardinal(Max(1, StrToIntDef(
+      fProtocolSettings.Cells[1, CProtocolRowMaxBrowse],
+      CRecorderOpcUaDefaultMaxNodesPerRequest))),
+      Cardinal(lRequestTimeoutSeconds) * 1000, lTimestampsToReturn);
   finally
     lReadTagNames.Free;
     lReadNodeIds.Free;
@@ -974,6 +1025,20 @@ end;
 procedure TRecorderOpcUaEditorForm.ProbeClick(Sender: TObject);
 begin
   StartProbe(opoTest);
+end;
+
+procedure TRecorderOpcUaEditorForm.ProtocolSettingsSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+var
+  lEditable: Boolean;
+begin
+  lEditable := (ACol = 1) and (ARow in [CProtocolRowInterval,
+    CProtocolRowMaxRead, CProtocolRowTimestamp, CProtocolRowMaxWrite,
+    CProtocolRowMaxBrowse, CProtocolRowTimeout]);
+  if lEditable then
+    fProtocolSettings.Options := fProtocolSettings.Options + [goEditing]
+  else
+    fProtocolSettings.Options := fProtocolSettings.Options - [goEditing];
 end;
 
 procedure TRecorderOpcUaEditorForm.BrowseClick(Sender: TObject);
@@ -2158,7 +2223,8 @@ begin
     AConfig.UserName := '';
     AConfig.PasswordEnvironment := '';
   end;
-  AConfig.PublishingIntervalMs := Cardinal(StrToIntDef(fInterval.Text,
+  AConfig.PublishingIntervalMs := Cardinal(StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowInterval],
     CRecorderOpcUaDefaultPublishingIntervalMs));
   if AConfig.PublishingIntervalMs < 10 then
     AConfig.PublishingIntervalMs := 10;
@@ -2167,40 +2233,35 @@ begin
   if lSessionTimeoutSeconds < 1 then lSessionTimeoutSeconds := 1;
   if lSessionTimeoutSeconds > 3600 then lSessionTimeoutSeconds := 3600;
   AConfig.SessionTimeoutMs := Cardinal(lSessionTimeoutSeconds) * 1000;
-  lValue := StrToIntDef(fProtocolSettings.Cells[1, 0],
+  lValue := StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowMaxRead],
     CRecorderOpcUaDefaultMaxNodesPerRequest);
   AConfig.MaxNodesPerRead := Cardinal(Max(1, lValue));
-  lValue := StrToIntDef(fProtocolSettings.Cells[3, 0],
+  lValue := StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowMaxWrite],
     CRecorderOpcUaDefaultMaxNodesPerRequest);
   AConfig.MaxNodesPerWrite := Cardinal(Max(1, lValue));
-  lValue := StrToIntDef(fProtocolSettings.Cells[1, 1],
+  lValue := StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowMaxBrowse],
     CRecorderOpcUaDefaultMaxNodesPerRequest);
   AConfig.MaxNodesPerBrowse := Cardinal(Max(1, lValue));
-  lValue := StrToIntDef(fProtocolSettings.Cells[3, 1],
+  lValue := StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowTimeout],
     CRecorderOpcUaDefaultRequestTimeoutMs div 1000);
   AConfig.RequestTimeoutMs := Cardinal(Max(1, lValue)) * 1000;
-  if SameText(Trim(fProtocolSettings.Cells[1, 2]), 'Source') then
+  if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Source') then
     AConfig.TimestampMode := outSource
-  else if SameText(Trim(fProtocolSettings.Cells[1, 2]), 'Both') then
+  else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Both') then
     AConfig.TimestampMode := outBoth
-  else if SameText(Trim(fProtocolSettings.Cells[1, 2]), 'Neither') then
+  else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
+    'Neither') then
     AConfig.TimestampMode := outNeither
   else
     AConfig.TimestampMode := outServer;
-  if SameText(Trim(fProtocolSettings.Cells[3, 2]), 'Subscription') then
-    AConfig.PollingType := ouptSubscription
-  else
-    AConfig.PollingType := ouptRead;
-  AConfig.ArchiveEnabled := StrToBoolDef(
-    Trim(fProtocolSettings.Cells[1, 3]), True);
-  AConfig.ArchiveRecordsPerPoll := Cardinal(Max(1,
-    StrToIntDef(fProtocolSettings.Cells[3, 3], 500)));
-  AConfig.ArchiveDepthDays := Cardinal(Max(1,
-    StrToIntDef(fProtocolSettings.Cells[1, 4], 1)));
-  AConfig.ArchivePollingRate := Cardinal(Max(1,
-    StrToIntDef(fProtocolSettings.Cells[3, 4], 1)));
-  AConfig.ShowAdditionalSettings := StrToBoolDef(
-    Trim(fProtocolSettings.Cells[1, 5]), True);
+  AConfig.PollingType := ouptRead;
+  AConfig.ArchiveEnabled := False;
   AConfig.SimplifiedTree := fSimplifiedTree.Checked;
   AConfig.Nodes.Clear;
   for I := 1 to fValueGrid.RowCount - 1 do
@@ -2212,6 +2273,12 @@ begin
     lNode.Readable := not SameText(fValueGrid.Cells[2, I], 'Только запись');
     lNode.Writable := SameText(fValueGrid.Cells[2, I], 'Чтение и запись') or
       SameText(fValueGrid.Cells[2, I], 'Только запись');
+    lNode.Role := TRecorderOpcUaNodeRole(EnsureRange(
+      StrToIntDef(fValueGrid.Cells[8, I], Ord(ounrAuto)),
+      Ord(Low(TRecorderOpcUaNodeRole)), Ord(High(TRecorderOpcUaNodeRole))));
+    lNode.MessageKind := RecorderMessageKindFromName(
+      fValueGrid.Cells[9, I]);
+    lNode.MessageColor := StrToIntDef(fValueGrid.Cells[10, I], -1);
   end;
 end;
 

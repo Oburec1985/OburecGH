@@ -100,6 +100,13 @@ begin
   if not Supports(ARenderer, IChartOffsetHelper, lRendererObj) then
     Exit;
   lRendererObj.SetGLColor(ASeries.Color);
+  if ASeries.StipplePattern <> 0 then
+  begin
+    glPushAttrib(GL_ENABLE_BIT or GL_LINE_BIT);
+    glDisable(GL_LINE_SMOOTH);
+    glLineStipple(2, ASeries.StipplePattern);
+    glEnable(GL_LINE_STIPPLE);
+  end;
   glLineWidth(Max(CDefaultTrendLineWidth, ASeries.LineWidth));
   // Использование шейдерного конвейера отрисовки (для поддержки логарифмических осей на GPU)
   glUseProgram(0);
@@ -189,6 +196,8 @@ begin
     end;
     glEnd;
   end;
+  if ASeries.StipplePattern <> 0 then
+    glPopAttrib;
 end;
 
 /// <summary>

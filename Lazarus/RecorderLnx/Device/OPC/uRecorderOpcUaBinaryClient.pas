@@ -58,6 +58,7 @@ type
     fSessionTimeoutMs: Cardinal;
     fRequestTimeoutMs: Cardinal;
     fTimestampsToReturn: Cardinal;
+    fMaxReferencesPerNode: Cardinal;
     fRevisedSessionTimeoutMs: Double;
     function ActivateSession: Boolean;
     function BrowseNode(const ANodeId, APath: string; ANodes: TObjectList;
@@ -83,11 +84,16 @@ type
     destructor Destroy; override;
     function Connect: Boolean;
     procedure Disconnect;
-    function Browse(ANodes: TObjectList): Boolean;
+    function Browse(ANodes: TObjectList;
+      AMaxReferencesPerNode: Cardinal = 100): Boolean;
     function ReadDouble(const ANodeId: string; out AValue: Double;
       out AStatus: Cardinal; out ATimestampSec: Double): Boolean;
     function ReadDoubles(const ANodeIds: TRecorderOpcUaStringArray;
       out AValues, ATimestampsSec: TRecorderOpcUaDoubleArray;
+      out AStatuses: TRecorderOpcUaCardinalArray): Boolean;
+    function ReadStrings(const ANodeIds: TRecorderOpcUaStringArray;
+      out AValues: TRecorderOpcUaStringArray;
+      out ATimestampsSec: TRecorderOpcUaDoubleArray;
       out AStatuses: TRecorderOpcUaCardinalArray): Boolean;
     function WriteScalar(const ANodeId: string; var ADataTypeNodeId: string;
       AValue: Double): Boolean;
@@ -1058,7 +1064,8 @@ begin
     W := TOpcUaWriter.Create(B);
     try
       Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle);
-      W.NodeId('i=0'); W.UInt64(0); W.UInt32(0); W.UInt32(100); W.Int32(1);
+      W.NodeId('i=0'); W.UInt64(0); W.UInt32(0);
+      W.UInt32(fMaxReferencesPerNode); W.Int32(1);
       W.NodeId(ANodeId); W.UInt32(0); W.NodeId(COpcUaHierarchicalReferences); W.BooleanValue(True);
       W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable or
         COpcUaNodeClassMethod); W.UInt32(63);
@@ -1091,11 +1098,14 @@ begin
   finally B.Free; end;
 end;
 
-function TRecorderOpcUaBinaryClient.Browse(ANodes: TObjectList): Boolean;
+function TRecorderOpcUaBinaryClient.Browse(ANodes: TObjectList;
+  AMaxReferencesPerNode: Cardinal): Boolean;
 var
   lVisited: TStringList;
 begin
   Result := False; if ANodes = nil then Exit; ANodes.Clear;
+  fMaxReferencesPerNode := AMaxReferencesPerNode;
+  if fMaxReferencesPerNode < 1 then fMaxReferencesPerNode := 1;
   lVisited := TStringList.Create;
   try
     lVisited.CaseSensitive := True;
@@ -1572,6 +1582,121 @@ begin
       end;
     except
       on E: Exception do SetError('read', E.Message);
+    end;
+  finally
+    R.Free;
+    B.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.ReadStrings(
+  const ANodeIds: TRecorderOpcUaStringArray;
+  out AValues: TRecorderOpcUaStringArray;
+  out ATimestampsSec: TRecorderOpcUaDoubleArray;
+  out AStatuses: TRecorderOpcUaCardinalArray): Boolean;
+var
+  I: Integer;
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  Q: TOpcUaReader;
+  D: TBytes;
+  Mask, VariantMask, TypeId: Byte;
+  N: LongInt;
+  SourceTicks, ServerTicks, Ticks: QWord;
+begin
+  Result := False;
+  SetLength(AValues, Length(ANodeIds));
+  SetLength(ATimestampsSec, Length(ANodeIds));
+  SetLength(AStatuses, Length(ANodeIds));
+  if Length(ANodeIds) = 0 then Exit(True);
+  R := nil;
+  B := TMemoryStream.Create;
+  try
+    try
+      W := TOpcUaWriter.Create(B);
+      try
+        Inc(fRequestHandle);
+        W.RequestHeader(fAuthenticationToken, fRequestHandle,
+          fRequestTimeoutMs);
+        W.DoubleValue(0);
+        W.UInt32(fTimestampsToReturn);
+        W.Int32(Length(ANodeIds));
+        for I := 0 to High(ANodeIds) do
+        begin
+          W.NodeId(ANodeIds[I]);
+          W.UInt32(13);
+          W.UaString('', True);
+          W.UInt16(0);
+          W.UaString('', True);
+        end;
+      finally
+        W.Free;
+      end;
+      if not ExchangeService(COpcUaReadRequest, B, R) then Exit;
+      Q := TOpcUaReader.Create(R);
+      try
+        Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+        Q.ResponseHeader;
+        N := Q.Int32;
+        if N <> Length(ANodeIds) then
+        begin
+          SetError('read strings', Format(
+            'server returned %d values for %d nodes',
+            [N, Length(ANodeIds)]));
+          Exit;
+        end;
+        for I := 0 to N - 1 do
+        begin
+          SourceTicks := 0;
+          ServerTicks := 0;
+          Mask := Q.ByteValue;
+          if (Mask and 1) = 0 then
+          begin
+            if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
+            SetError('read strings', Format(
+              'NodeId %s has no value; status 0x%.8x',
+              [ANodeIds[I], AStatuses[I]]));
+            Exit;
+          end;
+          VariantMask := Q.ByteValue;
+          if (VariantMask and $80) <> 0 then
+          begin
+            SetError('read strings', 'array values are not supported for ' +
+              ANodeIds[I]);
+            Exit;
+          end;
+          TypeId := VariantMask and $3F;
+          if TypeId <> 12 then
+          begin
+            SetError('read strings', 'expected String, received scalar type ' +
+              IntToStr(TypeId) + ' for ' + ANodeIds[I]);
+            Exit;
+          end;
+          AValues[I] := Q.UaString;
+          if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
+          if (Mask and 4) <> 0 then SourceTicks := Q.UInt64;
+          if (Mask and 8) <> 0 then ServerTicks := Q.UInt64;
+          if (Mask and 16) <> 0 then Q.UInt16;
+          if (Mask and 32) <> 0 then Q.UInt16;
+          if (AStatuses[I] and $80000000) <> 0 then
+          begin
+            SetError('read strings', Format(
+              'NodeId %s returned bad status 0x%.8x',
+              [ANodeIds[I], AStatuses[I]]));
+            Exit;
+          end;
+          Ticks := SourceTicks;
+          if Ticks = 0 then Ticks := ServerTicks;
+          if Ticks <> 0 then
+            ATimestampsSec[I] := Ticks / COpcUaTicksPerSecond -
+              COpcUaUnixEpochOffsetSeconds;
+        end;
+        Result := True;
+      finally
+        Q.Free;
+      end;
+    except
+      on E: Exception do SetError('read strings', E.Message);
     end;
   finally
     R.Free;

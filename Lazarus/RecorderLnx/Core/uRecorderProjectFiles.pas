@@ -75,7 +75,8 @@ uses
   IniFiles, jsonparser, Graphics, uRecorderSpectrumEngine, uRecorderFrequencyBands,
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
   uRecorderMeasurementSectionModel, uRecorderFrequencyResponseModel,
-  uRecorder3dModel, uRecorderSignalGeneratorModel,
+  uRecorder3dModel, uRecorderSignalGeneratorModel, uRecorderImpactHammerModel,
+  u3dPrimitives, u3dSkin, u3dVertexColors,
   uRecorderFrequencyResponse, uRecorderSdbStore, uRecorderDebugLog,
   uRecorderStrainCalibration;
 
@@ -94,6 +95,15 @@ var
   g_ProjectConfigExtensions: array[0..CRecorderProjectConfigExtensionMax - 1]
     of TRecorderProjectConfigExtension;
   g_ProjectConfigExtensionCount: Integer = 0;
+
+function SkinAxisName(AAxis:TRecorder3dSkinAxis):string;
+begin
+  case AAxis of
+    r3sX: Result:='X';
+    r3sY: Result:='Y';
+    r3sZ: Result:='Z';
+  end;
+end;
 
 function MakeFontSnapshot(const AName: string; ASize, AColor: Integer;
   ABold, AItalic: Boolean): TRecorderFontSnapshot;
@@ -432,30 +442,44 @@ begin
   end;
 end;
 
-procedure SaveTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
+procedure SaveTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag;
+  ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
+  lCalibration: TRecorderCalibration;
   lItem: TJSONObject;
 begin
   if (ATag = nil) or (ATag.CalibrationNames = nil) then
     Exit;
   for I := 0 to ATag.CalibrationNames.Count - 1 do
-    if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+  begin
+    lCalibration := nil;
+    if ARegistry <> nil then
+      lCalibration := ARegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
+    if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) and
+      ((lCalibration = nil) or (Trim(lCalibration.SdbKey) = '')) then
       AJson.Add(ATag.CalibrationNames[I])
     else
     begin
       lItem := TJSONObject.Create;
       lItem.Add('name', ATag.CalibrationNames[I]);
-      lItem.Add('enabled', False);
+      lItem.Add('enabled', RecorderCalibrationStepEnabled(
+        ATag.CalibrationNames, I));
+      if (lCalibration <> nil) and (Trim(lCalibration.SdbKey) <> '') then
+        lItem.Add('sdbKey', lCalibration.SdbKey);
       AJson.Add(lItem);
     end;
+  end;
 end;
 
-procedure LoadTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag);
+procedure LoadTagCalibrationPipeline(AJson: TJSONArray; ATag: TRecorderTag;
+  ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
+  lCalibration: TRecorderCalibration;
   lItem: TJSONObject;
   lIndex: Integer;
+  lName: string;
 begin
   if (ATag = nil) or (ATag.CalibrationNames = nil) then
     Exit;
@@ -466,7 +490,14 @@ begin
     if AJson.Items[I] is TJSONObject then
     begin
       lItem := TJSONObject(AJson.Items[I]);
-      lIndex := ATag.CalibrationNames.Add(lItem.Get('name', ''));
+      lName := lItem.Get('name', '');
+      lCalibration := nil;
+      if (ARegistry <> nil) and (Trim(lItem.Get('sdbKey', '')) <> '') then
+        lCalibration := ARegistry.FindCalibrationBySdbKey(
+          lItem.Get('sdbKey', ''));
+      if lCalibration <> nil then
+        lName := lCalibration.Name;
+      lIndex := ATag.CalibrationNames.Add(lName);
       RecorderSetCalibrationStepEnabled(ATag.CalibrationNames, lIndex,
         lItem.Get('enabled', True));
     end
@@ -773,6 +804,7 @@ var
   I, J: Integer;
   lRoot: TJSONObject;
   lGroups: TJSONArray;
+  lCalibration: TRecorderCalibration;
   lTags: TJSONArray;
   lTagJson: TJSONObject;
   lTag: TRecorderTag;
@@ -824,7 +856,6 @@ begin
       lTagJson.Add('sourceId', lTag.SourceId);
       lTagJson.Add('isVirtual', lTag.IsVirtual);
       lTagJson.Add('externalWriteAllowed', lTag.ExternalWriteAllowed);
-      lTagJson.Add('isVector', lTag.IsVector);
       lTagJson.Add('sourceValueMode', lTag.SourceValueMode);
       lTagJson.Add('moduleType', lTag.ModuleType);
       lTagJson.Add('pollFrequencyHz', lTag.PollFrequencyHz);
@@ -838,7 +869,11 @@ begin
       lTagJson.Add('channelCalibrationEnabled', lTag.ChannelCalibrationEnabled);
       SaveTagEstimates(JsonObject(lTagJson, 'estimates'), lTag);
       SaveTagSetpoints(JsonObject(lTagJson, 'setpoints'), lTag);
-      SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'), lTag);
+      lCalibration := ATags.FindCalibrationByName(lTag.HardwareCalibrationName);
+      if (lCalibration <> nil) and (Trim(lCalibration.SdbKey) <> '') then
+        lTagJson.Add('hardwareCalibrationSdbKey', lCalibration.SdbKey);
+      SaveTagCalibrationPipeline(JsonArray(lTagJson, 'calibrationPipeline'),
+        lTag, ATags);
     end;
 
     lText := TStringList.Create;
@@ -905,6 +940,7 @@ var
   lSkippedDuplicateCount: Integer;
   lData: TJSONData;
   lRoot: TJSONObject;
+  lCalibration: TRecorderCalibration;
   lTag: TRecorderTag;
   lTagJson: TJSONObject;
   lGroups: TJSONArray;
@@ -979,8 +1015,6 @@ begin
         lTag.ModuleType := lTagJson.Get('moduleType', lTag.ModuleType);
         lTag.PollFrequencyHz := lTagJson.Get('pollFrequencyHz',
           lTag.PollFrequencyHz);
-        lTag.IsVector := lTagJson.Get('isVector',
-          (not lTag.IsVirtual) and (lTag.PollFrequencyHz > 0));
         lTag.RangeMin := lTagJson.Get('rangeMin', lTag.RangeMin);
         lTag.RangeMax := lTagJson.Get('rangeMax', lTag.RangeMax);
         lTag.AutoRange := lTagJson.Get('autoRange', lTag.AutoRange);
@@ -989,11 +1023,16 @@ begin
           'hardwareCalibrationEnabled', lTag.HardwareCalibrationEnabled);
         lTag.HardwareCalibrationName := lTagJson.Get('hardwareCalibrationName',
           lTag.HardwareCalibrationName);
+        lCalibration := ATags.FindCalibrationBySdbKey(
+          lTagJson.Get('hardwareCalibrationSdbKey', ''));
+        if lCalibration <> nil then
+          lTag.HardwareCalibrationName := lCalibration.Name;
         lTag.ChannelCalibrationEnabled := lTagJson.Get('channelCalibrationEnabled',
           lTag.ChannelCalibrationEnabled);
         LoadTagEstimates(FindObject(lTagJson, 'estimates'), lTag);
         LoadTagSetpoints(FindObject(lTagJson, 'setpoints'), lTag);
-        LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'), lTag);
+        LoadTagCalibrationPipeline(FindArray(lTagJson, 'calibrationPipeline'),
+          lTag, ATags);
         if not ProjectTagBelongsToDeletedSource(ATags, lTag) then
         begin
           ATags.AddTag(lTag);
@@ -1092,6 +1131,9 @@ var
   lGeneratedSignal: TRecorderGeneratedSignal;
   lRole: TRecorderRosetteRole;
   lNamedFont: TRecorderNamedFont;
+  lImpactHammer: TRecorderImpactHammerComponent;
+  lPrimitiveSpec: T3dPrimitiveSpec;
+  lImpactValues: TStringList;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -1172,12 +1214,19 @@ begin
             TRecorder3dComponent(lComponent).CameraPitch);
           lIni.WriteFloat(lSection, 'CameraDistance',
             TRecorder3dComponent(lComponent).CameraDistance);
+          lIni.WriteFloat(lSection,'CameraTargetX',TRecorder3dComponent(lComponent).CameraTargetX);
+          lIni.WriteFloat(lSection,'CameraTargetY',TRecorder3dComponent(lComponent).CameraTargetY);
+          lIni.WriteFloat(lSection,'CameraTargetZ',TRecorder3dComponent(lComponent).CameraTargetZ);
+          lIni.WriteFloat(lSection,'CameraRoll',TRecorder3dComponent(lComponent).CameraRoll);
+          lIni.WriteFloat(lSection,'CameraFov',TRecorder3dComponent(lComponent).CameraFov);
           lIni.WriteBool(lSection, 'DrawFill',
             TRecorder3dComponent(lComponent).DrawFill);
           lIni.WriteBool(lSection, 'DrawWireframe',
             TRecorder3dComponent(lComponent).DrawWireframe);
           lIni.WriteBool(lSection, 'DrawPoints',
             TRecorder3dComponent(lComponent).DrawPoints);
+          lIni.WriteInteger(lSection,'PointColor',
+            TRecorder3dComponent(lComponent).PointColor);
           lIni.WriteBool(lSection, 'DrawNormals',
             TRecorder3dComponent(lComponent).DrawNormals);
           lIni.WriteFloat(lSection, 'NormalLength',
@@ -1188,6 +1237,29 @@ begin
             TRecorder3dComponent(lComponent).NormalLengthTagName);
           lIni.WriteInt64(lSection, 'BindingTargetNodeId',
             TRecorder3dComponent(lComponent).BindingTargetNodeId);
+          lIni.WriteInteger(lSection, 'PrimitiveCount',
+            TRecorder3dComponent(lComponent).PrimitiveCount);
+          for K := 0 to TRecorder3dComponent(lComponent).PrimitiveCount - 1 do
+          begin
+            lPrimitiveSpec := TRecorder3dComponent(lComponent).Primitives[K];
+            lIni.WriteInt64(lSection, Format('Primitive%dId', [K]), lPrimitiveSpec.NodeId);
+            lIni.WriteInteger(lSection, Format('Primitive%dKind', [K]), Ord(lPrimitiveSpec.Kind));
+            lIni.WriteString(lSection, Format('Primitive%dName', [K]), lPrimitiveSpec.Name);
+            lIni.WriteFloat(lSection, Format('Primitive%dX', [K]), lPrimitiveSpec.Position.X);
+            lIni.WriteFloat(lSection, Format('Primitive%dY', [K]), lPrimitiveSpec.Position.Y);
+            lIni.WriteFloat(lSection, Format('Primitive%dZ', [K]), lPrimitiveSpec.Position.Z);
+            lIni.WriteInteger(lSection, Format('Primitive%dIterations', [K]), lPrimitiveSpec.Iterations);
+            lIni.WriteInteger(lSection,
+              Format('Primitive%dCrossSectionIterations',[K]),
+              lPrimitiveSpec.CrossSectionIterations);
+          end;
+          lIni.WriteInteger(lSection, 'RemovedNodeCount',
+            TRecorder3dComponent(lComponent).RemovedNodeCount);
+          lIni.WriteInt64(lSection, 'NextPrimitiveNodeId',
+            TRecorder3dComponent(lComponent).NextPrimitiveNodeId);
+          for K := 0 to TRecorder3dComponent(lComponent).RemovedNodeCount - 1 do
+            lIni.WriteInt64(lSection, Format('RemovedNode%dId', [K]),
+              TRecorder3dComponent(lComponent).RemovedNodeIds[K]);
           lIni.WriteInt64(lSection, 'BindingXTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bPointX]);
           lIni.WriteString(lSection, 'BindingXTagName', TRecorder3dComponent(lComponent).BindingTagNames[r3bPointX]);
           lIni.WriteInt64(lSection, 'BindingYTagId', TRecorder3dComponent(lComponent).BindingTagIds[r3bPointY]);
@@ -1204,8 +1276,97 @@ begin
              lIni.WriteBool(lSection,Format('NodeRender%dFill',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawFill);
              lIni.WriteBool(lSection,Format('NodeRender%dWire',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawWireframe);
              lIni.WriteBool(lSection,Format('NodeRender%dPoints',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawPoints);
-             lIni.WriteBool(lSection,Format('NodeRender%dNormals',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawNormals);
+              lIni.WriteBool(lSection,Format('NodeRender%dNormals',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawNormals);
+              lIni.WriteBool(lSection,Format('NodeRender%dHasSettings',[K]),
+                TRecorder3dComponent(lComponent).NodeRenderOverrides[K].HasRenderSettings);
+              lIni.WriteBool(lSection,Format('NodeRender%dHasTransform',[K]),
+               TRecorder3dComponent(lComponent).NodeRenderOverrides[K].HasTransform);
+             for L:=0 to 15 do
+               lIni.WriteFloat(lSection,Format('NodeRender%dM%d',[K,L]),
+                 TRecorder3dComponent(lComponent).NodeRenderOverrides[K].LocalTransform[L]);
            end;
+          lIni.WriteInteger(lSection,'SkinBindingCount',
+            TRecorder3dComponent(lComponent).SkinBindingCount);
+          for K:=0 to TRecorder3dComponent(lComponent).SkinBindingCount-1 do
+          begin
+            lIni.WriteString(lSection,Format('Skin%dPointName',[K]),
+              TRecorder3dComponent(lComponent).SkinBindings[K].PointName);
+            lIni.WriteInt64(lSection,Format('Skin%dMeshNodeId',[K]),
+              TRecorder3dComponent(lComponent).SkinBindings[K].MeshNodeId);
+            lIni.WriteInt64(lSection,Format('Skin%dLogicalVertexId',[K]),
+              TRecorder3dComponent(lComponent).SkinBindings[K].LogicalVertexId);
+            lIni.WriteInteger(lSection,Format('Skin%dVertexIdKind',[K]),
+              Ord(TRecorder3dComponent(lComponent).SkinBindings[K].VertexIdKind));
+            lIni.WriteInt64(lSection,Format('Skin%dHelperNodeId',[K]),
+              TRecorder3dComponent(lComponent).SkinBindings[K].HelperNodeId);
+            lIni.WriteFloat(lSection,Format('Skin%dWeight',[K]),
+              TRecorder3dComponent(lComponent).SkinBindings[K].Weight);
+            for L:=0 to 15 do
+              lIni.WriteFloat(lSection,Format('Skin%dBindM%d',[K,L]),
+                TRecorder3dComponent(lComponent).SkinBindings[K].HelperBindWorld[L]);
+          end;
+          lIni.WriteInteger(lSection,'SkinBoneCount',
+            TRecorder3dComponent(lComponent).SkinBoneCount);
+          for K:=0 to TRecorder3dComponent(lComponent).SkinBoneCount-1 do
+          begin
+            lIni.WriteInt64(lSection,Format('SkinBone%dHelperNodeId',[K]),
+              TRecorder3dComponent(lComponent).SkinBones[K].HelperNodeId);
+            lIni.WriteInt64(lSection,Format('SkinBone%dOwnerMeshNodeId',[K]),
+              TRecorder3dComponent(lComponent).SkinBones[K].OwnerMeshNodeId);
+            lIni.WriteString(lSection,Format('SkinBone%dName',[K]),
+              TRecorder3dComponent(lComponent).SkinBones[K].Name);
+            for L:=0 to 15 do
+              lIni.WriteFloat(lSection,Format('SkinBone%dBindM%d',[K,L]),
+                TRecorder3dComponent(lComponent).SkinBones[K].BindLocalTransform[L]);
+            for L:=Ord(Low(TRecorder3dSkinAxis)) to
+              Ord(High(TRecorder3dSkinAxis)) do
+            begin
+              lIni.WriteInt64(lSection,Format('SkinBone%dTag%sId',
+                [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
+                TRecorder3dComponent(lComponent).SkinBones[K].TagIds[
+                  TRecorder3dSkinAxis(L)]);
+              lIni.WriteString(lSection,Format('SkinBone%dTag%sName',
+                [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
+                TRecorder3dComponent(lComponent).SkinBones[K].TagNames[
+                  TRecorder3dSkinAxis(L)]);
+            end;
+          end;
+          lIni.WriteInteger(lSection,'GradientStripCount',
+            TRecorder3dComponent(lComponent).GradientStripCount);
+          for K:=0 to TRecorder3dComponent(lComponent).GradientStripCount-1 do
+          begin
+            with TRecorder3dComponent(lComponent).GradientStrips[K] do
+            begin
+              lIni.WriteInt64(lSection,Format('Gradient%dId',[K]),Id);
+              lIni.WriteString(lSection,Format('Gradient%dName',[K]),Name);
+              lIni.WriteInteger(lSection,Format('Gradient%dLeftColor',[K]),LeftColor);
+              lIni.WriteInteger(lSection,Format('Gradient%dRightColor',[K]),RightColor);
+              lIni.WriteFloat(lSection,Format('Gradient%dLeftValue',[K]),LeftValue);
+              lIni.WriteFloat(lSection,Format('Gradient%dRightValue',[K]),RightValue);
+            end;
+          end;
+          lIni.WriteInteger(lSection,'VertexColorAnchorCount',
+            TRecorder3dComponent(lComponent).VertexColorAnchorCount);
+          for K:=0 to TRecorder3dComponent(lComponent).VertexColorAnchorCount-1 do
+          begin
+            with TRecorder3dComponent(lComponent).VertexColorAnchors[K] do
+            begin
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dId',[K]),Id);
+              lIni.WriteString(lSection,Format('ColorAnchor%dName',[K]),Name);
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dMeshNodeId',[K]),MeshNodeId);
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dLogicalVertexId',[K]),LogicalVertexId);
+              lIni.WriteInteger(lSection,Format('ColorAnchor%dVertexIdKind',[K]),Ord(VertexIdKind));
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dRadius',[K]),Radius);
+              lIni.WriteInteger(lSection,Format('ColorAnchor%dFalloff',[K]),Ord(Falloff));
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dExponent',[K]),FalloffExponent);
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dGradientId',[K]),GradientId);
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dTagId',[K]),TagId);
+              lIni.WriteString(lSection,Format('ColorAnchor%dTagName',[K]),TagName);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dEnabled',[K]),Enabled);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dApplyColor',[K]),ApplyColor);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dShowValueLabel',[K]),ShowValueLabel);
+            end;
+          end;
           lIni.WriteFloat(lSection, 'FrfFrequencyHz', TRecorder3dComponent(lComponent).FrfFrequencyHz);
           lIni.WriteFloat(lSection, 'FrfAnimationPhase', TRecorder3dComponent(lComponent).FrfAnimationPhaseRadians);
           lIni.WriteInt64(lSection, 'FrfFrequencyTagId', TRecorder3dComponent(lComponent).FrfFrequencyTagId);
@@ -1215,6 +1376,8 @@ begin
           lIni.WriteInteger(lSection, 'FrfBindingCount', TRecorder3dComponent(lComponent).FrfBindingCount);
           for K:=0 to TRecorder3dComponent(lComponent).FrfBindingCount-1 do
           begin
+            lIni.WriteString(lSection,Format('Frf%dSourceBindingId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].SourceBindingId);
+            lIni.WriteInt64(lSection,Format('Frf%dCurveId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].CurveId);
             lIni.WriteInt64(lSection,Format('Frf%dNodeId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].TargetNodeId);
             lIni.WriteInteger(lSection,Format('Frf%dAxis',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Axis));
             lIni.WriteInteger(lSection,Format('Frf%dSpace',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Space));
@@ -1289,6 +1452,8 @@ begin
               lImage.SvgBindings[K].TagName);
             lIni.WriteInteger(lSection, Format('SvgBinding%dValueKind', [K]),
               Ord(lImage.SvgBindings[K].ValueKind));
+            lIni.WriteString(lSection, Format('SvgBinding%dLiteral', [K]),
+              lImage.SvgBindings[K].LiteralValue);
           end;
         end;
         if lComponent is TRecorderMeasurementSectionComponent then
@@ -1572,6 +1737,19 @@ begin
             lIni.WriteBool(lSection, Format('LissajousLine%dShowDiameterValue', [K]), lLissajousLine.ShowDiameterValue);
           end;
         end;
+        if lComponent is TRecorderImpactHammerComponent then
+        begin
+          lImpactHammer := TRecorderImpactHammerComponent(lComponent);
+          lImpactValues := TStringList.Create;
+          try
+            lImpactHammer.SaveToStrings(lImpactValues, 'Impact.');
+            for L := 0 to lImpactValues.Count - 1 do
+              lIni.WriteString(lSection, lImpactValues.Names[L],
+                lImpactValues.ValueFromIndex[L]);
+          finally
+            lImpactValues.Free;
+          end;
+        end;
         if lComponent is TRecorderFrequencyResponseComponent then
         begin
           lFrequencyResponse := TRecorderFrequencyResponseComponent(lComponent);
@@ -1662,18 +1840,12 @@ begin
               TRecorderSqlTrendComponent(lComponent).FromUtc);
             lIni.WriteFloat(lSection, 'SqlToUtc',
               TRecorderSqlTrendComponent(lComponent).ToUtc);
-            lIni.WriteInteger(lSection, 'SqlMaxPoints',
-              TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
-            lIni.WriteBool(lSection, 'SqlShowEvents',
-              TRecorderSqlTrendComponent(lComponent).ShowEvents);
-            lIni.WriteBool(lSection, 'SqlShowRecordingEvents',
-              TRecorderSqlTrendComponent(lComponent).ShowRecordingEvents);
-            lIni.WriteBool(lSection, 'SqlShowTagAlarmEvents',
-              TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents);
-            lIni.WriteInteger(lSection, 'SqlDisplayCount',
-              TRecorderSqlTrendComponent(lComponent).DisplayCount);
-            lIni.WriteInteger(lSection, 'SqlActiveDisplay',
-              TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex);
+            lIni.WriteInteger(lSection, 'SqlMaxPoints', TRecorderSqlTrendComponent(lComponent).MaxPointsPerLine);
+            lIni.WriteBool(lSection, 'SqlShowEvents', TRecorderSqlTrendComponent(lComponent).ShowEvents);
+            lIni.WriteBool(lSection, 'SqlShowRecordingEvents', TRecorderSqlTrendComponent(lComponent).ShowRecordingEvents);
+            lIni.WriteBool(lSection, 'SqlShowTagAlarmEvents', TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents);
+            lIni.WriteInteger(lSection, 'SqlDisplayCount', TRecorderSqlTrendComponent(lComponent).DisplayCount);
+            lIni.WriteInteger(lSection, 'SqlActiveDisplay', TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex);
             for K := 0 to TRecorderSqlTrendComponent(lComponent).DisplayCount - 1 do
             begin
               lSqlDisplay := TRecorderSqlTrendComponent(lComponent).Displays[K];
@@ -1682,10 +1854,10 @@ begin
               for L := 0 to lSqlDisplay.AxisCount - 1 do
               begin
                 lAxis := lSqlDisplay.Axes[L];
-                lIni.WriteString(lSection, Format('SqlDisplay%dAxis%dName', [K, L]), lAxis.Name);
+                lIni.WriteString(lSection,  Format('SqlDisplay%dAxis%dName', [K, L]), lAxis.Name);
                 lIni.WriteInteger(lSection, Format('SqlDisplay%dAxis%dColor', [K, L]), lAxis.Color);
-                lIni.WriteFloat(lSection, Format('SqlDisplay%dAxis%dRangeMin', [K, L]), lAxis.RangeMin);
-                lIni.WriteFloat(lSection, Format('SqlDisplay%dAxis%dRangeMax', [K, L]), lAxis.RangeMax);
+                lIni.WriteFloat(lSection,   Format('SqlDisplay%dAxis%dRangeMin', [K, L]), lAxis.RangeMin);
+                lIni.WriteFloat(lSection,   Format('SqlDisplay%dAxis%dRangeMax', [K, L]), lAxis.RangeMax);
               end;
               lIni.WriteInteger(lSection, Format('SqlDisplay%dLineCount', [K]), lSqlDisplay.LineCount);
               for L := 0 to lSqlDisplay.LineCount - 1 do
@@ -1740,6 +1912,10 @@ var
   lRole: TRecorderRosetteRole;
   lTypeId: string;
   lIni: TIniFile;
+  lPrimitiveSpec: T3dPrimitiveSpec;
+  lImpactHammer: TRecorderImpactHammerComponent;
+  lImpactValues: TStringList;
+  lImpactError: string;
 begin
   if not FileExists(AFileName) then
     Exit;
@@ -1832,12 +2008,19 @@ begin
               lIni.ReadFloat(lSection, 'CameraPitch', -25);
             TRecorder3dComponent(lComponent).CameraDistance :=
               lIni.ReadFloat(lSection, 'CameraDistance', 6);
+            TRecorder3dComponent(lComponent).CameraTargetX:=lIni.ReadFloat(lSection,'CameraTargetX',0);
+            TRecorder3dComponent(lComponent).CameraTargetY:=lIni.ReadFloat(lSection,'CameraTargetY',0);
+            TRecorder3dComponent(lComponent).CameraTargetZ:=lIni.ReadFloat(lSection,'CameraTargetZ',0);
+            TRecorder3dComponent(lComponent).CameraRoll:=lIni.ReadFloat(lSection,'CameraRoll',0);
+            TRecorder3dComponent(lComponent).CameraFov:=lIni.ReadFloat(lSection,'CameraFov',45);
             TRecorder3dComponent(lComponent).DrawFill :=
               lIni.ReadBool(lSection, 'DrawFill', True);
             TRecorder3dComponent(lComponent).DrawWireframe :=
               lIni.ReadBool(lSection, 'DrawWireframe', False);
             TRecorder3dComponent(lComponent).DrawPoints :=
-              lIni.ReadBool(lSection, 'DrawPoints', False);
+              lIni.ReadBool(lSection, 'DrawPoints', True);
+            TRecorder3dComponent(lComponent).PointColor:=
+              lIni.ReadInteger(lSection,'PointColor',$001080FF);
             TRecorder3dComponent(lComponent).DrawNormals :=
               lIni.ReadBool(lSection, 'DrawNormals', False);
             TRecorder3dComponent(lComponent).NormalLength :=
@@ -1848,6 +2031,39 @@ begin
               lIni.ReadString(lSection, 'NormalLengthTagName', '');
             TRecorder3dComponent(lComponent).BindingTargetNodeId :=
               lIni.ReadInt64(lSection, 'BindingTargetNodeId', 0);
+            TRecorder3dComponent(lComponent).ClearSceneEdits;
+            TRecorder3dComponent(lComponent).NextPrimitiveNodeId :=
+              lIni.ReadInt64(lSection, 'NextPrimitiveNodeId', QWord(1) shl 62);
+            lCount := EnsureRange(lIni.ReadInteger(lSection,
+              'PrimitiveCount', 0), 0, 1024);
+            for K := 0 to lCount - 1 do
+            begin
+              lPrimitiveSpec.NodeId := lIni.ReadInt64(lSection,
+                Format('Primitive%dId', [K]), 0);
+              L := lIni.ReadInteger(lSection, Format('Primitive%dKind', [K]), 0);
+              if L < Ord(Low(T3dPrimitiveKind)) then L := Ord(Low(T3dPrimitiveKind));
+              if L > Ord(High(T3dPrimitiveKind)) then L := Ord(High(T3dPrimitiveKind));
+              lPrimitiveSpec.Kind := T3dPrimitiveKind(L);
+              lPrimitiveSpec.Name := lIni.ReadString(lSection,
+                Format('Primitive%dName', [K]), 'Object');
+              lPrimitiveSpec.Position.X := lIni.ReadFloat(lSection,
+                Format('Primitive%dX', [K]), 0);
+              lPrimitiveSpec.Position.Y := lIni.ReadFloat(lSection,
+                Format('Primitive%dY', [K]), 0);
+              lPrimitiveSpec.Position.Z := lIni.ReadFloat(lSection,
+                Format('Primitive%dZ', [K]), 0);
+              lPrimitiveSpec.Iterations := lIni.ReadInteger(lSection,
+                Format('Primitive%dIterations', [K]),
+                PrimitiveIterationMinimum(lPrimitiveSpec.Kind));
+              lPrimitiveSpec.CrossSectionIterations:=lIni.ReadInteger(lSection,
+                Format('Primitive%dCrossSectionIterations',[K]),1);
+              if lPrimitiveSpec.NodeId <> 0 then
+                TRecorder3dComponent(lComponent).AddPrimitive(lPrimitiveSpec);
+            end;
+            lCount := lIni.ReadInteger(lSection, 'RemovedNodeCount', 0);
+            for K := 0 to lCount - 1 do
+              TRecorder3dComponent(lComponent).MarkNodeRemoved(
+                lIni.ReadInt64(lSection, Format('RemovedNode%dId', [K]), 0));
             TRecorder3dComponent(lComponent).BindingTagIds[r3bPointX] := lIni.ReadInt64(lSection, 'BindingXTagId', 0);
             TRecorder3dComponent(lComponent).BindingTagNames[r3bPointX] := lIni.ReadString(lSection, 'BindingXTagName', '');
             TRecorder3dComponent(lComponent).BindingTagIds[r3bPointY] := lIni.ReadInt64(lSection, 'BindingYTagId', 0);
@@ -1863,9 +2079,122 @@ begin
                NodeId:=lIni.ReadInt64(lSection,Format('NodeRender%dId',[K]),0);
                DrawFill:=lIni.ReadBool(lSection,Format('NodeRender%dFill',[K]),True);
                DrawWireframe:=lIni.ReadBool(lSection,Format('NodeRender%dWire',[K]),False);
-               DrawPoints:=lIni.ReadBool(lSection,Format('NodeRender%dPoints',[K]),False);
-               DrawNormals:=lIni.ReadBool(lSection,Format('NodeRender%dNormals',[K]),False);
+                DrawPoints:=lIni.ReadBool(lSection,Format('NodeRender%dPoints',[K]),False);
+                DrawNormals:=lIni.ReadBool(lSection,Format('NodeRender%dNormals',[K]),False);
+                HasRenderSettings:=lIni.ReadBool(lSection,
+                  Format('NodeRender%dHasSettings',[K]),True);
+                HasTransform:=lIni.ReadBool(lSection,
+                 Format('NodeRender%dHasTransform',[K]),False);
+               if HasTransform then
+                 for L:=0 to 15 do
+                   LocalTransform[L]:=lIni.ReadFloat(lSection,
+                     Format('NodeRender%dM%d',[K,L]),0);
              end;
+            TRecorder3dComponent(lComponent).ClearSkinBindings;
+            lCount:=EnsureRange(lIni.ReadInteger(lSection,
+              'SkinBindingCount',0),0,65536);
+            for K:=0 to lCount-1 do
+              with TRecorder3dComponent(lComponent).AddSkinBinding do
+              begin
+                PointName:=lIni.ReadString(lSection,
+                  Format('Skin%dPointName',[K]),'');
+                MeshNodeId:=lIni.ReadInt64(lSection,
+                  Format('Skin%dMeshNodeId',[K]),0);
+                LogicalVertexId:=LongWord(lIni.ReadInt64(lSection,
+                  Format('Skin%dLogicalVertexId',[K]),0));
+                L:=lIni.ReadInteger(lSection,Format('Skin%dVertexIdKind',[K]),
+                  Ord(svikLegacyCorner));
+                if (L<Ord(Low(T3dSkinVertexIdKind))) or
+                   (L>Ord(High(T3dSkinVertexIdKind))) then
+                  L:=Ord(svikLegacyCorner);
+                VertexIdKind:=T3dSkinVertexIdKind(L);
+                HelperNodeId:=lIni.ReadInt64(lSection,
+                  Format('Skin%dHelperNodeId',[K]),0);
+                Weight:=EnsureRange(lIni.ReadFloat(lSection,
+                  Format('Skin%dWeight',[K]),1),0.0,1.0);
+                for L:=0 to 15 do
+                  HelperBindWorld[L]:=lIni.ReadFloat(lSection,
+                    Format('Skin%dBindM%d',[K,L]),HelperBindWorld[L]);
+              end;
+            TRecorder3dComponent(lComponent).ClearSkinBones;
+            lCount:=EnsureRange(lIni.ReadInteger(lSection,
+              'SkinBoneCount',0),0,4096);
+            for K:=0 to lCount-1 do
+              with TRecorder3dComponent(lComponent).AddSkinBone do
+              begin
+                HelperNodeId:=lIni.ReadInt64(lSection,
+                  Format('SkinBone%dHelperNodeId',[K]),0);
+                OwnerMeshNodeId:=lIni.ReadInt64(lSection,
+                  Format('SkinBone%dOwnerMeshNodeId',[K]),0);
+                Name:=lIni.ReadString(lSection,
+                  Format('SkinBone%dName',[K]),'');
+                for L:=0 to 15 do
+                  BindLocalTransform[L]:=lIni.ReadFloat(lSection,
+                    Format('SkinBone%dBindM%d',[K,L]),BindLocalTransform[L]);
+                for L:=Ord(Low(TRecorder3dSkinAxis)) to
+                  Ord(High(TRecorder3dSkinAxis)) do
+                begin
+                  TagIds[TRecorder3dSkinAxis(L)]:=lIni.ReadInt64(lSection,
+                    Format('SkinBone%dTag%sId',
+                      [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
+                    lIni.ReadInt64(lSection,
+                      Format('SkinBone%dTag%dId',[K,L]),0));
+                  TagNames[TRecorder3dSkinAxis(L)]:=lIni.ReadString(lSection,
+                    Format('SkinBone%dTag%sName',
+                      [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
+                    lIni.ReadString(lSection,
+                      Format('SkinBone%dTag%dName',[K,L]),''));
+                end;
+              end;
+            { Older projects only contain per-vertex Skin records. }
+            if TRecorder3dComponent(lComponent).SkinBoneCount=0 then
+              for K:=0 to TRecorder3dComponent(lComponent).SkinBindingCount-1 do
+                TRecorder3dComponent(lComponent).EnsureSkinBone(
+                  TRecorder3dComponent(lComponent).SkinBindings[K].HelperNodeId,
+                  TRecorder3dComponent(lComponent).SkinBindings[K].PointName);
+            TRecorder3dComponent(lComponent).ClearGradientStrips;
+            lCount:=EnsureRange(lIni.ReadInteger(lSection,
+              'GradientStripCount',0),0,4096);
+            for K:=0 to lCount-1 do
+              with TRecorder3dComponent(lComponent).AddGradientStrip do
+              begin
+                Id:=lIni.ReadInt64(lSection,Format('Gradient%dId',[K]),K+1);
+                Name:=lIni.ReadString(lSection,Format('Gradient%dName',[K]),'Gradient');
+                LeftColor:=lIni.ReadInteger(lSection,Format('Gradient%dLeftColor',[K]),$000000FF);
+                RightColor:=lIni.ReadInteger(lSection,Format('Gradient%dRightColor',[K]),$00FF0000);
+                LeftValue:=lIni.ReadFloat(lSection,Format('Gradient%dLeftValue',[K]),0);
+                RightValue:=lIni.ReadFloat(lSection,Format('Gradient%dRightValue',[K]),1);
+              end;
+            TRecorder3dComponent(lComponent).ClearVertexColorAnchors;
+            lCount:=EnsureRange(lIni.ReadInteger(lSection,
+              'VertexColorAnchorCount',0),0,65536);
+            for K:=0 to lCount-1 do
+              with TRecorder3dComponent(lComponent).AddVertexColorAnchor do
+              begin
+                Id:=lIni.ReadInt64(lSection,Format('ColorAnchor%dId',[K]),K+1);
+                Name:=lIni.ReadString(lSection,Format('ColorAnchor%dName',[K]),'Anchor');
+                MeshNodeId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dMeshNodeId',[K]),0);
+                LogicalVertexId:=LongWord(lIni.ReadInt64(lSection,
+                  Format('ColorAnchor%dLogicalVertexId',[K]),0));
+                L:=EnsureRange(lIni.ReadInteger(lSection,
+                  Format('ColorAnchor%dVertexIdKind',[K]),Ord(svikLogical)),
+                  Ord(Low(T3dSkinVertexIdKind)),Ord(High(T3dSkinVertexIdKind)));
+                VertexIdKind:=T3dSkinVertexIdKind(L);
+                Radius:=Max(0,lIni.ReadFloat(lSection,Format('ColorAnchor%dRadius',[K]),1));
+                L:=EnsureRange(lIni.ReadInteger(lSection,
+                  Format('ColorAnchor%dFalloff',[K]),Ord(vcfLinear)),
+                  Ord(Low(T3dVertexColorFalloff)),Ord(High(T3dVertexColorFalloff)));
+                Falloff:=T3dVertexColorFalloff(L);
+                FalloffExponent:=Max(0.01,lIni.ReadFloat(lSection,
+                  Format('ColorAnchor%dExponent',[K]),2));
+                GradientId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dGradientId',[K]),0);
+                TagId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dTagId',[K]),0);
+                TagName:=lIni.ReadString(lSection,Format('ColorAnchor%dTagName',[K]),'');
+                Enabled:=lIni.ReadBool(lSection,Format('ColorAnchor%dEnabled',[K]),True);
+                ApplyColor:=lIni.ReadBool(lSection,Format('ColorAnchor%dApplyColor',[K]),True);
+                ShowValueLabel:=lIni.ReadBool(lSection,
+                  Format('ColorAnchor%dShowValueLabel',[K]),False);
+              end;
             TRecorder3dComponent(lComponent).FrfFrequencyHz:=lIni.ReadFloat(lSection,'FrfFrequencyHz',100);
             TRecorder3dComponent(lComponent).FrfAnimationPhaseRadians:=lIni.ReadFloat(lSection,'FrfAnimationPhase',0);
             TRecorder3dComponent(lComponent).FrfFrequencyTagId:=lIni.ReadInt64(lSection,'FrfFrequencyTagId',0);
@@ -1876,6 +2205,8 @@ begin
             lCount:=lIni.ReadInteger(lSection,'FrfBindingCount',0);
             for K:=0 to lCount-1 do with TRecorder3dComponent(lComponent).AddFrfBinding do
             begin
+              SourceBindingId:=lIni.ReadString(lSection,Format('Frf%dSourceBindingId',[K]),'');
+              CurveId:=lIni.ReadInt64(lSection,Format('Frf%dCurveId',[K]),K+1);
               TargetNodeId:=lIni.ReadInt64(lSection,Format('Frf%dNodeId',[K]),0);
               SetAxisOrdinal(lIni.ReadInteger(lSection,Format('Frf%dAxis',[K]),0));
               SetSpaceOrdinal(lIni.ReadInteger(lSection,Format('Frf%dSpace',[K]),0));
@@ -1969,6 +2300,9 @@ begin
                   Format('SvgBinding%dValueKind', [K]), 0),
                   Ord(Low(TRecorderSvgValueKind)),
                   Ord(High(TRecorderSvgValueKind))));
+              lImage.SvgBindings[lImage.SvgBindingCount - 1].LiteralValue :=
+                lIni.ReadString(lSection,
+                  Format('SvgBinding%dLiteral', [K]), '');
             end;
           end;
           if lComponent is TRecorderMeasurementSectionComponent then
@@ -2331,19 +2665,19 @@ begin
             end
             else
             begin
-            TRecorderLissajousComponent(lComponent).XTagName := lIni.ReadString(lSection, 'XTagName', '');
-            TRecorderLissajousComponent(lComponent).YTagName := lIni.ReadString(lSection, 'YTagName', '');
-            TRecorderLissajousComponent(lComponent).XTagId := lIni.ReadInt64(lSection, 'XTagId', 0);
-            TRecorderLissajousComponent(lComponent).YTagId := lIni.ReadInt64(lSection, 'YTagId', 0);
-            TRecorderLissajousComponent(lComponent).DurationSec := lIni.ReadFloat(lSection, 'DurationSec', 0.3);
-            TRecorderLissajousComponent(lComponent).RangeMinX := lIni.ReadFloat(lSection, 'RangeMinX', -3);
-            TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
-            TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
-            TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
-            TRecorderLissajousComponent(lComponent).KeepSquare :=
-              lIni.ReadBool(lSection, 'KeepSquare', False);
-            TRecorderLissajousComponent(lComponent).LineColor := lIni.ReadInt64(lSection, 'LineColor', $00FF0000);
-            TRecorderLissajousComponent(lComponent).LineWidth := lIni.ReadInteger(lSection, 'LineWidth', 2);
+              TRecorderLissajousComponent(lComponent).XTagName := lIni.ReadString(lSection, 'XTagName', '');
+              TRecorderLissajousComponent(lComponent).YTagName := lIni.ReadString(lSection, 'YTagName', '');
+              TRecorderLissajousComponent(lComponent).XTagId := lIni.ReadInt64(lSection, 'XTagId', 0);
+              TRecorderLissajousComponent(lComponent).YTagId := lIni.ReadInt64(lSection, 'YTagId', 0);
+              TRecorderLissajousComponent(lComponent).DurationSec := lIni.ReadFloat(lSection, 'DurationSec', 0.3);
+              TRecorderLissajousComponent(lComponent).RangeMinX := lIni.ReadFloat(lSection, 'RangeMinX', -3);
+              TRecorderLissajousComponent(lComponent).RangeMaxX := lIni.ReadFloat(lSection, 'RangeMaxX', 3);
+              TRecorderLissajousComponent(lComponent).RangeMinY := lIni.ReadFloat(lSection, 'RangeMinY', -3);
+              TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
+              TRecorderLissajousComponent(lComponent).KeepSquare :=
+                lIni.ReadBool(lSection, 'KeepSquare', False);
+              TRecorderLissajousComponent(lComponent).LineColor := lIni.ReadInt64(lSection, 'LineColor', $00FF0000);
+              TRecorderLissajousComponent(lComponent).LineWidth := lIni.ReadInteger(lSection, 'LineWidth', 2);
             end;
             { Диапазоны и длительность общие для всех линий. }
             TRecorderLissajousComponent(lComponent).DurationSec := lIni.ReadFloat(lSection, 'DurationSec', 0.3);
@@ -2353,6 +2687,21 @@ begin
             TRecorderLissajousComponent(lComponent).RangeMaxY := lIni.ReadFloat(lSection, 'RangeMaxY', 3);
             TRecorderLissajousComponent(lComponent).KeepSquare :=
               lIni.ReadBool(lSection, 'KeepSquare', False);
+          end;
+          if lComponent is TRecorderImpactHammerComponent then
+          begin
+            lImpactHammer := TRecorderImpactHammerComponent(lComponent);
+            lImpactValues := TStringList.Create;
+            try
+              lIni.ReadSectionValues(lSection, lImpactValues);
+              if not lImpactHammer.LoadFromStrings(lImpactValues, 'Impact.',
+                lImpactError) then
+                raise ERecorderFormError.CreateFmt(
+                  'Invalid impact-hammer component in %s: %s',
+                  [lSection, lImpactError]);
+            finally
+              lImpactValues.Free;
+            end;
           end;
           if lComponent is TRecorderFrequencyResponseComponent then
           begin
@@ -2553,9 +2902,10 @@ begin
                   end;
                 end;
                 if TRecorderSqlTrendComponent(lComponent).DisplayCount = 0 then
+                begin
                   TRecorderSqlTrendComponent(lComponent).AddDisplay('Отображение 1');
-                TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex :=
-                  lIni.ReadInteger(lSection, 'SqlActiveDisplay', 0);
+                end;
+                TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex := lIni.ReadInteger(lSection, 'SqlActiveDisplay', 0);
               end;
             end;
           end;          lPage.AddComponent(lComponent);

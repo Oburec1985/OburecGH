@@ -36,6 +36,7 @@ type
     constructor Create(const AConfigFileName, AConfigText: string;
       AUpdateTimeMs: Cardinal);
     destructor Destroy; override;
+    procedure PrepareHardware; override;
     procedure Start; override;
     procedure Stop; override;
   end;
@@ -47,7 +48,8 @@ procedure RecorderSqlSourceAddBinding(AArray: TJSONArray; const ASignalName,
 implementation
 
 uses
-  jsonparser, uRecorderConfiguredDataSources;
+  jsonparser, uRecorderConfiguredDataSources, uRecorderSqlDbRuntime,
+  uRecorderHardwareLiveDevices, uRecorderDebugLog;
 
 procedure RecorderSqlSourceAddBinding(AArray: TJSONArray;
   const ASignalName, ATagName, AUnitName: string);
@@ -122,6 +124,26 @@ begin
   inherited Destroy;
 end;
 
+procedure TRecorderSqlDataSource.PrepareHardware;
+var
+  lError: string;
+begin
+  inherited PrepareHardware;
+  if RecorderSqlServerAvailable(fConfig, lError) then
+  begin
+    { После восстановления не переиспользуем соединение, на котором ранее
+      была обнаружена потеря сервера. Это допустимо здесь: PrepareHardware
+      выполняется при загрузке/переконфигурации, а не в Play/Stop. }
+    fRepository.Close;
+    RecorderHardwareClearSourceOffline(SourceId);
+    Exit;
+  end;
+
+  RecorderHardwareMarkSourceOffline(SourceId, lError);
+  RecorderDebugLog(Format('[DataSource:%s] SQL server unavailable: %s',
+    [SourceId, lError]));
+end;
+
 function TRecorderSqlDataSource.BindingBySignal(
   const AName: string): TRecorderSqlSourceBinding;
 var
@@ -160,7 +182,12 @@ end;
 
 procedure TRecorderSqlDataSource.Stop;
 begin
-  fRepository.Close;
+  { После потери сервера Close может попытаться завершить Firebird-транзакцию
+    через уже оборванную сеть. Offline-источник не должен выполнять SQL I/O в
+    общей цепочке Stop; repository будет освобождён при замене/удалении
+    конфигурации вне перехода Play -> Stop. }
+  if not RecorderHardwareIsSourceOffline(SourceId) then
+    fRepository.Close;
   inherited Stop;
 end;
 
@@ -168,8 +195,21 @@ procedure TRecorderSqlDataSource.DoTick;
 var
   I: Integer;
   lBinding: TRecorderSqlSourceBinding;
+  lError: string;
   lValues: TRecorderSqlLatestValues;
 begin
+  { Проверка выполняется до SQL-запроса. Если сервер пропал уже во время
+    Preview/Record, поток сам переводит источник в offline и завершается;
+    последующий Stop не ждёт системный таймаут Firebird. }
+  if not RecorderSqlServerAvailable(fConfig, lError) then
+  begin
+    RecorderHardwareMarkSourceOffline(SourceId, lError);
+    RecorderDebugLog(Format('[DataSource:%s] SQL server lost: %s',
+      [SourceId, lError]));
+    RequestStop;
+    Exit;
+  end;
+
   fRepository.ReadLatestSignalValues(fSignalNames, lValues);
   for I := 0 to High(lValues) do
   begin

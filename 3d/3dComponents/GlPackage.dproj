@@ -60,6 +60,7 @@
 			<DCCReference Include="xmlrtl.dcp"/>
 			<DCCReference Include="vclactnband.dcp"/>
 			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="VirtualTreesR.dcp"/>
 			<DCCReference Include="dcl_own.dcp"/>
 			<DCCReference Include="vcldb.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>

@@ -1,0 +1,67 @@
+object RecorderMdbDialog: TRecorderMdbDialog
+  Left = 300
+  Height = 560
+  Top = 160
+  Width = 960
+  BorderStyle = bsSizeable
+  Caption = 'Контекст измерения: изделие и испытание'
+  ClientHeight = 560
+  ClientWidth = 960
+  Constraints.MinHeight = 500
+  Constraints.MinWidth = 920
+  Position = poScreenCenter
+  object ObjectPan: TPanel
+    Left = 0 Height = 510 Top = 0 Width = 300 Align = alLeft TabOrder = 0
+    object lblObjectSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 50 Caption = 'Поиск'
+    end
+    object edObjectSearch: TEdit Left = 10 Height = 27 Top = 30 Width = 280 Anchors = [akTop, akLeft, akRight] OnChange = edObjectSearchChange TabOrder = 0
+    end
+    object lbObjects: TListBox Left = 10 Height = 260 Top = 65 Width = 280 Anchors = [akTop, akLeft, akRight, akBottom] OnSelectionChange = lbObjectsSelectionChange TabOrder = 1
+    end
+    object lblObjectName: TLabel Left = 10 Height = 17 Top = 338 Width = 110 Anchors = [akLeft, akBottom] Caption = 'Новое изделие'
+    end
+    object edObjectName: TEdit Left = 10 Height = 27 Top = 358 Width = 280 Anchors = [akLeft, akRight, akBottom] TabOrder = 2
+    end
+    object lblObjectType: TLabel Left = 10 Height = 17 Top = 390 Width = 85 Anchors = [akLeft, akBottom] Caption = 'Тип изделия'
+    end
+    object edObjectType: TEdit Left = 100 Height = 27 Top = 385 Width = 190 Anchors = [akLeft, akRight, akBottom] TabOrder = 3
+    end
+    object lblObjectSerial: TLabel Left = 10 Height = 17 Top = 422 Width = 85 Anchors = [akLeft, akBottom] Caption = 'Серийный №'
+    end
+    object edObjectSerial: TEdit Left = 100 Height = 27 Top = 417 Width = 190 Anchors = [akLeft, akRight, akBottom] TabOrder = 4
+    end
+    object btnCreateObject: TButton Left = 10 Height = 32 Top = 462 Width = 280 Anchors = [akLeft, akRight, akBottom] Caption = 'Создать изделие' OnClick = btnCreateObjectClick TabOrder = 5
+    end
+  end
+  object SplitterLeft: TSplitter Left = 300 Height = 510 Top = 0 Width = 5 Align = alLeft MinSize = 220
+  end
+  object TestPan: TPanel Left = 305 Height = 510 Top = 0 Width = 270 Align = alLeft TabOrder = 1
+    object lblTestSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 50 Caption = 'Поиск'
+    end
+    object edTestSearch: TEdit Left = 10 Height = 27 Top = 30 Width = 250 Anchors = [akTop, akLeft, akRight] OnChange = edTestSearchChange TabOrder = 0
+    end
+    object lbTests: TListBox Left = 10 Height = 330 Top = 65 Width = 250 Anchors = [akTop, akLeft, akRight, akBottom] OnSelectionChange = lbTestsSelectionChange TabOrder = 1
+    end
+    object lblTestName: TLabel Left = 10 Height = 17 Top = 405 Width = 120 Anchors = [akLeft, akBottom] Caption = 'Новое испытание'
+    end
+    object edTestName: TEdit Left = 10 Height = 27 Top = 425 Width = 250 Anchors = [akLeft, akRight, akBottom] TabOrder = 2
+    end
+    object btnCreateTest: TButton Left = 10 Height = 32 Top = 462 Width = 250 Anchors = [akLeft, akRight, akBottom] Caption = 'Создать испытание' Enabled = False OnClick = btnCreateTestClick TabOrder = 3
+    end
+  end
+  object SplitterRight: TSplitter Left = 575 Height = 510 Top = 0 Width = 5 Align = alLeft MinSize = 220
+  end
+  object ClientPan: TPanel Left = 580 Height = 510 Top = 0 Width = 380 Align = alClient TabOrder = 2
+    object lblContext: TLabel Left = 10 Height = 20 Top = 10 Width = 250 Caption = 'Замеры выбранного испытания'
+    end
+    object lvMeasurements: TListView Left = 10 Height = 460 Top = 38 Width = 360 Anchors = [akTop, akLeft, akRight, akBottom] ReadOnly = True RowSelect = True ViewStyle = vsReport TabOrder = 0
+      Columns = <item Caption = 'Начало' Width = 135 end item Caption = 'Статус' Width = 75 end item Caption = 'Значений' Width = 70 end item Caption = 'Файлов' Width = 60 end>
+    end
+  end
+  object BottomPan: TPanel Left = 0 Height = 50 Top = 510 Width = 960 Align = alBottom TabOrder = 3
+    object btnSelect: TButton Left = 720 Height = 32 Top = 9 Width = 110 Anchors = [akTop, akRight] Caption = 'Выбрать' Default = True Enabled = False OnClick = btnSelectClick TabOrder = 0
+    end
+    object btnCancel: TButton Left = 840 Height = 32 Top = 9 Width = 110 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 1
+    end
+  end
+end

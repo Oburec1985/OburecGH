@@ -23,7 +23,7 @@ uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   ComCtrls, ImgList, Grids, Buttons, Menus, LCLType, LCLIntf, LMessages,
   uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags, uMeraFile,
-  uRecorderCommandImages, uTagSettingsDialog, uComponentServices,
+  uRecorderCommandImages, uRcIconIds, uTagSettingsDialog, uComponentServices,
   uRecorderSpectrumEngine, uRecorderFrequencyBands, uRecorderFrequencyBandsDialog,
   uRecorderHardwareTree, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderTagBalance, uRecorder, uRecorderSettingsSourceProbe,
@@ -323,6 +323,8 @@ type
       ARefreshUi: Boolean = True);
     procedure DeleteMic185Source(const ASourceId: string);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
+    function TagCanZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
+      ATags: TList): Boolean;
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
       ATags: TList);
 
@@ -774,10 +776,10 @@ end;
 
 const
   CDeviceRootImageIndex = CIconDeviceRoot;
-  CDeviceControllerImageIndex = 42;
-  CDeviceDisabledImageIndex = 41;
-  CDeviceInactiveTagImageIndex = 54;
-  CDeviceVirtualTagImageIndex = 20;
+  CDeviceControllerImageIndex = CIconDeviceControllerState;
+  CDeviceDisabledImageIndex = CIconDeviceDisabled;
+  CDeviceInactiveTagImageIndex = CIconInactiveTag;
+  CDeviceVirtualTagImageIndex = CIconVirtualTag;
   CDeviceInactiveTagIconSize = 16;
   CDeviceModuleImageIndex = CIconDeviceModule;
   CDeviceTreeProbeTimeoutMs = 1000;
@@ -2092,9 +2094,6 @@ begin
   ATag.IsVirtual := RecorderIsVirtualTagSource(lSourceId);
   ATag.ModuleType := ASignal.ModuleName;
   ATag.PollFrequencyHz := ASignal.FrequencyHz;
-  { Общий контракт: любой нескалярный сигнал с частотой дискретизации
-    публикуется тегом как векторный, независимо от модели устройства. }
-  ATag.IsVector := ASignal.FrequencyHz > 0.0;
   ATag.SourceValueMode := ASignal.SourceValueMode;
   if Trim(ATag.Description) = '' then
     if SameText(ASignal.ModuleName, 'MIC-140') then
@@ -2435,9 +2434,9 @@ begin
 
   lBeforeProgramming := SelectedTagsProgrammingSignature;
   lDialogOk := ShowTagSettingsDialog(Self, fRecorder.TagRegistry, ATags,
-    fTagDialogImageList,
-      ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup, @TagZeroBalance,
-      fDeviceImageList);
+    fRecorder.DataSources, fTagDialogImageList,
+      ReadSecondsAsMs(fDataUpdateEdit, 200), @TagHardwareSourceSetup,
+      @TagCanZeroBalance, @TagZeroBalance, fDeviceImageList);
   if lDialogOk then
   begin
     { Имя, единицы, ГХ и оценки не требуют пересоздания источника.
@@ -6297,6 +6296,12 @@ begin
   ApplySpectrumConfiguration;
 end;
 
+function TRecorderSettingsDialog.TagCanZeroBalance(Sender: TObject;
+  ARegistry: TRecorderTagRegistry; ATags: TList): Boolean;
+begin
+  Result := RecorderCanZeroBalanceTags(ATags, fRecorder.DataSources);
+end;
+
 procedure TRecorderSettingsDialog.ShowSelectedHardwareSourceAddress;
 var
   lSourceId: string;
@@ -7015,7 +7020,6 @@ begin
     Exit;
   end;
   lTag := fRecorder.TagRegistry.CreateTag(lName, 4096, True);
-  lTag.IsVector := lIsVector;
   lTag.PollFrequencyHz := lFrequencyHz;
   lTag.SourceId := 'manual';
   if lIsVector then

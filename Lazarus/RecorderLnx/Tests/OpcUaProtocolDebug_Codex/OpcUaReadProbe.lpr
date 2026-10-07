@@ -22,6 +22,10 @@ var
   lNodes: TObjectList;
   lQuality: Cardinal;
   lTime, lValue: Double;
+  lStringNodeId: string;
+  lStringNodeIds, lStringValues: TRecorderOpcUaStringArray;
+  lStringTimes: TRecorderOpcUaDoubleArray;
+  lStringQualities: TRecorderOpcUaCardinalArray;
 begin
   if ParamCount > 0 then lEndpoint := ParamStr(1)
   else lEndpoint := CEndpoint;
@@ -48,6 +52,11 @@ begin
       for I := 0 to lNodes.Count - 1 do
       begin
         lNode := TRecorderOpcUaDiscoveredNode(lNodes[I]);
+        if (lStringNodeId = '') and
+          (SameText(lNode.DataTypeNodeId, 'i=12') or
+           SameText(lNode.DataTypeNodeId, 'ns=0;i=12')) and
+          lNode.CanRead then
+          lStringNodeId := lNode.NodeId;
         if Pos('Tag_[', lNode.DisplayName) = 1 then
         begin
           Inc(lTagChildren);
@@ -78,6 +87,22 @@ begin
       end;
       WriteLn('INDEXED COUNTS: Tag_=', lTagChildren,
         ' Tags_=', lTagsChildren);
+      if lStringNodeId <> '' then
+      begin
+        SetLength(lStringNodeIds, 1);
+        lStringNodeIds[0] := lStringNodeId;
+        if not lClient.ReadStrings(lStringNodeIds, lStringValues,
+          lStringTimes, lStringQualities) then
+        begin
+          WriteLn('STRING READ FAIL: ', lClient.ErrorText);
+          Halt(5);
+        end;
+        WriteLn('STRING READ OK: ', lStringNodeId, ' value=',
+          lStringValues[0], ' quality=0x',
+          IntToHex(lStringQualities[0], 8));
+      end
+      else
+        WriteLn('STRING READ SKIP: no readable String node');
     finally
       lNodes.Free;
     end;

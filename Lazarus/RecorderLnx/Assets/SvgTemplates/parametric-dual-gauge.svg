@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- RecorderLnx parameterized SVG template; parameters include defaults. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="540"
+     viewBox="0 0 700 540">
+  <rect width="700" height="540" fill="{{BackgroundColor|#ffffff}}"/>
+
+  <g id="dial">
+    <circle cx="350" cy="235" r="210" fill="{{DialColor|#c8c8c8}}"
+            stroke="{{OutlineColor|#000000}}" stroke-width="7"/>
+
+    <!-- recorder-deg-dash keeps public Sweep values in degrees while the
+         RecorderLnx preprocessor supplies BGRASVG with physical arc lengths. -->
+    <g fill="none" stroke-width="20" stroke-linecap="butt">
+      <g transform="rotate({{LeftGreenStart|-180}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{LeftGreenColor|#2eaa3b}}"
+              stroke-dasharray="recorder-deg-dash({{LeftGreenSweep|120}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+      <g transform="rotate({{LeftWarningStart|-60}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{LeftWarningColor|#f4a11e}}"
+              stroke-dasharray="recorder-deg-dash({{LeftWarningSweep|30}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+      <g transform="rotate({{LeftAlarmStart|-30}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{LeftAlarmColor|#ef2a28}}"
+              stroke-dasharray="recorder-deg-dash({{LeftAlarmSweep|30}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+
+      <g transform="rotate({{RightGreenStart|0}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{RightGreenColor|#2eaa3b}}"
+              stroke-dasharray="recorder-deg-dash({{RightGreenSweep|120}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+      <g transform="rotate({{RightWarningStart|120}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{RightWarningColor|#f4a11e}}"
+              stroke-dasharray="recorder-deg-dash({{RightWarningSweep|30}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+      <g transform="rotate({{RightAlarmStart|150}} 350 235)"><circle cx="350" cy="235" r="198"
+              stroke="{{RightAlarmColor|#ef2a28}}"
+              stroke-dasharray="recorder-deg-dash({{RightAlarmSweep|30}},198) 2000"
+              transform="rotate(-90 350 235)"/></g>
+    </g>
+
+    <!-- TickCount controls evenly spaced radial marks around the complete dial. -->
+    <path d="recorder-ticks({{TickCount|24}},350,235,188,210)"
+          fill="none" stroke="{{TickColor|#111111}}" stroke-width="2"/>
+
+    <!-- Values belong to the two independent semicircular scales.  Separate
+         parameters keep unequal engineering ranges possible on one dial. -->
+    <g id="scale-labels" font-family="{{FontFamily|Arial}}"
+       font-size="{{ScaleFontSize|28}}" fill="{{ScaleTextColor|#111111}}">
+      <text x="332" y="420" text-anchor="end">{{LeftScaleMin|0}}</text>
+      <text x="174" y="244" text-anchor="middle">{{LeftScaleMid|3}}</text>
+      <text x="332" y="73" text-anchor="end">{{LeftScaleMax|6}}</text>
+
+      <text x="368" y="420" text-anchor="start">{{RightScaleMin|0}}</text>
+      <text x="500" y="335" text-anchor="middle">{{RightScaleLow|1}}</text>
+      <text x="500" y="160" text-anchor="middle">{{RightScaleHigh|2}}</text>
+      <text x="368" y="73" text-anchor="start">{{RightScaleMax|3}}</text>
+    </g>
+
+    <!-- Pointed needles reach the inner edge of the coloured scale.  Their
+         white fill retains the original outlined-arrow appearance. -->
+    <g transform="rotate(recorder-value-angle({{LeftValue|2.8}},{{LeftScaleMin|0}},{{LeftScaleMax|6}},-180,0) 350 235)">
+      <path d="M344 235 L350 43 L356 235 Z"
+            fill="#ffffff" stroke="{{LeftNeedleColor|#174cff}}"
+            stroke-width="2" stroke-linejoin="miter"/>
+    </g>
+    <g transform="rotate(recorder-value-angle({{RightValue|1.4}},{{RightScaleMin|0}},{{RightScaleMax|3}},180,0) 350 235)">
+      <path d="M344 235 L350 43 L356 235 Z"
+            fill="#ffffff" stroke="{{RightNeedleColor|#174cff}}"
+            stroke-width="2" stroke-linejoin="miter"/>
+    </g>
+
+    <circle cx="350" cy="235" r="39" fill="{{HubColor|#ffffff}}"
+            stroke="{{OutlineColor|#000000}}" stroke-width="2"/>
+    <text x="350" y="226" text-anchor="middle"
+          font-family="{{FontFamily|Arial}}" font-size="{{CaptionFontSize|24}}"
+          fill="{{CaptionColor|#001180}}">{{Caption|ЛЕВ}}</text>
+    <text x="350" y="253" text-anchor="middle"
+          font-family="{{FontFamily|Arial}}" font-size="{{UnitFontSize|22}}"
+          fill="{{UnitColor|#111111}}">{{DialUnit|A V}}</text>
+  </g>
+
+  <!-- display accepts inline/none. Bind with the special visibility source. -->
+  <g id="left-indicator" display="{{LeftIndicatorVisible|inline}}">
+    <rect x="64" y="472" width="140" height="58" rx="16"
+          fill="{{LeftIndicatorColor|#35b63e}}"
+          stroke="{{OutlineColor|#000000}}" stroke-width="4"/>
+    <text x="134" y="512" text-anchor="middle"
+          font-family="{{FontFamily|Arial}}" font-size="{{ValueFontSize|34}}"
+          fill="{{ValueColor|#000000}}">{{LeftValue|2.8}}</text>
+    <text x="219" y="514" font-family="{{FontFamily|Arial}}"
+          font-size="{{IndicatorUnitFontSize|28}}"
+          fill="{{UnitColor|#111111}}">{{LeftUnit|A}}</text>
+  </g>
+
+  <g id="right-indicator" display="{{RightIndicatorVisible|inline}}">
+    <rect x="496" y="472" width="140" height="58" rx="16"
+          fill="{{RightIndicatorColor|#ef302e}}"
+          stroke="{{OutlineColor|#000000}}" stroke-width="4"/>
+    <text x="566" y="512" text-anchor="middle"
+          font-family="{{FontFamily|Arial}}" font-size="{{ValueFontSize|34}}"
+          fill="{{ValueColor|#000000}}">{{RightValue|1.4}}</text>
+    <text x="650" y="514" font-family="{{FontFamily|Arial}}"
+          font-size="{{IndicatorUnitFontSize|28}}"
+          fill="{{UnitColor|#111111}}">{{RightUnit|V}}</text>
+  </g>
+</svg>

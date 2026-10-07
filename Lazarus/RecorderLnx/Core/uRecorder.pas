@@ -11,7 +11,7 @@ interface
 uses
 
   Classes, SysUtils,
-  uRecorderCoreServices, uRecorderTags, uRecorderDataSources,
+  uRecorderCoreServices, uRecorderTags, uRecorderMessages, uRecorderDataSources,
   uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderEventQueue, uRecorderTimeSystem,
   uRecorderSpectrumRuntime, uRecorderAlgorithmManager, uRecorderAlarms,
@@ -23,6 +23,7 @@ type
   private
     fEventBus: TRecorderEventBus;
     fTagRegistry: TRecorderTagRegistry;
+    fMessageRegistry: TRecorderMessageRegistry;
     fDataSourceManager: TRecorderDataSourceManager;
     fStateMachine: TRecorderStateMachine;
     fRunSettings: TRecorderRunControlSettings;
@@ -42,6 +43,7 @@ type
     property EventBus: TRecorderEventBus read fEventBus;
     property TagRegistry: TRecorderTagRegistry read fTagRegistry;
     property Tags: TRecorderTagRegistry read fTagRegistry;
+    property Messages: TRecorderMessageRegistry read fMessageRegistry;
     property DataSources: TRecorderDataSourceManager read fDataSourceManager;
     property StateMachine: TRecorderStateMachine read fStateMachine;
     property RunSettings: TRecorderRunControlSettings read fRunSettings;
@@ -71,6 +73,7 @@ begin
   inherited Create;
   fEventBus := TRecorderEventBus.Create;
   fTagRegistry := TRecorderTagRegistry.Create(fEventBus);
+  fMessageRegistry := TRecorderMessageRegistry.Create;
   fDataSourceManager := TRecorderDataSourceManager.Create;
   fStateMachine := TRecorderStateMachine.Create;
   fRunSettings := TRecorderRunControlSettings.Create;
@@ -124,6 +127,7 @@ begin
   fTagRegistry.TimeSystem := nil;
   FreeAndNil(fTimeSystem);
   FreeAndNil(fTagRegistry);
+  FreeAndNil(fMessageRegistry);
   FreeAndNil(fRunSettings);
   FreeAndNil(fStateMachine);
   FreeAndNil(fEventBus);

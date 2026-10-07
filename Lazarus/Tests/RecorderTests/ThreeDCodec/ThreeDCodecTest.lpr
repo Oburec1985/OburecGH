@@ -45,6 +45,41 @@ begin
   finally Reader.Free; end;
 end;
 
+procedure TestShapeObr(const AFileName: string; const ALimits: T3dReadLimits);
+var
+  Reader: T3dObrReader;
+  Scene: T3dScene;
+  I: Integer;
+  Shape: T3dNode;
+begin
+  Check(FileExists(AFileName), 'shape fixture not found: ' + AFileName);
+  Reader := T3dObrReader.Create(ALimits);
+  try
+    Scene := Reader.LoadFromFile(AFileName);
+    try
+      Shape := nil;
+      for I := 0 to High(Scene.Nodes) do
+        if Scene.Nodes[I].Kind = nkShape then
+          begin
+            Shape := Scene.Nodes[I];
+            Break;
+          end;
+      Check(Shape <> nil, 'shape fixture contains no shape node');
+      Check(Shape.Bounds.Valid, 'OBR shape points do not produce node bounds');
+      Check(Scene.Bounds.Valid, 'OBR shape points do not produce scene bounds');
+      Check(Length(Shape.ShapeLines) > 0, 'OBR shape has no lines');
+      Check(Length(Shape.ShapeLines[0].Points) > 0,
+        'OBR shape line has no points');
+      WriteLn('PASS OBR shape ', ExtractFileName(AFileName),
+        ' lines=', Length(Shape.ShapeLines));
+    finally
+      Scene.Free;
+    end;
+  finally
+    Reader.Free;
+  end;
+end;
+
 procedure TestPair(const AObr, AOba: string; const ALimits: T3dReadLimits);
 var Obr: T3dObrReader; Oba: T3dObaReader; Scene: T3dScene; Animation: T3dAnimation;
 begin
@@ -92,6 +127,7 @@ begin
     TestObr(IncludeTrailingPathDelimiter(Root) + 'turbina.OBR', Limits);
     TestObr(IncludeTrailingPathDelimiter(Root) + 'skin.OBR', Limits);
     TestObr(IncludeTrailingPathDelimiter(Root) + 'airplane_5.OBR', Limits);
+    TestShapeObr(IncludeTrailingPathDelimiter(Root) + 'Type_001.OBR', Limits);
     TestPair(IncludeTrailingPathDelimiter(Root) + 'Animation.OBR',
       IncludeTrailingPathDelimiter(Root) + 'Animation.oba', Limits);
     TempName := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'three_d_truncated.obr';

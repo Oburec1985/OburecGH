@@ -24,7 +24,7 @@ unit uRecorderCoreServices;
 interface
 
 uses
-  Classes, SysUtils, uRecorderStateMachine;
+  Classes, SysUtils, SyncObjs, uRecorderStateMachine;
 
 type
   { Тип события RecorderLnx.
@@ -92,12 +92,26 @@ type
     public
       Token: Integer;                 { Уникальный токен подписки }
       Handler: TRecorderEventHandler; { Обработчик события }
+      Active: Boolean;
+      InFlight: Integer;
+      DeferredFree: Boolean;
+      Idle: TEvent;
+      constructor Create;
+      destructor Destroy; override;
     end;
   private
     fNextToken: Integer;              { Счетчик для генерации следующего токена }
     fSubscriptions: TList;            { Список активных подписок (TSubscription) }
     fLock: TRTLCriticalSection;
+    fPublishers: Integer;
+    fPublishersIdle: TEvent;
+    fShuttingDown: Boolean;
+    function BeginPublish: Boolean;
+    procedure EndPublish;
+    function FindSubscription(AToken: Integer): TSubscription;
     function GetSubscription(AIndex: Integer): TSubscription;
+    function LeaseSubscription(AToken: Integer): TSubscription;
+    procedure ReleaseSubscription(ASubscription: TSubscription);
   public
     { Создает пустую шину событий }
     constructor Create;
@@ -111,9 +125,9 @@ type
     function Unsubscribe(AToken: Integer): Boolean;
 
     { Синхронно рассылает событие всем текущим подписчикам.
-      Если обработчик отписывает себя или других подписчиков во время обработки,
-      текущая рассылка продолжает идти по снимку списка, чтобы не пропускать
-      соседние обработчики из-за сдвига индексов. }
+      Снимок токенов фиксирует порядок: новая подписка получит следующее
+      событие, а отписанная до своего хода уже не вызывается. Unsubscribe из
+      другого потока возвращается после завершения уже идущего callback. }
     procedure Publish(const AEvent: TRecorderEvent);
 
     { Удобный конструктор события без объектной нагрузки }
@@ -300,12 +314,50 @@ implementation
 uses
   uRecorderDebugLog;
 
+type
+  PRecorderEventCallbackFrame = ^TRecorderEventCallbackFrame;
+  TRecorderEventCallbackFrame = record
+    Subscription: Pointer;
+    Previous: PRecorderEventCallbackFrame;
+  end;
+
+threadvar
+  gRecorderEventCallbackFrame: PRecorderEventCallbackFrame;
+
+function CurrentThreadInvokes(ASubscription: Pointer): Boolean;
+var
+  lFrame: PRecorderEventCallbackFrame;
+begin
+  lFrame := gRecorderEventCallbackFrame;
+  while lFrame <> nil do
+  begin
+    if lFrame^.Subscription = ASubscription then
+      Exit(True);
+    lFrame := lFrame^.Previous;
+  end;
+  Result := False;
+end;
+
 { TRecorderEventBus }
+
+constructor TRecorderEventBus.TSubscription.Create;
+begin
+  inherited Create;
+  Active := True;
+  Idle := TEvent.Create(nil, True, True, '');
+end;
+
+destructor TRecorderEventBus.TSubscription.Destroy;
+begin
+  Idle.Free;
+  inherited Destroy;
+end;
 
 constructor TRecorderEventBus.Create;
 begin
   inherited Create;
   fSubscriptions := TList.Create;
+  fPublishersIdle := TEvent.Create(nil, True, True, '');
   fNextToken := 1;
   InitCriticalSection(fLock);
 end;
@@ -313,17 +365,120 @@ end;
 destructor TRecorderEventBus.Destroy;
 var
   I: Integer;
+  lSubscriptions: TList;
 begin
-  for I := 0 to fSubscriptions.Count - 1 do
-    TObject(fSubscriptions[I]).Free;
+  lSubscriptions := TList.Create;
+  EnterCriticalSection(fLock);
+  try
+    fShuttingDown := True;
+    for I := 0 to fSubscriptions.Count - 1 do
+    begin
+      GetSubscription(I).Active := False;
+      lSubscriptions.Add(fSubscriptions[I]);
+    end;
+    fSubscriptions.Clear;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+
+  { Publishers release subscription leases before their bus-level lease. This
+    lets shutdown reclaim handlers first, then the list and critical section. }
+  for I := 0 to lSubscriptions.Count - 1 do
+  begin
+    TSubscription(lSubscriptions[I]).Idle.WaitFor(INFINITE);
+    { Pair with ReleaseSubscription: the event may wake before that method has
+      left the bus lock, so cross the same lock before reclaiming its object. }
+    EnterCriticalSection(fLock);
+    LeaveCriticalSection(fLock);
+    TObject(lSubscriptions[I]).Free;
+  end;
+  lSubscriptions.Free;
+  fPublishersIdle.WaitFor(INFINITE);
   fSubscriptions.Free;
+  fPublishersIdle.Free;
   DoneCriticalSection(fLock);
   inherited Destroy;
+end;
+
+function TRecorderEventBus.BeginPublish: Boolean;
+begin
+  EnterCriticalSection(fLock);
+  try
+    Result := not fShuttingDown;
+    if Result then
+    begin
+      if fPublishers = 0 then
+        fPublishersIdle.ResetEvent;
+      Inc(fPublishers);
+    end;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+procedure TRecorderEventBus.EndPublish;
+begin
+  EnterCriticalSection(fLock);
+  try
+    Dec(fPublishers);
+    if fPublishers = 0 then
+      fPublishersIdle.SetEvent;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
 end;
 
 function TRecorderEventBus.GetSubscription(AIndex: Integer): TSubscription;
 begin
   Result := TSubscription(fSubscriptions[AIndex]);
+end;
+
+function TRecorderEventBus.FindSubscription(AToken: Integer): TSubscription;
+var
+  I: Integer;
+begin
+  for I := 0 to fSubscriptions.Count - 1 do
+    if GetSubscription(I).Token = AToken then
+      Exit(GetSubscription(I));
+  Result := nil;
+end;
+
+function TRecorderEventBus.LeaseSubscription(
+  AToken: Integer): TSubscription;
+begin
+  Result := nil;
+  EnterCriticalSection(fLock);
+  try
+    Result := FindSubscription(AToken);
+    if (Result = nil) or not Result.Active then
+      Exit(nil);
+    if Result.InFlight = 0 then
+      Result.Idle.ResetEvent;
+    Inc(Result.InFlight);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+procedure TRecorderEventBus.ReleaseSubscription(
+  ASubscription: TSubscription);
+var
+  lFree: Boolean;
+begin
+  lFree := False;
+  EnterCriticalSection(fLock);
+  try
+    Dec(ASubscription.InFlight);
+    if ASubscription.InFlight = 0 then
+    begin
+      ASubscription.Idle.SetEvent;
+      lFree := ASubscription.DeferredFree;
+    end;
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+  if lFree then
+    ASubscription.Free;
 end;
 
 function TRecorderEventBus.Subscribe(AHandler: TRecorderEventHandler): Integer;
@@ -334,11 +489,11 @@ begin
     raise ERecorderCoreServiceError.Create('Event handler cannot be empty');
 
   lSubscription := TSubscription.Create;
-  lSubscription.Token := fNextToken;
   lSubscription.Handler := AHandler;
-  Inc(fNextToken);
   EnterCriticalSection(fLock);
   try
+    lSubscription.Token := fNextToken;
+    Inc(fNextToken);
     fSubscriptions.Add(lSubscription);
   finally
     LeaveCriticalSection(fLock);
@@ -348,24 +503,44 @@ end;
 
 function TRecorderEventBus.Unsubscribe(AToken: Integer): Boolean;
 var
-  I: Integer;
   lSubscription: TSubscription;
+  lWait: Boolean;
 begin
   Result := False;
+  lSubscription := nil;
+  lWait := False;
   EnterCriticalSection(fLock);
   try
-    for I := 0 to fSubscriptions.Count - 1 do
+    lSubscription := FindSubscription(AToken);
+    if lSubscription <> nil then
     begin
-      lSubscription := GetSubscription(I);
-      if lSubscription.Token = AToken then
+      lSubscription.Active := False;
+      fSubscriptions.Remove(lSubscription);
+      Result := True;
+      if lSubscription.InFlight = 0 then
+        lWait := False
+      else if CurrentThreadInvokes(lSubscription) then
       begin
-        fSubscriptions.Delete(I);
-        lSubscription.Free;
-        Exit(True);
-      end;
+        { Waiting for a callback already on this thread would deadlock. Its
+          final ReleaseSubscription owns deferred reclamation instead. }
+        lSubscription.DeferredFree := True;
+        lSubscription := nil;
+      end
+      else
+        lWait := True;
     end;
   finally
     LeaveCriticalSection(fLock);
+  end;
+  if lSubscription <> nil then
+  begin
+    if lWait then
+    begin
+      lSubscription.Idle.WaitFor(INFINITE);
+      EnterCriticalSection(fLock);
+      LeaveCriticalSection(fLock);
+    end;
+    lSubscription.Free;
   end;
 end;
 
@@ -374,35 +549,40 @@ var
   I: Integer;
   lSnapshot: TList;
   lSubscription: TSubscription;
+  lFrame: TRecorderEventCallbackFrame;
   lStart: QWord;
 begin
+  if not BeginPublish then
+    Exit;
   lStart := GetTickCount64;
   lSnapshot := TList.Create;
   try
     EnterCriticalSection(fLock);
     try
       for I := 0 to fSubscriptions.Count - 1 do
-        lSnapshot.Add(fSubscriptions[I]);
+        lSnapshot.Add(Pointer(PtrInt(GetSubscription(I).Token)));
     finally
       LeaveCriticalSection(fLock);
     end;
 
     for I := 0 to lSnapshot.Count - 1 do
     begin
-      lSubscription := TSubscription(lSnapshot[I]);
-      EnterCriticalSection(fLock);
+      lSubscription := LeaseSubscription(PtrInt(lSnapshot[I]));
+      if lSubscription = nil then
+        Continue;
+      lFrame.Subscription := lSubscription;
+      lFrame.Previous := gRecorderEventCallbackFrame;
+      gRecorderEventCallbackFrame := @lFrame;
       try
-        if fSubscriptions.IndexOf(lSubscription) < 0 then
-          lSubscription := nil;
-      finally
-        LeaveCriticalSection(fLock);
-      end;
-
-      if lSubscription <> nil then
         lSubscription.Handler(Self, AEvent);
+      finally
+        gRecorderEventCallbackFrame := lFrame.Previous;
+        ReleaseSubscription(lSubscription);
+      end;
     end;
   finally
     lSnapshot.Free;
+    EndPublish;
   end;
   if GetTickCount64 - lStart > 5 then
     { Streaming debug: EventBus timing suppressed.

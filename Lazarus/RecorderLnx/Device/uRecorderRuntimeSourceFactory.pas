@@ -333,7 +333,8 @@ begin
         end;
     end;
 
-  ARecorder.DataSources.ConfigureTagsAll(ARecorder.TagRegistry);
+  ARecorder.DataSources.ConfigureTagsAll(ARecorder.TagRegistry,
+    ARecorder.Messages);
 end;
 
 procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;

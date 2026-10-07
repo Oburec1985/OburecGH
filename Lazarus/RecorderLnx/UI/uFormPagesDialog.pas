@@ -20,8 +20,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids,
-  uRecorderFormModel;
+  Grids, Buttons, ImgList,
+  uRecorderFormModel, uRcIconIds;
 
 type
   { TFormPagesDialog
@@ -32,7 +32,7 @@ type
     fFactory: TRecorderFormFactory;        { Фабрика создания форм }
     fBackgroundEdit: TEdit;                { Путь к фоновому изображению страницы }
     fKeepAspectCheck: TCheckBox;
-    fChooseBackgroundButton: TButton;
+    fChooseBackgroundButton: TSpeedButton;
     fClearBackgroundButton: TButton;
     fDetachButton: TButton;                        { Открепить/вернуть пользовательский формуляр }
     fGrid: TStringGrid;                    { Таблица со списком страниц }
@@ -60,13 +60,16 @@ type
     function GetSelectedPageIndex: Integer;
     function PageDescription(APage: TRecorderFormPage): string;
     function UniquePageId: string;
+    procedure SetupIconButton(AButton: TSpeedButton; AImages: TCustomImageList;
+      AImageIndex: Integer);
   public
     { Конструктор диалогового окна
       AManager   - ссылка на менеджер форм.
       AFactory   - ссылка на фабрику форм.
       ANextPageNo - начальный номер для генерации новых страниц. }
     constructor CreateDialog(AOwner: TComponent; AManager: TRecorderFormManager;
-      AFactory: TRecorderFormFactory; ANextPageNo: Integer);
+      AFactory: TRecorderFormFactory; ANextPageNo: Integer;
+      AImages: TCustomImageList = nil);
     property NextPageNo: Integer read fNextPageNo;
   end;
 
@@ -78,15 +81,15 @@ const
 
 constructor TFormPagesDialog.CreateDialog(AOwner: TComponent;
   AManager: TRecorderFormManager; AFactory: TRecorderFormFactory;
-  ANextPageNo: Integer);
+  ANextPageNo: Integer; AImages: TCustomImageList);
 var
   lNameLabel: TLabel;
   lBackgroundLabel: TLabel;
-  lAddMnemonic: TButton;
+  lAddMnemonic: TSpeedButton;
   lActivate: TButton;
   lOk: TButton;
   lCancel: TButton;
-  lDelete: TButton;
+  lDelete: TSpeedButton;
   lMoveUp: TButton;
   lMoveDown: TButton;
   lImport: TButton;
@@ -132,7 +135,7 @@ begin
   fGrid.ColWidths[1] := 280;
   fGrid.OnSelectCell := @SelectCell;
 
-  lDelete := TButton.Create(Self);
+  lDelete := TSpeedButton.Create(Self);
   lDelete.Parent := Self;
   lDelete.Left := 482;
   lDelete.Top := 74;
@@ -140,6 +143,7 @@ begin
   lDelete.Height := 24;
   lDelete.Caption := 'Delete';
   lDelete.OnClick := @DeleteClick;
+  SetupIconButton(lDelete, AImages, CIconRemove);
 
   lMoveUp := TButton.Create(Self);
   lMoveUp.Parent := Self;
@@ -177,7 +181,7 @@ begin
   lExport.Caption := 'Export';
   lExport.Enabled := False;
 
-  lAddMnemonic := TButton.Create(Self);
+  lAddMnemonic := TSpeedButton.Create(Self);
   lAddMnemonic.Parent := Self;
   lAddMnemonic.Left := 10;
   lAddMnemonic.Top := 310;
@@ -185,6 +189,7 @@ begin
   lAddMnemonic.Height := 24;
   lAddMnemonic.Caption := 'Add mnemonic';
   lAddMnemonic.OnClick := @AddMnemonicClick;
+  SetupIconButton(lAddMnemonic, AImages, CIconAdd);
 
   lBackgroundLabel := TLabel.Create(Self);
   lBackgroundLabel.Parent := Self;
@@ -199,7 +204,7 @@ begin
   fBackgroundEdit.Width := 320;
   fBackgroundEdit.ReadOnly := True;
 
-  fChooseBackgroundButton := TButton.Create(Self);
+  fChooseBackgroundButton := TSpeedButton.Create(Self);
   fChooseBackgroundButton.Parent := Self;
   fChooseBackgroundButton.Left := 378;
   fChooseBackgroundButton.Top := 250;
@@ -207,6 +212,7 @@ begin
   fChooseBackgroundButton.Height := 26;
   fChooseBackgroundButton.Caption := 'Выбрать...';
   fChooseBackgroundButton.OnClick := @ChooseBackgroundClick;
+  SetupIconButton(fChooseBackgroundButton, AImages, CIconImageComponent);
 
   fClearBackgroundButton := TButton.Create(Self);
   fClearBackgroundButton.Parent := Self;
@@ -474,6 +480,20 @@ begin
   lPage.Detached := not lPage.Detached;
   UpdatePageEditors(lPage);
   RefreshGrid;
+end;
+
+procedure TFormPagesDialog.SetupIconButton(AButton: TSpeedButton;
+  AImages: TCustomImageList; AImageIndex: Integer);
+begin
+  if (AButton = nil) or (AImages = nil) or (AImageIndex < 0) or
+    (AImageIndex >= AImages.Count) then
+    Exit;
+  AButton.Images := AImages;
+  AButton.ImageIndex := AImageIndex;
+  AButton.ImageWidth := 18;
+  AButton.Layout := blGlyphLeft;
+  AButton.Margin := 5;
+  AButton.Spacing := 4;
 end;
 
 procedure TFormPagesDialog.AddMnemonicClick(Sender: TObject);

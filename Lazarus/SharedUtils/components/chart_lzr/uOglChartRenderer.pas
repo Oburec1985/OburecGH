@@ -1217,11 +1217,13 @@ begin
   if (lPixelX1 >= ARect.Left) and (lPixelX1 <= ARect.Right) then
   begin
     SetGLColor(ACursor.Color);
+    glPushAttrib(GL_ENABLE_BIT or GL_LINE_BIT);
     glLineWidth(2.0);
+    glDisable(GL_LINE_SMOOTH);
     glLineStipple(2, $0F0F);
     glEnable(GL_LINE_STIPPLE);
     DrawLine(lPixelX1, ARect.Bottom, lPixelX1, ARect.Top);
-    glDisable(GL_LINE_STIPPLE);
+    glPopAttrib;
 
     if ACursor.ShowLabel then
     begin
@@ -1236,11 +1238,13 @@ begin
     if (lPixelX2 >= ARect.Left) and (lPixelX2 <= ARect.Right) then
     begin
       SetGLColor(ACursor.Color);
+      glPushAttrib(GL_ENABLE_BIT or GL_LINE_BIT);
       glLineWidth(1.5);
+      glDisable(GL_LINE_SMOOTH);
       glLineStipple(2, $3333);
       glEnable(GL_LINE_STIPPLE);
       DrawLine(lPixelX2, ARect.Bottom, lPixelX2, ARect.Top);
-      glDisable(GL_LINE_STIPPLE);
+      glPopAttrib;
 
       if ACursor.ShowLabel then
       begin

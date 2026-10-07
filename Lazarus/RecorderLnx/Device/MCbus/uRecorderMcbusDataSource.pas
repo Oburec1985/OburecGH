@@ -415,7 +415,6 @@ begin
           берём фактическую частоту именно сопоставленного канала. Общая частота
           контроллера здесь затёрла бы выбранное пользователем значение слота. }
         lTag.PollFrequencyHz := lChannels[I].PollFrequencyHz;
-        lTag.IsVector := lChannels[I].PollFrequencyHz > 0.0;
         RecorderMc201SyncTagUnitFromHardwareGx(Registry, lTag);
         fChannelTags[I] := lTag;
         Break;

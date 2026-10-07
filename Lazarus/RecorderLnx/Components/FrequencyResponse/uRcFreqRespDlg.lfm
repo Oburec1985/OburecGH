@@ -1,0 +1,84 @@
+object RcFreqRespDlg: TRcFreqRespDlg
+  Left = 220
+  Height = 650
+  Top = 120
+  Width = 980
+  BorderStyle = bsSizeable
+  Caption = 'Настройка АФЧХ'
+  ClientHeight = 650
+  ClientWidth = 980
+  Constraints.MinHeight = 600
+  Constraints.MinWidth = 860
+  Position = poOwnerFormCenter
+  LCLVersion = '2.2.6.0'
+  object pnlLeft: TPanel
+    Left = 0 Height = 650 Top = 0 Width = 310 Align = alLeft Caption = '' TabOrder = 0
+    object fTree: TTreeView
+      Left = 1 Height = 587 Top = 1 Width = 308 Align = alClient ReadOnly = True
+      TabOrder = 0 OnChange = TreeChange
+    end
+    object btnDel: TButton
+      Left = 1 Height = 30 Top = 588 Width = 308 Align = alBottom
+      Caption = 'Удалить выбранное' TabOrder = 1 OnClick = DeleteClick
+    end
+    object btnAddAxis: TButton
+      Left = 1 Height = 31 Top = 618 Width = 308 Align = alBottom
+      Caption = 'Добавить ось' TabOrder = 2 OnClick = AddAxisClick
+    end
+  end
+  object pnlMain: TPanel
+    Left = 310 Height = 650 Top = 0 Width = 670 Align = alClient Caption = '' TabOrder = 1
+    object fProps: TPanel
+      Left = 1 Height = 370 Top = 1 Width = 668 Align = alTop Caption = '' TabOrder = 0
+      object lblName: TLabel Left = 12 Height = 15 Top = 15 Width = 31 Caption = 'Имя:' end
+      object fName: TEdit Left = 180 Height = 27 Top = 10 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 0 end
+      object lblKind: TLabel Left = 12 Height = 15 Top = 47 Width = 67 Caption = 'Тип линии:' end
+      object fKind: TComboBox Left = 180 Height = 27 Top = 42 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 1 end
+      object lblValue: TLabel Left = 12 Height = 15 Top = 79 Width = 92 Caption = 'Тег результата:' end
+      object fValueTag: TComboBox Left = 180 Height = 27 Top = 74 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 2 end
+      object lblFreq: TLabel Left = 12 Height = 15 Top = 111 Width = 76 Caption = 'Тег частоты:' end
+      object fFreqTag: TComboBox Left = 180 Height = 27 Top = 106 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 3 end
+      object lblMinY: TLabel Left = 12 Height = 15 Top = 143 Width = 54 Caption = 'Минимум:' end
+      object fMinY: TEdit Left = 180 Height = 27 Top = 138 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 4 end
+      object lblMaxY: TLabel Left = 12 Height = 15 Top = 175 Width = 58 Caption = 'Максимум:' end
+      object fMaxY: TEdit Left = 180 Height = 27 Top = 170 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 5 end
+      object lblBuf: TLabel Left = 12 Height = 15 Top = 207 Width = 92 Caption = 'Размер буфера:' end
+      object fBufSize: TEdit Left = 180 Height = 27 Top = 202 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 6 end
+      object lblStep: TLabel Left = 12 Height = 15 Top = 239 Width = 72 Caption = 'Шаг dX, Гц:' end
+      object fStep: TEdit Left = 180 Height = 27 Top = 234 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 7 end
+      object lblMerge: TLabel Left = 12 Height = 15 Top = 271 Width = 113 Caption = 'Совпавшие точки:' end
+      object fMerge: TComboBox Left = 180 Height = 27 Top = 266 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 8 end
+      object fUniform: TCheckBox Left = 180 Height = 23 Top = 298 Width = 140 Caption = 'Равномерный X' TabOrder = 9 end
+      object fDrawLine: TCheckBox Left = 325 Height = 23 Top = 298 Width = 75 Caption = 'Линия' TabOrder = 10 end
+      object fDrawPoints: TCheckBox Left = 400 Height = 23 Top = 298 Width = 75 Caption = 'Точки' TabOrder = 11 end
+      object lblStyle: TLabel Left = 12 Height = 15 Top = 335 Width = 105 Caption = 'Цвет / толщина:' end
+      object fColor: TColorButton Left = 180 Height = 27 Top = 330 Width = 95 Caption = 'Цвет' TabOrder = 12 end
+      object fWidth: TEdit Left = 285 Height = 27 Top = 330 Width = 60 TabOrder = 13 end
+      object fLogY: TCheckBox Left = 355 Height = 23 Top = 330 Width = 190 Caption = 'Логарифмическая ось Y' TabOrder = 14 end
+    end
+    object pnlBottom: TPanel
+      Left = 1 Height = 50 Top = 599 Width = 668 Align = alBottom Caption = '' TabOrder = 2
+      object lblMinX: TLabel Left = 12 Height = 15 Top = 18 Width = 40 Caption = 'X min:' end
+      object fMinX: TEdit Left = 58 Height = 27 Top = 11 Width = 75 TabOrder = 0 end
+      object lblMaxX: TLabel Left = 141 Height = 15 Top = 18 Width = 43 Caption = 'X max:' end
+      object fMaxX: TEdit Left = 190 Height = 27 Top = 11 Width = 75 TabOrder = 1 end
+      object fLogX: TCheckBox Left = 275 Height = 23 Top = 13 Width = 75 Caption = 'Лог X' TabOrder = 2 end
+      object fLegend: TCheckBox Left = 352 Height = 23 Top = 13 Width = 90 Caption = 'Легенда' TabOrder = 3 end
+      object btnOk: TButton Left = 486 Height = 30 Top = 10 Width = 80 Anchors = [akTop, akRight] Caption = 'OK' Default = True TabOrder = 4 OnClick = OkClick end
+      object btnCancel: TButton Left = 578 Height = 30 Top = 10 Width = 80 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end
+    end
+    object pnlAvail: TPanel
+      Left = 1 Height = 228 Top = 371 Width = 668 Align = alClient Caption = '' TabOrder = 1
+      object fSearch: TEdit
+        Left = 1 Height = 28 Top = 1 Width = 666 Align = alTop
+        TextHint = 'Поиск доступных сигналов по имени, адресу или описанию'
+        TabOrder = 0 OnChange = SearchChange
+      end
+      object fAvailable: TListBox Left = 1 Height = 166 Top = 29 Width = 666 Align = alClient MultiSelect = True TabOrder = 1 end
+      object btnAddLines: TButton
+        Left = 1 Height = 32 Top = 195 Width = 666 Align = alBottom
+        Caption = 'Добавить выбранные сигналы линиями' TabOrder = 2 OnClick = AddLinesClick
+      end
+    end
+  end
+end

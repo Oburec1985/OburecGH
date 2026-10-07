@@ -43,11 +43,11 @@ uses
   uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
   uRecorderPluginApi,
-  uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
+  uRecorderCoreServices, uRecorderTags, uRecorderMessages, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderTagRefs,
-  uRecorderCommandImages, uRecorderProjectFiles, uRecorderDigitalPageView,
+  uRecorderCommandImages, uRcIconIds, uRecorderProjectFiles, uRecorderDigitalPageView,
   uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
@@ -61,6 +61,7 @@ uses
   uRecorderMeasurementSectionView, uRecorderTrendView,
   uRecorderFrequencyResponseModel, uRecorderFrequencyResponseView,
   uRecorder3dModel, uRecorder3dView,
+  uRecorderImpactHammerModel, uRecorderImpactSessionCommands,
   uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
@@ -69,6 +70,7 @@ uses
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
+  TRecorderDigitalViewMode = (rdvmTags, rdvmMessages);
 
   { TMainForm }
 
@@ -86,14 +88,16 @@ type
     btnSaveConfigAs: TSpeedButton;               // Кнопка сохранения текущей конфигурации проекта
     btnSettings: TSpeedButton;                   // Кнопка вызова общего диалога настроек
     btnStop: TSpeedButton;                       // Кнопка останова сбора/записи
+    btnViewMessages: TSpeedButton;
+    btnViewTags: TSpeedButton;
     edTagSearch: TEdit;                          // Поле поиска (фильтрации) тегов
     ilCommandButtons: TImageList;                // Список картинок для кнопок управления
-    ilTagDialogButtons: TImageList;              // Список картинок для кнопок настройки каналов
     lbState: TLabel;                             // Текстовый индикатор текущего состояния автомата
     lbTags: TListView;                           // Список тегов проекта с их текущими значениями
     lbTime: TLabel;                              // Индикатор времени (системного или длительности записи)
     mmLog: TMemo;                                // Поле вывода протокола (лога) работы программы
     pnMain: TPanel;                              // Главная центральная панель (область формуляров)
+    pnDataView: TPanel;
     pnRight: TPanel;                             // Правая боковая панель
     pnRightCommands: TPanel;                     // Панель кнопок управления сбором
     pnRightStatus: TPanel;                       // Панель индикатора состояния
@@ -120,6 +124,7 @@ type
     procedure btnSqlDbClick(Sender: TObject);
     procedure cbSqlDbRecordingChange(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
+    procedure btnViewModeClick(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -190,6 +195,9 @@ type
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
+    fDigitalViewMode: TRecorderDigitalViewMode;
+    fMessageRevision: QWord;
+    fMessageRows: TRecorderMessageSnapshotArray;
     fLastPluginInputRevision: QWord;              // Только входы источников; выходы расчётов не запускают Lua повторно
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fUpdatingSqlDbRecording: Boolean;
@@ -300,6 +308,7 @@ type
     function IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
     { Рисует встроенный цифровой формуляр. }
     procedure RenderDigitalPage(ARebuild: Boolean = True);
+    procedure RenderMessages(ARebuild: Boolean);
     { Рисует встроенную базовую страницу с осциллограммами. }
     procedure RenderBasePage;
     { Перестраивает набор осциллограмм на базовой странице. }
@@ -435,6 +444,8 @@ type
     procedure DeferredPrepareRuntime({%H-}Data: PtrInt);
     procedure OnMenuEditSelectedTags(Sender: TObject);
     procedure TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
+    function TagCanZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
+      ATags: TList): Boolean;
     procedure TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
       ATags: TList);
     { Callback registry: обеспечивает штатный Preview перед сбором градуировки. }
@@ -553,6 +564,7 @@ begin
 
   fSelectedComponentRow := -1;
   fRecorder := TRecorder.Create;
+  SetRecorderImpactDefaultSavePathProvider(@CurrentMeasureDir);
   fApplicationController := TRecorderApplicationController.Create(fRecorder, Self);
   fRecorder.TagRegistry.OnEnsureCalibrationData := @EnsureTagCalibrationData;
   fRecorder.TagRegistry.OnReleaseCalibrationData := @ReleaseTagCalibrationData;
@@ -579,6 +591,7 @@ begin
   RegisterRecorderSignalGeneratorFactory(fComponentFactory);
   RegisterRecorderFrequencyResponseFactory(fComponentFactory);
   RegisterRecorder3dFactory(fComponentFactory);
+  RegisterRecorderImpactHammerFactory(fComponentFactory);
   RegisterRecorderSqlTrendFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
   fMeasurementSectionFactory := fComponentFactory.FindFactory(
@@ -599,7 +612,8 @@ begin
   fPluginRuntime.LoadConfigured(RecorderPluginConfigFileName);
   ConfigureCoordinatorClient;
 
-  LoadRecorderCommandImages(ilCommandButtons);
+  RegenerateRecorderDesignerIcons(ilCommandButtons);
+  ValidateRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
   SetupCommandButtons;
   EnsureWinposPopupMenu;
@@ -609,6 +623,7 @@ begin
   EnsureBaseToolbar;
   fFormEditor := TFormEditorController.Create(fEditorCanvas, @GetActiveEditorPage,
     fComponentFactory);
+  fFormEditor.CommandImages := ilCommandButtons;
   fFormEditor.OnChanged := @FormEditorChanged;
   fFormEditor.OnPlaceComponent := @PlaceSelectedTool;
   fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine, fRecorder.RunSettings.DisplayBufferMs / 1000);
@@ -741,7 +756,7 @@ end;
 procedure TMainForm.ScheduleCommandLineDeviceTests;
 begin
   RecorderScheduleCommandLineDeviceTests(Self, fRecorder, ilCommandButtons,
-    ilTagDialogButtons, @DeviceTestStartPreview, @DeviceTestDataSourcesRunning,
+    ilCommandButtons, @DeviceTestStartPreview, @DeviceTestDataSourcesRunning,
     @DeviceTestLog, @DeviceTestFinished);
 end;
 
@@ -804,6 +819,7 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  SetRecorderImpactDefaultSavePathProvider(nil);
   SaveMainWindowLayout;
   FreeAndNil(fWindowDragTrace);
   if fCoordinatorTimer <> nil then
@@ -862,6 +878,16 @@ begin
   if (aRow > 0) and (gdSelected in aState) then Exit;
   if aRow <= 0 then
     Exit;
+
+  if fDigitalViewMode = rdvmMessages then
+  begin
+    if aRow <= Length(fMessageRows) then
+    begin
+      sgFormular.Canvas.Brush.Color := TColor(fMessageRows[aRow - 1].Color);
+      sgFormular.Canvas.Font.Color := clBlack;
+    end;
+    Exit;
+  end;
 
   { Единица «код» — серый фон ячейки Unit. }
   lUnit := Trim(sgFormular.Cells[3, aRow]);
@@ -1000,7 +1026,7 @@ var
 begin
   try
     lDialog := TFormPagesDialog.CreateDialog(Self, fFormManager, fFormFactory,
-      fNextPageNo);
+      fNextPageNo, ilCommandButtons);
     try
       if lDialog.ShowModal in [mrOk, mrCancel] then
       begin
@@ -1490,7 +1516,7 @@ begin
       lSourcesWereRunning := fRecorder.DataSources.Running;
       lDataSourcesChanged := False;
       lSettingsAccepted := ShowRecorderSettingsDialog(Self, fRecorder,
-        ilCommandButtons, ilTagDialogButtons, lDataSourcesChanged,
+        ilCommandButtons, ilCommandButtons, lDataSourcesChanged,
         fPluginRuntime);
       lExitStarted := GetTickCount64;
       if lSettingsAccepted then
@@ -1566,6 +1592,16 @@ begin
       end;
     lChanges.Free;
   end;
+end;
+
+procedure TMainForm.btnViewModeClick(Sender: TObject);
+begin
+  if Sender = btnViewMessages then
+    fDigitalViewMode := rdvmMessages
+  else
+    fDigitalViewMode := rdvmTags;
+  fMessageRevision := 0;
+  RenderDigitalPage(True);
 end;
 
 procedure TMainForm.btnSqlDbClick(Sender: TObject);
@@ -2319,6 +2355,7 @@ procedure TMainForm.ShowEditorSurface(AVisible: Boolean);
 begin
   EnsureEditorSurface;
   fEditorShell.Visible := AVisible;
+  pnDataView.Visible := False;
 
   { The editor shell and the built-in digital grid share pnMain with the base
     oscillogram surface. When the editor is hidden we send it back explicitly so
@@ -2370,14 +2407,76 @@ procedure TMainForm.RenderDigitalPage(ARebuild: Boolean);
 begin
   ShowBaseToolbar(False);
   ShowEditorSurface(False);
+  pnDataView.Visible := True;
+  pnDataView.BringToFront;
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  if ARebuild then
-    RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
-      fRecorder.AlarmEngine)
-  else
-    UpdateRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
-      fRecorder.AlarmEngine);
+  if fDigitalViewMode = rdvmMessages then
+    RenderMessages(ARebuild)
+  else if ARebuild then
+      RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
+        fRecorder.AlarmEngine)
+    else
+      UpdateRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
+        fRecorder.AlarmEngine);
+end;
+
+procedure TMainForm.RenderMessages(ARebuild: Boolean);
+var
+  I: Integer;
+  lRevision: QWord;
+  lTimeText, lTypeText: string;
+begin
+  lRevision := fRecorder.Messages.CopySnapshot(fMessageRows,
+    fMessageRevision);
+  if (not ARebuild) and (lRevision = fMessageRevision) then Exit;
+  fMessageRevision := lRevision;
+
+  sgFormular.BeginUpdate;
+  try
+    sgFormular.ColCount := 6;
+    sgFormular.FixedRows := 1;
+    sgFormular.RowCount := Max(2, Length(fMessageRows) + 1);
+    sgFormular.Cells[0, 0] := 'Сообщение';
+    sgFormular.Cells[1, 0] := 'Источник';
+    sgFormular.Cells[2, 0] := 'Значение';
+    sgFormular.Cells[3, 0] := 'Время';
+    sgFormular.Cells[4, 0] := 'Тип';
+    sgFormular.Cells[5, 0] := 'Качество';
+    sgFormular.ColWidths[0] := 160;
+    sgFormular.ColWidths[1] := 190;
+    sgFormular.ColWidths[2] := 320;
+    sgFormular.ColWidths[3] := 170;
+    sgFormular.ColWidths[4] := 110;
+    sgFormular.ColWidths[5] := 90;
+    for I := 0 to High(fMessageRows) do
+    begin
+      if fMessageRows[I].TimestampSec > 0 then
+        lTimeText := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',
+          UnixToDateTime(Trunc(fMessageRows[I].TimestampSec), False) +
+          Frac(fMessageRows[I].TimestampSec) / 86400.0)
+      else
+        lTimeText := '';
+      case fMessageRows[I].Kind of
+        rmkWarning: lTypeText := 'Предупреждение';
+        rmkStatus: lTypeText := 'Статус';
+      else
+        lTypeText := 'Информация';
+      end;
+      sgFormular.Cells[0, I + 1] := fMessageRows[I].Name;
+      sgFormular.Cells[1, I + 1] := fMessageRows[I].SourceId;
+      sgFormular.Cells[2, I + 1] := fMessageRows[I].Value;
+      sgFormular.Cells[3, I + 1] := lTimeText;
+      sgFormular.Cells[4, I + 1] := lTypeText;
+      sgFormular.Cells[5, I + 1] := '0x' +
+        IntToHex(fMessageRows[I].Quality, 8);
+    end;
+    if Length(fMessageRows) = 0 then
+      for I := 0 to sgFormular.ColCount - 1 do
+        sgFormular.Cells[I, 1] := '';
+  finally
+    sgFormular.EndUpdate;
+  end;
 end;
 
 procedure TMainForm.RenderBasePage;
@@ -3267,9 +3366,10 @@ begin
     lTag := TRecorderTag(lTags[0]);
     lChanges.SingleSourceEdit := True;
     lChanges.BeforePrimarySourceId := lTag.SourceId;
-    if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags, ilTagDialogButtons,
-      fRecorder.RunSettings.DataUpdateMs, @TagHardwareSourceSetup, @TagZeroBalance,
-      ilCommandButtons) then
+    if ShowTagSettingsDialog(Self, fRecorder.TagRegistry, lTags,
+      fRecorder.DataSources, ilCommandButtons,
+      fRecorder.RunSettings.DataUpdateMs, @TagHardwareSourceSetup,
+      @TagCanZeroBalance, @TagZeroBalance, ilCommandButtons) then
     begin
       if fRecorder.AlarmEngine <> nil then
         fRecorder.AlarmEngine.Reset;
@@ -3313,14 +3413,18 @@ end;
 procedure TMainForm.TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
 begin
   RecorderEditTagDevice(Self, fRecorder, ATag, ilCommandButtons,
-    ilTagDialogButtons, @DeviceTestLog);
+    ilCommandButtons, @DeviceTestLog);
+end;
+
+function TMainForm.TagCanZeroBalance(Sender: TObject;
+  ARegistry: TRecorderTagRegistry; ATags: TList): Boolean;
+begin
+  Result := RecorderCanBalanceTagDevices(fRecorder, ATags);
 end;
 
 procedure TMainForm.TagZeroBalance(Sender: TObject; ARegistry: TRecorderTagRegistry;
   ATags: TList);
 begin
-  // из диалога uTagSettingsDialog ZeroBalanceButtonClick попадаем сюда!!!
-  // в MainForm вообще балансировок не должно быть!!!
   RecorderBalanceTagDevices(Self, fRecorder, ARegistry, ATags);
 end;
 
@@ -4024,22 +4128,7 @@ end;
 
 function TMainForm.PaletteIconIndex(const AIconId: string): Integer;
 begin
-  if SameText(AIconId, 'text-label') then Result := CIconTextLabel
-  else if SameText(AIconId, 'digital-indicator') then Result := CIconDigitalIndicator
-  else if SameText(AIconId, 'oscillogram') then Result := CIconOscillogram
-  else if SameText(AIconId, 'trend') then Result := CIconTrends
-  else if SameText(AIconId, 'sql-trend') then Result := CIconSqlTrend
-  else if SameText(AIconId, 'frequency-response') then Result := CIconFrequencyResponse
-  else if SameText(AIconId, '3d-view') then Result := CIcon3dScene
-  else if SameText(AIconId, 'lissajous') then Result := CIconLissajous
-  else if SameText(AIconId, 'plugin-oscillogram') then Result := CIconPluginOscillogram
-  else if SameText(AIconId, 'donut') then Result := CIconDonut
-  else if SameText(AIconId, 'spectrum') then Result := CIconSpectrum
-  else if SameText(AIconId, 'image') then Result := CIconImageComponent
-  else if SameText(AIconId, 'button') then Result := CIconButton
-  else if SameText(AIconId, 'input-field') then Result := CIconInputField
-  else if SameText(AIconId, 'measurement-section') then Result := CIconMeasurementSection
-  else Result := -1;
+  Result := RcIconIndex(AIconId);
 end;
 
 procedure TMainForm.PaletteFactorySelected(

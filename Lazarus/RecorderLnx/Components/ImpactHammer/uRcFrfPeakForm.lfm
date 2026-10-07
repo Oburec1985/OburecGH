@@ -1,0 +1,43 @@
+object RcFrfPeakForm: TRcFrfPeakForm
+  Left = 400
+  Height = 420
+  Top = 220
+  Width = 670
+  Caption = 'Экстремумы FRF'
+  OnCreate = FormCreate
+  OnClose = FormClose
+  Position = poScreenCenter
+  object btnReport: TButton
+    Left = 8
+    Height = 28
+    Top = 8
+    Width = 130
+    Caption = 'Сохранить отчёт'
+    OnClick = btnReportClick
+    TabOrder = 0
+  end
+  object grdPeaks: TStringGrid
+    Left = 8
+    Height = 370
+    Top = 42
+    Width = 654
+    Align = alBottom
+    ColCount = 5
+    DefaultColWidth = 110
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 1
+    ColWidths = (
+      160
+      75
+      120
+      120
+      120
+    )
+  end
+  object dlgReport: TSaveDialog
+    DefaultExt = 'csv'
+    Filter = 'Таблица CSV|*.csv'
+    Title = 'Сохранить отчёт по экстремумам'
+  end
+end

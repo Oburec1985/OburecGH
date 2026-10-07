@@ -1,0 +1,519 @@
+object RecorderImpactHammerSettingsDialog: TRecorderImpactHammerSettingsDialog
+    Left = 300
+  Height = 820
+  Top = 120
+  Width = 900
+  Caption = 'Ударный FRF — настройки'
+  ClientHeight = 820
+  ClientWidth = 900
+  Position = poScreenCenter
+  LCLVersion = '3.6.0.0'
+  object pnlActions: TPanel
+    Align = alBottom
+    Height = 48
+    TabOrder = 4
+    object btnOk: TButton
+    Left = 700
+      Top = 9
+      Width = 88
+      Caption = 'OK'
+      Anchors = [akTop, akRight]
+      OnClick = btnOkClick
+      TabOrder = 0
+   
+  end
+    object btnCancel: TButton
+    Left = 798
+      Top = 9
+      Width = 88
+      Caption = 'Отмена'
+      ModalResult = 2
+      Anchors = [akTop, akRight]
+      TabOrder = 1
+   
+  end
+ 
+end
+  object gbHammer: TGroupBox
+    Left = 8
+    Height = 112
+    Top = 8
+    Width = 884
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Канал молотка'
+    TabOrder = 0
+    object lblHammerSearch: TLabel
+    Left = 12
+    Top = 24
+    Caption = 'Поиск'
+    end
+    object edHammerSearch: TEdit
+    Left = 100
+    Top = 20
+    Width = 760
+    OnChange = edHammerSearchChange
+    TabOrder = 0
+    end
+    object lblHammerTag: TLabel
+    Left = 12
+    Top = 62
+    Caption = 'Тег силы'
+    end
+    object cbHammerTag: TComboBox
+    Left = 100
+    Top = 58
+    Width = 760
+    Style = csDropDownList
+    TabOrder = 1
+    end
+    object chkEnabled: TCheckBox
+    Left = 12
+    Top = 88
+    Width = 180
+    Caption = 'Компонент включён'
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
+    end
+ 
+end
+  object gbAcquisition: TGroupBox
+    Left = 8
+    Height = 180
+    Top = 128
+    Width = 432
+    Caption = 'Захват удара'
+    TabOrder = 1
+    object lblPolarity: TLabel
+    Left = 12
+    Top = 28
+    Caption = 'Полярность'
+    end
+    object cbPolarity: TComboBox
+    Left = 168
+    Top = 24
+    Width = 240
+    Style = csDropDownList
+    Items.Strings = ('Положительная' 'Отрицательная' 'По модулю')
+    TabOrder = 0
+    end
+    object lblThreshold: TLabel
+    Left = 12
+    Top = 60
+    Caption = 'Порог'
+    end
+    object edThreshold: TEdit
+    Left = 168
+    Top = 56
+    Width = 100
+    TabOrder = 1
+    end
+    object lblHysteresis: TLabel
+    Left = 12
+    Top = 92
+    Caption = 'Гистерезис'
+    end
+    object edHysteresis: TEdit
+    Left = 168
+    Top = 88
+    Width = 100
+    TabOrder = 2
+    end
+    object lblPretrigger: TLabel
+    Left = 12
+    Top = 124
+    Caption = 'Предыстория, отсч.'
+    end
+    object edPretrigger: TEdit
+    Left = 168
+    Top = 120
+    Width = 100
+    TabOrder = 3
+    end
+    object lblCapture: TLabel
+    Left = 280
+    Top = 60
+    Caption = 'Захват'
+    end
+    object edCapture: TEdit
+    Left = 340
+    Top = 56
+    Width = 68
+    TabOrder = 4
+    end
+    object lblCapacity: TLabel
+    Left = 280
+    Top = 92
+    Caption = 'Ударов'
+    end
+    object edCapacity: TEdit
+    Left = 340
+    Top = 88
+    Width = 68
+    TabOrder = 5
+    end
+ 
+end
+  object gbAnalysis: TGroupBox
+    Left = 448
+    Height = 260
+    Top = 128
+    Width = 444
+    Caption = 'FFT / FRF'
+    TabOrder = 2
+    object lblFftSize: TLabel
+    Left = 12
+    Top = 28
+    Caption = 'FFT'
+    end
+    object edFftSize: TEdit
+    Left = 120
+    Top = 24
+    Width = 88
+    TabOrder = 0
+    end
+    object lblWindow: TLabel
+    Left = 220
+    Top = 28
+    Caption = 'Окно'
+    end
+    object cbWindow: TComboBox
+    Left = 284
+    Top = 24
+    Width = 144
+    Style = csDropDownList
+    Items.Strings = ('Прямоугольное' 'Hann' 'Hamming' 'Force' 'Экспонента')
+    TabOrder = 1
+    end
+    object lblZeroPad: TLabel
+    Left = 12
+    Top = 60
+    Caption = 'Zero-pad'
+    end
+    object edZeroPad: TEdit
+    Left = 120
+    Top = 56
+    Width = 88
+    TabOrder = 2
+    end
+    object lblEstimator: TLabel
+    Left = 220
+    Top = 60
+    Caption = 'Оценка'
+    end
+    object cbEstimator: TComboBox
+    Left = 284
+    Top = 56
+    Width = 144
+    Style = csDropDownList
+    Items.Strings = (
+      'H0'
+      'H1'
+      'H2'
+    )
+    TabOrder = 3
+    end
+    object lblCoherence: TLabel
+    Left = 12
+    Top = 92
+    Caption = 'Когерентность'
+    end
+    object edCoherence: TEdit
+    Left = 120
+    Top = 88
+    Width = 88
+    TabOrder = 4
+    end
+    object lblWelchSegment: TLabel
+    Left = 220
+    Top = 92
+    Caption = 'Welch N'
+    end
+    object edWelchSegment: TEdit
+    Left = 340
+    Top = 88
+    Width = 88
+    TabOrder = 5
+    end
+    object lblWelchOverlap: TLabel
+    Left = 220
+    Top = 124
+    Caption = 'Перекрытие, %'
+    end
+    object edWelchOverlap: TEdit
+    Left = 340
+    Top = 120
+    Width = 88
+    TabOrder = 6
+    end
+    object lblSampleRate: TLabel
+      Left = 12
+      Top = 156
+      Caption = 'Частота, Гц'
+    end
+    object edSampleRate: TEdit
+      Left = 120
+      Top = 152
+      Width = 88
+      TabOrder = 7
+    end
+    object lblExcitationUnit: TLabel
+      Left = 220
+      Top = 156
+      Caption = 'Ед. силы'
+    end
+    object edExcitationUnit: TEdit
+      Left = 340
+      Top = 152
+      Width = 88
+      TabOrder = 8
+    end
+    object lblForceFraction: TLabel
+      Left = 12
+      Top = 188
+      Caption = 'Force fraction'
+    end
+    object edForceFraction: TEdit
+      Left = 120
+      Top = 184
+      Width = 88
+      TabOrder = 9
+    end
+    object lblExponentialFraction: TLabel
+      Left = 220
+      Top = 188
+      Caption = 'Exp end fraction'
+    end
+    object edExponentialFraction: TEdit
+      Left = 340
+      Top = 184
+      Width = 88
+      TabOrder = 10
+    end
+ 
+end
+  object gbResponses: TGroupBox
+    Left = 8
+    Height = 372
+    Top = 396
+    Width = 884
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Caption = 'Каналы отклика и точки измерения'
+    TabOrder = 3
+    object lbResponses: TListBox
+    Left = 12
+    Top = 24
+    Width = 360
+    Height = 340
+    Anchors = [akTop, akLeft, akBottom]
+    OnClick = lbResponsesClick
+    TabOrder = 0
+    end
+    object lblResponseSearch: TLabel
+    Left = 388
+    Top = 28
+    Caption = 'Поиск'
+    end
+    object edResponseSearch: TEdit
+    Left = 492
+    Top = 24
+    Width = 368
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = edResponseSearchChange
+    TabOrder = 1
+    end
+    object lblResponseTag: TLabel
+    Left = 388
+    Top = 64
+    Caption = 'Тег отклика'
+    end
+    object cbResponseTag: TComboBox
+    Left = 492
+    Top = 60
+    Width = 368
+    Anchors = [akTop, akLeft, akRight]
+    Style = csDropDownList
+    TabOrder = 2
+    end
+    object lblResponsePoint: TLabel
+    Left = 388
+    Top = 100
+    Caption = 'Точка'
+    end
+    object edResponsePoint: TEdit
+    Left = 492
+    Top = 96
+    Width = 180
+    TabOrder = 3
+    end
+    object lblResponseAxis: TLabel
+    Left = 388
+    Top = 136
+    Caption = 'Ось'
+    end
+    object cbResponseAxis: TComboBox
+    Left = 492
+    Top = 132
+    Width = 180
+    Style = csDropDownList
+    Items.Strings = ('X' 'Y' 'Z')
+    ItemIndex = 0
+    TabOrder = 4
+    end
+    object chkResponseEnabled: TCheckBox
+    Left = 492
+    Top = 168
+    Caption = 'Использовать канал'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
+    end
+    object btnResponseColor: TColorButton
+    Left = 680
+    Top = 132
+    Width = 180
+    Caption = 'Цвет'
+    ButtonColor = clRed
+    TabOrder = 8
+    end
+    object lblResponseCurveId: TLabel
+      Left = 388
+      Top = 172
+      Caption = 'Curve ID'
+    end
+    object edResponseCurveId: TEdit
+      Left = 492
+      Top = 168
+      Width = 100
+      TabOrder = 9
+    end
+    object lblResponseSpace: TLabel
+      Left = 600
+      Top = 172
+      Caption = 'Система'
+    end
+    object cbResponseSpace: TComboBox
+      Left = 680
+      Top = 168
+      Width = 180
+      Style = csDropDownList
+      Items.Strings = (
+        'Модель'
+        'Локальная helper'
+        'Мировая'
+      )
+      ItemIndex = 1
+      TabOrder = 10
+    end
+    object lblResponseGain: TLabel
+      Left = 388
+      Top = 204
+      Caption = 'Масштаб'
+    end
+    object edResponseGain: TEdit
+      Left = 492
+      Top = 200
+      Width = 100
+      Text = '1'
+      TabOrder = 11
+    end
+    object lblResponseUnit: TLabel
+      Left = 600
+      Top = 204
+      Caption = 'Единица'
+    end
+    object edResponseUnit: TEdit
+      Left = 680
+      Top = 200
+      Width = 180
+      TabOrder = 12
+    end
+    object btnAddResponse: TButton
+    Left = 492
+    Top = 336
+    Width = 160
+    Caption = 'Добавить'
+    OnClick = btnAddResponseClick
+    TabOrder = 6
+    end
+    object btnDeleteResponse: TButton
+    Left = 664
+    Top = 336
+    Width = 160
+    Caption = 'Удалить'
+    OnClick = btnDeleteResponseClick
+    TabOrder = 7
+    end
+    object lblPointGroup: TLabel
+      Left = 388
+      Top = 240
+      Caption = 'Группа точки'
+    end
+    object edPointGroup: TEdit
+      Left = 492
+      Top = 236
+      Width = 100
+      TabOrder = 13
+    end
+    object lblPointIncrement: TLabel
+      Left = 600
+      Top = 240
+      Caption = 'Прибавить'
+    end
+    object edPointIncrement: TEdit
+      Left = 680
+      Top = 236
+      Width = 180
+      Text = '0'
+      TabOrder = 14
+    end
+    object lblBasePoint: TLabel
+      Left = 388
+      Top = 272
+      Caption = 'Базовая точка'
+    end
+    object edBasePoint: TEdit
+      Left = 492
+      Top = 268
+      Width = 100
+      Text = '0'
+      TabOrder = 15
+    end
+    object lblTarget3dComponent: TLabel
+      Left = 600
+      Top = 272
+      Caption = '3D компонент'
+    end
+    object edTarget3dComponent: TEdit
+      Left = 680
+      Top = 268
+      Width = 180
+      TabOrder = 16
+    end
+    object lblAnimationScale: TLabel
+      Left = 388
+      Top = 304
+      Caption = 'Масштаб анимации'
+    end
+    object edAnimationScale: TEdit
+      Left = 492
+      Top = 300
+      Width = 100
+      Text = '10000'
+      TabOrder = 17
+    end
+    object lblAnimationFrequency: TLabel
+      Left = 600
+      Top = 304
+      Caption = 'Частота'
+    end
+    object edAnimationFrequency: TEdit
+      Left = 680
+      Top = 300
+      Width = 180
+      Text = '100'
+      TabOrder = 18
+    end
+ 
+end
+end

@@ -961,6 +961,35 @@ begin
       lQuery.Free;
     end;
   end;
+  if AVersion < 6 then
+  begin
+    CreateIndexIfMissing('idx_tests_object_time',
+      'create index idx_tests_object_time on tests(object_id,started_at)');
+    CreateIndexIfMissing('idx_registrations_context_time',
+      'create index idx_registrations_context_time on registrations(object_id,test_id,started_at)');
+    CreateIndexIfMissing('idx_signal_values_registration',
+      'create index idx_signal_values_registration on signal_values(registration_id)');
+    CreateIndexIfMissing('idx_events_registration',
+      'create index idx_events_registration on events(registration_id)');
+    CreateIndexIfMissing('idx_data_file_links_registration',
+      'create index idx_data_file_links_registration on data_file_links(registration_id)');
+    CommitAndRestart;
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text := 'insert into schema_info(version, applied_at, description) ' +
+        'values(:version,:applied_at,:description)';
+      lQuery.Params.ParamByName('version').AsInteger := 6;
+      lQuery.Params.ParamByName('applied_at').AsFloat := Now;
+      lQuery.Params.ParamByName('description').AsString :=
+        'Mdb object-test-measurement lookup indexes';
+      lQuery.ExecSQL;
+      CommitAndRestart;
+    finally
+      lQuery.Free;
+    end;
+  end;
 end;
 
 procedure TRecorderSqlDbRepository.EnsureDatabase;
@@ -1021,6 +1050,16 @@ begin
     'create index idx_mera_recordings_time on mera_recordings(started_at_utc,finished_at_utc,state)');
   CreateIndexIfMissing('idx_data_file_locations_state',
     'create index idx_data_file_locations_state on data_file_locations(file_id,state)');
+  CreateIndexIfMissing('idx_tests_object_time',
+    'create index idx_tests_object_time on tests(object_id,started_at)');
+  CreateIndexIfMissing('idx_registrations_context_time',
+    'create index idx_registrations_context_time on registrations(object_id,test_id,started_at)');
+  CreateIndexIfMissing('idx_signal_values_registration',
+    'create index idx_signal_values_registration on signal_values(registration_id)');
+  CreateIndexIfMissing('idx_events_registration',
+    'create index idx_events_registration on events(registration_id)');
+  CreateIndexIfMissing('idx_data_file_links_registration',
+    'create index idx_data_file_links_registration on data_file_links(registration_id)');
   { Firebird publishes newly created metadata at a transaction boundary.
     Preparing a query for SCHEMA_INFO in the DDL transaction can otherwise
     fail with SQL error -204 / table unknown on a newly created database. }
@@ -1354,17 +1393,29 @@ function TRecorderSqlDbRepository.BeginRegistration(const AObjectId, ATestId,
   AReason: string; AStartedUtc: Double): string;
 var lQuery: TSQLQuery;
 begin
+  if Trim(AObjectId) = '' then
+    raise ERecorderSqlDbError.Create('Registration object id is empty');
   Result := RecorderSqlDbNewId;
   lQuery := TSQLQuery.Create(nil);
   try
     lQuery.DataBase := fConnection; lQuery.Transaction := fTransaction;
-    lQuery.SQL.Text := 'insert into registrations(id,object_id,test_id,started_at,status,reason) values(:id,:object_id,:test_id,:started_at,''open'',:reason)';
+    if ATestId = '' then
+      lQuery.SQL.Text := 'insert into registrations(id,object_id,test_id,started_at,status,reason) values(:id,:object_id,null,:started_at,''open'',:reason)'
+    else
+      lQuery.SQL.Text := 'insert into registrations(id,object_id,test_id,started_at,status,reason) ' +
+        'select :id,:object_id,:test_id,:started_at,''open'',:reason from tests ' +
+        'where id=:test_id and object_id=:object_id';
     lQuery.Params.ParamByName('id').AsString := Result;
     lQuery.Params.ParamByName('object_id').AsString := AObjectId;
-    if ATestId = '' then lQuery.Params.ParamByName('test_id').Clear else lQuery.Params.ParamByName('test_id').AsString := ATestId;
+    if ATestId <> '' then
+      lQuery.Params.ParamByName('test_id').AsString := ATestId;
     lQuery.Params.ParamByName('started_at').AsFloat := AStartedUtc;
     lQuery.Params.ParamByName('reason').AsString := AReason;
-    lQuery.ExecSQL; Commit;
+    lQuery.ExecSQL;
+    if (ATestId <> '') and (lQuery.RowsAffected <> 1) then
+      raise ERecorderSqlDbError.Create(
+        'Selected Mdb test does not belong to the selected object');
+    Commit;
   finally lQuery.Free; end;
 end;
 

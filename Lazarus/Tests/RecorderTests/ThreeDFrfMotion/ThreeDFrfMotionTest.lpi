@@ -17,7 +17,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../SharedUtils/3d/core;../../../SharedUtils/3d/motion;../../../RecorderLnx/Core"/>
+      <OtherUnitFiles Value="../../../SharedUtils/3d/core;../../../SharedUtils/3d/motion;../../../RecorderLnx/Core;../../../RecorderLnx/Components/ThreeD"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <CodeGeneration><Optimizations><OptimizationLevel Value="2"/></Optimizations></CodeGeneration>

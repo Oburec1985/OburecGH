@@ -1,0 +1,43 @@
+# График ударного FRF: штрих, граница Y и обратный zoom
+
+## Дополнение 2026-10-07
+
+Обратный zoom временной страницы теперь ограничен preset по фактическому интервалу отсчётов выбранного удара, без сброса текущей матрицы при каждом обновлении. На частотной странице общий double-click auto-fit отключён: собственный обработчик восстанавливает настроенные границы X (включая 20000), а не край частотных данных. UI smoke воспроизводит сброс с 16 до 20000 и проверяет preset времени.
+
+## Симптомы
+
+- Красная пунктирная линия порога меняла длину штрихов при изменении масштаба.
+- При `Y min = 0,1` на частотной странице показывались значения ниже нуля.
+- Обратный zoom временной страницы возвращал X к 0…1.
+- В списке линий не были видны штатные флажки.
+
+## Подтверждённые причины
+
+- Порог был нарезан на 16 отдельных линий в координатах данных.
+- При AutoScale сохранённый нижний предел Y игнорировался.
+- Общий zoom ограничивал X диапазоном Preset 0…1, хотя `HasPresetXRange=False`.
+- Owner draw списка закрашивал область встроенного checkbox.
+
+## Исправление и проверка
+
+Порог рисуется одной серией с `GL_LINE_STIPPLE` в экранных пикселях; OpenGL-состояние восстанавливается. Минимум Y применяется и после автоматического подбора верхней границы. Ограничение Preset применяется только при `HasPresetXRange`. Owner draw оставляет область флажка нетронутой. Пакет OGLChart и `ImpactHammerUiSmoke` собраны, smoke-тест прошёл. Полная сборка RecorderLnx сейчас останавливается на независимых ошибках `Canvas` в параллельно изменяемом `Components/ThreeD/uRecorder3dView.pas`; ручной GUI-сценарий пока не выполнен.
+
+## Оставшийся риск
+
+Штатный EXE удерживается запущенным экземпляром; изменения ещё не проверены в нём. Горизонтальный порог простирается по интервалу захвата, не бесконечно по zoom-out viewport.
+
+## 2026-10-06: повторное исправление флажков и видимости
+
+Новый снимок показал, что флажки по-прежнему рисовались неправильно. LCL уже передаёт `OnDrawItem` прямоугольник после области штатного checkbox, а код добавлял второй отступ. Убрана повторная поправка и явно нарисован полный квадрат с отметкой в зарезервированной области. Признак видимости теперь распространяется по `CurveId` на временной и частотные снимки; удалено принудительное включение последней скрытой линии. `ImpactHammerUiSmoke` проверяет обе страницы и пустой набор видимых линий; сборка и запуск прошли. Полная forced-сборка RecorderLnx прошла. Ручная проверка в приложении остаётся.
+
+Повторный аудит выявил совпадающие `CurveId` у импортированной и живой кривой. Read-only comparison теперь обрабатывается отдельно до рассылки видимости по ID, чтобы её флажок не скрывал живой канал. После правки UI smoke и полная forced-сборка приложения повторно прошли. Пиксельная проверка checkbox в работающем Win32-окне остаётся открытой.
+
+## 2026-10-06: каналы исчезали до первого удара
+
+Снимок пользователя показал «Ударов нет» и пустой список справа. Подтверждено: `FillPresentation` обнулял все `Results.Curves` и выходил при `fCurrentImpact < 0`; `ShowResultOptions` наполнял список только из этих пустых кривых. Теперь при отсутствии удара выдаются идентичности и видимость настроенных каналов с пустыми массивами данных. Убран пустой ранний выход `FillSnapshot` при ожидающей обработке удара, чтобы предыдущий снимок не мигал пустым. При неуспешной конфигурации выводится `LastError`, а прежний снимок сбрасывается. UI smoke проверяет список до первого удара; forced-сборки UI smoke и RecorderLnx прошли. Наличие живого сигнала/триггера на стенде не проверено; пустые графики до нового удара по контракту FRF ожидаемы.
+
+## 2026-10-06: checkbox clipped again
+
+Win32's owner-draw checklist path skips native checkbox paint (`win32wschecklst.pp`), and its `GetCheckWidth` remains zero. The previous custom box at `ARect.Left-16` was clipped outside the item. It is now drawn at `ARect.Left+2` inside the first item-height pixels that Win32 uses for click hit-testing; the color swatch and label follow it. UI smoke checks the checkbox border pixel on the visible form and passes. Manual inspection in the user's live process remains outstanding.
+
+Repeated editor `Configure` with the same component, tag registry, and serialized settings now reuses the current service, preserving two captured impacts in UI smoke. A saved settings change still recreates the service and may clear impacts; that broader migration path remains open. After an unrelated parallel TagSettings edit completed, the full forced `RecorderLnx.lpi` build passed (203091 lines).

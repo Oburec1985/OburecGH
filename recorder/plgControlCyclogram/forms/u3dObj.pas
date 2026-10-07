@@ -41,12 +41,12 @@ uses
 
 type
   TObjFrm3d = class(TRecFrm)
-    GL: cBaseGlComponent;
     ToolsGB: TGroupBox;
-    RightGB: TGroupBox;
-    RightSplitter: TSplitter;
     ErrorEdit: TEdit;
     BotSplitter: TSplitter;
+    GL: cBaseGlComponent;
+    RightGB: TGroupBox;
+    RightSplitter: TSplitter;
     procedure GLInitScene(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private

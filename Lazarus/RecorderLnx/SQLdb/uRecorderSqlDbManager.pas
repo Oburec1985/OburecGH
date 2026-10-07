@@ -22,6 +22,8 @@ type
     fConfigFileName: string;
     fTimeSystem: TRecorderTimeSystem;
     fRecordingEnabled: Boolean;
+    fMeasurementObjectId: string;
+    fMeasurementTestId: string;
     procedure EnsureRuntime;
     procedure SetRecordingActive(AValue: Boolean; const AReason: string);
     function GetRecordingEnabled: Boolean;
@@ -37,6 +39,9 @@ type
     procedure StartRegistration(const AReason: string = 'manual');
     procedure StopRegistration;
     procedure SetRecordingEnabled(AValue: Boolean);
+    procedure SetMeasurementContext(const AObjectId, ATestId: string);
+    procedure ClearMeasurementContext;
+    procedure PersistMeasurementContext(const AObjectId, ATestId: string);
     procedure ApplyRemoteRecordingSettings(AEnabled: Boolean;
       ARecordPeriodMs: Integer);
     procedure HandleBlockEvent(ATag: TObject; ATimeSec, AValue: Double);
@@ -46,6 +51,8 @@ type
     property ConfigFileName: string read fConfigFileName;
     property Runtime: TRecorderSqlDbRuntime read fRuntime;
     property RecordingEnabled: Boolean read GetRecordingEnabled;
+    property MeasurementObjectId: string read fMeasurementObjectId;
+    property MeasurementTestId: string read fMeasurementTestId;
   end;
 
 implementation
@@ -93,6 +100,8 @@ begin
   SetRecordingActive(False, 'SQLdb settings reload');
   FreeAndNil(fRuntime);
   fConfig.LoadFromFile(fConfigFileName);
+  fMeasurementObjectId := fConfig.MdbObjectId;
+  fMeasurementTestId := fConfig.MdbTestId;
   RecorderInfoLog(Format(
     '[SQLdb] config=%s enabled=%s selected=%d selection_configured=%s host=%s:%d',
     [fConfigFileName, BoolToStr(fConfig.Enabled, True),
@@ -226,10 +235,85 @@ end;
 procedure TRecorderSqlDbManager.StartRegistration(const AReason: string);
 begin
   if fRuntime = nil then Exit;
-  if fTimeSystem <> nil then
+  if (fMeasurementObjectId <> '') or (fMeasurementTestId <> '') then
+  begin
+    if (fMeasurementObjectId = '') or (fMeasurementTestId = '') then
+      raise ERecorderSqlDbError.Create(
+        'Incomplete Mdb measurement context');
+    if fTimeSystem <> nil then
+      fRuntime.BeginRegistration(fMeasurementObjectId, fMeasurementTestId,
+        AReason, fTimeSystem.CurrentUtc)
+    else
+      fRuntime.BeginRegistration(fMeasurementObjectId, fMeasurementTestId,
+        AReason, LocalTimeToUniversal(Now));
+  end
+  else if fTimeSystem <> nil then
     fRuntime.BeginRegistration(AReason, fTimeSystem.CurrentUtc)
   else
     fRuntime.BeginRegistration(AReason, LocalTimeToUniversal(Now));
+end;
+
+procedure TRecorderSqlDbManager.SetMeasurementContext(const AObjectId,
+  ATestId: string);
+begin
+  EnterCriticalSection(fStateLock);
+  try
+    if fRecordingEnabled then
+      raise ERecorderSqlDbError.Create(
+        'Cannot change Mdb context while SQL recording is active');
+    if (Trim(AObjectId) = '') or (Trim(ATestId) = '') then
+      raise ERecorderSqlDbError.Create('Mdb object and test are required');
+    fMeasurementObjectId := AObjectId;
+    fMeasurementTestId := ATestId;
+  finally
+    LeaveCriticalSection(fStateLock);
+  end;
+end;
+
+procedure TRecorderSqlDbManager.ClearMeasurementContext;
+begin
+  EnterCriticalSection(fStateLock);
+  try
+    if fRecordingEnabled then
+      raise ERecorderSqlDbError.Create(
+        'Cannot clear Mdb context while SQL recording is active');
+    fMeasurementObjectId := '';
+    fMeasurementTestId := '';
+  finally
+    LeaveCriticalSection(fStateLock);
+  end;
+end;
+
+procedure TRecorderSqlDbManager.PersistMeasurementContext(const AObjectId,
+  ATestId: string);
+var
+  lOldObjectId, lOldTestId: string;
+begin
+  EnterCriticalSection(fStateLock);
+  try
+    if fRecordingEnabled then
+      raise ERecorderSqlDbError.Create(
+        'Cannot change Mdb context while SQL recording is active');
+    if (Trim(AObjectId) = '') xor (Trim(ATestId) = '') then
+      raise ERecorderSqlDbError.Create('Mdb context must be complete or empty');
+    lOldObjectId := fMeasurementObjectId;
+    lOldTestId := fMeasurementTestId;
+    fMeasurementObjectId := AObjectId;
+    fMeasurementTestId := ATestId;
+    fConfig.MdbObjectId := AObjectId;
+    fConfig.MdbTestId := ATestId;
+    try
+      SaveConfig;
+    except
+      fMeasurementObjectId := lOldObjectId;
+      fMeasurementTestId := lOldTestId;
+      fConfig.MdbObjectId := lOldObjectId;
+      fConfig.MdbTestId := lOldTestId;
+      raise;
+    end;
+  finally
+    LeaveCriticalSection(fStateLock);
+  end;
 end;
 
 procedure TRecorderSqlDbManager.StopRegistration;

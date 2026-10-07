@@ -3,7 +3,7 @@ program ThreeDMathTest;
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
-uses Math, SysUtils, u3dCoreTypes, u3dScene, u3dGeometryMath;
+uses Math, SysUtils, u3dCoreTypes, u3dScene, u3dGeometryMath, u3dCamera;
 
 procedure Check(ACondition:Boolean; const AMessage:string);
 begin if not ACondition then raise Exception.Create(AMessage); end;
@@ -13,6 +13,7 @@ begin Check(Abs(AActual-AExpected)<1e-4,AMessage); end;
 var M,R,I:T3dMatrix; P,Q,Hit,Delta:T3dVector; Ray:T3dRayValue;
   B,TB:T3dBounds; Corners:array[0..7] of T3dVector; D,T,U:Single;
   Screen:T3dScreenPoint; Scene:T3dScene; Node:T3dNode; Ids:array[0..0] of QWord;
+  Camera:T3dCamera; Forward,Right,Up:T3dVector;
 begin
   try
     SetIdentity(M); M[12]:=3; M[13]:=-2; M[14]:=5;
@@ -40,6 +41,22 @@ begin
 
     Check(TryFitDistance(B,Vector3d(1,0,0),Vector3d(0,1,0),Vector3d(0,0,-1),90,1,1,D),'fit');
     Near(D,5,'fit distance');
+
+    FillChar(Camera,SizeOf(Camera),0);
+    Camera.Distance:=6; Camera.VerticalFovDegrees:=45;
+    Camera.ProjectionKind:=pkOrthographic; Camera.OrthographicScale:=3;
+    Camera.PitchDegrees:=-90;
+    M:=BuildProjectionMatrix(Camera,2,0.1,100);
+    Near(M[0],1/6,'orthographic aspect');
+    Near(M[5],1/3,'orthographic scale');
+    Near(M[11],0,'orthographic homogeneous term');
+    BuildCameraBasis(Camera,Forward,Right,Up);
+    Near(Forward.Y,-1,'top forward');
+    Check((Abs(Right.X)+Abs(Right.Y)+Abs(Right.Z))>0.9,
+      'top camera basis is not degenerate');
+    Camera.ProjectionKind:=pkPerspective;
+    M:=BuildProjectionMatrix(Camera,2,0.1,100);
+    Near(M[11],-1,'perspective homogeneous term');
 
     Scene:=T3dScene.Create;
     try Node:=T3dNode.Create; Node.Id:=1; Node.Bounds:=B; SetIdentity(Node.WorldTransform); Scene.AddNode(Node);

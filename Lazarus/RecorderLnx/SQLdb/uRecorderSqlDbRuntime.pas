@@ -52,6 +52,8 @@ type
       Text: string;                                 { Причина регистрации или текст события. }
       Extra: string;                                { Дополнительный тип данных, сейчас формат/тип файла. }
       Severity: string;                             { Нормализованная важность события: info/warning/alarm. }
+      ObjectId: string;                             { Immutable Mdb object selected when recording starts. }
+      TestId: string;                               { Immutable Mdb test selected when recording starts. }
       TimeUtc: Double;                              { Астрономическое UTC-время события/значения. }
       Value: Double;                                { Числовое значение или числовая нагрузка события. }
       Quality: Integer;                             { Качество значения; 0 = штатное значение. }
@@ -81,7 +83,10 @@ type
     { Запрещает новые задания, ждёт выгрузки очереди и останавливает поток. }
     procedure Stop;
     { Открывает новую регистрацию/сеанс записи в БД. }
-    procedure BeginRegistration(const AReason: string; AStartUtc: TDateTime);
+    procedure BeginRegistration(const AReason: string;
+      AStartUtc: TDateTime); overload;
+    procedure BeginRegistration(const AObjectId, ATestId, AReason: string;
+      AStartUtc: TDateTime); overload;
     { Закрывает текущую регистрацию/сеанс записи. }
     procedure EndRegistration(AStopUtc: TDateTime);
     { Ставит в очередь значение тега. SourceId+Address нужны, чтобы история
@@ -304,6 +309,23 @@ begin
   Enqueue(J);
 end;
 
+procedure TRecorderSqlDbRuntime.BeginRegistration(const AObjectId, ATestId,
+  AReason: string; AStartUtc: TDateTime);
+var
+  J: TJob;
+begin
+  if (Trim(AObjectId) = '') or (Trim(ATestId) = '') then
+    raise ERecorderSqlDbError.Create(
+      'Mdb object and test must be selected before recording');
+  J := TJob.Create;
+  J.Kind := jkStart;
+  J.ObjectId := AObjectId;
+  J.TestId := ATestId;
+  J.Text := AReason;
+  J.TimeUtc := AStartUtc;
+  Enqueue(J);
+end;
+
 procedure TRecorderSqlDbRuntime.EndRegistration(AStopUtc: TDateTime);
 var J: TJob;
 begin
@@ -362,7 +384,8 @@ var
   R: TRecorderSqlDbRepository;
   S: TRecorderSqlDbFileStore;
   J: TJob;
-  lObjectId, lRegistrationId, lSignalId: string;
+  lDefaultObjectId, lEffectiveObjectId, lObjectId: string;
+  lRegistrationId, lSignalId: string;
   lSignalKey: string;
   lSignals: TStringList;
   lStored: TRecorderStoredFile;
@@ -390,8 +413,9 @@ begin
         server's SQLdb/data directory to record scalar values.  Create the
         file store only when an actual file job arrives; otherwise a harmless
         missing/root-owned local directory disabled the entire SQL writer. }
-      lObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
+      lDefaultObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
         fConfig.SerialNumber);
+      lObjectId := lDefaultObjectId;
       while not fThread.IsStopping or HasJobs do
       begin
         J := PopJob;
@@ -410,7 +434,15 @@ begin
             begin
               if lRegistrationId <> '' then
                 R.FinishRegistration(lRegistrationId, 'closed', J.TimeUtc);
-              lRegistrationId := R.BeginRegistration(lObjectId, '', J.Text, J.TimeUtc);
+              if J.ObjectId <> '' then
+                lEffectiveObjectId := J.ObjectId
+              else
+                lEffectiveObjectId := lDefaultObjectId;
+              if lObjectId <> lEffectiveObjectId then
+                lSignals.Clear;
+              lObjectId := lEffectiveObjectId;
+              lRegistrationId := R.BeginRegistration(lObjectId, J.TestId,
+                J.Text, J.TimeUtc);
               fState := rsrsRecording;
             end;
           jkStop:

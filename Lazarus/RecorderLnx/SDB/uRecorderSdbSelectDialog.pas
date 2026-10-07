@@ -28,8 +28,12 @@ function CreateRecorderSdbSelectGuideForm(AOwner: TComponent): TForm;
 
 implementation
 
+var
+  g_CopiedSdbCalibrationKey: string = '';
+
 type
   TRecorderSdbSelectDialog = class(TForm)
+    btnApplyName: TButton;
     btnCancel: TButton;
     btnSaveStrain: TButton;
     btnSelect: TButton;
@@ -53,6 +57,9 @@ type
     lbRange: TLabel;
     lbUnits: TLabel;
     miCreateFolder: TMenuItem;
+    miCreateCalibration: TMenuItem;
+    miCopyCalibration: TMenuItem;
+    miPasteCalibration: TMenuItem;
     pcScaleData: TPageControl;
     pmSdbTree: TPopupMenu;
     pnBottom: TPanel;
@@ -69,9 +76,16 @@ type
     tsTable: TTabSheet;
     procedure btnSelectClick(Sender: TObject);
     procedure btnSaveStrainClick(Sender: TObject);
+    procedure btnApplyNameClick(Sender: TObject);
+    procedure edKeyChange(Sender: TObject);
+    procedure edKeyKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure pcScaleDataChange(Sender: TObject);
     procedure miCreateFolderClick(Sender: TObject);
+    procedure miCreateCalibrationClick(Sender: TObject);
+    procedure miCopyCalibrationClick(Sender: TObject);
+    procedure miPasteCalibrationClick(Sender: TObject);
     procedure pmSdbTreePopup(Sender: TObject);
     procedure treeSdbChange(Sender: TObject; Node: TTreeNode);
     procedure treeSdbCollapsed(Sender: TObject; Node: TTreeNode);
@@ -92,10 +106,12 @@ type
     fTree: TRecorderSdbTree;
     procedure AddNode(AParent: TTreeNode; AItem: TRecorderSdbNode);
     procedure ApplyNodeIcon(ANode: TTreeNode; AExpanded: Boolean);
+    procedure ApplyCalibrationName;
     procedure ClearScaleDetails;
     procedure ConfigureScaleChart;
     procedure ConfigureScaleSeries;
     function FolderKey(AItem: TRecorderSdbNode): string;
+    function PasteFolderKey(AItem: TRecorderSdbNode): string;
     procedure ReloadTree(const ASelectedKey: string);
     function SelectedItem: TRecorderSdbNode;
     function SelectedChoice: TRecorderSdbNode;
@@ -139,6 +155,21 @@ begin
     Result := AItem.FolderInfo.Key;
 end;
 
+function TRecorderSdbSelectDialog.PasteFolderKey(
+  AItem: TRecorderSdbNode): string;
+var
+  lPath: string;
+begin
+  Result := FolderKey(AItem);
+  if (AItem = nil) or (AItem.ItemKind <> sikScale) then
+    Exit;
+  lPath := StringReplace(AItem.ScaleInfo.Key, '\', PathDelim, [rfReplaceAll]);
+  Result := ExtractFileDir(lPath);
+  if Result = '.' then
+    Result := '';
+  Result := StringReplace(Result, PathDelim, '\', [rfReplaceAll]);
+end;
+
 procedure TRecorderSdbSelectDialog.treeSdbMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -160,6 +191,75 @@ begin
   lItem := SelectedItem;
   miCreateFolder.Enabled := (lItem <> nil) and
     (lItem.ItemKind in [sikRoot, sikFolder]);
+  miCreateCalibration.Enabled := miCreateFolder.Enabled;
+  miCopyCalibration.Enabled := (lItem <> nil) and
+    (lItem.ItemKind = sikScale);
+  miPasteCalibration.Enabled := (lItem <> nil) and
+    (Trim(g_CopiedSdbCalibrationKey) <> '');
+end;
+
+procedure TRecorderSdbSelectDialog.miCopyCalibrationClick(Sender: TObject);
+var
+  lItem: TRecorderSdbNode;
+begin
+  lItem := SelectedItem;
+  if (lItem = nil) or (lItem.ItemKind <> sikScale) then
+    Exit;
+  g_CopiedSdbCalibrationKey := lItem.ScaleInfo.Key;
+end;
+
+procedure TRecorderSdbSelectDialog.miPasteCalibrationClick(Sender: TObject);
+var
+  lCreatedKey: string;
+  lError: string;
+  lItem: TRecorderSdbNode;
+begin
+  lItem := SelectedItem;
+  if (lItem = nil) or (Trim(g_CopiedSdbCalibrationKey) = '') then
+    Exit;
+  if not RecorderSdbCopyCalibration(g_CopiedSdbCalibrationKey,
+    PasteFolderKey(lItem), lCreatedKey, lError) then
+  begin
+    MessageDlg('Копирование ГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ReloadTree(lCreatedKey);
+end;
+
+procedure TRecorderSdbSelectDialog.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if not (ssCtrl in Shift) then
+    Exit;
+  case Key of
+    Ord('C'): miCopyCalibrationClick(Sender);
+    Ord('V'): miPasteCalibrationClick(Sender);
+  else
+    Exit;
+  end;
+  Key := 0;
+end;
+
+procedure TRecorderSdbSelectDialog.miCreateCalibrationClick(Sender: TObject);
+var
+  lCreatedKey: string;
+  lError: string;
+  lItem: TRecorderSdbNode;
+  lName: string;
+begin
+  lItem := SelectedItem;
+  if (lItem = nil) or not (lItem.ItemKind in [sikRoot, sikFolder]) then
+    Exit;
+  lName := '';
+  if not InputQuery('Новая ГХ', 'Имя ГХ:', lName) then
+    Exit;
+  if not RecorderSdbCreateCalibration(FolderKey(lItem), lName,
+    lCreatedKey, lError) then
+  begin
+    MessageDlg('Создание ГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ReloadTree(lCreatedKey);
 end;
 
 procedure TRecorderSdbSelectDialog.miCreateFolderClick(Sender: TObject);
@@ -235,6 +335,49 @@ begin
   fScaleDataActiveTab := tsTable;
   ConfigureScaleChart;
   ConfigureScaleSeries;
+  btnApplyName.Enabled := False;
+end;
+
+procedure TRecorderSdbSelectDialog.edKeyChange(Sender: TObject);
+var
+  lItem: TRecorderSdbNode;
+begin
+  lItem := SelectedItem;
+  btnApplyName.Enabled := (lItem <> nil) and (lItem.ItemKind = sikScale) and
+    (Trim(edKey.Text) <> '') and
+    (Trim(edKey.Text) <> Trim(RecorderSdbNodeDisplayName(lItem)));
+end;
+
+procedure TRecorderSdbSelectDialog.edKeyKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key <> 13 then
+    Exit;
+  Key := 0;
+  ApplyCalibrationName;
+end;
+
+procedure TRecorderSdbSelectDialog.btnApplyNameClick(Sender: TObject);
+begin
+  ApplyCalibrationName;
+end;
+
+procedure TRecorderSdbSelectDialog.ApplyCalibrationName;
+var
+  lError: string;
+  lItem: TRecorderSdbNode;
+  lKey: string;
+begin
+  lItem := SelectedItem;
+  if (lItem = nil) or (lItem.ItemKind <> sikScale) then
+    Exit;
+  lKey := lItem.ScaleInfo.Key;
+  if not RecorderSdbRenameCalibration(lKey, edKey.Text, lError) then
+  begin
+    MessageDlg('Переименование ГХ', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  ReloadTree(lKey);
 end;
 
 procedure TRecorderSdbSelectDialog.pcScaleDataChange(Sender: TObject);
@@ -384,6 +527,8 @@ end;
 
 procedure TRecorderSdbSelectDialog.ShowNodeCommonInfo(AItem: TRecorderSdbNode);
 begin
+  edKey.ReadOnly := True;
+  btnApplyName.Enabled := False;
   edKey.Text := '';
   edDescription.Text := '';
   if AItem = nil then
@@ -391,6 +536,7 @@ begin
   RecorderSdbReloadNodeMetadata(AItem);
   edKey.Text := RecorderSdbNodeDisplayName(AItem);
   edDescription.Text := RecorderSdbNodeDisplayDescription(AItem);
+  edKey.ReadOnly := AItem.ItemKind <> sikScale;
 end;
 
 procedure TRecorderSdbSelectDialog.UpdateScaleChart(

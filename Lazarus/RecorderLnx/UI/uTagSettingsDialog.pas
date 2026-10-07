@@ -24,20 +24,18 @@ interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, StdCtrls, ExtCtrls, ComCtrls,
   Buttons, Dialogs, ImgList, uRecorderTags, uMeraFile, uComponentServices,
-  uRecorderMic140DataSource, uRecorderMic140DeviceConfig, uRecorderMic140Calibration, uRecorderMic140LegacyTiming, uRecorderMic140Utils, uRecorderMic140StreamTypes, uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
+  uRecorderDataSources, uRecorderTagSettingsProvider,
+  uRecorderCalibrationAddDialog, uRecorderCalibrationPropertiesDialog,
   uRecorderCalibrationListDialog, uRecorderSdbStore, uRecorderSdbSelectDialog,
   uRecorderStrainCalibrationDialog,
-  uRecorderMic140SettingsDialog, uRecorderMic185DataSource,
-  uMic185MebiusTypes,
-  uRecorderMic185Calibration,
-  uRecorderMc201Calibration, uRecorderConfiguredDataSources,
-  uRecorderCommandImages, uRecorderMc032SettingsDialog,
-  uRecorderDeviceInterfaces, uRecorderHardwareLiveDevices,
+  uRecorderCommandImages, uRcIconIds,
   uRecorderFrequencyGrids, uRecorderUnitManager,
   uRecorderTagCalibrationDialog;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
+  TTagCanZeroBalanceEvent = function(Sender: TObject;
+    ARegistry: TRecorderTagRegistry; ATags: TList): Boolean of object;
   TTagZeroBalanceEvent = procedure(Sender: TObject; ARegistry: TRecorderTagRegistry;
     ATags: TList) of object;
   { TTagSettingsDialog }
@@ -154,7 +152,6 @@ type
     btnOk: TButton;
     btnCancel: TButton;
     fApplyButton: TButton;
-    ilTagDialogButtons: TImageList;
     /// LFM-обработчик OnClick кнопки OK; при создании заменяется на OkButtonClick.
     procedure btnOkClick(Sender: TObject);
     /// LFM-обработчик OnChange флага Auto; рабочая логика назначается через OnClick.
@@ -166,9 +163,10 @@ type
     /// OnClick кнопки «Градуировка» открывает секундный мастер градуировки тега.
     procedure TagCalibrationButtonClick(Sender: TObject);
   private
-    fImages: TCustomImageList;                           // Список иконок для диалога (ilTagDialogButtons)
+    fImages: TCustomImageList;                           // Единый список иконок главной формы
     fCommandImages: TCustomImageList;                    // Список иконок устройства (ilCommandButtons)
     fTagRegistry: TRecorderTagRegistry;                  // Реестр тегов
+    fDataSources: TRecorderDataSourceManager;            // Источники и их capabilities
     fSelectedMeraFileName: string;                       // Путь выбранного Mera-файла
     fTags: TList;                                        // Список редактируемых тегов
     fDataUpdateMs: Cardinal;                             // Интервал обновления данных (TRecorderTag)
@@ -179,6 +177,7 @@ type
     fSetpointThresholdEdits: array[TRecorderTagSetpointKind] of TEdit; // Значения порогов уставок
     fSetpointAlarmInfoEdits: array[TRecorderTagSetpointKind] of TEdit; // Тексты событий уставок
     fOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+    fOnCanZeroBalance: TTagCanZeroBalanceEvent;
     fOnZeroBalance: TTagZeroBalanceEvent;
     
     // Внутренние методы обработчиков UI
@@ -215,13 +214,13 @@ type
     procedure DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
     /// Назначает кнопке изображение, подсказку и при необходимости квадратный размер.
     procedure AssignSpeedButtonImage(AButton: TSpeedButton; AImages: TCustomImageList;
-      AImageIndex: Integer; const AHint: string = ''; ABtnSize: Integer = 0);
+      AImageIndex: Integer; const AHint: string = ''; AIconSize: Integer = 0);
     /// Настраивает кнопку команды, используя изображение или текстовый fallback.
     procedure AssignActionSpeedButton(AButton: TSpeedButton; AImages: TCustomImageList;
       AImageIndex: Integer; const ACaption, AHint: string);
     /// Раскладывает кнопки действий устройства с учётом видимости и размеров панели.
     procedure LayoutTagDeviceActionButtons;
-    /// Загружает резервную иконку выгрузки ГХ из известных путей исходного Recorder.
+    /// Загружает резервную иконку выгрузки ГХ.
     procedure AssignDownloadFlashIcon(AButton: TSpeedButton);
     /// Обновляет текст и доступность элементов канальной цепочки ГХ.
     procedure UpdateChannelCurveText;
@@ -229,15 +228,8 @@ type
     procedure UpdateHardwareCurveText;
     /// Показывает действия аппаратной ГХ только для поддерживаемых источников.
     procedure UpdateHardwareCurveButtons;
-    /// Находит и назначает ГХ MIC-185; применение включает только по явному запросу.
-    function EnsureMic185HardwareCalibrationAssigned(ATag: TRecorderTag;
-      AEnableOnTag: Boolean): Boolean;
-    /// Определяет исходную единицу MIC-185 по режиму канала и настройкам возбуждения.
-    function Mic185SourceUnitName(ATag: TRecorderTag;
-      const ASettings: TMic185ChannelProgramSettings): string;
-    /// Возвращает возбуждение тензоканала, если его можно получить из live-устройства.
-    function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
-      out AExcitation: string): Boolean;
+    function ResolveSettingsProvider(ATag: TRecorderTag;
+      out AProvider: IRecorderTagSettingsProvider): Boolean;
     /// OnClick галки аппаратной ГХ переносит явный выбор в флаг её применения.
     procedure HardwareCurveCheckClick(Sender: TObject);
     /// OnClick внешней галки канальной ГХ меняет общий флаг применения pipeline.
@@ -263,6 +255,8 @@ type
     /// Возвращает UnitOut последней включённой ступени либо применяемой аппаратной ГХ.
     function TryGetChannelCalibrationOutputUnit(ATag: TRecorderTag;
       out AUnitName: string): Boolean;
+    function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
+      out AExcitation: string): Boolean;
     /// Возвращает последнюю реально применяемую ГХ, задающую выход AutoUnit.
     function FindOutputCalibration(ATag: TRecorderTag): TRecorderCalibration;
     /// Проверяет наличие применяемой ГХ с определённой выходной единицей.
@@ -277,6 +271,8 @@ type
     function CanZeroBalance: Boolean;
     
     // Обмен данными между UI и тегами
+    /// Заполняет список оценки по умолчанию теми же видами, что показаны галками.
+    procedure FillDefaultEstimateChoices;
     /// Заполняет контролы общими значениями тегов, не изменяя модель.
     procedure LoadFromTags;
     /// Валидирует UI и записывает в теги только явно представленные настройки.
@@ -344,8 +340,10 @@ type
     /// После загрузки визуальной LFM-формы связывает runtime-обработчики,
     /// реестр и выбранные теги, затем загружает их общее состояние в контролы.
     constructor CreateDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry;
-      ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200;
+      ATags: TList; ADataSources: TRecorderDataSourceManager = nil;
+      AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200;
       AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil;
+      AOnCanZeroBalance: TTagCanZeroBalanceEvent = nil;
       AOnZeroBalance: TTagZeroBalanceEvent = nil;
       ACommandImages: TCustomImageList = nil); reintroduce;
     /// Освобождает принадлежащую диалогу копию списка выбранных тегов.
@@ -353,66 +351,17 @@ type
   end;
 
 /// Показывает модальный редактор тегов; True означает подтверждённое сохранение.
-function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
+function ShowTagSettingsDialog(AOwner: TComponent; ATagRegistry: TRecorderTagRegistry; ATags: TList; ADataSources: TRecorderDataSourceManager = nil; AImages: TCustomImageList = nil; ADataUpdateMs: Cardinal = 200; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent = nil; AOnCanZeroBalance: TTagCanZeroBalanceEvent = nil; AOnZeroBalance: TTagZeroBalanceEvent = nil; ACommandImages: TCustomImageList = nil): Boolean;
 
 implementation
 
 const
   CMixedAlarmInfoText = '<разные значения>';
 
-/// Извлекает положительный номер слота MC-201 из канального адреса.
-// не должно быть зависимости в диалоге тега от аппаратных реализаций!!! Потом исправить!!!
-function RecorderMc201SlotFromAddress(const AAddress: string;
-  out ASlot: Integer): Boolean;
-var
-  lParts: TStringList;
-begin
-  Result := False;
-  ASlot := 0;
-  lParts := TStringList.Create;
-  try
-    lParts.StrictDelimiter := True;
-    lParts.Delimiter := '-';
-    lParts.DelimitedText := Trim(AAddress);
-    if lParts.Count < 2 then Exit;
-    Result := TryStrToInt(lParts[lParts.Count - 2], ASlot) and (ASlot > 0);
-  finally
-    lParts.Free;
-  end;
-end;
-
-/// Распространяет частоту слота MC-201 на все теги того же источника и слота.
-// не должно быть зависимости в диалоге тега от аппаратных реализаций!!! Потом исправить!!!
-// У датасорса по UpdateSrcConf в перекрытом методе смотрим что поменяли и если менялась частота тега применяем ко всему устройству
-// (например)
-procedure RecorderMc201ApplySlotFrequency(ARegistry: TRecorderTagRegistry;
-  const ASourceId, AAddress: string; AFrequencyHz: Double);
-var
-  I, lSlot, lTagSlot: Integer;
-  lTag: TRecorderTag;
-begin
-  if (ARegistry = nil) or
-    not RecorderMc201SlotFromAddress(AAddress, lSlot) then Exit;
-  for I := 0 to ARegistry.TagCount - 1 do
-  begin
-    lTag := ARegistry.Tags[I];
-    if SameText(lTag.SourceId, ASourceId) and
-      RecorderMc201SlotFromAddress(lTag.Address, lTagSlot) and
-      (lTagSlot = lSlot) then
-      lTag.PollFrequencyHz := AFrequencyHz;
-  end;
-end;
-
 {$R *.lfm}
 
 const
-  CTagDialogIconAddress = 0;
-  CTagDialogIconEdit = 1;
-  CTagDialogIconProperty = 2;
-  CTagDialogIconHardwareCurve = 3;
-  CTagDialogIconAdd = 4;
-  CTagDialogIconRemove = 5;
-  CTagDialogIconChannelCurve = 6;
+  CTagDialogIconSize = 32;
   CTagDeviceActionBtnSize = 32;
   CTagDeviceActionBtnGap = 4;
   CMeraSourcePrefix = 'Mera file: ';
@@ -467,15 +416,19 @@ end;
 
 function ShowTagSettingsDialog(AOwner: TComponent;
   ATagRegistry: TRecorderTagRegistry; ATags: TList;
-  AImages: TCustomImageList; ADataUpdateMs: Cardinal;
+  ADataSources: TRecorderDataSourceManager; AImages: TCustomImageList;
+  ADataUpdateMs: Cardinal;
   AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+  AOnCanZeroBalance: TTagCanZeroBalanceEvent;
   AOnZeroBalance: TTagZeroBalanceEvent;
   ACommandImages: TCustomImageList): Boolean;
 var
   lDialog: TTagSettingsDialog;
 begin
-  lDialog := TTagSettingsDialog.CreateDialog(AOwner, ATagRegistry, ATags, AImages,
-    ADataUpdateMs, AOnHardwareSourceSetup, AOnZeroBalance, ACommandImages);
+  lDialog := TTagSettingsDialog.CreateDialog(AOwner, ATagRegistry, ATags,
+    ADataSources, AImages,
+    ADataUpdateMs, AOnHardwareSourceSetup, AOnCanZeroBalance, AOnZeroBalance,
+    ACommandImages);
   try
     Result := lDialog.ShowModal = mrOk;
   finally
@@ -484,8 +437,10 @@ begin
 end;
 
 constructor TTagSettingsDialog.CreateDialog(AOwner: TComponent;
-  ATagRegistry: TRecorderTagRegistry; ATags: TList; AImages: TCustomImageList;
+  ATagRegistry: TRecorderTagRegistry; ATags: TList;
+  ADataSources: TRecorderDataSourceManager; AImages: TCustomImageList;
   ADataUpdateMs: Cardinal; AOnHardwareSourceSetup: TTagHardwareSourceSetupEvent;
+  AOnCanZeroBalance: TTagCanZeroBalanceEvent;
   AOnZeroBalance: TTagZeroBalanceEvent; ACommandImages: TCustomImageList);
 var
   lEstimateKind: TRecorderTagEstimateKind;
@@ -498,15 +453,14 @@ begin
     raise ERecorderTagError.Create('No tags selected');
 
   fTagRegistry := ATagRegistry;
-  if AImages <> nil then
-  begin
-    ilTagDialogButtons.Assign(AImages);
-    fImages := ilTagDialogButtons;
-  end
+  fDataSources := ADataSources;
+  if ACommandImages <> nil then
+    fImages := ACommandImages
   else
-    fImages := ilTagDialogButtons;
-  fCommandImages := ACommandImages;
+    fImages := AImages;
+  fCommandImages := fImages;
   fOnHardwareSourceSetup := AOnHardwareSourceSetup;
+  fOnCanZeroBalance := AOnCanZeroBalance;
   fOnZeroBalance := AOnZeroBalance;
   fTags := TList.Create;
   fTags.Assign(ATags);
@@ -526,6 +480,7 @@ begin
     tekPeakToPeakByRmsDeviation do
     if fEstimateChecks[lEstimateKind] <> nil then
       fEstimateChecks[lEstimateKind].OnClick := @EstimateCheckClick;
+  FillDefaultEstimateChoices;
 
   fSetpointEnabledChecks[tskHighAlarm] := fSetpointEnabledCheck0;
   fSetpointEnabledChecks[tskHighWarning] := fSetpointEnabledCheck1;
@@ -578,29 +533,49 @@ begin
   fZeroBalanceBtn.OnClick := @ZeroBalanceButtonClick;
   fHardwareDeviceSetupBtn.OnClick := @HardwareDeviceSetupButtonClick;
 
-  AssignSpeedButtonImage(fAddressButton, fImages, CTagDialogIconAddress);
-  AssignSpeedButtonImage(fDescriptionEditBtn, fImages, CTagDialogIconEdit);
-  AssignSpeedButtonImage(fHardwareCurveSelectBtn, fImages, CTagDialogIconProperty);
-  AssignSpeedButtonImage(fHardwareCurveSetupBtn, fImages, CTagDialogIconHardwareCurve);
+  AssignSpeedButtonImage(fAddressButton, fImages, CIconAddress);
+  AssignSpeedButtonImage(fDescriptionEditBtn, fImages, CIconEdit);
+  AssignSpeedButtonImage(fHardwareCurveSelectBtn, fImages, CIconProperty);
+  AssignSpeedButtonImage(fHardwareCurveSetupBtn, fImages, CIconHardwareCurve);
   AssignSpeedButtonImage(fHardwareCurveDownloadBtn, fCommandImages,
-    CTagDialogIconHardwareCurveRead, 'Выгрузка из памяти ГХ');
+    CIconHardwareCurveRead, 'Выгрузка из памяти ГХ');
   if (fHardwareCurveDownloadBtn <> nil) and (fHardwareCurveDownloadBtn.Images = nil) then
     AssignDownloadFlashIcon(fHardwareCurveDownloadBtn);
-  AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CTagDialogIconProperty,
+  AssignSpeedButtonImage(fChannelCurveSelectBtn, fImages, CIconProperty,
     'Настроить цепочку ГХ');
   fChannelCurveEdit.Hint := 'Двойной щелчок — редактировать выбранную ГХ';
   fChannelCurveEdit.ShowHint := True;
-  AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CTagDialogIconAdd);
-  AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CTagDialogIconRemove);
-  AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CTagDialogIconChannelCurve,
+  AssignSpeedButtonImage(fChannelCurveAddBtn, fImages, CIconAdd);
+  AssignSpeedButtonImage(fChannelCurveDeleteBtn, fImages, CIconRemove);
+  AssignSpeedButtonImage(fChannelCurveEditBtn, fImages, CIconChannelCurve,
     'Экспорт текущей ГХ в БДГХ');
-  AssignSpeedButtonImage(fZeroBalanceBtn, fCommandImages, CTagDialogIconZeroBalance,
-    'Балансировка нуля', CTagDeviceActionBtnSize);
+  AssignSpeedButtonImage(fZeroBalanceBtn, fCommandImages, CIconZeroBalance,
+    'Балансировка нуля');
   AssignSpeedButtonImage(fHardwareDeviceSetupBtn, fCommandImages,
-    CTagDialogIconHardwareSource, 'Настройка аппаратной части', CTagDeviceActionBtnSize);
+    CIconHardwareSource, 'Настройка аппаратной части');
   LayoutTagDeviceActionButtons;
   LoadFromTags;
   fDefaultEstimateCombo.OnChange := @DefaultEstimateComboChange;
+end;
+
+procedure TTagSettingsDialog.FillDefaultEstimateChoices;
+var
+  lKind: TRecorderTagEstimateKind;
+  lCaption: string;
+begin
+  fDefaultEstimateCombo.Items.BeginUpdate;
+  try
+    fDefaultEstimateCombo.Items.Clear;
+    for lKind := Low(TRecorderTagEstimateKind) to
+      tekPeakToPeakByRmsDeviation do
+    begin
+      lCaption := StringReplace(fEstimateChecks[lKind].Caption,
+        ' precision: default', '', []);
+      fDefaultEstimateCombo.Items.AddObject(lCaption, TObject(PtrInt(lKind)));
+    end;
+  finally
+    fDefaultEstimateCombo.Items.EndUpdate;
+  end;
 end;
 
 destructor TTagSettingsDialog.Destroy;
@@ -612,22 +587,20 @@ end;
 
 procedure TTagSettingsDialog.AssignSpeedButtonImage(AButton: TSpeedButton;
   AImages: TCustomImageList; AImageIndex: Integer; const AHint: string;
-  ABtnSize: Integer);
+  AIconSize: Integer);
 var
-  lBtnSize: Integer;
+  lIconSize: Integer;
 begin
   if (AButton = nil) or (AImages = nil) or (AImageIndex < 0) or
     (AImageIndex >= AImages.Count) then
     Exit;
-  if ABtnSize > 0 then
-    lBtnSize := ABtnSize
-  else if AImages.Width > 0 then
-    lBtnSize := AImages.Width
+  if AIconSize > 0 then
+    lIconSize := AIconSize
   else
-    lBtnSize := 32;
+    lIconSize := CTagDialogIconSize;
   AButton.Images := AImages;
   AButton.ImageIndex := AImageIndex;
-  AButton.ImageWidth := lBtnSize;
+  AButton.ImageWidth := lIconSize;
   AButton.Caption := '';
   AButton.Layout := blGlyphTop;
   AButton.Spacing := 0;
@@ -639,7 +612,6 @@ begin
     AButton.ShowHint := True;
     AButton.ParentShowHint := False;
   end;
-  AButton.SetBounds(AButton.Left, AButton.Top, lBtnSize, lBtnSize);
 end;
 
 procedure TTagSettingsDialog.AssignActionSpeedButton(AButton: TSpeedButton;
@@ -748,61 +720,27 @@ begin
   end;
 end;
 
-function TTagSettingsDialog.EnsureMic185HardwareCalibrationAssigned(
-  ATag: TRecorderTag; AEnableOnTag: Boolean): Boolean;
-begin
-  Result := False;
-  if (ATag = nil) or (fTagRegistry = nil) or
-    (Pos('MIC-185:', ATag.SourceId) <> 1) then
-    Exit;
-  Result := RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, ATag,
-    AEnableOnTag);
-end;
-
 function TTagSettingsDialog.TryGetStrainDeviceExcitation(ATag: TRecorderTag;
   out AExcitation: string): Boolean;
-var
-  lEffectivePowerMa: Double;
-  lNominalPowerMa: Double;
-  lSettings: TMic185ChannelProgramSettings;
 begin
   Result := False;
   AExcitation := '';
-  if (ATag = nil) or (fTagRegistry = nil) then
-    Exit;
-
-  if RecorderIsHardwareMic185TagSource(ATag.SourceId) then
-  begin
-    RecorderMic185GetSourceChannelMode(fTagRegistry, ATag.SourceId,
-      ATag.Address, ATag.PollFrequencyHz, lSettings);
-    lNominalPowerMa := Abs(Mic185PowerCodeToMa(lSettings.PowerMaCode));
-    if SameValue(lNominalPowerMa, 0.0, 1E-9) then
-      lNominalPowerMa := Abs(Mic185PowerCodeToMa(
-        RecorderMic185GetSourcePowerMaCode(fTagRegistry, ATag.SourceId)));
-    lEffectivePowerMa := RecorderMic185ApplyCurrentCalibration(fTagRegistry,
-      ATag, lNominalPowerMa);
-    AExcitation := FormatFloat('0.###', lEffectivePowerMa) + 'mA';
-    Result := True;
-  end;
 end;
 
 procedure TTagSettingsDialog.UpdateHardwareCurveText;
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
-  lConfigured: TRecorderConfiguredDataSource;
   lFirstEnabled: Boolean;
   lFirstName: string;
-  lMic185Settings: TMic185ChannelProgramSettings;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
   lSameEnabled: Boolean;
   lSameName: Boolean;
 begin
   if fTags.Count = 0 then
     Exit;
 
-  if Pos('MIC-185:', TagAt(0).SourceId) = 1 then
-    for I := 0 to fTags.Count - 1 do
-      EnsureMic185HardwareCalibrationAssigned(TagAt(I), False);
   lFirstName := Trim(TagAt(0).HardwareCalibrationName);
   lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
   lSameName := True;
@@ -829,57 +767,17 @@ begin
 
   lCalibration := fTagRegistry.FindCalibrationByName(
     lFirstName);
-  if (lCalibration = nil) and (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+  fHardwareCurveEdit.Text := lFirstName;
+  if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) then
   begin
-    RecorderMic185LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0), False);
-    lFirstName := Trim(TagAt(0).HardwareCalibrationName);
-    lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
-    fHardwareCurveCheck.Checked := lFirstEnabled;
-    lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
+    RecorderInitTagSettingsState(lState);
+    if lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
+      (Trim(lState.HardwareCalibrationText) <> '') then
+      fHardwareCurveEdit.Text := lState.HardwareCalibrationText;
   end;
-  // MC-201: если на диске уже есть ГХ для SN+диапазона — подтянуть сразу.
-  if (Pos('MC-032:', TagAt(0).SourceId) = 1) and
-    ((lCalibration = nil) or (lFirstName = '')) then
-  begin
-    lConfigured := RecorderConfiguredDataSourcesFind(fTagRegistry,
-      TagAt(0).SourceId);
-    if lConfigured <> nil then
-    begin
-      if RecorderMc201LoadHardwareCalibrationForTag(fTagRegistry, TagAt(0),
-        lConfigured.SpecificConfigText) then
-      begin
-        lFirstName := Trim(TagAt(0).HardwareCalibrationName);
-        lFirstEnabled := TagAt(0).HardwareCalibrationEnabled;
-        fHardwareCurveCheck.Checked := lFirstEnabled;
-        lCalibration := fTagRegistry.FindCalibrationByName(lFirstName);
-      end;
-    end;
-  end;
-  if (Pos('MIC-185:', TagAt(0).SourceId) = 1) and (lCalibration <> nil) then
-  begin
-    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
-      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
-    fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
-      fTagRegistry, TagAt(0), lMic185Settings, TagAt(0).UnitName);
-  end
-  else
-    fHardwareCurveEdit.Text := lFirstName;
-end;
-
-function TTagSettingsDialog.Mic185SourceUnitName(ATag: TRecorderTag;
-  const ASettings: TMic185ChannelProgramSettings): string;
-begin
-  Result := RecorderMic185GetSourceChannelUnitName(fTagRegistry,
-    ATag.SourceId, ATag.Address);
-  if Result = '' then
-    Result := RecorderMic185RangeUnitText(ASettings.MeasRangeIndex);
 end;
 
 procedure TTagSettingsDialog.HardwareCurveCheckClick(Sender: TObject);
-var
-  lChannelNumber: Integer;
-  lMic185Settings: TMic185ChannelProgramSettings;
-  lSettings: TRecorderMic140ChannelSettings;
 begin
   { При множественном выборе cbGrayed означает разные исходные значения.
     Первый явный щелчок должен стать общей командой «включить», иначе LCL
@@ -887,50 +785,7 @@ begin
   if fHardwareCurveCheck.State = cbGrayed then
     fHardwareCurveCheck.State := cbChecked;
   fHardwareCurveCheck.AllowGrayed := False;
-  if fTags.Count <> 1 then
-  begin
-    RefreshUnitChoices;
-    Exit;
-  end;
-  if Pos('MIC-185:', TagAt(0).SourceId) = 1 then
-  begin
-    if not fHardwareCurveCheck.Checked then
-    begin
-      RefreshUnitChoices;
-      Exit;
-    end;
-    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
-      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
-    if SameText(Trim(fUnitCombo.Text), 'код') or
-      SameText(Trim(fUnitCombo.Text), 'code') then
-      fUnitCombo.Text := Mic185SourceUnitName(TagAt(0), lMic185Settings);
-    fHardwareCurveEdit.Text := RecorderMic185EffectiveTransformText(
-      fTagRegistry, TagAt(0), lMic185Settings, fUnitCombo.Text);
-    RefreshUnitChoices;
-    Exit;
-  end;
-  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) <> 1 then
-  begin
-    RefreshUnitChoices;
-    Exit;
-  end;
-  lSettings.ChannelAddress := '';
-  if not RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
-    lChannelNumber, lSettings) then
-    Exit;
-
-  if fAutoUnitCheck.State <> cbChecked then
-  begin
-    RefreshUnitChoices;
-    Exit;
-  end;
-  if not fHardwareCurveCheck.Checked then
-    fUnitCombo.Text := 'code'
-  else if lSettings.ChannelCalibrationEnabled and
-    RecorderMic140ChannelUsesTemperature(lSettings) then
-    fUnitCombo.Text := RecorderMic140OutputModeUnitName(momTemperatureC)
-  else
-    fUnitCombo.Text := RecorderMic140OutputModeUnitName(momMillivolts);
+  ApplyAutoUnitFromChannelCalibration;
   RefreshUnitChoices;
 end;
 
@@ -947,6 +802,12 @@ end;
 function TTagSettingsDialog.TagAt(AIndex: Integer): TRecorderTag;
 begin
   Result := TRecorderTag(fTags[AIndex]);
+end;
+
+function TTagSettingsDialog.ResolveSettingsProvider(ATag: TRecorderTag;
+  out AProvider: IRecorderTagSettingsProvider): Boolean;
+begin
+  Result := RecorderResolveTagSettingsProvider(ATag, fDataSources, AProvider);
 end;
 
 function TTagSettingsDialog.AllString(AKind: Integer; out AValue: string): Boolean;
@@ -1295,8 +1156,6 @@ begin
     lSourceId := Trim(TagAt(I).SourceId);
     if RecorderIsDetachedTagSource(lSourceId) then
       Exit(True);
-    if RecorderIsHardwareMic140TagSource(lSourceId) then
-      Continue;
     if SourceNeedsActiveCheck(lSourceId) and
       not fTagRegistry.IsSourceActive(lSourceId) then
       Exit(True);
@@ -1506,20 +1365,21 @@ end;
 
 function TTagSettingsDialog.CanConfigureHardwareSource: Boolean;
 var
-  lHost: string;
-  lPort: Word;
   lTag: TRecorderTag;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
 begin
   Result := False;
   if fTags.Count <> 1 then
     Exit;
   lTag := TagAt(0);
-  if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-    Exit(True);
-  if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
-    Exit(True);
-  if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
-    Exit(True);
+  if ResolveSettingsProvider(lTag, lProvider) then
+  begin
+    RecorderInitTagSettingsState(lState);
+    if lProvider.ReadState(fTagRegistry, lTag, lState) and
+      lState.HardwareSourceConfigurable then
+      Exit(True);
+  end;
   Result := Pos(CMeraSourcePrefix, lTag.SourceId) = 1;
 end;
 
@@ -1555,27 +1415,9 @@ begin
 end;
 
 function TTagSettingsDialog.CanZeroBalance: Boolean;
-var
-  I: Integer;
-  lHost: string;
-  lPort: Word;
-  lTag: TRecorderTag;
 begin
-  Result := False;
-  if fTags.Count = 0 then
-    Exit;
-  for I := 0 to fTags.Count - 1 do
-  begin
-    lTag := TagAt(I);
-    if Pos('Detached:', lTag.SourceId) = 1 then
-      Continue;
-    if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-      Exit(True);
-    if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
-      Exit(True);
-    if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
-      Exit(True);
-  end;
+  Result := Assigned(fOnCanZeroBalance) and
+    fOnCanZeroBalance(Self, fTagRegistry, fTags);
 end;
 
 procedure TTagSettingsDialog.UpdateTagDeviceActionButtons;
@@ -1611,20 +1453,15 @@ var
 begin
   if not CanZeroBalance then
     Exit;
-  { Балансировка может быть запущена до OK/Apply. Сначала фиксируем выбранные
-    пользователем единицы MIC-185 в datasource, чтобы перепрограммирование
-    прибора не восстановило прежний режим мВ. }
+  { Балансировка может быть запущена до OK/Apply. Диалог фиксирует
+    только общую модель единицы; её аппаратную интерпретацию выполняет
+    конкретный datasource в ZeroBalanceTags. }
   if fTags.Count = 1 then
   begin
     lTag := TagAt(0);
     lUnitName := Trim(fUnitCombo.Text);
-    if (Pos('MIC-185:', lTag.SourceId) = 1) and
-      (SameText(lUnitName, 'мВ') or SameText(lUnitName, 'мВ(тензо)') or
-       SameText(lUnitName, 'Ом') or SameText(lUnitName, 'мкстрн') or
-       SameText(lUnitName, 'мкм/м')) then
+    if lUnitName <> '' then
     begin
-      RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
-        lTag.Address, lTag.PollFrequencyHz, lUnitName);
       lTag.SourceUnitName := lUnitName;
       if not lTag.AutoUnit then
         lTag.UnitName := lUnitName;
@@ -1651,13 +1488,10 @@ end;
 
 procedure TTagSettingsDialog.HardwareSourceSetupButtonClick(Sender: TObject);
 var
-  lConfigs: TStringList;
   lDialog: TOpenDialog;
-  lHost: string;
   lNewSourceId: string;
   lOldSourceId: string;
   lPath: string;
-  lPort: Word;
   lTag: TRecorderTag;
   I: Integer;
 begin
@@ -1668,20 +1502,6 @@ begin
   begin
     fOnHardwareSourceSetup(Self, lTag);
     LoadFromTags;
-    Exit;
-  end;
-
-  if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
-  begin
-    lConfigs := TStringList.Create;
-    try
-      lConfigs.OwnsObjects := True;
-      if ApplyRecorderMic140SourceDialog(Self, fTagRegistry, lConfigs, lTag.SourceId,
-        lNewSourceId) then
-        LoadFromTags;
-    finally
-      lConfigs.Free;
-    end;
     Exit;
   end;
 
@@ -1730,7 +1550,8 @@ var
   lSourceActive: Boolean;
   lTagTemp: TRecorderTag;
   lFrequencyGrid: TRecorderFrequencyGrid;
-  lMic185Settings: TMic185ChannelProgramSettings;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
 begin
   if fTags.Count = 1 then
   begin
@@ -1753,12 +1574,12 @@ begin
     fUnitCombo.Text := lText
   else
     fUnitCombo.Text := '';
-  if (fTags.Count = 1) and
-    (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+  if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) then
   begin
-    RecorderMic185GetSourceChannelMode(fTagRegistry, TagAt(0).SourceId,
-      TagAt(0).Address, TagAt(0).PollFrequencyHz, lMic185Settings);
-    fUnitCombo.Text := Mic185SourceUnitName(TagAt(0), lMic185Settings);
+    RecorderInitTagSettingsState(lState);
+    if lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
+      (Trim(lState.OutputUnitName) <> '') then
+      fUnitCombo.Text := lState.OutputUnitName;
   end;
   if AllString(2, lText) then
     fModuleEdit.Text := lText
@@ -1775,8 +1596,6 @@ begin
       lSourceActive := False;
       Break;
     end;
-    if RecorderIsHardwareMic140TagSource(lSourceId) then
-      Continue;
     if SourceNeedsActiveCheck(lSourceId) and
       not fTagRegistry.IsSourceActive(lSourceId) then
     begin
@@ -1953,14 +1772,13 @@ var
   lEstimateSettings: TRecorderTagEstimateSettings;
   lFloat: Double;
   lInt: Integer;
-  lMic185Settings: TMic185ChannelProgramSettings;
   lSetpoint: TRecorderTagSetpoint;
   lSetpointKind: TRecorderTagSetpointKind;
-  lChannelNumber: Integer;
-  lSettings: TRecorderMic140ChannelSettings;
-  lAppliedMic185Sources: TStringList;
-  lPreviousUnitName: string;
-  lSourceId: string;
+  lProvider: IRecorderTagSettingsProvider;
+  lDraft: TRecorderTagSettingsDraft;
+  lApplyResult: TRecorderTagSettingsApplyResult;
+  lErrorText: string;
+  lPreviousFrequency: Double;
   lHardwareChanged: Boolean;
   lChannelChanged: Boolean;
 begin
@@ -1973,22 +1791,18 @@ begin
       raise ERecorderTagError.Create('Invalid tag name');
   end;
 
-  lAppliedMic185Sources := TStringList.Create;
-  try
-    lAppliedMic185Sources.CaseSensitive := False;
-    for I := 0 to fTags.Count - 1 do
+  for I := 0 to fTags.Count - 1 do
     begin
       lTag := TagAt(I);
+      lPreviousFrequency := lTag.PollFrequencyHz;
       lTag.InvalidateCalibrationScale;
       lHardwareChanged := False;
       lChannelChanged := False;
-      lPreviousUnitName := lTag.UnitName;
     if fSelectedMeraFileName <> '' then
     begin
       lTag.Address := Trim(fModuleEdit.Text);
       lTag.SourceId := 'Mera file: ' + fSelectedMeraFileName;
       lTag.IsVirtual := True;
-      RecorderTagClearMic140Settings(lTag);
     end;
     { При Auto единица в combo уже является выходом последней ГХ. Не записываем
       её обратно как исходную единицу канала: SourceUnitName нужен сборщику
@@ -2003,34 +1817,7 @@ begin
     begin
       if not ReadFloat(fFrequencyCombo.Text, lFloat) then
         raise ERecorderTagError.Create('Invalid poll frequency');
-      if Pos('MIC-140:', lTag.SourceId) = 1 then
-      begin
-        { Частота у MIC-140 общая для прибора. Не запускаем обход всех тегов
-          и изменение их буферов, если пользователь просто нажал OK. }
-        if not SameValue(lTag.PollFrequencyHz,
-          RecorderMic140NormalizeFrequency(lFloat), 1E-9) then
-          RecorderMic140ApplySourceFrequency(fTagRegistry, lTag.SourceId, lFloat);
-      end
-      else if Pos('MC-032:', lTag.SourceId) = 1 then
-      begin
-        if not SameValue(lTag.PollFrequencyHz, lFloat, 1E-9) then
-          RecorderMc201ApplySlotFrequency(fTagRegistry, lTag.SourceId,
-            lTag.Address, lFloat);
-      end
-      else if Pos('MIC-185:', lTag.SourceId) = 1 then
-      begin
-        lSourceId := RecorderNormalizeTagSourceId(lTag.SourceId);
-        if (not SameValue(lTag.PollFrequencyHz,
-          RecorderMic185NormalizeFrequency(lFloat), 1E-9)) and
-          (lAppliedMic185Sources.IndexOf(lSourceId) < 0) then
-        begin
-          lAppliedMic185Sources.Add(lSourceId);
-          RecorderMic185ApplySourceFrequency(fTagRegistry, lSourceId, lFloat,
-            fDataUpdateMs);
-        end;
-      end
-      else
-        lTag.PollFrequencyHz := lFloat;
+      lTag.PollFrequencyHz := lFloat;
     end;
     if Trim(fMinEdit.Text) <> '' then
     begin
@@ -2046,21 +1833,6 @@ begin
     end;
     if fAutoUnitCheck.State <> cbGrayed then
       lTag.AutoUnit := fAutoUnitCheck.Checked;
-    if (Pos('MIC-185:', lTag.SourceId) = 1) and
-      ((SameText(Trim(fUnitCombo.Text), 'мВ')) or
-       (SameText(Trim(fUnitCombo.Text), 'мВ(тензо)')) or
-       (SameText(Trim(fUnitCombo.Text), 'Ом')) or
-       (SameText(Trim(fUnitCombo.Text), 'мкстрн')) or
-       (SameText(Trim(fUnitCombo.Text), 'мкм/м'))) then
-    begin
-      { Единица источника MIC-185 (мВ/Ом/мкстрн) является отдельной
-        пользовательской настройкой и сохраняется независимо от галки ГХ. }
-      RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
-        lTag.Address, lTag.PollFrequencyHz, Trim(fUnitCombo.Text));
-      lTag.SourceUnitName := Trim(fUnitCombo.Text);
-      if not lTag.AutoUnit then
-        lTag.UnitName := Trim(fUnitCombo.Text);
-    end;
     if fAutoRangeCheck.State <> cbGrayed then
       lTag.AutoRange := fAutoRangeCheck.Checked;
     if fHardwareCurveCheck.State <> cbGrayed then
@@ -2070,45 +1842,8 @@ begin
       if lHardwareChanged then
         lTag.ClearSignalHistory;
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
-      if lHardwareChanged and lTag.HardwareCalibrationEnabled and
-        (Pos('MIC-185:', lTag.SourceId) = 1) then
-      begin
-        EnsureMic185HardwareCalibrationAssigned(lTag, True);
-        RecorderMic185GetSourceChannelMode(fTagRegistry, lTag.SourceId,
-          lTag.Address, lTag.PollFrequencyHz, lMic185Settings);
-        if SameText(Trim(lTag.UnitName), 'код') or
-          SameText(Trim(lTag.UnitName), 'code') then
-          lTag.UnitName := Mic185SourceUnitName(lTag, lMic185Settings);
-        lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fTagRegistry,
-          lTag, lMic185Settings, lTag.UnitName);
-        lTag.RangeMin := -lTag.RangeMax;
-      end;
-      if lHardwareChanged and (not lTag.HardwareCalibrationEnabled) and
-        (Pos('MIC-185:', lTag.SourceId) = 1) then
-      begin
-        RecorderMic185SetSourceChannelUnitName(fTagRegistry, lTag.SourceId,
-          lTag.Address, lTag.PollFrequencyHz, lPreviousUnitName);
-        lTag.UnitName := lPreviousUnitName;
-      end;
-      if lHardwareChanged and
-        (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
-      begin
-        lSettings.ChannelAddress := '';
-        if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,
-          lChannelNumber, lSettings) then
-        begin
-          lSettings.HardwareCalibrationEnabled :=
-            lTag.HardwareCalibrationEnabled;
-          lSettings.HardwareCalibrationName :=
-            lTag.HardwareCalibrationName;
-          RecorderMic140UpdateChannelSettings(fTagRegistry, lTag, lSettings);
-        end;
-      end;
-      if lHardwareChanged and (Pos('MC-032:', lTag.SourceId) = 1) then
-        RecorderMc201SyncTagUnitFromHardwareGx(fTagRegistry, lTag);
     end;
-    { Hardware curve edit may show MIC-185 k,b details; calibration assignment
-      itself is changed only by explicit read/select actions. }
+    { Calibration assignment itself is changed only by explicit actions. }
     if fChannelCurveCheck.State <> cbGrayed then
     begin
       lChannelChanged := lTag.ChannelCalibrationEnabled <>
@@ -2116,60 +1851,38 @@ begin
       if lChannelChanged then
         lTag.ClearSignalHistory;
       lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
-      if lChannelChanged and
-        (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) then
-      begin
-        if fChannelCurveCheck.Checked then
-        begin
-          lSettings.ChannelAddress := '';
-          if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag, lChannelNumber,
-            lSettings) and ((Trim(lSettings.ThermocoupleScalePath) <> '') or
-            (Trim(lSettings.ThermocoupleScaleName) <> '')) then
-          begin
-            if lTag.SourceValueMode <>
-              RecorderMic140OutputModeToConfigName(momTemperatureC) then
-              lTag.ClearSignalHistory;
-            lTag.SourceValueMode :=
-              RecorderMic140OutputModeToConfigName(momTemperatureC);
-            if lTag.AutoUnit then
-              lTag.UnitName := RecorderMic140OutputModeUnitName(momTemperatureC);
-          end;
-        end
-        else
-        begin
-          if lTag.SourceValueMode <>
-            RecorderMic140OutputModeToConfigName(momMillivolts) then
-            lTag.ClearSignalHistory;
-          lTag.SourceValueMode :=
-            RecorderMic140OutputModeToConfigName(momMillivolts);
-          if lTag.AutoUnit then
-            lTag.UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
-        end;
-      end;
     end;
-    if (Pos(CMic140SourcePrefix, lTag.SourceId) = 1) and
-      (lHardwareChanged or lChannelChanged) then
+    if ResolveSettingsProvider(lTag, lProvider) then
     begin
-      lSettings.ChannelAddress := '';
-      if RecorderMic140TryGetChannelSettings(fTagRegistry, lTag,
-        lChannelNumber, lSettings) then
+      RecorderInitTagSettingsDraft(lTag, fDataUpdateMs, lDraft);
+      lDraft.PollFrequencyHz := lTag.PollFrequencyHz;
+      lDraft.UnitName := lTag.UnitName;
+      lDraft.AutoUnit := lTag.AutoUnit;
+      lDraft.HardwareCalibrationEnabled := lTag.HardwareCalibrationEnabled;
+      lDraft.ChannelCalibrationEnabled := lTag.ChannelCalibrationEnabled;
+      { Provider сравнивает draft с прежним значением и сам применяет
+        source-wide/slot-wide семантику частоты. }
+      lTag.PollFrequencyHz := lPreviousFrequency;
+      if not lProvider.NormalizeDraft(fTagRegistry, lTag, lDraft, lErrorText) then
+        raise ERecorderTagError.Create(lErrorText);
+      RecorderInitTagSettingsApplyResult(lApplyResult);
+      if not lProvider.ApplyDraft(fTagRegistry, lTag, lDraft, lApplyResult,
+        lErrorText) then
+        raise ERecorderTagError.Create(lErrorText);
+      if lApplyResult.UnitChanged then lTag.UnitName := lApplyResult.UnitName;
+      if lApplyResult.SourceUnitChanged then
+        lTag.SourceUnitName := lApplyResult.SourceUnitName;
+      if lApplyResult.FrequencyChanged then
+        lTag.PollFrequencyHz := lApplyResult.PollFrequencyHz;
+      if not lApplyResult.FrequencyChanged then
+        lTag.PollFrequencyHz := lDraft.PollFrequencyHz;
+      if lApplyResult.RangeChanged then
       begin
-        lSettings.ChannelCalibrationEnabled :=
-          lTag.ChannelCalibrationEnabled;
-        if lSettings.ChannelCalibrationEnabled and
-          RecorderMic140ChannelUsesTemperature(lSettings) then
-          lSettings.OutputMode :=
-            RecorderMic140OutputModeToConfigName(momTemperatureC)
-        else
-          lSettings.OutputMode :=
-            RecorderMic140OutputModeToConfigName(momMillivolts);
-        lSettings.HardwareCalibrationEnabled :=
-          lTag.HardwareCalibrationEnabled;
-        lSettings.HardwareCalibrationName :=
-          lTag.HardwareCalibrationName;
-        RecorderMic140UpdateChannelSettings(fTagRegistry, lTag, lSettings);
-        RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
+        lTag.RangeMin := lApplyResult.RangeMin;
+        lTag.RangeMax := lApplyResult.RangeMax;
       end;
+      if lApplyResult.SignalHistoryMustBeCleared then
+        lTag.ClearSignalHistory;
     end;
 
     lEstimateSettings := lTag.EstimateSettings;
@@ -2228,12 +1941,9 @@ begin
       lTag.SetpointRangeControlEnabled := fSetpointRangeControlCheck.Checked;
     if fSetpointRangeAlarmInfoEdit.Text <> CMixedAlarmInfoText then
       lTag.SetpointRangeAlarmInfoText := Trim(fSetpointRangeAlarmInfoEdit.Text);
-    if lTag.AutoUnit and (Pos(CMic140SourcePrefix, lTag.SourceId) <> 1) then
+    if lTag.AutoUnit then
       fTagRegistry.SyncTagAutoUnit(lTag);
     fTagRegistry.RebuildScales(lTag);
-  end;
-  finally
-    lAppliedMic185Sources.Free;
   end;
 end;
 
@@ -2277,6 +1987,9 @@ end;
 
 
 procedure TTagSettingsDialog.SelectCalibrationButtonClick(Sender: TObject);
+var
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
 begin
   if fTags.Count <> 1 then
   begin
@@ -2286,11 +1999,12 @@ begin
     Exit;
   end;
 
-  if Pos(CMic140SourcePrefix, TagAt(0).SourceId) = 1 then
+  if ResolveSettingsProvider(TagAt(0), lProvider) and
+    lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
+    not lState.ChannelCalibrationSelectable then
   begin
     MessageDlg('Канальная ГХ',
-      'Для MIC-140 термопарная ГХ настраивается в диалоге канала MIC-140 ' +
-      'и выгружается из памяти прибора. Общий список ГХ для этого канала не используется.',
+      'Канальная ГХ настраивается средствами выбранного источника.',
       mtInformation, [mbOK], 0);
     Exit;
   end;
@@ -2309,6 +2023,8 @@ function TTagSettingsDialog.TryGetChannelCalibrationOutputUnit(
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
 begin
   AUnitName := '';
   Result := False;
@@ -2330,15 +2046,12 @@ begin
       end;
     end;
 
-  { У MIC-185 аппаратная ГХ выдаёт промежуточные мВ, после которых datasource
-    переводит значение в выбранные для канала Ом/мкстрн. Без канальной ГХ
-    Auto должен показывать именно итоговую единицу источника. }
-  if Pos('MIC-185:', ATag.SourceId) = 1 then
+  if ResolveSettingsProvider(ATag, lProvider) and
+    lProvider.ReadState(fTagRegistry, ATag, lState) then
   begin
-    AUnitName := RecorderMic185GetSourceChannelUnitName(fTagRegistry,
-      ATag.SourceId, ATag.Address);
+    AUnitName := Trim(lState.OutputUnitName);
     if Trim(AUnitName) = '' then
-      AUnitName := Trim(ATag.SourceUnitName);
+      AUnitName := Trim(lState.SourceUnitName);
     if Trim(AUnitName) <> '' then
       Exit(True);
   end;
@@ -2374,10 +2087,6 @@ begin
         Exit;
     end;
 
-  { У MIC-185 выход аппаратной ступени дополнительно преобразуется datasource,
-    поэтому его единица не должна переписываться через аппаратную ГХ. }
-  if Pos('MIC-185:', ATag.SourceId) = 1 then
-    Exit(nil);
   if fHardwareCurveCheck.State = cbChecked then
     Result := fTagRegistry.FindCalibrationByName(
       ATag.HardwareCalibrationName);
@@ -2419,6 +2128,8 @@ var
   lOutputUnit: string;
   lOutputInfo: TRecorderUnitInfo;
   lCandidateInfo: TRecorderUnitInfo;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
   I: Integer;
 begin
   if fUnitCombo = nil then
@@ -2442,12 +2153,12 @@ begin
             SameText(lCandidateInfo.QuantityId, lOutputInfo.QuantityId) then
             fUnitCombo.Items.Add(lAllUnits[I]);
       end
-      else if (fTags.Count = 1) and
-        (Pos('MIC-185:', TagAt(0).SourceId) = 1) then
+      else if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) and
+        lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
+        (Length(lState.UnitNames) > 0) then
       begin
-        fUnitCombo.Items.Add('мВ');
-        fUnitCombo.Items.Add('Ом');
-        fUnitCombo.Items.Add('мкстрн');
+        for I := 0 to High(lState.UnitNames) do
+          fUnitCombo.Items.Add(lState.UnitNames[I]);
       end
       else
       begin
@@ -2519,8 +2230,8 @@ end;
 
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
 var
-  lChannelNumber: Integer;
-  lSettings: TRecorderMic140ChannelSettings;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
   lOutputUnit: string;
   lCurrentInfo: TRecorderUnitInfo;
   lOutputInfo: TRecorderUnitInfo;
@@ -2546,16 +2257,11 @@ begin
     Exit;
   end;
   if (fAutoUnitCheck.State = cbChecked) and (fTags.Count = 1) and
-    (Pos(CMic140SourcePrefix, TagAt(0).SourceId) = 1) then
+    ResolveSettingsProvider(TagAt(0), lProvider) and
+    lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
+    (Trim(lState.OutputUnitName) <> '') then
   begin
-    lSettings.ChannelAddress := '';
-    if RecorderMic140TryGetChannelSettings(fTagRegistry, TagAt(0),
-      lChannelNumber, lSettings) then
-      if fHardwareCurveCheck.Checked then
-        fUnitCombo.Text := RecorderMic140OutputModeUnitName(
-          RecorderMic140ConfigNameToOutputMode(lSettings.OutputMode))
-      else
-        fUnitCombo.Text := 'code';
+    fUnitCombo.Text := lState.OutputUnitName;
     RefreshUnitChoices;
     Exit;
   end;
@@ -2658,15 +2364,7 @@ var
   I: Integer;
 begin
   for I := 0 to fTags.Count - 1 do
-  begin
     TagAt(I).CalibrationNames.Clear;
-    if Pos(CMic140SourcePrefix, TagAt(I).SourceId) = 1 then
-    begin
-      TagAt(I).SourceValueMode :=
-        RecorderMic140OutputModeToConfigName(momMillivolts);
-      TagAt(I).UnitName := RecorderMic140OutputModeUnitName(momMillivolts);
-    end;
-  end;
   UpdateChannelCurveText;
 end;
 
@@ -2871,9 +2569,6 @@ begin
   end;
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
-    EnsureMic185HardwareCalibrationAssigned(TagAt(0), False);
-
-  if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
     MessageDlg('Аппаратная ГХ',
       'У выбранного тега нет назначенной аппаратной ГХ. Сначала выполните вычитку ГХ из модуля.',
@@ -2907,9 +2602,6 @@ begin
       mtInformation, [mbOK], 0);
     Exit;
   end;
-
-  if Trim(TagAt(0).HardwareCalibrationName) = '' then
-    EnsureMic185HardwareCalibrationAssigned(TagAt(0), False);
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
@@ -3010,18 +2702,18 @@ procedure TTagSettingsDialog.UpdateHardwareCurveButtons;
 var
   lI: Integer;
   lHasHardwareDevice: Boolean;
+  lProvider: IRecorderTagSettingsProvider;
+  lState: TRecorderTagSettingsState;
 begin
   lHasHardwareDevice := False;
   for lI := 0 to fTags.Count - 1 do
-  begin
-    if (Pos('MIC-140:', TagAt(lI).SourceId) = 1) or
-      (Pos('MIC-185:', TagAt(lI).SourceId) = 1) or
-      (Pos('MC-032: ', TagAt(lI).SourceId) = 1) then
+    if ResolveSettingsProvider(TagAt(lI), lProvider) and
+      lProvider.ReadState(fTagRegistry, TagAt(lI), lState) and
+      lState.HardwareCalibrationDownloadable then
     begin
       lHasHardwareDevice := True;
       Break;
     end;
-  end;
   if fHardwareCurveDownloadBtn <> nil then
     fHardwareCurveDownloadBtn.Visible := lHasHardwareDevice;
 end;
@@ -3030,20 +2722,18 @@ procedure TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick(Sender: 
 const
   sGhDownloadTitle = 'Выгрузка ГХ';
   sGhDownloadOk = 'Градуировки успешно выгружены из памяти устройства.';
-  sGhDownloadNoSupportedMic =
-    'Среди выбранных тегов нет каналов MIC-140 или MIC-185.';
+  sGhDownloadNoSupported =
+    'Среди выбранных тегов нет источников с поддержкой выгрузки аппаратной ГХ.';
 var
-  lB: Double;
-  lCalibrationName: string;
   lErrorMessage: string;
   lErrors: TStringList;
   lI: Integer;
-  lK: Double;
   lMessageText: string;
   lMessages: TStringList;
   lOkCount: Integer;
-  lDevice: IRecorderDevice;
-  lValues: TRecorderDeviceActionValues;
+  lProvider: IRecorderTagSettingsProvider;
+  lResult: TRecorderHardwareCalibrationResult;
+  lState: TRecorderTagSettingsState;
 begin
   if fTags.Count = 0 then
     Exit;
@@ -3054,37 +2744,22 @@ begin
     lOkCount := 0;
     for lI := 0 to fTags.Count - 1 do
     begin
-      if Pos('MC-032: ', TagAt(lI).SourceId) = 1 then
-      begin
-        lDevice := RecorderHardwareFindLiveDevice(TagAt(lI).SourceId);
-        if lDevice = nil then
-          lErrors.Add(Format('%s (%s): нет активной сессии MC-032',
-            [TagAt(lI).Name, TagAt(lI).Address]))
-        else if not lDevice.ExecuteDeviceAction(rdaReadHardwareCalibration,
-          [], lValues, lErrorMessage) then
-          lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name,
-            TagAt(lI).Address, lErrorMessage]));
+      if not ResolveSettingsProvider(TagAt(lI), lProvider) then
         Continue;
-      end;
-      if Pos('MIC-185:', TagAt(lI).SourceId) = 1 then
+      if not lProvider.ReadState(fTagRegistry, TagAt(lI), lState) or
+        not lState.HardwareCalibrationDownloadable then
+        Continue;
+      if lProvider.DownloadHardwareCalibration(fTagRegistry, TagAt(lI),
+        lResult, lErrorMessage) then
       begin
-        if RecorderMic185DownloadHardwareCalibrationFromDeviceEx(fTagRegistry,
-          TagAt(lI), lK, lB, lCalibrationName, lErrorMessage) then
-        begin
-          Inc(lOkCount);
+        Inc(lOkCount);
+        if Trim(lResult.MessageText) <> '' then
           lMessages.Add(Format('%s (%s): %s', [TagAt(lI).Name,
-            TagAt(lI).Address, RecorderMic185FormatHardwareKx(lK, lB)]));
-        end
-        else
-          lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name, TagAt(lI).Address,
-            lErrorMessage]));
-        Continue;
-      end;
-      if Pos('MIC-140:', TagAt(lI).SourceId) <> 1 then
-        Continue;
-      if RecorderMic140DownloadHardwareCalibrationFromDevice(fTagRegistry,
-        TagAt(lI), lErrorMessage) then
-        Inc(lOkCount)
+            TagAt(lI).Address, lResult.MessageText]))
+        else if Trim(lResult.PresentationText) <> '' then
+          lMessages.Add(Format('%s (%s): %s', [TagAt(lI).Name,
+            TagAt(lI).Address, lResult.PresentationText]));
+      end
       else
         lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name, TagAt(lI).Address,
           lErrorMessage]));
@@ -3107,7 +2782,7 @@ begin
     else if lErrors.Count > 0 then
       MessageDlg(sGhDownloadTitle, lErrors.Text, mtError, [mbOK], 0)
     else
-      MessageDlg(sGhDownloadTitle, sGhDownloadNoSupportedMic,
+      MessageDlg(sGhDownloadTitle, sGhDownloadNoSupported,
         mtInformation, [mbOK], 0);
   finally
     lMessages.Free;

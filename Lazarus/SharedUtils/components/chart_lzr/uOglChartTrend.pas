@@ -65,6 +65,7 @@ type
     fPoints: array of TChartPoint;       // Внутренний динамический массив точек серии
     fPointCount: Integer;
     fLineWidth: Single;
+    fStipplePattern: Word;
     fDrawLine: Boolean;
     fDrawMarkers: Boolean;
     fMarkerSize: Single;
@@ -85,6 +86,7 @@ type
     property Points[AIndex: Integer]: TChartPoint read GetPoint;
     property PointCount: Integer read GetPointCount;
     property LineWidth: Single read fLineWidth write fLineWidth;
+    property StipplePattern: Word read fStipplePattern write fStipplePattern;
     property DrawLine: Boolean read fDrawLine write fDrawLine;
     property DrawMarkers: Boolean read fDrawMarkers write fDrawMarkers;
     property MarkerSize: Single read fMarkerSize write fMarkerSize;
@@ -226,6 +228,7 @@ begin
   Caption := 'Line series';
   Color := $FFFF0000;
   fLineWidth := 1.0;
+  fStipplePattern := 0;
   fDrawLine := True;
   fDrawMarkers := False;
   fMarkerSize := 3.0;

@@ -171,7 +171,7 @@ begin
   if SysUtils.GetEnvironmentVariable('MERA_FILES') <> '' then
     Result := SysUtils.GetEnvironmentVariable('MERA_FILES')
   else
-    Result := '/srv/recorderlnx/MeraFiles';
+    Result := IncludeTrailingPathDelimiter(GetUserDir) + 'Mera Files';
 {$ENDIF}
 end;
 

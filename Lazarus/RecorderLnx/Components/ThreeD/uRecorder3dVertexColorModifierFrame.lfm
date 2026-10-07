@@ -1,0 +1,39 @@
+object Recorder3dVertexColorModifierFrame: TRecorder3dVertexColorModifierFrame
+  Height = 720
+  Width = 320
+  ClientHeight = 720
+  ClientWidth = 320
+  object lblGradients: TLabel Left = 8 Height = 15 Top = 8 Width = 100 Caption = 'Градиенты:' end
+  object lbGradients: TListBox Left = 8 Height = 74 Top = 27 Width = 304 Anchors = [akTop, akLeft, akRight] OnSelectionChange = GradientSelectionChange TabOrder = 0 end
+  object btnAddGradient: TButton Left = 8 Height = 26 Top = 106 Width = 148 Caption = 'Добавить градиент' OnClick = AddGradientClick TabOrder = 1 end
+  object btnDeleteGradient: TButton Left = 164 Height = 26 Top = 106 Width = 148 Caption = 'Удалить градиент' OnClick = DeleteGradientClick TabOrder = 2 end
+  object lblGradientName: TLabel Left = 8 Height = 15 Top = 143 Width = 72 Caption = 'Имя:' end
+  object edGradientName: TEdit Left = 88 Height = 23 Top = 138 Width = 224 Anchors = [akTop, akLeft, akRight] OnEditingDone = GradientPropertyChange TabOrder = 3 end
+  object lblLeft: TLabel Left = 8 Height = 15 Top = 175 Width = 72 Caption = 'Слева:' end
+  object cbLeftColor: TColorBox Left = 88 Height = 23 Top = 170 Width = 128 OnChange = GradientPropertyChange TabOrder = 4 end
+  object seLeftValue: TFloatSpinEdit Left = 224 Height = 23 Top = 170 Width = 88 DecimalPlaces = 3 MaxValue = 1000000 MinValue = -1000000 OnChange = GradientPropertyChange TabOrder = 5 end
+  object lblRight: TLabel Left = 8 Height = 15 Top = 207 Width = 72 Caption = 'Справа:' end
+  object cbRightColor: TColorBox Left = 88 Height = 23 Top = 202 Width = 128 OnChange = GradientPropertyChange TabOrder = 6 end
+  object seRightValue: TFloatSpinEdit Left = 224 Height = 23 Top = 202 Width = 88 DecimalPlaces = 3 MaxValue = 1000000 MinValue = -1000000 Value = 1 OnChange = GradientPropertyChange TabOrder = 7 end
+  object lblAnchors: TLabel Left = 8 Height = 15 Top = 239 Width = 100 Caption = 'Якоря цвета:' end
+  object lbAnchors: TListBox Left = 8 Height = 74 Top = 258 Width = 304 Anchors = [akTop, akLeft, akRight] OnSelectionChange = AnchorSelectionChange TabOrder = 8 end
+  object btnAddAnchor: TButton Left = 8 Height = 26 Top = 337 Width = 148 Caption = 'Добавить на вершине' OnClick = AddAnchorClick TabOrder = 9 end
+  object btnDeleteAnchor: TButton Left = 164 Height = 26 Top = 337 Width = 148 Caption = 'Удалить якорь' OnClick = DeleteAnchorClick TabOrder = 10 end
+  object lblAnchorName: TLabel Left = 8 Height = 15 Top = 374 Width = 72 Caption = 'Имя:' end
+  object edAnchorName: TEdit Left = 88 Height = 23 Top = 369 Width = 224 Anchors = [akTop, akLeft, akRight] OnEditingDone = AnchorPropertyChange TabOrder = 11 end
+  object lblRadius: TLabel Left = 8 Height = 15 Top = 406 Width = 72 Caption = 'Радиус:' end
+  object seRadius: TFloatSpinEdit Left = 88 Height = 23 Top = 401 Width = 100 DecimalPlaces = 3 Increment = 0.1 MaxValue = 1000000 Value = 1 OnChange = AnchorPropertyChange TabOrder = 12 end
+  object lblFalloff: TLabel Left = 8 Height = 15 Top = 438 Width = 72 Caption = 'Спад:' end
+  object cbFalloff: TComboBox Left = 88 Height = 23 Top = 433 Width = 128 Style = csDropDownList OnChange = AnchorPropertyChange TabOrder = 13 end
+  object lblExponent: TLabel Left = 220 Height = 15 Top = 438 Width = 36 Caption = 'Exp:' end
+  object seExponent: TFloatSpinEdit Left = 258 Height = 23 Top = 433 Width = 54 DecimalPlaces = 2 Increment = 0.1 MinValue = 0.01 MaxValue = 100 Value = 2 OnChange = AnchorPropertyChange TabOrder = 14 end
+  object lblGradient: TLabel Left = 8 Height = 15 Top = 470 Width = 72 Caption = 'Градиент:' end
+  object cbGradient: TComboBox Left = 88 Height = 23 Top = 465 Width = 224 Anchors = [akTop, akLeft, akRight] Style = csDropDownList OnChange = AnchorPropertyChange TabOrder = 15 end
+  object lblTagSearch: TLabel Left = 8 Height = 15 Top = 502 Width = 72 Caption = 'Поиск тега:' end
+  object edTagSearch: TEdit Left = 88 Height = 23 Top = 497 Width = 224 Anchors = [akTop, akLeft, akRight] OnChange = TagSearchChange TabOrder = 16 end
+  object lblTag: TLabel Left = 8 Height = 15 Top = 534 Width = 72 Caption = 'Тег:' end
+  object cbTag: TComboBox Left = 88 Height = 23 Top = 529 Width = 224 Anchors = [akTop, akLeft, akRight] Style = csDropDownList OnChange = AnchorPropertyChange TabOrder = 17 end
+  object chkEnabled: TCheckBox Left = 8 Height = 23 Top = 566 Width = 304 Caption = 'Якорь включён' OnChange = AnchorPropertyChange TabOrder = 18 end
+  object chkApplyColor: TCheckBox Left = 8 Height = 23 Top = 592 Width = 304 Caption = 'Применять цвет' OnChange = AnchorPropertyChange TabOrder = 19 end
+  object chkShowValueLabel: TCheckBox Left = 8 Height = 23 Top = 618 Width = 304 Caption = 'Показывать значение' OnChange = AnchorPropertyChange TabOrder = 20 end
+end

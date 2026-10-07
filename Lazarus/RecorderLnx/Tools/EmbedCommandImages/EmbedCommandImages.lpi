@@ -7,5 +7,5 @@
     <RequiredPackages><Item><PackageName Value="LCL"/></Item></RequiredPackages>
     <Units><Unit><Filename Value="EmbedCommandImages.lpr"/><IsPartOfProject Value="True"/></Unit></Units>
   </ProjectOptions>
-  <CompilerOptions><Version Value="11"/><SearchPaths><OtherUnitFiles Value="../../UI"/><UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/></SearchPaths></CompilerOptions>
+  <CompilerOptions><Version Value="11"/><SearchPaths><OtherUnitFiles Value="../../Components/Editor"/><UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/></SearchPaths></CompilerOptions>
 </CONFIG>

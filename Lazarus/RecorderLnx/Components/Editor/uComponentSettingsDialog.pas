@@ -1,0 +1,757 @@
+unit uComponentSettingsDialog;
+
+{$mode objfpc}{$H+}
+{$codepage UTF8}
+
+interface
+
+uses
+  LConvEncoding,
+  Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, Buttons,
+  Dialogs, uRecorderFormModel, uRecorderTags, uComponentServices;
+
+type
+  TComponentSettingsDialog = class(TForm)
+  private
+    fComponent: TRecorderVisualComponent;
+    fTagRegistry: TRecorderTagRegistry;
+    fTagSearchLabel: TLabel;
+    fTagComboLabel: TLabel;
+    fTagCombo: TComboBox;
+    fTagSearchEdit: TEdit;
+    fOkButton: TButton;
+    fCancelButton: TButton;
+    fSelectedFontName: string;
+    fSelectedFontSize: Integer;
+    fSelectedFontColor: TColor;
+    fSelectedFontBold: Boolean;
+    fSelectedFontItalic: Boolean;
+    fFontPreviewLabel: TLabel;
+    fFontButton: TButton;
+    fNamedFontCombo: TComboBox;
+    fAssignAllButton: TButton;
+    fAssignAllRequested: Boolean;
+    fTextEdit: TEdit;
+    fDisplayFormatEdit: TEdit;
+    fCaptionEdit: TEdit;
+    fUseSourceTagNameCheck: TCheckBox;
+    fLoadingTagValueCaption: Boolean;
+    fShowNameCombo: TComboBox;
+    fUseDefaultEstimateCheck: TCheckBox;
+    fEstimateKindCombo: TComboBox;
+    fBindingModeCombo: TComboBox;
+    fTagOffsetEdit: TEdit;
+
+    procedure BindingModeComboChange(Sender: TObject);
+    procedure FontButtonClick(Sender: TObject);
+    procedure NamedFontChange(Sender: TObject);
+    procedure AssignFontToAllClick(Sender: TObject);
+    procedure OkButtonClick(Sender: TObject);
+    procedure TagSearchEditChange(Sender: TObject);
+    procedure UseDefaultEstimateCheckChange(Sender: TObject);
+    procedure CaptionEditChange(Sender: TObject);
+    procedure UseSourceTagNameCheckChange(Sender: TObject);
+    procedure TagComboChange(Sender: TObject);
+    procedure RefreshAutomaticCaption;
+    procedure BuildUi;
+    procedure AddTagComboItem(ATag: TRecorderTag);
+    procedure PopulateInitialTagSelection;
+    procedure LoadFromComponent;
+    procedure PopulateTags(const AFilter: string);
+    procedure StoreToComponent;
+    procedure UpdateFontPreview;
+    procedure DefineSelectedFont;
+    procedure UpdateTagVisibility;
+  public
+    constructor CreateDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
+      ATagRegistry: TRecorderTagRegistry); reintroduce;
+  end;
+
+function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
+  ATagRegistry: TRecorderTagRegistry): Boolean;
+
+implementation
+
+uses
+  uRecorderTrendSettingsDialog, uRecorderSpectrumSettingsDialog,
+  uRecorderDonutSettingsDialog,
+  uRecorderOscillogramSettingsDialog, uRecorderImageSettingsDialog,
+  uRecorderButtonSettingsDialog, uRecorderSqlTrendModel,
+  uRecorderSqlTrendSettingsDialog, uRecorderMeasurementSectionModel,
+  uRecorderMeasurementSectionSettingsDialog, uRecorderInputFieldSettingsDialog,
+  uRecorderVibrationEstimateSettingsDialog, uRecorderLissajousSettingsDialog,
+  uRecorderFrequencyResponseModel, uRcFreqRespDlg,
+  uRecorder3dModel, uRecorder3dSettingsDialog, uRecorderSignalGeneratorModel,
+  uRecorderSignalGeneratorSettingsDialog, uRecorderImpactHammerModel,
+  uRecorderImpactHammerSettingsDialog;
+  
+
+
+
+const
+  CTagComboEmptyFilterLimit = 200;
+
+function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
+  ATagRegistry: TRecorderTagRegistry): Boolean;
+var
+  lDialog: TComponentSettingsDialog;
+begin
+  if AComponent is TRecorderImpactHammerComponent then
+    Exit(ShowRecorderImpactHammerSettings(AOwner,
+      TRecorderImpactHammerComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderSignalGeneratorComponent then
+    Exit(ShowRecorderSignalGeneratorSettingsDialog(AOwner,
+      TRecorderSignalGeneratorComponent(AComponent)));
+  if AComponent is TRecorder3dComponent then
+    Exit(ShowRecorder3dSettingsDialog(AOwner,
+      TRecorder3dComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderFrequencyResponseComponent then
+    Exit(ShowRcFreqRespDlg(AOwner,
+      TRecorderFrequencyResponseComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderLissajousComponent then
+    Exit(ShowRecorderLissajousSettingsDialog(AOwner,
+      TRecorderLissajousComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderVibrationEstimateComponent then
+    Exit(ShowRecorderVibrationEstimateSettingsDialog(AOwner,
+      TRecorderVibrationEstimateComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderSqlTrendComponent then
+    Exit(ShowRecorderSqlTrendSettingsDialog(AOwner,
+      TRecorderSqlTrendComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderMeasurementSectionComponent then
+    Exit(ShowRecorderMeasurementSectionSettingsDialog(AOwner,
+      TRecorderMeasurementSectionComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderButtonComponent then
+    Exit(ShowRecorderButtonSettingsDialog(AOwner,
+      TRecorderButtonComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderInputFieldComponent then
+    Exit(ShowRecorderInputFieldSettingsDialog(AOwner,
+      TRecorderInputFieldComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderImageComponent then
+    Exit(ShowRecorderImageSettingsDialog(AOwner,
+      TRecorderImageComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderTrendComponent then
+    Exit(ShowRecorderTrendSettingsDialog(AOwner,
+      TRecorderTrendComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderSpectrumComponent then
+    Exit(ShowRecorderSpectrumSettingsDialog(AOwner,
+      TRecorderSpectrumComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderDonutComponent then
+    Exit(ShowRecorderDonutSettingsDialog(AOwner,
+      TRecorderDonutComponent(AComponent), ATagRegistry));
+  if AComponent is TRecorderOscillogramComponent then
+    Exit(ShowRecorderOscillogramSettingsDialog(AOwner,
+      TRecorderOscillogramComponent(AComponent), ATagRegistry));
+
+  lDialog := TComponentSettingsDialog.CreateDialog(AOwner, AComponent, ATagRegistry);
+  try
+    Result := lDialog.ShowModal = mrOk;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+constructor TComponentSettingsDialog.CreateDialog(AOwner: TComponent;
+  AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+begin
+  inherited CreateNew(AOwner, 1);
+  fComponent := AComponent;
+  fTagRegistry := ATagRegistry;
+  Caption := 'Настройка компонента - ' + AComponent.Name;
+  BorderStyle := bsSizeable;
+  Position := poOwnerFormCenter;
+  ClientWidth := 460;
+  Constraints.MinWidth := 460;
+  BuildUi;
+  LoadFromComponent;
+end;
+
+procedure TComponentSettingsDialog.BuildUi;
+var
+  lTop: Integer;
+  lLabel: TLabel;
+  lEst: TRecorderTagEstimateKind;
+  I: Integer;
+begin
+  lTop := 16;
+
+  if (fComponent is TRecorderTagValueComponent) or (fComponent is TRecorderOscillogramComponent) then
+  begin
+    fTagSearchLabel := TLabel.Create(Self);
+    fTagSearchLabel.Parent := Self;
+    fTagSearchLabel.SetBounds(16, lTop + 4, 120, 16);
+    fTagSearchLabel.Caption := 'Поиск тега:';
+
+    fTagSearchEdit := TEdit.Create(Self);
+    fTagSearchEdit.Parent := Self;
+    fTagSearchEdit.SetBounds(140, lTop, 300, 23);
+    fTagSearchEdit.Anchors := [akLeft, akTop, akRight];
+    fTagSearchEdit.OnChange := @TagSearchEditChange;
+    Inc(lTop, 32);
+
+    fTagComboLabel := TLabel.Create(Self);
+    fTagComboLabel.Parent := Self;
+    fTagComboLabel.SetBounds(16, lTop + 4, 120, 16);
+    fTagComboLabel.Caption := 'Выбранный тег:';
+
+    fTagCombo := TComboBox.Create(Self);
+    fTagCombo.Parent := Self;
+    fTagCombo.SetBounds(140, lTop, 300, 23);
+    fTagCombo.Anchors := [akLeft, akTop, akRight];
+    fTagCombo.Style := csDropDownList;
+    fTagCombo.OnChange := @TagComboChange;
+    Inc(lTop, 40);
+  end;
+
+  if fComponent is TRecorderStaticTextComponent then
+  begin
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Текст метки:';
+
+    fTextEdit := TEdit.Create(Self);
+    fTextEdit.Parent := Self;
+    fTextEdit.SetBounds(140, lTop, 300, 23);
+    fTextEdit.Anchors := [akLeft, akTop, akRight];
+    Inc(lTop, 40);
+  end;
+
+  if (fComponent is TRecorderStaticTextComponent) or (fComponent is TRecorderTagValueComponent) then
+  begin
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 10, 120, 16);
+    lLabel.Caption := 'Шрифт компонента:';
+
+    fNamedFontCombo := TComboBox.Create(Self);
+    fNamedFontCombo.Parent := Self;
+    fNamedFontCombo.SetBounds(140, lTop, 120, 25);
+    fNamedFontCombo.OnChange := @NamedFontChange;
+    if fComponent.NamedFonts <> nil then
+      for I := 0 to fComponent.NamedFonts.Count - 1 do
+        fNamedFontCombo.Items.Add(fComponent.NamedFonts.Items[I].Name);
+
+    fFontButton := TButton.Create(Self);
+    fFontButton.Parent := Self;
+    fFontButton.SetBounds(268, lTop, 82, 25);
+    fFontButton.Caption := 'Выбрать...';
+    fFontButton.OnClick := @FontButtonClick;
+
+    fFontPreviewLabel := TLabel.Create(Self);
+    fFontPreviewLabel.Parent := Self;
+    fFontPreviewLabel.SetBounds(140, lTop + 28, 180, 25);
+    fFontPreviewLabel.Caption := 'Образец текста';
+    if fComponent is TRecorderTagValueComponent then
+    begin
+      fAssignAllButton := TButton.Create(Self);
+      fAssignAllButton.Parent := Self;
+      fAssignAllButton.SetBounds(354, lTop, 90, 25);
+      fAssignAllButton.Caption := 'Назначить всем';
+      fAssignAllButton.OnClick := @AssignFontToAllClick;
+    end;
+    Inc(lTop, 58);
+  end;
+
+  if fComponent is TRecorderTagValueComponent then
+  begin
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Подпись:';
+
+    fCaptionEdit := TEdit.Create(Self);
+    fCaptionEdit.Parent := Self;
+    fCaptionEdit.SetBounds(140, lTop, 300, 23);
+    fCaptionEdit.Anchors := [akLeft, akTop, akRight];
+    fCaptionEdit.OnChange := @CaptionEditChange;
+    Inc(lTop, 32);
+
+    fUseSourceTagNameCheck := TCheckBox.Create(Self);
+    fUseSourceTagNameCheck.Parent := Self;
+    fUseSourceTagNameCheck.SetBounds(140, lTop, 300, 20);
+    fUseSourceTagNameCheck.AutoSize := True;
+    fUseSourceTagNameCheck.Caption := 'Использовать имя исходного тега';
+    fUseSourceTagNameCheck.OnChange := @UseSourceTagNameCheckChange;
+    Inc(lTop, 32);
+
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Формат (Format):';
+
+    fDisplayFormatEdit := TEdit.Create(Self);
+    fDisplayFormatEdit.Parent := Self;
+    fDisplayFormatEdit.SetBounds(140, lTop, 120, 23);
+    Inc(lTop, 32);
+
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Отображение имени:';
+
+    fShowNameCombo := TComboBox.Create(Self);
+    fShowNameCombo.Parent := Self;
+    fShowNameCombo.SetBounds(140, lTop, 180, 23);
+    fShowNameCombo.Style := csDropDownList;
+    fShowNameCombo.Items.Add('Не отображать имя');
+    fShowNameCombo.Items.Add('Автоматически');
+    fShowNameCombo.Items.Add('Имя слева');
+    Inc(lTop, 32);
+
+    fUseDefaultEstimateCheck := TCheckBox.Create(Self);
+    fUseDefaultEstimateCheck.Parent := Self;
+    fUseDefaultEstimateCheck.SetBounds(16, lTop, 220, 20);
+    fUseDefaultEstimateCheck.Caption := 'Оценка по умолчанию из тега';
+    fUseDefaultEstimateCheck.OnChange := @UseDefaultEstimateCheckChange;
+
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(240, lTop + 2, 70, 16);
+    lLabel.Caption := 'Оценка:';
+
+    fEstimateKindCombo := TComboBox.Create(Self);
+    fEstimateKindCombo.Parent := Self;
+    fEstimateKindCombo.SetBounds(310, lTop, 130, 23);
+    fEstimateKindCombo.Style := csDropDownList;
+    for lEst := Low(TRecorderTagEstimateKind) to High(TRecorderTagEstimateKind) do
+      fEstimateKindCombo.Items.Add(RecorderTagEstimateKindToShortName(lEst));
+    Inc(lTop, 40);
+  end;
+
+  if fComponent is TRecorderOscillogramComponent then
+  begin
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Привязка к каналу:';
+
+    fBindingModeCombo := TComboBox.Create(Self);
+    fBindingModeCombo.Parent := Self;
+    fBindingModeCombo.SetBounds(140, lTop, 220, 23);
+    fBindingModeCombo.Style := csDropDownList;
+    fBindingModeCombo.Items.Add('Относительная (выбранный тег)');
+    fBindingModeCombo.Items.Add('Абсолютная привязка');
+    fBindingModeCombo.OnChange := @BindingModeComboChange;
+    Inc(lTop, 32);
+
+    lLabel := TLabel.Create(Self);
+    lLabel.Parent := Self;
+    lLabel.SetBounds(16, lTop + 4, 120, 16);
+    lLabel.Caption := 'Относит. смещение:';
+
+    fTagOffsetEdit := TEdit.Create(Self);
+    fTagOffsetEdit.Parent := Self;
+    fTagOffsetEdit.SetBounds(140, lTop, 80, 23);
+    Inc(lTop, 40);
+  end;
+
+  fCancelButton := TButton.Create(Self);
+  fCancelButton.Parent := Self;
+  fCancelButton.SetBounds(350, lTop, 90, 25);
+  fCancelButton.Caption := 'Отмена';
+  fCancelButton.ModalResult := mrCancel;
+
+  fOkButton := TButton.Create(Self);
+  fOkButton.Parent := Self;
+  fOkButton.SetBounds(250, lTop, 90, 25);
+  fOkButton.Caption := 'OK';
+  fOkButton.OnClick := @OkButtonClick;
+  fOkButton.Default := True;
+  ClientHeight := lTop + 40;
+  Constraints.MinHeight := ClientHeight;
+  { Назначать нижние anchors только после окончательного размера формы.
+    Иначе LCL пересчитывает координаты от начальной высоты CreateNew и
+    уносит кнопки за нижнюю границу при первом изменении ClientHeight. }
+  fCancelButton.Anchors := [akRight, akBottom];
+  fOkButton.Anchors := [akRight, akBottom];
+  for I := 0 to ControlCount - 1 do
+  begin
+    if Controls[I] is TLabel then
+      TLabel(Controls[I]).AutoSize := True
+    else if Controls[I] is TCheckBox then
+      TCheckBox(Controls[I]).AutoSize := True;
+  end;
+end;
+
+procedure TComponentSettingsDialog.AddTagComboItem(ATag: TRecorderTag);
+begin
+  if (fTagCombo = nil) or (ATag = nil) then
+    Exit;
+  fTagCombo.Items.AddObject(LclText(ATag.Name), ATag);
+end;
+
+procedure TComponentSettingsDialog.PopulateInitialTagSelection;
+var
+  lTag: TRecorderTag;
+begin
+  if (fTagCombo = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  fTagCombo.Items.BeginUpdate;
+  try
+    fTagCombo.Items.Clear;
+    lTag := nil;
+    if fComponent.TagId <> 0 then
+      lTag := fTagRegistry.FindById(fComponent.TagId);
+    if (lTag = nil) and (fComponent.TagName <> '') then
+      lTag := fTagRegistry.FindByName(fComponent.TagName);
+    if lTag <> nil then
+    begin
+      AddTagComboItem(lTag);
+      fTagCombo.ItemIndex := 0;
+    end;
+  finally
+    fTagCombo.Items.EndUpdate;
+  end;
+end;
+
+procedure TComponentSettingsDialog.PopulateTags(const AFilter: string);
+var
+  I: Integer;
+  lAddedCount: Integer;
+  lFilter: string;
+  lTag: TRecorderTag;
+  lCurrentSelection: string;
+  lSearchText: string;
+begin
+  if (fTagCombo = nil) or (fTagRegistry = nil) then
+    Exit;
+
+  lCurrentSelection := '';
+  if (fTagCombo.ItemIndex >= 0) and
+    (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
+    lCurrentSelection := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]).Name
+  else
+    lCurrentSelection := fTagCombo.Text;
+
+  fTagCombo.Items.BeginUpdate;
+  try
+    fTagCombo.Items.Clear;
+    lFilter := LowerCase(Trim(LclText(AFilter)));
+    lAddedCount := 0;
+    for I := 0 to fTagRegistry.TagCount - 1 do
+    begin
+      lTag := fTagRegistry.Tags[I];
+      lSearchText := LowerCase(LclText(lTag.Name + ' ' + lTag.Address + ' ' + lTag.Description));
+      if (lFilter = '') or (Pos(lFilter, lSearchText) > 0) then
+      begin
+        AddTagComboItem(lTag);
+        Inc(lAddedCount);
+        if (lFilter = '') and (lAddedCount >= CTagComboEmptyFilterLimit) then
+          Break;
+      end;
+    end;
+
+    fTagCombo.ItemIndex := -1;
+    for I := 0 to fTagCombo.Items.Count - 1 do
+      if (fTagCombo.Items.Objects[I] is TRecorderTag) and
+        (TRecorderTag(fTagCombo.Items.Objects[I]).Name = lCurrentSelection) then
+      begin
+        fTagCombo.ItemIndex := I;
+        Break;
+      end;
+    if (fTagCombo.ItemIndex < 0) and (fTagCombo.Items.Count > 0) then
+      fTagCombo.ItemIndex := 0;
+  finally
+    fTagCombo.Items.EndUpdate;
+  end;
+end;
+
+procedure TComponentSettingsDialog.LoadFromComponent;
+var
+  lTagIndex: Integer;
+begin
+  if fTagCombo <> nil then
+  begin
+    PopulateInitialTagSelection;
+    lTagIndex := 0;
+    while (lTagIndex < fTagCombo.Items.Count) and
+      ((not (fTagCombo.Items.Objects[lTagIndex] is TRecorderTag)) or
+       (TRecorderTag(fTagCombo.Items.Objects[lTagIndex]).Name <> fComponent.TagName)) do
+      Inc(lTagIndex);
+    if lTagIndex < fTagCombo.Items.Count then
+      fTagCombo.ItemIndex := lTagIndex
+    else if fTagCombo.Items.Count > 0 then
+      fTagCombo.ItemIndex := 0;
+  end;
+
+  if fComponent is TRecorderStaticTextComponent then
+  begin
+    fTextEdit.Text := TRecorderStaticTextComponent(fComponent).Text;
+    fSelectedFontName := TRecorderStaticTextComponent(fComponent).FontName;
+    fSelectedFontSize := TRecorderStaticTextComponent(fComponent).FontSize;
+    fSelectedFontColor := TRecorderStaticTextComponent(fComponent).FontColor;
+    fSelectedFontBold := TRecorderStaticTextComponent(fComponent).FontStyleBold;
+    fSelectedFontItalic := TRecorderStaticTextComponent(fComponent).FontStyleItalic;
+    UpdateFontPreview;
+  end
+  else if fComponent is TRecorderTagValueComponent then
+  begin
+    fLoadingTagValueCaption := True;
+    try
+      fUseSourceTagNameCheck.Checked :=
+        TRecorderTagValueComponent(fComponent).UseSourceTagName;
+      if fUseSourceTagNameCheck.Checked then
+        RefreshAutomaticCaption
+      else
+        fCaptionEdit.Text := TRecorderTagValueComponent(fComponent).Caption;
+    finally
+      fLoadingTagValueCaption := False;
+    end;
+    fDisplayFormatEdit.Text := TRecorderTagValueComponent(fComponent).DisplayFormat;
+    fShowNameCombo.ItemIndex := Ord(TRecorderTagValueComponent(fComponent).ShowNameMode);
+    fUseDefaultEstimateCheck.Checked := TRecorderTagValueComponent(fComponent).UseDefaultEstimate;
+    fEstimateKindCombo.ItemIndex := Ord(TRecorderTagValueComponent(fComponent).EstimateKind);
+    fEstimateKindCombo.Enabled := not fUseDefaultEstimateCheck.Checked;
+    fSelectedFontName := TRecorderTagValueComponent(fComponent).FontName;
+    fSelectedFontSize := TRecorderTagValueComponent(fComponent).FontSize;
+    fSelectedFontColor := TRecorderTagValueComponent(fComponent).FontColor;
+    fSelectedFontBold := TRecorderTagValueComponent(fComponent).FontStyleBold;
+    fSelectedFontItalic := TRecorderTagValueComponent(fComponent).FontStyleItalic;
+    UpdateFontPreview;
+  end
+  else if fComponent is TRecorderOscillogramComponent then
+  begin
+    fBindingModeCombo.ItemIndex := Ord(TRecorderOscillogramComponent(fComponent).BindingMode);
+    fTagOffsetEdit.Text := IntToStr(TRecorderOscillogramComponent(fComponent).TagOffset);
+  end;
+  if fNamedFontCombo <> nil then
+    fNamedFontCombo.Text := fComponent.NamedFontName;
+  UpdateTagVisibility;
+end;
+
+procedure TComponentSettingsDialog.StoreToComponent;
+var
+  lTag: TRecorderTag;
+  I: Integer;
+  lOther: TRecorderVisualComponent;
+begin
+  if fTagCombo <> nil then
+  begin
+    if (fTagCombo.ItemIndex >= 0) and
+      (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
+    begin
+      { Привязка хранится парой TagId/TagName. Нельзя менять только имя:
+        последующая синхронизация по старому Id вернет прежний тег. }
+      lTag := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]);
+      fComponent.TagId := lTag.Id;
+      fComponent.TagName := lTag.Name;
+    end
+    else
+    begin
+      fComponent.TagName := fTagCombo.Text;
+      lTag := nil;
+      if fTagRegistry <> nil then
+        lTag := fTagRegistry.FindByName(fComponent.TagName);
+      if lTag <> nil then
+        fComponent.TagId := lTag.Id
+      else
+        fComponent.TagId := 0;
+    end;
+  end;
+
+  if fComponent is TRecorderStaticTextComponent then
+  begin
+    DefineSelectedFont;
+    fComponent.NamedFontName := Trim(fNamedFontCombo.Text);
+    TRecorderStaticTextComponent(fComponent).Text := fTextEdit.Text;
+    TRecorderStaticTextComponent(fComponent).FontName := fSelectedFontName;
+    TRecorderStaticTextComponent(fComponent).FontSize := fSelectedFontSize;
+    TRecorderStaticTextComponent(fComponent).FontColor := fSelectedFontColor;
+    TRecorderStaticTextComponent(fComponent).FontStyleBold := fSelectedFontBold;
+    TRecorderStaticTextComponent(fComponent).FontStyleItalic := fSelectedFontItalic;
+  end
+  else if fComponent is TRecorderTagValueComponent then
+  begin
+    DefineSelectedFont;
+    fComponent.NamedFontName := Trim(fNamedFontCombo.Text);
+    TRecorderTagValueComponent(fComponent).DisplayFormat := fDisplayFormatEdit.Text;
+    TRecorderTagValueComponent(fComponent).Caption := fCaptionEdit.Text;
+    TRecorderTagValueComponent(fComponent).UseSourceTagName :=
+      fUseSourceTagNameCheck.Checked;
+    TRecorderTagValueComponent(fComponent).ShowNameMode := TRecorderTagValueNameMode(fShowNameCombo.ItemIndex);
+    TRecorderTagValueComponent(fComponent).UseDefaultEstimate := fUseDefaultEstimateCheck.Checked;
+    TRecorderTagValueComponent(fComponent).EstimateKind := TRecorderTagEstimateKind(fEstimateKindCombo.ItemIndex);
+    TRecorderTagValueComponent(fComponent).FontName := fSelectedFontName;
+    TRecorderTagValueComponent(fComponent).FontSize := fSelectedFontSize;
+    TRecorderTagValueComponent(fComponent).FontColor := fSelectedFontColor;
+    TRecorderTagValueComponent(fComponent).FontStyleBold := fSelectedFontBold;
+    TRecorderTagValueComponent(fComponent).FontStyleItalic := fSelectedFontItalic;
+    if fAssignAllRequested and (fComponent.Factory <> nil) then
+      for I := 0 to fComponent.Factory.ChildCount - 1 do
+      begin
+        lOther := fComponent.Factory.Children[I];
+        if lOther is TRecorderTagValueComponent then
+          lOther.NamedFontName := fComponent.NamedFontName;
+      end;
+  end
+  else if fComponent is TRecorderOscillogramComponent then
+  begin
+    TRecorderOscillogramComponent(fComponent).BindingMode := TRecorderTagBindingMode(fBindingModeCombo.ItemIndex);
+    TRecorderOscillogramComponent(fComponent).TagOffset := StrToIntDef(fTagOffsetEdit.Text, 0);
+  end;
+end;
+
+procedure TComponentSettingsDialog.UpdateFontPreview;
+begin
+  if fFontPreviewLabel = nil then
+    Exit;
+  fFontPreviewLabel.Font.Name := fSelectedFontName;
+  fFontPreviewLabel.Font.Size := fSelectedFontSize;
+  fFontPreviewLabel.Font.Color := fSelectedFontColor;
+  fFontPreviewLabel.Font.Style := [];
+  if fSelectedFontBold then
+    fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsBold];
+  if fSelectedFontItalic then
+    fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsItalic];
+end;
+
+procedure TComponentSettingsDialog.DefineSelectedFont;
+var
+  lName: string;
+begin
+  lName := Trim(fNamedFontCombo.Text);
+  if (lName = '') or (fComponent.NamedFonts = nil) then
+    Exit;
+  fComponent.NamedFonts.Define(lName, fSelectedFontName, fSelectedFontSize,
+    fSelectedFontColor, fSelectedFontBold, fSelectedFontItalic);
+end;
+
+procedure TComponentSettingsDialog.NamedFontChange(Sender: TObject);
+var
+  lFont: TRecorderNamedFont;
+begin
+  if fComponent.NamedFonts = nil then
+    Exit;
+  lFont := fComponent.NamedFonts.Find(fNamedFontCombo.Text);
+  if lFont = nil then
+    Exit;
+  fSelectedFontName := lFont.FontName;
+  fSelectedFontSize := lFont.FontSize;
+  fSelectedFontColor := lFont.FontColor;
+  fSelectedFontBold := lFont.Bold;
+  fSelectedFontItalic := lFont.Italic;
+  UpdateFontPreview;
+end;
+
+procedure TComponentSettingsDialog.AssignFontToAllClick(Sender: TObject);
+begin
+  if Trim(fNamedFontCombo.Text) = '' then
+  begin
+    MessageDlg('Шрифт', 'Введите имя общего шрифта.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  fAssignAllRequested := True;
+  fAssignAllButton.Caption := 'Будет назначен';
+end;
+
+procedure TComponentSettingsDialog.FontButtonClick(Sender: TObject);
+var
+  lDlg: TFontDialog;
+begin
+  lDlg := TFontDialog.Create(Self);
+  try
+    lDlg.Font.Name := fSelectedFontName;
+    lDlg.Font.Size := fSelectedFontSize;
+    lDlg.Font.Color := fSelectedFontColor;
+    lDlg.Font.Style := [];
+    if fSelectedFontBold then
+      lDlg.Font.Style := lDlg.Font.Style + [fsBold];
+    if fSelectedFontItalic then
+      lDlg.Font.Style := lDlg.Font.Style + [fsItalic];
+
+    if lDlg.Execute then
+    begin
+      fSelectedFontName := lDlg.Font.Name;
+      fSelectedFontSize := lDlg.Font.Size;
+      fSelectedFontColor := lDlg.Font.Color;
+      fSelectedFontBold := fsBold in lDlg.Font.Style;
+      fSelectedFontItalic := fsItalic in lDlg.Font.Style;
+      UpdateFontPreview;
+    end;
+  finally
+    lDlg.Free;
+  end;
+end;
+
+procedure TComponentSettingsDialog.TagSearchEditChange(Sender: TObject);
+begin
+  PopulateTags(fTagSearchEdit.Text);
+end;
+
+procedure TComponentSettingsDialog.UseDefaultEstimateCheckChange(Sender: TObject);
+begin
+  if fEstimateKindCombo <> nil then
+    fEstimateKindCombo.Enabled := not fUseDefaultEstimateCheck.Checked;
+end;
+
+procedure TComponentSettingsDialog.CaptionEditChange(Sender: TObject);
+begin
+  if fLoadingTagValueCaption or (fUseSourceTagNameCheck = nil) then
+    Exit;
+  if fUseSourceTagNameCheck.Checked then
+    fUseSourceTagNameCheck.Checked := False;
+end;
+
+procedure TComponentSettingsDialog.UseSourceTagNameCheckChange(Sender: TObject);
+begin
+  if fLoadingTagValueCaption or (fUseSourceTagNameCheck = nil) or
+    (not fUseSourceTagNameCheck.Checked) then
+    Exit;
+  RefreshAutomaticCaption;
+end;
+
+procedure TComponentSettingsDialog.TagComboChange(Sender: TObject);
+begin
+  if (fUseSourceTagNameCheck <> nil) and fUseSourceTagNameCheck.Checked then
+    RefreshAutomaticCaption;
+end;
+
+procedure TComponentSettingsDialog.RefreshAutomaticCaption;
+var
+  lCaption: string;
+  lWasLoading: Boolean;
+begin
+  if fCaptionEdit = nil then
+    Exit;
+  lCaption := '';
+  if (fTagCombo <> nil) and (fTagCombo.ItemIndex >= 0) and
+    (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
+    lCaption := TRecorderTag(fTagCombo.Items.Objects[fTagCombo.ItemIndex]).Name
+  else if fTagCombo <> nil then
+    lCaption := fTagCombo.Text;
+  lWasLoading := fLoadingTagValueCaption;
+  fLoadingTagValueCaption := True;
+  try
+    fCaptionEdit.Text := lCaption;
+  finally
+    fLoadingTagValueCaption := lWasLoading;
+  end;
+end;
+
+procedure TComponentSettingsDialog.BindingModeComboChange(Sender: TObject);
+begin
+  UpdateTagVisibility;
+end;
+
+procedure TComponentSettingsDialog.UpdateTagVisibility;
+var
+  lShowTagChoice: Boolean;
+begin
+  if (fComponent is TRecorderOscillogramComponent) and (fBindingModeCombo <> nil) then
+  begin
+    lShowTagChoice := TRecorderTagBindingMode(fBindingModeCombo.ItemIndex) <> rtbmRelativeSelectedTag;
+    if fTagSearchLabel <> nil then fTagSearchLabel.Visible := lShowTagChoice;
+    if fTagSearchEdit <> nil then fTagSearchEdit.Visible := lShowTagChoice;
+    if fTagComboLabel <> nil then fTagComboLabel.Visible := lShowTagChoice;
+    if fTagCombo <> nil then fTagCombo.Visible := lShowTagChoice;
+  end;
+end;
+
+procedure TComponentSettingsDialog.OkButtonClick(Sender: TObject);
+begin
+  StoreToComponent;
+  ModalResult := mrOk;
+end;
+
+end.

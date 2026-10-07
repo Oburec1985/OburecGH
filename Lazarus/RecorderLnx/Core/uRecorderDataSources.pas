@@ -25,7 +25,7 @@ interface
 
 uses
   Classes, SysUtils,
-  uRecorderTags, uMeraFile, uRecorderDebugLog;
+  uRecorderTags, uRecorderMessages, uMeraFile, uRecorderDebugLog;
 
 type
   TRecorderZeroBalanceTraceEvent = procedure(const AText: string) of object;
@@ -97,6 +97,12 @@ type
   IRecorderZeroBalanceTraceSupport = interface
     ['{7317C81E-5834-4BD5-AAB4-F12B53F08D8A}']
     procedure SetZeroBalanceTrace(AHandler: TRecorderZeroBalanceTraceEvent);
+  end;
+
+  { Optional capability for sources which publish non-numeric messages. }
+  IRecorderMessageSource = interface
+    ['{6CBB9F18-3192-40FD-91DE-574919821CBD}']
+    procedure ConfigureMessages(ARegistry: TRecorderMessageRegistry);
   end;
 
   { TRecorderDataSourceBase
@@ -321,6 +327,7 @@ type
   private
     fLastErrors: TStringList;           { Ошибки потоков после останова }
     fRegistry: TRecorderTagRegistry;    { Ссылка на реестр тегов }
+    fMessageRegistry: TRecorderMessageRegistry;
     fRunning: Boolean;                  { Флаг активности опроса }
     fSources: TList;                    { Список контекстов источников (TSourceContext) }
     function GetLastError(AIndex: Integer): string;
@@ -348,7 +355,8 @@ type
 
     { Настраивает теги всех источников в общем registry.
       ARegistry - общий реестр тегов проекта. Владение не передается. }
-    procedure ConfigureTagsAll(ARegistry: TRecorderTagRegistry);
+    procedure ConfigureTagsAll(ARegistry: TRecorderTagRegistry;
+      AMessageRegistry: TRecorderMessageRegistry = nil);
 
     { Подключает и программирует оборудование после полной загрузки конфигурации. }
     procedure PrepareHardwareAll;
@@ -1373,9 +1381,6 @@ var
       ATag.UnitName := lSignal.UnitsName;
     ATag.ModuleType := lSignal.ModuleName;
     ATag.PollFrequencyHz := lSignal.FrequencyHz;
-    { Канал файла с частотой дискретизации публикует блоки, даже если старый
-      проект был сохранён до появления признака IsVector. }
-    ATag.IsVector := lSignal.FrequencyHz > 0.0;
     ATag.SensorCalibrationName := lSignal.SensorCalibrationName;
     ATag.AmplifierCalibrationName := lSignal.AmplifierCalibrationName;
     ATag.SourceId := lSourceId;
@@ -1849,6 +1854,8 @@ begin
       lContext.Thread.WaitFor;
       FreeAndNil(lContext.Thread);
     end;
+    if fMessageRegistry <> nil then
+      fMessageRegistry.RemoveBySource(ASourceId);
     lContext.Free;
     fSources.Delete(I);
     Exit;
@@ -1860,6 +1867,7 @@ procedure TRecorderDataSourceManager.ReplaceSource(
   APrepareNow: Boolean);
 var
   lWasRunning: Boolean;
+  lMessageSource: IRecorderMessageSource;
 begin
   if ASource = nil then
     raise ERecorderDataSourceError.Create('Replacement data source cannot be nil');
@@ -1867,6 +1875,8 @@ begin
   RemoveSource(ASource.SourceId);
   AddSource(ASource, AEnabled);
   ASource.ConfigureTags(fRegistry);
+  if Supports(ASource, IRecorderMessageSource, lMessageSource) then
+    lMessageSource.ConfigureMessages(fMessageRegistry);
   if AEnabled and APrepareNow then
   begin
     GetSourceContext(fSources.Count - 1).PrepareHardware;
@@ -1897,9 +1907,11 @@ begin
       Exit(GetSourceContext(I).Source);
 end;
 
-procedure TRecorderDataSourceManager.ConfigureTagsAll(ARegistry: TRecorderTagRegistry);
+procedure TRecorderDataSourceManager.ConfigureTagsAll(
+  ARegistry: TRecorderTagRegistry; AMessageRegistry: TRecorderMessageRegistry);
 var
   I: Integer;
+  lMessageSource: IRecorderMessageSource;
 begin
   if ARegistry = nil then
     raise ERecorderDataSourceError.Create('Data source manager registry cannot be nil');
@@ -1907,8 +1919,14 @@ begin
     raise ERecorderDataSourceError.Create('Cannot configure data sources while running');
 
   fRegistry := ARegistry;
+  fMessageRegistry := AMessageRegistry;
   for I := 0 to fSources.Count - 1 do
+  begin
     GetSourceContext(I).Source.ConfigureTags(fRegistry);
+    if Supports(GetSourceContext(I).Source, IRecorderMessageSource,
+      lMessageSource) then
+      lMessageSource.ConfigureMessages(fMessageRegistry);
+  end;
 end;
 
 procedure TRecorderDataSourceManager.PrepareHardwareAll;

@@ -1,0 +1,247 @@
+object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
+  Left = 378
+  Height = 510
+  Top = 160
+  Width = 450
+  BorderStyle = bsDialog
+  Caption = 'Свойства канала'
+  ClientHeight = 510
+  ClientWidth = 450
+  Position = poOwnerFormCenter
+  object gbChannel: TGroupBox
+    Left = 8
+    Height = 206
+    Top = 8
+    Width = 434
+    Caption = 'Свойства канала'
+    ClientHeight = 186
+    ClientWidth = 430
+    TabOrder = 0
+    object Label1: TLabel
+      Left = 14
+      Top = 22
+      Caption = 'Входной диапазон номинальный'
+    end
+    object Label2: TLabel
+      Left = 14
+      Top = 52
+      Caption = 'Входной диапазон фактический'
+    end
+    object Label3: TLabel
+      Left = 14
+      Top = 82
+      Caption = 'Коммутация'
+    end
+    object Label4: TLabel
+      Left = 14
+      Top = 112
+      Caption = 'Канал термокомпенсации'
+    end
+    object Label5: TLabel
+      Left = 14
+      Top = 142
+      Caption = 'Балансировка программная'
+    end
+    object cbNominalRange: TComboBox
+      Left = 250
+      Top = 18
+      Width = 82
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object edNominalRangeUnit: TEdit
+      Left = 344
+      Top = 18
+      Width = 76
+      Height = 23
+      ReadOnly = True
+      TabOrder = 1
+    end
+    object edActualRange: TEdit
+      Left = 250
+      Top = 48
+      Width = 82
+      Height = 23
+      TabOrder = 2
+    end
+    object cbActualRangeUnit: TComboBox
+      Left = 344
+      Top = 48
+      Width = 76
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 3
+    end
+    object cbCommutation: TComboBox
+      Left = 250
+      Top = 78
+      Width = 82
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 4
+    end
+    object cbThermoChannel: TComboBox
+      Left = 250
+      Top = 108
+      Width = 82
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 5
+    end
+    object edSoftBalance: TEdit
+      Left = 250
+      Top = 138
+      Width = 82
+      Height = 23
+      TabOrder = 6
+    end
+    object edSoftBalanceUnit: TEdit
+      Left = 344
+      Top = 138
+      Width = 76
+      Height = 23
+      ReadOnly = True
+      TabOrder = 7
+    end
+    object chkChannelShunt: TCheckBox
+      Left = 250
+      Top = 166
+      Width = 22
+      Height = 19
+      TabOrder = 8
+    end
+  end
+  object gbSensor: TGroupBox
+    Left = 8
+    Height = 126
+    Top = 218
+    Width = 434
+    Caption = 'Свойства тензорезистора'
+    ClientHeight = 106
+    ClientWidth = 430
+    TabOrder = 1
+    object Label6: TLabel
+      Left = 14
+      Top = 22
+      Caption = 'Схема подключения датчика'
+    end
+    object Label7: TLabel
+      Left = 14
+      Top = 52
+      Caption = 'Тензочувствительность'
+    end
+    object Label8: TLabel
+      Left = 14
+      Top = 82
+      Caption = 'Номинал внешнего сопротивления, [Ом]'
+    end
+    object Label9: TLabel
+      Left = 14
+      Top = 112
+      Caption = 'Номинал внутреннего сопротивления, [Ом]'
+    end
+    object cbSensorScheme: TComboBox
+      Left = 250
+      Top = 18
+      Width = 104
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object edStrainSensitivity: TEdit
+      Left = 250
+      Top = 48
+      Width = 104
+      Height = 23
+      TabOrder = 1
+    end
+    object edOuterResistance: TEdit
+      Left = 250
+      Top = 78
+      Width = 104
+      Height = 23
+      TabOrder = 2
+    end
+    object edInnerResistance: TEdit
+      Left = 250
+      Top = 108
+      Width = 104
+      Height = 23
+      TabOrder = 3
+    end
+  end
+  object gbModule: TGroupBox
+    Left = 8
+    Height = 100
+    Top = 348
+    Width = 434
+    Caption = 'Свойства модуля'
+    ClientHeight = 80
+    ClientWidth = 430
+    TabOrder = 2
+    object Label10: TLabel
+      Left = 14
+      Top = 22
+      Caption = 'Питание общее, [мА]'
+    end
+    object Label11: TLabel
+      Left = 14
+      Top = 52
+      Caption = 'Значение калибровочного шунта'
+    end
+    object Label12: TLabel
+      Left = 14
+      Top = 82
+      Caption = 'Балансировка аппаратная общая'
+    end
+    object Label13: TLabel
+      Left = 344
+      Top = 82
+      Caption = 'мВ'
+    end
+    object cbModulePower: TComboBox
+      Left = 250
+      Top = 18
+      Width = 82
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object cbShuntValue: TComboBox
+      Left = 250
+      Top = 48
+      Width = 82
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object edHardBalance: TEdit
+      Left = 250
+      Top = 78
+      Width = 82
+      Height = 23
+      TabOrder = 2
+    end
+  end
+  object btnApply: TButton
+    Left = 260
+    Top = 474
+    Width = 82
+    Height = 27
+    Caption = 'Применить'
+    Default = True
+    ModalResult = 1
+    TabOrder = 3
+  end
+  object btnCancel: TButton
+    Left = 352
+    Top = 474
+    Width = 82
+    Height = 27
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 4
+  end
+end

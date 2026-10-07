@@ -6,7 +6,7 @@ unit uRecorderOpcUaTypes;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, fpjson, jsonparser;
+  Classes, SysUtils, Contnrs, fpjson, jsonparser, uRecorderMessages;
 
 const
   CRecorderOpcUaModuleType = 'OPC UA';
@@ -22,6 +22,7 @@ type
   TRecorderOpcUaAuthenticationMode = (ouamAnonymous, ouamUserPassword);
   TRecorderOpcUaTimestampMode = (outSource, outServer, outBoth, outNeither);
   TRecorderOpcUaPollingType = (ouptRead, ouptSubscription);
+  TRecorderOpcUaNodeRole = (ounrAuto, ounrTag, ounrMessage);
 
   TRecorderOpcUaNode = class
   public
@@ -30,6 +31,9 @@ type
     DataTypeNodeId: string;
     Readable: Boolean;
     Writable: Boolean;
+    Role: TRecorderOpcUaNodeRole;
+    MessageKind: TRecorderMessageKind;
+    MessageColor: LongInt;
   end;
 
   TRecorderOpcUaConfig = class
@@ -68,6 +72,7 @@ type
 function RecorderOpcUaSourceId(const AEndpoint: string;
   AMode: TRecorderOpcUaMode): string;
 function RecorderIsOpcUaSource(const ASourceId, AModuleType: string): Boolean;
+function RecorderOpcUaNodeIsMessage(ANode: TRecorderOpcUaNode): Boolean;
 
 implementation
 
@@ -110,6 +115,9 @@ begin
   Result.DataTypeNodeId := Trim(ADataTypeNodeId);
   Result.Readable := AReadable;
   Result.Writable := AWritable;
+  Result.Role := ounrAuto;
+  Result.MessageKind := rmkInformation;
+  Result.MessageColor := -1;
   fNodes.Add(Result);
 end;
 
@@ -167,6 +175,14 @@ begin
       lObject.Add('dataTypeNodeId', lNode.DataTypeNodeId);
       lObject.Add('readable', lNode.Readable);
       lObject.Add('writable', lNode.Writable);
+      case lNode.Role of
+        ounrTag: lObject.Add('role', 'tag');
+        ounrMessage: lObject.Add('role', 'message');
+      else
+        lObject.Add('role', 'auto');
+      end;
+      lObject.Add('messageKind', RecorderMessageKindName(lNode.MessageKind));
+      lObject.Add('messageColor', lNode.MessageColor);
       lArray.Add(lObject);
     end;
     Result := lRoot.AsJSON;
@@ -252,9 +268,20 @@ begin
           begin
             lItem := TJSONObject(lNodes.Items[I]);
             if Trim(lItem.Get('nodeId', '')) <> '' then
+            begin
               AddNode(lItem.Get('nodeId', ''), lItem.Get('tagName', ''),
                 lItem.Get('writable', False), lItem.Get('readable', True),
                 lItem.Get('dataTypeNodeId', ''));
+              if SameText(lItem.Get('role', 'auto'), 'tag') then
+                TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).Role := ounrTag
+              else if SameText(lItem.Get('role', 'auto'), 'message') then
+                TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).Role := ounrMessage;
+              TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).MessageKind :=
+                RecorderMessageKindFromName(lItem.Get('messageKind',
+                'information'));
+              TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).MessageColor :=
+                lItem.Get('messageColor', -1);
+            end;
           end;
       if Endpoint = '' then
       begin
@@ -284,6 +311,18 @@ function RecorderIsOpcUaSource(const ASourceId, AModuleType: string): Boolean;
 begin
   Result := SameText(Trim(AModuleType), CRecorderOpcUaModuleType) or
     (Pos(CRecorderOpcUaSourcePrefix, Trim(ASourceId)) = 1);
+end;
+
+function RecorderOpcUaNodeIsMessage(ANode: TRecorderOpcUaNode): Boolean;
+begin
+  if ANode = nil then Exit(False);
+  case ANode.Role of
+    ounrMessage: Result := True;
+    ounrTag: Result := False;
+  else
+    Result := SameText(ANode.DataTypeNodeId, 'i=12') or
+      SameText(ANode.DataTypeNodeId, 'ns=0;i=12');
+  end;
 end;
 
 end.

@@ -35,7 +35,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/Algs;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../SharedUtils;../../../SharedUtils/components/chart_lzr"/>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Algs;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../RecorderLnx/Calibrations;../../../RecorderLnx/Calibrations/Strains;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/FrequencyResponse;../../../RecorderLnx/Components/MeasurementSection;../../../RecorderLnx/Components/SignalGenerator;../../../RecorderLnx/Components/SqlTrend;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/motion"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

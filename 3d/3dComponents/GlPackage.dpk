@@ -33,6 +33,7 @@ requires
   xmlrtl,
   vclactnband,
   vclx,
+  VirtualTreesR,
   dcl_own,
   vcldb,
   dbrtl,

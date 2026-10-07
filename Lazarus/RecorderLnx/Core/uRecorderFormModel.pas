@@ -296,7 +296,8 @@ type
     rsvHighWarning, rsvLowWarning, rsvLowAlarm, rsvHighAlarmColor,
     rsvHighWarningColor, rsvLowWarningColor, rsvLowAlarmColor,
     rsvActiveAlarmColorWhite, rsvActiveAlarmColorTransparent,
-    rsvActiveAlarmColorCurrent);
+    rsvActiveAlarmColorCurrent, rsvLiteral, rsvVisibleWhenNonZero,
+    rsvAlwaysVisible, rsvAlwaysHidden);
 
   TRecorderSvgTagBinding = class
   private
@@ -304,12 +305,16 @@ type
     fTagId: TRecorderTagId;
     fTagName: string;
     fValueKind: TRecorderSvgValueKind;
+    fLiteralValue: string;
   public
     procedure Assign(ASource: TRecorderSvgTagBinding);
     property ParameterName: string read fParameterName write fParameterName;
     property TagId: TRecorderTagId read fTagId write fTagId;
     property TagName: string read fTagName write fTagName;
     property ValueKind: TRecorderSvgValueKind read fValueKind write fValueKind;
+    { Used for template defaults and parameters which are not driven by a tag,
+      such as a unit caption or font family. }
+    property LiteralValue: string read fLiteralValue write fLiteralValue;
   end;
 
   { Картинка на мнемосхеме. Каждая строка Images хранится как
@@ -1420,6 +1425,7 @@ begin
   fTagId := ASource.TagId;
   fTagName := ASource.TagName;
   fValueKind := ASource.ValueKind;
+  fLiteralValue := ASource.LiteralValue;
 end;
 
 class function TRecorderImageComponent.GetTypeId: string;

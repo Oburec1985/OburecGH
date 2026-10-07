@@ -1,0 +1,66 @@
+object RecorderSplashForm: TRecorderSplashForm
+  Left = 420
+  Height = 250
+  Top = 240
+  Width = 520
+  BorderIcons = []
+  BorderStyle = bsNone
+  Caption = 'RecorderLnx'
+  ClientHeight = 250
+  ClientWidth = 520
+  Color = clWhite
+  FormStyle = fsStayOnTop
+  Position = poScreenCenter
+  OnPaint = FormPaint
+  LCLVersion = '2.2.6.0'
+  object lbApplication: TLabel
+    Left = 32
+    Height = 46
+    Top = 50
+    Width = 456
+    Alignment = taCenter
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'RecorderLnx'
+    Font.Color = 4210752
+    Font.Height = -32
+    Font.Name = 'Sans'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+    Transparent = True
+  end
+  object lbVersion: TLabel
+    Left = 32
+    Height = 30
+    Top = 114
+    Width = 456
+    Alignment = taCenter
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'Версия'
+    Font.Color = 5263440
+    Font.Height = -18
+    Font.Name = 'Sans'
+    ParentColor = False
+    ParentFont = False
+    Transparent = True
+  end
+  object lbArticle: TLabel
+    Left = 32
+    Height = 30
+    Top = 158
+    Width = 456
+    Alignment = taCenter
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = ''
+    Font.Color = 4210752
+    Font.Height = -18
+    Font.Name = 'Sans'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+    Transparent = True
+  end
+end

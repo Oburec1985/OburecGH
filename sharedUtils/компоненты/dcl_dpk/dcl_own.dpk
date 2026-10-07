@@ -32,7 +32,8 @@ requires
   vclx,
   bdertl,
   dbrtl,
-  vcldb;
+  vcldb,
+  VirtualTreesR;
 
 contains
   DCL_MYOWN in 'DCL_MYOWN.pas',

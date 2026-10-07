@@ -2958,6 +2958,9 @@ begin
       Continue;
     SetLength(lChannels, Length(lChannels) + 1);
     lChannels[High(lChannels)] := lIndex;
+    if Trim(lTag.SourceUnitName) <> '' then
+      RecorderMic185SetSourceChannelUnitName(Registry, SourceId, lTag.Address,
+        lTag.PollFrequencyHz, lTag.SourceUnitName);
   end;
   if Length(lChannels) = 0 then
   begin

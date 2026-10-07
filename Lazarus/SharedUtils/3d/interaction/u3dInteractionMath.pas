@@ -1,5 +1,8 @@
 unit u3dInteractionMath;
 
+{ Contains allocation-free vector helpers used in pointer and camera hot paths.
+  Functions are pure and operate in right-handed world coordinates. }
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
@@ -11,14 +14,21 @@ uses
 const
   C3dEpsilon = 1.0e-6;
 
-function Add(const A, B: T3dVector): T3dVector; inline;
-function Subtract(const A, B: T3dVector): T3dVector; inline;
-function Scale(const A: T3dVector; AFactor: Single): T3dVector; inline;
-function Dot(const A, B: T3dVector): Single; inline;
-function Cross(const A, B: T3dVector): T3dVector; inline;
-function Length3d(const A: T3dVector): Single; inline;
+function Add(const A, B: T3dVector): T3dVector;
+inline;
+function Subtract(const A, B: T3dVector): T3dVector;
+inline;
+function Scale(const A: T3dVector; AFactor: Single): T3dVector;
+inline;
+function Dot(const A, B: T3dVector): Single;
+inline;
+function Cross(const A, B: T3dVector): T3dVector;
+inline;
+function Length3d(const A: T3dVector): Single;
+inline;
 function Normalize(const A: T3dVector): T3dVector;
-function ClampValue(AValue, AMinimum, AMaximum: Single): Single; inline;
+function ClampValue(AValue, AMinimum, AMaximum: Single): Single;
+inline;
 
 implementation
 
@@ -45,7 +55,7 @@ end;
 function Cross(const A, B: T3dVector): T3dVector;
 begin
   Result := Vector3d(A.Y * B.Z - A.Z * B.Y,
-    A.Z * B.X - A.X * B.Z, A.X * B.Y - A.Y * B.X);
+            A.Z * B.X - A.X * B.Z, A.X * B.Y - A.Y * B.X);
 end;
 
 function Length3d(const A: T3dVector): Single;
@@ -54,6 +64,7 @@ begin
 end;
 
 function Normalize(const A: T3dVector): T3dVector;
+
 var
   lLength: Single;
 begin
@@ -65,8 +76,10 @@ end;
 
 function ClampValue(AValue, AMinimum, AMaximum: Single): Single;
 begin
-  if AValue < AMinimum then Exit(AMinimum);
-  if AValue > AMaximum then Exit(AMaximum);
+  if AValue < AMinimum then
+    Exit(AMinimum);
+  if AValue > AMaximum then
+    Exit(AMaximum);
   Result := AValue;
 end;
 

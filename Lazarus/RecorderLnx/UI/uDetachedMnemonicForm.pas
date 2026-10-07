@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils, Types, Forms, Controls, ExtCtrls, Buttons, Graphics,
   ImgList, uRecorderFormModel, uRecorderTags, uRecorderAlarms,
-  uFormEditorController, uRecorderCommandImages, uRecorderMeasurementSectionModel,
+  uFormEditorController, uRecorderCommandImages, uRcIconIds, uRecorderMeasurementSectionModel,
   uRecorderComponentToolGroup, uRecorderSqlTrendModel;
 
 type

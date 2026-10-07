@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, uRecorderTags;
 
 const
-  CRecorderSqlDbSchemaVersion = 5;
+  CRecorderSqlDbSchemaVersion = 6;
   CRecorderSqlDbDefaultFileName = 'recorderlnx.sqlite3';
   CRecorderFirebirdDefaultFileName = 'recorderlnx.fdb';
   CRecorderFirebirdDefaultHost = '192.168.9.66';
@@ -139,6 +139,8 @@ type
     fObjectName: string;
     fObjectType: string;
     fSerialNumber: string;
+    fMdbObjectId: string;
+    fMdbTestId: string;
     fSignalNames: TStringList;
     fSignalEstimates: TStringList;
     fSignalSelectionConfigured: Boolean;
@@ -182,6 +184,8 @@ type
     property ObjectName: string read fObjectName write fObjectName;
     property ObjectType: string read fObjectType write fObjectType;
     property SerialNumber: string read fSerialNumber write fSerialNumber;
+    property MdbObjectId: string read fMdbObjectId write fMdbObjectId;
+    property MdbTestId: string read fMdbTestId write fMdbTestId;
     property SignalNames: TStringList read fSignalNames;
     property SignalEstimates: TStringList read fSignalEstimates;
     property SignalSelectionConfigured: Boolean read fSignalSelectionConfigured
@@ -300,6 +304,8 @@ begin
   fObjectName := ASource.fObjectName;
   fObjectType := ASource.fObjectType;
   fSerialNumber := ASource.fSerialNumber;
+  fMdbObjectId := ASource.fMdbObjectId;
+  fMdbTestId := ASource.fMdbTestId;
   fSignalNames.Assign(ASource.fSignalNames);
   fSignalEstimates.Assign(ASource.fSignalEstimates);
   fSignalSelectionConfigured := ASource.fSignalSelectionConfigured;
@@ -326,6 +332,8 @@ begin
   fObjectName := 'Объект мониторинга';
   fObjectType := '';
   fSerialNumber := '';
+  fMdbObjectId := '';
+  fMdbTestId := '';
   fSignalNames.Clear;
   fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
@@ -547,6 +555,8 @@ begin
       fObjectName := lIni.ReadString('SQLdb', 'ObjectName', fObjectName);
       fObjectType := lIni.ReadString('SQLdb', 'ObjectType', fObjectType);
       fSerialNumber := lIni.ReadString('SQLdb', 'SerialNumber', fSerialNumber);
+      fMdbObjectId := lIni.ReadString('Mdb', 'ObjectId', fMdbObjectId);
+      fMdbTestId := lIni.ReadString('Mdb', 'TestId', fMdbTestId);
       fPort := lIni.ReadInteger('SQLdb', 'Port', fPort);
       fUserName := lIni.ReadString('SQLdb', 'UserName', fUserName);
       fPasswordEnvironment := lIni.ReadString('SQLdb', 'PasswordEnvironment', fPasswordEnvironment);
@@ -653,6 +663,8 @@ begin
     lIni.WriteString('SQLdb', 'ObjectName', fObjectName);
     lIni.WriteString('SQLdb', 'ObjectType', fObjectType);
     lIni.WriteString('SQLdb', 'SerialNumber', fSerialNumber);
+    lIni.WriteString('Mdb', 'ObjectId', fMdbObjectId);
+    lIni.WriteString('Mdb', 'TestId', fMdbTestId);
     lIni.DeleteKey('SQLdb', 'Backend');
     lIni.DeleteKey('SQLdb', 'RootDirectory');
     lIni.DeleteKey('SQLdb', 'Database');

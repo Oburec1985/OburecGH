@@ -11,7 +11,7 @@ program RecorderCoreServicesTest;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils,
+  Classes, SysUtils, SyncObjs,
   uRecorderCoreServices,
   uRecorderConfigurationService,
   uRecorderUnitManager;
@@ -23,6 +23,65 @@ type
     LastText: string;
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure HandleAction(ASender: TObject; const AContext: TRecorderActionContext);
+  end;
+
+  TReentrantProbe = class
+  private
+    fBus: TRecorderEventBus;
+    fChild: TEventProbe;
+    fSubscribedChild: Boolean;
+  public
+    Count: Integer;
+    Token: Integer;
+    constructor Create(ABus: TRecorderEventBus; AChild: TEventProbe = nil);
+    procedure RecursivePublish(ASender: TObject; const AEvent: TRecorderEvent);
+    procedure SubscribeFromHandler(ASender: TObject;
+      const AEvent: TRecorderEvent);
+    procedure SelfUnsubscribe(ASender: TObject;
+      const AEvent: TRecorderEvent);
+  end;
+
+  TSlowEventProbe = class
+  public
+    Count: Integer;
+    Started: TEvent;
+    Release: TEvent;
+    constructor Create;
+    destructor Destroy; override;
+    procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
+  end;
+
+  TPublishThread = class(TThread)
+  private
+    fBus: TRecorderEventBus;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(ABus: TRecorderEventBus);
+  end;
+
+  TUnsubscribeThread = class(TThread)
+  private
+    fBus: TRecorderEventBus;
+    fToken: Integer;
+  protected
+    procedure Execute; override;
+  public
+    Done: TEvent;
+    Removed: Boolean;
+    constructor Create(ABus: TRecorderEventBus; AToken: Integer);
+    destructor Destroy; override;
+  end;
+
+  TDestroyBusThread = class(TThread)
+  private
+    fBus: TRecorderEventBus;
+  protected
+    procedure Execute; override;
+  public
+    Done: TEvent;
+    constructor Create(ABus: TRecorderEventBus);
+    destructor Destroy; override;
   end;
 
   TMockExtension = class(TInterfacedObject, IRecorderExtension)
@@ -100,6 +159,116 @@ procedure TEventProbe.HandleAction(ASender: TObject;
 begin
   Inc(Count);
   LastText := AContext.Text;
+end;
+
+constructor TReentrantProbe.Create(ABus: TRecorderEventBus;
+  AChild: TEventProbe);
+begin
+  inherited Create;
+  fBus := ABus;
+  fChild := AChild;
+end;
+
+procedure TReentrantProbe.RecursivePublish(ASender: TObject;
+  const AEvent: TRecorderEvent);
+begin
+  Inc(Count);
+  if Count = 1 then
+    fBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+end;
+
+procedure TReentrantProbe.SubscribeFromHandler(ASender: TObject;
+  const AEvent: TRecorderEvent);
+begin
+  Inc(Count);
+  if not fSubscribedChild then
+  begin
+    fBus.Subscribe(@fChild.HandleEvent);
+    fSubscribedChild := True;
+  end;
+end;
+
+procedure TReentrantProbe.SelfUnsubscribe(ASender: TObject;
+  const AEvent: TRecorderEvent);
+begin
+  Inc(Count);
+  AssertTrue(fBus.Unsubscribe(Token), 'self-unsubscribe returns true');
+end;
+
+constructor TSlowEventProbe.Create;
+begin
+  inherited Create;
+  Started := TEvent.Create(nil, True, False, '');
+  Release := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TSlowEventProbe.Destroy;
+begin
+  Release.Free;
+  Started.Free;
+  inherited Destroy;
+end;
+
+procedure TSlowEventProbe.HandleEvent(ASender: TObject;
+  const AEvent: TRecorderEvent);
+begin
+  Inc(Count);
+  Started.SetEvent;
+  Release.WaitFor(INFINITE);
+end;
+
+constructor TPublishThread.Create(ABus: TRecorderEventBus);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fBus := ABus;
+end;
+
+procedure TPublishThread.Execute;
+begin
+  fBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+end;
+
+constructor TUnsubscribeThread.Create(ABus: TRecorderEventBus;
+  AToken: Integer);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fBus := ABus;
+  fToken := AToken;
+  Done := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TUnsubscribeThread.Destroy;
+begin
+  Done.Free;
+  inherited Destroy;
+end;
+
+procedure TUnsubscribeThread.Execute;
+begin
+  Removed := fBus.Unsubscribe(fToken);
+  Done.SetEvent;
+end;
+
+constructor TDestroyBusThread.Create(ABus: TRecorderEventBus);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  fBus := ABus;
+  Done := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TDestroyBusThread.Destroy;
+begin
+  Done.Free;
+  inherited Destroy;
+end;
+
+procedure TDestroyBusThread.Execute;
+begin
+  fBus.Free;
+  Done.SetEvent;
 end;
 
 function TMockExtension.GetId: string;
@@ -234,6 +403,140 @@ begin
 
     Writeln('Event bus test passed.');
   finally
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestEventBusReentrancy;
+var
+  lBus: TRecorderEventBus;
+  lChild: TEventProbe;
+  lProbe: TReentrantProbe;
+begin
+  lBus := TRecorderEventBus.Create;
+  lChild := TEventProbe.Create;
+  lProbe := TReentrantProbe.Create(lBus, lChild);
+  try
+    lBus.Subscribe(@lProbe.RecursivePublish);
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    AssertEquals(lProbe.Count, 2, 'recursive publish count');
+  finally
+    lProbe.Free;
+    lChild.Free;
+    lBus.Free;
+  end;
+
+  lBus := TRecorderEventBus.Create;
+  lChild := TEventProbe.Create;
+  lProbe := TReentrantProbe.Create(lBus, lChild);
+  try
+    lBus.Subscribe(@lProbe.SubscribeFromHandler);
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    AssertEquals(lChild.Count, 0, 'new subscription skips current publish');
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    AssertEquals(lChild.Count, 1, 'new subscription receives next publish');
+    Writeln('Event bus reentrancy tests passed.');
+  finally
+    lProbe.Free;
+    lChild.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestEventBusSelfUnsubscribe;
+var
+  lBus: TRecorderEventBus;
+  lProbe: TReentrantProbe;
+begin
+  lBus := TRecorderEventBus.Create;
+  lProbe := TReentrantProbe.Create(lBus);
+  try
+    lProbe.Token := lBus.Subscribe(@lProbe.SelfUnsubscribe);
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    AssertEquals(lProbe.Count, 1, 'self-unsubscribe callback count');
+    Writeln('Event bus self-unsubscribe test passed.');
+  finally
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestConcurrentUnsubscribeWaitsForCallback;
+var
+  lBus: TRecorderEventBus;
+  lProbe: TSlowEventProbe;
+  lPublish: TPublishThread;
+  lUnsubscribe: TUnsubscribeThread;
+  lToken: Integer;
+begin
+  lBus := TRecorderEventBus.Create;
+  lProbe := TSlowEventProbe.Create;
+  lPublish := nil;
+  lUnsubscribe := nil;
+  try
+    lToken := lBus.Subscribe(@lProbe.HandleEvent);
+    lPublish := TPublishThread.Create(lBus);
+    lPublish.Start;
+    AssertTrue(lProbe.Started.WaitFor(2000) = wrSignaled,
+      'slow callback starts');
+
+    lUnsubscribe := TUnsubscribeThread.Create(lBus, lToken);
+    lUnsubscribe.Start;
+    AssertTrue(lUnsubscribe.Done.WaitFor(50) = wrTimeout,
+      'unsubscribe waits for in-flight callback');
+    lProbe.Release.SetEvent;
+    AssertTrue(lUnsubscribe.Done.WaitFor(2000) = wrSignaled,
+      'unsubscribe completes after callback');
+    lPublish.WaitFor;
+    lUnsubscribe.WaitFor;
+    AssertTrue(lUnsubscribe.Removed, 'concurrent unsubscribe removes token');
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceUser));
+    AssertEquals(lProbe.Count, 1, 'removed slow callback is not called again');
+    Writeln('Event bus concurrent unsubscribe test passed.');
+  finally
+    lProbe.Release.SetEvent;
+    lUnsubscribe.Free;
+    lPublish.Free;
+    lProbe.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestConcurrentDestroyWaitsForPublish;
+var
+  lBus: TRecorderEventBus;
+  lProbe: TSlowEventProbe;
+  lPublish: TPublishThread;
+  lDestroy: TDestroyBusThread;
+begin
+  lBus := TRecorderEventBus.Create;
+  lProbe := TSlowEventProbe.Create;
+  lPublish := nil;
+  lDestroy := nil;
+  try
+    lBus.Subscribe(@lProbe.HandleEvent);
+    lPublish := TPublishThread.Create(lBus);
+    lPublish.Start;
+    AssertTrue(lProbe.Started.WaitFor(2000) = wrSignaled,
+      'slow callback starts before destroy');
+
+    lDestroy := TDestroyBusThread.Create(lBus);
+    lDestroy.Start;
+    AssertTrue(lDestroy.Done.WaitFor(50) = wrTimeout,
+      'destroy waits for in-flight publish');
+    lProbe.Release.SetEvent;
+    AssertTrue(lDestroy.Done.WaitFor(2000) = wrSignaled,
+      'destroy completes after publish');
+    lPublish.WaitFor;
+    lDestroy.WaitFor;
+    lBus := nil;
+    Writeln('Event bus concurrent destroy test passed.');
+  finally
+    lProbe.Release.SetEvent;
+    lDestroy.Free;
+    lPublish.Free;
     lProbe.Free;
     lBus.Free;
   end;
@@ -443,6 +746,10 @@ end;
 
 begin
   TestEventBus;
+  TestEventBusReentrancy;
+  TestEventBusSelfUnsubscribe;
+  TestConcurrentUnsubscribeWaitsForCallback;
+  TestConcurrentDestroyWaitsForPublish;
   TestActionRegistry;
   TestExtensionManager;
   TestAlgorithmOnlyConfiguration;

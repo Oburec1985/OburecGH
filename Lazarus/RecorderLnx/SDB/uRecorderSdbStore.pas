@@ -75,6 +75,12 @@ function RecorderSdbUpdateLinkedCalibration(ALinkedCalibration,
   AEditedCalibration: TRecorderCalibration; out AError: string): Boolean;
 function RecorderSdbCreateFolder(const AParentKey, AName: string;
   out ACreatedKey, AError: string): Boolean;
+function RecorderSdbCreateCalibration(const AFolderKey, AName: string;
+  out ACreatedKey, AError: string): Boolean;
+function RecorderSdbRenameCalibration(const AKey, ANewName: string;
+  out AError: string): Boolean;
+function RecorderSdbCopyCalibration(const ASourceKey, ADestinationFolderKey: string;
+  out ACreatedKey, AError: string): Boolean;
 
 function RecorderSdbNodeDisplayName(ANode: TRecorderSdbNode): string;
 function RecorderSdbNodeDisplayDescription(ANode: TRecorderSdbNode): string;
@@ -225,6 +231,138 @@ begin
     end;
   finally
     lProps.Free;
+  end;
+end;
+
+function RecorderSdbCreateCalibration(const AFolderKey, AName: string;
+  out ACreatedKey, AError: string): Boolean;
+var
+  lCalibration: TRecorderCalibration;
+  lName: string;
+begin
+  Result := False;
+  ACreatedKey := '';
+  AError := '';
+  lName := Trim(AName);
+  if (lName = '') or (lName = '.') or (Pos('..', lName) > 0) or
+    not SameText(SdbSafeFileName(lName), lName) then
+  begin
+    AError := 'Имя ГХ содержит недопустимые символы.';
+    Exit;
+  end;
+
+  lCalibration := TRecorderCalibration.Create(rckScale);
+  try
+    lCalibration.Name := lName;
+    lCalibration.Scale := 1.0;
+    Result := RecorderSdbExportCalibration(AFolderKey, lCalibration, False,
+      ACreatedKey, AError);
+    if (not Result) and SameText(AError, 'EXISTS') then
+      AError := 'ГХ с таким именем уже существует.';
+  finally
+    lCalibration.Free;
+  end;
+end;
+
+function RecorderSdbRenameCalibration(const AKey, ANewName: string;
+  out AError: string): Boolean;
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lFolderKey: string;
+  lInfo: TSdbScaleInfo;
+  lKey: string;
+  lKeys: TStringList;
+  lName: string;
+begin
+  Result := False;
+  AError := '';
+  lName := Trim(ANewName);
+  if lName = '' then
+  begin
+    AError := 'Имя ГХ не может быть пустым.';
+    Exit;
+  end;
+
+  lKey := RecorderSdbNormalizeKey(AKey);
+  lFolderKey := ExtractFileDir(StringReplace(lKey, '\', PathDelim,
+    [rfReplaceAll]));
+  lFolderKey := StringReplace(lFolderKey, PathDelim, '\', [rfReplaceAll]);
+  if lFolderKey = '.' then
+    lFolderKey := '';
+  lKeys := TStringList.Create;
+  try
+    RecorderSdbListScaleKeys(lFolderKey, lKeys);
+    for I := 0 to lKeys.Count - 1 do
+      if (not SameText(RecorderSdbNormalizeKey(lKeys[I]), lKey)) and
+        SameText(ExtractFileDir(StringReplace(lKeys[I], '\', PathDelim,
+          [rfReplaceAll])), StringReplace(lFolderKey, '\', PathDelim,
+          [rfReplaceAll])) and
+        RecorderSdbTryLoadScale(lKeys[I], lInfo) and SameText(lInfo.Name, lName) then
+      begin
+        AError := 'ГХ с таким именем уже существует в этом каталоге.';
+        Exit;
+      end;
+  finally
+    lKeys.Free;
+  end;
+
+  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+  try
+    if not RecorderSdbLoadScaleCalibration(AKey, lCalibration) then
+    begin
+      AError := 'Не удалось загрузить выбранную ГХ.';
+      Exit;
+    end;
+    lCalibration.Name := lName;
+    Result := RecorderSdbUpdateCalibration(AKey, lCalibration, AError);
+  finally
+    lCalibration.Free;
+  end;
+end;
+
+function RecorderSdbCopyCalibration(const ASourceKey,
+  ADestinationFolderKey: string; out ACreatedKey, AError: string): Boolean;
+var
+  lCalibration: TRecorderCalibration;
+  lCopyNo: Integer;
+  lName: string;
+  lSourceName: string;
+begin
+  Result := False;
+  ACreatedKey := '';
+  AError := '';
+  lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+  try
+    if not RecorderSdbLoadScaleCalibration(ASourceKey, lCalibration) then
+    begin
+      AError := 'Не удалось загрузить копируемую ГХ.';
+      Exit;
+    end;
+    lSourceName := Trim(lCalibration.Name);
+    if lSourceName = '' then
+      lSourceName := ExtractFileName(StringReplace(
+        RecorderSdbNormalizeKey(ASourceKey), '\', PathDelim, [rfReplaceAll]));
+    lCalibration.SdbKey := '';
+    lCalibration.SourceFileName := '';
+    lCopyNo := 1;
+    repeat
+      if lCopyNo = 1 then
+        lName := lSourceName + ' (копия)'
+      else
+        lName := lSourceName + ' (копия ' + IntToStr(lCopyNo) + ')';
+      lCalibration.Name := lName;
+      Result := RecorderSdbExportCalibration(ADestinationFolderKey,
+        lCalibration, False, ACreatedKey, AError);
+      if Result then
+        Exit;
+      if not SameText(AError, 'EXISTS') then
+        Exit;
+      Inc(lCopyNo);
+    until lCopyNo > 9999;
+    AError := 'Не удалось подобрать свободное имя для копии ГХ.';
+  finally
+    lCalibration.Free;
   end;
 end;
 

@@ -39,6 +39,8 @@ type
     function Iterate: Boolean;
     function ReadChanged(AIndex: Integer; out AValue,
       ATimestampSec: Double; out AQuality: Cardinal): Boolean;
+    function ReadMessageChanged(AIndex: Integer; out AValue: string;
+      out ATimestampSec: Double; out AQuality: Cardinal): Boolean;
     function WriteClientValue(AIndex: Integer; AValue: Double): Boolean;
     function WriteClientValues(const AIndexes: TRecorderOpcUaIntegerArray;
       const AValues: TRecorderOpcUaDoubleArray): Boolean;
@@ -255,7 +257,7 @@ begin
     Result := RecorderOpcUaServerIterate(fHandle, False)
   else
     Result := RecorderOpcUaClientIterate(fHandle, 0,
-      Min(fConfig.MaxNodesPerRead, CRecorderOpcUaDefaultMaxNodesPerRequest));
+      fConfig.MaxNodesPerRead);
   if not Result then Fail('iterate', RecorderOpcUaLastError(fHandle));
 end;
 
@@ -266,6 +268,16 @@ begin
     (AIndex < Length(fNodeIndexes)) and
     RecorderOpcUaClientReadChanged(fHandle, fNodeIndexes[AIndex], AValue,
       ATimestampSec, AQuality);
+end;
+
+function TRecorderOpcUaDevice.ReadMessageChanged(AIndex: Integer;
+  out AValue: string; out ATimestampSec: Double;
+  out AQuality: Cardinal): Boolean;
+begin
+  Result := (fConfig.Mode = oumClient) and (AIndex >= 0) and
+    (AIndex < Length(fNodeIndexes)) and
+    RecorderOpcUaClientReadMessageChanged(fHandle, fNodeIndexes[AIndex],
+      AValue, ATimestampSec, AQuality);
 end;
 
 function TRecorderOpcUaDevice.WriteClientValue(AIndex: Integer;

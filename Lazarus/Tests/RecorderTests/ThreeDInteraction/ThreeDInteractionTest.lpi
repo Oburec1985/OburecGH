@@ -17,7 +17,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../SharedUtils/3d/core;../../../SharedUtils/3d/interaction"/>
+      <OtherUnitFiles Value="../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/interaction"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <CodeGeneration><Optimizations><OptimizationLevel Value="2"/></Optimizations></CodeGeneration>

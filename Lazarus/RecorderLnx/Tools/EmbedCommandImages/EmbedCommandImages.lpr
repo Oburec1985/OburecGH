@@ -1,7 +1,7 @@
 program EmbedCommandImages;
 {$mode objfpc}{$H+}
 uses Interfaces, Classes, SysUtils, Forms, Controls, ImgList, LResources,
-  uRecorderCommandImages;
+  uRecorderCommandImages, uRcIconIds;
 type
   TClassFinder = class
     procedure FindClass(Reader: TReader; const AName: string;
@@ -14,7 +14,7 @@ begin
 end;
 procedure Embed(const AFileName: string);
 var
-  I, S, F: Integer;
+  I, S, F, BitmapStart, BitmapFinish, NewStart, NewFinish: Integer;
   L, O, W: TStringList;
   R, T: TStringStream;
   C: TComponent;
@@ -49,9 +49,24 @@ begin
     finally
       T.Free;
     end;
-    for I := F downto S do L.Delete(I);
-    for I := W.Count - 1 downto 0 do
-      if W[I] <> '' then L.Insert(S, '  ' + W[I]);
+    BitmapStart:=S;
+    while (BitmapStart<=F) and
+      (Pos('Bitmap = {',Trim(L[BitmapStart]))<>1) do Inc(BitmapStart);
+    if BitmapStart>F then raise Exception.Create('ilCommandButtons bitmap not found');
+    BitmapFinish:=BitmapStart;
+    while (BitmapFinish<=F) and
+      (Copy(Trim(L[BitmapFinish]),Length(Trim(L[BitmapFinish])),1)<>'}') do
+      Inc(BitmapFinish);
+    NewStart:=0;
+    while (NewStart<W.Count) and
+      (Pos('Bitmap = {',Trim(W[NewStart]))<>1) do Inc(NewStart);
+    if NewStart>=W.Count then raise Exception.Create('generated bitmap not found');
+    NewFinish:=NewStart;
+    while (NewFinish<W.Count) and
+      (Copy(Trim(W[NewFinish]),Length(Trim(W[NewFinish])),1)<>'}') do
+      Inc(NewFinish);
+    for I:=BitmapFinish downto BitmapStart do L.Delete(I);
+    for I:=NewFinish downto NewStart do L.Insert(BitmapStart,'  '+W[I]);
     L.SaveToFile(AFileName);
   finally
     C.Free; Finder.Free; W.Free; O.Free; L.Free;

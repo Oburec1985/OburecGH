@@ -1,0 +1,441 @@
+object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
+  Left = 235
+  Height = 715
+  Top = 5
+  Width = 920
+  Caption = 'OPC UA client/server'
+  ClientHeight = 715
+  ClientWidth = 920
+  Constraints.MinHeight = 620
+  Constraints.MinWidth = 700
+  OnCloseQuery = FormCloseQuery
+  OnShow = FormShow
+  Position = poOwnerFormCenter
+  LCLVersion = '2.2.6.0'
+  object fConfigPanel: TPanel
+    Left = 0
+    Height = 230
+    Top = 0
+    Width = 920
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 230
+    ClientWidth = 920
+    TabOrder = 0
+    object lblMode: TLabel
+      Left = 16
+      Height = 19
+      Top = 18
+      Width = 45
+      Caption = 'Режим'
+      ParentColor = False
+    end
+    object lblEndpoint: TLabel
+      Left = 16
+      Height = 19
+      Top = 54
+      Width = 83
+      Caption = 'Endpoint URL'
+      ParentColor = False
+    end
+    object lblAuth: TLabel
+      Left = 16
+      Height = 19
+      Top = 90
+      Width = 110
+      Caption = 'Аутентификация'
+      ParentColor = False
+    end
+    object lblUser: TLabel
+      Left = 16
+      Height = 19
+      Top = 126
+      Width = 94
+      Caption = 'Пользователь'
+      ParentColor = False
+    end
+    object lblPassword: TLabel
+      Left = 16
+      Height = 19
+      Top = 162
+      Width = 74
+      Caption = 'ENV пароля'
+      ParentColor = False
+    end
+    object lblInterval: TLabel
+      Left = 390
+      Height = 19
+      Top = 126
+      Width = 86
+      Caption = 'Интервал, мс'
+      ParentColor = False
+    end
+    object lblSessionTimeout: TLabel
+      Left = 620
+      Height = 19
+      Top = 126
+      Width = 112
+      Caption = 'Таймаут сессии, с'
+      ParentColor = False
+    end
+    object fMode: TComboBox
+      Left = 140
+      Height = 31
+      Top = 14
+      Width = 180
+      ItemHeight = 0
+      Items.Strings = (
+        'Client'
+        'Server'
+      )
+      OnChange = ModeChange
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object fEndpoint: TEdit
+      Left = 140
+      Height = 31
+      Top = 50
+      Width = 760
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 1
+    end
+    object fAuth: TComboBox
+      Left = 140
+      Height = 31
+      Top = 86
+      Width = 220
+      ItemHeight = 0
+      Items.Strings = (
+        'Анонимно'
+        'Логин / пароль'
+      )
+      OnChange = AuthChange
+      Style = csDropDownList
+      TabOrder = 2
+    end
+    object fUserName: TEdit
+      Left = 140
+      Height = 31
+      Top = 122
+      Width = 220
+      TabOrder = 3
+    end
+    object fPassword: TEdit
+      Left = 140
+      Height = 31
+      Top = 158
+      Width = 220
+      TabOrder = 4
+    end
+    object fInterval: TEdit
+      Left = 500
+      Height = 31
+      Top = 122
+      Width = 100
+      TabOrder = 5
+    end
+    object fSessionTimeout: TEdit
+      Left = 740
+      Height = 31
+      Top = 122
+      Width = 80
+      TabOrder = 6
+    end
+    object fProbeButton: TButton
+      Left = 140
+      Height = 30
+      Top = 194
+      Width = 150
+      Caption = 'Проверить связь'
+      OnClick = ProbeClick
+      TabOrder = 7
+    end
+    object fBrowseButton: TButton
+      Left = 300
+      Height = 30
+      Top = 194
+      Width = 130
+      Caption = 'Найти теги'
+      OnClick = BrowseClick
+      TabOrder = 8
+    end
+    object fReadButton: TButton
+      Left = 440
+      Height = 30
+      Top = 194
+      Width = 160
+      Caption = 'Прочитать значения'
+      OnClick = ReadClick
+      TabOrder = 9
+    end
+  end
+  object fConfigSplitter: TSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 6
+    Top = 230
+    Width = 920
+    Align = alTop
+    AutoSnap = False
+    Color = 14131200
+    MinSize = 160
+    ParentColor = False
+    ResizeAnchor = akTop
+  end
+  object fDiagnosticsPanel: TPanel
+    Left = 0
+    Height = 90
+    Top = 577
+    Width = 920
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 90
+    ClientWidth = 920
+    TabOrder = 2
+    object lblDiagnostics: TLabel
+      Left = 8
+      Height = 19
+      Top = 2
+      Width = 82
+      Caption = 'Диагностика'
+      ParentColor = False
+    end
+    object fDiagnostics: TMemo
+      Left = 0
+      Height = 70
+      Top = 20
+      Width = 920
+      Align = alBottom
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
+      TabOrder = 0
+    end
+  end
+  object fWorkspacePanel: TPanel
+    Left = 0
+    Height = 341
+    Top = 236
+    Width = 920
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 341
+    ClientWidth = 920
+    TabOrder = 1
+    object fTreePanel: TPanel
+      Left = 0
+      Height = 341
+      Top = 0
+      Width = 440
+      Align = alLeft
+      BevelOuter = bvNone
+      ClientHeight = 341
+      ClientWidth = 440
+      TabOrder = 0
+      object lblTree: TLabel
+        Left = 8
+        Height = 19
+        Top = 6
+        Width = 282
+        Caption = 'Узлы OPC UA (Ctrl/Shift — мультивыбор)'
+        ParentColor = False
+      end
+      object fSimplifiedTree: TCheckBox
+        Left = 261
+        Height = 21
+        Top = 29
+        Width = 171
+        Anchors = [akTop, akRight]
+        Caption = 'Упрощённое дерево'
+        Checked = True
+        OnChange = SimplifiedTreeChange
+        State = cbChecked
+        TabOrder = 0
+      end
+      object lblTreeSearch: TLabel
+        Left = 8
+        Height = 19
+        Top = 32
+        Width = 50
+        Caption = 'Фильтр:'
+        ParentColor = False
+      end
+      object fTreeSearch: TEdit
+        Left = 64
+        Height = 27
+        Top = 27
+        Width = 185
+        Anchors = [akTop, akLeft, akRight]
+        TabOrder = 1
+        OnChange = TreeSearchChange
+      end
+      object fBrowseTree: TTreeView
+        Left = 8
+        Height = 279
+        Top = 58
+        Width = 424
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        DragMode = dmAutomatic
+        HideSelection = False
+        Images = fNodeImages
+        MultiSelect = True
+        MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+        PopupMenu = fBrowsePopup
+        ReadOnly = True
+        TabOrder = 2
+        OnDblClick = BrowseTreeDblClick
+        OnMouseDown = BrowseTreeMouseDown
+        OnSelectionChanged = BrowseTreeSelectionChanged
+        OnStartDrag = BrowseTreeStartDrag
+        Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+      end
+    end
+    object fBrowserSplitter: TSplitter
+      Cursor = crHSplit
+      Left = 440
+      Height = 341
+      Top = 0
+      Width = 6
+      Align = alLeft
+      AutoSnap = False
+      Color = 14131200
+      MinSize = 260
+      ParentColor = False
+      ResizeAnchor = akLeft
+    end
+    object fDetailsPages: TPageControl
+      Left = 446
+      Height = 341
+      Top = 0
+      Width = 474
+      ActivePage = fPropertiesTab
+      Align = alClient
+      TabIndex = 0
+      TabOrder = 1
+      object fPropertiesTab: TTabSheet
+        Caption = 'Свойства узла'
+        ClientHeight = 313
+        ClientWidth = 466
+        object fPropertiesGrid: TStringGrid
+          Left = 0
+          Height = 313
+          Top = 0
+          Width = 466
+          Align = alClient
+          ColCount = 2
+          FixedCols = 0
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goThumbTracking]
+          RowCount = 14
+          TabOrder = 0
+        end
+      end
+      object fUsedTab: TTabSheet
+        Caption = 'Используемые каналы'
+        ClientHeight = 313
+        ClientWidth = 466
+        object lblUsedHint: TLabel
+          Left = 8
+          Height = 19
+          Top = 5
+          Width = 350
+          Caption = 'Перетащите слева; протяните мышью — выбрать; Del — удалить'
+          ParentColor = False
+        end
+        object lblUsedSearch: TLabel
+          Left = 8
+          Height = 19
+          Top = 34
+          Width = 50
+          Caption = 'Фильтр:'
+          ParentColor = False
+        end
+        object fUsedSearch: TEdit
+          Left = 64
+          Height = 27
+          Top = 29
+          Width = 394
+          Anchors = [akTop, akLeft, akRight]
+          TabOrder = 0
+          OnChange = UsedSearchChange
+        end
+        object fUsedTree: TTreeView
+          Left = 0
+          Height = 255
+          Top = 58
+          Width = 466
+          Anchors = [akTop, akLeft, akRight, akBottom]
+          HideSelection = False
+          Images = fNodeImages
+          MultiSelect = True
+          MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+          ReadOnly = True
+          TabOrder = 1
+          OnDragDrop = UsedTreeDragDrop
+          OnDragOver = UsedTreeDragOver
+          OnKeyDown = UsedTreeKeyDown
+          OnMouseDown = UsedTreeMouseDown
+          OnMouseMove = UsedTreeMouseMove
+          OnMouseUp = UsedTreeMouseUp
+          Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+        end
+        object fValueGrid: TStringGrid
+          Left = 0
+          Height = 1
+          Top = 0
+          Width = 1
+          ColCount = 8
+          FixedCols = 0
+          RowCount = 1
+          Visible = False
+        end
+      end
+    end
+  end
+  object buttonPanel: TPanel
+    Left = 0
+    Height = 48
+    Top = 667
+    Width = 920
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 920
+    TabOrder = 3
+    object fOkButton: TButton
+      Left = 734
+      Height = 28
+      Top = 10
+      Width = 80
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      ModalResult = 1
+      TabOrder = 0
+    end
+    object fCancelButton: TButton
+      Left = 824
+      Height = 28
+      Top = 10
+      Width = 80
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object fNodeImages: TImageList
+    Left = 664
+    Top = 16
+  end
+  object fBrowsePopup: TPopupMenu
+    OnPopup = BrowsePopupPopup
+    Left = 744
+    Top = 16
+    object fAddSelectedMenuItem: TMenuItem
+      Caption = 'Добавить выбранные в используемые'
+      OnClick = AddSelectedMenuClick
+    end
+  end
+end

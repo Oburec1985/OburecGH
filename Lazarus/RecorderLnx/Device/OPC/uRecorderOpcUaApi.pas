@@ -12,6 +12,7 @@ type
   TRecorderOpcUaHandle = Pointer;
   TRecorderOpcUaIntegerArray = array of Integer;
   TRecorderOpcUaDoubleArray = array of Double;
+  TRecorderOpcUaStringArray = array of string;
 
 function RecorderOpcUaLoad(out AError: string): Boolean;
 procedure RecorderOpcUaUnload;
@@ -25,11 +26,14 @@ function RecorderOpcUaClientAddNode(AHandle: TRecorderOpcUaHandle;
   AWritable: Boolean = False; const ADataTypeNodeId: string = ''): Integer;
 function RecorderOpcUaClientConnect(AHandle: TRecorderOpcUaHandle): Boolean;
 function RecorderOpcUaClientBrowse(AHandle: TRecorderOpcUaHandle;
-  ALines: TStrings): Boolean;
+  ALines: TStrings; AMaxReferencesPerNode: Cardinal = 100): Boolean;
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
   ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal = 100): Boolean;
 function RecorderOpcUaClientReadChanged(AHandle: TRecorderOpcUaHandle;
   AIndex: Integer; out AValue, ATimestampSec: Double;
+  out AQuality: Cardinal): Boolean;
+function RecorderOpcUaClientReadMessageChanged(AHandle: TRecorderOpcUaHandle;
+  AIndex: Integer; out AValue: string; out ATimestampSec: Double;
   out AQuality: Cardinal): Boolean;
 function RecorderOpcUaClientWrite(AHandle: TRecorderOpcUaHandle;
   AIndex: Integer; AValue: Double): Boolean;
@@ -55,6 +59,9 @@ uses
   Contnrs, Math, uRecorderOpcUaBinaryClient;
 
 type
+  TRecorderOpcUaStringMatrix = array of
+    uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
+
   TRecorderOpcUaHandleBase = class
   public
     ErrorText: string;
@@ -67,11 +74,20 @@ type
     Readable: array of Boolean;
     Writable: array of Boolean;
     DataTypeNodeIds: array of string;
+    IsStringNode: array of Boolean;
     Values: array of Double;
+    StringValues: array of string;
     Times: array of Double;
     Qualities: array of Cardinal;
     Changed: array of Boolean;
     HasValues: array of Boolean;
+    NumericNodeIds: uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
+    NumericIndexes: TRecorderOpcUaIntegerArray;
+    StringNodeIds: uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
+    StringIndexes: TRecorderOpcUaIntegerArray;
+    NumericChunks: TRecorderOpcUaStringMatrix;
+    StringChunks: TRecorderOpcUaStringMatrix;
+    ChunkSize: Cardinal;
     constructor Create(const AEndpoint, AUserName, APassword: string;
       ASessionTimeoutMs, ARequestTimeoutMs,
       ATimestampsToReturn: Cardinal);
@@ -89,6 +105,34 @@ begin
   Client := TRecorderOpcUaBinaryClient.Create(AEndpoint, AUserName, APassword,
     ASessionTimeoutMs, ARequestTimeoutMs, ATimestampsToReturn);
   NodeIds := TStringList.Create;
+end;
+
+procedure BuildReadChunks(const ANodeIds:
+  uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray; AChunkSize: Integer;
+  out AChunks: TRecorderOpcUaStringMatrix);
+var
+  I, J, lCount, lStart: Integer;
+begin
+  if Length(ANodeIds) = 0 then
+  begin
+    SetLength(AChunks, 0);
+    Exit;
+  end;
+  lCount := (Length(ANodeIds) + AChunkSize - 1) div AChunkSize;
+  SetLength(AChunks, lCount);
+  for I := 0 to lCount - 1 do
+  begin
+    lStart := I * AChunkSize;
+    SetLength(AChunks[I], Min(AChunkSize, Length(ANodeIds) - lStart));
+    for J := 0 to High(AChunks[I]) do
+      AChunks[I][J] := ANodeIds[lStart + J];
+  end;
+end;
+
+function IsStringDataType(const ANodeId: string): Boolean;
+begin
+  Result := SameText(Trim(ANodeId), 'i=12') or
+    SameText(Trim(ANodeId), 'ns=0;i=12');
 end;
 
 destructor TRecorderOpcUaClientHandle.Destroy;
@@ -135,8 +179,10 @@ begin
   Result := -1;
   if AHandle = nil then Exit;
   lHandle := TRecorderOpcUaClientHandle(AHandle);
+  lHandle.ChunkSize := 0;
   Result := lHandle.NodeIds.Add(Trim(ANodeId));
   SetLength(lHandle.Values, lHandle.NodeIds.Count);
+  SetLength(lHandle.StringValues, lHandle.NodeIds.Count);
   SetLength(lHandle.Times, lHandle.NodeIds.Count);
   SetLength(lHandle.Qualities, lHandle.NodeIds.Count);
   SetLength(lHandle.Changed, lHandle.NodeIds.Count);
@@ -144,9 +190,26 @@ begin
   SetLength(lHandle.Readable, lHandle.NodeIds.Count);
   SetLength(lHandle.Writable, lHandle.NodeIds.Count);
   SetLength(lHandle.DataTypeNodeIds, lHandle.NodeIds.Count);
+  SetLength(lHandle.IsStringNode, lHandle.NodeIds.Count);
   lHandle.Readable[Result] := AReadable;
   lHandle.Writable[Result] := AWritable;
   lHandle.DataTypeNodeIds[Result] := Trim(ADataTypeNodeId);
+  lHandle.IsStringNode[Result] := IsStringDataType(ADataTypeNodeId);
+  if not AReadable then Exit;
+  if lHandle.IsStringNode[Result] then
+  begin
+    SetLength(lHandle.StringNodeIds, Length(lHandle.StringNodeIds) + 1);
+    SetLength(lHandle.StringIndexes, Length(lHandle.StringIndexes) + 1);
+    lHandle.StringNodeIds[High(lHandle.StringNodeIds)] := Trim(ANodeId);
+    lHandle.StringIndexes[High(lHandle.StringIndexes)] := Result;
+  end
+  else
+  begin
+    SetLength(lHandle.NumericNodeIds, Length(lHandle.NumericNodeIds) + 1);
+    SetLength(lHandle.NumericIndexes, Length(lHandle.NumericIndexes) + 1);
+    lHandle.NumericNodeIds[High(lHandle.NumericNodeIds)] := Trim(ANodeId);
+    lHandle.NumericIndexes[High(lHandle.NumericIndexes)] := Result;
+  end;
 end;
 
 function RecorderOpcUaClientWrite(AHandle: TRecorderOpcUaHandle;
@@ -227,7 +290,7 @@ begin
 end;
 
 function RecorderOpcUaClientBrowse(AHandle: TRecorderOpcUaHandle;
-  ALines: TStrings): Boolean;
+  ALines: TStrings; AMaxReferencesPerNode: Cardinal): Boolean;
 var
   I, J: Integer;
   lHandle: TRecorderOpcUaClientHandle;
@@ -239,7 +302,7 @@ begin
   lHandle := TRecorderOpcUaClientHandle(AHandle);
   lNodes := TObjectList.Create(True);
   try
-    Result := lHandle.Client.Browse(lNodes);
+    Result := lHandle.Client.Browse(lNodes, AMaxReferencesPerNode);
     lHandle.ErrorText := lHandle.Client.ErrorText;
     if not Result then Exit;
     ALines.BeginUpdate;
@@ -277,32 +340,29 @@ end;
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
   ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal): Boolean;
 var
-  I, J, lCount, lStart, lChunkCount: Integer;
+  I, J, lStart, lChunkCount, lIndex: Integer;
   lHandle: TRecorderOpcUaClientHandle;
-  lNodeIds: TRecorderOpcUaStringArray;
   lValues, lTimes: uRecorderOpcUaBinaryClient.TRecorderOpcUaDoubleArray;
+  lStringValues: uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
   lQualities: TRecorderOpcUaCardinalArray;
 begin
   Result := False;
   if AHandle = nil then Exit;
   lHandle := TRecorderOpcUaClientHandle(AHandle);
-  lCount := 0;
-  for I := 0 to lHandle.NodeIds.Count - 1 do
-    if lHandle.Readable[I] then Inc(lCount);
-  SetLength(lNodeIds, lCount);
-  J := 0;
-  for I := 0 to lHandle.NodeIds.Count - 1 do
-    if lHandle.Readable[I] then
-    begin
-      lNodeIds[J] := lHandle.NodeIds[I];
-      Inc(J);
-    end;
   if AMaxNodesPerRead < 1 then AMaxNodesPerRead := 1;
-  lStart := 0;
-  while lStart < lCount do
+  if lHandle.ChunkSize <> AMaxNodesPerRead then
   begin
-    lChunkCount := Min(Integer(AMaxNodesPerRead), lCount - lStart);
-    if not lHandle.Client.ReadDoubles(Copy(lNodeIds, lStart, lChunkCount),
+    BuildReadChunks(lHandle.NumericNodeIds, AMaxNodesPerRead,
+      lHandle.NumericChunks);
+    BuildReadChunks(lHandle.StringNodeIds, AMaxNodesPerRead,
+      lHandle.StringChunks);
+    lHandle.ChunkSize := AMaxNodesPerRead;
+  end;
+  lStart := 0;
+  for I := 0 to High(lHandle.NumericChunks) do
+  begin
+    lChunkCount := Length(lHandle.NumericChunks[I]);
+    if not lHandle.Client.ReadDoubles(lHandle.NumericChunks[I],
       lValues, lTimes, lQualities) then
     begin
       lHandle.ErrorText := lHandle.Client.ErrorText;
@@ -310,24 +370,62 @@ begin
         lHandle.ErrorText := 'OPC UA batch read failed';
       Exit;
     end;
-    J := 0;
-    for I := 0 to lHandle.NodeIds.Count - 1 do
-      if lHandle.Readable[I] then
-      begin
-        if (J >= lStart) and (J < lStart + lChunkCount) then
-        begin
-          lHandle.Changed[I] := (not lHandle.HasValues[I]) or
-            (not SameValue(lHandle.Values[I], lValues[J - lStart]));
-          lHandle.Values[I] := lValues[J - lStart];
-          lHandle.Times[I] := lTimes[J - lStart];
-          lHandle.Qualities[I] := lQualities[J - lStart];
-          lHandle.HasValues[I] := True;
-        end;
-        Inc(J);
-      end;
+    for J := 0 to lChunkCount - 1 do
+    begin
+      lIndex := lHandle.NumericIndexes[lStart + J];
+      lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+        (not SameValue(lHandle.Values[lIndex], lValues[J]));
+      lHandle.Values[lIndex] := lValues[J];
+      lHandle.Times[lIndex] := lTimes[J];
+      lHandle.Qualities[lIndex] := lQualities[J];
+      lHandle.HasValues[lIndex] := True;
+    end;
+    Inc(lStart, lChunkCount);
+  end;
+  lStart := 0;
+  for I := 0 to High(lHandle.StringChunks) do
+  begin
+    lChunkCount := Length(lHandle.StringChunks[I]);
+    if not lHandle.Client.ReadStrings(lHandle.StringChunks[I], lStringValues, lTimes,
+      lQualities) then
+    begin
+      lHandle.ErrorText := lHandle.Client.ErrorText;
+      Exit;
+    end;
+    for J := 0 to lChunkCount - 1 do
+    begin
+      lIndex := lHandle.StringIndexes[lStart + J];
+      lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+        (lHandle.StringValues[lIndex] <> lStringValues[J]) or
+        (not SameValue(lHandle.Times[lIndex], lTimes[J])) or
+        (lHandle.Qualities[lIndex] <> lQualities[J]);
+      lHandle.StringValues[lIndex] := lStringValues[J];
+      lHandle.Times[lIndex] := lTimes[J];
+      lHandle.Qualities[lIndex] := lQualities[J];
+      lHandle.HasValues[lIndex] := True;
+    end;
     Inc(lStart, lChunkCount);
   end;
   if ATimeoutMs > 0 then Sleep(Min(ATimeoutMs, 10));
+  Result := True;
+end;
+
+function RecorderOpcUaClientReadMessageChanged(
+  AHandle: TRecorderOpcUaHandle; AIndex: Integer; out AValue: string;
+  out ATimestampSec: Double; out AQuality: Cardinal): Boolean;
+var
+  lHandle: TRecorderOpcUaClientHandle;
+begin
+  Result := False;
+  if AHandle = nil then Exit;
+  lHandle := TRecorderOpcUaClientHandle(AHandle);
+  if (AIndex < 0) or (AIndex >= Length(lHandle.Changed)) or
+    not lHandle.IsStringNode[AIndex] or
+    not lHandle.Changed[AIndex] then Exit;
+  AValue := lHandle.StringValues[AIndex];
+  ATimestampSec := lHandle.Times[AIndex];
+  AQuality := lHandle.Qualities[AIndex];
+  lHandle.Changed[AIndex] := False;
   Result := True;
 end;
 
@@ -340,6 +438,7 @@ begin
   if AHandle = nil then Exit;
   lHandle := TRecorderOpcUaClientHandle(AHandle);
   if (AIndex < 0) or (AIndex >= Length(lHandle.Changed)) or
+    lHandle.IsStringNode[AIndex] or
     not lHandle.Changed[AIndex] then Exit;
   AValue := lHandle.Values[AIndex];
   ATimestampSec := lHandle.Times[AIndex];

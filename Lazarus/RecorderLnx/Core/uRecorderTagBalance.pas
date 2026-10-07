@@ -17,8 +17,33 @@ uses
 function RecorderTryZeroBalanceTags(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; ATags: TList;
   ADataSources: TRecorderDataSourceManager): Boolean;
+function RecorderCanZeroBalanceTags(ATags: TList;
+  ADataSources: TRecorderDataSourceManager): Boolean;
 
 implementation
+
+function RecorderCanZeroBalanceTags(ATags: TList;
+  ADataSources: TRecorderDataSourceManager): Boolean;
+var
+  I: Integer;
+  lBalance: IRecorderZeroBalanceSupport;
+  lSource: IRecorderDataSource;
+  lTag: TRecorderTag;
+begin
+  Result := False;
+  if (ATags = nil) or (ADataSources = nil) then
+    Exit;
+  for I := 0 to ATags.Count - 1 do
+  begin
+    lTag := TRecorderTag(ATags[I]);
+    if (lTag = nil) or (Pos('Detached:', lTag.SourceId) = 1) then
+      Continue;
+    lSource := ADataSources.FindSource(lTag.SourceId);
+    if (lSource <> nil) and
+      Supports(lSource, IRecorderZeroBalanceSupport, lBalance) then
+      Exit(True);
+  end;
+end;
 
 type
   { Аппаратная балансировка содержит несколько циклов «ЦАП -> сбор данных».

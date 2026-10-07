@@ -1,0 +1,252 @@
+object Recorder3dSkinModifierFrame: TRecorder3dSkinModifierFrame
+  Height = 520
+  Width = 320
+  ClientHeight = 520
+  ClientWidth = 320
+  object pnlBones: TPanel
+    Left = 0
+    Height = 142
+    Top = 0
+    Width = 320
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 142
+    ClientWidth = 320
+    TabOrder = 0
+    object lblBones: TLabel
+      Left = 8
+      Height = 15
+      Top = 7
+      Width = 90
+      Caption = 'Кости (helper):'
+    end
+    object lbBones: TListBox
+      Left = 8
+      Height = 82
+      Top = 25
+      Width = 304
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ItemHeight = 0
+      OnSelectionChange = BoneSelectionChange
+      TabOrder = 0
+    end
+    object pnlBoneButtons: TPanel
+      Left = 0
+      Height = 31
+      Top = 111
+      Width = 320
+      Align = alBottom
+      BevelOuter = bvNone
+      ClientHeight = 31
+      ClientWidth = 320
+      TabOrder = 1
+      object btnAddBone: TButton
+        Left = 8
+        Height = 26
+        Top = 2
+        Width = 112
+        Caption = 'Добавить кость'
+        OnClick = AddBoneClick
+        TabOrder = 0
+      end
+      object btnResetBones: TButton
+        Left = 124
+        Height = 26
+        Top = 2
+        Width = 104
+        Caption = 'Вернуть кости'
+        OnClick = ResetBonesClick
+        TabOrder = 1
+      end
+      object btnDeleteBone: TButton
+        Left = 232
+        Height = 26
+        Top = 2
+        Width = 78
+        Caption = 'Удалить'
+        OnClick = DeleteBoneClick
+        TabOrder = 2
+      end
+    end
+  end
+  object splBones: TSplitter
+    Left = 0
+    Height = 6
+    Top = 142
+    Width = 320
+    Align = alTop
+    MinSize = 92
+    ResizeAnchor = akTop
+  end
+  object pnlBoneProperties: TPanel
+    Left = 0
+    Height = 184
+    Top = 148
+    Width = 320
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 184
+    ClientWidth = 320
+    TabOrder = 1
+    object lblBoneName: TLabel
+      Left = 8
+      Height = 15
+      Top = 8
+      Width = 62
+      Caption = 'Имя:'
+    end
+    object edBoneName: TEdit
+      Left = 88
+      Height = 23
+      Top = 5
+      Width = 224
+      Anchors = [akTop, akLeft, akRight]
+      OnEditingDone = BoneNameEditingDone
+      TabOrder = 0
+    end
+    object lblTagSearch: TLabel
+      Left = 8
+      Height = 15
+      Top = 39
+      Width = 68
+      Caption = 'Поиск тега:'
+    end
+    object edTagSearch: TEdit
+      Left = 88
+      Height = 23
+      Top = 35
+      Width = 224
+      Anchors = [akTop, akLeft, akRight]
+      OnChange = TagSearchChange
+      TabOrder = 1
+    end
+    object lblTagX: TLabel
+      Left = 8
+      Height = 15
+      Top = 71
+      Width = 72
+      Caption = 'Смещение X:'
+    end
+    object cbTagX: TComboBox
+      Left = 88
+      Height = 23
+      Top = 66
+      Width = 224
+      Anchors = [akTop, akLeft, akRight]
+      Style = csDropDownList
+      OnChange = TagChange
+      TabOrder = 2
+    end
+    object lblTagY: TLabel
+      Left = 8
+      Height = 15
+      Top = 102
+      Width = 72
+      Caption = 'Смещение Y:'
+    end
+    object cbTagY: TComboBox
+      Left = 88
+      Height = 23
+      Top = 97
+      Width = 224
+      Anchors = [akTop, akLeft, akRight]
+      Style = csDropDownList
+      OnChange = TagChange
+      TabOrder = 3
+    end
+    object lblTagZ: TLabel
+      Left = 8
+      Height = 15
+      Top = 133
+      Width = 72
+      Caption = 'Смещение Z:'
+    end
+    object cbTagZ: TComboBox
+      Left = 88
+      Height = 23
+      Top = 128
+      Width = 224
+      Anchors = [akTop, akLeft, akRight]
+      Style = csDropDownList
+      OnChange = TagChange
+      TabOrder = 4
+    end
+    object lblState: TLabel
+      Left = 8
+      Height = 30
+      Top = 156
+      Width = 304
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = ''
+      WordWrap = True
+    end
+  end
+  object lblInfluences: TLabel
+    Left = 8
+    Height = 15
+    Top = 338
+    Width = 162
+    Caption = 'Вершины выбранной кости:'
+  end
+  object sgInfluences: TStringGrid
+    Left = 8
+    Height = 125
+    Top = 358
+    Width = 304
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ColCount = 3
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goSmoothScroll]
+    RowCount = 1
+    OnSelectCell = InfluenceSelection
+    TabOrder = 2
+  end
+  object pnlInfluenceButtons: TPanel
+    Left = 0
+    Height = 34
+    Top = 486
+    Width = 320
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 34
+    ClientWidth = 320
+    TabOrder = 3
+    object lblWeight: TLabel
+      Left = 8
+      Height = 15
+      Top = 9
+      Width = 26
+      Caption = 'Вес:'
+    end
+    object seWeight: TFloatSpinEdit
+      Left = 42
+      Height = 23
+      Top = 5
+      Width = 67
+      DecimalPlaces = 3
+      Increment = 0.05
+      MaxValue = 1
+      Value = 1
+      TabOrder = 0
+    end
+    object btnBindVertex: TButton
+      Left = 116
+      Height = 27
+      Top = 3
+      Width = 126
+      Caption = 'Добавить вершину'
+      OnClick = BindVertexClick
+      TabOrder = 1
+    end
+    object btnRemoveVertex: TButton
+      Left = 246
+      Height = 27
+      Top = 3
+      Width = 66
+      Caption = 'Удалить'
+      OnClick = RemoveVertexClick
+      TabOrder = 2
+    end
+  end
+end

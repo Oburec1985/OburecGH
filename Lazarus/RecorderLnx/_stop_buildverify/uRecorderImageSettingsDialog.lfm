@@ -1,0 +1,70 @@
+object RecorderImageSettingsDialog: TRecorderImageSettingsDialog
+  Left = 320
+  Height = 720
+  Top = 140
+  Width = 980
+  Caption = 'Настройка картинки'
+  ClientHeight = 720
+  ClientWidth = 980
+  Constraints.MinHeight = 560
+  Constraints.MinWidth = 760
+  Position = poOwnerFormCenter
+  LCLVersion = '3.6.0.0'
+  object TopPan: TPanel
+    Left = 0
+    Height = 112
+    Top = 0
+    Width = 980
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 0
+    object TagSearchLabel: TLabel Left = 12 Height = 17 Top = 15 Width = 70 Caption = 'Поиск тега:' end
+    object TagSearchEdit: TEdit Left = 144 Height = 25 Top = 10 Width = 824 Anchors = [akTop, akLeft, akRight] TextHint = 'Имя, адрес или описание' OnChange = TagSearchEditChange TabOrder = 0 end
+    object TagLabel: TLabel Left = 12 Height = 17 Top = 47 Width = 117 Caption = 'Тег-переключатель:' end
+    object TagCombo: TComboBox Left = 144 Height = 25 Top = 42 Width = 824 Anchors = [akTop, akLeft, akRight] Style = csDropDownList OnChange = TagComboChange TabOrder = 1 end
+    object HintLabel: TLabel Left = 12 Height = 34 Top = 75 Width = 956 Anchors = [akTop, akLeft, akRight] AutoSize = False Caption = 'Для каждого значения тега задайте файл. Если тег не выбран, всегда отображается первая картинка.' WordWrap = True end
+  end
+  object ClientPan: TPanel
+    Left = 0 Height = 564 Top = 112 Width = 980 Align = alClient BevelOuter = bvNone TabOrder = 1
+    object Pages: TPageControl
+      Left = 8 Height = 584 Top = 0 Width = 964 Align = alClient BorderSpacing.Left = 8 BorderSpacing.Right = 8 BorderSpacing.Bottom = 8 TabOrder = 0
+      object ImagesTab: TTabSheet
+        Caption = 'Изображения' ClientHeight = 554 ClientWidth = 956
+        object ImagesRightPan: TPanel
+          Left = 824 Height = 554 Top = 0 Width = 132 Align = alRight BevelOuter = bvNone TabOrder = 1
+          object AddButton: TButton Left = 8 Height = 28 Top = 8 Width = 116 Caption = 'Добавить' OnClick = AddButtonClick TabOrder = 0 end
+          object DeleteButton: TButton Left = 8 Height = 28 Top = 44 Width = 116 Caption = 'Удалить' OnClick = DeleteButtonClick TabOrder = 1 end
+          object BrowseButton: TButton Left = 8 Height = 28 Top = 80 Width = 116 Caption = 'Выбрать файл...' OnClick = BrowseButtonClick TabOrder = 2 end
+        end
+        object ImagesGrid: TStringGrid
+          Left = 0 Height = 554 Top = 0 Width = 824 Align = alClient ColCount = 3
+          Columns = <item Title.Caption = 'Значение тега' Width = 120 end item Title.Caption = 'Файл картинки' Width = 480 end item Title.Caption = 'Предпросмотр' Width = 160 end>
+          DefaultRowHeight = 64 FixedCols = 0 RowCount = 2 TabOrder = 0 OnDblClick = ImagesGridDblClick OnDrawCell = ImagesGridDrawCell
+        end
+      end
+      object SvgTab: TTabSheet
+        Caption = 'Параметры SVG' ClientHeight = 554 ClientWidth = 956
+        object BindingBottomPan: TPanel
+          Left = 0 Height = 92 Top = 462 Width = 956 Align = alBottom BevelOuter = bvNone TabOrder = 1
+          object BindingSearchLabel: TLabel Left = 8 Height = 17 Top = 10 Width = 70 Caption = 'Поиск тега:' end
+          object BindingSearchEdit: TEdit Left = 100 Height = 25 Top = 6 Width = 848 Anchors = [akTop, akLeft, akRight] TextHint = 'Имя, адрес или описание' OnChange = BindingSearchEditChange TabOrder = 0 end
+          object BindingTagLabel: TLabel Left = 8 Height = 17 Top = 48 Width = 82 Caption = 'Тег Recorder:' end
+          object BindingTagCombo: TComboBox Left = 100 Height = 25 Top = 43 Width = 360 Anchors = [akTop, akLeft, akRight] Style = csDropDownList OnChange = BindingTagComboChange TabOrder = 1 end
+          object BindingSourceLabel: TLabel Left = 475 Height = 17 Top = 48 Width = 65 Anchors = [akTop, akRight] Caption = 'Источник:' end
+          object BindingSourceCombo: TComboBox Left = 546 Height = 25 Top = 43 Width = 402 Anchors = [akTop, akRight] Style = csDropDownList OnChange = BindingSourceComboChange TabOrder = 2 end
+        end
+        object BindingsGrid: TStringGrid
+          Left = 0 Height = 462 Top = 0 Width = 956 Align = alClient ColCount = 4
+          Columns = <item Title.Caption = 'Параметр SVG' Width = 185 end item Title.Caption = 'Тег Recorder' Width = 210 end item Title.Caption = 'Передавать' Width = 260 end item Title.Caption = 'Постоянное / значение по умолчанию' Width = 260 end>
+          FixedCols = 0 RowCount = 2 Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing] OnSelectCell = BindingsGridSelectCell OnSelectEditor = BindingsGridSelectEditor TabOrder = 0
+        end
+      end
+    end
+  end
+  object BottomPan: TPanel
+    Left = 0 Height = 44 Top = 676 Width = 980 Align = alBottom BevelOuter = bvNone TabOrder = 2
+    object OkButton: TButton Left = 774 Height = 28 Top = 8 Width = 94 Anchors = [akTop, akRight] Caption = 'OK' Default = True OnClick = OkButtonClick TabOrder = 0 end
+    object CancelButton: TButton Left = 876 Height = 28 Top = 8 Width = 94 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 1 end
+  end
+  object ImageDialog: TOpenPictureDialog Filter = 'Изображения|*.png;*.bmp;*.jpg;*.jpeg;*.gif|Все файлы|*.*' left = 900 top = 112 end
+end

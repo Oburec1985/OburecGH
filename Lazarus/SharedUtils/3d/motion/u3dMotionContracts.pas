@@ -1,5 +1,8 @@
 unit u3dMotionContracts;
 
+{ Defines renderer-independent motion commands used by Recorder/FRF adapters
+  and scene motion sinks. Commands reference stable node IDs only. }
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 

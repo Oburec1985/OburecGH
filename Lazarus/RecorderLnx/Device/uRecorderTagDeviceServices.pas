@@ -23,6 +23,8 @@ function RecorderEditTagDevice(AOwner: TComponent; ARecorder: TRecorder;
   ALog: TRecorderDeviceServiceLogEvent = nil): Boolean;
 function RecorderBalanceTagDevices(AOwner: TComponent; ARecorder: TRecorder;
   ARegistry: TRecorderTagRegistry; ATags: TList): Boolean;
+function RecorderCanBalanceTagDevices(ARecorder: TRecorder;
+  ATags: TList): Boolean;
 procedure RecorderScheduleCommandLineDeviceTests(AOwner: TComponent;
   ARecorder: TRecorder; ADeviceImages, ATagImages: TCustomImageList;
   AStartPreview: TRecorderDeviceTestPreviewEvent;
@@ -152,6 +154,13 @@ function RecorderBalanceTagDevices(AOwner: TComponent; ARecorder: TRecorder;
 begin
   Result := (ARecorder <> nil) and RecorderTryZeroBalanceTags(AOwner,
     ARegistry, ATags, ARecorder.DataSources);
+end;
+
+function RecorderCanBalanceTagDevices(ARecorder: TRecorder;
+  ATags: TList): Boolean;
+begin
+  Result := (ARecorder <> nil) and
+    RecorderCanZeroBalanceTags(ATags, ARecorder.DataSources);
 end;
 
 procedure RecorderScheduleCommandLineDeviceTests(AOwner: TComponent;
