@@ -60,6 +60,9 @@ function IsAbsoluteConfigPath(const AFileName: string): Boolean;
 
 implementation
 
+uses
+  uCoordinatorHostStore;
+
 const
   LINUX_RECORDER_SQL_CONFIG =
     '/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini';
@@ -176,6 +179,7 @@ begin
     lStorage.RootPath := IncludeTrailingPathDelimiter(ExtractFilePath(fFileName)) + 'archive';
     Exit;
   end;
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fFileName);
   try
     ListenAddress := lIni.ReadString('service', 'listen', ListenAddress);
@@ -267,6 +271,7 @@ begin
     end;
   finally
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
 
@@ -277,6 +282,7 @@ var
   lStorage: TStorageConfig;
   lSection: string;
 begin
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fFileName);
   try
     lIni.WriteString('service', 'listen', ListenAddress);
@@ -290,13 +296,6 @@ begin
     lIni.WriteString('sdb_sync', 'primary_host_id', SdbPrimaryHostId);
     lIni.WriteString('sdb_sync', 'share_name', SdbShareName);
     lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
-    lIni.WriteInteger('hosts', 'count', HostCount);
-    for lIndex := 0 to HostCount - 1 do
-    begin
-      lSection := 'host.' + IntToStr(lIndex);
-      lIni.WriteString(lSection, 'id', HostId(lIndex));
-      lIni.WriteString(lSection, 'name', HostName(lIndex));
-    end;
     lIni.WriteInteger('storages', 'count', StorageCount);
     for lIndex := 0 to StorageCount - 1 do
     begin
@@ -311,6 +310,7 @@ begin
     lIni.UpdateFile;
   finally
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
 

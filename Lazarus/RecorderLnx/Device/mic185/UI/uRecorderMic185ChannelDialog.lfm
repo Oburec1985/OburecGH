@@ -53,7 +53,7 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Height = 15
       Top = 172
       Width = 157
-      Caption = 'Балансировка программная'
+      Caption = 'Остаточная балансировка, код АЦП'
     end
     object lblActualRangeUnit: TLabel
       Left = 14
@@ -237,14 +237,14 @@ object RecorderMic185ChannelForm: TRecorderMic185ChannelForm
       Height = 15
       Top = 82
       Width = 184
-      Caption = 'Балансировка аппаратная общая'
+      Caption = 'Балансировка аппаратная общая, код ЦАП'
     end
     object Label13: TLabel
       Left = 464
       Height = 15
       Top = 82
       Width = 16
-      Caption = 'мВ'
+      Caption = 'код ЦАП'
     end
     object cbModulePower: TComboBox
       Left = 370

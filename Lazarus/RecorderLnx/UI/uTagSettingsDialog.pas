@@ -1779,8 +1779,14 @@ var
   lApplyResult: TRecorderTagSettingsApplyResult;
   lErrorText: string;
   lPreviousFrequency: Double;
+  lPreviousUnitName: string;
+  lPreviousSourceUnitName: string;
+  lPreviousAutoUnit: Boolean;
+  lPreviousHardwareEnabled: Boolean;
+  lPreviousChannelEnabled: Boolean;
   lHardwareChanged: Boolean;
   lChannelChanged: Boolean;
+  lRuntimeTransformChanged: Boolean;
 begin
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
@@ -1795,9 +1801,15 @@ begin
     begin
       lTag := TagAt(I);
       lPreviousFrequency := lTag.PollFrequencyHz;
+      lPreviousUnitName := lTag.UnitName;
+      lPreviousSourceUnitName := lTag.SourceUnitName;
+      lPreviousAutoUnit := lTag.AutoUnit;
+      lPreviousHardwareEnabled := lTag.HardwareCalibrationEnabled;
+      lPreviousChannelEnabled := lTag.ChannelCalibrationEnabled;
       lTag.InvalidateCalibrationScale;
       lHardwareChanged := False;
       lChannelChanged := False;
+      lRuntimeTransformChanged := False;
     if fSelectedMeraFileName <> '' then
     begin
       lTag.Address := Trim(fModuleEdit.Text);
@@ -1839,8 +1851,6 @@ begin
     begin
       lHardwareChanged := lTag.HardwareCalibrationEnabled <>
         fHardwareCurveCheck.Checked;
-      if lHardwareChanged then
-        lTag.ClearSignalHistory;
       lTag.HardwareCalibrationEnabled := fHardwareCurveCheck.Checked;
     end;
     { Calibration assignment itself is changed only by explicit actions. }
@@ -1848,21 +1858,27 @@ begin
     begin
       lChannelChanged := lTag.ChannelCalibrationEnabled <>
         fChannelCurveCheck.Checked;
-      if lChannelChanged then
-        lTag.ClearSignalHistory;
       lTag.ChannelCalibrationEnabled := fChannelCurveCheck.Checked;
     end;
     if ResolveSettingsProvider(lTag, lProvider) then
     begin
       RecorderInitTagSettingsDraft(lTag, fDataUpdateMs, lDraft);
       lDraft.PollFrequencyHz := lTag.PollFrequencyHz;
-      lDraft.UnitName := lTag.UnitName;
+      if Trim(fUnitCombo.Text) <> '' then
+        lDraft.UnitName := Trim(fUnitCombo.Text)
+      else
+        lDraft.UnitName := lTag.UnitName;
       lDraft.AutoUnit := lTag.AutoUnit;
       lDraft.HardwareCalibrationEnabled := lTag.HardwareCalibrationEnabled;
       lDraft.ChannelCalibrationEnabled := lTag.ChannelCalibrationEnabled;
       { Provider сравнивает draft с прежним значением и сам применяет
         source-wide/slot-wide семантику частоты. }
       lTag.PollFrequencyHz := lPreviousFrequency;
+      lTag.UnitName := lPreviousUnitName;
+      lTag.SourceUnitName := lPreviousSourceUnitName;
+      lTag.AutoUnit := lPreviousAutoUnit;
+      lTag.HardwareCalibrationEnabled := lPreviousHardwareEnabled;
+      lTag.ChannelCalibrationEnabled := lPreviousChannelEnabled;
       if not lProvider.NormalizeDraft(fTagRegistry, lTag, lDraft, lErrorText) then
         raise ERecorderTagError.Create(lErrorText);
       RecorderInitTagSettingsApplyResult(lApplyResult);
@@ -1881,8 +1897,14 @@ begin
         lTag.RangeMin := lApplyResult.RangeMin;
         lTag.RangeMax := lApplyResult.RangeMax;
       end;
-      if lApplyResult.SignalHistoryMustBeCleared then
-        lTag.ClearSignalHistory;
+      lRuntimeTransformChanged := lRuntimeTransformChanged or
+        lApplyResult.SignalHistoryMustBeCleared;
+      lTag.AutoUnit := lDraft.AutoUnit;
+      lTag.HardwareCalibrationEnabled := lDraft.HardwareCalibrationEnabled;
+      lTag.ChannelCalibrationEnabled := lDraft.ChannelCalibrationEnabled;
+      lRuntimeTransformChanged := lRuntimeTransformChanged or
+        lApplyResult.SourceUnitChanged or lApplyResult.UnitChanged or
+        lHardwareChanged or lChannelChanged;
     end;
 
     lEstimateSettings := lTag.EstimateSettings;
@@ -1897,8 +1919,6 @@ begin
     begin
       if not TryStrToInt(Trim(fPortionLengthEdit.Text), lInt) or (lInt <= 0) then
         raise ERecorderTagError.Create('Invalid estimate portion length');
-      if (fTags.Count > 0) and (lInt = RecorderTagDefaultEstimatePortionLength(TagAt(0).PollFrequencyHz, fDataUpdateMs)) then
-        lInt := 17280;
       lEstimateSettings.PortionLength := lInt;
     end;
     if fSmoothingCheck.State <> cbGrayed then
@@ -1944,6 +1964,16 @@ begin
     if lTag.AutoUnit then
       fTagRegistry.SyncTagAutoUnit(lTag);
     fTagRegistry.RebuildScales(lTag);
+    lRuntimeTransformChanged := lRuntimeTransformChanged or
+      not SameText(lPreviousUnitName, lTag.UnitName) or
+      not SameText(lPreviousSourceUnitName, lTag.SourceUnitName) or
+      (lPreviousAutoUnit <> lTag.AutoUnit) or
+      (lPreviousHardwareEnabled <> lTag.HardwareCalibrationEnabled) or
+      (lPreviousChannelEnabled <> lTag.ChannelCalibrationEnabled);
+    if lRuntimeTransformChanged then
+      lTag.ClearSignalHistory;
+    if lRuntimeTransformChanged and (fDataSources <> nil) then
+      fDataSources.RefreshSourceRuntimeTransforms(lTag.SourceId);
   end;
 end;
 

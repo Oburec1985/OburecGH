@@ -439,6 +439,9 @@ uses
   uRecorderDeviceConfigSignature,
   uRecorderMc032SettingsDialog, uRecorderMc201SlotSettingsDialog,
   uRecorderDeviceSearchDialog, uMc032Device, uMc201ProtocolTypes,
+  uRecorderPxiMx248Types, uRecorderPxiMx248WindowsTransport,
+  uRecorderPxiMx248ConfiguredEditor, uRecorderPxiMx248DiscoveryWorker,
+  uRecorderDriverContractsV2,
   uRecorderDebugLog,
   uRecorderTagTableExchange, uRecorderOpcUaTypes,
   uRecorderSqlDbSettingsDialog, uRecorderSqlDataSource;
@@ -3808,6 +3811,7 @@ begin
     lCombo.Items.Add('MIC-140');
     lCombo.Items.Add('MIC183/185');
     lCombo.Items.Add('MC-032');
+    lCombo.Items.Add('PXI MX-248');
     lCombo.Items.Add('OPC UA');
     lCombo.Items.Add('SQL database');
     lCombo.Items.Add('Mera file');
@@ -3841,6 +3845,8 @@ begin
       EditHardwareSource('', 'MIC183/185')
     else if SameText(lCombo.Text, 'MC-032') then
       EditMc032Source
+    else if SameText(lCombo.Text, 'PXI MX-248') then
+      EditHardwareSource('', 'PXI MX-248')
     else if SameText(lCombo.Text, 'OPC UA') then
       EditHardwareSource('', 'OPC UA')
     else if SameText(lCombo.Text, 'SQL database') then
@@ -3856,11 +3862,14 @@ procedure TRecorderSettingsDialog.NetworkTestClick(Sender: TObject);
 var
   lElapsedMs: QWord;
   lErrorText: string;
+  lHost: string;
   lPortValue: Integer;
+  lSourcePort: Word;
   lStartedAt: QWord;
   lStream: TSocketStream;
   lTraceId: string;
   lSourceId: string;
+  lUseLiveSession: Boolean;
 begin
   if (cbNetworkInterface <> nil) and (cbNetworkInterface.ItemIndex >= 0) then
     SetRecorderNetworkBindAddress(RecorderNetworkAddressFromDisplay(
@@ -3877,14 +3886,25 @@ begin
   lSourceId := SelectedHardwareSourceId;
   if lSourceId = '' then
     lSourceId := Trim(edNetworkTestHost.Text) + ':' + IntToStr(lPortValue);
+  lUseLiveSession :=
+    (RecorderHardwareFindLiveDevice(lSourceId) <> nil) and
+    (TryParseRecorderMic185SourceId(lSourceId, lHost, lSourcePort) or
+     TryParseRecorderMic140SourceId(lSourceId, lHost, lSourcePort) or
+     TryParseRecorderMc032SourceId(lSourceId, lHost, lSourcePort)) and
+    SameText(Trim(lHost), Trim(edNetworkTestHost.Text)) and
+    (lSourcePort = Word(lPortValue));
   lTraceId := RecorderMic185NewLifecycleTraceId('tcp-ping');
   RecorderMic185LifecycleLog(lTraceId, lSourceId, 'tcp-ping', 'BEGIN',
-    Format('endpoint=%s:%d bind=%s timeout_ms=1500',
-      [Trim(edNetworkTestHost.Text), lPortValue, RecorderNetworkBindAddress]));
+    Format('endpoint=%s:%d bind=%s timeout_ms=1500 live_session=%s',
+      [Trim(edNetworkTestHost.Text), lPortValue, RecorderNetworkBindAddress,
+       BoolToStr(lUseLiveSession, True)]));
   lStream := nil;
   try
-    if RecorderOpenBoundTcpStream(Trim(edNetworkTestHost.Text),
-      Word(lPortValue), 1500, lStream, lErrorText) then
+    if (lUseLiveSession and
+        RecorderHardwareTestSourceLink(lSourceId, lErrorText)) or
+       ((not lUseLiveSession) and
+        RecorderOpenBoundTcpStream(Trim(edNetworkTestHost.Text),
+          Word(lPortValue), 1500, lStream, lErrorText)) then
     begin
       lElapsedMs := GetTickCount64 - lStartedAt;
       lblNetworkTestResult.Caption := Format('Связь есть, %d мс', [lElapsedMs]);
@@ -3927,6 +3947,8 @@ var
   lBroadcastSerial: string;
   lProbeKind: string;
   lProbeSerial: string;
+  lMx248Devices: TPxiMx248DiscoveredDevices;
+  lMx248Result: TRecorderOperationResult;
   lBroadcastThread: TRecorderHardwareBroadcastSearchThread;
   lSerial: LongWord;
   lPort: Word;
@@ -4227,6 +4249,29 @@ begin
 
     Screen.Cursor := crHourGlass;
     try
+      { PXI discovery is local to the Windows host and only enumerates DevAPI
+        routes. It does not open, initialize, or configure a board. }
+      lStageStartedAt := GetTickCount64;
+      lMx248Result := RecorderDiscoverPxiMx248Responsive(lMx248Devices);
+      if lMx248Result.IsSuccess then
+      begin
+        for I := 0 to High(lMx248Devices) do
+        begin
+          lDisplay := Format('MX-248 — %s, SN=%d, шасси=%d, слот=%d',
+            [lMx248Devices[I].DeviceName, lMx248Devices[I].SerialNumber,
+             lMx248Devices[I].Chassis, lMx248Devices[I].Slot]);
+          AddFound(CRecorderPxiMx248ModuleType,
+            RecorderPxiMx248SourceId(lMx248Devices[I].Chassis,
+              lMx248Devices[I].Slot), lDisplay,
+            lMx248Devices[I].SerialNumber);
+        end;
+        RecorderDebugLog(Format('[HardwareSearch] PXI MX-248: %d device(s), %d ms',
+          [Length(lMx248Devices), GetTickCount64 - lStageStartedAt]));
+      end
+      else
+        RecorderDebugLog(Format('[HardwareSearch] PXI MX-248 failed: %s: %s',
+          [lMx248Result.Stage, lMx248Result.MessageText]));
+
       { Штатные broadcast-ответы уже содержат тип прибора. Такие устройства
         добавляем сразу и повторный TestLink для них не выполняем. }
       { Обычная кнопка должна оставаться быстрой: ищем MIC по broadcast.
@@ -4394,6 +4439,9 @@ begin
       else if SameText(lDevice.DeviceType, 'MC-032') then
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
           lDevice.SourceId, 'MC-032', 0)
+      else if SameText(lDevice.DeviceType, CRecorderPxiMx248ModuleType) then
+        RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
+          lDevice.SourceId, CRecorderPxiMx248ModuleType, 0)
       else
         Continue;
       { Broadcast/protocol discovery already proved that this endpoint is alive.
@@ -4524,7 +4572,7 @@ begin
   end;
   SyncMeraFilesPathFromUi;
   if not RecorderEditConfiguredDataSource(Self, fRecorder.TagRegistry, ASourceId,
-    lNewSourceId, AModuleTypeHint) then
+    lNewSourceId, AModuleTypeHint, fRecorder.DataSources) then
     Exit;
   ApplyConfiguredSourceChange(ASourceId, lNewSourceId);
 end;

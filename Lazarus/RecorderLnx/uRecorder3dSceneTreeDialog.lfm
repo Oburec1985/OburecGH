@@ -1,0 +1,180 @@
+object Recorder3dSceneTreeDialog: TRecorder3dSceneTreeDialog
+  Left = 0
+  Height = 420
+  Top = 0
+  Width = 640
+  Caption = 'Редактор 3D-сцены'
+  ClientHeight = 420
+  ClientWidth = 640
+  Constraints.MinHeight = 320
+  Constraints.MinWidth = 600
+  KeyPreview = True
+  Position = poOwnerFormCenter
+  LCLVersion = '4.2.0.0'
+  OnCreate = FormCreate
+  OnClose = FormClose
+  OnKeyDown = FormKeyDown
+  OnResize = FormResize
+  object TopPan: TPanel
+    Left = 0
+    Height = 92
+    Top = 0
+    Width = 640
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 92
+    ClientWidth = 640
+    TabOrder = 0
+    object lblType: TLabel
+      Left = 8
+      Height = 15
+      Top = 15
+      Width = 88
+      Caption = 'Тип объекта:'
+    end
+    object cbType: TComboBox
+      Left = 100
+      Height = 23
+      Top = 10
+      Width = 150
+      ItemHeight = 15
+      Items.Strings = (
+        'Куб'
+        'Пластина (балка)'
+        'Плоскость'
+        'Прямая (линия)'
+      )
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = TypeChange
+    end
+    object lblIterations: TLabel
+      Left = 100
+      Height = 15
+      Top = 58
+      Width = 76
+      Caption = 'По ребру:'
+    end
+    object seIterations: TSpinEdit
+      Left = 180
+      Height = 23
+      Top = 53
+      Width = 64
+      MaxValue = 128
+      MinValue = 1
+      TabOrder = 1
+      Value = 1
+      OnChange = ParametersChange
+    end
+    object lblCrossSection: TLabel
+      Left = 260
+      Height = 15
+      Top = 58
+      Width = 92
+      Caption = 'Поперёк:'
+      Visible = False
+    end
+    object seCrossSection: TSpinEdit
+      Left = 356
+      Height = 23
+      Top = 53
+      Width = 64
+      MaxValue = 128
+      MinValue = 1
+      TabOrder = 2
+      Value = 1
+      Visible = False
+      OnChange = ParametersChange
+    end
+    object btnAdd: TButton
+      Left = 258
+      Height = 28
+      Top = 8
+      Width = 96
+      Caption = 'Добавить'
+      TabOrder = 3
+      OnClick = AddClick
+    end
+    object btnDelete: TButton
+      Left = 362
+      Height = 28
+      Top = 8
+      Width = 144
+      Caption = 'Удалить выбранный'
+      TabOrder = 4
+      OnClick = DeleteClick
+    end
+    object lblBackground: TLabel
+      Left = 440
+      Height = 15
+      Top = 58
+      Width = 40
+      Caption = 'Фон:'
+    end
+    object cbBackground: TColorBox
+      Left = 484
+      Height = 25
+      Top = 52
+      Width = 148
+      Anchors = [akTop, akRight]
+      Style = [cbStandardColors, cbExtendedColors, cbCustomColor]
+      TabOrder = 5
+      OnSelect = BackgroundColorSelect
+    end
+  end
+  object BottomPan: TPanel
+    Left = 0
+    Height = 48
+    Top = 372
+    Width = 640
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 640
+    TabOrder = 2
+    object lblHint: TLabel
+      Left = 8
+      Height = 15
+      Top = 17
+      Width = 164
+      Caption = 'Del — удалить выбранный объект'
+    end
+    object btnOk: TButton
+      Left = 552
+      Height = 32
+      Top = 8
+      Width = 80
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Закрыть'
+      OnClick = CloseClick
+      TabOrder = 0
+    end
+    object btnCancel: TButton
+      Left = 552
+      Height = 32
+      Top = 8
+      Width = 80
+      Anchors = [akTop, akRight]
+      Cancel = False
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+      Visible = False
+    end
+  end
+  object sgScene: TStringGrid
+    Left = 0
+    Height = 280
+    Top = 92
+    Width = 640
+    Align = alClient
+    ColCount = 4
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goSmoothScroll]
+    RowCount = 1
+    TabOrder = 1
+    OnSelectCell = GridSelectCell
+    OnDblClick = GridDblClick
+  end
+end

@@ -1243,8 +1243,10 @@ begin
     InitializeResult(irtSpectrum, 'Hz', fModel.ResponseCount + 1);
     for ResultType := irtFrfMagnitude to irtCoherence do
       InitializeResult(ResultType, 'Hz', fModel.ResponseCount);
+    { ExcitationVisible controls frequency-domain presentation only. The tacho
+      channel remains available in time so the impact and trigger are visible. }
     SetCurveIdentity(irtTime, 0, 0, fModel.HammerTagName,
-      fModel.ExcitationUnitName, $0000FF, fModel.ExcitationVisible);
+      fModel.ExcitationUnitName, $0000FF, True);
     SetCurveIdentity(irtSpectrum, 0, 0, fModel.HammerTagName,
       fModel.ExcitationUnitName, $0000FF, fModel.ExcitationVisible);
     for ResponseIndex := 0 to fModel.ResponseCount - 1 do
@@ -1276,7 +1278,7 @@ begin
 
   InitializeResult(irtTime, 's', fModel.ResponseCount + 1);
   SetCurveIdentity(irtTime, 0, 0, fModel.HammerTagName,
-    fModel.ExcitationUnitName, $0000FF, fModel.ExcitationVisible);
+    fModel.ExcitationUnitName, $0000FF, True);
   Series := Block.Excitation;
   CopyTimeSeries(irtTime, 0, Series);
   for ResponseIndex := 0 to fModel.ResponseCount - 1 do

@@ -5,14 +5,18 @@ program ImpactHammerUiSmoke;
 
 uses
   Interfaces, Forms, Classes, SysUtils, Math, Controls, Graphics, StdCtrls, ExtCtrls,
-  Buttons, CheckLst,
+  Buttons,
   uRecorderFormModel, uRecorderTags, uRecorderCoreServices,
   uRecorderVisualControl,
   uRecorderStateMachine, uRecorderImpactHammer, uRecorderImpactHammerModel,
   uRecorderImpactHammerContracts, uRecorderImpactSessionContracts,
   uRecorderImpactHammerView, uRecorderImpactHammerSettingsDialog,
+  uRcFrfPeakForm,
+  uRcFrfPeaks,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartRenderer, uOglChartTypes, uOglChartDrawObj,
+  uOglChartTrend, uOglChartTextLabel, uOglChartCursor,
+  uSharedColorCheckTable,
   uOglChartPanZoomListener;
 
 type
@@ -154,22 +158,36 @@ var
   Bus: TRecorderEventBus;
   Registry: TRecorderTagRegistry;
   View: TRecorderImpactHammerView;
+  PeakForm: TRcFrfPeakForm;
+  PeakRows: TRcPeaks;
+  SelectedPeak: TRcPeak;
   HostForm: TForm;
   FormInterface: IVForm;
   Commands: IRecorderImpactSessionCommandPort;
   SavedService: IRecorderImpactHammerApplicationService;
   Snapshot: TRecorderImpactHammerSnapshot;
+  ChangedSnapshot: TRecorderImpactHammerSnapshot;
   AxisState: TImpactResultAxisState;
   Folder: string;
-  I: Integer;
+  I, J: Integer;
   SeriesIdentity: array[TRecorderImpactResultType] of PtrUInt;
   TimePage: TChartPage;
   FrequencyPage: TChartPage;
   Renderer: TOpenGLChartRenderer;
   FrequencyRect: TChartPixelRect;
+  FreqAxis: TChartAxis;
+  FlagTrend: cBuffTrend1d;
+  TriggerCursor: TChartHorizontalCursor;
+  PeakLine: cLineSeries;
+  PeakUpdateBefore: QWord;
+  PeakY, MovedPeakY: Integer;
+  FlagA, FlagB, FlagC: TChartFlagLabel;
+  DenseFlags: array[0..11] of TChartFlagLabel;
+  SomeFlagHidden: Boolean;
+  FlagRectA, FlagRectB, FlagRectC: TRect;
   RespAxis, HammerAxis: TChartAxis;
-  CurveList: TCheckListBox;
-  CheckRect: TRect;
+  CurveList: TSharedColorCheckTable;
+  CheckRect, ColorRect: TRect;
   CursorRenderer: TOpenGLChartRenderer;
   CursorPage: TChartPage;
   CursorRect: TChartPixelRect;
@@ -228,6 +246,40 @@ begin
         Stage(BackTraceStrFunc(ExceptAddr));
         Halt(2);
       end;
+    end;
+    PeakForm := TRcFrfPeakForm.Create(nil);
+    try
+      Check(PeakForm.FormStyle = fsStayOnTop,
+        'FRF extrema window does not remain on top');
+      SetLength(PeakRows, 2);
+      PeakRows[0].Curve := 'X';
+      PeakRows[0].Index := 10;
+      PeakRows[0].Frequency := 100;
+      PeakRows[1].Curve := 'Y';
+      PeakRows[1].Index := 20;
+      PeakRows[1].Frequency := 200;
+      PeakForm.SetPeaks(PeakRows);
+      PeakForm.grdPeaks.Row := 2;
+      Check(PeakForm.TryGetSelectedPeak(SelectedPeak) and
+        (SelectedPeak.Curve = 'Y') and (SelectedPeak.Index = 20),
+        'peak row selection is not retained by the form');
+      PeakForm.SetPeaks(PeakRows);
+      Check(PeakForm.TryGetSelectedPeak(SelectedPeak) and
+        (SelectedPeak.Index = 20),
+        'peak selection was lost on refreshing the same result');
+      Check(Pos('f', LowerCase(PeakForm.lblFormula.Caption)) > 0,
+        'FRF decrement formula is not shown');
+      PeakForm.Show;
+      Application.ProcessMessages;
+      PeakForm.Height := PeakForm.Height + 150;
+      PeakForm.Width := PeakForm.Width + 100;
+      Application.ProcessMessages;
+      Check(PeakForm.grdPeaks.Height > 450,
+        'FRF peak grid does not grow with its window');
+      Check(PeakForm.grdPeaks.Width > 700,
+        'FRF peak grid does not fill resized window width');
+    finally
+      PeakForm.Free;
     end;
     HostForm := TForm.Create(nil);
     HostForm.SetBounds(0, 0, 1100, 760);
@@ -303,29 +355,55 @@ begin
     end;
     Stage('configured');
     FormInterface.RefreshControl(Registry, 1);
-    CurveList := TCheckListBox(View.FindComponent('clbCurves'));
-    Check(CurveList.Count = 1,
+    CurveList := TSharedColorCheckTable(View.FindComponent('clbCurves'));
+    Check(CurveList.ItemCount = 1,
       'configured FRF response channel missing before first impact');
     TRadioGroup(View.FindComponent('rgFrequencyResult')).ItemIndex := 0;
     View.frequencyResultChange(nil);
-    Check(CurveList.Count = 2,
+    Check(CurveList.ItemCount = 2,
       'configured spectrum channels missing before first impact');
+    Check((CurveList.Cells[CurveList.CheckColumn, 0] = 'Показ') and
+      (CurveList.Cells[CurveList.ColorColumn, 0] = 'Цвет') and
+      (CurveList.Cells[CurveList.NameColumn, 0] = 'Канал'),
+      'shared curve table column headers are missing');
     CurveList.Repaint;
     Application.ProcessMessages;
-    CheckRect := CurveList.ItemRect(0);
-    Check(ColorToRGB(CurveList.Canvas.Pixels[CheckRect.Left + 2,
-      CheckRect.Top + 3]) = ColorToRGB(clWindowText),
-      'owner-drawn checkbox border is not painted inside the item');
+    CheckRect := CurveList.CellRect(CurveList.CheckColumn, 1);
+    Check(ColorToRGB(CurveList.Canvas.Pixels[
+      CheckRect.Left + (CheckRect.Width - 13) div 2,
+      CheckRect.Top + (CheckRect.Height - 13) div 2]) = ColorToRGB(clWindowText),
+      'shared table checkbox border is not painted inside the cell');
+    ColorRect := CurveList.CellRect(CurveList.ColorColumn, 2);
+    Check(ColorToRGB(CurveList.Canvas.Pixels[
+      (ColorRect.Left + ColorRect.Right) div 2,
+      (ColorRect.Top + ColorRect.Bottom) div 2]) =
+      ColorToRGB(CurveList.ItemColor[1]),
+      'shared table color marker is not painted');
+    Check(ColorToRGB(CurveList.Canvas.Pixels[ColorRect.Right - 3,
+      (ColorRect.Top + ColorRect.Bottom) div 2]) <>
+      ColorToRGB(CurveList.ItemColor[1]),
+      'shared table color marker stretches across the cell');
+    Check(ColorToRGB(CurveList.Canvas.Pixels[ColorRect.Right - 1,
+      ColorRect.Bottom - 2]) = ColorToRGB(clBtnShadow),
+      'shared table vertical grid line is missing');
+    Check(ColorToRGB(CurveList.Canvas.Pixels[ColorRect.Right - 2,
+      ColorRect.Bottom - 1]) = ColorToRGB(clBtnShadow),
+      'shared table horizontal grid line is missing');
     Check((View.ResultSampleCount(irtTime, 0) = 0) and
       (View.ResultSampleCount(irtSpectrum, 0) = 0),
       'empty configured curves contain samples before first impact');
-    CurveList.ItemIndex := 0;
+    CurveList.SelectedIndex := 0;
     CurveList.Checked[0] := False;
-    View.curveVisibilityClickCheck(nil);
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
     Check(not Model.ExcitationVisible,
       'hammer checkbox does not change model before first impact');
+    View.ApplicationService.FillSnapshot(Snapshot);
+    Check(Snapshot.Results[irtTime].Curves[0].Visible,
+      'unchecked tacho channel disappeared from time domain');
+    Check(not Snapshot.Results[irtSpectrum].Curves[0].Visible,
+      'unchecked tacho channel remained visible in frequency domain');
     CurveList.Checked[0] := True;
-    View.curveVisibilityClickCheck(nil);
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
     Check(TChartPage(TChartModel(View.GetChartControl.Model).Children[0]).ChildCount >= 3,
       'time page did not create separate hammer axis');
     Check(SameValue(TChartPage(TChartModel(View.GetChartControl.Model).
@@ -402,8 +480,68 @@ begin
       'Simultaneous time page has no data');
     TRadioGroup(View.FindComponent('rgFrequencyResult')).ItemIndex := 0;
     View.frequencyResultChange(nil);
-    CurveList := TCheckListBox(View.FindComponent('clbCurves'));
-    Check(CurveList.Count = 2, 'spectrum curve checklist lost both channels');
+    CurveList := TSharedColorCheckTable(View.FindComponent('clbCurves'));
+    CurveList.SelectedIndex := 0;
+    CurveList.Checked[0] := False;
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
+    View.ApplicationService.FillSnapshot(Snapshot);
+    Check(Snapshot.Results[irtTime].Curves[0].Visible and
+      not Snapshot.Results[irtSpectrum].Curves[0].Visible,
+      'captured tacho visibility is not split between time and frequency');
+    CurveList.Checked[0] := True;
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
+    TimePage := TChartPage(TChartModel(View.GetChartControl.Model).Children[0]);
+    TriggerCursor := nil;
+    for I := 0 to TimePage.ChildCount - 1 do
+      if (TimePage.Children[I] is TChartHorizontalCursor) and
+         (TimePage.Children[I].Name = 'TriggerLevel') then
+        TriggerCursor := TChartHorizontalCursor(TimePage.Children[I]);
+    Check((TriggerCursor <> nil) and TriggerCursor.Visible and
+      (TriggerCursor.Axis <> nil),
+      'time-domain threshold cursor is missing');
+    Check(TimePage.HasPresetXRange and
+      SameValue(TimePage.PresetMinXValue, 0) and
+      SameValue(TimePage.PresetMaxXValue,
+        Model.CaptureSamples / Model.SampleRateHz) and
+      SameValue(TimePage.XMinValue, TimePage.PresetMinXValue) and
+      SameValue(TimePage.XMaxValue, TimePage.PresetMaxXValue),
+      'time-domain viewport does not use configured capture duration');
+    TRadioGroup(View.FindComponent('rgFrequencyResult')).ItemIndex := 0;
+    View.frequencyResultChange(nil);
+    TCheckBox(View.FindComponent('chkExtrema')).Checked := True;
+    View.extremaChange(nil);
+    PeakForm := TRcFrfPeakForm(View.FindComponent('RcFrfPeakForm'));
+    Check(PeakForm <> nil, 'FRF peak table was not created');
+    FrequencyPage := TChartPage(TChartModel(View.GetChartControl.Model).Children[1]);
+    FreqAxis := TChartAxis(FrequencyPage.Children[0]);
+    PeakLine := nil;
+    for I := 0 to FreqAxis.ChildCount - 1 do
+      if (FreqAxis.Children[I] is cLineSeries) and
+         (FreqAxis.Children[I].Name = 'PeakThreshold') then
+        PeakLine := cLineSeries(FreqAxis.Children[I]);
+    Check((PeakLine <> nil) and (PeakLine.PointCount = 2),
+      'FRF threshold line is missing');
+    Renderer := TOpenGLChartRenderer(View.GetChartControl.GetRenderer);
+    FrequencyRect := Renderer.GetPageContentRect(FrequencyPage);
+    PeakY := Round(Renderer.AxisValueToPixel(FreqAxis, PeakLine.Points[0].Y,
+      FrequencyRect.Bottom, FrequencyRect.Top));
+    if PeakY > (FrequencyRect.Top + FrequencyRect.Bottom) div 2 then
+      MovedPeakY := Max(FrequencyRect.Top + 2, PeakY - 20)
+    else
+      MovedPeakY := Min(FrequencyRect.Bottom - 2, PeakY + 20);
+    PeakUpdateBefore := PeakForm.UpdateCount;
+    View.chartMouseDown(View.GetChartControl, mbLeft, [],
+      (FrequencyRect.Left + FrequencyRect.Right) div 2, PeakY);
+    View.chartMouseMove(View.GetChartControl, [ssLeft],
+      (FrequencyRect.Left + FrequencyRect.Right) div 2, MovedPeakY);
+    Check(PeakForm.UpdateCount > PeakUpdateBefore,
+      'FRF extrema table did not update during threshold drag');
+    View.chartMouseUp(View.GetChartControl, mbLeft, [],
+      (FrequencyRect.Left + FrequencyRect.Right) div 2, MovedPeakY);
+    TCheckBox(View.FindComponent('chkExtrema')).Checked := False;
+    View.extremaChange(nil);
+    CurveList := TSharedColorCheckTable(View.FindComponent('clbCurves'));
+    Check(CurveList.ItemCount = 2, 'spectrum curve table lost both channels');
     Check(TLabel(View.FindComponent('lblCursor')).Visible,
       'frequency cursor legend is hidden');
     CursorRenderer := TOpenGLChartRenderer(View.GetChartControl.GetRenderer);
@@ -419,24 +557,24 @@ begin
       Round((CursorRect.Top + CursorRect.Bottom) / 2));
     Check(Pos('X2:', TLabel(View.FindComponent('lblCursor')).Caption) > 0,
       'frequency cursor legend omitted the second cursor');
-    CurveList.ItemIndex := 0;
+    CurveList.SelectedIndex := 0;
     CurveList.Checked[0] := False;
-    View.curveVisibilityClickCheck(nil);
-    Check((View.ResultVisibleSeriesCount(irtTime) = 1) and
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
+    Check((View.ResultVisibleSeriesCount(irtTime) = 2) and
       (View.ResultVisibleSeriesCount(irtSpectrum) = 1),
-      'hammer visibility was not applied to both chart pages');
-    CurveList.ItemIndex := 1;
+      'hidden tacho did not remain visible only in time domain');
+    CurveList.SelectedIndex := 1;
     CurveList.Checked[1] := False;
-    View.curveVisibilityClickCheck(nil);
-    Check((View.ResultVisibleSeriesCount(irtTime) = 0) and
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
+    Check((View.ResultVisibleSeriesCount(irtTime) = 1) and
       (View.ResultVisibleSeriesCount(irtSpectrum) = 0),
-      'last hidden channel remains visible on a chart page');
-    CurveList.ItemIndex := 0;
+      'response visibility changed the time-only tacho policy');
+    CurveList.SelectedIndex := 0;
     CurveList.Checked[0] := True;
-    View.curveVisibilityClickCheck(nil);
-    CurveList.ItemIndex := 1;
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
+    CurveList.SelectedIndex := 1;
     CurveList.Checked[1] := True;
-    View.curveVisibilityClickCheck(nil);
+    View.curveVisibilityClickCheck(nil, CurveList.SelectedIndex);
     TimePage := TChartPage(TChartModel(View.GetChartControl.Model).Children[0]);
     RespAxis := TChartAxis(TimePage.FindChild('ResponsesTimeAxis'));
     HammerAxis := TChartAxis(TimePage.FindChild('HammerTimeAxis'));
@@ -454,10 +592,13 @@ begin
     Stage('before zoom regression');
     AxisState := Model.AxisStates[irtSpectrum];
     AxisState.XMax := 20000;
+    AxisState.YMin := 0.1;
+    AxisState.YMax := 2000;
     Model.AxisStates[irtSpectrum] := AxisState;
     TRadioGroup(View.FindComponent('rgFrequencyResult')).ItemIndex := 0;
     View.frequencyResultChange(nil);
     FrequencyPage.XMaxValue := 16;
+    TChartAxis(FrequencyPage.Children[0]).MaxValue := 19;
     Renderer := TOpenGLChartRenderer(View.GetChartControl.GetRenderer);
     FrequencyRect := Renderer.GetPageContentRect(FrequencyPage);
     View.chartMouseDown(View.GetChartControl, mbLeft, [ssDouble],
@@ -468,13 +609,113 @@ begin
       FloatToStr(FrequencyPage.XMaxValue));
     Check(SameValue(FrequencyPage.XMaxValue, 20000),
       'frequency double-click did not restore configured X max');
+    Check(SameValue(TChartAxis(FrequencyPage.Children[0]).MaxValue, 2000),
+      'frequency double-click did not restore configured Y max');
+    FreqAxis := TChartAxis(FrequencyPage.Children[0]);
+    FlagTrend := nil;
+    for I := 0 to FreqAxis.ChildCount - 1 do
+      if (FreqAxis.Children[I] is cBuffTrend1d) and
+         cBuffTrend1d(FreqAxis.Children[I]).Visible then
+      begin
+        FlagTrend := cBuffTrend1d(FreqAxis.Children[I]);
+        Break;
+      end;
+    Check(FlagTrend <> nil, 'frequency series missing for flag layout');
+    FlagA := TChartFlagLabel.Create;
+    FlagB := TChartFlagLabel.Create;
+    FlagC := TChartFlagLabel.Create;
+    FlagA.Text := 'F:2 V:1';
+    FlagB.Text := 'F:2 V:2';
+    FlagC.Text := 'F:20000 V:1';
+    FlagA.Trend := FlagTrend;
+    FlagB.Trend := FlagTrend;
+    FlagC.Trend := FlagTrend;
+    FlagA.AnchorX := 2;
+    FlagB.AnchorX := 2;
+    FlagC.AnchorX := 20000;
+    FlagA.AutoLayout := True;
+    FlagB.AutoLayout := True;
+    FlagC.AutoLayout := True;
+    FlagA.Visible := True;
+    FlagB.Visible := True;
+    FlagC.Visible := True;
+    FrequencyPage.AddChild(FlagA);
+    FrequencyPage.AddChild(FlagB);
+    FrequencyPage.AddChild(FlagC);
+    View.GetChartControl.Redraw;
+    View.GetChartControl.Repaint;
+    Application.ProcessMessages;
+    Check(not FlagA.RenderHidden and not FlagB.RenderHidden and
+      not FlagC.RenderHidden,
+      'visible peak flags were hidden despite available chart space');
+    FrequencyRect := Renderer.GetPageContentRect(FrequencyPage);
+    FlagRectA.Left := Round(Renderer.XValueToPixel(FrequencyPage, nil,
+      FlagA.WorldX, FrequencyRect.Left, FrequencyRect.Right));
+    FlagRectA.Top := Round(Renderer.AxisValueToPixel(FreqAxis,
+      FlagA.WorldY, FrequencyRect.Bottom, FrequencyRect.Top));
+    FlagRectA.Right := FlagRectA.Left + FlagA.Width;
+    FlagRectA.Bottom := FlagRectA.Top + FlagA.Height;
+    FlagRectB.Left := Round(Renderer.XValueToPixel(FrequencyPage, nil,
+      FlagB.WorldX, FrequencyRect.Left, FrequencyRect.Right));
+    FlagRectB.Top := Round(Renderer.AxisValueToPixel(FreqAxis,
+      FlagB.WorldY, FrequencyRect.Bottom, FrequencyRect.Top));
+    FlagRectB.Right := FlagRectB.Left + FlagB.Width;
+    FlagRectB.Bottom := FlagRectB.Top + FlagB.Height;
+    FlagRectC.Left := Round(Renderer.XValueToPixel(FrequencyPage, nil,
+      FlagC.WorldX, FrequencyRect.Left, FrequencyRect.Right));
+    FlagRectC.Top := Round(Renderer.AxisValueToPixel(FreqAxis,
+      FlagC.WorldY, FrequencyRect.Bottom, FrequencyRect.Top));
+    FlagRectC.Right := FlagRectC.Left + FlagC.Width;
+    FlagRectC.Bottom := FlagRectC.Top + FlagC.Height;
+    Check((FlagRectA.Left >= FrequencyRect.Left) and
+      (FlagRectB.Left >= FrequencyRect.Left) and
+      (FlagRectA.Right <= FrequencyRect.Right) and
+      (FlagRectB.Right <= FrequencyRect.Right) and
+      (FlagRectC.Left >= FrequencyRect.Left) and
+      (FlagRectC.Right <= FrequencyRect.Right) and
+      (FlagRectA.Top >= FrequencyRect.Top) and
+      (FlagRectB.Top >= FrequencyRect.Top) and
+      (FlagRectC.Top >= FrequencyRect.Top) and
+      (FlagRectA.Bottom <= FrequencyRect.Bottom) and
+      (FlagRectB.Bottom <= FrequencyRect.Bottom) and
+      (FlagRectC.Bottom <= FrequencyRect.Bottom),
+      'peak flag escaped frequency chart content');
+    Check((FlagRectA.Right <= FlagRectB.Left) or
+      (FlagRectB.Right <= FlagRectA.Left) or
+      (FlagRectA.Bottom <= FlagRectB.Top) or
+      (FlagRectB.Bottom <= FlagRectA.Top),
+      'peak flags overlap');
+    for I := Low(DenseFlags) to High(DenseFlags) do
+    begin
+      DenseFlags[I] := TChartFlagLabel.Create;
+      DenseFlags[I].Text := 'F:2 V:1';
+      DenseFlags[I].Trend := FlagTrend;
+      DenseFlags[I].AnchorX := 2;
+      DenseFlags[I].AutoLayout := True;
+      DenseFlags[I].Highlighted := I = High(DenseFlags);
+      DenseFlags[I].Visible := True;
+      FrequencyPage.AddChild(DenseFlags[I]);
+    end;
+    View.GetChartControl.Redraw;
+    View.GetChartControl.Repaint;
+    Application.ProcessMessages;
+    SomeFlagHidden := False;
+    for I := Low(DenseFlags) to High(DenseFlags) do
+    begin
+      SomeFlagHidden := SomeFlagHidden or DenseFlags[I].RenderHidden;
+      DenseFlags[I].Visible := False;
+    end;
+    Check(SomeFlagHidden, 'dense flags should be suppressed when no room remains');
+    Check(not DenseFlags[High(DenseFlags)].RenderHidden,
+      'selected peak flag lost its place to unselected flags');
+    FlagA.Visible := False;
+    FlagB.Visible := False;
+    FlagC.Visible := False;
     Check(TimePage.HasPresetXRange and
-      SameValue(TimePage.PresetMinXValue,
-        Snapshot.Results[irtTime].Curves[0].X[0]) and
+      SameValue(TimePage.PresetMinXValue, 0) and
       SameValue(TimePage.PresetMaxXValue,
-        Snapshot.Results[irtTime].Curves[0].X[
-          High(Snapshot.Results[irtTime].Curves[0].X)]),
-      'reverse time zoom is not bounded by captured signal');
+        Model.CaptureSamples / Model.SampleRateHz),
+      'time zoom is not bounded by configured capture duration');
     Stage('zoom regression passed');
     PublishImpact(Registry, 20);
     for I := 0 to 100 do
@@ -493,6 +734,25 @@ begin
     View.btnNextImpactClick(nil);
     Check(TLabel(View.FindComponent('lblImpactPosition')).Caption = '2 из 2',
       'next impact did not refresh the view immediately');
+    View.ApplicationService.FillSnapshot(Snapshot);
+    ChangedSnapshot := Snapshot;
+    ChangedSnapshot.ImpactIndex := Snapshot.ImpactIndex + 1;
+    ChangedSnapshot.ImpactCount := Snapshot.ImpactCount + 1;
+    for I := 0 to High(ChangedSnapshot.Results[irtTime].Curves) do
+    begin
+      ChangedSnapshot.Results[irtTime].Curves[I].X :=
+        Copy(Snapshot.Results[irtTime].Curves[I].X);
+      for J := 0 to High(ChangedSnapshot.Results[irtTime].Curves[I].X) do
+        ChangedSnapshot.Results[irtTime].Curves[I].X[J] :=
+          Snapshot.Results[irtTime].Curves[I].X[J] * 1.5 - 0.02;
+    end;
+    View.ApplySnapshot(ChangedSnapshot);
+    TimePage := TChartPage(TChartModel(View.GetChartControl.Model).Children[0]);
+    Check(SameValue(TimePage.XMinValue, 0) and
+      SameValue(TimePage.XMaxValue, Model.CaptureSamples / Model.SampleRateHz),
+      'new impact replaced configured time-domain X range');
+    View.ApplicationService.FillSnapshot(Snapshot);
+    View.ApplySnapshot(Snapshot);
     SavedService := View.ApplicationService;
     FormInterface.Configure(Model, Registry);
     Check(View.ApplicationService = SavedService,

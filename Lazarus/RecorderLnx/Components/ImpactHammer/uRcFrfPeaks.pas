@@ -17,7 +17,8 @@ type
 
 { Finds only completed above-threshold hills. The caller owns the result array. }
 procedure FindRcPeaks(const AX, AY: TRcDoubles; AThreshold: Double;
-  const ACurve: string; var APeaks: TRcPeaks);
+  const ACurve: string; var APeaks: TRcPeaks;
+  AMinFrequency: Double = 0; AMaxFrequency: Double = 0);
 
 implementation
 
@@ -46,7 +47,8 @@ begin
 end;
 
 procedure FindRcPeaks(const AX, AY: TRcDoubles; AThreshold: Double;
-  const ACurve: string; var APeaks: TRcPeaks);
+  const ACurve: string; var APeaks: TRcPeaks;
+  AMinFrequency: Double; AMaxFrequency: Double);
 var
   lI, lTop, lCount, lCapacity: Integer;
   lInside: Boolean;
@@ -60,6 +62,12 @@ begin
   lCapacity := lCount;
   for lI := 1 to High(AY) do
   begin
+    if (AX[lI] < AMinFrequency) or
+       ((AMaxFrequency > AMinFrequency) and (AX[lI] > AMaxFrequency)) then
+    begin
+      lInside := False;
+      Continue;
+    end;
     lValue := AY[lI];
     if IsNan(lValue) or IsInfinite(lValue) then
     begin
@@ -68,7 +76,8 @@ begin
     end;
     if not lInside then
     begin
-      if (AY[lI - 1] <= AThreshold) and (lValue > AThreshold) then
+      if (AX[lI - 1] >= AMinFrequency) and
+         (AY[lI - 1] <= AThreshold) and (lValue > AThreshold) then
       begin
         lInside := True;
         lTop := lI;

@@ -1180,9 +1180,9 @@ begin
     lFrequency:=fComponent.FrfFrequencyHz;
     lPhase:=fComponent.FrfAnimationPhaseRadians;
     if fFrfFrequencyTag<>nil then
-      lFrequency:=fFrfFrequencyTag.SignalBuffer.LatestValue;
+      RecorderTryReadScalarValue(fFrfFrequencyTag,True,tekMean,lFrequency);
     if fFrfAnimationPhaseTag<>nil then
-      lPhase:=fFrfAnimationPhaseTag.SignalBuffer.LatestValue;
+      RecorderTryReadScalarValue(fFrfAnimationPhaseTag,True,tekMean,lPhase);
     if (fImpactBindingController<>nil) and
       fImpactBindingController.AnimationPlaying then
     begin

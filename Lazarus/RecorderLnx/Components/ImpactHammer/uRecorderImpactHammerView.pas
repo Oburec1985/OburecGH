@@ -10,8 +10,6 @@ uses
   Buttons,
   LResources,
   ComCtrls,
-  CheckLst,
-  LCLType,
   Math, uOglChart, uOglChartColors, uOglChartChart, uOglChartPage,
   uOglChartAxis, uOglChartTrend, uOglChartRenderer,
   uOglChartDrawObj, uOglChartCursor, uOglChartTextLabel,
@@ -21,7 +19,7 @@ uses
   uRecorderImpactSessionContracts,
   uRecorderImpactHammerModel, uRecorderImpactHammerContracts,
   uRecorderImpactHammerPresenter, uRecorderImpactMeraAdapter,
-  uRcFrfPeaks, uRcFrfPeakForm;
+  uRcFrfPeaks, uRcFrfPeakForm, uSharedColorCheckTable;
 
 type
   { Runtime surface for the impact-hammer workflow. ApplySnapshot is the only
@@ -47,7 +45,7 @@ type
     chkExtrema: TCheckBox;
     chkLogX: TCheckBox;
     chkLogY: TCheckBox;
-    clbCurves: TCheckListBox;
+    clbCurves: TSharedColorCheckTable;
     cmbEstimator: TComboBox;
     cmbWindow: TComboBox;
     rgFrequencyResult: TRadioGroup;
@@ -88,10 +86,8 @@ type
     procedure axisOptionsChange(Sender: TObject);
     procedure extremaChange(Sender: TObject);
     procedure axisRangeEditingDone(Sender: TObject);
-    procedure curveVisibilityClickCheck(Sender: TObject);
+    procedure curveVisibilityClickCheck(Sender: TObject; AIndex: Integer);
     procedure curveSelectionClick(Sender: TObject);
-    procedure curveDrawItem(Control: TWinControl; Index: Integer;
-      ARect: TRect; State: TOwnerDrawState);
     procedure processingOptionsChange(Sender: TObject);
     procedure frequencyResultChange(Sender: TObject);
     procedure filterWindowChange(Sender: TObject);
@@ -121,10 +117,9 @@ type
     fLastChartClick: TPoint;
     fHasChartClick: Boolean;
     fTimeCursor: TChartCursor;
-    fTriggerLines: array of cLineSeries;
+    fTriggerCursor: TChartHorizontalCursor;
     fTriggerDragging: Boolean;
     fDrawLevel: Double;
-    fDrawDuration: Double;
     fFitImpactIndex: Integer;
     fFitImpactCount: Integer;
     fChartSeries: array[TRecorderImpactResultType] of array of cBuffTrend1d;
@@ -137,6 +132,7 @@ type
     fPeakLine: cLineSeries;
     fPeakThreshold: Double;
     fPeakDragging: Boolean;
+    fLastPeakRefreshTick: QWord;
     fPresenter: TRecorderImpactHammerPresenter;
     fUpdatingOptions: Boolean;
     fUpdatingWindow: Boolean;
@@ -155,9 +151,12 @@ type
     procedure UpdateFilterWindow;
     procedure UpdateTriggerLine(AValue: Double);
     procedure InvalidateExtrema;
+    procedure RefreshExtrema;
+    procedure PeakSelectionChange(Sender: TObject);
     procedure PresentExtrema(AType: TRecorderImpactResultType;
       const AFrame: TRecorderImpactPresentationFrame);
     procedure UpdatePeakLine;
+    procedure SetPeakThresholdFromPixel(AY: Integer);
     procedure FitTimePage;
     procedure ConfigureTimeAxes;
     function CurrentSettings: string;
@@ -389,38 +388,18 @@ end;
 procedure TRecorderImpactHammerView.ApplySnapshot(
   const ASnapshot: TRecorderImpactHammerSnapshot);
 var
-  I: Integer;
-  lMinX, lMaxX: Double;
-  lHasSamples: Boolean;
+  lDuration: Double;
 begin
   fSnapshot := ASnapshot;
-  { Bound reverse zoom by the visible samples, including a small negative
-    pretrigger offset if the acquired timestamps contain one. }
-  lHasSamples := False;
-  lMinX := 0;
-  lMaxX := 0;
-  for I := 0 to High(ASnapshot.Results[irtTime].Curves) do
-    if Length(ASnapshot.Results[irtTime].Curves[I].X) > 1 then
-    begin
-      if not lHasSamples then
-      begin
-        lMinX := ASnapshot.Results[irtTime].Curves[I].X[0];
-        lMaxX := ASnapshot.Results[irtTime].Curves[I].X[
-          High(ASnapshot.Results[irtTime].Curves[I].X)];
-        lHasSamples := True;
-      end
-      else
-      begin
-        lMinX := Min(lMinX, ASnapshot.Results[irtTime].Curves[I].X[0]);
-        lMaxX := Max(lMaxX, ASnapshot.Results[irtTime].Curves[I].X[
-          High(ASnapshot.Results[irtTime].Curves[I].X)]);
-      end;
-    end;
-  fTimePage.HasPresetXRange := lHasSamples and (lMaxX > lMinX);
+  lDuration := 0;
+  if (fComponent <> nil) and (fComponent.SampleRateHz > 0) then
+    lDuration := fComponent.CaptureSamples / fComponent.SampleRateHz;
+  if lDuration <= 0 then lDuration := ASnapshot.CaptureDurationSeconds;
+  fTimePage.HasPresetXRange := lDuration > 0;
   if fTimePage.HasPresetXRange then
   begin
-    fTimePage.PresetMinXValue := lMinX;
-    fTimePage.PresetMaxXValue := lMaxX;
+    fTimePage.PresetMinXValue := 0;
+    fTimePage.PresetMaxXValue := lDuration;
   end;
   ApplyCurvePalette;
   Inc(fExtremaDataRevision);
@@ -462,8 +441,6 @@ begin
 end;
 
 procedure TRecorderImpactHammerView.BuildCharts;
-var
-  I: Integer;
 begin
   { The host panel is streamed so the layout remains visible and resizable in
     Lazarus. OglChart model pages are runtime objects because they belong to
@@ -490,17 +467,13 @@ begin
   fTimeAxis.Name := 'ResponsesTimeAxis';
   fTimeAxis.Color := $FF404040;
   fTimePage.AddChild(fTimeAxis);
-  SetLength(fTriggerLines, 1);
-  for I := 0 to High(fTriggerLines) do
-  begin
-    fTriggerLines[I] := cLineSeries.Create;
-    fTriggerLines[I].Name := 'TriggerLevel' + IntToStr(I);
-    fTriggerLines[I].Caption := '';
-    fTriggerLines[I].Color := OglChartColorToGL(clRed);
-    fTriggerLines[I].LineWidth := 2;
-    fTriggerLines[I].StipplePattern := $0F0F;
-    fTimeAxis.AddChild(fTriggerLines[I]);
-  end;
+  fTriggerCursor := TChartHorizontalCursor.Create;
+  fTriggerCursor.Name := 'TriggerLevel';
+  fTriggerCursor.Axis := fTimeAxis;
+  fTriggerCursor.Color := OglChartColorToGL(clRed);
+  fTriggerCursor.LineWidth := 2;
+  fTriggerCursor.StipplePattern := $0F0F;
+  fTimePage.AddChild(fTriggerCursor);
   fFrequencyPage := TChartPage.Create;
   fFrequencyPage.Name := 'FrequencyPage';
   fFrequencyPage.Caption := 'Частота';
@@ -527,7 +500,6 @@ end;
 procedure TRecorderImpactHammerView.ConfigureTimeAxes;
 var
   lAxis: TChartAxis;
-  I: Integer;
 begin
   if (fComponent <> nil) and fComponent.ExcitationOwnAxis then
   begin
@@ -545,8 +517,7 @@ begin
   if (Length(fChartSeries[irtTime]) > 0) and
      (fChartSeries[irtTime][0] <> nil) then
     lAxis.AddChild(fChartSeries[irtTime][0]);
-  for I := 0 to High(fTriggerLines) do
-    lAxis.AddChild(fTriggerLines[I]);
+  if fTriggerCursor <> nil then fTriggerCursor.Axis := lAxis;
   if (lAxis = fTimeAxis) and (fHammerTimeAxis <> nil) then
     FreeAndNil(fHammerTimeAxis);
 end;
@@ -724,6 +695,24 @@ begin
   fExtremaBuiltRevision := High(QWord);
 end;
 
+procedure TRecorderImpactHammerView.RefreshExtrema;
+var
+  lType: TRecorderImpactResultType;
+  lFrame: TRecorderImpactPresentationFrame;
+begin
+  if fComponent = nil then Exit;
+  lType := ActiveFrequencyResult;
+  InvalidateExtrema;
+  if BuildPresentationFrame(lType, fComponent.AxisStates[lType], lFrame) then
+    PresentExtrema(lType, lFrame);
+  fChart.Redraw;
+end;
+
+procedure TRecorderImpactHammerView.PeakSelectionChange(Sender: TObject);
+begin
+  RefreshExtrema;
+end;
+
 procedure TRecorderImpactHammerView.UpdatePeakLine;
 var
   lState: TImpactResultAxisState;
@@ -740,6 +729,19 @@ begin
       [fPeakThreshold]);
 end;
 
+procedure TRecorderImpactHammerView.SetPeakThresholdFromPixel(AY: Integer);
+var
+  lRenderer: TOpenGLChartRenderer;
+  lRect: TChartPixelRect;
+begin
+  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
+  if lRenderer = nil then Exit;
+  lRect := lRenderer.GetPageContentRect(fFrequencyPage);
+  fPeakThreshold := Max(1E-9, lRenderer.PixelToAxisValue(fFrequencyAxis,
+    EnsureRange(AY, lRect.Top, lRect.Bottom), lRect.Bottom, lRect.Top));
+  UpdatePeakLine;
+end;
+
 procedure TRecorderImpactHammerView.PresentExtrema(
   AType: TRecorderImpactResultType;
   const AFrame: TRecorderImpactPresentationFrame);
@@ -748,6 +750,10 @@ var
   lLabelIndex: Integer;
   lPeakIndex: Integer;
   lFirstPeak: Integer;
+  lSelectedCurve: Integer;
+  lAxisState: TImpactResultAxisState;
+  lSelectedPeak: TRcPeak;
+  lHasSelectedPeak, lIsSelected: Boolean;
 
   procedure EnsureLabel;
   begin
@@ -758,17 +764,19 @@ var
       fExtremaLabels[lLabelIndex].Name :=
         Format('ImpactExtremum%d', [lLabelIndex]);
       fExtremaLabels[lLabelIndex].AttachToAllTrends := False;
+      fExtremaLabels[lLabelIndex].AutoLayout := True;
       fFrequencyPage.AddChild(fExtremaLabels[lLabelIndex]);
     end;
   end;
 
-  procedure ShowLabel(const APeak: TRcPeak);
+  procedure ShowLabel(const APeak: TRcPeak; AHighlighted: Boolean);
   begin
     EnsureLabel;
     fExtremaLabels[lLabelIndex].Trend := fChartSeries[AType][lCurveIndex];
     fExtremaLabels[lLabelIndex].AnchorX := APeak.Frequency;
     fExtremaLabels[lLabelIndex].Text := Format('%.4g Hz; %.4g',
       [APeak.Frequency, APeak.Value]);
+    fExtremaLabels[lLabelIndex].Highlighted := AHighlighted;
     fExtremaLabels[lLabelIndex].Visible := True;
     Inc(lLabelIndex);
   end;
@@ -787,6 +795,10 @@ begin
     Exit;
 
   lLabelIndex := 0;
+  lSelectedCurve := clbCurves.SelectedIndex;
+  lHasSelectedPeak := (fPeakForm <> nil) and
+    fPeakForm.TryGetSelectedPeak(lSelectedPeak);
+  lAxisState := fComponent.AxisStates[AType];
   SetLength(fPeaks, 0);
   for lCurveIndex := 0 to High(AFrame.Curves) do
   begin
@@ -798,9 +810,18 @@ begin
     lFirstPeak := Length(fPeaks);
     FindRcPeaks(AFrame.Curves[lCurveIndex].X,
       AFrame.Curves[lCurveIndex].Y, fPeakThreshold,
-      AFrame.Curves[lCurveIndex].Name, fPeaks);
+      AFrame.Curves[lCurveIndex].Name, fPeaks,
+      lAxisState.XMin, lAxisState.XMax);
     for lPeakIndex := lFirstPeak to High(fPeaks) do
-      ShowLabel(fPeaks[lPeakIndex]);
+    begin
+      lIsSelected := lHasSelectedPeak and
+        (fPeaks[lPeakIndex].Curve = lSelectedPeak.Curve) and
+        (fPeaks[lPeakIndex].Index = lSelectedPeak.Index) and
+        SameValue(fPeaks[lPeakIndex].Frequency, lSelectedPeak.Frequency);
+      if (lSelectedCurve < 0) or (lSelectedCurve = lCurveIndex) or
+         lIsSelected then
+        ShowLabel(fPeaks[lPeakIndex], lIsSelected);
+    end;
   end;
   while lLabelIndex < Length(fExtremaLabels) do
   begin
@@ -820,22 +841,21 @@ var
   ContentRect: TChartPixelRect;
   CursorFrame: TRecorderImpactPresentationFrame;
   AxisState: TImpactResultAxisState;
+  lNow: QWord;
 begin
   if Sender <> fChart then
     Exit;
   if fPeakDragging then
   begin
-    Renderer := TOpenGLChartRenderer(fChart.GetRenderer);
-    if Renderer <> nil then
+    SetPeakThresholdFromPixel(Y);
+    lNow := GetTickCount64;
+    if lNow - fLastPeakRefreshTick >= 25 then
     begin
-      ContentRect := Renderer.GetPageContentRect(fFrequencyPage);
-      fPeakThreshold := Max(1E-9, Renderer.PixelToAxisValue(fFrequencyAxis,
-        EnsureRange(Y, ContentRect.Top, ContentRect.Bottom),
-        ContentRect.Bottom, ContentRect.Top));
-      UpdatePeakLine;
-      InvalidateExtrema;
+      RefreshExtrema;
+      fLastPeakRefreshTick := lNow;
+    end
+    else
       fChart.Redraw;
-    end;
     Exit;
   end;
   if fTriggerDragging then
@@ -880,26 +900,26 @@ end;
 
 procedure TRecorderImpactHammerView.UpdateTriggerLine(AValue: Double);
 var
-  lLevel, lDuration: Double;
+  lLevel: Double;
 begin
-  if (Length(fTriggerLines) = 0) or (fComponent = nil) then Exit;
+  if (fTriggerCursor = nil) or (fComponent = nil) then Exit;
   lLevel := AValue;
   if fComponent.TriggerPolarity = itpNegative then lLevel := -lLevel;
-  lDuration := Max(1E-6, fSnapshot.CaptureDurationSeconds);
-  if (fTriggerLines[0].PointCount = 2) and
-    SameValue(lLevel, fDrawLevel) and
-    SameValue(lDuration, fDrawDuration) then Exit;
-  fTriggerLines[0].ClearPoints;
-  fTriggerLines[0].AddPoint(0, lLevel);
-  fTriggerLines[0].AddPoint(lDuration, lLevel);
+  if SameValue(lLevel, fDrawLevel) then Exit;
+  fTriggerCursor.Y := lLevel;
   lblTriggerLevel.Caption := Format('Порог: %.6g', [lLevel]);
   fDrawLevel := lLevel;
-  fDrawDuration := lDuration;
 end;
 
 procedure TRecorderImpactHammerView.FitTimePage;
 begin
   FitPageZoom(fTimePage);
+  if fTimePage.HasPresetXRange then
+  begin
+    fTimePage.XMinValue := fTimePage.PresetMinXValue;
+    fTimePage.XMaxValue := fTimePage.PresetMaxXValue;
+    fTimePage.ZoomedX := False;
+  end;
   fChart.Redraw;
 end;
 
@@ -909,20 +929,12 @@ var
 begin
   if fComponent = nil then Exit;
   lState := fComponent.AxisStates[ActiveFrequencyResult];
-  if lState.AutoScale then
-  begin
-    FitZoomY(fFrequencyPage);
-    if fFrequencyAxis.MaxValue <= lState.YMin then
-      fFrequencyAxis.MaxValue := Max(lState.YMax,
-        lState.YMin + Max(Abs(lState.YMin) * 0.1, 1E-9));
-    fFrequencyAxis.MinValue := lState.YMin;
-  end
-  else
+  ApplyConfiguredFrequencyRange(lState);
+  if lState.YMax > lState.YMin then
   begin
     fFrequencyAxis.MinValue := lState.YMin;
     fFrequencyAxis.MaxValue := lState.YMax;
   end;
-  ApplyConfiguredFrequencyRange(lState);
   fChart.Redraw;
 end;
 
@@ -1000,8 +1012,9 @@ begin
   begin
     fPeakDragging := False;
     fChart.MouseInputEnabled := True;
-    InvalidateExtrema;
-    PresentResult(ActiveFrequencyResult);
+    SetPeakThresholdFromPixel(Y);
+    RefreshExtrema;
+    fLastPeakRefreshTick := GetTickCount64;
     Exit;
   end;
   if not fTriggerDragging or (Button <> mbLeft) then Exit;
@@ -1072,7 +1085,7 @@ var
   lX1, lPeakHz, lDecrement: Double;
 begin
   lType := ActiveFrequencyResult;
-  lSelected := clbCurves.ItemIndex;
+  lSelected := clbCurves.SelectedIndex;
   if (lSelected < 0) or
      (lSelected > High(fSnapshot.Results[lType].Curves)) or
      not fSnapshot.Results[lType].Curves[lSelected].Visible then
@@ -1154,16 +1167,14 @@ begin
     edtXMax.Enabled := not AxisState.AutoScale;
     edtYMin.Enabled := not AxisState.AutoScale;
     edtYMax.Enabled := not AxisState.AutoScale;
-    clbCurves.Items.BeginUpdate;
+    clbCurves.BeginUpdate;
     try
       clbCurves.Clear;
       for I := 0 to High(fSnapshot.Results[AType].Curves) do
-      begin
-        clbCurves.Items.Add(fSnapshot.Results[AType].Curves[I].Name);
-        clbCurves.Checked[I] := fSnapshot.Results[AType].Curves[I].Visible;
-      end;
+        clbCurves.AddItem(fSnapshot.Results[AType].Curves[I].Name,
+          CurveColor(I), fSnapshot.Results[AType].Curves[I].Visible);
     finally
-      clbCurves.Items.EndUpdate;
+      clbCurves.EndUpdate;
     end;
   finally
     fUpdatingOptions := False;
@@ -1232,7 +1243,8 @@ begin
   RememberSettings;
 end;
 
-procedure TRecorderImpactHammerView.curveVisibilityClickCheck(Sender: TObject);
+procedure TRecorderImpactHammerView.curveVisibilityClickCheck(Sender: TObject;
+  AIndex: Integer);
 var
   ResultType: TRecorderImpactResultType;
   lType: TRecorderImpactResultType;
@@ -1244,17 +1256,14 @@ begin
     Exit;
   InvalidateExtrema;
   ResultType := ActiveFrequencyResult;
-  if (clbCurves.ItemIndex < 0) or
-    (clbCurves.ItemIndex > High(fSnapshot.Results[ResultType].Curves)) then
+  if (AIndex < 0) or
+    (AIndex > High(fSnapshot.Results[ResultType].Curves)) then
     Exit;
-  lVisible := clbCurves.Checked[clbCurves.ItemIndex];
-  CurveId := fSnapshot.Results[ResultType].Curves[
-    clbCurves.ItemIndex].CurveId;
-  if fSnapshot.Results[ResultType].Curves[
-    clbCurves.ItemIndex].ReadOnly then
+  lVisible := clbCurves.Checked[AIndex];
+  CurveId := fSnapshot.Results[ResultType].Curves[AIndex].CurveId;
+  if fSnapshot.Results[ResultType].Curves[AIndex].ReadOnly then
   begin
-    fSnapshot.Results[ResultType].Curves[
-      clbCurves.ItemIndex].Visible := lVisible;
+    fSnapshot.Results[ResultType].Curves[AIndex].Visible := lVisible;
     PresentResult(ResultType);
     Exit;
   end;
@@ -1262,7 +1271,10 @@ begin
     High(TRecorderImpactResultType) do
     for I := 0 to High(fSnapshot.Results[lType].Curves) do
       if fSnapshot.Results[lType].Curves[I].CurveId = CurveId then
-        fSnapshot.Results[lType].Curves[I].Visible := lVisible;
+        if (CurveId = 0) and (lType = irtTime) then
+          fSnapshot.Results[lType].Curves[I].Visible := True
+        else
+          fSnapshot.Results[lType].Curves[I].Visible := lVisible;
   if fComponent <> nil then
   begin
     if CurveId = 0 then
@@ -1281,70 +1293,9 @@ begin
 end;
 
 procedure TRecorderImpactHammerView.curveSelectionClick(Sender: TObject);
-var
-  lResultType: TRecorderImpactResultType;
-  lCurveIndex: Integer;
 begin
-  for lCurveIndex := 0 to clbCurves.Count - 1 do
-    if clbCurves.Checked[lCurveIndex] then
-      Exit;
-  lResultType := ActiveFrequencyResult;
-  PresentResult(irtTime);
-  PresentResult(lResultType);
-end;
-
-procedure TRecorderImpactHammerView.curveDrawItem(Control: TWinControl;
-  Index: Integer; ARect: TRect; State: TOwnerDrawState);
-var
-  lBox: TRect;
-  lCheck: TRect;
-  lBackground: TColor;
-begin
-  if (Index < 0) or (Index >= clbCurves.Items.Count) then
-    Exit;
-  if odSelected in State then
-    lBackground := clHighlight
-  else
-    lBackground := clbCurves.Color;
-  clbCurves.Canvas.Brush.Color := lBackground;
-  clbCurves.Canvas.FillRect(ARect);
-  { Win32 skips native checkbox painting for owner-drawn checklists. Keep the
-    painted box inside the item clip and inside its checkbox hit area. }
-  lCheck.Left := ARect.Left + 2;
-  lCheck.Top := ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2;
-  lCheck.Right := lCheck.Left + 13;
-  lCheck.Bottom := lCheck.Top + 13;
-  clbCurves.Canvas.Brush.Color := clWindow;
-  clbCurves.Canvas.Pen.Color := clWindowText;
-  clbCurves.Canvas.Rectangle(lCheck);
-  if clbCurves.Checked[Index] then
-  begin
-    clbCurves.Canvas.Pen.Width := 2;
-    clbCurves.Canvas.MoveTo(lCheck.Left + 2, lCheck.Top + 6);
-    clbCurves.Canvas.LineTo(lCheck.Left + 5, lCheck.Top + 9);
-    clbCurves.Canvas.LineTo(lCheck.Right - 2, lCheck.Top + 3);
-    clbCurves.Canvas.Pen.Width := 1;
-  end;
-  lBox.Left := lCheck.Right + 4;
-  lBox.Top := ARect.Top + (ARect.Bottom - ARect.Top - 10) div 2;
-  lBox.Right := lBox.Left + 10;
-  lBox.Bottom := lBox.Top + 10;
-  clbCurves.Canvas.Brush.Color := CurveColor(Index);
-  clbCurves.Canvas.Pen.Color := clBlack;
-  clbCurves.Canvas.Rectangle(lBox);
-  if odSelected in State then
-  begin
-    clbCurves.Canvas.Brush.Color := clHighlight;
-    clbCurves.Canvas.Font.Color := clHighlightText;
-  end
-  else
-  begin
-    clbCurves.Canvas.Brush.Color := clbCurves.Color;
-    clbCurves.Canvas.Font.Color := clbCurves.Font.Color;
-  end;
-  clbCurves.Canvas.TextOut(lBox.Right + 5,
-    ARect.Top + (ARect.Bottom - ARect.Top - clbCurves.Canvas.TextHeight('Ag')) div 2,
-    clbCurves.Items[Index]);
+  if fUpdatingOptions or (fComponent = nil) then Exit;
+  RefreshExtrema;
 end;
 
 procedure TRecorderImpactHammerView.extremaChange(Sender: TObject);
@@ -1354,7 +1305,10 @@ begin
   if chkExtrema.Checked then
   begin
     if fPeakForm = nil then
+    begin
       fPeakForm := TRcFrfPeakForm.Create(Self);
+      fPeakForm.OnPeakSelected := @PeakSelectionChange;
+    end;
     fPeakForm.Show;
   end
   else if fPeakForm <> nil then

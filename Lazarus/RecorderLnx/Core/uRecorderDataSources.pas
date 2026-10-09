@@ -62,6 +62,7 @@ type
       Вызывается только после остановки worker-потока. }
     function Reconfigure(AUpdateTimeMs: Cardinal;
       out AErrorText: string): Boolean;
+    procedure RefreshRuntimeTransforms;
     { Переводит источник в рабочее состояние. Теги должны быть настроены заранее. }
     procedure Start;
     { Подготовка железа/транспорта до старта потока сбора. Метод не обращается
@@ -150,6 +151,7 @@ type
     procedure ConfigureTags(ARegistry: TRecorderTagRegistry); virtual;
     function Reconfigure(AUpdateTimeMs: Cardinal;
       out AErrorText: string): Boolean; virtual;
+    procedure RefreshRuntimeTransforms; virtual;
     { Запуск источника }
     procedure Start; virtual;
     { Подготовка железа/транспорта до старта потока сбора. UI использовать нельзя. }
@@ -364,6 +366,7 @@ type
     procedure PrepareHardwareSources(ASourceIds: TStrings);
     function ReconfigureAll(AUpdateTimeMs: Cardinal;
       AErrors: TStrings = nil): Boolean;
+    procedure RefreshSourceRuntimeTransforms(const ASourceId: string);
 
     { Запускает все источники, создавая отдельный thread-runner на каждый. }
     procedure StartAll;
@@ -1929,6 +1932,10 @@ begin
   end;
 end;
 
+procedure TRecorderDataSourceBase.RefreshRuntimeTransforms;
+begin
+end;
+
 procedure TRecorderDataSourceManager.PrepareHardwareAll;
 var
   I: Integer;
@@ -2024,6 +2031,16 @@ begin
     if AErrors <> nil then
       AErrors.Add(lContext.Source.SourceId + ': ' + lErrorText);
   end;
+end;
+
+procedure TRecorderDataSourceManager.RefreshSourceRuntimeTransforms(
+  const ASourceId: string);
+var
+  lSource: IRecorderDataSource;
+begin
+  lSource := FindSource(ASourceId);
+  if lSource <> nil then
+    lSource.RefreshRuntimeTransforms;
 end;
 
 procedure TRecorderDataSourceManager.StartAll;

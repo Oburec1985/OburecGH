@@ -56,6 +56,7 @@ uses
   uRecorderRecordTimebase,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlDbRuntime, uRecorderSqlDataSource,
+  uRecorderMeraBaseModel, uRecorderMeraBaseView,
   uRecorderSqlTrendModel, uRecorderSqlTrendView,
   uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
   uRecorderMeasurementSectionView, uRecorderTrendView,
@@ -135,6 +136,8 @@ type
     procedure pnRightCommandsClick(Sender: TObject);
     procedure sgFormularPrepareCanvas({%H-}sender: TObject; aCol, aRow: Integer;
       aState: TGridDrawState);
+    procedure sgFormularMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure sgFormularSelectCell({%H-}Sender: TObject;
       {%H-}aCol, aRow: Integer; var {%H-}CanSelect: Boolean);
     procedure SplitterRightMoved(Sender: TObject);
@@ -383,6 +386,8 @@ type
     function CurrentTagListSelectionName: string;
     // отобразить список тегов
     procedure RebuildTagList(const AFilter: string);
+    procedure FocusTagInList(const ATagName: string);
+    procedure FormEditorTagActivated(const ATagName: string);
     { Собирает выбранные в списке TListBox теги }
     procedure CollectSelectedTags(ATags: TList);
     { Синхронизирует выбранный в UI тег с ядром Recorder. }
@@ -593,6 +598,7 @@ begin
   RegisterRecorder3dFactory(fComponentFactory);
   RegisterRecorderImpactHammerFactory(fComponentFactory);
   RegisterRecorderSqlTrendFactory(fComponentFactory);
+  RegisterRecorderMeraBaseFactory(fComponentFactory);
   RegisterRecorderMeasurementSectionFactory(fComponentFactory);
   fMeasurementSectionFactory := fComponentFactory.FindFactory(
     TRecorderMeasurementSectionComponent.TypeId);
@@ -600,7 +606,9 @@ begin
     fRecorder.TagRegistry, fRecorder.AlarmEngine);
   fPluginRuntime.OnLogMessage := @AddPluginLog;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
+  TRecorderMeraBaseView.SetSqlDbManager(fRecorder.SqlDbManager);
   sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
+  sgFormular.OnMouseDown := @sgFormularMouseDown;
   fFormManager := TRecorderFormManager.Create;
   fDetachedForms := TStringList.Create;
   fDetachedForms.Sorted := True;
@@ -626,6 +634,7 @@ begin
   fFormEditor.CommandImages := ilCommandButtons;
   fFormEditor.OnChanged := @FormEditorChanged;
   fFormEditor.OnPlaceComponent := @PlaceSelectedTool;
+  fFormEditor.OnTagActivate := @FormEditorTagActivated;
   fFormEditor.SetDataContext(fRecorder.TagRegistry, fRecorder.AlarmEngine, fRecorder.RunSettings.DisplayBufferMs / 1000);
   lbTags.OnClick := @lbTagsClick;
   UpdateActiveSourceIds;
@@ -847,6 +856,7 @@ begin
   FreeAndNil(fLatestTagValues);
   FreeAndNil(fLogLines);
   FreeAndNil(fHardwareStatusSourceIds);
+  TRecorderMeraBaseView.SetSqlDbManager(nil);
   FreeAndNil(fRecorder);
 end;
 
@@ -1592,6 +1602,27 @@ begin
       end;
     lChanges.Free;
   end;
+end;
+
+procedure TMainForm.sgFormularMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  lCol: Integer;
+  lRow: Integer;
+  lTagName: string;
+begin
+  if (Button <> mbLeft) or not (ssDouble in Shift) or
+    (fDigitalViewMode <> rdvmTags) then
+    Exit;
+  sgFormular.MouseToCell(X, Y, lCol, lRow);
+  if lRow <= 0 then
+    Exit;
+  while (lRow > 0) and (sgFormular.Cells[0, lRow] = '') do
+    Dec(lRow);
+  if lRow <= 0 then
+    Exit;
+  lTagName := Trim(sgFormular.Cells[0, lRow]);
+  FocusTagInList(lTagName);
 end;
 
 procedure TMainForm.btnViewModeClick(Sender: TObject);
@@ -3414,6 +3445,49 @@ procedure TMainForm.TagHardwareSourceSetup(Sender: TObject; ATag: TRecorderTag);
 begin
   RecorderEditTagDevice(Self, fRecorder, ATag, ilCommandButtons,
     ilCommandButtons, @DeviceTestLog);
+end;
+
+procedure TMainForm.FocusTagInList(const ATagName: string);
+var
+  I: Integer;
+  lItem: TListItem;
+  lTag: TRecorderTag;
+begin
+  if (lbTags = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then
+    Exit;
+  lTag := fRecorder.TagRegistry.FindByName(Trim(ATagName));
+  if lTag = nil then
+    Exit;
+
+  if Trim(edTagSearch.Text) <> '' then
+    edTagSearch.Text := '';
+  { Переход из цифрового компонента выбирает ровно один тег. Ручное
+    множественное выделение в правой таблице при этом остаётся доступным. }
+  for I := 0 to lbTags.Items.Count - 1 do
+  begin
+    lbTags.Items[I].Selected := False;
+    lbTags.Items[I].Focused := False;
+  end;
+  for I := 0 to lbTags.Items.Count - 1 do
+  begin
+    lItem := lbTags.Items[I];
+    if (TObject(lItem.Data) <> lTag) and
+      not SameText(Trim(lItem.Caption), lTag.Name) then
+      Continue;
+    lbTags.Selected := lItem;
+    lItem.Selected := True;
+    lItem.Focused := True;
+    lItem.MakeVisible(False);
+    fRecorder.TagRegistry.SelectedTagName := lTag.Name;
+    lbTags.SetFocus;
+    Exit;
+  end;
+end;
+
+procedure TMainForm.FormEditorTagActivated(const ATagName: string);
+begin
+  FocusTagInList(ATagName);
 end;
 
 function TMainForm.TagCanZeroBalance(Sender: TObject;

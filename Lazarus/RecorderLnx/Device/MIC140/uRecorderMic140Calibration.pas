@@ -913,7 +913,7 @@ begin
       if not Mic140HardwareTare2IsUsable(lTare2) then
       begin
         if Trim(AErrorMessage) = '' then
-          AErrorMessage := 'Calibration was not found in device flash memory';
+          AErrorMessage := 'Аппаратная ГХ не найдена в памяти модуля';
         AErrorMessage := AErrorMessage + ' (details in ' + Mic140FlashLogFilePath() + ')';
         Mic140LogFlash(lLogPrefix + 'TIn download failed: ' + AErrorMessage);
         Exit;
@@ -923,7 +923,7 @@ begin
     if not Mic140HardwareTareIsUsable(lTare) then
     begin
       if Trim(AErrorMessage) = '' then
-        AErrorMessage := 'Calibration was not found in device flash memory';
+        AErrorMessage := 'Аппаратная ГХ не найдена в памяти модуля';
       AErrorMessage := AErrorMessage + ' (details in ' + Mic140FlashLogFilePath() + ')';
       Mic140LogFlash(lLogPrefix + 'download failed: ' + AErrorMessage);
       Exit;

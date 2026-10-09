@@ -96,6 +96,7 @@ object RecorderMic185SettingsForm: TRecorderMic185SettingsForm
     Anchors = [akTop, akLeft, akRight, akBottom]
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
     TabOrder = 5
+    OnDblClick = gridChannelsDblClick
   end
   object btnSelectAll: TButton
     Left = 12

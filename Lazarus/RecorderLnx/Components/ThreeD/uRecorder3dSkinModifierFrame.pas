@@ -34,7 +34,8 @@ type
     pnlBoneButtons,pnlInfluenceButtons,pnlBoneProperties:TPanel;
     btnAddBone,btnDeleteBone,btnResetBones,btnBindVertex,btnRemoveVertex:TButton;
     edBoneName,edTagSearch:TEdit;
-    cbTagX,cbTagY,cbTagZ:TComboBox;
+    cbTagX,cbTagY,cbTagZ,cbModeX,cbModeY,cbModeZ:TComboBox;
+    chkUseInactive:TCheckBox;
     splBones:TSplitter;
     sgInfluences:TStringGrid;
     seWeight:TFloatSpinEdit;
@@ -45,6 +46,8 @@ type
     procedure BoneNameEditingDone(Sender:TObject);
     procedure TagSearchChange(Sender:TObject);
     procedure TagChange(Sender:TObject);
+    procedure ModeChange(Sender:TObject);
+    procedure UseInactiveChange(Sender:TObject);
     procedure BindVertexClick(Sender:TObject);
     procedure RemoveVertexClick(Sender:TObject);
     procedure InfluenceSelection(Sender:TObject; ACol,ARow:Integer;
@@ -65,6 +68,7 @@ type
     fOnRemoveInfluence:TRecorder3dRemoveSkinInfluenceEvent;
     function SelectedBone:TRecorder3dSkinBone;
     function AxisCombo(AAxis:TRecorder3dSkinAxis):TComboBox;
+    function ModeCombo(AAxis:TRecorder3dSkinAxis):TComboBox;
     function TagMatches(ATag:TRecorderTag; const AFilter:string):Boolean;
     procedure PopulateTagCombo(AAxis:TRecorder3dSkinAxis;
       const AFilter:string);
@@ -102,6 +106,14 @@ begin
   cbTagX.Tag:=Ord(r3sX);
   cbTagY.Tag:=Ord(r3sY);
   cbTagZ.Tag:=Ord(r3sZ);
+  cbModeX.Tag:=Ord(r3sX);
+  cbModeY.Tag:=Ord(r3sY);
+  cbModeZ.Tag:=Ord(r3sZ);
+  cbModeX.Items.Add('Текущее');
+  cbModeX.Items.Add('Оценка тега');
+  cbModeY.Items.Assign(cbModeX.Items);
+  cbModeZ.Items.Assign(cbModeX.Items);
+  UseInactiveChange(chkUseInactive);
   sgInfluences.Cells[0,0]:='Объект';
   sgInfluences.Cells[1,0]:='Вершина';
   sgInfluences.Cells[2,0]:='Вес';
@@ -109,6 +121,16 @@ begin
   sgInfluences.ColWidths[1]:=82;
   sgInfluences.ColWidths[2]:=64;
   UpdateActions;
+end;
+
+function TRecorder3dSkinModifierFrame.ModeCombo(
+  AAxis:TRecorder3dSkinAxis):TComboBox;
+begin
+  case AAxis of
+    r3sX:Result:=cbModeX;
+    r3sY:Result:=cbModeY;
+    else Result:=cbModeZ;
+  end;
 end;
 
 procedure TRecorder3dSkinModifierFrame.ResetBonesClick(Sender:TObject);
@@ -158,11 +180,24 @@ function TRecorder3dSkinModifierFrame.TagMatches(ATag:TRecorderTag;
 var
   SearchText:string;
 begin
-  Result:=(ATag<>nil) and not ATag.IsVector;
+  Result:=ATag<>nil;
   if not Result or (AFilter='') then
     Exit;
   SearchText:=UTF8LowerCase(ATag.Name+' '+ATag.Address+' '+ATag.Description);
   Result:=Pos(AFilter,SearchText)>0;
+end;
+
+procedure TRecorder3dSkinModifierFrame.UseInactiveChange(Sender:TObject);
+var
+  Axis:TRecorder3dSkinAxis;
+begin
+  for Axis:=Low(Axis) to High(Axis) do
+    if chkUseInactive.Checked then
+      AxisCombo(Axis).Style:=csDropDown
+    else
+      AxisCombo(Axis).Style:=csDropDownList;
+  if fComponent<>nil then
+    fComponent.UseInactiveTag:=chkUseInactive.Checked;
 end;
 
 procedure TRecorder3dSkinModifierFrame.PopulateTagCombo(
@@ -195,6 +230,12 @@ begin
           SelectedIndex:=Combo.Items.Count-1;
       end;
     Combo.ItemIndex:=SelectedIndex;
+    if (SelectedIndex=0) and (Bone<>nil) and chkUseInactive.Checked and
+      (Trim(Bone.TagNames[AAxis])<>'') then
+    begin
+      Combo.ItemIndex:=-1;
+      Combo.Text:=Bone.TagNames[AAxis];
+    end;
   finally
     Combo.Items.EndUpdate;
   end;
@@ -216,6 +257,8 @@ var
   SelectedId:QWord;
   Bone:TRecorder3dSkinBone;
 begin
+  chkUseInactive.Checked:=(fComponent<>nil) and fComponent.UseInactiveTag;
+  UseInactiveChange(chkUseInactive);
   SelectedId:=0;
   Bone:=SelectedBone;
   if Bone<>nil then
@@ -245,6 +288,7 @@ end;
 procedure TRecorder3dSkinModifierFrame.LoadSelectedBone;
 var
   Bone:TRecorder3dSkinBone;
+  Axis:TRecorder3dSkinAxis;
 begin
   Bone:=SelectedBone;
   if Bone=nil then
@@ -252,6 +296,11 @@ begin
   else
     edBoneName.Text:=Bone.Name;
   PopulateTagCombos;
+  for Axis:=Low(Axis) to High(Axis) do
+    if Bone=nil then
+      ModeCombo(Axis).ItemIndex:=Ord(r3tvCurrentValue)
+    else
+      ModeCombo(Axis).ItemIndex:=Ord(Bone.TagValueModes[Axis]);
   LoadInfluences;
 end;
 
@@ -296,6 +345,9 @@ begin
   cbTagX.Enabled:=HasBone;
   cbTagY.Enabled:=HasBone;
   cbTagZ.Enabled:=HasBone;
+  cbModeX.Enabled:=HasBone;
+  cbModeY.Enabled:=HasBone;
+  cbModeZ.Enabled:=HasBone;
   sgInfluences.Enabled:=HasBone;
   seWeight.Enabled:=fHasVertex and HasBone;
   btnBindVertex.Enabled:=fHasVertex and HasBone and Assigned(fOnSetInfluence);
@@ -306,6 +358,24 @@ begin
     lblState.Caption:='Добавьте или выберите кость.'
   else
     lblState.Caption:='';
+end;
+
+procedure TRecorder3dSkinModifierFrame.ModeChange(Sender:TObject);
+var
+  Axis:TRecorder3dSkinAxis;
+  Combo:TComboBox;
+  Bone:TRecorder3dSkinBone;
+begin
+  if fLoading or not (Sender is TComboBox) then
+    Exit;
+  Combo:=TComboBox(Sender);
+  Axis:=TRecorder3dSkinAxis(Combo.Tag);
+  Bone:=SelectedBone;
+  if (Bone=nil) or (Combo.ItemIndex<Ord(Low(TRecorder3dTagValueMode))) or
+    (Combo.ItemIndex>Ord(High(TRecorder3dTagValueMode))) then
+    Exit;
+  Bone.TagValueModes[Axis]:=TRecorder3dTagValueMode(Combo.ItemIndex);
+  Changed;
 end;
 
 procedure TRecorder3dSkinModifierFrame.Changed;
@@ -414,7 +484,10 @@ begin
   if TagItem=nil then
   begin
     Bone.TagIds[Axis]:=0;
-    Bone.TagNames[Axis]:='';
+    if chkUseInactive.Checked then
+      Bone.TagNames[Axis]:=Trim(Combo.Text)
+    else
+      Bone.TagNames[Axis]:='';
   end
   else
   begin

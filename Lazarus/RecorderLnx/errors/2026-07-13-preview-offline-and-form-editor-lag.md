@@ -48,3 +48,27 @@
 - `D:\works\OburecGH\Lazarus\Tests\RecorderTests\DataSources\lib\RecorderDataSourcesTest.exe`
   завершился с exit code 0.
 
+## Follow-up 2026-10-09: 3D component reset after Ctrl+Z
+
+### Symptom
+
+- После удаления настроенного 3D-компонента и Ctrl+Z компонент возвращался с
+  настройками по умолчанию.
+
+### Root cause and fix
+
+- Undo создаёт снимки через общий `CopyComponentState`, но в диспетчере не было
+  ветки `TRecorder3dComponent`; в снимок попадали только базовые поля.
+- В общий путь Undo/Copy/Paste подключён глубокий
+  `TRecorder3dComponent.Assign`, сохраняющий сцену, камеру, примитивы, Skin,
+  матрицы, градиенты и якоря цветов вершин.
+- Общий флаг `UseInactiveTag` теперь также переносится во все снимки.
+
+### Verification
+
+- Forced build `RecorderFormModelTest.lpi` — exit code 0; изолированный запуск
+  `--3d-editor-snapshot-only` проверяет именно общий dispatcher Undo/Copy,
+  включая base state, сцену и вложенный Skin, exit code 0.
+- Forced build `RecorderLnxDragVerify.lpi` — exit code 0.
+- Основной `RecorderLnx.lpi` полностью скомпилирован и дошёл до линковки; замена
+  `RecorderLnx.exe` заблокирована запущенным процессом (Windows error 5).

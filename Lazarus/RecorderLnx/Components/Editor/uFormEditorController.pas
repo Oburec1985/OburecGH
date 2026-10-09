@@ -66,7 +66,8 @@ uses
   LCLType, uRecorderFormModel, uRecorderTags, uRecorderOglOscillogramView,
   uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart,
   uOglChartColors, uRecorderDebugLog, uRecorderSqlTrendModel,
-  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView;
+  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
+  uRecorderMeraBaseView;
 
 
 type
@@ -103,6 +104,7 @@ type
   { Событийный колбэк уведомления об изменении в редакторе }
   TEditorNotifyEvent = procedure of object;
   TEditorPlaceComponentEvent = procedure(const APoint: TPoint) of object;
+  TEditorTagActivateEvent = procedure(const ATagName: string) of object;
 
 
   { TFormEditorClipboardItem
@@ -195,6 +197,7 @@ type
     fHasCanvasClick: Boolean;
     fComponentPlacementArmed: Boolean;
     fOnPlaceComponent: TEditorPlaceComponentEvent;
+    fOnTagActivate: TEditorTagActivateEvent;
     fAlarmEngine: IRecorderAlarmEngine;                  { Флаг сохранения состояния Undo для текущей операции }
     fPagePanels: TStringList;                      { Панели отдельных страниц мнемосхем }
     fEditMouseHandlers: TList;                     { Временно заменённые обработчики дочерних контролов }
@@ -211,6 +214,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ComponentMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure ComponentDblClick(Sender: TObject);
     procedure ChildMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure ChildMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -244,7 +248,6 @@ type
     procedure PositionResizeHandles(APanel: TPanel;
       const ABounds: TRecorderRect);
     procedure NotifyChanged;
-    procedure CopyComponentState(ASource, ADest: TRecorderVisualComponent);
     procedure CopySelected;
     procedure ChangeSelectedLayer(ABringForward, AMoveToEdge: Boolean);
     procedure RestoreSelectionByIds(AIds: TStrings);
@@ -272,6 +275,10 @@ type
     function PlacePendingComponentAt(const APoint: TPoint): Boolean;
 
   public
+    { Копирует полный снимок состояния компонента. Общий путь для Undo и
+      Copy/Paste; открыт также для изолированной регрессионной проверки. }
+    class procedure CopyComponentState(ASource,
+      ADest: TRecorderVisualComponent); static;
     { Создает контроллер для полотна.
       ACanvas - панель, внутри которой строится редактор мнемосхемы.
       AGetPage - callback, возвращающий активную страницу модели.
@@ -323,6 +330,8 @@ type
     property OnChanged: TEditorNotifyEvent read fOnChanged write fOnChanged;
     property OnPlaceComponent: TEditorPlaceComponentEvent read fOnPlaceComponent
       write fOnPlaceComponent;
+    property OnTagActivate: TEditorTagActivateEvent read fOnTagActivate
+      write fOnTagActivate;
   end;
 
 
@@ -331,7 +340,8 @@ implementation
 
 uses
   uRecorderTrendView, uRecorderFrequencyResponseModel, uRecorder3dView,
-  uRecorderImpactHammerModel, uRecorderImpactHammerView, uRcIconIds;
+  uRecorder3dModel, uRecorderImpactHammerModel, uRecorderImpactHammerView,
+  uRcIconIds, uRecorderTagRefs;
 
 
 
@@ -775,7 +785,7 @@ begin
   fLastOperationRenderTickMs := lNow;
 end;
 
-procedure TFormEditorController.CopyComponentState(ASource,
+class procedure TFormEditorController.CopyComponentState(ASource,
   ADest: TRecorderVisualComponent);
 var
   lSrcStatic: TRecorderStaticTextComponent;
@@ -797,6 +807,7 @@ begin
   ADest.Name := ASource.Name;
   ADest.TagName := ASource.TagName;
   ADest.TagId := ASource.TagId;
+  ADest.UseInactiveTag := ASource.UseInactiveTag;
   ADest.Bounds := ASource.Bounds;
 
   if (ASource is TRecorderStaticTextComponent) and
@@ -895,7 +906,10 @@ begin
       TRecorderLissajousComponent(ASource))
   else if (ASource is TRecorderDonutComponent) and
     (ADest is TRecorderDonutComponent) then
-    TRecorderDonutComponent(ADest).AssignDonut(TRecorderDonutComponent(ASource));
+    TRecorderDonutComponent(ADest).AssignDonut(TRecorderDonutComponent(ASource))
+  else if (ASource is TRecorder3dComponent) and
+    (ADest is TRecorder3dComponent) then
+    TRecorder3dComponent(ADest).Assign(TRecorder3dComponent(ASource));
 end;
 
 
@@ -1339,6 +1353,8 @@ begin
           TRecorderButtonView(lControl).EditMode := fEnabled;
         if lControl is TRecorderMeasurementSectionView then
           TRecorderMeasurementSectionView(lControl).EditMode := fEnabled;
+        if lControl is TRecorderMeraBaseView then
+          TRecorderMeraBaseView(lControl).ApplyEditMode(fEnabled);
         lControl.Tag := I;
         lControl.Enabled := True;
 
@@ -1369,6 +1385,12 @@ begin
               '[MNEMO-PERF] component=%s class=%s create=%dms configure=%dms refresh=%dms',
               [lComponent.Name, lControlClass.ClassName, lCreateMs,
                lConfigureMs, lRefreshMs]));
+        end;
+
+        if lComponent is TRecorderTagValueComponent then
+        begin
+          lPanel.OnDblClick := @ComponentDblClick;
+          TControlAccess(lControl).OnDblClick := @ComponentDblClick;
         end;
 
         if lControl is TRecorder3dView then
@@ -1421,10 +1443,16 @@ begin
 
       if lPanel <> nil then
       begin
+        if lComponent is TRecorderTagValueComponent then
+          lPanel.OnDblClick := @ComponentDblClick
+        else
+          lPanel.OnDblClick := nil;
         lPanel.SetBounds(lBounds.Left, lBounds.Top, lBounds.Width, lBounds.Height);
         if lPanel.ControlCount > 0 then
         begin
           lCtrl := lPanel.Controls[0];
+          if lComponent is TRecorderTagValueComponent then
+            TControlAccess(lCtrl).OnDblClick := @ComponentDblClick;
           lCtrl.Enabled := True;
           lCtrl.Visible := not (fEnabled and
             (lCtrl is TRecorderInputFieldView));
@@ -2766,6 +2794,30 @@ begin
   if GetGroupBounds(lGroupBounds) then
     PositionResizeHandles(lPagePanel, lGroupBounds);
 
+end;
+
+procedure TFormEditorController.ComponentDblClick(Sender: TObject);
+var
+  lComponent: TRecorderVisualComponent;
+  lHostControl: TControl;
+  lIndex: Integer;
+  lPage: TRecorderFormPage;
+  lTag: TRecorderTag;
+begin
+  if (not Assigned(fOnTagActivate)) or not (Sender is TControl) then
+    Exit;
+  lHostControl := ComponentHostControl(TControl(Sender));
+  lIndex := lHostControl.Tag;
+  lPage := GetActivePage;
+  if (lPage = nil) or (lIndex < 0) or (lIndex >= lPage.ComponentCount) then
+    Exit;
+  lComponent := lPage.Components[lIndex];
+  if not (lComponent is TRecorderTagValueComponent) then
+    Exit;
+  lTag := RecorderResolveTag(fTagRegistry, lComponent.TagId,
+    lComponent.TagName);
+  if lTag <> nil then
+    fOnTagActivate(lTag.Name);
 end;
 
 procedure TFormEditorController.BindImpactSettings(AControl: TControl);

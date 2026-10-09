@@ -864,13 +864,68 @@
         <Filename Value="../SharedUtils/3d/lcl/u3dLclWidget.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Core/uRecorderPxiMx248Types.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Core/uRecorderPxiMx248Properties.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Core/uRecorderPxiMx248Device.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Runtime/uRecorderPxiMx248RuntimeTransport.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Runtime/uRecorderPxiMx248DeviceAdapter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Runtime/uRecorderPxiMx248DataSource.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Runtime/uRecorderPxiMx248Factory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Transport/Windows/uRecorderPxiMx248BridgeCodec.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/Transport/Windows/uRecorderPxiMx248WindowsTransport.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248SettingsService.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248DiscoveryWorker.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248SettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="PxiMx248SettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248ConfiguredEditor.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Mdb;Components/Common;Components/Donut;Components/Editor;Components/FrequencyResponse;Components/ImpactHammer;Components/Lissajous;Components/MeasurementSection;Components/Oscillogram;Components/SignalGenerator;Components/Spectrum;Components/SqlTrend;Components/Standard;Components/ThreeD;Components/Trend;Calibrations;Calibrations/Strains;Device;Device/DAC/Core;Device/DAC/Audio;Device/DAC/Null;Device/DAC/PXIe;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Mdb;Components/Common;Components/Donut;Components/Editor;Components/FrequencyResponse;Components/ImpactHammer;Components/Lissajous;Components/MeasurementSection;Components/Oscillogram;Components/SignalGenerator;Components/Spectrum;Components/SqlTrend;Components/Standard;Components/ThreeD;Components/Trend;Calibrations;Calibrations/Strains;Device;Device/DAC/Core;Device/DAC/Audio;Device/DAC/Null;Device/DAC/PXIe;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;Device/Architecture;Device/PXI/MX248/Core;Device/PXI/MX248/Runtime;Device/PXI/MX248/Transport/Windows;Device/PXI/MX248/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

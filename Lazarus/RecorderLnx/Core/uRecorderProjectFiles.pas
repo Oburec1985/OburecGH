@@ -1195,6 +1195,7 @@ begin
         lIni.WriteString(lSection, 'Name', lComponent.Name);
         lIni.WriteString(lSection, 'TagName', lComponent.TagName);
         lIni.WriteInt64(lSection, 'TagId', lComponent.TagId);
+        lIni.WriteBool(lSection,'UseInactiveTag',lComponent.UseInactiveTag);
         lIni.WriteInteger(lSection, 'Left', lComponent.Bounds.Left);
         lIni.WriteInteger(lSection, 'Top', lComponent.Bounds.Top);
         lIni.WriteInteger(lSection, 'Width', lComponent.Bounds.Width);
@@ -1329,6 +1330,10 @@ begin
                 [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
                 TRecorder3dComponent(lComponent).SkinBones[K].TagNames[
                   TRecorder3dSkinAxis(L)]);
+              lIni.WriteInteger(lSection,Format('SkinBone%dTag%sValueMode',
+                [K,SkinAxisName(TRecorder3dSkinAxis(L))]),Ord(
+                TRecorder3dComponent(lComponent).SkinBones[K].TagValueModes[
+                  TRecorder3dSkinAxis(L)]));
             end;
           end;
           lIni.WriteInteger(lSection,'GradientStripCount',
@@ -1362,6 +1367,10 @@ begin
               lIni.WriteInt64(lSection,Format('ColorAnchor%dGradientId',[K]),GradientId);
               lIni.WriteInt64(lSection,Format('ColorAnchor%dTagId',[K]),TagId);
               lIni.WriteString(lSection,Format('ColorAnchor%dTagName',[K]),TagName);
+              lIni.WriteInteger(lSection,Format('ColorAnchor%dEstimateKind',[K]),
+                Ord(EstimateKind));
+              lIni.WriteBool(lSection,Format('ColorAnchor%dUseDefaultEstimate',[K]),
+                UseDefaultEstimate);
               lIni.WriteBool(lSection,Format('ColorAnchor%dEnabled',[K]),Enabled);
               lIni.WriteBool(lSection,Format('ColorAnchor%dApplyColor',[K]),ApplyColor);
               lIni.WriteBool(lSection,Format('ColorAnchor%dShowValueLabel',[K]),ShowValueLabel);
@@ -1422,6 +1431,10 @@ begin
             TRecorderTagValueComponent(lComponent).Caption);
           lIni.WriteBool(lSection, 'UseSourceTagName',
             TRecorderTagValueComponent(lComponent).UseSourceTagName);
+          lIni.WriteInteger(lSection,'EstimateKind',
+            Ord(TRecorderTagValueComponent(lComponent).EstimateKind));
+          lIni.WriteBool(lSection,'UseDefaultEstimate',
+            TRecorderTagValueComponent(lComponent).UseDefaultEstimate);
           lIni.WriteString(lSection, 'FontName', TRecorderTagValueComponent(lComponent).FontName);
           lIni.WriteInteger(lSection, 'FontSize', TRecorderTagValueComponent(lComponent).FontSize);
           lIni.WriteInteger(lSection, 'FontColor', TRecorderTagValueComponent(lComponent).FontColor);
@@ -1988,6 +2001,8 @@ begin
           lComponent.Name := lIni.ReadString(lSection, 'Name', '');
           lComponent.TagName := lIni.ReadString(lSection, 'TagName', '');
           lComponent.TagId := lIni.ReadInt64(lSection, 'TagId', 0);
+          lComponent.UseInactiveTag:=lIni.ReadBool(lSection,
+            'UseInactiveTag',False);
           lComponent.SetBounds(
             lIni.ReadInteger(lSection, 'Left', 0),
             lIni.ReadInteger(lSection, 'Top', 0),
@@ -2144,6 +2159,13 @@ begin
                       [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
                     lIni.ReadString(lSection,
                       Format('SkinBone%dTag%dName',[K,L]),''));
+                  TagValueModes[TRecorder3dSkinAxis(L)]:=
+                    TRecorder3dTagValueMode(EnsureRange(lIni.ReadInteger(
+                      lSection,Format('SkinBone%dTag%sValueMode',
+                        [K,SkinAxisName(TRecorder3dSkinAxis(L))]),
+                      Ord(r3tvCurrentValue)),
+                      Ord(Low(TRecorder3dTagValueMode)),
+                      Ord(High(TRecorder3dTagValueMode))));
                 end;
               end;
             { Older projects only contain per-vertex Skin records. }
@@ -2190,6 +2212,13 @@ begin
                 GradientId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dGradientId',[K]),0);
                 TagId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dTagId',[K]),0);
                 TagName:=lIni.ReadString(lSection,Format('ColorAnchor%dTagName',[K]),'');
+                L:=EnsureRange(lIni.ReadInteger(lSection,
+                  Format('ColorAnchor%dEstimateKind',[K]),Ord(tekMean)),
+                  Ord(Low(TRecorderTagEstimateKind)),
+                  Ord(High(TRecorderTagEstimateKind)));
+                EstimateKind:=TRecorderTagEstimateKind(L);
+                UseDefaultEstimate:=lIni.ReadBool(lSection,
+                  Format('ColorAnchor%dUseDefaultEstimate',[K]),True);
                 Enabled:=lIni.ReadBool(lSection,Format('ColorAnchor%dEnabled',[K]),True);
                 ApplyColor:=lIni.ReadBool(lSection,Format('ColorAnchor%dApplyColor',[K]),True);
                 ShowValueLabel:=lIni.ReadBool(lSection,
@@ -2264,6 +2293,13 @@ begin
               lIni.ReadString(lSection, 'Caption', '');
             TRecorderTagValueComponent(lComponent).UseSourceTagName :=
               lIni.ReadBool(lSection, 'UseSourceTagName', True);
+            lItemCount:=EnsureRange(lIni.ReadInteger(lSection,'EstimateKind',
+              Ord(tekMean)),Ord(Low(TRecorderTagEstimateKind)),
+              Ord(High(TRecorderTagEstimateKind)));
+            TRecorderTagValueComponent(lComponent).EstimateKind:=
+              TRecorderTagEstimateKind(lItemCount);
+            TRecorderTagValueComponent(lComponent).UseDefaultEstimate:=
+              lIni.ReadBool(lSection,'UseDefaultEstimate',True);
             TRecorderTagValueComponent(lComponent).FontName :=
               lIni.ReadString(lSection, 'FontName', 'Tahoma');
             TRecorderTagValueComponent(lComponent).FontSize :=

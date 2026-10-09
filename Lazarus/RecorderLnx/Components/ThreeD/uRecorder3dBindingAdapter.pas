@@ -67,9 +67,6 @@ var
   lId: TRecorderTagId;
   lName: string;
 begin
-  Result := nil;
-  if ARegistry = nil then
-    Exit;
   lId := fComponent.BindingTagIds[ASlot];
   lName := fComponent.BindingTagNames[ASlot];
   if (ASlot = r3bNormalLength) and (lId = 0) then
@@ -77,10 +74,7 @@ begin
     lId := fComponent.NormalLengthTagId;
     lName := fComponent.NormalLengthTagName;
   end;
-  if lId <> 0 then
-    Result := ARegistry.FindById(lId);
-  if (Result = nil) and (lName <> '') then
-    Result := ARegistry.FindByName(lName);
+  Result:=RecorderResolveTagReference(ARegistry,lId,lName);
 end;
 
 procedure TRecorder3dBindingAdapter.Configure(AComponent: TRecorder3dComponent;
@@ -111,8 +105,9 @@ begin
   Result := False;
   if fTags[ASlot] = nil then
     Exit;
-  AValue := fTags[ASlot].SignalBuffer.LatestValue;
-  if IsNan(AValue) or IsInfinite(AValue) or
+  if not RecorderTryReadScalarValue(fTags[ASlot],True,tekMean,AValue) then
+    Exit;
+  if
     SameValue(AValue, fLastValues[ASlot]) then
     Exit;
   fLastValues[ASlot] := AValue;

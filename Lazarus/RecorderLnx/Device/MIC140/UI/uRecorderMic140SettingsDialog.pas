@@ -61,7 +61,6 @@ type
     procedure SearchClick(Sender: TObject);
     procedure TestClick(Sender: TObject);
     procedure BalanceClick(Sender: TObject);
-    procedure ThermoCompClick(Sender: TObject);
   private
     fTagRegistry: TRecorderTagRegistry;
     fSourceId: string;
@@ -94,38 +93,6 @@ type
 
 {$R *.lfm}
 
-procedure WarnMissingTInCalibrations(ARegistry: TRecorderTagRegistry;
-  ADeviceSerial, ADevSubRev: Integer);
-var
-  I: Integer;
-  lCalName: string;
-  lMissing: TStringList;
-begin
-  if ADeviceSerial <= 0 then
-  begin
-    MessageDlg('Термокомпенсация MIC-140',
-      'Неизвестен серийный номер модуля, поэтому проверить ГХ каналов ' +
-      'термокомпенсации нельзя. Сначала выполните «Проверить», затем ' +
-      'попробуйте считать ГХ из памяти модуля.', mtWarning, [mbOK], 0);
-    Exit;
-  end;
-  lMissing := TStringList.Create;
-  try
-    for I := 0 to RecorderMic140VisibleTemperatureCount(ADevSubRev) - 1 do
-      if not RecorderMic140EnsureTInHardwareCalibration(ARegistry,
-        ADeviceSerial, I, ADevSubRev, lCalName) then
-        lMissing.Add(RecorderMic140TemperatureDisplayText(I + 1, ADevSubRev));
-    if lMissing.Count > 0 then
-      MessageDlg('Термокомпенсация MIC-140',
-        'В Mera Files не найдены аппаратные ГХ каналов термокомпенсации: ' +
-        lMissing.CommaText + '.' + LineEnding +
-        'Попробуйте считать аппаратные ГХ из памяти модуля.',
-        mtWarning, [mbOK], 0);
-  finally
-    lMissing.Free;
-  end;
-end;
-
 function ShowRecorderMic140SettingsDialog(AOwner: TComponent;
   var AResult: TRecorderMic140DialogResult;
   ATagRegistry: TRecorderTagRegistry; const ASourceId: string;
@@ -157,7 +124,6 @@ begin
   SetLength(fChannelSettings, 0);
   InitGrid;
   btnBalance.OnClick := @BalanceClick;
-  fThermoCompCheck.OnClick := @ThermoCompClick;
 
   fGridPopup := TPopupMenu.Create(Self);
   lItem := TMenuItem.Create(fGridPopup);
@@ -165,12 +131,6 @@ begin
   lItem.OnClick := @ChannelPropertiesClick;
   fGridPopup.Items.Add(lItem);
   fGrid.PopupMenu := fGridPopup;
-end;
-
-procedure TRecorderMic140SettingsDialog.ThermoCompClick(Sender: TObject);
-begin
-  if fThermoCompCheck.Checked then
-    WarnMissingTInCalibrations(fTagRegistry, fDeviceSerial, fDevSubRev);
 end;
 
 procedure TRecorderMic140SettingsDialog.InitGrid;
@@ -685,8 +645,6 @@ function ApplyRecorderMic140SourceDialog(AOwner: TComponent;
   const ASourceId: string; out ANewSourceId: string): Boolean;
 var
   I: Integer;
-  lAutoThermo: Boolean;
-  lCalName: string;
   lCapacity: Integer;
   lChannelNumber: Integer;
   lConfig: TRecorderMic140SourceConfig;
@@ -704,7 +662,6 @@ begin
     Exit;
 
   InitRecorderMic140DialogResult(lResult);
-  lAutoThermo := False;
   try
     if TryParseRecorderMic140SourceId(ASourceId, lHost, lPort) then
     begin
@@ -743,13 +700,8 @@ begin
           (lResult.SelectedChannels.IndexOf(IntToStr(I + 1)) >= 0)) then
         begin
           lResult.ThermoCompensationEnabled := True;
-          lAutoThermo := True;
           Break;
         end;
-
-    if lAutoThermo then
-      WarnMissingTInCalibrations(ATagRegistry, lResult.DeviceSerial,
-        CMic140Mic140SubRev1);
 
     ANewSourceId := RecorderMic140SourceId(lResult.Host, lResult.Port);
     lNodeNumber := RecorderMic140NodeNumberForHost(lResult.Host);
@@ -863,7 +815,8 @@ type
   public
     function SupportsSource(const ASourceId, AModuleType: string): Boolean;
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
-      const ASourceId: string; out ANewSourceId: string): Boolean;
+      const ASourceId: string; out ANewSourceId: string;
+      ADataSources: TRecorderDataSourceManager): Boolean;
   end;
 
 function TRecorderMic140ConfiguredSourceEditor.SupportsSource(
@@ -875,7 +828,7 @@ end;
 
 function TRecorderMic140ConfiguredSourceEditor.EditSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string; ADataSources: TRecorderDataSourceManager): Boolean;
 begin
   if ARegistry = nil then
     Exit(False);

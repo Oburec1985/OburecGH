@@ -471,6 +471,7 @@ type
 
   TRecorderTagRegistry = class
   private
+    fStructureRevision: QWord;
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fBlockPublishedTarget: TObject;
     fOnBlockPublished: TRecorderTagBlockPublishedEvent;
@@ -617,6 +618,9 @@ type
     procedure PublishBlock(const ATagName: string; const ATimes,
       AValues: array of Double; ACount: Integer;
       AValuesAlreadyTransformed: Boolean = False);
+    procedure PublishBlock(ATag: TRecorderTag; const ATimes,
+      AValues: array of Double; ACount: Integer;
+      AValuesAlreadyTransformed: Boolean = False); overload;
     { Возвращает сводное состояние данных без обхода и блокировки всех тегов. }
     procedure GetRuntimeDataState(out ARevision: QWord; out ALatestTime: Double);
     procedure GetInputDataRevision(out ARevision: QWord);
@@ -657,6 +661,7 @@ type
     property SelectedTagName: string read fSelectedTagName write fSelectedTagName;
     property TagGroupPaths: TStringList read fTagGroupPaths;
     property TagCount: Integer read GetTagCount;
+    property StructureRevision: QWord read fStructureRevision;
     property Calibrations: TRecorderCalibrationList read fCalibrations;
     property SpectrumConfigs: TRecorderSpectrumConfigTree read fSpectrumConfigs;
     { Serialized configurations of non-spectrum runtime algorithms. Spectrum
@@ -693,6 +698,15 @@ function RecorderTagsShareSourceId(ARegistry: TRecorderTagRegistry;
   const ATagNames: array of string): Boolean;
 function RecorderTagsShareSourceIdList(ARegistry: TRecorderTagRegistry;
   ATagNames: TStrings): Boolean;
+{ Строковое имя является постоянной ссылкой. Id используется только для
+  совместимости со старыми конфигурациями без имени. }
+function RecorderResolveTagReference(ARegistry:TRecorderTagRegistry;
+  ATagId:TRecorderTagId; const ATagName:string):TRecorderTag;
+{ Reads a tag through the scalar-visualization contract. Scalar tags keep
+  their latest-value behaviour; vector tags are reduced with an estimate. }
+function RecorderTryReadScalarValue(ATag:TRecorderTag;
+  AUseDefaultEstimate:Boolean; AEstimateKind:TRecorderTagEstimateKind;
+  out AValue:Double):Boolean;
 
 { Состояние отдельной ступени pipeline хранится вместе с её именем.
   Старые списки без маркера считаются полностью включёнными. }
@@ -2026,6 +2040,7 @@ begin
   end;
 
   fTags.Add(ATag);
+  Inc(fStructureRevision);
   RecorderLogTagAddTrace('added', ATag);
   Result := ATag;
 end;
@@ -3260,24 +3275,32 @@ end;
 procedure TRecorderTagRegistry.PublishBlock(const ATagName: string; const ATimes,
   AValues: array of Double; ACount: Integer; AValuesAlreadyTransformed: Boolean);
 var
-  I: Integer;
   lTag: TRecorderTag;
-  lValues: TRecorderDoubleArray;
 begin
-  if ACount <= 0 then
-    Exit;
-
   lTag := FindByName(ATagName);
   if lTag = nil then
     raise ERecorderTagError.CreateFmt('Tag not found: %s', [ATagName]);
+  PublishBlock(lTag, ATimes, AValues, ACount, AValuesAlreadyTransformed);
+end;
+
+procedure TRecorderTagRegistry.PublishBlock(ATag: TRecorderTag;
+  const ATimes, AValues: array of Double; ACount: Integer;
+  AValuesAlreadyTransformed: Boolean);
+var
+  I: Integer;
+  lValues: TRecorderDoubleArray;
+begin
+  if ACount <= 0 then Exit;
+  if ATag = nil then
+    raise ERecorderTagError.Create('Tag is required for block publication');
   if AValuesAlreadyTransformed then
-    lTag.AddSamples(ATimes, AValues, ACount)
+    ATag.AddSamples(ATimes, AValues, ACount)
   else
   begin
     SetLength(lValues, ACount);
     for I := 0 to ACount - 1 do
-      lValues[I] := TransformTagValue(lTag, AValues[I]);
-    lTag.AddSamples(ATimes, lValues, ACount);
+      lValues[I] := TransformTagValue(ATag, AValues[I]);
+    ATag.AddSamples(ATimes, lValues, ACount);
   end;
   MarkRuntimeDataUpdated(ATimes[ACount - 1]);
   MarkInputDataUpdated;
@@ -3287,9 +3310,9 @@ begin
   { Для уже преобразованных данных можно передать исходный массив напрямую.
     Иначе уведомление должно получить значения после ГХ из последнего блока. }
   if AValuesAlreadyTransformed then
-    PublishBlockNotifications(lTag, ATimes, AValues, ACount)
+    PublishBlockNotifications(ATag, ATimes, AValues, ACount)
   else
-    PublishBlockNotifications(lTag, ATimes, lValues, ACount);
+    PublishBlockNotifications(ATag, ATimes, lValues, ACount);
 end;
 
 procedure TRecorderTagRegistry.RemoveTagReferences(ATag: TRecorderTag);
@@ -3335,6 +3358,7 @@ begin
     RemoveLoadedTagAliases(ATag);
     fTags.Remove(ATag);
     ATag.Free;
+    Inc(fStructureRevision);
   end;
 end;
 
@@ -3393,6 +3417,7 @@ begin
   for I := 0 to fTags.Count - 1 do
     TObject(fTags[I]).Free;
   fTags.Clear;
+  Inc(fStructureRevision);
   fSourceSpecificConfigs.Clear;
   fConfiguredDataSources.Clear;
   fTagGroupPaths.Clear;
@@ -3468,6 +3493,46 @@ function TRecorderCalibration.Clone: TRecorderCalibration;
 begin
   Result := TRecorderCalibration.Create(fKind);
   Result.Assign(Self);
+end;
+
+function RecorderResolveTagReference(ARegistry:TRecorderTagRegistry;
+  ATagId:TRecorderTagId; const ATagName:string):TRecorderTag;
+begin
+  Result:=nil;
+  if ARegistry=nil then
+    Exit;
+  if Trim(ATagName)<>'' then
+    Result:=ARegistry.FindByName(Trim(ATagName))
+  else if ATagId<>0 then
+    Result:=ARegistry.FindById(ATagId);
+end;
+
+function RecorderTryReadScalarValue(ATag:TRecorderTag;
+  AUseDefaultEstimate:Boolean; AEstimateKind:TRecorderTagEstimateKind;
+  out AValue:Double):Boolean;
+var
+  lEstimate:TRecorderTagEstimate;
+begin
+  Result:=False;
+  AValue:=NaN;
+  if ATag=nil then
+    Exit;
+  if ATag.IsVector then
+  begin
+    if AUseDefaultEstimate then
+      AEstimateKind:=ATag.EstimateSettings.DefaultKind;
+    lEstimate:=ATag.Estimate(AEstimateKind);
+    if not lEstimate.Valid then
+      Exit;
+    AValue:=lEstimate.Value;
+  end
+  else
+  begin
+    if ATag.SignalBuffer.Count=0 then
+      Exit;
+    AValue:=ATag.SignalBuffer.LatestValue;
+  end;
+  Result:=not IsNan(AValue) and not IsInfinite(AValue);
 end;
 
 function TRecorderCalibration.ConvertInputUnit(

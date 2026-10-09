@@ -1,5 +1,18 @@
 # План работ: Анализ памяти, оптимизация отрисовки и правила рефакторинга
 
+## Итерация 2026-10-09: PXI MX-248
+
+- [x] Исследовать DevAPI, MICPXI, mx224v14 и шаблон MIC-140 Delphi 2020.
+- [x] Создать typed core и атомарный строковый property channel в новом
+  `Device/PXI/MX248`.
+- [x] Зафиксировать lifecycle, threading/runtime ограничения и карту
+  первоисточников в `Device/PXI/MX248/Docs/README.md`.
+- [x] Добавить x86 DevAPI dependency closure и VC++ x86 runtime в Inno Setup.
+- [x] Ввести проверку PE architecture и SHA-256 manifest до упаковки.
+- [x] Пересобрать core test, RecorderLnx и полный Windows installer.
+- [ ] Реализовать и проверить x86 bridge с versioned IPC.
+- [ ] Подключить transport/datasource/registry и выполнить hardware smoke.
+
 ## Итерация 2026-09-24: MIC-185 и автоматические единицы ГХ
 
 - [x] Найти причину восстановления всех каналов MIC-185 после удаления.

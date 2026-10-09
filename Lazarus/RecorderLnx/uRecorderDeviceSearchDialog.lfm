@@ -20,12 +20,24 @@ object RecorderDeviceSearchDialog: TRecorderDeviceSearchDialog
   end
   object lbDevices: TCheckListBox
     Left = 16
-    Height = 240
+    Height = 218
     Top = 56
     Width = 588
     Anchors = [akTop, akLeft, akRight, akBottom]
     ItemHeight = 0
     TabOrder = 0
+    OnClickCheck = lbDevicesClickCheck
+  end
+  object cbSelectAll: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 282
+    Width = 180
+    Anchors = [akLeft, akBottom]
+    AllowGrayed = True
+    Caption = 'Выделить все / снять все'
+    TabOrder = 1
+    OnChange = cbSelectAllChange
   end
   object btnOk: TButton
     Left = 428
@@ -36,7 +48,7 @@ object RecorderDeviceSearchDialog: TRecorderDeviceSearchDialog
     Caption = 'Добавить'
     Default = True
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 2
   end
   object btnCancel: TButton
     Left = 520
@@ -47,6 +59,6 @@ object RecorderDeviceSearchDialog: TRecorderDeviceSearchDialog
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2
-    TabOrder = 2
+    TabOrder = 3
   end
 end

@@ -126,8 +126,7 @@ begin
       begin
         fComponent.TagId := lTag.Id;
         fComponent.TagName := lTag.Name;
-        if lTag.SignalBuffer <> nil then
-          lValue := lTag.SignalBuffer.LatestValue;
+        RecorderTryReadScalarValue(lTag,True,tekMean,lValue);
       end;
     end;
     if IsNan(lValue) or IsInfinite(lValue) then
@@ -147,8 +146,7 @@ begin
     if ATagRegistry <> nil then
     begin
       lTag := fComponent.ResolveTagAt(ATagRegistry, I);
-      if (lTag <> nil) and (lTag.SignalBuffer <> nil) then
-        lValue := lTag.SignalBuffer.LatestValue;
+      RecorderTryReadScalarValue(lTag,True,tekMean,lValue);
     end;
     if IsNan(lValue) or IsInfinite(lValue) or (lValue < 0) then
       lValue := 0;

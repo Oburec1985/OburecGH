@@ -161,10 +161,9 @@ implementation
 
 function LatestTagValue(ATag: TRecorderTag; out AValue: Double): Boolean;
 begin
-  Result := (ATag <> nil) and (ATag.SignalBuffer.Count > 0);
+  Result := RecorderTryReadScalarValue(ATag,True,tekMean,AValue);
   if Result then
   begin
-    AValue := ATag.SignalBuffer.LatestValue;
     if (ATag.RangeMax > ATag.RangeMin) and
       ((AValue < ATag.RangeMin) or (AValue > ATag.RangeMax)) then
       Result := False;

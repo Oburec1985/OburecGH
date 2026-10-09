@@ -16,6 +16,7 @@ type
   TRecorder3dSkinRuntimeBinding = record
     Node:T3dNode;
     Tags:array[TRecorder3dSkinAxis] of TRecorderTag;
+    ValueModes:array[TRecorder3dSkinAxis] of TRecorder3dTagValueMode;
     LastValues:array[TRecorder3dSkinAxis] of Double;
     BindTranslation:T3dVector;
   end;
@@ -24,9 +25,14 @@ type
   private
     fComponent:TRecorder3dComponent;
     fScene:T3dScene;
+    fRegistry:TRecorderTagRegistry;
+    fRegistryRevision:QWord;
     fBindings:array of TRecorder3dSkinRuntimeBinding;
     function ResolveTag(ARegistry:TRecorderTagRegistry;
       ABone:TRecorder3dSkinBone; AAxis:TRecorder3dSkinAxis):TRecorderTag;
+    function ReadTagValue(ATag:TRecorderTag;
+      AMode:TRecorder3dTagValueMode; out AValue:Double):Boolean;
+    procedure RefreshTagReferences;
   public
     procedure Configure(AComponent:TRecorder3dComponent;
       ARegistry:TRecorderTagRegistry);
@@ -40,15 +46,55 @@ function TRecorder3dSkinBindingAdapter.ResolveTag(
   ARegistry:TRecorderTagRegistry; ABone:TRecorder3dSkinBone;
   AAxis:TRecorder3dSkinAxis):TRecorderTag;
 begin
-  Result:=nil;
-  if (ARegistry=nil) or (ABone=nil) then
+  if ABone=nil then
+    Exit(nil);
+  Result:=RecorderResolveTagReference(ARegistry,ABone.TagIds[AAxis],
+    ABone.TagNames[AAxis]);
+end;
+
+procedure TRecorder3dSkinBindingAdapter.RefreshTagReferences;
+var
+  I:Integer;
+  Axis:TRecorder3dSkinAxis;
+begin
+  if (fRegistry=nil) or (fComponent=nil) then
     Exit;
-  if ABone.TagIds[AAxis]<>0 then
-    Result:=ARegistry.FindById(ABone.TagIds[AAxis]);
-  if (Result=nil) and (ABone.TagNames[AAxis]<>'') then
-    Result:=ARegistry.FindByName(ABone.TagNames[AAxis]);
-  if (Result<>nil) and Result.IsVector then
-    Result:=nil;
+  for I:=0 to High(fBindings) do
+    for Axis:=Low(Axis) to High(Axis) do
+    begin
+      fBindings[I].Tags[Axis]:=ResolveTag(fRegistry,
+        fComponent.SkinBones[I],Axis);
+      fBindings[I].ValueModes[Axis]:=
+        fComponent.SkinBones[I].TagValueModes[Axis];
+      fBindings[I].LastValues[Axis]:=NaN;
+    end;
+  fRegistryRevision:=fRegistry.StructureRevision;
+end;
+
+function TRecorder3dSkinBindingAdapter.ReadTagValue(ATag:TRecorderTag;
+  AMode:TRecorder3dTagValueMode; out AValue:Double):Boolean;
+var
+  Estimate:TRecorderTagEstimate;
+begin
+  Result:=False;
+  if ATag=nil then
+    Exit;
+  case AMode of
+    r3tvDefaultEstimate:
+      begin
+        Estimate:=ATag.Estimate(ATag.EstimateSettings.DefaultKind);
+        if not Estimate.Valid then
+          Exit;
+        AValue:=Estimate.Value;
+      end;
+    else
+      begin
+        if ATag.SignalBuffer.Count=0 then
+          Exit;
+        AValue:=ATag.SignalBuffer.LatestValue;
+      end;
+  end;
+  Result:=not IsNan(AValue) and not IsInfinite(AValue);
 end;
 
 procedure TRecorder3dSkinBindingAdapter.Configure(
@@ -63,6 +109,7 @@ begin
     the current scene after configuration is complete. }
   AttachScene(nil);
   fComponent:=AComponent;
+  fRegistry:=ARegistry;
   if fComponent=nil then
     SetLength(fBindings,0)
   else
@@ -72,8 +119,14 @@ begin
     begin
       fBindings[I].Tags[Axis]:=ResolveTag(ARegistry,
         fComponent.SkinBones[I],Axis);
+      fBindings[I].ValueModes[Axis]:=
+        fComponent.SkinBones[I].TagValueModes[Axis];
       fBindings[I].LastValues[Axis]:=NaN;
     end;
+  if fRegistry<>nil then
+    fRegistryRevision:=fRegistry.StructureRevision
+  else
+    fRegistryRevision:=0;
 end;
 
 procedure TRecorder3dSkinBindingAdapter.AttachScene(AScene:T3dScene);
@@ -106,6 +159,9 @@ begin
   Result:=False;
   if fScene=nil then
     Exit;
+  if (fRegistry<>nil) and
+    (fRegistryRevision<>fRegistry.StructureRevision) then
+    RefreshTagReferences;
   for I:=0 to High(fBindings) do
   begin
     Node:=fBindings[I].Node;
@@ -113,10 +169,8 @@ begin
       Continue;
     for Axis:=Low(Axis) to High(Axis) do
     begin
-      if fBindings[I].Tags[Axis]=nil then
-        Continue;
-      Value:=fBindings[I].Tags[Axis].SignalBuffer.LatestValue;
-      if IsNan(Value) or IsInfinite(Value) then
+      if not ReadTagValue(fBindings[I].Tags[Axis],
+        fBindings[I].ValueModes[Axis],Value) then
         Continue;
       if (not IsNan(fBindings[I].LastValues[Axis])) and
         SameValue(Value,fBindings[I].LastValues[Axis]) then

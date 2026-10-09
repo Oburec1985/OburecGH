@@ -134,6 +134,63 @@ begin
   end;
 end;
 
+{$ifndef windows}
+function RecorderIsRunning: Boolean;
+var
+  lProcess: TProcess;
+begin
+  lProcess := TProcess.Create(nil);
+  try
+    lProcess.Executable := '/usr/bin/pgrep';
+    lProcess.Parameters.Add('-x');
+    lProcess.Parameters.Add('RecorderLnx');
+    lProcess.Options := [poNoConsole, poWaitOnExit];
+    lProcess.Execute;
+    Result := lProcess.ExitStatus = 0;
+  finally
+    lProcess.Free;
+  end;
+end;
+
+function StopRecorderBeforeShutdown(out AMessage: string): Boolean;
+const
+  CGracefulExitTimeoutMs = 15000;
+  CExitPollIntervalMs = 100;
+  CRecorderExitRequestFile = '/tmp/mera-recorderlnx-exit.request';
+var
+  lRequestFile: TFileStream;
+  lWaitedMs: Integer;
+begin
+  Result := True;
+  AMessage := '';
+  if not RecorderIsRunning then
+    Exit;
+
+  try
+    lRequestFile := TFileStream.Create(CRecorderExitRequestFile, fmCreate);
+    lRequestFile.Free;
+  except
+    on E: Exception do
+    begin
+      AMessage := 'Cannot request graceful RecorderLnx exit: ' + E.Message;
+      Exit(False);
+    end;
+  end;
+
+  lWaitedMs := 0;
+  while RecorderIsRunning and (lWaitedMs < CGracefulExitTimeoutMs) do
+  begin
+    Sleep(CExitPollIntervalMs);
+    Inc(lWaitedMs, CExitPollIntervalMs);
+  end;
+  if RecorderIsRunning then
+  begin
+    AMessage := 'RecorderLnx did not exit in 15 seconds; shutdown cancelled';
+    Exit(False);
+  end;
+end;
+{$endif}
+
 function HostAgentShutdown(AConfig: TRecorderHostAgentConfig;
   out AMessage: string): Boolean;
 {$ifndef windows}
@@ -150,6 +207,10 @@ begin
     AMessage := 'Shutdown is disabled by allow_shutdown=false';
     Exit;
   end;
+  {$ifndef windows}
+  if not StopRecorderBeforeShutdown(AMessage) then
+    Exit;
+  {$endif}
   lProcess := TProcess.Create(nil);
   lOutput := TStringList.Create;
   try

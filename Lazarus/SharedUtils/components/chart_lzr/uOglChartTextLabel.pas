@@ -57,6 +57,9 @@ type
     fTrend: cBaseTrend;                  // Ссылка на тренд/линию графика
     fAttachToAllTrends: Boolean;         // Флаг привязки ко всем трендам на странице в одной X-координате
     fAnchorX: Double;                    // Координата X точки привязки на графике
+    fAutoLayout: Boolean;
+    fRenderHidden: Boolean;
+    fHighlighted: Boolean;
   protected
     function GetAxis: TChartAxis; override;
   public
@@ -68,6 +71,9 @@ type
     property Trend: cBaseTrend read fTrend write fTrend;
     property AttachToAllTrends: Boolean read fAttachToAllTrends write fAttachToAllTrends;
     property AnchorX: Double read fAnchorX write fAnchorX;
+    property AutoLayout: Boolean read fAutoLayout write fAutoLayout;
+    property RenderHidden: Boolean read fRenderHidden write fRenderHidden;
+    property Highlighted: Boolean read fHighlighted write fHighlighted;
   end;
 
 // Вспомогательная функция интерполяции значения Y на тренде по X
@@ -349,6 +355,9 @@ begin
   fAnchorX := 0.0;
   fTrend := nil;
   fAttachToAllTrends := False;
+  fAutoLayout := False;
+  fRenderHidden := False;
+  fHighlighted := False;
   SetFloatRect(0.1, 0.05, 0.25, 0.12);
   fWidth := 100;
   fHeight := 30;
@@ -359,6 +368,7 @@ begin
   inherited SaveJsonAttributes(AJson);
   AJson.Add('AttachToAllTrends', fAttachToAllTrends);
   AJson.Add('AnchorX', fAnchorX);
+  AJson.Add('AutoLayout', fAutoLayout);
 end;
 
 procedure TChartFlagLabel.LoadJsonAttributes(AJson: TJSONObject);
@@ -369,6 +379,8 @@ begin
     fAttachToAllTrends := AJson.Booleans['AttachToAllTrends'];
   if AJson.IndexOfName('AnchorX') <> -1 then
     fAnchorX := AJson.Floats['AnchorX'];
+  if AJson.IndexOfName('AutoLayout') <> -1 then
+    fAutoLayout := AJson.Booleans['AutoLayout'];
 end;
 
 end.

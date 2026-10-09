@@ -289,6 +289,17 @@ end;
 
 procedure TMic140v2Tcp.Disconnect;
 begin
+  { MIC-140 owns one controller session. Close it with an orderly TCP shutdown
+    so the firmware sees both directions closed before the socket handle is
+    destroyed. A bare closesocket can leave the embedded session occupied,
+    especially when Recorder exits while scan traffic is still pending. }
+  if fSocket <> nil then
+    try
+      fpShutdown(fSocket.Handle, SHUT_RDWR);
+    except
+      { Disconnect is idempotent and must not hide the protocol error that
+        initiated cleanup. }
+    end;
   SetLength(fRxBuffer, 0);
   FreeAndNil(fSocket);
 end;

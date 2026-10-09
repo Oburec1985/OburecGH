@@ -28,6 +28,21 @@
     </Units>
     <RequiredPackages>
       <Item>
+        <PackageName Value="bgracontrols"/>
+      </Item>
+      <Item>
+        <PackageName Value="DateTimeCtrls"/>
+      </Item>
+      <Item>
+        <PackageName Value="LzrObrPack"/>
+      </Item>
+      <Item>
+        <PackageName Value="TAChartLazarusPkg"/>
+      </Item>
+      <Item>
+        <PackageName Value="LazOpenGLContext"/>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
       </Item>
     </RequiredPackages>
@@ -35,7 +50,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Algs;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../RecorderLnx/Calibrations;../../../RecorderLnx/Calibrations/Strains;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/FrequencyResponse;../../../RecorderLnx/Components/MeasurementSection;../../../RecorderLnx/Components/SignalGenerator;../../../RecorderLnx/Components/SqlTrend;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/motion"/>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Algs;../../../RecorderLnx/Mdb;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../RecorderLnx/Calibrations;../../../RecorderLnx/Calibrations/Strains;../../../RecorderLnx/Components/Common;../../../RecorderLnx/Components/Donut;../../../RecorderLnx/Components/Editor;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/FrequencyResponse;../../../RecorderLnx/Components/Lissajous;../../../RecorderLnx/Components/MeasurementSection;../../../RecorderLnx/Components/Oscillogram;../../../RecorderLnx/Components/SignalGenerator;../../../RecorderLnx/Components/Spectrum;../../../RecorderLnx/Components/SqlTrend;../../../RecorderLnx/Components/Standard;../../../RecorderLnx/Components/Trend;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/interaction;../../../SharedUtils/3d/lcl;../../../SharedUtils/3d/motion;../../../SharedUtils/3d/render/opengl"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
     <Linking>

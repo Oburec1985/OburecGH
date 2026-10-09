@@ -1,12 +1,14 @@
 object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   Left = 420
-  Height = 510
+  Height = 620
   Top = 220
-  Width = 920
-  BorderStyle = bsDialog
+  Width = 980
+  BorderStyle = bsSizeable
   Caption = 'Аппаратные свойства MC-201'
-  ClientHeight = 510
-  ClientWidth = 920
+  ClientHeight = 620
+  ClientWidth = 980
+  Constraints.MinHeight = 600
+  Constraints.MinWidth = 920
   Position = poOwnerFormCenter
   object fSerialEdit: TEdit
     Left = 120
@@ -36,9 +38,10 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   end
   object ChannelGroup: TGroupBox
     Left = 16
-    Height = 190
+    Height = 220
     Top = 55
-    Width = 888
+    Width = 948
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Каналы'
     TabOrder = 2
     object HeaderRange: TLabel
@@ -348,8 +351,8 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   end
   object fCommutationGroup: TRadioGroup
     Left = 16
-    Height = 95
-    Top = 255
+    Height = 120
+    Top = 285
     Width = 220
     Caption = 'Коммутация'
     Items.Strings = (
@@ -360,9 +363,10 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   end
   object SubmoduleGroup: TGroupBox
     Left = 248
-    Height = 95
-    Top = 255
-    Width = 656
+    Height = 120
+    Top = 285
+    Width = 716
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Субмодуль'
     TabOrder = 4
     object SubmoduleLabel: TLabel
@@ -379,7 +383,8 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
       Left = 90
       Height = 25
       Top = 20
-      Width = 360
+      Width = 600
+      Anchors = [akTop, akLeft, akRight]
       Style = csDropDownList
       TabOrder = 0
     end
@@ -387,16 +392,18 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
       Left = 90
       Height = 25
       Top = 54
-      Width = 360
+      Width = 600
+      Anchors = [akTop, akLeft, akRight]
       Style = csDropDownList
       TabOrder = 1
     end
   end
   object CalibGroup: TGroupBox
     Left = 16
-    Height = 70
-    Top = 360
-    Width = 888
+    Height = 100
+    Top = 415
+    Width = 948
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Аппаратная ГХ (масштаб K, В/код)'
     TabOrder = 5
     object fCalCh1: TCheckBox
@@ -439,7 +446,7 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
       Left = 360
       Height = 30
       Top = 22
-      Width = 280
+      Width = 360
       Caption = 'Калибровка выбранных (сдвиг ЦАП)'
       TabOrder = 4
     end
@@ -447,8 +454,8 @@ object RecorderMc201SlotSettingsDialog: TRecorderMc201SlotSettingsDialog
   object fButtonPanel: TButtonPanel
     Left = 0
     Height = 50
-    Top = 460
-    Width = 920
+    Top = 570
+    Width = 980
     Align = alBottom
     AutoSize = True
     ShowButtons = [pbOK, pbCancel]

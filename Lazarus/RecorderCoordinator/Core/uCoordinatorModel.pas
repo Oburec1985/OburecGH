@@ -137,6 +137,8 @@ type
     function SetHostDisplayName(const AInstanceId,
       ADisplayName: string): Boolean;
     function SetHostAddress(const AInstanceId, AAddress: string): Boolean;
+    function RestoreIgnoredHost(const AInstanceId, AAddress,
+      AMacAddress: string): Boolean;
     function IgnoreHost(const AInstanceId: string): Boolean;
     procedure ClearHostMeraFilesPaths;
     function HostProbeTargets: TJSONArray;
@@ -484,8 +486,7 @@ begin
   try
     FreeAndNil(fHostStore);
     fHostStore := TCoordinatorHostStore.Create(lFileName);
-    fIgnoredHostsFileName := IncludeTrailingPathDelimiter(
-      ExtractFileDir(lFileName)) + 'ignored-hosts.ini';
+    fIgnoredHostsFileName := lFileName;
     LoadIgnoredHostsLocked;
     LoadStoredHosts;
     SaveHostsLocked;
@@ -505,6 +506,7 @@ begin
     TObject(fIgnoredHosts[lIndex]).Free;
   fIgnoredHosts.Clear;
   if not FileExists(fIgnoredHostsFileName) then Exit;
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fIgnoredHostsFileName);
   try
     lCount := lIni.ReadInteger('ignored_hosts', 'count', 0);
@@ -524,6 +526,7 @@ begin
     end;
   finally
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
 
@@ -533,11 +536,18 @@ var
   lIndex: Integer;
   lIni: TIniFile;
   lSection: string;
+  lSections: TStringList;
 begin
   if fIgnoredHostsFileName = '' then Exit;
   ForceDirectories(ExtractFileDir(fIgnoredHostsFileName));
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fIgnoredHostsFileName);
+  lSections := TStringList.Create;
   try
+    lIni.ReadSections(lSections);
+    for lIndex := lSections.Count - 1 downto 0 do
+      if Pos('ignored_host.', LowerCase(lSections[lIndex])) = 1 then
+        lIni.EraseSection(lSections[lIndex]);
     lIni.EraseSection('ignored_hosts');
     lIni.WriteInteger('ignored_hosts', 'count', fIgnoredHosts.Count);
     for lIndex := 0 to fIgnoredHosts.Count - 1 do
@@ -552,7 +562,9 @@ begin
     end;
     lIni.UpdateFile;
   finally
+    lSections.Free;
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
 
@@ -1740,6 +1752,38 @@ begin
     lHost.Free;
     SaveIgnoredHostsLocked;
     SaveHostsLocked;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TCoordinatorModel.RestoreIgnoredHost(const AInstanceId, AAddress,
+  AMacAddress: string): Boolean;
+var
+  lHost: TCoordinatorHost;
+  lIndex: Integer;
+begin
+  Result := False;
+  fLock.Acquire;
+  try
+    for lIndex := fIgnoredHosts.Count - 1 downto 0 do
+    begin
+      lHost := TCoordinatorHost(fIgnoredHosts[lIndex]);
+      if ((Trim(AInstanceId) <> '') and
+          SameText(Trim(lHost.InstanceId), Trim(AInstanceId))) or
+         ((Trim(AAddress) <> '') and
+          SameText(NormalizedAddress(lHost.Address),
+            NormalizedAddress(AAddress))) or
+         ((NormalizedMacAddress(AMacAddress) <> '') and
+          (NormalizedMacAddress(lHost.MacAddress) =
+            NormalizedMacAddress(AMacAddress))) then
+      begin
+        fIgnoredHosts.Delete(lIndex);
+        lHost.Free;
+        Result := True;
+      end;
+    end;
+    if Result then SaveIgnoredHostsLocked;
   finally
     fLock.Release;
   end;

@@ -204,6 +204,7 @@ type
   TRecorderCalibrationArray = array of TRecorderCalibration;
 
   TRecorderMic185ValueTransform = record
+    Valid: Boolean;
     IsLinear: Boolean;
     K: Double;
     B: Double;
@@ -214,13 +215,24 @@ type
     ChannelConversions: array of Double;
     PowerMa: Double;
   end;
+  TRecorderMic185ValueTransformArray = array of TRecorderMic185ValueTransform;
 
+function RecorderMic185ApplyValueTransform(AValueCode: Double;
+  const ATransform: TRecorderMic185ValueTransform): Double;
+function RecorderMic185BuildValueTransform(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
+  AHardwareCalibration: TRecorderCalibration): TRecorderMic185ValueTransform;
+function RecorderMic185ResolveHardwareCalibrationForTransform(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): TRecorderCalibration;
+
+type
   TRecorderMic185DataSource = class(TRecorderDataSourceBase,
     IRecorderZeroBalanceSupport, IRecorderZeroBalanceTraceSupport)
   private
     fChannelTagNames: TStringList;
     fChannelTags: array of TRecorderTag;
-    fValueTransforms: array of TRecorderMic185ValueTransform;
+    fValueTransforms: TRecorderMic185ValueTransformArray;
+    fValueTransformsLock: TRTLCriticalSection;
     fTempTags: array of TRecorderTag;
     fTimes: TRecorderDoubleArray;
     fUtsTag: TRecorderTag;
@@ -247,7 +259,11 @@ type
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     procedure ApplyChannelProgramSettings;
+    procedure BuildRuntimeTransforms(
+      out ATransforms: TRecorderMic185ValueTransformArray);
     procedure CacheRuntimeChannels;
+    procedure PublishRuntimeTransforms(
+      var ATransforms: TRecorderMic185ValueTransformArray);
     procedure ConfigureDevice;
     procedure PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
     procedure PublishAuxChannels(ATimeSec: Double);
@@ -263,6 +279,7 @@ type
     destructor Destroy; override;
     function Reconfigure(AUpdateTimeMs: Cardinal;
       out AErrorText: string): Boolean; override;
+    procedure RefreshRuntimeTransforms; override;
     procedure RequestStop; override;
     procedure Start; override;
     procedure Stop; override;
@@ -1181,6 +1198,10 @@ var
   lSettings: TMic185ChannelProgramSettingsArray;
   lSummary: string;
   lTemperatureCompensation: Boolean;
+  lProgramOk: Boolean;
+  lRestartError: string;
+  lRestartOk: Boolean;
+  lWasStarted: Boolean;
   lTraceId: string;
   lStageStartedAt: QWord;
 begin
@@ -1233,16 +1254,44 @@ begin
     lLiveNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
       lTemperatureCompensation, lModuleSettings);
     try
-      if lLiveNative.State = rdsStarted then
-        lLiveNative.Stop;
-      lStageStartedAt := GetTickCount64;
-      RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure-live',
-        'BEGIN', '');
-      if not lLiveNative.TryProgramDevice(AErrorText) then
-      begin
+      lWasStarted := lLiveNative.State = rdsStarted;
+      lProgramOk := False;
+      lRestartError := '';
+      lRestartOk := True;
+      try
+        if lWasStarted then
+          lLiveNative.Stop;
+        lStageStartedAt := GetTickCount64;
         RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure-live',
-          'FAIL', AErrorText, GetTickCount64 - lStageStartedAt);
-        AErrorText := 'MIC183/185 live programming failed: ' + AErrorText;
+          'BEGIN', '');
+        lProgramOk := lLiveNative.TryProgramDevice(AErrorText);
+        if not lProgramOk then
+        begin
+          RecorderMic185LifecycleLog(lTraceId, ASourceId, 'configure-live',
+            'FAIL', AErrorText, GetTickCount64 - lStageStartedAt);
+          AErrorText := 'MIC183/185 live programming failed: ' + AErrorText;
+        end;
+      finally
+        if lWasStarted and (lLiveNative.State <> rdsStarted) then
+        begin
+          lRestartOk := lLiveNative.TryStart(lRestartError);
+          if lRestartOk then
+            RecorderMic185LifecycleLog(lTraceId, ASourceId, 'restart-live',
+              'OK', '')
+          else
+            RecorderMic185LifecycleLog(lTraceId, ASourceId, 'restart-live',
+              'FAIL', lRestartError);
+        end;
+      end;
+      if not lRestartOk then
+      begin
+        if AErrorText <> '' then
+          AErrorText := AErrorText + '; ';
+        AErrorText := AErrorText +
+          'MIC183/185 restart after programming failed: ' + lRestartError;
+      end;
+      if (not lProgramOk) or (not lRestartOk) then
+      begin
         RecorderMic185Log(Format('ProgramConfiguredSource failed live %s: %s',
           [ASourceId, AErrorText]));
         Exit;
@@ -1369,22 +1418,30 @@ var
   lTemperatureCompensation: Boolean;
   lWasStarted: Boolean;
 
-  procedure ClearSelectedSoftBalance;
+  procedure ClearAllBalanceCorrections;
   var
-    lCh: Integer;
     lIndex: Integer;
   begin
-    for lIndex := 0 to High(AChannelIndices) do
+    for lIndex := 0 to High(lSettings) do
     begin
-      lCh := AChannelIndices[lIndex];
-      if (lCh >= 0) and (lCh <= High(lSettings)) then
-      begin
-        lSettings[lCh].SoftBalance := 0;
-        lSettings[lCh].SoftBalanceFine := 0.0;
-      end;
+      lSettings[lIndex].SoftBalance := 0;
+      lSettings[lIndex].SoftBalanceFine := 0.0;
     end;
-    RecorderMic185Log(Format('ZeroBalance %s clean setup: cleared %d old soft balances',
-      [ASourceId, Length(AChannelIndices)]));
+    lModuleSettings.HardBalance := CMic185DefaultHardBalance;
+    RecorderMic185Log(Format(
+      'ZeroBalance %s clean setup: DAC=%d, cleared all %d channel balances',
+      [ASourceId, lModuleSettings.HardBalance, Length(lSettings)]));
+  end;
+
+  procedure StoreAllChannelBalanceSettings;
+  var
+    lIndex: Integer;
+  begin
+    for lIndex := 0 to High(lSettings) do
+      RecorderMic185SetSourceChannelMode(ARegistry, ASourceId,
+        RecorderMic185MeasurementAddressText(
+        RecorderMic185SourceDeviceIndex(ARegistry, ASourceId), lIndex + 1),
+        lPollHz, lSettings[lIndex]);
   end;
 
   procedure StoreReturnedSoftBalance;
@@ -1413,6 +1470,75 @@ var
     end;
   end;
 
+  function ApplyReturnedSoftBalance(ADevice: TRecorderMic185Device;
+    out AErrorText: string): Boolean;
+  begin
+    ADevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
+      lTemperatureCompensation, lModuleSettings);
+    Result := ADevice.TryProgramDevice(AErrorText);
+    if Result and lModuleSettings.HardwareBalanceOn then
+      RecorderMic185Log(Format(
+        'ZeroBalance %s applied common DAC code=%d and per-channel ADC balance in one program',
+        [ASourceId, lModuleSettings.HardBalance]));
+  end;
+
+  function ApplyCommonHardwareBalance(ADevice: TRecorderMic185Device;
+    out AErrorText: string): Boolean;
+  var
+    lChannel: Integer;
+    lCount: Integer;
+    lMeanAdcCode: Double;
+    lIndex: Integer;
+    lTargetDacCode: Int64;
+  begin
+    Result := False;
+    AErrorText := '';
+    if not lModuleSettings.HardwareBalanceOn then
+      Exit(True);
+
+    lMeanAdcCode := 0.0;
+    lCount := 0;
+    for lIndex := 0 to Min(High(AChannelIndices), High(lBalances)) do
+    begin
+      lChannel := AChannelIndices[lIndex];
+      if (lChannel < 0) or (lChannel > High(lSettings)) then
+        Continue;
+      lMeanAdcCode := lMeanAdcCode + lBalances[lIndex];
+      Inc(lCount);
+    end;
+    if lCount = 0 then
+    begin
+      AErrorText := 'MIC183/185 hardware balance has no valid selected channels';
+      Exit;
+    end;
+
+    { ADC and DAC span the same physical input range. ADC correction is signed
+      16-bit (32768 codes per half-range), while the common DAC has 8192 codes
+      per half-range. Hence one DAC code equals four ADC codes. Always derive
+      the common hardware code from the neutral DAC setting: accumulating the
+      previous value makes repeated balance operations drift and a fixed mV
+      range incorrectly saturates channels configured for another range. }
+    lMeanAdcCode := lMeanAdcCode / lCount;
+    lTargetDacCode := CMic185DefaultHardBalance - Round(lMeanAdcCode / 4.0);
+    lTargetDacCode := EnsureRange(lTargetDacCode, 0,
+      CMic185HardBalanceDacMax - 1);
+    lModuleSettings.HardBalance := LongWord(lTargetDacCode);
+    ADevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
+      lTemperatureCompensation, lModuleSettings);
+    if not ADevice.TryProgramDevice(AErrorText) then
+    begin
+      AErrorText := 'MIC183/185 hardware balance apply failed: ' + AErrorText;
+      Exit;
+    end;
+    RecorderMic185SetSourceModuleSettings(ARegistry, ASourceId, lPollHz,
+      lModuleSettings);
+    RecorderMic185Log(Format(
+      'ZeroBalance %s common hard balance meanADC=%.6g targetDAC=%d channels=%d',
+      [ASourceId, lMeanAdcCode, lModuleSettings.HardBalance, lCount]));
+
+    Result := True;
+  end;
+
   procedure StoreFineSoftBalance(ACh: Integer; AFineCode: Double);
   begin
     if (ACh < 0) or (ACh > High(lSettings)) then
@@ -1423,10 +1549,8 @@ var
       RecorderMic185SourceDeviceIndex(ARegistry, ASourceId), ACh + 1),
       lPollHz, lSettings[ACh]);
     RecorderMic185Log(Format(
-      'ZeroBalance %s ch%d fine residual=%.6g code, ui=%.6g mV',
-      [ASourceId, ACh + 1, AFineCode,
-      RecorderMic185SoftBalanceCodeToMv(Round(AFineCode),
-      lSettings[ACh].MeasRangeIndex)]));
+      'ZeroBalance %s ch%d fine residual=%.6g ADC code',
+      [ASourceId, ACh + 1, AFineCode]));
   end;
 
   function MeasureFineSoftBalance(ADevice: TRecorderMic185Device;
@@ -1439,14 +1563,17 @@ var
     lDiscarded: Integer;
     lEndAt: QWord;
     lReadCount: Integer;
+    lReady: Boolean;
     lSampleTotal: Integer;
     lSums: array of Double;
+    lTargetSamples: Integer;
     lTries: Integer;
   begin
     Result := False;
     AErrorText := '';
     SetLength(lSums, Length(AChannelIndices));
     SetLength(lCounts, Length(AChannelIndices));
+    lTargetSamples := Max(1, Ceil(lPollHz));
     if not ADevice.TryStart(AErrorText) then
       Exit;
     try
@@ -1454,9 +1581,10 @@ var
       lDiscarded := 0;
       lReadCount := 0;
       lTries := 0;
-      lEndAt := GetTickCount64 + CMic185ZeroBalanceFineTotalWaitMs;
-      while (lReadCount < CMic185ZeroBalanceFineBlocks) and
-        (GetTickCount64 < lEndAt) do
+      lEndAt := GetTickCount64 + Max(CMic185ZeroBalanceFineTotalWaitMs,
+        4000);
+      lReady := False;
+      while (not lReady) and (GetTickCount64 < lEndAt) do
       begin
         Inc(lTries);
         if not ADevice.ReadBlock(CMic185ZeroBalanceFineReadTimeoutMs, lBlock) then
@@ -1482,10 +1610,19 @@ var
             Continue;
           for J := 0 to lBlock.SampleCount - 1 do
           begin
+            if lCounts[I] >= lTargetSamples then
+              Break;
             lSums[I] := lSums[I] + lBlock.Values[lCh][J];
             Inc(lCounts[I]);
           end;
         end;
+        lReady := True;
+        for I := 0 to High(AChannelIndices) do
+          if lCounts[I] < lTargetSamples then
+          begin
+            lReady := False;
+            Break;
+          end;
       end;
     finally
       ADevice.Stop;
@@ -1501,12 +1638,29 @@ var
       end;
     if Result then
       RecorderMic185Log(Format(
-        'ZeroBalance %s fine residual measured blocks=%d discarded=%d samples=%d tries=%d',
-        [ASourceId, lReadCount, lDiscarded, lSampleTotal, lTries]));
+        'ZeroBalance %s residual measured over 1 s: blocks=%d discarded=%d samples=%d targetPerChannel=%d tries=%d',
+        [ASourceId, lReadCount, lDiscarded, lSampleTotal, lTargetSamples,
+         lTries]));
     if not Result then
       AErrorText := Format(
         'MIC183/185 fine zero-balance read did not return samples (tries=%d)',
         [lTries]);
+  end;
+
+  procedure PromoteMeasuredResidualToDeviceSoftBalance;
+  var
+    lChannel: Integer;
+    lIndex: Integer;
+  begin
+    SetLength(lBalances, Length(AChannelIndices));
+    for lIndex := 0 to High(AChannelIndices) do
+    begin
+      lChannel := AChannelIndices[lIndex];
+      if (lChannel < 0) or (lChannel > High(lSettings)) then
+        Continue;
+      lBalances[lIndex] := lSettings[lChannel].SoftBalanceFine;
+      lSettings[lChannel].SoftBalanceFine := 0.0;
+    end;
   end;
 begin
   Result := False;
@@ -1524,9 +1678,10 @@ begin
     lSettings);
   RecorderMic185GetSourceGroupAddition(ARegistry, ASourceId, lGroupAddition);
   RecorderMic185GetSourceModuleSettings(ARegistry, ASourceId, lModuleSettings);
+  lModuleSettings.BalancePortionLength := LongWord(Max(1, Round(lPollHz)));
   lTemperatureCompensation :=
     RecorderMic185GetSourceTemperatureCompensation(ARegistry, ASourceId);
-  ClearSelectedSoftBalance;
+  ClearAllBalanceCorrections;
 
   lLiveNative := RecorderMic185FindLiveDevice(lHost, lPort);
   if lLiveNative <> nil then
@@ -1559,17 +1714,33 @@ begin
           AMessages.Add('MIC183/185 clean zero-balance setup failed: ' + lError);
         Exit;
       end;
-      if not lLiveNative.TryZeroBalanceChannels(AChannelIndices, lBalances,
-        lError) then
+      if not MeasureFineSoftBalance(lLiveNative, lError) then
+      begin
+        if AMessages <> nil then
+          AMessages.Add('MIC183/185 initial one-second balance measurement failed: ' +
+            lError);
+        Exit;
+      end;
+      PromoteMeasuredResidualToDeviceSoftBalance;
+      if not ApplyCommonHardwareBalance(lLiveNative, lError) then
       begin
         if AMessages <> nil then
           AMessages.Add(lError);
         Exit;
       end;
+      if lModuleSettings.HardwareBalanceOn then
+      begin
+        if not MeasureFineSoftBalance(lLiveNative, lError) then
+        begin
+          if AMessages <> nil then
+            AMessages.Add('MIC183/185 residual measurement after hardware balance failed: ' +
+              lError);
+          Exit;
+        end;
+        PromoteMeasuredResidualToDeviceSoftBalance;
+      end;
       StoreReturnedSoftBalance;
-      lLiveNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
-        lTemperatureCompensation, lModuleSettings);
-      if not lLiveNative.TryProgramDevice(lError) then
+      if not ApplyReturnedSoftBalance(lLiveNative, lError) then
       begin
         Result := False;
         if AMessages <> nil then
@@ -1579,9 +1750,7 @@ begin
       RecorderMic185Log(Format(
         'ZeroBalance %s applied returned soft balances to device',
         [ASourceId]));
-      if not MeasureFineSoftBalance(lLiveNative, lError) then
-        RecorderMic185Log(Format('ZeroBalance %s fine residual skipped: %s',
-          [ASourceId, lError]));
+      StoreAllChannelBalanceSettings;
       RecorderMarkSourceProgrammingApplied(ARegistry, ASourceId);
       Result := True;
     finally
@@ -1612,17 +1781,39 @@ begin
       lTemperatureCompensation, lModuleSettings);
     if (not lNative.TryConnect(lError)) or
       (not lNative.TryInitializeSession(lError)) or
-      (not lNative.TryProgramDevice(lError)) or
-      (not lNative.TryZeroBalanceChannels(AChannelIndices, lBalances, lError)) then
+      (not lNative.TryProgramDevice(lError)) then
     begin
       if AMessages <> nil then
         AMessages.Add(lError);
       Exit;
     end;
+    if not MeasureFineSoftBalance(lNative, lError) then
+    begin
+      if AMessages <> nil then
+        AMessages.Add('MIC183/185 initial one-second balance measurement failed: ' +
+          lError);
+      Exit;
+    end;
+    PromoteMeasuredResidualToDeviceSoftBalance;
+    if not ApplyCommonHardwareBalance(lNative, lError) then
+    begin
+      if AMessages <> nil then
+        AMessages.Add(lError);
+      Exit;
+    end;
+    if lModuleSettings.HardwareBalanceOn then
+    begin
+      if not MeasureFineSoftBalance(lNative, lError) then
+      begin
+        if AMessages <> nil then
+          AMessages.Add('MIC183/185 residual measurement after hardware balance failed: ' +
+            lError);
+        Exit;
+      end;
+      PromoteMeasuredResidualToDeviceSoftBalance;
+    end;
     StoreReturnedSoftBalance;
-    lNative.ApplyChannelProgramSettings(lSettings, lGroupAddition,
-      lTemperatureCompensation, lModuleSettings);
-    if not lNative.TryProgramDevice(lError) then
+    if not ApplyReturnedSoftBalance(lNative, lError) then
     begin
       if AMessages <> nil then
         AMessages.Add('MIC183/185 zero-balance apply failed: ' + lError);
@@ -1631,9 +1822,7 @@ begin
     RecorderMic185Log(Format(
       'ZeroBalance %s applied returned soft balances to device',
       [ASourceId]));
-    if not MeasureFineSoftBalance(lNative, lError) then
-      RecorderMic185Log(Format('ZeroBalance %s fine residual skipped: %s',
-        [ASourceId, lError]));
+    StoreAllChannelBalanceSettings;
     if AMessages <> nil then
       AMessages.Add(Format('MIC183/185 balance OK: %d channel(s)',
         [Length(AChannelIndices)]));
@@ -2063,7 +2252,7 @@ begin
   end;
 end;
 
-function Mic185BuildValueTransform(ARegistry: TRecorderTagRegistry;
+function RecorderMic185BuildValueTransform(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const ASettings: TMic185ChannelProgramSettings;
   AHardwareCalibration: TRecorderCalibration): TRecorderMic185ValueTransform;
 var
@@ -2075,6 +2264,7 @@ var
   lStepB: Double;
   lStepK: Double;
 begin
+  Result.Valid := ATag <> nil;
   Result.IsLinear := True;
   Result.K := 1.0;
   Result.B := 0.0;
@@ -2090,15 +2280,22 @@ begin
   Result.HardwareCalibration := AHardwareCalibration;
   SetLength(Result.ChannelCalibrations, 0);
   SetLength(Result.ChannelConversions, 0);
+  { Missing hardware GX must not stop acquisition.  In this state the only
+    honest value we can publish is the untouched ADC code: do not apply
+    balance, unit conversion or channel calibrations that expect physical
+    units. }
+  if ATag.HardwareCalibrationEnabled and (AHardwareCalibration = nil) then
+    Exit;
   if not ATag.HardwareCalibrationEnabled then
     Result.HardwareCalibration := nil;
   Result.PowerMa := Mic185EffectivePowerMa(ASettings);
   Result.PowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
     Result.PowerMa);
 
-  if AHardwareCalibration <> nil then
+  if Result.HardwareCalibration <> nil then
   begin
-    if Mic185TryGetCalibrationLine(AHardwareCalibration, Result.K, Result.B) then
+    if Mic185TryGetCalibrationLine(Result.HardwareCalibration, Result.K,
+      Result.B) then
       Result.HardwareCalibration := nil
     else
       Result.IsLinear := False;
@@ -2152,7 +2349,18 @@ begin
   end;
 end;
 
-function Mic185ApplyValueTransform(AValueCode: Double;
+function RecorderMic185ResolveHardwareCalibrationForTransform(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): TRecorderCalibration;
+begin
+  Result := nil;
+  if (ARegistry = nil) or (ATag = nil) or
+    (not ATag.HardwareCalibrationEnabled) then
+    Exit;
+  if RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, False) then
+    Result := ARegistry.FindTagHardwareCalibration(ATag);
+end;
+
+function RecorderMic185ApplyValueTransform(AValueCode: Double;
   const ATransform: TRecorderMic185ValueTransform): Double;
 var
   I: Integer;
@@ -2608,7 +2816,8 @@ begin
         if lMode <> '' then
         begin
           lTag.SourceUnitName := lMode;
-          lTag.UnitName := lMode;
+          if lTag.AutoUnit then
+            ARegistry.SyncTagAutoUnit(lTag, True);
         end
         else if Trim(lTag.UnitName) = '' then
           lTag.UnitName := RecorderMic185RangeUnitText(
@@ -2858,6 +3067,7 @@ constructor TRecorderMic185DataSource.Create(const ASourceId, AHost: string;
   ASelectedNames: TStrings);
 begin
   inherited Create(ASourceId, 'MIC183/185 data source', AUpdateTimeMs);
+  InitCriticalSection(fValueTransformsLock);
   fHost := AHost;
   fPort := APort;
   fPollFrequencyHz := APollFrequencyHz;
@@ -2883,6 +3093,8 @@ begin
   fHardwarePrepareAttempted := False;
   fSelectedNames.Free;
   fChannelTagNames.Free;
+  SetLength(fValueTransforms, 0);
+  DoneCriticalSection(fValueTransformsLock);
   inherited Destroy;
 end;
 
@@ -3111,39 +3323,80 @@ begin
   CacheRuntimeChannels;
 end;
 
-procedure TRecorderMic185DataSource.CacheRuntimeChannels;
+procedure TRecorderMic185DataSource.BuildRuntimeTransforms(
+  out ATransforms: TRecorderMic185ValueTransformArray);
 var
   I: Integer;
   lCalibration: TRecorderCalibration;
   lSettings: TMic185ChannelProgramSettings;
   lTag: TRecorderTag;
 begin
-  SetLength(fValueTransforms, Length(fChannelTags));
+  SetLength(ATransforms, Length(fChannelTags));
   for I := 0 to High(fChannelTags) do
   begin
     lTag := fChannelTags[I];
-    SetLength(fValueTransforms[I].ChannelCalibrations, 0);
-    SetLength(fValueTransforms[I].ChannelConversions, 0);
-    fValueTransforms[I].IsLinear := True;
-    fValueTransforms[I].K := 1.0;
-    fValueTransforms[I].B := 0.0;
+    SetLength(ATransforms[I].ChannelCalibrations, 0);
+    SetLength(ATransforms[I].ChannelConversions, 0);
+    ATransforms[I].IsLinear := True;
+    ATransforms[I].Valid := False;
+    ATransforms[I].K := 1.0;
+    ATransforms[I].B := 0.0;
     if lTag = nil then
       Continue;
 
-    lCalibration := Registry.FindTagHardwareCalibration(lTag);
-    if lTag.HardwareCalibrationEnabled and (lCalibration = nil) and
-      (Trim(lTag.HardwareCalibrationName) <> '') then
+    lCalibration := nil;
+    if lTag.HardwareCalibrationEnabled then
     begin
-      RecorderMic185LoadHardwareCalibrationForTag(Registry, lTag, False);
-      lCalibration := Registry.FindTagHardwareCalibration(lTag);
+      { The tag may still name a calibration from a previous range. Resolve
+        against the current programmed range every time the immutable runtime
+        snapshot is rebuilt; never apply a stale range calibration. }
+      lCalibration := RecorderMic185ResolveHardwareCalibrationForTransform(
+        Registry, lTag);
+      if lCalibration = nil then
+      begin
+        RecorderHardwareSetSourceWarning(SourceId, Format(
+          'Для канала %s не найдена аппаратная ГХ текущего диапазона; данные выводятся в кодах',
+          [lTag.Name]));
+        RecorderMic185Log(Format(
+          'Hardware GX unavailable tag="%s" source="%s": publishing raw ADC codes',
+          [lTag.Name, SourceId]));
+      end;
     end;
 
     if I > High(fRuntimeChannelSettings) then
       Continue;
     lSettings := fRuntimeChannelSettings[I];
-    fValueTransforms[I] := Mic185BuildValueTransform(Registry, lTag,
+    ATransforms[I] := RecorderMic185BuildValueTransform(Registry, lTag,
       lSettings, lCalibration);
   end;
+end;
+
+procedure TRecorderMic185DataSource.PublishRuntimeTransforms(
+  var ATransforms: TRecorderMic185ValueTransformArray);
+var
+  lPrevious: TRecorderMic185ValueTransformArray;
+begin
+  EnterCriticalSection(fValueTransformsLock);
+  try
+    lPrevious := fValueTransforms;
+    fValueTransforms := ATransforms;
+    ATransforms := lPrevious;
+  finally
+    LeaveCriticalSection(fValueTransformsLock);
+  end;
+end;
+
+procedure TRecorderMic185DataSource.CacheRuntimeChannels;
+var
+  lPrepared: TRecorderMic185ValueTransformArray;
+begin
+  BuildRuntimeTransforms(lPrepared);
+  PublishRuntimeTransforms(lPrepared);
+end;
+
+procedure TRecorderMic185DataSource.RefreshRuntimeTransforms;
+begin
+  CacheRuntimeChannels;
 end;
 
 procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
@@ -3203,7 +3456,8 @@ begin
       if lUnitName <> '' then
       begin
         lTag.SourceUnitName := lUnitName;
-        lTag.UnitName := lUnitName
+        if lTag.AutoUnit then
+          ARegistry.SyncTagAutoUnit(lTag, True)
       end
       else if Trim(lTag.UnitName) = '' then
         lTag.UnitName := RecorderMic185RangeUnitText(
@@ -3386,6 +3640,7 @@ begin
     ConfigureDevice;
   if (not fHardwarePrepared) and fHardwarePrepareAttempted then
     Exit;
+  RecorderHardwareClearSourceWarning(SourceId);
   CacheRuntimeChannels;
   if fDevice.State <> rdsStarted then
   begin
@@ -3414,7 +3669,6 @@ begin
   fLastRxTick := fDiagTick;
   fLastBlockTick := fDiagTick;
   fRxWarning := False;
-  RecorderHardwareClearSourceWarning(SourceId);
 end;
 
 function TRecorderMic185DataSource.Reconfigure(AUpdateTimeMs: Cardinal;
@@ -3488,6 +3742,7 @@ var
   lFirstTime: Double;
   lTag: TRecorderTag;
   lTransform: TRecorderMic185ValueTransform;
+  lTransforms: TRecorderMic185ValueTransformArray;
 begin
   if (Registry = nil) or (ABlock.SampleCount <= 0) or (ABlock.SampleRateHz <= 0) then
     Exit;
@@ -3503,8 +3758,12 @@ begin
   // TMic185ChannelProgramSettingsArray
   // Этой функции не место в RunTime
   lCount := Min(ABlock.ChannelCount, Length(fChannelTags));
-  if Length(fValueTransforms) < lCount then
-    CacheRuntimeChannels;
+  EnterCriticalSection(fValueTransformsLock);
+  try
+    lTransforms := fValueTransforms;
+  finally
+    LeaveCriticalSection(fValueTransformsLock);
+  end;
   for I := 0 to lCount - 1 do
   begin
     // лучше хранить массив ссылок на теги. Поиск тега по имени каждый раз плохая операция!
@@ -3519,15 +3778,20 @@ begin
     lFirstTime := RecorderBlockChannelFirstTime(ABlock, I);
     for J := 0 to ABlock.SampleCount - 1 do
       fTimes[J] := lFirstTime + (J / ABlock.SampleRateHz);
-    if I <= High(fValueTransforms) then
+    if I <= High(lTransforms) then
     begin
-      lTransform := fValueTransforms[I];
+      lTransform := lTransforms[I];
+      { With hardware GX enabled, absence of the calibration for the current
+        range is a hard data-validity failure. Never publish ADC codes as mV,
+        Ohm or strain merely because the transform could not be resolved. }
+      if not lTransform.Valid then
+        Continue;
       if lTransform.IsLinear then
         for J := 0 to ABlock.SampleCount - 1 do
           fValues[J] := lTransform.K * ABlock.Values[I][J] + lTransform.B
       else
         for J := 0 to ABlock.SampleCount - 1 do
-          fValues[J] := Mic185ApplyValueTransform(ABlock.Values[I][J],
+          fValues[J] := RecorderMic185ApplyValueTransform(ABlock.Values[I][J],
             lTransform);
     end
     else

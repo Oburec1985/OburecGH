@@ -11,7 +11,7 @@ uses
   {$IFDEF UNIX}
   cthreads, BaseUnix,
   {$ENDIF}
-  SysUtils, Classes, Interfaces, Forms, uMainForm, uRecorderSplashForm,
+  SysUtils, Classes, Interfaces, Forms, ExtCtrls, uMainForm, uRecorderSplashForm,
   uRecorderSingleInstance, uRecorderNetworkBinding,
   uRecorderDebugLog,
   uComponentSettingsDialog,
@@ -38,6 +38,7 @@ uses
   uRecorderMic185DataSource, uRecorderMic185Runtime,
   uRecorderMic185AdditionalDialog, uRecorderMic185ChannelDialog,
   uRecorderMic185SettingsDialog,
+  uRecorderPxiMx248ConfiguredEditor,
   uRecorderHardwareTagSettingsProviders,
   uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
   uRecorderMeraPaths, uOglChartLog,
@@ -48,6 +49,64 @@ uses
 
 const
   CUserGuideDirectoryName: UTF8String = 'Руководство пользователя';
+  {$IFDEF UNIX}
+  CRecorderExitRequestFile = '/tmp/mera-recorderlnx-exit.request';
+  {$ENDIF}
+
+{$IFDEF UNIX}
+type
+  TRecorderTerminationMonitor = class
+  private
+    fTimer: TTimer;
+    procedure TimerTick(Sender: TObject);
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+var
+  g_TerminationRequested: LongInt = 0;
+  g_TerminationMonitor: TRecorderTerminationMonitor = nil;
+
+procedure RecorderTerminationSignalHandler(ASignal: cint); cdecl;
+begin
+  { Signal handlers may only publish the request. LCL and device cleanup must
+    run later in the application thread. }
+  InterlockedExchange(g_TerminationRequested, 1);
+end;
+
+constructor TRecorderTerminationMonitor.Create;
+begin
+  inherited Create;
+  DeleteFile(CRecorderExitRequestFile);
+  fTimer := TTimer.Create(nil);
+  fTimer.Interval := 100;
+  fTimer.OnTimer := @TimerTick;
+  fTimer.Enabled := True;
+end;
+
+destructor TRecorderTerminationMonitor.Destroy;
+begin
+  FreeAndNil(fTimer);
+  inherited Destroy;
+end;
+
+procedure TRecorderTerminationMonitor.TimerTick(Sender: TObject);
+var
+  lFileRequested: Boolean;
+begin
+  lFileRequested := FileExists(CRecorderExitRequestFile);
+  if (InterlockedExchange(g_TerminationRequested, 0) = 0) and
+    not lFileRequested then
+    Exit;
+  if lFileRequested then
+    DeleteFile(CRecorderExitRequestFile);
+  fTimer.Enabled := False;
+  RecorderDebugLog('Получен запрос штатного завершения RecorderLnx.');
+  FreeAndNil(MainForm);
+  Application.Terminate;
+end;
+{$ENDIF}
 
 function HasSwitch(const AName: string): Boolean;
 var
@@ -147,6 +206,8 @@ begin
     до CreateForm, где начинаются проверки сетевых устройств. Закрытый peer
     должен дать драйверу EPIPE, а не External exception code 13. }
   fpSignal(SIGPIPE, SignalHandler(SIG_IGN));
+  fpSignal(SIGTERM, SignalHandler(@RecorderTerminationSignalHandler));
+  g_TerminationMonitor := TRecorderTerminationMonitor.Create;
   {$ENDIF}
   ChartLogSetFileName(RecorderServiceFileName('oglchart_debug.log'));
   lSplash := TRecorderSplashForm.Create(nil);
@@ -166,6 +227,9 @@ begin
           PathDelim + 'screens')));
     Application.Run;
   finally
+    {$IFDEF UNIX}
+    FreeAndNil(g_TerminationMonitor);
+    {$ENDIF}
     lSplash.Free;
     lSingleInstance.Free;
   end;

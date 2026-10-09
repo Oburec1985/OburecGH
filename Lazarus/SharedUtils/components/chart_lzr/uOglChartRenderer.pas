@@ -154,6 +154,8 @@ type
 
     procedure DrawTextLabel(ALabel: TChartTextLabel; APage: TChartPage; const ARect: TChartPixelRect);
     procedure DrawCursor(ACursor: TChartCursor; APage: TChartPage; const ARect: TChartPixelRect);
+    procedure DrawHorizontalCursor(ACursor: TChartHorizontalCursor;
+      const ARect: TChartPixelRect);
       procedure DrawFrequencyBand(ABand: TChartFrequencyBand; APage: TChartPage; const ARect: TChartPixelRect);
       procedure DrawBandShadedRects(APage: TChartPage; const ARect: TChartPixelRect);
     procedure CollectFlags(AObject: TChartBaseObject; AList: TList);
@@ -1256,6 +1258,30 @@ begin
   end;
 end;
 
+procedure TOpenGLChartRenderer.DrawHorizontalCursor(
+  ACursor: TChartHorizontalCursor; const ARect: TChartPixelRect);
+var
+  lPixelY: Single;
+begin
+  if (ACursor = nil) or not ACursor.Visible or (ACursor.Axis = nil) then Exit;
+  lPixelY := AxisValueToPixel(ACursor.Axis, ACursor.Y,
+    ARect.Bottom, ARect.Top);
+  if (lPixelY < ARect.Top) or (lPixelY > ARect.Bottom) then Exit;
+  SetGLColor(ACursor.Color);
+  glPushAttrib(GL_ENABLE_BIT or GL_LINE_BIT);
+  glLineWidth(ACursor.LineWidth);
+  if ACursor.StipplePattern <> 0 then
+  begin
+    glDisable(GL_LINE_SMOOTH);
+    glLineStipple(1, ACursor.StipplePattern);
+    glEnable(GL_LINE_STIPPLE);
+  end;
+  { ARect is PageContentRect: normalized window X [-1..1] projected after
+    reserving axis labels, so the overlay always spans the visible X scale. }
+  DrawLine(ARect.Left, lPixelY, ARect.Right, lPixelY);
+  glPopAttrib;
+end;
+
 function FindTrendPeak(ATrend: cBuffTrend1d; AX1, AX2: Double; out APeakX, APeakY: Double): Boolean;
 var
   I, lStartIdx, lEndIdx: Integer;
@@ -1978,14 +2004,25 @@ begin
           else if lPtX > lLabelRect.Right then
             lConnX := lLabelRect.Right;
 
-          SetGLColor($FF808080); // Line color
-          glLineWidth(1.0);
+          if lFlag.Highlighted then
+          begin
+            SetGLColor($FFFF8000);
+            glLineWidth(2.0);
+          end
+          else
+          begin
+            SetGLColor($FF808080);
+            glLineWidth(1.0);
+          end;
           glBegin(GL_LINES);
           glVertex2f(lPtX, lPtY);
           glVertex2f(lConnX, (lLabelRect.Top + lLabelRect.Bottom) / 2);
           glEnd;
           // Рисуем незалитый маркер, чтобы он не перекрывал текст флага
-          SetGLColor($FF202020);
+          if lFlag.Highlighted then
+            SetGLColor($FFFF8000)
+          else
+            SetGLColor($FF202020);
           glBegin(GL_LINE_LOOP);
           glVertex2f(lPtX - 3, lPtY - 3);
           glVertex2f(lPtX + 3, lPtY - 3);
@@ -2003,19 +2040,26 @@ begin
   end;
 
   // 2. Рисуем фон метки (для флага максимума делаем его полупрозрачным, как у курсора)
-  if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
+  if (ALabel is TChartFlagLabel) and TChartFlagLabel(ALabel).Highlighted then
+    SetGLColor($FFFFE08A)
+  else if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
     SetGLColor($D8F5F5FA)
   else
     SetGLColor($FFFFFFFF);
   FillRect(lLabelRect);
   // 3. Рисуем границу рамки
-  if SelectedObject = ALabel then
+  if (ALabel is TChartFlagLabel) and TChartFlagLabel(ALabel).Highlighted then
+    SetGLColor($FFFF8000)
+  else if SelectedObject = ALabel then
     SetGLColor($FFFF0000) // Выделено (красный)
   else if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
     SetGLColor(TChartFlagLabel(ALabel).Trend.Color) // В цвет соответствующей линии
   else
     SetGLColor($FFCCCCCC); // Обычный серый
-  glLineWidth(1.0);
+  if (ALabel is TChartFlagLabel) and TChartFlagLabel(ALabel).Highlighted then
+    glLineWidth(2.0)
+  else
+    glLineWidth(1.0);
   DrawRect(lLabelRect);
   // 4. Отрисовка текста с автопереносом
   // 4. Отрисовка текста внутри метки
@@ -2026,7 +2070,9 @@ begin
   if Assigned(lFont) then
   begin
     lOldColor := lFont.Color;
-    if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
+    if (ALabel is TChartFlagLabel) and TChartFlagLabel(ALabel).Highlighted then
+      lFont.Color := $FF202020
+    else if (ALabel is TChartFlagLabel) and (TChartFlagLabel(ALabel).Trend <> nil) then
       lFont.Color := TChartFlagLabel(ALabel).Trend.Color // Текст цветом линии
     else
       lFont.Color := $FF333333;
@@ -2060,6 +2106,10 @@ begin
     Exit;
   if (AObject is TChartDrawObject) and not TChartDrawObject(AObject).Visible then
     Exit;
+  if (AObject is TChartFlagLabel) and
+     TChartFlagLabel(AObject).AutoLayout and
+     TChartFlagLabel(AObject).RenderHidden then
+    Exit;
   lYAxis := AYAxis;
   if AObject is TChartAxis then
     lYAxis := TChartAxis(AObject);
@@ -2072,6 +2122,8 @@ begin
   //   DrawTextLabel(TChartTextLabel(AObject), APage, ARect);
   if AObject is TChartCursor then
       DrawCursor(TChartCursor(AObject), APage, ARect);
+  if AObject is TChartHorizontalCursor then
+      DrawHorizontalCursor(TChartHorizontalCursor(AObject), ARect);
     if AObject is TChartFrequencyBand then
       DrawFrequencyBand(TChartFrequencyBand(AObject), APage, ARect);
   for lIndex := 0 to AObject.ChildCount - 1 do
@@ -2088,6 +2140,10 @@ begin
     Exit;
   if (AObject is TChartDrawObject) and not TChartDrawObject(AObject).Visible then
     Exit;
+  if (AObject is TChartFlagLabel) and
+     TChartFlagLabel(AObject).AutoLayout and
+     TChartFlagLabel(AObject).RenderHidden then
+    Exit;
   lYAxis := AYAxis;
   if AObject is TChartAxis then
     lYAxis := TChartAxis(AObject);
@@ -2102,7 +2158,8 @@ var
   I: Integer;
 begin
   if not Assigned(AObject) then Exit;
-  if (AObject is TChartFlagLabel) and TChartFlagLabel(AObject).Visible then
+  if (AObject is TChartFlagLabel) and TChartFlagLabel(AObject).Visible and
+     TChartFlagLabel(AObject).AutoLayout then
     AList.Add(AObject);
   for I := 0 to AObject.ChildCount - 1 do
     CollectFlags(AObject.Children[I], AList);
@@ -2112,58 +2169,100 @@ procedure TOpenGLChartRenderer.ResolveFlagOverlaps(APage: TChartPage);
 var
   lFlags: TList;
   lFlag: TChartFlagLabel;
-  I, J: Integer;
+  I, J, K, lCount, lStep, lTop, lPreferredTop: Integer;
+  lWidth, lHeight, lLeft: Integer;
   lContentRect: TChartPixelRect;
-  lY: Single;
-  lBaseY: array of Integer;
-  lHeight: array of Integer;
+  lRect: TChartPixelRect;
+  lPlaced: array of TChartPixelRect;
+  lAnchorX, lAnchorY: Single;
+  lValue: Double;
+  lAxis: TChartAxis;
+  lFont: cOglFont;
   lTemp: Pointer;
-  lDiff: Integer;
+  lFree: Boolean;
 begin
   lFlags := TList.Create;
   try
     CollectFlags(APage, lFlags);
-    if lFlags.Count <= 1 then Exit;
+    if lFlags.Count = 0 then Exit;
 
     lContentRect := PageContentRect(APage);
-
-    SetLength(lBaseY, lFlags.Count);
-    SetLength(lHeight, lFlags.Count);
-    for I := 0 to lFlags.Count - 1 do
-    begin
-      lFlag := TChartFlagLabel(lFlags[I]);
-      lFlag.RenderYOffset := 0;
-
-      if lFlag.IsWorldY and Assigned(lFlag.Axis) then
-      begin
-        lY := AxisValueToPixel(lFlag.Axis, lFlag.WorldY, lContentRect.Bottom, lContentRect.Top);
-        lBaseY[I] := Round(lY);
-      end
-      else
-      begin
-        lBaseY[I] := lContentRect.Top + Round(lFlag.FloatRect.Top * (lContentRect.Bottom - lContentRect.Top));
-      end;
-      lHeight[I] := lFlag.Height;
-    end;
-
+    lFont := fFontMng.Font(cfGridTick);
+    SetLength(lPlaced, lFlags.Count);
     for I := 0 to lFlags.Count - 2 do
       for J := I + 1 to lFlags.Count - 1 do
-        if lBaseY[I] > lBaseY[J] then
+        if (not TChartFlagLabel(lFlags[I]).Highlighted and
+            TChartFlagLabel(lFlags[J]).Highlighted) or
+           ((TChartFlagLabel(lFlags[I]).Highlighted =
+             TChartFlagLabel(lFlags[J]).Highlighted) and
+            (TChartFlagLabel(lFlags[I]).AnchorX >
+             TChartFlagLabel(lFlags[J]).AnchorX)) then
         begin
           lTemp := lFlags[I];
           lFlags[I] := lFlags[J];
           lFlags[J] := lTemp;
-
-          lDiff := lBaseY[I]; lBaseY[I] := lBaseY[J]; lBaseY[J] := lDiff;
-          lDiff := lHeight[I]; lHeight[I] := lHeight[J]; lHeight[J] := lDiff;
         end;
-
-    for I := 1 to lFlags.Count - 1 do
+    lCount := 0;
+    for I := 0 to lFlags.Count - 1 do
     begin
-      lDiff := (lBaseY[I-1] + TChartFlagLabel(lFlags[I-1]).RenderYOffset + lHeight[I-1] + 4) - lBaseY[I];
-      if lDiff > 0 then
+      lFlag := TChartFlagLabel(lFlags[I]);
+      lFlag.RenderHidden := True;
+      lFlag.RenderYOffset := 0;
+      lAxis := lFlag.Axis;
+      if (lAxis = nil) or (lFlag.Trend = nil) or
+         not GetTrendValueAtX(lFlag.Trend, lFlag.AnchorX, lValue) then
+        Continue;
+      lAnchorX := XValueToPixel(APage, nil, lFlag.AnchorX,
+        lContentRect.Left, lContentRect.Right);
+      lAnchorY := AxisValueToPixel(lAxis, lValue,
+        lContentRect.Bottom, lContentRect.Top);
+      if (lAnchorX < lContentRect.Left) or
+         (lAnchorX > lContentRect.Right) or
+         (lAnchorY < lContentRect.Top) or
+         (lAnchorY > lContentRect.Bottom) then
+        Continue;
+      lWidth := lFlag.Width;
+      if lFont <> nil then
+        lWidth := Max(lWidth, Round(lFont.TextPixelWidth(lFlag.Text)) + 12);
+      lHeight := lFlag.Height;
+      if (lWidth + 4 > lContentRect.Right - lContentRect.Left) or
+         (lHeight + 4 > lContentRect.Bottom - lContentRect.Top) then
+        Continue;
+      lLeft := EnsureRange(Round(lAnchorX) - lWidth div 2,
+        lContentRect.Left + 2, lContentRect.Right - lWidth - 2);
+      { Stay just above the peak. On collision move upward only, so a flag
+        cannot drift toward the zero tick or away from its peak unnecessarily. }
+      lPreferredTop := EnsureRange(Round(lAnchorY) - lHeight - 8,
+        lContentRect.Top + 2, lContentRect.Bottom - lHeight - 2);
+      lStep := lHeight + 4;
+      for J := 0 to (lPreferredTop - lContentRect.Top) div lStep do
       begin
-        TChartFlagLabel(lFlags[I]).RenderYOffset := lDiff;
+        lTop := lPreferredTop - J * lStep;
+        lRect.Left := lLeft;
+        lRect.Right := lLeft + lWidth;
+        lRect.Top := lTop;
+        lRect.Bottom := lTop + lHeight;
+        lFree := True;
+        for K := 0 to lCount - 1 do
+          if (lRect.Left < lPlaced[K].Right + 4) and
+             (lRect.Right + 4 > lPlaced[K].Left) and
+             (lRect.Top < lPlaced[K].Bottom + 4) and
+             (lRect.Bottom + 4 > lPlaced[K].Top) then
+          begin
+            lFree := False;
+            Break;
+          end;
+        if lFree then
+        begin
+          lFlag.WorldX := PixelToXValue(APage, nil, lLeft,
+            lContentRect.Left, lContentRect.Right);
+          lFlag.WorldY := PixelToAxisValue(lAxis, lTop,
+            lContentRect.Bottom, lContentRect.Top);
+          lFlag.RenderHidden := False;
+          lPlaced[lCount] := lRect;
+          Inc(lCount);
+          Break;
+        end;
       end;
     end;
 
@@ -2185,8 +2284,8 @@ begin
     Exit;
   if not APage.Visible then
     Exit;
-  ResolveFlagOverlaps(APage);
   fPageRect := PageToPixelRect(APage);
+  ResolveFlagOverlaps(APage);
   lContentRect := PageContentRect(APage);
   lYAxis := GetPrimaryXAxis(APage);
   glEnable(GL_SCISSOR_TEST);

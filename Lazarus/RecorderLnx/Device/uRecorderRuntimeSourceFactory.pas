@@ -35,7 +35,8 @@ uses
   uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
   uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource,
   uRecorderOpcUaTypes, uRecorderOpcUaFactory, uRecorderSqlDataSource,
-  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorSource;
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorSource,
+  uRecorderPxiMx248ConfiguredEditor, uRecorderPxiMx248Factory;
 
 const
   CMeraSourcePrefix = 'Mera file: ';
@@ -292,6 +293,13 @@ begin
     begin
       lConfigured := TRecorderConfiguredDataSource(
         ARecorder.TagRegistry.ConfiguredDataSources[I]);
+      if SameText(lConfigured.ModuleType, CRecorderPxiMx248ModuleType) then
+      begin
+        lSource := RecorderCreatePxiMx248DataSource(lConfigured, ADataUpdateMs);
+        ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
+        Log(ALog, 'PXI MX-248 source configured: ' + lConfigured.SourceId);
+        Continue;
+      end;
       if not RecorderIsOpcUaSource(lConfigured.SourceId,
         lConfigured.ModuleType) then
       begin
@@ -480,6 +488,8 @@ begin
       lSource := TRecorderMcbusDataSource.Create(ASourceId, lHost, lPort,
         lPollFrequencyHz, ADataUpdateMs, lTagNames, lSpecificConfigText);
     end
+    else if SameText(lConfigured.ModuleType, CRecorderPxiMx248ModuleType) then
+      lSource := RecorderCreatePxiMx248DataSource(lConfigured, ADataUpdateMs)
     else if RecorderIsOpcUaSource(ASourceId, lConfigured.ModuleType) then
       lSource := RecorderCreateOpcUaDataSource(ASourceId,
         lConfigured.SpecificConfigText, ADataUpdateMs)

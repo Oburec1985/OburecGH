@@ -4,9 +4,7 @@ object RecorderVirtualTagDialog: TRecorderVirtualTagDialog
   Top = 260
   Width = 420
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSizeable
-  Constraints.MinHeight = 190
-  Constraints.MinWidth = 420
+  BorderStyle = bsDialog
   Caption = 'Создание виртуального тега'
   ClientHeight = 190
   ClientWidth = 420
@@ -24,7 +22,6 @@ object RecorderVirtualTagDialog: TRecorderVirtualTagDialog
     Height = 23
     Top = 34
     Width = 396
-    Anchors = [akTop, akLeft, akRight]
     TabOrder = 0
   end
   object cbVector: TCheckBox
@@ -60,7 +57,6 @@ object RecorderVirtualTagDialog: TRecorderVirtualTagDialog
     Height = 30
     Top = 148
     Width = 82
-    Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     TabOrder = 3
@@ -71,7 +67,6 @@ object RecorderVirtualTagDialog: TRecorderVirtualTagDialog
     Height = 30
     Top = 148
     Width = 82
-    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2

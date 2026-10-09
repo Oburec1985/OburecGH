@@ -12,14 +12,16 @@ unit uRecorderConfiguredSourceEditor;
 interface
 
 uses
-  Classes, SysUtils, uRecorderTags, uRecorderConfiguredDataSources;
+  Classes, SysUtils, uRecorderTags, uRecorderDataSources,
+  uRecorderConfiguredDataSources;
 
 type
   IRecorderConfiguredSourceEditor = interface
     ['{A4E8C1F2-6B3D-4F9A-9E2C-1D5A7B8C9E0F}']
     function SupportsSource(const ASourceId, AModuleType: string): Boolean;
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
-      const ASourceId: string; out ANewSourceId: string): Boolean;
+      const ASourceId: string; out ANewSourceId: string;
+      ADataSources: TRecorderDataSourceManager): Boolean;
   end;
 
 procedure RecorderRegisterConfiguredSourceEditor(
@@ -27,7 +29,8 @@ procedure RecorderRegisterConfiguredSourceEditor(
 
 function RecorderEditConfiguredDataSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string; const AModuleTypeHint: string = ''): Boolean;
+  out ANewSourceId: string; const AModuleTypeHint: string = '';
+  ADataSources: TRecorderDataSourceManager = nil): Boolean;
 
 function RecorderResolveConfiguredSourceModuleType(
   ARegistry: TRecorderTagRegistry; const ASourceId: string): string;
@@ -99,7 +102,8 @@ end;
 
 function RecorderEditConfiguredDataSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string; const AModuleTypeHint: string): Boolean;
+  out ANewSourceId: string; const AModuleTypeHint: string;
+  ADataSources: TRecorderDataSourceManager): Boolean;
 var
   lEditor: IRecorderConfiguredSourceEditor;
   lModuleType: string;
@@ -115,7 +119,8 @@ begin
   lEditor := GConfiguredSourceEditors.FindEditor(ASourceId, lModuleType);
   if lEditor = nil then
     Exit;
-  Result := lEditor.EditSource(AOwner, ARegistry, ASourceId, ANewSourceId);
+  Result := lEditor.EditSource(AOwner, ARegistry, ASourceId, ANewSourceId,
+    ADataSources);
 end;
 
 finalization

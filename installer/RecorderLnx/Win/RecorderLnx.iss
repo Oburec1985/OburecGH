@@ -3,16 +3,7 @@
   #define AppVersion "0.1.10"
 #endif
 #define AppPublisher "Mera"
-#define SourceRoot "..\..\..\Lazarus\RecorderLnx"
-#ifndef AppExeOverride
-  #define AppExe SourceRoot + "\lib\x86_64-win64\RecorderLnx.exe"
-#else
-  #define AppExe AppExeOverride
-#endif
-#define HostAgentExe SourceRoot + "\lib\x86_64-win64\RecorderHostAgent.exe"
-#define PluginDir SourceRoot + "\lib\x86_64-win64\plugins"
-#define LuaRuntime SourceRoot + "\lib\x86_64-win64\lua54.dll"
-#define LuaHelp SourceRoot + "\lib\x86_64-win64\help\RecorderLnxLua.chm"
+#define FilesRoot "files"
 
 [Setup]
 AppId={{4A88E3C4-8B9E-4B0C-81F7-72D86F1C6143}
@@ -32,7 +23,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 WizardStyle=modern
 UninstallDisplayIcon={app}\RecorderLnx.exe
-SetupIconFile={#SourceRoot}\resources\app\RecorderLnx.ico
+SetupIconFile={#FilesRoot}\setup\RecorderLnx.ico
 SetupLogging=yes
 
 [Languages]
@@ -44,6 +35,8 @@ Name: "{app}\bios"
 Name: "{app}\bios\devices"
 Name: "{app}\bios\devices\mc201"
 Name: "{app}\syscom"
+Name: "{app}\mx248"
+Name: "{app}\mx248\vendor"
 Name: "{code:GetMeraFilesDir}"
 Name: "{code:GetMeraFilesDir}\RecorderLnx"
 Name: "{code:GetMeraFilesDir}\RecorderLnx\config"
@@ -54,23 +47,32 @@ Name: "{code:GetMeraFilesDir}\Resources"
 Name: "{code:GetMeraFilesDir}\SDB"
 
 [Files]
-Source: "{#AppExe}"; DestDir: "{app}"; DestName: "RecorderLnx.exe"; Flags: ignoreversion
-Source: "{#HostAgentExe}"; DestDir: "{app}"; Flags: ignoreversion; \
+Source: "{#FilesRoot}\app\RecorderLnx.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FilesRoot}\app\RecorderHostAgent.exe"; DestDir: "{app}"; Flags: ignoreversion; \
   AfterInstall: EnsureHostAgentConfig
-Source: "{#LuaRuntime}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#LuaHelp}"; DestDir: "{app}\help"; Flags: ignoreversion
-Source: "{#PluginDir}\LuaCalcPlugin.dll"; DestDir: "{app}\plugins"; \
+Source: "{#FilesRoot}\app\lua54.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FilesRoot}\app\help\RecorderLnxLua.chm"; DestDir: "{app}\help"; Flags: ignoreversion
+Source: "{#FilesRoot}\app\plugins\LuaCalcPlugin.dll"; DestDir: "{app}\plugins"; \
   Flags: ignoreversion
-Source: "{#PluginDir}\SampleInfoPlugin.dll"; DestDir: "{app}\plugins"; \
+Source: "{#FilesRoot}\app\plugins\SampleInfoPlugin.dll"; DestDir: "{app}\plugins"; \
   Flags: ignoreversion
-Source: "{#SourceRoot}\lib\x86_64-win64\res\*"; DestDir: "{app}\res"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
-Source: "{#SourceRoot}\Device\MCbus\resources\devices\mc201\mc_201a.bio"; \
+Source: "{#FilesRoot}\app\res\*"; DestDir: "{app}\res"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#FilesRoot}\app\bios\devices\mc201\mc_201a.bio"; \
   DestDir: "{app}\bios\devices\mc201"; Flags: ignoreversion
-Source: "{#SourceRoot}\config\app.ini"; \
+; PXI MX-248 vendor stack and bridge are x86. Keep the executable beside its
+; private DLL closure; RecorderLnx starts it on demand through local pipes.
+; Keep it isolated from the Win64 application directory to prevent accidental
+; LoadLibrary attempts from RecorderLnx.exe. The build script verifies PE x86.
+Source: "{#FilesRoot}\app\mx248\vendor\*"; DestDir: "{app}\mx248\vendor"; \
+  Flags: ignoreversion
+Source: "{#FilesRoot}\redist\VC_redist.x86.exe"; DestDir: "{tmp}"; \
+  DestName: "VC_redist.x86.exe"; \
+  Flags: deleteafterinstall
+Source: "{#FilesRoot}\mera-files\RecorderLnx\app.ini"; \
   DestDir: "{code:GetMeraFilesDir}\RecorderLnx"; \
   Flags: onlyifdoesntexist uninsneveruninstall; Check: ShouldInstallAppConfig
-Source: "{#SourceRoot}\config\projects\default\*"; \
+Source: "{#FilesRoot}\mera-files\RecorderLnx\config\projects\default\*"; \
   DestDir: "{code:GetMeraFilesDir}\RecorderLnx\config\projects\default"; \
   Flags: onlyifdoesntexist uninsneveruninstall recursesubdirs createallsubdirs
 
@@ -102,6 +104,9 @@ Name: "desktopicon"; Description: "Создать ярлык на рабочем
   GroupDescription: "Дополнительные значки:"
 
 [Run]
+Filename: "{tmp}\VC_redist.x86.exe"; Parameters: "/install /quiet /norestart"; \
+  Flags: runhidden waituntilterminated; \
+  StatusMsg: "Установка x86 runtime для PXI MX-248..."
 Filename: "{sys}\netsh.exe"; \
   Parameters: "advfirewall firewall delete rule name=""Mera RecorderHostAgent API"""; \
   Flags: runhidden; StatusMsg: "Обновление правила управления компьютером..."
@@ -120,6 +125,8 @@ Filename: "{app}\RecorderLnx.exe"; Description: "Запустить RecorderLnx"
   WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
+Filename: "{sys}\taskkill.exe"; Parameters: "/IM PxiMx248Bridge.exe /T /F"; \
+  Flags: runhidden; RunOnceId: "StopPxiMx248Bridge"
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM RecorderHostAgent.exe /T /F"; \
   Flags: runhidden; RunOnceId: "StopRecorderHostAgent"
 Filename: "{sys}\netsh.exe"; \
@@ -182,6 +189,17 @@ begin
     ewWaitUntilTerminated, ResultCode);
 end;
 
+procedure StopMx248Bridge;
+var
+  ResultCode: Integer;
+begin
+  { Bridge has no global service state; exact-image cleanup is only for a
+    previous on-demand child that survived an interrupted RecorderLnx. }
+  Exec(ExpandConstant('{sys}\taskkill.exe'),
+    '/IM PxiMx248Bridge.exe /T /F', '', SW_HIDE,
+    ewWaitUntilTerminated, ResultCode);
+end;
+
 procedure EnsureHostAgentConfig;
 var
   ConfigFile: string;
@@ -204,5 +222,8 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssInstall then
+  begin
+    StopMx248Bridge;
     StopHostAgent;
+  end;
 end;

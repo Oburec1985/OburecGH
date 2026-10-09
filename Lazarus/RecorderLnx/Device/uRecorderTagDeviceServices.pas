@@ -124,7 +124,7 @@ begin
   if TryParseRecorderMic185SourceId(ATag.SourceId, lHost, lPort) then
   begin
     Result := ApplyRecorderMic185SourceDialog(AOwner, ARecorder.TagRegistry,
-      ATag.SourceId, lNewSourceId);
+      ATag.SourceId, lNewSourceId, ARecorder.DataSources);
     if Result then
       Log(ALog, 'MIC183/185 hardware settings updated.');
     Exit;

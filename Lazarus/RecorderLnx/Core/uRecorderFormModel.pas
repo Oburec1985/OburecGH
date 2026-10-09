@@ -96,6 +96,7 @@ type
     fName: string;                                 { имя компонента }
     fTagName: string;
     fTagId: TRecorderTagId;                        { Id привязанного тега }
+    fUseInactiveTag: Boolean;
     fNamedFontName: string;
     fNamedFonts: TRecorderNamedFontManager;
     fResolvedNamedFont: TRecorderNamedFont;
@@ -126,6 +127,7 @@ type
     property Name: string read fName write fName;
     property TagName: string read fTagName write fTagName;
     property TagId: TRecorderTagId read fTagId write fTagId;
+    property UseInactiveTag:Boolean read fUseInactiveTag write fUseInactiveTag;
     property Bounds: TRecorderRect read fBounds write fBounds;
     property Factory: TRecorderComponentFactoryBase read fFactory;
     property ParentPage: TRecorderFormPage read fParentPage;
@@ -1071,6 +1073,7 @@ begin
   fBounds.Height := 0;
   fTagName := '';
   fTagId := 0;
+  fUseInactiveTag:=False;
   fResolvedFontRevision := High(QWord);
 end;
 
@@ -1456,6 +1459,7 @@ begin
     Exit;
   TagId := ASource.TagId;
   TagName := ASource.TagName;
+  UseInactiveTag:=ASource.UseInactiveTag;
   fImages.Assign(ASource.Images);
   ClearSvgBindings;
   for I := 0 to ASource.SvgBindingCount - 1 do

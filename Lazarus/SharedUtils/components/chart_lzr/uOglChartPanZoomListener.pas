@@ -69,6 +69,32 @@ procedure FitPageZoom(APage: TChartPage);
 
 implementation
 
+procedure ClampPageXToPreset(APage: TChartPage);
+var
+  lSpan, lPresetSpan: Double;
+begin
+  if (APage = nil) or not APage.HasPresetXRange or
+     (APage.PresetMaxXValue <= APage.PresetMinXValue) then Exit;
+  lSpan := APage.XMaxValue - APage.XMinValue;
+  lPresetSpan := APage.PresetMaxXValue - APage.PresetMinXValue;
+  if (lSpan <= 0) or (lSpan >= lPresetSpan) then
+  begin
+    APage.XMinValue := APage.PresetMinXValue;
+    APage.XMaxValue := APage.PresetMaxXValue;
+    Exit;
+  end;
+  if APage.XMinValue < APage.PresetMinXValue then
+  begin
+    APage.XMinValue := APage.PresetMinXValue;
+    APage.XMaxValue := APage.XMinValue + lSpan;
+  end;
+  if APage.XMaxValue > APage.PresetMaxXValue then
+  begin
+    APage.XMaxValue := APage.PresetMaxXValue;
+    APage.XMinValue := APage.XMaxValue - lSpan;
+  end;
+end;
+
 
 function IsOnYAxisBand(ARenderer: TOpenGLChartRenderer; APage: TChartPage;
   AX, AY: Integer): Boolean;
@@ -844,6 +870,7 @@ begin
         lContentRect.Right - dX, lContentRect.Left, lContentRect.Right);
       fActivePage.XMinValue := lNewMinX;
       fActivePage.XMaxValue := lNewMaxX;
+      ClampPageXToPreset(fActivePage);
       fActivePage.ZoomedX := True;
       
       // Определяем выбранную ось (Y) для изоляции панорамирования
@@ -1011,6 +1038,7 @@ begin
             NewXMax := lRenderer.PixelToXValue(fActivePage, nil, lSelRect.Right, lContentRect.Left, lContentRect.Right);
             fActivePage.XMinValue := NewXMin;
             fActivePage.XMaxValue := NewXMax;
+            ClampPageXToPreset(fActivePage);
             fActivePage.ZoomedX := True;
           end;
           // Определяем выбранную ось (Y) для изоляции рамки зума
@@ -1128,6 +1156,7 @@ begin
       lMouseValX := lRenderer.PixelToXValue(lPage, nil, X, lContentRect.Left, lContentRect.Right);
       lPage.XMinValue := lMouseValX - (lMouseValX - lPage.XMinValue) * lZoomFactor;
       lPage.XMaxValue := lMouseValX + (lPage.XMaxValue - lMouseValX) * lZoomFactor;
+      ClampPageXToPreset(lPage);
       lPage.ZoomedX := True;
       
       // Определяем выбранную ось (Y) для изоляции зума

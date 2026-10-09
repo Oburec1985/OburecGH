@@ -76,8 +76,6 @@ var
   lConfig: TCoordinatorConfig;
   lServer: TCoordinatorHttpServer;
   lEventStore: TCoordinatorSqlEventStore;
-  lHost, lResult: TJSONObject;
-  lIndex: Integer;
 begin
   Result := 1;
   lModel := TCoordinatorModel.Create;
@@ -91,20 +89,6 @@ begin
     lModel.EventWindowSec := lConfig.EventWindowSec;
     lModel.CreateRecordingEvents := lConfig.CreateRecordingEvents;
     lModel.StartAllOnAnyRecording := lConfig.StartAllOnAnyRecording;
-    for lIndex := 0 to lConfig.HostCount - 1 do
-    begin
-      lHost := TJSONObject.Create;
-      try
-        lHost.Add('instance_id', lConfig.HostId(lIndex));
-        lHost.Add('managed', True);
-        lHost.Add('host_name', lConfig.HostName(lIndex));
-        lHost.Add('state', 'configured');
-        lResult := lModel.RegisterHello(lHost);
-        lResult.Free;
-      finally
-        lHost.Free;
-      end;
-    end;
     lConfig.ListenAddress := ParamValue('--listen', lConfig.ListenAddress);
     lConfig.Port := StrToIntDef(ParamValue('--port', IntToStr(lConfig.Port)), lConfig.Port);
     lServer.Start(lConfig.ListenAddress, lConfig.Port);

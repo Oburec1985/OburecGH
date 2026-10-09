@@ -45,6 +45,14 @@ begin
   FindRcPeaks(lX, lY, 1, 'response', lPeaks);
   Check(Length(lPeaks) = 1, 'FRF half-width peak');
   CheckNear(lPeaks[0].Decrement, 1 / 3, 'FRF half-width decrement');
+
+  SetLength(lPeaks, 0);
+  FindRcPeaks(lX, lY, 1, 'response', lPeaks, 0, 2);
+  Check(Length(lPeaks) = 0,
+    'peak whose second threshold crossing is outside preset band must be excluded');
+  FindRcPeaks(lX, lY, 1, 'response', lPeaks, 0, 4);
+  Check(Length(lPeaks) = 1,
+    'completed peak inside preset frequency band must remain visible');
 end;
 
 function ReferenceWindow(AKind: TRecorderImpactWindowKind; AIndex,

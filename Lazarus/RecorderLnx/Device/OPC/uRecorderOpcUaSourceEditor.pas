@@ -10,7 +10,8 @@ implementation
 uses
   Classes, SysUtils, Math, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
   ComCtrls, Grids, Contnrs, Graphics, ImgList, Menus, LazUTF8, LCLType,
-  uRecorderTags, uRecorderMessages, uRecorderConfiguredDataSources,
+  uRecorderTags, uRecorderDataSources, uRecorderMessages,
+  uRecorderConfiguredDataSources,
   uRecorderConfiguredSourceEditor, uRecorderOpcUaTypes, uRecorderOpcUaApi;
 
 type
@@ -214,7 +215,8 @@ type
   public
     function SupportsSource(const ASourceId, AModuleType: string): Boolean;
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
-      const ASourceId: string; out ANewSourceId: string): Boolean;
+      const ASourceId: string; out ANewSourceId: string;
+      ADataSources: TRecorderDataSourceManager): Boolean;
   end;
 
 const
@@ -2290,7 +2292,7 @@ end;
 
 function TRecorderOpcUaSourceEditor.EditSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string; ADataSources: TRecorderDataSourceManager): Boolean;
 var
   lConfig: TRecorderOpcUaConfig;
   lEntry, lOldEntry: TRecorderConfiguredDataSource;

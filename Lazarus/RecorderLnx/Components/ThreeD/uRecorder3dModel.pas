@@ -19,6 +19,7 @@ type
   TRecorder3dBindingSlot = (r3bPointX, r3bPointY, r3bPointZ, r3bColor,
     r3bNormalLength);
   TRecorder3dSkinAxis = (r3sX, r3sY, r3sZ);
+  TRecorder3dTagValueMode = (r3tvCurrentValue, r3tvDefaultEstimate);
 
   TRecorder3dFrfBindingSpec = record
     CurveId: QWord;
@@ -78,10 +79,14 @@ type
   private
     fTagIds: array[TRecorder3dSkinAxis] of TRecorderTagId;
     fTagNames: array[TRecorder3dSkinAxis] of string;
+    fTagValueModes: array[TRecorder3dSkinAxis] of TRecorder3dTagValueMode;
     function GetTagId(AAxis:TRecorder3dSkinAxis):TRecorderTagId;
     function GetTagName(AAxis:TRecorder3dSkinAxis):string;
     procedure SetTagId(AAxis:TRecorder3dSkinAxis; AValue:TRecorderTagId);
     procedure SetTagName(AAxis:TRecorder3dSkinAxis; const AValue:string);
+    function GetTagValueMode(AAxis:TRecorder3dSkinAxis):TRecorder3dTagValueMode;
+    procedure SetTagValueMode(AAxis:TRecorder3dSkinAxis;
+      AValue:TRecorder3dTagValueMode);
   public
     HelperNodeId:QWord;
     OwnerMeshNodeId:QWord;
@@ -92,6 +97,8 @@ type
       read GetTagId write SetTagId;
     property TagNames[AAxis:TRecorder3dSkinAxis]:string
       read GetTagName write SetTagName;
+    property TagValueModes[AAxis:TRecorder3dSkinAxis]:TRecorder3dTagValueMode
+      read GetTagValueMode write SetTagValueMode;
   end;
 
   TRecorder3dGradientStrip=class
@@ -115,6 +122,8 @@ type
     GradientId:QWord;
     TagId:TRecorderTagId;
     TagName:string;
+    EstimateKind:TRecorderTagEstimateKind;
+    UseDefaultEstimate:Boolean;
     Enabled,ApplyColor,ShowValueLabel:Boolean;
     constructor Create;
   end;
@@ -299,6 +308,8 @@ begin
   VertexIdKind:=svikLogical;
   Radius:=1;
   FalloffExponent:=1;
+  EstimateKind:=tekMean;
+  UseDefaultEstimate:=True;
   Enabled:=True;
   ApplyColor:=True;
 end;
@@ -307,6 +318,18 @@ constructor TRecorder3dSkinBone.Create;
 begin
   inherited Create;
   SetIdentity(BindLocalTransform);
+end;
+
+function TRecorder3dSkinBone.GetTagValueMode(
+  AAxis:TRecorder3dSkinAxis):TRecorder3dTagValueMode;
+begin
+  Result:=fTagValueModes[AAxis];
+end;
+
+procedure TRecorder3dSkinBone.SetTagValueMode(AAxis:TRecorder3dSkinAxis;
+  AValue:TRecorder3dTagValueMode);
+begin
+  fTagValueModes[AAxis]:=AValue;
 end;
 
 function TRecorder3dSkinBone.GetTagId(
@@ -550,6 +573,7 @@ begin
     begin
       TargetBone.TagIds[BoneAxis]:=SourceBone.TagIds[BoneAxis];
       TargetBone.TagNames[BoneAxis]:=SourceBone.TagNames[BoneAxis];
+      TargetBone.TagValueModes[BoneAxis]:=SourceBone.TagValueModes[BoneAxis];
     end;
   end;
   ClearGradientStrips;
@@ -577,6 +601,8 @@ begin
     TargetAnchor.Falloff:=SourceAnchor.Falloff;
     TargetAnchor.GradientId:=SourceAnchor.GradientId;
     TargetAnchor.TagId:=SourceAnchor.TagId; TargetAnchor.TagName:=SourceAnchor.TagName;
+    TargetAnchor.EstimateKind:=SourceAnchor.EstimateKind;
+    TargetAnchor.UseDefaultEstimate:=SourceAnchor.UseDefaultEstimate;
     TargetAnchor.Enabled:=SourceAnchor.Enabled;
     TargetAnchor.ApplyColor:=SourceAnchor.ApplyColor;
     TargetAnchor.ShowValueLabel:=SourceAnchor.ShowValueLabel;

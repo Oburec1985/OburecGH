@@ -1,0 +1,207 @@
+object PxiMx248SettingsDialog: TPxiMx248SettingsDialog
+  Left = 320
+  Height = 520
+  Top = 180
+  Width = 940
+  BorderIcons = [biSystemMenu]
+  Caption = 'PXI MX-248'
+  ClientHeight = 520
+  ClientWidth = 940
+  Constraints.MinHeight = 430
+  Constraints.MinWidth = 760
+  OnCreate = FormCreate
+  Position = poOwnerFormCenter
+  LCLVersion = '3.8.0.0'
+  object pnDevice: TPanel
+    Left = 0
+    Height = 142
+    Top = 0
+    Width = 940
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 142
+    ClientWidth = 940
+    TabOrder = 0
+    object lblChassis: TLabel
+      Left = 12
+      Height = 15
+      Top = 12
+      Width = 40
+      Caption = 'Шасси'
+    end
+    object edChassis: TEdit
+      Left = 12
+      Height = 25
+      Top = 32
+      Width = 70
+      OnChange = LocationChange
+      TabOrder = 0
+      Text = '0'
+    end
+    object lblSlot: TLabel
+      Left = 94
+      Height = 15
+      Top = 12
+      Width = 31
+      Caption = 'Слот'
+    end
+    object edSlot: TEdit
+      Left = 94
+      Height = 25
+      Top = 32
+      Width = 70
+      OnChange = LocationChange
+      TabOrder = 1
+      Text = '0'
+    end
+    object lblSourceId: TLabel
+      Left = 176
+      Height = 15
+      Top = 12
+      Width = 56
+      Caption = 'Source ID'
+    end
+    object edSourceId: TEdit
+      Left = 176
+      Height = 25
+      Top = 32
+      Width = 256
+      TabOrder = 2
+    end
+    object lblSampleRate: TLabel
+      Left = 448
+      Height = 15
+      Top = 12
+      Width = 78
+      Caption = 'Частота, Hz'
+    end
+    object edSampleRate: TEdit
+      Left = 448
+      Height = 25
+      Top = 32
+      Width = 116
+      TabOrder = 3
+    end
+    object lblBlockSamples: TLabel
+      Left = 580
+      Height = 15
+      Top = 12
+      Width = 99
+      Caption = 'Размер блока'
+    end
+    object edBlockSamples: TEdit
+      Left = 580
+      Height = 25
+      Top = 32
+      Width = 116
+      TabOrder = 4
+    end
+    object lblCalibrationMode: TLabel
+      Left = 712
+      Height = 15
+      Top = 12
+      Width = 119
+      Caption = 'Источник калибровки'
+    end
+    object cbCalibrationMode: TComboBox
+      Left = 712
+      Height = 23
+      Top = 32
+      Width = 156
+      Style = csDropDownList
+      TabOrder = 5
+    end
+    object lblStatus: TLabel
+      Left = 640
+      Height = 58
+      Top = 72
+      Width = 288
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = 'Offline draft: оборудование не изменяется до Применить.'
+      WordWrap = True
+    end
+    object lblDiscovered: TLabel
+      Left = 12
+      Height = 15
+      Top = 72
+      Width = 116
+      Caption = 'Плата в этой системе'
+    end
+    object cbDiscovered: TComboBox
+      Left = 12
+      Height = 23
+      Top = 94
+      Width = 500
+      Style = csDropDownList
+      OnChange = DiscoveredChange
+      TabOrder = 6
+    end
+    object btnSearch: TButton
+      Left = 524
+      Height = 30
+      Top = 90
+      Width = 104
+      Caption = 'Найти платы'
+      OnClick = DiscoverClick
+      TabOrder = 7
+    end
+  end
+  object gridChannels: TStringGrid
+    Left = 0
+    Height = 326
+    Top = 142
+    Width = 940
+    Align = alClient
+    ColCount = 9
+    DefaultColWidth = 96
+    FixedCols = 1
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
+    RowCount = 9
+    TabOrder = 1
+    OnDblClick = GridDblClick
+  end
+  object pnButtons: TPanel
+    Left = 0
+    Height = 52
+    Top = 468
+    Width = 940
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 52
+    ClientWidth = 940
+    TabOrder = 2
+    object btnApply: TButton
+      Left = 660
+      Height = 30
+      Top = 10
+      Width = 88
+      Anchors = [akTop, akRight]
+      Caption = 'Применить'
+      OnClick = ApplyClick
+      TabOrder = 0
+    end
+    object btnOk: TButton
+      Left = 756
+      Height = 30
+      Top = 10
+      Width = 80
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      OnClick = OkClick
+      TabOrder = 1
+    end
+    object btnCancel: TButton
+      Left = 844
+      Height = 30
+      Top = 10
+      Width = 84
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 2
+    end
+  end
+end

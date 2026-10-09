@@ -7,7 +7,7 @@ unit uOglChartCursor;
 {$codepage UTF8}
 interface
 uses
-  Classes, SysUtils, fpjson, uOglChartBaseObj, uOglChartTypes;
+  Classes, SysUtils, fpjson, uOglChartBaseObj, uOglChartTypes, uOglChartAxis;
 type
   TChartCursorType = (cctSingle, cctDouble);
   { TChartCursor }
@@ -39,6 +39,25 @@ type
     property ShowLabel: Boolean read fShowLabel write fShowLabel;
     property Color: Cardinal read fColor write fColor;
     property MultiLineMode: TMultiLineMode read fMultiLineMode write fMultiLineMode;
+  end;
+  { Horizontal overlay spanning the axis content rectangle in screen space. }
+  TChartHorizontalCursor = class(TChartBaseObject)
+  private
+    fVisible: Boolean;
+    fY: Double;
+    fAxis: TChartAxis;
+    fColor: Cardinal;
+    fLineWidth: Single;
+    fStipplePattern: Word;
+  public
+    procedure AssignDefaultProperties; override;
+    function NotSaveToJson: Boolean; override;
+    property Visible: Boolean read fVisible write fVisible;
+    property Y: Double read fY write fY;
+    property Axis: TChartAxis read fAxis write fAxis;
+    property Color: Cardinal read fColor write fColor;
+    property LineWidth: Single read fLineWidth write fLineWidth;
+    property StipplePattern: Word read fStipplePattern write fStipplePattern;
   end;
   { TChartFrequencyBand }
   TChartFrequencyBand = class(TChartBaseObject)
@@ -129,6 +148,23 @@ begin
   begin
     if AJson.Booleans['multiline'] then fMultiLineMode := mlShowNames else fMultiLineMode := mlDisabled;
   end;
+end;
+{ TChartHorizontalCursor }
+procedure TChartHorizontalCursor.AssignDefaultProperties;
+begin
+  inherited AssignDefaultProperties;
+  Name := 'HorizontalCursor';
+  Caption := '';
+  fVisible := True;
+  fY := 0;
+  fAxis := nil;
+  fColor := $FFFF0000;
+  fLineWidth := 2;
+  fStipplePattern := $0F0F;
+end;
+function TChartHorizontalCursor.NotSaveToJson: Boolean;
+begin
+  Result := True;
 end;
 { TChartFrequencyBand }
 constructor TChartFrequencyBand.Create;

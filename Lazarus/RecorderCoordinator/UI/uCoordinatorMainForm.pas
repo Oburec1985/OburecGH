@@ -7,6 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Buttons, ComCtrls,
+  Menus,
   ExtCtrls, Grids, DateTimePicker, Spin, fpjson, uCoordinatorModel,
   uCoordinatorConfig, uCoordinatorHttpServer, uCoordinatorSqlEventStore,
   uRecorderSqlDbTypes, uCoordinatorHostAgentClient;
@@ -86,6 +87,7 @@ type
     timerRefresh: TTimer;
     procedure btnAddStorageClick(Sender: TObject);
     procedure btnAddHostClick(Sender: TObject);
+    procedure AddHostMenuItemClick(Sender: TObject);
     procedure btnDeleteHostClick(Sender: TObject);
     procedure btnCommandStartClick(Sender: TObject);
     procedure btnCommandStartAllClick(Sender: TObject);
@@ -138,6 +140,7 @@ type
     fSdbConfigResponsesReady: Boolean;
     fSdbConfigRequestedAt: QWord;
     procedure AddLog(const AText: string);
+    procedure CreateHostContextMenu;
     procedure DrainBackgroundDiagnostics;
     procedure ApplyServiceSettings;
     procedure ApplyStorageEditor;
@@ -198,8 +201,6 @@ end;
 
 procedure TCoordinatorMainForm.FormCreate(Sender: TObject);
 var
-  lIndex: Integer;
-  lHost, lResult: TJSONObject;
   lError: string;
 begin
   Caption := CoordinatorWindowCaption;
@@ -212,20 +213,7 @@ begin
   fSqlEventStore := TCoordinatorSqlEventStore.Create(fConfig.SqlDbConfigFile);
   fModel.OnRecordingLifecycle := @StoreRecordingLifecycle;
   fServer := TCoordinatorHttpServer.Create(fModel);
-  for lIndex := 0 to fConfig.HostCount - 1 do
-  begin
-    lHost := TJSONObject.Create;
-    try
-      lHost.Add('instance_id', fConfig.HostId(lIndex));
-      lHost.Add('host_name', fConfig.HostName(lIndex));
-      lHost.Add('state', 'configured');
-      lHost.Add('managed', True);
-      lResult := fModel.RegisterHello(lHost);
-      lResult.Free;
-    finally
-      lHost.Free;
-    end;
-  end;
+  CreateHostContextMenu;
   edtEventWindow.Text := IntToStr(fConfig.EventWindowSec);
   edtDatabaseHost.Text := DefaultFirebirdHost;
   fLoading := True;
@@ -713,11 +701,11 @@ begin
       Exit;
     end;
     fModel.SetHostDisplayName(lStoredId, Trim(edtHostName.Text));
-    fConfig.SetHostName(lStoredId, lHostId, Trim(edtHostName.Text));
     AddLog('RecorderLnx изменён: ' + lStoredId);
   end
   else
   begin
+    fModel.RestoreIgnoredHost(lHostId, lHostId, '');
     lInput := TJSONObject.Create;
     try
       lInput.Add('instance_id', lHostId);
@@ -725,6 +713,13 @@ begin
       lInput.Add('state', 'configured');
       lResult := fModel.RegisterHello(lInput);
       try
+        if SameText(lResult.Get('result_code', ''), 'ignored') then
+        begin
+          MessageDlg('Добавление RecorderLnx',
+            'Хост остался в списке игнорируемых и не был добавлен.',
+            mtWarning, [mbOK], 0);
+          Exit;
+        end;
         AddLog('RecorderLnx добавлен: ' + lHostId);
       finally
         lResult.Free;
@@ -732,9 +727,7 @@ begin
     finally
       lInput.Free;
     end;
-    fConfig.AddHost(lHostId, Trim(edtHostName.Text));
   end;
-  fConfig.Save;
   RefreshHosts;
 end;
 
@@ -756,13 +749,11 @@ begin
       mtWarning, [mbOK], 0);
     Exit;
   end;
-  fConfig.RemoveHost(lHostId, lAddress);
-  fConfig.Save;
   fEditorHostId := '';
   edtSelectedHost.Clear;
   edtHostName.Clear;
   RefreshHosts;
-  AddLog('Хост удалён и добавлен в ignored-hosts.ini: ' + lHostId);
+  AddLog('Хост удалён и добавлен в [ignored_hosts]: ' + lHostId);
 end;
 
 function TCoordinatorMainForm.EditorHost: TJSONObject;
@@ -1096,6 +1087,37 @@ begin
   finally
     lPayload.Free;
   end;
+end;
+
+procedure TCoordinatorMainForm.CreateHostContextMenu;
+var
+  lMenu: TPopupMenu;
+  lAddHostItem: TMenuItem;
+begin
+  lMenu := TPopupMenu.Create(Self);
+  lAddHostItem := TMenuItem.Create(lMenu);
+  lAddHostItem.Caption := 'Добавить хост';
+  lAddHostItem.OnClick := @AddHostMenuItemClick;
+  lMenu.Items.Add(lAddHostItem);
+  gridHosts.PopupMenu := lMenu;
+end;
+
+procedure TCoordinatorMainForm.AddHostMenuItemClick(Sender: TObject);
+var
+  lAddress, lHostName: string;
+begin
+  lAddress := '';
+  if not InputQuery('Добавление RecorderLnx',
+    'Адрес хоста или Instance ID:', lAddress) then Exit;
+  lAddress := Trim(lAddress);
+  if lAddress = '' then Exit;
+  lHostName := '';
+  if not InputQuery('Добавление RecorderLnx',
+    'Имя хоста (можно оставить пустым):', lHostName) then Exit;
+  fEditorHostId := '';
+  edtSelectedHost.Text := lAddress;
+  edtHostName.Text := Trim(lHostName);
+  btnAddHostClick(Sender);
 end;
 
 procedure TCoordinatorMainForm.btnSetSqlPeriodAllClick(Sender: TObject);

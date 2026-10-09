@@ -17,7 +17,8 @@ uses
   uRecorderProjectFiles, uRecorderTags, uRecorderLissajousMath,
   uRecorder3dModel, uRecorder3dSkinBindingAdapter,
   uRecorderImpactHammerModel, uRecorderSvgParameters,
-  u3dPrimitives, u3dCoreTypes, u3dScene, u3dSkin, u3dVertexColors;
+  uFormEditorController, u3dPrimitives, u3dCoreTypes, u3dScene, u3dSkin,
+  u3dVertexColors;
 
 type
   TTestPluginOscillographFactory = class(TRecorderComponentFactoryBase)
@@ -116,6 +117,45 @@ begin
   Writeln('Calibration stable SDB reference test passed.');
 end;
 
+procedure TestProjectMic185OhmUnitRoundTrip;
+var
+  lFileName: string;
+  lLoaded: TRecorderTagRegistry;
+  lRegistry: TRecorderTagRegistry;
+  lTag: TRecorderTag;
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderMic185OhmUnit.config.json';
+  lRegistry := TRecorderTagRegistry.Create(nil);
+  lLoaded := TRecorderTagRegistry.Create(nil);
+  try
+    lTag := lRegistry.CreateTag('MIC185-ohm', 64);
+    lTag.SourceId := 'MIC-185: 192.168.9.158:4000';
+    lTag.Address := '158-01';
+    lTag.AutoUnit := False;
+    lTag.SourceUnitName := 'Ом';
+    lTag.UnitName := 'Ом';
+    lTag.HardwareCalibrationEnabled := True;
+    SaveRecorderProjectConfig(lFileName, lRegistry);
+
+    LoadRecorderProjectConfig(lFileName, lLoaded);
+    lTag := lLoaded.FindByName('MIC185-ohm');
+    AssertTrue(lTag <> nil, 'MIC-185 Ohm tag restored');
+    AssertEquals(lTag.SourceUnitName, 'Ом',
+      'MIC-185 datasource unit remains Ohm after reload');
+    AssertEquals(lTag.UnitName, 'Ом',
+      'MIC-185 display unit remains Ohm after reload');
+    AssertTrue(not lTag.AutoUnit, 'MIC-185 manual unit mode remains disabled');
+    AssertTrue(lTag.HardwareCalibrationEnabled,
+      'MIC-185 hardware GX flag remains enabled');
+  finally
+    lLoaded.Free;
+    lRegistry.Free;
+    DeleteFile(lFileName);
+  end;
+  Writeln('MIC-185 Ohm unit project roundtrip test passed.');
+end;
+
 procedure TestComponentFactory;
 var
   lFactory: TRecorderComponentFactory;
@@ -200,6 +240,7 @@ var
   lLoaded: TRecorderFormManager;
   lManager: TRecorderFormManager;
   lPage: TRecorderFormPage;
+  lSourceValue,lLoadedValue:TRecorderTagValueComponent;
 begin
   lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
     'RecorderFormModelTest.gui.ini';
@@ -220,6 +261,11 @@ begin
     lPage.DetachedHeight := 800;
     lPage.DetachedMonitor := 1;
     lPage.DetachedMaximized := True;
+    lSourceValue:=TRecorderTagValueComponent.Create;
+    lSourceValue.Name:='estimate-value';
+    lSourceValue.EstimateKind:=tekRmsValue;
+    lSourceValue.UseDefaultEstimate:=False;
+    lPage.AddComponent(lSourceValue);
     lManager.AddPage(lPage);
 
     SaveRecorderGuiConfig(lFileName, lManager);
@@ -236,6 +282,10 @@ begin
     AssertEquals(lLoaded.Pages[0].DetachedMonitor, 1, 'loaded detached monitor');
     AssertTrue(lLoaded.Pages[0].DetachedMaximized,
       'loaded detached maximized state');
+    lLoadedValue:=TRecorderTagValueComponent(lLoaded.Pages[0].Components[0]);
+    AssertTrue((lLoadedValue.EstimateKind=tekRmsValue) and
+      not lLoadedValue.UseDefaultEstimate,
+      'tag value estimate settings roundtrip');
     Writeln('GUI config base oscillogram count test passed.');
   finally
     lManager.Free;
@@ -408,6 +458,7 @@ begin
     Source:=TRecorder3dComponent(
       Factory.CreateComponent(TRecorder3dComponent.TypeId));
     Source.Id:='Page1.3d1';
+    Source.UseInactiveTag:=True;
     Source.CameraYaw:=17; Source.CameraPitch:=-11; Source.CameraDistance:=42;
     Source.CameraTargetX:=1.25; Source.CameraTargetY:=-2.5; Source.CameraTargetZ:=7.75;
     Source.CameraRoll:=23.5; Source.CameraFov:=61;
@@ -445,6 +496,7 @@ begin
     SkinBone.OwnerMeshNodeId:=Primitive.NodeId;
     SkinBone.TagIds[r3sX]:=501;
     SkinBone.TagNames[r3sX]:='virtual.skin.x';
+    SkinBone.TagValueModes[r3sX]:=r3tvDefaultEstimate;
     SkinBone.BindLocalTransform[12]:=4.75;
     Gradient:=Source.AddGradientStrip;
     Gradient.Id:=701;
@@ -465,6 +517,8 @@ begin
     Anchor.GradientId:=Gradient.Id;
     Anchor.TagId:=902;
     Anchor.TagName:='virtual.temperature';
+    Anchor.EstimateKind:=tekRmsValue;
+    Anchor.UseDefaultEstimate:=False;
     Anchor.Enabled:=False;
     Anchor.ApplyColor:=False;
     Anchor.ShowValueLabel:=True;
@@ -477,6 +531,8 @@ begin
     AssertTrue(Abs(Restored.CameraTargetZ-7.75)<1E-9,'3d camera target Z');
     AssertTrue(Abs(Restored.CameraRoll-23.5)<1E-9,'3d camera roll');
     AssertTrue(Abs(Restored.CameraFov-61)<1E-9,'3d camera FOV');
+    AssertTrue(Restored.UseInactiveTag,
+      'visual component inactive tag option roundtrip');
     AssertTrue((Restored.FrfBindingCount=1) and
       (Restored.FrfBindings[0].CurveId=9001),'3d stable FRF curve id');
     AssertEquals(Restored.FrfBindings[0].SourceBindingId, 'hammer-main',
@@ -516,6 +572,7 @@ begin
       (Restored.SkinBones[0].Name='Blade helper') and
       (Restored.SkinBones[0].TagIds[r3sX]=501) and
       (Restored.SkinBones[0].TagNames[r3sX]='virtual.skin.x') and
+      (Restored.SkinBones[0].TagValueModes[r3sX]=r3tvDefaultEstimate) and
       (Abs(Restored.SkinBones[0].BindLocalTransform[12]-4.75)<1E-6),
       '3d skin bone and point tag roundtrip');
     AssertTrue((Restored.GradientStripCount=1) and
@@ -538,6 +595,8 @@ begin
       (Restored.VertexColorAnchors[0].GradientId=701) and
       (Restored.VertexColorAnchors[0].TagId=902) and
       (Restored.VertexColorAnchors[0].TagName='virtual.temperature') and
+      (Restored.VertexColorAnchors[0].EstimateKind=tekRmsValue) and
+      not Restored.VertexColorAnchors[0].UseDefaultEstimate and
       not Restored.VertexColorAnchors[0].Enabled and
       not Restored.VertexColorAnchors[0].ApplyColor and
       Restored.VertexColorAnchors[0].ShowValueLabel,
@@ -561,6 +620,37 @@ begin
   end;
 end;
 
+procedure TestScalarVisualizationReadsVectorEstimate;
+var
+  Registry:TRecorderTagRegistry;
+  Tag:TRecorderTag;
+  Settings:TRecorderTagEstimateSettings;
+  Times,Values:array[0..3] of Double;
+  Value:Double;
+begin
+  Registry:=TRecorderTagRegistry.Create(nil);
+  try
+    Tag:=Registry.CreateTag('vector.scalar.visual',64);
+    Tag.PollFrequencyHz:=100;
+    Settings:=Tag.EstimateSettings;
+    Settings.DefaultKind:=tekMean;
+    Settings.EnabledKinds[tekMean]:=True;
+    Settings.EnabledKinds[tekRmsValue]:=True;
+    Settings.PortionLength:=4;
+    Tag.EstimateSettings:=Settings;
+    Times[0]:=0; Times[1]:=0.01; Times[2]:=0.02; Times[3]:=0.03;
+    Values[0]:=1; Values[1]:=2; Values[2]:=3; Values[3]:=4;
+    Tag.AddSamples(Times,Values,Length(Values));
+    AssertTrue(RecorderTryReadScalarValue(Tag,True,tekRmsValue,Value) and
+      (Abs(Value-2.5)<1E-9),'vector default estimate for scalar visual');
+    AssertTrue(RecorderTryReadScalarValue(Tag,False,tekRmsValue,Value) and
+      (Abs(Value-Sqrt(7.5))<1E-9),'vector selected estimate for scalar visual');
+  finally
+    Registry.Free;
+  end;
+  Writeln('Scalar visualization vector estimate test passed.');
+end;
+
 procedure Test3dEditorSnapshotRestoresDeepState;
 var
   Source,Snapshot:TRecorder3dComponent;
@@ -571,6 +661,9 @@ begin
   Source:=TRecorder3dComponent.Create;
   Snapshot:=TRecorder3dComponent.Create;
   try
+    Source.Id:='3d-undo-test';
+    Source.Name:='Configured 3D';
+    Source.UseInactiveTag:=True;
     Source.SceneFileName:='before-browse.obr';
     Source.BindingTargetNodeId:=77;
     Source.BindingTagIds[r3bPointX]:=123;
@@ -593,7 +686,19 @@ begin
     SkinItem.HelperNodeId:=10;
     SkinItem.Weight:=0.6;
     SkinItem.HelperBindWorld[14]:=3.5;
-    Snapshot.Assign(Source);
+    TFormEditorController.CopyComponentState(Source,Snapshot);
+
+    AssertEquals(Snapshot.Id,'3d-undo-test',
+      '3d Undo dispatcher restores component id');
+    AssertEquals(Snapshot.Name,'Configured 3D',
+      '3d Undo dispatcher restores component name');
+    AssertTrue(Snapshot.UseInactiveTag,
+      '3d Undo dispatcher restores inactive tag mode');
+    AssertEquals(Snapshot.SceneFileName,'before-browse.obr',
+      '3d Undo dispatcher restores scene file');
+    AssertTrue((Snapshot.SkinBindingCount=1) and
+      (Abs(Snapshot.SkinBindings[0].Weight-0.6)<1E-6),
+      '3d Undo dispatcher restores nested skin state');
 
     Source.SceneFileName:='browsed.obr';
     Source.BindingTargetNodeId:=88;
@@ -1015,8 +1120,89 @@ begin
   Writeln('Skin adapter scene replacement test passed.');
 end;
 
+procedure TestSkinVectorTagValueModes;
+var
+  Component:TRecorder3dComponent;
+  Registry:TRecorderTagRegistry;
+  Scene:T3dScene;
+  Helper:T3dNode;
+  Bone:TRecorder3dSkinBone;
+  Tag:TRecorderTag;
+  Adapter:TRecorder3dSkinBindingAdapter;
+  Settings:TRecorderTagEstimateSettings;
+  Times,Values:array[0..3] of Double;
 begin
+  Component:=TRecorder3dComponent.Create;
+  Registry:=TRecorderTagRegistry.Create(nil);
+  Scene:=T3dScene.Create;
+  Adapter:=TRecorder3dSkinBindingAdapter.Create;
+  try
+    Helper:=T3dNode.Create;
+    Helper.Id:=301;
+    SetIdentity(Helper.LocalTransform);
+    Helper.LocalTransform[12]:=10;
+    Scene.AddNode(Helper);
+    Bone:=Component.EnsureSkinBone(301,'vector-generator');
+    Bone.BindLocalTransform:=Helper.LocalTransform;
+    Tag:=Registry.CreateTag('generator-vector',64);
+    Tag.PollFrequencyHz:=100;
+    Bone.TagIds[r3sX]:=Tag.Id;
+    Bone.TagNames[r3sX]:=Tag.Name;
+    Settings:=Tag.EstimateSettings;
+    Settings.DefaultKind:=tekMean;
+    Settings.EnabledKinds[tekMean]:=True;
+    Settings.PortionLength:=4;
+    Tag.EstimateSettings:=Settings;
+    Times[0]:=0; Times[1]:=0.01; Times[2]:=0.02; Times[3]:=0.03;
+    Values[0]:=1; Values[1]:=2; Values[2]:=3; Values[3]:=4;
+    Tag.AddSamples(Times,Values,Length(Values));
+
+    Bone.TagValueModes[r3sX]:=r3tvCurrentValue;
+    Adapter.Configure(Component,Registry);
+    Adapter.AttachScene(Scene);
+    AssertTrue(Adapter.ApplyChanged,'vector tag current value apply');
+    AssertTrue(Abs(Helper.LocalTransform[12]-14)<1E-6,
+      'current value is last sample from vector buffer');
+
+    Bone.TagValueModes[r3sX]:=r3tvDefaultEstimate;
+    Adapter.Configure(Component,Registry);
+    Adapter.AttachScene(Scene);
+    AssertTrue(Adapter.ApplyChanged,'vector tag default estimate apply');
+    AssertTrue(Abs(Helper.LocalTransform[12]-12.5)<1E-6,
+      'default tag estimate uses configured mean');
+
+    Registry.RemoveTag(Tag);
+    Tag:=Registry.CreateTag('generator-vector',64);
+    Tag.PollFrequencyHz:=100;
+    Tag.SignalBuffer.AddSample(1,7);
+    Bone.TagValueModes[r3sX]:=r3tvCurrentValue;
+    AssertTrue(Adapter.ApplyChanged,
+      'string tag reference reconnects after tag recreation');
+    AssertTrue(Abs(Helper.LocalTransform[12]-17)<1E-6,
+      'recreated tag with new id drives the original binding');
+  finally
+    Adapter.Free;
+    Scene.Free;
+    Registry.Free;
+    Component.Free;
+  end;
+  Writeln('Skin vector tag value modes test passed.');
+end;
+
+begin
+  if SameText(ParamStr(1), '--3d-editor-snapshot-only') then
+  begin
+    Test3dEditorSnapshotRestoresDeepState;
+    Writeln('3D editor snapshot dispatcher test passed.');
+    Halt(0);
+  end;
+  if SameText(ParamStr(1), '--mic185-unit-roundtrip-only') then
+  begin
+    TestProjectMic185OhmUnitRoundTrip;
+    Halt(0);
+  end;
   TestProjectCalibrationKeepsSdbReference;
+  TestProjectMic185OhmUnitRoundTrip;
   TestComponentFactory;
   TestFormPages;
   TestGuiConfigSavesBaseOscillogramCount;
@@ -1030,6 +1216,8 @@ begin
   TestSvgParameterParser;
   TestSkinBoneBindDoesNotDriftOnReconfigure;
   TestSkinAdapterConfigureAfterSceneReplacement;
+  TestSkinVectorTagValueModes;
+  TestScalarVisualizationReadsVectorEstimate;
   TestParametricGaugeArcConvention;
   TestLissajousShiftedTimestamps;
 end.

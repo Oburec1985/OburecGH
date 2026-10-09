@@ -34,12 +34,27 @@ type
   end;
 
 function DefaultCoordinatorHostStoreFile: string;
+procedure BeginCoordinatorConfigAccess;
+procedure EndCoordinatorConfigAccess;
 
 implementation
 
+var
+  gCoordinatorConfigLock: TRTLCriticalSection;
+
+procedure BeginCoordinatorConfigAccess;
+begin
+  EnterCriticalSection(gCoordinatorConfigLock);
+end;
+
+procedure EndCoordinatorConfigAccess;
+begin
+  LeaveCriticalSection(gCoordinatorConfigLock);
+end;
+
 function DefaultCoordinatorHostStoreFile: string;
 begin
-  Result := IncludeTrailingPathDelimiter(GetAppConfigDir(False)) + 'hosts.ini';
+  Result := ChangeFileExt(ParamStr(0), '.ini');
 end;
 
 constructor TCoordinatorHostStore.Create(const AFileName: string);
@@ -56,6 +71,7 @@ var
 begin
   Result := nil;
   if not FileExists(fFileName) then Exit;
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fFileName);
   try
     lCount := lIni.ReadInteger('hosts', 'count', 0);
@@ -78,6 +94,7 @@ begin
     end;
   finally
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
 
@@ -86,10 +103,17 @@ var
   lIndex: Integer;
   lIni: TIniFile;
   lSection: string;
+  lSections: TStringList;
 begin
   ForceDirectories(ExtractFileDir(fFileName));
+  BeginCoordinatorConfigAccess;
   lIni := TIniFile.Create(fFileName);
+  lSections := TStringList.Create;
   try
+    lIni.ReadSections(lSections);
+    for lIndex := lSections.Count - 1 downto 0 do
+      if Pos('host.', LowerCase(lSections[lIndex])) = 1 then
+        lIni.EraseSection(lSections[lIndex]);
     lIni.EraseSection('hosts');
     lIni.WriteInteger('hosts', 'count', Length(AHosts));
     for lIndex := 0 to High(AHosts) do
@@ -111,8 +135,16 @@ begin
     end;
     lIni.UpdateFile;
   finally
+    lSections.Free;
     lIni.Free;
+    EndCoordinatorConfigAccess;
   end;
 end;
+
+initialization
+  InitCriticalSection(gCoordinatorConfigLock);
+
+finalization
+  DoneCriticalSection(gCoordinatorConfigLock);
 
 end.

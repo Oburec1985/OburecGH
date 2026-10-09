@@ -3,7 +3,8 @@ program CoordinatorHostIdentityTest;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils, fpjson, uCoordinatorModel, uCoordinatorHostStore;
+  SysUtils, fpjson, uCoordinatorModel, uCoordinatorHostStore,
+  uCoordinatorConfig;
 
 const
   CRecorderId = '83e7e8d1-64d0-486b-a512-12ab34cd56ef';
@@ -830,6 +831,104 @@ begin
   end;
 end;
 
+procedure CheckManualRestoreRemovesOnlyMatchingIgnore;
+const
+  CFirstAddress = '192.0.2.40';
+  CSecondAddress = '192.0.2.41';
+var
+  lData, lResult: TJSONObject;
+  lConfig: TCoordinatorConfig;
+  lFileName: string;
+  lHosts: TJSONArray;
+  lModel: TCoordinatorModel;
+
+  procedure RegisterAddress(const AAddress: string; out AResult: TJSONObject);
+  begin
+    lData := TJSONObject.Create;
+    try
+      lData.Add('instance_id', AAddress);
+      lData.Add('host_name', 'Manual host');
+      lData.Add('state', 'configured');
+      AResult := lModel.RegisterHello(lData);
+    finally
+      lData.Free;
+    end;
+  end;
+
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir) +
+    'coordinator-unified-host-test.ini';
+  DeleteFile(lFileName);
+  lModel := TCoordinatorModel.Create;
+  try
+    lModel.EnableHostPersistence(lFileName);
+    RegisterAddress(CFirstAddress, lResult);
+    lResult.Free;
+    RegisterAddress(CSecondAddress, lResult);
+    lResult.Free;
+    Check(lModel.IgnoreHost(CFirstAddress), 'first host was not ignored');
+    Check(lModel.IgnoreHost(CSecondAddress), 'second host was not ignored');
+
+    RegisterAddress(CFirstAddress, lResult);
+    try
+      Check(lResult.Get('result_code', '') = 'ignored',
+        'automatic registration bypassed ignored hosts');
+    finally
+      lResult.Free;
+    end;
+
+    Check(lModel.RestoreIgnoredHost(CFirstAddress, CFirstAddress, ''),
+      'manual restore did not remove matching ignored host');
+    RegisterAddress(CFirstAddress, lResult);
+    try
+      Check(lResult.Get('result_code', '') = 'noError',
+        'manual host was not registered after restore');
+    finally
+      lResult.Free;
+    end;
+    RegisterAddress(CSecondAddress, lResult);
+    try
+      Check(lResult.Get('result_code', '') = 'ignored',
+        'manual restore removed an unrelated ignored host');
+    finally
+      lResult.Free;
+    end;
+  finally
+    lModel.Free;
+  end;
+
+  lConfig := TCoordinatorConfig.Create(lFileName);
+  try
+    lConfig.Load;
+    lConfig.EventWindowSec := 45;
+    lConfig.Save;
+  finally
+    lConfig.Free;
+  end;
+
+  lModel := TCoordinatorModel.Create;
+  try
+    lModel.EnableHostPersistence(lFileName);
+    lHosts := lModel.HostsJson;
+    try
+      Check(lHosts.Count = 1,
+        'restored host did not survive unified INI restart');
+    finally
+      lHosts.Free;
+    end;
+    RegisterAddress(CSecondAddress, lResult);
+    try
+      Check(lResult.Get('result_code', '') = 'ignored',
+        'ignored host did not survive unified INI restart');
+    finally
+      lResult.Free;
+    end;
+  finally
+    lModel.Free;
+    DeleteFile(lFileName);
+  end;
+end;
+
 begin
   CheckDiscoveryRequiresHttpForManagement;
   CheckRecorderHostInfo;
@@ -848,5 +947,6 @@ begin
   CheckAlias(GetEnvironmentVariable('COMPUTERNAME'));
   CheckWildcardConfigPayload;
   CheckStoppedHeartbeatPreservesMeasurementPath;
+  CheckManualRestoreRemovesOnlyMatchingIgnore;
   WriteLn('OK: configured local aliases merge into RecorderLnx UUID');
 end.

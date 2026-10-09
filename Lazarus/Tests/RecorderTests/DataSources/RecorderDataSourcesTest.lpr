@@ -16,6 +16,7 @@ uses
   Interfaces,
   Classes,
   SysUtils,
+  Math,
   uRecorderCoreServices,
   uRecorderDataSources,
   uRecorderTags,
@@ -23,6 +24,10 @@ uses
   uRecorderMic140Device,
   uRecorderMic140Calibration,
   uRecorderMic140Utils,
+  uRecorderMic185DataSource,
+  uMic185MebiusTypes,
+  uRecorderHardwareTagSettingsProviders,
+  uRecorderTagSettingsProvider,
   uRecorderDeviceDataThread,
   uRecorderAcquisitionTypes,
   uRecorderMeraPaths,
@@ -34,6 +39,12 @@ type
     function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; override;
   public
     procedure PublishSequence(ASequence: Integer);
+  end;
+
+  TTransformRefreshProbeSource = class(TMockSineDataSource)
+  public
+    RefreshCount: Integer;
+    procedure RefreshRuntimeTransforms; override;
   end;
 
   TDataSourceEventProbe = class
@@ -129,6 +140,11 @@ begin
   lBlock.Values[0][0] := ASequence;
   lBlock.Values[0][1] := ASequence + 0.5;
   PushBlock(lBlock);
+end;
+
+procedure TTransformRefreshProbeSource.RefreshRuntimeTransforms;
+begin
+  Inc(RefreshCount);
 end;
 
 procedure TDataSourceEventProbe.HandleEvent(ASender: TObject;
@@ -277,6 +293,7 @@ var
   lSnapshotB: TRecorderSignalSnapshot;
   lSourceA: IRecorderDataSource;
   lSourceB: IRecorderDataSource;
+  lRefreshProbe: TTransformRefreshProbeSource;
   lTagA: TRecorderTag;
   lTagB: TRecorderTag;
 begin
@@ -289,8 +306,10 @@ begin
   try
     lBus.Subscribe(@lProbe.HandleEvent);
 
-    lSourceA := TMockSineDataSource.Create('mock.manager.a', 'ManagerSineA',
+    lRefreshProbe := TTransformRefreshProbeSource.Create(
+      'mock.manager.a', 'ManagerSineA',
       25, 1.0, 2.0);
+    lSourceA := lRefreshProbe;
     lSourceB := TMockSineDataSource.Create('mock.manager.b', 'ManagerSineB',
       40, 1.5, 1.0);
 
@@ -324,6 +343,9 @@ begin
     AssertEquals(lManager.SourceCount, 2, 'manager source count');
     AssertTrue(lManager.FindSource('MOCK.MANAGER.A') = lSourceA,
       'manager case-insensitive lookup');
+    lManager.RefreshSourceRuntimeTransforms('MOCK.MANAGER.A');
+    AssertEquals(lRefreshProbe.RefreshCount, 1,
+      'manager refreshes only requested source runtime transforms');
     AssertTrue(not lManager.Running, 'manager stopped');
     AssertEquals(lManager.LastErrorCount, 0, 'manager thread errors');
     AssertTrue(lSnapshotA.Count >= 3, 'manager source A ticks');
@@ -793,6 +815,182 @@ begin
   LogLine('RESULT MIC-140 Mera Files calibr path test passed.');
 end;
 
+procedure TestMic185TagSettingsDraftUsesVisibleUnit;
+var
+  lApply: TRecorderTagSettingsApplyResult;
+  lDraft: TRecorderTagSettingsDraft;
+  lError: string;
+  lProvider: IRecorderTagSettingsProvider;
+  lRegistry: TRecorderTagRegistry;
+  lResolver: IRecorderTagSettingsProviderResolver;
+  lTag: TRecorderTag;
+begin
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lTag := lRegistry.CreateTag('MIC185_ch01', 1024);
+    lTag.SourceId := 'MIC-185: 192.168.14.185:4000';
+    lTag.Address := '1-01';
+    lTag.UnitName := 'code';
+    lTag.PollFrequencyHz := 100.0;
+    RecorderMic185SetSourceChannelUnitName(lRegistry, lTag.SourceId,
+      lTag.Address, lTag.PollFrequencyHz, 'Ом');
+
+    lResolver := CreateRecorderHardwareTagSettingsResolver;
+    AssertTrue(lResolver.Resolve(lTag, nil, lProvider),
+      'Resolve MIC-185 tag-settings provider');
+    RecorderInitTagSettingsDraft(lTag, 200, lDraft);
+    lDraft.UnitName := 'мВ';
+    lDraft.HardwareCalibrationEnabled := True;
+    RecorderInitTagSettingsApplyResult(lApply);
+    AssertTrue(lProvider.ApplyDraft(lRegistry, lTag, lDraft, lApply, lError),
+      'Apply MIC-185 visible unit draft: ' + lError);
+    AssertTrue(lApply.SourceUnitChanged,
+      'MIC-185 source unit change must be detected against original state');
+    AssertTrue(SameText(lApply.SourceUnitName, 'мВ'),
+      'MIC-185 visible unit must reach provider draft');
+    AssertTrue(lApply.SignalHistoryMustBeCleared,
+      'MIC-185 hardware flag must be compared with original tag state');
+    AssertTrue(SameText(RecorderMic185GetSourceChannelUnitName(lRegistry,
+      lTag.SourceId, lTag.Address), 'мВ'),
+      'MIC-185 source unit must be persisted');
+
+    lTag.UnitName := 'мВ';
+    lTag.SourceUnitName := 'мВ';
+    lTag.HardwareCalibrationEnabled := True;
+    RecorderInitTagSettingsApplyResult(lApply);
+    AssertTrue(lProvider.ApplyDraft(lRegistry, lTag, lDraft, lApply, lError),
+      'Apply MIC-185 no-op draft: ' + lError);
+    AssertTrue(not lApply.SourceUnitChanged and not lApply.UnitChanged and
+      not lApply.SignalHistoryMustBeCleared,
+      'MIC-185 no-op draft must not invalidate transform or history');
+  finally
+    lRegistry.Free;
+  end;
+  LogLine('RESULT MIC-185 tag-settings visible unit test passed.');
+end;
+
+procedure TestMic185ProductionValueTransform;
+var
+  lCalibration: TRecorderCalibration;
+  lChannelCalibration: TRecorderCalibration;
+  lRegistry: TRecorderTagRegistry;
+  lSettings: TMic185ChannelProgramSettings;
+  lTag: TRecorderTag;
+  lTransform: TRecorderMic185ValueTransform;
+  lValue: Double;
+  lStaleCalibration: TRecorderCalibration;
+  lCurrentCalibration: TRecorderCalibration;
+begin
+  LogLine('--- MIC-185 production value transform test ---');
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lTag := lRegistry.CreateTag('MIC185_transform', 16);
+    lTag.SourceId := 'MIC-185: 192.168.14.185:4000';
+    lTag.Address := '1-01';
+    lTag.UnitName := 'мВ';
+    lTag.SourceUnitName := 'мВ';
+    RecorderMic185ReadChannelMode('', 100.0, lSettings);
+    RecorderMic185SetSourceChannelUnitName(lRegistry, lTag.SourceId,
+      lTag.Address, 100.0, 'мВ');
+
+    lCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+    try
+      lCalibration.AddPoint(0.0, 0.0);
+      lCalibration.AddPoint(32768.0, 25.0);
+      lTag.HardwareCalibrationEnabled := True;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, lCalibration);
+      lValue := RecorderMic185ApplyValueTransform(32768.0, lTransform);
+      AssertTrue(not SameValue(lValue, 32768.0, 1E-9),
+        'MIC-185 hardware GX must convert full-scale code to physical mV');
+      AssertEquals(lValue, 25.0, 'MIC-185 hardware GX physical mV');
+
+      lTag.HardwareCalibrationEnabled := False;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, lCalibration);
+      AssertTrue(lTransform.Valid,
+        'MIC-185 transform without hardware GX must remain publishable');
+      AssertEquals(RecorderMic185ApplyValueTransform(32768.0, lTransform),
+        32768.0 - lSettings.SoftBalanceFine,
+        'MIC-185 disabled hardware GX is a no-op apart from soft balance');
+
+      lChannelCalibration := TRecorderCalibration.Create(rckPiecewiseLinear);
+      lChannelCalibration.Name := 'MIC185 channel x2';
+      lChannelCalibration.UnitIn := 'мВ';
+      lChannelCalibration.UnitOut := 'мВ';
+      lChannelCalibration.AddPoint(0.0, 0.0);
+      lChannelCalibration.AddPoint(10.0, 20.0);
+      lRegistry.Calibrations.Add(lChannelCalibration);
+      lTag.CalibrationNames.Add(lChannelCalibration.Name);
+      lTag.ChannelCalibrationEnabled := True;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, nil);
+      AssertEquals(RecorderMic185ApplyValueTransform(10.0, lTransform), 20.0,
+        'MIC-185 enabled channel GX');
+      lTag.ChannelCalibrationEnabled := False;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, nil);
+      AssertEquals(RecorderMic185ApplyValueTransform(10.0, lTransform),
+        10.0 - lSettings.SoftBalanceFine, 'MIC-185 disabled channel GX');
+
+      RecorderMic185SetSourceChannelUnitName(lRegistry, lTag.SourceId,
+        lTag.Address, 100.0, 'Ом');
+      lTag.SourceUnitName := 'Ом';
+      lTag.UnitName := 'Ом';
+      lTag.AutoUnit := False;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, nil);
+      lValue := RecorderMic185ApplyValueTransform(100.0, lTransform);
+      AssertTrue(not SameValue(lValue, 100.0, 1E-9),
+        'MIC-185 Ohm output must convert internal mV');
+      lTag.AutoUnit := True;
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, nil);
+      AssertEquals(RecorderMic185ApplyValueTransform(100.0, lTransform),
+        lValue, 'MIC-185 AutoUnit does not change source mV-to-Ohm transform');
+
+      { Pin the active hardware range explicitly: the stale calibration below
+        must never be accepted merely because it is still named on the tag. }
+      lSettings.MeasRangeIndex := 0;
+      RecorderMic185SetSourceChannelMode(lRegistry, lTag.SourceId,
+        lTag.Address, lTag.PollFrequencyHz, lSettings);
+      lTag.HardwareCalibrationEnabled := True;
+      lTag.HardwareCalibrationName := 'MIC185 sn0170 range3 ch01';
+      lStaleCalibration := TRecorderCalibration.Create(rckLinear);
+      lStaleCalibration.Name := lTag.HardwareCalibrationName;
+      lStaleCalibration.Scale := 99.0;
+      lRegistry.Calibrations.Add(lStaleCalibration);
+      AssertTrue(RecorderMic185ResolveHardwareCalibrationForTransform(
+        lRegistry, lTag) = nil,
+        'MIC-185 stale calibration from another range must not be applied');
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, nil);
+      AssertTrue(not lTransform.Valid,
+        'MIC-185 missing required current-range GX must suppress publication');
+
+      lCurrentCalibration := TRecorderCalibration.Create(rckLinear);
+      lCurrentCalibration.Name := 'MIC185 sn0170 range1 ch01';
+      lCurrentCalibration.Scale := 0.001;
+      lRegistry.Calibrations.Add(lCurrentCalibration);
+      AssertTrue(RecorderMic185ResolveHardwareCalibrationForTransform(
+        lRegistry, lTag) = lCurrentCalibration,
+        'MIC-185 current-range calibration must be rebound from cache');
+      lTransform := RecorderMic185BuildValueTransform(lRegistry, lTag,
+        lSettings, lCurrentCalibration);
+      AssertTrue(lTransform.Valid,
+        'MIC-185 current-range GX must restore publication');
+      AssertTrue(SameText(lTag.HardwareCalibrationName,
+        lCurrentCalibration.Name),
+        'MIC-185 tag must persist the rebound current-range calibration name');
+    finally
+      lCalibration.Free;
+    end;
+  finally
+    lRegistry.Free;
+  end;
+  LogLine('RESULT MIC-185 production value transform test passed.');
+end;
+
 procedure TestDeviceDataThreadLeaseRing;
 var
   I: Integer;
@@ -853,6 +1051,12 @@ begin
       TestDeviceDataThreadLeaseRing;
       Exit;
     end;
+    if SameText(ParamStr(1), '--mic185-unit-only') then
+    begin
+      TestMic185TagSettingsDraftUsesVisibleUnit;
+      TestMic185ProductionValueTransform;
+      Exit;
+    end;
     TestMockSineDataSource;
     LogLine('');
     TestDiagnosticsDataSource;
@@ -870,6 +1074,9 @@ begin
     TestMic140HardwareCalibrationLoad;
     LogLine('');
     TestMic140MeraCalibrPath;
+    LogLine('');
+    TestMic185TagSettingsDraftUsesVisibleUnit;
+    TestMic185ProductionValueTransform;
     LogLine('');
     TestDeviceDataThreadLeaseRing;
   finally

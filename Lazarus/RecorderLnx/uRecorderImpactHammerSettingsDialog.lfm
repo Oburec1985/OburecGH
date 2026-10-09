@@ -1,0 +1,63 @@
+object RecorderImpactHammerSettingsDialog: TRecorderImpactHammerSettingsDialog
+  Left = 180 Height = 720 Top = 60 Width = 1060 Caption = 'Настройки обработки ударов' ClientHeight = 720 ClientWidth = 1060 Position = poScreenCenter LCLVersion = '3.6.0.0'
+  object gbResponses: TGroupBox
+    Left = 8 Height = 664 Top = 8 Width = 220 Anchors = [akTop, akLeft, akBottom] Caption = 'Вход и выходы' TabOrder = 0
+    object tvChannels: TTreeView Left = 8 Height = 632 Top = 24 Width = 204 Anchors = [akTop, akLeft, akRight, akBottom] OnDragOver = tvChannelsDragOver OnDragDrop = tvChannelsDragDrop OnKeyDown = tvChannelsKeyDown TabOrder = 0 end
+  end
+  object gbAvailableTags: TGroupBox
+    Left = 840 Height = 664 Top = 8 Width = 212 Anchors = [akTop, akRight, akBottom] Caption = 'Доступные теги' TabOrder = 5
+    object edTagSearch: TEdit Left = 8 Height = 25 Top = 24 Width = 196 Anchors = [akTop, akLeft, akRight] OnChange = edTagSearchChange TextHint = 'Поиск по имени, адресу, описанию' TabOrder = 0 end
+    object lbAvailableTags: TListBox Left = 8 Height = 607 Top = 53 Width = 196 Anchors = [akTop, akLeft, akRight, akBottom] DragMode = dmAutomatic MultiSelect = True ExtendedSelect = True TabOrder = 1 end
+  end
+  object gbHammer: TGroupBox
+    Left = 236 Height = 180 Top = 8 Width = 596 Anchors = [akTop, akLeft, akRight] Caption = 'Триггер и временной захват' TabOrder = 1
+    object lblHammer: TLabel Left = 8 Top = 22 Caption = 'Тахо датчик' end
+    object cbHammer: TComboBox Left = 8 Height = 25 Top = 40 Width = 330 Style = csDropDownList OnChange = cbHammerChange TabOrder = 0 end
+    object chkEnabled: TCheckBox Left = 488 Height = 23 Top = 42 Width = 100 Caption = 'Включён' Checked = True State = cbChecked TabOrder = 1 end
+    object lblThreshold: TLabel Left = 8 Top = 72 Caption = 'Значение триггера' end
+    object lblPretrigger: TLabel Left = 296 Top = 72 Caption = 'Отступ, с' end
+    object lblCapture: TLabel Left = 434 Top = 72 Caption = 'Длительность, с' end
+    object edThreshold: TEdit Left = 8 Height = 25 Top = 90 Width = 130 TabOrder = 2 end
+    object chkFront: TCheckBox Left = 150 Height = 23 Top = 90 Width = 130 Caption = 'Фронт' OnChange = chkFrontChange TabOrder = 3 end
+    object edPretrigger: TEdit Left = 296 Height = 25 Top = 90 Width = 118 TabOrder = 4 end
+    object edCapture: TEdit Left = 434 Height = 25 Top = 90 Width = 144 OnChange = edTimeChange TabOrder = 5 end
+    object lblCapacity: TLabel Left = 8 Top = 122 Caption = 'Число ударов' end
+    object edCapacity: TEdit Left = 8 Height = 25 Top = 140 Width = 110 TabOrder = 6 end
+    object lblPortion: TLabel Left = 150 Top = 145 Caption = 'Порция: —' end
+  end
+  object gbAnalysis: TGroupBox
+    Left = 236 Height = 174 Top = 196 Width = 596 Anchors = [akTop, akLeft, akRight] Caption = 'Расчёт FFT / FRF' TabOrder = 2
+    object lblFftSize: TLabel Left = 8 Top = 22 Caption = 'Размер FFT' end
+    object lblEstimator: TLabel Left = 284 Top = 22 Caption = 'Оценка' end
+    object lblWindow: TLabel Left = 372 Top = 22 Caption = 'Окно' end
+    object lblCoherence: TLabel Left = 470 Top = 22 Caption = 'Порог Coh' end
+    object edFftSize: TEdit Left = 8 Height = 25 Top = 40 Width = 76 OnChange = edFftSizeChange TabOrder = 0 end
+    object udFftSize: TUpDown Left = 84 Height = 25 Top = 40 Width = 18 Max = 1000 Min = 0 Position = 500 OnClick = udFftSizeClick TabOrder = 1 end
+    object lblFftDuration: TLabel Left = 108 Top = 45 Caption = '— с' end
+    object chkZeroPad: TCheckBox Left = 180 Height = 23 Top = 40 Width = 96 Caption = 'Доп. нулями' TabOrder = 2 end
+    object cbEstimator: TComboBox Left = 284 Height = 25 Top = 40 Width = 80 Style = csDropDownList Items.Strings = ('H0' 'H1' 'H2') TabOrder = 2 end
+    object cbWindow: TComboBox Left = 372 Height = 25 Top = 40 Width = 90 Style = csDropDownList Items.Strings = ('Прямоугольное' 'Hann' 'Hamming' 'Force' 'Экспонента') TabOrder = 3 end
+    object edCoherence: TEdit Left = 470 Height = 25 Top = 40 Width = 110 TabOrder = 4 end
+    object chkWelch: TCheckBox Left = 8 Height = 23 Top = 68 Width = 66 Caption = 'Welch' OnChange = chkWelchChange TabOrder = 5 end
+    object lblWelchSegment: TLabel Left = 80 Top = 72 Caption = 'N' end
+    object lblWelchOverlap: TLabel Left = 188 Top = 72 Caption = 'Перекрытие, %' end
+    object lblSampleRate: TLabel Left = 296 Top = 72 Caption = 'Частота, Гц' end
+    object lblExcitationUnit: TLabel Left = 424 Top = 72 Caption = 'Ед. силы' end
+    object edWelchSegment: TEdit Left = 80 Height = 25 Top = 90 Width = 100 TabOrder = 6 end
+    object edWelchOverlap: TEdit Left = 188 Height = 25 Top = 90 Width = 100 TabOrder = 7 end
+    object edSampleRate: TEdit Left = 296 Height = 25 Top = 90 Width = 120 ReadOnly = True TabOrder = 8 end
+    object edExcitationUnit: TEdit Left = 424 Height = 25 Top = 90 Width = 110 TabOrder = 9 end
+    object lblExportPath: TLabel Left = 8 Top = 122 Caption = 'Каталог сохранения результатов' end
+    object edExportPath: TEdit Left = 8 Height = 25 Top = 140 Width = 572 Anchors = [akTop, akLeft, akRight] TabOrder = 10 end
+  end
+  object gbAxes: TGroupBox
+    Left = 236 Height = 294 Top = 378 Width = 596 Anchors = [akTop, akLeft, akRight, akBottom] Caption = 'Отображение графиков' TabOrder = 3
+    object chkExcitationAxis: TCheckBox Left = 8 Height = 23 Top = 22 Width = 240 Caption = 'Воздействие в отдельную ось' TabOrder = 0 end
+    object grdAxes: TStringGrid Left = 8 Height = 232 Top = 50 Width = 580 Anchors = [akTop, akLeft, akRight, akBottom] ColCount = 8 FixedCols = 1 RowCount = 6 Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goEditing] OnDblClick = grdAxesDblClick OnDrawCell = grdAxesDrawCell OnKeyDown = grdAxesKeyDown OnSelectEditor = grdAxesSelectEditor TabOrder = 1 end
+  end
+  object pnlActions: TPanel
+    Left = 0 Height = 40 Top = 680 Width = 1060 Align = alBottom BevelOuter = bvNone TabOrder = 4
+    object btnOk: TButton Left = 864 Height = 28 Top = 6 Width = 88 Anchors = [akTop, akRight] Caption = 'OK' Default = True OnClick = btnOkClick TabOrder = 0 end
+    object btnCancel: TButton Left = 960 Height = 28 Top = 6 Width = 88 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 1 end
+  end
+end

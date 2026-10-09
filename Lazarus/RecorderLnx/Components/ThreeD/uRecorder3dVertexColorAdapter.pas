@@ -24,6 +24,10 @@ type
   public
     Engine:T3dVertexColorEngine;
     Tags:array of TRecorderTag;
+    TagIds:array of TRecorderTagId;
+    TagNames:array of string;
+    EstimateKinds:array of TRecorderTagEstimateKind;
+    UseDefaultEstimates:array of Boolean;
     LastValues:array of Double;
     ConfigEnabled,LastActive,ActiveInitialized:array of Boolean;
     ShowLabels:array of Boolean;
@@ -38,11 +42,13 @@ type
   private
     fComponent:TRecorder3dComponent;
     fRegistry:TRecorderTagRegistry;
+    fRegistryRevision:QWord;
     fScene:T3dScene;
     fGroups:array of TRecorder3dVertexColorGroup;
     procedure ClearGroups;
     function ResolveTag(AAnchor:TRecorder3dVertexColorAnchor):TRecorderTag;
     function FindGradientIndex(AId:QWord):Integer;
+    procedure RefreshTagReferences;
   public
     destructor Destroy; override;
     procedure Configure(AComponent:TRecorder3dComponent;
@@ -82,12 +88,22 @@ end;
 function TRecorder3dVertexColorAdapter.ResolveTag(
   AAnchor:TRecorder3dVertexColorAnchor):TRecorderTag;
 begin
-  Result:=nil;
-  if (fRegistry=nil) or (AAnchor=nil) then Exit;
-  if AAnchor.TagId<>0 then Result:=fRegistry.FindById(AAnchor.TagId);
-  if (Result=nil) and (AAnchor.TagName<>'') then
-    Result:=fRegistry.FindByName(AAnchor.TagName);
-  if (Result<>nil) and Result.IsVector then Result:=nil;
+  if AAnchor=nil then Exit(nil);
+  Result:=RecorderResolveTagReference(fRegistry,AAnchor.TagId,AAnchor.TagName);
+end;
+
+procedure TRecorder3dVertexColorAdapter.RefreshTagReferences;
+var I,J:Integer;
+begin
+  if (fRegistry=nil) or (fComponent=nil) then Exit;
+  for I:=0 to High(fGroups) do
+    for J:=0 to High(fGroups[I].Tags) do
+    begin
+      fGroups[I].Tags[J]:=RecorderResolveTagReference(fRegistry,
+        fGroups[I].TagIds[J],fGroups[I].TagNames[J]);
+      fGroups[I].LastValues[J]:=NaN;
+    end;
+  fRegistryRevision:=fRegistry.StructureRevision;
 end;
 
 function TRecorder3dVertexColorAdapter.FindGradientIndex(AId:QWord):Integer;
@@ -104,6 +120,8 @@ begin
   AttachScene(nil);
   fComponent:=AComponent;
   fRegistry:=ARegistry;
+  if fRegistry<>nil then fRegistryRevision:=fRegistry.StructureRevision
+  else fRegistryRevision:=0;
 end;
 
 procedure TRecorder3dVertexColorAdapter.AttachScene(AScene:T3dScene);
@@ -161,6 +179,10 @@ begin
         Inc(Count);
     SetLength(Evals,Count);
     SetLength(fGroups[GroupIndex].Tags,Count);
+    SetLength(fGroups[GroupIndex].TagIds,Count);
+    SetLength(fGroups[GroupIndex].TagNames,Count);
+    SetLength(fGroups[GroupIndex].EstimateKinds,Count);
+    SetLength(fGroups[GroupIndex].UseDefaultEstimates,Count);
     SetLength(fGroups[GroupIndex].LastValues,Count);
     SetLength(fGroups[GroupIndex].ConfigEnabled,Count);
     SetLength(fGroups[GroupIndex].LastActive,Count);
@@ -186,6 +208,10 @@ begin
       Evals[Count].Enabled:=Anchor.Enabled;
       Evals[Count].ApplyColor:=Anchor.ApplyColor;
       fGroups[GroupIndex].Tags[Count]:=ResolveTag(Anchor);
+      fGroups[GroupIndex].TagIds[Count]:=Anchor.TagId;
+      fGroups[GroupIndex].TagNames[Count]:=Anchor.TagName;
+      fGroups[GroupIndex].EstimateKinds[Count]:=Anchor.EstimateKind;
+      fGroups[GroupIndex].UseDefaultEstimates[Count]:=Anchor.UseDefaultEstimate;
       fGroups[GroupIndex].ConfigEnabled[Count]:=Anchor.Enabled;
       fGroups[GroupIndex].ShowLabels[Count]:=Anchor.ShowValueLabel;
       fGroups[GroupIndex].Names[Count]:=Anchor.Name;
@@ -234,6 +260,9 @@ function TRecorder3dVertexColorAdapter.ApplyChanged:Boolean;
 var I,J:Integer; Value:Double; Changed,Active:Boolean;
 begin
   Result:=False;
+  if (fRegistry<>nil) and
+    (fRegistryRevision<>fRegistry.StructureRevision) then
+    RefreshTagReferences;
   for I:=0 to High(fGroups) do
   begin
     Changed:=False;
@@ -241,12 +270,9 @@ begin
     begin
       Active:=False;
       Value:=NaN;
-      if fGroups[I].Tags[J]<>nil then
-      begin
-        Value:=fGroups[I].Tags[J].SignalBuffer.LatestValue;
-        Active:=fGroups[I].ConfigEnabled[J] and
-          (not IsNan(Value)) and (not IsInfinite(Value));
-      end;
+      if RecorderTryReadScalarValue(fGroups[I].Tags[J],
+        fGroups[I].UseDefaultEstimates[J],fGroups[I].EstimateKinds[J],Value) then
+        Active:=fGroups[I].ConfigEnabled[J];
       if (not fGroups[I].ActiveInitialized[J]) or
          (Active<>fGroups[I].LastActive[J]) then
       begin

@@ -345,7 +345,7 @@ function TCalPascalPlg.ProcessNotify(a_dwCommand: dword; a_dwData: dword): boole
 var
   b: boolean;
 begin
-  result := false;
+  result := true;
   b := a_dwCommand = PN_LEAVERCCONFIG;
   if b then
     m_leavecfgNotify := true;
@@ -562,7 +562,6 @@ begin
       end;
     end;
   end;
-  result := false;
 end;
 
 function TCalPascalPlg.GetName: LPCSTR; stdcall;
@@ -576,6 +575,11 @@ begin
     PLGPROP_INFOSTRING:
       begin
         Value := GPluginInfo.Dsc;
+        result := true;
+      end;
+    PLGPROP_CLB_ASSIGNED:
+      begin
+        Value := True;
         result := true;
       end;
   else

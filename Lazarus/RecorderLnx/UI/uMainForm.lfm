@@ -245,6 +245,7 @@ object MainForm: TMainForm
           Width = 64
         end>
       ColumnClick = False
+      HideSelection = False
       MultiSelect = True
       ReadOnly = True
       RowSelect = True

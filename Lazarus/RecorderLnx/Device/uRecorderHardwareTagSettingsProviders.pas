@@ -277,6 +277,7 @@ function TRecorderMic185TagSettingsProvider.ApplyDraft(
 var
   lRange: Double;
   lSettings: TMic185ChannelProgramSettings;
+  lOriginalSourceUnit: string;
   lSourceUnit: string;
 begin
   Result := inherited ApplyDraft(ARegistry, ATag, ADraft, AResult, AErrorText);
@@ -288,18 +289,22 @@ begin
     AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
     AResult.FrequencyChanged := True;
   end;
+  lOriginalSourceUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
+    ATag.SourceId, ATag.Address);
   lSourceUnit := Trim(ADraft.UnitName);
-  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) then
+  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
+    not SameText(lOriginalSourceUnit, lSourceUnit) then
   begin
     RecorderMic185SetSourceChannelUnitName(ARegistry, ATag.SourceId,
       ATag.Address, ADraft.PollFrequencyHz, lSourceUnit);
     AResult.SourceUnitName := lSourceUnit;
     AResult.SourceUnitChanged := True;
-    if not ADraft.AutoUnit then
-    begin
-      AResult.UnitName := lSourceUnit;
-      AResult.UnitChanged := True;
-    end;
+  end;
+  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
+    not ADraft.AutoUnit and not SameText(ATag.UnitName, lSourceUnit) then
+  begin
+    AResult.UnitName := lSourceUnit;
+    AResult.UnitChanged := True;
   end;
   if ADraft.HardwareCalibrationEnabled then
   begin
@@ -321,7 +326,8 @@ begin
     AResult.RangeChanged := True;
   end;
   AResult.SignalHistoryMustBeCleared :=
-    ATag.HardwareCalibrationEnabled <> ADraft.HardwareCalibrationEnabled;
+    (ATag.HardwareCalibrationEnabled <> ADraft.HardwareCalibrationEnabled) or
+    AResult.SourceUnitChanged or AResult.UnitChanged;
 end;
 
 function TRecorderMic185TagSettingsProvider.DownloadHardwareCalibration(

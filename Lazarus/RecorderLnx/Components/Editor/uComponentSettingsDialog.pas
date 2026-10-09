@@ -6,7 +6,7 @@ unit uComponentSettingsDialog;
 interface
 
 uses
-  LConvEncoding,
+  LConvEncoding, LazUTF8,
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls, Buttons,
   Dialogs, uRecorderFormModel, uRecorderTags, uComponentServices;
 
@@ -19,6 +19,7 @@ type
     fTagComboLabel: TLabel;
     fTagCombo: TComboBox;
     fTagSearchEdit: TEdit;
+    fUseInactiveTagCheck:TCheckBox;
     fOkButton: TButton;
     fCancelButton: TButton;
     fSelectedFontName: string;
@@ -52,6 +53,7 @@ type
     procedure CaptionEditChange(Sender: TObject);
     procedure UseSourceTagNameCheckChange(Sender: TObject);
     procedure TagComboChange(Sender: TObject);
+    procedure UseInactiveTagChange(Sender:TObject);
     procedure RefreshAutomaticCaption;
     procedure BuildUi;
     procedure AddTagComboItem(ATag: TRecorderTag);
@@ -199,7 +201,15 @@ begin
     fTagCombo.Anchors := [akLeft, akTop, akRight];
     fTagCombo.Style := csDropDownList;
     fTagCombo.OnChange := @TagComboChange;
-    Inc(lTop, 40);
+    Inc(lTop, 30);
+
+    fUseInactiveTagCheck:=TCheckBox.Create(Self);
+    fUseInactiveTagCheck.Parent:=Self;
+    fUseInactiveTagCheck.SetBounds(140,lTop,300,20);
+    fUseInactiveTagCheck.AutoSize:=True;
+    fUseInactiveTagCheck.Caption:='Использовать неактивные';
+    fUseInactiveTagCheck.OnChange:=@UseInactiveTagChange;
+    Inc(lTop,30);
   end;
 
   if fComponent is TRecorderStaticTextComponent then
@@ -400,6 +410,9 @@ begin
       AddTagComboItem(lTag);
       fTagCombo.ItemIndex := 0;
     end;
+    if (lTag=nil) and fComponent.UseInactiveTag and
+      (Trim(fComponent.TagName)<>'') then
+      fTagCombo.Text:=fComponent.TagName;
   finally
     fTagCombo.Items.EndUpdate;
   end;
@@ -427,12 +440,13 @@ begin
   fTagCombo.Items.BeginUpdate;
   try
     fTagCombo.Items.Clear;
-    lFilter := LowerCase(Trim(LclText(AFilter)));
+    lFilter := UTF8LowerCase(Trim(LclText(AFilter)));
     lAddedCount := 0;
     for I := 0 to fTagRegistry.TagCount - 1 do
     begin
       lTag := fTagRegistry.Tags[I];
-      lSearchText := LowerCase(LclText(lTag.Name + ' ' + lTag.Address + ' ' + lTag.Description));
+      lSearchText := UTF8LowerCase(LclText(lTag.Name + ' ' + lTag.Address +
+        ' ' + lTag.Description));
       if (lFilter = '') or (Pos(lFilter, lSearchText) > 0) then
       begin
         AddTagComboItem(lTag);
@@ -450,8 +464,13 @@ begin
         fTagCombo.ItemIndex := I;
         Break;
       end;
-    if (fTagCombo.ItemIndex < 0) and (fTagCombo.Items.Count > 0) then
+    if (fTagCombo.ItemIndex<0) and
+      ((fUseInactiveTagCheck=nil) or not fUseInactiveTagCheck.Checked) and
+      (fTagCombo.Items.Count>0) then
       fTagCombo.ItemIndex := 0;
+    if (fTagCombo.ItemIndex<0) and (fUseInactiveTagCheck<>nil) and
+      fUseInactiveTagCheck.Checked then
+      fTagCombo.Text:=lCurrentSelection;
   finally
     fTagCombo.Items.EndUpdate;
   end;
@@ -463,6 +482,8 @@ var
 begin
   if fTagCombo <> nil then
   begin
+    fUseInactiveTagCheck.Checked:=fComponent.UseInactiveTag;
+    UseInactiveTagChange(fUseInactiveTagCheck);
     PopulateInitialTagSelection;
     lTagIndex := 0;
     while (lTagIndex < fTagCombo.Items.Count) and
@@ -471,8 +492,11 @@ begin
       Inc(lTagIndex);
     if lTagIndex < fTagCombo.Items.Count then
       fTagCombo.ItemIndex := lTagIndex
-    else if fTagCombo.Items.Count > 0 then
+    else if (not fComponent.UseInactiveTag) and
+      (fTagCombo.Items.Count > 0) then
       fTagCombo.ItemIndex := 0;
+    if fComponent.UseInactiveTag and (lTagIndex>=fTagCombo.Items.Count) then
+      fTagCombo.Text:=fComponent.TagName;
   end;
 
   if fComponent is TRecorderStaticTextComponent then
@@ -528,6 +552,7 @@ var
 begin
   if fTagCombo <> nil then
   begin
+    fComponent.UseInactiveTag:=fUseInactiveTagCheck.Checked;
     if (fTagCombo.ItemIndex >= 0) and
       (fTagCombo.Items.Objects[fTagCombo.ItemIndex] is TRecorderTag) then
     begin
@@ -604,6 +629,21 @@ begin
     fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsBold];
   if fSelectedFontItalic then
     fFontPreviewLabel.Font.Style := fFontPreviewLabel.Font.Style + [fsItalic];
+end;
+
+procedure TComponentSettingsDialog.UseInactiveTagChange(Sender:TObject);
+var
+  lText:string;
+begin
+  if fTagCombo=nil then
+    Exit;
+  lText:=fTagCombo.Text;
+  if (fUseInactiveTagCheck<>nil) and fUseInactiveTagCheck.Checked then
+    fTagCombo.Style:=csDropDown
+  else
+    fTagCombo.Style:=csDropDownList;
+  if (fUseInactiveTagCheck<>nil) and fUseInactiveTagCheck.Checked then
+    fTagCombo.Text:=lText;
 end;
 
 procedure TComponentSettingsDialog.DefineSelectedFont;

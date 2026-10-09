@@ -599,10 +599,9 @@ function TRecorderMeasurementSectionTableForm.TagValueOutOfTolerance(
 var
   lValue: Double;
 begin
-  Result := (ATag = nil) or (ATag.SignalBuffer.Count = 0);
+  Result := not RecorderTryReadScalarValue(ATag,True,tekMean,lValue);
   if Result or (ATag.RangeMax <= ATag.RangeMin) then
     Exit;
-  lValue := ATag.SignalBuffer.LatestValue;
   Result := (lValue < ATag.RangeMin) or (lValue > ATag.RangeMax);
 end;
 

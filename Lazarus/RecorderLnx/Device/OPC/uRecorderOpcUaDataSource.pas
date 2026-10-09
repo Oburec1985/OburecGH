@@ -38,6 +38,7 @@ type
     procedure DoTick; override;
   public
     constructor Create(const ADevice: IRecorderDevice; AUpdateTimeMs: Cardinal);
+    destructor Destroy; override;
     procedure PrepareHardware; override;
     procedure Start; override;
     procedure Stop; override;
@@ -49,7 +50,7 @@ type
 implementation
 
 uses
-  Math, uRecorderDebugLog;
+  Math, uRecorderDebugLog, uRecorderHardwareLiveDevices;
 
 const
   CRecorderOpcUaReconnectDelayMs = 5000;
@@ -62,6 +63,12 @@ begin
   fDevice := ADevice;
   inherited Create(ADevice.DeviceId, CRecorderOpcUaModuleType,
     Max(10, AUpdateTimeMs));
+end;
+
+destructor TRecorderOpcUaDataSource.Destroy;
+begin
+  RecorderHardwareUnregisterLiveDevice(Self);
+  inherited Destroy;
 end;
 
 function TRecorderOpcUaDataSource.OpcDevice: TRecorderOpcUaDevice;
@@ -252,6 +259,7 @@ end;
 procedure TRecorderOpcUaDataSource.PrepareHardware;
 begin
   fPrepared := False;
+  RecorderHardwareUnregisterLiveDevice(Self);
   if (OpcDevice.Config.Mode = oumClient) and (OpcDevice.NodeCount = 0) then
   begin
     fPrepareError := 'Не выбраны OPC UA-каналы';
@@ -297,6 +305,8 @@ begin
     fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
   end;
   if fPrepared then fNextPrepareAtMs := 0;
+  if fPrepared then
+    RecorderHardwareRegisterLiveDevice(Self, SourceId, fDevice);
   if (not fPrepared) and (fPrepareError <> '') then
     RecorderDebugLog(Format('[OPC UA] source=%s error=%s',
       [SourceId, fPrepareError]));
@@ -332,6 +342,7 @@ begin
   begin
     fPrepareError := OpcDevice.LastError;
     fDevice.Disconnect;
+    RecorderHardwareUnregisterLiveDevice(Self);
     fPrepared := False;
     fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
     RecorderDebugLog(Format(
@@ -345,6 +356,7 @@ begin
   begin
     fPrepareError := OpcDevice.LastError;
     fDevice.Disconnect;
+    RecorderHardwareUnregisterLiveDevice(Self);
     fPrepared := False;
     fNextPrepareAtMs := GetTickCount64 + CRecorderOpcUaReconnectDelayMs;
     RecorderDebugLog(Format(

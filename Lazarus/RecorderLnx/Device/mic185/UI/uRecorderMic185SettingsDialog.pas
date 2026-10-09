@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Grids,
-  uRecorderTags, uMic185MebiusTypes;
+  uRecorderTags, uRecorderDataSources, uMic185MebiusTypes;
 
 type
   TRecorderMic185RowArray = array of Integer;
@@ -50,8 +50,11 @@ type
     fPowerMaCode: LongWord;
     fPollFrequencyHz: Double;
     fRegistry: TRecorderTagRegistry;
+    fDataSources: TRecorderDataSourceManager;
     fSourceId: string;
     function ApplySettingsToDevice: Boolean;
+    function EnsureHardwareCalibrationsForSource(
+      const ASourceId: string; out AErrorText: string): Boolean;
     procedure ApplySettingsToRow(const ASettings: TMic185ChannelProgramSettings;
       const AUnitName: string; ARow: Integer);
     function EnsureTagForGridRow(ARow: Integer): TRecorderTag;
@@ -83,7 +86,8 @@ type
 
 function ApplyRecorderMic185SourceDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string;
+  ADataSources: TRecorderDataSourceManager = nil): Boolean;
 
 procedure SetRecorderMic185SettingsSelfTestActive(AActive: Boolean);
 function CreateRecorderMic185SettingsGuideForm(AOwner: TComponent): TForm;
@@ -165,12 +169,18 @@ end;
 
 function TRecorderMic185SettingsForm.ApplySettingsToDevice: Boolean;
 var
+  lCalibrationErrorText: string;
   lErrorText: string;
 begin
   Result := False;
   StoreChannelSettingsConfig;
   Result := RecorderMic185ProgramConfiguredSource(fRegistry, BuildSourceId,
     lErrorText);
+  if Result then
+    EnsureHardwareCalibrationsForSource(BuildSourceId,
+      lCalibrationErrorText);
+  if Result and (fDataSources <> nil) then
+    fDataSources.RefreshSourceRuntimeTransforms(BuildSourceId);
   if not Result then
   begin
     if Trim(lErrorText) = '' then
@@ -179,10 +189,53 @@ begin
   end;
 end;
 
+function TRecorderMic185SettingsForm.EnsureHardwareCalibrationsForSource(
+  const ASourceId: string; out AErrorText: string): Boolean;
+var
+  I: Integer;
+  lB: Double;
+  lCalibrationName: string;
+  lDownloadError: string;
+  lK: Double;
+  lTag: TRecorderTag;
+begin
+  Result := True;
+  AErrorText := '';
+  if fRegistry = nil then
+    Exit;
+
+  for I := 0 to fRegistry.TagCount - 1 do
+  begin
+    lTag := fRegistry.Tags[I];
+    if (lTag = nil) or (not SameText(lTag.SourceId, ASourceId)) or
+      (RecorderMic185ChannelAddressToIndex(lTag.Address) < 0) or
+      (not lTag.HardwareCalibrationEnabled) then
+      Continue;
+    if RecorderMic185LoadHardwareCalibrationForTag(fRegistry, lTag, True) then
+      Continue;
+
+    lDownloadError := '';
+    if RecorderMic185DownloadHardwareCalibrationFromDeviceEx(fRegistry,
+      lTag, lK, lB, lCalibrationName, lDownloadError) then
+      Continue;
+
+    Result := False;
+    if AErrorText = '' then
+      AErrorText := Format(
+        'Не удалось загрузить аппаратную градуировку нового диапазона для канала %s: %s',
+        [lTag.Name, lDownloadError]);
+    RecorderMic185Log(Format(
+      'Hardware GX auto-download failed tag="%s" source="%s": %s',
+      [lTag.Name, ASourceId, lDownloadError]));
+  end;
+end;
+
 procedure TRecorderMic185SettingsForm.ApplySettingsToRow(
   const ASettings: TMic185ChannelProgramSettings; const AUnitName: string;
   ARow: Integer);
 var
+  lPreviousSourceUnit: string;
+  lPreviousUnit: string;
   lTargetTag: TRecorderTag;
 begin
   if (ARow < 1) or (ARow > CMic185ChannelCountMax) then
@@ -191,6 +244,8 @@ begin
   lTargetTag := EnsureTagForGridRow(ARow);
   if lTargetTag <> nil then
   begin
+    lPreviousSourceUnit := lTargetTag.SourceUnitName;
+    lPreviousUnit := lTargetTag.UnitName;
     lTargetTag.SourceValueMode := RecorderMic185FormatChannelMode(ASettings);
     if Trim(AUnitName) <> '' then
     begin
@@ -201,6 +256,13 @@ begin
         lTargetTag.Address, lTargetTag.PollFrequencyHz, AUnitName);
     end;
     ApplyMic185HardwareModeFromUnit(fRegistry, lTargetTag);
+    if (not SameText(lPreviousSourceUnit, lTargetTag.SourceUnitName)) or
+      (not SameText(lPreviousUnit, lTargetTag.UnitName)) then
+    begin
+      lTargetTag.InvalidateCalibrationScale;
+      fRegistry.RebuildScales(lTargetTag);
+      lTargetTag.ClearSignalHistory;
+    end;
     lTargetTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(fRegistry,
       lTargetTag, ASettings, lTargetTag.UnitName);
     lTargetTag.RangeMin := -lTargetTag.RangeMax;
@@ -449,7 +511,11 @@ end;
 procedure TRecorderMic185SettingsForm.UpdateGridRow(ARow: Integer;
   ATag: TRecorderTag);
 var
+  lHardMv: Double;
+  lHardValue: Double;
   lSettings: TMic185ChannelProgramSettings;
+  lSoftCode: LongInt;
+  lSoftValue: Double;
   lUnitName: string;
 begin
   if (ARow < 1) or (ATag = nil) then
@@ -466,14 +532,23 @@ begin
       lUnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
     gridChannels.Cells[2, ARow] := RecorderMic185EffectiveRangeTextForTag(
       fRegistry, ATag, lSettings, lUnitName);
-    gridChannels.Cells[3, ARow] := FormatFloat('0.###',
-      RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
-      RecorderMic185HardBalanceCodeToMv(fModuleSettings.HardBalance),
-      lSettings, lUnitName));
-    gridChannels.Cells[4, ARow] := FormatFloat('0.###',
-      RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
-      RecorderMic185SoftBalanceCodeToMv(lSettings.SoftBalance,
-      lSettings.MeasRangeIndex), lSettings, lUnitName));
+    if fModuleSettings.HardBalance = 0 then
+      lHardMv := 0.0
+    else
+      lHardMv := (Int64(fModuleSettings.HardBalance) -
+        CMic185DefaultHardBalance) *
+        RecorderMic185RangeMax(lSettings.MeasRangeIndex) /
+        CMic185DefaultHardBalance;
+    lHardValue := RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
+      lHardMv, lSettings, lUnitName);
+    lSoftCode := lSettings.SoftBalance + Round(lSettings.SoftBalanceFine);
+    lSoftValue := RecorderMic185ConvertUnitValueForTag(fRegistry, ATag,
+      RecorderMic185SoftBalanceCodeToMv(lSoftCode,
+      lSettings.MeasRangeIndex), lSettings, lUnitName);
+    gridChannels.Cells[3, ARow] := Format('%.4g %s',
+      [lHardValue, lUnitName]);
+    gridChannels.Cells[4, ARow] := Format('%.4g %s',
+      [lSoftValue, lUnitName]);
     gridChannels.Cells[5, ARow] := lUnitName;
     gridChannels.Cells[6, ARow] := RecorderMic185CommutationText(lSettings.CommutIndex);
     gridChannels.Cells[7, ARow] := RecorderMic185SensorSchemeText(lSettings.SensorScheme);
@@ -785,6 +860,8 @@ var
   lSettings: TMic185ChannelProgramSettings;
   lSourceId: string;
   lTag: TRecorderTag;
+  lPreviousSourceUnit: string;
+  lPreviousUnit: string;
   lUnitName: string;
 begin
   lTag := nil;
@@ -812,6 +889,8 @@ begin
   if lTag = nil then
     Exit;
   GetSourceRowSettings(lRow, lSettings);
+  lPreviousSourceUnit := lTag.SourceUnitName;
+  lPreviousUnit := lTag.UnitName;
   lSettings.PowerMaCode := fPowerMaCode;
   lTag.SourceValueMode := RecorderMic185FormatChannelMode(lSettings);
   if ShowRecorderMic185ChannelDialog(Self, fRegistry, lTag, fModuleSettings) then
@@ -835,6 +914,13 @@ begin
       fPollFrequencyHz, fChannelSettings[lRow - 1]);
     RecorderMic185SetSourceModuleSettings(fRegistry, lSourceId,
       fPollFrequencyHz, fModuleSettings);
+    if (not SameText(lPreviousSourceUnit, lTag.SourceUnitName)) or
+      (not SameText(lPreviousUnit, lTag.UnitName)) then
+    begin
+      lTag.InvalidateCalibrationScale;
+      fRegistry.RebuildScales(lTag);
+      lTag.ClearSignalHistory;
+    end;
     RecorderMic185GetSourceGroupAddition(fRegistry, lSourceId,
       lGroupAddition);
     lAdditionIndex := Integer(lGroupAddition[(lRow - 1) div 16]);
@@ -877,12 +963,13 @@ end;
 
 function ApplyRecorderMic185SourceDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string; ADataSources: TRecorderDataSourceManager): Boolean;
 var
   lForm: TRecorderMic185SettingsForm;
 begin
   lForm := TRecorderMic185SettingsForm.Create(AOwner);
   try
+    lForm.fDataSources := ADataSources;
     lForm.LoadSource(ARegistry, ASourceId);
     if GRecorderMic185SettingsSelfTestActive then
     begin
@@ -909,7 +996,8 @@ type
   public
     function SupportsSource(const ASourceId, AModuleType: string): Boolean;
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
-      const ASourceId: string; out ANewSourceId: string): Boolean;
+      const ASourceId: string; out ANewSourceId: string;
+      ADataSources: TRecorderDataSourceManager): Boolean;
   end;
 
 function TRecorderMic185ConfiguredSourceEditor.SupportsSource(
@@ -922,10 +1010,10 @@ end;
 
 function TRecorderMic185ConfiguredSourceEditor.EditSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string; ADataSources: TRecorderDataSourceManager): Boolean;
 begin
   Result := ApplyRecorderMic185SourceDialog(AOwner, ARegistry, ASourceId,
-    ANewSourceId);
+    ANewSourceId, ADataSources);
 end;
 
 initialization

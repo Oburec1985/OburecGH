@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="RecorderDriverContractsV2Test"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <RunParams><FormatVersion Value="2"/></RunParams>
+    <Units>
+      <Unit><Filename Value="RecorderDriverContractsV2Test.lpr"/><IsPartOfProject Value="True"/></Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../../RecorderLnx/Device/Architecture;../../../RecorderLnx/Device"/>
+      <UnitOutputDirectory Value="lib"/>
+    </SearchPaths>
+    <Linking><Debugging><DebugInfoType Value="dsDwarf3"/></Debugging></Linking>
+  </CompilerOptions>
+</CONFIG>

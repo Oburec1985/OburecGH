@@ -86,7 +86,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="Core;Service;UI;../RecorderLnx;../RecorderLnx/Algs;../RecorderLnx/Core;../RecorderLnx/Calibrations;../RecorderLnx/Calibrations/Strains;../RecorderLnx/Device;../RecorderLnx/Device/MIC140;../RecorderLnx/Device/MIC140/UI;../RecorderLnx/Device/MIC140/utils;../RecorderLnx/Device/mic185;../RecorderLnx/Device/mic185/UI;../RecorderLnx/Device/MCbus;../RecorderLnx/Device/MCbus/UI;../RecorderLnx/SDB;../RecorderLnx/SQLdb;../RecorderLnx/SQLdb/SqlTrend;../SharedUtils;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Core;Service;UI;../RecorderLnx;../RecorderLnx/Algs;../RecorderLnx/Core;../RecorderLnx/Calibrations;../RecorderLnx/Calibrations/Strains;../RecorderLnx/Components/SqlTrend;../RecorderLnx/Device;../RecorderLnx/Device/MIC140;../RecorderLnx/Device/MIC140/UI;../RecorderLnx/Device/MIC140/utils;../RecorderLnx/Device/mic185;../RecorderLnx/Device/mic185/UI;../RecorderLnx/Device/MCbus;../RecorderLnx/Device/MCbus/UI;../RecorderLnx/SDB;../RecorderLnx/SQLdb;../RecorderLnx/SQLdb/SqlTrend;../SharedUtils;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

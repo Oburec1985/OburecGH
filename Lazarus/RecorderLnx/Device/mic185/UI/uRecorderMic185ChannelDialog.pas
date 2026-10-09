@@ -6,7 +6,7 @@ unit uRecorderMic185ChannelDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
+  Classes, SysUtils, Math, Forms, Controls, StdCtrls, ExtCtrls,
   uRecorderTags, uMic185MebiusTypes;
 
 type
@@ -179,8 +179,10 @@ begin
     lPowerMa := TextToFloatDef(cbModulePower.Text, cbModulePower.ItemIndex);
     ASettings.PowerMaCode := Mic185PowerMaToCode(lPowerMa);
   end;
-  ASettings.SoftBalance := RecorderMic185SoftBalanceMvToCode(
-    TextToFloatDef(edSoftBalance.Text, 0), ASettings.MeasRangeIndex);
+  ASettings.SoftBalance := EnsureRange(
+    StrToIntDef(Trim(edSoftBalance.Text), 0),
+    -CMic185SoftBalanceMaxCode, CMic185SoftBalanceMaxCode);
+  ASettings.SoftBalanceFine := 0.0;
   if chkChannelShunt.Checked then
     ASettings.ShuntOn := 1
   else
@@ -193,8 +195,9 @@ end;
 procedure TRecorderMic185ChannelForm.ReadModuleSettingsFromUi(
   var ASettings: TMic185ModuleProgramSettings);
 begin
-  ASettings.HardBalance := RecorderMic185HardBalanceMvToCode(
-    TextToFloatDef(edHardBalance.Text, 0));
+  ASettings.HardBalance := LongWord(EnsureRange(
+    StrToIntDef(Trim(edHardBalance.Text), CMic185DefaultHardBalance),
+    0, CMic185HardBalanceDacMax));
 end;
 
 procedure TRecorderMic185ChannelForm.UpdateActualRange;
@@ -227,13 +230,12 @@ begin
   FillCombo(cbShuntValue, ['откл', '0', '1', '2', '3'], 0);
   edNominalRangeUnit.Text := 'мВ';
   edActualRange.Text := '±5.000';
-  edSoftBalance.Text := '0.000';
-  edSoftBalanceUnit.Text := 'мВ';
+  edSoftBalance.Text := '0';
+  edSoftBalanceUnit.Text := 'код АЦП';
   edStrainSensitivity.Text := '2.000';
   edOuterResistance.Text := '200.000';
   edInnerResistance.Text := '10000';
-  edHardBalance.Text := FormatFloat('0.###',
-    RecorderMic185HardBalanceCodeToMv(fModuleSettings.HardBalance));
+  edHardBalance.Text := IntToStr(fModuleSettings.HardBalance);
   chkChannelShunt.Checked := False;
   cbNominalRange.OnChange := @SettingsChanged;
   cbActualRangeUnit.OnChange := @SettingsChanged;
@@ -246,6 +248,7 @@ begin
     Caption := 'Свойства канала ' + ATag.Address;
     RecorderMic185ReadChannelMode(ATag.SourceValueMode, ATag.PollFrequencyHz,
       lSettings);
+    edSoftBalance.Text := IntToStr(lSettings.SoftBalance);
     if lSettings.MeasRangeIndex <= CMic185Range05mV then
       cbNominalRange.ItemIndex := lSettings.MeasRangeIndex;
     if lSettings.CommutIndex <= CMic185CommutCalibr then
@@ -265,9 +268,6 @@ begin
     chkChannelShunt.Checked := lSettings.ShuntOn <> 0;
     edActualRange.Text := RecorderMic185RangeText(lSettings.MeasRangeIndex);
     cbActualRangeUnit.Text := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-    edSoftBalance.Text := FormatFloat('0.###',
-      RecorderMic185SoftBalanceCodeToMv(lSettings.SoftBalance,
-      lSettings.MeasRangeIndex));
     edStrainSensitivity.Text := FloatToStr(lSettings.TensoSensitivity);
     edOuterResistance.Text := FloatToStr(lSettings.Resistance);
     cbActualRangeUnit.Text := RecorderMic185GetSourceChannelUnitName(

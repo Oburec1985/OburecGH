@@ -758,9 +758,9 @@ begin
     Color := TColor(lAlarmColor)
   else
     Color := $00F2F8FF;
-  if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) then
+  if RecorderTryReadScalarValue(lTag,fComponent.UseDefaultEstimate,
+    fComponent.EstimateKind,lValue) then
   begin
-    lValue := lTag.SignalBuffer.LatestValue;
     lValueStr := FormatFloat(fComponent.DisplayFormat, lValue);
   end
   else
@@ -1244,14 +1244,8 @@ begin
   for I := 0 to fComponent.SvgBindingCount - 1 do
   begin
     lBinding := fComponent.SvgBindings[I];
-    lTag := nil;
-    if fTagRegistry <> nil then
-    begin
-      if lBinding.TagId <> 0 then
-        lTag := fTagRegistry.FindById(lBinding.TagId);
-      if lTag = nil then
-        lTag := fTagRegistry.FindByName(lBinding.TagName);
-    end;
+    lTag:=RecorderResolveTagReference(fTagRegistry,lBinding.TagId,
+      lBinding.TagName);
     fSvgBindingTags.Add(lTag);
     fSvgBindingRevisions.Add(Pointer(PtrUInt(0)));
   end;
@@ -1378,15 +1372,14 @@ begin
   case ABinding.ValueKind of
     rsvCurrentValue:
       begin
-        if lTag.SignalBuffer.Count = 0 then
+        if not RecorderTryReadScalarValue(lTag,True,tekMean,lNumber) then
           Exit;
-        lNumber := lTag.SignalBuffer.LatestValue;
       end;
     rsvVisibleWhenNonZero:
       begin
-        if lTag.SignalBuffer.Count = 0 then
+        if not RecorderTryReadScalarValue(lTag,True,tekMean,lNumber) then
           Exit;
-        if Abs(lTag.SignalBuffer.LatestValue) > 1.0E-12 then
+        if Abs(lNumber) > 1.0E-12 then
           AValue := 'inline'
         else
           AValue := 'none';
@@ -1665,21 +1658,19 @@ var
   I: Integer;
   lTag: TRecorderTag;
   lFileName: string;
+  lValue: Double;
 begin
   Result := '';
   if (fComponent = nil) or (fComponent.Images.Count = 0) then
     Exit;
 
-  lTag := nil;
-  if (ATagRegistry <> nil) and (Trim(fComponent.TagName) <> '') then
+  if Trim(fComponent.TagName)<>'' then
   begin
-    if fComponent.TagId <> 0 then
-      lTag := ATagRegistry.FindById(fComponent.TagId);
-    if lTag = nil then
-      lTag := ATagRegistry.FindByName(fComponent.TagName);
-    if (lTag <> nil) and (lTag.SignalBuffer.Count > 0) then
+    lTag:=RecorderResolveTagReference(ATagRegistry,fComponent.TagId,
+      fComponent.TagName);
+    if RecorderTryReadScalarValue(lTag,True,tekMean,lValue) then
     begin
-      lFileName := FileNameForValue(lTag.SignalBuffer.LatestValue);
+      lFileName := FileNameForValue(lValue);
       if (lFileName <> '') and FileExists(lFileName) then
         Exit(lFileName);
     end;
@@ -1727,6 +1718,7 @@ procedure TRecorderImageView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
 var
   lTag: TRecorderTag;
+  lValue: Double;
 begin
   if fComponent = nil then
     Exit;
@@ -1745,15 +1737,9 @@ begin
     RefreshSvgParameters;
     Exit;
   end;
-  lTag := nil;
-  if ATagRegistry <> nil then
-  begin
-    if fComponent.TagId <> 0 then
-      lTag := ATagRegistry.FindById(fComponent.TagId);
-    if lTag = nil then
-      lTag := ATagRegistry.FindByName(fComponent.TagName);
-  end;
-  if (lTag = nil) or (lTag.SignalBuffer.Count = 0) then
+  lTag:=RecorderResolveTagReference(ATagRegistry,fComponent.TagId,
+    fComponent.TagName);
+  if not RecorderTryReadScalarValue(lTag,True,tekMean,lValue) then
   begin
     SelectFile('');
     Exit;
@@ -1765,7 +1751,7 @@ begin
   end;
   fLastRevision := lTag.SignalBuffer.Revision;
   fHasRevision := True;
-  SelectFile(FileNameForValue(lTag.SignalBuffer.LatestValue));
+  SelectFile(FileNameForValue(lValue));
   RefreshSvgParameters;
 end;
 
